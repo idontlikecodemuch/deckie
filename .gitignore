@@ -21,3 +21,7 @@ deck-app/Deck/Resources/Deck.shazamcatalog
 *.p8
 # derived from mixer/features via score.py (61 MB); regenerate, do not commit (decision D10)
 mixer/pairs.json
+# stage 1 benchmark harness build products and raw Music Understanding output (large; summarised by mixer/bench_mu.py)
+tools/mubench/build/
+tools/mubench/*.xcodeproj/xcuserdata/
+mixer/mu_raw/
