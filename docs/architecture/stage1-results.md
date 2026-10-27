@@ -167,3 +167,14 @@ and persists for two windows if far on the wheel and four if near); the join rea
 covers each mix window. Minimum cost version: three analyses per track (mix-in window, mix-out window, whole).
 The lightweight estimator stays in the lab as the level-2 fallback candidate. False-change rate on 60 ordinary
 tracks with Apple's windows: see below when the run completes.
+
+False-change rate, Apple's windows on 60 ordinary tracks (30 s windows, 15 s hop, seeded with the song key,
+hysteresis rule): 9 of 60 open a second segment, against 27 of 60 for the lightweight estimator. Of the nine, some
+are real (the Chris Lorenzo versus Black Eyed Peas wordplay edit changes song at 270 s; Get Ur Freak On is a
+transition edit; I Put A Spell On You has a rubato ending; Deep Inside changes at 435 s of a long cut) and the
+rest alternate between two areas all the way through (Lose Control, Demonique, We Found Love), which is ambiguous
+material rather than a modulation. The median track has 100 percent of its windows inside the song key's tonal
+area; the alternating ones sit at 31 to 60 percent. Rule that follows: store a key stability per track (the share
+of windows inside the song key's area) and treat it as the key confidence the scorer already weighs, so an
+ambiguous track gets a soft key rather than a wrong verdict, consistent with "key is a warning, not a score to
+chase". The segment covering each mix window supplies that window's key.

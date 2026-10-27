@@ -22,7 +22,8 @@ lines of Swift, medium 60 to 200, large over 200 or involving a model. Bar numbe
 > windows (`tools/mubench -keywindows`), seeded with the song key and filtered by the tonal-area hysteresis rule;
 > it caught every tested modulation with clean controls where the lightweight estimator flagged chord changes as
 > key changes. Cost about 0.6 s per 30 s window; the minimum product version analyses the two mix windows and the
-> whole track. `mixer/key_light.py` stays as the level-2 fallback candidate. Vocal signal (track J): Apple's
+> whole track. Also store a key stability (share of windows inside the song key's tonal area; 9 of 60 ordinary
+> tracks fall below it) as the key confidence the scorer weighs. `mixer/key_light.py` stays as the level-2 fallback candidate. Vocal signal (track J): Apple's
 > instrument activity, `ranges` as the presence gate and the series for the overlap term, calibrated on a listening
 > set; HTDemucs (MIT) as the optional stem pass later.
 >
