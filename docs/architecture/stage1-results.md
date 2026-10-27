@@ -125,3 +125,13 @@ Port-plan adjustment: keep the framework's whole-song key as the track's key, an
 estimator (the HPCP vote already planned as the second opinion) over the mix-in and mix-out windows, plus a
 persisted change list for the few tracks that modulate. The scorer's key term reads the window keys, not the
 song key. Cost: a few hundred milliseconds per track on top of the framework.
+
+## 1d. Recognition across the fader range (done Oct 27, afternoon)
+
+Follow-up to 1b by a research agent, report `docs/research/h-pitch-robust-recognition.md`, 25 tracks, offline
+renders with synthetic room noise; nothing through a real microphone yet. Findings: one signature tolerates about
+plus or minus 4 percent in every mode (time-stretch, pitch shift, vinyl-style) and fails at 5; frequency skew reads
+vinyl-style pitch to within 0.03 points from one 8-second match; two matches 8 seconds apart give the tempo-only
+ratio to 0.02 to 0.05 points, where the app today waits 20 seconds and rounds to 0.5; estimating tempo from live
+beats alone is off by 0.35 to 1.6 points and by 4 during a blend, so beat tracking is a refinement, not a primary.
+Recommendation and measurements: see the report and proposal P11.

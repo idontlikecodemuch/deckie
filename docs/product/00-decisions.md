@@ -127,3 +127,13 @@ Christopher says so; a yes moves it up into the dated decisions above.
   analysis and take names from tags? Lean: yes. Content hash plus ShazamKit signature plus an analysis descriptor for
   versions; names from tags with an editor; edits in the crate file. Public data only suggests corrections. The
   sprint's pool needed hand maps for 98 original years and 105 new entries, which is the evidence. Spec 5.4.
+- **P11. Recognition across the fader range: shift the microphone, keep one signature per track.** Measured
+  (track H): a ShazamKit signature matches within about plus or minus 4 percent of its own speed in every mode.
+  Proposed: while listening for a new song, run several ShazamKit sessions in parallel on transformed copies of
+  the microphone signal (as is; resampled for vinyl-style plus and minus 8 and 16; time-stretched for tempo-only
+  plus and minus 5, 10 and 15), then drop to one stream re-centred on the measured ratio. The crate keeps one
+  45 KB signature per track. Offline stand-ins matched 21 to 25 of 25 across plus and minus 16 percent in both
+  modes; CPU about 12 percent of one Mac core, to be measured on the iPad. Interim for the next gig: a
+  nine-signature catalogue, which matched 25 of 25 everywhere and needs no new code. Also: fix the tempo-only
+  pitch reading to a two-match offset fit reported to 0.1 percent in about 16 s, instead of 20 s rounded to 0.5.
+  Not now: an own pitch-invariant fingerprint (the proven designs are AGPL or paper-only). Spec 5.3.

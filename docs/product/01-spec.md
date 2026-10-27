@@ -124,8 +124,10 @@ server. Schema in track A, section 5.
 
 A ShazamKit custom catalogue built from the user's files, per crate, rebuilt locally. On-device signature cost,
 memory at thousands of signatures and pitch tolerance beyond the current variants were never measured [measure].
-Apple's guidance says matches are safe under 5 percent skew, so the plus or minus 4 percent variants may be partly
-redundant [measure]. Bulk work runs only on power, watches thermal state, and uses the OS 26 continued-processing
+Apple's guidance says matches are safe under 5 percent skew, which stage 1 confirmed: one signature covers about
+plus or minus 4 percent in every mode. The proposed answer (P11, track H) is to transform the microphone signal
+into several parallel matchers rather than multiply the catalogue, with a nine-signature catalogue as the interim
+fix and a faster, finer tempo-only pitch reading from two match offsets. Bulk work runs only on power, watches thermal state, and uses the OS 26 continued-processing
 task so the user sees progress.
 
 ### 5.4 Identity and naming (track B; revised Oct 26 evening, P10 proposed)
