@@ -1,0 +1,23 @@
+# environments and caches
+mixer/.venv/
+**/__pycache__/
+*.pyc
+.DS_Store
+# Xcode / app build output (regenerate with xcodegen + xcodebuild)
+deck-app/build/
+deck-app/tools/build/
+deck-app/*.xcodeproj/xcuserdata/
+deck-app/*.xcarchive
+# audio and large derived data (commercial tracks; regenerate from the music folder)
+*.mp3
+*.wav
+*.aac
+*.m4a
+*.iso
+mixer/mixes/_work/
+deck-app/Deck/Resources/Deck.shazamcatalog
+# credentials
+.env
+*.p8
+# derived from mixer/features via score.py (61 MB); regenerate, do not commit (decision D10)
+mixer/pairs.json
