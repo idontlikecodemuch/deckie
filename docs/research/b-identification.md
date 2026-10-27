@@ -89,7 +89,7 @@ bracket tokens are not versions: `[pmedia]` 643 times, years on compilation rips
    `... - Spinnin' Records.mp3`), or hyphenated slugs (`Joel-Dickinson-Thee-Greatest-Hits-Bette-Midler-...`), or commas
    between artists. Bit rate is a tell: the sprint flagged 128 and 192 kbps rips by hand.
 3. *Compilation and album rips*: 98 percent have title and artist tags, 95 percent album, 71 percent year, 73 percent
-   genre, 26 percent BPM. The album tag is the disc name, and in Chris's crate the *user's* disc names (`CD1 - 90s`,
+   genre, 26 percent BPM. The album tag is the disc name, and in Christopher's crate the *user's* disc names (`CD1 - 90s`,
    `CD3 - Halloween`) sit next to commercial ones (`NOW That's What I Call Music! Forever 90s`). Album, track number and
    year are enough for a MusicBrainz release lookup; the user's own disc names must be kept as-is.
 
@@ -142,7 +142,7 @@ timeline is published; purchase is not offered.
 **Reading versus training.** None of the three documents contains "train", "machine learning" or "artificial
 intelligence"; YouTube's help page says only that the Terms "prohibits content from unauthorized use, such as
 unauthorized downloads and scraping", with a creator-side training setting that "By default... is turned off" [S34].
-Chris's point stands, mapping a file to public metadata is not training, but it does not help: the terms restrict the
+Christopher's point stands, mapping a file to public metadata is not training, but it does not help: the terms restrict the
 access and the storage, not the purpose.
 
 **Verdict.** Off the table as a lookup source. Numerically: a 2,447-file crate at 100 searches per day for the whole
@@ -273,7 +273,7 @@ Internal: `pool/newfiles/probe.json`, `library_probe.json`, `probe_new.py`, `poo
 
 ## Addendum: YouTube, dug further
 
-Follow-up of Oct 26, 2026 to Chris's question: he knows sites that pull YouTube data; is any route to YouTube's
+Follow-up of Oct 26, 2026 to Christopher's question: he knows sites that pull YouTube data; is any route to YouTube's
 public metadata usable for best-mapping a user's files, titles only, never audio, nothing the App Store would reject?
 
 **Every site that shows YouTube data gets it one of four ways.** (A) As a registered Data API client, bound by the
@@ -322,7 +322,7 @@ remixer and year themselves, so YouTube never has to be read at all; the link is
 reading-versus-training question stays moot: the terms govern access and storage, and the InnerTube routes that the
 frontends use are the access YouTube is actively blocking with PO Tokens.
 
-**Sites Chris may mean, for him to confirm.** API clients (route A): 1001Tracklists (its privacy page says it uses
+**Sites Christopher may mean, for him to confirm.** API clients (route A): 1001Tracklists (its privacy page says it uses
 the YouTube API "to add and embed YouTube media links" [S17]), Last.fm, Soundiiz, TuneMyMusic, FreeYourMusic,
 Social Blade, vidIQ, Kworb, Chartmetric, Soundcharts. Frontends and extractors (route B): Invidious, Piped, NewPipe,
 FreeTube, Yattee (reported gone from the App Store [S64]), yt-dlp, cobalt, y2mate-style converters, ytmusicapi,
@@ -332,7 +332,7 @@ or third group, they confirm the picture; if in the second, they are the ones Yo
 
 ## Addendum: self-contained identity
 
-Chris's question: MusicBrainz and Discogs were inaccurate in the sprint and the DJ edits names anyway, so does public
+Christopher's question: MusicBrainz and Discogs were inaccurate in the sprint and the DJ edits names anyway, so does public
 identification matter, or can Deckie make its own identity from the analysis and take names from tags, with an editor?
 
 **1. The accuracy problem is structural, not a bug.** The sprint ended with hand maps for about a hundred original
@@ -363,7 +363,7 @@ embeddings in an Euclidean distance space, using a triplet loss" [S71], CoverHun
 do exact-track and version identification with 10-second queries [S73]. On device: chroma over vDSP is cheap and a
 128-d embedding model is a few megabytes on Core ML `[inf]`; Track A already budgets a style embedding per track
 [S79]. Expectation `[inf]`: intro, extended, clean, dirty and short edits of one recording are the easy case (same
-audio, shifted structure); remixes with new instrumentals are partial; mashups are two works. Measure on Chris's
+audio, shifted structure); remixes with new instrumentals are partial; mashups are two works. Measure on Christopher's
 crate first: five No Broke Boys, three Return of the Mack.
 
 **3. Editing without touching files has precedent.** Lexicon: select any number of tracks, press E, fields that

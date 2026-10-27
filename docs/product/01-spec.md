@@ -3,10 +3,10 @@
 Dated Oct 26, 2026. Supersedes v0.3 (`history/01-spec-v0.3.md`). What changed from v0.3: the community research
 written by Codex (`docs/research/codex-community.md`, direct quotes from DJs) is folded in. It softens the tracklist
 claim, widens privacy to cover taste and history, tempers the learning loop, reframes the lead promise around
-recall, and reshapes the trial. What changed from v0.2: Chris accepted the native
+recall, and reshapes the trial. What changed from v0.2: Christopher accepted the native
 engine on Apple's Music Understanding framework with graceful fallbacks (D11); tuning speaks the DJ's language and
 starts from a song chain (D12, research track E); the Mike caveat in section 2; profiles as a proposal (P9); the
-YouTube verdict reopened for a deeper look. Proposed decisions still waiting for Chris are in `00-decisions.md`. Items marked
+YouTube verdict reopened for a deeper look. Proposed decisions still waiting for Christopher are in `00-decisions.md`. Items marked
 [measure] need an experiment before they are relied on; the experiments are in section 7, stage 1.
 
 ## 1. Goal
@@ -32,7 +32,7 @@ Define the segment by the rig first and the music second.
 Size: about a quarter of DJs were off the laptop in 2022 and about 10 percent on CDJs or separates in 2021. Niche,
 and the one place where every Deckie feature is new rather than one of them.
 
-A second situation, from Chris (Oct 26): the DJ with an unfamiliar crate. Mike's party set was curated by Chris and
+A second situation, from Christopher (Oct 26): the DJ with an unfamiliar crate. Mike's party set was curated by Christopher and
 held music Mike does not usually play, so the sprint's data describes a DJ playing someone else's selection: new
 DJs, a themed party with a handed-over crate, or someone having fun with a new DJ toy. His 16 percent pitch habit
 is not normal either. The answer in both cases is the same, customisation, which is why D6 exists. A recording of
@@ -101,7 +101,7 @@ A Swift package, working name DeckieAnalysis, runs the same analysis on iPhone, 
 
 The Python stack in `mixer/` becomes the lab: ground truth for the 373 analysed tracks and the place to try models.
 It does not ship. The madmom models and the Essentia models are licensed non-commercial and Essentia is AGPL
-(track A, section 4). Chris's crate must be regenerated with the shipped engine before it is a TestFlight fixture.
+(track A, section 4). Christopher's crate must be regenerated with the shipped engine before it is a TestFlight fixture.
 
 Graceful fallbacks (D11): Music Understanding needs OS 27, and some 2018 to 2022 iPads are dropped; check the iPad
 Air 4 [measure]. Degradation is designed in, not bolted on. Level 1: a device below OS 27 consumes a crate file that
@@ -229,11 +229,11 @@ later. Android and Windows: not planned.
   against the Python features: beat and downbeat F-measure, key agreement, vocal-timeline correlation, section
   boundaries. Needs macOS 27 or an iOS 27 device; this Mac is on 26. (b) ShazamKit on device: signature time per
   track on an iPhone, memory at a few thousand signatures, and a pitch sweep with `catalogtool bench` including
-  tempo-only variants. (c) Does the iPad Air 4 run iPadOS 27. (d) Regenerate Chris's crate with the new engine once
+  tempo-only variants. (c) Does the iPad Air 4 run iPadOS 27. (d) Regenerate Christopher's crate with the new engine once
   (a) passes.
 - Stage 2: DeckieAnalysis on the Mac and crate file v1. Point it at any folder and get a crate file; the identification
   pipeline; the iPad reads the crate file instead of bundled data; the catalogue is built from the user's files.
-  Chris's crate is test fixture number one.
+  Christopher's crate is test fixture number one.
 - Stage 3: on device. The engine on iPad and iPhone; on-device signatures; onboarding; the sliders; the learning loop.
 - Stage 4: trial. TestFlight with five to ten DJs from the primary segment, observed in three situations: a vinyl
   or CD DJ working unfamiliar records into a familiar bag; a DJ adapting to house gear; a DJ turning a hardware set
@@ -259,11 +259,11 @@ later. Android and Windows: not planned.
 
 ## 9. Open questions
 
-- Vocabulary: Chris's "echo in" and "more bass range" matched no source; what did he mean? Whether the brake
+- Vocabulary: Christopher's "echo in" and "more bass range" matched no source; what did he mean? Whether the brake
   versus hard-cut split goes into `score.py` or only into the labels.
 
 - YouTube: the deeper look at sites that carry YouTube data and at mapping services (track B addendum).
-- Profiles: one per style, as proposed in 5.6, or something simpler (Chris).
+- Profiles: one per style, as proposed in 5.6, or something simpler (Christopher).
 - The vocabulary dictionary (track E) and the Reddit pass (track F, run by Codex).
 
 - Music Understanding accuracy, confidence and timings (stage 1a).
@@ -273,7 +273,7 @@ later. Android and Windows: not planned.
 - The renderer for onboarding A/B joins: Mac only, or an on-device port.
 - Chromaprint on iOS (LGPL 2.1 static linking); the MetaBrainz tier for a per-user client app.
 - Whether anyone but Mike uses the pitch readout; the 2026 off-laptop share.
-- Final bundle id under App Hold Media (Chris).
+- Final bundle id under App Hold Media (Christopher).
 - Deckie trademark: attorney review of DECKEE; deckie.dj registrar availability (still unconfirmed at the registry).
 - Done: the community pass (Codex, `docs/research/codex-community.md`). Still open from it: acceptable recognition
   delay and error, vinyl-library preparation effort, live attention cost, willingness to pay, use beyond a novelty

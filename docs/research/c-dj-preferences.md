@@ -210,9 +210,9 @@ The right-hand values are starting points **[inf]**; they need the measure-then-
 
 **The sample is thin but real.** Two "final mix" files from the web page (Oct 23 and 24,
 `pool/newfiles/mike_final_mix_*.txt`): his ON lists per disc (Oct 24: 52 singalongs on CD1, 54 mix-ins on CD2),
-toggles against Chris's picks (46 changes, then 41), one note ("Extended dance remixes"), STARRED "(none)", CHAINS
+toggles against Christopher's picks (46 changes, then 41), one note ("Extended dance remixes"), STARRED "(none)", CHAINS
 "(none)"; `mike_chains.json` was never produced. Plus the verbatim feedback in `BRIEF.md` section 7 and the live
-session on Oct 24. No recorded set has been analysed, so dimensions 6 to 11 rest on what he said and what Chris saw.
+session on Oct 24. No recorded set has been analysed, so dimensions 6 to 11 rest on what he said and what Christopher saw.
 
 **What the sample says.** CD2 (mix-ins) is 70 percent remixes, edits and extended versions, median 126.5 BPM, 43 of 54
 tracks between 120 and 134; CD1 is 55 percent remixes, median 124, spread 81 to 155, with 20 Halloween records. On Oct

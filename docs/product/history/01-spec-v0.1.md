@@ -66,7 +66,7 @@ and the user's content is theirs.
 - Stage 1, one to two weeks: research sprint, tracks A to D. Output: spec v0.2 with decisions on the analysis engine
   per platform, crate file v1, identification sources, the preference framework and positioning.
 - Stage 2: crate file and Mac analyser. Point the mixer at any folder and get a crate file; the iPad reads the crate
-  file instead of bundled data; the catalogue is built from the user's files. Chris's crate is test fixture number one.
+  file instead of bundled data; the catalogue is built from the user's files. Christopher's crate is test fixture number one.
 - Stage 3: on device. iOS subset of the analysis; on-device signatures; onboarding; the sliders.
 - Stage 4: trial. TestFlight with five to ten DJs. Pass marks from the competitive analysis: identification within
   15 seconds on at least 85 percent of songs; at least one pick taken per three songs; six of ten use it at two or
@@ -78,7 +78,7 @@ and the user's content is theirs.
 - YouTube as a lookup source: what the Terms of Service allow (RESEARCH B).
 - Signatures in the crate file or regenerated per device (RESEARCH A).
 - One app for iPhone and iPad, or iPad-first with an iPhone recorder (RESEARCH A and D).
-- Final bundle id under App Hold Media (Chris).
+- Final bundle id under App Hold Media (Christopher).
 - Deckie trademark clearance and the DECKEE conflict (`docs/naming/`).
 
 ## 9. Not doing

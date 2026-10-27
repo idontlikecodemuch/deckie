@@ -217,7 +217,7 @@ plus a second-tap flavour row for the cut family.
 Mapping notes: a blend tile sets the blend-length bucket directly (under 2, 8, 16, 32); any cut or effect tile raises
 the cut share and keeps `brake_cut` in `moves[]`; "Vinyl brake" or "Backspin" marks a stop-style exit so the renderer
 rotates them in; "Chop" marks the alternating style the recogniser cannot yet see; "Filter fade" and "Echo out"
-distinguish the two exits `transition()` chooses between at line 193 of `score.py`. Chris's examples map as: "fade
+distinguish the two exits `transition()` chooses between at line 193 of `score.py`. Christopher's examples map as: "fade
 mix" to Blend, "hard break" to Hard cut, "echo in" to Echo out or Tease (ask), "scratch" to the scratch-in flavour,
 "more bass range" **[inf]** to the pitch-range popup "Widen the range".
 
@@ -230,9 +230,9 @@ mix" to Blend, "hard break" to Hard cut, "echo in" to Echo out or Tease (ask), "
 2. **Reddit** was unreachable here; the forum usage above is DJ TechTools, NI community, dnbforum, TranceAddict and
    VirtualDJ. Track F covers Reddit.
 3. **Two tiles or one for brake_cut.** The recommendation splits it into Hard cut and Vinyl brake; the scorer today
-   emits one code. Chris decides whether the split goes into `score.py` or only into the labels.
+   emits one code. Christopher decides whether the split goes into `score.py` or only into the labels.
 4. **Hip-hop "blend".** If Mike's circle uses "blend" for acapella-over-beat, test the bar-count suffix with him.
-5. **"Echo in" and "more bass range"** are Chris's words with no source match; ask what he hears in them.
+5. **"Echo in" and "more bass range"** are Christopher's words with no source match; ask what he hears in them.
 6. **Serato's own manual wording** could not be fetched (support site refuses); the ±8/±16/±50 figures come from the
    Rane ONE manual and a Serato support snippet [31][30]. Traktor's current range list is a user report [34].
 7. **Gear-specific words.** Whether to say "Master tempo" to a CDJ DJ and "Keylock" to a Serato DJ, from the gear

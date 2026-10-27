@@ -1,6 +1,6 @@
 # Deckie: decision log
 
-Decisions Chris made, in order, with the reasoning and what each one rules out. New decisions are appended with
+Decisions Christopher made, in order, with the reasoning and what each one rules out. New decisions are appended with
 their date. The spec (`01-spec.md`) restates these as requirements; the research plan (`02-research-plan.md`) lists
 what we do not know yet. Standing principles from the sprint are at the end.
 
@@ -28,7 +28,7 @@ free. Decide it under the LLC before the first TestFlight upload; after the reco
   sites where DJs keep their sets. Obscure mixes, edits, bootlegs and live sets are first-class, not edge cases.
 - Identification is best-effort mapping of the user's files to public metadata. Reading public metadata to map a
   file is not model training on the user's content.
-- YouTube: Chris raised using YouTube as a public reference for mapping, since most songs are there and public.
+- YouTube: Christopher raised using YouTube as a public reference for mapping, since most songs are there and public.
   Open question, scoped in research track B: what YouTube's Terms of Service allow from an app on iOS or macOS.
   The official Data API allows metadata search within quota; scraping, crawling and audio download are prohibited.
   The answer decides whether YouTube is a lookup source or off the table.
@@ -52,7 +52,7 @@ free. Decide it under the LLC before the first TestFlight upload; after the reco
   track. The spec must state goal, use, value, differentiator, for whom and why.
 
 ### D9. Name: Deckie (decided earlier on Oct 26)
-Folders, the Xcode target and the bundle id keep "deck" until Chris says to rename. The deep report is
+Folders, the Xcode target and the bundle id keep "deck" until Christopher says to rename. The deep report is
 `docs/naming/05-deckie.md`. Its finding: DECKEE (Deckee Pty Ltd, a boating-safety app, pronounced the same) is
 registered for class 9 software in the US (Reg. 6993660, narrow boating goods), the EU, UK, NZ and Canada
 (IR 1605323, broad "computer software, downloadable software (apps)") and Australia (2119248, 2119251). Cheap buys
@@ -74,14 +74,14 @@ trademark attorney reviews DECKEE: deckie.com, any filing, any public launch.
 - Do not over-engineer; every round that removed something was welcomed.
 
 ### D11. Build natively on Apple's Music Understanding framework, with graceful fallbacks (accepted later on Oct 26)
-Chris accepted P1 ("let's build natively for that and create some graceful fallbacks"). One Swift engine on
+Christopher accepted P1 ("let's build natively for that and create some graceful fallbacks"). One Swift engine on
 iPhone, iPad and Mac; the Python stack becomes the lab and does not ship. The fallback is designed in, not bolted
 on: a device below OS 27 consumes a crate analysed elsewhere; one that must analyse alone runs a reduced engine and
 marks its tracks for re-analysis; the app always says which level it is on. Spec 5.1. Supersedes the hard OS 27
 floor in P3.
 
 ### D12. Tuning speaks the DJ's language and starts from a song chain (Oct 26)
-Chris: tuning "should be more intuitive. Make a song chain and say how you'd mix it", with in-app popups in the
+Christopher: tuning "should be more intuitive. Make a song chain and say how you'd mix it", with in-app popups in the
 style of a rhythm-game prompt ("fade mix", "hard break", "echo in", "scratch"), and a researched dictionary so the
 app uses the words DJs actually use. Research track E produces the dictionary; every label, popup and slider uses
 it; the onboarding chain replaces sliders as the first elicitation. Also accepted as tuning inputs: upload one of
@@ -93,14 +93,14 @@ to history, cues, saved pairs and learned preferences: all of it stays with the 
 learning (only the DJ), and the DJ can see, export and delete it. Spec 3.
 
 ### Note on D5 (Oct 26): Mike's data is a special case
-Mike's party set was curated by Chris and held music Mike does not usually play, so the sprint's data describes a
+Mike's party set was curated by Christopher and held music Mike does not usually play, so the sprint's data describes a
 DJ with an unfamiliar crate, and his 16 percent pitch range is not typical. That is itself a use case (new DJs, a
-themed party, a new toy). Chris will supply a recording of the set Mike actually played as the real reference.
+themed party, a new toy). Christopher will supply a recording of the set Mike actually played as the real reference.
 
-## Proposed on Oct 26, 2026, from the research (awaiting Chris)
+## Proposed on Oct 26, 2026, from the research (awaiting Christopher)
 
 Each of these follows from a research report and is written into spec v0.2 as "proposed". None is decided until
-Chris says so; a yes moves it up into the dated decisions above.
+Christopher says so; a yes moves it up into the dated decisions above.
 
 - **P1. Accepted as D11.**
 - **P2. YouTube is not a source for automated mapping; user-shared links may be resolved and shown, never stored.**
@@ -108,7 +108,7 @@ Chris says so; a yes moves it up into the dated decisions above.
   link-holding databases. Only API clients, link holders and the user's own link survive the terms. MusicBrainz's
   CC0 URL relationships are the legitimate holder of YouTube links per recording.
 - **P3. Superseded by D11:** no hard OS 27 floor; graceful fallback levels instead. The iPad Air 4 check stands.
-- **P4. Regenerate Chris's crate with the shipped engine before any TestFlight build.** The current features were
+- **P4. Regenerate Christopher's crate with the shipped engine before any TestFlight build.** The current features were
   produced with non-commercial models. Track A (not legal advice).
 - **P5. Primary segment: DJs playing open-format on gear that does not know what is loaded.** Narrower than
   "mobile and wedding". Track D.
@@ -119,10 +119,10 @@ Chris says so; a yes moves it up into the dated decisions above.
 - **P8. Store name "Deckie: DJ Booth Companion", category Music; "Data Not Collected" only if true.** Track D.
 - **Open, not proposed:** pricing (track D leans one-time, $39 to $59); the onboarding renderer on device or Mac
   only; an iPhone-only set-recorder SKU.
-- **P9. Profiles: one crate, several named preference sets, one active per gig.** Chris asked whether multiple
+- **P9. Profiles: one crate, several named preference sets, one active per gig.** Christopher asked whether multiple
   styles mean profiles. Lean: yes, but start with one and never make a new user choose; a new profile is a copy, a
   set upload, or a fresh onboarding chain. Spec 5.6.
-- **P10. Identity is self-contained; public lookup is an optional helper, never applied automatically.** Chris:
+- **P10. Identity is self-contained; public lookup is an optional helper, never applied automatically.** Christopher:
   MusicBrainz and Discogs were inaccurate in the sprint, so the DJ edits anyway; can Deckie fingerprint from its own
   analysis and take names from tags? Lean: yes. Content hash plus ShazamKit signature plus an analysis descriptor for
   versions; names from tags with an editor; edits in the crate file. Public data only suggests corrections. The

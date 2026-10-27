@@ -2,7 +2,7 @@
 
 Dated Oct 26, 2026. Supersedes v0.1 (`history/01-spec-v0.1.md`). What changed: the four research reports in
 `docs/research/` are folded in, so the sections that were marked RESEARCH now have content. Everything that is new
-and would change the product is listed as a proposed decision in `00-decisions.md` and waits for Chris. Items marked
+and would change the product is listed as a proposed decision in `00-decisions.md` and waits for Christopher. Items marked
 [measure] need an experiment before they are relied on; the experiments are in section 7, stage 1.
 
 ## 1. Goal
@@ -74,7 +74,7 @@ A Swift package, working name DeckieAnalysis, runs the same analysis on iPhone, 
 
 The Python stack in `mixer/` becomes the lab: ground truth for the 373 analysed tracks and the place to try models.
 It does not ship. The madmom models and the Essentia models are licensed non-commercial and Essentia is AGPL
-(track A, section 4). Chris's crate must be regenerated with the shipped engine before it is a TestFlight fixture.
+(track A, section 4). Christopher's crate must be regenerated with the shipped engine before it is a TestFlight fixture.
 
 OS floor: iOS, iPadOS and macOS 27. Some 2018 to 2022 iPads are dropped; check the iPad Air 4 [measure]. The crate
 file mitigates it: any OS 27 device analyses, any device consumes. A fallback engine for older devices exists on
@@ -161,11 +161,11 @@ later. Android and Windows: not planned.
   against the Python features: beat and downbeat F-measure, key agreement, vocal-timeline correlation, section
   boundaries. Needs macOS 27 or an iOS 27 device; this Mac is on 26. (b) ShazamKit on device: signature time per
   track on an iPhone, memory at a few thousand signatures, and a pitch sweep with `catalogtool bench` including
-  tempo-only variants. (c) Does the iPad Air 4 run iPadOS 27. (d) Regenerate Chris's crate with the new engine once
+  tempo-only variants. (c) Does the iPad Air 4 run iPadOS 27. (d) Regenerate Christopher's crate with the new engine once
   (a) passes.
 - Stage 2: DeckieAnalysis on the Mac and crate file v1. Point it at any folder and get a crate file; the identification
   pipeline; the iPad reads the crate file instead of bundled data; the catalogue is built from the user's files.
-  Chris's crate is test fixture number one.
+  Christopher's crate is test fixture number one.
 - Stage 3: on device. The engine on iPad and iPhone; on-device signatures; onboarding; the sliders; the learning loop.
 - Stage 4: trial. TestFlight with five to ten DJs from the primary segment. Pass marks: identification within 15 s on
   at least 85 percent of songs; at least one pick taken per three songs; six of ten use it at two or more gigs.
@@ -194,7 +194,7 @@ later. Android and Windows: not planned.
 - The renderer for onboarding A/B joins: Mac only, or an on-device port.
 - Chromaprint on iOS (LGPL 2.1 static linking); the MetaBrainz tier for a per-user client app.
 - Whether anyone but Mike uses the pitch readout; the 2026 off-laptop share.
-- Final bundle id under App Hold Media (Chris).
+- Final bundle id under App Hold Media (Christopher).
 - Deckie trademark: attorney review of DECKEE; deckie.dj registrar availability (still unconfirmed at the registry).
 - A human pass on r/DJs, r/Beatmatch and the DJ Discords; the tools could not reach Reddit.
 

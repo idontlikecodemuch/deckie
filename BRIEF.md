@@ -21,7 +21,7 @@ through a microphone and none tells the DJ how to do the join; the auto-mix slic
 
 ## 2. The people and the history
 
-- **Chris Shannon** (owner, c@christophershannon.io): built all of this with Claude Code agents over Oct 17-25,
+- **Christopher Shannon** (owner, c@christophershannon.io): built all of this with Claude Code agents over Oct 17-25,
   2026, for his friend's Halloween party on Oct 24. He has a paid Apple developer account (team 566NNM5HT8, App Hold
   Media LLC), a Bluehost site (christophershannon.io, behind Cloudflare) and an iPad Air (4th gen) that ran the app
   at the party. He is design-literate and direct: "don't over-engineer", "simplify", "options not verdicts",
@@ -177,7 +177,7 @@ Pending or weak:
    fade"; later "much better... still a little safe; lulls between songs; bring beats from one song into the other
    staccato-ly; add human-driven random variance; document everything"; "more dance and remix-y, with a few
    downbeat or hard pop callouts; more disco house; two CDs continuous; then one CD, mixed into each other".
-   All of Chris's individually downloaded remixes/edits are favourites and should be represented.
+   All of Christopher's individually downloaded remixes/edits are favourites and should be represented.
 
 ## 8. Principles that held up
 
@@ -194,13 +194,11 @@ Pending or weak:
 
 ## 9. How to run things here
 
-- Point the data at a music folder: `candidates.json` and `pool.json` carry absolute `path` values for the original
-  folder. To work elsewhere, either keep that folder path (symlink `/Users/christophershannon/personal/90s2000
-  playlist`) or rewrite the `path` fields and re-run `build_candidates.py` (which also expects `pool/newfiles/pool.json`
-  one level up from `mixer/`: the scripts use relative paths `../newfiles/...` from the mixer folder and
-  `../../Mike page/...` for the web player; in this layout those map to `pool/newfiles` and `web-player`, so
-  adjust the constants at the top of `build_candidates.py`, `add_mix_to_data.py`, `mixwaves.py`, `build_mixmap.py`,
-  `build_print.py` and `build_two_discs.py`, or recreate the original layout).
+- Point the data at a music folder (updated Oct 26, evening): the scripts now find the repo's own files by their
+  location and the audio through `DECKIE_MUSIC_ROOT` (default: the original folder on Christopher's Mac). `pool.json`
+  paths are relative to that root; `candidates.json` and the feature files carry absolute paths and are rebuilt by
+  `build_candidates.py`. Disc outputs and the phone page's hard-linked tracks are written beside the audio. See the
+  root `README.md`.
 - Analysis for new tracks: `add_tracks.py <folder>` then `analyze.py --ids ...`, `local_tempo.py`, `score.py`.
 - Web player data: `pool/newfiles/mike_data.py` then `mixer/add_mix_to_data.py`; upload with `ftp_upload_mike.py
   --env <path to .env> --local-dir <staging> --remote-dir auto`.

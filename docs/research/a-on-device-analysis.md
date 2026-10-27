@@ -49,7 +49,7 @@ notarisation pain. Section 4 has the detail.
    matches fail "if the frequency skew is too large" and that under 5 percent "should be safe", which suggests
    the +/-4 variants may be partly redundant. Measure before designing around them.
 
-A fourth, legal rather than technical: Chris's 373-track crate was analysed with NonCommercial models. Regenerate
+A fourth, legal rather than technical: Christopher's 373-track crate was analysed with NonCommercial models. Regenerate
 it with the shipped engine before it becomes a fixture in any TestFlight build *[inference; not legal advice]*.
 
 **Crate file decision.** A package directory (`<name>.deckiecrate`), not a single JSON: a small `crate.json`
@@ -157,7 +157,7 @@ A package directory, `<Name>.deckiecrate`, declared as an exported UTType confor
 for open-in-place from Files.
 
 ```
-Chris.deckiecrate/
+Christopher.deckiecrate/
   manifest.json          schema, crate id, name, created, devices seen, engine versions used
   crate.json             tracks: identification + analysis summary (one record per track, see below)
   bars/<trackid>.bin     per-bar series, float16: lufs, low_db, high_db, onset_density, vocal, drum, bass, other
