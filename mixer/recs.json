@@ -1226,22 +1226,6 @@
      "camelot_b": "1A"
     },
     {
-     "id": "9c20f328b8",
-     "title": "DJ Dado - X-Files",
-     "score": 0.7192,
-     "reasons": [
-      "B has a clean 16-bar intro",
-      "same style",
-      "16-bar phrases both sides",
-      "different groove (r=0.00)"
-     ],
-     "suggested_transition": "ramped_blend",
-     "stretch_pct": 9.41,
-     "multiplier": "1",
-     "camelot_a": "1A",
-     "camelot_b": "8A"
-    },
-    {
      "id": "fc58560f11",
      "title": "Madonna - Vogue",
      "score": 0.7192,
@@ -1258,6 +1242,22 @@
      "multiplier": "4/3",
      "camelot_a": "1A",
      "camelot_b": "1A"
+    },
+    {
+     "id": "9c20f328b8",
+     "title": "DJ Dado - X-Files",
+     "score": 0.7192,
+     "reasons": [
+      "B has a clean 16-bar intro",
+      "same style",
+      "16-bar phrases both sides",
+      "different groove (r=0.00)"
+     ],
+     "suggested_transition": "ramped_blend",
+     "stretch_pct": 9.41,
+     "multiplier": "1",
+     "camelot_a": "1A",
+     "camelot_b": "8A"
     },
     {
      "id": "fb5e2fb59f",
@@ -2925,25 +2925,6 @@
      "camelot_b": "3A"
     },
     {
-     "id": "58a945ccc1",
-     "title": "Sisqo - Thong Song Colin Jay Remix (Dirty)",
-     "score": 0.64,
-     "reasons": [
-      "B enters -2.2 LU quieter",
-      "related style",
-      "12A -> 12A",
-      "tempo change x3/4 (104 -> 124): transition track or brake, no blend",
-      "8-bar window (short of a 16-bar phrase)",
-      "groove not comparable at x3/4",
-      "longer cut"
-     ],
-     "suggested_transition": "brake_cut",
-     "stretch_pct": 10.58,
-     "multiplier": "3/4",
-     "camelot_a": "12A",
-     "camelot_b": "12A"
-    },
-    {
      "id": "28cfd6b844",
      "title": "Riton x Nightcrawlers - Friday (Dopamine Re-Edit) Extended",
      "score": 0.64,
@@ -2961,6 +2942,25 @@
      "multiplier": "3/4",
      "camelot_a": "12A",
      "camelot_b": "11A"
+    },
+    {
+     "id": "58a945ccc1",
+     "title": "Sisqo - Thong Song Colin Jay Remix (Dirty)",
+     "score": 0.64,
+     "reasons": [
+      "B enters -2.2 LU quieter",
+      "related style",
+      "12A -> 12A",
+      "tempo change x3/4 (104 -> 124): transition track or brake, no blend",
+      "8-bar window (short of a 16-bar phrase)",
+      "groove not comparable at x3/4",
+      "longer cut"
+     ],
+     "suggested_transition": "brake_cut",
+     "stretch_pct": 10.58,
+     "multiplier": "3/4",
+     "camelot_a": "12A",
+     "camelot_b": "12A"
     },
     {
      "id": "c246e54bb7",
@@ -5819,25 +5819,6 @@
      "camelot_b": "5A"
     },
     {
-     "id": "aed6b25f60",
-     "title": "Kyle Dixon & Michael Stein - Stranger Things Theme Kwest Halloween Remix",
-     "score": 0.6469,
-     "reasons": [
-      "B has a clean 16-bar intro",
-      "16-bar phrases both sides",
-      "B enters -2.9 LU quieter",
-      "tempo change x3/4 (93 -> 128): transition track or brake, no blend",
-      "different sound (closer than only 16% of pairs)",
-      "groove not comparable at x3/4",
-      "longer cut"
-     ],
-     "suggested_transition": "brake_cut",
-     "stretch_pct": 3.22,
-     "multiplier": "3/4",
-     "camelot_a": "5A",
-     "camelot_b": "9A"
-    },
-    {
      "id": "df902aeaec",
      "title": "Swedish House Mafia - Don't You Worry Child",
      "score": 0.6469,
@@ -5855,6 +5836,25 @@
      "multiplier": "3/4",
      "camelot_a": "5A",
      "camelot_b": "10B"
+    },
+    {
+     "id": "aed6b25f60",
+     "title": "Kyle Dixon & Michael Stein - Stranger Things Theme Kwest Halloween Remix",
+     "score": 0.6469,
+     "reasons": [
+      "B has a clean 16-bar intro",
+      "16-bar phrases both sides",
+      "B enters -2.9 LU quieter",
+      "tempo change x3/4 (93 -> 128): transition track or brake, no blend",
+      "different sound (closer than only 16% of pairs)",
+      "groove not comparable at x3/4",
+      "longer cut"
+     ],
+     "suggested_transition": "brake_cut",
+     "stretch_pct": 3.22,
+     "multiplier": "3/4",
+     "camelot_a": "5A",
+     "camelot_b": "9A"
     },
     {
      "id": "64cfcb19f3",
@@ -7305,8 +7305,8 @@
      "camelot_b": "12A"
     },
     {
-     "id": "9ebf0221c3",
-     "title": "Yeah Yeah Yeahs - Heads Will Roll",
+     "id": "30a2efa137",
+     "title": "Yeah Yeah Yeahs - Heads Will Roll (A-Trak Remix)",
      "score": 0.7043,
      "reasons": [
       "B enters -2.4 LU quieter",
@@ -7323,8 +7323,8 @@
      "camelot_b": "1A"
     },
     {
-     "id": "30a2efa137",
-     "title": "Yeah Yeah Yeahs - Heads Will Roll (A-Trak Remix)",
+     "id": "9ebf0221c3",
+     "title": "Yeah Yeah Yeahs - Heads Will Roll",
      "score": 0.7043,
      "reasons": [
       "B enters -2.4 LU quieter",
@@ -10979,23 +10979,6 @@
      "camelot_b": "8A"
     },
     {
-     "id": "76878a6a74",
-     "title": "Dom Dolla & Tiga - Don't Worry Baby Extended Mix",
-     "score": 0.8282,
-     "reasons": [
-      "-1.5% stretch on B (130.0 end -> 132.0 start)",
-      "B enters -2.2 LU quieter",
-      "16-bar phrases both sides",
-      "different groove (r=0.25)",
-      "longer cut"
-     ],
-     "suggested_transition": "bass_swap_8",
-     "stretch_pct": 1.53,
-     "multiplier": "1",
-     "camelot_a": "1B",
-     "camelot_b": "6A"
-    },
-    {
      "id": "414431e58b",
      "title": "LF System - Afraid To Feel Extended",
      "score": 0.8282,
@@ -11011,6 +10994,23 @@
      "multiplier": "1",
      "camelot_a": "1B",
      "camelot_b": "1A"
+    },
+    {
+     "id": "76878a6a74",
+     "title": "Dom Dolla & Tiga - Don't Worry Baby Extended Mix",
+     "score": 0.8282,
+     "reasons": [
+      "-1.5% stretch on B (130.0 end -> 132.0 start)",
+      "B enters -2.2 LU quieter",
+      "16-bar phrases both sides",
+      "different groove (r=0.25)",
+      "longer cut"
+     ],
+     "suggested_transition": "bass_swap_8",
+     "stretch_pct": 1.53,
+     "multiplier": "1",
+     "camelot_a": "1B",
+     "camelot_b": "6A"
     },
     {
      "id": "9b81bc4b78",
@@ -11303,21 +11303,21 @@
      "camelot_b": "11A"
     },
     {
-     "id": "76878a6a74",
-     "title": "Dom Dolla & Tiga - Don't Worry Baby Extended Mix",
+     "id": "414431e58b",
+     "title": "LF System - Afraid To Feel Extended",
      "score": 0.8282,
      "reasons": [
-      "-1.5% stretch on B (130.0 end -> 132.0 start)",
-      "B enters -2.2 LU quieter",
-      "16-bar phrases both sides",
-      "different groove (r=0.25)",
+      "+1.5% stretch on B (130.0 end -> 128.0 start)",
+      "energy steady (-1.0 LU)",
+      "similar sound (closer than 90% of pairs)",
+      "vocals overlap 14 of 16 bars",
       "longer cut"
      ],
-     "suggested_transition": "bass_swap_8",
-     "stretch_pct": 1.53,
+     "suggested_transition": "quick_blend_echo",
+     "stretch_pct": 1.54,
      "multiplier": "1",
      "camelot_a": "1B",
-     "camelot_b": "6A"
+     "camelot_b": "1A"
     }
    ],
    "in": [
@@ -11939,8 +11939,8 @@
      "camelot_b": "2A"
     },
     {
-     "id": "9ebf0221c3",
-     "title": "Yeah Yeah Yeahs - Heads Will Roll",
+     "id": "30a2efa137",
+     "title": "Yeah Yeah Yeahs - Heads Will Roll (A-Trak Remix)",
      "score": 0.8471,
      "reasons": [
       "+0.6% stretch on B (132.0 end -> 131.3 start)",
@@ -11956,8 +11956,8 @@
      "camelot_b": "2A"
     },
     {
-     "id": "30a2efa137",
-     "title": "Yeah Yeah Yeahs - Heads Will Roll (A-Trak Remix)",
+     "id": "9ebf0221c3",
+     "title": "Yeah Yeah Yeahs - Heads Will Roll",
      "score": 0.8471,
      "reasons": [
       "+0.6% stretch on B (132.0 end -> 131.3 start)",
@@ -12970,8 +12970,8 @@
      "camelot_b": "9A"
     },
     {
-     "id": "9ebf0221c3",
-     "title": "Yeah Yeah Yeahs - Heads Will Roll",
+     "id": "30a2efa137",
+     "title": "Yeah Yeah Yeahs - Heads Will Roll (A-Trak Remix)",
      "score": 0.8019,
      "reasons": [
       "-3.7% stretch on B (127.3 end -> 132.0 start)",
@@ -12988,8 +12988,8 @@
      "camelot_b": "1A"
     },
     {
-     "id": "30a2efa137",
-     "title": "Yeah Yeah Yeahs - Heads Will Roll (A-Trak Remix)",
+     "id": "9ebf0221c3",
+     "title": "Yeah Yeah Yeahs - Heads Will Roll",
      "score": 0.8019,
      "reasons": [
       "-3.7% stretch on B (127.3 end -> 132.0 start)",
@@ -14597,8 +14597,8 @@
   "pool": {
    "out": [
     {
-     "id": "9ebf0221c3",
-     "title": "Yeah Yeah Yeahs - Heads Will Roll",
+     "id": "30a2efa137",
+     "title": "Yeah Yeah Yeahs - Heads Will Roll (A-Trak Remix)",
      "score": 0.7809,
      "reasons": [
       "+0.7% stretch on B (133.0 end -> 132.0 start)",
@@ -14614,8 +14614,8 @@
      "camelot_b": "1A"
     },
     {
-     "id": "30a2efa137",
-     "title": "Yeah Yeah Yeahs - Heads Will Roll (A-Trak Remix)",
+     "id": "9ebf0221c3",
+     "title": "Yeah Yeah Yeahs - Heads Will Roll",
      "score": 0.7809,
      "reasons": [
       "+0.7% stretch on B (133.0 end -> 132.0 start)",
@@ -14840,8 +14840,8 @@
      "camelot_b": "5A"
     },
     {
-     "id": "9ebf0221c3",
-     "title": "Yeah Yeah Yeahs - Heads Will Roll",
+     "id": "30a2efa137",
+     "title": "Yeah Yeah Yeahs - Heads Will Roll (A-Trak Remix)",
      "score": 0.7904,
      "reasons": [
       "-0.7% stretch on B (132.0 end -> 133.0 start)",
@@ -14857,8 +14857,8 @@
      "camelot_b": "5A"
     },
     {
-     "id": "30a2efa137",
-     "title": "Yeah Yeah Yeahs - Heads Will Roll (A-Trak Remix)",
+     "id": "9ebf0221c3",
+     "title": "Yeah Yeah Yeahs - Heads Will Roll",
      "score": 0.7904,
      "reasons": [
       "-0.7% stretch on B (132.0 end -> 133.0 start)",
@@ -15870,8 +15870,8 @@
      "camelot_b": "7A"
     },
     {
-     "id": "9ebf0221c3",
-     "title": "Yeah Yeah Yeahs - Heads Will Roll",
+     "id": "30a2efa137",
+     "title": "Yeah Yeah Yeahs - Heads Will Roll (A-Trak Remix)",
      "score": 0.7964,
      "reasons": [
       "-2.6% stretch on B (128.7 end -> 132.0 start)",
@@ -16595,23 +16595,6 @@
   "disc": {
    "out": [
     {
-     "id": "64cfcb19f3",
-     "title": "Bette Midler - I Put A Spell On You Thee Werqn' Btches Club Mix (Joel Dickinson)",
-     "score": 0.9217,
-     "reasons": [
-      "same tempo (128.0 BPM at A's end)",
-      "energy steady (-0.0 LU)",
-      "similar sound (closer than 98% of pairs)",
-      "different groove (r=0.00)",
-      "longer cut"
-     ],
-     "suggested_transition": "bass_swap_16",
-     "stretch_pct": 0.02,
-     "multiplier": "1",
-     "camelot_a": "3A",
-     "camelot_b": "4A"
-    },
-    {
      "id": "df902aeaec",
      "title": "Swedish House Mafia - Don't You Worry Child",
      "score": 0.9217,
@@ -16627,6 +16610,23 @@
      "multiplier": "1",
      "camelot_a": "3A",
      "camelot_b": "10B"
+    },
+    {
+     "id": "64cfcb19f3",
+     "title": "Bette Midler - I Put A Spell On You Thee Werqn' Btches Club Mix (Joel Dickinson)",
+     "score": 0.9217,
+     "reasons": [
+      "same tempo (128.0 BPM at A's end)",
+      "energy steady (-0.0 LU)",
+      "similar sound (closer than 98% of pairs)",
+      "different groove (r=0.00)",
+      "longer cut"
+     ],
+     "suggested_transition": "bass_swap_16",
+     "stretch_pct": 0.02,
+     "multiplier": "1",
+     "camelot_a": "3A",
+     "camelot_b": "4A"
     },
     {
      "id": "aed6b25f60",
@@ -18393,20 +18393,21 @@
      "camelot_b": "3A"
     },
     {
-     "id": "59b14556e8",
-     "title": "Lana Del Rey vs Cedric Gervais - Summertime Sadness (Remix) Cedric Gervais Extended Remix",
+     "id": "30a2efa137",
+     "title": "Yeah Yeah Yeahs - Heads Will Roll (A-Trak Remix)",
      "score": 0.8577,
      "reasons": [
-      "+1.6% stretch on B (128.0 end -> 126.0 start)",
-      "16-bar phrases both sides",
-      "similar sound (closer than 100% of pairs)",
+      "same style",
+      "-3.1% stretch on B (128.0 end -> 132.0 start)",
+      "similar sound (closer than 98% of pairs)",
+      "10-bar window (short of a 16-bar phrase)",
       "longer cut"
      ],
-     "suggested_transition": "bass_swap_16",
-     "stretch_pct": 1.56,
+     "suggested_transition": "bass_swap_8",
+     "stretch_pct": 3.12,
      "multiplier": "1",
      "camelot_a": "10A",
-     "camelot_b": "12A"
+     "camelot_b": "1A"
     }
    ],
    "in": [
@@ -18731,8 +18732,8 @@
      "camelot_b": "10A"
     },
     {
-     "id": "9ebf0221c3",
-     "title": "Yeah Yeah Yeahs - Heads Will Roll",
+     "id": "30a2efa137",
+     "title": "Yeah Yeah Yeahs - Heads Will Roll (A-Trak Remix)",
      "score": 0.9429,
      "reasons": [
       "energy steady (+0.1 LU)",
@@ -18747,8 +18748,8 @@
      "camelot_b": "10A"
     },
     {
-     "id": "30a2efa137",
-     "title": "Yeah Yeah Yeahs - Heads Will Roll (A-Trak Remix)",
+     "id": "9ebf0221c3",
+     "title": "Yeah Yeah Yeahs - Heads Will Roll",
      "score": 0.9429,
      "reasons": [
       "energy steady (+0.1 LU)",
@@ -19669,19 +19670,21 @@
      "camelot_b": "3A"
     },
     {
-     "id": "568f687566",
-     "title": "Cher - Believe Disco Dom Remix",
+     "id": "6478f7d1bd",
+     "title": "Sonique - It Feels So Good Extended Mix 1998",
      "score": 0.7716,
      "reasons": [
-      "energy steady (+0.2 LU)",
-      "same style",
-      "16-bar phrases both sides",
+      "energy steady (-1.7 LU)",
+      "similar sound (closer than 89% of pairs)",
+      "-4.5% stretch on B (135.0 end -> 141.1 start)",
+      "no steady beat at A's end (echo out, cut B in on its downbeat)",
+      "different groove (r=0.03)",
       "longer cut"
      ],
-     "suggested_transition": "ramped_blend",
-     "stretch_pct": 9.37,
+     "suggested_transition": "quick_blend_echo",
+     "stretch_pct": 4.49,
      "multiplier": "1",
-     "camelot_a": "9A",
+     "camelot_a": "11A",
      "camelot_b": "3A"
     }
    ]
@@ -22578,8 +22581,8 @@
      "camelot_b": "5A"
     },
     {
-     "id": "9ebf0221c3",
-     "title": "Yeah Yeah Yeahs - Heads Will Roll",
+     "id": "30a2efa137",
+     "title": "Yeah Yeah Yeahs - Heads Will Roll (A-Trak Remix)",
      "score": 0.6939,
      "reasons": [
       "2A -> 1A (-1 (fifth))",
@@ -22596,8 +22599,8 @@
      "camelot_b": "1A"
     },
     {
-     "id": "30a2efa137",
-     "title": "Yeah Yeah Yeahs - Heads Will Roll (A-Trak Remix)",
+     "id": "9ebf0221c3",
+     "title": "Yeah Yeah Yeahs - Heads Will Roll",
      "score": 0.6939,
      "reasons": [
       "2A -> 1A (-1 (fifth))",
@@ -22759,8 +22762,8 @@
      "camelot_b": "2A"
     },
     {
-     "id": "9ebf0221c3",
-     "title": "Yeah Yeah Yeahs - Heads Will Roll",
+     "id": "30a2efa137",
+     "title": "Yeah Yeah Yeahs - Heads Will Roll (A-Trak Remix)",
      "score": 0.6459,
      "reasons": [
       "energy steady (-1.4 LU)",
@@ -22778,8 +22781,8 @@
      "camelot_b": "2A"
     },
     {
-     "id": "30a2efa137",
-     "title": "Yeah Yeah Yeahs - Heads Will Roll (A-Trak Remix)",
+     "id": "9ebf0221c3",
+     "title": "Yeah Yeah Yeahs - Heads Will Roll",
      "score": 0.6459,
      "reasons": [
       "energy steady (-1.4 LU)",
@@ -23661,22 +23664,6 @@
      "camelot_b": "1B"
     },
     {
-     "id": "b6ab2ed32b",
-     "title": "Talking Heads - Psycho Killer Freejak Halloween Remix (Clean)",
-     "score": 0.8236,
-     "reasons": [
-      "-1.9% stretch on B (130.0 end -> 132.5 start)",
-      "same style",
-      "16-bar phrases both sides",
-      "different groove (r=0.14)"
-     ],
-     "suggested_transition": "bass_swap_16",
-     "stretch_pct": 1.89,
-     "multiplier": "1",
-     "camelot_a": "8A",
-     "camelot_b": "1B"
-    },
-    {
      "id": "f8b9c2903d",
      "title": "Fedde Le Grand - Put Your Hands Up For Detroit ZANS Remix",
      "score": 0.8236,
@@ -23690,6 +23677,22 @@
      "stretch_pct": 3.49,
      "multiplier": "1",
      "camelot_a": "9B",
+     "camelot_b": "1B"
+    },
+    {
+     "id": "b6ab2ed32b",
+     "title": "Talking Heads - Psycho Killer Freejak Halloween Remix (Clean)",
+     "score": 0.8236,
+     "reasons": [
+      "-1.9% stretch on B (130.0 end -> 132.5 start)",
+      "same style",
+      "16-bar phrases both sides",
+      "different groove (r=0.14)"
+     ],
+     "suggested_transition": "bass_swap_16",
+     "stretch_pct": 1.89,
+     "multiplier": "1",
+     "camelot_a": "8A",
      "camelot_b": "1B"
     },
     {
@@ -23766,8 +23769,8 @@
      "camelot_b": "10B"
     },
     {
-     "id": "9ebf0221c3",
-     "title": "Yeah Yeah Yeahs - Heads Will Roll",
+     "id": "30a2efa137",
+     "title": "Yeah Yeah Yeahs - Heads Will Roll (A-Trak Remix)",
      "score": 0.8936,
      "reasons": [
       "same tempo (132.5 BPM at A's end)",
@@ -23783,8 +23786,8 @@
      "camelot_b": "1A"
     },
     {
-     "id": "30a2efa137",
-     "title": "Yeah Yeah Yeahs - Heads Will Roll (A-Trak Remix)",
+     "id": "9ebf0221c3",
+     "title": "Yeah Yeah Yeahs - Heads Will Roll",
      "score": 0.8936,
      "reasons": [
       "same tempo (132.5 BPM at A's end)",
@@ -23882,8 +23885,8 @@
      "camelot_b": "1B"
     },
     {
-     "id": "9ebf0221c3",
-     "title": "Yeah Yeah Yeahs - Heads Will Roll",
+     "id": "30a2efa137",
+     "title": "Yeah Yeah Yeahs - Heads Will Roll (A-Trak Remix)",
      "score": 0.8577,
      "reasons": [
       "same tempo (132.0 BPM at A's end)",
@@ -23899,8 +23902,8 @@
      "camelot_b": "1B"
     },
     {
-     "id": "30a2efa137",
-     "title": "Yeah Yeah Yeahs - Heads Will Roll (A-Trak Remix)",
+     "id": "9ebf0221c3",
+     "title": "Yeah Yeah Yeahs - Heads Will Roll",
      "score": 0.8577,
      "reasons": [
       "same tempo (132.0 BPM at A's end)",
@@ -23949,22 +23952,6 @@
      "camelot_b": "1B"
     },
     {
-     "id": "b6ab2ed32b",
-     "title": "Talking Heads - Psycho Killer Freejak Halloween Remix (Clean)",
-     "score": 0.8236,
-     "reasons": [
-      "-1.9% stretch on B (130.0 end -> 132.5 start)",
-      "same style",
-      "16-bar phrases both sides",
-      "different groove (r=0.14)"
-     ],
-     "suggested_transition": "bass_swap_16",
-     "stretch_pct": 1.89,
-     "multiplier": "1",
-     "camelot_a": "8A",
-     "camelot_b": "1B"
-    },
-    {
      "id": "f8b9c2903d",
      "title": "Fedde Le Grand - Put Your Hands Up For Detroit ZANS Remix",
      "score": 0.8236,
@@ -23978,6 +23965,22 @@
      "stretch_pct": 3.49,
      "multiplier": "1",
      "camelot_a": "9B",
+     "camelot_b": "1B"
+    },
+    {
+     "id": "b6ab2ed32b",
+     "title": "Talking Heads - Psycho Killer Freejak Halloween Remix (Clean)",
+     "score": 0.8236,
+     "reasons": [
+      "-1.9% stretch on B (130.0 end -> 132.5 start)",
+      "same style",
+      "16-bar phrases both sides",
+      "different groove (r=0.14)"
+     ],
+     "suggested_transition": "bass_swap_16",
+     "stretch_pct": 1.89,
+     "multiplier": "1",
+     "camelot_a": "8A",
      "camelot_b": "1B"
     },
     {
@@ -25266,6 +25269,23 @@
      "camelot_b": "5A"
     },
     {
+     "id": "85e9c129e6",
+     "title": "Taylor Swift - Look What You Made Me Do",
+     "score": 0.6843,
+     "reasons": [
+      "+1.1% stretch on B (129.4 end -> 128.0 start)",
+      "energy steady (+1.5 LU)",
+      "similar sound (closer than 74% of pairs)",
+      "8-bar window (short of a 16-bar phrase)",
+      "different style"
+     ],
+     "suggested_transition": "bass_swap_8",
+     "stretch_pct": 1.1,
+     "multiplier": "1",
+     "camelot_a": "4A",
+     "camelot_b": "8A"
+    },
+    {
      "id": "14c795a717",
      "title": "T. Rex - Get It On Joe T. Vannelli Vocal Attack Mix",
      "score": 0.6843,
@@ -25283,23 +25303,6 @@
      "multiplier": "1",
      "camelot_a": "4A",
      "camelot_b": "3A"
-    },
-    {
-     "id": "85e9c129e6",
-     "title": "Taylor Swift - Look What You Made Me Do",
-     "score": 0.6843,
-     "reasons": [
-      "+1.1% stretch on B (129.4 end -> 128.0 start)",
-      "energy steady (+1.5 LU)",
-      "similar sound (closer than 74% of pairs)",
-      "8-bar window (short of a 16-bar phrase)",
-      "different style"
-     ],
-     "suggested_transition": "bass_swap_8",
-     "stretch_pct": 1.1,
-     "multiplier": "1",
-     "camelot_a": "4A",
-     "camelot_b": "8A"
     },
     {
      "id": "59b14556e8",
@@ -29434,6 +29437,23 @@
    ],
    "in": [
     {
+     "id": "089908ae2a",
+     "title": "Britney Spears - ...Baby One More Time Extended (fan edit)",
+     "score": 0.6903,
+     "reasons": [
+      "16-bar phrases both sides",
+      "+4.7% stretch on B (93.0 end -> 88.7 start)",
+      "B enters -4.1 LU quieter",
+      "vocals overlap 15 of 16 bars",
+      "longer cut"
+     ],
+     "suggested_transition": "quick_blend_echo",
+     "stretch_pct": 4.68,
+     "multiplier": "1",
+     "camelot_a": "5A",
+     "camelot_b": "11A"
+    },
+    {
      "id": "20992416e6",
      "title": "Richard O'Brien - Time Warp 1989 Damian Remix (extended)",
      "score": 0.6903,
@@ -29451,23 +29471,6 @@
      "stretch_pct": 0.35,
      "multiplier": "2",
      "camelot_a": "11B",
-     "camelot_b": "11A"
-    },
-    {
-     "id": "089908ae2a",
-     "title": "Britney Spears - ...Baby One More Time Extended (fan edit)",
-     "score": 0.6903,
-     "reasons": [
-      "16-bar phrases both sides",
-      "+4.7% stretch on B (93.0 end -> 88.7 start)",
-      "B enters -4.1 LU quieter",
-      "vocals overlap 15 of 16 bars",
-      "longer cut"
-     ],
-     "suggested_transition": "quick_blend_echo",
-     "stretch_pct": 4.68,
-     "multiplier": "1",
-     "camelot_a": "5A",
      "camelot_b": "11A"
     },
     {
@@ -31363,13 +31366,13 @@
      "camelot_b": "9A"
     },
     {
-     "id": "7b488e72a9",
-     "title": "Rihanna - We Found Love Calvin Harris Extended Mix",
+     "id": "414431e58b",
+     "title": "LF System - Afraid To Feel Extended",
      "score": 0.6116,
      "reasons": [
-      "energy steady (-0.2 LU)",
+      "energy steady (-1.9 LU)",
+      "no vocal clash",
       "related style",
-      "similar sound (closer than 73% of pairs)",
       "tempo change x3/4 (128 -> 164): transition track or brake, no blend",
       "8-bar window (short of a 16-bar phrase)",
       "groove not comparable at x3/4",
@@ -31378,7 +31381,7 @@
      "suggested_transition": "brake_cut",
      "stretch_pct": 4.02,
      "multiplier": "3/4",
-     "camelot_a": "2B",
+     "camelot_a": "1A",
      "camelot_b": "9A"
     }
    ]
@@ -31518,8 +31521,8 @@
      "camelot_b": "9A"
     },
     {
-     "id": "9ebf0221c3",
-     "title": "Yeah Yeah Yeahs - Heads Will Roll",
+     "id": "30a2efa137",
+     "title": "Yeah Yeah Yeahs - Heads Will Roll (A-Trak Remix)",
      "score": 0.6399,
      "reasons": [
       "B enters -2.2 LU quieter",
@@ -34463,23 +34466,6 @@
      "camelot_b": "11A"
     },
     {
-     "id": "04c326848f",
-     "title": "Eiffel 65 - Blue (Da Ba Dee)",
-     "score": 0.8583,
-     "reasons": [
-      "+1.6% stretch on B (128.0 end -> 126.0 start)",
-      "energy steady (-1.3 LU)",
-      "same style",
-      "8-bar window (short of a 16-bar phrase)",
-      "longer cut"
-     ],
-     "suggested_transition": "bass_swap_8",
-     "stretch_pct": 1.56,
-     "multiplier": "1",
-     "camelot_a": "6A",
-     "camelot_b": "11A"
-    },
-    {
      "id": "c90611dc88",
      "title": "Jolyon Petch - Thriller Freejak Remix (house cover)",
      "score": 0.8583,
@@ -34495,6 +34481,23 @@
      "stretch_pct": 1.57,
      "multiplier": "1",
      "camelot_a": "12A",
+     "camelot_b": "11A"
+    },
+    {
+     "id": "04c326848f",
+     "title": "Eiffel 65 - Blue (Da Ba Dee)",
+     "score": 0.8583,
+     "reasons": [
+      "+1.6% stretch on B (128.0 end -> 126.0 start)",
+      "energy steady (-1.3 LU)",
+      "same style",
+      "8-bar window (short of a 16-bar phrase)",
+      "longer cut"
+     ],
+     "suggested_transition": "bass_swap_8",
+     "stretch_pct": 1.56,
+     "multiplier": "1",
+     "camelot_a": "6A",
      "camelot_b": "11A"
     },
     {
@@ -35052,8 +35055,8 @@
      "camelot_b": "8A"
     },
     {
-     "id": "9ebf0221c3",
-     "title": "Yeah Yeah Yeahs - Heads Will Roll",
+     "id": "30a2efa137",
+     "title": "Yeah Yeah Yeahs - Heads Will Roll (A-Trak Remix)",
      "score": 0.7416,
      "reasons": [
       "-0.8% stretch on B (132.0 end -> 133.0 start)",
@@ -35070,8 +35073,8 @@
      "camelot_b": "8A"
     },
     {
-     "id": "30a2efa137",
-     "title": "Yeah Yeah Yeahs - Heads Will Roll (A-Trak Remix)",
+     "id": "9ebf0221c3",
+     "title": "Yeah Yeah Yeahs - Heads Will Roll",
      "score": 0.7416,
      "reasons": [
       "-0.8% stretch on B (132.0 end -> 133.0 start)",
@@ -39433,24 +39436,6 @@
      "camelot_b": "7B"
     },
     {
-     "id": "c246e54bb7",
-     "title": "Tame Impala & Jennie - Dracula (Jennie Remix) Extended Remix",
-     "score": 0.6569,
-     "reasons": [
-      "B enters -2.4 LU quieter",
-      "related style",
-      "no vocal clash",
-      "8-bar window (short of a 16-bar phrase)",
-      "different groove (r=0.25)",
-      "longer cut"
-     ],
-     "suggested_transition": "ramped_blend",
-     "stretch_pct": 8.72,
-     "multiplier": "1",
-     "camelot_a": "2A",
-     "camelot_b": "7B"
-    },
-    {
      "id": "7b488e72a9",
      "title": "Rihanna - We Found Love Calvin Harris Extended Mix",
      "score": 0.6569,
@@ -39467,6 +39452,24 @@
      "stretch_pct": 9.37,
      "multiplier": "4/3",
      "camelot_a": "2B",
+     "camelot_b": "7B"
+    },
+    {
+     "id": "c246e54bb7",
+     "title": "Tame Impala & Jennie - Dracula (Jennie Remix) Extended Remix",
+     "score": 0.6569,
+     "reasons": [
+      "B enters -2.4 LU quieter",
+      "related style",
+      "no vocal clash",
+      "8-bar window (short of a 16-bar phrase)",
+      "different groove (r=0.25)",
+      "longer cut"
+     ],
+     "suggested_transition": "ramped_blend",
+     "stretch_pct": 8.72,
+     "multiplier": "1",
+     "camelot_a": "2A",
      "camelot_b": "7B"
     },
     {
@@ -45847,8 +45850,8 @@
      "camelot_b": "3A"
     },
     {
-     "id": "9ebf0221c3",
-     "title": "Yeah Yeah Yeahs - Heads Will Roll",
+     "id": "30a2efa137",
+     "title": "Yeah Yeah Yeahs - Heads Will Roll (A-Trak Remix)",
      "score": 0.8499,
      "reasons": [
       "+1.5% stretch on B (134.0 end -> 132.0 start)",
@@ -45865,8 +45868,8 @@
      "camelot_b": "1A"
     },
     {
-     "id": "30a2efa137",
-     "title": "Yeah Yeah Yeahs - Heads Will Roll (A-Trak Remix)",
+     "id": "9ebf0221c3",
+     "title": "Yeah Yeah Yeahs - Heads Will Roll",
      "score": 0.8499,
      "reasons": [
       "+1.5% stretch on B (134.0 end -> 132.0 start)",
@@ -45937,8 +45940,8 @@
      "camelot_b": "1B"
     },
     {
-     "id": "9ebf0221c3",
-     "title": "Yeah Yeah Yeahs - Heads Will Roll",
+     "id": "30a2efa137",
+     "title": "Yeah Yeah Yeahs - Heads Will Roll (A-Trak Remix)",
      "score": 0.808,
      "reasons": [
       "-1.5% stretch on B (132.0 end -> 134.0 start)",
@@ -45956,8 +45959,8 @@
      "camelot_b": "1B"
     },
     {
-     "id": "30a2efa137",
-     "title": "Yeah Yeah Yeahs - Heads Will Roll (A-Trak Remix)",
+     "id": "9ebf0221c3",
+     "title": "Yeah Yeah Yeahs - Heads Will Roll",
      "score": 0.808,
      "reasons": [
       "-1.5% stretch on B (132.0 end -> 134.0 start)",
@@ -48706,8 +48709,8 @@
      "camelot_b": "3A"
     },
     {
-     "id": "9ebf0221c3",
-     "title": "Yeah Yeah Yeahs - Heads Will Roll",
+     "id": "30a2efa137",
+     "title": "Yeah Yeah Yeahs - Heads Will Roll (A-Trak Remix)",
      "score": 0.8527,
      "reasons": [
       "same tempo (132.0 BPM at A's end)",
@@ -48723,8 +48726,8 @@
      "camelot_b": "1A"
     },
     {
-     "id": "30a2efa137",
-     "title": "Yeah Yeah Yeahs - Heads Will Roll (A-Trak Remix)",
+     "id": "9ebf0221c3",
+     "title": "Yeah Yeah Yeahs - Heads Will Roll",
      "score": 0.8527,
      "reasons": [
       "same tempo (132.0 BPM at A's end)",
@@ -48807,8 +48810,8 @@
      "camelot_b": "11A"
     },
     {
-     "id": "9ebf0221c3",
-     "title": "Yeah Yeah Yeahs - Heads Will Roll",
+     "id": "30a2efa137",
+     "title": "Yeah Yeah Yeahs - Heads Will Roll (A-Trak Remix)",
      "score": 0.8562,
      "reasons": [
       "same tempo (132.0 BPM at A's end)",
@@ -48824,8 +48827,8 @@
      "camelot_b": "11A"
     },
     {
-     "id": "30a2efa137",
-     "title": "Yeah Yeah Yeahs - Heads Will Roll (A-Trak Remix)",
+     "id": "9ebf0221c3",
+     "title": "Yeah Yeah Yeahs - Heads Will Roll",
      "score": 0.8562,
      "reasons": [
       "same tempo (132.0 BPM at A's end)",
@@ -50374,8 +50377,8 @@
      "camelot_b": "1A"
     },
     {
-     "id": "9ebf0221c3",
-     "title": "Yeah Yeah Yeahs - Heads Will Roll",
+     "id": "30a2efa137",
+     "title": "Yeah Yeah Yeahs - Heads Will Roll (A-Trak Remix)",
      "score": 0.8405,
      "reasons": [
       "energy steady (-1.5 LU)",
@@ -50392,8 +50395,8 @@
      "camelot_b": "1A"
     },
     {
-     "id": "30a2efa137",
-     "title": "Yeah Yeah Yeahs - Heads Will Roll (A-Trak Remix)",
+     "id": "9ebf0221c3",
+     "title": "Yeah Yeah Yeahs - Heads Will Roll",
      "score": 0.8405,
      "reasons": [
       "energy steady (-1.5 LU)",
@@ -51583,24 +51586,6 @@
      "camelot_b": "7A"
     },
     {
-     "id": "b18ba51986",
-     "title": "Snap! - Rhythm Is A Dancer",
-     "score": 0.776,
-     "reasons": [
-      "+1.3% stretch on B (126.0 end -> 124.4 start)",
-      "energy steady (-1.2 LU)",
-      "B has a clean 16-bar intro",
-      "8-bar window (short of a 16-bar phrase)",
-      "different groove (r=0.00)",
-      "longer cut"
-     ],
-     "suggested_transition": "bass_swap_8",
-     "stretch_pct": 1.31,
-     "multiplier": "1",
-     "camelot_a": "2A",
-     "camelot_b": "8A"
-    },
-    {
      "id": "cb633f2e6c",
      "title": "Slayyyter - Brand New Chanel$ Extended",
      "score": 0.776,
@@ -51617,6 +51602,24 @@
      "multiplier": "1",
      "camelot_a": "2A",
      "camelot_b": "2B"
+    },
+    {
+     "id": "b18ba51986",
+     "title": "Snap! - Rhythm Is A Dancer",
+     "score": 0.776,
+     "reasons": [
+      "+1.3% stretch on B (126.0 end -> 124.4 start)",
+      "energy steady (-1.2 LU)",
+      "B has a clean 16-bar intro",
+      "8-bar window (short of a 16-bar phrase)",
+      "different groove (r=0.00)",
+      "longer cut"
+     ],
+     "suggested_transition": "bass_swap_8",
+     "stretch_pct": 1.31,
+     "multiplier": "1",
+     "camelot_a": "2A",
+     "camelot_b": "8A"
     },
     {
      "id": "b1fd952870",
@@ -51741,8 +51744,8 @@
      "camelot_b": "2A"
     },
     {
-     "id": "9ebf0221c3",
-     "title": "Yeah Yeah Yeahs - Heads Will Roll",
+     "id": "30a2efa137",
+     "title": "Yeah Yeah Yeahs - Heads Will Roll (A-Trak Remix)",
      "score": 0.8758,
      "reasons": [
       "energy steady (-1.4 LU)",
@@ -51758,8 +51761,8 @@
      "camelot_b": "2A"
     },
     {
-     "id": "30a2efa137",
-     "title": "Yeah Yeah Yeahs - Heads Will Roll (A-Trak Remix)",
+     "id": "9ebf0221c3",
+     "title": "Yeah Yeah Yeahs - Heads Will Roll",
      "score": 0.8758,
      "reasons": [
       "energy steady (-1.4 LU)",
@@ -52138,8 +52141,8 @@
      "camelot_b": "8A"
     },
     {
-     "id": "9ebf0221c3",
-     "title": "Yeah Yeah Yeahs - Heads Will Roll",
+     "id": "30a2efa137",
+     "title": "Yeah Yeah Yeahs - Heads Will Roll (A-Trak Remix)",
      "score": 0.8073,
      "reasons": [
       "no vocal clash",
@@ -52156,8 +52159,8 @@
      "camelot_b": "1A"
     },
     {
-     "id": "30a2efa137",
-     "title": "Yeah Yeah Yeahs - Heads Will Roll (A-Trak Remix)",
+     "id": "9ebf0221c3",
+     "title": "Yeah Yeah Yeahs - Heads Will Roll",
      "score": 0.8073,
      "reasons": [
       "no vocal clash",
@@ -52332,8 +52335,8 @@
      "camelot_b": "8B"
     },
     {
-     "id": "9ebf0221c3",
-     "title": "Yeah Yeah Yeahs - Heads Will Roll",
+     "id": "30a2efa137",
+     "title": "Yeah Yeah Yeahs - Heads Will Roll (A-Trak Remix)",
      "score": 0.7615,
      "reasons": [
       "no vocal clash",
@@ -52350,8 +52353,8 @@
      "camelot_b": "8B"
     },
     {
-     "id": "30a2efa137",
-     "title": "Yeah Yeah Yeahs - Heads Will Roll (A-Trak Remix)",
+     "id": "9ebf0221c3",
+     "title": "Yeah Yeah Yeahs - Heads Will Roll",
      "score": 0.7615,
      "reasons": [
       "no vocal clash",
@@ -52818,8 +52821,8 @@
      "camelot_b": "12A"
     },
     {
-     "id": "9ebf0221c3",
-     "title": "Yeah Yeah Yeahs - Heads Will Roll",
+     "id": "30a2efa137",
+     "title": "Yeah Yeah Yeahs - Heads Will Roll (A-Trak Remix)",
      "score": 0.8199,
      "reasons": [
       "-2.1% stretch on B (132.0 end -> 134.8 start)",
@@ -52836,8 +52839,8 @@
      "camelot_b": "12A"
     },
     {
-     "id": "30a2efa137",
-     "title": "Yeah Yeah Yeahs - Heads Will Roll (A-Trak Remix)",
+     "id": "9ebf0221c3",
+     "title": "Yeah Yeah Yeahs - Heads Will Roll",
      "score": 0.8199,
      "reasons": [
       "-2.1% stretch on B (132.0 end -> 134.8 start)",
@@ -55083,8 +55086,8 @@
      "camelot_b": "9B"
     },
     {
-     "id": "9ebf0221c3",
-     "title": "Yeah Yeah Yeahs - Heads Will Roll",
+     "id": "30a2efa137",
+     "title": "Yeah Yeah Yeahs - Heads Will Roll (A-Trak Remix)",
      "score": 0.7467,
      "reasons": [
       "no vocal clash",
@@ -60055,27 +60058,6 @@
      "camelot_b": "10B"
     },
     {
-     "id": "aed6b25f60",
-     "title": "Kyle Dixon & Michael Stein - Stranger Things Theme Kwest Halloween Remix",
-     "score": 0.5123,
-     "reasons": [
-      "energy steady (-0.7 LU)",
-      "B has a clean 16-bar intro",
-      "12A -> 9A (pitch-shift B by +2 st)",
-      "tempo change x2/3 (90 -> 128): transition track or brake, no blend",
-      "8-bar window (short of a 16-bar phrase)",
-      "different sound (closer than only 29% of pairs)",
-      "groove not comparable at x2/3",
-      "different style",
-      "longer cut"
-     ],
-     "suggested_transition": "brake_cut",
-     "stretch_pct": 5.19,
-     "multiplier": "2/3",
-     "camelot_a": "12A",
-     "camelot_b": "9A"
-    },
-    {
      "id": "fc58560f11",
      "title": "Madonna - Vogue",
      "score": 0.5123,
@@ -60095,6 +60077,27 @@
      "multiplier": "3/4",
      "camelot_a": "12A",
      "camelot_b": "1A"
+    },
+    {
+     "id": "aed6b25f60",
+     "title": "Kyle Dixon & Michael Stein - Stranger Things Theme Kwest Halloween Remix",
+     "score": 0.5123,
+     "reasons": [
+      "energy steady (-0.7 LU)",
+      "B has a clean 16-bar intro",
+      "12A -> 9A (pitch-shift B by +2 st)",
+      "tempo change x2/3 (90 -> 128): transition track or brake, no blend",
+      "8-bar window (short of a 16-bar phrase)",
+      "different sound (closer than only 29% of pairs)",
+      "groove not comparable at x2/3",
+      "different style",
+      "longer cut"
+     ],
+     "suggested_transition": "brake_cut",
+     "stretch_pct": 5.19,
+     "multiplier": "2/3",
+     "camelot_a": "12A",
+     "camelot_b": "9A"
     }
    ],
    "in": [
@@ -61268,25 +61271,6 @@
      "camelot_b": "8B"
     },
     {
-     "id": "9c20f328b8",
-     "title": "DJ Dado - X-Files",
-     "score": 0.5506,
-     "reasons": [
-      "energy steady (-1.2 LU)",
-      "B has a clean 16-bar intro",
-      "8B -> 8A (relative major/minor)",
-      "tempo change x2/3 (95 -> 135): transition track or brake, no blend",
-      "8-bar window (short of a 16-bar phrase)",
-      "groove not comparable at x2/3",
-      "different style"
-     ],
-     "suggested_transition": "brake_cut",
-     "stretch_pct": 5.02,
-     "multiplier": "2/3",
-     "camelot_a": "8B",
-     "camelot_b": "8A"
-    },
-    {
      "id": "30a2efa137",
      "title": "Yeah Yeah Yeahs - Heads Will Roll (A-Trak Remix)",
      "score": 0.5506,
@@ -61304,6 +61288,25 @@
      "multiplier": "3/4",
      "camelot_a": "8B",
      "camelot_b": "1A"
+    },
+    {
+     "id": "9c20f328b8",
+     "title": "DJ Dado - X-Files",
+     "score": 0.5506,
+     "reasons": [
+      "energy steady (-1.2 LU)",
+      "B has a clean 16-bar intro",
+      "8B -> 8A (relative major/minor)",
+      "tempo change x2/3 (95 -> 135): transition track or brake, no blend",
+      "8-bar window (short of a 16-bar phrase)",
+      "groove not comparable at x2/3",
+      "different style"
+     ],
+     "suggested_transition": "brake_cut",
+     "stretch_pct": 5.02,
+     "multiplier": "2/3",
+     "camelot_a": "8B",
+     "camelot_b": "8A"
     },
     {
      "id": "fc58560f11",
@@ -61954,26 +61957,6 @@
      "camelot_b": "12B"
     },
     {
-     "id": "c90611dc88",
-     "title": "Jolyon Petch - Thriller Freejak Remix (house cover)",
-     "score": 0.5653,
-     "reasons": [
-      "energy steady (-0.7 LU)",
-      "16-bar phrases both sides",
-      "vocals overlap 4 of 16 bars",
-      "tempo change x4/3 (128 -> 94): transition track or brake, no blend",
-      "different sound (closer than only 32% of pairs)",
-      "groove not comparable at x4/3",
-      "different style",
-      "longer cut"
-     ],
-     "suggested_transition": "brake_cut",
-     "stretch_pct": 2.18,
-     "multiplier": "4/3",
-     "camelot_a": "12A",
-     "camelot_b": "12B"
-    },
-    {
      "id": "249629a432",
      "title": "Peggy Gou - (It Goes Like) Nanana Extended Mix",
      "score": 0.5653,
@@ -61991,6 +61974,26 @@
      "stretch_pct": 3.68,
      "multiplier": "4/3",
      "camelot_a": "5A",
+     "camelot_b": "12B"
+    },
+    {
+     "id": "c90611dc88",
+     "title": "Jolyon Petch - Thriller Freejak Remix (house cover)",
+     "score": 0.5653,
+     "reasons": [
+      "energy steady (-0.7 LU)",
+      "16-bar phrases both sides",
+      "vocals overlap 4 of 16 bars",
+      "tempo change x4/3 (128 -> 94): transition track or brake, no blend",
+      "different sound (closer than only 32% of pairs)",
+      "groove not comparable at x4/3",
+      "different style",
+      "longer cut"
+     ],
+     "suggested_transition": "brake_cut",
+     "stretch_pct": 2.18,
+     "multiplier": "4/3",
+     "camelot_a": "12A",
      "camelot_b": "12B"
     },
     {
@@ -64731,6 +64734,23 @@
      "camelot_b": "10B"
     },
     {
+     "id": "28cfd6b844",
+     "title": "Riton x Nightcrawlers - Friday (Dopamine Re-Edit) Extended",
+     "score": 0.7939,
+     "reasons": [
+      "-2.5% stretch on B (120.0 end -> 123.0 start)",
+      "16-bar phrases both sides",
+      "B enters -2.9 LU quieter",
+      "different groove (r=0.20)",
+      "longer cut"
+     ],
+     "suggested_transition": "bass_swap_8",
+     "stretch_pct": 2.49,
+     "multiplier": "1",
+     "camelot_a": "9B",
+     "camelot_b": "11A"
+    },
+    {
      "id": "64a3aaa1c2",
      "title": "Robyn - Dancing On My Own",
      "score": 0.7939,
@@ -64747,23 +64767,6 @@
      "multiplier": "1",
      "camelot_a": "9B",
      "camelot_b": "2B"
-    },
-    {
-     "id": "28cfd6b844",
-     "title": "Riton x Nightcrawlers - Friday (Dopamine Re-Edit) Extended",
-     "score": 0.7939,
-     "reasons": [
-      "-2.5% stretch on B (120.0 end -> 123.0 start)",
-      "16-bar phrases both sides",
-      "B enters -2.9 LU quieter",
-      "different groove (r=0.20)",
-      "longer cut"
-     ],
-     "suggested_transition": "bass_swap_8",
-     "stretch_pct": 2.49,
-     "multiplier": "1",
-     "camelot_a": "9B",
-     "camelot_b": "11A"
     }
    ],
    "in": [
@@ -68000,8 +68003,8 @@
      "camelot_b": "9A"
     },
     {
-     "id": "9ebf0221c3",
-     "title": "Yeah Yeah Yeahs - Heads Will Roll",
+     "id": "30a2efa137",
+     "title": "Yeah Yeah Yeahs - Heads Will Roll (A-Trak Remix)",
      "score": 0.7386,
      "reasons": [
       "+2.3% stretch on B (132.0 end -> 129.0 start)",
@@ -68018,8 +68021,8 @@
      "camelot_b": "9A"
     },
     {
-     "id": "30a2efa137",
-     "title": "Yeah Yeah Yeahs - Heads Will Roll (A-Trak Remix)",
+     "id": "9ebf0221c3",
+     "title": "Yeah Yeah Yeahs - Heads Will Roll",
      "score": 0.7386,
      "reasons": [
       "+2.3% stretch on B (132.0 end -> 129.0 start)",
@@ -68812,6 +68815,22 @@
      "camelot_b": "7A"
     },
     {
+     "id": "f8b9c2903d",
+     "title": "Fedde Le Grand - Put Your Hands Up For Detroit ZANS Remix",
+     "score": 0.8776,
+     "reasons": [
+      "same style",
+      "-3.1% stretch on B (128.0 end -> 132.0 start)",
+      "16-bar phrases both sides",
+      "longer cut"
+     ],
+     "suggested_transition": "bass_swap_16",
+     "stretch_pct": 3.13,
+     "multiplier": "1",
+     "camelot_a": "9B",
+     "camelot_b": "7A"
+    },
+    {
      "id": "14c795a717",
      "title": "T. Rex - Get It On Joe T. Vannelli Vocal Attack Mix",
      "score": 0.8776,
@@ -68826,22 +68845,6 @@
      "stretch_pct": 3.12,
      "multiplier": "1",
      "camelot_a": "3A",
-     "camelot_b": "7A"
-    },
-    {
-     "id": "f8b9c2903d",
-     "title": "Fedde Le Grand - Put Your Hands Up For Detroit ZANS Remix",
-     "score": 0.8776,
-     "reasons": [
-      "same style",
-      "-3.1% stretch on B (128.0 end -> 132.0 start)",
-      "16-bar phrases both sides",
-      "longer cut"
-     ],
-     "suggested_transition": "bass_swap_16",
-     "stretch_pct": 3.13,
-     "multiplier": "1",
-     "camelot_a": "9B",
      "camelot_b": "7A"
     },
     {
@@ -69064,8 +69067,8 @@
      "camelot_b": "7A"
     },
     {
-     "id": "9ebf0221c3",
-     "title": "Yeah Yeah Yeahs - Heads Will Roll",
+     "id": "30a2efa137",
+     "title": "Yeah Yeah Yeahs - Heads Will Roll (A-Trak Remix)",
      "score": 0.8912,
      "reasons": [
       "same tempo (132.0 BPM at A's end)",
@@ -69081,8 +69084,8 @@
      "camelot_b": "7A"
     },
     {
-     "id": "30a2efa137",
-     "title": "Yeah Yeah Yeahs - Heads Will Roll (A-Trak Remix)",
+     "id": "9ebf0221c3",
+     "title": "Yeah Yeah Yeahs - Heads Will Roll",
      "score": 0.8912,
      "reasons": [
       "same tempo (132.0 BPM at A's end)",
@@ -70033,21 +70036,6 @@
      "camelot_b": "7A"
     },
     {
-     "id": "bedd2ea40c",
-     "title": "Kate Bush - Running Up That Hill (A Deal With God) Landis Remix",
-     "score": 0.8723,
-     "reasons": [
-      "B has a clean 16-bar intro",
-      "16-bar phrases both sides",
-      "similar sound (closer than 96% of pairs)"
-     ],
-     "suggested_transition": "bass_swap_16",
-     "stretch_pct": 3.84,
-     "multiplier": "1",
-     "camelot_a": "4A",
-     "camelot_b": "5A"
-    },
-    {
      "id": "f41f1882ae",
      "title": "Rihanna - Don't Stop The Music Spryte Remix",
      "score": 0.8723,
@@ -70062,6 +70050,21 @@
      "multiplier": "1",
      "camelot_a": "4A",
      "camelot_b": "11A"
+    },
+    {
+     "id": "bedd2ea40c",
+     "title": "Kate Bush - Running Up That Hill (A Deal With God) Landis Remix",
+     "score": 0.8723,
+     "reasons": [
+      "B has a clean 16-bar intro",
+      "16-bar phrases both sides",
+      "similar sound (closer than 96% of pairs)"
+     ],
+     "suggested_transition": "bass_swap_16",
+     "stretch_pct": 3.84,
+     "multiplier": "1",
+     "camelot_a": "4A",
+     "camelot_b": "5A"
     },
     {
      "id": "f8b9c2903d",
@@ -70523,20 +70526,19 @@
      "camelot_b": "12A"
     },
     {
-     "id": "8f58be69b8",
-     "title": "Rockwell - Somebody's Watching Me Tall Boys Halloween Remix",
+     "id": "770a9ef519",
+     "title": "Modjo - Lady (Hear Me Tonight) 5HOURS & Loruare Remix",
      "score": 0.8105,
      "reasons": [
-      "+2.4% stretch on B (127.0 end -> 124.0 start)",
-      "12A -> 12A",
-      "similar sound (closer than 96% of pairs)",
-      "8-bar window (short of a 16-bar phrase)",
-      "different groove (r=0.00)"
+      "+1.6% stretch on B (126.0 end -> 124.0 start)",
+      "similar sound (closer than 100% of pairs)",
+      "B enters -2.4 LU quieter",
+      "8-bar window (short of a 16-bar phrase)"
      ],
      "suggested_transition": "bass_swap_8",
-     "stretch_pct": 2.36,
+     "stretch_pct": 1.59,
      "multiplier": "1",
-     "camelot_a": "12A",
+     "camelot_a": "8A",
      "camelot_b": "12A"
     }
    ]
@@ -70983,6 +70985,22 @@
      "camelot_b": "12A"
     },
     {
+     "id": "568f687566",
+     "title": "Cher - Believe Disco Dom Remix",
+     "score": 0.8855,
+     "reasons": [
+      "+2.3% stretch on B (129.0 end -> 126.0 start)",
+      "B has a clean 16-bar intro",
+      "16-bar phrases both sides",
+      "longer cut"
+     ],
+     "suggested_transition": "bass_swap_16",
+     "stretch_pct": 2.32,
+     "multiplier": "1",
+     "camelot_a": "9A",
+     "camelot_b": "12A"
+    },
+    {
      "id": "aed6b25f60",
      "title": "Kyle Dixon & Michael Stein - Stranger Things Theme Kwest Halloween Remix",
      "score": 0.8855,
@@ -70999,19 +71017,18 @@
      "camelot_b": "12A"
     },
     {
-     "id": "568f687566",
-     "title": "Cher - Believe Disco Dom Remix",
-     "score": 0.8855,
+     "id": "b1fd952870",
+     "title": "Bad Bunny - DtMF ETX vs Eric Mendosa & Exodus Better Off Alone Edit (Dirty)",
+     "score": 0.8762,
      "reasons": [
-      "+2.3% stretch on B (129.0 end -> 126.0 start)",
-      "B has a clean 16-bar intro",
-      "16-bar phrases both sides",
-      "longer cut"
+      "+1.6% stretch on B (128.0 end -> 126.0 start)",
+      "similar sound (closer than 100% of pairs)",
+      "16-bar phrases both sides"
      ],
      "suggested_transition": "bass_swap_16",
-     "stretch_pct": 2.32,
+     "stretch_pct": 1.56,
      "multiplier": "1",
-     "camelot_a": "9A",
+     "camelot_a": "1A",
      "camelot_b": "12A"
     },
     {
@@ -71029,21 +71046,6 @@
      "stretch_pct": 1.56,
      "multiplier": "1",
      "camelot_a": "12A",
-     "camelot_b": "12A"
-    },
-    {
-     "id": "b1fd952870",
-     "title": "Bad Bunny - DtMF ETX vs Eric Mendosa & Exodus Better Off Alone Edit (Dirty)",
-     "score": 0.8762,
-     "reasons": [
-      "+1.6% stretch on B (128.0 end -> 126.0 start)",
-      "similar sound (closer than 100% of pairs)",
-      "16-bar phrases both sides"
-     ],
-     "suggested_transition": "bass_swap_16",
-     "stretch_pct": 1.56,
-     "multiplier": "1",
-     "camelot_a": "1A",
      "camelot_b": "12A"
     },
     {
@@ -71267,22 +71269,6 @@
      "camelot_b": "12A"
     },
     {
-     "id": "aed6b25f60",
-     "title": "Kyle Dixon & Michael Stein - Stranger Things Theme Kwest Halloween Remix",
-     "score": 0.8855,
-     "reasons": [
-      "+1.6% stretch on B (128.0 end -> 126.0 start)",
-      "B has a clean 16-bar intro",
-      "same style",
-      "longer cut"
-     ],
-     "suggested_transition": "bass_swap_16",
-     "stretch_pct": 1.56,
-     "multiplier": "1",
-     "camelot_a": "9A",
-     "camelot_b": "12A"
-    },
-    {
      "id": "568f687566",
      "title": "Cher - Believe Disco Dom Remix",
      "score": 0.8855,
@@ -71294,6 +71280,22 @@
      ],
      "suggested_transition": "bass_swap_16",
      "stretch_pct": 2.32,
+     "multiplier": "1",
+     "camelot_a": "9A",
+     "camelot_b": "12A"
+    },
+    {
+     "id": "aed6b25f60",
+     "title": "Kyle Dixon & Michael Stein - Stranger Things Theme Kwest Halloween Remix",
+     "score": 0.8855,
+     "reasons": [
+      "+1.6% stretch on B (128.0 end -> 126.0 start)",
+      "B has a clean 16-bar intro",
+      "same style",
+      "longer cut"
+     ],
+     "suggested_transition": "bass_swap_16",
+     "stretch_pct": 1.56,
      "multiplier": "1",
      "camelot_a": "9A",
      "camelot_b": "12A"
@@ -76662,24 +76664,6 @@
      "camelot_b": "1A"
     },
     {
-     "id": "64cfcb19f3",
-     "title": "Bette Midler - I Put A Spell On You Thee Werqn' Btches Club Mix (Joel Dickinson)",
-     "score": 0.8096,
-     "reasons": [
-      "-0.8% stretch on B (127.0 end -> 128.0 start)",
-      "energy steady (-1.9 LU)",
-      "same style",
-      "8-bar window (short of a 16-bar phrase)",
-      "different groove (r=0.00)",
-      "longer cut"
-     ],
-     "suggested_transition": "bass_swap_8",
-     "stretch_pct": 0.77,
-     "multiplier": "1",
-     "camelot_a": "7A",
-     "camelot_b": "4A"
-    },
-    {
      "id": "14c795a717",
      "title": "T. Rex - Get It On Joe T. Vannelli Vocal Attack Mix",
      "score": 0.8096,
@@ -76696,6 +76680,24 @@
      "multiplier": "1",
      "camelot_a": "7A",
      "camelot_b": "3A"
+    },
+    {
+     "id": "64cfcb19f3",
+     "title": "Bette Midler - I Put A Spell On You Thee Werqn' Btches Club Mix (Joel Dickinson)",
+     "score": 0.8096,
+     "reasons": [
+      "-0.8% stretch on B (127.0 end -> 128.0 start)",
+      "energy steady (-1.9 LU)",
+      "same style",
+      "8-bar window (short of a 16-bar phrase)",
+      "different groove (r=0.00)",
+      "longer cut"
+     ],
+     "suggested_transition": "bass_swap_8",
+     "stretch_pct": 0.77,
+     "multiplier": "1",
+     "camelot_a": "7A",
+     "camelot_b": "4A"
     },
     {
      "id": "28cfd6b844",
@@ -77527,22 +77529,6 @@
      "camelot_b": "9A"
     },
     {
-     "id": "079a0a43f1",
-     "title": "Aim - Demonique",
-     "score": 0.7645,
-     "reasons": [
-      "energy steady (+0.3 LU)",
-      "16-bar phrases both sides",
-      "related style",
-      "longer cut"
-     ],
-     "suggested_transition": "ramped_blend",
-     "stretch_pct": 7.21,
-     "multiplier": "1",
-     "camelot_a": "6A",
-     "camelot_b": "8B"
-    },
-    {
      "id": "7b6e1e73c5",
      "title": "Rihanna - Umbrella",
      "score": 0.7645,
@@ -77559,6 +77545,22 @@
      "multiplier": "1",
      "camelot_a": "6A",
      "camelot_b": "3B"
+    },
+    {
+     "id": "079a0a43f1",
+     "title": "Aim - Demonique",
+     "score": 0.7645,
+     "reasons": [
+      "energy steady (+0.3 LU)",
+      "16-bar phrases both sides",
+      "related style",
+      "longer cut"
+     ],
+     "suggested_transition": "ramped_blend",
+     "stretch_pct": 7.21,
+     "multiplier": "1",
+     "camelot_a": "6A",
+     "camelot_b": "8B"
     },
     {
      "id": "3dcc0ca66a",
@@ -79386,6 +79388,24 @@
    ],
    "in": [
     {
+     "id": "25c6363ebc",
+     "title": "Blackstreet - No Diggity",
+     "score": 0.7082,
+     "reasons": [
+      "same style",
+      "-3.9% stretch on B (88.7 end -> 92.1 start)",
+      "B enters -3.4 LU quieter",
+      "vocals overlap 14 of 14 bars",
+      "different sound (closer than only 18% of pairs)",
+      "longer cut"
+     ],
+     "suggested_transition": "quick_blend_echo",
+     "stretch_pct": 3.92,
+     "multiplier": "1",
+     "camelot_a": "11A",
+     "camelot_b": "9B"
+    },
+    {
      "id": "dbadf2f7bd",
      "title": "The Cranberries - Zombie",
      "score": 0.7082,
@@ -79402,24 +79422,6 @@
      "stretch_pct": 4.79,
      "multiplier": "1",
      "camelot_a": "9A",
-     "camelot_b": "9B"
-    },
-    {
-     "id": "25c6363ebc",
-     "title": "Blackstreet - No Diggity",
-     "score": 0.7082,
-     "reasons": [
-      "same style",
-      "-3.9% stretch on B (88.7 end -> 92.1 start)",
-      "B enters -3.4 LU quieter",
-      "vocals overlap 14 of 14 bars",
-      "different sound (closer than only 18% of pairs)",
-      "longer cut"
-     ],
-     "suggested_transition": "quick_blend_echo",
-     "stretch_pct": 3.92,
-     "multiplier": "1",
-     "camelot_a": "11A",
      "camelot_b": "9B"
     },
     {
@@ -79886,8 +79888,8 @@
      "camelot_b": "11A"
     },
     {
-     "id": "9ebf0221c3",
-     "title": "Yeah Yeah Yeahs - Heads Will Roll",
+     "id": "30a2efa137",
+     "title": "Yeah Yeah Yeahs - Heads Will Roll (A-Trak Remix)",
      "score": 0.8227,
      "reasons": [
       "+2.2% stretch on B (135.0 end -> 132.0 start)",
@@ -79904,8 +79906,8 @@
      "camelot_b": "1A"
     },
     {
-     "id": "30a2efa137",
-     "title": "Yeah Yeah Yeahs - Heads Will Roll (A-Trak Remix)",
+     "id": "9ebf0221c3",
+     "title": "Yeah Yeah Yeahs - Heads Will Roll",
      "score": 0.8227,
      "reasons": [
       "+2.2% stretch on B (135.0 end -> 132.0 start)",
@@ -80057,8 +80059,8 @@
      "camelot_b": "11A"
     },
     {
-     "id": "9ebf0221c3",
-     "title": "Yeah Yeah Yeahs - Heads Will Roll",
+     "id": "30a2efa137",
+     "title": "Yeah Yeah Yeahs - Heads Will Roll (A-Trak Remix)",
      "score": 0.83,
      "reasons": [
       "-2.3% stretch on B (132.0 end -> 135.0 start)",
@@ -80074,8 +80076,8 @@
      "camelot_b": "11A"
     },
     {
-     "id": "30a2efa137",
-     "title": "Yeah Yeah Yeahs - Heads Will Roll (A-Trak Remix)",
+     "id": "9ebf0221c3",
+     "title": "Yeah Yeah Yeahs - Heads Will Roll",
      "score": 0.83,
      "reasons": [
       "-2.3% stretch on B (132.0 end -> 135.0 start)",
@@ -82308,23 +82310,6 @@
      "camelot_b": "4A"
     },
     {
-     "id": "1009515479",
-     "title": "P!nk - Funhouse",
-     "score": 0.6998,
-     "reasons": [
-      "+1.9% stretch on B (104.0 end -> 102.0 start)",
-      "energy steady (-1.5 LU)",
-      "same style",
-      "vocals overlap 8 of 8 bars",
-      "8-bar window (short of a 16-bar phrase)"
-     ],
-     "suggested_transition": "quick_blend_echo",
-     "stretch_pct": 1.92,
-     "multiplier": "1",
-     "camelot_a": "9A",
-     "camelot_b": "4A"
-    },
-    {
      "id": "aff60d22b9",
      "title": "Nelly - Hot In Herre",
      "score": 0.6998,
@@ -82337,6 +82322,23 @@
      ],
      "suggested_transition": "quick_blend_echo",
      "stretch_pct": 4.75,
+     "multiplier": "1",
+     "camelot_a": "9A",
+     "camelot_b": "4A"
+    },
+    {
+     "id": "1009515479",
+     "title": "P!nk - Funhouse",
+     "score": 0.6998,
+     "reasons": [
+      "+1.9% stretch on B (104.0 end -> 102.0 start)",
+      "energy steady (-1.5 LU)",
+      "same style",
+      "vocals overlap 8 of 8 bars",
+      "8-bar window (short of a 16-bar phrase)"
+     ],
+     "suggested_transition": "quick_blend_echo",
+     "stretch_pct": 1.92,
      "multiplier": "1",
      "camelot_a": "9A",
      "camelot_b": "4A"
@@ -83937,8 +83939,8 @@
      "camelot_b": "3B"
     },
     {
-     "id": "9ebf0221c3",
-     "title": "Yeah Yeah Yeahs - Heads Will Roll",
+     "id": "30a2efa137",
+     "title": "Yeah Yeah Yeahs - Heads Will Roll (A-Trak Remix)",
      "score": 0.8241,
      "reasons": [
       "+1.5% stretch on B (132.0 end -> 130.0 start)",
@@ -83955,8 +83957,8 @@
      "camelot_b": "3B"
     },
     {
-     "id": "30a2efa137",
-     "title": "Yeah Yeah Yeahs - Heads Will Roll (A-Trak Remix)",
+     "id": "9ebf0221c3",
+     "title": "Yeah Yeah Yeahs - Heads Will Roll",
      "score": 0.8241,
      "reasons": [
       "+1.5% stretch on B (132.0 end -> 130.0 start)",
@@ -85872,6 +85874,23 @@
      "camelot_b": "11A"
     },
     {
+     "id": "f766236975",
+     "title": "La Roux - Bulletproof DJs From Mars N9 Edit",
+     "score": 0.7731,
+     "reasons": [
+      "-2.4% stretch on B (125.0 end -> 128.0 start)",
+      "energy steady (-0.8 LU)",
+      "no vocal clash",
+      "8-bar window (short of a 16-bar phrase)",
+      "different groove (r=0.00)"
+     ],
+     "suggested_transition": "bass_swap_8",
+     "stretch_pct": 2.4,
+     "multiplier": "1",
+     "camelot_a": "9B",
+     "camelot_b": "9A"
+    },
+    {
      "id": "64cfcb19f3",
      "title": "Bette Midler - I Put A Spell On You Thee Werqn' Btches Club Mix (Joel Dickinson)",
      "score": 0.7731,
@@ -85888,23 +85907,6 @@
      "multiplier": "1",
      "camelot_a": "9B",
      "camelot_b": "4A"
-    },
-    {
-     "id": "f766236975",
-     "title": "La Roux - Bulletproof DJs From Mars N9 Edit",
-     "score": 0.7731,
-     "reasons": [
-      "-2.4% stretch on B (125.0 end -> 128.0 start)",
-      "energy steady (-0.8 LU)",
-      "no vocal clash",
-      "8-bar window (short of a 16-bar phrase)",
-      "different groove (r=0.00)"
-     ],
-     "suggested_transition": "bass_swap_8",
-     "stretch_pct": 2.4,
-     "multiplier": "1",
-     "camelot_a": "9B",
-     "camelot_b": "9A"
     },
     {
      "id": "7b488e72a9",
@@ -86704,8 +86706,8 @@
      "camelot_b": "4B"
     },
     {
-     "id": "9ebf0221c3",
-     "title": "Yeah Yeah Yeahs - Heads Will Roll",
+     "id": "30a2efa137",
+     "title": "Yeah Yeah Yeahs - Heads Will Roll (A-Trak Remix)",
      "score": 0.8103,
      "reasons": [
       "+2.9% stretch on B (136.0 end -> 132.0 start)",
@@ -86721,8 +86723,8 @@
      "camelot_b": "1A"
     },
     {
-     "id": "30a2efa137",
-     "title": "Yeah Yeah Yeahs - Heads Will Roll (A-Trak Remix)",
+     "id": "9ebf0221c3",
+     "title": "Yeah Yeah Yeahs - Heads Will Roll",
      "score": 0.8103,
      "reasons": [
       "+2.9% stretch on B (136.0 end -> 132.0 start)",
@@ -86841,8 +86843,8 @@
      "camelot_b": "8B"
     },
     {
-     "id": "9ebf0221c3",
-     "title": "Yeah Yeah Yeahs - Heads Will Roll",
+     "id": "30a2efa137",
+     "title": "Yeah Yeah Yeahs - Heads Will Roll (A-Trak Remix)",
      "score": 0.797,
      "reasons": [
       "energy steady (+0.0 LU)",
@@ -86858,8 +86860,8 @@
      "camelot_b": "8B"
     },
     {
-     "id": "30a2efa137",
-     "title": "Yeah Yeah Yeahs - Heads Will Roll (A-Trak Remix)",
+     "id": "9ebf0221c3",
+     "title": "Yeah Yeah Yeahs - Heads Will Roll",
      "score": 0.797,
      "reasons": [
       "energy steady (+0.0 LU)",
@@ -87876,22 +87878,6 @@
      "camelot_b": "9A"
     },
     {
-     "id": "b18ba51986",
-     "title": "Snap! - Rhythm Is A Dancer",
-     "score": 0.9479,
-     "reasons": [
-      "-1.2% stretch on B (124.4 end -> 125.8 start)",
-      "energy steady (-1.3 LU)",
-      "same style",
-      "longer cut"
-     ],
-     "suggested_transition": "bass_swap_16",
-     "stretch_pct": 1.17,
-     "multiplier": "1",
-     "camelot_a": "8A",
-     "camelot_b": "9A"
-    },
-    {
      "id": "568f687566",
      "title": "Cher - Believe Disco Dom Remix",
      "score": 0.9479,
@@ -87906,6 +87892,22 @@
      "stretch_pct": 2.48,
      "multiplier": "1",
      "camelot_a": "9A",
+     "camelot_b": "9A"
+    },
+    {
+     "id": "b18ba51986",
+     "title": "Snap! - Rhythm Is A Dancer",
+     "score": 0.9479,
+     "reasons": [
+      "-1.2% stretch on B (124.4 end -> 125.8 start)",
+      "energy steady (-1.3 LU)",
+      "same style",
+      "longer cut"
+     ],
+     "suggested_transition": "bass_swap_16",
+     "stretch_pct": 1.17,
+     "multiplier": "1",
+     "camelot_a": "8A",
      "camelot_b": "9A"
     },
     {
@@ -95401,22 +95403,6 @@
      "camelot_b": "7A"
     },
     {
-     "id": "c4538c1356",
-     "title": "Crystal Waters - Gypsy Woman (She's Homeless) ALRT Remix",
-     "score": 0.7877,
-     "reasons": [
-      "+0.7% stretch on B (127.9 end -> 127.0 start)",
-      "7A -> 7A",
-      "same style",
-      "8-bar window (short of a 16-bar phrase)"
-     ],
-     "suggested_transition": "bass_swap_8",
-     "stretch_pct": 0.73,
-     "multiplier": "1",
-     "camelot_a": "7A",
-     "camelot_b": "7A"
-    },
-    {
      "id": "30a2efa137",
      "title": "Yeah Yeah Yeahs - Heads Will Roll (A-Trak Remix)",
      "score": 0.7877,
@@ -95433,6 +95419,22 @@
      "multiplier": "1",
      "camelot_a": "7A",
      "camelot_b": "1A"
+    },
+    {
+     "id": "c4538c1356",
+     "title": "Crystal Waters - Gypsy Woman (She's Homeless) ALRT Remix",
+     "score": 0.7877,
+     "reasons": [
+      "+0.7% stretch on B (127.9 end -> 127.0 start)",
+      "7A -> 7A",
+      "same style",
+      "8-bar window (short of a 16-bar phrase)"
+     ],
+     "suggested_transition": "bass_swap_8",
+     "stretch_pct": 0.73,
+     "multiplier": "1",
+     "camelot_a": "7A",
+     "camelot_b": "7A"
     },
     {
      "id": "bedd2ea40c",
@@ -97308,8 +97310,8 @@
      "camelot_b": "7A"
     },
     {
-     "id": "9ebf0221c3",
-     "title": "Yeah Yeah Yeahs - Heads Will Roll",
+     "id": "30a2efa137",
+     "title": "Yeah Yeah Yeahs - Heads Will Roll (A-Trak Remix)",
      "score": 0.7724,
      "reasons": [
       "+2.9% stretch on B (136.0 end -> 132.0 start)",
@@ -97326,8 +97328,8 @@
      "camelot_b": "1A"
     },
     {
-     "id": "30a2efa137",
-     "title": "Yeah Yeah Yeahs - Heads Will Roll (A-Trak Remix)",
+     "id": "9ebf0221c3",
+     "title": "Yeah Yeah Yeahs - Heads Will Roll",
      "score": 0.7724,
      "reasons": [
       "+2.9% stretch on B (136.0 end -> 132.0 start)",
@@ -97527,8 +97529,8 @@
      "camelot_b": "8A"
     },
     {
-     "id": "9ebf0221c3",
-     "title": "Yeah Yeah Yeahs - Heads Will Roll",
+     "id": "30a2efa137",
+     "title": "Yeah Yeah Yeahs - Heads Will Roll (A-Trak Remix)",
      "score": 0.7245,
      "reasons": [
       "energy steady (+0.9 LU)",
@@ -97546,8 +97548,8 @@
      "camelot_b": "8A"
     },
     {
-     "id": "30a2efa137",
-     "title": "Yeah Yeah Yeahs - Heads Will Roll (A-Trak Remix)",
+     "id": "9ebf0221c3",
+     "title": "Yeah Yeah Yeahs - Heads Will Roll",
      "score": 0.7245,
      "reasons": [
       "energy steady (+0.9 LU)",
@@ -98049,8 +98051,8 @@
      "camelot_b": "11B"
     },
     {
-     "id": "9ebf0221c3",
-     "title": "Yeah Yeah Yeahs - Heads Will Roll",
+     "id": "30a2efa137",
+     "title": "Yeah Yeah Yeahs - Heads Will Roll (A-Trak Remix)",
      "score": 0.7544,
      "reasons": [
       "-1.5% stretch on B (132.0 end -> 134.0 start)",
@@ -98065,8 +98067,8 @@
      "camelot_b": "11B"
     },
     {
-     "id": "30a2efa137",
-     "title": "Yeah Yeah Yeahs - Heads Will Roll (A-Trak Remix)",
+     "id": "9ebf0221c3",
+     "title": "Yeah Yeah Yeahs - Heads Will Roll",
      "score": 0.7544,
      "reasons": [
       "-1.5% stretch on B (132.0 end -> 134.0 start)",
@@ -98137,22 +98139,6 @@
      "camelot_b": "9A"
     },
     {
-     "id": "9b81bc4b78",
-     "title": "Calvin Harris - This Is What You Came For Extended Mix",
-     "score": 0.9427,
-     "reasons": [
-      "energy steady (+1.2 LU)",
-      "same style",
-      "+3.1% stretch on B (128.0 end -> 124.0 start)",
-      "longer cut"
-     ],
-     "suggested_transition": "bass_swap_16",
-     "stretch_pct": 3.13,
-     "multiplier": "1",
-     "camelot_a": "2B",
-     "camelot_b": "8B"
-    },
-    {
      "id": "df902aeaec",
      "title": "Swedish House Mafia - Don't You Worry Child",
      "score": 0.9427,
@@ -98168,6 +98154,22 @@
      "multiplier": "1",
      "camelot_a": "2B",
      "camelot_b": "10B"
+    },
+    {
+     "id": "9b81bc4b78",
+     "title": "Calvin Harris - This Is What You Came For Extended Mix",
+     "score": 0.9427,
+     "reasons": [
+      "energy steady (+1.2 LU)",
+      "same style",
+      "+3.1% stretch on B (128.0 end -> 124.0 start)",
+      "longer cut"
+     ],
+     "suggested_transition": "bass_swap_16",
+     "stretch_pct": 3.13,
+     "multiplier": "1",
+     "camelot_a": "2B",
+     "camelot_b": "8B"
     },
     {
      "id": "59b14556e8",
@@ -98403,22 +98405,6 @@
      "camelot_b": "9A"
     },
     {
-     "id": "9b81bc4b78",
-     "title": "Calvin Harris - This Is What You Came For Extended Mix",
-     "score": 0.9427,
-     "reasons": [
-      "energy steady (+1.2 LU)",
-      "same style",
-      "+3.1% stretch on B (128.0 end -> 124.0 start)",
-      "longer cut"
-     ],
-     "suggested_transition": "bass_swap_16",
-     "stretch_pct": 3.13,
-     "multiplier": "1",
-     "camelot_a": "2B",
-     "camelot_b": "8B"
-    },
-    {
      "id": "df902aeaec",
      "title": "Swedish House Mafia - Don't You Worry Child",
      "score": 0.9427,
@@ -98434,6 +98420,22 @@
      "multiplier": "1",
      "camelot_a": "2B",
      "camelot_b": "10B"
+    },
+    {
+     "id": "9b81bc4b78",
+     "title": "Calvin Harris - This Is What You Came For Extended Mix",
+     "score": 0.9427,
+     "reasons": [
+      "energy steady (+1.2 LU)",
+      "same style",
+      "+3.1% stretch on B (128.0 end -> 124.0 start)",
+      "longer cut"
+     ],
+     "suggested_transition": "bass_swap_16",
+     "stretch_pct": 3.13,
+     "multiplier": "1",
+     "camelot_a": "2B",
+     "camelot_b": "8B"
     },
     {
      "id": "492780f268",
@@ -102976,8 +102978,8 @@
      "camelot_b": "7A"
     },
     {
-     "id": "9ebf0221c3",
-     "title": "Yeah Yeah Yeahs - Heads Will Roll",
+     "id": "30a2efa137",
+     "title": "Yeah Yeah Yeahs - Heads Will Roll (A-Trak Remix)",
      "score": 0.8029,
      "reasons": [
       "energy steady (-1.5 LU)",
@@ -102993,8 +102995,8 @@
      "camelot_b": "1A"
     },
     {
-     "id": "30a2efa137",
-     "title": "Yeah Yeah Yeahs - Heads Will Roll (A-Trak Remix)",
+     "id": "9ebf0221c3",
+     "title": "Yeah Yeah Yeahs - Heads Will Roll",
      "score": 0.8029,
      "reasons": [
       "energy steady (-1.5 LU)",
@@ -103145,8 +103147,8 @@
      "camelot_b": "6A"
     },
     {
-     "id": "9ebf0221c3",
-     "title": "Yeah Yeah Yeahs - Heads Will Roll",
+     "id": "30a2efa137",
+     "title": "Yeah Yeah Yeahs - Heads Will Roll (A-Trak Remix)",
      "score": 0.7878,
      "reasons": [
       "energy steady (+0.3 LU)",
@@ -103274,6 +103276,23 @@
      "camelot_b": "10A"
     },
     {
+     "id": "7b488e72a9",
+     "title": "Rihanna - We Found Love Calvin Harris Extended Mix",
+     "score": 0.792,
+     "reasons": [
+      "-1.6% stretch on B (126.0 end -> 128.0 start)",
+      "same style",
+      "similar sound (closer than 98% of pairs)",
+      "8-bar window (short of a 16-bar phrase)",
+      "longer cut"
+     ],
+     "suggested_transition": "bass_swap_8",
+     "stretch_pct": 1.59,
+     "multiplier": "1",
+     "camelot_a": "12A",
+     "camelot_b": "2B"
+    },
+    {
      "id": "58a945ccc1",
      "title": "Sisqo - Thong Song Colin Jay Remix (Dirty)",
      "score": 0.792,
@@ -103290,23 +103309,6 @@
      "multiplier": "1",
      "camelot_a": "12A",
      "camelot_b": "12A"
-    },
-    {
-     "id": "7b488e72a9",
-     "title": "Rihanna - We Found Love Calvin Harris Extended Mix",
-     "score": 0.792,
-     "reasons": [
-      "-1.6% stretch on B (126.0 end -> 128.0 start)",
-      "same style",
-      "similar sound (closer than 98% of pairs)",
-      "8-bar window (short of a 16-bar phrase)",
-      "longer cut"
-     ],
-     "suggested_transition": "bass_swap_8",
-     "stretch_pct": 1.59,
-     "multiplier": "1",
-     "camelot_a": "12A",
-     "camelot_b": "2B"
     }
    ],
    "in": [
@@ -104107,22 +104109,6 @@
      "camelot_b": "4A"
     },
     {
-     "id": "b7b0789ff6",
-     "title": "Nelly Furtado - Promiscuous",
-     "score": 0.7403,
-     "reasons": [
-      "-2.1% stretch on B (112.0 end -> 114.3 start)",
-      "energy steady (-1.1 LU)",
-      "same style",
-      "8-bar window (short of a 16-bar phrase)"
-     ],
-     "suggested_transition": "bass_swap_8",
-     "stretch_pct": 2.05,
-     "multiplier": "1",
-     "camelot_a": "5A",
-     "camelot_b": "3A"
-    },
-    {
      "id": "985173b698",
      "title": "Nirvana - Smells Like Teen Spirit",
      "score": 0.7403,
@@ -104139,6 +104125,22 @@
      "multiplier": "1",
      "camelot_a": "5A",
      "camelot_b": "4A"
+    },
+    {
+     "id": "b7b0789ff6",
+     "title": "Nelly Furtado - Promiscuous",
+     "score": 0.7403,
+     "reasons": [
+      "-2.1% stretch on B (112.0 end -> 114.3 start)",
+      "energy steady (-1.1 LU)",
+      "same style",
+      "8-bar window (short of a 16-bar phrase)"
+     ],
+     "suggested_transition": "bass_swap_8",
+     "stretch_pct": 2.05,
+     "multiplier": "1",
+     "camelot_a": "5A",
+     "camelot_b": "3A"
     },
     {
      "id": "c73652b55e",
@@ -104779,22 +104781,6 @@
      "camelot_b": "7A"
     },
     {
-     "id": "59b14556e8",
-     "title": "Lana Del Rey vs Cedric Gervais - Summertime Sadness (Remix) Cedric Gervais Extended Remix",
-     "score": 0.8565,
-     "reasons": [
-      "same tempo (126.0 BPM at A's end)",
-      "B enters +2.9 LU louder",
-      "related style",
-      "longer cut"
-     ],
-     "suggested_transition": "bass_swap_8",
-     "stretch_pct": 0.09,
-     "multiplier": "1",
-     "camelot_a": "12A",
-     "camelot_b": "7A"
-    },
-    {
      "id": "249629a432",
      "title": "Peggy Gou - (It Goes Like) Nanana Extended Mix",
      "score": 0.8565,
@@ -104809,6 +104795,22 @@
      "stretch_pct": 3.16,
      "multiplier": "1",
      "camelot_a": "5A",
+     "camelot_b": "7A"
+    },
+    {
+     "id": "59b14556e8",
+     "title": "Lana Del Rey vs Cedric Gervais - Summertime Sadness (Remix) Cedric Gervais Extended Remix",
+     "score": 0.8565,
+     "reasons": [
+      "same tempo (126.0 BPM at A's end)",
+      "B enters +2.9 LU louder",
+      "related style",
+      "longer cut"
+     ],
+     "suggested_transition": "bass_swap_8",
+     "stretch_pct": 0.09,
+     "multiplier": "1",
+     "camelot_a": "12A",
      "camelot_b": "7A"
     },
     {
@@ -107096,8 +107098,8 @@
      "camelot_b": "8A"
     },
     {
-     "id": "9ebf0221c3",
-     "title": "Yeah Yeah Yeahs - Heads Will Roll",
+     "id": "30a2efa137",
+     "title": "Yeah Yeah Yeahs - Heads Will Roll (A-Trak Remix)",
      "score": 0.9,
      "reasons": [
       "energy steady (-1.8 LU)",
@@ -107112,8 +107114,8 @@
      "camelot_b": "8A"
     },
     {
-     "id": "30a2efa137",
-     "title": "Yeah Yeah Yeahs - Heads Will Roll (A-Trak Remix)",
+     "id": "9ebf0221c3",
+     "title": "Yeah Yeah Yeahs - Heads Will Roll",
      "score": 0.9,
      "reasons": [
       "energy steady (-1.8 LU)",
@@ -107944,6 +107946,24 @@
      "camelot_b": "1B"
     },
     {
+     "id": "76878a6a74",
+     "title": "Dom Dolla & Tiga - Don't Worry Baby Extended Mix",
+     "score": 0.7398,
+     "reasons": [
+      "+1.5% stretch on B (132.0 end -> 130.0 start)",
+      "similar sound (closer than 90% of pairs)",
+      "related style",
+      "9-bar window (short of a 16-bar phrase)",
+      "different groove (r=0.28)",
+      "longer cut"
+     ],
+     "suggested_transition": "bass_swap_8",
+     "stretch_pct": 1.51,
+     "multiplier": "1",
+     "camelot_a": "6A",
+     "camelot_b": "1B"
+    },
+    {
      "id": "8bd22f1602",
      "title": "Eric Prydz - Call on Me Extended Edit",
      "score": 0.7398,
@@ -107960,24 +107980,6 @@
      "stretch_pct": 2.92,
      "multiplier": "1",
      "camelot_a": "6B",
-     "camelot_b": "1B"
-    },
-    {
-     "id": "76878a6a74",
-     "title": "Dom Dolla & Tiga - Don't Worry Baby Extended Mix",
-     "score": 0.7398,
-     "reasons": [
-      "+1.5% stretch on B (132.0 end -> 130.0 start)",
-      "similar sound (closer than 90% of pairs)",
-      "related style",
-      "9-bar window (short of a 16-bar phrase)",
-      "different groove (r=0.28)",
-      "longer cut"
-     ],
-     "suggested_transition": "bass_swap_8",
-     "stretch_pct": 1.51,
-     "multiplier": "1",
-     "camelot_a": "6A",
      "camelot_b": "1B"
     }
    ]
@@ -111630,8 +111632,8 @@
      "camelot_b": "6B"
     },
     {
-     "id": "9ebf0221c3",
-     "title": "Yeah Yeah Yeahs - Heads Will Roll",
+     "id": "30a2efa137",
+     "title": "Yeah Yeah Yeahs - Heads Will Roll (A-Trak Remix)",
      "score": 0.8645,
      "reasons": [
       "same style",
@@ -111646,8 +111648,8 @@
      "camelot_b": "6B"
     },
     {
-     "id": "30a2efa137",
-     "title": "Yeah Yeah Yeahs - Heads Will Roll (A-Trak Remix)",
+     "id": "9ebf0221c3",
+     "title": "Yeah Yeah Yeahs - Heads Will Roll",
      "score": 0.8645,
      "reasons": [
       "same style",
@@ -116046,23 +116048,6 @@
      "camelot_b": "9A"
     },
     {
-     "id": "b18ba51986",
-     "title": "Snap! - Rhythm Is A Dancer",
-     "score": 0.8326,
-     "reasons": [
-      "-0.7% stretch on B (123.5 end -> 124.4 start)",
-      "8A -> 8A",
-      "same style",
-      "8-bar window (short of a 16-bar phrase)",
-      "longer cut"
-     ],
-     "suggested_transition": "bass_swap_8",
-     "stretch_pct": 0.69,
-     "multiplier": "1",
-     "camelot_a": "8A",
-     "camelot_b": "8A"
-    },
-    {
      "id": "457ed7c7b3",
      "title": "Oliver Heldens & Will Clarke - Lost In Music Extended Mix",
      "score": 0.8326,
@@ -116079,6 +116064,23 @@
      "multiplier": "1",
      "camelot_a": "8A",
      "camelot_b": "7A"
+    },
+    {
+     "id": "b18ba51986",
+     "title": "Snap! - Rhythm Is A Dancer",
+     "score": 0.8326,
+     "reasons": [
+      "-0.7% stretch on B (123.5 end -> 124.4 start)",
+      "8A -> 8A",
+      "same style",
+      "8-bar window (short of a 16-bar phrase)",
+      "longer cut"
+     ],
+     "suggested_transition": "bass_swap_8",
+     "stretch_pct": 0.69,
+     "multiplier": "1",
+     "camelot_a": "8A",
+     "camelot_b": "8A"
     },
     {
      "id": "58a945ccc1",
@@ -117314,8 +117316,8 @@
      "camelot_b": "3A"
     },
     {
-     "id": "9ebf0221c3",
-     "title": "Yeah Yeah Yeahs - Heads Will Roll",
+     "id": "30a2efa137",
+     "title": "Yeah Yeah Yeahs - Heads Will Roll (A-Trak Remix)",
      "score": 0.9248,
      "reasons": [
       "+1.5% stretch on B (132.0 end -> 130.0 start)",
@@ -117330,8 +117332,8 @@
      "camelot_b": "3A"
     },
     {
-     "id": "30a2efa137",
-     "title": "Yeah Yeah Yeahs - Heads Will Roll (A-Trak Remix)",
+     "id": "9ebf0221c3",
+     "title": "Yeah Yeah Yeahs - Heads Will Roll",
      "score": 0.9248,
      "reasons": [
       "+1.5% stretch on B (132.0 end -> 130.0 start)",
@@ -118918,21 +118920,6 @@
      "camelot_b": "3A"
     },
     {
-     "id": "bedd2ea40c",
-     "title": "Kate Bush - Running Up That Hill (A Deal With God) Landis Remix",
-     "score": 0.9022,
-     "reasons": [
-      "-1.6% stretch on B (123.0 end -> 125.0 start)",
-      "B has a clean 16-bar intro",
-      "similar sound (closer than 97% of pairs)"
-     ],
-     "suggested_transition": "bass_swap_16",
-     "stretch_pct": 1.64,
-     "multiplier": "1",
-     "camelot_a": "10A",
-     "camelot_b": "5A"
-    },
-    {
      "id": "6e8f63bbce",
      "title": "Moby - Go",
      "score": 0.9022,
@@ -118946,6 +118933,21 @@
      "multiplier": "1",
      "camelot_a": "10A",
      "camelot_b": "9A"
+    },
+    {
+     "id": "bedd2ea40c",
+     "title": "Kate Bush - Running Up That Hill (A Deal With God) Landis Remix",
+     "score": 0.9022,
+     "reasons": [
+      "-1.6% stretch on B (123.0 end -> 125.0 start)",
+      "B has a clean 16-bar intro",
+      "similar sound (closer than 97% of pairs)"
+     ],
+     "suggested_transition": "bass_swap_16",
+     "stretch_pct": 1.64,
+     "multiplier": "1",
+     "camelot_a": "10A",
+     "camelot_b": "5A"
     },
     {
      "id": "15e073a272",
@@ -122389,21 +122391,19 @@
      "camelot_b": "8A"
     },
     {
-     "id": "edfc2ee251",
-     "title": "Daft Punk - Get Lucky",
+     "id": "e46b81e5ab",
+     "title": "Chappell Roan - Pink Pony Club Lincoln Baio Party In the U.S.A. Remix",
      "score": 0.6483,
      "reasons": [
-      "no vocal clash",
       "related style",
-      "B enters -4.0 LU quieter",
-      "different sound (closer than only 32% of pairs)",
-      "different groove (r=0.33)",
-      "longer cut"
+      "+4.9% stretch on B (112.0 end -> 106.5 start)",
+      "vocals overlap 1 of 8 bars",
+      "8-bar window (short of a 16-bar phrase)"
      ],
-     "suggested_transition": "ramped_blend",
-     "stretch_pct": 8.21,
+     "suggested_transition": "bass_swap_8",
+     "stretch_pct": 4.9,
      "multiplier": "1",
-     "camelot_a": "10A",
+     "camelot_a": "2A",
      "camelot_b": "8A"
     }
    ]
@@ -123500,6 +123500,24 @@
      "camelot_b": "5B"
     },
     {
+     "id": "bedd2ea40c",
+     "title": "Kate Bush - Running Up That Hill (A Deal With God) Landis Remix",
+     "score": 0.5651,
+     "reasons": [
+      "energy steady (+0.6 LU)",
+      "no vocal clash",
+      "5A -> 5B (relative major/minor)",
+      "tempo change x3/2 (125 -> 86): transition track or brake, no blend",
+      "groove not comparable at x3/2",
+      "different style"
+     ],
+     "suggested_transition": "brake_cut",
+     "stretch_pct": 3.2,
+     "multiplier": "3/2",
+     "camelot_a": "5A",
+     "camelot_b": "5B"
+    },
+    {
      "id": "67bcdc4c3f",
      "title": "Backstreet Boys - Everybody (Backstreet's Back)",
      "score": 0.5651,
@@ -123516,24 +123534,6 @@
      "stretch_pct": 6.11,
      "multiplier": "4/3",
      "camelot_a": "3A",
-     "camelot_b": "5B"
-    },
-    {
-     "id": "bedd2ea40c",
-     "title": "Kate Bush - Running Up That Hill (A Deal With God) Landis Remix",
-     "score": 0.5651,
-     "reasons": [
-      "energy steady (+0.6 LU)",
-      "no vocal clash",
-      "5A -> 5B (relative major/minor)",
-      "tempo change x3/2 (125 -> 86): transition track or brake, no blend",
-      "groove not comparable at x3/2",
-      "different style"
-     ],
-     "suggested_transition": "brake_cut",
-     "stretch_pct": 3.2,
-     "multiplier": "3/2",
-     "camelot_a": "5A",
      "camelot_b": "5B"
     },
     {
@@ -124618,6 +124618,23 @@
      "camelot_b": "2A"
     },
     {
+     "id": "7931a6a51a",
+     "title": "Snoop Dogg - Drop It Like It's Hot The Golden Pony Remix",
+     "score": 0.8386,
+     "reasons": [
+      "+1.6% stretch on B (122.0 end -> 120.0 start)",
+      "same style",
+      "no vocal clash",
+      "8-bar window (short of a 16-bar phrase)",
+      "different groove (r=0.00)"
+     ],
+     "suggested_transition": "bass_swap_8",
+     "stretch_pct": 1.64,
+     "multiplier": "1",
+     "camelot_a": "3A",
+     "camelot_b": "2A"
+    },
+    {
      "id": "58a945ccc1",
      "title": "Sisqo - Thong Song Colin Jay Remix (Dirty)",
      "score": 0.8386,
@@ -124633,23 +124650,6 @@
      "stretch_pct": 3.23,
      "multiplier": "1",
      "camelot_a": "12A",
-     "camelot_b": "2A"
-    },
-    {
-     "id": "7931a6a51a",
-     "title": "Snoop Dogg - Drop It Like It's Hot The Golden Pony Remix",
-     "score": 0.8386,
-     "reasons": [
-      "+1.6% stretch on B (122.0 end -> 120.0 start)",
-      "same style",
-      "no vocal clash",
-      "8-bar window (short of a 16-bar phrase)",
-      "different groove (r=0.00)"
-     ],
-     "suggested_transition": "bass_swap_8",
-     "stretch_pct": 1.64,
-     "multiplier": "1",
-     "camelot_a": "3A",
      "camelot_b": "2A"
     },
     {
@@ -124925,6 +124925,23 @@
      "camelot_b": "2A"
     },
     {
+     "id": "7931a6a51a",
+     "title": "Snoop Dogg - Drop It Like It's Hot The Golden Pony Remix",
+     "score": 0.8386,
+     "reasons": [
+      "+1.6% stretch on B (122.0 end -> 120.0 start)",
+      "same style",
+      "no vocal clash",
+      "8-bar window (short of a 16-bar phrase)",
+      "different groove (r=0.00)"
+     ],
+     "suggested_transition": "bass_swap_8",
+     "stretch_pct": 1.64,
+     "multiplier": "1",
+     "camelot_a": "3A",
+     "camelot_b": "2A"
+    },
+    {
      "id": "58a945ccc1",
      "title": "Sisqo - Thong Song Colin Jay Remix (Dirty)",
      "score": 0.8386,
@@ -124940,23 +124957,6 @@
      "stretch_pct": 3.23,
      "multiplier": "1",
      "camelot_a": "12A",
-     "camelot_b": "2A"
-    },
-    {
-     "id": "7931a6a51a",
-     "title": "Snoop Dogg - Drop It Like It's Hot The Golden Pony Remix",
-     "score": 0.8386,
-     "reasons": [
-      "+1.6% stretch on B (122.0 end -> 120.0 start)",
-      "same style",
-      "no vocal clash",
-      "8-bar window (short of a 16-bar phrase)",
-      "different groove (r=0.00)"
-     ],
-     "suggested_transition": "bass_swap_8",
-     "stretch_pct": 1.64,
-     "multiplier": "1",
-     "camelot_a": "3A",
      "camelot_b": "2A"
     },
     {
@@ -125485,8 +125485,8 @@
      "camelot_b": "8A"
     },
     {
-     "id": "9ebf0221c3",
-     "title": "Yeah Yeah Yeahs - Heads Will Roll",
+     "id": "30a2efa137",
+     "title": "Yeah Yeah Yeahs - Heads Will Roll (A-Trak Remix)",
      "score": 0.913,
      "reasons": [
       "-2.3% stretch on B (132.0 end -> 135.0 start)",
@@ -125502,8 +125502,8 @@
      "camelot_b": "8A"
     },
     {
-     "id": "30a2efa137",
-     "title": "Yeah Yeah Yeahs - Heads Will Roll (A-Trak Remix)",
+     "id": "9ebf0221c3",
+     "title": "Yeah Yeah Yeahs - Heads Will Roll",
      "score": 0.913,
      "reasons": [
       "-2.3% stretch on B (132.0 end -> 135.0 start)",
@@ -128198,8 +128198,8 @@
      "camelot_b": "4A"
     },
     {
-     "id": "9ebf0221c3",
-     "title": "Yeah Yeah Yeahs - Heads Will Roll",
+     "id": "30a2efa137",
+     "title": "Yeah Yeah Yeahs - Heads Will Roll (A-Trak Remix)",
      "score": 0.8134,
      "reasons": [
       "-1.5% stretch on B (130.0 end -> 132.0 start)",
@@ -128215,8 +128215,8 @@
      "camelot_b": "1A"
     },
     {
-     "id": "30a2efa137",
-     "title": "Yeah Yeah Yeahs - Heads Will Roll (A-Trak Remix)",
+     "id": "9ebf0221c3",
+     "title": "Yeah Yeah Yeahs - Heads Will Roll",
      "score": 0.8134,
      "reasons": [
       "-1.5% stretch on B (130.0 end -> 132.0 start)",
@@ -128477,6 +128477,23 @@
      "camelot_b": "6A"
     },
     {
+     "id": "30a2efa137",
+     "title": "Yeah Yeah Yeahs - Heads Will Roll (A-Trak Remix)",
+     "score": 0.6484,
+     "reasons": [
+      "same style",
+      "no vocal clash",
+      "similar sound (closer than 86% of pairs)",
+      "8-bar window (short of a 16-bar phrase)",
+      "longer cut"
+     ],
+     "suggested_transition": "ramped_blend",
+     "stretch_pct": 8.97,
+     "multiplier": "1",
+     "camelot_a": "8A",
+     "camelot_b": "1A"
+    },
+    {
      "id": "fdb6138e05",
      "title": "Zara Larsson - Midnight Sun",
      "score": 0.6484,
@@ -128493,23 +128510,6 @@
      "multiplier": "1",
      "camelot_a": "8A",
      "camelot_b": "11B"
-    },
-    {
-     "id": "30a2efa137",
-     "title": "Yeah Yeah Yeahs - Heads Will Roll (A-Trak Remix)",
-     "score": 0.6484,
-     "reasons": [
-      "same style",
-      "no vocal clash",
-      "similar sound (closer than 86% of pairs)",
-      "8-bar window (short of a 16-bar phrase)",
-      "longer cut"
-     ],
-     "suggested_transition": "ramped_blend",
-     "stretch_pct": 8.97,
-     "multiplier": "1",
-     "camelot_a": "8A",
-     "camelot_b": "1A"
     }
    ],
    "in": [
@@ -129867,8 +129867,8 @@
      "camelot_b": "6A"
     },
     {
-     "id": "9ebf0221c3",
-     "title": "Yeah Yeah Yeahs - Heads Will Roll",
+     "id": "30a2efa137",
+     "title": "Yeah Yeah Yeahs - Heads Will Roll (A-Trak Remix)",
      "score": 0.8383,
      "reasons": [
       "-0.8% stretch on B (131.0 end -> 132.0 start)",
@@ -129885,8 +129885,8 @@
      "camelot_b": "1A"
     },
     {
-     "id": "30a2efa137",
-     "title": "Yeah Yeah Yeahs - Heads Will Roll (A-Trak Remix)",
+     "id": "9ebf0221c3",
+     "title": "Yeah Yeah Yeahs - Heads Will Roll",
      "score": 0.8383,
      "reasons": [
       "-0.8% stretch on B (131.0 end -> 132.0 start)",
@@ -130044,8 +130044,8 @@
      "camelot_b": "1B"
     },
     {
-     "id": "9ebf0221c3",
-     "title": "Yeah Yeah Yeahs - Heads Will Roll",
+     "id": "30a2efa137",
+     "title": "Yeah Yeah Yeahs - Heads Will Roll (A-Trak Remix)",
      "score": 0.8445,
      "reasons": [
       "+0.8% stretch on B (132.0 end -> 131.0 start)",
@@ -130062,8 +130062,8 @@
      "camelot_b": "1B"
     },
     {
-     "id": "30a2efa137",
-     "title": "Yeah Yeah Yeahs - Heads Will Roll (A-Trak Remix)",
+     "id": "9ebf0221c3",
+     "title": "Yeah Yeah Yeahs - Heads Will Roll",
      "score": 0.8445,
      "reasons": [
       "+0.8% stretch on B (132.0 end -> 131.0 start)",
@@ -132782,8 +132782,8 @@
      "camelot_b": "9A"
     },
     {
-     "id": "9ebf0221c3",
-     "title": "Yeah Yeah Yeahs - Heads Will Roll",
+     "id": "30a2efa137",
+     "title": "Yeah Yeah Yeahs - Heads Will Roll (A-Trak Remix)",
      "score": 0.8321,
      "reasons": [
       "-1.5% stretch on B (130.0 end -> 132.0 start)",
@@ -132800,8 +132800,8 @@
      "camelot_b": "1A"
     },
     {
-     "id": "30a2efa137",
-     "title": "Yeah Yeah Yeahs - Heads Will Roll (A-Trak Remix)",
+     "id": "9ebf0221c3",
+     "title": "Yeah Yeah Yeahs - Heads Will Roll",
      "score": 0.8321,
      "reasons": [
       "-1.5% stretch on B (130.0 end -> 132.0 start)",
@@ -133255,8 +133255,8 @@
      "camelot_b": "6A"
     },
     {
-     "id": "9ebf0221c3",
-     "title": "Yeah Yeah Yeahs - Heads Will Roll",
+     "id": "30a2efa137",
+     "title": "Yeah Yeah Yeahs - Heads Will Roll (A-Trak Remix)",
      "score": 0.8201,
      "reasons": [
       "+3.0% stretch on B (136.0 end -> 132.0 start)",
@@ -133273,8 +133273,8 @@
      "camelot_b": "1A"
     },
     {
-     "id": "30a2efa137",
-     "title": "Yeah Yeah Yeahs - Heads Will Roll (A-Trak Remix)",
+     "id": "9ebf0221c3",
+     "title": "Yeah Yeah Yeahs - Heads Will Roll",
      "score": 0.8201,
      "reasons": [
       "+3.0% stretch on B (136.0 end -> 132.0 start)",
@@ -133411,8 +133411,8 @@
      "camelot_b": "5A"
     },
     {
-     "id": "9ebf0221c3",
-     "title": "Yeah Yeah Yeahs - Heads Will Roll",
+     "id": "30a2efa137",
+     "title": "Yeah Yeah Yeahs - Heads Will Roll (A-Trak Remix)",
      "score": 0.8073,
      "reasons": [
       "energy steady (-1.2 LU)",
@@ -133429,8 +133429,8 @@
      "camelot_b": "5A"
     },
     {
-     "id": "30a2efa137",
-     "title": "Yeah Yeah Yeahs - Heads Will Roll (A-Trak Remix)",
+     "id": "9ebf0221c3",
+     "title": "Yeah Yeah Yeahs - Heads Will Roll",
      "score": 0.8073,
      "reasons": [
       "energy steady (-1.2 LU)",
@@ -133607,6 +133607,23 @@
      "camelot_b": "2A"
     },
     {
+     "id": "2991758f7f",
+     "title": "Sam Robs & Kelvin Wood - No Scrubs Extended Mix (house cover)",
+     "score": 0.833,
+     "reasons": [
+      "-1.6% stretch on B (123.0 end -> 125.0 start)",
+      "same style",
+      "similar sound (closer than 100% of pairs)",
+      "8-bar window (short of a 16-bar phrase)",
+      "longer cut"
+     ],
+     "suggested_transition": "bass_swap_8",
+     "stretch_pct": 1.63,
+     "multiplier": "1",
+     "camelot_a": "3A",
+     "camelot_b": "1A"
+    },
+    {
      "id": "64cfcb19f3",
      "title": "Bette Midler - I Put A Spell On You Thee Werqn' Btches Club Mix (Joel Dickinson)",
      "score": 0.833,
@@ -133623,23 +133640,6 @@
      "multiplier": "1",
      "camelot_a": "3A",
      "camelot_b": "4A"
-    },
-    {
-     "id": "2991758f7f",
-     "title": "Sam Robs & Kelvin Wood - No Scrubs Extended Mix (house cover)",
-     "score": 0.833,
-     "reasons": [
-      "-1.6% stretch on B (123.0 end -> 125.0 start)",
-      "same style",
-      "similar sound (closer than 100% of pairs)",
-      "8-bar window (short of a 16-bar phrase)",
-      "longer cut"
-     ],
-     "suggested_transition": "bass_swap_8",
-     "stretch_pct": 1.63,
-     "multiplier": "1",
-     "camelot_a": "3A",
-     "camelot_b": "1A"
     },
     {
      "id": "9b81bc4b78",
@@ -135162,8 +135162,8 @@
      "camelot_b": "12A"
     },
     {
-     "id": "9ebf0221c3",
-     "title": "Yeah Yeah Yeahs - Heads Will Roll",
+     "id": "30a2efa137",
+     "title": "Yeah Yeah Yeahs - Heads Will Roll (A-Trak Remix)",
      "score": 0.7571,
      "reasons": [
       "1A -> 12A (-1 (fifth))",
@@ -135180,8 +135180,8 @@
      "camelot_b": "12A"
     },
     {
-     "id": "30a2efa137",
-     "title": "Yeah Yeah Yeahs - Heads Will Roll (A-Trak Remix)",
+     "id": "9ebf0221c3",
+     "title": "Yeah Yeah Yeahs - Heads Will Roll",
      "score": 0.7571,
      "reasons": [
       "1A -> 12A (-1 (fifth))",
@@ -136975,23 +136975,6 @@
      "camelot_b": "8A"
     },
     {
-     "id": "334614c3a0",
-     "title": "Drake - NOKIA MarkCutz Halloween Ringtone Edit (Dirty)",
-     "score": 0.6046,
-     "reasons": [
-      "energy steady (-1.8 LU)",
-      "similar sound (closer than 80% of pairs)",
-      "16-bar phrases both sides",
-      "vocals overlap 13 of 16 bars",
-      "different style"
-     ],
-     "suggested_transition": "quick_blend_echo",
-     "stretch_pct": 7.35,
-     "multiplier": "1",
-     "camelot_a": "11A",
-     "camelot_b": "7A"
-    },
-    {
      "id": "15e073a272",
      "title": "Rihanna - Disturbia DJ Mag Halloween Remix",
      "score": 0.6046,
@@ -137008,6 +136991,23 @@
      "multiplier": "3/4",
      "camelot_a": "11A",
      "camelot_b": "10A"
+    },
+    {
+     "id": "334614c3a0",
+     "title": "Drake - NOKIA MarkCutz Halloween Ringtone Edit (Dirty)",
+     "score": 0.6046,
+     "reasons": [
+      "energy steady (-1.8 LU)",
+      "similar sound (closer than 80% of pairs)",
+      "16-bar phrases both sides",
+      "vocals overlap 13 of 16 bars",
+      "different style"
+     ],
+     "suggested_transition": "quick_blend_echo",
+     "stretch_pct": 7.35,
+     "multiplier": "1",
+     "camelot_a": "11A",
+     "camelot_b": "7A"
     },
     {
      "id": "14c795a717",
@@ -139096,8 +139096,8 @@
      "camelot_b": "9A"
     },
     {
-     "id": "9ebf0221c3",
-     "title": "Yeah Yeah Yeahs - Heads Will Roll",
+     "id": "30a2efa137",
+     "title": "Yeah Yeah Yeahs - Heads Will Roll (A-Trak Remix)",
      "score": 0.9509,
      "reasons": [
       "energy steady (+0.8 LU)",
@@ -139112,8 +139112,8 @@
      "camelot_b": "9A"
     },
     {
-     "id": "30a2efa137",
-     "title": "Yeah Yeah Yeahs - Heads Will Roll (A-Trak Remix)",
+     "id": "9ebf0221c3",
+     "title": "Yeah Yeah Yeahs - Heads Will Roll",
      "score": 0.9509,
      "reasons": [
       "energy steady (+0.8 LU)",
@@ -142524,8 +142524,8 @@
      "camelot_b": "1A"
     },
     {
-     "id": "9ebf0221c3",
-     "title": "Yeah Yeah Yeahs - Heads Will Roll",
+     "id": "30a2efa137",
+     "title": "Yeah Yeah Yeahs - Heads Will Roll (A-Trak Remix)",
      "score": 0.8335,
      "reasons": [
       "+3.0% stretch on B (132.0 end -> 128.0 start)",
@@ -142541,8 +142541,8 @@
      "camelot_b": "1A"
     },
     {
-     "id": "30a2efa137",
-     "title": "Yeah Yeah Yeahs - Heads Will Roll (A-Trak Remix)",
+     "id": "9ebf0221c3",
+     "title": "Yeah Yeah Yeahs - Heads Will Roll",
      "score": 0.8335,
      "reasons": [
       "+3.0% stretch on B (132.0 end -> 128.0 start)",
@@ -144195,8 +144195,8 @@
      "camelot_b": "4B"
     },
     {
-     "id": "9ebf0221c3",
-     "title": "Yeah Yeah Yeahs - Heads Will Roll",
+     "id": "30a2efa137",
+     "title": "Yeah Yeah Yeahs - Heads Will Roll (A-Trak Remix)",
      "score": 0.8154,
      "reasons": [
       "+2.9% stretch on B (136.0 end -> 132.0 start)",
@@ -144212,8 +144212,8 @@
      "camelot_b": "1A"
     },
     {
-     "id": "30a2efa137",
-     "title": "Yeah Yeah Yeahs - Heads Will Roll (A-Trak Remix)",
+     "id": "9ebf0221c3",
+     "title": "Yeah Yeah Yeahs - Heads Will Roll",
      "score": 0.8154,
      "reasons": [
       "+2.9% stretch on B (136.0 end -> 132.0 start)",
@@ -144263,8 +144263,8 @@
      "camelot_b": "8B"
     },
     {
-     "id": "9ebf0221c3",
-     "title": "Yeah Yeah Yeahs - Heads Will Roll",
+     "id": "30a2efa137",
+     "title": "Yeah Yeah Yeahs - Heads Will Roll (A-Trak Remix)",
      "score": 0.8157,
      "reasons": [
       "-3.0% stretch on B (132.0 end -> 136.0 start)",
@@ -144280,8 +144280,8 @@
      "camelot_b": "8B"
     },
     {
-     "id": "30a2efa137",
-     "title": "Yeah Yeah Yeahs - Heads Will Roll (A-Trak Remix)",
+     "id": "9ebf0221c3",
+     "title": "Yeah Yeah Yeahs - Heads Will Roll",
      "score": 0.8157,
      "reasons": [
       "-3.0% stretch on B (132.0 end -> 136.0 start)",
@@ -152579,26 +152579,6 @@
      "camelot_b": "10B"
     },
     {
-     "id": "9b81bc4b78",
-     "title": "Calvin Harris - This Is What You Came For Extended Mix",
-     "score": 0.5082,
-     "reasons": [
-      "B enters -2.9 LU quieter",
-      "vocals overlap 1 of 14 bars",
-      "8B -> 10B (+2 energy boost)",
-      "tempo change x3/2 (124 -> 77): transition track or brake, no blend",
-      "different sound (closer than only 17% of pairs)",
-      "groove not comparable at x3/2",
-      "different style",
-      "longer cut"
-     ],
-     "suggested_transition": "brake_cut",
-     "stretch_pct": 6.27,
-     "multiplier": "3/2",
-     "camelot_a": "8B",
-     "camelot_b": "10B"
-    },
-    {
      "id": "59b14556e8",
      "title": "Lana Del Rey vs Cedric Gervais - Summertime Sadness (Remix) Cedric Gervais Extended Remix",
      "score": 0.5082,
@@ -152616,6 +152596,26 @@
      "stretch_pct": 7.76,
      "multiplier": "3/2",
      "camelot_a": "12A",
+     "camelot_b": "10B"
+    },
+    {
+     "id": "9b81bc4b78",
+     "title": "Calvin Harris - This Is What You Came For Extended Mix",
+     "score": 0.5082,
+     "reasons": [
+      "B enters -2.9 LU quieter",
+      "vocals overlap 1 of 14 bars",
+      "8B -> 10B (+2 energy boost)",
+      "tempo change x3/2 (124 -> 77): transition track or brake, no blend",
+      "different sound (closer than only 17% of pairs)",
+      "groove not comparable at x3/2",
+      "different style",
+      "longer cut"
+     ],
+     "suggested_transition": "brake_cut",
+     "stretch_pct": 6.27,
+     "multiplier": "3/2",
+     "camelot_a": "8B",
      "camelot_b": "10B"
     },
     {
@@ -154886,6 +154886,21 @@
      "camelot_b": "9A"
     },
     {
+     "id": "7931a6a51a",
+     "title": "Snoop Dogg - Drop It Like It's Hot The Golden Pony Remix",
+     "score": 0.9053,
+     "reasons": [
+      "+2.4% stretch on B (125.0 end -> 122.0 start)",
+      "same style",
+      "B has a clean 16-bar intro"
+     ],
+     "suggested_transition": "bass_swap_16",
+     "stretch_pct": 2.4,
+     "multiplier": "1",
+     "camelot_a": "6A",
+     "camelot_b": "3A"
+    },
+    {
      "id": "f41f1882ae",
      "title": "Rihanna - Don't Stop The Music Spryte Remix",
      "score": 0.9053,
@@ -154900,21 +154915,6 @@
      "multiplier": "1",
      "camelot_a": "6A",
      "camelot_b": "11A"
-    },
-    {
-     "id": "7931a6a51a",
-     "title": "Snoop Dogg - Drop It Like It's Hot The Golden Pony Remix",
-     "score": 0.9053,
-     "reasons": [
-      "+2.4% stretch on B (125.0 end -> 122.0 start)",
-      "same style",
-      "B has a clean 16-bar intro"
-     ],
-     "suggested_transition": "bass_swap_16",
-     "stretch_pct": 2.4,
-     "multiplier": "1",
-     "camelot_a": "6A",
-     "camelot_b": "3A"
     },
     {
      "id": "15e073a272",
@@ -160434,6 +160434,24 @@
      "camelot_b": "5A"
     },
     {
+     "id": "6478f7d1bd",
+     "title": "Sonique - It Feels So Good Extended Mix 1998",
+     "score": 0.6752,
+     "reasons": [
+      "same style",
+      "similar sound (closer than 83% of pairs)",
+      "-5.9% stretch on B (135.0 end -> 143.0 start)",
+      "vocals overlap 8 of 8 bars",
+      "no steady beat at A's end (echo out, cut B in on its downbeat)",
+      "longer cut"
+     ],
+     "suggested_transition": "quick_blend_echo",
+     "stretch_pct": 5.91,
+     "multiplier": "1",
+     "camelot_a": "11A",
+     "camelot_b": "5A"
+    },
+    {
      "id": "4098d0dece",
      "title": "Doja Cat - Demons Extended Version",
      "score": 0.6752,
@@ -160450,24 +160468,6 @@
      "stretch_pct": 2.15,
      "multiplier": "1",
      "camelot_a": "5A",
-     "camelot_b": "5A"
-    },
-    {
-     "id": "6478f7d1bd",
-     "title": "Sonique - It Feels So Good Extended Mix 1998",
-     "score": 0.6752,
-     "reasons": [
-      "same style",
-      "similar sound (closer than 83% of pairs)",
-      "-5.9% stretch on B (135.0 end -> 143.0 start)",
-      "vocals overlap 8 of 8 bars",
-      "no steady beat at A's end (echo out, cut B in on its downbeat)",
-      "longer cut"
-     ],
-     "suggested_transition": "quick_blend_echo",
-     "stretch_pct": 5.91,
-     "multiplier": "1",
-     "camelot_a": "11A",
      "camelot_b": "5A"
     },
     {
@@ -164191,6 +164191,22 @@
      "camelot_b": "11A"
     },
     {
+     "id": "a744522f06",
+     "title": "Montell Jordan - This Is How We Do It Mahalo's 90s Baby Rework (extended)",
+     "score": 0.7857,
+     "reasons": [
+      "same tempo (123.0 BPM at A's end)",
+      "energy steady (-0.8 LU)",
+      "same style",
+      "8-bar window (short of a 16-bar phrase)"
+     ],
+     "suggested_transition": "bass_swap_8",
+     "stretch_pct": 0.03,
+     "multiplier": "1",
+     "camelot_a": "3A",
+     "camelot_b": "11A"
+    },
+    {
      "id": "e0dc3c7ab5",
      "title": "Rockwell - Somebody's Watching Me Richastic Halloween Remix",
      "score": 0.7857,
@@ -164205,22 +164221,6 @@
      "stretch_pct": 2.52,
      "multiplier": "1",
      "camelot_a": "12A",
-     "camelot_b": "11A"
-    },
-    {
-     "id": "a744522f06",
-     "title": "Montell Jordan - This Is How We Do It Mahalo's 90s Baby Rework (extended)",
-     "score": 0.7857,
-     "reasons": [
-      "same tempo (123.0 BPM at A's end)",
-      "energy steady (-0.8 LU)",
-      "same style",
-      "8-bar window (short of a 16-bar phrase)"
-     ],
-     "suggested_transition": "bass_swap_8",
-     "stretch_pct": 0.03,
-     "multiplier": "1",
-     "camelot_a": "3A",
      "camelot_b": "11A"
     }
    ]
@@ -166525,8 +166525,8 @@
      "camelot_b": "12A"
     },
     {
-     "id": "9ebf0221c3",
-     "title": "Yeah Yeah Yeahs - Heads Will Roll",
+     "id": "30a2efa137",
+     "title": "Yeah Yeah Yeahs - Heads Will Roll (A-Trak Remix)",
      "score": 0.7987,
      "reasons": [
       "+3.0% stretch on B (132.0 end -> 128.0 start)",
@@ -166543,8 +166543,8 @@
      "camelot_b": "12A"
     },
     {
-     "id": "30a2efa137",
-     "title": "Yeah Yeah Yeahs - Heads Will Roll (A-Trak Remix)",
+     "id": "9ebf0221c3",
+     "title": "Yeah Yeah Yeahs - Heads Will Roll",
      "score": 0.7987,
      "reasons": [
       "+3.0% stretch on B (132.0 end -> 128.0 start)",
@@ -167969,8 +167969,8 @@
   "pool": {
    "out": [
     {
-     "id": "9ebf0221c3",
-     "title": "Yeah Yeah Yeahs - Heads Will Roll",
+     "id": "30a2efa137",
+     "title": "Yeah Yeah Yeahs - Heads Will Roll (A-Trak Remix)",
      "score": 0.8417,
      "reasons": [
       "-1.5% stretch on B (130.0 end -> 132.0 start)",
@@ -167987,8 +167987,8 @@
      "camelot_b": "1A"
     },
     {
-     "id": "30a2efa137",
-     "title": "Yeah Yeah Yeahs - Heads Will Roll (A-Trak Remix)",
+     "id": "9ebf0221c3",
+     "title": "Yeah Yeah Yeahs - Heads Will Roll",
      "score": 0.8417,
      "reasons": [
       "-1.5% stretch on B (130.0 end -> 132.0 start)",
@@ -168216,8 +168216,8 @@
      "camelot_b": "11B"
     },
     {
-     "id": "9ebf0221c3",
-     "title": "Yeah Yeah Yeahs - Heads Will Roll",
+     "id": "30a2efa137",
+     "title": "Yeah Yeah Yeahs - Heads Will Roll (A-Trak Remix)",
      "score": 0.8029,
      "reasons": [
       "+1.5% stretch on B (132.0 end -> 130.0 start)",
@@ -168234,8 +168234,8 @@
      "camelot_b": "11B"
     },
     {
-     "id": "30a2efa137",
-     "title": "Yeah Yeah Yeahs - Heads Will Roll (A-Trak Remix)",
+     "id": "9ebf0221c3",
+     "title": "Yeah Yeah Yeahs - Heads Will Roll",
      "score": 0.8029,
      "reasons": [
       "+1.5% stretch on B (132.0 end -> 130.0 start)",
@@ -171377,22 +171377,6 @@
      "camelot_b": "10A"
     },
     {
-     "id": "630f437bd1",
-     "title": "Lady Gaga - Just Dance",
-     "score": 0.8453,
-     "reasons": [
-      "-1.4% stretch on B (117.4 end -> 119.0 start)",
-      "12B -> 12B",
-      "same style",
-      "vocals overlap 11 of 13 bars"
-     ],
-     "suggested_transition": "quick_blend_echo",
-     "stretch_pct": 1.36,
-     "multiplier": "1",
-     "camelot_a": "12B",
-     "camelot_b": "12B"
-    },
-    {
      "id": "c246e54bb7",
      "title": "Tame Impala & Jennie - Dracula (Jennie Remix) Extended Remix",
      "score": 0.8453,
@@ -171408,6 +171392,22 @@
      "multiplier": "1",
      "camelot_a": "12B",
      "camelot_b": "2A"
+    },
+    {
+     "id": "630f437bd1",
+     "title": "Lady Gaga - Just Dance",
+     "score": 0.8453,
+     "reasons": [
+      "-1.4% stretch on B (117.4 end -> 119.0 start)",
+      "12B -> 12B",
+      "same style",
+      "vocals overlap 11 of 13 bars"
+     ],
+     "suggested_transition": "quick_blend_echo",
+     "stretch_pct": 1.36,
+     "multiplier": "1",
+     "camelot_a": "12B",
+     "camelot_b": "12B"
     },
     {
      "id": "32263e2426",
@@ -175987,8 +175987,8 @@
      "camelot_b": "1B"
     },
     {
-     "id": "9ebf0221c3",
-     "title": "Yeah Yeah Yeahs - Heads Will Roll",
+     "id": "30a2efa137",
+     "title": "Yeah Yeah Yeahs - Heads Will Roll (A-Trak Remix)",
      "score": 0.8171,
      "reasons": [
       "+0.8% stretch on B (132.0 end -> 131.0 start)",
@@ -176004,8 +176004,8 @@
      "camelot_b": "1B"
     },
     {
-     "id": "30a2efa137",
-     "title": "Yeah Yeah Yeahs - Heads Will Roll (A-Trak Remix)",
+     "id": "9ebf0221c3",
+     "title": "Yeah Yeah Yeahs - Heads Will Roll",
      "score": 0.8171,
      "reasons": [
       "+0.8% stretch on B (132.0 end -> 131.0 start)",
@@ -181824,8 +181824,8 @@
      "camelot_b": "10A"
     },
     {
-     "id": "9ebf0221c3",
-     "title": "Yeah Yeah Yeahs - Heads Will Roll",
+     "id": "30a2efa137",
+     "title": "Yeah Yeah Yeahs - Heads Will Roll (A-Trak Remix)",
      "score": 0.7266,
      "reasons": [
       "+2.2% stretch on B (135.0 end -> 132.0 start)",
@@ -181843,8 +181843,8 @@
      "camelot_b": "1A"
     },
     {
-     "id": "30a2efa137",
-     "title": "Yeah Yeah Yeahs - Heads Will Roll (A-Trak Remix)",
+     "id": "9ebf0221c3",
+     "title": "Yeah Yeah Yeahs - Heads Will Roll",
      "score": 0.7266,
      "reasons": [
       "+2.2% stretch on B (135.0 end -> 132.0 start)",
@@ -182509,24 +182509,6 @@
      "camelot_b": "5A"
     },
     {
-     "id": "f068a57770",
-     "title": "Doja Cat - Demons Epiphany Hip-Hop flip",
-     "score": 0.6437,
-     "reasons": [
-      "5A -> 5A",
-      "similar sound (closer than 100% of pairs)",
-      "half-time/double-time blend (x1/2), 0.0% stretch",
-      "B enters -11.3 LU quieter",
-      "8-bar window (short of a 16-bar phrase)",
-      "different groove (r=0.30)"
-     ],
-     "suggested_transition": "bass_swap_8",
-     "stretch_pct": 0.0,
-     "multiplier": "1/2",
-     "camelot_a": "5A",
-     "camelot_b": "5A"
-    },
-    {
      "id": "a04a0734d0",
      "title": "Flo Rida - Low URAI Remix (Dirty)",
      "score": 0.6437,
@@ -182542,6 +182524,24 @@
      "stretch_pct": 3.45,
      "multiplier": "1",
      "camelot_a": "8A",
+     "camelot_b": "5A"
+    },
+    {
+     "id": "f068a57770",
+     "title": "Doja Cat - Demons Epiphany Hip-Hop flip",
+     "score": 0.6437,
+     "reasons": [
+      "5A -> 5A",
+      "similar sound (closer than 100% of pairs)",
+      "half-time/double-time blend (x1/2), 0.0% stretch",
+      "B enters -11.3 LU quieter",
+      "8-bar window (short of a 16-bar phrase)",
+      "different groove (r=0.30)"
+     ],
+     "suggested_transition": "bass_swap_8",
+     "stretch_pct": 0.0,
+     "multiplier": "1/2",
+     "camelot_a": "5A",
      "camelot_b": "5A"
     },
     {
@@ -183020,20 +183020,21 @@
      "camelot_b": "10B"
     },
     {
-     "id": "386cbfae4c",
-     "title": "Nelly - Hot In Herre Colin Jay Remix (Intro - Clean)",
+     "id": "7b4e00b93b",
+     "title": "Royksopp & Robyn - Do It Again",
      "score": 0.8369,
      "reasons": [
       "-0.8% stretch on B (123.0 end -> 124.0 start)",
-      "B has a clean 16-bar intro",
-      "B enters -2.2 LU quieter",
-      "different groove (r=0.39)"
+      "energy steady (-2.0 LU)",
+      "similar sound (closer than 99% of pairs)",
+      "different groove (r=0.00)",
+      "longer cut"
      ],
      "suggested_transition": "bass_swap_8",
      "stretch_pct": 0.81,
      "multiplier": "1",
      "camelot_a": "12A",
-     "camelot_b": "9A"
+     "camelot_b": "4A"
     }
    ],
    "in": [
@@ -193305,8 +193306,8 @@
      "camelot_b": "12A"
     },
     {
-     "id": "9ebf0221c3",
-     "title": "Yeah Yeah Yeahs - Heads Will Roll",
+     "id": "30a2efa137",
+     "title": "Yeah Yeah Yeahs - Heads Will Roll (A-Trak Remix)",
      "score": 0.8845,
      "reasons": [
       "-1.7% stretch on B (132.0 end -> 134.3 start)",
@@ -193322,8 +193323,8 @@
      "camelot_b": "12A"
     },
     {
-     "id": "30a2efa137",
-     "title": "Yeah Yeah Yeahs - Heads Will Roll (A-Trak Remix)",
+     "id": "9ebf0221c3",
+     "title": "Yeah Yeah Yeahs - Heads Will Roll",
      "score": 0.8845,
      "reasons": [
       "-1.7% stretch on B (132.0 end -> 134.3 start)",
@@ -201971,8 +201972,8 @@
      "camelot_b": "8B"
     },
     {
-     "id": "9ebf0221c3",
-     "title": "Yeah Yeah Yeahs - Heads Will Roll",
+     "id": "30a2efa137",
+     "title": "Yeah Yeah Yeahs - Heads Will Roll (A-Trak Remix)",
      "score": 0.863,
      "reasons": [
       "same style",
@@ -201988,8 +201989,8 @@
      "camelot_b": "8B"
     },
     {
-     "id": "30a2efa137",
-     "title": "Yeah Yeah Yeahs - Heads Will Roll (A-Trak Remix)",
+     "id": "9ebf0221c3",
+     "title": "Yeah Yeah Yeahs - Heads Will Roll",
      "score": 0.863,
      "reasons": [
       "same style",
@@ -203473,8 +203474,8 @@
      "camelot_b": "12A"
     },
     {
-     "id": "9ebf0221c3",
-     "title": "Yeah Yeah Yeahs - Heads Will Roll",
+     "id": "30a2efa137",
+     "title": "Yeah Yeah Yeahs - Heads Will Roll (A-Trak Remix)",
      "score": 0.821,
      "reasons": [
       "-1.1% stretch on B (130.5 end -> 132.0 start)",
@@ -203490,8 +203491,8 @@
      "camelot_b": "1A"
     },
     {
-     "id": "30a2efa137",
-     "title": "Yeah Yeah Yeahs - Heads Will Roll (A-Trak Remix)",
+     "id": "9ebf0221c3",
+     "title": "Yeah Yeah Yeahs - Heads Will Roll",
      "score": 0.821,
      "reasons": [
       "-1.1% stretch on B (130.5 end -> 132.0 start)",
@@ -205056,26 +205057,6 @@
      "camelot_b": "8A"
     },
     {
-     "id": "c90611dc88",
-     "title": "Jolyon Petch - Thriller Freejak Remix (house cover)",
-     "score": 0.4817,
-     "reasons": [
-      "energy steady (-1.1 LU)",
-      "vocals overlap 2 of 11 bars",
-      "12A -> 8A (pitch-shift B by -1 st), key unsure",
-      "tempo change x3/2 (128 -> 79): transition track or brake, no blend",
-      "11-bar window (short of a 16-bar phrase)",
-      "different sound (closer than only 1% of pairs)",
-      "groove not comparable at x3/2",
-      "longer cut"
-     ],
-     "suggested_transition": "brake_cut",
-     "stretch_pct": 7.71,
-     "multiplier": "3/2",
-     "camelot_a": "12A",
-     "camelot_b": "8A"
-    },
-    {
      "id": "14c795a717",
      "title": "T. Rex - Get It On Joe T. Vannelli Vocal Attack Mix",
      "score": 0.4817,
@@ -205094,6 +205075,26 @@
      "stretch_pct": 7.71,
      "multiplier": "3/2",
      "camelot_a": "3A",
+     "camelot_b": "8A"
+    },
+    {
+     "id": "c90611dc88",
+     "title": "Jolyon Petch - Thriller Freejak Remix (house cover)",
+     "score": 0.4817,
+     "reasons": [
+      "energy steady (-1.1 LU)",
+      "vocals overlap 2 of 11 bars",
+      "12A -> 8A (pitch-shift B by -1 st), key unsure",
+      "tempo change x3/2 (128 -> 79): transition track or brake, no blend",
+      "11-bar window (short of a 16-bar phrase)",
+      "different sound (closer than only 1% of pairs)",
+      "groove not comparable at x3/2",
+      "longer cut"
+     ],
+     "suggested_transition": "brake_cut",
+     "stretch_pct": 7.71,
+     "multiplier": "3/2",
+     "camelot_a": "12A",
      "camelot_b": "8A"
     },
     {
@@ -206580,8 +206581,8 @@
      "camelot_b": "9A"
     },
     {
-     "id": "9ebf0221c3",
-     "title": "Yeah Yeah Yeahs - Heads Will Roll",
+     "id": "30a2efa137",
+     "title": "Yeah Yeah Yeahs - Heads Will Roll (A-Trak Remix)",
      "score": 0.8517,
      "reasons": [
       "energy steady (-0.7 LU)",
@@ -206598,8 +206599,8 @@
      "camelot_b": "9A"
     },
     {
-     "id": "30a2efa137",
-     "title": "Yeah Yeah Yeahs - Heads Will Roll (A-Trak Remix)",
+     "id": "9ebf0221c3",
+     "title": "Yeah Yeah Yeahs - Heads Will Roll",
      "score": 0.8517,
      "reasons": [
       "energy steady (-0.7 LU)",
@@ -207765,24 +207766,6 @@
      "camelot_b": "11A"
     },
     {
-     "id": "9c20f328b8",
-     "title": "DJ Dado - X-Files",
-     "score": 0.6059,
-     "reasons": [
-      "B has a clean 16-bar intro",
-      "half-time/double-time blend (x1/2), 2.2% stretch",
-      "B enters -4.3 LU quieter",
-      "no steady beat at A's end (echo out, cut B in on its downbeat)",
-      "different sound (closer than only 28% of pairs)",
-      "different groove (r=0.00)"
-     ],
-     "suggested_transition": "quick_blend_echo",
-     "stretch_pct": 2.19,
-     "multiplier": "1/2",
-     "camelot_a": "5A",
-     "camelot_b": "8A"
-    },
-    {
      "id": "dbc03c2426",
      "title": "KATSEYE - GNARLY Amanda Sze Remix Rework",
      "score": 0.6059,
@@ -207800,6 +207783,24 @@
      "multiplier": "1/2",
      "camelot_a": "5A",
      "camelot_b": "6A"
+    },
+    {
+     "id": "9c20f328b8",
+     "title": "DJ Dado - X-Files",
+     "score": 0.6059,
+     "reasons": [
+      "B has a clean 16-bar intro",
+      "half-time/double-time blend (x1/2), 2.2% stretch",
+      "B enters -4.3 LU quieter",
+      "no steady beat at A's end (echo out, cut B in on its downbeat)",
+      "different sound (closer than only 28% of pairs)",
+      "different groove (r=0.00)"
+     ],
+     "suggested_transition": "quick_blend_echo",
+     "stretch_pct": 2.19,
+     "multiplier": "1/2",
+     "camelot_a": "5A",
+     "camelot_b": "8A"
     },
     {
      "id": "fb5e2fb59f",
@@ -210709,24 +210710,6 @@
      "camelot_b": "9A"
     },
     {
-     "id": "9b81bc4b78",
-     "title": "Calvin Harris - This Is What You Came For Extended Mix",
-     "score": 0.6563,
-     "reasons": [
-      "16-bar phrases both sides",
-      "B enters -2.6 LU quieter",
-      "similar sound (closer than 86% of pairs)",
-      "tempo change x4/3 (151 -> 124): transition track or brake, no blend",
-      "groove not comparable at x4/3",
-      "longer cut"
-     ],
-     "suggested_transition": "brake_cut",
-     "stretch_pct": 9.49,
-     "multiplier": "4/3",
-     "camelot_a": "11B",
-     "camelot_b": "8B"
-    },
-    {
      "id": "962eea95bf",
      "title": "Sister Sledge - We Are Family Luca Debonaire & DJ Marlon Remix",
      "score": 0.6563,
@@ -210743,6 +210726,24 @@
      "multiplier": "4/3",
      "camelot_a": "11B",
      "camelot_b": "10B"
+    },
+    {
+     "id": "9b81bc4b78",
+     "title": "Calvin Harris - This Is What You Came For Extended Mix",
+     "score": 0.6563,
+     "reasons": [
+      "16-bar phrases both sides",
+      "B enters -2.6 LU quieter",
+      "similar sound (closer than 86% of pairs)",
+      "tempo change x4/3 (151 -> 124): transition track or brake, no blend",
+      "groove not comparable at x4/3",
+      "longer cut"
+     ],
+     "suggested_transition": "brake_cut",
+     "stretch_pct": 9.49,
+     "multiplier": "4/3",
+     "camelot_a": "11B",
+     "camelot_b": "8B"
     },
     {
      "id": "76878a6a74",
@@ -212514,6 +212515,22 @@
      "camelot_b": "9A"
     },
     {
+     "id": "1971ce842e",
+     "title": "Doja Cat - Paint The Town Red (FRASER Bootleg Remix)",
+     "score": 0.8033,
+     "reasons": [
+      "-2.4% stretch on B (123.0 end -> 126.0 start)",
+      "energy steady (+0.2 LU)",
+      "similar sound (closer than 95% of pairs)",
+      "8-bar window (short of a 16-bar phrase)"
+     ],
+     "suggested_transition": "bass_swap_8",
+     "stretch_pct": 2.44,
+     "multiplier": "1",
+     "camelot_a": "2A",
+     "camelot_b": "6A"
+    },
+    {
      "id": "7931a6a51a",
      "title": "Snoop Dogg - Drop It Like It's Hot The Golden Pony Remix",
      "score": 0.8033,
@@ -212529,22 +212546,6 @@
      "multiplier": "1",
      "camelot_a": "2A",
      "camelot_b": "3A"
-    },
-    {
-     "id": "1971ce842e",
-     "title": "Doja Cat - Paint The Town Red (FRASER Bootleg Remix)",
-     "score": 0.8033,
-     "reasons": [
-      "-2.4% stretch on B (123.0 end -> 126.0 start)",
-      "energy steady (+0.2 LU)",
-      "similar sound (closer than 95% of pairs)",
-      "8-bar window (short of a 16-bar phrase)"
-     ],
-     "suggested_transition": "bass_swap_8",
-     "stretch_pct": 2.44,
-     "multiplier": "1",
-     "camelot_a": "2A",
-     "camelot_b": "6A"
     }
    ],
    "in": [
@@ -212671,20 +212672,20 @@
      "camelot_b": "2A"
     },
     {
-     "id": "9c0a47d25a",
-     "title": "JAY-Z - Empire State Of Mind Krooner Remix",
+     "id": "7931a6a51a",
+     "title": "Snoop Dogg - Drop It Like It's Hot The Golden Pony Remix",
      "score": 0.7998,
      "reasons": [
-      "-2.5% stretch on B (120.0 end -> 123.0 start)",
-      "energy steady (-1.2 LU)",
-      "similar sound (closer than 96% of pairs)",
+      "-0.8% stretch on B (122.0 end -> 123.0 start)",
+      "energy steady (-2.0 LU)",
+      "no vocal clash",
       "8-bar window (short of a 16-bar phrase)",
-      "different groove (r=0.00)"
+      "different groove (r=0.25)"
      ],
      "suggested_transition": "bass_swap_8",
-     "stretch_pct": 2.5,
+     "stretch_pct": 0.82,
      "multiplier": "1",
-     "camelot_a": "2A",
+     "camelot_a": "3A",
      "camelot_b": "2A"
     }
    ]

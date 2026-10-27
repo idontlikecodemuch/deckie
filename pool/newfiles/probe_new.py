@@ -1,5 +1,6 @@
 import json, os, subprocess, hashlib, time, sys
-ROOT = "/Users/christophershannon/personal/90s2000 playlist"; S = os.path.dirname(os.path.abspath(__file__))
+MUSIC_ROOT = os.environ.get("DECKIE_MUSIC_ROOT", "/Users/christophershannon/personal/90s2000 playlist")  # where the audio lives; never inside the repo
+ROOT = MUSIC_ROOT; S = os.path.dirname(os.path.abspath(__file__))
 old = {p["file"]: p for p in json.load(open(f"{S}/probe.json"))}
 cut = time.mktime((2026, 10, 20, 18, 0, 0, 0, 0, -1))  # Oct 20 2026 evening: the Oct 17 singles are already on the discs
 files = sorted(f for f in os.listdir(ROOT) if os.path.isfile(os.path.join(ROOT, f)) and f.lower().endswith((".mp3", ".mp4", ".m4a", ".wav", ".aiff", ".flac")) and os.path.getmtime(os.path.join(ROOT, f)) > cut)

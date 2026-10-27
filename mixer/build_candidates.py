@@ -2,10 +2,12 @@
 """Rebuild mixer/candidates.json from the pool: every non-library row (the four v2 discs plus
 additions), with on_disc/page flags and the longest cut of each song version marked."""
 import json, os, re, collections
-ROOT = "/Users/christophershannon/personal/90s2000 playlist"
 HERE = os.path.dirname(os.path.abspath(__file__))
-rows = json.load(open(os.path.join(ROOT, "_pool build", "newfiles", "pool.json")))
-pd = json.load(open(os.path.join(ROOT, "Mike page", "data.json")))
+REPO = os.path.dirname(HERE)
+MUSIC_ROOT = os.environ.get("DECKIE_MUSIC_ROOT", "/Users/christophershannon/personal/90s2000 playlist")  # where the audio lives; never inside the repo
+ROOT = MUSIC_ROOT
+rows = json.load(open(os.path.join(REPO, "pool", "newfiles", "pool.json")))
+pd = json.load(open(os.path.join(REPO, "web-player", "data.json")))
 page = {t["id"]: t for t in (pd["tracks"] if isinstance(pd, dict) else pd)}
 extra = set(json.load(open(os.path.join(HERE, "extra_lib_ids.json")))) if os.path.exists(os.path.join(HERE, "extra_lib_ids.json")) else set()
 sel = [r for r in rows if r.get("src") != "lib" or r["id"] in extra]   # library tracks listed in extra_lib_ids.json join the candidates

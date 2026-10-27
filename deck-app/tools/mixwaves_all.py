@@ -8,7 +8,7 @@ import json, os, sys, math
 import numpy as np, soundfile as sf
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(os.path.dirname(HERE))
-MIXER = os.path.join(ROOT, "_pool build", "mixer")
+MIXER = os.path.join(ROOT, "mixer")  # ROOT is the repo
 B64 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
 LEAD_BARS, MAX_BARS, HEAD_BARS = 8, 32, 64
 SPB = 8 if "--spb" not in sys.argv else int(sys.argv[sys.argv.index("--spb") + 1])

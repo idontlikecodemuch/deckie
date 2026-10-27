@@ -13,8 +13,8 @@ Reads only; never touches the MP3s or the files under "_pool build" and "Mike pa
 import json, os, sys, shutil, subprocess, datetime
 HERE = os.path.dirname(os.path.abspath(__file__))
 APP = os.path.dirname(HERE)
-ROOT = os.path.dirname(APP)
-MIXER = os.path.join(ROOT, "_pool build", "mixer")
+ROOT = os.path.dirname(APP)  # the repo
+MIXER = os.path.join(ROOT, "mixer")
 RES = os.path.join(APP, "Deck", "Resources")
 BUILD = os.path.join(HERE, "build")
 VARIANTS = "o,r-4,r+4"

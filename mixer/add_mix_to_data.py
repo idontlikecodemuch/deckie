@@ -5,8 +5,8 @@ into best (from mixer/pairs.json, score >= 0.55, up to 8), with a short label fo
 """
 import json, os, datetime
 HERE = os.path.dirname(os.path.abspath(__file__))
-ROOT = os.path.dirname(os.path.dirname(HERE))
-PAGE = os.path.join(ROOT, "Mike page")
+REPO = os.path.dirname(HERE)
+PAGE = os.path.join(REPO, "web-player")
 LABEL = {"bass_swap_16": "blend", "bass_swap_32": "long blend", "bass_swap_8": "short blend", "ramped_blend": "ramp blend",
          "filter_sweep": "filter out", "quick_blend_echo": "echo out", "brake_cut": "brake/cut"}
 MIN, TOP = 0.55, 12

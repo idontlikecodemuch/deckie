@@ -2,14 +2,16 @@
 """Build the two-disc mix map page: both CDs in disc order, SVG lines from each track's end to
 its best next tracks (from mixer/recs.json), coloured by suggested transition."""
 import json, os, re, sys, html
-ROOT = "/Users/christophershannon/personal/90s2000 playlist"
-MIX = os.path.join(ROOT, "_pool build", "mixer")
+MIX = os.path.dirname(os.path.abspath(__file__))
+REPO = os.path.dirname(MIX)
+MUSIC_ROOT = os.environ.get("DECKIE_MUSIC_ROOT", "/Users/christophershannon/personal/90s2000 playlist")  # where the audio lives; never inside the repo
+ROOT = MUSIC_ROOT
 OUT_HTML = sys.argv[1]
 TOPN, MINSCORE = 5, 0.55
 
 recs = json.load(open(os.path.join(MIX, "recs.json")))
 cands = {c["id"]: c for c in json.load(open(os.path.join(MIX, "candidates.json")))}
-pd = json.load(open(os.path.join(ROOT, "Mike page", "data.json")))
+pd = json.load(open(os.path.join(REPO, "web-player", "data.json")))
 page = pd["tracks"] if isinstance(pd, dict) else pd
 sel = [t for t in page if t.get("selected")]
 
@@ -25,7 +27,7 @@ for disc, dname in (("1", "CD1 Singalongs"), ("2", "CD2 Mix-ins")):
             if m: names[(disc, folder, int(m.group(1)))] = m.group(2)
 
 # track numbers: the disc build sorted each folder by (pool bpm, title.lower())
-pool = {r["id"]: r for r in json.load(open(os.path.join(ROOT, "_pool build", "newfiles", "pool.json")))}
+pool = {r["id"]: r for r in json.load(open(os.path.join(REPO, "pool", "newfiles", "pool.json")))}
 num = {}
 for disc in ("1", "2"):
     for folder in sorted({t["folder"] for t in sel if t["disc"] == disc}):

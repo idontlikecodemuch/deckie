@@ -11,8 +11,8 @@ Burn with: hdiutil burn -forceclose -underrun -speed 10 -noverifyburn -noeject "
 import os, re, shutil, subprocess, sys, unicodedata
 FFMPEG = "/opt/homebrew/bin/ffmpeg"
 HERE = os.path.dirname(os.path.abspath(__file__))
-ROOT = os.path.dirname(os.path.dirname(HERE))
-OUT = os.path.join(ROOT, "CDs mix")
+MUSIC_ROOT = os.environ.get("DECKIE_MUSIC_ROOT", "/Users/christophershannon/personal/90s2000 playlist")  # where the audio lives; never inside the repo
+OUT = os.path.join(MUSIC_ROOT, "CDs mix")  # disc artifacts stay beside the audio
 ALLOWED = re.compile(r"[^A-Za-z0-9 \-_.()',&]")
 def ascii_fold(s): return ALLOWED.sub("", unicodedata.normalize("NFKD", s).encode("ascii", "ignore").decode())
 def run(cmd): return subprocess.run(cmd, capture_output=True, text=True)

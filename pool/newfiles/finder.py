@@ -1,5 +1,6 @@
 import os, re, unicodedata
-ROOT = '/Users/christophershannon/personal/90s2000 playlist'
+MUSIC_ROOT = os.environ.get("DECKIE_MUSIC_ROOT", "/Users/christophershannon/personal/90s2000 playlist")  # where the audio lives; never inside the repo
+ROOT = MUSIC_ROOT
 F = {
  "COLL": "dance-hits-collection-90th-1990-2000_20230206",
  "SUB":  "dance-hits-collection-90th-1990-2000_20230206/Dance Hits Collection 90th (1990-2000)",

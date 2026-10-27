@@ -143,7 +143,7 @@ For every directed pair A -> B (A's `mix_out` against B's `mix_in`; pairs sharin
 * **rhythm**: max(0, Pearson r) of `onset_pattern_16`; for k = 2 or 1/2 the half-tempo track's pattern is folded
   to one bar and stretched to 16 cells first; other multipliers get a neutral 0.25.
 
-`score = 0.30 tempo + 0.20 key + 0.15 energy + 0.15 vocal + 0.10 phrase + 0.05 timbre + 0.05 rhythm`,
+`score = 0.26 tempo + 0.14 key + 0.11 energy + 0.11 vocal + 0.08 phrase + 0.12 timbre + 0.05 rhythm + 0.13 style` (the weights `W` in score.py since Oct 24; the earlier 0.30/0.20/0.15 formula is what recs.md from older runs prints),
 plus +0.03 when the *recommended* track (B for outgoing, A for incoming lists) is >= 270 s ("longer cut").
 Gates: stretch <= 10%; v > 0.5 only with `quick_blend_echo` (echo-out) or `brake_cut` (cut).
 

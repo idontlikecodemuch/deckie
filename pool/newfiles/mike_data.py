@@ -1,6 +1,10 @@
 import json, os, re, shutil, sys, time
 SP = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))  # the folder holding newfiles/, shop/, twodisc/
-ROOT = "/Users/christophershannon/personal/90s2000 playlist"; OUT = os.path.join(ROOT, "Mike page")
+REPO = os.path.dirname(SP)
+MUSIC_ROOT = os.environ.get("DECKIE_MUSIC_ROOT", "/Users/christophershannon/personal/90s2000 playlist")  # where the audio lives; never inside the repo
+ROOT = MUSIC_ROOT
+OUT = os.path.join(MUSIC_ROOT, "Mike page")      # hard-linked MP3s for the phone page stay beside the audio
+DATA_OUT = os.path.join(REPO, "web-player")       # data.js + data.json live in the repo
 import unicodedata
 def safe(name):
     n = unicodedata.normalize("NFKD", name).encode("ascii", "ignore").decode()
@@ -104,8 +108,8 @@ data = {"generated": time.strftime("%Y-%m-%d"), "budgetMB": 690, "folders": FOLD
         "discs": {"1": {"name": "CD1 Singalongs", "short": "Singalongs", "blurb": "The crowd-pleasers: hooks the whole room sings. 90s and 2000s pop, hip-hop and dance plus the Halloween staples. Where a slow original had a club edit or intro version, that version is here instead of the original."},
                   "2": {"name": "CD2 Mix-ins", "short": "Mix-ins", "blurb": "Your lane: house remixes, mash-ups, transitions and tools that layer easily, a few CD4 favourites, and the Halloween tracks that work as a blend rather than a singalong."}},
         "tracks": tracks}
-json.dump(data, open(os.path.join(OUT, "data.json"), "w"), indent=1, ensure_ascii=False)
-open(os.path.join(OUT, "data.js"), "w").write("window.MIKE_DATA = " + json.dumps(data, ensure_ascii=False) + ";\n")
+json.dump(data, open(os.path.join(DATA_OUT, "data.json"), "w"), indent=1, ensure_ascii=False)
+open(os.path.join(DATA_OUT, "data.js"), "w").write("window.MIKE_DATA = " + json.dumps(data, ensure_ascii=False) + ";\n")
 for d in "12":
     sel = [t for t in tracks if t["disc"] == d and t["selected"]]; alt = [t for t in tracks if t["disc"] == d and not t["selected"]]
     print(f"CD{d}: {len(sel)} on, {round(sum(t['mb'] for t in sel),1)} MB; {len(alt)} alternates")

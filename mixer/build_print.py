@@ -2,9 +2,11 @@
 """One-page printout: both discs in disc order with faint lines from a track's end to the
 tracks it mixes into (top K per track above MINSCORE, from mixer/recs.json). Letter portrait."""
 import json, os, re, sys, html, subprocess
-ROOT = "/Users/christophershannon/personal/90s2000 playlist"
-MIX = os.path.join(ROOT, "_pool build", "mixer")
-OUT = os.path.join(ROOT, "CDs v3")
+MIX = os.path.dirname(os.path.abspath(__file__))
+REPO = os.path.dirname(MIX)
+MUSIC_ROOT = os.environ.get("DECKIE_MUSIC_ROOT", "/Users/christophershannon/personal/90s2000 playlist")  # where the audio lives; never inside the repo
+ROOT = MUSIC_ROOT
+OUT = os.path.join(MUSIC_ROOT, "CDs v3")  # disc artifacts stay beside the audio
 CHROME = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
 TOPK = int(sys.argv[1]) if len(sys.argv) > 1 else 4
 MINSCORE = float(sys.argv[2]) if len(sys.argv) > 2 else 0.75

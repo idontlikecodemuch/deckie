@@ -18,8 +18,9 @@ that file with ast so its side effects do not run).
 import ast, html, json, os, re, shutil, subprocess, sys, unicodedata
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-ROOT = os.path.dirname(HERE)
-OUT = os.path.join(ROOT, "CDs v3")
+MUSIC_ROOT = os.environ.get("DECKIE_MUSIC_ROOT", "/Users/christophershannon/personal/90s2000 playlist")  # where the audio lives; never inside the repo
+ROOT = MUSIC_ROOT  # pool.json paths are relative to the music folder
+OUT = os.path.join(MUSIC_ROOT, "CDs v3")  # disc artifacts stay beside the audio
 ISO_DIR = os.path.join(OUT, "ISO")
 FFMPEG = "/opt/homebrew/bin/ffmpeg"
 FFPROBE = "/opt/homebrew/bin/ffprobe"

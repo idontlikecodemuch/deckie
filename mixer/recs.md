@@ -129,8 +129,8 @@
   - 0.92 -> T. Rex - Get It On Joe T. Vannelli Vocal Attack Mix | 0.0% (x1) | 10A->3A | bass_swap_16 | same tempo (128.0 BPM at A's end); energy steady (-1.1 LU); B has a clean 16-bar intro; different groove (r=0.30); longer cut
 - **Rihanna - We Found Love Calvin Harris Extended Mix** (128.0 BPM, 2B)
   - 0.95 -> Kyle Dixon & Michael Stein - Stranger Things Theme Kwest Halloween Remix | 0.0% (x1) | 2B->9A | bass_swap_16 | same tempo (128.0 BPM at A's end); B has a clean 16-bar intro; same style; longer cut
-  - 0.94 -> Calvin Harris - This Is What You Came For Extended Mix | 3.1% (x1) | 2B->8B | bass_swap_16 | energy steady (+1.2 LU); same style; +3.1% stretch on B (128.0 end -> 124.0 start); longer cut
   - 0.94 -> Swedish House Mafia - Don't You Worry Child | 0.8% (x1) | 2B->10B | bass_swap_16 | -0.8% stretch on B (128.0 end -> 129.0 start); energy steady (-0.0 LU); B has a clean 16-bar intro; different groove (r=0.05); longer cut
+  - 0.94 -> Calvin Harris - This Is What You Came For Extended Mix | 3.1% (x1) | 2B->8B | bass_swap_16 | energy steady (+1.2 LU); same style; +3.1% stretch on B (128.0 end -> 124.0 start); longer cut
 - **Cher - Believe Disco Dom Remix** (129.0 BPM, 9A)
   - 0.95 -> Kyle Dixon & Michael Stein - Stranger Things Theme Kwest Halloween Remix | 0.8% (x1) | 9A->9A | bass_swap_16 | +0.8% stretch on B (129.0 end -> 128.0 start); energy steady (+1.0 LU); B has a clean 16-bar intro; different groove (r=0.38); longer cut
   - 0.92 -> Rihanna - Disturbia DJ Mag Halloween Remix | 0.8% (x1) | 9A->10A | bass_swap_16 | +0.8% stretch on B (129.0 end -> 128.0 start); energy steady (+0.3 LU); B has a clean 16-bar intro
@@ -296,8 +296,8 @@
   - 0.85 -> Kate Bush - Running Up That Hill (A Deal With God) Landis Remix | 2.4% (x1) | 4A->5A | bass_swap_8 | +2.3% stretch on B (128.0 end -> 125.0 start); energy steady (-1.8 LU); B has a clean 16-bar intro; 8-bar window (short of a 16-bar phrase)
   - 0.85 -> T. Rex - Get It On Joe T. Vannelli Vocal Attack Mix | 0.0% (x1) | 4A->3A | bass_swap_8 | same tempo (128.0 BPM at A's end); energy steady (-0.6 LU); B has a clean 16-bar intro; 8-bar window (short of a 16-bar phrase); different groove (r=0.00); longer cut
 - **T. Rex - Get It On Joe T. Vannelli Vocal Attack Mix** (128.0 BPM, 3A)
-  - 0.92 -> Bette Midler - I Put A Spell On You Thee Werqn' Btches Club Mix (Joel Dickinson) | 0.0% (x1) | 3A->4A | bass_swap_16 | same tempo (128.0 BPM at A's end); energy steady (-0.0 LU); similar sound (closer than 98% of pairs); different groove (r=0.00); longer cut
   - 0.92 -> Swedish House Mafia - Don't You Worry Child | 0.8% (x1) | 3A->10B | bass_swap_32 | -0.8% stretch on B (128.0 end -> 129.0 start); energy steady (-0.8 LU); B has a clean 16-bar intro; different groove (r=0.22); longer cut
+  - 0.92 -> Bette Midler - I Put A Spell On You Thee Werqn' Btches Club Mix (Joel Dickinson) | 0.0% (x1) | 3A->4A | bass_swap_16 | same tempo (128.0 BPM at A's end); energy steady (-0.0 LU); similar sound (closer than 98% of pairs); different groove (r=0.00); longer cut
   - 0.91 -> Kyle Dixon & Michael Stein - Stranger Things Theme Kwest Halloween Remix | 0.0% (x1) | 3A->9A | bass_swap_32 | same tempo (128.0 BPM at A's end); energy steady (+1.3 LU); B has a clean 16-bar intro; different groove (r=0.00); longer cut
 - **Bad Bunny - DtMF ETX vs Eric Mendosa & Exodus Better Off Alone Edit (Dirty)** (128.0 BPM, 1A)
   - 0.92 -> Kyle Dixon & Michael Stein - Stranger Things Theme Kwest Halloween Remix | 0.0% (x1) | 1A->9A | bass_swap_16 | same tempo (128.0 BPM at A's end); energy steady (+0.5 LU); B has a clean 16-bar intro; longer cut

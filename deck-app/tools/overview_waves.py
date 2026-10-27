@@ -7,7 +7,7 @@ import json, os, sys
 import numpy as np, soundfile as sf
 HERE = os.path.dirname(os.path.abspath(__file__))
 APP = os.path.dirname(HERE); ROOT = os.path.dirname(APP)
-MIXER = os.path.join(ROOT, "_pool build", "mixer")
+MIXER = os.path.join(ROOT, "mixer")  # ROOT is the repo
 OUT = os.path.join(APP, "Deck", "Resources", "overview.json")
 B64 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
 N = 480

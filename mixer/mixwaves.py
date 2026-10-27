@@ -6,12 +6,12 @@ Cached by id; rerun after new tracks are analysed.  .venv/bin/python -I mixwaves
 import json, os, sys, math
 import numpy as np, soundfile as sf
 HERE = os.path.dirname(os.path.abspath(__file__))
-ROOT = os.path.dirname(os.path.dirname(HERE))
+REPO = os.path.dirname(HERE)
 B64 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
 SPB, LEAD_BARS, MAX_BARS = 4, 8, 32
 OUT = os.path.join(HERE, "mixwaves.json")
 cache = json.load(open(OUT)) if os.path.exists(OUT) and "--force" not in sys.argv else {}
-pd = json.load(open(os.path.join(ROOT, "Mike page", "data.json")))
+pd = json.load(open(os.path.join(REPO, "web-player", "data.json")))
 tracks = pd["tracks"] if isinstance(pd, dict) else pd
 cands = {c["id"]: c for c in json.load(open(os.path.join(HERE, "candidates.json")))}
 
