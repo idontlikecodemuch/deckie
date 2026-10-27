@@ -169,3 +169,10 @@ Christopher says so; a yes moves it up into the dated decisions above.
 - **Refinement of D13 (Oct 27): key segments come from Apple's key analysis on windows**, seeded with the song key
   and filtered by the hysteresis rule, not from the lightweight estimator, which stays in the lab as the fallback
   candidate. Stage 1 results section 1e.
+- **P14. "Crate from discs" on the Mac: an attended read queue and an unattended analyse-and-name queue.** Track K.
+  Audio CDs arrive as the AIFFs macOS exposes plus TOC, CD-Text and ISRCs; MP3 CDs as a file copy; about 4 to 5
+  minutes per disc attended, analysis hidden behind reads for audio CDs and about 30 unattended hours per 100 MP3
+  discs at today's speed. Naming in the product's order: tags and file names, then a single MusicBrainz disc-id
+  request for commercial albums (on request, no audio sent), CD-Text, opt-in AcoustID, else the DJ's own name.
+  Home-burned continuous mixes split by the crate's own recognition plus the analysis boundaries. The iPad cannot
+  read optical drives; it consumes the crate. YouTube confirmed out for any automated pull. Spec: "Crate from discs".

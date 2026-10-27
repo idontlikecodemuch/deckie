@@ -1,18 +1,22 @@
 # Deckie, condensed spec for approval
 
-v0.5, Oct 27, 2026. The two-page version, rewritten to where we stand today so notes can be made against it.
+v0.6, Oct 27, 2026 (afternoon). The two-page version for notes. New since v0.5: key over time settled on Apple's
+detector run on windows; the vocal signal settled on Apple's instrument activity with a listening set; a
+"Crate from discs and albums" section from the ingestion research.
 The full spec is `01-spec.md`; the dated decisions and the open proposals are `00-decisions.md`; the evidence is in
 `docs/research/` (nine reports) and the measurements in `docs/architecture/stage1-results.md`. The vocabulary, 144
 terms in three registers, is a page: https://claude.ai/artifact/XtF38gtDMdrk2u6noURRYR.
 
 ## Where we are now
 
-- Repo: 14 commits on `main`, self-contained, pipeline and app verified from it; not yet pushed (commit email to
-  confirm). Research tracks A to H done; Codex community pass done; Codex vocabulary pass pending.
+- Repo: 22 commits on `main`, self-contained, pipeline and app verified from it; not yet pushed (commit email to
+  confirm). Research tracks A to K done; Codex community pass done; Codex vocabulary pass pending.
 - Measured: Apple's Music Understanding framework reproduces the lab's beats (F 0.987), tempo, key (exact or a
   neighbour on 96 percent of confident keys) and loudness (within 0.04 LU), in about 12 s per track in the iOS 27
   simulator on this Mac. It reports one key per track even on songs that modulate. One ShazamKit signature matches
-  within about plus or minus 4 percent of its own speed in every mode.
+  within about plus or minus 4 percent of its own speed in every mode. Apple's key detector run on 30-second
+  windows finds every tested modulation with clean controls, where a lightweight estimator of our own flagged chord
+  changes as key changes; Apple's vocal activity is right more often than the lab's detector where they disagree.
 - Decided since v0.4: D11 (native engine on the framework, graceful fallbacks), D12 (tuning in the DJ's own words,
   onboarding from a song chain), D13 (key-change markers; the crate is Deckie's own richer format; interchange is an
   explicit, lossy button, never a sync). Eleven proposals wait below.
@@ -55,7 +59,9 @@ pitch, join, learning, tracklist. Never sold as AI.
 
 - One Swift engine on iPhone, iPad and Mac on Apple's Music Understanding framework (OS 27) for beats, key,
   structure, instrument activity and loudness, plus our own grid fit, tempo and key segments, 8-bar lattice, mix
-  windows and Camelot mapping ported from the lab. Fallback levels for older devices. The Python lab stays as
+  windows and Camelot mapping ported from the lab. Key segments: Apple's key analysis on windows, seeded with the
+  song key, with a hysteresis rule and a key-stability confidence. Vocal signal: Apple's instrument activity,
+  calibrated on a 40-track listening set Christopher labels; a vocal stem (HTDemucs, MIT) later as an optional pass. Fallback levels for older devices. The Python lab stays as
   ground truth and never ships (non-commercial model licences).
 - The crate file: a package of about 10 KB per track, never audio. Tempo stored as segments in the industry's
   grid-marker shape (one for 89 percent of tracks, several for transition edits and rubato intros); key stored as
@@ -67,9 +73,26 @@ pitch, join, learning, tracklist. Never sold as AI.
 - Preferences learned on device in the crate file: twelve dimensions, saved pairs outranking plays.
 - One universal iOS app plus a native Mac app; roles Booth, Pocket, Desk. Web app much later.
 
+## Crate from discs and albums (new; track K)
+
+Mike's library is hundreds of burned MP3 CDs of obscure edits with inconsistent tags, plus albums. The Mac app
+gets a "Crate from discs" flow with two queues. Attended: insert a disc, burst-read it to a folder, eject, swap;
+about 4 to 5 minutes per disc, halved with a second USB drive. Unattended: hash, dedupe, analyse, sign, name. An
+audio CD arrives as the AIFF tracks macOS already exposes plus its table of contents, CD-Text and ISRC codes; an MP3
+CD is a file copy. Time for 100 discs: about 8 attended hours either way, plus about 30 unattended hours of analysis
+for MP3 discs at today's 12 seconds per track, less if the framework runs several tracks in parallel. Naming, in the
+order the product allows: tags and file names first (they are what the CDJ displays); for commercial albums one
+disc-id request to MusicBrainz names the whole album without sending audio, on request only; CD-Text where a burner
+wrote it; AcoustID as the opt-in route for untagged ordinary songs; and for obscure edits the DJ's own name, which
+is fine because identity is hash plus signature plus analysis. Continuous home-burned mixes are split by running the
+crate's own recognition over the file plus the analysis's section, tempo and key boundaries, with the sprint's cue
+sheet as the template. The iPad cannot read any optical drive; it consumes the crate and reads USB sticks through
+Files. YouTube: confirmed no for any automated pull; a hand-triggered "find on YouTube" link per track is all that
+survives, and it is not faster than typing.
+
 ## v1 features
 
-Hear and identify; picks with the join and a "why" line in the DJ's words, scoped to the current crate, joins that
+Hear and identify; crate from discs and albums on the Mac; picks with the join and a "why" line in the DJ's words, scoped to the current crate, joins that
 can start mid-song; saved pairs with a note; crate import and a naming editor; onboarding under five minutes from a
 song chain with move-word tiles (long blend, echo out, echo in, hard cut, scratch in, and the rest); sliders in the
 DJ's vocabulary, with a one-tap "widen the beat range" during a set; set recording with CUE and Mixcloud export;
@@ -78,8 +101,9 @@ rekordbox XML export and import as explicit buttons; a "How you mix" page with u
 ## Staging
 
 0. Baseline: done Oct 26.
-1. Measure before engine code: done Oct 27 (framework benchmark, ShazamKit pitch sweep, key over time, recognition
-   solves). Remaining: a listening check for the vocal thresholds; regenerating Christopher's crate needs the engine.
+1. Measure before engine code: done Oct 27 (framework benchmark, ShazamKit pitch sweep, key over windows,
+   recognition solves, vocal signal, disc ingestion). Remaining: the 40-track vocal listening set, labelled by
+   Christopher; regenerating Christopher's crate needs the engine.
 2. Next: the engine on the Mac writing crate file v1, with parity tests against the 373 lab files; the two quick
    wins into the existing iPad app for Mike's next gig (nine-signature catalogue, finer tempo-only pitch reading);
    then the iPad reads the crate file instead of bundled data.
@@ -97,6 +121,8 @@ rekordbox XML export and import as explicit buttons; a "How you mix" page with u
 - P10. Identity self-contained; public lookup an optional helper.
 - P11. Recognition: shift the microphone into parallel matchers, one signature per track; nine signatures interim.
 - P12. Tempo segments in the grid-marker shape, so export and import are clean (narrowed by D13).
+- P13. The v1 vocal signal is Apple's instrument activity, calibrated on a listening set; a stem pass later.
+- P14. "Crate from discs" on the Mac as above; the iPad consumes the crate.
 - Also yours: the final bundle id under App Hold Media; the attorney review of DECKEE; a registrar check of
   deckie.dj; the commit email; pricing (lean: one-time, $39 to $59).
 
