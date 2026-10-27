@@ -1,6 +1,9 @@
-# Deckie product spec, v0.4
+# Deckie product spec, v0.5
 
-Dated Oct 26, 2026. Supersedes v0.3 (`history/01-spec-v0.3.md`). What changed from v0.3: the community research
+Dated Oct 27, 2026. Patched in place since v0.4 with: stage 1 measurements, D13 (key markers, the crate as Deckie's own
+format, interchange by explicit lossy button), P11 (recognition across the fader range), P12 (grid-marker shape),
+the vocabulary usage check (Filter sweep), echo in and widen the beat range. The condensed version for notes is
+`spec-condensed.md` v0.5. Supersedes v0.4 and, before it, v0.3 (`history/01-spec-v0.3.md`). What changed from v0.3: the community research
 written by Codex (`docs/research/codex-community.md`, direct quotes from DJs) is folded in. It softens the tracklist
 claim, widens privacy to cover taste and history, tempers the learning loop, reframes the lead promise around
 recall, and reshapes the trial. What changed from v0.2: Christopher accepted the native
