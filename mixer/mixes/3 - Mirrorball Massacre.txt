@@ -1,0 +1,25 @@
+Mirrorball Massacre  (hour 3, disco lean)
+Duration 60:07, 21 songs, mastered -10.0 LUFS integrated, true peak -0.7 dBTP
+H = Halloween.  Join = how this song comes in.
+
+  0:00    Oasis - Wonderwall                                           87.0 BPM  11B   [start]
+  3:14  H Creedence Clearwater Revival - Bad Moon Rising               89.9 BPM  10B   [quick_blend_echo 4 bars, +3.2%]
+  5:17    50 Cent - In Da Club                                         90.0 BPM  12A   [quick_blend_echo 4 bars, +0.1%, reverb wash]
+  7:51    TLC - No Scrubs                                              92.9 BPM  1A    [quick_blend_echo 4 bars, +3.2%]
+ 10:57    Mark Morrison - Return Of The Mack                           95.4 BPM  8B    [quick_blend_echo 4 bars, +2.7%]
+ 13:48    Beyonce - Crazy In Love                                      99.3 BPM  6A    [quick_blend_echo 4 bars, +4.0%, reverb wash]
+ 17:07  H Lady Gaga - Disease                                         101.0 BPM  10A   [filter_sweep 8 bars, +1.7%]
+ 20:14    The Beloved - Sweet Harmony                                 101.6 BPM  5B    [filter_sweep 8 bars, +0.6%]
+ 23:04    Los Del Rio - Macarena (Bayside Boys Remix)                 103.2 BPM  4B    [filter_sweep 16 bars, +1.6%]
+ 25:29  H P!nk - Funhouse                                             104.0 BPM  9A    [quick_blend_echo 4 bars, +0.8%]
+ 28:40    Lizzo - About Damn Time                                     109.0 BPM  2A    [quick_blend_echo 4 bars, +4.8%]
+ 31:36  H Little Mix - Black Magic                                    112.0 BPM  12B   [quick_blend_echo 4 bars, +2.8%, reverb wash]
+ 34:53    Mark Ronson - Uptown Funk                                   115.0 BPM  7B    [quick_blend_echo 4 bars, +2.7%]
+ 37:28    Robin S - Show Me Love                                      120.2 BPM  7B    [filter_sweep 8 bars, +4.6%]
+ 40:24    Robyn - With Every Heartbeat                                121.0 BPM  9B    [bass_swap_16 16 bars, +0.6%]
+ 42:38  H Stevie Wonder - Superstition                                123.0 BPM  2A    [filter_sweep 8 bars, +1.6%]
+ 45:26    The Chemical Brothers - Hey Boy Hey Girl                    127.0 BPM  7A    [filter_sweep 8 bars, +3.2%]
+ 48:35    Livin' Joy - Don't Stop Movin'                              130.0 BPM  7A    [bass_swap_16 16 bars, +2.4%]
+ 51:18  H The Grid - Swamp Thing                                      132.3 BPM  8A    [bass_swap_16 16 bars, +1.8%]
+ 54:03    David Morales & The Face - Needin' U                        130.3 BPM  8B    [quick_blend_echo 8 bars, -1.5%]
+ 56:23    Dr. Alban - It's My Life                                    128.7 BPM  8A    [filter_sweep 16 bars, -1.3%]

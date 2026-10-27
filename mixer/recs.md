@@ -1,0 +1,424 @@
+# Mix recommendations
+
+373 analysed tracks scored; 138608 directed pairs passed the gates; 99832 pairs with score >= 0.45. Score = 0.30 tempo + 0.20 key + 0.15 energy + 0.15 vocal + 0.10 phrase + 0.05 timbre + 0.05 rhythm (+0.03 for a candidate >= 270 s).
+
+## On-disc tracks (91 analysed): top 3 disc-view matches (A -> B)
+
+### Disc S (singalongs)
+
+#### 2 - 90-99
+- **Britney Spears - ...Baby One More Time Extended (fan edit)** (93.0 BPM, 5A)
+  - 0.71 -> Drake - NOKIA MarkCutz Halloween Ringtone Edit (Dirty) | 1.6% (x1) | 5A->7A | quick_blend_echo | -1.6% stretch on B (93.0 end -> 94.5 start); related style; 16-bar phrases both sides; vocals overlap 12 of 16 bars; different groove (r=0.40)
+  - 0.66 -> Daft Punk - Get Lucky | 6.4% (x3/4) | 5A->10A | brake_cut | 16-bar phrases both sides; B enters -2.8 LU quieter; related style; tempo change x3/4 (93 -> 116): transition track or brake, no blend; groove not comparable at x3/4; longer cut
+  - 0.65 -> Kate Bush - Running Up That Hill (A Deal With God) Landis Remix | 0.8% (x3/4) | 5A->5A | brake_cut | 5A -> 5A; B has a clean 16-bar intro; 16-bar phrases both sides; tempo change x3/4 (93 -> 125): transition track or brake, no blend; different sound (closer than only 34% of pairs); groove not comparable at x3/4
+
+#### 3 - 100-109
+- **Lady Gaga - Bloody Mary** (100.0 BPM, 8A)
+  - 0.72 -> Kyle Dixon & Michael Stein - Stranger Things Theme Kwest Halloween Remix | 4.0% (x3/4) | 8A->9A | quick_blend_echo | energy steady (-1.9 LU); B has a clean 16-bar intro; same style; tempo change x3/4 (100 -> 128): transition track or brake, no blend; no steady beat at A's end (echo out, cut B in on its downbeat); groove not comparable at x3/4; longer cut
+  - 0.70 -> Drake - NOKIA MarkCutz Halloween Ringtone Edit (Dirty) | 5.5% (x1) | 8A->7A | quick_blend_echo | same style; B enters -3.2 LU quieter; +5.5% stretch on B (100.0 end -> 94.5 start); vocals overlap 13 of 16 bars; no steady beat at A's end (echo out, cut B in on its downbeat)
+  - 0.67 -> Swedish House Mafia - Don't You Worry Child | 3.2% (x3/4) | 8A->10B | quick_blend_echo | B has a clean 16-bar intro; same style; similar sound (closer than 80% of pairs); tempo change x3/4 (100 -> 129): transition track or brake, no blend; no steady beat at A's end (echo out, cut B in on its downbeat); groove not comparable at x3/4; longer cut
+- **Mark Morrison - Return Of The Mack Tall Boys Remix (Intro)** (103.0 BPM, 8A)
+  - 0.62 -> Drake - NOKIA MarkCutz Halloween Ringtone Edit (Dirty) | 8.3% (x1) | 8A->7A | ramped_blend | energy steady (-0.5 LU); related style; 8A -> 7A (-1 (fifth)); 8-bar window (short of a 16-bar phrase)
+  - 0.60 -> Lady Gaga - Bloody Mary | 2.9% (x1) | 8A->8A | bass_swap_8 | +2.9% stretch on B (103.0 end -> 100.0 start); related style; 8A -> 8A; B enters -9.0 LU quieter; 8-bar window (short of a 16-bar phrase); different sound (closer than only 20% of pairs); different groove (r=0.34)
+  - 0.60 -> Backstreet Boys - Everybody (Backstreet's Back) | 4.9% (x1) | 8A->3A | quick_blend_echo | B enters -2.2 LU quieter; -4.9% stretch on B (103.0 end -> 108.1 start); matching groove (r=0.68); vocals overlap 7 of 8 bars; 8-bar window (short of a 16-bar phrase); different sound (closer than only 29% of pairs); longer cut
+- **Backstreet Boys - Everybody (Backstreet's Back)** (108.1 BPM, 3A)
+  - 0.69 -> Tame Impala & Jennie - Dracula (Jennie Remix) Extended Remix | 6.5% (x1) | 3A->2A | quick_blend_echo | 3A -> 2A (-1 (fifth)); 16-bar phrases both sides; matching groove (r=0.86); vocals overlap 10 of 16 bars; different style; longer cut
+  - 0.65 -> Madonna - Vogue | 7.6% (x1) | 3A->1A | quick_blend_echo | B enters -4.1 LU quieter; vocals overlap 1 of 16 bars; similar sound (closer than 73% of pairs); longer cut
+  - 0.65 -> Daft Punk - Get Lucky | 7.4% (x1) | 3A->10A | ramped_blend | 16-bar phrases both sides; B enters -2.6 LU quieter; 3A -> 10A (pitch-shift B by -1 st); different sound (closer than only 34% of pairs); different style; longer cut
+
+#### 4 - 110-119
+- **Chappell Roan - Pink Pony Club Lincoln Baio Party In the U.S.A. Remix** (112.0 BPM, 2A)
+  - 0.82 -> Tame Impala & Jennie - Dracula (Jennie Remix) Extended Remix | 2.7% (x1) | 2A->2A | bass_swap_8 | -2.7% stretch on B (112.0 end -> 115.0 start); same style; similar sound (closer than 97% of pairs); 8-bar window (short of a 16-bar phrase); longer cut
+  - 0.80 -> Dua Lipa - Levitating The Blessed Madonna Remix | 3.6% (x1) | 2A->10A | bass_swap_8 | energy steady (-1.6 LU); same style; -3.6% stretch on B (112.0 end -> 116.0 start); 8-bar window (short of a 16-bar phrase)
+  - 0.76 -> Madonna - Vogue | 3.8% (x1) | 2A->1A | quick_blend_echo | -3.8% stretch on B (112.0 end -> 116.2 start); B enters -2.8 LU quieter; related style; B's beat starts at bar 1 (cut in there, skip the intro); longer cut
+- **Tame Impala & Jennie - Dracula (Jennie Remix) Extended Remix** (115.0 BPM, 2A)
+  - 0.88 -> Dua Lipa - Levitating The Blessed Madonna Remix | 0.8% (x1) | 2A->10A | bass_swap_8 | -0.8% stretch on B (115.0 end -> 116.0 start); energy steady (-1.6 LU); same style
+  - 0.87 -> Madonna - Vogue | 1.0% (x1) | 2A->1A | quick_blend_echo | -1.0% stretch on B (115.0 end -> 116.2 start); B enters -2.7 LU quieter; 2A -> 1A (-1 (fifth)); longer cut
+  - 0.86 -> Daft Punk - Get Lucky | 0.9% (x1) | 2A->10A | bass_swap_16 | -0.9% stretch on B (115.0 end -> 116.0 start); energy steady (-1.3 LU); 16-bar phrases both sides; longer cut
+- **Dua Lipa - Levitating The Blessed Madonna Remix** (116.0 BPM, 10A)
+  - 0.93 -> Tame Impala & Jennie - Dracula (Jennie Remix) Extended Remix | 0.8% (x1) | 10A->2A | bass_swap_16 | +0.8% stretch on B (116.0 end -> 115.0 start); energy steady (-1.9 LU); same style; longer cut
+  - 0.89 -> Daft Punk - Get Lucky | 0.0% (x1) | 10A->10A | bass_swap_16 | same tempo (116.0 BPM at A's end); 10A -> 10A; energy steady (+0.4 LU); different groove (r=0.38); longer cut
+  - 0.86 -> Snoop Dogg - Drop It Like It's Hot The Golden Pony Remix | 5.2% (x1) | 10A->3A | bass_swap_16 | energy steady (-0.9 LU); B has a clean 16-bar intro; 16-bar phrases both sides
+- **Madonna - Vogue** (116.2 BPM, 1A, tempo change 116->116)
+  - 0.88 -> Tame Impala & Jennie - Dracula (Jennie Remix) Extended Remix | 1.0% (x1) | 1A->2A | bass_swap_8 | +1.0% stretch on B (116.2 end -> 115.0 start); B enters -2.4 LU quieter; 1A -> 2A (+1 (fifth)); longer cut
+  - 0.84 -> Snoop Dogg - Drop It Like It's Hot The Golden Pony Remix | 5.0% (x1) | 1A->3A | bass_swap_16 | energy steady (-1.4 LU); B has a clean 16-bar intro; 16-bar phrases both sides
+  - 0.83 -> Daft Punk - Get Lucky | 0.1% (x1) | 1A->10A | bass_swap_16 | same tempo (116.2 BPM at A's end); energy steady (-0.1 LU); 16-bar phrases both sides; longer cut
+- **Robyn - Dancing On My Own** (117.0 BPM, 2B)
+  - 0.88 -> Tame Impala & Jennie - Dracula (Jennie Remix) Extended Remix | 1.7% (x1) | 2B->2A | bass_swap_8 | +1.7% stretch on B (117.0 end -> 115.0 start); similar sound (closer than 93% of pairs); 16-bar phrases both sides; longer cut
+  - 0.82 -> Calvin Harris - This Is What You Came For Extended Mix | 6.0% (x1) | 2B->8B | bass_swap_8 | same style; 16-bar phrases both sides; B enters -2.4 LU quieter; different groove (r=0.31); longer cut
+  - 0.80 -> JAY-Z - Empire State Of Mind Krooner Remix | 2.6% (x1) | 2B->2A | bass_swap_8 | -2.6% stretch on B (117.0 end -> 120.0 start); no vocal clash; similar sound (closer than 92% of pairs); 8-bar window (short of a 16-bar phrase); different groove (r=0.00)
+- **Sophie Ellis-Bextor - Murder On The Dancefloor Extended Album Version** (117.4 BPM, 12B)
+  - 0.86 -> Daft Punk - Get Lucky | 1.2% (x1) | 12B->10A | bass_swap_8 | +1.2% stretch on B (117.4 end -> 116.0 start); energy steady (-0.8 LU); 16-bar phrases both sides; longer cut
+  - 0.85 -> Tame Impala & Jennie - Dracula (Jennie Remix) Extended Remix | 2.0% (x1) | 12B->2A | quick_blend_echo | +2.0% stretch on B (117.4 end -> 115.0 start); similar sound (closer than 90% of pairs); 16-bar phrases both sides; vocals overlap 10 of 16 bars; longer cut
+  - 0.82 -> Snoop Dogg - Drop It Like It's Hot The Golden Pony Remix | 3.9% (x1) | 12B->3A | bass_swap_16 | B has a clean 16-bar intro; same style; B enters -2.1 LU quieter; 12B -> 3A (clash)
+- **Lady Gaga - Bad Romance** (119.0 BPM, 8A)
+  - 0.77 -> Dua Lipa - Levitating The Blessed Madonna Remix | 2.5% (x1) | 8A->10A | bass_swap_8 | +2.5% stretch on B (119.0 end -> 116.0 start); B enters -2.6 LU quieter; related style; 8-bar window (short of a 16-bar phrase)
+  - 0.76 -> Snoop Dogg - Drop It Like It's Hot The Golden Pony Remix | 2.5% (x1) | 8A->3A | bass_swap_8 | -2.5% stretch on B (119.0 end -> 122.0 start); same style; B has a clean 16-bar intro; 8-bar window (short of a 16-bar phrase)
+  - 0.76 -> Tame Impala & Jennie - Dracula (Jennie Remix) Extended Remix | 3.3% (x1) | 8A->2A | quick_blend_echo | +3.3% stretch on B (119.0 end -> 115.0 start); same style; matching groove (r=0.94); vocals overlap 5 of 8 bars; 8-bar window (short of a 16-bar phrase); longer cut
+
+#### 5 - 120-124
+- **Lady Gaga - Monster** (120.0 BPM, 8A)
+  - 0.89 -> Snoop Dogg - Drop It Like It's Hot The Golden Pony Remix | 1.7% (x1) | 8A->3A | bass_swap_16 | -1.7% stretch on B (120.0 end -> 122.0 start); same style; B has a clean 16-bar intro
+  - 0.88 -> Kyle Dixon & Michael Stein - Stranger Things Theme Kwest Halloween Remix | 6.7% (x1) | 8A->9A | ramped_blend | energy steady (-1.9 LU); B has a clean 16-bar intro; 16-bar phrases both sides; longer cut
+  - 0.87 -> Calvin Harris - This Is What You Came For Extended Mix | 3.3% (x1) | 8A->8B | bass_swap_8 | 16-bar phrases both sides; -3.3% stretch on B (120.0 end -> 124.0 start); B enters -2.9 LU quieter; different groove (r=0.33); longer cut
+- **Lady Gaga - Zombieboy** (122.0 BPM, 5A)
+  - 0.85 -> Kate Bush - Running Up That Hill (A Deal With God) Landis Remix | 2.5% (x1) | 5A->5A | bass_swap_8 | -2.5% stretch on B (122.0 end -> 125.0 start); 5A -> 5A; energy steady (-0.6 LU); 8-bar window (short of a 16-bar phrase); different groove (r=0.23)
+  - 0.83 -> Beyonce - Break My Soul (The Queens Remix) | 1.6% (x1) | 5A->1A | quick_blend_echo | +1.6% stretch on B (122.0 end -> 120.0 start); energy steady (-1.1 LU); same style; B's beat starts at bar 16 (cut in there, skip the intro); different groove (r=0.22); longer cut
+  - 0.82 -> Riton x Nightcrawlers - Friday (Dopamine Re-Edit) Extended | 0.8% (x1) | 5A->11A | bass_swap_8 | -0.8% stretch on B (122.0 end -> 123.0 start); energy steady (+0.0 LU); same style; 8-bar window (short of a 16-bar phrase); longer cut
+- **Snoop Dogg - Drop It Like It's Hot The Golden Pony Remix** (122.0 BPM, 3A)
+  - 0.93 -> Ciara - Goodies Dillon Francis Extended Mix | 3.3% (x1) | 3A->4A | bass_swap_8 | energy steady (-1.4 LU); same style; similar sound (closer than 98% of pairs); different groove (r=0.38)
+  - 0.92 -> Riton x Nightcrawlers - Friday (Dopamine Re-Edit) Extended | 0.8% (x1) | 3A->11A | bass_swap_16 | -0.8% stretch on B (122.0 end -> 123.0 start); B enters -2.2 LU quieter; similar sound (closer than 97% of pairs); longer cut
+  - 0.92 -> Calvin Harris - This Is What You Came For Extended Mix | 1.6% (x1) | 3A->8B | bass_swap_16 | -1.6% stretch on B (122.0 end -> 124.0 start); energy steady (-2.0 LU); 16-bar phrases both sides; different groove (r=0.37); longer cut
+- **Montell Jordan - This Is How We Do It Mahalo's 90s Baby Rework (extended)** (123.0 BPM, 3A)
+  - 0.85 -> Snoop Dogg - Drop It Like It's Hot The Golden Pony Remix | 0.8% (x1) | 3A->3A | bass_swap_8 | +0.8% stretch on B (123.0 end -> 122.0 start); 3A -> 3A; energy steady (-0.4 LU); 8-bar window (short of a 16-bar phrase); different groove (r=0.06)
+  - 0.84 -> T. Rex - Get It On Joe T. Vannelli Vocal Attack Mix | 4.1% (x1) | 3A->3A | bass_swap_8 | 3A -> 3A; energy steady (+0.2 LU); B has a clean 16-bar intro; 8-bar window (short of a 16-bar phrase); different groove (r=0.00); longer cut
+  - 0.84 -> Kyle Dixon & Michael Stein - Stranger Things Theme Kwest Halloween Remix | 4.1% (x1) | 3A->9A | bass_swap_8 | energy steady (+0.7 LU); B has a clean 16-bar intro; similar sound (closer than 91% of pairs); 8-bar window (short of a 16-bar phrase); longer cut
+- **Daft Punk - One More Time Tall Boys Club Edit** (123.0 BPM, 10B)
+  - 0.89 -> Sister Sledge - We Are Family Luca Debonaire & DJ Marlon Remix | 0.8% (x1) | 10B->10B | bass_swap_8 | -0.8% stretch on B (123.0 end -> 124.0 start); energy steady (-0.3 LU); 16-bar phrases both sides; different groove (r=0.13); longer cut
+  - 0.89 -> Snoop Dogg - Drop It Like It's Hot The Golden Pony Remix | 0.8% (x1) | 10B->3A | bass_swap_16 | +0.8% stretch on B (123.0 end -> 122.0 start); energy steady (-1.6 LU); B has a clean 16-bar intro; different groove (r=0.13)
+  - 0.86 -> Kate Bush - Running Up That Hill (A Deal With God) Landis Remix | 1.6% (x1) | 10B->5A | bass_swap_16 | -1.6% stretch on B (123.0 end -> 125.0 start); B has a clean 16-bar intro; 16-bar phrases both sides; different groove (r=0.00)
+- **Next - Too Close Tom Damage Remix** (124.0 BPM, 9A)
+  - 0.84 -> Kyle Dixon & Michael Stein - Stranger Things Theme Kwest Halloween Remix | 3.2% (x1) | 9A->9A | bass_swap_8 | energy steady (-0.8 LU); B has a clean 16-bar intro; -3.2% stretch on B (124.0 end -> 128.0 start); 8-bar window (short of a 16-bar phrase); different groove (r=0.00); longer cut
+  - 0.82 -> T. Rex - Get It On Joe T. Vannelli Vocal Attack Mix | 3.2% (x1) | 9A->3A | bass_swap_8 | energy steady (-1.4 LU); B has a clean 16-bar intro; -3.2% stretch on B (124.0 end -> 128.0 start); 8-bar window (short of a 16-bar phrase); different groove (r=0.15); longer cut
+  - 0.81 -> La Roux - Bulletproof DJs From Mars N9 Edit | 3.2% (x1) | 9A->9A | bass_swap_8 | -3.2% stretch on B (124.0 end -> 128.0 start); B enters -2.3 LU quieter; similar sound (closer than 96% of pairs); 8-bar window (short of a 16-bar phrase); different groove (r=0.17)
+- **Sisqo - Thong Song Colin Jay Remix (Dirty)** (124.0 BPM, 12A)
+  - 0.84 -> Blackstreet - No Diggity Rogerson & Ray Montreal Remix | 1.6% (x1) | 12A->11A | bass_swap_8 | -1.6% stretch on B (124.0 end -> 126.0 start); energy steady (+0.3 LU); same style; 8-bar window (short of a 16-bar phrase); different groove (r=0.00)
+  - 0.83 -> T. Rex - Get It On Joe T. Vannelli Vocal Attack Mix | 3.2% (x1) | 12A->3A | bass_swap_8 | energy steady (+0.6 LU); B has a clean 16-bar intro; -3.2% stretch on B (124.0 end -> 128.0 start); 8-bar window (short of a 16-bar phrase); different groove (r=0.34); longer cut
+  - 0.82 -> Swedish House Mafia - Don't You Worry Child | 4.0% (x1) | 12A->10B | bass_swap_8 | energy steady (-1.0 LU); B has a clean 16-bar intro; similar sound (closer than 95% of pairs); 8-bar window (short of a 16-bar phrase); longer cut
+- **Richard O'Brien - Time Warp 1989 Damian Remix (extended)** (176.7 BPM, 11B)
+  - 0.56 -> Swedish House Mafia - Don't You Worry Child | 2.6% (x4/3) | 11B->10B | quick_blend_echo | B has a clean 16-bar intro; B enters -2.8 LU quieter; 11B -> 10B (-1 (fifth)); tempo change x4/3 (177 -> 129): transition track or brake, no blend; no steady beat at A's end (echo out, cut B in on its downbeat); different sound (closer than only 22% of pairs); groove not comparable at x4/3; different style; longer cut
+  - 0.53 -> Sonique - It Feels So Good Extended Mix 1998 | 1.9% (x4/3) | 11B->11A | quick_blend_echo | energy steady (-1.6 LU); 11B -> 11A (relative major/minor); vocals overlap 9 of 16 bars; tempo change x4/3 (177 -> 135): transition track or brake, no blend; no steady beat at A's end (echo out, cut B in on its downbeat); different sound (closer than only 30% of pairs); groove not comparable at x4/3; different style; longer cut
+  - 0.53 -> Bette Midler - I Put A Spell On You Thee Werqn' Btches Club Mix (Joel Dickinson) | 3.4% (x4/3) | 11B->4A | quick_blend_echo | energy steady (-2.0 LU); 11B -> 4A (pitch-shift B by +1 st); vocals overlap 7 of 16 bars; tempo change x4/3 (177 -> 128): transition track or brake, no blend; no steady beat at A's end (echo out, cut B in on its downbeat); different sound (closer than only 33% of pairs); groove not comparable at x4/3; longer cut
+
+#### 6 - 125-129
+- **Drake - NOKIA MarkCutz Halloween Ringtone Edit (Dirty)** (106.0 BPM, 7A, tempo change 94->106)
+  - 0.74 -> Mark Morrison - Return Of The Mack Tall Boys Remix (Intro) | 2.9% (x1) | 7A->8A | quick_blend_echo | +2.9% stretch on B (106.0 end -> 103.0 start); energy steady (-1.0 LU); related style; vocals overlap 11 of 12 bars; 12-bar window (short of a 16-bar phrase)
+  - 0.72 -> Tame Impala & Jennie - Dracula (Jennie Remix) Extended Remix | 8.5% (x1) | 7A->2A | ramped_blend | same style; B enters -2.0 LU quieter; similar sound (closer than 78% of pairs); longer cut
+  - 0.70 -> Backstreet Boys - Everybody (Backstreet's Back) | 1.9% (x1) | 7A->3A | quick_blend_echo | -1.9% stretch on B (106.0 end -> 108.1 start); B enters -2.8 LU quieter; matching groove (r=0.72); vocals overlap 13 of 14 bars; different style; longer cut
+- **50 Cent - In Da Club Disco Lines Remix (Clean)** (125.0 BPM, 6A)
+  - 0.92 -> Kate Bush - Running Up That Hill (A Deal With God) Landis Remix | 0.0% (x1) | 6A->5A | bass_swap_16 | same tempo (125.0 BPM at A's end); B has a clean 16-bar intro; 16-bar phrases both sides
+  - 0.91 -> Kyle Dixon & Michael Stein - Stranger Things Theme Kwest Halloween Remix | 2.4% (x1) | 6A->9A | bass_swap_16 | -2.4% stretch on B (125.0 end -> 128.0 start); energy steady (-1.3 LU); B has a clean 16-bar intro; different groove (r=0.25); longer cut
+  - 0.91 -> Snoop Dogg - Drop It Like It's Hot The Golden Pony Remix | 2.4% (x1) | 6A->3A | bass_swap_16 | +2.4% stretch on B (125.0 end -> 122.0 start); same style; B has a clean 16-bar intro
+- **Kate Bush - Running Up That Hill (A Deal With God) Landis Remix** (125.0 BPM, 5A)
+  - 0.96 -> Kyle Dixon & Michael Stein - Stranger Things Theme Kwest Halloween Remix | 2.4% (x1) | 5A->9A | bass_swap_16 | -2.4% stretch on B (125.0 end -> 128.0 start); energy steady (+0.5 LU); B has a clean 16-bar intro; longer cut
+  - 0.96 -> Lady Gaga - Abracadabra (Intro) | 0.8% (x1) | 5A->4A | bass_swap_16 | -0.8% stretch on B (125.0 end -> 126.0 start); energy steady (-0.8 LU); 16-bar phrases both sides
+  - 0.94 -> Sam Robs & Kelvin Wood - No Scrubs Extended Mix (house cover) | 0.0% (x1) | 5A->1A | bass_swap_16 | same tempo (125.0 BPM at A's end); similar sound (closer than 99% of pairs); 16-bar phrases both sides; longer cut
+- **Ciara - Goodies Dillon Francis Extended Mix** (126.0 BPM, 4A)
+  - 0.95 -> Snoop Dogg - Drop It Like It's Hot The Golden Pony Remix | 3.2% (x1) | 4A->3A | bass_swap_16 | energy steady (-1.1 LU); B has a clean 16-bar intro; same style; different groove (r=0.38)
+  - 0.93 -> T. Rex - Get It On Joe T. Vannelli Vocal Attack Mix | 1.6% (x1) | 4A->3A | bass_swap_16 | -1.6% stretch on B (126.0 end -> 128.0 start); energy steady (-0.5 LU); B has a clean 16-bar intro; different groove (r=0.00); longer cut
+  - 0.93 -> Kate Bush - Running Up That Hill (A Deal With God) Landis Remix | 0.8% (x1) | 4A->5A | bass_swap_16 | +0.8% stretch on B (126.0 end -> 125.0 start); energy steady (-1.7 LU); B has a clean 16-bar intro; different groove (r=0.28)
+- **Lady Gaga - Abracadabra (Intro)** (126.0 BPM, 4A)
+  - 0.95 -> Kate Bush - Running Up That Hill (A Deal With God) Landis Remix | 0.8% (x1) | 4A->5A | bass_swap_16 | +0.8% stretch on B (126.0 end -> 125.0 start); B has a clean 16-bar intro; 16-bar phrases both sides
+  - 0.95 -> Kyle Dixon & Michael Stein - Stranger Things Theme Kwest Halloween Remix | 1.6% (x1) | 4A->9A | bass_swap_16 | -1.6% stretch on B (126.0 end -> 128.0 start); energy steady (-1.1 LU); B has a clean 16-bar intro; longer cut
+  - 0.93 -> T. Rex - Get It On Joe T. Vannelli Vocal Attack Mix | 1.6% (x1) | 4A->3A | bass_swap_16 | -1.6% stretch on B (126.0 end -> 128.0 start); energy steady (-1.6 LU); B has a clean 16-bar intro; different groove (r=0.00); longer cut
+- **Doja Cat - Paint The Town Red (FRASER Bootleg Remix)** (126.0 BPM, 6A)
+  - 0.95 -> Kate Bush - Running Up That Hill (A Deal With God) Landis Remix | 0.8% (x1) | 6A->5A | bass_swap_16 | +0.8% stretch on B (126.0 end -> 125.0 start); energy steady (-1.6 LU); B has a clean 16-bar intro
+  - 0.93 -> Kyle Dixon & Michael Stein - Stranger Things Theme Kwest Halloween Remix | 1.6% (x1) | 6A->9A | bass_swap_16 | -1.6% stretch on B (126.0 end -> 128.0 start); energy steady (+0.2 LU); B has a clean 16-bar intro; longer cut
+  - 0.91 -> Riton x Nightcrawlers - Friday (Dopamine Re-Edit) Extended | 2.4% (x1) | 6A->11A | bass_swap_16 | +2.4% stretch on B (126.0 end -> 123.0 start); energy steady (-0.9 LU); same style; longer cut
+- **Rockwell - Somebody's Watching Me Tall Boys Halloween Remix** (127.0 BPM, 12A)
+  - 0.93 -> Kyle Dixon & Michael Stein - Stranger Things Theme Kwest Halloween Remix | 0.8% (x1) | 12A->9A | bass_swap_16 | -0.8% stretch on B (127.0 end -> 128.0 start); energy steady (-0.4 LU); B has a clean 16-bar intro; longer cut
+  - 0.93 -> Kate Bush - Running Up That Hill (A Deal With God) Landis Remix | 1.6% (x1) | 12A->5A | bass_swap_16 | +1.6% stretch on B (127.0 end -> 125.0 start); B has a clean 16-bar intro; same style
+  - 0.91 -> Sam Robs & Kelvin Wood - No Scrubs Extended Mix (house cover) | 1.6% (x1) | 12A->1A | bass_swap_8 | +1.6% stretch on B (127.0 end -> 125.0 start); similar sound (closer than 99% of pairs); 16-bar phrases both sides; longer cut
+- **Taylor Swift - Look What You Made Me Do** (128.0 BPM, 8A)
+  - 0.98 -> Kyle Dixon & Michael Stein - Stranger Things Theme Kwest Halloween Remix | 0.0% (x1) | 8A->9A | bass_swap_16 | same tempo (128.0 BPM at A's end); energy steady (-1.3 LU); B has a clean 16-bar intro; longer cut
+  - 0.90 -> Rihanna - Disturbia DJ Mag Halloween Remix | 0.0% (x1) | 8A->10A | bass_swap_16 | same tempo (128.0 BPM at A's end); B enters -2.0 LU quieter; 16-bar phrases both sides
+  - 0.90 -> Swedish House Mafia - Don't You Worry Child | 0.8% (x1) | 8A->10B | bass_swap_16 | -0.8% stretch on B (128.0 end -> 129.0 start); B has a clean 16-bar intro; same style; different groove (r=0.06); longer cut
+- **Rihanna - Disturbia DJ Mag Halloween Remix** (128.0 BPM, 10A)
+  - 0.96 -> Kyle Dixon & Michael Stein - Stranger Things Theme Kwest Halloween Remix | 0.0% (x1) | 10A->9A | bass_swap_16 | same tempo (128.0 BPM at A's end); energy steady (-0.6 LU); B has a clean 16-bar intro; different groove (r=0.22); longer cut
+  - 0.93 -> Swedish House Mafia - Don't You Worry Child | 0.8% (x1) | 10A->10B | bass_swap_16 | -0.8% stretch on B (128.0 end -> 129.0 start); B has a clean 16-bar intro; 16-bar phrases both sides; different groove (r=0.00); longer cut
+  - 0.92 -> T. Rex - Get It On Joe T. Vannelli Vocal Attack Mix | 0.0% (x1) | 10A->3A | bass_swap_16 | same tempo (128.0 BPM at A's end); energy steady (-1.1 LU); B has a clean 16-bar intro; different groove (r=0.30); longer cut
+- **Rihanna - We Found Love Calvin Harris Extended Mix** (128.0 BPM, 2B)
+  - 0.95 -> Kyle Dixon & Michael Stein - Stranger Things Theme Kwest Halloween Remix | 0.0% (x1) | 2B->9A | bass_swap_16 | same tempo (128.0 BPM at A's end); B has a clean 16-bar intro; same style; longer cut
+  - 0.94 -> Calvin Harris - This Is What You Came For Extended Mix | 3.1% (x1) | 2B->8B | bass_swap_16 | energy steady (+1.2 LU); same style; +3.1% stretch on B (128.0 end -> 124.0 start); longer cut
+  - 0.94 -> Swedish House Mafia - Don't You Worry Child | 0.8% (x1) | 2B->10B | bass_swap_16 | -0.8% stretch on B (128.0 end -> 129.0 start); energy steady (-0.0 LU); B has a clean 16-bar intro; different groove (r=0.05); longer cut
+- **Cher - Believe Disco Dom Remix** (129.0 BPM, 9A)
+  - 0.95 -> Kyle Dixon & Michael Stein - Stranger Things Theme Kwest Halloween Remix | 0.8% (x1) | 9A->9A | bass_swap_16 | +0.8% stretch on B (129.0 end -> 128.0 start); energy steady (+1.0 LU); B has a clean 16-bar intro; different groove (r=0.38); longer cut
+  - 0.92 -> Rihanna - Disturbia DJ Mag Halloween Remix | 0.8% (x1) | 9A->10A | bass_swap_16 | +0.8% stretch on B (129.0 end -> 128.0 start); energy steady (+0.3 LU); B has a clean 16-bar intro
+  - 0.91 -> Sam Robs & Kelvin Wood - No Scrubs Extended Mix (house cover) | 3.1% (x1) | 9A->1A | bass_swap_16 | same style; B enters -2.0 LU quieter; +3.1% stretch on B (129.0 end -> 125.0 start); longer cut
+
+#### 7 - 130-134
+- **Aqua - Barbie Girl Extended Mix** (130.0 BPM, 1B)
+  - 0.88 -> Rihanna - We Found Love Calvin Harris Extended Mix | 1.5% (x1) | 1B->2B | bass_swap_8 | +1.5% stretch on B (130.0 end -> 128.0 start); energy steady (-2.0 LU); 16-bar phrases both sides; different groove (r=0.35); longer cut
+  - 0.87 -> T. Rex - Get It On Joe T. Vannelli Vocal Attack Mix | 1.5% (x1) | 1B->3A | bass_swap_16 | +1.5% stretch on B (130.0 end -> 128.0 start); energy steady (-1.4 LU); B has a clean 16-bar intro; different groove (r=0.00); longer cut
+  - 0.86 -> Swedish House Mafia - Don't You Worry Child | 0.8% (x1) | 1B->10B | bass_swap_16 | +0.8% stretch on B (130.0 end -> 129.0 start); B has a clean 16-bar intro; 16-bar phrases both sides; different groove (r=0.01); longer cut
+- **Talking Heads - Psycho Killer Freejak Halloween Remix (Clean)** (130.0 BPM, 8A)
+  - 0.97 -> Kyle Dixon & Michael Stein - Stranger Things Theme Kwest Halloween Remix | 1.5% (x1) | 8A->9A | bass_swap_16 | +1.5% stretch on B (130.0 end -> 128.0 start); energy steady (-1.4 LU); B has a clean 16-bar intro; different groove (r=0.32); longer cut
+  - 0.93 -> Kylie vs New Order - Blue Monday Mashup | 1.5% (x1) | 8A->7A | bass_swap_16 | -1.5% stretch on B (130.0 end -> 132.0 start); 16-bar phrases both sides; same style; different groove (r=0.28); longer cut
+  - 0.93 -> T. Rex - Get It On Joe T. Vannelli Vocal Attack Mix | 1.5% (x1) | 8A->3A | bass_swap_16 | +1.5% stretch on B (130.0 end -> 128.0 start); energy steady (-1.9 LU); B has a clean 16-bar intro; different groove (r=0.00); longer cut
+- **Nelly Furtado - Maneater Rogerson Halloween Remix** (130.0 BPM, 3B)
+  - 0.93 -> T. Rex - Get It On Joe T. Vannelli Vocal Attack Mix | 1.5% (x1) | 3B->3A | bass_swap_16 | +1.5% stretch on B (130.0 end -> 128.0 start); energy steady (+0.3 LU); B has a clean 16-bar intro; different groove (r=0.00); longer cut
+  - 0.92 -> Swedish House Mafia - Don't You Worry Child | 0.8% (x1) | 3B->10B | bass_swap_16 | +0.8% stretch on B (130.0 end -> 129.0 start); energy steady (-1.3 LU); B has a clean 16-bar intro; different groove (r=0.04); longer cut
+  - 0.91 -> Rihanna - We Found Love Calvin Harris Extended Mix | 1.5% (x1) | 3B->2B | bass_swap_16 | +1.5% stretch on B (130.0 end -> 128.0 start); energy steady (-0.3 LU); 16-bar phrases both sides; different groove (r=0.00); longer cut
+- **Yeah Yeah Yeahs - Heads Will Roll (A-Trak Remix)** (132.0 BPM, 1A)
+  - 0.95 -> Kyle Dixon & Michael Stein - Stranger Things Theme Kwest Halloween Remix | 3.0% (x1) | 1A->9A | bass_swap_16 | energy steady (+0.8 LU); B has a clean 16-bar intro; +3.0% stretch on B (132.0 end -> 128.0 start); longer cut
+  - 0.91 -> Rihanna - Disturbia DJ Mag Halloween Remix | 3.0% (x1) | 1A->10A | bass_swap_16 | energy steady (+0.1 LU); same style; +3.0% stretch on B (132.0 end -> 128.0 start)
+  - 0.90 -> T. Rex - Get It On Joe T. Vannelli Vocal Attack Mix | 3.0% (x1) | 1A->3A | bass_swap_16 | energy steady (+0.2 LU); B has a clean 16-bar intro; +3.0% stretch on B (132.0 end -> 128.0 start); different groove (r=0.00); longer cut
+- **Rick James - Super Freak Rob DVS Super Freaky Girls Halloween Edit** (133.0 BPM, 8A)
+  - 0.89 -> Kyle Dixon & Michael Stein - Stranger Things Theme Kwest Halloween Remix | 3.8% (x1) | 8A->9A | bass_swap_16 | energy steady (-0.8 LU); B has a clean 16-bar intro; same style; longer cut
+  - 0.85 -> DJ Dado - X-Files | 1.5% (x1) | 8A->8A | bass_swap_16 | -1.5% stretch on B (133.0 end -> 135.0 start); 8A -> 8A; B has a clean 16-bar intro; different sound (closer than only 38% of pairs); different groove (r=0.02)
+  - 0.84 -> Rihanna - Disturbia DJ Mag Halloween Remix | 3.8% (x1) | 8A->10A | bass_swap_16 | energy steady (-1.5 LU); 16-bar phrases both sides; same style; different groove (r=0.21)
+
+#### 8 - 135 plus
+- **Cartoons - Witch Doctor Extended Mix** (136.0 BPM, 8B)
+  - 0.83 -> DJ Dado - X-Files | 0.7% (x1) | 8B->8A | bass_swap_8 | +0.7% stretch on B (136.0 end -> 135.0 start); energy steady (-0.1 LU); B has a clean 16-bar intro; 8-bar window (short of a 16-bar phrase); different groove (r=0.00)
+  - 0.81 -> Yeah Yeah Yeahs - Heads Will Roll (A-Trak Remix) | 2.9% (x1) | 8B->1A | bass_swap_8 | +2.9% stretch on B (136.0 end -> 132.0 start); energy steady (+0.6 LU); same style; 8-bar window (short of a 16-bar phrase); longer cut
+  - 0.75 -> Underworld - Born Slippy | 3.0% (x1) | 8B->6B | quick_blend_echo | energy steady (-1.9 LU); same style; -3.0% stretch on B (136.0 end -> 140.1 start); B's beat starts at bar 10 (cut in there, skip the intro); different groove (r=0.23)
+- **Bette Midler - I Put A Spell On You Thee Werqn' Btches Club Mix (Joel Dickinson)** (140.0 BPM, 4A, tempo change 128->128)
+  - 0.92 -> T. Rex - Get It On Joe T. Vannelli Vocal Attack Mix | 0.0% (x1) | 4A->3A | bass_swap_16 | same tempo (128.1 BPM at A's end); energy steady (+0.1 LU); B has a clean 16-bar intro; different groove (r=0.00); longer cut
+  - 0.91 -> Kyle Dixon & Michael Stein - Stranger Things Theme Kwest Halloween Remix | 0.0% (x1) | 4A->9A | bass_swap_16 | same tempo (128.1 BPM at A's end); energy steady (+0.6 LU); B has a clean 16-bar intro; different groove (r=0.00); longer cut
+  - 0.91 -> Kate Bush - Running Up That Hill (A Deal With God) Landis Remix | 2.4% (x1) | 4A->5A | bass_swap_16 | +2.4% stretch on B (128.1 end -> 125.0 start); energy steady (-1.1 LU); B has a clean 16-bar intro; different groove (r=0.00)
+- **Doja Cat - Demons Extended Version** (140.0 BPM, 5A)
+  - 0.81 -> ADÉLA - Nicole Kidman YuchiBoy Remix (Dirty) | 0.0% (x1) | 5A->6A | quick_blend_echo | same tempo (140.0 BPM at A's end); energy steady (-0.6 LU); same style; vocals overlap 16 of 16 bars; different groove (r=0.32)
+  - 0.77 -> DJ Dado - X-Files | 3.6% (x1) | 5A->8A | bass_swap_16 | B has a clean 16-bar intro; 16-bar phrases both sides; +3.6% stretch on B (140.0 end -> 135.0 start); different sound (closer than only 22% of pairs); different groove (r=0.00)
+  - 0.77 -> Robert Miles - Children | 2.1% (x1) | 5A->4A | bass_swap_16 | +2.1% stretch on B (140.0 end -> 137.1 start); B has a clean 16-bar intro; 16-bar phrases both sides; different sound (closer than only 17% of pairs); different groove (r=0.00)
+- **Britney Spears - Toxic** (143.0 BPM, 5A)
+  - 0.82 -> ADÉLA - Nicole Kidman YuchiBoy Remix (Dirty) | 2.1% (x1) | 5A->6A | quick_blend_echo | +2.1% stretch on B (143.0 end -> 140.0 start); energy steady (-1.6 LU); 16-bar phrases both sides; vocals overlap 16 of 16 bars
+  - 0.79 -> Sonique - It Feels So Good Extended Mix 1998 | 5.6% (x1) | 5A->11A | quick_blend_echo | same style; B enters -2.1 LU quieter; similar sound (closer than 83% of pairs); longer cut
+  - 0.76 -> Robert Miles - Children | 4.1% (x1) | 5A->4A | bass_swap_16 | B has a clean 16-bar intro; 16-bar phrases both sides; +4.1% stretch on B (143.0 end -> 137.1 start); different groove (r=0.00)
+- **Ginuwine - Pony Wick-it Remix** (144.0 BPM, 12A)
+  - 0.82 -> ADÉLA - Nicole Kidman YuchiBoy Remix (Dirty) | 2.8% (x1) | 12A->6A | quick_blend_echo | +2.8% stretch on B (144.0 end -> 140.0 start); energy steady (-1.1 LU); similar sound (closer than 97% of pairs); vocals overlap 16 of 16 bars
+  - 0.79 -> DJ Dado - X-Files | 6.3% (x1) | 12A->8A | ramped_blend | B has a clean 16-bar intro; same style; 16-bar phrases both sides; different groove (r=0.00)
+  - 0.78 -> Robert Miles - Children | 4.8% (x1) | 12A->4A | bass_swap_16 | same style; B has a clean 16-bar intro; 16-bar phrases both sides; different groove (r=0.00)
+- **Olivia Rodrigo - vampire Trayze Remix (Dirty)** (155.0 BPM, 7B)
+  - 0.72 -> Swedish House Mafia - Don't You Worry Child | 11.0% (x4/3) | 7B->10B | brake_cut | B has a clean 16-bar intro; 16-bar phrases both sides; B enters -2.2 LU quieter; tempo change x4/3 (155 -> 129): transition track or brake, no blend; groove not comparable at x4/3; longer cut
+  - 0.69 -> Calvin Harris - This Is What You Came For Extended Mix | 6.7% (x4/3) | 7B->8B | brake_cut | energy steady (-1.0 LU); 16-bar phrases both sides; 7B -> 8B (+1 (fifth)); tempo change x4/3 (155 -> 124): transition track or brake, no blend; groove not comparable at x4/3; longer cut
+  - 0.69 -> Zara Larsson - Midnight Sun | 2.6% (x1) | 7B->11B | bass_swap_8 | +2.6% stretch on B (155.0 end -> 151.0 start); same style; vocals overlap 1 of 8 bars; B enters -12.7 LU quieter; 8-bar window (short of a 16-bar phrase)
+
+### Disc M (mix-ins)
+
+#### 4 - 110-119
+- **Daft Punk - Get Lucky** (116.0 BPM, 10A)
+  - 0.88 -> Tame Impala & Jennie - Dracula (Jennie Remix) Extended Remix | 0.9% (x1) | 10A->2A | bass_swap_16 | +0.9% stretch on B (116.0 end -> 115.0 start); energy steady (-1.8 LU); 16-bar phrases both sides; longer cut
+  - 0.86 -> Dua Lipa - Levitating The Blessed Madonna Remix | 0.0% (x1) | 10A->10A | bass_swap_16 | same tempo (116.0 BPM at A's end); 10A -> 10A; energy steady (+0.1 LU); different groove (r=0.38)
+  - 0.83 -> Madonna - Vogue | 0.1% (x1) | 10A->1A | quick_blend_echo | same tempo (116.0 BPM at A's end); energy steady (-1.0 LU); no vocal clash; longer cut
+- **Silk City & Dua Lipa - Electricity Extended Version** (118.0 BPM, 8B)
+  - 0.85 -> Madonna - Vogue | 1.5% (x1) | 8B->1A | quick_blend_echo | +1.5% stretch on B (118.0 end -> 116.2 start); similar sound (closer than 85% of pairs); related style; longer cut
+  - 0.84 -> Snoop Dogg - Drop It Like It's Hot The Golden Pony Remix | 3.4% (x1) | 8B->3A | quick_blend_echo | B has a clean 16-bar intro; -3.4% stretch on B (118.0 end -> 122.0 start); similar sound (closer than 96% of pairs); no steady beat at A's end (echo out, cut B in on its downbeat)
+  - 0.83 -> Daft Punk - Get Lucky | 1.7% (x1) | 8B->10A | quick_blend_echo | +1.7% stretch on B (118.0 end -> 116.0 start); energy steady (-1.8 LU); same style; no steady beat at A's end (echo out, cut B in on its downbeat); longer cut
+
+#### 5 - 120-124
+- **JAY-Z - Empire State Of Mind Krooner Remix** (120.0 BPM, 2A)
+  - 0.87 -> Nelly Furtado - Maneater Monaark & Norsam Remix | 0.0% (x1) | 2A->3A | bass_swap_8 | same tempo (120.0 BPM at A's end); same style; similar sound (closer than 100% of pairs); 8-bar window (short of a 16-bar phrase)
+  - 0.85 -> Snoop Dogg - Drop It Like It's Hot The Golden Pony Remix | 1.7% (x1) | 2A->3A | bass_swap_8 | -1.7% stretch on B (120.0 end -> 122.0 start); energy steady (-1.4 LU); B has a clean 16-bar intro; 8-bar window (short of a 16-bar phrase); different groove (r=0.00)
+  - 0.85 -> Beyonce - Break My Soul (The Queens Remix) | 0.0% (x1) | 2A->1A | quick_blend_echo | same tempo (120.0 BPM at A's end); similar sound (closer than 99% of pairs); B enters -2.4 LU quieter; B's beat starts at bar 16 (cut in there, skip the intro); different groove (r=0.00); longer cut
+- **Nelly Furtado - Maneater Monaark & Norsam Remix** (120.0 BPM, 3A)
+  - 0.96 -> Snoop Dogg - Drop It Like It's Hot The Golden Pony Remix | 1.7% (x1) | 3A->3A | bass_swap_16 | -1.7% stretch on B (120.0 end -> 122.0 start); 3A -> 3A; energy steady (-0.4 LU); different groove (r=0.25)
+  - 0.92 -> Calvin Harris - This Is What You Came For Extended Mix | 3.3% (x1) | 3A->8B | bass_swap_16 | energy steady (-0.1 LU); 16-bar phrases both sides; similar sound (closer than 98% of pairs); different groove (r=0.20); longer cut
+  - 0.89 -> Tame Impala & Jennie - Dracula (Jennie Remix) Extended Remix | 4.1% (x1) | 3A->2A | bass_swap_16 | energy steady (-1.3 LU); no vocal clash; similar sound (closer than 90% of pairs); different groove (r=0.03); longer cut
+- **Beyonce - Break My Soul (The Queens Remix)** (120.0 BPM, 1A)
+  - 0.87 -> Snoop Dogg - Drop It Like It's Hot The Golden Pony Remix | 1.6% (x1) | 1A->3A | bass_swap_16 | -1.6% stretch on B (120.0 end -> 122.0 start); energy steady (-2.0 LU); B has a clean 16-bar intro; different groove (r=0.00)
+  - 0.87 -> Madonna - Vogue | 3.2% (x1) | 1A->1A | quick_blend_echo | 1A -> 1A; +3.2% stretch on B (120.0 end -> 116.2 start); B enters -2.1 LU quieter; different groove (r=0.00); longer cut
+  - 0.86 -> Calvin Harris - This Is What You Came For Extended Mix | 3.3% (x1) | 1A->8B | bass_swap_8 | energy steady (-1.7 LU); -3.3% stretch on B (120.0 end -> 124.0 start); similar sound (closer than 97% of pairs); different groove (r=0.00); longer cut
+- **Justice vs Simian - We Are Your Friends** (122.9 BPM, 8A)
+  - 0.92 -> Kyle Dixon & Michael Stein - Stranger Things Theme Kwest Halloween Remix | 4.1% (x1) | 8A->9A | bass_swap_16 | energy steady (-1.1 LU); B has a clean 16-bar intro; 16-bar phrases both sides; longer cut
+  - 0.91 -> Snoop Dogg - Drop It Like It's Hot The Golden Pony Remix | 0.8% (x1) | 8A->3A | bass_swap_16 | +0.8% stretch on B (122.9 end -> 122.0 start); B has a clean 16-bar intro; same style
+  - 0.86 -> Kate Bush - Running Up That Hill (A Deal With God) Landis Remix | 1.7% (x1) | 8A->5A | bass_swap_16 | -1.7% stretch on B (122.9 end -> 125.0 start); B has a clean 16-bar intro; 16-bar phrases both sides
+- **Riton x Nightcrawlers - Friday (Dopamine Re-Edit) Extended** (123.0 BPM, 11A)
+  - 0.90 -> Kate Bush - Running Up That Hill (A Deal With God) Landis Remix | 1.6% (x1) | 11A->5A | bass_swap_16 | -1.6% stretch on B (123.0 end -> 125.0 start); B has a clean 16-bar intro; B enters -2.0 LU quieter
+  - 0.90 -> Snoop Dogg - Drop It Like It's Hot The Golden Pony Remix | 0.8% (x1) | 11A->3A | bass_swap_16 | +0.8% stretch on B (123.0 end -> 122.0 start); energy steady (-1.4 LU); B has a clean 16-bar intro
+  - 0.88 -> Kyle Dixon & Michael Stein - Stranger Things Theme Kwest Halloween Remix | 4.1% (x1) | 11A->9A | bass_swap_16 | energy steady (-0.2 LU); B has a clean 16-bar intro; -4.1% stretch on B (123.0 end -> 128.0 start); longer cut
+- **Nightcrawlers - Push The Feeling On** (123.0 BPM, 11A)
+  - 0.90 -> Riton x Nightcrawlers - Friday (Dopamine Re-Edit) Extended | 0.0% (x1) | 11A->11A | bass_swap_8 | same tempo (123.0 BPM at A's end); energy steady (-1.9 LU); similar sound (closer than 97% of pairs); longer cut
+  - 0.87 -> Snoop Dogg - Drop It Like It's Hot The Golden Pony Remix | 0.8% (x1) | 11A->3A | bass_swap_16 | +0.8% stretch on B (123.0 end -> 122.0 start); energy steady (-1.9 LU); B has a clean 16-bar intro; different groove (r=0.26)
+  - 0.86 -> Lana Del Rey vs Cedric Gervais - Summertime Sadness (Remix) Cedric Gervais Extended Remix | 2.4% (x1) | 11A->12A | bass_swap_16 | -2.4% stretch on B (123.0 end -> 126.0 start); 16-bar phrases both sides; similar sound (closer than 91% of pairs); longer cut
+- **Calvin Harris - This Is What You Came For Extended Mix** (124.0 BPM, 8B)
+  - 0.95 -> Rihanna - We Found Love Calvin Harris Extended Mix | 3.2% (x1) | 8B->2B | bass_swap_16 | energy steady (+0.2 LU); same style; -3.2% stretch on B (124.0 end -> 128.0 start); longer cut
+  - 0.92 -> Swedish House Mafia - Don't You Worry Child | 4.0% (x1) | 8B->10B | bass_swap_16 | energy steady (-0.8 LU); B has a clean 16-bar intro; same style; different groove (r=0.31); longer cut
+  - 0.90 -> Sam Robs & Kelvin Wood - No Scrubs Extended Mix (house cover) | 0.8% (x1) | 8B->1A | bass_swap_16 | -0.8% stretch on B (124.0 end -> 125.0 start); energy steady (-1.7 LU); similar sound (closer than 99% of pairs); different groove (r=0.06); longer cut
+- **Sister Sledge - We Are Family Luca Debonaire & DJ Marlon Remix** (124.0 BPM, 10B)
+  - 0.90 -> T. Rex - Get It On Joe T. Vannelli Vocal Attack Mix | 3.2% (x1) | 10B->3A | bass_swap_16 | energy steady (-1.6 LU); B has a clean 16-bar intro; same style; different groove (r=0.00); longer cut
+  - 0.89 -> Kate Bush - Running Up That Hill (A Deal With God) Landis Remix | 0.8% (x1) | 10B->5A | bass_swap_16 | -0.8% stretch on B (124.0 end -> 125.0 start); B has a clean 16-bar intro; 16-bar phrases both sides; different groove (r=0.18)
+  - 0.88 -> Swedish House Mafia - Don't You Worry Child | 4.0% (x1) | 10B->10B | bass_swap_16 | B has a clean 16-bar intro; 16-bar phrases both sides; -4.0% stretch on B (124.0 end -> 129.0 start); different groove (r=0.00); longer cut
+- **Sister Sledge - Lost In Music Dimitri From Paris Remix** (124.0 BPM, 7A)
+  - 0.89 -> Kate Bush - Running Up That Hill (A Deal With God) Landis Remix | 0.8% (x1) | 7A->5A | bass_swap_16 | -0.8% stretch on B (124.0 end -> 125.0 start); energy steady (-1.0 LU); B has a clean 16-bar intro
+  - 0.89 -> Snoop Dogg - Drop It Like It's Hot The Golden Pony Remix | 1.6% (x1) | 7A->3A | bass_swap_16 | +1.6% stretch on B (124.0 end -> 122.0 start); energy steady (-0.4 LU); B has a clean 16-bar intro
+  - 0.89 -> T. Rex - Get It On Joe T. Vannelli Vocal Attack Mix | 3.2% (x1) | 7A->3A | bass_swap_16 | energy steady (+0.2 LU); B has a clean 16-bar intro; same style; different groove (r=0.00); longer cut
+
+#### 6 - 125-129
+- **Sam Robs & Kelvin Wood - No Scrubs Extended Mix (house cover)** (125.0 BPM, 1A)
+  - 0.87 -> Kyle Dixon & Michael Stein - Stranger Things Theme Kwest Halloween Remix | 2.4% (x1) | 1A->9A | bass_swap_8 | -2.4% stretch on B (125.0 end -> 128.0 start); B has a clean 16-bar intro; similar sound (closer than 93% of pairs); 8-bar window (short of a 16-bar phrase); longer cut
+  - 0.85 -> Lana Del Rey vs Cedric Gervais - Summertime Sadness (Remix) Cedric Gervais Extended Remix | 0.8% (x1) | 1A->12A | bass_swap_8 | -0.8% stretch on B (125.0 end -> 126.0 start); B enters -2.0 LU quieter; similar sound (closer than 99% of pairs); 8-bar window (short of a 16-bar phrase); different groove (r=0.38); longer cut
+  - 0.85 -> Sisqo - Thong Song Colin Jay Remix (Dirty) | 0.8% (x1) | 1A->12A | bass_swap_8 | +0.8% stretch on B (125.0 end -> 124.0 start); energy steady (+0.4 LU); same style; 8-bar window (short of a 16-bar phrase); different groove (r=0.00); longer cut
+- **Blackstreet - No Diggity Rogerson & Ray Montreal Remix** (126.0 BPM, 11A)
+  - 0.93 -> Riton x Nightcrawlers - Friday (Dopamine Re-Edit) Extended | 2.4% (x1) | 11A->11A | bass_swap_16 | +2.4% stretch on B (126.0 end -> 123.0 start); energy steady (-0.8 LU); similar sound (closer than 99% of pairs); longer cut
+  - 0.93 -> Kate Bush - Running Up That Hill (A Deal With God) Landis Remix | 0.8% (x1) | 11A->5A | bass_swap_16 | +0.8% stretch on B (126.0 end -> 125.0 start); energy steady (-1.5 LU); B has a clean 16-bar intro
+  - 0.93 -> Kyle Dixon & Michael Stein - Stranger Things Theme Kwest Halloween Remix | 1.6% (x1) | 11A->9A | bass_swap_16 | -1.6% stretch on B (126.0 end -> 128.0 start); energy steady (+0.3 LU); B has a clean 16-bar intro; longer cut
+- **Modjo - Lady (Hear Me Tonight) 5HOURS & Loruare Remix** (126.0 BPM, 8A)
+  - 0.86 -> Kyle Dixon & Michael Stein - Stranger Things Theme Kwest Halloween Remix | 1.6% (x1) | 8A->9A | bass_swap_8 | -1.6% stretch on B (126.0 end -> 128.0 start); energy steady (+0.1 LU); B has a clean 16-bar intro; 8-bar window (short of a 16-bar phrase); different groove (r=0.00); longer cut
+  - 0.86 -> T. Rex - Get It On Joe T. Vannelli Vocal Attack Mix | 1.6% (x1) | 8A->3A | bass_swap_8 | -1.6% stretch on B (126.0 end -> 128.0 start); energy steady (-0.4 LU); B has a clean 16-bar intro; 8-bar window (short of a 16-bar phrase); different groove (r=0.33); longer cut
+  - 0.85 -> Swedish House Mafia - Don't You Worry Child | 2.4% (x1) | 8A->10B | bass_swap_8 | -2.4% stretch on B (126.0 end -> 129.0 start); B has a clean 16-bar intro; B enters -2.0 LU quieter; 8-bar window (short of a 16-bar phrase); longer cut
+- **Lana Del Rey vs Cedric Gervais - Summertime Sadness (Remix) Cedric Gervais Extended Remix** (126.0 BPM, 12A)
+  - 0.92 -> Sam Robs & Kelvin Wood - No Scrubs Extended Mix (house cover) | 0.8% (x1) | 12A->1A | bass_swap_16 | +0.8% stretch on B (126.0 end -> 125.0 start); energy steady (+1.4 LU); similar sound (closer than 99% of pairs); different groove (r=0.38); longer cut
+  - 0.91 -> Swedish House Mafia - Don't You Worry Child | 2.4% (x1) | 12A->10B | bass_swap_16 | -2.4% stretch on B (126.0 end -> 129.0 start); B has a clean 16-bar intro; same style; different groove (r=0.00); longer cut
+  - 0.90 -> Rihanna - We Found Love Calvin Harris Extended Mix | 1.6% (x1) | 12A->2B | bass_swap_16 | -1.6% stretch on B (126.0 end -> 128.0 start); same style; similar sound (closer than 99% of pairs); longer cut
+- **Icona Pop - I Love It** (126.0 BPM, 3B)
+  - 0.92 -> Rihanna - We Found Love Calvin Harris Extended Mix | 1.6% (x1) | 3B->2B | bass_swap_8 | -1.6% stretch on B (126.0 end -> 128.0 start); energy steady (-1.8 LU); same style; longer cut
+  - 0.91 -> Swedish House Mafia - Don't You Worry Child | 2.4% (x1) | 3B->10B | bass_swap_16 | -2.4% stretch on B (126.0 end -> 129.0 start); B has a clean 16-bar intro; same style; different groove (r=0.00); longer cut
+  - 0.90 -> Rihanna - Disturbia DJ Mag Halloween Remix | 1.6% (x1) | 3B->10A | bass_swap_16 | -1.6% stretch on B (126.0 end -> 128.0 start); energy steady (-1.4 LU); 16-bar phrases both sides
+- **Slayyyter - Brand New Chanel$ Extended** (126.1 BPM, 2B)
+  - 0.90 -> Swedish House Mafia - Don't You Worry Child | 2.3% (x1) | 2B->10B | bass_swap_16 | -2.3% stretch on B (126.1 end -> 129.0 start); B has a clean 16-bar intro; similar sound (closer than 95% of pairs); longer cut
+  - 0.88 -> Rihanna - We Found Love Calvin Harris Extended Mix | 1.5% (x1) | 2B->2B | bass_swap_8 | -1.5% stretch on B (126.1 end -> 128.0 start); 2B -> 2B; B enters -2.1 LU quieter; different groove (r=0.00); longer cut
+  - 0.87 -> Kyle Dixon & Michael Stein - Stranger Things Theme Kwest Halloween Remix | 1.5% (x1) | 2B->9A | bass_swap_16 | -1.5% stretch on B (126.1 end -> 128.0 start); energy steady (-0.9 LU); B has a clean 16-bar intro; different groove (r=0.07); longer cut
+- **Eric Prydz - Call on Me Extended Edit** (126.3 BPM, 6B)
+  - 0.91 -> Fedde Le Grand - Put Your Hands Up For Detroit ZANS Remix | 1.3% (x1) | 6B->9B | bass_swap_32 | -1.3% stretch on B (126.3 end -> 128.0 start); energy steady (-0.6 LU); same style; longer cut
+  - 0.90 -> Rihanna - We Found Love Calvin Harris Extended Mix | 1.3% (x1) | 6B->2B | bass_swap_32 | -1.3% stretch on B (126.3 end -> 128.0 start); B enters -2.1 LU quieter; 32-bar phrases both sides; longer cut
+  - 0.90 -> Riton x Nightcrawlers - Friday (Dopamine Re-Edit) Extended | 2.6% (x1) | 6B->11A | bass_swap_16 | +2.6% stretch on B (126.3 end -> 123.0 start); B enters -2.1 LU quieter; 18-bar phrases both sides; longer cut
+- **Crystal Waters - Gypsy Woman (She's Homeless) ALRT Remix** (127.0 BPM, 7A)
+  - 0.86 -> Kyle Dixon & Michael Stein - Stranger Things Theme Kwest Halloween Remix | 0.8% (x1) | 7A->9A | bass_swap_8 | -0.8% stretch on B (127.0 end -> 128.0 start); energy steady (-1.8 LU); B has a clean 16-bar intro; 8-bar window (short of a 16-bar phrase); longer cut
+  - 0.83 -> Blackstreet - No Diggity Rogerson & Ray Montreal Remix | 0.8% (x1) | 7A->11A | bass_swap_8 | +0.8% stretch on B (127.0 end -> 126.0 start); same style; similar sound (closer than 100% of pairs); 8-bar window (short of a 16-bar phrase)
+  - 0.83 -> T. Rex - Get It On Joe T. Vannelli Vocal Attack Mix | 0.8% (x1) | 7A->3A | bass_swap_8 | -0.8% stretch on B (127.0 end -> 128.0 start); B has a clean 16-bar intro; B enters -2.3 LU quieter; 8-bar window (short of a 16-bar phrase); different groove (r=0.00); longer cut
+- **La Roux - Bulletproof DJs From Mars N9 Edit** (128.0 BPM, 9A)
+  - 0.97 -> Kyle Dixon & Michael Stein - Stranger Things Theme Kwest Halloween Remix | 0.0% (x1) | 9A->9A | bass_swap_32 | same tempo (128.0 BPM at A's end); 9A -> 9A; energy steady (-0.2 LU); different groove (r=0.27); longer cut
+  - 0.93 -> Talking Heads - Psycho Killer Freejak Halloween Remix (Clean) | 1.6% (x1) | 9A->8A | bass_swap_16 | -1.6% stretch on B (128.0 end -> 130.0 start); energy steady (-0.0 LU); similar sound (closer than 100% of pairs)
+  - 0.93 -> Rihanna - Disturbia DJ Mag Halloween Remix | 0.0% (x1) | 9A->10A | bass_swap_16 | same tempo (128.0 BPM at A's end); energy steady (-0.9 LU); B has a clean 16-bar intro; different groove (r=0.00)
+- **Zedd - Clarity** (128.0 BPM, 4B)
+  - 0.95 -> Kyle Dixon & Michael Stein - Stranger Things Theme Kwest Halloween Remix | 0.0% (x1) | 4B->9A | bass_swap_16 | same tempo (128.0 BPM at A's end); B has a clean 16-bar intro; same style; longer cut
+  - 0.91 -> Swedish House Mafia - Don't You Worry Child | 0.8% (x1) | 4B->10B | bass_swap_16 | -0.8% stretch on B (128.0 end -> 129.0 start); B has a clean 16-bar intro; same style; different groove (r=0.00); longer cut
+  - 0.89 -> Rihanna - We Found Love Calvin Harris Extended Mix | 0.0% (x1) | 4B->2B | bass_swap_8 | same tempo (128.0 BPM at A's end); same style; similar sound (closer than 99% of pairs); longer cut
+- **Fedde Le Grand - Put Your Hands Up For Detroit ZANS Remix** (128.0 BPM, 9B)
+  - 0.93 -> Kyle Dixon & Michael Stein - Stranger Things Theme Kwest Halloween Remix | 0.0% (x1) | 9B->9A | bass_swap_32 | same tempo (128.0 BPM at A's end); energy steady (-1.4 LU); B has a clean 16-bar intro; longer cut
+  - 0.90 -> Swedish House Mafia - Don't You Worry Child | 0.8% (x1) | 9B->10B | bass_swap_32 | -0.8% stretch on B (128.0 end -> 129.0 start); B has a clean 16-bar intro; 32-bar phrases both sides; different groove (r=0.24); longer cut
+  - 0.88 -> Sister Sledge - We Are Family Luca Debonaire & DJ Marlon Remix | 3.1% (x1) | 9B->10B | bass_swap_16 | energy steady (-1.2 LU); +3.1% stretch on B (128.0 end -> 124.0 start); 16-bar phrases both sides; different groove (r=0.08); longer cut
+- **Kyle Dixon & Michael Stein - Stranger Things Theme Kwest Halloween Remix** (128.0 BPM, 9A)
+  - 0.95 -> Rihanna - We Found Love Calvin Harris Extended Mix | 0.0% (x1) | 9A->2B | bass_swap_16 | same tempo (128.0 BPM at A's end); energy steady (-1.3 LU); same style; longer cut
+  - 0.94 -> Taylor Swift - Look What You Made Me Do | 0.0% (x1) | 9A->8A | bass_swap_16 | same tempo (128.0 BPM at A's end); same style; no vocal clash
+  - 0.94 -> Talking Heads - Psycho Killer Freejak Halloween Remix (Clean) | 1.6% (x1) | 9A->8A | bass_swap_16 | -1.6% stretch on B (128.0 end -> 130.0 start); energy steady (+0.0 LU); similar sound (closer than 100% of pairs); different groove (r=0.32)
+- **LF System - Afraid To Feel Extended** (128.0 BPM, 1A, tempo change 128->128)
+  - 0.85 -> Peggy Gou - (It Goes Like) Nanana Extended Mix | 1.6% (x1) | 1A->5A | bass_swap_8 | -1.6% stretch on B (128.0 end -> 130.0 start); energy steady (-1.2 LU); same style; 8-bar window (short of a 16-bar phrase); different groove (r=0.35); longer cut
+  - 0.84 -> Sisqo - Thong Song Colin Jay Remix (Dirty) | 3.1% (x1) | 1A->12A | bass_swap_8 | B enters -2.1 LU quieter; +3.1% stretch on B (128.0 end -> 124.0 start); similar sound (closer than 96% of pairs); 8-bar window (short of a 16-bar phrase); different groove (r=0.25); longer cut
+  - 0.84 -> Sam Robs & Kelvin Wood - No Scrubs Extended Mix (house cover) | 2.3% (x1) | 1A->1A | bass_swap_8 | +2.3% stretch on B (128.0 end -> 125.0 start); similar sound (closer than 97% of pairs); no vocal clash; 8-bar window (short of a 16-bar phrase); different groove (r=0.08); longer cut
+- **Jolyon Petch - Thriller Freejak Remix (house cover)** (128.0 BPM, 12A)
+  - 0.92 -> T. Rex - Get It On Joe T. Vannelli Vocal Attack Mix | 0.0% (x1) | 12A->3A | bass_swap_32 | same tempo (128.0 BPM at A's end); energy steady (-1.7 LU); B has a clean 16-bar intro; different groove (r=0.04); longer cut
+  - 0.92 -> Rockwell - Somebody's Watching Me Tall Boys Halloween Remix | 0.8% (x1) | 12A->12A | bass_swap_16 | +0.8% stretch on B (128.0 end -> 127.0 start); 12A -> 12A; energy steady (-1.7 LU); different groove (r=0.00)
+  - 0.91 -> Kyle Dixon & Michael Stein - Stranger Things Theme Kwest Halloween Remix | 0.0% (x1) | 12A->9A | bass_swap_32 | same tempo (128.0 BPM at A's end); energy steady (-1.2 LU); B has a clean 16-bar intro; different groove (r=0.00); longer cut
+- **Tiësto & Sexyy Red - OMG! (Dirty)** (128.0 BPM, 4A)
+  - 0.86 -> Kyle Dixon & Michael Stein - Stranger Things Theme Kwest Halloween Remix | 0.0% (x1) | 4A->9A | bass_swap_8 | same tempo (128.0 BPM at A's end); energy steady (-0.0 LU); B has a clean 16-bar intro; 8-bar window (short of a 16-bar phrase); longer cut
+  - 0.85 -> Kate Bush - Running Up That Hill (A Deal With God) Landis Remix | 2.4% (x1) | 4A->5A | bass_swap_8 | +2.3% stretch on B (128.0 end -> 125.0 start); energy steady (-1.8 LU); B has a clean 16-bar intro; 8-bar window (short of a 16-bar phrase)
+  - 0.85 -> T. Rex - Get It On Joe T. Vannelli Vocal Attack Mix | 0.0% (x1) | 4A->3A | bass_swap_8 | same tempo (128.0 BPM at A's end); energy steady (-0.6 LU); B has a clean 16-bar intro; 8-bar window (short of a 16-bar phrase); different groove (r=0.00); longer cut
+- **T. Rex - Get It On Joe T. Vannelli Vocal Attack Mix** (128.0 BPM, 3A)
+  - 0.92 -> Bette Midler - I Put A Spell On You Thee Werqn' Btches Club Mix (Joel Dickinson) | 0.0% (x1) | 3A->4A | bass_swap_16 | same tempo (128.0 BPM at A's end); energy steady (-0.0 LU); similar sound (closer than 98% of pairs); different groove (r=0.00); longer cut
+  - 0.92 -> Swedish House Mafia - Don't You Worry Child | 0.8% (x1) | 3A->10B | bass_swap_32 | -0.8% stretch on B (128.0 end -> 129.0 start); energy steady (-0.8 LU); B has a clean 16-bar intro; different groove (r=0.22); longer cut
+  - 0.91 -> Kyle Dixon & Michael Stein - Stranger Things Theme Kwest Halloween Remix | 0.0% (x1) | 3A->9A | bass_swap_32 | same tempo (128.0 BPM at A's end); energy steady (+1.3 LU); B has a clean 16-bar intro; different groove (r=0.00); longer cut
+- **Bad Bunny - DtMF ETX vs Eric Mendosa & Exodus Better Off Alone Edit (Dirty)** (128.0 BPM, 1A)
+  - 0.92 -> Kyle Dixon & Michael Stein - Stranger Things Theme Kwest Halloween Remix | 0.0% (x1) | 1A->9A | bass_swap_16 | same tempo (128.0 BPM at A's end); energy steady (+0.5 LU); B has a clean 16-bar intro; longer cut
+  - 0.91 -> Lana Del Rey vs Cedric Gervais - Summertime Sadness (Remix) Cedric Gervais Extended Remix | 1.6% (x1) | 1A->12A | bass_swap_16 | +1.6% stretch on B (128.0 end -> 126.0 start); similar sound (closer than 100% of pairs); 16-bar phrases both sides; longer cut
+  - 0.88 -> Sam Robs & Kelvin Wood - No Scrubs Extended Mix (house cover) | 2.4% (x1) | 1A->1A | bass_swap_8 | +2.3% stretch on B (128.0 end -> 125.0 start); similar sound (closer than 99% of pairs); 16-bar phrases both sides; longer cut
+- **Swedish House Mafia - Don't You Worry Child** (129.0 BPM, 10B)
+  - 0.92 -> T. Rex - Get It On Joe T. Vannelli Vocal Attack Mix | 0.8% (x1) | 10B->3A | bass_swap_16 | +0.8% stretch on B (129.0 end -> 128.0 start); B has a clean 16-bar intro; similar sound (closer than 96% of pairs); different groove (r=0.22); longer cut
+  - 0.90 -> Rihanna - Disturbia DJ Mag Halloween Remix | 0.8% (x1) | 10B->10A | bass_swap_16 | +0.8% stretch on B (129.0 end -> 128.0 start); 16-bar phrases both sides; B has a clean 16-bar intro; different groove (r=0.00)
+  - 0.90 -> Rihanna - We Found Love Calvin Harris Extended Mix | 0.8% (x1) | 10B->2B | bass_swap_16 | +0.8% stretch on B (129.0 end -> 128.0 start); same style; similar sound (closer than 99% of pairs); different groove (r=0.05); longer cut
+
+#### 7 - 130-134
+- **Charli XCX - Von Dutch Extended Version** (130.0 BPM, 4A)
+  - 0.83 -> Kyle Dixon & Michael Stein - Stranger Things Theme Kwest Halloween Remix | 1.5% (x1) | 4A->9A | bass_swap_8 | +1.5% stretch on B (130.0 end -> 128.0 start); energy steady (-1.2 LU); B has a clean 16-bar intro; 8-bar window (short of a 16-bar phrase); longer cut
+  - 0.83 -> Lady Gaga - Abracadabra (Intro) | 3.1% (x1) | 4A->4A | bass_swap_8 | same style; +3.1% stretch on B (130.0 end -> 126.0 start); similar sound (closer than 98% of pairs); 8-bar window (short of a 16-bar phrase)
+  - 0.83 -> Bette Midler - I Put A Spell On You Thee Werqn' Btches Club Mix (Joel Dickinson) | 1.6% (x1) | 4A->4A | bass_swap_8 | +1.5% stretch on B (130.0 end -> 128.0 start); similar sound (closer than 99% of pairs); no vocal clash; 8-bar window (short of a 16-bar phrase); different groove (r=0.00); longer cut
+- **Peggy Gou - (It Goes Like) Nanana Extended Mix** (130.0 BPM, 5A)
+  - 0.95 -> Dom Dolla & Tiga - Don't Worry Baby Extended Mix | 1.5% (x1) | 5A->6A | bass_swap_16 | -1.5% stretch on B (130.0 end -> 132.0 start); energy steady (-0.1 LU); same style; longer cut
+  - 0.92 -> Swedish House Mafia - Don't You Worry Child | 0.8% (x1) | 5A->10B | bass_swap_16 | +0.8% stretch on B (130.0 end -> 129.0 start); energy steady (-1.0 LU); B has a clean 16-bar intro; different groove (r=0.15); longer cut
+  - 0.92 -> Kyle Dixon & Michael Stein - Stranger Things Theme Kwest Halloween Remix | 1.5% (x1) | 5A->9A | bass_swap_16 | +1.5% stretch on B (130.0 end -> 128.0 start); energy steady (+1.1 LU); B has a clean 16-bar intro; different groove (r=0.09); longer cut
+- **Rihanna - Rude Boy Matthew Topper Won't Be Possible Edit** (130.0 BPM, 5B)
+  - 0.91 -> Swedish House Mafia - Don't You Worry Child | 0.8% (x1) | 5B->10B | bass_swap_16 | +0.8% stretch on B (130.0 end -> 129.0 start); energy steady (-1.4 LU); B has a clean 16-bar intro; different groove (r=0.00); longer cut
+  - 0.88 -> Fedde Le Grand - Put Your Hands Up For Detroit ZANS Remix | 1.5% (x1) | 5B->9B | bass_swap_8 | +1.5% stretch on B (130.0 end -> 128.0 start); energy steady (+1.1 LU); similar sound (closer than 99% of pairs); longer cut
+  - 0.88 -> Rihanna - Disturbia DJ Mag Halloween Remix | 1.5% (x1) | 5B->10A | bass_swap_16 | +1.5% stretch on B (130.0 end -> 128.0 start); energy steady (+0.0 LU); 16-bar phrases both sides
+- **Rihanna - Don't Stop The Music Colin Jay Remix** (130.0 BPM, 11B)
+  - 0.84 -> Yeah Yeah Yeahs - Heads Will Roll (A-Trak Remix) | 1.5% (x1) | 11B->1A | bass_swap_8 | -1.5% stretch on B (130.0 end -> 132.0 start); energy steady (-1.0 LU); same style; 8-bar window (short of a 16-bar phrase); different groove (r=0.39); longer cut
+  - 0.84 -> Swedish House Mafia - Don't You Worry Child | 0.8% (x1) | 11B->10B | bass_swap_8 | +0.8% stretch on B (130.0 end -> 129.0 start); energy steady (-1.1 LU); B has a clean 16-bar intro; 8-bar window (short of a 16-bar phrase); different groove (r=0.00); longer cut
+  - 0.83 -> Bette Midler - I Put A Spell On You Thee Werqn' Btches Club Mix (Joel Dickinson) | 1.6% (x1) | 11B->4A | bass_swap_8 | +1.6% stretch on B (130.0 end -> 128.0 start); energy steady (-0.3 LU); similar sound (closer than 98% of pairs); 8-bar window (short of a 16-bar phrase); longer cut
+- **Missy Elliott - Lose Control Matthew Topper In This Bih' Edit (Dirty)** (130.0 BPM, 2B)
+  - 0.82 -> Kyle Dixon & Michael Stein - Stranger Things Theme Kwest Halloween Remix | 1.5% (x1) | 2B->9A | bass_swap_8 | +1.5% stretch on B (130.0 end -> 128.0 start); energy steady (+2.0 LU); B has a clean 16-bar intro; 8-bar window (short of a 16-bar phrase); longer cut
+  - 0.79 -> Chris Lorenzo & Kah-Lo vs Black Eyed Peas - In This Bih' MarkCutz The Time Wordplay Transition (Dirty) | 0.0% (x1) | 2B->2B | quick_blend_echo | same tempo (130.0 BPM at A's end); similar sound (closer than 100% of pairs); B enters -2.1 LU quieter; vocals overlap 8 of 8 bars; 8-bar window (short of a 16-bar phrase); longer cut
+  - 0.78 -> Swedish House Mafia - Don't You Worry Child | 0.8% (x1) | 2B->10B | bass_swap_8 | +0.8% stretch on B (130.0 end -> 129.0 start); energy steady (-0.2 LU); B has a clean 16-bar intro; 8-bar window (short of a 16-bar phrase); different groove (r=0.26); longer cut
+- **Chris Lorenzo & Kah-Lo vs Black Eyed Peas - In This Bih' MarkCutz The Time Wordplay Transition (Dirty)** (130.0 BPM, 2B)
+  - 0.85 -> Kyle Dixon & Michael Stein - Stranger Things Theme Kwest Halloween Remix | 1.5% (x1) | 2B->9A | bass_swap_8 | +1.5% stretch on B (130.0 end -> 128.0 start); energy steady (+1.6 LU); B has a clean 16-bar intro; 8-bar window (short of a 16-bar phrase); longer cut
+  - 0.83 -> Swedish House Mafia - Don't You Worry Child | 0.8% (x1) | 2B->10B | bass_swap_8 | +0.8% stretch on B (130.0 end -> 129.0 start); energy steady (-0.5 LU); B has a clean 16-bar intro; 8-bar window (short of a 16-bar phrase); longer cut
+  - 0.81 -> Rihanna - We Found Love Calvin Harris Extended Mix | 1.5% (x1) | 2B->2B | bass_swap_8 | +1.5% stretch on B (130.0 end -> 128.0 start); energy steady (+0.5 LU); same style; 8-bar window (short of a 16-bar phrase); longer cut
+- **Drake & Sexyy Red - Cheetah Print (Intro - Dirty)** (130.0 BPM, 5A)
+  - 0.88 -> Dom Dolla & Tiga - Don't Worry Baby Extended Mix | 1.5% (x1) | 5A->6A | bass_swap_8 | -1.5% stretch on B (130.0 end -> 132.0 start); energy steady (+0.0 LU); same style; different groove (r=0.36); longer cut
+  - 0.88 -> Kyle Dixon & Michael Stein - Stranger Things Theme Kwest Halloween Remix | 1.5% (x1) | 5A->9A | bass_swap_16 | +1.5% stretch on B (130.0 end -> 128.0 start); energy steady (+1.2 LU); B has a clean 16-bar intro; longer cut
+  - 0.86 -> Swedish House Mafia - Don't You Worry Child | 0.8% (x1) | 5A->10B | bass_swap_16 | +0.8% stretch on B (130.0 end -> 129.0 start); energy steady (-0.9 LU); B has a clean 16-bar intro; different groove (r=0.00); longer cut
+- **The Prodigy - Breathe** (130.0 BPM, 5B)
+  - 0.86 -> Kyle Dixon & Michael Stein - Stranger Things Theme Kwest Halloween Remix | 1.6% (x1) | 5B->9A | bass_swap_16 | +1.5% stretch on B (130.0 end -> 128.0 start); energy steady (-1.5 LU); B has a clean 16-bar intro; 5B -> 9A (clash), key unsure; longer cut
+  - 0.85 -> Swedish House Mafia - Don't You Worry Child | 0.8% (x1) | 5B->10B | bass_swap_16 | +0.8% stretch on B (130.0 end -> 129.0 start); B has a clean 16-bar intro; 16-bar phrases both sides; different groove (r=0.22); longer cut
+  - 0.85 -> Kate Bush - Running Up That Hill (A Deal With God) Landis Remix | 3.9% (x1) | 5B->5A | bass_swap_16 | B has a clean 16-bar intro; 16-bar phrases both sides; same style
+- **Disco Lines & Tinashe - No Broke Boys (Intro - Dirty)** (131.0 BPM, 1B)
+  - 0.92 -> Rihanna - We Found Love Calvin Harris Extended Mix | 2.3% (x1) | 1B->2B | bass_swap_16 | +2.3% stretch on B (131.0 end -> 128.0 start); similar sound (closer than 99% of pairs); 16-bar phrases both sides; different groove (r=0.00); longer cut
+  - 0.90 -> Swedish House Mafia - Don't You Worry Child | 1.5% (x1) | 1B->10B | bass_swap_16 | +1.5% stretch on B (131.0 end -> 129.0 start); B has a clean 16-bar intro; 16-bar phrases both sides; longer cut
+  - 0.89 -> T. Rex - Get It On Joe T. Vannelli Vocal Attack Mix | 2.3% (x1) | 1B->3A | bass_swap_16 | +2.3% stretch on B (131.0 end -> 128.0 start); B has a clean 16-bar intro; B enters -2.1 LU quieter; different groove (r=0.00); longer cut
+- **Sam Smith & Kim Petras - Unholy** (131.0 BPM, 3B)
+  - 0.78 -> Rihanna - Disturbia DJ Mag Halloween Remix | 2.3% (x1) | 3B->10A | bass_swap_16 | +2.3% stretch on B (131.0 end -> 128.0 start); energy steady (-1.5 LU); 16-bar phrases both sides; different style
+  - 0.76 -> Swedish House Mafia - Don't You Worry Child | 1.5% (x1) | 3B->10B | bass_swap_16 | +1.5% stretch on B (131.0 end -> 129.0 start); B has a clean 16-bar intro; 16-bar phrases both sides; different groove (r=0.00); different style; longer cut
+  - 0.76 -> Rihanna - We Found Love Calvin Harris Extended Mix | 2.3% (x1) | 3B->2B | bass_swap_8 | +2.3% stretch on B (131.0 end -> 128.0 start); energy steady (-1.9 LU); 16-bar phrases both sides; different style; longer cut
+- **Dom Dolla & Tiga - Don't Worry Baby Extended Mix** (132.0 BPM, 6A)
+  - 0.91 -> Kyle Dixon & Michael Stein - Stranger Things Theme Kwest Halloween Remix | 3.0% (x1) | 6A->9A | bass_swap_16 | energy steady (-0.8 LU); B has a clean 16-bar intro; +3.0% stretch on B (132.0 end -> 128.0 start); longer cut
+  - 0.89 -> Rihanna - Disturbia DJ Mag Halloween Remix | 3.0% (x1) | 6A->10A | bass_swap_16 | energy steady (-1.5 LU); B has a clean 16-bar intro; +3.0% stretch on B (132.0 end -> 128.0 start)
+  - 0.88 -> Kylie vs New Order - Blue Monday Mashup | 0.0% (x1) | 6A->7A | bass_swap_8 | same tempo (132.0 BPM at A's end); B enters -2.0 LU quieter; 16-bar phrases both sides; longer cut
+- **Kylie vs New Order - Blue Monday Mashup** (132.0 BPM, 7A)
+  - 0.93 -> Kyle Dixon & Michael Stein - Stranger Things Theme Kwest Halloween Remix | 3.0% (x1) | 7A->9A | bass_swap_16 | B has a clean 16-bar intro; +3.0% stretch on B (132.0 end -> 128.0 start); B enters +2.0 LU louder; longer cut
+  - 0.90 -> DJ Dado - X-Files | 2.3% (x1) | 7A->8A | bass_swap_16 | -2.3% stretch on B (132.0 end -> 135.0 start); energy steady (-0.6 LU); B has a clean 16-bar intro; different groove (r=0.00)
+  - 0.89 -> Rihanna - Disturbia DJ Mag Halloween Remix | 3.0% (x1) | 7A->10A | bass_swap_16 | energy steady (+1.3 LU); same style; 16-bar phrases both sides
+
+#### 8 - 135 plus
+- **DJ Dado - X-Files** (135.0 BPM, 8A)
+  - 0.89 -> Kyle Dixon & Michael Stein - Stranger Things Theme Kwest Halloween Remix | 5.2% (x1) | 8A->9A | bass_swap_16 | energy steady (-1.3 LU); B has a clean 16-bar intro; same style; different groove (r=0.00); longer cut
+  - 0.85 -> Robert Miles - Children | 1.6% (x1) | 8A->4A | bass_swap_16 | -1.6% stretch on B (135.0 end -> 137.1 start); B has a clean 16-bar intro; same style; different groove (r=0.20)
+  - 0.85 -> T. Rex - Get It On Joe T. Vannelli Vocal Attack Mix | 5.2% (x1) | 8A->3A | bass_swap_16 | energy steady (-1.8 LU); B has a clean 16-bar intro; 16-bar phrases both sides; different groove (r=0.02); longer cut
+- **KATSEYE - GNARLY Amanda Sze Remix Rework** (135.0 BPM, 6A)
+  - 0.77 -> Dom Dolla & Tiga - Don't Worry Baby Extended Mix | 2.2% (x1) | 6A->6A | bass_swap_8 | +2.2% stretch on B (135.0 end -> 132.0 start); similar sound (closer than 95% of pairs); B enters -2.9 LU quieter; 8-bar window (short of a 16-bar phrase); longer cut
+  - 0.77 -> Peggy Gou - (It Goes Like) Nanana Extended Mix | 3.7% (x1) | 6A->5A | bass_swap_8 | +3.7% stretch on B (135.0 end -> 130.0 start); 6A -> 5A (-1 (fifth)); B enters -3.4 LU quieter; 8-bar window (short of a 16-bar phrase); longer cut
+  - 0.73 -> Yeah Yeah Yeahs - Heads Will Roll (A-Trak Remix) | 2.2% (x1) | 6A->1A | bass_swap_8 | +2.2% stretch on B (135.0 end -> 132.0 start); similar sound (closer than 98% of pairs); no vocal clash; 8-bar window (short of a 16-bar phrase); different groove (r=0.00); different style; longer cut
+- **Sonique - It Feels So Good Extended Mix 1998** (135.0 BPM, 11A)
+  - 0.82 -> Yeah Yeah Yeahs - Heads Will Roll (A-Trak Remix) | 2.2% (x1) | 11A->1A | quick_blend_echo | +2.2% stretch on B (135.0 end -> 132.0 start); same style; similar sound (closer than 96% of pairs); no steady beat at A's end (echo out, cut B in on its downbeat); different groove (r=0.06); longer cut
+  - 0.82 -> Rihanna - Disturbia DJ Mag Halloween Remix | 5.2% (x1) | 11A->10A | quick_blend_echo | energy steady (-1.5 LU); same style; B has a clean 16-bar intro; no steady beat at A's end (echo out, cut B in on its downbeat); different groove (r=0.00)
+  - 0.81 -> Kyle Dixon & Michael Stein - Stranger Things Theme Kwest Halloween Remix | 5.2% (x1) | 11A->9A | quick_blend_echo | energy steady (-0.8 LU); B has a clean 16-bar intro; similar sound (closer than 91% of pairs); no steady beat at A's end (echo out, cut B in on its downbeat); longer cut
+- **LCD Soundsystem - Daft Punk Is Playing At My House** (136.0 BPM, 8A)
+  - 0.79 -> Kylie vs New Order - Blue Monday Mashup | 2.9% (x1) | 8A->7A | quick_blend_echo | +2.9% stretch on B (136.0 end -> 132.0 start); energy steady (-1.8 LU); same style; vocals overlap 8 of 8 bars; 8-bar window (short of a 16-bar phrase); longer cut
+  - 0.77 -> Yeah Yeah Yeahs - Heads Will Roll (A-Trak Remix) | 2.9% (x1) | 8A->1A | bass_swap_8 | +2.9% stretch on B (136.0 end -> 132.0 start); same style; B enters -2.6 LU quieter; 8-bar window (short of a 16-bar phrase); different sound (closer than only 36% of pairs); longer cut
+  - 0.76 -> Sonique - It Feels So Good Extended Mix 1998 | 0.7% (x1) | 8A->11A | quick_blend_echo | +0.7% stretch on B (136.0 end -> 135.0 start); energy steady (-1.6 LU); same style; B's beat starts at bar 9 (cut in there, skip the intro); different groove (r=0.35); longer cut
+- **Fcukers - If You Wanna Party, Come Over To My House** (136.0 BPM, 5A)
+  - 0.88 -> Dom Dolla & Tiga - Don't Worry Baby Extended Mix | 3.0% (x1) | 5A->6A | bass_swap_8 | +3.0% stretch on B (136.0 end -> 132.0 start); energy steady (-1.5 LU); same style; different groove (r=0.28); longer cut
+  - 0.82 -> Yeah Yeah Yeahs - Heads Will Roll (A-Trak Remix) | 3.0% (x1) | 5A->1A | bass_swap_8 | +3.0% stretch on B (136.0 end -> 132.0 start); similar sound (closer than 99% of pairs); B enters -2.3 LU quieter; 10-bar window (short of a 16-bar phrase); different groove (r=0.29); longer cut
+  - 0.82 -> Swedish House Mafia - Don't You Worry Child | 5.2% (x1) | 5A->10B | bass_swap_16 | B has a clean 16-bar intro; B enters -2.4 LU quieter; 16-bar phrases both sides; different groove (r=0.00); longer cut
+- **Robert Miles - Children** (137.1 BPM, 4A)
+  - 0.85 -> DJ Dado - X-Files | 1.6% (x1) | 4A->8A | quick_blend_echo | +1.5% stretch on B (137.1 end -> 135.0 start); B has a clean 16-bar intro; same style; no steady beat at A's end (echo out, cut B in on its downbeat); different groove (r=0.20)
+  - 0.82 -> Sonique - It Feels So Good Extended Mix 1998 | 1.5% (x1) | 4A->11A | quick_blend_echo | +1.5% stretch on B (137.1 end -> 135.0 start); B enters -2.0 LU quieter; similar sound (closer than 88% of pairs); different groove (r=0.29); longer cut
+  - 0.80 -> Bette Midler - I Put A Spell On You Thee Werqn' Btches Club Mix (Joel Dickinson) | 6.7% (x1) | 4A->4A | quick_blend_echo | 4A -> 4A; same style; B enters -2.4 LU quieter; no steady beat at A's end (echo out, cut B in on its downbeat); longer cut
+- **ADÉLA - Nicole Kidman YuchiBoy Remix (Dirty)** (140.0 BPM, 6A)
+  - 0.83 -> Dom Dolla & Tiga - Don't Worry Baby Extended Mix | 5.7% (x1) | 6A->6A | bass_swap_8 | energy steady (-0.8 LU); same style; 16-bar phrases both sides; longer cut
+  - 0.83 -> DJ Dado - X-Files | 3.6% (x1) | 6A->8A | bass_swap_16 | B has a clean 16-bar intro; B enters -2.2 LU quieter; 16-bar phrases both sides; different groove (r=0.00)
+  - 0.81 -> Robert Miles - Children | 2.1% (x1) | 6A->4A | bass_swap_16 | +2.1% stretch on B (140.0 end -> 137.1 start); B has a clean 16-bar intro; 16-bar phrases both sides
+- **Underworld - Born Slippy** (140.1 BPM, 6B)
+  - 0.81 -> Sonique - It Feels So Good Extended Mix 1998 | 3.6% (x1) | 6B->11A | quick_blend_echo | energy steady (+0.5 LU); +3.6% stretch on B (140.1 end -> 135.0 start); no vocal clash; B's beat starts at bar 9 (cut in there, skip the intro); different groove (r=0.00); longer cut
+  - 0.79 -> DJ Dado - X-Files | 3.6% (x1) | 6B->8A | bass_swap_8 | energy steady (-1.1 LU); B has a clean 16-bar intro; same style; 8-bar window (short of a 16-bar phrase); different groove (r=0.00)
+  - 0.79 -> Robert Miles - Children | 2.1% (x1) | 6B->4A | bass_swap_8 | +2.1% stretch on B (140.1 end -> 137.1 start); B has a clean 16-bar intro; same style; 8-bar window (short of a 16-bar phrase); different groove (r=0.00)
+- **Zara Larsson - Midnight Sun** (151.0 BPM, 11B)
+  - 0.74 -> Olivia Rodrigo - vampire Trayze Remix (Dirty) | 2.6% (x1) | 11B->7B | quick_blend_echo | -2.7% stretch on B (151.0 end -> 155.0 start); same style; B enters -3.5 LU quieter; vocals overlap 12 of 12 bars
+  - 0.71 -> ADÉLA - Nicole Kidman YuchiBoy Remix (Dirty) | 7.3% (x1) | 11B->6A | quick_blend_echo | same style; similar sound (closer than 99% of pairs); B enters -2.1 LU quieter; vocals overlap 16 of 16 bars
+  - 0.68 -> Riton x Nightcrawlers - Friday (Dopamine Re-Edit) Extended | 8.6% (x4/3) | 11B->11A | brake_cut | same style; 16-bar phrases both sides; B enters -2.8 LU quieter; tempo change x4/3 (151 -> 123): transition track or brake, no blend; groove not comparable at x4/3; longer cut
+
+## 20 strongest pairs overall
+
+- 0.98 Doja Cat - Paint The Town Red (FRASER Bootleg Remix) -> Oliver Heldens & Will Clarke - Lost In Music Extended Mix | 1.6% | 6A->7A | bass_swap_16 | -1.6% stretch on B (126.0 end -> 128.0 start); energy steady (-0.7 LU); same style; longer cut
+- 0.98 Taylor Swift - Look What You Made Me Do -> Kyle Dixon & Michael Stein - Stranger Things Theme Kwest Halloween Remix | 0.0% | 8A->9A | bass_swap_16 | same tempo (128.0 BPM at A's end); energy steady (-1.3 LU); B has a clean 16-bar intro; longer cut
+- 0.98 Moby - Go -> Kyle Dixon & Michael Stein - Stranger Things Theme Kwest Halloween Remix | 1.7% | 9A->9A | bass_swap_16 | -1.7% stretch on B (125.8 end -> 128.0 start); 9A -> 9A; energy steady (-0.7 LU); longer cut
+- 0.97 Estelle - American Boy Aurelios Remix -> Kyle Dixon & Michael Stein - Stranger Things Theme Kwest Halloween Remix | 0.0% | 9A->9A | bass_swap_16 | same tempo (128.0 BPM at A's end); 9A -> 9A; energy steady (-1.4 LU); different groove (r=0.39); longer cut
+- 0.97 Ol' Dirty Bastard - Got Your Money Anthem Kingz Genie In A Bottle Edit -> Royksopp & Robyn - Do It Again | 0.0% | 4A->4A | bass_swap_16 | same tempo (124.0 BPM at A's end); 4A -> 4A; energy steady (-1.6 LU); different groove (r=0.32); longer cut
+- 0.97 La Roux - Bulletproof DJs From Mars N9 Edit -> Kyle Dixon & Michael Stein - Stranger Things Theme Kwest Halloween Remix | 0.0% | 9A->9A | bass_swap_32 | same tempo (128.0 BPM at A's end); 9A -> 9A; energy steady (-0.2 LU); different groove (r=0.27); longer cut
+- 0.97 Talking Heads - Psycho Killer Freejak Halloween Remix (Clean) -> Kyle Dixon & Michael Stein - Stranger Things Theme Kwest Halloween Remix | 1.5% | 8A->9A | bass_swap_16 | +1.5% stretch on B (130.0 end -> 128.0 start); energy steady (-1.4 LU); B has a clean 16-bar intro; different groove (r=0.32); longer cut
+- 0.97 Rihanna - Disturbia DJ Mag Halloween Remix -> Rihanna - Don't Stop The Music Spryte Remix | 1.6% | 10A->11A | bass_swap_16 | +1.6% stretch on B (128.0 end -> 126.0 start); energy steady (-0.7 LU); same style
+- 0.96 Calvin Harris - This Is What You Came For Extended Mix -> Ida Corr & Fedde Le Grand - Let Me Think About It Jay Dizzle & Howard Hill Remix | 1.6% | 8B->7B | bass_swap_16 | +1.6% stretch on B (124.0 end -> 122.0 start); energy steady (-0.2 LU); B has a clean 16-bar intro; longer cut
+- 0.96 Kate Bush - Running Up That Hill (A Deal With God) Landis Remix -> Kyle Dixon & Michael Stein - Stranger Things Theme Kwest Halloween Remix | 2.4% | 5A->9A | bass_swap_16 | -2.4% stretch on B (125.0 end -> 128.0 start); energy steady (+0.5 LU); B has a clean 16-bar intro; longer cut
+- 0.96 Rihanna - Don't Stop The Music Spryte Remix -> Rihanna - Disturbia DJ Mag Halloween Remix | 1.6% | 11A->10A | bass_swap_16 | -1.6% stretch on B (126.0 end -> 128.0 start); energy steady (-1.7 LU); same style
+- 0.96 Ida Corr & Fedde Le Grand - Let Me Think About It Jay Dizzle & Howard Hill Remix -> Calvin Harris - This Is What You Came For Extended Mix | 1.6% | 7B->8B | bass_swap_16 | -1.6% stretch on B (122.0 end -> 124.0 start); energy steady (-0.7 LU); no vocal clash; longer cut
+- 0.96 Talking Heads - Psycho Killer Freejak Halloween Remix (Clean) -> The Grid - Swamp Thing | 1.8% | 8A->8A | bass_swap_8 | -1.8% stretch on B (130.0 end -> 132.4 start); 8A -> 8A; energy steady (-1.1 LU); different groove (r=0.33); longer cut
+- 0.96 Kate Bush - Running Up That Hill (A Deal With God) Landis Remix -> Lady Gaga - Abracadabra | 0.8% | 5A->4A | bass_swap_16 | -0.8% stretch on B (125.0 end -> 126.0 start); energy steady (-0.8 LU); 16-bar phrases both sides
+- 0.96 Rihanna - Disturbia DJ Mag Halloween Remix -> Kyle Dixon & Michael Stein - Stranger Things Theme Kwest Halloween Remix | 0.0% | 10A->9A | bass_swap_16 | same tempo (128.0 BPM at A's end); energy steady (-0.6 LU); B has a clean 16-bar intro; different groove (r=0.22); longer cut
+- 0.96 Nelly Furtado - Maneater Monaark & Norsam Remix -> Snoop Dogg - Drop It Like It's Hot The Golden Pony Remix | 1.7% | 3A->3A | bass_swap_16 | -1.7% stretch on B (120.0 end -> 122.0 start); 3A -> 3A; energy steady (-0.4 LU); different groove (r=0.25)
+- 0.96 Ol' Dirty Bastard - Got Your Money Anthem Kingz Genie In A Bottle Edit -> Bette Midler - I Put A Spell On You Thee Werqn' Btches Club Mix (Joel Dickinson) | 3.2% | 4A->4A | bass_swap_16 | 4A -> 4A; same style; -3.2% stretch on B (124.0 end -> 128.0 start); different groove (r=0.20); longer cut
+- 0.96 Kate Bush - Running Up That Hill (A Deal With God) Landis Remix -> Lady Gaga - Abracadabra (Intro) | 0.8% | 5A->4A | bass_swap_16 | -0.8% stretch on B (125.0 end -> 126.0 start); energy steady (-0.8 LU); 16-bar phrases both sides
+- 0.95 Dom Dolla & Tiga - Don't Worry Baby -> Oliver Heldens & Will Clarke - Lost In Music Extended Mix | 3.0% | 6A->7A | bass_swap_16 | energy steady (-1.9 LU); same style; +3.0% stretch on B (132.0 end -> 128.0 start); different groove (r=0.00); longer cut
+- 0.95 Lady Gaga - Abracadabra -> Kyle Dixon & Michael Stein - Stranger Things Theme Kwest Halloween Remix | 1.6% | 4A->9A | bass_swap_16 | -1.6% stretch on B (126.0 end -> 128.0 start); energy steady (-1.5 LU); B has a clean 16-bar intro; longer cut
+
+## Tracks with no match >= 0.6 (pool view, either direction)
+
+- none

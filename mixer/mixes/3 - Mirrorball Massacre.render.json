@@ -1,0 +1,1025 @@
+{
+ "plan": "plan_3.json",
+ "out": "3 - Mirrorball Massacre",
+ "joins": [
+  {
+   "n": 1,
+   "type": "quick_blend_echo",
+   "from_title": "Oasis - Wonderwall",
+   "to_title": "Creedence Clearwater Revival - Bad Moon Rising",
+   "a_overlap_start_bar": 69,
+   "a_exit_bar": 73,
+   "b_cue_bar": 1,
+   "stretch_pct": 3.25,
+   "stretch_side": "both, ramped bar by bar from 87.05 to 89.88 BPM across the overlap",
+   "pair_score": 0.714,
+   "vocal_overlap": 0.903,
+   "dip_out_mids": false,
+   "reverb_wash": false,
+   "scratch": false,
+   "backspin": false,
+   "key_shift_st": 0,
+   "reasons": [
+    "energy steady (+1.2 LU)",
+    "-3.3% stretch on B (87.1 end -> 89.9 start)",
+    "11B -> 10B (-1 (fifth))",
+    "8-bar window (short of a 16-bar phrase)",
+    "different groove (r=0.00)"
+   ],
+   "overlap_bars_rendered": 4,
+   "phase_corr_ms": 39.1,
+   "at_s": 188.826,
+   "tail": "echo 3/8 beat=503 ms fb 0.58",
+   "bar_s_ramp": [
+    2.746,
+    2.6809
+   ],
+   "geom_downbeat_err_ms": 0.0,
+   "beat_offset_ms": 5.6,
+   "beats_compared": 17,
+   "beat_spread_mad_ms": 16.5
+  },
+  {
+   "n": 2,
+   "type": "quick_blend_echo",
+   "from_title": "Creedence Clearwater Revival - Bad Moon Rising",
+   "to_title": "50 Cent - In Da Club",
+   "a_overlap_start_bar": 47,
+   "a_exit_bar": 51,
+   "b_cue_bar": 1,
+   "stretch_pct": 0.14,
+   "stretch_side": "both, ramped bar by bar from 89.88 to 90.01 BPM across the overlap",
+   "pair_score": 0.5981,
+   "vocal_overlap": 0.967,
+   "dip_out_mids": true,
+   "reverb_wash": true,
+   "scratch": false,
+   "backspin": false,
+   "key_shift_st": 0,
+   "reasons": [
+    "same tempo (89.9 BPM at A's end)",
+    "energy steady (-0.2 LU)",
+    "10B -> 12A (pitch-shift B by -2 st)",
+    "vocals overlap 8 of 8 bars",
+    "8-bar window (short of a 16-bar phrase)",
+    "different sound (closer than only 7% of pairs)",
+    "different groove (r=0.34)"
+   ],
+   "overlap_bars_rendered": 4,
+   "phase_corr_ms": -53.1,
+   "at_s": 311.879,
+   "tail": "reverb_wash",
+   "bar_s_ramp": [
+    2.6697,
+    2.6669
+   ],
+   "geom_downbeat_err_ms": 0.0,
+   "beat_offset_ms": -0.9,
+   "beats_compared": 14,
+   "beat_spread_mad_ms": 12.9
+  },
+  {
+   "n": 3,
+   "type": "quick_blend_echo",
+   "from_title": "50 Cent - In Da Club",
+   "to_title": "TLC - No Scrubs",
+   "a_overlap_start_bar": 59,
+   "a_exit_bar": 63,
+   "b_cue_bar": 1,
+   "stretch_pct": 3.23,
+   "stretch_side": "both, ramped bar by bar from 90.01 to 92.91 BPM across the overlap",
+   "pair_score": 0.6393,
+   "vocal_overlap": 0.496,
+   "dip_out_mids": false,
+   "reverb_wash": false,
+   "scratch": false,
+   "backspin": false,
+   "key_shift_st": 0,
+   "reasons": [
+    "-3.2% stretch on B (90.0 end -> 92.9 start)",
+    "12A -> 1A (+1 (fifth))",
+    "B enters -4.5 LU quieter",
+    "vocals overlap 6 of 8 bars",
+    "8-bar window (short of a 16-bar phrase)",
+    "different groove (r=0.00)"
+   ],
+   "overlap_bars_rendered": 4,
+   "phase_corr_ms": 8.3,
+   "at_s": 466.532,
+   "tail": "echo 3/8 beat=486 ms fb 0.58",
+   "bar_s_ramp": [
+    2.6559,
+    2.5933
+   ],
+   "geom_downbeat_err_ms": 0.0,
+   "beat_offset_ms": 0.0,
+   "beats_compared": 16,
+   "beat_spread_mad_ms": 3.2
+  },
+  {
+   "n": 4,
+   "type": "quick_blend_echo",
+   "from_title": "TLC - No Scrubs",
+   "to_title": "Mark Morrison - Return Of The Mack",
+   "a_overlap_start_bar": 73,
+   "a_exit_bar": 77,
+   "b_cue_bar": 1,
+   "stretch_pct": 2.71,
+   "stretch_side": "both, ramped bar by bar from 92.91 to 95.43 BPM across the overlap",
+   "pair_score": 0.6501,
+   "vocal_overlap": 0.949,
+   "dip_out_mids": false,
+   "reverb_wash": false,
+   "scratch": false,
+   "backspin": false,
+   "key_shift_st": 0,
+   "reasons": [
+    "-2.7% stretch on B (92.9 end -> 95.4 start)",
+    "energy steady (-0.9 LU)",
+    "similar sound (closer than 77% of pairs)",
+    "vocals overlap 8 of 8 bars",
+    "8-bar window (short of a 16-bar phrase)"
+   ],
+   "overlap_bars_rendered": 4,
+   "phase_corr_ms": 4.5,
+   "at_s": 652.673,
+   "tail": "echo 3/8 beat=473 ms fb 0.58",
+   "bar_s_ramp": [
+    2.5744,
+    2.5233
+   ],
+   "geom_downbeat_err_ms": 0.0,
+   "beat_offset_ms": -0.0,
+   "beats_compared": 16,
+   "beat_spread_mad_ms": 7.0
+  },
+  {
+   "n": 5,
+   "type": "quick_blend_echo",
+   "from_title": "Mark Morrison - Return Of The Mack",
+   "to_title": "Beyonce - Crazy In Love",
+   "a_overlap_start_bar": 69,
+   "a_exit_bar": 73,
+   "b_cue_bar": 1,
+   "stretch_pct": 4.02,
+   "stretch_side": "both, ramped bar by bar from 95.43 to 99.27 BPM across the overlap",
+   "pair_score": 0.5683,
+   "vocal_overlap": 0.961,
+   "dip_out_mids": false,
+   "reverb_wash": true,
+   "scratch": false,
+   "backspin": false,
+   "key_shift_st": 0,
+   "reasons": [
+    "energy steady (-0.2 LU)",
+    "similar sound (closer than 90% of pairs)",
+    "-4.0% stretch on B (95.4 end -> 99.3 start)",
+    "vocals overlap 8 of 8 bars",
+    "8-bar window (short of a 16-bar phrase)"
+   ],
+   "overlap_bars_rendered": 4,
+   "phase_corr_ms": -1.6,
+   "at_s": 823.824,
+   "tail": "reverb_wash",
+   "bar_s_ramp": [
+    2.5025,
+    2.4297
+   ],
+   "geom_downbeat_err_ms": 0.0,
+   "beat_offset_ms": 0.0,
+   "beats_compared": 17,
+   "beat_spread_mad_ms": 7.4
+  },
+  {
+   "n": 6,
+   "type": "filter_sweep",
+   "from_title": "Beyonce - Crazy In Love",
+   "to_title": "Lady Gaga - Disease",
+   "a_overlap_start_bar": 81,
+   "a_exit_bar": 89,
+   "b_cue_bar": 1,
+   "stretch_pct": 1.74,
+   "stretch_side": "both, ramped bar by bar from 99.27 to 100.99 BPM across the overlap",
+   "pair_score": 0.5676,
+   "vocal_overlap": 0.345,
+   "dip_out_mids": true,
+   "reverb_wash": false,
+   "scratch": false,
+   "backspin": false,
+   "key_shift_st": 1,
+   "reasons": [
+    "-1.7% stretch on B (99.3 end -> 101.0 start)",
+    "no vocal clash",
+    "6A -> 10A (pitch-shift B by +1 st)",
+    "B enters -9.1 LU quieter",
+    "8-bar window (short of a 16-bar phrase)",
+    "different groove (r=0.20)"
+   ],
+   "overlap_bars_rendered": 8,
+   "phase_corr_ms": 2.2,
+   "at_s": 1017.435,
+   "tail": "hp sweep 30 Hz -> 3 kHz over 8 bars",
+   "bar_s_ramp": [
+    2.4152,
+    2.379
+   ],
+   "geom_downbeat_err_ms": 0.0,
+   "beat_offset_ms": 0.0,
+   "beats_compared": 29,
+   "beat_spread_mad_ms": 10.9
+  },
+  {
+   "n": 7,
+   "type": "filter_sweep",
+   "from_title": "Lady Gaga - Disease",
+   "to_title": "The Beloved - Sweet Harmony",
+   "a_overlap_start_bar": 80,
+   "a_exit_bar": 88,
+   "b_cue_bar": 1,
+   "stretch_pct": 0.59,
+   "stretch_side": "both, ramped bar by bar from 100.99 to 101.59 BPM across the overlap",
+   "pair_score": 0.6652,
+   "vocal_overlap": 0.236,
+   "dip_out_mids": true,
+   "reverb_wash": false,
+   "scratch": false,
+   "backspin": false,
+   "key_shift_st": 0,
+   "reasons": [
+    "-0.6% stretch on B (101.0 end -> 101.6 start)",
+    "no vocal clash",
+    "B enters -5.0 LU quieter",
+    "8-bar window (short of a 16-bar phrase)",
+    "different groove (r=0.15)",
+    "longer cut"
+   ],
+   "overlap_bars_rendered": 8,
+   "phase_corr_ms": 6.2,
+   "at_s": 1205.329,
+   "tail": "hp sweep 30 Hz -> 3 kHz over 8 bars",
+   "bar_s_ramp": [
+    2.3755,
+    2.3634
+   ],
+   "geom_downbeat_err_ms": 0.0,
+   "beat_offset_ms": 0.5,
+   "beats_compared": 32,
+   "beat_spread_mad_ms": 6.1
+  },
+  {
+   "n": 8,
+   "type": "filter_sweep",
+   "from_title": "The Beloved - Sweet Harmony",
+   "to_title": "Los Del Rio - Macarena (Bayside Boys Remix)",
+   "a_overlap_start_bar": 69,
+   "a_exit_bar": 85,
+   "b_cue_bar": 1,
+   "stretch_pct": 1.57,
+   "stretch_side": "both, ramped bar by bar from 101.59 to 103.18 BPM across the overlap",
+   "pair_score": 0.7779,
+   "vocal_overlap": 0.415,
+   "dip_out_mids": false,
+   "reverb_wash": false,
+   "scratch": false,
+   "backspin": false,
+   "key_shift_st": 0,
+   "reasons": [
+    "-1.6% stretch on B (101.6 end -> 103.2 start)",
+    "16-bar phrases both sides",
+    "B enters -2.3 LU quieter",
+    "different groove (r=0.00)"
+   ],
+   "overlap_bars_rendered": 16,
+   "phase_corr_ms": 7.9,
+   "at_s": 1366.026,
+   "tail": "hp sweep 30 Hz -> 3 kHz over 16 bars",
+   "bar_s_ramp": [
+    2.3614,
+    2.3272
+   ],
+   "geom_downbeat_err_ms": 0.0,
+   "beat_offset_ms": 0.0,
+   "beats_compared": 63,
+   "beat_spread_mad_ms": 7.0
+  },
+  {
+   "n": 9,
+   "type": "quick_blend_echo",
+   "from_title": "Los Del Rio - Macarena (Bayside Boys Remix)",
+   "to_title": "P!nk - Funhouse",
+   "a_overlap_start_bar": 69,
+   "a_exit_bar": 73,
+   "b_cue_bar": 1,
+   "stretch_pct": 0.8,
+   "stretch_side": "both, ramped bar by bar from 103.18 to 104.00 BPM across the overlap",
+   "pair_score": 0.603,
+   "vocal_overlap": 0.843,
+   "dip_out_mids": false,
+   "reverb_wash": false,
+   "scratch": false,
+   "backspin": false,
+   "key_shift_st": 0,
+   "reasons": [
+    "-0.8% stretch on B (103.2 end -> 104.0 start)",
+    "B enters -2.3 LU quieter",
+    "similar sound (closer than 72% of pairs)",
+    "vocals overlap 8 of 8 bars",
+    "8-bar window (short of a 16-bar phrase)",
+    "different groove (r=0.00)"
+   ],
+   "overlap_bars_rendered": 4,
+   "phase_corr_ms": -10.4,
+   "at_s": 1524.498,
+   "tail": "echo 3/8 beat=433 ms fb 0.58",
+   "bar_s_ramp": [
+    2.3237,
+    2.31
+   ],
+   "geom_downbeat_err_ms": 0.0,
+   "beat_offset_ms": 0.0,
+   "beats_compared": 16,
+   "beat_spread_mad_ms": 6.2
+  },
+  {
+   "n": 10,
+   "type": "quick_blend_echo",
+   "from_title": "P!nk - Funhouse",
+   "to_title": "Lizzo - About Damn Time",
+   "a_overlap_start_bar": 84,
+   "a_exit_bar": 88,
+   "b_cue_bar": 1,
+   "stretch_pct": 4.81,
+   "stretch_side": "both, ramped bar by bar from 104.00 to 109.00 BPM across the overlap",
+   "pair_score": 0.5594,
+   "vocal_overlap": 0.529,
+   "dip_out_mids": false,
+   "reverb_wash": false,
+   "scratch": false,
+   "backspin": false,
+   "key_shift_st": 0,
+   "reasons": [
+    "B enters -2.7 LU quieter",
+    "similar sound (closer than 81% of pairs)",
+    "matching groove (r=0.68)",
+    "vocals overlap 7 of 8 bars",
+    "8-bar window (short of a 16-bar phrase)"
+   ],
+   "overlap_bars_rendered": 4,
+   "phase_corr_ms": 2.4,
+   "at_s": 1716.07,
+   "tail": "echo 3/8 beat=415 ms fb 0.58",
+   "bar_s_ramp": [
+    2.2942,
+    2.2148
+   ],
+   "geom_downbeat_err_ms": 0.0,
+   "beat_offset_ms": -0.0,
+   "beats_compared": 15,
+   "beat_spread_mad_ms": 5.6
+  },
+  {
+   "n": 11,
+   "type": "quick_blend_echo",
+   "from_title": "Lizzo - About Damn Time",
+   "to_title": "Little Mix - Black Magic",
+   "a_overlap_start_bar": 81,
+   "a_exit_bar": 85,
+   "b_cue_bar": 1,
+   "stretch_pct": 2.75,
+   "stretch_side": "both, ramped bar by bar from 109.00 to 112.00 BPM across the overlap",
+   "pair_score": 0.6912,
+   "vocal_overlap": 0.926,
+   "dip_out_mids": false,
+   "reverb_wash": true,
+   "scratch": false,
+   "backspin": false,
+   "key_shift_st": 0,
+   "reasons": [
+    "-2.7% stretch on B (109.0 end -> 112.0 start)",
+    "16-bar phrases both sides",
+    "similar sound (closer than 84% of pairs)",
+    "vocals overlap 16 of 16 bars",
+    "different groove (r=0.32)"
+   ],
+   "overlap_bars_rendered": 4,
+   "phase_corr_ms": -0.1,
+   "at_s": 1892.425,
+   "tail": "reverb_wash",
+   "bar_s_ramp": [
+    2.1944,
+    2.1502
+   ],
+   "geom_downbeat_err_ms": 0.0,
+   "beat_offset_ms": -0.0,
+   "beats_compared": 15,
+   "beat_spread_mad_ms": 5.1
+  },
+  {
+   "n": 12,
+   "type": "quick_blend_echo",
+   "from_title": "Little Mix - Black Magic",
+   "to_title": "Mark Ronson - Uptown Funk",
+   "a_overlap_start_bar": 93,
+   "a_exit_bar": 97,
+   "b_cue_bar": 1,
+   "stretch_pct": 2.68,
+   "stretch_side": "both, ramped bar by bar from 112.00 to 115.00 BPM across the overlap",
+   "pair_score": 0.718,
+   "vocal_overlap": 0.943,
+   "dip_out_mids": false,
+   "reverb_wash": false,
+   "scratch": false,
+   "backspin": false,
+   "key_shift_st": 0,
+   "reasons": [
+    "-2.7% stretch on B (112.0 end -> 115.0 start)",
+    "16-bar phrases both sides",
+    "similar sound (closer than 80% of pairs)",
+    "vocals overlap 16 of 16 bars",
+    "longer cut"
+   ],
+   "overlap_bars_rendered": 4,
+   "phase_corr_ms": 19.5,
+   "at_s": 2089.67,
+   "tail": "echo 3/8 beat=393 ms fb 0.58",
+   "bar_s_ramp": [
+    2.1358,
+    2.0939
+   ],
+   "geom_downbeat_err_ms": 0.0,
+   "beat_offset_ms": 0.0,
+   "beats_compared": 16,
+   "beat_spread_mad_ms": 9.1
+  },
+  {
+   "n": 13,
+   "type": "filter_sweep",
+   "from_title": "Mark Ronson - Uptown Funk",
+   "to_title": "Robin S - Show Me Love",
+   "a_overlap_start_bar": 73,
+   "a_exit_bar": 81,
+   "b_cue_bar": 1,
+   "stretch_pct": 4.57,
+   "stretch_side": "both, ramped bar by bar from 115.00 to 120.25 BPM across the overlap",
+   "pair_score": 0.6764,
+   "vocal_overlap": 0.294,
+   "dip_out_mids": true,
+   "reverb_wash": false,
+   "scratch": false,
+   "backspin": false,
+   "key_shift_st": 0,
+   "reasons": [
+    "B enters -2.3 LU quieter",
+    "7B -> 7B, key unsure",
+    "-4.6% stretch on B (115.0 end -> 120.3 start)",
+    "different groove (r=0.13)"
+   ],
+   "overlap_bars_rendered": 8,
+   "phase_corr_ms": -18.6,
+   "at_s": 2240.061,
+   "tail": "hp sweep 30 Hz -> 3 kHz over 8 bars",
+   "bar_s_ramp": [
+    2.0811,
+    2.0014
+   ],
+   "geom_downbeat_err_ms": 0.0,
+   "beat_offset_ms": 0.0,
+   "beats_compared": 31,
+   "beat_spread_mad_ms": 9.2
+  },
+  {
+   "n": 14,
+   "type": "bass_swap_16",
+   "from_title": "Robin S - Show Me Love",
+   "to_title": "Robyn - With Every Heartbeat",
+   "a_overlap_start_bar": 85,
+   "a_exit_bar": 101,
+   "b_cue_bar": 1,
+   "stretch_pct": 0.62,
+   "stretch_side": "both, ramped bar by bar from 120.25 to 121.00 BPM across the overlap",
+   "pair_score": 0.7856,
+   "vocal_overlap": 0.245,
+   "dip_out_mids": false,
+   "reverb_wash": false,
+   "scratch": false,
+   "backspin": false,
+   "key_shift_st": 0,
+   "reasons": [
+    "-0.6% stretch on B (120.3 end -> 121.0 start)",
+    "16-bar phrases both sides",
+    "B enters -2.9 LU quieter",
+    "different groove (r=0.21)"
+   ],
+   "overlap_bars_rendered": 16,
+   "phase_corr_ms": 4.1,
+   "at_s": 2408.063,
+   "tail": "bass swap at bar 8 of 16, highs 1 bar later",
+   "bar_s_ramp": [
+    1.9954,
+    1.9838
+   ],
+   "geom_downbeat_err_ms": 0.0,
+   "beat_offset_ms": -0.0,
+   "beats_compared": 63,
+   "beat_spread_mad_ms": 7.7
+  },
+  {
+   "n": 15,
+   "type": "filter_sweep",
+   "from_title": "Robyn - With Every Heartbeat",
+   "to_title": "Stevie Wonder - Superstition",
+   "a_overlap_start_bar": 73,
+   "a_exit_bar": 81,
+   "b_cue_bar": 1,
+   "stretch_pct": 1.65,
+   "stretch_side": "both, ramped bar by bar from 121.00 to 123.00 BPM across the overlap",
+   "pair_score": 0.7077,
+   "vocal_overlap": 0.026,
+   "dip_out_mids": false,
+   "reverb_wash": false,
+   "scratch": false,
+   "backspin": false,
+   "key_shift_st": 0,
+   "reasons": [
+    "-1.7% stretch on B (121.0 end -> 123.0 start)",
+    "B enters -2.3 LU quieter",
+    "no vocal clash",
+    "8-bar window (short of a 16-bar phrase)",
+    "different groove (r=0.00)"
+   ],
+   "overlap_bars_rendered": 8,
+   "phase_corr_ms": -14.6,
+   "at_s": 2550.986,
+   "tail": "hp sweep 30 Hz -> 3 kHz over 8 bars",
+   "bar_s_ramp": [
+    1.9814,
+    1.9532
+   ],
+   "geom_downbeat_err_ms": 0.0,
+   "beat_offset_ms": 0.0,
+   "beats_compared": 31,
+   "beat_spread_mad_ms": 8.2
+  },
+  {
+   "n": 16,
+   "type": "filter_sweep",
+   "from_title": "Stevie Wonder - Superstition",
+   "to_title": "The Chemical Brothers - Hey Boy Hey Girl",
+   "a_overlap_start_bar": 87,
+   "a_exit_bar": 95,
+   "b_cue_bar": 1,
+   "stretch_pct": 3.25,
+   "stretch_side": "both, ramped bar by bar from 123.00 to 127.00 BPM across the overlap",
+   "pair_score": 0.7155,
+   "vocal_overlap": 0.214,
+   "dip_out_mids": false,
+   "reverb_wash": false,
+   "scratch": false,
+   "backspin": false,
+   "key_shift_st": 0,
+   "reasons": [
+    "-3.3% stretch on B (123.0 end -> 127.0 start)",
+    "similar sound (closer than 82% of pairs)",
+    "B enters -3.5 LU quieter",
+    "8-bar window (short of a 16-bar phrase)",
+    "different groove (r=0.28)",
+    "longer cut"
+   ],
+   "overlap_bars_rendered": 8,
+   "phase_corr_ms": -1.7,
+   "at_s": 2718.923,
+   "tail": "hp sweep 30 Hz -> 3 kHz over 8 bars",
+   "bar_s_ramp": [
+    1.9474,
+    1.8936
+   ],
+   "geom_downbeat_err_ms": 0.0,
+   "beat_offset_ms": 0.0,
+   "beats_compared": 25,
+   "beat_spread_mad_ms": 9.2
+  },
+  {
+   "n": 17,
+   "type": "bass_swap_16",
+   "from_title": "The Chemical Brothers - Hey Boy Hey Girl",
+   "to_title": "Livin' Joy - Don't Stop Movin'",
+   "a_overlap_start_bar": 97,
+   "a_exit_bar": 113,
+   "b_cue_bar": 1,
+   "stretch_pct": 2.35,
+   "stretch_side": "both, ramped bar by bar from 127.00 to 129.98 BPM across the overlap",
+   "pair_score": 0.781,
+   "vocal_overlap": 0.35,
+   "dip_out_mids": false,
+   "reverb_wash": false,
+   "scratch": false,
+   "backspin": false,
+   "key_shift_st": 0,
+   "reasons": [
+    "-2.3% stretch on B (127.0 end -> 130.0 start)",
+    "B enters -2.3 LU quieter",
+    "no vocal clash",
+    "8-bar window (short of a 16-bar phrase)",
+    "different groove (r=0.35)"
+   ],
+   "overlap_bars_rendered": 16,
+   "phase_corr_ms": -15.6,
+   "at_s": 2900.606,
+   "tail": "bass swap at bar 8 of 16, highs 1 bar later",
+   "bar_s_ramp": [
+    1.8884,
+    1.8478
+   ],
+   "geom_downbeat_err_ms": 0.0,
+   "beat_offset_ms": -0.0,
+   "beats_compared": 63,
+   "beat_spread_mad_ms": 6.8
+  },
+  {
+   "n": 18,
+   "type": "bass_swap_16",
+   "from_title": "Livin' Joy - Don't Stop Movin'",
+   "to_title": "The Grid - Swamp Thing",
+   "a_overlap_start_bar": 89,
+   "a_exit_bar": 105,
+   "b_cue_bar": 1,
+   "stretch_pct": 1.83,
+   "stretch_side": "both, ramped bar by bar from 129.98 to 132.35 BPM across the overlap",
+   "pair_score": 0.9234,
+   "vocal_overlap": 0.186,
+   "dip_out_mids": false,
+   "reverb_wash": false,
+   "scratch": false,
+   "backspin": false,
+   "key_shift_st": 0,
+   "reasons": [
+    "-1.8% stretch on B (130.0 end -> 132.4 start)",
+    "energy steady (-0.8 LU)",
+    "similar sound (closer than 96% of pairs)",
+    "different groove (r=0.32)",
+    "longer cut"
+   ],
+   "overlap_bars_rendered": 16,
+   "phase_corr_ms": 77.2,
+   "at_s": 3063.361,
+   "tail": "bass swap at bar 8 of 16, highs 1 bar later",
+   "bar_s_ramp": [
+    1.8454,
+    1.8143
+   ],
+   "geom_downbeat_err_ms": 0.0,
+   "beat_offset_ms": 0.0,
+   "beats_compared": 64,
+   "beat_spread_mad_ms": 10.6
+  },
+  {
+   "n": 19,
+   "type": "quick_blend_echo",
+   "from_title": "The Grid - Swamp Thing",
+   "to_title": "David Morales & The Face - Needin' U",
+   "a_overlap_start_bar": 96,
+   "a_exit_bar": 104,
+   "b_cue_bar": 1,
+   "stretch_pct": -1.52,
+   "stretch_side": "both, ramped bar by bar from 132.35 to 130.34 BPM across the overlap",
+   "pair_score": 0.7836,
+   "vocal_overlap": 0.565,
+   "dip_out_mids": false,
+   "reverb_wash": false,
+   "scratch": false,
+   "backspin": false,
+   "key_shift_st": 0,
+   "reasons": [
+    "+1.5% stretch on B (132.4 end -> 130.3 start)",
+    "similar sound (closer than 96% of pairs)",
+    "16-bar phrases both sides",
+    "vocals overlap 15 of 16 bars",
+    "different groove (r=0.00)",
+    "longer cut"
+   ],
+   "overlap_bars_rendered": 8,
+   "phase_corr_ms": 22.2,
+   "at_s": 3235.867,
+   "tail": "echo 3/8 beat=345 ms fb 0.58",
+   "bar_s_ramp": [
+    1.815,
+    1.8396
+   ],
+   "geom_downbeat_err_ms": 0.0,
+   "beat_offset_ms": -0.1,
+   "beats_compared": 32,
+   "beat_spread_mad_ms": 6.1
+  },
+  {
+   "n": 20,
+   "type": "filter_sweep",
+   "from_title": "David Morales & The Face - Needin' U",
+   "to_title": "Dr. Alban - It's My Life",
+   "a_overlap_start_bar": 73,
+   "a_exit_bar": 89,
+   "b_cue_bar": 1,
+   "stretch_pct": -1.28,
+   "stretch_side": "both, ramped bar by bar from 130.34 to 128.68 BPM across the overlap",
+   "pair_score": 0.7792,
+   "vocal_overlap": 0.473,
+   "dip_out_mids": false,
+   "reverb_wash": false,
+   "scratch": false,
+   "backspin": false,
+   "key_shift_st": 0,
+   "reasons": [
+    "+1.3% stretch on B (130.3 end -> 128.7 start)",
+    "16-bar phrases both sides",
+    "similar sound (closer than 91% of pairs)",
+    "different groove (r=0.00)"
+   ],
+   "overlap_bars_rendered": 16,
+   "phase_corr_ms": 2.1,
+   "at_s": 3368.329,
+   "tail": "hp sweep 30 Hz -> 3 kHz over 16 bars",
+   "bar_s_ramp": [
+    1.8421,
+    1.8644
+   ],
+   "geom_downbeat_err_ms": 0.0,
+   "beat_offset_ms": -0.0,
+   "beats_compared": 66,
+   "beat_spread_mad_ms": 11.0
+  }
+ ],
+ "songs": [
+  {
+   "pos": 1,
+   "title": "Oasis - Wonderwall",
+   "start_s": 0.0,
+   "src_lufs": -5.9,
+   "bars": [
+    1,
+    73
+   ],
+   "max_stretch_pct": 2.84,
+   "secs": 0.9
+  },
+  {
+   "pos": 2,
+   "title": "Creedence Clearwater Revival - Bad Moon Rising",
+   "start_s": 188.83,
+   "src_lufs": -9.83,
+   "bars": [
+    1,
+    51
+   ],
+   "max_stretch_pct": 2.76,
+   "secs": 0.7
+  },
+  {
+   "pos": 3,
+   "title": "50 Cent - In Da Club",
+   "start_s": 311.88,
+   "src_lufs": -7.56,
+   "bars": [
+    1,
+    63
+   ],
+   "max_stretch_pct": 2.82,
+   "secs": 0.8
+  },
+  {
+   "pos": 4,
+   "title": "TLC - No Scrubs",
+   "start_s": 466.53,
+   "src_lufs": -9.3,
+   "bars": [
+    1,
+    77
+   ],
+   "max_stretch_pct": 2.74,
+   "secs": 0.9
+  },
+  {
+   "pos": 5,
+   "title": "Mark Morrison - Return Of The Mack",
+   "start_s": 652.67,
+   "src_lufs": -7.81,
+   "bars": [
+    1,
+    73
+   ],
+   "max_stretch_pct": 3.51,
+   "secs": 0.9
+  },
+  {
+   "pos": 6,
+   "title": "Beyonce - Crazy In Love",
+   "start_s": 823.82,
+   "src_lufs": -10.55,
+   "bars": [
+    1,
+    89
+   ],
+   "max_stretch_pct": 3.39,
+   "secs": 1.4
+  },
+  {
+   "pos": 7,
+   "title": "Lady Gaga - Disease",
+   "start_s": 1017.43,
+   "src_lufs": -4.96,
+   "bars": [
+    1,
+    88
+   ],
+   "max_stretch_pct": 1.6,
+   "secs": 4.8
+  },
+  {
+   "pos": 8,
+   "title": "The Beloved - Sweet Harmony",
+   "start_s": 1205.33,
+   "src_lufs": -11.82,
+   "bars": [
+    1,
+    85
+   ],
+   "max_stretch_pct": 1.52,
+   "secs": 2.3
+  },
+  {
+   "pos": 9,
+   "title": "Los Del Rio - Macarena (Bayside Boys Remix)",
+   "start_s": 1366.03,
+   "src_lufs": -12.15,
+   "bars": [
+    1,
+    73
+   ],
+   "max_stretch_pct": 1.5,
+   "secs": 1.4
+  },
+  {
+   "pos": 10,
+   "title": "P!nk - Funhouse",
+   "start_s": 1524.5,
+   "src_lufs": -7.11,
+   "bars": [
+    1,
+    88
+   ],
+   "max_stretch_pct": 4.19,
+   "secs": 0.9
+  },
+  {
+   "pos": 11,
+   "title": "Lizzo - About Damn Time",
+   "start_s": 1716.07,
+   "src_lufs": -9.77,
+   "bars": [
+    1,
+    85
+   ],
+   "max_stretch_pct": 4.03,
+   "secs": 0.9
+  },
+  {
+   "pos": 12,
+   "title": "Little Mix - Black Magic",
+   "start_s": 1892.43,
+   "src_lufs": -10.78,
+   "bars": [
+    1,
+    97
+   ],
+   "max_stretch_pct": 2.35,
+   "secs": 0.9
+  },
+  {
+   "pos": 13,
+   "title": "Mark Ronson - Uptown Funk",
+   "start_s": 2089.67,
+   "src_lufs": -9.46,
+   "bars": [
+    1,
+    81
+   ],
+   "max_stretch_pct": 4.28,
+   "secs": 1.4
+  },
+  {
+   "pos": 14,
+   "title": "Robin S - Show Me Love",
+   "start_s": 2240.06,
+   "src_lufs": -8.25,
+   "bars": [
+    1,
+    101
+   ],
+   "max_stretch_pct": 4.1,
+   "secs": 1.3
+  },
+  {
+   "pos": 15,
+   "title": "Robyn - With Every Heartbeat",
+   "start_s": 2408.06,
+   "src_lufs": -7.08,
+   "bars": [
+    1,
+    81
+   ],
+   "max_stretch_pct": 1.55,
+   "secs": 1.6
+  },
+  {
+   "pos": 16,
+   "title": "Stevie Wonder - Superstition",
+   "start_s": 2550.99,
+   "src_lufs": -6.86,
+   "bars": [
+    1,
+    95
+   ],
+   "max_stretch_pct": 3.04,
+   "secs": 1.2
+  },
+  {
+   "pos": 17,
+   "title": "The Chemical Brothers - Hey Boy Hey Girl",
+   "start_s": 2718.92,
+   "src_lufs": -8.35,
+   "bars": [
+    1,
+    113
+   ],
+   "max_stretch_pct": 2.95,
+   "secs": 1.4
+  },
+  {
+   "pos": 18,
+   "title": "Livin' Joy - Don't Stop Movin'",
+   "start_s": 2900.61,
+   "src_lufs": -11.88,
+   "bars": [
+    1,
+    105
+   ],
+   "max_stretch_pct": 2.22,
+   "secs": 1.4
+  },
+  {
+   "pos": 19,
+   "title": "The Grid - Swamp Thing",
+   "start_s": 3063.36,
+   "src_lufs": -12.01,
+   "bars": [
+    1,
+    104
+   ],
+   "max_stretch_pct": 1.74,
+   "secs": 2.0
+  },
+  {
+   "pos": 20,
+   "title": "David Morales & The Face - Needin' U",
+   "start_s": 3235.87,
+   "src_lufs": -12.13,
+   "bars": [
+    1,
+    89
+   ],
+   "max_stretch_pct": 1.45,
+   "secs": 2.8
+  },
+  {
+   "pos": 21,
+   "title": "Dr. Alban - It's My Life",
+   "start_s": 3368.33,
+   "src_lufs": -11.97,
+   "bars": [
+    1,
+    129
+   ],
+   "max_stretch_pct": 1.25,
+   "secs": 1.0
+  }
+ ],
+ "premaster_lufs": -14.05,
+ "master_gain_db": 6.15,
+ "master_lufs": -10.02,
+ "sample_peak_dbfs": -1.8,
+ "mp3": "/Users/christophershannon/personal/90s2000 playlist/_pool build/mixer/mixes/3 - Mirrorball Massacre.mp3",
+ "mp3_bytes": 144289068,
+ "mp3_integrated_lufs": -10.0,
+ "mp3_true_peak_dbtp": -0.7,
+ "silent_gaps": [],
+ "duration_s": 3607.2,
+ "planned_duration_s": 3603.0,
+ "render_secs": 228.0,
+ "checks": {
+  "no_clipping": true,
+  "no_silent_gaps": true,
+  "joins_geom_within_10ms": true,
+  "joins_tracker_beats_within_10ms": "20 of 20",
+  "joins_over_10ms": [],
+  "duration_vs_plan_s": 4.2,
+  "duration_ok": true
+ }
+}

@@ -1,0 +1,1676 @@
+{
+ "CD1 - 90s": [
+  {
+   "key": "COLL",
+   "match": "782.",
+   "name": "Snap! - Rhythm Is A Dancer",
+   "cls": "D",
+   "override": null
+  },
+  {
+   "key": "COLL",
+   "match": "708.",
+   "name": "Haddaway - What Is Love",
+   "cls": "D",
+   "override": null
+  },
+  {
+   "key": "COLL",
+   "match": "705.",
+   "name": "Culture Beat - Mr. Vain",
+   "cls": "D",
+   "override": null
+  },
+  {
+   "key": "COLL",
+   "match": "612.",
+   "name": "2 Unlimited - No Limit",
+   "cls": "D",
+   "override": null
+  },
+  {
+   "key": "COLL",
+   "match": "498.",
+   "name": "Corona - The Rhythm Of The Night",
+   "cls": "D",
+   "override": null
+  },
+  {
+   "key": "COLL",
+   "match": "873.",
+   "name": "La Bouche - Be My Lover",
+   "cls": "D",
+   "override": null
+  },
+  {
+   "key": "COLL",
+   "match": "254.",
+   "name": "Real McCoy - Another Night",
+   "cls": "D",
+   "override": null
+  },
+  {
+   "key": "COLL",
+   "match": "576.",
+   "name": "Ace Of Base - All That She Wants",
+   "cls": "P",
+   "override": null
+  },
+  {
+   "key": "COLL",
+   "match": "738.",
+   "name": "Livin' Joy - Don't Stop Movin'",
+   "cls": "D",
+   "override": null
+  },
+  {
+   "key": "SP",
+   "match": "CD4/16 - Livin' Joy",
+   "name": "Livin' Joy - Dreamer",
+   "cls": "D",
+   "override": null
+  },
+  {
+   "key": "COLL",
+   "match": "481.",
+   "name": "Sash! - Ecuador",
+   "cls": "D",
+   "override": null
+  },
+  {
+   "key": "COLL",
+   "match": "223.",
+   "name": "Mr. President - Coco Jamboo",
+   "cls": "P",
+   "override": null
+  },
+  {
+   "key": "SUB",
+   "match": "096.",
+   "name": "Scatman John - Scatman",
+   "cls": "D",
+   "override": null
+  },
+  {
+   "key": "COLL",
+   "match": "838.",
+   "name": "Eiffel 65 - Blue (Da Ba Dee)",
+   "cls": "D",
+   "override": null
+  },
+  {
+   "key": "COLL",
+   "match": "570.",
+   "name": "N-Trance - Set You Free",
+   "cls": "D",
+   "override": null
+  },
+  {
+   "key": "COLL",
+   "match": "361.",
+   "name": "Robert Miles - Children",
+   "cls": "D",
+   "override": null
+  },
+  {
+   "key": "F90",
+   "match": "025.",
+   "name": "C+C Music Factory - Gonna Make You Sweat",
+   "cls": "D",
+   "override": null
+  },
+  {
+   "key": "SUB",
+   "match": "015.",
+   "name": "Ice MC - Think About The Way",
+   "cls": "D",
+   "override": null
+  },
+  {
+   "key": "COLL",
+   "match": "607.",
+   "name": "Dr. Alban - It's My Life",
+   "cls": "D",
+   "override": null
+  },
+  {
+   "key": "90S",
+   "match": "13.",
+   "name": "Robin S - Show Me Love",
+   "cls": "D",
+   "override": null
+  },
+  {
+   "key": "F90",
+   "match": "058.",
+   "name": "CeCe Peniston - Finally",
+   "cls": "D",
+   "override": null
+  },
+  {
+   "key": "E90",
+   "match": "2/17.",
+   "name": "Technotronic - Pump Up The Jam",
+   "cls": "D",
+   "override": null
+  },
+  {
+   "key": "E90",
+   "match": "2/12.",
+   "name": "Gala - Freed From Desire",
+   "cls": "D",
+   "override": null
+  },
+  {
+   "key": "E90",
+   "match": "1/6.",
+   "name": "Bomfunk MC's - Freestyler",
+   "cls": "D",
+   "override": null
+  },
+  {
+   "key": "90S",
+   "match": "05.",
+   "name": "Cher - Believe",
+   "cls": "D",
+   "override": null
+  },
+  {
+   "key": "F90",
+   "match": "099.",
+   "name": "Madonna - Vogue",
+   "cls": "D",
+   "override": null
+  },
+  {
+   "key": "F90",
+   "match": "001.",
+   "name": "Britney Spears - ...Baby One More Time",
+   "cls": "P",
+   "override": null
+  },
+  {
+   "key": "F90",
+   "match": "023.",
+   "name": "Spice Girls - Wannabe",
+   "cls": "P",
+   "override": null
+  },
+  {
+   "key": "F90",
+   "match": "063.",
+   "name": "Aqua - Barbie Girl",
+   "cls": "D",
+   "override": null
+  },
+  {
+   "key": "F90",
+   "match": "067.",
+   "name": "Los Del Rio - Macarena (Bayside Boys Remix)",
+   "cls": "P",
+   "override": null
+  },
+  {
+   "key": "F90",
+   "match": "068.",
+   "name": "Ricky Martin - Livin' La Vida Loca",
+   "cls": "R",
+   "override": 89
+  },
+  {
+   "key": "F90",
+   "match": "004.",
+   "name": "Backstreet Boys - Everybody (Backstreet's Back)",
+   "cls": "P",
+   "override": null
+  },
+  {
+   "key": "F90",
+   "match": "064.",
+   "name": "Hanson - MMMBop",
+   "cls": "P",
+   "override": null
+  },
+  {
+   "key": "F90",
+   "match": "003.",
+   "name": "Will Smith - Gettin' Jiggy Wit It",
+   "cls": "P",
+   "override": null
+  },
+  {
+   "key": "F90",
+   "match": "002.",
+   "name": "Shania Twain - Man! I Feel Like A Woman!",
+   "cls": "D",
+   "override": null
+  },
+  {
+   "key": "90S",
+   "match": "26.",
+   "name": "Peter Andre - Mysterious Girl",
+   "cls": "P",
+   "override": 86
+  },
+  {
+   "key": "SUB",
+   "match": "038.",
+   "name": "Rednex - Cotton Eye Joe",
+   "cls": "D",
+   "override": null
+  },
+  {
+   "key": "COLL",
+   "match": "872.",
+   "name": "Scooter - How Much Is The Fish",
+   "cls": "D",
+   "override": null
+  },
+  {
+   "key": "ROB",
+   "match": "[1997] Robyn Is Here/06 - Show Me Love",
+   "name": "Robyn - Show Me Love (1997)",
+   "cls": "P",
+   "override": null
+  },
+  {
+   "key": "90S",
+   "match": "01.",
+   "name": "Mark Morrison - Return Of The Mack",
+   "cls": "P",
+   "override": null
+  },
+  {
+   "key": "F90",
+   "match": "026.",
+   "name": "Montell Jordan - This Is How We Do It",
+   "cls": "P",
+   "override": null
+  },
+  {
+   "key": "F90",
+   "match": "088.",
+   "name": "Blackstreet - No Diggity",
+   "cls": "R",
+   "override": null
+  },
+  {
+   "key": "F90",
+   "match": "085.",
+   "name": "Next - Too Close",
+   "cls": "R",
+   "override": null
+  },
+  {
+   "key": "TOP",
+   "match": "Ginuwine - Pony",
+   "name": "Ginuwine - Pony",
+   "cls": "R",
+   "override": null
+  },
+  {
+   "key": "F90",
+   "match": "089.",
+   "name": "Kris Kross - Jump",
+   "cls": "P",
+   "override": null
+  },
+  {
+   "key": "F90",
+   "match": "077.",
+   "name": "Tag Team - Whoomp! (There It Is)",
+   "cls": "P",
+   "override": null
+  },
+  {
+   "key": "F90",
+   "match": "076.",
+   "name": "Sir Mix-A-Lot - Baby Got Back",
+   "cls": "P",
+   "override": null
+  },
+  {
+   "key": "F90",
+   "match": "080.",
+   "name": "The Notorious B.I.G. - Hypnotize",
+   "cls": "P",
+   "override": null
+  },
+  {
+   "key": "F90",
+   "match": "071.",
+   "name": "Coolio - Gangsta's Paradise",
+   "cls": "P",
+   "override": null
+  },
+  {
+   "key": "F90",
+   "match": "074.",
+   "name": "Warren G - Regulate",
+   "cls": "R",
+   "override": null
+  },
+  {
+   "key": "F90",
+   "match": "028.",
+   "name": "Bell Biv DeVoe - Poison",
+   "cls": "P",
+   "override": null
+  },
+  {
+   "key": "F90",
+   "match": "031.",
+   "name": "TLC - No Scrubs",
+   "cls": "R",
+   "override": null
+  },
+  {
+   "key": "F90",
+   "match": "092.",
+   "name": "Mariah Carey - Fantasy",
+   "cls": "P",
+   "override": null
+  },
+  {
+   "key": "F90",
+   "match": "016.",
+   "name": "Oasis - Wonderwall",
+   "cls": "P",
+   "override": 87
+  },
+  {
+   "key": "F90",
+   "match": "022.",
+   "name": "No Doubt - Don't Speak",
+   "cls": "R",
+   "override": null
+  },
+  {
+   "key": "F90",
+   "match": "014.",
+   "name": "Nirvana - Smells Like Teen Spirit",
+   "cls": "P",
+   "override": null
+  },
+  {
+   "key": "F90",
+   "match": "094.",
+   "name": "Fugees - Killing Me Softly With His Song",
+   "cls": "R",
+   "override": null
+  },
+  {
+   "key": "90S",
+   "match": "14.",
+   "name": "Goo Goo Dolls - Iris",
+   "cls": "R",
+   "override": null
+  },
+  {
+   "key": "90S",
+   "match": "24.",
+   "name": "Third Eye Blind - Semi-Charmed Life",
+   "cls": "P",
+   "override": null
+  },
+  {
+   "key": "F90",
+   "match": "125.",
+   "name": "Semisonic - Closing Time",
+   "cls": "P",
+   "override": null
+  }
+ ],
+ "CD2 - 2000s to now": [
+  {
+   "key": "00D",
+   "match": "004.",
+   "name": "Britney Spears - Toxic",
+   "cls": "D",
+   "override": null
+  },
+  {
+   "key": "00D",
+   "match": "003.",
+   "name": "Beyonce - Crazy In Love",
+   "cls": "P",
+   "override": null
+  },
+  {
+   "key": "00D",
+   "match": "001.",
+   "name": "OutKast - Hey Ya!",
+   "cls": "P",
+   "override": null
+  },
+  {
+   "key": "00D",
+   "match": "021.",
+   "name": "Usher - Yeah!",
+   "cls": "P",
+   "override": null
+  },
+  {
+   "key": "00D",
+   "match": "030.",
+   "name": "Justin Timberlake - SexyBack",
+   "cls": "P",
+   "override": null
+  },
+  {
+   "key": "00D",
+   "match": "040.",
+   "name": "Shakira - Hips Don't Lie",
+   "cls": "P",
+   "override": null
+  },
+  {
+   "key": "00D",
+   "match": "020.",
+   "name": "Nelly Furtado - Promiscuous",
+   "cls": "P",
+   "override": null
+  },
+  {
+   "key": "00D",
+   "match": "018.",
+   "name": "Rihanna - Umbrella",
+   "cls": "P",
+   "override": null
+  },
+  {
+   "key": "00D",
+   "match": "057.",
+   "name": "Lady Gaga - Just Dance",
+   "cls": "D",
+   "override": null
+  },
+  {
+   "key": "00D",
+   "match": "031.",
+   "name": "Kylie Minogue - Can't Get You Out Of My Head",
+   "cls": "D",
+   "override": null
+  },
+  {
+   "key": "00D",
+   "match": "008.",
+   "name": "Christina Aguilera, Lil' Kim, Mya, P!nk - Lady Marmalade",
+   "cls": "P",
+   "override": null
+  },
+  {
+   "key": "00D",
+   "match": "045.",
+   "name": "Destiny's Child - Survivor",
+   "cls": "P",
+   "override": null
+  },
+  {
+   "key": "00D",
+   "match": "100.",
+   "name": "P!nk - Get The Party Started",
+   "cls": "D",
+   "override": null
+  },
+  {
+   "key": "00D",
+   "match": "033.",
+   "name": "Shaggy - It Wasn't Me",
+   "cls": "P",
+   "override": null
+  },
+  {
+   "key": "00D",
+   "match": "027.",
+   "name": "Britney Spears - Gimme More",
+   "cls": "P",
+   "override": null
+  },
+  {
+   "key": "SP",
+   "match": "CD1/07 - Sophie",
+   "name": "Sophie Ellis-Bextor - Murder On The Dancefloor",
+   "cls": "D",
+   "override": null
+  },
+  {
+   "key": "00D",
+   "match": "041.",
+   "name": "Gnarls Barkley - Crazy",
+   "cls": "P",
+   "override": null
+  },
+  {
+   "key": "00D",
+   "match": "056.",
+   "name": "Gorillaz - Feel Good Inc",
+   "cls": "D",
+   "override": null
+  },
+  {
+   "key": "00D",
+   "match": "006.",
+   "name": "M.I.A. - Paper Planes",
+   "cls": "P",
+   "override": null
+  },
+  {
+   "key": "00D",
+   "match": "039.",
+   "name": "Estelle - American Boy",
+   "cls": "P",
+   "override": null
+  },
+  {
+   "key": "00D",
+   "match": "017.",
+   "name": "Nelly - Hot In Herre",
+   "cls": "P",
+   "override": null
+  },
+  {
+   "key": "00D",
+   "match": "026.",
+   "name": "50 Cent - In Da Club",
+   "cls": "P",
+   "override": null
+  },
+  {
+   "key": "00D",
+   "match": "085.",
+   "name": "Kanye West - Gold Digger",
+   "cls": "P",
+   "override": null
+  },
+  {
+   "key": "00D",
+   "match": "036.",
+   "name": "Snoop Dogg - Drop It Like It's Hot",
+   "cls": "P",
+   "override": null
+  },
+  {
+   "key": "00D",
+   "match": "047.",
+   "name": "Flo Rida - Low",
+   "cls": "D",
+   "override": null
+  },
+  {
+   "key": "00D",
+   "match": "043.",
+   "name": "Ying Yang Twins - Get Low",
+   "cls": "P",
+   "override": null
+  },
+  {
+   "key": "00D",
+   "match": "048.",
+   "name": "Sisqo - Thong Song",
+   "cls": "P",
+   "override": null
+  },
+  {
+   "key": "00D",
+   "match": "002.",
+   "name": "Amerie - 1 Thing",
+   "cls": "P",
+   "override": 100
+  },
+  {
+   "key": "00D",
+   "match": "067.",
+   "name": "Ciara - Goodies",
+   "cls": "P",
+   "override": null
+  },
+  {
+   "key": "00G",
+   "match": "43.",
+   "name": "Pretty Ricky - Grind With Me",
+   "cls": "R",
+   "override": null
+  },
+  {
+   "key": "00D",
+   "match": "037.",
+   "name": "Kelis - Milkshake",
+   "cls": "P",
+   "override": null
+  },
+  {
+   "key": "00D",
+   "match": "010.",
+   "name": "Black Eyed Peas - I Gotta Feeling",
+   "cls": "D",
+   "override": null
+  },
+  {
+   "key": "10D",
+   "match": "088.",
+   "name": "Kesha - TiK ToK",
+   "cls": "D",
+   "override": null
+  },
+  {
+   "key": "10D",
+   "match": "014.",
+   "name": "Taio Cruz - Dynamite",
+   "cls": "D",
+   "override": null
+  },
+  {
+   "key": "10D",
+   "match": "027.",
+   "name": "Rihanna - We Found Love",
+   "cls": "D",
+   "override": null
+  },
+  {
+   "key": "10D",
+   "match": "020.",
+   "name": "Major Lazer - Lean On",
+   "cls": "P",
+   "override": null
+  },
+  {
+   "key": "10D",
+   "match": "092.",
+   "name": "Mark Ronson - Uptown Funk",
+   "cls": "P",
+   "override": null
+  },
+  {
+   "key": "10D",
+   "match": "029.",
+   "name": "Carly Rae Jepsen - Call Me Maybe",
+   "cls": "D",
+   "override": null
+  },
+  {
+   "key": "10D",
+   "match": "031.",
+   "name": "Icona Pop - I Love It",
+   "cls": "D",
+   "override": null
+  },
+  {
+   "key": "ROB",
+   "match": "[2010] Body Talk/01 - Dancing on My Own (Radio Version)",
+   "name": "Robyn - Dancing On My Own",
+   "cls": "D",
+   "override": null
+  },
+  {
+   "key": "ROB",
+   "match": "[2010] Body Talk/08 - Call Your Girlfriend",
+   "name": "Robyn - Call Your Girlfriend",
+   "cls": "D",
+   "override": null
+  },
+  {
+   "key": "ROB",
+   "match": "[2007] Robyn/07 - With Every Heartbeat",
+   "name": "Robyn - With Every Heartbeat",
+   "cls": "D",
+   "override": null
+  },
+  {
+   "key": "10D",
+   "match": "005.",
+   "name": "Dua Lipa - Don't Start Now",
+   "cls": "D",
+   "override": null
+  },
+  {
+   "key": "SP",
+   "match": "CD1/06 - Dua Lipa",
+   "name": "Dua Lipa - Levitating",
+   "cls": "P",
+   "override": null
+  },
+  {
+   "key": "SP",
+   "match": "CD1/04 - Kylie",
+   "name": "Kylie Minogue - Padam Padam",
+   "cls": "D",
+   "override": null
+  },
+  {
+   "key": "SP",
+   "match": "CD1/08 - Lady Gaga",
+   "name": "Lady Gaga & Ariana Grande - Rain On Me",
+   "cls": "D",
+   "override": null
+  },
+  {
+   "key": "SP",
+   "match": "CD1/10 - Sam Smith",
+   "name": "Sam Smith & Kim Petras - Unholy",
+   "cls": "P",
+   "override": null
+  },
+  {
+   "key": "SP",
+   "match": "CD1/11 - The Weeknd",
+   "name": "The Weeknd - Save Your Tears",
+   "cls": "D",
+   "override": null
+  },
+  {
+   "key": "SP",
+   "match": "CD1/19 - Lizzo",
+   "name": "Lizzo - About Damn Time",
+   "cls": "P",
+   "override": null
+  },
+  {
+   "key": "TOP",
+   "match": "Midnight Sun",
+   "name": "Zara Larsson - Midnight Sun",
+   "cls": "D",
+   "override": null
+  },
+  {
+   "key": "SP",
+   "match": "CD1/20 - SZA",
+   "name": "SZA - Kill Bill",
+   "cls": "R",
+   "override": null
+  },
+  {
+   "key": "SP",
+   "match": "CD2/01 - Justin Timberlake",
+   "name": "Justin Timberlake - Can't Stop The Feeling!",
+   "cls": "P",
+   "override": null
+  },
+  {
+   "key": "MAY",
+   "match": "14.",
+   "name": "Lady Gaga & Bruno Mars - Die With A Smile",
+   "cls": "R",
+   "override": null
+  },
+  {
+   "key": "00G",
+   "match": "01.",
+   "name": "Coldplay - Viva La Vida",
+   "cls": "D",
+   "override": null
+  },
+  {
+   "key": "00G",
+   "match": "29.",
+   "name": "My Chemical Romance - Teenagers",
+   "cls": "P",
+   "override": null
+  },
+  {
+   "key": "00G",
+   "match": "22.",
+   "name": "Panic! At The Disco - I Write Sins Not Tragedies",
+   "cls": "R",
+   "override": 85
+  },
+  {
+   "key": "00G",
+   "match": "34.",
+   "name": "The Darkness - I Believe In A Thing Called Love",
+   "cls": "D",
+   "override": null
+  },
+  {
+   "key": "10D",
+   "match": "059.",
+   "name": "Pharrell Williams - Happy",
+   "cls": "R",
+   "override": null
+  },
+  {
+   "key": "10D",
+   "match": "040.",
+   "name": "Bruno Mars - 24K Magic",
+   "cls": "P",
+   "override": null
+  }
+ ],
+ "CD3 - Halloween": [
+  {
+   "key": "HAL",
+   "match": "01.",
+   "name": "Michael Jackson - Thriller",
+   "cls": "D",
+   "override": null
+  },
+  {
+   "key": "HAL",
+   "match": "07.",
+   "name": "Ray Parker Jr. - Ghostbusters",
+   "cls": "P",
+   "override": null
+  },
+  {
+   "key": "HAL",
+   "match": "05.",
+   "name": "Bobby Boris Pickett - Monster Mash",
+   "cls": "P",
+   "override": null
+  },
+  {
+   "key": "HAL",
+   "match": "08.",
+   "name": "Rockwell - Somebody's Watching Me",
+   "cls": "P",
+   "override": null
+  },
+  {
+   "key": "PCM",
+   "match": "beat freakz",
+   "name": "Beatfreakz - Somebody's Watching Me (2006)",
+   "cls": "D",
+   "override": null
+  },
+  {
+   "key": "HAL",
+   "match": "10.",
+   "name": "Rihanna - Disturbia",
+   "cls": "D",
+   "override": null
+  },
+  {
+   "key": "HAL",
+   "match": "15.",
+   "name": "Lady Gaga - Monster",
+   "cls": "D",
+   "override": null
+  },
+  {
+   "key": "HAL",
+   "match": "04.",
+   "name": "Lady Gaga - Bloody Mary",
+   "cls": "D",
+   "override": null
+  },
+  {
+   "key": "MAY",
+   "match": "02.",
+   "name": "Lady Gaga - Abracadabra",
+   "cls": "D",
+   "override": null
+  },
+  {
+   "key": "MAY",
+   "match": "01.",
+   "name": "Lady Gaga - Disease",
+   "cls": "D",
+   "override": null
+  },
+  {
+   "key": "MAY",
+   "match": "07.",
+   "name": "Lady Gaga - Zombieboy",
+   "cls": "D",
+   "override": null
+  },
+  {
+   "key": "HAL",
+   "match": "17.",
+   "name": "Kesha - Cannibal",
+   "cls": "D",
+   "override": null
+  },
+  {
+   "key": "HAL",
+   "match": "18.",
+   "name": "Yeah Yeah Yeahs - Heads Will Roll",
+   "cls": "D",
+   "override": null
+  },
+  {
+   "key": "TOP",
+   "match": "Heads_Will_Roll_A-trak",
+   "name": "Yeah Yeah Yeahs - Heads Will Roll (A-Trak Remix)",
+   "cls": "D",
+   "override": null
+  },
+  {
+   "key": "HAL",
+   "match": "13.",
+   "name": "Britney Spears - Freakshow",
+   "cls": "D",
+   "override": null
+  },
+  {
+   "key": "HAL",
+   "match": "48.",
+   "name": "Ava Max - Sweet But Psycho",
+   "cls": "D",
+   "override": null
+  },
+  {
+   "key": "HAL",
+   "match": "16.",
+   "name": "Little Nell - Time Warp",
+   "cls": "P",
+   "override": 87
+  },
+  {
+   "key": "HAL",
+   "match": "46.",
+   "name": "The Cranberries - Zombie",
+   "cls": "P",
+   "override": null
+  },
+  {
+   "key": "HAL",
+   "match": "03.",
+   "name": "Rob Zombie - Dragula",
+   "cls": "D",
+   "override": null
+  },
+  {
+   "key": "HAL",
+   "match": "36.",
+   "name": "Michael Jackson - Scream",
+   "cls": "D",
+   "override": null
+  },
+  {
+   "key": "PCK",
+   "match": "I Put A Spell",
+   "name": "Bette Midler - I Put A Spell On You (Hocus Pocus)",
+   "cls": "R",
+   "override": null
+  },
+  {
+   "key": "HAL",
+   "match": "24.",
+   "name": "DJ Jazzy Jeff & The Fresh Prince - A Nightmare On My Street",
+   "cls": "P",
+   "override": null
+  },
+  {
+   "key": "HAL",
+   "match": "09.",
+   "name": "Stevie Wonder - Superstition",
+   "cls": "P",
+   "override": null
+  },
+  {
+   "key": "HAL",
+   "match": "12.",
+   "name": "Talking Heads - Psycho Killer",
+   "cls": "P",
+   "override": null
+  },
+  {
+   "key": "HAL",
+   "match": "21.",
+   "name": "Duran Duran - Hungry Like The Wolf",
+   "cls": "P",
+   "override": null
+  },
+  {
+   "key": "HAL",
+   "match": "22.",
+   "name": "Bow Wow Wow - I Want Candy",
+   "cls": "P",
+   "override": null
+  },
+  {
+   "key": "HAL",
+   "match": "20.",
+   "name": "Rick James - Super Freak",
+   "cls": "P",
+   "override": null
+  },
+  {
+   "key": "HAL",
+   "match": "26.",
+   "name": "The Specials - Ghost Town",
+   "cls": "P",
+   "override": null
+  },
+  {
+   "key": "HAL",
+   "match": "19.",
+   "name": "P!nk - Funhouse",
+   "cls": "P",
+   "override": null
+  },
+  {
+   "key": "HAL",
+   "match": "29.",
+   "name": "Oingo Boingo - Dead Man's Party",
+   "cls": "P",
+   "override": null
+  },
+  {
+   "key": "HAL",
+   "match": "02.",
+   "name": "John Carpenter - Halloween Theme",
+   "cls": "A",
+   "override": null
+  },
+  {
+   "key": "HAL",
+   "match": "06.",
+   "name": "Warren Zevon - Werewolves Of London",
+   "cls": "P",
+   "override": null
+  },
+  {
+   "key": "HAL",
+   "match": "23.",
+   "name": "The Citizens Of Halloween - This Is Halloween",
+   "cls": "P",
+   "override": 84
+  },
+  {
+   "key": "PCK",
+   "match": "Witch Doctor",
+   "name": "Cartoons - Witch Doctor",
+   "cls": "D",
+   "override": null
+  },
+  {
+   "key": "SCA",
+   "match": "01.",
+   "name": "Doja Cat - Paint The Town Red",
+   "cls": "P",
+   "override": null
+  },
+  {
+   "key": "SCA",
+   "match": "02.",
+   "name": "Doja Cat - Demons",
+   "cls": "P",
+   "override": null
+  },
+  {
+   "key": "TOP",
+   "match": "Haunted",
+   "name": "Beyonce - Haunted",
+   "cls": "A",
+   "override": null
+  },
+  {
+   "key": "TOP",
+   "match": "Dracula",
+   "name": "Tame Impala & Jennie - Dracula (Jennie Remix)",
+   "cls": "D",
+   "override": null
+  },
+  {
+   "key": "SP",
+   "match": "CD3/06 - Olivia Rodrigo",
+   "name": "Olivia Rodrigo - Vampire",
+   "cls": "R",
+   "override": null
+  },
+  {
+   "key": "00D",
+   "match": "005.",
+   "name": "Lady Gaga - Bad Romance",
+   "cls": "D",
+   "override": null
+  },
+  {
+   "key": "00D",
+   "match": "007.",
+   "name": "Missy Elliott - Get Ur Freak On",
+   "cls": "R",
+   "override": 89
+  },
+  {
+   "key": "00D",
+   "match": "075.",
+   "name": "Sugababes - Freak Like Me",
+   "cls": "P",
+   "override": null
+  },
+  {
+   "key": "10D",
+   "match": "001.",
+   "name": "Taylor Swift - Look What You Made Me Do",
+   "cls": "D",
+   "override": null
+  },
+  {
+   "key": "10D",
+   "match": "067.",
+   "name": "Little Mix - Black Magic",
+   "cls": "D",
+   "override": null
+  },
+  {
+   "key": "COLL",
+   "match": "309.",
+   "name": "The Prodigy - Voodoo People",
+   "cls": "D",
+   "override": null
+  },
+  {
+   "key": "E90",
+   "match": "1/2.",
+   "name": "The Prodigy - Breathe",
+   "cls": "D",
+   "override": null
+  },
+  {
+   "key": "COLL",
+   "match": "159.",
+   "name": "DJ Dado - X-Files",
+   "cls": "D",
+   "override": null
+  },
+  {
+   "key": "COLL",
+   "match": "868.",
+   "name": "The Grid - Swamp Thing",
+   "cls": "D",
+   "override": 134
+  },
+  {
+   "key": "SUB",
+   "match": "094.",
+   "name": "Sash! - Mysterious Times",
+   "cls": "D",
+   "override": null
+  },
+  {
+   "key": "F90",
+   "match": "004.",
+   "name": "Backstreet Boys - Everybody (Backstreet's Back)",
+   "cls": "P",
+   "override": null
+  },
+  {
+   "key": "F90",
+   "match": "101.",
+   "name": "Depeche Mode - Personal Jesus",
+   "cls": "P",
+   "override": null
+  },
+  {
+   "key": "PCA",
+   "match": "DANGER",
+   "name": "Electric Six - Danger! High Voltage",
+   "cls": "D",
+   "override": null
+  },
+  {
+   "key": "PCA",
+   "match": "Voodoo Child",
+   "name": "Rogue Traders - Voodoo Child",
+   "cls": "D",
+   "override": null
+  },
+  {
+   "key": "PCA",
+   "match": "Kylie Minogue VS",
+   "name": "Kylie vs New Order - Blue Monday Mashup",
+   "cls": "D",
+   "override": null
+  },
+  {
+   "key": "PCM",
+   "match": "DISCO INFERNO",
+   "name": "The Trammps - Disco Inferno",
+   "cls": "D",
+   "override": null
+  },
+  {
+   "key": "PCM",
+   "match": "you spin me",
+   "name": "Dead Or Alive - You Spin Me Round",
+   "cls": "D",
+   "override": null
+  },
+  {
+   "key": "PCM",
+   "match": "relight my fire",
+   "name": "Take That feat. Lulu - Relight My Fire",
+   "cls": "D",
+   "override": null
+  },
+  {
+   "key": "PCM",
+   "match": "Bat Out Of Hell",
+   "name": "Meat Loaf - Bat Out Of Hell",
+   "cls": "P",
+   "override": null
+  }
+ ],
+ "CD4 - House Electronic Ambient": [
+  {
+   "key": "E90",
+   "match": "1/1.",
+   "name": "Faithless - Insomnia",
+   "cls": "D",
+   "override": null
+  },
+  {
+   "key": "E90",
+   "match": "1/3.",
+   "name": "Underworld - Born Slippy",
+   "cls": "D",
+   "override": null
+  },
+  {
+   "key": "E90",
+   "match": "1/4.",
+   "name": "The Chemical Brothers - Hey Boy Hey Girl",
+   "cls": "D",
+   "override": null
+  },
+  {
+   "key": "E90",
+   "match": "1/5.",
+   "name": "Fatboy Slim - Praise You",
+   "cls": "D",
+   "override": null
+  },
+  {
+   "key": "E90",
+   "match": "1/8.",
+   "name": "Armand Van Helden - You Don't Know Me",
+   "cls": "D",
+   "override": null
+  },
+  {
+   "key": "E90",
+   "match": "1/9.",
+   "name": "Mr. Oizo - Flat Beat",
+   "cls": "D",
+   "override": null
+  },
+  {
+   "key": "E90",
+   "match": "1/11.",
+   "name": "Wildchild - Renegade Master",
+   "cls": "D",
+   "override": 125
+  },
+  {
+   "key": "E90",
+   "match": "1/14.",
+   "name": "David Morales & The Face - Needin' U",
+   "cls": "D",
+   "override": null
+  },
+  {
+   "key": "E90",
+   "match": "1/15.",
+   "name": "The Bucketheads - The Bomb!",
+   "cls": "D",
+   "override": null
+  },
+  {
+   "key": "E90",
+   "match": "1/16.",
+   "name": "Ultra Nate - Free",
+   "cls": "D",
+   "override": null
+  },
+  {
+   "key": "E90",
+   "match": "1/17.",
+   "name": "Adamski feat. Seal - Killer",
+   "cls": "D",
+   "override": null
+  },
+  {
+   "key": "E90",
+   "match": "2/1.",
+   "name": "The Source feat. Candi Staton - You Got The Love",
+   "cls": "D",
+   "override": null
+  },
+  {
+   "key": "E90",
+   "match": "2/19.",
+   "name": "Hardrive - Deep Inside",
+   "cls": "D",
+   "override": null
+  },
+  {
+   "key": "E90",
+   "match": "2/5.",
+   "name": "Planet Perfecto & Grace - Not Over Yet '99",
+   "cls": "D",
+   "override": null
+  },
+  {
+   "key": "E90",
+   "match": "2/6.",
+   "name": "Moloko - Sing It Back",
+   "cls": "D",
+   "override": null
+  },
+  {
+   "key": "E90",
+   "match": "3/6.",
+   "name": "Everything But The Girl - Missing (Todd Terry Mix)",
+   "cls": "D",
+   "override": null
+  },
+  {
+   "key": "COLL",
+   "match": "310.",
+   "name": "Nightcrawlers - Push The Feeling On",
+   "cls": "D",
+   "override": null
+  },
+  {
+   "key": "COLL",
+   "match": "479.",
+   "name": "The Beloved - Sweet Harmony",
+   "cls": "D",
+   "override": null
+  },
+  {
+   "key": "SUB",
+   "match": "017.",
+   "name": "Jam & Spoon - Right In The Night",
+   "cls": "D",
+   "override": null
+  },
+  {
+   "key": "90S",
+   "match": "29.",
+   "name": "Tori Amos - Professional Widow (Armand Van Helden Mix)",
+   "cls": "D",
+   "override": null
+  },
+  {
+   "key": "SP",
+   "match": "CD4/13 - Roger Sanchez",
+   "name": "Roger Sanchez - Another Chance",
+   "cls": "D",
+   "override": null
+  },
+  {
+   "key": "SP",
+   "match": "CD4/19 - Dario G",
+   "name": "Dario G - Sunchyme",
+   "cls": "D",
+   "override": null
+  },
+  {
+   "key": "SP",
+   "match": "CD4/20 - William Orbit",
+   "name": "William Orbit - Barber's Adagio For Strings (Ferry Corsten Remix)",
+   "cls": "D",
+   "override": null
+  },
+  {
+   "key": "SP",
+   "match": "CD4/18 - ATB",
+   "name": "ATB, Topic & A7S - Your Love (9PM)",
+   "cls": "D",
+   "override": null
+  },
+  {
+   "key": "00D",
+   "match": "055.",
+   "name": "Daft Punk - Robot Rock",
+   "cls": "D",
+   "override": null
+  },
+  {
+   "key": "00D",
+   "match": "078.",
+   "name": "Justice vs Simian - We Are Your Friends",
+   "cls": "D",
+   "override": null
+  },
+  {
+   "key": "00D",
+   "match": "044.",
+   "name": "Basement Jaxx - Romeo",
+   "cls": "D",
+   "override": null
+  },
+  {
+   "key": "00G",
+   "match": "41.",
+   "name": "LCD Soundsystem - Daft Punk Is Playing At My House",
+   "cls": "D",
+   "override": null
+  },
+  {
+   "key": "10D",
+   "match": "016.",
+   "name": "Daft Punk - Get Lucky",
+   "cls": "D",
+   "override": null
+  },
+  {
+   "key": "10D",
+   "match": "022.",
+   "name": "Swedish House Mafia - Don't You Worry Child",
+   "cls": "D",
+   "override": null
+  },
+  {
+   "key": "10D",
+   "match": "045.",
+   "name": "Avicii - Wake Me Up",
+   "cls": "D",
+   "override": null
+  },
+  {
+   "key": "10D",
+   "match": "009.",
+   "name": "Calvin Harris - This Is What You Came For",
+   "cls": "D",
+   "override": null
+  },
+  {
+   "key": "10D",
+   "match": "097.",
+   "name": "Zedd - Clarity",
+   "cls": "D",
+   "override": null
+  },
+  {
+   "key": "10D",
+   "match": "037.",
+   "name": "Jack U - Where Are U Now",
+   "cls": "D",
+   "override": null
+  },
+  {
+   "key": "10D",
+   "match": "068.",
+   "name": "Silk City & Dua Lipa - Electricity",
+   "cls": "D",
+   "override": 118
+  },
+  {
+   "key": "SP",
+   "match": "CD1/09 - Lana Del Rey",
+   "name": "Lana Del Rey vs Cedric Gervais - Summertime Sadness (Remix)",
+   "cls": "D",
+   "override": null
+  },
+  {
+   "key": "SP",
+   "match": "CD1/12 - Kenya Grace",
+   "name": "Kenya Grace - Strangers",
+   "cls": "D",
+   "override": null
+  },
+  {
+   "key": "SP",
+   "match": "CD1/13 - Peggy Gou",
+   "name": "Peggy Gou - (It Goes Like) Nanana",
+   "cls": "D",
+   "override": null
+  },
+  {
+   "key": "SP",
+   "match": "CD1/14 - LF SYSTEM",
+   "name": "LF System - Afraid To Feel",
+   "cls": "D",
+   "override": null
+  },
+  {
+   "key": "SP",
+   "match": "CD1/15 - Eliza Rose",
+   "name": "Eliza Rose - B.O.T.A. (Baddest Of Them All)",
+   "cls": "D",
+   "override": null
+  },
+  {
+   "key": "SP",
+   "match": "CD1/16 - Ti",
+   "name": "Tiesto & Tate McRae - 10.35 (VIP Mix)",
+   "cls": "D",
+   "override": null
+  },
+  {
+   "key": "SP",
+   "match": "CD2/11 - Riton",
+   "name": "Riton x Nightcrawlers - Friday (Dopamine Re-Edit)",
+   "cls": "D",
+   "override": null
+  },
+  {
+   "key": "TOP",
+   "match": "BREAK MY SOUL",
+   "name": "Beyonce - Break My Soul (The Queens Remix)",
+   "cls": "D",
+   "override": null
+  },
+  {
+   "key": "TOP",
+   "match": "Dom Dolla",
+   "name": "Dom Dolla & Tiga - Don't Worry Baby",
+   "cls": "D",
+   "override": null
+  },
+  {
+   "key": "TOP",
+   "match": "Fcukers",
+   "name": "Fcukers - If You Wanna Party, Come Over To My House",
+   "cls": "D",
+   "override": null
+  },
+  {
+   "key": "TOP",
+   "match": "Slayyyter",
+   "name": "Slayyyter - Brand New Chanel$",
+   "cls": "D",
+   "override": null
+  },
+  {
+   "key": "ROB",
+   "match": "[2014] Do It Again (Royksopp & Robyn) [EP]/03 - Do It Again",
+   "name": "Royksopp & Robyn - Do It Again",
+   "cls": "D",
+   "override": null
+  },
+  {
+   "key": "E90",
+   "match": "3/2.",
+   "name": "Moby - Go",
+   "cls": "D",
+   "override": null
+  },
+  {
+   "key": "E90",
+   "match": "3/1.",
+   "name": "Groove Armada - At The River",
+   "cls": "A",
+   "override": null
+  },
+  {
+   "key": "E90",
+   "match": "3/3.",
+   "name": "Morcheeba - The Sea",
+   "cls": "A",
+   "override": null
+  },
+  {
+   "key": "E90",
+   "match": "3/4.",
+   "name": "Zero 7 - Destiny",
+   "cls": "A",
+   "override": null
+  },
+  {
+   "key": "E90",
+   "match": "3/8.",
+   "name": "Smoke City - Underwater Love",
+   "cls": "A",
+   "override": null
+  },
+  {
+   "key": "E90",
+   "match": "3/9.",
+   "name": "Kinobe - Slip Into Something More Comfortable",
+   "cls": "A",
+   "override": 87
+  },
+  {
+   "key": "E90",
+   "match": "3/17.",
+   "name": "The Future Sound Of London - Papua New Guinea",
+   "cls": "A",
+   "override": null
+  },
+  {
+   "key": "E90",
+   "match": "3/19.",
+   "name": "808 State - Pacific State",
+   "cls": "A",
+   "override": null
+  },
+  {
+   "key": "E90",
+   "match": "3/20.",
+   "name": "Orbital - Halcyon",
+   "cls": "A",
+   "override": 126
+  },
+  {
+   "key": "SUB",
+   "match": "043.",
+   "name": "Enigma - Sadeness",
+   "cls": "A",
+   "override": null
+  },
+  {
+   "key": "90S",
+   "match": "72.",
+   "name": "Julee Cruise - Falling (Twin Peaks)",
+   "cls": "A",
+   "override": 62
+  },
+  {
+   "key": "90S",
+   "match": "04.",
+   "name": "All Saints - Pure Shores",
+   "cls": "A",
+   "override": null
+  },
+  {
+   "key": "SUB",
+   "match": "064.",
+   "name": "Robert Miles - Fable (Dream Radio)",
+   "cls": "A",
+   "override": null
+  },
+  {
+   "key": "ROB",
+   "match": "[2014] Do It Again (Royksopp & Robyn) [EP]/01 - Monument",
+   "name": "Royksopp & Robyn - Monument",
+   "cls": "A",
+   "override": null
+  }
+ ]
+}

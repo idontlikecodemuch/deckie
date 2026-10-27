@@ -1,0 +1,32 @@
+Hour 1: Graveyard Shift (spooky lean) - 24 songs, about 62 min, 6 Halloween (H)
+
+
+Stage 1 - hip-hop / R&B (quick cuts)
+ 1.  0:00    Kanye West - Gold Digger                                    92.5 BPM   <- start
+ 2.  1:51  H Missy Elliott - Get Ur Freak On                             90.0 BPM   <- cut on the one + scratch stab
+ 3.  4:31    Snoop Dogg - Drop It Like It's Hot                          92.0 BPM   <- cut on the one + scratch stab
+ 4.  6:29  H Sugababes - Freak Like Me                                   91.8 BPM   <- chop: A 2 bars / B 2 bars / A 1 bar / B + scratch
+ 5.  9:00    The Notorious B.I.G. - Hypnotize                            93.9 BPM   <- cut on the one + scratch stab
+ 6. 10:50    Shaggy - It Wasn't Me                                       94.7 BPM   <- chop: A 2 bars / B 2 bars / A 1 bar / B + scratch
+ 7. 12:57    Amerie - 1 Thing                                           100.0 BPM   <- cut on the one + scratch stab
+ 8. 15:04    50 Cent - Just a Lil Bit                                   100.0 BPM   <- chop: A 2 bars / B 2 bars / A 1 bar / B + scratch
+ 9. 17:21    Ying Yang Twins - Get Low                                  101.0 BPM   <- cut on the one + scratch stab
+10. 19:46    Sexyy Red & Bruno Mars - Fat Juicy & Wet                   104.0 BPM   <- chop: A 2 bars / B 2 bars / A 1 bar / B + scratch
+
+Stage 2 - pop / disco
+11. 21:39  H Michael Jackson - Scream                                   106.5 BPM   <- 8-bar bass-swap blend
+12. 24:17    Jungle - PROBLEMZ                                          110.0 BPM   <- 8-bar bass-swap blend
+13. 27:11    Fatboy Slim - Praise You                                   109.7 BPM   <- echo-out, next song cuts in on the one
+14. 29:40  H Little Mix - Black Magic                                   112.0 BPM   <- 16-bar bass-swap blend
+15. 32:31    Gnarls Barkley - Crazy                                     112.0 BPM   <- 16-bar bass-swap blend
+16. 34:51    Britney Spears - Gimme More                                113.3 BPM   <- 16-bar bass-swap blend
+17. 37:59    Justin Timberlake - SexyBack                               117.0 BPM   <- 8-bar bass-swap blend
+
+Stage 3 - dance
+18. 41:00  H Rockwell - Somebody's Watching Me                          120.0 BPM   <- 16-bar bass-swap blend
+19. 43:40    Taio Cruz - Dynamite                                       120.0 BPM   <- 16-bar bass-swap blend
+20. 46:26    Ida Corr & Fedde Le Grand - Let Me Think About It          122.0 BPM   <- 16-bar bass-swap blend
+21. 49:03  H Johan K & Rinat Bibikov - Zombie                           122.0 BPM   <- 16-bar bass-swap blend
+22. 51:56    Moby - Go                                                  125.8 BPM   <- 16-bar bass-swap blend
+23. 55:15    ATB, Topic & A7S - Your Love (9PM)                         126.0 BPM   <- 8-bar bass-swap blend
+24. 57:11    Black Eyed Peas - I Gotta Feeling                          128.0 BPM   <- 16-bar bass-swap blend

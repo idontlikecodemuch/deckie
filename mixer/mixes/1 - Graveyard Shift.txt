@@ -1,0 +1,26 @@
+Graveyard Shift  (hour 1, spooky lean)
+Duration 60:35, 22 songs, mastered -10.0 LUFS integrated, true peak -0.9 dBTP
+H = Halloween.  Join = how this song comes in.
+
+  0:00    Ricky Martin - Livin' La Vida Loca                           89.0 BPM  12A   [start]
+  2:47    Blackstreet - No Diggity                                     88.7 BPM  11A   [quick_blend_echo 4 bars, -0.4%]
+  5:45  H Missy Elliott - Get Ur Freak On                              88.9 BPM  4A    [filter_sweep 8 bars, +0.3%]
+  8:38    Snoop Dogg - Drop It Like It's Hot                           92.0 BPM  4B    [filter_sweep 8 bars, +3.5%]
+ 11:43  H Sugababes - Freak Like Me                                    91.8 BPM  8B    [quick_blend_echo 8 bars, -0.2%, reverb wash]
+ 14:15    Shaggy - It Wasn't Me                                        94.7 BPM  8B    [quick_blend_echo 4 bars, +3.2%]
+ 17:20    Amerie - 1 Thing                                            100.0 BPM  3A    [quick_blend_echo 8 bars, +5.5%]
+ 20:37  H Whodini - Freaks Come Out at Night                          100.8 BPM  3B    [quick_blend_echo 4 bars, +0.8%, reverb wash]
+ 23:14    Dua Lipa - Levitating                                       103.0 BPM  10A   [quick_blend_echo 4 bars, +2.2%]
+ 26:20  H Michael Jackson - Scream                                    106.5 BPM  8A    [filter_sweep 8 bars, +3.4%]
+ 29:02    Spice Girls - Wannabe                                       110.0 BPM  1B    [quick_blend_echo 4 bars, +3.3%]
+ 31:39    Justin Timberlake - Can't Stop The Feeling!                 113.0 BPM  8B    [quick_blend_echo 8 bars, +2.7%, reverb wash]
+ 34:29    The Weeknd - Save Your Tears                                118.0 BPM  8B    [quick_blend_echo 4 bars, +4.4%]
+ 37:40    Ida Corr & Fedde Le Grand - Let Me Think About It           122.0 BPM  7B    [bass_swap_16 16 bars, +3.4%]
+ 40:18    Moloko - Sing It Back                                       123.0 BPM  2A    [bass_swap_16 16 bars, +0.8%]
+ 43:19  H Johan K & Rinat Bibikov - Zombie                            122.0 BPM  9B    [bass_swap_16 16 bars, -0.8%]
+ 46:20    Lady Gaga & Doechii - Runway                                120.0 BPM  8B    [filter_sweep 8 bars, -1.6%]
+ 49:06  H Take That feat. Lulu - Relight My Fire                      122.6 BPM  10A   [bass_swap_16 16 bars, +2.2%]
+ 51:10    Moby - Go                                                   125.8 BPM  9A    [bass_swap_16 16 bars, +2.6%]
+ 54:13    Ultra Nate - Free                                           125.0 BPM  4A    [bass_swap_16 16 bars, -0.6%]
+ 56:16    Ol' Dirty Bastard - Got Your Money                          124.0 BPM  4A    [filter_sweep 16 bars, -0.8%]
+ 58:21    ATB, Topic & A7S - Your Love (9PM)                          126.0 BPM  8A    [bass_swap_16 16 bars, +1.6%]

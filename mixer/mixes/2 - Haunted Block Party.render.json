@@ -1,0 +1,1060 @@
+{
+ "plan": "plan_2.json",
+ "out": "2 - Haunted Block Party",
+ "joins": [
+  {
+   "n": 1,
+   "type": "filter_sweep",
+   "from_title": "M.I.A. - Paper Planes",
+   "to_title": "DJ Jazzy Jeff & The Fresh Prince - A Nightmare On My Street",
+   "a_overlap_start_bar": 57,
+   "a_exit_bar": 73,
+   "b_cue_bar": 1,
+   "stretch_pct": -0.77,
+   "stretch_side": "both, ramped bar by bar from 86.00 to 85.34 BPM across the overlap",
+   "pair_score": 0.7492,
+   "vocal_overlap": 0.724,
+   "dip_out_mids": false,
+   "reverb_wash": false,
+   "scratch": false,
+   "backspin": false,
+   "key_shift_st": 0,
+   "reasons": [
+    "+0.8% stretch on B (86.0 end -> 85.3 start)",
+    "energy steady (-0.9 LU)",
+    "16-bar phrases both sides",
+    "vocals overlap 13 of 16 bars",
+    "different groove (r=0.14)",
+    "longer cut"
+   ],
+   "overlap_bars_rendered": 16,
+   "phase_corr_ms": 3.9,
+   "at_s": 156.281,
+   "tail": "hp sweep 30 Hz -> 3 kHz over 16 bars",
+   "bar_s_ramp": [
+    2.7912,
+    2.8116
+   ],
+   "geom_downbeat_err_ms": 0.0,
+   "beat_offset_ms": -0.0,
+   "beats_compared": 64,
+   "beat_spread_mad_ms": 7.8
+  },
+  {
+   "n": 2,
+   "type": "quick_blend_echo",
+   "from_title": "DJ Jazzy Jeff & The Fresh Prince - A Nightmare On My Street",
+   "to_title": "Rihanna - Umbrella",
+   "a_overlap_start_bar": 73,
+   "a_exit_bar": 77,
+   "b_cue_bar": 1,
+   "stretch_pct": 1.94,
+   "stretch_side": "both, ramped bar by bar from 85.34 to 87.00 BPM across the overlap",
+   "pair_score": 0.5398,
+   "vocal_overlap": 0.986,
+   "dip_out_mids": false,
+   "reverb_wash": false,
+   "scratch": false,
+   "backspin": false,
+   "key_shift_st": 0,
+   "reasons": [
+    "-1.9% stretch on B (85.3 end -> 87.0 start)",
+    "B enters -4.1 LU quieter",
+    "similar sound (closer than 71% of pairs)",
+    "9A -> 3B (clash)",
+    "vocals overlap 8 of 8 bars",
+    "8-bar window (short of a 16-bar phrase)",
+    "different groove (r=0.37)",
+    "longer cut"
+   ],
+   "overlap_bars_rendered": 4,
+   "phase_corr_ms": -3.8,
+   "at_s": 358.594,
+   "tail": "echo 3/8 beat=519 ms fb 0.58",
+   "bar_s_ramp": [
+    2.8055,
+    2.7653
+   ],
+   "geom_downbeat_err_ms": 0.0,
+   "beat_offset_ms": 0.0,
+   "beats_compared": 16,
+   "beat_spread_mad_ms": 10.1
+  },
+  {
+   "n": 3,
+   "type": "quick_blend_echo",
+   "from_title": "Rihanna - Umbrella",
+   "to_title": "SZA - Kill Bill",
+   "a_overlap_start_bar": 57,
+   "a_exit_bar": 65,
+   "b_cue_bar": 1,
+   "stretch_pct": 2.3,
+   "stretch_side": "both, ramped bar by bar from 87.00 to 89.00 BPM across the overlap",
+   "pair_score": 0.8005,
+   "vocal_overlap": 0.36,
+   "dip_out_mids": false,
+   "reverb_wash": true,
+   "scratch": false,
+   "backspin": false,
+   "key_shift_st": 0,
+   "reasons": [
+    "-2.3% stretch on B (87.0 end -> 89.0 start)",
+    "energy steady (-1.7 LU)",
+    "16-bar phrases both sides"
+   ],
+   "overlap_bars_rendered": 8,
+   "phase_corr_ms": 0.1,
+   "at_s": 513.187,
+   "tail": "reverb_wash",
+   "bar_s_ramp": [
+    2.7548,
+    2.7006
+   ],
+   "geom_downbeat_err_ms": 0.0,
+   "beat_offset_ms": 0.0,
+   "beats_compared": 31,
+   "beat_spread_mad_ms": 9.1
+  },
+  {
+   "n": 4,
+   "type": "quick_blend_echo",
+   "from_title": "SZA - Kill Bill",
+   "to_title": "Kanye West - Gold Digger",
+   "a_overlap_start_bar": 53,
+   "a_exit_bar": 57,
+   "b_cue_bar": 1,
+   "stretch_pct": 3.94,
+   "stretch_side": "both, ramped bar by bar from 89.00 to 92.50 BPM across the overlap",
+   "pair_score": 0.6058,
+   "vocal_overlap": 0.739,
+   "dip_out_mids": false,
+   "reverb_wash": false,
+   "scratch": false,
+   "backspin": false,
+   "key_shift_st": 0,
+   "reasons": [
+    "energy steady (-0.4 LU)",
+    "-3.9% stretch on B (89.0 end -> 92.5 start)",
+    "5B -> 4B (-1 (fifth)), key unsure",
+    "vocals overlap 7 of 8 bars",
+    "8-bar window (short of a 16-bar phrase)",
+    "different groove (r=0.37)"
+   ],
+   "overlap_bars_rendered": 4,
+   "phase_corr_ms": -46.3,
+   "at_s": 653.711,
+   "tail": "echo 3/8 beat=489 ms fb 0.58",
+   "bar_s_ramp": [
+    2.6837,
+    2.607
+   ],
+   "geom_downbeat_err_ms": 0.0,
+   "beat_offset_ms": -6.5,
+   "beats_compared": 8,
+   "beat_spread_mad_ms": 31.6
+  },
+  {
+   "n": 5,
+   "type": "quick_blend_echo",
+   "from_title": "Kanye West - Gold Digger",
+   "to_title": "The Notorious B.I.G. - Hypnotize",
+   "a_overlap_start_bar": 76,
+   "a_exit_bar": 80,
+   "b_cue_bar": 1,
+   "stretch_pct": 1.51,
+   "stretch_side": "both, ramped bar by bar from 92.50 to 93.91 BPM across the overlap",
+   "pair_score": 0.7253,
+   "vocal_overlap": 0.833,
+   "dip_out_mids": false,
+   "reverb_wash": false,
+   "scratch": false,
+   "backspin": false,
+   "key_shift_st": 0,
+   "reasons": [
+    "-1.5% stretch on B (92.5 end -> 93.9 start)",
+    "energy steady (+0.5 LU)",
+    "16-bar phrases both sides",
+    "vocals overlap 15 of 16 bars",
+    "different groove (r=0.31)"
+   ],
+   "overlap_bars_rendered": 4,
+   "phase_corr_ms": 8.1,
+   "at_s": 848.491,
+   "tail": "echo 3/8 beat=480 ms fb 0.58",
+   "bar_s_ramp": [
+    2.5896,
+    2.5606
+   ],
+   "geom_downbeat_err_ms": 0.0,
+   "beat_offset_ms": -0.0,
+   "beats_compared": 15,
+   "beat_spread_mad_ms": 10.2
+  },
+  {
+   "n": 6,
+   "type": "quick_blend_echo",
+   "from_title": "The Notorious B.I.G. - Hypnotize",
+   "to_title": "Doja Cat - Paint The Town Red",
+   "a_overlap_start_bar": 77,
+   "a_exit_bar": 81,
+   "b_cue_bar": 1,
+   "stretch_pct": 6.49,
+   "stretch_side": "both, ramped bar by bar from 93.91 to 100.00 BPM across the overlap",
+   "pair_score": null,
+   "vocal_overlap": 0.805,
+   "dip_out_mids": false,
+   "reverb_wash": true,
+   "scratch": false,
+   "backspin": false,
+   "key_shift_st": 0,
+   "reasons": [],
+   "overlap_bars_rendered": 4,
+   "phase_corr_ms": 8.2,
+   "at_s": 1042.798,
+   "tail": "reverb_wash",
+   "bar_s_ramp": [
+    2.5358,
+    2.4189
+   ],
+   "geom_downbeat_err_ms": 0.0,
+   "beat_offset_ms": 0.0,
+   "beats_compared": 15,
+   "beat_spread_mad_ms": 7.3
+  },
+  {
+   "n": 7,
+   "type": "quick_blend_echo",
+   "from_title": "Doja Cat - Paint The Town Red",
+   "to_title": "50 Cent - Just a Lil Bit",
+   "a_overlap_start_bar": 57,
+   "a_exit_bar": 65,
+   "b_cue_bar": 1,
+   "stretch_pct": 0.0,
+   "stretch_side": "none (tempos equal)",
+   "pair_score": 0.7747,
+   "vocal_overlap": 0.354,
+   "dip_out_mids": false,
+   "reverb_wash": false,
+   "scratch": false,
+   "backspin": false,
+   "key_shift_st": 0,
+   "reasons": [
+    "same tempo (100.0 BPM at A's end)",
+    "energy steady (-1.6 LU)",
+    "16-bar phrases both sides",
+    "vocals overlap 9 of 16 bars"
+   ],
+   "overlap_bars_rendered": 8,
+   "phase_corr_ms": 0.2,
+   "at_s": 1177.505,
+   "tail": "echo 3/8 beat=450 ms fb 0.58",
+   "bar_s_ramp": [
+    2.4,
+    2.4
+   ],
+   "geom_downbeat_err_ms": 0.0,
+   "beat_offset_ms": -0.0,
+   "beats_compared": 33,
+   "beat_spread_mad_ms": 0.0
+  },
+  {
+   "n": 8,
+   "type": "quick_blend_echo",
+   "from_title": "50 Cent - Just a Lil Bit",
+   "to_title": "Ciara - Goodies",
+   "a_overlap_start_bar": 78,
+   "a_exit_bar": 82,
+   "b_cue_bar": 1,
+   "stretch_pct": 2.0,
+   "stretch_side": "both, ramped bar by bar from 100.00 to 102.00 BPM across the overlap",
+   "pair_score": 0.7768,
+   "vocal_overlap": 0.993,
+   "dip_out_mids": false,
+   "reverb_wash": false,
+   "scratch": false,
+   "backspin": false,
+   "key_shift_st": 0,
+   "reasons": [
+    "-2.0% stretch on B (100.0 end -> 102.0 start)",
+    "energy steady (+0.2 LU)",
+    "similar sound (closer than 91% of pairs)",
+    "8-bar window (short of a 16-bar phrase)"
+   ],
+   "overlap_bars_rendered": 4,
+   "phase_corr_ms": -1.8,
+   "at_s": 1362.307,
+   "tail": "echo 3/8 beat=442 ms fb 0.58",
+   "bar_s_ramp": [
+    2.3941,
+    2.3588
+   ],
+   "geom_downbeat_err_ms": 0.0,
+   "beat_offset_ms": -0.0,
+   "beats_compared": 16,
+   "beat_spread_mad_ms": 5.3
+  },
+  {
+   "n": 9,
+   "type": "quick_blend_echo",
+   "from_title": "Ciara - Goodies",
+   "to_title": "Various - IN THE SHADOWS",
+   "a_overlap_start_bar": 63,
+   "a_exit_bar": 71,
+   "b_cue_bar": 1,
+   "stretch_pct": 3.93,
+   "stretch_side": "both, ramped bar by bar from 102.00 to 106.01 BPM across the overlap",
+   "pair_score": 0.6291,
+   "vocal_overlap": 0.596,
+   "dip_out_mids": true,
+   "reverb_wash": true,
+   "scratch": false,
+   "backspin": false,
+   "key_shift_st": 0,
+   "reasons": [
+    "matching groove (r=0.89)",
+    "B enters -3.2 LU quieter",
+    "-3.9% stretch on B (102.0 end -> 106.0 start)",
+    "8-bar window (short of a 16-bar phrase)",
+    "different sound (closer than only 11% of pairs)"
+   ],
+   "overlap_bars_rendered": 8,
+   "phase_corr_ms": 1.1,
+   "at_s": 1508.283,
+   "tail": "reverb_wash",
+   "bar_s_ramp": [
+    2.3473,
+    2.2694
+   ],
+   "geom_downbeat_err_ms": 0.0,
+   "beat_offset_ms": -0.0,
+   "beats_compared": 32,
+   "beat_spread_mad_ms": 6.7
+  },
+  {
+   "n": 10,
+   "type": "quick_blend_echo",
+   "from_title": "Various - IN THE SHADOWS",
+   "to_title": "Bell Biv DeVoe - Poison",
+   "a_overlap_start_bar": 90,
+   "a_exit_bar": 94,
+   "b_cue_bar": 1,
+   "stretch_pct": 3.66,
+   "stretch_side": "both, ramped bar by bar from 106.01 to 109.89 BPM across the overlap",
+   "pair_score": 0.7659,
+   "vocal_overlap": 0.772,
+   "dip_out_mids": true,
+   "reverb_wash": false,
+   "scratch": false,
+   "backspin": false,
+   "key_shift_st": 0,
+   "reasons": [
+    "11A -> 11A",
+    "16-bar phrases both sides",
+    "B enters -2.6 LU quieter",
+    "vocals overlap 16 of 16 bars",
+    "different sound (closer than only 19% of pairs)",
+    "longer cut"
+   ],
+   "overlap_bars_rendered": 4,
+   "phase_corr_ms": 19.3,
+   "at_s": 1710.106,
+   "tail": "echo 3/8 beat=411 ms fb 0.58",
+   "bar_s_ramp": [
+    2.2538,
+    2.1938
+   ],
+   "geom_downbeat_err_ms": 0.0,
+   "beat_offset_ms": -0.0,
+   "beats_compared": 16,
+   "beat_spread_mad_ms": 0.3
+  },
+  {
+   "n": 11,
+   "type": "bass_swap_16",
+   "from_title": "Bell Biv DeVoe - Poison",
+   "to_title": "Gnarls Barkley - Crazy",
+   "a_overlap_start_bar": 57,
+   "a_exit_bar": 73,
+   "b_cue_bar": 1,
+   "stretch_pct": 1.92,
+   "stretch_side": "both, ramped bar by bar from 109.89 to 112.00 BPM across the overlap",
+   "pair_score": 0.8511,
+   "vocal_overlap": 0.348,
+   "dip_out_mids": true,
+   "reverb_wash": false,
+   "scratch": false,
+   "backspin": false,
+   "key_shift_st": 0,
+   "reasons": [
+    "-1.9% stretch on B (109.9 end -> 112.0 start)",
+    "energy steady (-0.8 LU)",
+    "16-bar phrases both sides"
+   ],
+   "overlap_bars_rendered": 16,
+   "phase_corr_ms": 2.0,
+   "at_s": 1832.562,
+   "tail": "bass swap at bar 8 of 16, highs 1 bar later, mids dipped",
+   "bar_s_ramp": [
+    2.1826,
+    2.1441
+   ],
+   "geom_downbeat_err_ms": 0.0,
+   "beat_offset_ms": 0.2,
+   "beats_compared": 64,
+   "beat_spread_mad_ms": 8.1
+  },
+  {
+   "n": 12,
+   "type": "filter_sweep",
+   "from_title": "Gnarls Barkley - Crazy",
+   "to_title": "Tame Impala & Jennie - Dracula (Jennie Remix)",
+   "a_overlap_start_bar": 74,
+   "a_exit_bar": 82,
+   "b_cue_bar": 1,
+   "stretch_pct": 2.68,
+   "stretch_side": "both, ramped bar by bar from 112.00 to 115.00 BPM across the overlap",
+   "pair_score": 0.7532,
+   "vocal_overlap": 0.201,
+   "dip_out_mids": true,
+   "reverb_wash": false,
+   "scratch": false,
+   "backspin": false,
+   "key_shift_st": 0,
+   "reasons": [
+    "-2.7% stretch on B (112.0 end -> 115.0 start)",
+    "energy steady (-1.2 LU)",
+    "vocals overlap 1 of 8 bars",
+    "8-bar window (short of a 16-bar phrase)"
+   ],
+   "overlap_bars_rendered": 8,
+   "phase_corr_ms": 10.6,
+   "at_s": 1989.307,
+   "tail": "hp sweep 30 Hz -> 3 kHz over 8 bars",
+   "bar_s_ramp": [
+    2.1393,
+    2.0904
+   ],
+   "geom_downbeat_err_ms": 0.0,
+   "beat_offset_ms": 0.9,
+   "beats_compared": 30,
+   "beat_spread_mad_ms": 12.3
+  },
+  {
+   "n": 13,
+   "type": "quick_blend_echo",
+   "from_title": "Tame Impala & Jennie - Dracula (Jennie Remix)",
+   "to_title": "Ace Of Base - All That She Wants",
+   "a_overlap_start_bar": 94,
+   "a_exit_bar": 98,
+   "b_cue_bar": 1,
+   "stretch_pct": 2.61,
+   "stretch_side": "both, ramped bar by bar from 115.00 to 118.00 BPM across the overlap",
+   "pair_score": 0.7739,
+   "vocal_overlap": 0.873,
+   "dip_out_mids": false,
+   "reverb_wash": false,
+   "scratch": false,
+   "backspin": false,
+   "key_shift_st": 0,
+   "reasons": [
+    "-2.6% stretch on B (115.0 end -> 118.0 start)",
+    "energy steady (-1.8 LU)",
+    "16-bar phrases both sides",
+    "vocals overlap 16 of 16 bars",
+    "longer cut"
+   ],
+   "overlap_bars_rendered": 4,
+   "phase_corr_ms": 11.8,
+   "at_s": 2183.603,
+   "tail": "echo 3/8 beat=383 ms fb 0.58",
+   "bar_s_ramp": [
+    2.0802,
+    2.0404
+   ],
+   "geom_downbeat_err_ms": 0.0,
+   "beat_offset_ms": -0.0,
+   "beats_compared": 15,
+   "beat_spread_mad_ms": 13.4
+  },
+  {
+   "n": 14,
+   "type": "bass_swap_16",
+   "from_title": "Ace Of Base - All That She Wants",
+   "to_title": "Rihanna - Pon De Replay",
+   "a_overlap_start_bar": 81,
+   "a_exit_bar": 97,
+   "b_cue_bar": 1,
+   "stretch_pct": 1.69,
+   "stretch_side": "both, ramped bar by bar from 118.00 to 120.00 BPM across the overlap",
+   "pair_score": 0.8867,
+   "vocal_overlap": 0.301,
+   "dip_out_mids": false,
+   "reverb_wash": false,
+   "scratch": false,
+   "backspin": false,
+   "key_shift_st": 0,
+   "reasons": [
+    "-1.7% stretch on B (118.0 end -> 120.0 start)",
+    "energy steady (+2.0 LU)",
+    "16-bar phrases both sides",
+    "different groove (r=0.00)"
+   ],
+   "overlap_bars_rendered": 16,
+   "phase_corr_ms": -25.4,
+   "at_s": 2346.443,
+   "tail": "bass swap at bar 8 of 16, highs 1 bar later",
+   "bar_s_ramp": [
+    2.0328,
+    2.001
+   ],
+   "geom_downbeat_err_ms": 0.0,
+   "beat_offset_ms": -0.0,
+   "beats_compared": 63,
+   "beat_spread_mad_ms": 9.7
+  },
+  {
+   "n": 15,
+   "type": "filter_sweep",
+   "from_title": "Rihanna - Pon De Replay",
+   "to_title": "Rockwell - Somebody's Watching Me",
+   "a_overlap_start_bar": 72,
+   "a_exit_bar": 80,
+   "b_cue_bar": 1,
+   "stretch_pct": 0.0,
+   "stretch_side": "none (tempos equal)",
+   "pair_score": 0.8474,
+   "vocal_overlap": 0.003,
+   "dip_out_mids": false,
+   "reverb_wash": false,
+   "scratch": false,
+   "backspin": false,
+   "key_shift_st": 0,
+   "reasons": [
+    "same tempo (120.0 BPM at A's end)",
+    "energy steady (+1.3 LU)",
+    "no vocal clash",
+    "8-bar window (short of a 16-bar phrase)",
+    "different groove (r=0.37)"
+   ],
+   "overlap_bars_rendered": 8,
+   "phase_corr_ms": 19.8,
+   "at_s": 2488.693,
+   "tail": "hp sweep 30 Hz -> 3 kHz over 8 bars",
+   "bar_s_ramp": [
+    2.0,
+    2.0
+   ],
+   "geom_downbeat_err_ms": 0.0,
+   "beat_offset_ms": 0.0,
+   "beats_compared": 32,
+   "beat_spread_mad_ms": 0.0
+  },
+  {
+   "n": 16,
+   "type": "bass_swap_16",
+   "from_title": "Rockwell - Somebody's Watching Me",
+   "to_title": "Everything But The Girl - Missing (Todd Terry Mix)",
+   "a_overlap_start_bar": 81,
+   "a_exit_bar": 97,
+   "b_cue_bar": 1,
+   "stretch_pct": 2.91,
+   "stretch_side": "both, ramped bar by bar from 120.00 to 123.49 BPM across the overlap",
+   "pair_score": 0.8694,
+   "vocal_overlap": 0.025,
+   "dip_out_mids": false,
+   "reverb_wash": false,
+   "scratch": false,
+   "backspin": false,
+   "key_shift_st": 0,
+   "reasons": [
+    "-2.9% stretch on B (120.0 end -> 123.5 start)",
+    "energy steady (-1.3 LU)",
+    "no vocal clash",
+    "different groove (r=0.28)",
+    "longer cut"
+   ],
+   "overlap_bars_rendered": 16,
+   "phase_corr_ms": -43.3,
+   "at_s": 2648.737,
+   "tail": "bass swap at bar 8 of 16, highs 1 bar later",
+   "bar_s_ramp": [
+    1.9982,
+    1.9452
+   ],
+   "geom_downbeat_err_ms": 0.0,
+   "beat_offset_ms": -0.0,
+   "beats_compared": 64,
+   "beat_spread_mad_ms": 42.3
+  },
+  {
+   "n": 17,
+   "type": "bass_swap_16",
+   "from_title": "Everything But The Girl - Missing (Todd Terry Mix)",
+   "to_title": "Nelly - Hot In Herre",
+   "a_overlap_start_bar": 69,
+   "a_exit_bar": 85,
+   "b_cue_bar": 1,
+   "stretch_pct": 0.41,
+   "stretch_side": "both, ramped bar by bar from 123.49 to 124.00 BPM across the overlap",
+   "pair_score": 0.8463,
+   "vocal_overlap": 0.053,
+   "dip_out_mids": false,
+   "reverb_wash": false,
+   "scratch": false,
+   "backspin": false,
+   "key_shift_st": 0,
+   "reasons": [
+    "same tempo (123.5 BPM at A's end)",
+    "energy steady (+0.1 LU)",
+    "B has a clean 16-bar intro",
+    "8-bar window (short of a 16-bar phrase)",
+    "different groove (r=0.40)"
+   ],
+   "overlap_bars_rendered": 16,
+   "phase_corr_ms": 4.1,
+   "at_s": 2781.334,
+   "tail": "bass swap at bar 8 of 16, highs 1 bar later",
+   "bar_s_ramp": [
+    1.9432,
+    1.9358
+   ],
+   "geom_downbeat_err_ms": 0.0,
+   "beat_offset_ms": 0.0,
+   "beats_compared": 63,
+   "beat_spread_mad_ms": 7.9
+  },
+  {
+   "n": 18,
+   "type": "bass_swap_16",
+   "from_title": "Nelly - Hot In Herre",
+   "to_title": "Royksopp & Robyn - Do It Again",
+   "a_overlap_start_bar": 70,
+   "a_exit_bar": 86,
+   "b_cue_bar": 1,
+   "stretch_pct": -0.01,
+   "stretch_side": "none (tempos equal)",
+   "pair_score": 0.9138,
+   "vocal_overlap": 0.589,
+   "dip_out_mids": false,
+   "reverb_wash": false,
+   "scratch": false,
+   "backspin": false,
+   "key_shift_st": 0,
+   "reasons": [
+    "same tempo (124.0 BPM at A's end)",
+    "energy steady (-0.0 LU)",
+    "no vocal clash",
+    "different groove (r=0.00)",
+    "longer cut"
+   ],
+   "overlap_bars_rendered": 16,
+   "phase_corr_ms": 0.5,
+   "at_s": 2914.949,
+   "tail": "bass swap at bar 8 of 16, highs 1 bar later",
+   "bar_s_ramp": [
+    1.9355,
+    1.9357
+   ],
+   "geom_downbeat_err_ms": 0.0,
+   "beat_offset_ms": -0.0,
+   "beats_compared": 64,
+   "beat_spread_mad_ms": 0.7
+  },
+  {
+   "n": 19,
+   "type": "bass_swap_16",
+   "from_title": "Royksopp & Robyn - Do It Again",
+   "to_title": "Rihanna - Don't Stop The Music",
+   "a_overlap_start_bar": 91,
+   "a_exit_bar": 107,
+   "b_cue_bar": 1,
+   "stretch_pct": 1.62,
+   "stretch_side": "both, ramped bar by bar from 123.99 to 126.00 BPM across the overlap",
+   "pair_score": 0.9063,
+   "vocal_overlap": 0.092,
+   "dip_out_mids": false,
+   "reverb_wash": false,
+   "scratch": false,
+   "backspin": false,
+   "key_shift_st": 0,
+   "reasons": [
+    "-1.6% stretch on B (124.0 end -> 126.0 start)",
+    "energy steady (-0.7 LU)",
+    "B has a clean 16-bar intro",
+    "different groove (r=0.24)"
+   ],
+   "overlap_bars_rendered": 16,
+   "phase_corr_ms": 18.0,
+   "at_s": 3089.14,
+   "tail": "bass swap at bar 8 of 16, highs 1 bar later",
+   "bar_s_ramp": [
+    1.9347,
+    1.9057
+   ],
+   "geom_downbeat_err_ms": 0.0,
+   "beat_offset_ms": -0.3,
+   "beats_compared": 64,
+   "beat_spread_mad_ms": 6.6
+  },
+  {
+   "n": 20,
+   "type": "bass_swap_16",
+   "from_title": "Rihanna - Don't Stop The Music",
+   "to_title": "Nelly Furtado - Promiscuous",
+   "a_overlap_start_bar": 77,
+   "a_exit_bar": 93,
+   "b_cue_bar": 1,
+   "stretch_pct": 3.17,
+   "stretch_side": "both, ramped bar by bar from 126.00 to 130.00 BPM across the overlap",
+   "pair_score": 0.8584,
+   "vocal_overlap": 0.224,
+   "dip_out_mids": false,
+   "reverb_wash": false,
+   "scratch": false,
+   "backspin": false,
+   "key_shift_st": 0,
+   "reasons": [
+    "16-bar phrases both sides",
+    "similar sound (closer than 100% of pairs)",
+    "B enters -2.3 LU quieter",
+    "different groove (r=0.10)"
+   ],
+   "overlap_bars_rendered": 16,
+   "phase_corr_ms": -14.6,
+   "at_s": 3234.161,
+   "tail": "bass swap at bar 8 of 16, highs 1 bar later",
+   "bar_s_ramp": [
+    1.9029,
+    1.848
+   ],
+   "geom_downbeat_err_ms": 0.0,
+   "beat_offset_ms": -0.0,
+   "beats_compared": 64,
+   "beat_spread_mad_ms": 8.2
+  },
+  {
+   "n": 21,
+   "type": "filter_sweep",
+   "from_title": "Nelly Furtado - Promiscuous",
+   "to_title": "Black Eyed Peas - I Gotta Feeling",
+   "a_overlap_start_bar": 97,
+   "a_exit_bar": 113,
+   "b_cue_bar": 1,
+   "stretch_pct": -1.54,
+   "stretch_side": "both, ramped bar by bar from 130.00 to 128.00 BPM across the overlap",
+   "pair_score": 0.8238,
+   "vocal_overlap": 0.515,
+   "dip_out_mids": false,
+   "reverb_wash": false,
+   "scratch": false,
+   "backspin": false,
+   "key_shift_st": 0,
+   "reasons": [
+    "+1.5% stretch on B (130.0 end -> 128.0 start)",
+    "16-bar phrases both sides",
+    "similar sound (closer than 95% of pairs)",
+    "different groove (r=0.22)",
+    "longer cut"
+   ],
+   "overlap_bars_rendered": 16,
+   "phase_corr_ms": 0.1,
+   "at_s": 3411.859,
+   "tail": "hp sweep 30 Hz -> 3 kHz over 16 bars",
+   "bar_s_ramp": [
+    1.8471,
+    1.8741
+   ],
+   "geom_downbeat_err_ms": 0.0,
+   "beat_offset_ms": 0.0,
+   "beats_compared": 64,
+   "beat_spread_mad_ms": 6.5
+  }
+ ],
+ "songs": [
+  {
+   "pos": 1,
+   "title": "M.I.A. - Paper Planes",
+   "start_s": 0.0,
+   "src_lufs": -9.54,
+   "bars": [
+    1,
+    73
+   ],
+   "max_stretch_pct": 0.75,
+   "secs": 2.1
+  },
+  {
+   "pos": 2,
+   "title": "DJ Jazzy Jeff & The Fresh Prince - A Nightmare On My Street",
+   "start_s": 156.28,
+   "src_lufs": -13.3,
+   "bars": [
+    1,
+    77
+   ],
+   "max_stretch_pct": 1.7,
+   "secs": 1.6
+  },
+  {
+   "pos": 3,
+   "title": "Rihanna - Umbrella",
+   "start_s": 358.59,
+   "src_lufs": -8.3,
+   "bars": [
+    1,
+    65
+   ],
+   "max_stretch_pct": 2.15,
+   "secs": 1.2
+  },
+  {
+   "pos": 4,
+   "title": "SZA - Kill Bill",
+   "start_s": 513.19,
+   "src_lufs": -7.93,
+   "bars": [
+    1,
+    57
+   ],
+   "max_stretch_pct": 3.44,
+   "secs": 1.0
+  },
+  {
+   "pos": 5,
+   "title": "Kanye West - Gold Digger",
+   "start_s": 653.71,
+   "src_lufs": -7.55,
+   "bars": [
+    1,
+    80
+   ],
+   "max_stretch_pct": 3.33,
+   "secs": 0.9
+  },
+  {
+   "pos": 6,
+   "title": "The Notorious B.I.G. - Hypnotize",
+   "start_s": 848.49,
+   "src_lufs": -7.18,
+   "bars": [
+    1,
+    81
+   ],
+   "max_stretch_pct": 5.66,
+   "secs": 1.0
+  },
+  {
+   "pos": 7,
+   "title": "Doja Cat - Paint The Town Red",
+   "start_s": 1042.8,
+   "src_lufs": -8.65,
+   "bars": [
+    1,
+    65
+   ],
+   "max_stretch_pct": 5.35,
+   "secs": 0.9
+  },
+  {
+   "pos": 8,
+   "title": "50 Cent - Just a Lil Bit",
+   "start_s": 1177.51,
+   "src_lufs": -7.91,
+   "bars": [
+    1,
+    82
+   ],
+   "max_stretch_pct": 1.75,
+   "secs": 0.9
+  },
+  {
+   "pos": 9,
+   "title": "Ciara - Goodies",
+   "start_s": 1362.31,
+   "src_lufs": -10.83,
+   "bars": [
+    1,
+    71
+   ],
+   "max_stretch_pct": 3.68,
+   "secs": 1.0
+  },
+  {
+   "pos": 10,
+   "title": "Various - IN THE SHADOWS",
+   "start_s": 1508.28,
+   "src_lufs": -6.53,
+   "bars": [
+    1,
+    94
+   ],
+   "max_stretch_pct": 3.55,
+   "secs": 1.1
+  },
+  {
+   "pos": 11,
+   "title": "Bell Biv DeVoe - Poison",
+   "start_s": 1710.11,
+   "src_lufs": -12.62,
+   "bars": [
+    1,
+    73
+   ],
+   "max_stretch_pct": 3.1,
+   "secs": 1.3
+  },
+  {
+   "pos": 12,
+   "title": "Gnarls Barkley - Crazy",
+   "start_s": 1832.56,
+   "src_lufs": -4.54,
+   "bars": [
+    1,
+    82
+   ],
+   "max_stretch_pct": 2.51,
+   "secs": 1.6
+  },
+  {
+   "pos": 13,
+   "title": "Tame Impala & Jennie - Dracula (Jennie Remix)",
+   "start_s": 1989.31,
+   "src_lufs": -6.28,
+   "bars": [
+    1,
+    98
+   ],
+   "max_stretch_pct": 2.45,
+   "secs": 1.0
+  },
+  {
+   "pos": 14,
+   "title": "Ace Of Base - All That She Wants",
+   "start_s": 2183.6,
+   "src_lufs": -9.41,
+   "bars": [
+    1,
+    97
+   ],
+   "max_stretch_pct": 2.23,
+   "secs": 1.3
+  },
+  {
+   "pos": 15,
+   "title": "Rihanna - Pon De Replay",
+   "start_s": 2346.44,
+   "src_lufs": -7.75,
+   "bars": [
+    1,
+    80
+   ],
+   "max_stretch_pct": 1.61,
+   "secs": 1.3
+  },
+  {
+   "pos": 16,
+   "title": "Rockwell - Somebody's Watching Me",
+   "start_s": 2488.69,
+   "src_lufs": -8.19,
+   "bars": [
+    1,
+    97
+   ],
+   "max_stretch_pct": 2.82,
+   "secs": 1.0
+  },
+  {
+   "pos": 17,
+   "title": "Everything But The Girl - Missing (Todd Terry Mix)",
+   "start_s": 2648.74,
+   "src_lufs": -10.19,
+   "bars": [
+    1,
+    85
+   ],
+   "max_stretch_pct": 2.74,
+   "secs": 1.6
+  },
+  {
+   "pos": 18,
+   "title": "Nelly - Hot In Herre",
+   "start_s": 2781.33,
+   "src_lufs": -8.03,
+   "bars": [
+    1,
+    86
+   ],
+   "max_stretch_pct": 0.39,
+   "secs": 1.2
+  },
+  {
+   "pos": 19,
+   "title": "Royksopp & Robyn - Do It Again",
+   "start_s": 2914.95,
+   "src_lufs": -6.48,
+   "bars": [
+    1,
+    107
+   ],
+   "max_stretch_pct": 1.57,
+   "secs": 1.4
+  },
+  {
+   "pos": 20,
+   "title": "Rihanna - Don't Stop The Music",
+   "start_s": 3089.14,
+   "src_lufs": -8.43,
+   "bars": [
+    1,
+    93
+   ],
+   "max_stretch_pct": 3.07,
+   "secs": 1.5
+  },
+  {
+   "pos": 21,
+   "title": "Nelly Furtado - Promiscuous",
+   "start_s": 3234.16,
+   "src_lufs": -6.76,
+   "bars": [
+    1,
+    113
+   ],
+   "max_stretch_pct": 2.98,
+   "secs": 2.0
+  },
+  {
+   "pos": 22,
+   "title": "Black Eyed Peas - I Gotta Feeling",
+   "start_s": 3411.86,
+   "src_lufs": -9.98,
+   "bars": [
+    1,
+    155
+   ],
+   "max_stretch_pct": 1.51,
+   "secs": 1.2
+  }
+ ],
+ "premaster_lufs": -13.8,
+ "master_gain_db": 4.39,
+ "master_lufs": -10.08,
+ "sample_peak_dbfs": -1.8,
+ "mp3": "/Users/christophershannon/personal/90s2000 playlist/_pool build/mixer/mixes/2 - Haunted Block Party.mp3",
+ "mp3_bytes": 148029803,
+ "mp3_integrated_lufs": -10.0,
+ "mp3_true_peak_dbtp": -1.1,
+ "silent_gaps": [],
+ "duration_s": 3700.7,
+ "planned_duration_s": 3697.3,
+ "render_secs": 165.0,
+ "checks": {
+  "no_clipping": true,
+  "no_silent_gaps": true,
+  "joins_geom_within_10ms": true,
+  "joins_tracker_beats_within_10ms": "21 of 21",
+  "joins_over_10ms": [],
+  "duration_vs_plan_s": 3.4,
+  "duration_ok": true
+ }
+}

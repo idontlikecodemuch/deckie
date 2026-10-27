@@ -1,0 +1,347 @@
+id	title	bpm_tag	bpm	multiplier	grid_conf	key	key_conf	lufs	vocal_mean	mix_in_bars	mix_out_bars	flags
+be1182a39f	Goo Goo Dolls - Iris	78.0	77.48	1	0.0	10B	1.0	-8.07	0.88	14	16	half_time_candidate,vocal_heavy,fade_out,low_grid_confidence,short_intro,short_outro,tempo_change
+0f80678b6e	LF System - Afraid To Feel	128.0	127.28	1	0.0	1A	0.65	-7.79	0.85	16	16	vocal_heavy,low_grid_confidence,short_intro,short_outro,intro_no_steady_beat,outro_no_steady_beat
+414431e58b	LF System - Afraid To Feel Extended	124.0	128.0	1	0.0	1A	0.65	-7.32	0.79	16	8	vocal_heavy,low_grid_confidence,short_intro,short_outro,tempo_change
+f6618badbe	Little Nell - Time Warp	87.0	87.81	1	0.0	8A	0.45	-13.67	0.93	8	8	half_time_candidate,vocal_heavy,low_grid_confidence,key_uncertain,short_intro,short_outro,intro_no_steady_beat,outro_no_steady_beat
+26944cc615	Meat Loaf - Bat Out Of Hell	86.0	85.17	1	0.0	7B	1.0	-13.58	0.87	16	8	half_time_candidate,vocal_heavy,fade_out,low_grid_confidence,short_intro,short_outro,intro_no_steady_beat,outro_no_steady_beat
+6f3883f0df	My Chemical Romance - Teenagers	112.0	113.14	1	0.0	12B	1.0	-6.76	0.93	17	8	vocal_heavy,fade_out,low_grid_confidence,short_intro,short_outro,tempo_change,intro_no_steady_beat
+985173b698	Nirvana - Smells Like Teen Spirit	117.0	117.37	1	0.0	4A	1.0	-7.1	0.97	16	16	vocal_heavy,fade_out,low_grid_confidence,short_intro,short_outro,intro_no_steady_beat
+b34d685a88	Olivia Rodrigo - Vampire	69.0	69.08	1	0.0	7B	1.0	-7.88	0.91	16	16	half_time_candidate,vocal_heavy,low_grid_confidence,short_intro,short_outro,intro_no_steady_beat,outro_no_steady_beat
+20992416e6	Richard O'Brien - Time Warp 1989 Damian Remix (extended)	121.0	176.68	3/2	0.0	11B	1.0	-14.26	0.89	16	16	half_time_candidate,vocal_heavy,low_grid_confidence,short_intro,short_outro,intro_no_steady_beat,outro_no_steady_beat
+638988c5d6	Semisonic - Closing Time	92.0	92.13	1	0.0	9B	1.0	-9.25	0.95	14	16	half_time_candidate,vocal_heavy,fade_out,low_grid_confidence,short_intro,short_outro,outro_no_steady_beat
+f086445b0a	Stevie Wonder - Superstition	100.0	101.17	1	0.0	5B	0.45	-15.41	0.42	8	32	fade_out,low_grid_confidence,key_uncertain,short_intro,tempo_change,intro_no_steady_beat,outro_no_steady_beat
+1582213333	Talking Heads - Psycho Killer	123.0	123.36	1	0.0	8A	0.65	-12.32	0.86	8	16	vocal_heavy,low_grid_confidence,short_intro,short_outro,tempo_change,intro_no_steady_beat
+dbadf2f7bd	The Cranberries - Zombie	84.0	83.02	1	0.0	9A	0.3	-10.21	0.91	19	16	half_time_candidate,vocal_heavy,low_grid_confidence,key_uncertain,short_intro,short_outro,tempo_change,intro_no_steady_beat
+96e91e4e05	Bette Midler - I Put A Spell On You (Hocus Pocus)	66.0	150.46	2	0.04	4A	0.45	-12.93	0.95	8	16	half_time_candidate,vocal_heavy,low_grid_confidence,key_uncertain,short_intro,short_outro,intro_no_steady_beat
+c220d7482b	Warren Zevon - Werewolves Of London	104.0	103.8	1	0.05	9B	1.0	-12.6	0.89	16	16	vocal_heavy,fade_out,low_grid_confidence,short_intro,short_outro
+da7616d94a	The Specials - Ghost Town	74.0	73.82	1	0.08	5A	0.65	-19.7	0.55	16	8	half_time_candidate,fade_out,low_grid_confidence,short_intro,short_outro
+cb633f2e6c	Slayyyter - Brand New Chanel$ Extended	127.0	126.11	1	0.14	2B	1.0	-6.91	0.92	8	16	vocal_heavy,low_grid_confidence,short_intro,short_outro
+2ef1f02391	Bobby Boris Pickett - Monster Mash	70.0	69.86	1	0.26	9B	1.0	-16.95	0.93	14	16	half_time_candidate,vocal_heavy,fade_out,low_grid_confidence,short_intro,short_outro,intro_no_steady_beat,outro_no_steady_beat
+caa4a2ca03	The Future Sound Of London - Papua New Guinea	125.0	124.97	1	0.28	4A	0.3	-12.78	0.18	16	8	low_grid_confidence,key_uncertain,short_outro,intro_no_steady_beat
+334614c3a0	Drake - NOKIA MarkCutz Halloween Ringtone Edit (Dirty)	126.0	106.02	3/4	0.33	7A	0.65	-7.04	0.95	16	16	half_time_candidate,vocal_heavy,low_grid_confidence,short_intro,short_outro,tempo_change,transition_track,intro_half_time
+0327cf1c94	Michael Jackson - Thriller	118.0	118.5	1	0.33	12A	1.0	-9.53	0.72	8	16	low_grid_confidence,short_intro,short_outro
+d8cae37d6f	Bow Wow Wow - I Want Candy	110.0	109.53	1	0.36	10B	1.0	-10.87	0.62	16	16	low_grid_confidence,short_outro
+26f48f3c8d	Daft Punk - Robot Rock	112.0	111.91	1	0.38	10B	0.65	-7.06	0.64	13	16	low_grid_confidence,short_intro,short_outro,intro_no_steady_beat
+64cfcb19f3	Bette Midler - I Put A Spell On You Thee Werqn' Btches Club Mix (Joel Dickinson)	140.0	139.98	1	0.44	4A	1.0	-7.43	0.73	19	16	fade_out,low_grid_confidence,short_intro,tempo_change
+787267653e	Tori Amos - Professional Widow (Armand Van Helden Mix)	128.0	127.92	1	0.47	7A	1.0	-8.14	0.89	16	8	vocal_heavy,fade_out,low_grid_confidence,short_intro,short_outro
+5dc4f57039	Disco Lines & Tinashe - No Broke Boys (Acap - Dirty)	131.0	130.98	1	0.5	12A	0.45	-15.41	0.89	15	8	vocal_heavy,low_grid_confidence,key_uncertain,short_intro,short_outro,intro_no_steady_beat
+4045bfd790	Drake & Sexyy Red - Cheetah Print (Intro - Dirty)	130.0	130.0	1	0.51	5A	0.65	-10.48	0.92	15	16	vocal_heavy,short_intro,short_outro
+ae786b4522	The Grid - Swamp Thing	134.0	132.35	1	0.51	8A	1.0	-12.01	0.64	15	16	short_intro,short_outro
+332f6d4ba6	William Orbit - Barber's Adagio For Strings (Ferry Corsten Remix)	135.0	135.05	1	0.51	3A	0.65	-12.6	0.47	32	8	short_outro,intro_no_steady_beat
+92fb3d0254	Everything But The Girl - Missing (Todd Terry Mix)	124.0	123.49	1	0.52	8A	1.0	-10.19	0.87	12	8	vocal_heavy,short_intro,short_outro
+cc0bd3a367	Hardrive - Deep Inside	124.0	124.03	1	0.54	10B	0.65	-9.2	0.88	16	16	vocal_heavy,short_intro,short_outro,intro_no_steady_beat
+2b41c1d48b	Lady Gaga & Bruno Mars - Die With A Smile	79.0	79.0	1	0.59	11B	0.65	-11.08	0.92	8	8	half_time_candidate,vocal_heavy,fade_out,short_intro,short_outro
+491a75d505	John Carpenter - Halloween Theme	68.0	68.0	1	0.6	10A	0.65	-10.52	0.2	18	8	half_time_candidate,fade_out,short_outro
+c350836c4d	808 State - Pacific State	126.0	124.15	1	0.61	10B	0.65	-10.89	0.13	12	32	fade_out,short_intro
+6478f7d1bd	Sonique - It Feels So Good Extended Mix 1998	135.0	135.02	1	0.62	11A	1.0	-9.33	0.68	32	16	fade_out,short_outro,intro_no_steady_beat,outro_no_steady_beat
+22753f7a30	OutKast - Hey Ya!	81.0	79.5	1	0.63	9A	0.45	-5.88	0.97	8	8	half_time_candidate,vocal_heavy,fade_out,key_uncertain,short_intro,short_outro
+be1c382361	The Source feat. Candi Staton - You Got The Love	113.0	113.62	1	0.63	2A	0.65	-11.37	0.84	19	8	vocal_heavy,short_intro,short_outro,intro_no_steady_beat
+23aac209d3	Morcheeba - The Sea	75.0	74.99	1	0.64	9A	1.0	-11.09	0.63	16	32	half_time_candidate,fade_out,short_intro,intro_no_steady_beat,outro_no_steady_beat
+e0b4d39fa9	No Doubt - Don't Speak	76.0	76.03	1	0.65	4A	1.0	-8.42	0.85	8	16	half_time_candidate,vocal_heavy,fade_out,short_intro,short_outro
+15744579e6	Silk City & Dua Lipa - Electricity Extended Version	118.0	118.02	1	0.65	8B	1.0	-9.08	0.92	13	16	vocal_heavy,fade_out,short_intro,short_outro,intro_no_steady_beat,outro_no_steady_beat
+c246e54bb7	Tame Impala & Jennie - Dracula (Jennie Remix) Extended Remix	115.0	115.03	1	0.65	2A	1.0	-13.63	0.92	16	16	vocal_heavy,short_intro,short_outro
+730db3ecc1	Beyonce - Break My Soul (The Queens Remix)	120.0	120.02	1	0.66	1A	1.0	-9.59	0.85	32	16	vocal_heavy,short_outro,intro_no_steady_beat
+bb5a733550	Missy Elliott - Get Ur Freak On DJ Bizzon Halloween Theme 70-90 Transition (Dirty)	90.0	90.02	1	0.67	4A	1.0	-9.03	0.63	16	16	half_time_candidate,short_intro,tempo_change,intro_half_time
+5b8400f6dd	Oasis - Wonderwall	88.0	87.05	1	0.67	11B	1.0	-5.9	0.92	8	8	half_time_candidate,vocal_heavy,short_intro,short_outro
+9c0a47d25a	JAY-Z - Empire State Of Mind Krooner Remix	120.0	120.0	1	0.68	2A	1.0	-7.92	0.59	8	8	short_intro,short_outro
+22eb47cafe	Cher - Strong Enough	127.0	124.95	1	0.69	9B	0.3	-9.5	0.93	18	16	vocal_heavy,fade_out,key_uncertain,short_intro,short_outro,intro_no_steady_beat
+a67262ebf4	Fcukers - If You Wanna Party, Come Over To My House	136.0	136.01	1	0.69	5A	0.45	-7.53	0.85	15	16	vocal_heavy,fade_out,key_uncertain,short_intro,short_outro
+a95733fa24	Royksopp & Robyn - Monument	93.0	93.01	1	0.69	8A	1.0	-10.03	0.32	8	32	half_time_candidate,short_intro
+6f518998ab	Scooter - How Much Is The Fish	140.0	140.01	1	0.69	7A	1.0	-11.93	0.81	8	16	vocal_heavy,fade_out,short_intro,short_outro
+431c6eaf73	Eliza Rose - B.O.T.A. (Baddest Of Them All)	137.0	137.01	1	0.7	8B	1.0	-8.39	0.57	8	8	fade_out,short_intro,short_outro
+4a3d019281	Kinobe - Slip Into Something More Comfortable	87.0	87.0	1	0.7	5A	1.0	-9.39	0.11	34	32	half_time_candidate,intro_no_steady_beat,outro_no_steady_beat
+ac3e0bab42	Kris Kross - Jump	102.0	101.99	1	0.7	11A	1.0	-13.82	0.98	8	16	vocal_heavy,fade_out,short_intro,short_outro
+c382707563	Enigma - Sadeness	96.0	95.01	1	0.72	8A	1.0	-11.75	0.37	32	32	half_time_candidate
+10f0cba926	Cardi B - WAP Lincoln Baio Addams Family Intro (Dirty)	133.0	132.98	1	0.73	5A	0.3	-10.02	0.98	16	8	vocal_heavy,key_uncertain,short_intro,short_outro
+fff6b185cf	N-Trance - Set You Free	136.0	139.93	1	0.74	4B	1.0	-11.84	0.64	16	32	fade_out,tempo_change,intro_no_steady_beat
+696f6424a1	Bruno Mars - 24K Magic	107.0	107.02	1	0.76	4A	1.0	-8.41	0.99	19	16	vocal_heavy,short_intro,short_outro,intro_no_steady_beat
+88f7574201	Panic! At The Disco - I Write Sins Not Tragedies	85.0	85.0	1	0.76	7A	0.65	-7.74	0.87	17	16	half_time_candidate,vocal_heavy,short_intro,short_outro
+3541e6903f	Shania Twain - Man! I Feel Like A Woman!	125.0	125.0	1	0.76	6B	0.65	-7.32	0.99	13	8	vocal_heavy,short_intro,short_outro
+58a945ccc1	Sisqo - Thong Song Colin Jay Remix (Dirty)	124.0	124.0	1	0.76	12A	1.0	-7.16	0.88	8	8	vocal_heavy,short_intro,short_outro
+bdd8ffd1c2	Doja Cat - Paint The Town Red SM remix (SoundCloud rip)	130.0	127.97	1	0.77	7A	1.0	-9.43	0.82	8	16	vocal_heavy,short_intro,tempo_change,outro_no_steady_beat
+5aeb1275b6	Jack U - Where Are U Now	139.0	140.01	1	0.78	9B	1.0	-7.39	0.63	16	16	fade_out,short_intro
+1bbb71e906	Rick James - Super Freak	132.0	132.44	1	0.78	8A	0.65	-11.17	0.94	13	16	vocal_heavy,fade_out,short_intro,short_outro
+a842ca9e48	Sam Robs & Kelvin Wood - No Scrubs house cover	124.0	124.0	1	0.78	1A	1.0	-7.87	0.78	8	16	vocal_heavy,short_intro,short_outro
+30c4ab432b	Silk City & Dua Lipa - Electricity	118.0	118.0	1	0.78	8B	1.0	-8.85	0.91	19	16	vocal_heavy,fade_out,short_intro,short_outro,intro_no_steady_beat,outro_no_steady_beat
+fe83d80e03	The Citizens Of Halloween - This Is Halloween	84.0	83.76	1	0.78	5A	0.65	-16.0	0.86	18	16	half_time_candidate,vocal_heavy,fade_out,short_intro,short_outro
+890c95ce6f	Underworld - Born Slippy	140.0	140.07	1	0.78	6B	1.0	-13.3	0.5	32	8	fade_out,short_intro,short_outro,intro_no_steady_beat
+76878a6a74	Dom Dolla & Tiga - Don't Worry Baby Extended Mix	132.0	131.99	1	0.79	6A	0.65	-8.33	0.66	16	16	short_intro,short_outro
+79e7a45d90	LCD Soundsystem - Daft Punk Is Playing At My House	136.0	136.0	1	0.79	8A	1.0	-10.21	0.94	8	8	vocal_heavy,short_intro,short_outro
+04026027e2	The Prodigy - Voodoo People	149.0	149.01	1	0.79	1A	1.0	-11.7	0.38	34	16	fade_out
+faa8a8219d	Zero 7 - Destiny	69.0	69.0	1	0.79	5A	0.45	-14.42	0.88	17	16	half_time_candidate,vocal_heavy,key_uncertain,short_intro,short_outro,outro_no_steady_beat
+f8b1c42e92	Adamski feat. Seal - Killer	120.0	119.98	1	0.8	3A	1.0	-12.06	0.96	16	16	vocal_heavy,fade_out,short_intro,short_outro
+bab4f68f4d	Dua Lipa - Levitating	103.0	103.0	1	0.81	10A	1.0	-8.0	0.95	14	16	vocal_heavy,short_intro,short_outro
+6825448b0d	Mark Morrison - Return Of The Mack Lincoln Baio Little Bit Yours Edit	123.0	123.0	1	0.81	8A	0.45	-8.5	0.93	17	16	vocal_heavy,key_uncertain,short_intro,short_outro
+833af0adb0	Slayyyter - Brand New Chanel$	126.0	125.99	1	0.81	2B	1.0	-7.16	0.9	8	16	vocal_heavy,fade_out,short_intro,short_outro
+28cfd6b844	Riton x Nightcrawlers - Friday (Dopamine Re-Edit) Extended	123.0	122.98	1	0.82	11A	0.65	-7.13	0.85	18	16	vocal_heavy,fade_out,short_intro,short_outro
+1492183e97	Technotronic - Pump Up The Jam	125.0	124.77	1	0.82	5A	1.0	-9.71	0.92	8	16	vocal_heavy,fade_out,short_intro,short_outro
+91d5ac4b83	Warren G - Regulate	95.0	95.42	1	0.82	9A	1.0	-12.95	0.94	8	16	half_time_candidate,vocal_heavy,fade_out,short_intro,short_outro
+cc13692251	Ace Of Base - All That She Wants SNBRN & Klatch Remix	118.0	118.0	1	0.83	12A	1.0	-9.41	0.45	16	16	short_intro
+366dc91024	Charli XCX - Von Dutch Extended Version	130.0	129.99	1	0.83	4A	0.45	-7.32	0.8	16	8	vocal_heavy,fade_out,key_uncertain,short_intro,short_outro
+8bd22f1602	Eric Prydz - Call on Me Extended Edit	127.0	126.31	1	0.84	6B	0.6	-10.67	0.39	32	32	fade_out
+fb5e2fb59f	Robert Miles - Children	137.0	137.1	1	0.84	4A	1.0	-12.87	0.71	16	16	short_outro,outro_no_steady_beat
+e6253fb232	Sash! - Mysterious Times	134.0	134.26	1	0.84	12A	1.0	-11.9	0.84	16	16	vocal_heavy,fade_out,short_intro,short_outro
+b6ab2ed32b	Talking Heads - Psycho Killer Freejak Halloween Remix (Clean)	130.0	130.0	1	0.84	8A	1.0	-7.98	0.53	16	16	short_intro
+df99db5eca	The Darkness - I Believe In A Thing Called Love	128.0	128.11	1	0.84	12B	1.0	-8.41	0.91	17	16	vocal_heavy,short_intro,short_outro,outro_no_steady_beat
+af7cc131e9	Zedd - Clarity	128.0	128.0	1	0.84	4B	1.0	-6.03	0.8	12	16	vocal_heavy,fade_out,short_intro,short_outro
+53b23eef38	Depeche Mode - Personal Jesus	130.0	129.92	1	0.85	11A	1.0	-9.83	0.92	16	16	vocal_heavy,fade_out,short_intro,short_outro
+aed6b25f60	Kyle Dixon & Michael Stein - Stranger Things Theme Kwest Halloween Remix	128.0	128.0	1	0.85	9A	1.0	-6.45	0.14	32	16	
+9550a2af00	Riton x Nightcrawlers - Friday (Dopamine Re-Edit)	123.0	122.98	1	0.85	10A	1.0	-6.56	0.96	16	16	vocal_heavy,short_intro,short_outro
+a86a62eedc	Robert Miles - Fable (Dream Radio)	68.0	68.04	1	0.85	12A	1.0	-10.23	0.76	17	16	half_time_candidate,vocal_heavy,short_outro,intro_no_steady_beat,outro_no_steady_beat
+8f58be69b8	Rockwell - Somebody's Watching Me Tall Boys Halloween Remix	127.0	127.0	1	0.85	12A	1.0	-7.16	0.78	16	16	vocal_heavy,short_intro,short_outro
+b9b844805c	Avicii - Wake Me Up	124.0	124.0	1	0.86	10B	1.0	-8.36	0.69	12	16	short_intro,intro_no_steady_beat
+b1fd952870	Bad Bunny - DtMF ETX vs Eric Mendosa & Exodus Better Off Alone Edit (Dirty)	128.0	128.0	1	0.86	1A	0.65	-5.74	0.77	8	16	vocal_heavy,short_intro,short_outro
+23630f1856	Beyonce - Haunted	67.0	124.98	2	0.86	1A	1.0	-9.89	0.57	8	16	half_time_candidate,short_intro,short_outro,intro_no_steady_beat
+43e761ecfd	La Bouche - Be My Lover	135.0	134.77	1	0.86	12A	1.0	-11.94	0.98	13	16	vocal_heavy,short_intro,short_outro
+6fcfb3369b	Next - Too Close	100.0	99.7	1	0.86	11B	0.65	-13.77	0.99	8	8	half_time_candidate,vocal_heavy,fade_out,short_intro,short_outro
+1009515479	P!nk - Funhouse	104.0	104.0	1	0.86	9A	1.0	-7.12	0.95	8	8	vocal_heavy,short_intro,short_outro
+2c58f5cbea	Rick James - Super Freak Rob DVS Super Freaky Girls Halloween Edit	133.0	132.99	1	0.86	8A	1.0	-6.85	0.93	9	16	vocal_heavy,short_intro,short_outro,intro_no_steady_beat
+4ebd987328	Shaggy - It Wasn't Me	95.0	94.74	1	0.86	8B	1.0	-10.41	0.98	16	8	half_time_candidate,vocal_heavy,short_intro,short_outro
+4545ce6d9a	Fugees - Killing Me Softly With His Song	92.0	92.42	1	0.87	8A	0.45	-12.91	0.81	8	16	half_time_candidate,vocal_heavy,fade_out,key_uncertain,short_intro,short_outro,intro_no_steady_beat
+dbc03c2426	KATSEYE - GNARLY Amanda Sze Remix Rework	135.0	135.0	1	0.87	6A	1.0	-9.68	0.83	9	8	vocal_heavy,short_intro,short_outro
+4d8a9204eb	Smoke City - Underwater Love	82.0	81.75	1	0.87	11A	0.6	-10.81	0.55	32	16	half_time_candidate,fade_out
+9ebf0221c3	Yeah Yeah Yeahs - Heads Will Roll	132.0	132.0	1	0.87	1A	1.0	-7.31	0.82	10	16	vocal_heavy,short_intro,short_outro
+30a2efa137	Yeah Yeah Yeahs - Heads Will Roll (A-Trak Remix)	132.0	132.0	1	0.87	1A	1.0	-7.31	0.82	10	16	vocal_heavy,short_intro,short_outro
+80730d295c	Dom Dolla & Tiga - Don't Worry Baby	132.0	132.0	1	0.88	6A	1.0	-8.1	0.77	17	16	vocal_heavy,short_intro,short_outro
+9f95672045	Wildchild - Renegade Master	125.0	173.56	4/3	0.88	9A	0.45	-9.52	0.96	16	16	half_time_candidate,vocal_heavy,key_uncertain,short_intro,short_outro
+fdb6138e05	Zara Larsson - Midnight Sun	151.0	151.0	1	0.88	11B	0.65	-7.68	0.89	8	16	vocal_heavy,fade_out,short_intro,short_outro
+52d5998c5a	Julee Cruise - Falling (Twin Peaks)	71.0	71.78	1	0.89	7B	1.0	-15.37	0.43	8	8	half_time_candidate,fade_out,short_intro,short_outro
+32263e2426	Robyn - With Every Heartbeat	121.0	121.0	1	0.89	9B	0.65	-7.08	0.61	16	32	fade_out
+df1bb40ae3	Basement Jaxx - Romeo	127.0	126.86	1	0.9	10B	1.0	-9.15	0.85	8	16	vocal_heavy,fade_out,short_intro,short_outro,intro_no_steady_beat
+386cbfae4c	Nelly - Hot In Herre Colin Jay Remix (Intro - Clean)	124.0	124.0	1	0.9	9A	1.0	-8.03	0.73	13	16	short_intro
+77ea962f88	Next - Too Close Tom Damage Remix	124.0	124.0	1	0.9	9A	0.65	-7.84	0.87	8	8	vocal_heavy,fade_out,short_intro,short_outro
+0cd4852386	The Trammps - Disco Inferno	129.0	131.25	1	0.9	2A	1.0	-13.84	0.74	19	16	short_outro
+75b2c3d3a0	Ultra Nate - Free	125.0	125.01	1	0.9	4A	1.0	-9.94	0.91	16	16	vocal_heavy,fade_out,short_outro
+47b4937dc6	Ying Yang Twins - Get Low	101.0	100.99	1	0.9	5A	1.0	-9.77	1.0	8	16	vocal_heavy,short_intro,short_outro
+089908ae2a	Britney Spears - ...Baby One More Time Extended (fan edit)	93.0	93.01	1	0.91	5A	1.0	-10.91	0.8	16	16	half_time_candidate,vocal_heavy,short_intro,short_outro
+58176232a3	Charli XCX - Von Dutch (Dirty)	130.0	129.99	1	0.91	4A	0.45	-7.18	0.88	12	16	vocal_heavy,fade_out,key_uncertain,short_intro,short_outro
+5d83b80d6a	Ida Corr & Fedde Le Grand - Let Me Think About It Jay Dizzle & Howard Hill Remix	122.0	122.0	1	0.91	7B	1.0	-8.39	0.42	32	16	
+fc58560f11	Madonna - Vogue	116.0	116.22	1	0.91	1A	1.0	-13.49	0.81	35	16	vocal_heavy,short_outro,tempo_change,intro_no_steady_beat
+894c323ee7	Scatman John - Scatman	136.0	136.02	1	0.91	5B	0.45	-11.79	0.76	16	16	vocal_heavy,fade_out,key_uncertain,short_intro,short_outro
+a04a0734d0	Flo Rida - Low URAI Remix (Dirty)	147.0	145.0	1	0.92	8A	0.3	-5.64	0.46	16	8	key_uncertain,short_intro,short_outro
+79db510db9	Ginuwine - Pony Wick-it Remix	144.0	144.0	1	0.92	12A	1.0	-8.45	0.91	16	16	vocal_heavy,fade_out,short_intro,short_outro,intro_no_steady_beat
+edc24f0b6a	Hanson - MMMBop	105.0	104.86	1	0.92	11B	1.0	-9.78	0.96	16	8	vocal_heavy,fade_out,short_intro,short_outro
+da6de0ce27	Tiësto & Sexyy Red - OMG! (Dirty)	128.0	128.0	1	0.92	4A	1.0	-7.75	0.91	12	8	vocal_heavy,short_intro,short_outro
+aeb64425b4	Coldplay - Viva La Vida	138.0	138.0	1	0.93	4B	1.0	-9.26	0.91	16	8	vocal_heavy,fade_out,short_intro,short_outro,outro_no_steady_beat
+9c20f328b8	DJ Dado - X-Files	135.0	134.98	1	0.93	8A	1.0	-11.84	0.61	32	16	fade_out,short_outro
+fda0386599	Daft Punk - One More Time Tall Boys Club Edit	123.0	123.0	1	0.93	10B	0.65	-5.38	0.65	16	16	short_outro
+0e08febebf	Dario G - Sunchyme	133.0	133.0	1	0.93	12B	1.0	-7.65	0.61	16	8	short_outro
+5bee27e681	Duran Duran - Hungry Like The Wolf	127.0	127.36	1	0.93	8A	0.65	-8.75	0.96	19	16	vocal_heavy,fade_out,short_intro,short_outro
+dae7b28dcf	Estelle - American Boy	118.0	117.99	1	0.93	9A	1.0	-5.75	0.93	8	16	vocal_heavy,fade_out,short_intro,short_outro
+d8be9bfa4a	Mark Morrison - Return Of The Mack Tall Boys Remix (Intro)	103.0	103.0	1	0.93	8A	0.65	-5.99	0.98	12	8	vocal_heavy,short_intro,short_outro
+1cc5eb759e	Mark Morrison - Return Of The Mack Tall Boys Remix (Intro) (1)	103.0	103.0	1	0.93	8A	0.65	-5.99	0.98	12	8	vocal_heavy,short_intro,short_outro
+a744522f06	Montell Jordan - This Is How We Do It Mahalo's 90s Baby Rework (extended)	123.0	123.0	1	0.93	3A	1.0	-6.63	0.82	12	8	vocal_heavy,short_intro,short_outro
+aff60d22b9	Nelly - Hot In Herre	107.0	107.08	1	0.93	9A	1.0	-10.52	0.98	13	8	vocal_heavy,short_intro,short_outro
+77c4d248c6	Orbital - Halcyon	126.0	128.0	1	0.93	11B	0.65	-11.03	0.67	15	16	short_intro,short_outro
+f39917d40a	Planet Perfecto & Grace - Not Over Yet '99	130.0	130.52	1	0.93	12A	1.0	-12.96	0.82	16	8	vocal_heavy,fade_out,short_intro,short_outro
+2991758f7f	Sam Robs & Kelvin Wood - No Scrubs Extended Mix (house cover)	125.0	125.0	1	0.93	1A	1.0	-7.09	0.83	16	8	vocal_heavy,short_intro,short_outro
+e3f56460e2	Sisqo - Thong Song	122.0	121.5	1	0.93	11B	0.45	-9.89	0.93	8	16	vocal_heavy,fade_out,key_uncertain,short_intro,short_outro
+c28f4e7450	Sister Sledge - Lost In Music Dimitri From Paris Remix	124.0	124.0	1	0.93	7A	1.0	-12.83	0.72	16	16	fade_out,short_outro,intro_no_steady_beat
+228b65cb8b	Tag Team - Whoomp! (There It Is)	129.0	129.42	1	0.93	4A	0.6	-11.12	0.99	17	8	vocal_heavy,short_intro,short_outro
+4e86ea3ee0	Ace Of Base - All That She Wants	94.0	93.77	1	0.94	12A	1.0	-11.86	0.87	16	8	half_time_candidate,vocal_heavy,fade_out,short_intro,short_outro
+0c8f1608c1	Aqua - Barbie Girl	130.0	130.0	1	0.94	1B	0.65	-9.86	0.97	16	16	vocal_heavy,fade_out,short_intro,short_outro
+54610602f8	Backstreet Boys - Everybody (Backstreet's Back)	108.0	108.06	1	0.94	3A	1.0	-10.42	0.95	14	16	vocal_heavy,short_intro,short_outro
+67bcdc4c3f	Backstreet Boys - Everybody (Backstreet's Back)	108.0	108.06	1	0.94	3A	1.0	-10.42	0.95	14	16	vocal_heavy,short_intro,short_outro
+b3d302a43f	Cartoons - Witch Doctor	136.0	135.99	1	0.94	8B	1.0	-9.95	0.89	16	16	vocal_heavy,fade_out,short_intro,short_outro
+e47c8f44a8	Chris Lorenzo & Kah-Lo vs Black Eyed Peas - In This Bih' MarkCutz The Time Wordplay Transition (Dirty)	130.0	130.0	1	0.94	2B	0.45	-8.47	0.92	16	8	vocal_heavy,key_uncertain,short_intro,short_outro
+5585ea39f9	Dua Lipa - Levitating The Blessed Madonna Remix	116.0	116.0	1	0.94	10A	1.0	-8.36	0.81	18	16	vocal_heavy,fade_out,short_intro
+f8b9c2903d	Fedde Le Grand - Put Your Hands Up For Detroit ZANS Remix	128.0	128.0	1	0.94	9B	0.45	-7.68	0.39	32	32	key_uncertain
+86d04c0981	Gala - Freed From Desire	129.0	128.97	1	0.94	7A	1.0	-8.29	0.9	16	8	vocal_heavy,fade_out,short_intro,short_outro
+bf14c1627c	Kanye West - Gold Digger	92.0	92.5	1	0.94	4B	0.45	-7.55	0.96	16	16	half_time_candidate,vocal_heavy,key_uncertain,short_intro,short_outro
+1292915dae	Lady Gaga - Disease	101.0	100.99	1	0.94	10A	1.0	-4.96	0.85	8	16	vocal_heavy,short_intro,short_outro
+aa5cce125b	Mariah Carey - Fantasy	102.0	102.37	1	0.94	9B	0.65	-11.24	0.98	16	16	vocal_heavy,short_intro,short_outro
+994388dc92	Michael Jackson - Scream	107.0	106.51	1	0.94	8A	0.65	-11.1	0.9	14	16	vocal_heavy,fade_out,short_intro,short_outro
+be42a36c02	Taio Cruz - Dynamite	120.0	119.99	1	0.94	12B	1.0	-7.23	0.95	19	16	vocal_heavy,short_intro,short_outro
+1841e5dadb	2 Unlimited - No Limit	141.0	141.09	1	0.95	3A	1.0	-11.99	0.67	34	16	short_outro
+80be91214e	ADÉLA - Nicole Kidman YuchiBoy Remix (Dirty)	140.0	140.0	1	0.95	6A	1.0	-7.35	0.99	16	16	vocal_heavy,short_intro,short_outro
+6e63887336	Beatfreakz - Somebody's Watching Me (2006)	127.0	125.08	1	0.95	12A	1.0	-11.57	0.89	12	16	vocal_heavy,short_intro,short_outro
+03d09d5c4c	Blackstreet - No Diggity Tall Boys Remix	105.0	105.0	1	0.95	11A	1.0	-7.58	0.99	16	8	vocal_heavy,short_intro,short_outro
+279f042fe2	Bomfunk MC's - Freestyler	164.0	163.8	1	0.95	9A	1.0	-8.83	0.93	8	8	vocal_heavy,fade_out,short_intro,short_outro
+c1a466a185	Cher - Believe	133.0	133.01	1	0.95	2B	1.0	-8.91	0.92	8	16	vocal_heavy,fade_out,short_intro,short_outro
+0a3b93c118	Christina Aguilera, Lil' Kim, Mya, P!nk - Lady Marmalade	110.0	109.91	1	0.95	6A	1.0	-8.6	0.99	16	16	vocal_heavy,short_intro,short_outro
+1357ca4243	Dr. Alban - It's My Life	129.0	128.68	1	0.95	8A	1.0	-11.97	0.77	16	8	vocal_heavy,fade_out,short_intro,short_outro
+04c326848f	Eiffel 65 - Blue (Da Ba Dee)	128.0	127.99	1	0.95	6A	1.0	-11.9	0.91	17	16	vocal_heavy,fade_out,short_intro,short_outro
+855c17ab8d	Groove Armada - At The River	68.0	68.0	1	0.95	4B	1.0	-10.42	0.59	12	16	half_time_candidate,short_intro,short_outro
+f766236975	La Roux - Bulletproof DJs From Mars N9 Edit	128.0	128.0	1	0.95	9A	1.0	-6.81	0.45	8	32	short_intro
+dd755116e6	Lady Gaga & Ariana Grande - Rain On Me	123.0	123.0	1	0.95	12A	0.65	-10.23	0.97	12	16	vocal_heavy,short_intro,short_outro
+3069ce3a18	Major Lazer - Lean On	98.0	97.99	1	0.95	6A	1.0	-8.06	0.89	8	8	half_time_candidate,vocal_heavy,short_intro,short_outro
+7b488e72a9	Rihanna - We Found Love Calvin Harris Extended Mix	128.0	128.0	1	0.95	2B	1.0	-9.06	0.75	32	16	vocal_heavy,short_outro
+c4de511f7a	Sam Smith & Kim Petras - Unholy	131.0	131.01	1	0.95	3B	0.3	-10.08	0.98	12	16	vocal_heavy,key_uncertain,short_intro,short_outro
+be3df59af0	Sophie Ellis-Bextor - Murder On The Dancefloor	117.0	117.29	1	0.95	12B	1.0	-9.78	0.93	19	16	vocal_heavy,fade_out,short_intro,short_outro
+d54caa76af	Armand Van Helden - You Don't Know Me	130.0	129.97	1	0.96	7B	0.65	-9.53	0.95	8	16	vocal_heavy,short_intro,short_outro
+c164a74c78	C+C Music Factory - Gonna Make You Sweat	113.0	113.33	1	0.96	6B	0.45	-9.31	0.92	17	8	vocal_heavy,fade_out,key_uncertain,short_intro,short_outro
+6d99a6219a	Cartoons - Witch Doctor Extended Mix	136.0	135.99	1	0.96	8B	1.0	-8.81	0.83	14	8	vocal_heavy,short_intro,short_outro
+6ff1422643	Culture Beat - Mr. Vain	133.0	132.86	1	0.96	8A	1.0	-11.98	0.91	8	8	vocal_heavy,short_intro,short_outro
+5e96e8f7b5	Destiny's Child - Survivor	80.0	80.6	1	0.96	1A	1.0	-6.19	0.95	8	16	half_time_candidate,vocal_heavy,short_intro,short_outro,outro_no_steady_beat
+e5d18d6019	Gorillaz - Feel Good Inc	139.0	138.52	1	0.96	4B	0.45	-10.39	0.92	16	8	vocal_heavy,fade_out,key_uncertain,short_intro,short_outro
+4d4bb5f4c1	Johan K & Rinat Bibikov - Zombie Extended Mix (dance cover)	122.0	122.0	1	0.96	9B	1.0	-10.52	0.33	16	8	fade_out,short_outro
+71d7922d2d	Justice vs Simian - We Are Your Friends	125.0	122.94	1	0.96	8A	1.0	-2.35	0.85	9	16	vocal_heavy,short_intro,short_outro
+065cf3ba0b	Kelis - Milkshake 20 Alex Wann Remix	118.0	118.0	1	0.96	7A	1.0	-10.62	0.25	12	8	fade_out,short_intro,short_outro,intro_no_steady_beat
+9fe4ab36bb	Kesha - Cannibal	130.0	129.99	1	0.96	4A	1.0	-8.17	0.95	12	8	vocal_heavy,short_intro,short_outro
+7b82b2c690	Los Del Rio - Macarena (Bayside Boys Remix)	103.0	103.18	1	0.96	4B	0.45	-12.16	0.87	16	16	vocal_heavy,key_uncertain,short_intro,short_outro
+900b47e703	Missy Elliott ft Ciara & Fatman Scoop - Lose Control (Extended Version) (Official)	125.0	125.48	1	0.96	11A	1.0	-9.0	0.99	8	16	vocal_heavy,short_intro,short_outro
+4ad6d37588	Pharrell Williams - Happy	80.0	80.0	1	0.96	4A	1.0	-9.51	0.97	12	16	half_time_candidate,vocal_heavy,short_intro,short_outro
+cb4f2a019f	Rihanna - Don't Stop The Music Colin Jay Remix	130.0	130.0	1	0.96	11B	0.65	-9.46	0.77	8	8	vocal_heavy,short_intro,short_outro
+64a3aaa1c2	Robyn - Dancing On My Own	117.0	117.0	1	0.96	2B	1.0	-9.08	0.86	16	16	vocal_heavy,fade_out,short_intro,short_outro
+7b4e00b93b	Royksopp & Robyn - Do It Again	126.0	123.99	1	0.96	4A	1.0	-6.48	0.75	16	16	vocal_heavy,fade_out,short_intro
+3bdb01e597	Sash! - Ecuador	130.0	132.87	1	0.96	10A	1.0	-9.47	0.83	11	16	vocal_heavy,fade_out,short_intro,short_outro,intro_no_steady_beat
+a3ff3416a3	Sir Mix-A-Lot - Baby Got Back	128.0	128.5	1	0.96	5A	0.3	-14.29	0.94	8	16	vocal_heavy,key_uncertain,short_intro,short_outro,intro_no_steady_beat
+7931a6a51a	Snoop Dogg - Drop It Like It's Hot The Golden Pony Remix	122.0	122.0	1	0.96	3A	1.0	-8.07	0.29	16	32	
+85c00976c9	Third Eye Blind - Semi-Charmed Life	102.0	102.03	1	0.96	9B	1.0	-9.91	0.98	8	16	vocal_heavy,short_intro,short_outro
+87bf5bba45	Aqua - Barbie Girl Extended Mix	130.0	130.0	1	0.97	1B	0.45	-11.06	0.88	9	16	vocal_heavy,fade_out,key_uncertain,short_intro,short_outro
+2c4bc602dc	Blackstreet - No Diggity Rogerson & Ray Montreal Remix	126.0	125.99	1	0.97	11A	1.0	-7.2	0.71	8	16	short_intro,short_outro
+9b81bc4b78	Calvin Harris - This Is What You Came For Extended Mix	124.0	123.99	1	0.97	8B	1.0	-7.16	0.73	16	16	
+185943f61c	CeCe Peniston - Finally	120.0	120.09	1	0.97	10A	0.65	-14.98	0.91	16	16	vocal_heavy,fade_out,short_intro,short_outro
+568f687566	Cher - Believe Disco Dom Remix	129.0	129.0	1	0.97	9A	0.65	-9.95	0.72	8	16	short_intro
+c4538c1356	Crystal Waters - Gypsy Woman (She's Homeless) ALRT Remix	127.0	126.99	1	0.97	7A	1.0	-8.22	0.83	12	8	vocal_heavy,short_intro,short_outro
+dcdda93217	Doja Cat - Demons	140.0	140.0	1	0.97	5A	1.0	-6.96	0.95	8	16	vocal_heavy,short_intro,short_outro
+f068a57770	Doja Cat - Demons Epiphany Hip-Hop flip	70.0	70.0	1	0.97	5A	1.0	-7.02	0.95	13	8	half_time_candidate,vocal_heavy,short_intro,short_outro
+460d9ad1b6	Eric Prydz - Call on Me	128.0	126.31	1	0.97	6B	1.0	-8.5	0.39	32	8	fade_out,short_outro
+8fed47d254	Jam & Spoon - Right In The Night	137.0	136.99	1	0.97	5A	1.0	-11.93	0.58	8	8	fade_out,short_intro,short_outro
+ea14cece9e	Kenya Grace - Strangers	170.0	170.0	1	0.97	10A	1.0	-9.15	0.93	16	8	vocal_heavy,short_intro,short_outro
+f0688dffae	Lady Gaga - Zombieboy	122.0	122.0	1	0.97	5A	1.0	-6.06	0.89	18	8	vocal_heavy,short_intro,short_outro
+32c0278a81	Livin' Joy - Dreamer	127.0	127.35	1	0.97	5A	1.0	-9.01	0.92	8	16	vocal_heavy,fade_out,short_intro,short_outro
+6024f262d9	M.I.A. - Paper Planes	86.0	86.0	1	0.97	6A	0.45	-9.54	0.86	16	16	half_time_candidate,vocal_heavy,key_uncertain,short_intro,short_outro
+770a9ef519	Modjo - Lady (Hear Me Tonight) 5HOURS & Loruare Remix	126.0	126.0	1	0.97	8A	1.0	-8.68	0.73	8	8	short_intro,short_outro
+1e745f2967	Pretty Ricky - Grind With Me	68.0	68.23	1	0.97	2A	1.0	-9.81	0.99	8	8	half_time_candidate,vocal_heavy,short_intro,short_outro
+bde8605000	Robin S - Show Me Love	120.0	120.25	1	0.97	7B	0.45	-8.25	0.87	12	16	vocal_heavy,fade_out,key_uncertain,short_intro,short_outro
+e66b69bf1b	Rockwell - Somebody's Watching Me	124.0	124.1	1	0.97	12A	1.0	-14.89	0.85	17	16	vocal_heavy,fade_out,short_intro,short_outro
+21eb1f48dc	Rogue Traders - Voodoo Child	132.0	132.46	1	0.97	1B	1.0	-10.25	0.92	16	16	vocal_heavy,fade_out,short_intro,short_outro
+ed85c2be76	Sean Paul - Temperature	127.0	125.0	1	0.97	6B	1.0	-9.18	0.93	8	8	vocal_heavy,short_intro,short_outro
+9e84381441	Shakira - She Wolf	124.0	122.02	1	0.97	10A	0.65	-10.11	0.87	14	16	vocal_heavy,short_intro,short_outro
+b18ba51986	Snap! - Rhythm Is A Dancer	124.0	124.35	1	0.97	8A	1.0	-11.95	0.84	9	16	vocal_heavy,fade_out,short_intro,short_outro
+d2bbcdae73	Sonique - It Feels So Good	137.0	134.99	1	0.97	4A	1.0	-10.52	0.85	12	16	vocal_heavy,fade_out,short_intro,short_outro
+fe9426554b	Stevie Wonder - Superstition Spooki Remix	123.0	123.0	1	0.97	2A	0.45	-6.86	0.6	8	8	key_uncertain,short_intro,short_outro
+b287c4d2a8	Sugababes - Freak Like Me	92.0	91.84	1	0.97	8B	0.45	-6.63	0.91	8	16	half_time_candidate,vocal_heavy,fade_out,key_uncertain,short_intro,short_outro
+5fd79ffb02	The Chemical Brothers - Hey Boy Hey Girl	127.0	127.0	1	0.97	7A	0.45	-8.35	0.5	16	8	key_uncertain,short_intro,short_outro
+4da14e5c28	50 Cent - In Da Club	90.0	90.01	1	0.98	12A	1.0	-7.57	0.99	14	8	half_time_candidate,vocal_heavy,fade_out,short_intro,short_outro
+769460d967	ATB, Topic & A7S - Your Love (9PM)	126.0	126.0	1	0.98	8A	1.0	-11.39	0.66	13	16	short_intro
+af768cb8a2	Bell Biv DeVoe - Poison	112.0	109.89	1	0.98	11A	1.0	-12.62	0.92	16	16	vocal_heavy,fade_out,short_intro,short_outro
+25c6363ebc	Blackstreet - No Diggity	89.0	88.65	1	0.98	11A	1.0	-11.62	0.93	16	16	half_time_candidate,vocal_heavy,short_intro,short_outro
+b3ef7dfde6	Britney Spears - Gimme More	113.0	113.33	1	0.98	11A	0.6	-6.89	0.89	8	16	vocal_heavy,fade_out,short_intro,short_outro
+c33791114a	Britney Spears - Toxic	143.0	143.0	1	0.98	5A	1.0	-8.75	0.94	8	16	vocal_heavy,short_intro,short_outro
+08608b5120	Calvin Harris - This Is What You Came For	124.0	123.99	1	0.98	8B	0.65	-6.4	0.87	8	16	vocal_heavy,short_intro,short_outro
+e46b81e5ab	Chappell Roan - Pink Pony Club Lincoln Baio Party In the U.S.A. Remix	112.0	112.0	1	0.98	2A	0.65	-7.63	0.81	12	8	vocal_heavy,fade_out,short_intro,short_outro
+d403e8c7da	Chappell Roan - Pink Pony Club Lincoln Baio Party In the U.S.A. Remix (1)	112.0	112.0	1	0.98	2A	0.65	-7.63	0.81	12	8	vocal_heavy,fade_out,short_intro,short_outro
+cef5acce17	Ciara - Goodies Dillon Francis Extended Mix	126.0	126.0	1	0.98	4A	1.0	-7.44	0.81	15	16	vocal_heavy,short_intro,short_outro
+468f34d25c	Ciara - Goodies Dillon Francis flip (Tall Boys Clap Intro)	126.0	126.0	1	0.98	4A	1.0	-6.77	0.79	8	8	vocal_heavy,short_intro,short_outro
+c026257b17	DJ Jazzy Jeff & The Fresh Prince - A Nightmare On My Street	85.0	85.34	1	0.98	9A	1.0	-13.29	0.92	16	8	half_time_candidate,vocal_heavy,fade_out,short_intro,short_outro
+cbdcf23c9d	David Morales & The Face - Needin' U	130.0	130.34	1	0.98	8B	0.65	-12.13	0.92	16	16	vocal_heavy,short_intro,short_outro
+4098d0dece	Doja Cat - Demons Extended Version	140.0	140.0	1	0.98	5A	1.0	-11.16	0.97	8	16	vocal_heavy,short_intro,short_outro
+08e45fb8ca	Drake - Rich Baby Daddy Gilla MILLION DOLLAR BABY Edit (Dirty)	70.0	70.0	1	0.98	11A	1.0	-9.18	0.98	8	8	half_time_candidate,vocal_heavy,short_intro,short_outro
+558f312b73	Electric Six - Danger! High Voltage	125.0	122.99	1	0.98	10A	1.0	-16.85	0.95	12	16	vocal_heavy,fade_out,short_intro,short_outro
+25b099f594	Faithless - Insomnia	127.0	126.85	1	0.98	5A	1.0	-12.12	0.69	8	16	fade_out,short_intro,short_outro
+bfd13207cc	Ginuwine - Pony	71.0	71.02	1	0.98	12A	1.0	-7.99	0.99	12	8	half_time_candidate,vocal_heavy,short_intro,short_outro
+5a41602a8b	Ice MC - Think About The Way	133.0	132.99	1	0.98	7A	1.0	-11.89	0.96	12	16	vocal_heavy,short_intro,short_outro
+e0fc19ea05	Jungle - PROBLEMZ	110.0	109.99	1	0.98	9A	1.0	-9.39	0.57	16	8	short_intro,short_outro
+eb41f56b88	Junior Senior - Move Your Feet	121.0	118.88	1	0.98	8A	1.0	-8.37	0.81	17	16	vocal_heavy,short_intro,short_outro
+56c45c6d8b	Justin Timberlake - Can't Stop The Feeling!	113.0	113.0	1	0.98	8B	1.0	-9.83	0.92	14	16	vocal_heavy,short_intro,short_outro
+90b24bf89e	Kylie Minogue - Padam Padam	128.0	128.0	1	0.98	4A	0.45	-9.3	0.67	8	8	key_uncertain,short_intro,short_outro
+a09f008219	Lady Gaga - Bad Romance	119.0	119.0	1	0.98	8A	0.65	-7.31	1.0	8	8	vocal_heavy,fade_out,short_intro,short_outro
+80fc6406b3	Lana Del Rey vs Cedric Gervais - Summertime Sadness (Remix)	126.0	126.0	1	0.98	12A	1.0	-9.98	0.86	15	8	vocal_heavy,short_intro,short_outro
+99fda458c5	Mark Ronson - Uptown Funk	115.0	115.0	1	0.98	7B	0.65	-9.46	0.96	16	16	vocal_heavy,short_intro,short_outro
+08d9f8922e	Montell Jordan - This Is How We Do It Mahalo's 90s Baby Rework	123.0	123.0	1	0.98	3A	0.65	-6.11	0.97	12	8	vocal_heavy,short_intro,short_outro
+c7bf69c580	Mr. Oizo - Flat Beat	129.0	129.04	1	0.98	7A	0.3	-9.57	0.38	10	32	key_uncertain,short_intro
+fb79e797cd	Oingo Boingo - Dead Man's Party	80.0	173.05	2	0.98	2A	1.0	-14.87	0.44	10	8	half_time_candidate,short_intro,short_outro
+b8b2472a1b	P!nk - Get The Party Started	129.0	128.92	1	0.98	10A	1.0	-8.45	0.98	16	16	vocal_heavy,short_intro,short_outro
+249629a432	Peggy Gou - (It Goes Like) Nanana Extended Mix	130.0	130.0	1	0.98	5A	1.0	-8.15	0.58	8	16	short_intro
+295e83120c	Ray Parker Jr. - Ghostbusters	116.0	115.37	1	0.98	12B	0.45	-13.4	0.89	8	16	vocal_heavy,fade_out,key_uncertain,short_intro,short_outro
+5f78386ecd	Rednex - Cotton Eye Joe	132.0	131.99	1	0.98	11B	1.0	-11.96	0.78	12	8	vocal_heavy,short_intro,short_outro
+bc4e7ce641	Rihanna - Rude Boy Matthew Topper Won't Be Possible Edit	130.0	130.0	1	0.98	5B	0.45	-7.46	0.85	16	16	vocal_heavy,key_uncertain,short_intro,short_outro
+7b6e1e73c5	Rihanna - Umbrella	87.0	87.0	1	0.98	3B	1.0	-8.31	0.99	16	16	half_time_candidate,vocal_heavy,fade_out,short_intro,short_outro
+4282f056a7	Rihanna - Umbrella Jody den Broeder Lush Club Remix	126.0	126.0	1	0.98	2A	0.3	-9.17	0.72	17	8	key_uncertain,short_outro
+492780f268	Rihanna - We Found Love	128.0	128.0	1	0.98	2B	0.65	-7.75	0.87	16	8	vocal_heavy,short_intro,short_outro
+3dcc0ca66a	SZA - Kill Bill	89.0	89.0	1	0.98	5B	0.65	-7.93	0.69	16	8	half_time_candidate,short_outro
+cdbc8ab95c	Sophie Ellis-Bextor - Murder On The Dancefloor Extended Album Version	117.0	117.41	1	0.98	12B	1.0	-10.55	0.85	12	16	vocal_heavy,fade_out,short_intro,short_outro
+91a8e79e8a	Spice Girls - Wannabe	110.0	110.04	1	0.98	1B	1.0	-9.37	0.98	16	8	vocal_heavy,short_intro,short_outro
+d10cf58a72	Take That feat. Lulu - Relight My Fire	123.0	122.6	1	0.98	10A	1.0	-13.81	0.94	15	16	vocal_heavy,short_intro,short_outro
+7c9aaa4f1b	Tame Impala & Jennie - Dracula (Jennie Remix)	115.0	115.0	1	0.98	2A	1.0	-6.29	0.91	17	16	vocal_heavy,short_intro,short_outro
+85e9c129e6	Taylor Swift - Look What You Made Me Do	128.0	128.0	1	0.98	8A	1.0	-7.47	0.94	16	16	vocal_heavy,short_intro,short_outro
+b670986af8	The Prodigy - Breathe	130.0	130.01	1	0.98	5B	0.45	-8.82	0.76	14	16	vocal_heavy,fade_out,key_uncertain,short_intro,short_outro
+93f282cb3b	Tiesto & Tate McRae - 10.35 (VIP Mix)	125.0	124.98	1	0.98	3A	1.0	-8.11	0.89	17	8	vocal_heavy,short_intro,short_outro
+341ae1d04d	Will Smith - Gettin' Jiggy Wit It	108.0	107.9	1	0.98	1B	0.3	-9.84	0.95	16	16	vocal_heavy,fade_out,key_uncertain,short_intro,short_outro
+be5f4e069d	50 Cent - In Da Club Disco Lines Remix (Clean)	125.0	125.0	1	0.99	6A	1.0	-8.25	0.96	16	16	vocal_heavy,short_intro,short_outro
+890b5541b6	All Saints - Pure Shores	101.0	100.6	1	0.99	2B	1.0	-11.34	0.86	8	16	vocal_heavy,fade_out,short_intro,short_outro
+a5bd41517e	Amerie - 1 Thing	100.0	100.0	1	0.99	3A	0.65	-8.61	0.76	8	16	vocal_heavy,fade_out,short_intro,short_outro
+0a8dd1de91	Ava Max - Sweet But Psycho	133.0	133.0	1	0.99	3B	0.65	-7.46	0.97	13	16	vocal_heavy,short_intro,short_outro
+f642dd68c2	Britney Spears - ...Baby One More Time	93.0	92.98	1	0.99	5A	1.0	-8.77	0.76	16	16	half_time_candidate,vocal_heavy,short_intro,short_outro
+3e2935b2b3	Britney Spears - Freakshow	132.0	131.99	1	0.99	11A	1.0	-8.51	0.95	19	16	vocal_heavy,short_intro,short_outro
+53cec5b727	Carly Rae Jepsen - Call Me Maybe	120.0	120.0	1	0.99	9B	1.0	-9.05	0.91	12	16	vocal_heavy,fade_out,short_intro,short_outro
+66bba99bdd	Ciara - Goodies	102.0	102.0	1	0.99	4A	1.0	-10.83	1.0	8	16	vocal_heavy,short_intro,short_outro
+b5bdc8cc9d	Coolio - Gangsta's Paradise	80.0	79.95	1	0.99	5A	1.0	-10.2	0.96	12	16	half_time_candidate,vocal_heavy,short_intro,short_outro
+e0e02179ae	Corona - The Rhythm Of The Night	128.0	127.88	1	0.99	4A	0.65	-11.86	0.89	17	16	vocal_heavy,short_intro,short_outro
+edfc2ee251	Daft Punk - Get Lucky	116.0	116.05	1	0.99	10A	1.0	-10.9	0.73	32	16	fade_out
+1971ce842e	Doja Cat - Paint The Town Red (FRASER Bootleg Remix)	126.0	126.0	1	0.99	6A	1.0	-8.3	0.79	8	16	vocal_heavy,short_intro,short_outro
+ca2f1f7cd8	Dua Lipa - Don't Start Now	124.0	124.0	1	0.99	10B	0.65	-7.93	0.92	12	16	vocal_heavy,short_intro,short_outro
+769c06bf8e	Flo Rida - Low	128.0	128.0	1	0.99	5B	0.45	-9.39	0.98	9	16	vocal_heavy,key_uncertain,short_intro,short_outro
+81b5c68720	Gnarls Barkley - Crazy	112.0	112.0	1	0.99	5A	1.0	-4.54	0.5	17	8	short_outro
+6b2121c34a	Haddaway - What Is Love	124.0	123.87	1	0.99	7B	0.45	-11.95	0.9	8	16	vocal_heavy,key_uncertain,short_intro,short_outro
+310b6d0f81	Jeremih - Don't Tell 'Em Sir Marcus & Kareem Remix (Intro - Dirty)	105.0	105.0	1	0.99	7B	0.65	-7.87	0.86	8	8	vocal_heavy,short_intro,short_outro
+c43eee64b3	Justin Timberlake - SexyBack	117.0	117.0	1	0.99	8A	1.0	-8.19	0.94	16	16	vocal_heavy,fade_out,short_intro,short_outro
+c73652b55e	Kelis - Milkshake	113.0	113.0	1	0.99	7A	0.3	-8.06	0.84	9	8	vocal_heavy,fade_out,key_uncertain,short_intro,short_outro
+ce974d0eb2	Kesha - TiK ToK	120.0	120.0	1	0.99	7A	0.45	-6.45	0.99	8	16	vocal_heavy,key_uncertain,short_intro,short_outro
+53297c7de6	Kylie Minogue - Can't Get You Out Of My Head	126.0	125.99	1	0.99	8A	1.0	-10.03	0.96	16	16	vocal_heavy,fade_out,short_intro,short_outro
+ec27aa8f79	Lady Gaga - Abracadabra	126.0	126.0	1	0.99	4A	1.0	-6.53	0.94	19	16	vocal_heavy,short_intro,short_outro
+f2049b614d	Lady Gaga - Abracadabra (Intro)	126.0	126.0	1	0.99	4A	1.0	-6.37	0.94	17	16	vocal_heavy,short_intro,short_outro
+886fbd9c1a	Lady Gaga - Bloody Mary	100.0	100.0	1	0.99	8A	1.0	-8.97	0.9	8	16	vocal_heavy,fade_out,short_intro,short_outro,outro_no_steady_beat
+630f437bd1	Lady Gaga - Just Dance	119.0	119.0	1	0.99	12B	1.0	-8.55	0.97	13	8	vocal_heavy,short_intro,short_outro
+a34b438689	Lady Gaga - Monster	120.0	120.0	1	0.99	8A	1.0	-7.39	0.98	18	16	vocal_heavy,short_intro,short_outro,intro_no_steady_beat
+0b0da663e4	Little Mix - Black Magic	112.0	112.0	1	0.99	12B	1.0	-10.78	0.97	16	16	vocal_heavy,short_intro,short_outro
+bc61cdd8ad	Livin' Joy - Don't Stop Movin'	130.0	129.98	1	0.99	7A	1.0	-11.88	0.91	16	16	vocal_heavy,fade_out,short_intro,short_outro
+57f6c20ca3	Lizzo - About Damn Time	109.0	109.0	1	0.99	2A	0.65	-9.77	0.94	12	16	vocal_heavy,short_intro,short_outro
+ddaf27d9d7	Mark Morrison - Return Of The Mack	95.0	95.43	1	0.99	8B	0.65	-7.81	0.96	8	16	half_time_candidate,vocal_heavy,fade_out,short_intro,short_outro
+e8c9259c3c	Missy Elliott - Get Ur Freak On	89.0	88.92	1	0.99	4A	1.0	-11.92	0.56	8	8	half_time_candidate,fade_out,short_intro,short_outro
+8daf56a8e0	Moloko - Sing It Back	125.0	122.99	1	0.99	2A	1.0	-10.99	0.91	16	16	vocal_heavy,fade_out,short_intro,short_outro
+e4d28920f3	Montell Jordan - This Is How We Do It	104.0	103.64	1	0.99	4A	1.0	-11.45	0.97	8	8	vocal_heavy,fade_out,short_intro,short_outro
+da6e2527c5	Nelly Furtado - Maneater Monaark & Norsam Remix	120.0	120.0	1	0.99	3A	1.0	-9.03	0.42	8	16	short_intro
+b7b0789ff6	Nelly Furtado - Promiscuous	114.0	114.3	1	0.99	3A	0.65	-7.69	0.97	17	16	vocal_heavy,short_intro,short_outro
+375a5aaa21	Ol' Dirty Bastard - Got Your Money Anthem Kingz Genie In A Bottle Edit	124.0	124.0	1	0.99	4A	1.0	-8.56	0.46	33	16	
+9c3b804bd6	Olivia Rodrigo - vampire Trayze Remix (Dirty)	155.0	155.0	1	0.99	7B	1.0	-7.84	0.98	12	16	vocal_heavy,short_intro,short_outro
+a648f33cae	Peggy Gou - (It Goes Like) Nanana	130.0	130.0	1	0.99	5A	1.0	-7.38	0.66	12	8	short_intro,short_outro
+c78a6c3ad0	Real McCoy - Another Night	126.0	125.97	1	0.99	9B	0.65	-11.96	0.92	8	8	vocal_heavy,short_intro,short_outro
+0692b134c9	Ricky Martin - Livin' La Vida Loca	89.0	89.0	1	0.99	12A	1.0	-6.67	0.87	16	16	half_time_candidate,vocal_heavy,short_intro,short_outro
+15e073a272	Rihanna - Disturbia DJ Mag Halloween Remix	128.0	128.0	1	0.99	10A	1.0	-8.73	0.83	17	16	vocal_heavy,fade_out,short_outro
+f41f1882ae	Rihanna - Don't Stop The Music Spryte Remix	126.0	126.0	1	0.99	11A	1.0	-8.43	0.72	16	16	fade_out,short_outro
+aba1185a8b	Robyn - Call Your Girlfriend	125.0	125.0	1	0.99	4B	1.0	-6.63	0.94	12	16	vocal_heavy,short_intro,short_outro
+7d1ca3e415	Robyn - Show Me Love (1997)	91.0	91.01	1	0.99	12B	1.0	-8.21	0.98	14	8	half_time_candidate,vocal_heavy,short_intro,short_outro
+0589898af7	Sexyy Red & Bruno Mars - Fat Juicy & Wet (Intro - Dirty)	104.0	104.0	1	0.99	12A	0.65	-8.29	0.93	16	8	vocal_heavy,short_intro,short_outro
+d91cfc8e4d	Snoop Dogg - Drop It Like It's Hot	92.0	92.0	1	0.99	4B	0.45	-8.6	0.87	15	8	half_time_candidate,vocal_heavy,fade_out,key_uncertain,short_intro,short_outro
+9546dd7347	TLC - No Scrubs	93.0	92.91	1	0.99	1A	1.0	-9.3	0.98	12	8	half_time_candidate,vocal_heavy,fade_out,short_intro,short_outro
+50b4b2b2aa	The Notorious B.I.G. - Hypnotize	94.0	93.91	1	0.99	12B	0.45	-9.32	1.0	16	16	half_time_candidate,vocal_heavy,fade_out,key_uncertain,short_intro,short_outro
+16a74d3aec	The Notorious B.I.G. - Hypnotize Soundtrack Version	94.0	93.91	1	0.99	12B	0.45	-7.18	1.0	16	16	half_time_candidate,vocal_heavy,fade_out,key_uncertain,short_intro,short_outro
+b0ba60df79	Usher - Yeah!	105.0	105.0	1	0.99	9B	0.45	-8.24	1.0	8	16	vocal_heavy,key_uncertain,short_intro,short_outro
+0a18673b0a	50 Cent - Just a Lil Bit DJ Bizzon Club Edit (Dirty)	100.0	100.0	1	1.0	4A	0.45	-7.95	0.82	17	8	vocal_heavy,key_uncertain,short_intro,short_outro
+6489f248e0	Beyonce - Crazy In Love	99.0	99.27	1	1.0	6A	0.65	-10.55	0.95	8	16	half_time_candidate,vocal_heavy,fade_out,short_intro,short_outro
+f0b08c43d7	Black Eyed Peas - I Gotta Feeling	128.0	128.0	1	1.0	8B	1.0	-9.98	0.97	16	16	vocal_heavy,short_intro,short_outro
+6cab2a1607	Bobby 'Boris' Pickett & The Crypt-Kickers - Monster Mash Lincoln Baio Remix	125.0	125.0	1	1.0	9B	1.0	-9.78	0.97	12	8	vocal_heavy,short_intro,short_outro
+37bd767b44	Dead Or Alive - You Spin Me Round	128.0	134.03	1	1.0	1B	1.0	-11.16	0.94	10	16	vocal_heavy,short_intro,short_outro
+a346c5561c	Disco Lines & Tinashe - No Broke Boys (Dirty)	131.0	131.0	1	1.0	1B	1.0	-10.13	0.75	16	8	short_intro,short_outro
+d6f9615a5b	Disco Lines & Tinashe - No Broke Boys (Intro - Dirty)	131.0	131.0	1	1.0	1B	1.0	-10.38	0.75	16	16	short_intro
+bc9a89a0aa	Doja Cat - Paint The Town Red	100.0	100.0	1	1.0	9B	0.3	-8.65	0.98	8	16	vocal_heavy,key_uncertain,short_intro,short_outro
+2eb22eadd0	Drake - Rich Baby Daddy (Intro - Dirty)	146.0	146.0	1	1.0	11A	1.0	-6.69	0.91	15	16	vocal_heavy,short_intro,intro_no_steady_beat,outro_no_steady_beat
+e196f47e7d	Estelle - American Boy Aurelios Remix	128.0	128.0	1	1.0	9A	1.0	-8.48	0.51	8	16	fade_out,short_intro
+0420bddf03	Fatboy Slim - Praise You	110.0	109.72	1	1.0	4B	1.0	-12.03	0.46	32	32	fade_out
+21fccb15e4	Icona Pop - I Love It	126.0	126.0	1	1.0	3B	0.65	-6.73	0.89	16	16	vocal_heavy,short_intro,short_outro
+c90611dc88	Jolyon Petch - Thriller Freejak Remix (house cover)	128.0	128.0	1	1.0	12A	1.0	-7.09	0.41	8	32	short_intro
+bedd2ea40c	Kate Bush - Running Up That Hill (A Deal With God) Landis Remix	125.0	125.0	1	1.0	5A	1.0	-7.98	0.35	16	16	
+57537dcfb7	Kylie vs New Order - Blue Monday Mashup	126.0	132.0	1	1.0	7A	1.0	-12.35	0.83	16	16	vocal_heavy,short_intro,short_outro
+ded8cf35e6	Lady Gaga & Doechii - Runway (Intro - Dirty)	120.0	119.98	1	1.0	8B	0.45	-7.18	0.71	8	16	key_uncertain,short_intro
+59b14556e8	Lana Del Rey vs Cedric Gervais - Summertime Sadness (Remix) Cedric Gervais Extended Remix	121.0	126.0	1	1.0	12A	0.65	-7.19	0.67	16	16	
+ec7890a2d4	Missy Elliott - Lose Control Matthew Topper In This Bih' Edit (Dirty)	130.0	130.0	1	1.0	2B	0.45	-8.74	0.98	8	8	vocal_heavy,key_uncertain,short_intro,short_outro
+6e8f63bbce	Moby - Go	134.0	125.81	1	1.0	9A	1.0	-10.54	0.73	16	16	short_outro
+d98ae8fab9	Mr. President - Coco Jamboo	100.0	100.0	1	1.0	12A	1.0	-11.95	0.98	8	16	half_time_candidate,vocal_heavy,short_intro,short_outro
+68fc2caf28	Nelly Furtado - Maneater Rogerson Halloween Remix	130.0	130.0	1	1.0	3B	1.0	-6.92	0.74	10	16	short_intro,short_outro
+944011cc86	Nelly Furtado - Promiscuous ON_1 & SHADDA Remix	130.0	130.0	1	1.0	3A	1.0	-6.77	0.59	16	16	short_outro
+c546b63944	Nightcrawlers - Push The Feeling On	126.0	123.03	1	1.0	11A	0.65	-11.98	0.94	8	16	vocal_heavy,fade_out,short_intro,short_outro
+9a07c636fc	Peter Andre - Mysterious Girl	85.0	86.0	1	1.0	5B	1.0	-8.16	0.88	12	16	half_time_candidate,vocal_heavy,fade_out,short_intro,short_outro
+52922e91bc	Rihanna - Disturbia	125.0	125.0	1	1.0	10B	0.65	-7.47	0.99	18	16	vocal_heavy,fade_out,short_intro,short_outro
+7ebac5972c	Rihanna - Pon De Replay RUGGED Remix	120.0	120.0	1	1.0	11A	1.0	-7.75	0.72	16	8	short_intro,short_outro
+e2251794fc	Rob Zombie - Dragula	125.0	125.03	1	1.0	5A	1.0	-8.66	0.95	12	16	vocal_heavy,short_intro,short_outro
+e0dc3c7ab5	Rockwell - Somebody's Watching Me Richastic Halloween Remix	120.0	120.0	1	1.0	12A	1.0	-8.2	0.54	8	16	short_intro
+3769fc3406	Roger Sanchez - Another Chance	128.0	129.88	1	1.0	6A	0.3	-9.91	0.66	15	16	fade_out,key_uncertain,short_intro,short_outro
+44568fcd9b	Shakira - Hips Don't Lie	100.0	100.0	1	1.0	3A	1.0	-9.99	0.93	16	16	vocal_heavy,fade_out,short_intro,short_outro
+962eea95bf	Sister Sledge - We Are Family Luca Debonaire & DJ Marlon Remix	124.0	124.0	1	1.0	10B	0.65	-7.01	0.79	16	16	vocal_heavy,fade_out,short_intro,short_outro
+df902aeaec	Swedish House Mafia - Don't You Worry Child	126.0	129.0	1	1.0	10B	1.0	-6.82	0.6	32	16	fade_out,short_outro
+fdf5c39c8c	The Beloved - Sweet Harmony	102.0	101.59	1	1.0	5B	0.3	-11.82	0.83	8	16	vocal_heavy,fade_out,key_uncertain,short_intro,short_outro
+8236ca7d59	The Bucketheads - The Bomb!	126.0	125.88	1	1.0	7A	0.65	-11.3	0.86	14	16	vocal_heavy,fade_out,short_intro,short_outro
+dddd7550ab	The Weeknd - Save Your Tears	118.0	118.0	1	1.0	8B	1.0	-8.08	0.81	16	16	vocal_heavy,short_intro,short_outro

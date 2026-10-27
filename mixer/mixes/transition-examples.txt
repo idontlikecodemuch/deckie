@@ -1,0 +1,20 @@
+Transition examples (17 clips, 18.4 min, -10.1 LUFS, TP -0.7 dBTP)
+Each clip: ~20 s before the join to ~30 s after; 1 s of silence between clips.
+
+ 1  0:00  bass swap, 16 bars                               Ida Corr & Fedde Le Grand - Let Me Think About It  ->  Ol' Dirty Bastard - Got Your Money   [mix 1, join 1, as planned; join at +8 s in clip; stretch +1.6%; beat offset after phase-lock -0.0 ms]
+ 2  1:16  bass swap, 8 bars                                Adamski feat. Seal - Killer  ->  Nelly Furtado - Maneater   [mix 1, join 5, as planned; join at +20 s in clip; stretch +0.0%; beat offset after phase-lock -0.1 ms]
+ 3  2:23  bass swap, 32 bars [forced]                      Rihanna - We Found Love  ->  Estelle - American Boy   [mix 2, join 29, type forced on this pair; join at +8 s in clip; stretch +0.0%; beat offset after phase-lock -0.1 ms]
+ 4  3:39  tempo-ramped bass swap, 16 bars                  Talking Heads - Psycho Killer  ->  LCD Soundsystem - Daft Punk Is Playing At My House   [mix 2, join 13, as planned; join at +8 s in clip; stretch +4.6%; beat offset after phase-lock 0.0 ms]
+ 5  4:55  high-pass filter sweep, 16 bars [forced]         Ol' Dirty Bastard - Got Your Money  ->  Royksopp & Robyn - Do It Again   [mix 1, join 2, type forced on this pair; join at +8 s in clip; stretch -0.0%; beat offset after phase-lock -0.0 ms]
+ 6  6:11  echo-out, cut in on the one                      Doja Cat - Demons  ->  Adamski feat. Seal - Killer   [mix 1, join 4, as planned; join at +20 s in clip; stretch +71.4%]
+ 7  7:12  reverb throw, cut in on the one [forced]         Snoop Dogg - Drop It Like It's Hot  ->  Take That feat. Lulu - Relight My Fire   [mix 1, join 27, type forced on this pair; join at +20 s in clip; stretch +0.5%]
+ 8  8:13  loop roll, cut in on the one [forced]            Everything But The Girl - Missing (Todd Terry Mix)  ->  Snap! - Rhythm Is A Dancer   [mix 2, join 26, type forced on this pair; join at +20 s in clip; stretch +0.7%]
+ 9  9:14  into the hip-hop stretch: echo-out into the Get Ur Freak On Halloween bridge Rihanna - Don't Stop The Music  ->  Missy Elliott - Get Ur Freak On   [mix 1, join 13, as planned; join at +20 s in clip; stretch -28.2%]
+10  10:15  hip-hop stretch: slam on the one + scratch stab  Missy Elliott - Get Ur Freak On  ->  50 Cent - Just a Lil Bit   [mix 1, join 14, as planned; join at +20 s in clip; stretch +7.2%]
+11  11:16  hip-hop stretch: chop A2/B2/A1/B + scratch stab  50 Cent - Just a Lil Bit  ->  Mark Morrison - Return Of The Mack   [mix 1, join 15, as planned; join at +20 s in clip; stretch +3.0%; beat offset after phase-lock -0.0 ms]
+12  12:19  back to the floor: riser + slam                  Chappell Roan - Pink Pony Club  ->  Slayyyter - Brand New Chanel$   [mix 1, join 20, as planned; join at +20 s in clip; stretch +12.6%]
+13  13:20  into a callout: slam on the one                  Chris Lorenzo & Kah-Lo vs Black Eyed Peas - In This Bih'  ->  Drake - Rich Baby Daddy   [mix 1, join 22, as planned; join at +20 s in clip; stretch -46.1%]
+14  14:21  back out of a callout: riser + slam on the one   Olivia Rodrigo - vampire  ->  Disco Lines & Tinashe - No Broke Boys   [mix 2, join 6, as planned; join at +20 s in clip; stretch -15.5%]
+15  15:22  back out of a callout: riser + scratch stab + slam Bette Midler - I Put A Spell On You  ->  Sam Robs & Kelvin Wood - No Scrubs   [mix 1, join 8, as planned; join at +20 s in clip; stretch -3.2%]
+16  16:23  into a callout: vinyl brake                      Royksopp & Robyn - Do It Again  ->  Doja Cat - Demons   [mix 1, join 3, as planned; join at +20 s in clip; stretch -43.5%]
+17  17:24  into a callout: backspin                         Ciara - Goodies  ->  Backstreet Boys - Everybody (Backstreet's Back)   [mix 1, join 11, as planned; join at +20 s in clip; stretch -14.2%]

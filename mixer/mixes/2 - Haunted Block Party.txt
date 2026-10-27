@@ -1,0 +1,26 @@
+Haunted Block Party  (hour 2, hiphop lean)
+Duration 61:40, 22 songs, mastered -10.0 LUFS integrated, true peak -1.1 dBTP
+H = Halloween.  Join = how this song comes in.
+
+  0:00    M.I.A. - Paper Planes                                        86.0 BPM  6A    [start]
+  2:58  H DJ Jazzy Jeff & The Fresh Prince - A Nightmare On My Stree   85.3 BPM  9A    [filter_sweep 16 bars, -0.8%]
+  6:04    Rihanna - Umbrella                                           87.0 BPM  3B    [quick_blend_echo 4 bars, +1.9%]
+  8:44    SZA - Kill Bill                                              89.0 BPM  5B    [quick_blend_echo 8 bars, +2.3%, reverb wash]
+ 10:59    Kanye West - Gold Digger                                     92.5 BPM  4B    [quick_blend_echo 4 bars, +3.9%]
+ 14:13    The Notorious B.I.G. - Hypnotize                             93.9 BPM  12B   [quick_blend_echo 4 bars, +1.5%]
+ 17:27  H Doja Cat - Paint The Town Red                               100.0 BPM  9B    [quick_blend_echo 4 bars, +6.5%, reverb wash]
+ 19:47    50 Cent - Just a Lil Bit                                    100.0 BPM  4A    [quick_blend_echo 8 bars, +0.0%]
+ 22:47    Ciara - Goodies                                             102.0 BPM  4A    [quick_blend_echo 4 bars, +2.0%]
+ 25:17  H Various - IN THE SHADOWS                                    106.0 BPM  11A   [quick_blend_echo 8 bars, +3.9%, reverb wash]
+ 28:34    Bell Biv DeVoe - Poison                                     109.9 BPM  11A   [quick_blend_echo 4 bars, +3.7%]
+ 30:49    Gnarls Barkley - Crazy                                      112.0 BPM  5A    [bass_swap_16 16 bars, +1.9%]
+ 33:17  H Tame Impala & Jennie - Dracula (Jennie Remix)               115.0 BPM  2A    [filter_sweep 8 bars, +2.7%]
+ 36:27    Ace Of Base - All That She Wants                            118.0 BPM  12A   [quick_blend_echo 4 bars, +2.6%]
+ 39:22    Rihanna - Pon De Replay                                     120.0 BPM  11A   [bass_swap_16 16 bars, +1.7%]
+ 41:36  H Rockwell - Somebody's Watching Me                           120.0 BPM  12A   [filter_sweep 8 bars, +0.0%]
+ 44:24    Everything But The Girl - Missing (Todd Terry Mix)          123.5 BPM  8A    [bass_swap_16 16 bars, +2.9%]
+ 46:36    Nelly - Hot In Herre                                        124.0 BPM  9A    [bass_swap_16 16 bars, +0.4%]
+ 48:50    Royksopp & Robyn - Do It Again                              124.0 BPM  4A    [bass_swap_16 16 bars, -0.0%]
+ 51:44    Rihanna - Don't Stop The Music                              126.0 BPM  11A   [bass_swap_16 16 bars, +1.6%]
+ 54:09    Nelly Furtado - Promiscuous                                 130.0 BPM  3A    [bass_swap_16 16 bars, +3.2%]
+ 57:06    Black Eyed Peas - I Gotta Feeling                           128.0 BPM  8B    [filter_sweep 16 bars, -1.5%]

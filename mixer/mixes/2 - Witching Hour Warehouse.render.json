@@ -1,0 +1,3233 @@
+{
+ "plan": "plan_mix2.json",
+ "out": "2 - Witching Hour Warehouse",
+ "joins": [
+  {
+   "n": 1,
+   "type": "bass_swap_16",
+   "from_title": "Lady Gaga & Doechii - Runway",
+   "to_title": "Johan K & Rinat Bibikov - Zombie",
+   "a_overlap_start_bar": 80,
+   "a_exit_bar": 96,
+   "b_cue_bar": 1,
+   "stretch_pct": 1.68,
+   "stretch_side": "both, ramped bar by bar from 119.98 to 122.00 BPM across the overlap",
+   "pair_score": 0.8832,
+   "vocal_overlap": 0.031,
+   "dip_out_mids": false,
+   "reverb_wash": false,
+   "scratch": false,
+   "backspin": false,
+   "key_shift_st": 0,
+   "reasons": [
+    "-1.7% stretch on B (120.0 end -> 122.0 start)",
+    "B has a clean 16-bar intro",
+    "16-bar phrases both sides",
+    "different groove (r=0.27)"
+   ],
+   "overlap_bars_rendered": 16,
+   "phase_corr_ms": -0.1,
+   "variance": {
+    "sync_ms": -4.14,
+    "cut_16th": 1,
+    "wobble_pct": 0.178,
+    "echo_div": 0.75,
+    "echo_fb": 0.83,
+    "echo_bars": 3,
+    "fader_ms": 15.6,
+    "swap_bar": 10
+   },
+   "teaser": false,
+   "fix": {
+    "hot": true,
+    "post_bars": 4,
+    "makeup_db": 4.0,
+    "beat_level": 0.7
+   },
+   "at_s": 158.041,
+   "tail": "bass swap on bar 11 of 16 (B bass killed before, A bass gone after), highs cross bars 6-11, A mids out by bar 16",
+   "bar_s_ramp": [
+    1.9993,
+    1.9683
+   ],
+   "geom_downbeat_err_ms": 0.0,
+   "beat_offset_ms": -0.0,
+   "beats_compared": 63,
+   "beat_spread_mad_ms": 11.6
+  },
+  {
+   "n": 2,
+   "type": "bass_swap_8",
+   "from_title": "Johan K & Rinat Bibikov - Zombie",
+   "to_title": "ATB, Topic & A7S - Your Love (9PM)",
+   "a_overlap_start_bar": 97,
+   "a_exit_bar": 105,
+   "b_cue_bar": 1,
+   "stretch_pct": 3.28,
+   "stretch_side": "both, ramped bar by bar from 122.00 to 126.00 BPM across the overlap",
+   "pair_score": 0.6374,
+   "vocal_overlap": 0.035,
+   "dip_out_mids": false,
+   "reverb_wash": false,
+   "scratch": false,
+   "backspin": false,
+   "key_shift_st": 0,
+   "reasons": [
+    "similar sound (closer than 100% of pairs)",
+    "no vocal clash",
+    "-3.3% stretch on B (122.0 end -> 126.0 start)",
+    "9B -> 8A (clash)",
+    "8-bar window (short of a 16-bar phrase)",
+    "different groove (r=0.00)"
+   ],
+   "overlap_bars_rendered": 8,
+   "phase_corr_ms": -5.0,
+   "variance": {
+    "sync_ms": 7.04,
+    "cut_16th": 0,
+    "wobble_pct": -0.286,
+    "echo_div": 0.75,
+    "echo_fb": 0.832,
+    "echo_bars": 3,
+    "fader_ms": -39.7,
+    "swap_bar": 4
+   },
+   "teaser": true,
+   "fix": {
+    "hot": true,
+    "post_bars": 4,
+    "makeup_db": 3.3,
+    "beat_level": 0.7
+   },
+   "at_s": 347.17,
+   "tail": "bass swap on bar 5 of 8 (B bass killed before, A bass gone after), highs cross bars 3-5, A mids out by bar 8",
+   "bar_s_ramp": [
+    1.9633,
+    1.9087
+   ],
+   "geom_downbeat_err_ms": 0.0,
+   "beat_offset_ms": 0.0,
+   "beats_compared": 32,
+   "beat_spread_mad_ms": 7.8
+  },
+  {
+   "n": 3,
+   "type": "bass_swap_16",
+   "from_title": "ATB, Topic & A7S - Your Love (9PM)",
+   "to_title": "Kate Bush - Running Up That Hill (A Deal With God)",
+   "a_overlap_start_bar": 62,
+   "a_exit_bar": 78,
+   "b_cue_bar": 1,
+   "stretch_pct": -0.79,
+   "stretch_side": "both, ramped bar by bar from 126.00 to 125.00 BPM across the overlap",
+   "pair_score": 0.8696,
+   "vocal_overlap": 0.01,
+   "dip_out_mids": false,
+   "reverb_wash": false,
+   "scratch": false,
+   "backspin": false,
+   "key_shift_st": 0,
+   "reasons": [
+    "+0.8% stretch on B (126.0 end -> 125.0 start)",
+    "B has a clean 16-bar intro",
+    "16-bar phrases both sides",
+    "different groove (r=0.39)"
+   ],
+   "overlap_bars_rendered": 16,
+   "phase_corr_ms": -1.7,
+   "variance": {
+    "sync_ms": -2.02,
+    "cut_16th": 0,
+    "wobble_pct": 0.129,
+    "echo_div": 0.5,
+    "echo_fb": 0.859,
+    "echo_bars": 3,
+    "fader_ms": -32.7,
+    "swap_bar": 8
+   },
+   "teaser": false,
+   "fix": {
+    "hot": true,
+    "post_bars": 4,
+    "makeup_db": 3.0,
+    "beat_level": 0.7
+   },
+   "at_s": 463.61,
+   "tail": "bass swap on bar 9 of 16 (B bass killed before, A bass gone after), highs cross bars 5-9, A mids out by bar 16",
+   "bar_s_ramp": [
+    1.9053,
+    1.9195
+   ],
+   "geom_downbeat_err_ms": 0.0,
+   "beat_offset_ms": -0.0,
+   "beats_compared": 64,
+   "beat_spread_mad_ms": 7.6
+  },
+  {
+   "n": 4,
+   "type": "bass_swap_16",
+   "from_title": "Kate Bush - Running Up That Hill (A Deal With God)",
+   "to_title": "Oliver Heldens & Will Clarke - Lost In Music",
+   "a_overlap_start_bar": 80,
+   "a_exit_bar": 96,
+   "b_cue_bar": 1,
+   "stretch_pct": 2.4,
+   "stretch_side": "both, ramped bar by bar from 125.00 to 128.00 BPM across the overlap",
+   "pair_score": 0.9044,
+   "vocal_overlap": 0.005,
+   "dip_out_mids": false,
+   "reverb_wash": false,
+   "scratch": false,
+   "backspin": false,
+   "key_shift_st": 0,
+   "reasons": [
+    "-2.4% stretch on B (125.0 end -> 128.0 start)",
+    "energy steady (-0.4 LU)",
+    "B has a clean 16-bar intro",
+    "different groove (r=0.00)",
+    "longer cut"
+   ],
+   "overlap_bars_rendered": 16,
+   "phase_corr_ms": -5.3,
+   "variance": {
+    "sync_ms": -2.13,
+    "cut_16th": 0,
+    "wobble_pct": -0.219,
+    "echo_div": 0.75,
+    "echo_fb": 0.824,
+    "echo_bars": 3,
+    "fader_ms": -14.0,
+    "swap_bar": 8
+   },
+   "teaser": true,
+   "fix": {
+    "hot": true,
+    "post_bars": 4,
+    "makeup_db": 2.5,
+    "beat_level": 0.7
+   },
+   "at_s": 615.175,
+   "tail": "bass swap on bar 9 of 16 (B bass killed before, A bass gone after), highs cross bars 5-9, A mids out by bar 16",
+   "bar_s_ramp": [
+    1.9186,
+    1.8764
+   ],
+   "geom_downbeat_err_ms": 0.0,
+   "beat_offset_ms": 0.0,
+   "beats_compared": 63,
+   "beat_spread_mad_ms": 5.1
+  },
+  {
+   "n": 5,
+   "type": "bass_swap_8",
+   "from_title": "Oliver Heldens & Will Clarke - Lost In Music",
+   "to_title": "Talking Heads - Psycho Killer",
+   "a_overlap_start_bar": 105,
+   "a_exit_bar": 113,
+   "b_cue_bar": 1,
+   "stretch_pct": 1.56,
+   "stretch_side": "both, ramped bar by bar from 128.00 to 130.00 BPM across the overlap",
+   "pair_score": 0.9171,
+   "vocal_overlap": 0.589,
+   "dip_out_mids": false,
+   "reverb_wash": false,
+   "scratch": false,
+   "backspin": false,
+   "key_shift_st": 0,
+   "reasons": [
+    "-1.6% stretch on B (128.0 end -> 130.0 start)",
+    "energy steady (+0.1 LU)",
+    "similar sound (closer than 100% of pairs)",
+    "different groove (r=0.17)"
+   ],
+   "overlap_bars_rendered": 8,
+   "phase_corr_ms": 0.7,
+   "variance": {
+    "sync_ms": 7.56,
+    "cut_16th": 0,
+    "wobble_pct": -0.181,
+    "echo_div": 0.75,
+    "echo_fb": 0.846,
+    "echo_bars": 3,
+    "fader_ms": -19.0,
+    "swap_bar": 5
+   },
+   "teaser": false,
+   "fix": null,
+   "at_s": 810.53,
+   "tail": "bass swap on bar 6 of 8 (B bass killed before, A bass gone after), highs cross bars 3-6, A mids out by bar 8",
+   "bar_s_ramp": [
+    1.8732,
+    1.848
+   ],
+   "geom_downbeat_err_ms": 0.0,
+   "beat_offset_ms": -0.0,
+   "beats_compared": 31,
+   "beat_spread_mad_ms": 5.6
+  },
+  {
+   "n": 6,
+   "type": "bass_swap_16",
+   "from_title": "Talking Heads - Psycho Killer",
+   "to_title": "Livin' Joy - Don't Stop Movin'",
+   "a_overlap_start_bar": 65,
+   "a_exit_bar": 81,
+   "b_cue_bar": 1,
+   "stretch_pct": -0.01,
+   "stretch_side": "none (tempos equal)",
+   "pair_score": 0.886,
+   "vocal_overlap": 0.098,
+   "dip_out_mids": false,
+   "reverb_wash": false,
+   "scratch": false,
+   "backspin": false,
+   "key_shift_st": 0,
+   "reasons": [
+    "same tempo (130.0 BPM at A's end)",
+    "16-bar phrases both sides",
+    "vocals overlap 1 of 16 bars",
+    "different groove (r=0.06)"
+   ],
+   "overlap_bars_rendered": 16,
+   "phase_corr_ms": -0.8,
+   "variance": {
+    "sync_ms": -4.48,
+    "cut_16th": 0,
+    "wobble_pct": 0.213,
+    "echo_div": 0.5,
+    "echo_fb": 0.902,
+    "echo_bars": 3,
+    "fader_ms": 30.3,
+    "swap_bar": 8
+   },
+   "teaser": true,
+   "fix": {
+    "hot": true,
+    "post_bars": 4,
+    "makeup_db": 2.7,
+    "beat_level": 0.7
+   },
+   "at_s": 928.8,
+   "tail": "bass swap on bar 9 of 16 (B bass killed before, A bass gone after), highs cross bars 5-9, A mids out by bar 16",
+   "bar_s_ramp": [
+    1.8462,
+    1.8464
+   ],
+   "geom_downbeat_err_ms": 0.0,
+   "beat_offset_ms": 0.0,
+   "beats_compared": 63,
+   "beat_spread_mad_ms": 1.3
+  },
+  {
+   "n": 7,
+   "type": "brake_cut",
+   "from_title": "Livin' Joy - Don't Stop Movin'",
+   "to_title": "Flo Rida - Low",
+   "a_overlap_start_bar": 105,
+   "a_exit_bar": 105,
+   "b_cue_bar": 17,
+   "stretch_pct": 11.56,
+   "stretch_side": "none (cut on the one, no beat-match)",
+   "pair_score": null,
+   "vocal_overlap": 0.629,
+   "dip_out_mids": false,
+   "reverb_wash": false,
+   "scratch": false,
+   "backspin": false,
+   "key_shift_st": 0,
+   "reasons": [],
+   "overlap_bars_rendered": 0,
+   "phase_corr_ms": 0.0,
+   "variance": {
+    "sync_ms": -2.88,
+    "cut_16th": -1,
+    "wobble_pct": 0.152,
+    "echo_div": 0.75,
+    "echo_fb": 0.811,
+    "echo_bars": 3,
+    "fader_ms": -29.1
+   },
+   "teaser": false,
+   "fix": {
+    "post_bars": 4,
+    "makeup_db": 6.0,
+    "beat_level": 0.9
+   },
+   "at_s": 1120.83,
+   "tail": "vinyl brake over the last bar (1.85 s) from its downbeat, B on the one",
+   "riser": "noise riser 7.4 s (4 bars) ending on B's downbeat + sub impact",
+   "fell_back_to_cut": false
+  },
+  {
+   "n": 8,
+   "type": "slam",
+   "from_title": "Flo Rida - Low",
+   "to_title": "Disco Lines & Tinashe - No Broke Boys",
+   "a_overlap_start_bar": 72,
+   "a_exit_bar": 72,
+   "b_cue_bar": 1,
+   "stretch_pct": -9.65,
+   "stretch_side": "none (cut on the one, no beat-match)",
+   "pair_score": null,
+   "vocal_overlap": 0.4,
+   "dip_out_mids": false,
+   "reverb_wash": false,
+   "scratch": true,
+   "backspin": false,
+   "key_shift_st": 0,
+   "reasons": [],
+   "overlap_bars_rendered": 0,
+   "phase_corr_ms": 0.0,
+   "variance": {
+    "sync_ms": -4.11,
+    "cut_16th": 1,
+    "wobble_pct": 0.112,
+    "echo_div": 0.5,
+    "echo_fb": 0.862,
+    "echo_bars": 3,
+    "fader_ms": -11.4
+   },
+   "teaser": false,
+   "fix": {
+    "pre_bars": 4,
+    "pre_makeup_db": 4.0,
+    "beat_level": 0.9,
+    "pre_riser": true,
+    "post_bars": 4,
+    "makeup_db": 3.9
+   },
+   "at_s": 1211.864,
+   "tail": "cut on the one; A's last beat replaced by a scratch stab",
+   "riser": "noise riser 6.6 s (4 bars) ending on B's downbeat + sub impact",
+   "fell_back_to_cut": false
+  },
+  {
+   "n": 9,
+   "type": "bass_swap_8",
+   "from_title": "Disco Lines & Tinashe - No Broke Boys",
+   "to_title": "KATSEYE - GNARLY",
+   "a_overlap_start_bar": 81,
+   "a_exit_bar": 89,
+   "b_cue_bar": 1,
+   "stretch_pct": 3.05,
+   "stretch_side": "both, ramped bar by bar from 131.00 to 135.00 BPM across the overlap",
+   "pair_score": 0.7981,
+   "vocal_overlap": 0.084,
+   "dip_out_mids": false,
+   "reverb_wash": false,
+   "scratch": false,
+   "backspin": false,
+   "key_shift_st": 0,
+   "reasons": [
+    "energy steady (-1.9 LU)",
+    "-3.0% stretch on B (131.0 end -> 135.0 start)",
+    "similar sound (closer than 97% of pairs)",
+    "8-bar window (short of a 16-bar phrase)",
+    "different groove (r=0.37)"
+   ],
+   "overlap_bars_rendered": 8,
+   "phase_corr_ms": 3.3,
+   "variance": {
+    "sync_ms": -5.91,
+    "cut_16th": 0,
+    "wobble_pct": 0.296,
+    "echo_div": 0.75,
+    "echo_fb": 0.81,
+    "echo_bars": 3,
+    "fader_ms": 38.6,
+    "swap_bar": 3
+   },
+   "teaser": false,
+   "fix": {
+    "hot": true,
+    "post_bars": 4,
+    "makeup_db": 2.2,
+    "beat_level": 0.7
+   },
+   "at_s": 1314.453,
+   "tail": "bass swap on bar 4 of 8 (B bass killed before, A bass gone after), highs cross bars 2-4, A mids out by bar 8",
+   "bar_s_ramp": [
+    1.8286,
+    1.7812
+   ],
+   "geom_downbeat_err_ms": 0.0,
+   "beat_offset_ms": -0.0,
+   "beats_compared": 31,
+   "beat_spread_mad_ms": 9.0
+  },
+  {
+   "n": 10,
+   "type": "bass_swap_8",
+   "from_title": "KATSEYE - GNARLY",
+   "to_title": "Fcukers - If You Wanna Party, Come Over To My House",
+   "a_overlap_start_bar": 50,
+   "a_exit_bar": 58,
+   "b_cue_bar": 1,
+   "stretch_pct": 0.76,
+   "stretch_side": "both, ramped bar by bar from 135.00 to 136.01 BPM across the overlap",
+   "pair_score": 0.6607,
+   "vocal_overlap": 0.566,
+   "dip_out_mids": false,
+   "reverb_wash": false,
+   "scratch": false,
+   "backspin": false,
+   "key_shift_st": 0,
+   "reasons": [
+    "-0.8% stretch on B (135.0 end -> 136.0 start)",
+    "similar sound (closer than 92% of pairs)",
+    "B enters -3.7 LU quieter",
+    "8-bar window (short of a 16-bar phrase)",
+    "different groove (r=0.00)"
+   ],
+   "overlap_bars_rendered": 8,
+   "phase_corr_ms": 12.8,
+   "variance": {
+    "sync_ms": -6.68,
+    "cut_16th": 0,
+    "wobble_pct": 0.151,
+    "echo_div": 0.75,
+    "echo_fb": 0.857,
+    "echo_bars": 4,
+    "fader_ms": -23.7,
+    "swap_bar": 4
+   },
+   "teaser": true,
+   "fix": {
+    "hot": true,
+    "post_bars": 4,
+    "makeup_db": 2.8,
+    "beat_level": 0.7
+   },
+   "at_s": 1401.773,
+   "tail": "bass swap on bar 5 of 8 (B bass killed before, A bass gone after), highs cross bars 3-5, A mids out by bar 8",
+   "bar_s_ramp": [
+    1.777,
+    1.7653
+   ],
+   "geom_downbeat_err_ms": 0.0,
+   "beat_offset_ms": 0.0,
+   "beats_compared": 31,
+   "beat_spread_mad_ms": 13.6
+  },
+  {
+   "n": 11,
+   "type": "echo_out",
+   "from_title": "Fcukers - If You Wanna Party, Come Over To My House",
+   "to_title": "Olivia Rodrigo - vampire",
+   "a_overlap_start_bar": 88,
+   "a_exit_bar": 88,
+   "b_cue_bar": 5,
+   "stretch_pct": 13.96,
+   "stretch_side": "none (cut on the one, no beat-match)",
+   "pair_score": null,
+   "vocal_overlap": 0.661,
+   "dip_out_mids": false,
+   "reverb_wash": false,
+   "scratch": false,
+   "backspin": false,
+   "key_shift_st": 0,
+   "reasons": [],
+   "overlap_bars_rendered": 0,
+   "phase_corr_ms": 0.0,
+   "variance": {
+    "sync_ms": -7.02,
+    "cut_16th": 0,
+    "wobble_pct": -0.189,
+    "echo_div": 0.5,
+    "echo_fb": 0.894,
+    "echo_bars": 4,
+    "fader_ms": 39.2
+   },
+   "teaser": false,
+   "fix": {
+    "post_bars": 4,
+    "makeup_db": 3.0,
+    "beat_level": 0.8
+   },
+   "at_s": 1555.34,
+   "tail": "echo-out: last 2 beats sent (lows out), dry cut on the exit downbeat, 0.50-beat delay (221 ms), feedback 0.89, 4-bar tail, LP 5000 Hz, wet -4 dB",
+   "fell_back_to_cut": false
+  },
+  {
+   "n": 12,
+   "type": "slam",
+   "from_title": "Olivia Rodrigo - vampire",
+   "to_title": "Ti\u00ebsto & Sexyy Red - OMG!",
+   "a_overlap_start_bar": 85,
+   "a_exit_bar": 85,
+   "b_cue_bar": 1,
+   "stretch_pct": -17.42,
+   "stretch_side": "none (cut on the one, no beat-match)",
+   "pair_score": null,
+   "vocal_overlap": 0.534,
+   "dip_out_mids": false,
+   "reverb_wash": false,
+   "scratch": false,
+   "backspin": false,
+   "key_shift_st": 0,
+   "reasons": [],
+   "overlap_bars_rendered": 0,
+   "phase_corr_ms": 0.0,
+   "variance": {
+    "sync_ms": 6.84,
+    "cut_16th": 0,
+    "wobble_pct": 0.237,
+    "echo_div": 0.5,
+    "echo_fb": 0.888,
+    "echo_bars": 4,
+    "fader_ms": -19.9
+   },
+   "teaser": false,
+   "fix": {
+    "pre_bars": 4,
+    "pre_makeup_db": 2.8,
+    "beat_level": 0.8,
+    "pre_riser": true
+   },
+   "at_s": 1679.211,
+   "tail": "cut on the one",
+   "riser": "noise riser 6.2 s (4 bars) ending on B's downbeat + sub impact",
+   "fell_back_to_cut": false
+  },
+  {
+   "n": 13,
+   "type": "bass_swap_8",
+   "from_title": "Ti\u00ebsto & Sexyy Red - OMG!",
+   "to_title": "Rihanna - Disturbia",
+   "a_overlap_start_bar": 69,
+   "a_exit_bar": 77,
+   "b_cue_bar": 1,
+   "stretch_pct": -0.0,
+   "stretch_side": "none (tempos equal)",
+   "pair_score": 0.784,
+   "vocal_overlap": 0.213,
+   "dip_out_mids": false,
+   "reverb_wash": false,
+   "scratch": false,
+   "backspin": false,
+   "key_shift_st": 0,
+   "reasons": [
+    "same tempo (128.0 BPM at A's end)",
+    "energy steady (-0.7 LU)",
+    "similar sound (closer than 95% of pairs)",
+    "8-bar window (short of a 16-bar phrase)",
+    "different groove (r=0.15)"
+   ],
+   "overlap_bars_rendered": 8,
+   "phase_corr_ms": -6.3,
+   "variance": {
+    "sync_ms": -4.56,
+    "cut_16th": 0,
+    "wobble_pct": 0.206,
+    "echo_div": 0.75,
+    "echo_fb": 0.849,
+    "echo_bars": 4,
+    "fader_ms": 15.3,
+    "swap_bar": 4
+   },
+   "teaser": false,
+   "fix": {
+    "pre_bars": 4,
+    "pre_makeup_db": 3.6,
+    "beat_level": 0.9,
+    "post_bars": 4,
+    "makeup_db": 2.4,
+    "hot": true
+   },
+   "at_s": 1784.217,
+   "tail": "bass swap on bar 5 of 8 (B bass killed before, A bass gone after), highs cross bars 3-5, A mids out by bar 8",
+   "bar_s_ramp": [
+    1.875,
+    1.875
+   ],
+   "geom_downbeat_err_ms": 0.0,
+   "beat_offset_ms": 0.0,
+   "beats_compared": 10,
+   "beat_spread_mad_ms": 0.0
+  },
+  {
+   "n": 14,
+   "type": "echo_out",
+   "from_title": "Rihanna - Disturbia",
+   "to_title": "Missy Elliott - Lose Control",
+   "a_overlap_start_bar": 106,
+   "a_exit_bar": 106,
+   "b_cue_bar": 1,
+   "stretch_pct": 1.56,
+   "stretch_side": "none (cut on the one, no beat-match)",
+   "pair_score": 0.4683,
+   "vocal_overlap": 0.714,
+   "dip_out_mids": false,
+   "reverb_wash": false,
+   "scratch": false,
+   "backspin": false,
+   "key_shift_st": 0,
+   "reasons": [
+    "-1.6% stretch on B (128.0 end -> 130.0 start)",
+    "similar sound (closer than 59% of pairs)",
+    "B enters -6.1 LU quieter",
+    "10A -> 2B (clash), key unsure",
+    "vocals overlap 8 of 8 bars",
+    "8-bar window (short of a 16-bar phrase)",
+    "different groove (r=0.14)",
+    "cut: vocals would clash (0.76 over 8 bars)"
+   ],
+   "overlap_bars_rendered": 0,
+   "phase_corr_ms": 0.0,
+   "variance": {
+    "sync_ms": -4.23,
+    "cut_16th": 0,
+    "wobble_pct": 0.142,
+    "echo_div": 0.5,
+    "echo_fb": 0.883,
+    "echo_bars": 3,
+    "fader_ms": -35.6
+   },
+   "teaser": true,
+   "fix": {
+    "post_bars": 4,
+    "makeup_db": 6.0,
+    "beat_level": 0.9
+   },
+   "at_s": 1981.095,
+   "tail": "echo-out: last 2 beats sent (lows out), dry cut on the exit downbeat, 0.50-beat delay (234 ms), feedback 0.88, 3-bar tail, LP 5000 Hz, wet -4 dB",
+   "fell_back_to_cut": true
+  },
+  {
+   "n": 15,
+   "type": "brake_cut",
+   "from_title": "Missy Elliott - Lose Control",
+   "to_title": "Cardi B - WAP",
+   "a_overlap_start_bar": 112,
+   "a_exit_bar": 112,
+   "b_cue_bar": 9,
+   "stretch_pct": 2.29,
+   "stretch_side": "none (cut on the one, no beat-match)",
+   "pair_score": 0.5282,
+   "vocal_overlap": 0.916,
+   "dip_out_mids": false,
+   "reverb_wash": false,
+   "scratch": false,
+   "backspin": true,
+   "key_shift_st": 0,
+   "reasons": [
+    "-2.3% stretch on B (130.0 end -> 133.0 start)",
+    "energy steady (+0.5 LU)",
+    "similar sound (closer than 72% of pairs)",
+    "2B -> 5A (clash), key unsure",
+    "vocals overlap 8 of 8 bars",
+    "8-bar window (short of a 16-bar phrase)",
+    "different groove (r=0.14)"
+   ],
+   "overlap_bars_rendered": 0,
+   "phase_corr_ms": 0.0,
+   "variance": {
+    "sync_ms": 2.7,
+    "cut_16th": 1,
+    "wobble_pct": 0.148,
+    "echo_div": 0.75,
+    "echo_fb": 0.817,
+    "echo_bars": 4,
+    "fader_ms": 25.0
+   },
+   "teaser": false,
+   "fix": null,
+   "at_s": 2186.017,
+   "tail": "backspin from beat 3 of the last bar (0.92 s, -6 dB), B on the one",
+   "riser": "noise riser 7.4 s (4 bars) ending on B's downbeat + sub impact",
+   "fell_back_to_cut": false
+  },
+  {
+   "n": 16,
+   "type": "echo_out",
+   "from_title": "Cardi B - WAP",
+   "to_title": "LCD Soundsystem - Daft Punk Is Playing At My House",
+   "a_overlap_start_bar": 65,
+   "a_exit_bar": 65,
+   "b_cue_bar": 1,
+   "stretch_pct": 2.27,
+   "stretch_side": "none (cut on the one, no beat-match)",
+   "pair_score": 0.5648,
+   "vocal_overlap": 0.959,
+   "dip_out_mids": true,
+   "reverb_wash": false,
+   "scratch": false,
+   "backspin": false,
+   "key_shift_st": 0,
+   "reasons": [
+    "-2.3% stretch on B (133.0 end -> 136.0 start)",
+    "energy steady (+1.5 LU)",
+    "5A -> 8A (pitch-shift B by -2 st), key unsure",
+    "vocals overlap 8 of 8 bars",
+    "8-bar window (short of a 16-bar phrase)",
+    "different sound (closer than only 32% of pairs)",
+    "different groove (r=0.16)"
+   ],
+   "overlap_bars_rendered": 0,
+   "phase_corr_ms": 0.0,
+   "variance": {
+    "sync_ms": 5.89,
+    "cut_16th": 0,
+    "wobble_pct": -0.113,
+    "echo_div": 0.75,
+    "echo_fb": 0.857,
+    "echo_bars": 3,
+    "fader_ms": -13.3
+   },
+   "teaser": true,
+   "fix": null,
+   "at_s": 2287.082,
+   "tail": "echo-out: last 2 beats sent (lows out), dry cut on the exit downbeat, 0.75-beat delay (338 ms), feedback 0.86, 3-bar tail, LP 5000 Hz, wet -4 dB",
+   "riser": "noise riser 7.2 s (4 bars) ending on B's downbeat + sub impact",
+   "fell_back_to_cut": false
+  },
+  {
+   "n": 17,
+   "type": "brake_cut",
+   "from_title": "LCD Soundsystem - Daft Punk Is Playing At My House",
+   "to_title": "Blackstreet - No Diggity",
+   "a_overlap_start_bar": 113,
+   "a_exit_bar": 113,
+   "b_cue_bar": 15,
+   "stretch_pct": -22.8,
+   "stretch_side": "none (cut on the one, no beat-match)",
+   "pair_score": null,
+   "vocal_overlap": 0.953,
+   "dip_out_mids": false,
+   "reverb_wash": false,
+   "scratch": false,
+   "backspin": false,
+   "key_shift_st": 0,
+   "reasons": [],
+   "overlap_bars_rendered": 0,
+   "phase_corr_ms": 0.0,
+   "variance": {
+    "sync_ms": -3.18,
+    "cut_16th": 0,
+    "wobble_pct": 0.169,
+    "echo_div": 0.5,
+    "echo_fb": 0.873,
+    "echo_bars": 4,
+    "fader_ms": 19.3
+   },
+   "teaser": false,
+   "fix": {
+    "post_bars": 4,
+    "makeup_db": 3.6,
+    "beat_level": 0.9,
+    "pre_bars": 4,
+    "pre_makeup_db": 2.1,
+    "pre_riser": true
+   },
+   "at_s": 2482.963,
+   "tail": "vinyl brake over the last bar (1.76 s) from its downbeat, B on the one",
+   "riser": "noise riser 7.1 s (4 bars) ending on B's downbeat + sub impact",
+   "fell_back_to_cut": false
+  },
+  {
+   "n": 18,
+   "type": "slam",
+   "from_title": "Blackstreet - No Diggity",
+   "to_title": "Jeremih - Don't Tell 'Em",
+   "a_overlap_start_bar": 49,
+   "a_exit_bar": 49,
+   "b_cue_bar": 7,
+   "stretch_pct": 0.0,
+   "stretch_side": "none (cut on the one, no beat-match)",
+   "pair_score": 0.6484,
+   "vocal_overlap": 0.774,
+   "dip_out_mids": false,
+   "reverb_wash": false,
+   "scratch": true,
+   "backspin": false,
+   "key_shift_st": 0,
+   "reasons": [
+    "same tempo (105.0 BPM at A's end)",
+    "energy steady (-0.7 LU)",
+    "similar sound (closer than 82% of pairs)",
+    "11A -> 7B (clash)",
+    "8-bar window (short of a 16-bar phrase)"
+   ],
+   "overlap_bars_rendered": 0,
+   "phase_corr_ms": 0.0,
+   "variance": {
+    "sync_ms": -3.76,
+    "cut_16th": 0,
+    "wobble_pct": 0.159,
+    "echo_div": 0.75,
+    "echo_fb": 0.841,
+    "echo_bars": 4,
+    "fader_ms": 12.0
+   },
+   "teaser": true,
+   "fix": {
+    "pre_bars": 4,
+    "pre_makeup_db": 6.0,
+    "beat_level": 0.9,
+    "pre_riser": true
+   },
+   "at_s": 2560.678,
+   "tail": "cut on the one; A's last beat replaced by a scratch stab",
+   "riser": "noise riser 9.1 s (4 bars) ending on B's downbeat + sub impact",
+   "fell_back_to_cut": false
+  },
+  {
+   "n": 19,
+   "type": "chop",
+   "from_title": "Jeremih - Don't Tell 'Em",
+   "to_title": "Usher - Yeah!",
+   "a_overlap_start_bar": 28,
+   "a_exit_bar": 33,
+   "b_cue_bar": 6,
+   "stretch_pct": -0.0,
+   "stretch_side": "B runs at A's tempo through the chop, then jumps to its own tempo",
+   "pair_score": 0.6264,
+   "vocal_overlap": 0.993,
+   "dip_out_mids": false,
+   "reverb_wash": false,
+   "scratch": true,
+   "backspin": false,
+   "key_shift_st": 0,
+   "reasons": [
+    "same tempo (105.0 BPM at A's end)",
+    "energy steady (-1.2 LU)",
+    "similar sound (closer than 74% of pairs)",
+    "vocals overlap 6 of 8 bars",
+    "8-bar window (short of a 16-bar phrase)",
+    "different groove (r=0.10)"
+   ],
+   "overlap_bars_rendered": 5,
+   "phase_corr_ms": -5.9,
+   "variance": {
+    "sync_ms": 7.16,
+    "cut_16th": 0,
+    "wobble_pct": -0.25,
+    "echo_div": 0.75,
+    "echo_fb": 0.85,
+    "echo_bars": 4,
+    "fader_ms": -10.9
+   },
+   "teaser": false,
+   "fix": {
+    "hot": true,
+    "post_bars": 4,
+    "makeup_db": 4.8,
+    "beat_level": 0.9
+   },
+   "at_s": 2604.113,
+   "tail": "chop A2-B2-A1-B (crossfader cuts on the bar) + scratch stab",
+   "bar_s_ramp": [
+    2.2857,
+    2.2857
+   ],
+   "geom_downbeat_err_ms": 0.0,
+   "beat_offset_ms": -0.0,
+   "beats_compared": 20,
+   "beat_spread_mad_ms": 0.0
+  },
+  {
+   "n": 20,
+   "type": "slam",
+   "from_title": "Usher - Yeah!",
+   "to_title": "Jungle - PROBLEMZ",
+   "a_overlap_start_bar": 33,
+   "a_exit_bar": 33,
+   "b_cue_bar": 1,
+   "stretch_pct": 4.75,
+   "stretch_side": "none (cut on the one, no beat-match)",
+   "pair_score": 0.6774,
+   "vocal_overlap": 0.542,
+   "dip_out_mids": true,
+   "reverb_wash": false,
+   "scratch": true,
+   "backspin": false,
+   "key_shift_st": 0,
+   "reasons": [
+    "energy steady (+0.9 LU)",
+    "16-bar phrases both sides",
+    "matching groove (r=0.67)",
+    "vocals overlap 10 of 16 bars",
+    "different sound (closer than only 34% of pairs)"
+   ],
+   "overlap_bars_rendered": 0,
+   "phase_corr_ms": 0.0,
+   "variance": {
+    "sync_ms": -2.78,
+    "cut_16th": 0,
+    "wobble_pct": 0.16,
+    "echo_div": 0.75,
+    "echo_fb": 0.869,
+    "echo_bars": 3,
+    "fader_ms": 36.4
+   },
+   "teaser": true,
+   "fix": {
+    "post_bars": 4,
+    "makeup_db": 3.9,
+    "beat_level": 0.8
+   },
+   "at_s": 2665.825,
+   "tail": "cut on the one; A's last beat replaced by a scratch stab",
+   "fell_back_to_cut": false
+  },
+  {
+   "n": 21,
+   "type": "slam",
+   "from_title": "Jungle - PROBLEMZ",
+   "to_title": "Next - Too Close",
+   "a_overlap_start_bar": 33,
+   "a_exit_bar": 33,
+   "b_cue_bar": 9,
+   "stretch_pct": -9.35,
+   "stretch_side": "none (cut on the one, no beat-match)",
+   "pair_score": null,
+   "vocal_overlap": 0.861,
+   "dip_out_mids": false,
+   "reverb_wash": false,
+   "scratch": true,
+   "backspin": false,
+   "key_shift_st": 0,
+   "reasons": [],
+   "overlap_bars_rendered": 0,
+   "phase_corr_ms": 0.0,
+   "variance": {
+    "sync_ms": -5.47,
+    "cut_16th": 0,
+    "wobble_pct": 0.261,
+    "echo_div": 0.75,
+    "echo_fb": 0.822,
+    "echo_bars": 4,
+    "fader_ms": 30.8
+   },
+   "teaser": false,
+   "fix": null,
+   "at_s": 2735.649,
+   "tail": "cut on the one; A's last beat replaced by a scratch stab",
+   "fell_back_to_cut": false
+  },
+  {
+   "n": 22,
+   "type": "slam",
+   "from_title": "Next - Too Close",
+   "to_title": "Beyonce - Crazy In Love",
+   "a_overlap_start_bar": 33,
+   "a_exit_bar": 33,
+   "b_cue_bar": 19,
+   "stretch_pct": -0.44,
+   "stretch_side": "none (cut on the one, no beat-match)",
+   "pair_score": 0.6691,
+   "vocal_overlap": 0.962,
+   "dip_out_mids": false,
+   "reverb_wash": false,
+   "scratch": true,
+   "backspin": false,
+   "key_shift_st": 0,
+   "reasons": [
+    "same tempo (99.7 BPM at A's end)",
+    "energy steady (-0.9 LU)",
+    "matching groove (r=0.95)",
+    "vocals overlap 8 of 8 bars",
+    "8-bar window (short of a 16-bar phrase)"
+   ],
+   "overlap_bars_rendered": 0,
+   "phase_corr_ms": 0.0,
+   "variance": {
+    "sync_ms": 5.24,
+    "cut_16th": 1,
+    "wobble_pct": -0.166,
+    "echo_div": 0.75,
+    "echo_fb": 0.814,
+    "echo_bars": 4,
+    "fader_ms": 28.4
+   },
+   "teaser": true,
+   "fix": null,
+   "at_s": 2788.607,
+   "tail": "cut on the one; A's last beat replaced by a scratch stab",
+   "fell_back_to_cut": false
+  },
+  {
+   "n": 23,
+   "type": "chop",
+   "from_title": "Beyonce - Crazy In Love",
+   "to_title": "Kris Kross - Jump",
+   "a_overlap_start_bar": 48,
+   "a_exit_bar": 53,
+   "b_cue_bar": 14,
+   "stretch_pct": 2.75,
+   "stretch_side": "B runs at A's tempo through the chop, then jumps to its own tempo",
+   "pair_score": 0.6483,
+   "vocal_overlap": 0.974,
+   "dip_out_mids": false,
+   "reverb_wash": false,
+   "scratch": true,
+   "backspin": false,
+   "key_shift_st": 0,
+   "reasons": [
+    "-2.7% stretch on B (99.3 end -> 102.0 start)",
+    "energy steady (-1.2 LU)",
+    "similar sound (closer than 92% of pairs)",
+    "vocals overlap 8 of 8 bars",
+    "8-bar window (short of a 16-bar phrase)"
+   ],
+   "overlap_bars_rendered": 5,
+   "phase_corr_ms": -2.9,
+   "variance": {
+    "sync_ms": 2.58,
+    "cut_16th": 0,
+    "wobble_pct": -0.292,
+    "echo_div": 0.5,
+    "echo_fb": 0.864,
+    "echo_bars": 3,
+    "fader_ms": -11.0
+   },
+   "teaser": false,
+   "fix": {
+    "hot": true,
+    "post_bars": 4,
+    "makeup_db": 5.1,
+    "beat_level": 0.9
+   },
+   "at_s": 2853.889,
+   "tail": "chop A2-B2-A1-B (crossfader cuts on the bar) + scratch stab",
+   "bar_s_ramp": [
+    2.4178,
+    2.4178
+   ],
+   "geom_downbeat_err_ms": 0.0,
+   "beat_offset_ms": -0.0,
+   "beats_compared": 20,
+   "beat_spread_mad_ms": 6.9
+  },
+  {
+   "n": 24,
+   "type": "slam",
+   "from_title": "Kris Kross - Jump",
+   "to_title": "Los Del Rio - Macarena (Bayside Boys Remix)",
+   "a_overlap_start_bar": 48,
+   "a_exit_bar": 48,
+   "b_cue_bar": 31,
+   "stretch_pct": 1.16,
+   "stretch_side": "none (cut on the one, no beat-match)",
+   "pair_score": 0.7332,
+   "vocal_overlap": 0.973,
+   "dip_out_mids": true,
+   "reverb_wash": false,
+   "scratch": true,
+   "backspin": false,
+   "key_shift_st": 0,
+   "reasons": [
+    "-1.2% stretch on B (102.0 end -> 103.2 start)",
+    "energy steady (-1.4 LU)",
+    "16-bar phrases both sides",
+    "different groove (r=0.00)"
+   ],
+   "overlap_bars_rendered": 0,
+   "phase_corr_ms": 0.0,
+   "variance": {
+    "sync_ms": -7.88,
+    "cut_16th": 1,
+    "wobble_pct": 0.222,
+    "echo_div": 0.75,
+    "echo_fb": 0.862,
+    "echo_bars": 4,
+    "fader_ms": 28.3
+   },
+   "teaser": true,
+   "fix": null,
+   "at_s": 2934.216,
+   "tail": "cut on the one; A's last beat replaced by a scratch stab",
+   "fell_back_to_cut": false
+  },
+  {
+   "n": 25,
+   "type": "slam",
+   "from_title": "Los Del Rio - Macarena (Bayside Boys Remix)",
+   "to_title": "Everything But The Girl - Missing (Todd Terry Mix)",
+   "a_overlap_start_bar": 57,
+   "a_exit_bar": 57,
+   "b_cue_bar": 1,
+   "stretch_pct": 19.69,
+   "stretch_side": "none (cut on the one, no beat-match)",
+   "pair_score": null,
+   "vocal_overlap": 0.599,
+   "dip_out_mids": false,
+   "reverb_wash": false,
+   "scratch": false,
+   "backspin": false,
+   "key_shift_st": 0,
+   "reasons": [],
+   "overlap_bars_rendered": 0,
+   "phase_corr_ms": 0.0,
+   "variance": {
+    "sync_ms": 3.28,
+    "cut_16th": 1,
+    "wobble_pct": 0.149,
+    "echo_div": 0.75,
+    "echo_fb": 0.863,
+    "echo_bars": 4,
+    "fader_ms": 21.4
+   },
+   "teaser": false,
+   "fix": {
+    "pre_bars": 4,
+    "pre_makeup_db": 2.4,
+    "beat_level": 0.8,
+    "pre_riser": true
+   },
+   "at_s": 2990.041,
+   "tail": "cut on the one",
+   "riser": "noise riser 9.3 s (4 bars) ending on B's downbeat + sub impact",
+   "fell_back_to_cut": false
+  },
+  {
+   "n": 26,
+   "type": "bass_swap_8",
+   "from_title": "Everything But The Girl - Missing (Todd Terry Mix)",
+   "to_title": "Snap! - Rhythm Is A Dancer",
+   "a_overlap_start_bar": 77,
+   "a_exit_bar": 85,
+   "b_cue_bar": 1,
+   "stretch_pct": 0.69,
+   "stretch_side": "both, ramped bar by bar from 123.49 to 124.35 BPM across the overlap",
+   "pair_score": 0.7858,
+   "vocal_overlap": 0.336,
+   "dip_out_mids": false,
+   "reverb_wash": false,
+   "scratch": false,
+   "backspin": false,
+   "key_shift_st": 0,
+   "reasons": [
+    "-0.7% stretch on B (123.5 end -> 124.4 start)",
+    "8A -> 8A",
+    "similar sound (closer than 93% of pairs)",
+    "8-bar window (short of a 16-bar phrase)",
+    "longer cut"
+   ],
+   "overlap_bars_rendered": 8,
+   "phase_corr_ms": -8.3,
+   "variance": {
+    "sync_ms": -5.85,
+    "cut_16th": -1,
+    "wobble_pct": -0.18,
+    "echo_div": 0.5,
+    "echo_fb": 0.855,
+    "echo_bars": 3,
+    "fader_ms": -30.3,
+    "swap_bar": 4
+   },
+   "teaser": true,
+   "fix": {
+    "hot": true,
+    "post_bars": 4,
+    "makeup_db": 6.0,
+    "beat_level": 0.9
+   },
+   "at_s": 3114.427,
+   "tail": "bass swap on bar 5 of 8 (B bass killed before, A bass gone after), highs cross bars 3-5, A mids out by bar 8",
+   "bar_s_ramp": [
+    1.9426,
+    1.9309
+   ],
+   "geom_downbeat_err_ms": 0.0,
+   "beat_offset_ms": 0.0,
+   "beats_compared": 32,
+   "beat_spread_mad_ms": 10.1
+  },
+  {
+   "n": 27,
+   "type": "bass_swap_8",
+   "from_title": "Snap! - Rhythm Is A Dancer",
+   "to_title": "Moby - Go",
+   "a_overlap_start_bar": 90,
+   "a_exit_bar": 98,
+   "b_cue_bar": 1,
+   "stretch_pct": 1.17,
+   "stretch_side": "both, ramped bar by bar from 124.35 to 125.81 BPM across the overlap",
+   "pair_score": 0.9036,
+   "vocal_overlap": 0.339,
+   "dip_out_mids": false,
+   "reverb_wash": false,
+   "scratch": false,
+   "backspin": false,
+   "key_shift_st": 0,
+   "reasons": [
+    "-1.2% stretch on B (124.4 end -> 125.8 start)",
+    "energy steady (-1.3 LU)",
+    "16-bar phrases both sides"
+   ],
+   "overlap_bars_rendered": 8,
+   "phase_corr_ms": 0.8,
+   "variance": {
+    "sync_ms": 6.8,
+    "cut_16th": -1,
+    "wobble_pct": -0.195,
+    "echo_div": 0.75,
+    "echo_fb": 0.869,
+    "echo_bars": 4,
+    "fader_ms": -28.2,
+    "swap_bar": 4
+   },
+   "teaser": false,
+   "fix": null,
+   "at_s": 3286.249,
+   "tail": "bass swap on bar 5 of 8 (B bass killed before, A bass gone after), highs cross bars 3-5, A mids out by bar 8",
+   "bar_s_ramp": [
+    1.9286,
+    1.9091
+   ],
+   "geom_downbeat_err_ms": 0.0,
+   "beat_offset_ms": 0.0,
+   "beats_compared": 31,
+   "beat_spread_mad_ms": 8.9
+  },
+  {
+   "n": 28,
+   "type": "bass_swap_8",
+   "from_title": "Moby - Go",
+   "to_title": "Estelle - American Boy",
+   "a_overlap_start_bar": 105,
+   "a_exit_bar": 113,
+   "b_cue_bar": 1,
+   "stretch_pct": 1.74,
+   "stretch_side": "both, ramped bar by bar from 125.81 to 128.00 BPM across the overlap",
+   "pair_score": 0.7545,
+   "vocal_overlap": 0.39,
+   "dip_out_mids": false,
+   "reverb_wash": false,
+   "scratch": false,
+   "backspin": false,
+   "key_shift_st": 0,
+   "reasons": [
+    "-1.7% stretch on B (125.8 end -> 128.0 start)",
+    "9A -> 9A",
+    "similar sound (closer than 92% of pairs)",
+    "8-bar window (short of a 16-bar phrase)"
+   ],
+   "overlap_bars_rendered": 8,
+   "phase_corr_ms": -16.2,
+   "variance": {
+    "sync_ms": 5.67,
+    "cut_16th": 0,
+    "wobble_pct": 0.17,
+    "echo_div": 0.75,
+    "echo_fb": 0.848,
+    "echo_bars": 3,
+    "fader_ms": -15.1,
+    "swap_bar": 3
+   },
+   "teaser": true,
+   "fix": {
+    "hot": true,
+    "post_bars": 4,
+    "makeup_db": 4.0,
+    "beat_level": 0.7
+   },
+   "at_s": 3484.752,
+   "tail": "bass swap on bar 4 of 8 (B bass killed before, A bass gone after), highs cross bars 2-4, A mids out by bar 8",
+   "bar_s_ramp": [
+    1.9056,
+    1.877
+   ],
+   "geom_downbeat_err_ms": 0.0,
+   "beat_offset_ms": 0.0,
+   "beats_compared": 31,
+   "beat_spread_mad_ms": 9.8
+  },
+  {
+   "n": 29,
+   "type": "bass_swap_16",
+   "from_title": "Estelle - American Boy",
+   "to_title": "Eiffel 65 - Blue (Da Ba Dee)",
+   "a_overlap_start_bar": 89,
+   "a_exit_bar": 105,
+   "b_cue_bar": 1,
+   "stretch_pct": -0.01,
+   "stretch_side": "none (tempos equal)",
+   "pair_score": 0.8469,
+   "vocal_overlap": 0.069,
+   "dip_out_mids": false,
+   "reverb_wash": false,
+   "scratch": false,
+   "backspin": false,
+   "key_shift_st": 0,
+   "reasons": [
+    "same tempo (128.0 BPM at A's end)",
+    "16-bar phrases both sides",
+    "no vocal clash",
+    "longer cut"
+   ],
+   "overlap_bars_rendered": 16,
+   "phase_corr_ms": -2.1,
+   "variance": {
+    "sync_ms": -7.97,
+    "cut_16th": 1,
+    "wobble_pct": -0.213,
+    "echo_div": 0.75,
+    "echo_fb": 0.839,
+    "echo_bars": 3,
+    "fader_ms": 32.8,
+    "swap_bar": 6
+   },
+   "teaser": false,
+   "fix": {
+    "hot": true,
+    "post_bars": 4,
+    "makeup_db": 6.0,
+    "beat_level": 0.9
+   },
+   "at_s": 3649.886,
+   "tail": "bass swap on bar 7 of 16 (B bass killed before, A bass gone after), highs cross bars 4-7, A mids out by bar 16",
+   "bar_s_ramp": [
+    1.875,
+    1.8751
+   ],
+   "geom_downbeat_err_ms": 0.0,
+   "beat_offset_ms": -0.0,
+   "beats_compared": 63,
+   "beat_spread_mad_ms": 0.7
+  },
+  {
+   "n": 30,
+   "type": "bass_swap_8",
+   "from_title": "Eiffel 65 - Blue (Da Ba Dee)",
+   "to_title": "David Morales & The Face - Needin' U",
+   "a_overlap_start_bar": 106,
+   "a_exit_bar": 114,
+   "b_cue_bar": 1,
+   "stretch_pct": 1.84,
+   "stretch_side": "both, ramped bar by bar from 127.99 to 130.34 BPM across the overlap",
+   "pair_score": 0.782,
+   "vocal_overlap": 0.579,
+   "dip_out_mids": false,
+   "reverb_wash": false,
+   "scratch": false,
+   "backspin": false,
+   "key_shift_st": 0,
+   "reasons": [
+    "-1.8% stretch on B (128.0 end -> 130.3 start)",
+    "16-bar phrases both sides",
+    "similar sound (closer than 96% of pairs)",
+    "longer cut"
+   ],
+   "overlap_bars_rendered": 8,
+   "phase_corr_ms": -2.1,
+   "variance": {
+    "sync_ms": 4.76,
+    "cut_16th": -1,
+    "wobble_pct": -0.278,
+    "echo_div": 0.75,
+    "echo_fb": 0.863,
+    "echo_bars": 4,
+    "fader_ms": -25.3,
+    "swap_bar": 4
+   },
+   "teaser": true,
+   "fix": null,
+   "at_s": 3846.773,
+   "tail": "bass swap on bar 5 of 8 (B bass killed before, A bass gone after), highs cross bars 3-5, A mids out by bar 8",
+   "bar_s_ramp": [
+    1.873,
+    1.8434
+   ],
+   "geom_downbeat_err_ms": 0.0,
+   "beat_offset_ms": 0.0,
+   "beats_compared": 31,
+   "beat_spread_mad_ms": 6.2
+  },
+  {
+   "n": 31,
+   "type": "bass_swap_16",
+   "from_title": "David Morales & The Face - Needin' U",
+   "to_title": "Dario G - Sunchyme",
+   "a_overlap_start_bar": 73,
+   "a_exit_bar": 89,
+   "b_cue_bar": 1,
+   "stretch_pct": 2.04,
+   "stretch_side": "both, ramped bar by bar from 130.34 to 133.00 BPM across the overlap",
+   "pair_score": 0.8556,
+   "vocal_overlap": 0.091,
+   "dip_out_mids": false,
+   "reverb_wash": false,
+   "scratch": false,
+   "backspin": false,
+   "key_shift_st": 0,
+   "reasons": [
+    "-2.0% stretch on B (130.3 end -> 133.0 start)",
+    "B has a clean 16-bar intro",
+    "16-bar phrases both sides",
+    "different groove (r=0.16)"
+   ],
+   "overlap_bars_rendered": 16,
+   "phase_corr_ms": 0.1,
+   "variance": {
+    "sync_ms": -7.35,
+    "cut_16th": 0,
+    "wobble_pct": -0.294,
+    "echo_div": 0.75,
+    "echo_fb": 0.855,
+    "echo_bars": 3,
+    "fader_ms": -27.8,
+    "swap_bar": 10
+   },
+   "teaser": false,
+   "fix": {
+    "hot": true,
+    "post_bars": 4,
+    "makeup_db": 2.4,
+    "beat_level": 0.9
+   },
+   "at_s": 3979.481,
+   "tail": "bass swap on bar 11 of 16 (B bass killed before, A bass gone after), highs cross bars 6-11, A mids out by bar 16",
+   "bar_s_ramp": [
+    1.8402,
+    1.8056
+   ],
+   "geom_downbeat_err_ms": 0.0,
+   "beat_offset_ms": 0.0,
+   "beats_compared": 63,
+   "beat_spread_mad_ms": 8.4
+  },
+  {
+   "n": 32,
+   "type": "bass_swap_8",
+   "from_title": "Dario G - Sunchyme",
+   "to_title": "Planet Perfecto & Grace - Not Over Yet '99",
+   "a_overlap_start_bar": 81,
+   "a_exit_bar": 89,
+   "b_cue_bar": 1,
+   "stretch_pct": -1.86,
+   "stretch_side": "both, ramped bar by bar from 133.00 to 130.52 BPM across the overlap",
+   "pair_score": 0.7348,
+   "vocal_overlap": 0.459,
+   "dip_out_mids": false,
+   "reverb_wash": false,
+   "scratch": false,
+   "backspin": false,
+   "key_shift_st": 0,
+   "reasons": [
+    "+1.9% stretch on B (133.0 end -> 130.5 start)",
+    "energy steady (-0.5 LU)",
+    "similar sound (closer than 94% of pairs)",
+    "vocals overlap 7 of 8 bars",
+    "8-bar window (short of a 16-bar phrase)"
+   ],
+   "overlap_bars_rendered": 8,
+   "phase_corr_ms": -5.3,
+   "variance": {
+    "sync_ms": -6.33,
+    "cut_16th": 1,
+    "wobble_pct": 0.231,
+    "echo_div": 0.5,
+    "echo_fb": 0.855,
+    "echo_bars": 4,
+    "fader_ms": -37.5,
+    "swap_bar": 3
+   },
+   "teaser": true,
+   "fix": null,
+   "at_s": 4124.138,
+   "tail": "bass swap on bar 4 of 8 (B bass killed before, A bass gone after), highs cross bars 2-4, A mids out by bar 8",
+   "bar_s_ramp": [
+    1.8066,
+    1.8366
+   ],
+   "geom_downbeat_err_ms": 0.0,
+   "beat_offset_ms": -0.0,
+   "beats_compared": 32,
+   "beat_spread_mad_ms": 5.8
+  }
+ ],
+ "songs": [
+  {
+   "pos": 1,
+   "title": "Lady Gaga & Doechii - Runway",
+   "start_s": 0.0,
+   "src_lufs": -7.18,
+   "bars": [
+    1,
+    96
+   ],
+   "max_stretch_pct": 1.62,
+   "secs": 1.0
+  },
+  {
+   "pos": 2,
+   "title": "Johan K & Rinat Bibikov - Zombie",
+   "start_s": 158.04,
+   "src_lufs": -10.52,
+   "bars": [
+    1,
+    105
+   ],
+   "max_stretch_pct": 3.07,
+   "secs": 1.4
+  },
+  {
+   "pos": 3,
+   "title": "ATB, Topic & A7S - Your Love (9PM)",
+   "start_s": 347.17,
+   "src_lufs": -11.39,
+   "bars": [
+    1,
+    78
+   ],
+   "max_stretch_pct": 2.98,
+   "secs": 1.3
+  },
+  {
+   "pos": 4,
+   "title": "Kate Bush - Running Up That Hill (A Deal With God)",
+   "start_s": 463.61,
+   "src_lufs": -7.98,
+   "bars": [
+    1,
+    96
+   ],
+   "max_stretch_pct": 2.33,
+   "secs": 1.4
+  },
+  {
+   "pos": 5,
+   "title": "Oliver Heldens & Will Clarke - Lost In Music",
+   "start_s": 615.18,
+   "src_lufs": -7.86,
+   "bars": [
+    1,
+    113
+   ],
+   "max_stretch_pct": 2.27,
+   "secs": 1.7
+  },
+  {
+   "pos": 6,
+   "title": "Talking Heads - Psycho Killer",
+   "start_s": 810.53,
+   "src_lufs": -7.98,
+   "bars": [
+    1,
+    81
+   ],
+   "max_stretch_pct": 1.44,
+   "secs": 0.9
+  },
+  {
+   "pos": 7,
+   "title": "Livin' Joy - Don't Stop Movin'",
+   "start_s": 928.8,
+   "src_lufs": -11.88,
+   "bars": [
+    1,
+    105
+   ],
+   "max_stretch_pct": 0.21,
+   "secs": 1.0
+  },
+  {
+   "pos": 8,
+   "title": "Flo Rida - Low",
+   "start_s": 1120.83,
+   "src_lufs": -5.64,
+   "bars": [
+    17,
+    72
+   ],
+   "max_stretch_pct": 0,
+   "secs": 0.5
+  },
+  {
+   "pos": 9,
+   "title": "Disco Lines & Tinashe - No Broke Boys",
+   "start_s": 1211.86,
+   "src_lufs": -10.12,
+   "bars": [
+    25,
+    89
+   ],
+   "max_stretch_pct": 2.85,
+   "secs": 0.7
+  },
+  {
+   "pos": 10,
+   "title": "KATSEYE - GNARLY",
+   "start_s": 1314.45,
+   "src_lufs": -9.67,
+   "bars": [
+    1,
+    58
+   ],
+   "max_stretch_pct": 2.77,
+   "secs": 0.8
+  },
+  {
+   "pos": 11,
+   "title": "Fcukers - If You Wanna Party, Come Over To My House",
+   "start_s": 1401.77,
+   "src_lufs": -7.53,
+   "bars": [
+    1,
+    88
+   ],
+   "max_stretch_pct": 0.7,
+   "secs": 0.8
+  },
+  {
+   "pos": 12,
+   "title": "Olivia Rodrigo - vampire",
+   "start_s": 1555.34,
+   "src_lufs": -7.83,
+   "bars": [
+    5,
+    85
+   ],
+   "max_stretch_pct": 0,
+   "secs": 0.7
+  },
+  {
+   "pos": 13,
+   "title": "Ti\u00ebsto & Sexyy Red - OMG!",
+   "start_s": 1679.21,
+   "src_lufs": -7.75,
+   "bars": [
+    13,
+    77
+   ],
+   "max_stretch_pct": 0,
+   "secs": 0.5
+  },
+  {
+   "pos": 14,
+   "title": "Rihanna - Disturbia",
+   "start_s": 1784.22,
+   "src_lufs": -8.74,
+   "bars": [
+    1,
+    106
+   ],
+   "max_stretch_pct": 0.21,
+   "secs": 0.8
+  },
+  {
+   "pos": 15,
+   "title": "Missy Elliott - Lose Control",
+   "start_s": 1981.09,
+   "src_lufs": -8.73,
+   "bars": [
+    1,
+    112
+   ],
+   "max_stretch_pct": 0,
+   "secs": 0.8
+  },
+  {
+   "pos": 16,
+   "title": "Cardi B - WAP",
+   "start_s": 2186.02,
+   "src_lufs": -10.01,
+   "bars": [
+    9,
+    65
+   ],
+   "max_stretch_pct": 0,
+   "secs": 0.8
+  },
+  {
+   "pos": 17,
+   "title": "LCD Soundsystem - Daft Punk Is Playing At My House",
+   "start_s": 2287.08,
+   "src_lufs": -10.21,
+   "bars": [
+    2,
+    113
+   ],
+   "max_stretch_pct": 0,
+   "secs": 0.8
+  },
+  {
+   "pos": 18,
+   "title": "Blackstreet - No Diggity",
+   "start_s": 2482.96,
+   "src_lufs": -7.57,
+   "bars": [
+    15,
+    49
+   ],
+   "max_stretch_pct": 0,
+   "secs": 0.7
+  },
+  {
+   "pos": 19,
+   "title": "Jeremih - Don't Tell 'Em",
+   "start_s": 2560.68,
+   "src_lufs": -7.87,
+   "bars": [
+    9,
+    33
+   ],
+   "max_stretch_pct": 0,
+   "secs": 0.5
+  },
+  {
+   "pos": 20,
+   "title": "Usher - Yeah!",
+   "start_s": 2604.11,
+   "src_lufs": -8.24,
+   "bars": [
+    6,
+    33
+   ],
+   "max_stretch_pct": 0.25,
+   "secs": 0.8
+  },
+  {
+   "pos": 21,
+   "title": "Jungle - PROBLEMZ",
+   "start_s": 2665.82,
+   "src_lufs": -9.39,
+   "bars": [
+    1,
+    33
+   ],
+   "max_stretch_pct": 0,
+   "secs": 0.5
+  },
+  {
+   "pos": 22,
+   "title": "Next - Too Close",
+   "start_s": 2735.65,
+   "src_lufs": -13.77,
+   "bars": [
+    11,
+    33
+   ],
+   "max_stretch_pct": 0,
+   "secs": 0.7
+  },
+  {
+   "pos": 23,
+   "title": "Beyonce - Crazy In Love",
+   "start_s": 2788.61,
+   "src_lufs": -10.55,
+   "bars": [
+    21,
+    53
+   ],
+   "max_stretch_pct": 0,
+   "secs": 0.7
+  },
+  {
+   "pos": 24,
+   "title": "Kris Kross - Jump",
+   "start_s": 2853.89,
+   "src_lufs": -13.82,
+   "bars": [
+    14,
+    48
+   ],
+   "max_stretch_pct": 2.67,
+   "secs": 0.8
+  },
+  {
+   "pos": 25,
+   "title": "Los Del Rio - Macarena (Bayside Boys Remix)",
+   "start_s": 2934.22,
+   "src_lufs": -12.15,
+   "bars": [
+    33,
+    57
+   ],
+   "max_stretch_pct": 0,
+   "secs": 1.0
+  },
+  {
+   "pos": 26,
+   "title": "Everything But The Girl - Missing (Todd Terry Mix)",
+   "start_s": 2990.04,
+   "src_lufs": -10.19,
+   "bars": [
+    13,
+    85
+   ],
+   "max_stretch_pct": 0.65,
+   "secs": 1.0
+  },
+  {
+   "pos": 27,
+   "title": "Snap! - Rhythm Is A Dancer",
+   "start_s": 3114.43,
+   "src_lufs": -11.95,
+   "bars": [
+    1,
+    98
+   ],
+   "max_stretch_pct": 1.1,
+   "secs": 1.5
+  },
+  {
+   "pos": 28,
+   "title": "Moby - Go",
+   "start_s": 3286.25,
+   "src_lufs": -10.54,
+   "bars": [
+    1,
+    113
+   ],
+   "max_stretch_pct": 1.63,
+   "secs": 1.1
+  },
+  {
+   "pos": 29,
+   "title": "Estelle - American Boy",
+   "start_s": 3484.75,
+   "src_lufs": -8.48,
+   "bars": [
+    1,
+    105
+   ],
+   "max_stretch_pct": 1.61,
+   "secs": 1.1
+  },
+  {
+   "pos": 30,
+   "title": "Eiffel 65 - Blue (Da Ba Dee)",
+   "start_s": 3649.89,
+   "src_lufs": -11.9,
+   "bars": [
+    1,
+    114
+   ],
+   "max_stretch_pct": 1.72,
+   "secs": 1.2
+  },
+  {
+   "pos": 31,
+   "title": "David Morales & The Face - Needin' U",
+   "start_s": 3846.77,
+   "src_lufs": -12.13,
+   "bars": [
+    1,
+    89
+   ],
+   "max_stretch_pct": 1.97,
+   "secs": 2.5
+  },
+  {
+   "pos": 32,
+   "title": "Dario G - Sunchyme",
+   "start_s": 3979.48,
+   "src_lufs": -7.64,
+   "bars": [
+    1,
+    89
+   ],
+   "max_stretch_pct": 1.94,
+   "secs": 1.4
+  },
+  {
+   "pos": 33,
+   "title": "Planet Perfecto & Grace - Not Over Yet '99",
+   "start_s": 4124.14,
+   "src_lufs": -12.95,
+   "bars": [
+    1,
+    116
+   ],
+   "max_stretch_pct": 1.78,
+   "secs": 1.0
+  }
+ ],
+ "seed": 1002,
+ "fixes": {
+  "1": {
+   "hot": true,
+   "post_bars": 4,
+   "makeup_db": 4.0,
+   "beat_level": 0.7
+  },
+  "2": {
+   "hot": true,
+   "post_bars": 4,
+   "makeup_db": 3.3,
+   "beat_level": 0.7
+  },
+  "3": {
+   "hot": true,
+   "post_bars": 4,
+   "makeup_db": 3.0,
+   "beat_level": 0.7
+  },
+  "4": {
+   "hot": true,
+   "post_bars": 4,
+   "makeup_db": 2.5,
+   "beat_level": 0.7
+  },
+  "6": {
+   "hot": true,
+   "post_bars": 4,
+   "makeup_db": 2.7,
+   "beat_level": 0.7
+  },
+  "7": {
+   "post_bars": 4,
+   "makeup_db": 6.0,
+   "beat_level": 0.9
+  },
+  "8": {
+   "pre_bars": 4,
+   "pre_makeup_db": 4.0,
+   "beat_level": 0.9,
+   "pre_riser": true,
+   "post_bars": 4,
+   "makeup_db": 3.9
+  },
+  "9": {
+   "hot": true,
+   "post_bars": 4,
+   "makeup_db": 2.2,
+   "beat_level": 0.7
+  },
+  "10": {
+   "hot": true,
+   "post_bars": 4,
+   "makeup_db": 2.8,
+   "beat_level": 0.7
+  },
+  "11": {
+   "post_bars": 4,
+   "makeup_db": 3.0,
+   "beat_level": 0.8
+  },
+  "12": {
+   "pre_bars": 4,
+   "pre_makeup_db": 2.8,
+   "beat_level": 0.8,
+   "pre_riser": true
+  },
+  "13": {
+   "pre_bars": 4,
+   "pre_makeup_db": 3.6,
+   "beat_level": 0.9,
+   "post_bars": 4,
+   "makeup_db": 2.4,
+   "hot": true
+  },
+  "14": {
+   "post_bars": 4,
+   "makeup_db": 6.0,
+   "beat_level": 0.9
+  },
+  "17": {
+   "post_bars": 4,
+   "makeup_db": 3.6,
+   "beat_level": 0.9,
+   "pre_bars": 4,
+   "pre_makeup_db": 2.1,
+   "pre_riser": true
+  },
+  "18": {
+   "pre_bars": 4,
+   "pre_makeup_db": 6.0,
+   "beat_level": 0.9,
+   "pre_riser": true
+  },
+  "19": {
+   "hot": true,
+   "post_bars": 4,
+   "makeup_db": 4.8,
+   "beat_level": 0.9
+  },
+  "20": {
+   "post_bars": 4,
+   "makeup_db": 3.9,
+   "beat_level": 0.8
+  },
+  "23": {
+   "hot": true,
+   "post_bars": 4,
+   "makeup_db": 5.1,
+   "beat_level": 0.9
+  },
+  "25": {
+   "pre_bars": 4,
+   "pre_makeup_db": 2.4,
+   "beat_level": 0.8,
+   "pre_riser": true
+  },
+  "26": {
+   "hot": true,
+   "post_bars": 4,
+   "makeup_db": 6.0,
+   "beat_level": 0.9
+  },
+  "28": {
+   "hot": true,
+   "post_bars": 4,
+   "makeup_db": 4.0,
+   "beat_level": 0.7
+  },
+  "29": {
+   "hot": true,
+   "post_bars": 4,
+   "makeup_db": 6.0,
+   "beat_level": 0.9
+  },
+  "31": {
+   "hot": true,
+   "post_bars": 4,
+   "makeup_db": 2.4,
+   "beat_level": 0.9
+  }
+ },
+ "lulls": [
+  {
+   "n": 1,
+   "type": "bass_swap_16",
+   "at_s": 158.0,
+   "ref_lufs_st": -15.0,
+   "min_lufs_st": -15.6,
+   "dip_lu": 0.7,
+   "dip_where": "during",
+   "min_at_s": 189.4,
+   "overlap_end_s": 189.8
+  },
+  {
+   "n": 2,
+   "type": "bass_swap_8",
+   "at_s": 347.2,
+   "ref_lufs_st": -14.4,
+   "min_lufs_st": -15.2,
+   "dip_lu": 0.8,
+   "dip_where": "after",
+   "min_at_s": 364.8,
+   "overlap_end_s": 362.7
+  },
+  {
+   "n": 3,
+   "type": "bass_swap_16",
+   "at_s": 463.6,
+   "ref_lufs_st": -13.8,
+   "min_lufs_st": -15.3,
+   "dip_lu": 1.4,
+   "dip_where": "after",
+   "min_at_s": 500.2,
+   "overlap_end_s": 494.2
+  },
+  {
+   "n": 4,
+   "type": "bass_swap_16",
+   "at_s": 615.2,
+   "ref_lufs_st": -13.3,
+   "min_lufs_st": -13.8,
+   "dip_lu": 0.4,
+   "dip_where": "during",
+   "min_at_s": 619.8,
+   "overlap_end_s": 645.5
+  },
+  {
+   "n": 5,
+   "type": "bass_swap_8",
+   "at_s": 810.5,
+   "ref_lufs_st": -15.7,
+   "min_lufs_st": -14.8,
+   "dip_lu": -0.8,
+   "dip_where": "before",
+   "min_at_s": 807.6,
+   "overlap_end_s": 825.4
+  },
+  {
+   "n": 6,
+   "type": "bass_swap_16",
+   "at_s": 928.8,
+   "ref_lufs_st": -14.1,
+   "min_lufs_st": -15.3,
+   "dip_lu": 1.2,
+   "dip_where": "before",
+   "min_at_s": 925.9,
+   "overlap_end_s": 958.3
+  },
+  {
+   "n": 7,
+   "type": "brake_cut",
+   "at_s": 1120.8,
+   "ref_lufs_st": -12.8,
+   "min_lufs_st": -19.8,
+   "dip_lu": 7.0,
+   "dip_where": "after",
+   "min_at_s": 1126.8,
+   "overlap_end_s": 1120.8
+  },
+  {
+   "n": 8,
+   "type": "slam",
+   "at_s": 1211.9,
+   "ref_lufs_st": -12.7,
+   "min_lufs_st": -15.5,
+   "dip_lu": 2.9,
+   "dip_where": "before",
+   "min_at_s": 1210.1,
+   "overlap_end_s": 1211.9
+  },
+  {
+   "n": 9,
+   "type": "bass_swap_8",
+   "at_s": 1314.5,
+   "ref_lufs_st": -12.5,
+   "min_lufs_st": -14.4,
+   "dip_lu": 1.9,
+   "dip_where": "during",
+   "min_at_s": 1317.7,
+   "overlap_end_s": 1328.9
+  },
+  {
+   "n": 10,
+   "type": "bass_swap_8",
+   "at_s": 1401.8,
+   "ref_lufs_st": -14.2,
+   "min_lufs_st": -13.8,
+   "dip_lu": -0.4,
+   "dip_where": "before",
+   "min_at_s": 1398.8,
+   "overlap_end_s": 1415.9
+  },
+  {
+   "n": 11,
+   "type": "echo_out",
+   "at_s": 1555.3,
+   "ref_lufs_st": -14.0,
+   "min_lufs_st": -15.4,
+   "dip_lu": 1.5,
+   "dip_where": "after",
+   "min_at_s": 1561.2,
+   "overlap_end_s": 1555.3
+  },
+  {
+   "n": 12,
+   "type": "slam",
+   "at_s": 1679.2,
+   "ref_lufs_st": -13.2,
+   "min_lufs_st": -12.7,
+   "dip_lu": -0.5,
+   "dip_where": "after",
+   "min_at_s": 1682.4,
+   "overlap_end_s": 1679.2
+  },
+  {
+   "n": 13,
+   "type": "bass_swap_8",
+   "at_s": 1784.2,
+   "ref_lufs_st": -14.3,
+   "min_lufs_st": -15.9,
+   "dip_lu": 1.6,
+   "dip_where": "during",
+   "min_at_s": 1784.6,
+   "overlap_end_s": 1799.2
+  },
+  {
+   "n": 14,
+   "type": "echo_out",
+   "at_s": 1981.1,
+   "ref_lufs_st": -13.8,
+   "min_lufs_st": -17.0,
+   "dip_lu": 3.2,
+   "dip_where": "after",
+   "min_at_s": 1987.0,
+   "overlap_end_s": 1981.1
+  },
+  {
+   "n": 15,
+   "type": "brake_cut",
+   "at_s": 2186.0,
+   "ref_lufs_st": -16.4,
+   "min_lufs_st": -16.7,
+   "dip_lu": 0.3,
+   "dip_where": "after",
+   "min_at_s": 2190.2,
+   "overlap_end_s": 2186.0
+  },
+  {
+   "n": 16,
+   "type": "echo_out",
+   "at_s": 2287.1,
+   "ref_lufs_st": -14.1,
+   "min_lufs_st": -14.9,
+   "dip_lu": 0.8,
+   "dip_where": "after",
+   "min_at_s": 2290.9,
+   "overlap_end_s": 2287.1
+  },
+  {
+   "n": 17,
+   "type": "brake_cut",
+   "at_s": 2483.0,
+   "ref_lufs_st": -13.1,
+   "min_lufs_st": -14.4,
+   "dip_lu": 1.3,
+   "dip_where": "before",
+   "min_at_s": 2482.0,
+   "overlap_end_s": 2483.0
+  },
+  {
+   "n": 18,
+   "type": "slam",
+   "at_s": 2560.7,
+   "ref_lufs_st": -13.7,
+   "min_lufs_st": -14.5,
+   "dip_lu": 0.8,
+   "dip_where": "before",
+   "min_at_s": 2558.5,
+   "overlap_end_s": 2560.7
+  },
+  {
+   "n": 19,
+   "type": "chop",
+   "at_s": 2604.1,
+   "ref_lufs_st": -13.5,
+   "min_lufs_st": -15.9,
+   "dip_lu": 2.4,
+   "dip_where": "during",
+   "min_at_s": 2607.7,
+   "overlap_end_s": 2615.5
+  },
+  {
+   "n": 20,
+   "type": "slam",
+   "at_s": 2665.8,
+   "ref_lufs_st": -13.3,
+   "min_lufs_st": -14.6,
+   "dip_lu": 1.3,
+   "dip_where": "after",
+   "min_at_s": 2671.8,
+   "overlap_end_s": 2665.8
+  },
+  {
+   "n": 21,
+   "type": "slam",
+   "at_s": 2735.6,
+   "ref_lufs_st": -13.8,
+   "min_lufs_st": -15.3,
+   "dip_lu": 1.5,
+   "dip_where": "after",
+   "min_at_s": 2736.5,
+   "overlap_end_s": 2735.6
+  },
+  {
+   "n": 22,
+   "type": "slam",
+   "at_s": 2788.6,
+   "ref_lufs_st": -14.4,
+   "min_lufs_st": -13.9,
+   "dip_lu": -0.5,
+   "dip_where": "after",
+   "min_at_s": 2789.4,
+   "overlap_end_s": 2788.6
+  },
+  {
+   "n": 23,
+   "type": "chop",
+   "at_s": 2853.9,
+   "ref_lufs_st": -14.0,
+   "min_lufs_st": -19.1,
+   "dip_lu": 5.1,
+   "dip_where": "during",
+   "min_at_s": 2859.6,
+   "overlap_end_s": 2866.0
+  },
+  {
+   "n": 24,
+   "type": "slam",
+   "at_s": 2934.2,
+   "ref_lufs_st": -13.8,
+   "min_lufs_st": -14.0,
+   "dip_lu": 0.3,
+   "dip_where": "after",
+   "min_at_s": 2935.3,
+   "overlap_end_s": 2934.2
+  },
+  {
+   "n": 25,
+   "type": "slam",
+   "at_s": 2990.0,
+   "ref_lufs_st": -13.8,
+   "min_lufs_st": -14.4,
+   "dip_lu": 0.6,
+   "dip_where": "after",
+   "min_at_s": 2994.3,
+   "overlap_end_s": 2990.0
+  },
+  {
+   "n": 26,
+   "type": "bass_swap_8",
+   "at_s": 3114.4,
+   "ref_lufs_st": -13.6,
+   "min_lufs_st": -17.4,
+   "dip_lu": 3.8,
+   "dip_where": "after",
+   "min_at_s": 3135.9,
+   "overlap_end_s": 3129.9
+  },
+  {
+   "n": 27,
+   "type": "bass_swap_8",
+   "at_s": 3286.2,
+   "ref_lufs_st": -13.3,
+   "min_lufs_st": -14.5,
+   "dip_lu": 1.1,
+   "dip_where": "before",
+   "min_at_s": 3283.3,
+   "overlap_end_s": 3301.6
+  },
+  {
+   "n": 28,
+   "type": "bass_swap_8",
+   "at_s": 3484.8,
+   "ref_lufs_st": -14.1,
+   "min_lufs_st": -14.4,
+   "dip_lu": 0.3,
+   "dip_where": "before",
+   "min_at_s": 3481.8,
+   "overlap_end_s": 3499.9
+  },
+  {
+   "n": 29,
+   "type": "bass_swap_16",
+   "at_s": 3649.9,
+   "ref_lufs_st": -14.0,
+   "min_lufs_st": -18.0,
+   "dip_lu": 4.0,
+   "dip_where": "after",
+   "min_at_s": 3681.6,
+   "overlap_end_s": 3679.9
+  },
+  {
+   "n": 30,
+   "type": "bass_swap_8",
+   "at_s": 3846.8,
+   "ref_lufs_st": -16.6,
+   "min_lufs_st": -17.8,
+   "dip_lu": 1.2,
+   "dip_where": "after",
+   "min_at_s": 3863.8,
+   "overlap_end_s": 3861.6
+  },
+  {
+   "n": 31,
+   "type": "bass_swap_16",
+   "at_s": 3979.5,
+   "ref_lufs_st": -14.2,
+   "min_lufs_st": -16.6,
+   "dip_lu": 2.4,
+   "dip_where": "during",
+   "min_at_s": 3995.8,
+   "overlap_end_s": 4008.6
+  },
+  {
+   "n": 32,
+   "type": "bass_swap_8",
+   "at_s": 4124.1,
+   "ref_lufs_st": -14.3,
+   "min_lufs_st": -14.6,
+   "dip_lu": 0.4,
+   "dip_where": "after",
+   "min_at_s": 4142.2,
+   "overlap_end_s": 4138.7
+  }
+ ],
+ "near_silence_runs": [
+  [
+   1995.55,
+   0.3
+  ],
+  [
+   4334.57,
+   0.25
+  ]
+ ],
+ "premaster_lufs": -13.57,
+ "master_gain_db": 4.92,
+ "master_lufs": -10.1,
+ "sample_peak_dbfs": -1.8,
+ "mp3": "/Users/christophershannon/personal/90s2000 playlist/_pool build/mixer/mixes/2 - Witching Hour Warehouse.mp3",
+ "mp3_bytes": 173436501,
+ "mp3_integrated_lufs": -10.1,
+ "mp3_true_peak_dbtp": -0.5,
+ "silent_gaps": [],
+ "duration_s": 4335.8,
+ "planned_duration_s": 4352.6,
+ "render_secs": 243.1,
+ "checks": {
+  "no_clipping": true,
+  "no_silent_gaps": true,
+  "joins_geom_within_10ms": true,
+  "joins_tracker_beats_within_10ms": "18 of 18",
+  "joins_over_10ms": [],
+  "duration_vs_plan_s": -16.8,
+  "duration_ok": true,
+  "lull_joins_over_2lu": [
+   [
+    7,
+    7.0
+   ],
+   [
+    8,
+    2.9
+   ],
+   [
+    14,
+    3.2
+   ],
+   [
+    19,
+    2.4
+   ],
+   [
+    23,
+    5.1
+   ],
+   [
+    26,
+    3.8
+   ],
+   [
+    29,
+    4.0
+   ],
+   [
+    31,
+    2.4
+   ]
+  ],
+  "near_silence_over_half_beat": [
+   [
+    1995.55,
+    0.3
+   ],
+   [
+    4334.57,
+    0.25
+   ]
+  ]
+ },
+ "lulls_pass2": [
+  {
+   "n": 1,
+   "type": "bass_swap_16",
+   "at_s": 158.0,
+   "ref_lufs_st": -15.0,
+   "min_lufs_st": -15.6,
+   "dip_lu": 0.7,
+   "dip_where": "during",
+   "min_at_s": 189.4,
+   "overlap_end_s": 189.8
+  },
+  {
+   "n": 2,
+   "type": "bass_swap_8",
+   "at_s": 347.2,
+   "ref_lufs_st": -14.4,
+   "min_lufs_st": -15.2,
+   "dip_lu": 0.8,
+   "dip_where": "after",
+   "min_at_s": 364.8,
+   "overlap_end_s": 362.7
+  },
+  {
+   "n": 3,
+   "type": "bass_swap_16",
+   "at_s": 463.6,
+   "ref_lufs_st": -13.8,
+   "min_lufs_st": -15.3,
+   "dip_lu": 1.4,
+   "dip_where": "after",
+   "min_at_s": 500.2,
+   "overlap_end_s": 494.2
+  },
+  {
+   "n": 4,
+   "type": "bass_swap_16",
+   "at_s": 615.2,
+   "ref_lufs_st": -13.3,
+   "min_lufs_st": -13.8,
+   "dip_lu": 0.4,
+   "dip_where": "during",
+   "min_at_s": 619.8,
+   "overlap_end_s": 645.5
+  },
+  {
+   "n": 5,
+   "type": "bass_swap_8",
+   "at_s": 810.5,
+   "ref_lufs_st": -15.7,
+   "min_lufs_st": -14.8,
+   "dip_lu": -0.8,
+   "dip_where": "before",
+   "min_at_s": 807.6,
+   "overlap_end_s": 825.4
+  },
+  {
+   "n": 6,
+   "type": "bass_swap_16",
+   "at_s": 928.8,
+   "ref_lufs_st": -14.1,
+   "min_lufs_st": -15.3,
+   "dip_lu": 1.2,
+   "dip_where": "before",
+   "min_at_s": 925.9,
+   "overlap_end_s": 958.3
+  },
+  {
+   "n": 7,
+   "type": "brake_cut",
+   "at_s": 1120.8,
+   "ref_lufs_st": -12.8,
+   "min_lufs_st": -20.4,
+   "dip_lu": 7.6,
+   "dip_where": "after",
+   "min_at_s": 1126.8,
+   "overlap_end_s": 1120.8
+  },
+  {
+   "n": 8,
+   "type": "slam",
+   "at_s": 1211.9,
+   "ref_lufs_st": -12.7,
+   "min_lufs_st": -16.5,
+   "dip_lu": 3.9,
+   "dip_where": "after",
+   "min_at_s": 1212.2,
+   "overlap_end_s": 1211.9
+  },
+  {
+   "n": 9,
+   "type": "bass_swap_8",
+   "at_s": 1314.5,
+   "ref_lufs_st": -12.5,
+   "min_lufs_st": -14.4,
+   "dip_lu": 1.9,
+   "dip_where": "during",
+   "min_at_s": 1317.7,
+   "overlap_end_s": 1328.9
+  },
+  {
+   "n": 10,
+   "type": "bass_swap_8",
+   "at_s": 1401.8,
+   "ref_lufs_st": -14.2,
+   "min_lufs_st": -13.8,
+   "dip_lu": -0.4,
+   "dip_where": "before",
+   "min_at_s": 1398.8,
+   "overlap_end_s": 1415.9
+  },
+  {
+   "n": 11,
+   "type": "echo_out",
+   "at_s": 1555.3,
+   "ref_lufs_st": -14.0,
+   "min_lufs_st": -15.4,
+   "dip_lu": 1.5,
+   "dip_where": "after",
+   "min_at_s": 1561.2,
+   "overlap_end_s": 1555.3
+  },
+  {
+   "n": 12,
+   "type": "slam",
+   "at_s": 1679.2,
+   "ref_lufs_st": -13.2,
+   "min_lufs_st": -12.7,
+   "dip_lu": -0.5,
+   "dip_where": "after",
+   "min_at_s": 1682.4,
+   "overlap_end_s": 1679.2
+  },
+  {
+   "n": 13,
+   "type": "bass_swap_8",
+   "at_s": 1784.2,
+   "ref_lufs_st": -14.3,
+   "min_lufs_st": -16.7,
+   "dip_lu": 2.4,
+   "dip_where": "after",
+   "min_at_s": 1799.4,
+   "overlap_end_s": 1799.2
+  },
+  {
+   "n": 14,
+   "type": "echo_out",
+   "at_s": 1981.1,
+   "ref_lufs_st": -13.8,
+   "min_lufs_st": -17.6,
+   "dip_lu": 3.8,
+   "dip_where": "after",
+   "min_at_s": 1987.0,
+   "overlap_end_s": 1981.1
+  },
+  {
+   "n": 15,
+   "type": "brake_cut",
+   "at_s": 2186.0,
+   "ref_lufs_st": -16.4,
+   "min_lufs_st": -16.7,
+   "dip_lu": 0.3,
+   "dip_where": "after",
+   "min_at_s": 2190.2,
+   "overlap_end_s": 2186.0
+  },
+  {
+   "n": 16,
+   "type": "echo_out",
+   "at_s": 2287.1,
+   "ref_lufs_st": -14.1,
+   "min_lufs_st": -14.9,
+   "dip_lu": 0.8,
+   "dip_where": "after",
+   "min_at_s": 2290.9,
+   "overlap_end_s": 2287.1
+  },
+  {
+   "n": 17,
+   "type": "brake_cut",
+   "at_s": 2483.0,
+   "ref_lufs_st": -13.2,
+   "min_lufs_st": -15.3,
+   "dip_lu": 2.1,
+   "dip_where": "before",
+   "min_at_s": 2481.4,
+   "overlap_end_s": 2483.0
+  },
+  {
+   "n": 18,
+   "type": "slam",
+   "at_s": 2560.7,
+   "ref_lufs_st": -13.7,
+   "min_lufs_st": -15.9,
+   "dip_lu": 2.1,
+   "dip_where": "before",
+   "min_at_s": 2558.3,
+   "overlap_end_s": 2560.7
+  },
+  {
+   "n": 19,
+   "type": "chop",
+   "at_s": 2604.1,
+   "ref_lufs_st": -13.5,
+   "min_lufs_st": -15.9,
+   "dip_lu": 2.4,
+   "dip_where": "during",
+   "min_at_s": 2607.7,
+   "overlap_end_s": 2615.5
+  },
+  {
+   "n": 20,
+   "type": "slam",
+   "at_s": 2665.8,
+   "ref_lufs_st": -13.3,
+   "min_lufs_st": -14.6,
+   "dip_lu": 1.3,
+   "dip_where": "after",
+   "min_at_s": 2671.8,
+   "overlap_end_s": 2665.8
+  },
+  {
+   "n": 21,
+   "type": "slam",
+   "at_s": 2735.6,
+   "ref_lufs_st": -13.8,
+   "min_lufs_st": -15.3,
+   "dip_lu": 1.5,
+   "dip_where": "after",
+   "min_at_s": 2736.5,
+   "overlap_end_s": 2735.6
+  },
+  {
+   "n": 22,
+   "type": "slam",
+   "at_s": 2788.6,
+   "ref_lufs_st": -14.4,
+   "min_lufs_st": -13.9,
+   "dip_lu": -0.5,
+   "dip_where": "after",
+   "min_at_s": 2789.4,
+   "overlap_end_s": 2788.6
+  },
+  {
+   "n": 23,
+   "type": "chop",
+   "at_s": 2853.9,
+   "ref_lufs_st": -14.0,
+   "min_lufs_st": -19.1,
+   "dip_lu": 5.1,
+   "dip_where": "during",
+   "min_at_s": 2859.6,
+   "overlap_end_s": 2866.0
+  },
+  {
+   "n": 24,
+   "type": "slam",
+   "at_s": 2934.2,
+   "ref_lufs_st": -13.8,
+   "min_lufs_st": -14.0,
+   "dip_lu": 0.3,
+   "dip_where": "after",
+   "min_at_s": 2935.3,
+   "overlap_end_s": 2934.2
+  },
+  {
+   "n": 25,
+   "type": "slam",
+   "at_s": 2990.0,
+   "ref_lufs_st": -13.8,
+   "min_lufs_st": -14.4,
+   "dip_lu": 0.6,
+   "dip_where": "after",
+   "min_at_s": 2994.3,
+   "overlap_end_s": 2990.0
+  },
+  {
+   "n": 26,
+   "type": "bass_swap_8",
+   "at_s": 3114.4,
+   "ref_lufs_st": -13.6,
+   "min_lufs_st": -18.2,
+   "dip_lu": 4.7,
+   "dip_where": "after",
+   "min_at_s": 3135.9,
+   "overlap_end_s": 3129.9
+  },
+  {
+   "n": 27,
+   "type": "bass_swap_8",
+   "at_s": 3286.2,
+   "ref_lufs_st": -13.3,
+   "min_lufs_st": -14.5,
+   "dip_lu": 1.1,
+   "dip_where": "before",
+   "min_at_s": 3283.3,
+   "overlap_end_s": 3301.6
+  },
+  {
+   "n": 28,
+   "type": "bass_swap_8",
+   "at_s": 3484.8,
+   "ref_lufs_st": -14.1,
+   "min_lufs_st": -14.4,
+   "dip_lu": 0.3,
+   "dip_where": "before",
+   "min_at_s": 3481.8,
+   "overlap_end_s": 3499.9
+  },
+  {
+   "n": 29,
+   "type": "bass_swap_16",
+   "at_s": 3649.9,
+   "ref_lufs_st": -14.0,
+   "min_lufs_st": -19.8,
+   "dip_lu": 5.8,
+   "dip_where": "after",
+   "min_at_s": 3681.6,
+   "overlap_end_s": 3679.9
+  },
+  {
+   "n": 30,
+   "type": "bass_swap_8",
+   "at_s": 3846.8,
+   "ref_lufs_st": -16.6,
+   "min_lufs_st": -17.8,
+   "dip_lu": 1.2,
+   "dip_where": "after",
+   "min_at_s": 3863.8,
+   "overlap_end_s": 3861.6
+  },
+  {
+   "n": 31,
+   "type": "bass_swap_16",
+   "at_s": 3979.5,
+   "ref_lufs_st": -14.2,
+   "min_lufs_st": -16.6,
+   "dip_lu": 2.4,
+   "dip_where": "during",
+   "min_at_s": 3995.8,
+   "overlap_end_s": 4008.6
+  },
+  {
+   "n": 32,
+   "type": "bass_swap_8",
+   "at_s": 4124.1,
+   "ref_lufs_st": -14.3,
+   "min_lufs_st": -14.6,
+   "dip_lu": 0.4,
+   "dip_where": "after",
+   "min_at_s": 4142.2,
+   "overlap_end_s": 4138.7
+  }
+ ],
+ "lulls_pass1": [
+  {
+   "n": 1,
+   "type": "bass_swap_16",
+   "at_s": 158.0,
+   "ref_lufs_st": -15.0,
+   "min_lufs_st": -19.4,
+   "dip_lu": 4.5,
+   "dip_where": "during",
+   "min_at_s": 189.3,
+   "overlap_end_s": 189.8
+  },
+  {
+   "n": 2,
+   "type": "bass_swap_8",
+   "at_s": 347.2,
+   "ref_lufs_st": -14.4,
+   "min_lufs_st": -17.7,
+   "dip_lu": 3.3,
+   "dip_where": "after",
+   "min_at_s": 364.8,
+   "overlap_end_s": 362.7
+  },
+  {
+   "n": 3,
+   "type": "bass_swap_16",
+   "at_s": 463.6,
+   "ref_lufs_st": -13.8,
+   "min_lufs_st": -16.8,
+   "dip_lu": 3.0,
+   "dip_where": "after",
+   "min_at_s": 496.7,
+   "overlap_end_s": 494.2
+  },
+  {
+   "n": 4,
+   "type": "bass_swap_16",
+   "at_s": 615.2,
+   "ref_lufs_st": -13.3,
+   "min_lufs_st": -15.8,
+   "dip_lu": 2.5,
+   "dip_where": "during",
+   "min_at_s": 644.7,
+   "overlap_end_s": 645.5
+  },
+  {
+   "n": 5,
+   "type": "bass_swap_8",
+   "at_s": 810.5,
+   "ref_lufs_st": -15.7,
+   "min_lufs_st": -14.8,
+   "dip_lu": -0.8,
+   "dip_where": "before",
+   "min_at_s": 807.6,
+   "overlap_end_s": 825.4
+  },
+  {
+   "n": 6,
+   "type": "bass_swap_16",
+   "at_s": 928.8,
+   "ref_lufs_st": -14.1,
+   "min_lufs_st": -16.8,
+   "dip_lu": 2.7,
+   "dip_where": "after",
+   "min_at_s": 961.6,
+   "overlap_end_s": 958.3
+  },
+  {
+   "n": 7,
+   "type": "brake_cut",
+   "at_s": 1120.8,
+   "ref_lufs_st": -12.8,
+   "min_lufs_st": -23.8,
+   "dip_lu": 11.0,
+   "dip_where": "after",
+   "min_at_s": 1123.4,
+   "overlap_end_s": 1120.8
+  },
+  {
+   "n": 8,
+   "type": "slam",
+   "at_s": 1211.9,
+   "ref_lufs_st": -12.7,
+   "min_lufs_st": -20.7,
+   "dip_lu": 8.1,
+   "dip_where": "before",
+   "min_at_s": 1208.9,
+   "overlap_end_s": 1211.9
+  },
+  {
+   "n": 9,
+   "type": "bass_swap_8",
+   "at_s": 1314.5,
+   "ref_lufs_st": -12.5,
+   "min_lufs_st": -14.7,
+   "dip_lu": 2.2,
+   "dip_where": "after",
+   "min_at_s": 1332.1,
+   "overlap_end_s": 1328.9
+  },
+  {
+   "n": 10,
+   "type": "bass_swap_8",
+   "at_s": 1401.8,
+   "ref_lufs_st": -14.2,
+   "min_lufs_st": -17.0,
+   "dip_lu": 2.8,
+   "dip_where": "during",
+   "min_at_s": 1413.6,
+   "overlap_end_s": 1415.9
+  },
+  {
+   "n": 11,
+   "type": "echo_out",
+   "at_s": 1555.3,
+   "ref_lufs_st": -14.0,
+   "min_lufs_st": -16.9,
+   "dip_lu": 3.0,
+   "dip_where": "after",
+   "min_at_s": 1560.0,
+   "overlap_end_s": 1555.3
+  },
+  {
+   "n": 12,
+   "type": "slam",
+   "at_s": 1679.2,
+   "ref_lufs_st": -13.2,
+   "min_lufs_st": -16.0,
+   "dip_lu": 2.8,
+   "dip_where": "before",
+   "min_at_s": 1676.3,
+   "overlap_end_s": 1679.2
+  },
+  {
+   "n": 13,
+   "type": "bass_swap_8",
+   "at_s": 1784.2,
+   "ref_lufs_st": -14.3,
+   "min_lufs_st": -17.9,
+   "dip_lu": 3.6,
+   "dip_where": "before",
+   "min_at_s": 1783.4,
+   "overlap_end_s": 1799.2
+  },
+  {
+   "n": 14,
+   "type": "echo_out",
+   "at_s": 1981.1,
+   "ref_lufs_st": -13.8,
+   "min_lufs_st": -20.0,
+   "dip_lu": 6.1,
+   "dip_where": "after",
+   "min_at_s": 1987.0,
+   "overlap_end_s": 1981.1
+  },
+  {
+   "n": 15,
+   "type": "brake_cut",
+   "at_s": 2186.0,
+   "ref_lufs_st": -16.4,
+   "min_lufs_st": -16.7,
+   "dip_lu": 0.3,
+   "dip_where": "after",
+   "min_at_s": 2190.2,
+   "overlap_end_s": 2186.0
+  },
+  {
+   "n": 16,
+   "type": "echo_out",
+   "at_s": 2287.1,
+   "ref_lufs_st": -14.1,
+   "min_lufs_st": -14.9,
+   "dip_lu": 0.8,
+   "dip_where": "after",
+   "min_at_s": 2290.9,
+   "overlap_end_s": 2287.1
+  },
+  {
+   "n": 17,
+   "type": "brake_cut",
+   "at_s": 2483.0,
+   "ref_lufs_st": -13.2,
+   "min_lufs_st": -16.8,
+   "dip_lu": 3.6,
+   "dip_where": "after",
+   "min_at_s": 2486.0,
+   "overlap_end_s": 2483.0
+  },
+  {
+   "n": 18,
+   "type": "slam",
+   "at_s": 2560.7,
+   "ref_lufs_st": -13.7,
+   "min_lufs_st": -20.5,
+   "dip_lu": 6.7,
+   "dip_where": "before",
+   "min_at_s": 2558.3,
+   "overlap_end_s": 2560.7
+  },
+  {
+   "n": 19,
+   "type": "chop",
+   "at_s": 2604.1,
+   "ref_lufs_st": -13.5,
+   "min_lufs_st": -15.9,
+   "dip_lu": 2.4,
+   "dip_where": "during",
+   "min_at_s": 2613.8,
+   "overlap_end_s": 2615.5
+  },
+  {
+   "n": 20,
+   "type": "slam",
+   "at_s": 2665.8,
+   "ref_lufs_st": -13.3,
+   "min_lufs_st": -17.2,
+   "dip_lu": 3.9,
+   "dip_where": "after",
+   "min_at_s": 2669.1,
+   "overlap_end_s": 2665.8
+  },
+  {
+   "n": 21,
+   "type": "slam",
+   "at_s": 2735.6,
+   "ref_lufs_st": -13.8,
+   "min_lufs_st": -15.3,
+   "dip_lu": 1.5,
+   "dip_where": "after",
+   "min_at_s": 2736.5,
+   "overlap_end_s": 2735.6
+  },
+  {
+   "n": 22,
+   "type": "slam",
+   "at_s": 2788.6,
+   "ref_lufs_st": -14.4,
+   "min_lufs_st": -13.9,
+   "dip_lu": -0.5,
+   "dip_where": "after",
+   "min_at_s": 2789.4,
+   "overlap_end_s": 2788.6
+  },
+  {
+   "n": 23,
+   "type": "chop",
+   "at_s": 2853.9,
+   "ref_lufs_st": -14.0,
+   "min_lufs_st": -19.1,
+   "dip_lu": 5.1,
+   "dip_where": "during",
+   "min_at_s": 2859.6,
+   "overlap_end_s": 2866.0
+  },
+  {
+   "n": 24,
+   "type": "slam",
+   "at_s": 2934.2,
+   "ref_lufs_st": -13.8,
+   "min_lufs_st": -14.0,
+   "dip_lu": 0.3,
+   "dip_where": "after",
+   "min_at_s": 2935.3,
+   "overlap_end_s": 2934.2
+  },
+  {
+   "n": 25,
+   "type": "slam",
+   "at_s": 2990.0,
+   "ref_lufs_st": -13.9,
+   "min_lufs_st": -16.2,
+   "dip_lu": 2.4,
+   "dip_where": "before",
+   "min_at_s": 2987.1,
+   "overlap_end_s": 2990.0
+  },
+  {
+   "n": 26,
+   "type": "bass_swap_8",
+   "at_s": 3114.4,
+   "ref_lufs_st": -13.6,
+   "min_lufs_st": -21.7,
+   "dip_lu": 8.1,
+   "dip_where": "after",
+   "min_at_s": 3130.1,
+   "overlap_end_s": 3129.9
+  },
+  {
+   "n": 27,
+   "type": "bass_swap_8",
+   "at_s": 3286.2,
+   "ref_lufs_st": -13.3,
+   "min_lufs_st": -14.5,
+   "dip_lu": 1.1,
+   "dip_where": "before",
+   "min_at_s": 3283.3,
+   "overlap_end_s": 3301.6
+  },
+  {
+   "n": 28,
+   "type": "bass_swap_8",
+   "at_s": 3484.8,
+   "ref_lufs_st": -14.1,
+   "min_lufs_st": -18.5,
+   "dip_lu": 4.4,
+   "dip_where": "during",
+   "min_at_s": 3498.2,
+   "overlap_end_s": 3499.9
+  },
+  {
+   "n": 29,
+   "type": "bass_swap_16",
+   "at_s": 3649.9,
+   "ref_lufs_st": -14.0,
+   "min_lufs_st": -25.2,
+   "dip_lu": 11.2,
+   "dip_where": "after",
+   "min_at_s": 3681.6,
+   "overlap_end_s": 3679.9
+  },
+  {
+   "n": 30,
+   "type": "bass_swap_8",
+   "at_s": 3846.8,
+   "ref_lufs_st": -16.6,
+   "min_lufs_st": -17.8,
+   "dip_lu": 1.2,
+   "dip_where": "after",
+   "min_at_s": 3863.8,
+   "overlap_end_s": 3861.6
+  },
+  {
+   "n": 31,
+   "type": "bass_swap_16",
+   "at_s": 3979.5,
+   "ref_lufs_st": -14.2,
+   "min_lufs_st": -16.6,
+   "dip_lu": 2.5,
+   "dip_where": "during",
+   "min_at_s": 3995.8,
+   "overlap_end_s": 4008.6
+  },
+  {
+   "n": 32,
+   "type": "bass_swap_8",
+   "at_s": 4124.1,
+   "ref_lufs_st": -14.3,
+   "min_lufs_st": -14.6,
+   "dip_lu": 0.4,
+   "dip_where": "after",
+   "min_at_s": 4142.2,
+   "overlap_end_s": 4138.7
+  }
+ ],
+ "near_silence_pass1": [
+  [
+   1123.08,
+   0.25
+  ],
+  [
+   1995.55,
+   0.3
+  ],
+  [
+   4334.57,
+   0.25
+  ]
+ ]
+}

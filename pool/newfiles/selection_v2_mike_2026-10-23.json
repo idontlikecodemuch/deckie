@@ -1,0 +1,1001 @@
+[
+ {
+  "id": "f642dd68c2",
+  "disc": "S",
+  "title": "Britney Spears - ...Baby One More Time",
+  "ver": "",
+  "src": "on CD1 now",
+  "mb": 8.4,
+  "bpm": 93
+ },
+ {
+  "id": "6489f248e0",
+  "disc": "S",
+  "title": "Beyonce - Crazy In Love",
+  "ver": "",
+  "src": "on CD2 now",
+  "mb": 9.4,
+  "bpm": 99
+ },
+ {
+  "id": "886fbd9c1a",
+  "disc": "S",
+  "title": "Lady Gaga - Bloody Mary",
+  "ver": "",
+  "src": "on CD3 now",
+  "mb": 9.8,
+  "bpm": 100
+ },
+ {
+  "id": "d8be9bfa4a",
+  "disc": "S",
+  "title": "Mark Morrison - Return Of The Mack",
+  "ver": "Tall Boys Remix (Intro)",
+  "src": "new download",
+  "mb": 8.1,
+  "bpm": 103
+ },
+ {
+  "id": "67bcdc4c3f",
+  "disc": "S",
+  "title": "Backstreet Boys - Everybody (Backstreet's Back)",
+  "ver": "",
+  "src": "on CD1 now",
+  "mb": 11.5,
+  "bpm": 108
+ },
+ {
+  "id": "81b5c68720",
+  "disc": "S",
+  "title": "Gnarls Barkley - Crazy",
+  "ver": "",
+  "src": "on CD2 now",
+  "mb": 7.3,
+  "bpm": 112
+ },
+ {
+  "id": "99fda458c5",
+  "disc": "S",
+  "title": "Mark Ronson - Uptown Funk",
+  "ver": "",
+  "src": "on CD2 now",
+  "mb": 10.8,
+  "bpm": 115
+ },
+ {
+  "id": "7c9aaa4f1b",
+  "disc": "S",
+  "title": "Tame Impala & Jennie - Dracula (Jennie Remix)",
+  "ver": "",
+  "src": "on CD3 now",
+  "mb": 8.4,
+  "bpm": 115
+ },
+ {
+  "id": "5585ea39f9",
+  "disc": "S",
+  "title": "Dua Lipa - Levitating",
+  "ver": "The Blessed Madonna Remix",
+  "src": "new download",
+  "mb": 10.2,
+  "bpm": 116
+ },
+ {
+  "id": "fc58560f11",
+  "disc": "S",
+  "title": "Madonna - Vogue",
+  "ver": "",
+  "src": "on CD1 now",
+  "mb": 11.6,
+  "bpm": 116
+ },
+ {
+  "id": "64a3aaa1c2",
+  "disc": "S",
+  "title": "Robyn - Dancing On My Own",
+  "ver": "",
+  "src": "on CD2 now",
+  "mb": 11.2,
+  "bpm": 117
+ },
+ {
+  "id": "be3df59af0",
+  "disc": "S",
+  "title": "Sophie Ellis-Bextor - Murder On The Dancefloor",
+  "ver": "",
+  "src": "on CD2 now",
+  "mb": 9.1,
+  "bpm": 117
+ },
+ {
+  "id": "a09f008219",
+  "disc": "S",
+  "title": "Lady Gaga - Bad Romance",
+  "ver": "",
+  "src": "on CD3 now",
+  "mb": 11.8,
+  "bpm": 119
+ },
+ {
+  "id": "a34b438689",
+  "disc": "S",
+  "title": "Lady Gaga - Monster",
+  "ver": "",
+  "src": "on CD3 now",
+  "mb": 10.0,
+  "bpm": 120
+ },
+ {
+  "id": "bde8605000",
+  "disc": "S",
+  "title": "Robin S - Show Me Love",
+  "ver": "",
+  "src": "on CD1 now",
+  "mb": 10.1,
+  "bpm": 120
+ },
+ {
+  "id": "f0688dffae",
+  "disc": "S",
+  "title": "Lady Gaga - Zombieboy",
+  "ver": "",
+  "src": "on CD3 now",
+  "mb": 8.5,
+  "bpm": 122
+ },
+ {
+  "id": "7931a6a51a",
+  "disc": "S",
+  "title": "Snoop Dogg - Drop It Like It's Hot",
+  "ver": "The Golden Pony Remix",
+  "src": "new download",
+  "mb": 9.5,
+  "bpm": 122
+ },
+ {
+  "id": "fda0386599",
+  "disc": "S",
+  "title": "Daft Punk - One More Time",
+  "ver": "Tall Boys Club Edit",
+  "src": "new download",
+  "mb": 8.6,
+  "bpm": 123
+ },
+ {
+  "id": "08d9f8922e",
+  "disc": "S",
+  "title": "Montell Jordan - This Is How We Do It",
+  "ver": "Mahalo's 90s Baby Rework",
+  "src": "new download",
+  "mb": 7.5,
+  "bpm": 123
+ },
+ {
+  "id": "ca2f1f7cd8",
+  "disc": "S",
+  "title": "Dua Lipa - Don't Start Now",
+  "ver": "",
+  "src": "on CD2 now",
+  "mb": 7.3,
+  "bpm": 124
+ },
+ {
+  "id": "386cbfae4c",
+  "disc": "S",
+  "title": "Nelly - Hot In Herre",
+  "ver": "Colin Jay Remix (Intro - Clean)",
+  "src": "new download",
+  "mb": 10.4,
+  "bpm": 124
+ },
+ {
+  "id": "77ea962f88",
+  "disc": "S",
+  "title": "Next - Too Close",
+  "ver": "Tom Damage Remix",
+  "src": "new download",
+  "mb": 9.6,
+  "bpm": 124
+ },
+ {
+  "id": "58a945ccc1",
+  "disc": "S",
+  "title": "Sisqo - Thong Song",
+  "ver": "Colin Jay Remix (Dirty)",
+  "src": "new download",
+  "mb": 11.2,
+  "bpm": 124
+ },
+ {
+  "id": "be5f4e069d",
+  "disc": "S",
+  "title": "50 Cent - In Da Club",
+  "ver": "Disco Lines Remix (Clean)",
+  "src": "new download",
+  "mb": 6.0,
+  "bpm": 125
+ },
+ {
+  "id": "bedd2ea40c",
+  "disc": "S",
+  "title": "Kate Bush - Running Up That Hill (A Deal With God)",
+  "ver": "Landis Remix",
+  "src": "new download",
+  "mb": 7.4,
+  "bpm": 125
+ },
+ {
+  "id": "e2251794fc",
+  "disc": "S",
+  "title": "Rob Zombie - Dragula",
+  "ver": "",
+  "src": "on CD3 now",
+  "mb": 8.9,
+  "bpm": 125
+ },
+ {
+  "id": "468f34d25c",
+  "disc": "S",
+  "title": "Ciara - Goodies",
+  "ver": "Dillon Francis flip (Tall Boys Clap Intro)",
+  "src": "new download",
+  "mb": 5.6,
+  "bpm": 126
+ },
+ {
+  "id": "1971ce842e",
+  "disc": "S",
+  "title": "Doja Cat - Paint The Town Red",
+  "ver": "(FRASER Bootleg Remix)",
+  "src": "new download",
+  "mb": 9.7,
+  "bpm": 126
+ },
+ {
+  "id": "334614c3a0",
+  "disc": "S",
+  "title": "Drake - NOKIA",
+  "ver": "MarkCutz Halloween Ringtone Edit (Dirty)",
+  "src": "new download",
+  "mb": 10.5,
+  "bpm": 126
+ },
+ {
+  "id": "f2049b614d",
+  "disc": "S",
+  "title": "Lady Gaga - Abracadabra",
+  "ver": "(Intro)",
+  "src": "new download",
+  "mb": 9.4,
+  "bpm": 126
+ },
+ {
+  "id": "f41f1882ae",
+  "disc": "S",
+  "title": "Rihanna - Don't Stop The Music",
+  "ver": "Spryte Remix",
+  "src": "new download",
+  "mb": 10.0,
+  "bpm": 126
+ },
+ {
+  "id": "37bd767b44",
+  "disc": "S",
+  "title": "Dead Or Alive - You Spin Me Round",
+  "ver": "",
+  "src": "on CD3 now",
+  "mb": 8.6,
+  "bpm": 128
+ },
+ {
+  "id": "492780f268",
+  "disc": "S",
+  "title": "Rihanna - We Found Love",
+  "ver": "",
+  "src": "on CD2 now",
+  "mb": 8.6,
+  "bpm": 128
+ },
+ {
+  "id": "85e9c129e6",
+  "disc": "S",
+  "title": "Taylor Swift - Look What You Made Me Do",
+  "ver": "",
+  "src": "on CD3 now",
+  "mb": 8.5,
+  "bpm": 128
+ },
+ {
+  "id": "568f687566",
+  "disc": "S",
+  "title": "Cher - Believe",
+  "ver": "Disco Dom Remix",
+  "src": "new download",
+  "mb": 11.7,
+  "bpm": 129
+ },
+ {
+  "id": "86d04c0981",
+  "disc": "S",
+  "title": "Gala - Freed From Desire",
+  "ver": "",
+  "src": "on CD1 now",
+  "mb": 8.5,
+  "bpm": 129
+ },
+ {
+  "id": "0c8f1608c1",
+  "disc": "S",
+  "title": "Aqua - Barbie Girl",
+  "ver": "",
+  "src": "on CD1 now",
+  "mb": 7.9,
+  "bpm": 130
+ },
+ {
+  "id": "68fc2caf28",
+  "disc": "S",
+  "title": "Nelly Furtado - Maneater",
+  "ver": "Rogerson Halloween Remix",
+  "src": "new download",
+  "mb": 10.3,
+  "bpm": 130
+ },
+ {
+  "id": "944011cc86",
+  "disc": "S",
+  "title": "Nelly Furtado - Promiscuous",
+  "ver": "ON_1 & SHADDA Remix",
+  "src": "new download",
+  "mb": 8.4,
+  "bpm": 130
+ },
+ {
+  "id": "b6ab2ed32b",
+  "disc": "S",
+  "title": "Talking Heads - Psycho Killer",
+  "ver": "Freejak Halloween Remix (Clean)",
+  "src": "new download",
+  "mb": 6.4,
+  "bpm": 130
+ },
+ {
+  "id": "30a2efa137",
+  "disc": "S",
+  "title": "Yeah Yeah Yeahs - Heads Will Roll (A-Trak Remix)",
+  "ver": "",
+  "src": "on CD3 now",
+  "mb": 15.4,
+  "bpm": 132
+ },
+ {
+  "id": "0a8dd1de91",
+  "disc": "S",
+  "title": "Ava Max - Sweet But Psycho",
+  "ver": "",
+  "src": "on CD3 now",
+  "mb": 7.5,
+  "bpm": 133
+ },
+ {
+  "id": "10f0cba926",
+  "disc": "S",
+  "title": "Cardi B - WAP",
+  "ver": "Lincoln Baio Addams Family Intro (Dirty)",
+  "src": "new download",
+  "mb": 10.0,
+  "bpm": 133
+ },
+ {
+  "id": "2c58f5cbea",
+  "disc": "S",
+  "title": "Rick James - Super Freak",
+  "ver": "Rob DVS Super Freaky Girls Halloween Edit",
+  "src": "new download",
+  "mb": 8.7,
+  "bpm": 133
+ },
+ {
+  "id": "b3d302a43f",
+  "disc": "S",
+  "title": "Cartoons - Witch Doctor",
+  "ver": "",
+  "src": "on CD3 now",
+  "mb": 7.5,
+  "bpm": 136
+ },
+ {
+  "id": "894c323ee7",
+  "disc": "S",
+  "title": "Scatman John - Scatman",
+  "ver": "",
+  "src": "on CD1 now",
+  "mb": 8.5,
+  "bpm": 136
+ },
+ {
+  "id": "64cfcb19f3",
+  "disc": "S",
+  "title": "Bette Midler - I Put A Spell On You",
+  "ver": "Thee Werqn' Btches Club Mix (Joel Dickinson)",
+  "src": "new download",
+  "mb": 15.8,
+  "bpm": 140
+ },
+ {
+  "id": "dcdda93217",
+  "disc": "S",
+  "title": "Doja Cat - Demons",
+  "ver": "",
+  "src": "on CD3 now",
+  "mb": 7.8,
+  "bpm": 140
+ },
+ {
+  "id": "c33791114a",
+  "disc": "S",
+  "title": "Britney Spears - Toxic",
+  "ver": "",
+  "src": "on CD2 now",
+  "mb": 8.0,
+  "bpm": 143
+ },
+ {
+  "id": "79db510db9",
+  "disc": "S",
+  "title": "Ginuwine - Pony",
+  "ver": "Wick-it Remix",
+  "src": "new download",
+  "mb": 10.9,
+  "bpm": 144
+ },
+ {
+  "id": "9c3b804bd6",
+  "disc": "S",
+  "title": "Olivia Rodrigo - vampire",
+  "ver": "Trayze Remix (Dirty)",
+  "src": "new download",
+  "mb": 8.6,
+  "bpm": 155
+ },
+ {
+  "id": "edfc2ee251",
+  "disc": "M",
+  "title": "Daft Punk - Get Lucky",
+  "ver": "",
+  "src": "on CD4 now",
+  "mb": 14.8,
+  "bpm": 116
+ },
+ {
+  "id": "30c4ab432b",
+  "disc": "M",
+  "title": "Silk City & Dua Lipa - Electricity",
+  "ver": "",
+  "src": "on CD4 now",
+  "mb": 9.5,
+  "bpm": 118
+ },
+ {
+  "id": "f8b1c42e92",
+  "disc": "M",
+  "title": "Adamski feat. Seal - Killer",
+  "ver": "",
+  "src": "on CD4 now",
+  "mb": 9.1,
+  "bpm": 120
+ },
+ {
+  "id": "730db3ecc1",
+  "disc": "M",
+  "title": "Beyonce - Break My Soul (The Queens Remix)",
+  "ver": "",
+  "src": "on CD4 now",
+  "mb": 14.2,
+  "bpm": 120
+ },
+ {
+  "id": "9c0a47d25a",
+  "disc": "M",
+  "title": "JAY-Z - Empire State Of Mind",
+  "ver": "Krooner Remix",
+  "src": "new download",
+  "mb": 10.0,
+  "bpm": 120
+ },
+ {
+  "id": "da6e2527c5",
+  "disc": "M",
+  "title": "Nelly Furtado - Maneater",
+  "ver": "Monaark & Norsam Remix",
+  "src": "new download",
+  "mb": 9.9,
+  "bpm": 120
+ },
+ {
+  "id": "9550a2af00",
+  "disc": "M",
+  "title": "Riton x Nightcrawlers - Friday (Dopamine Re-Edit)",
+  "ver": "",
+  "src": "on CD4 now",
+  "mb": 6.8,
+  "bpm": 123
+ },
+ {
+  "id": "fe9426554b",
+  "disc": "M",
+  "title": "Stevie Wonder - Superstition",
+  "ver": "Spooki Remix",
+  "src": "new download",
+  "mb": 7.5,
+  "bpm": 123
+ },
+ {
+  "id": "b9b844805c",
+  "disc": "M",
+  "title": "Avicii - Wake Me Up",
+  "ver": "",
+  "src": "on CD4 now",
+  "mb": 9.9,
+  "bpm": 124
+ },
+ {
+  "id": "08608b5120",
+  "disc": "M",
+  "title": "Calvin Harris - This Is What You Came For",
+  "ver": "",
+  "src": "on CD4 now",
+  "mb": 8.9,
+  "bpm": 124
+ },
+ {
+  "id": "92fb3d0254",
+  "disc": "M",
+  "title": "Everything But The Girl - Missing (Todd Terry Mix)",
+  "ver": "",
+  "src": "on CD4 now",
+  "mb": 11.5,
+  "bpm": 124
+ },
+ {
+  "id": "a842ca9e48",
+  "disc": "M",
+  "title": "Sam Robs & Kelvin Wood - No Scrubs",
+  "ver": "house cover",
+  "src": "new download",
+  "mb": 9.2,
+  "bpm": 124
+ },
+ {
+  "id": "c28f4e7450",
+  "disc": "M",
+  "title": "Sister Sledge - Lost In Music",
+  "ver": "Dimitri From Paris Remix",
+  "src": "new download",
+  "mb": 18.8,
+  "bpm": 124
+ },
+ {
+  "id": "962eea95bf",
+  "disc": "M",
+  "title": "Sister Sledge - We Are Family",
+  "ver": "Luca Debonaire & DJ Marlon Remix",
+  "src": "new download",
+  "mb": 14.1,
+  "bpm": 124
+ },
+ {
+  "id": "71d7922d2d",
+  "disc": "M",
+  "title": "Justice vs Simian - We Are Your Friends",
+  "ver": "",
+  "src": "on CD4 now",
+  "mb": 6.6,
+  "bpm": 125
+ },
+ {
+  "id": "8daf56a8e0",
+  "disc": "M",
+  "title": "Moloko - Sing It Back",
+  "ver": "",
+  "src": "on CD4 now",
+  "mb": 11.2,
+  "bpm": 125
+ },
+ {
+  "id": "93f282cb3b",
+  "disc": "M",
+  "title": "Tiesto & Tate McRae - 10.35 (VIP Mix)",
+  "ver": "",
+  "src": "on CD4 now",
+  "mb": 7.0,
+  "bpm": 125
+ },
+ {
+  "id": "2c4bc602dc",
+  "disc": "M",
+  "title": "Blackstreet - No Diggity",
+  "ver": "Rogerson & Ray Montreal Remix",
+  "src": "new download",
+  "mb": 8.2,
+  "bpm": 126
+ },
+ {
+  "id": "21fccb15e4",
+  "disc": "M",
+  "title": "Icona Pop - I Love It",
+  "ver": "",
+  "src": "on CD2 now",
+  "mb": 6.2,
+  "bpm": 126
+ },
+ {
+  "id": "57537dcfb7",
+  "disc": "M",
+  "title": "Kylie vs New Order - Blue Monday Mashup",
+  "ver": "",
+  "src": "on CD3 now",
+  "mb": 16.9,
+  "bpm": 126
+ },
+ {
+  "id": "80fc6406b3",
+  "disc": "M",
+  "title": "Lana Del Rey vs Cedric Gervais - Summertime Sadness (Remix)",
+  "ver": "",
+  "src": "on CD4 now",
+  "mb": 8.6,
+  "bpm": 126
+ },
+ {
+  "id": "770a9ef519",
+  "disc": "M",
+  "title": "Modjo - Lady (Hear Me Tonight)",
+  "ver": "5HOURS & Loruare Remix",
+  "src": "new download",
+  "mb": 9.3,
+  "bpm": 126
+ },
+ {
+  "id": "c546b63944",
+  "disc": "M",
+  "title": "Nightcrawlers - Push The Feeling On",
+  "ver": "",
+  "src": "on CD4 now",
+  "mb": 9.6,
+  "bpm": 126
+ },
+ {
+  "id": "4282f056a7",
+  "disc": "M",
+  "title": "Rihanna - Umbrella",
+  "ver": "Jody den Broeder Lush Club Remix",
+  "src": "new download",
+  "mb": 22.1,
+  "bpm": 126
+ },
+ {
+  "id": "833af0adb0",
+  "disc": "M",
+  "title": "Slayyyter - Brand New Chanel$",
+  "ver": "",
+  "src": "on CD4 now",
+  "mb": 9.6,
+  "bpm": 126
+ },
+ {
+  "id": "df902aeaec",
+  "disc": "M",
+  "title": "Swedish House Mafia - Don't You Worry Child",
+  "ver": "",
+  "src": "on CD4 now",
+  "mb": 16.1,
+  "bpm": 126
+ },
+ {
+  "id": "df1bb40ae3",
+  "disc": "M",
+  "title": "Basement Jaxx - Romeo",
+  "ver": "",
+  "src": "on CD4 now",
+  "mb": 8.7,
+  "bpm": 127
+ },
+ {
+  "id": "c4538c1356",
+  "disc": "M",
+  "title": "Crystal Waters - Gypsy Woman (She's Homeless)",
+  "ver": "ALRT Remix",
+  "src": "new download",
+  "mb": 7.4,
+  "bpm": 127
+ },
+ {
+  "id": "25b099f594",
+  "disc": "M",
+  "title": "Faithless - Insomnia",
+  "ver": "",
+  "src": "on CD4 now",
+  "mb": 8.6,
+  "bpm": 127
+ },
+ {
+  "id": "5fd79ffb02",
+  "disc": "M",
+  "title": "The Chemical Brothers - Hey Boy Hey Girl",
+  "ver": "",
+  "src": "on CD4 now",
+  "mb": 11.6,
+  "bpm": 127
+ },
+ {
+  "id": "b1fd952870",
+  "disc": "M",
+  "title": "Bad Bunny - DtMF",
+  "ver": "ETX vs Eric Mendosa & Exodus Better Off Alone Edit (Dirty)",
+  "src": "new download",
+  "mb": 8.7,
+  "bpm": 128
+ },
+ {
+  "id": "460d9ad1b6",
+  "disc": "M",
+  "title": "Eric Prydz - Call on Me",
+  "ver": "",
+  "src": "in your folder, not on a disc",
+  "mb": 7.4,
+  "bpm": 128
+ },
+ {
+  "id": "f8b9c2903d",
+  "disc": "M",
+  "title": "Fedde Le Grand - Put Your Hands Up For Detroit",
+  "ver": "ZANS Remix",
+  "src": "new download",
+  "mb": 11.2,
+  "bpm": 128
+ },
+ {
+  "id": "c90611dc88",
+  "disc": "M",
+  "title": "Jolyon Petch - Thriller",
+  "ver": "Freejak Remix (house cover)",
+  "src": "new download",
+  "mb": 11.8,
+  "bpm": 128
+ },
+ {
+  "id": "aed6b25f60",
+  "disc": "M",
+  "title": "Kyle Dixon & Michael Stein - Stranger Things Theme",
+  "ver": "Kwest Halloween Remix",
+  "src": "new download",
+  "mb": 10.9,
+  "bpm": 128
+ },
+ {
+  "id": "f766236975",
+  "disc": "M",
+  "title": "La Roux - Bulletproof",
+  "ver": "DJs From Mars N9 Edit",
+  "src": "new download",
+  "mb": 10.1,
+  "bpm": 128
+ },
+ {
+  "id": "0f80678b6e",
+  "disc": "M",
+  "title": "LF System - Afraid To Feel",
+  "ver": "",
+  "src": "on CD4 now",
+  "mb": 7.1,
+  "bpm": 128
+ },
+ {
+  "id": "da6de0ce27",
+  "disc": "M",
+  "title": "Tiësto & Sexyy Red - OMG!",
+  "ver": "(Dirty)",
+  "src": "new download",
+  "mb": 6.2,
+  "bpm": 128
+ },
+ {
+  "id": "af7cc131e9",
+  "disc": "M",
+  "title": "Zedd - Clarity",
+  "ver": "",
+  "src": "on CD4 now",
+  "mb": 10.9,
+  "bpm": 128
+ },
+ {
+  "id": "d54caa76af",
+  "disc": "M",
+  "title": "Armand Van Helden - You Don't Know Me",
+  "ver": "",
+  "src": "on CD4 now",
+  "mb": 7.5,
+  "bpm": 130
+ },
+ {
+  "id": "58176232a3",
+  "disc": "M",
+  "title": "Charli XCX - Von Dutch",
+  "ver": "(Dirty)",
+  "src": "new download",
+  "mb": 6.7,
+  "bpm": 130
+ },
+ {
+  "id": "e47c8f44a8",
+  "disc": "M",
+  "title": "Chris Lorenzo & Kah-Lo vs Black Eyed Peas - In This Bih'",
+  "ver": "MarkCutz The Time Wordplay Transition (Dirty)",
+  "src": "new download",
+  "mb": 11.9,
+  "bpm": 130
+ },
+ {
+  "id": "4045bfd790",
+  "disc": "M",
+  "title": "Drake & Sexyy Red - Cheetah Print",
+  "ver": "(Intro - Dirty)",
+  "src": "new download",
+  "mb": 9.4,
+  "bpm": 130
+ },
+ {
+  "id": "ec7890a2d4",
+  "disc": "M",
+  "title": "Missy Elliott - Lose Control",
+  "ver": "Matthew Topper In This Bih' Edit (Dirty)",
+  "src": "new download",
+  "mb": 8.4,
+  "bpm": 130
+ },
+ {
+  "id": "a648f33cae",
+  "disc": "M",
+  "title": "Peggy Gou - (It Goes Like) Nanana",
+  "ver": "",
+  "src": "on CD4 now",
+  "mb": 9.3,
+  "bpm": 130
+ },
+ {
+  "id": "cb4f2a019f",
+  "disc": "M",
+  "title": "Rihanna - Don't Stop The Music",
+  "ver": "Colin Jay Remix",
+  "src": "new download",
+  "mb": 10.8,
+  "bpm": 130
+ },
+ {
+  "id": "bc4e7ce641",
+  "disc": "M",
+  "title": "Rihanna - Rude Boy",
+  "ver": "Matthew Topper Won't Be Possible Edit",
+  "src": "new download",
+  "mb": 7.2,
+  "bpm": 130
+ },
+ {
+  "id": "b670986af8",
+  "disc": "M",
+  "title": "The Prodigy - Breathe",
+  "ver": "",
+  "src": "on CD3 now",
+  "mb": 9.6,
+  "bpm": 130
+ },
+ {
+  "id": "d6f9615a5b",
+  "disc": "M",
+  "title": "Disco Lines & Tinashe - No Broke Boys",
+  "ver": "(Intro - Dirty)",
+  "src": "new download",
+  "mb": 8.3,
+  "bpm": 131
+ },
+ {
+  "id": "c4de511f7a",
+  "disc": "M",
+  "title": "Sam Smith & Kim Petras - Unholy",
+  "ver": "",
+  "src": "on CD2 now",
+  "mb": 6.3,
+  "bpm": 131
+ },
+ {
+  "id": "80730d295c",
+  "disc": "M",
+  "title": "Dom Dolla & Tiga - Don't Worry Baby",
+  "ver": "",
+  "src": "on CD4 now",
+  "mb": 8.2,
+  "bpm": 132
+ },
+ {
+  "id": "9c20f328b8",
+  "disc": "M",
+  "title": "DJ Dado - X-Files",
+  "ver": "",
+  "src": "on CD3 now",
+  "mb": 9.4,
+  "bpm": 135
+ },
+ {
+  "id": "dbc03c2426",
+  "disc": "M",
+  "title": "KATSEYE - GNARLY",
+  "ver": "Amanda Sze Remix Rework",
+  "src": "new download",
+  "mb": 2.6,
+  "bpm": 135
+ },
+ {
+  "id": "a67262ebf4",
+  "disc": "M",
+  "title": "Fcukers - If You Wanna Party, Come Over To My House",
+  "ver": "",
+  "src": "on CD4 now",
+  "mb": 6.8,
+  "bpm": 136
+ },
+ {
+  "id": "79e7a45d90",
+  "disc": "M",
+  "title": "LCD Soundsystem - Daft Punk Is Playing At My House",
+  "ver": "",
+  "src": "on CD4 now",
+  "mb": 8.1,
+  "bpm": 136
+ },
+ {
+  "id": "fb5e2fb59f",
+  "disc": "M",
+  "title": "Robert Miles - Children",
+  "ver": "",
+  "src": "on CD1 now",
+  "mb": 9.8,
+  "bpm": 137
+ },
+ {
+  "id": "d2bbcdae73",
+  "disc": "M",
+  "title": "Sonique - It Feels So Good",
+  "ver": "",
+  "src": "in your folder, not on a disc",
+  "mb": 9.5,
+  "bpm": 137
+ },
+ {
+  "id": "80be91214e",
+  "disc": "M",
+  "title": "ADÉLA - Nicole Kidman",
+  "ver": "YuchiBoy Remix (Dirty)",
+  "src": "new download",
+  "mb": 8.9,
+  "bpm": 140
+ },
+ {
+  "id": "890c95ce6f",
+  "disc": "M",
+  "title": "Underworld - Born Slippy",
+  "ver": "",
+  "src": "on CD4 now",
+  "mb": 10.3,
+  "bpm": 140
+ },
+ {
+  "id": "fdb6138e05",
+  "disc": "M",
+  "title": "Zara Larsson - Midnight Sun",
+  "ver": "",
+  "src": "on CD2 now",
+  "mb": 7.7,
+  "bpm": 151
+ }
+]

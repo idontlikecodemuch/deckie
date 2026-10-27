@@ -1,0 +1,33 @@
+Hour 2: Haunted Block Party (hiphop lean) - 25 songs, about 64 min, 5 Halloween (H)
+
+
+Stage 1 - hip-hop / R&B (quick cuts)
+ 1.  0:00    Panic! At The Disco - I Write Sins Not Tragedies            85.0 BPM   <- start
+ 2.  1:21  H DJ Jazzy Jeff & The Fresh Prince - A Nightmare On My Stree  85.3 BPM   <- chop: A 2 bars / B 2 bars / A 1 bar / B + scratch
+ 3.  3:31    M.I.A. - Paper Planes                                       86.0 BPM   <- cut on the one + scratch stab
+ 4.  5:25    Blackstreet - No Diggity                                    88.7 BPM   <- chop: A 2 bars / B 2 bars / A 1 bar / B + scratch
+ 5.  8:02    Ricky Martin - Livin' La Vida Loca                          89.0 BPM   <- cut on the one + scratch stab
+ 6. 10:01    50 Cent - In Da Club                                        90.0 BPM   <- chop: A 2 bars / B 2 bars / A 1 bar / B + scratch
+ 7. 12:14    TLC - No Scrubs                                             92.9 BPM   <- cut on the one + scratch stab
+ 8. 14:44  H Doja Cat - Paint The Town Red                              100.0 BPM   <- cut on the one + scratch stab
+ 9. 17:03    Mariah Carey - Fantasy                                     102.4 BPM   <- cut on the one + scratch stab
+10. 19:22    Jeremih - Don't Tell 'Em                                   105.0 BPM   <- chop: A 2 bars / B 2 bars / A 1 bar / B + scratch
+
+Stage 2 - pop / disco
+11. 21:34    Hanson - MMMBop                                            104.9 BPM   <- 8-bar bass-swap blend + key shift +1 st
+12. 24:39  H Various - IN THE SHADOWS                                   106.0 BPM   <- 8-bar bass-swap blend
+13. 28:10    Spice Girls - Wannabe                                      110.0 BPM   <- echo-out, next song cuts in on the one
+14. 30:43  H Ray Parker Jr. - Ghostbusters                              115.4 BPM   <- 8-bar bass-swap blend
+15. 33:29    Robyn - With Every Heartbeat                               121.0 BPM   <- 16-bar bass-swap blend
+16. 35:36    The Weeknd - Save Your Tears                               118.0 BPM   <- 16-bar bass-swap blend
+17. 38:35    Robin S - Show Me Love                                     120.2 BPM   <- 16-bar bass-swap blend
+
+Stage 3 - dance
+18. 41:23  H Stevie Wonder - Superstition                               123.0 BPM   <- 16-bar bass-swap blend
+19. 43:55    Everything But The Girl - Missing (Todd Terry Mix)         123.5 BPM   <- 16-bar bass-swap blend
+20. 46:07    Snap! - Rhythm Is A Dancer                                 124.3 BPM   <- 16-bar bass-swap blend
+21. 48:43    Nelly - Hot In Herre                                       124.0 BPM   <- 16-bar bass-swap blend
+22. 51:12    Ol' Dirty Bastard - Got Your Money                         124.0 BPM   <- 8-bar bass-swap blend
+23. 53:18    Robyn - Call Your Girlfriend                               125.0 BPM   <- 16-bar bass-swap blend
+24. 55:29    Rihanna - Don't Stop The Music                             126.0 BPM   <- 16-bar bass-swap blend
+25. 57:54    Ultra Nate - Free                                          125.0 BPM   <- 16-bar bass-swap blend

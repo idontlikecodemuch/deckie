@@ -1,0 +1,505 @@
+{
+ "plan": "plan_mix1.json",
+ "out": "preview",
+ "joins": [
+  {
+   "n": 1,
+   "type": "bass_swap_16",
+   "from_title": "Ida Corr & Fedde Le Grand - Let Me Think About It",
+   "to_title": "Ol' Dirty Bastard - Got Your Money",
+   "a_overlap_start_bar": 81,
+   "a_exit_bar": 97,
+   "b_cue_bar": 1,
+   "stretch_pct": 1.64,
+   "stretch_side": "both, ramped bar by bar from 122.00 to 124.00 BPM across the overlap",
+   "pair_score": 0.7982,
+   "vocal_overlap": 0.246,
+   "dip_out_mids": false,
+   "reverb_wash": false,
+   "scratch": false,
+   "backspin": false,
+   "key_shift_st": 0,
+   "reasons": [
+    "-1.6% stretch on B (122.0 end -> 124.0 start)",
+    "energy steady (-0.6 LU)",
+    "similar sound (closer than 98% of pairs)",
+    "7B -> 4A (clash)"
+   ],
+   "overlap_bars_rendered": 16,
+   "phase_corr_ms": -3.0,
+   "variance": {
+    "sync_ms": 2.09,
+    "cut_16th": 0,
+    "wobble_pct": -0.272,
+    "echo_div": 0.5,
+    "echo_fb": 0.855,
+    "echo_bars": 3,
+    "fader_ms": -28.9,
+    "swap_bar": 8
+   },
+   "teaser": false,
+   "fix": {
+    "hot": true,
+    "post_bars": 4,
+    "makeup_db": 3.7,
+    "beat_level": 0.7
+   },
+   "at_s": 157.403,
+   "tail": "bass swap on bar 9 of 16 (B bass killed before, A bass gone after), highs cross bars 5-9, A mids out by bar 16",
+   "bar_s_ramp": [
+    1.9663,
+    1.9365
+   ],
+   "geom_downbeat_err_ms": 0.0,
+   "beat_offset_ms": -0.0,
+   "beats_compared": 63,
+   "beat_spread_mad_ms": 7.0
+  },
+  {
+   "n": 2,
+   "type": "bass_swap_16",
+   "from_title": "Ol' Dirty Bastard - Got Your Money",
+   "to_title": "Royksopp & Robyn - Do It Again",
+   "a_overlap_start_bar": 66,
+   "a_exit_bar": 82,
+   "b_cue_bar": 1,
+   "stretch_pct": -0.01,
+   "stretch_side": "none (tempos equal)",
+   "pair_score": 0.9863,
+   "vocal_overlap": 0.053,
+   "dip_out_mids": false,
+   "reverb_wash": false,
+   "scratch": false,
+   "backspin": false,
+   "key_shift_st": 0,
+   "reasons": [
+    "same tempo (124.0 BPM at A's end)",
+    "4A -> 4A",
+    "energy steady (-1.6 LU)",
+    "different groove (r=0.32)",
+    "longer cut"
+   ],
+   "overlap_bars_rendered": 16,
+   "phase_corr_ms": -10.4,
+   "variance": {
+    "sync_ms": -2.91,
+    "cut_16th": 0,
+    "wobble_pct": 0.126,
+    "echo_div": 0.75,
+    "echo_fb": 0.856,
+    "echo_bars": 4,
+    "fader_ms": -17.6,
+    "swap_bar": 8
+   },
+   "teaser": true,
+   "fix": null,
+   "at_s": 283.474,
+   "tail": "bass swap on bar 9 of 16 (B bass killed before, A bass gone after), highs cross bars 5-9, A mids out by bar 16",
+   "bar_s_ramp": [
+    1.9355,
+    1.9357
+   ],
+   "geom_downbeat_err_ms": 0.0,
+   "beat_offset_ms": -0.0,
+   "beats_compared": 63,
+   "beat_spread_mad_ms": 1.1
+  },
+  {
+   "n": 3,
+   "type": "brake_cut",
+   "from_title": "Royksopp & Robyn - Do It Again",
+   "to_title": "Doja Cat - Demons",
+   "a_overlap_start_bar": 107,
+   "a_exit_bar": 107,
+   "b_cue_bar": 6,
+   "stretch_pct": -43.54,
+   "stretch_side": "none (cut on the one, no beat-match)",
+   "pair_score": null,
+   "vocal_overlap": 0.738,
+   "dip_out_mids": false,
+   "reverb_wash": false,
+   "scratch": false,
+   "backspin": false,
+   "key_shift_st": 0,
+   "reasons": [],
+   "overlap_bars_rendered": 0,
+   "phase_corr_ms": 0.0,
+   "variance": {
+    "sync_ms": -4.16,
+    "cut_16th": 0,
+    "wobble_pct": 0.113,
+    "echo_div": 0.5,
+    "echo_fb": 0.862,
+    "echo_bars": 4,
+    "fader_ms": -38.7
+   },
+   "teaser": false,
+   "fix": null,
+   "at_s": 488.655,
+   "tail": "vinyl brake over the last bar (1.94 s) from its downbeat, B on the one",
+   "riser": "noise riser 7.7 s (4 bars) ending on B's downbeat + sub impact",
+   "fell_back_to_cut": false
+  },
+  {
+   "n": 4,
+   "type": "echo_out",
+   "from_title": "Doja Cat - Demons",
+   "to_title": "Adamski feat. Seal - Killer",
+   "a_overlap_start_bar": 38,
+   "a_exit_bar": 38,
+   "b_cue_bar": 1,
+   "stretch_pct": 71.4,
+   "stretch_side": "none (cut on the one, no beat-match)",
+   "pair_score": null,
+   "vocal_overlap": 0.904,
+   "dip_out_mids": false,
+   "reverb_wash": false,
+   "scratch": false,
+   "backspin": false,
+   "key_shift_st": 0,
+   "reasons": [],
+   "overlap_bars_rendered": 0,
+   "phase_corr_ms": 0.0,
+   "variance": {
+    "sync_ms": 2.65,
+    "cut_16th": -1,
+    "wobble_pct": 0.176,
+    "echo_div": 0.5,
+    "echo_fb": 0.87,
+    "echo_bars": 4,
+    "fader_ms": -21.1
+   },
+   "teaser": false,
+   "fix": null,
+   "at_s": 598.366,
+   "tail": "echo-out: last 2 beats sent (lows out), dry cut on the exit downbeat, 0.50-beat delay (429 ms), feedback 0.87, 4-bar tail, LP 5000 Hz, wet -4 dB",
+   "riser": "noise riser 13.7 s (4 bars) ending on B's downbeat + sub impact",
+   "fell_back_to_cut": false
+  },
+  {
+   "n": 5,
+   "type": "bass_swap_8",
+   "from_title": "Adamski feat. Seal - Killer",
+   "to_title": "Nelly Furtado - Maneater",
+   "a_overlap_start_bar": 97,
+   "a_exit_bar": 105,
+   "b_cue_bar": 1,
+   "stretch_pct": 0.02,
+   "stretch_side": "none (tempos equal)",
+   "pair_score": 0.7778,
+   "vocal_overlap": 0.519,
+   "dip_out_mids": false,
+   "reverb_wash": false,
+   "scratch": false,
+   "backspin": false,
+   "key_shift_st": 0,
+   "reasons": [
+    "same tempo (120.0 BPM at A's end)",
+    "3A -> 3A",
+    "B enters -2.5 LU quieter",
+    "8-bar window (short of a 16-bar phrase)"
+   ],
+   "overlap_bars_rendered": 8,
+   "phase_corr_ms": 7.3,
+   "variance": {
+    "sync_ms": 4.34,
+    "cut_16th": 0,
+    "wobble_pct": -0.178,
+    "echo_div": 0.5,
+    "echo_fb": 0.853,
+    "echo_bars": 4,
+    "fader_ms": -13.7,
+    "swap_bar": 3
+   },
+   "teaser": false,
+   "fix": null,
+   "at_s": 712.376,
+   "tail": "bass swap on bar 4 of 8 (B bass killed before, A bass gone after), highs cross bars 2-4, A mids out by bar 8",
+   "bar_s_ramp": [
+    2.0003,
+    2.0
+   ],
+   "geom_downbeat_err_ms": 0.0,
+   "beat_offset_ms": -0.1,
+   "beats_compared": 33,
+   "beat_spread_mad_ms": 0.6
+  }
+ ],
+ "songs": [
+  {
+   "pos": 1,
+   "title": "Ida Corr & Fedde Le Grand - Let Me Think About It",
+   "start_s": 0.0,
+   "src_lufs": -8.39,
+   "bars": [
+    1,
+    97
+   ],
+   "max_stretch_pct": 1.59,
+   "secs": 1.3
+  },
+  {
+   "pos": 2,
+   "title": "Ol' Dirty Bastard - Got Your Money",
+   "start_s": 157.4,
+   "src_lufs": -8.56,
+   "bars": [
+    1,
+    82
+   ],
+   "max_stretch_pct": 1.56,
+   "secs": 1.1
+  },
+  {
+   "pos": 3,
+   "title": "Royksopp & Robyn - Do It Again",
+   "start_s": 283.47,
+   "src_lufs": -6.48,
+   "bars": [
+    1,
+    107
+   ],
+   "max_stretch_pct": 0.13,
+   "secs": 1.3
+  },
+  {
+   "pos": 4,
+   "title": "Doja Cat - Demons",
+   "start_s": 488.65,
+   "src_lufs": -7.01,
+   "bars": [
+    6,
+    38
+   ],
+   "max_stretch_pct": 0,
+   "secs": 0.8
+  },
+  {
+   "pos": 5,
+   "title": "Adamski feat. Seal - Killer",
+   "start_s": 598.37,
+   "src_lufs": -12.06,
+   "bars": [
+    40,
+    105
+   ],
+   "max_stretch_pct": 0,
+   "secs": 0.7
+  },
+  {
+   "pos": 6,
+   "title": "Nelly Furtado - Maneater",
+   "start_s": 712.38,
+   "src_lufs": -9.03,
+   "bars": [
+    1,
+    73
+   ],
+   "max_stretch_pct": 0.18,
+   "secs": 0.8
+  }
+ ],
+ "seed": 1001,
+ "fixes": {
+  "1": {
+   "hot": true,
+   "post_bars": 4,
+   "makeup_db": 3.7,
+   "beat_level": 0.7
+  }
+ },
+ "lulls": [
+  {
+   "n": 1,
+   "type": "bass_swap_16",
+   "at_s": 157.4,
+   "ref_lufs_st": -13.6,
+   "min_lufs_st": -14.1,
+   "dip_lu": 0.5,
+   "dip_where": "during",
+   "min_at_s": 158.6,
+   "overlap_end_s": 188.6
+  },
+  {
+   "n": 2,
+   "type": "bass_swap_16",
+   "at_s": 283.5,
+   "ref_lufs_st": -13.9,
+   "min_lufs_st": -13.9,
+   "dip_lu": 0.0,
+   "dip_where": "after",
+   "min_at_s": 317.2,
+   "overlap_end_s": 314.4
+  },
+  {
+   "n": 3,
+   "type": "brake_cut",
+   "at_s": 488.7,
+   "ref_lufs_st": -14.1,
+   "min_lufs_st": -16.0,
+   "dip_lu": 1.8,
+   "dip_where": "before",
+   "min_at_s": 487.1,
+   "overlap_end_s": 488.7
+  },
+  {
+   "n": 4,
+   "type": "echo_out",
+   "at_s": 598.4,
+   "ref_lufs_st": -14.4,
+   "min_lufs_st": -14.7,
+   "dip_lu": 0.3,
+   "dip_where": "before",
+   "min_at_s": 595.4,
+   "overlap_end_s": 598.4
+  },
+  {
+   "n": 5,
+   "type": "bass_swap_8",
+   "at_s": 712.4,
+   "ref_lufs_st": -15.3,
+   "min_lufs_st": -14.9,
+   "dip_lu": -0.4,
+   "dip_where": "during",
+   "min_at_s": 726.5,
+   "overlap_end_s": 728.4
+  }
+ ],
+ "near_silence_runs": [],
+ "premaster_lufs": -13.73,
+ "master_gain_db": 4.83,
+ "master_lufs": -10.01,
+ "sample_peak_dbfs": -1.8,
+ "mp3": "/Users/christophershannon/personal/90s2000 playlist/_pool build/mixer/mixes/preview.mp3",
+ "mp3_bytes": 34258166,
+ "mp3_integrated_lufs": -10.0,
+ "mp3_true_peak_dbtp": -1.0,
+ "silent_gaps": [],
+ "duration_s": 856.4,
+ "planned_duration_s": null,
+ "render_secs": 46.0,
+ "checks": {
+  "no_clipping": true,
+  "no_silent_gaps": true,
+  "joins_geom_within_10ms": true,
+  "joins_tracker_beats_within_10ms": "3 of 3",
+  "joins_over_10ms": [],
+  "lull_joins_over_2lu": [],
+  "near_silence_over_half_beat": []
+ },
+ "lulls_pass2": [
+  {
+   "n": 1,
+   "type": "bass_swap_16",
+   "at_s": 157.4,
+   "ref_lufs_st": -13.6,
+   "min_lufs_st": -14.1,
+   "dip_lu": 0.5,
+   "dip_where": "during",
+   "min_at_s": 158.6,
+   "overlap_end_s": 188.6
+  },
+  {
+   "n": 2,
+   "type": "bass_swap_16",
+   "at_s": 283.5,
+   "ref_lufs_st": -13.9,
+   "min_lufs_st": -13.9,
+   "dip_lu": 0.0,
+   "dip_where": "after",
+   "min_at_s": 317.2,
+   "overlap_end_s": 314.4
+  },
+  {
+   "n": 3,
+   "type": "brake_cut",
+   "at_s": 488.7,
+   "ref_lufs_st": -14.1,
+   "min_lufs_st": -16.0,
+   "dip_lu": 1.8,
+   "dip_where": "before",
+   "min_at_s": 487.1,
+   "overlap_end_s": 488.7
+  },
+  {
+   "n": 4,
+   "type": "echo_out",
+   "at_s": 598.4,
+   "ref_lufs_st": -14.4,
+   "min_lufs_st": -14.7,
+   "dip_lu": 0.3,
+   "dip_where": "before",
+   "min_at_s": 595.4,
+   "overlap_end_s": 598.4
+  },
+  {
+   "n": 5,
+   "type": "bass_swap_8",
+   "at_s": 712.4,
+   "ref_lufs_st": -15.3,
+   "min_lufs_st": -14.9,
+   "dip_lu": -0.4,
+   "dip_where": "during",
+   "min_at_s": 726.5,
+   "overlap_end_s": 728.4
+  }
+ ],
+ "lulls_pass1": [
+  {
+   "n": 1,
+   "type": "bass_swap_16",
+   "at_s": 157.4,
+   "ref_lufs_st": -13.6,
+   "min_lufs_st": -17.3,
+   "dip_lu": 3.7,
+   "dip_where": "during",
+   "min_at_s": 187.1,
+   "overlap_end_s": 188.6
+  },
+  {
+   "n": 2,
+   "type": "bass_swap_16",
+   "at_s": 283.5,
+   "ref_lufs_st": -13.9,
+   "min_lufs_st": -13.9,
+   "dip_lu": 0.0,
+   "dip_where": "after",
+   "min_at_s": 317.2,
+   "overlap_end_s": 314.4
+  },
+  {
+   "n": 3,
+   "type": "brake_cut",
+   "at_s": 488.7,
+   "ref_lufs_st": -14.1,
+   "min_lufs_st": -16.0,
+   "dip_lu": 1.8,
+   "dip_where": "before",
+   "min_at_s": 487.1,
+   "overlap_end_s": 488.7
+  },
+  {
+   "n": 4,
+   "type": "echo_out",
+   "at_s": 598.4,
+   "ref_lufs_st": -14.4,
+   "min_lufs_st": -14.7,
+   "dip_lu": 0.3,
+   "dip_where": "before",
+   "min_at_s": 595.4,
+   "overlap_end_s": 598.4
+  },
+  {
+   "n": 5,
+   "type": "bass_swap_8",
+   "at_s": 712.4,
+   "ref_lufs_st": -15.3,
+   "min_lufs_st": -14.9,
+   "dip_lu": -0.4,
+   "dip_where": "during",
+   "min_at_s": 726.5,
+   "overlap_end_s": 728.4
+  }
+ ],
+ "near_silence_pass1": []
+}

@@ -1,0 +1,10 @@
+Haunted Disco  (hour 1, disco-house and pop remixes lean)
+Duration 14:16, 6 songs, mastered -10.0 LUFS integrated, true peak -1.0 dBTP
+H = Halloween.  Join = how this song comes in.
+
+  0:00    Ida Corr & Fedde Le Grand - Let Me Think About It           122.0 BPM  7B    [start]
+  2:53    Ol' Dirty Bastard - Got Your Money                          124.0 BPM  4A    [bass_swap_16 16 bars, +1.6%]
+  4:58    Royksopp & Robyn - Do It Again                              124.0 BPM  4A    [bass_swap_16 16 bars, -0.0%]
+  8:08  H Doja Cat - Demons                                            70.0 BPM  5A    [brake_cut, -43.5%]
+  9:58    Adamski feat. Seal - Killer                                 120.0 BPM  3A    [echo_out, +71.4%]
+ 12:00    Nelly Furtado - Maneater                                    120.0 BPM  3A    [bass_swap_8 8 bars, +0.0%]

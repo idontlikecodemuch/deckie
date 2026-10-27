@@ -1,0 +1,1060 @@
+{
+ "plan": "plan_1.json",
+ "out": "1 - Graveyard Shift",
+ "joins": [
+  {
+   "n": 1,
+   "type": "quick_blend_echo",
+   "from_title": "Ricky Martin - Livin' La Vida Loca",
+   "to_title": "Blackstreet - No Diggity",
+   "a_overlap_start_bar": 61,
+   "a_exit_bar": 65,
+   "b_cue_bar": 1,
+   "stretch_pct": -0.39,
+   "stretch_side": "both, ramped bar by bar from 89.00 to 88.65 BPM across the overlap",
+   "pair_score": 0.796,
+   "vocal_overlap": 0.862,
+   "dip_out_mids": true,
+   "reverb_wash": false,
+   "scratch": false,
+   "backspin": false,
+   "key_shift_st": 0,
+   "reasons": [
+    "same tempo (89.0 BPM at A's end)",
+    "16-bar phrases both sides",
+    "B enters -2.5 LU quieter",
+    "vocals overlap 16 of 16 bars",
+    "different sound (closer than only 25% of pairs)",
+    "different groove (r=0.00)",
+    "longer cut"
+   ],
+   "overlap_bars_rendered": 4,
+   "phase_corr_ms": 56.3,
+   "at_s": 161.76,
+   "tail": "echo 3/8 beat=507 ms fb 0.58",
+   "bar_s_ramp": [
+    2.6979,
+    2.7059
+   ],
+   "geom_downbeat_err_ms": 0.0,
+   "beat_offset_ms": -0.1,
+   "beats_compared": 16,
+   "beat_spread_mad_ms": 8.0
+  },
+  {
+   "n": 2,
+   "type": "filter_sweep",
+   "from_title": "Blackstreet - No Diggity",
+   "to_title": "Missy Elliott - Get Ur Freak On",
+   "a_overlap_start_bar": 65,
+   "a_exit_bar": 73,
+   "b_cue_bar": 1,
+   "stretch_pct": 0.3,
+   "stretch_side": "both, ramped bar by bar from 88.65 to 88.92 BPM across the overlap",
+   "pair_score": 0.7809,
+   "vocal_overlap": 0.136,
+   "dip_out_mids": false,
+   "reverb_wash": false,
+   "scratch": false,
+   "backspin": false,
+   "key_shift_st": 0,
+   "reasons": [
+    "same tempo (88.7 BPM at A's end)",
+    "energy steady (+1.4 LU)",
+    "no vocal clash",
+    "8-bar window (short of a 16-bar phrase)",
+    "different groove (r=0.21)"
+   ],
+   "overlap_bars_rendered": 8,
+   "phase_corr_ms": -17.9,
+   "at_s": 335.018,
+   "tail": "hp sweep 30 Hz -> 3 kHz over 8 bars",
+   "bar_s_ramp": [
+    2.7067,
+    2.6997
+   ],
+   "geom_downbeat_err_ms": 0.0,
+   "beat_offset_ms": 0.0,
+   "beats_compared": 32,
+   "beat_spread_mad_ms": 6.0
+  },
+  {
+   "n": 3,
+   "type": "filter_sweep",
+   "from_title": "Missy Elliott - Get Ur Freak On",
+   "to_title": "Snoop Dogg - Drop It Like It's Hot",
+   "a_overlap_start_bar": 65,
+   "a_exit_bar": 73,
+   "b_cue_bar": 1,
+   "stretch_pct": 3.47,
+   "stretch_side": "both, ramped bar by bar from 88.92 to 92.00 BPM across the overlap",
+   "pair_score": 0.7431,
+   "vocal_overlap": 0.069,
+   "dip_out_mids": false,
+   "reverb_wash": false,
+   "scratch": false,
+   "backspin": false,
+   "key_shift_st": 0,
+   "reasons": [
+    "energy steady (+0.9 LU)",
+    "similar sound (closer than 94% of pairs)",
+    "vocals overlap 1 of 8 bars",
+    "8-bar window (short of a 16-bar phrase)",
+    "different groove (r=0.22)"
+   ],
+   "overlap_bars_rendered": 8,
+   "phase_corr_ms": 7.3,
+   "at_s": 507.789,
+   "tail": "hp sweep 30 Hz -> 3 kHz over 8 bars",
+   "bar_s_ramp": [
+    2.6934,
+    2.6143
+   ],
+   "geom_downbeat_err_ms": 0.0,
+   "beat_offset_ms": -0.0,
+   "beats_compared": 31,
+   "beat_spread_mad_ms": 7.8
+  },
+  {
+   "n": 4,
+   "type": "quick_blend_echo",
+   "from_title": "Snoop Dogg - Drop It Like It's Hot",
+   "to_title": "Sugababes - Freak Like Me",
+   "a_overlap_start_bar": 72,
+   "a_exit_bar": 80,
+   "b_cue_bar": 1,
+   "stretch_pct": -0.18,
+   "stretch_side": "both, ramped bar by bar from 92.00 to 91.84 BPM across the overlap",
+   "pair_score": 0.6726,
+   "vocal_overlap": 0.363,
+   "dip_out_mids": true,
+   "reverb_wash": true,
+   "scratch": false,
+   "backspin": false,
+   "key_shift_st": 0,
+   "reasons": [
+    "same tempo (92.0 BPM at A's end)",
+    "vocals overlap 3 of 8 bars",
+    "B enters -4.1 LU quieter",
+    "8-bar window (short of a 16-bar phrase)",
+    "different sound (closer than only 19% of pairs)"
+   ],
+   "overlap_bars_rendered": 8,
+   "phase_corr_ms": -4.5,
+   "at_s": 693.371,
+   "tail": "reverb_wash",
+   "bar_s_ramp": [
+    2.609,
+    2.613
+   ],
+   "geom_downbeat_err_ms": 0.0,
+   "beat_offset_ms": -0.0,
+   "beats_compared": 32,
+   "beat_spread_mad_ms": 5.2
+  },
+  {
+   "n": 5,
+   "type": "quick_blend_echo",
+   "from_title": "Sugababes - Freak Like Me",
+   "to_title": "Shaggy - It Wasn't Me",
+   "a_overlap_start_bar": 61,
+   "a_exit_bar": 65,
+   "b_cue_bar": 1,
+   "stretch_pct": 3.16,
+   "stretch_side": "both, ramped bar by bar from 91.84 to 94.74 BPM across the overlap",
+   "pair_score": 0.7337,
+   "vocal_overlap": 0.96,
+   "dip_out_mids": true,
+   "reverb_wash": false,
+   "scratch": false,
+   "backspin": false,
+   "key_shift_st": 0,
+   "reasons": [
+    "-3.2% stretch on B (91.8 end -> 94.7 start)",
+    "16-bar phrases both sides",
+    "matching groove (r=0.92)",
+    "vocals overlap 16 of 16 bars"
+   ],
+   "overlap_bars_rendered": 4,
+   "phase_corr_ms": 4.1,
+   "at_s": 850.149,
+   "tail": "echo 3/8 beat=477 ms fb 0.58",
+   "bar_s_ramp": [
+    2.6032,
+    2.5431
+   ],
+   "geom_downbeat_err_ms": 0.0,
+   "beat_offset_ms": 0.0,
+   "beats_compared": 16,
+   "beat_spread_mad_ms": 19.7
+  },
+  {
+   "n": 6,
+   "type": "quick_blend_echo",
+   "from_title": "Shaggy - It Wasn't Me",
+   "to_title": "Amerie - 1 Thing",
+   "a_overlap_start_bar": 72,
+   "a_exit_bar": 80,
+   "b_cue_bar": 1,
+   "stretch_pct": 5.55,
+   "stretch_side": "both, ramped bar by bar from 94.74 to 100.00 BPM across the overlap",
+   "pair_score": 0.5533,
+   "vocal_overlap": 0.393,
+   "dip_out_mids": false,
+   "reverb_wash": false,
+   "scratch": false,
+   "backspin": false,
+   "key_shift_st": 0,
+   "reasons": [
+    "energy steady (+0.2 LU)",
+    "similar sound (closer than 86% of pairs)",
+    "no vocal clash",
+    "8-bar window (short of a 16-bar phrase)",
+    "different groove (r=0.00)"
+   ],
+   "overlap_bars_rendered": 8,
+   "phase_corr_ms": -4.1,
+   "at_s": 1030.172,
+   "tail": "echo 3/8 beat=452 ms fb 0.58",
+   "bar_s_ramp": [
+    2.5247,
+    2.4081
+   ],
+   "geom_downbeat_err_ms": 0.0,
+   "beat_offset_ms": 0.0,
+   "beats_compared": 32,
+   "beat_spread_mad_ms": 6.4
+  },
+  {
+   "n": 7,
+   "type": "quick_blend_echo",
+   "from_title": "Amerie - 1 Thing",
+   "to_title": "Whodini - Freaks Come Out at Night",
+   "a_overlap_start_bar": 85,
+   "a_exit_bar": 89,
+   "b_cue_bar": 1,
+   "stretch_pct": 0.79,
+   "stretch_side": "both, ramped bar by bar from 100.00 to 100.79 BPM across the overlap",
+   "pair_score": 0.7534,
+   "vocal_overlap": 0.837,
+   "dip_out_mids": false,
+   "reverb_wash": true,
+   "scratch": false,
+   "backspin": false,
+   "key_shift_st": 0,
+   "reasons": [
+    "-0.8% stretch on B (100.0 end -> 100.8 start)",
+    "energy steady (-1.2 LU)",
+    "16-bar phrases both sides",
+    "vocals overlap 16 of 16 bars",
+    "different groove (r=0.00)",
+    "longer cut"
+   ],
+   "overlap_bars_rendered": 4,
+   "phase_corr_ms": 27.1,
+   "at_s": 1232.273,
+   "tail": "reverb_wash",
+   "bar_s_ramp": [
+    2.3976,
+    2.3836
+   ],
+   "geom_downbeat_err_ms": 0.0,
+   "beat_offset_ms": -0.0,
+   "beats_compared": 16,
+   "beat_spread_mad_ms": 7.9
+  },
+  {
+   "n": 8,
+   "type": "quick_blend_echo",
+   "from_title": "Whodini - Freaks Come Out at Night",
+   "to_title": "Dua Lipa - Levitating",
+   "a_overlap_start_bar": 67,
+   "a_exit_bar": 71,
+   "b_cue_bar": 1,
+   "stretch_pct": 2.19,
+   "stretch_side": "both, ramped bar by bar from 100.79 to 103.00 BPM across the overlap",
+   "pair_score": 0.6929,
+   "vocal_overlap": 0.78,
+   "dip_out_mids": false,
+   "reverb_wash": false,
+   "scratch": false,
+   "backspin": false,
+   "key_shift_st": 0,
+   "reasons": [
+    "-2.2% stretch on B (100.8 end -> 103.0 start)",
+    "energy steady (-1.8 LU)",
+    "similar sound (closer than 69% of pairs)",
+    "vocals overlap 13 of 14 bars",
+    "different groove (r=0.19)"
+   ],
+   "overlap_bars_rendered": 4,
+   "phase_corr_ms": 20.7,
+   "at_s": 1389.455,
+   "tail": "echo 3/8 beat=438 ms fb 0.58",
+   "bar_s_ramp": [
+    2.3748,
+    2.3365
+   ],
+   "geom_downbeat_err_ms": 0.0,
+   "beat_offset_ms": -0.0,
+   "beats_compared": 16,
+   "beat_spread_mad_ms": 8.9
+  },
+  {
+   "n": 9,
+   "type": "filter_sweep",
+   "from_title": "Dua Lipa - Levitating",
+   "to_title": "Michael Jackson - Scream",
+   "a_overlap_start_bar": 79,
+   "a_exit_bar": 87,
+   "b_cue_bar": 1,
+   "stretch_pct": 3.42,
+   "stretch_side": "both, ramped bar by bar from 103.00 to 106.51 BPM across the overlap",
+   "pair_score": 0.6946,
+   "vocal_overlap": 0.292,
+   "dip_out_mids": false,
+   "reverb_wash": false,
+   "scratch": false,
+   "backspin": false,
+   "key_shift_st": 0,
+   "reasons": [
+    "-3.4% stretch on B (103.0 end -> 106.5 start)",
+    "similar sound (closer than 72% of pairs)",
+    "14-bar window (short of a 16-bar phrase)",
+    "longer cut"
+   ],
+   "overlap_bars_rendered": 8,
+   "phase_corr_ms": 24.0,
+   "at_s": 1571.289,
+   "tail": "hp sweep 30 Hz -> 3 kHz over 8 bars",
+   "bar_s_ramp": [
+    2.3253,
+    2.258
+   ],
+   "geom_downbeat_err_ms": 0.0,
+   "beat_offset_ms": 4.0,
+   "beats_compared": 26,
+   "beat_spread_mad_ms": 22.3
+  },
+  {
+   "n": 10,
+   "type": "quick_blend_echo",
+   "from_title": "Michael Jackson - Scream",
+   "to_title": "Spice Girls - Wannabe",
+   "a_overlap_start_bar": 75,
+   "a_exit_bar": 79,
+   "b_cue_bar": 1,
+   "stretch_pct": 3.31,
+   "stretch_side": "both, ramped bar by bar from 106.51 to 110.04 BPM across the overlap",
+   "pair_score": 0.7062,
+   "vocal_overlap": 0.736,
+   "dip_out_mids": false,
+   "reverb_wash": false,
+   "scratch": false,
+   "backspin": false,
+   "key_shift_st": 0,
+   "reasons": [
+    "16-bar phrases both sides",
+    "-3.3% stretch on B (106.5 end -> 110.0 start)",
+    "B enters -2.8 LU quieter",
+    "vocals overlap 15 of 16 bars",
+    "different groove (r=0.33)"
+   ],
+   "overlap_bars_rendered": 4,
+   "phase_corr_ms": -9.0,
+   "at_s": 1738.342,
+   "tail": "echo 3/8 beat=411 ms fb 0.58",
+   "bar_s_ramp": [
+    2.2441,
+    2.1899
+   ],
+   "geom_downbeat_err_ms": 0.0,
+   "beat_offset_ms": 0.0,
+   "beats_compared": 13,
+   "beat_spread_mad_ms": 10.5
+  },
+  {
+   "n": 11,
+   "type": "quick_blend_echo",
+   "from_title": "Spice Girls - Wannabe",
+   "to_title": "Justin Timberlake - Can't Stop The Feeling!",
+   "a_overlap_start_bar": 71,
+   "a_exit_bar": 79,
+   "b_cue_bar": 1,
+   "stretch_pct": 2.69,
+   "stretch_side": "both, ramped bar by bar from 110.04 to 113.00 BPM across the overlap",
+   "pair_score": 0.7253,
+   "vocal_overlap": 0.542,
+   "dip_out_mids": false,
+   "reverb_wash": true,
+   "scratch": false,
+   "backspin": false,
+   "key_shift_st": 0,
+   "reasons": [
+    "-2.7% stretch on B (110.0 end -> 113.0 start)",
+    "B enters -2.5 LU quieter",
+    "similar sound (closer than 78% of pairs)",
+    "8-bar window (short of a 16-bar phrase)"
+   ],
+   "overlap_bars_rendered": 8,
+   "phase_corr_ms": 7.5,
+   "at_s": 1891.148,
+   "tail": "reverb_wash",
+   "bar_s_ramp": [
+    2.1774,
+    2.1274
+   ],
+   "geom_downbeat_err_ms": 0.0,
+   "beat_offset_ms": -0.0,
+   "beats_compared": 29,
+   "beat_spread_mad_ms": 8.3
+  },
+  {
+   "n": 12,
+   "type": "quick_blend_echo",
+   "from_title": "Justin Timberlake - Can't Stop The Feeling!",
+   "to_title": "The Weeknd - Save Your Tears",
+   "a_overlap_start_bar": 83,
+   "a_exit_bar": 87,
+   "b_cue_bar": 1,
+   "stretch_pct": 4.42,
+   "stretch_side": "both, ramped bar by bar from 113.00 to 118.00 BPM across the overlap",
+   "pair_score": 0.7648,
+   "vocal_overlap": 0.729,
+   "dip_out_mids": false,
+   "reverb_wash": false,
+   "scratch": false,
+   "backspin": false,
+   "key_shift_st": 0,
+   "reasons": [
+    "8B -> 8B",
+    "B enters -2.0 LU quieter",
+    "16-bar phrases both sides",
+    "vocals overlap 15 of 16 bars"
+   ],
+   "overlap_bars_rendered": 4,
+   "phase_corr_ms": 16.5,
+   "at_s": 2065.517,
+   "tail": "echo 3/8 beat=383 ms fb 0.58",
+   "bar_s_ramp": [
+    2.1124,
+    2.0449
+   ],
+   "geom_downbeat_err_ms": 0.0,
+   "beat_offset_ms": -0.0,
+   "beats_compared": 16,
+   "beat_spread_mad_ms": 8.5
+  },
+  {
+   "n": 13,
+   "type": "bass_swap_16",
+   "from_title": "The Weeknd - Save Your Tears",
+   "to_title": "Ida Corr & Fedde Le Grand - Let Me Think About It",
+   "a_overlap_start_bar": 89,
+   "a_exit_bar": 105,
+   "b_cue_bar": 1,
+   "stretch_pct": 3.39,
+   "stretch_side": "both, ramped bar by bar from 118.00 to 122.00 BPM across the overlap",
+   "pair_score": 0.9198,
+   "vocal_overlap": 0.063,
+   "dip_out_mids": false,
+   "reverb_wash": false,
+   "scratch": false,
+   "backspin": false,
+   "key_shift_st": 0,
+   "reasons": [
+    "B has a clean 16-bar intro",
+    "16-bar phrases both sides",
+    "B enters -2.4 LU quieter",
+    "different groove (r=0.27)",
+    "longer cut"
+   ],
+   "overlap_bars_rendered": 16,
+   "phase_corr_ms": -17.5,
+   "at_s": 2244.697,
+   "tail": "bass swap at bar 8 of 16, highs 1 bar later",
+   "bar_s_ramp": [
+    2.0318,
+    1.9693
+   ],
+   "geom_downbeat_err_ms": 0.0,
+   "beat_offset_ms": 0.0,
+   "beats_compared": 64,
+   "beat_spread_mad_ms": 5.0
+  },
+  {
+   "n": 14,
+   "type": "bass_swap_16",
+   "from_title": "Ida Corr & Fedde Le Grand - Let Me Think About It",
+   "to_title": "Moloko - Sing It Back",
+   "a_overlap_start_bar": 81,
+   "a_exit_bar": 97,
+   "b_cue_bar": 1,
+   "stretch_pct": 0.81,
+   "stretch_side": "both, ramped bar by bar from 122.00 to 122.99 BPM across the overlap",
+   "pair_score": 0.9211,
+   "vocal_overlap": 0.417,
+   "dip_out_mids": false,
+   "reverb_wash": false,
+   "scratch": false,
+   "backspin": false,
+   "key_shift_st": 0,
+   "reasons": [
+    "-0.8% stretch on B (122.0 end -> 123.0 start)",
+    "energy steady (-0.7 LU)",
+    "16-bar phrases both sides",
+    "longer cut"
+   ],
+   "overlap_bars_rendered": 16,
+   "phase_corr_ms": -7.1,
+   "at_s": 2402.614,
+   "tail": "bass swap at bar 8 of 16, highs 1 bar later",
+   "bar_s_ramp": [
+    1.9668,
+    1.9519
+   ],
+   "geom_downbeat_err_ms": 0.0,
+   "beat_offset_ms": 0.0,
+   "beats_compared": 63,
+   "beat_spread_mad_ms": 6.9
+  },
+  {
+   "n": 15,
+   "type": "bass_swap_16",
+   "from_title": "Moloko - Sing It Back",
+   "to_title": "Johan K & Rinat Bibikov - Zombie",
+   "a_overlap_start_bar": 94,
+   "a_exit_bar": 110,
+   "b_cue_bar": 1,
+   "stretch_pct": -0.81,
+   "stretch_side": "both, ramped bar by bar from 122.99 to 122.00 BPM across the overlap",
+   "pair_score": 0.8617,
+   "vocal_overlap": 0.066,
+   "dip_out_mids": false,
+   "reverb_wash": false,
+   "scratch": false,
+   "backspin": false,
+   "key_shift_st": 0,
+   "reasons": [
+    "+0.8% stretch on B (123.0 end -> 122.0 start)",
+    "B has a clean 16-bar intro",
+    "16-bar phrases both sides",
+    "different groove (r=0.00)"
+   ],
+   "overlap_bars_rendered": 16,
+   "phase_corr_ms": -8.2,
+   "at_s": 2584.226,
+   "tail": "bass swap at bar 8 of 16, highs 1 bar later",
+   "bar_s_ramp": [
+    1.9519,
+    1.9668
+   ],
+   "geom_downbeat_err_ms": 0.0,
+   "beat_offset_ms": 0.1,
+   "beats_compared": 62,
+   "beat_spread_mad_ms": 7.9
+  },
+  {
+   "n": 16,
+   "type": "filter_sweep",
+   "from_title": "Johan K & Rinat Bibikov - Zombie",
+   "to_title": "Lady Gaga & Doechii - Runway",
+   "a_overlap_start_bar": 97,
+   "a_exit_bar": 105,
+   "b_cue_bar": 1,
+   "stretch_pct": -1.65,
+   "stretch_side": "both, ramped bar by bar from 122.00 to 119.98 BPM across the overlap",
+   "pair_score": 0.7871,
+   "vocal_overlap": 0.021,
+   "dip_out_mids": false,
+   "reverb_wash": false,
+   "scratch": false,
+   "backspin": false,
+   "key_shift_st": 0,
+   "reasons": [
+    "+1.6% stretch on B (122.0 end -> 120.0 start)",
+    "energy steady (-1.8 LU)",
+    "no vocal clash",
+    "8-bar window (short of a 16-bar phrase)",
+    "different groove (r=0.27)"
+   ],
+   "overlap_bars_rendered": 8,
+   "phase_corr_ms": -2.0,
+   "at_s": 2772.96,
+   "tail": "hp sweep 30 Hz -> 3 kHz over 8 bars",
+   "bar_s_ramp": [
+    1.9693,
+    1.9982
+   ],
+   "geom_downbeat_err_ms": 0.0,
+   "beat_offset_ms": 0.0,
+   "beats_compared": 31,
+   "beat_spread_mad_ms": 6.9
+  },
+  {
+   "n": 17,
+   "type": "bass_swap_16",
+   "from_title": "Lady Gaga & Doechii - Runway",
+   "to_title": "Take That feat. Lulu - Relight My Fire",
+   "a_overlap_start_bar": 80,
+   "a_exit_bar": 96,
+   "b_cue_bar": 1,
+   "stretch_pct": 2.18,
+   "stretch_side": "both, ramped bar by bar from 119.98 to 122.60 BPM across the overlap",
+   "pair_score": 0.7606,
+   "vocal_overlap": 0.306,
+   "dip_out_mids": false,
+   "reverb_wash": false,
+   "scratch": false,
+   "backspin": false,
+   "key_shift_st": 0,
+   "reasons": [
+    "-2.2% stretch on B (120.0 end -> 122.6 start)",
+    "energy steady (-1.9 LU)",
+    "15-bar window (short of a 16-bar phrase)",
+    "different groove (r=0.00)"
+   ],
+   "overlap_bars_rendered": 16,
+   "phase_corr_ms": 9.4,
+   "at_s": 2930.841,
+   "tail": "bass swap at bar 8 of 16, highs 1 bar later",
+   "bar_s_ramp": [
+    1.9989,
+    1.9589
+   ],
+   "geom_downbeat_err_ms": 0.0,
+   "beat_offset_ms": -0.0,
+   "beats_compared": 64,
+   "beat_spread_mad_ms": 9.4
+  },
+  {
+   "n": 18,
+   "type": "bass_swap_16",
+   "from_title": "Take That feat. Lulu - Relight My Fire",
+   "to_title": "Moby - Go",
+   "a_overlap_start_bar": 64,
+   "a_exit_bar": 80,
+   "b_cue_bar": 1,
+   "stretch_pct": 2.61,
+   "stretch_side": "both, ramped bar by bar from 122.60 to 125.81 BPM across the overlap",
+   "pair_score": 0.9202,
+   "vocal_overlap": 0.328,
+   "dip_out_mids": false,
+   "reverb_wash": false,
+   "scratch": false,
+   "backspin": false,
+   "key_shift_st": 0,
+   "reasons": [
+    "-2.6% stretch on B (122.6 end -> 125.8 start)",
+    "energy steady (-1.6 LU)",
+    "16-bar phrases both sides"
+   ],
+   "overlap_bars_rendered": 16,
+   "phase_corr_ms": 5.4,
+   "at_s": 3054.502,
+   "tail": "bass swap at bar 8 of 16, highs 1 bar later",
+   "bar_s_ramp": [
+    1.956,
+    1.9092
+   ],
+   "geom_downbeat_err_ms": 0.0,
+   "beat_offset_ms": 0.0,
+   "beats_compared": 63,
+   "beat_spread_mad_ms": 8.9
+  },
+  {
+   "n": 19,
+   "type": "bass_swap_16",
+   "from_title": "Moby - Go",
+   "to_title": "Ultra Nate - Free",
+   "a_overlap_start_bar": 97,
+   "a_exit_bar": 113,
+   "b_cue_bar": 1,
+   "stretch_pct": -0.64,
+   "stretch_side": "both, ramped bar by bar from 125.81 to 125.01 BPM across the overlap",
+   "pair_score": 0.7857,
+   "vocal_overlap": 0.322,
+   "dip_out_mids": false,
+   "reverb_wash": false,
+   "scratch": false,
+   "backspin": false,
+   "key_shift_st": 0,
+   "reasons": [
+    "+0.6% stretch on B (125.8 end -> 125.0 start)",
+    "similar sound (closer than 99% of pairs)",
+    "16-bar phrases both sides",
+    "B enters -8.7 LU quieter",
+    "longer cut"
+   ],
+   "overlap_bars_rendered": 16,
+   "phase_corr_ms": -9.7,
+   "at_s": 3238.047,
+   "tail": "bass swap at bar 8 of 16, highs 1 bar later",
+   "bar_s_ramp": [
+    1.9081,
+    1.9195
+   ],
+   "geom_downbeat_err_ms": 0.0,
+   "beat_offset_ms": -0.1,
+   "beats_compared": 63,
+   "beat_spread_mad_ms": 10.4
+  },
+  {
+   "n": 20,
+   "type": "filter_sweep",
+   "from_title": "Ultra Nate - Free",
+   "to_title": "Ol' Dirty Bastard - Got Your Money",
+   "a_overlap_start_bar": 65,
+   "a_exit_bar": 81,
+   "b_cue_bar": 1,
+   "stretch_pct": -0.81,
+   "stretch_side": "both, ramped bar by bar from 125.01 to 124.00 BPM across the overlap",
+   "pair_score": 0.8815,
+   "vocal_overlap": 0.531,
+   "dip_out_mids": false,
+   "reverb_wash": false,
+   "scratch": false,
+   "backspin": false,
+   "key_shift_st": 0,
+   "reasons": [
+    "+0.8% stretch on B (125.0 end -> 124.0 start)",
+    "4A -> 4A",
+    "energy steady (-0.8 LU)"
+   ],
+   "overlap_bars_rendered": 16,
+   "phase_corr_ms": 0.1,
+   "at_s": 3360.823,
+   "tail": "hp sweep 30 Hz -> 3 kHz over 16 bars",
+   "bar_s_ramp": [
+    1.9204,
+    1.935
+   ],
+   "geom_downbeat_err_ms": 0.0,
+   "beat_offset_ms": 0.0,
+   "beats_compared": 64,
+   "beat_spread_mad_ms": 6.5
+  },
+  {
+   "n": 21,
+   "type": "bass_swap_16",
+   "from_title": "Ol' Dirty Bastard - Got Your Money",
+   "to_title": "ATB, Topic & A7S - Your Love (9PM)",
+   "a_overlap_start_bar": 66,
+   "a_exit_bar": 82,
+   "b_cue_bar": 1,
+   "stretch_pct": 1.61,
+   "stretch_side": "both, ramped bar by bar from 124.00 to 126.00 BPM across the overlap",
+   "pair_score": 0.8426,
+   "vocal_overlap": 0.065,
+   "dip_out_mids": false,
+   "reverb_wash": false,
+   "scratch": false,
+   "backspin": false,
+   "key_shift_st": 0,
+   "reasons": [
+    "-1.6% stretch on B (124.0 end -> 126.0 start)",
+    "similar sound (closer than 99% of pairs)",
+    "no vocal clash"
+   ],
+   "overlap_bars_rendered": 16,
+   "phase_corr_ms": -6.6,
+   "at_s": 3486.514,
+   "tail": "bass swap at bar 8 of 16, highs 1 bar later",
+   "bar_s_ramp": [
+    1.9346,
+    1.9058
+   ],
+   "geom_downbeat_err_ms": 0.0,
+   "beat_offset_ms": -0.0,
+   "beats_compared": 64,
+   "beat_spread_mad_ms": 8.9
+  }
+ ],
+ "songs": [
+  {
+   "pos": 1,
+   "title": "Ricky Martin - Livin' La Vida Loca",
+   "start_s": 0.0,
+   "src_lufs": -6.67,
+   "bars": [
+    1,
+    65
+   ],
+   "max_stretch_pct": 0.35,
+   "secs": 1.0
+  },
+  {
+   "pos": 2,
+   "title": "Blackstreet - No Diggity",
+   "start_s": 161.76,
+   "src_lufs": -11.62,
+   "bars": [
+    1,
+    73
+   ],
+   "max_stretch_pct": 0.35,
+   "secs": 1.7
+  },
+  {
+   "pos": 3,
+   "title": "Missy Elliott - Get Ur Freak On",
+   "start_s": 335.02,
+   "src_lufs": -11.93,
+   "bars": [
+    1,
+    73
+   ],
+   "max_stretch_pct": 3.25,
+   "secs": 1.5
+  },
+  {
+   "pos": 4,
+   "title": "Snoop Dogg - Drop It Like It's Hot",
+   "start_s": 507.79,
+   "src_lufs": -8.6,
+   "bars": [
+    1,
+    80
+   ],
+   "max_stretch_pct": 3.15,
+   "secs": 1.4
+  },
+  {
+   "pos": 5,
+   "title": "Sugababes - Freak Like Me",
+   "start_s": 693.37,
+   "src_lufs": -6.64,
+   "bars": [
+    1,
+    65
+   ],
+   "max_stretch_pct": 2.76,
+   "secs": 0.9
+  },
+  {
+   "pos": 6,
+   "title": "Shaggy - It Wasn't Me",
+   "start_s": 850.15,
+   "src_lufs": -10.41,
+   "bars": [
+    1,
+    80
+   ],
+   "max_stretch_pct": 5.2,
+   "secs": 1.1
+  },
+  {
+   "pos": 7,
+   "title": "Amerie - 1 Thing",
+   "start_s": 1030.17,
+   "src_lufs": -8.61,
+   "bars": [
+    1,
+    89
+   ],
+   "max_stretch_pct": 4.94,
+   "secs": 1.1
+  },
+  {
+   "pos": 8,
+   "title": "Whodini - Freaks Come Out at Night",
+   "start_s": 1232.27,
+   "src_lufs": -15.79,
+   "bars": [
+    1,
+    71
+   ],
+   "max_stretch_pct": 1.92,
+   "secs": 1.1
+  },
+  {
+   "pos": 9,
+   "title": "Dua Lipa - Levitating",
+   "start_s": 1389.46,
+   "src_lufs": -7.99,
+   "bars": [
+    1,
+    87
+   ],
+   "max_stretch_pct": 3.2,
+   "secs": 1.2
+  },
+  {
+   "pos": 10,
+   "title": "Michael Jackson - Scream",
+   "start_s": 1571.29,
+   "src_lufs": -11.1,
+   "bars": [
+    1,
+    79
+   ],
+   "max_stretch_pct": 3.1,
+   "secs": 1.2
+  },
+  {
+   "pos": 11,
+   "title": "Spice Girls - Wannabe",
+   "start_s": 1738.34,
+   "src_lufs": -9.37,
+   "bars": [
+    1,
+    79
+   ],
+   "max_stretch_pct": 2.81,
+   "secs": 0.8
+  },
+  {
+   "pos": 12,
+   "title": "Justin Timberlake - Can't Stop The Feeling!",
+   "start_s": 1891.15,
+   "src_lufs": -9.83,
+   "bars": [
+    1,
+    87
+   ],
+   "max_stretch_pct": 3.86,
+   "secs": 1.0
+  },
+  {
+   "pos": 13,
+   "title": "The Weeknd - Save Your Tears",
+   "start_s": 2065.52,
+   "src_lufs": -8.07,
+   "bars": [
+    1,
+    105
+   ],
+   "max_stretch_pct": 3.72,
+   "secs": 1.1
+  },
+  {
+   "pos": 14,
+   "title": "Ida Corr & Fedde Le Grand - Let Me Think About It",
+   "start_s": 2244.7,
+   "src_lufs": -8.39,
+   "bars": [
+    1,
+    97
+   ],
+   "max_stretch_pct": 3.18,
+   "secs": 1.8
+  },
+  {
+   "pos": 15,
+   "title": "Moloko - Sing It Back",
+   "start_s": 2402.61,
+   "src_lufs": -10.99,
+   "bars": [
+    1,
+    110
+   ],
+   "max_stretch_pct": 0.78,
+   "secs": 1.7
+  },
+  {
+   "pos": 16,
+   "title": "Johan K & Rinat Bibikov - Zombie",
+   "start_s": 2584.23,
+   "src_lufs": -10.52,
+   "bars": [
+    1,
+    105
+   ],
+   "max_stretch_pct": 1.55,
+   "secs": 1.5
+  },
+  {
+   "pos": 17,
+   "title": "Lady Gaga & Doechii - Runway",
+   "start_s": 2772.96,
+   "src_lufs": -7.18,
+   "bars": [
+    1,
+    96
+   ],
+   "max_stretch_pct": 2.11,
+   "secs": 1.1
+  },
+  {
+   "pos": 18,
+   "title": "Take That feat. Lulu - Relight My Fire",
+   "start_s": 2930.84,
+   "src_lufs": -13.81,
+   "bars": [
+    1,
+    80
+   ],
+   "max_stretch_pct": 2.53,
+   "secs": 1.5
+  },
+  {
+   "pos": 19,
+   "title": "Moby - Go",
+   "start_s": 3054.5,
+   "src_lufs": -10.54,
+   "bars": [
+    1,
+    113
+   ],
+   "max_stretch_pct": 2.47,
+   "secs": 1.5
+  },
+  {
+   "pos": 20,
+   "title": "Ultra Nate - Free",
+   "start_s": 3238.05,
+   "src_lufs": -9.94,
+   "bars": [
+    1,
+    81
+   ],
+   "max_stretch_pct": 0.78,
+   "secs": 2.4
+  },
+  {
+   "pos": 21,
+   "title": "Ol' Dirty Bastard - Got Your Money",
+   "start_s": 3360.82,
+   "src_lufs": -8.56,
+   "bars": [
+    1,
+    82
+   ],
+   "max_stretch_pct": 1.56,
+   "secs": 1.2
+  },
+  {
+   "pos": 22,
+   "title": "ATB, Topic & A7S - Your Love (9PM)",
+   "start_s": 3486.51,
+   "src_lufs": -11.39,
+   "bars": [
+    1,
+    79
+   ],
+   "max_stretch_pct": 1.54,
+   "secs": 0.8
+  }
+ ],
+ "premaster_lufs": -13.85,
+ "master_gain_db": 5.29,
+ "master_lufs": -10.07,
+ "sample_peak_dbfs": -1.8,
+ "mp3": "/Users/christophershannon/personal/90s2000 playlist/_pool build/mixer/mixes/1 - Graveyard Shift.mp3",
+ "mp3_bytes": 145434272,
+ "mp3_integrated_lufs": -10.0,
+ "mp3_true_peak_dbtp": -0.9,
+ "silent_gaps": [],
+ "duration_s": 3635.8,
+ "planned_duration_s": 3632.7,
+ "render_secs": 196.7,
+ "checks": {
+  "no_clipping": true,
+  "no_silent_gaps": true,
+  "joins_geom_within_10ms": true,
+  "joins_tracker_beats_within_10ms": "21 of 21",
+  "joins_over_10ms": [],
+  "duration_vs_plan_s": 3.1,
+  "duration_ok": true
+ }
+}

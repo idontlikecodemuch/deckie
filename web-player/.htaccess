@@ -1,0 +1,23 @@
+# Mike's Halloween discs: keep the MP3s off search engines and away from direct or hotlinked requests.
+# No Options/ErrorDocument directives here on purpose: Bluehost's AllowOverride rejects them and 500s the folder.
+
+<IfModule mod_headers.c>
+  # Tell crawlers not to index or archive anything in this folder (page included).
+  Header set X-Robots-Tag "noindex, nofollow, noarchive"
+  # Cloudflare would otherwise cache the MP3s and serve them to anyone; keep every request at the origin.
+  <FilesMatch "\.(mp3|js|json)$">
+    Header set Cache-Control "private, no-store"
+  </FilesMatch>
+</IfModule>
+
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  # Only serve an MP3 when the request comes from the page on this domain (the browser sends the page as Referer).
+  RewriteCond %{HTTP_REFERER} !^https?://(www\.)?christophershannon\.io/ [NC]
+  RewriteRule \.mp3$ - [F,NC]
+</IfModule>
+
+# the page itself: always revalidate, so a new data version tag reaches phones at once
+<FilesMatch "^index\.html$">
+  Header set Cache-Control "no-store"
+</FilesMatch>

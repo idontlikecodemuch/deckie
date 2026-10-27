@@ -1,0 +1,1427 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0f0a17">
+<meta name="color-scheme" content="dark">
+<meta name="robots" content="noindex, nofollow, noarchive">
+<title>Mike's Halloween Discs</title>
+<link rel="icon" type="image/png" sizes="64x64" href="favicon.png">
+<link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+<style>
+/* ===== Theme tokens ===== */
+:root{
+  --bg:#0f0a17; --bg2:#160f22; --card:#1d1530; --card2:#251b3b; --line:#30254a; --disp:#07050d;
+  --tx:#f2edf9; --mut:#ab9fc2; --dim:#76698f;
+  --acc:#b490ff; --acc2:#8a5cff; --acc-tx:#150a28; --acc-soft:rgba(180,144,255,.16); --acc-dim:#4a3b6e;
+  --glow:0 0 14px rgba(180,144,255,.35);
+  --orange:#ff8a1f; --orange-tx:#1a0d02; --amber:#ffc040; --bad:#ff5d6c; --ok:#72dca0;
+  /* function colours: Singalong (CD1), Mix-in (CD2), Halloween */
+  --c-sing:#b490ff; --c-mix:#3fd2c0; --c-hal:#ff8a1f;
+  --k-remix:#b490ff; --k-intro:#5fd0c6; --k-mash:#ff7fc0; --k-trans:#79a8ff; --k-cover:#e3c07a;
+  --silver:radial-gradient(circle at 35% 28%,#fff 0,#e6e4ee 22%,#b3b1c2 52%,#6c6a7c 82%,#3b3947 100%);
+  --pl-bg:linear-gradient(135deg,#2a1356 0%,#1d1650 55%,#141a4a 100%);
+  --r:12px; --r-s:8px;
+  --mono:ui-monospace,"SF Mono",SFMono-Regular,Menlo,Consolas,"Roboto Mono",monospace;
+  --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  /* type scale */ --fs-xs:11px; --fs-s:13px; --fs-m:15px; --fs-l:17px;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%;height:100%}
+/* never wider than the screen (iOS widens the layout viewport on any overflow) */
+html,body{width:100%;max-width:100%;overflow-x:hidden}
+html{overflow-x:clip}
+body *{min-width:0}
+body{margin:0;height:100vh;height:100dvh;display:flex;flex-direction:column;overflow:hidden;
+  background:var(--bg);color:var(--tx);font:var(--fs-m)/1.4 var(--sans);font-variant-numeric:tabular-nums}
+button,input,textarea{font:inherit;color:inherit}
+button{cursor:pointer;-webkit-tap-highlight-color:transparent}
+:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+svg{width:20px;height:20px;fill:currentColor;display:block}
+[hidden]{display:none!important}
+.in{max-width:860px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left));padding-right:max(16px,env(safe-area-inset-right))}
+@media (max-width:359px){.lx{display:none}}
+
+/* subtle Halloween background art */
+.bgart{position:fixed;pointer-events:none;z-index:0;opacity:.13;width:auto}
+.bgart.moon{top:calc(env(safe-area-inset-top) + 190px);right:0;width:200px;height:180px}
+.bgart.web{left:0;bottom:0;width:170px;height:170px;opacity:.09;fill:none}
+header,.tool,.list,.player{position:relative;z-index:1}
+
+/* ===== Header ===== */
+header{flex:none;background:linear-gradient(180deg,rgba(32,20,58,.95),rgba(15,10,23,.94));-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);
+  border-bottom:1px solid var(--line);padding-top:env(safe-area-inset-top)}
+.top{display:flex;align-items:center;gap:10px;padding-top:8px;min-width:0}
+.qbtn{flex:none;width:44px;height:44px;border-radius:50%;border:1px solid var(--acc-dim);background:radial-gradient(circle at 40% 30%,#2e2250,var(--card));color:var(--acc);font-weight:700;font-size:var(--fs-l);box-shadow:var(--glow)}
+.chg{flex:1;min-width:0;font-size:var(--fs-s);line-height:1.25;color:var(--mut);overflow-wrap:anywhere}
+.chg b{color:var(--acc)}
+.chg button{border:0;background:none;color:var(--acc);text-decoration:underline;padding:12px 4px;margin:-12px 0;font-size:var(--fs-s)}
+.send{flex:0 1 auto;min-width:0;max-width:60%;min-height:44px;padding:0 18px;border:0;border-radius:22px;background:linear-gradient(180deg,#ffa24a,var(--orange));color:var(--orange-tx);font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;box-shadow:0 0 16px rgba(255,138,31,.3)}
+.tabs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px;margin:10px 0;background:var(--bg2);border:1px solid var(--line);border-radius:var(--r);padding:3px}
+.tabs button{min-width:0;min-height:42px;border:0;border-radius:9px;background:none;color:var(--mut);font-size:var(--fs-s);font-weight:600;padding:2px 4px;line-height:1.15;overflow:hidden;overflow-wrap:anywhere}
+.tabs button[aria-selected=true]{background:linear-gradient(180deg,rgba(180,144,255,.28),rgba(138,92,255,.14));color:#e3d6ff;box-shadow:inset 0 0 0 1px var(--acc-dim),var(--glow)}
+.meters{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.mlab{font-size:var(--fs-xs);color:var(--mut);margin-bottom:5px;line-height:1.35;overflow-wrap:anywhere}
+.mlab b{color:var(--tx);font-size:var(--fs-s)}
+.bar{height:10px;border-radius:5px;background:var(--card2);overflow:hidden;box-shadow:inset 0 0 0 1px var(--line)}
+.bar i{display:block;height:100%;background:linear-gradient(90deg,var(--acc2),var(--acc));border-radius:5px;box-shadow:0 0 10px rgba(180,144,255,.55);transition:width .2s}
+.meter.warn .bar i{background:linear-gradient(90deg,#e49a12,var(--amber));box-shadow:0 0 10px rgba(255,192,64,.45)} .meter.warn .st{color:var(--amber)}
+.meter.over .bar i{background:linear-gradient(90deg,#d8344a,var(--bad));box-shadow:0 0 10px rgba(255,93,108,.5)} .meter.over .mlab,.meter.over .mlab b{color:var(--bad)}
+.legend{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:var(--fs-xs);color:var(--mut);padding:8px 0 10px}
+.legend i{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px;vertical-align:0}
+.legend .sing,.dot.sing{background:var(--c-sing)} .legend .mix,.dot.mix{background:var(--c-mix)} .legend .hal,.dot.hal{background:var(--c-hal)}
+
+/* ===== Toolbar: search, chips, BPM index ===== */
+.tool{flex:none;padding-top:10px}
+.trow{display:flex;gap:8px;align-items:center;min-width:0;overflow-x:auto;scrollbar-width:none;touch-action:pan-x pan-y}
+.trow::-webkit-scrollbar,.pills::-webkit-scrollbar,.gcar::-webkit-scrollbar{display:none}
+.ibtn{flex:none;width:44px;height:44px;border-radius:var(--r);border:1px solid var(--line);background:var(--bg2);color:var(--mut);display:grid;place-items:center}
+.search{flex:1;min-width:0;height:44px;font-size:16px;border:1px solid var(--acc-dim);background:var(--bg2);border-radius:var(--r);padding:0 14px}
+.chip{flex:none;min-height:36px;padding:0 14px;border:1px solid var(--line);background:var(--bg2);border-radius:18px;color:var(--mut);font-size:var(--fs-s);white-space:nowrap}
+.chip[aria-pressed=true]{background:linear-gradient(180deg,rgba(180,144,255,.26),rgba(138,92,255,.12));border-color:var(--acc);color:#e3d6ff;box-shadow:var(--glow)}
+.idx{margin:8px 0 10px;min-width:0}
+.idxh{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:0 8px;min-width:0}
+.idxh .tg2{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:0 10px;min-width:0}
+.vh{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.cap{flex:none;font:700 11px var(--sans);letter-spacing:1px;color:var(--dim);font-variant:small-caps;text-transform:lowercase}
+.hi{flex:none;display:flex;align-items:center;gap:2px;font-size:var(--fs-xs);color:var(--mut);cursor:pointer}
+.pills{flex:1 1 auto;min-width:0;display:flex;gap:4px;overflow-x:auto;scrollbar-width:none;overscroll-behavior-x:contain;touch-action:pan-x pan-y}
+.pills button{flex:1 0 40px;min-width:40px;min-height:40px;overflow:hidden;border:1px solid var(--line);border-radius:var(--r-s);background:var(--bg2);padding:0 2px;color:var(--mut);font:600 var(--fs-s) var(--mono);white-space:nowrap}
+.pills button[aria-current=true]{background:linear-gradient(180deg,#c8adff,var(--acc2));border-color:var(--acc);color:var(--acc-tx);box-shadow:var(--glow)}
+.pills .altp{flex-basis:46px;min-width:46px;border-style:dashed;font-family:var(--sans)}
+
+/* ===== The list: BPM groups stacked vertically ===== */
+.list{flex:1;min-height:0;width:100%;max-width:100%;overflow-y:auto;overflow-x:hidden;overscroll-behavior-y:contain;-webkit-overflow-scrolling:touch;touch-action:pan-y;position:relative}
+.list>.in{padding-bottom:28px}
+.fold{margin:0 0 18px}
+.fh{position:sticky;top:0;z-index:5;display:flex;align-items:center;gap:8px;min-width:0;padding:6px 10px;border-radius:var(--r);
+  background:linear-gradient(135deg,#2a1f45,#1b1430);border:1px solid var(--line);box-shadow:0 6px 14px rgba(0,0,0,.35)}
+.fh-t{flex:1 1 auto;min-width:0;display:flex;align-items:center;gap:6px;min-height:44px;border:0;background:none;padding:0;text-align:left}
+.fh-t svg{flex:none;color:var(--mut);transition:transform .15s}
+.fold.closed .fh-t svg{transform:rotate(-90deg)}
+.fold.closed .fb{display:none}
+.fh .fn{min-width:0;font:700 var(--fs-m) var(--mono);overflow-wrap:anywhere}
+.fold.alts{margin-top:30px}
+.fold.alts .fh{background:linear-gradient(135deg,#231a33,#17111f);border-style:dashed}
+.fold.alts .fn{font-family:var(--sans);color:var(--mut)}
+/* per-group disc switch: CD1 · CD2 · Both */
+.dots{flex:none;display:flex}
+.dots button{flex:none;min-height:44px;width:40px;border:0;background:none;padding:0;display:grid;place-items:center;color:var(--dim);font:600 10px var(--sans)}
+.dots button span{display:flex;flex-direction:column;align-items:center;gap:3px}
+.dots button span::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--line);transition:background .15s,box-shadow .15s}
+.dots button[aria-selected=true]{color:#e3d6ff}
+.dots button[aria-selected=true] span::before{background:var(--acc);box-shadow:0 0 8px rgba(180,144,255,.9)}
+.pf{flex:none;width:44px;height:44px;border-radius:50%;border:1px solid var(--acc-dim);background:var(--acc-soft);color:var(--acc);display:grid;place-items:center}
+/* the horizontal carousel inside each group */
+.gcar{display:flex;align-items:flex-start;width:100%;max-width:100%;overflow-x:auto;overflow-y:hidden;scroll-snap-type:x mandatory;overscroll-behavior-x:contain;scrollbar-width:none;touch-action:pan-x pan-y}
+.gp{flex:0 0 100%;width:100%;min-width:0;max-width:100%;scroll-snap-align:start;scroll-snap-stop:always}
+.gmeta{font-size:var(--fs-xs);color:var(--mut);padding:10px 2px 0}
+.gmeta b{color:var(--tx)}
+.empty{color:var(--dim);font-size:var(--fs-s);padding:14px 2px;margin:0}
+
+/* ===== Track rows ===== */
+.row{--fc:var(--c-sing);display:grid;grid-template-columns:44px minmax(0,1fr) 54px;gap:12px;align-items:start;padding:14px 0 14px 10px;border-bottom:1px solid var(--line);border-left:3px solid var(--fc)}
+.row.f-mix{--fc:var(--c-mix)} .row.f-hal{--fc:var(--c-hal)}
+.pb{align-self:center}
+.pb,.ctl .pp,.cb.pp{width:44px;height:44px;border:0;border-radius:50%;background:var(--silver);color:#1b1622;display:grid;place-items:center;
+  box-shadow:0 1px 2px rgba(0,0,0,.5),inset 0 1px 1px rgba(255,255,255,.9),inset 0 -2px 4px rgba(0,0,0,.35)}
+.pb .ip,.pp .ip{display:none}
+body.is-playing .row.playing .pb .ip,body.is-playing .pp .ip{display:block}
+body.is-playing .row.playing .pb .is,body.is-playing .pp .is{display:none}
+/* glow only while playing */
+body.is-playing .row.playing .pb,body.is-playing .pp{box-shadow:0 0 14px rgba(225,215,255,.75),0 0 4px rgba(255,255,255,.8),inset 0 1px 1px rgba(255,255,255,.9),inset 0 -2px 4px rgba(0,0,0,.35)}
+.t{font-size:var(--fs-m);overflow-wrap:anywhere;min-width:0}
+.t .ar{color:var(--mut)}
+.t b{font-weight:700}
+.kp{display:inline-block;max-width:100%;overflow:hidden;text-overflow:ellipsis;vertical-align:2px;margin-left:6px;padding:0 7px;border-radius:6px;font:800 10px/18px var(--sans);letter-spacing:.5px;color:var(--bg);background:var(--k-remix);white-space:nowrap}
+.kp.k-intro{background:var(--k-intro)} .kp.k-mash{background:var(--k-mash)} .kp.k-trans{background:var(--k-trans)} .kp.k-cover{background:var(--k-cover)}
+.v{color:var(--acc);font-size:var(--fs-s);margin-top:2px;overflow-wrap:anywhere}
+.tags{display:flex;flex-wrap:wrap;gap:6px 8px;margin-top:8px;font-size:var(--fs-xs);color:var(--mut);align-items:center}
+.tg{padding:1px 7px;border-radius:6px;border:1px solid var(--line);line-height:17px;white-space:nowrap;max-width:100%;overflow:hidden;text-overflow:ellipsis}
+.tg.h{background:var(--orange);border-color:var(--orange);color:var(--orange-tx);font-weight:800}
+.tg.d{background:var(--tx);border-color:var(--tx);color:var(--bg);font-weight:800}
+.tg.lq{border-color:#6e5530;color:var(--amber)}
+.tg.er{border-color:var(--bad);color:var(--bad)}
+.tg.hd{border-color:transparent;color:var(--ok);padding:0}
+.tg.fb-tag{font-family:var(--mono);border-color:var(--acc-dim);color:var(--acc)}
+.lg{color:var(--amber)}
+.note{font-size:var(--fs-xs);color:var(--dim);margin-top:6px;overflow-wrap:anywhere}
+/* CDJ readout: caption above, one-line LCD that scrolls when too long */
+.deck{margin-top:8px;min-width:0}
+.deck small{display:block;font:700 9px var(--sans);letter-spacing:1px;color:var(--dim);font-variant:small-caps;text-transform:lowercase;margin-bottom:3px}
+.lcd{overflow:hidden;white-space:nowrap;background:linear-gradient(180deg,#0c0a18,var(--disp));border:1px solid #2a2140;border-radius:5px;padding:4px 8px;box-shadow:inset 0 0 8px rgba(120,160,255,.08)}
+.lcd span{display:inline-block;font:var(--fs-xs)/1.4 var(--mono);color:#cfe3ff;text-shadow:0 0 4px rgba(150,190,255,.45);white-space:pre}
+.lcd.mq span{animation:mq var(--mqd,6s) ease-in-out infinite alternate}
+@keyframes mq{0%,18%{transform:translateX(0)}82%,100%{transform:translateX(var(--mqx,0))}}
+@media (prefers-reduced-motion:reduce){.lcd.mq span{animation:none}.lcd{overflow-x:auto}}
+.rt{display:flex;flex-direction:column;align-items:flex-end;gap:2px}
+.star{flex:none;width:44px;height:44px;border:0;background:none;padding:0;display:grid;place-items:center;color:var(--dim);font-size:20px;line-height:1}
+.star::before{content:"☆"}
+.star[aria-pressed=true]{color:#ffd166;text-shadow:0 0 8px rgba(255,209,102,.6)}
+.star[aria-pressed=true]::before{content:"★"}
+.rt .star{margin-right:5px}
+.xi .star{width:36px}
+.bpm{font:700 var(--fs-s) var(--mono);color:var(--fc);text-align:right;line-height:1.1}
+.bpm small{display:block;font-size:9px;color:var(--dim);letter-spacing:.5px}
+.row.playing{background:linear-gradient(90deg,var(--acc-soft),transparent 75%);border-radius:0 var(--r-s) var(--r-s) 0}
+.row:not(.err) .tg.er,.row:not(.heard) .tg.hd{display:none}
+.alts .row .t,.alts .row .v{opacity:.8}
+
+/* "Hide info": compact one-line rows */
+.compact .row{grid-template-columns:44px minmax(0,1fr) auto;align-items:center;padding:4px 0 4px 10px}
+.compact .row .v,.compact .row .tags,.compact .row .note,.compact .row .deck,.compact .bpm small{display:none}
+.compact .row .t{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.compact .row .rt{flex-direction:row;align-items:center;gap:0}
+.compact .rt .star{margin-right:0}
+.compact .gmeta{padding-top:6px}
+.compact .xi .why{display:none} .compact .xi .why.w-mix{display:inline-block}
+.compact .xi .rsn{display:none}
+
+/* switch */
+.sw{display:grid;place-items:center;width:54px;height:44px;cursor:pointer;position:relative;flex:none}
+.sw input{position:absolute;opacity:0;inset:0;width:100%;height:100%;margin:0;cursor:pointer}
+.sw i{width:44px;height:26px;border-radius:13px;background:#3a3050;position:relative;transition:background .15s;pointer-events:none}
+.sw i::after{content:"";position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#bdb2d2;transition:transform .15s}
+.sw input:checked+i{background:linear-gradient(90deg,var(--acc2),var(--acc));box-shadow:0 0 8px rgba(180,144,255,.45)}
+.sw input:checked+i::after{transform:translateX(18px);background:radial-gradient(circle at 40% 35%,#ffc285,var(--orange));box-shadow:0 0 6px rgba(255,138,31,.7)}
+.sw input:focus-visible+i{outline:2px solid var(--acc);outline-offset:2px}
+
+/* ===== Player bar (collapsed): its own violet/indigo treatment ===== */
+.player{flex:none;background:var(--pl-bg);border-top:1px solid #4b3a86;box-shadow:0 -6px 22px rgba(90,60,200,.25);padding-bottom:env(safe-area-inset-bottom);touch-action:none}
+.player{position:relative}
+.pbar{display:flex;align-items:center;gap:5px;padding-top:14px;padding-bottom:6px}
+.pbar .pstar{width:32px;height:44px;font-size:18px;margin:0}
+.ptr{flex:none;display:flex;align-items:center;gap:5px}
+.cb.sm{width:32px;height:32px}
+.cb.sm svg{width:17px;height:17px}
+.pbar .cb{padding:0}
+.pbar .cb.pp{width:44px;height:44px}
+.psw{display:flex;align-items:center;gap:2px;min-width:0}
+.psw .ps{flex:0 1 auto;min-width:0}
+.psw .chev{flex:none;width:14px;height:14px;color:#a99bd0;opacity:.8}
+/* slim glowing progress line that is also the scrubber (no round thumb) */
+.line{position:relative;height:28px;touch-action:none;cursor:pointer;-webkit-user-select:none;user-select:none;--p:0%;--x:0px;outline:none}
+.line .ltr{position:absolute;left:0;right:0;top:50%;height:3px;transform:translateY(-50%);background:rgba(255,255,255,.1);border-radius:2px;transition:height .12s}
+.line .ltr i{position:absolute;left:0;top:0;bottom:0;width:var(--p);border-radius:2px;background:linear-gradient(90deg,var(--acc2),#d8c6ff);box-shadow:0 0 8px rgba(200,175,255,.9)}
+.line .ltick,.line .lbub{position:absolute;left:var(--x);display:none;pointer-events:none}
+.line .ltick{top:50%;width:2px;height:16px;margin-left:-1px;transform:translateY(-50%);background:#fff;border-radius:1px;box-shadow:0 0 8px rgba(230,220,255,.95)}
+.line .lbub{bottom:calc(100% + 2px);transform:translateX(-50%);padding:2px 7px;border-radius:6px;background:#2a1a52;border:1px solid #5a47a0;color:#fff;font:600 var(--fs-xs) var(--mono);white-space:nowrap;box-shadow:0 4px 14px rgba(0,0,0,.5)}
+.line.drag .ltr{height:5px}
+.line.drag .ltick,.line.drag .lbub{display:block}
+.line:focus-visible .ltr{box-shadow:0 0 0 2px var(--acc)}
+.pline{position:absolute;left:0;right:0;top:-14px;z-index:3}
+.xline{margin-top:4px}
+.pinfo{flex:1;min-width:0;border:0;background:none;text-align:left;padding:0;min-height:44px}
+.pt{display:block;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ps{display:block;font-size:var(--fs-xs);color:#c3b6e6;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.st{color:#d8c6ff} .err .st{color:var(--bad)}
+.cb{flex:none;width:44px;height:44px;border:0;border-radius:50%;background:rgba(255,255,255,.08);display:grid;place-items:center;color:var(--tx)}
+
+/* ===== Expanded player sheet ===== */
+.xp{position:fixed;inset:0;z-index:50;background:rgba(0,0,0,.5);opacity:0;pointer-events:none;transition:opacity .2s}
+.xp.open{opacity:1;pointer-events:auto}
+.xp-in{position:absolute;left:0;right:0;bottom:0;top:calc(env(safe-area-inset-top) + 28px);background:linear-gradient(180deg,#2b1559 0%,#1b1748 45%,#120f2c 100%);border-radius:20px 20px 0 0;border-top:1px solid #5a47a0;
+  box-shadow:0 -10px 40px rgba(110,70,230,.35);overflow-y:auto;overscroll-behavior:contain;transform:translateY(100%);transition:transform .25s ease;padding-bottom:calc(24px + env(safe-area-inset-bottom))}
+.xp.open .xp-in{transform:none}
+.xp-top{display:flex;justify-content:center;padding:6px 0 0;touch-action:none;position:sticky;top:0;background:linear-gradient(180deg,#2b1559 70%,rgba(43,21,89,0));z-index:2}
+.xp-top button{width:88px;height:40px;border:0;background:none;color:#c3b6e6;display:grid;place-items:center}
+.xp-top button svg{width:28px;height:28px}
+.xt{font-size:var(--fs-l);font-weight:700;margin-top:4px;overflow-wrap:anywhere}
+.xt .ar{color:#c3b6e6;font-weight:400}
+.xv{color:#d8c6ff;font-size:var(--fs-s);overflow-wrap:anywhere}
+.xm{color:#c3b6e6;font-size:var(--fs-s);margin-top:4px;overflow-wrap:anywhere}
+#wave{display:block;width:100%;height:88px;margin-top:18px;cursor:pointer;touch-action:none;border-radius:var(--r-s);background:rgba(5,3,15,.55);box-shadow:inset 0 0 0 1px rgba(160,130,255,.2)}
+.xtime{display:flex;justify-content:space-between;align-items:center;gap:8px;font:var(--fs-xs) var(--mono);color:#c3b6e6;margin-top:6px}
+.zoom{display:flex;border:1px solid rgba(160,130,255,.3);border-radius:16px;overflow:hidden}
+.zoom button{min-width:40px;min-height:32px;border:0;background:none;color:#c3b6e6;font:600 var(--fs-xs) var(--mono);padding:0 8px}
+.zoom button[aria-pressed=true]{background:linear-gradient(180deg,#c8adff,var(--acc2));color:var(--acc-tx)}
+.shufrow{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin-top:4px}
+.shb{display:inline-flex;align-items:center;gap:6px;min-height:40px;padding:0 14px;border-radius:20px;border:1px solid rgba(160,130,255,.3);background:rgba(255,255,255,.06);color:#c3b6e6;font-size:var(--fs-s);font-weight:600}
+.cb[data-ctl=shuffle]{color:#c3b6e6}
+[data-ctl=shuffle][aria-pressed=true]{color:#fff;background:linear-gradient(180deg,rgba(200,175,255,.45),rgba(138,92,255,.35));box-shadow:0 0 12px rgba(200,175,255,.55)}
+.ctl{display:flex;justify-content:center;align-items:center;gap:8px;margin:14px 0 6px;min-width:0}
+.ctl button{flex:0 1 52px;min-width:40px;height:48px;border:0;border-radius:24px;background:rgba(255,255,255,.08);display:grid;place-items:center;font:600 var(--fs-s) var(--mono)}
+.ctl .pp{flex:0 1 60px;min-width:52px;width:60px;height:60px;border-radius:50%}
+.ctl .pp svg{width:28px;height:28px}
+.xh{min-width:0;display:flex;align-items:center;justify-content:space-between;margin:24px 0 8px}
+.xh h3{margin:0;font-size:var(--fs-s);text-transform:uppercase;letter-spacing:1px;color:#c3b6e6}
+.xlist{max-height:260px;overflow-y:auto;border:1px solid rgba(160,130,255,.22);border-radius:var(--r);background:rgba(8,5,20,.45)}
+.xi{display:flex;align-items:center;gap:8px;width:100%;min-height:48px;border:0;border-bottom:1px solid rgba(160,130,255,.14);background:none;text-align:left;padding:4px 10px}
+.xi:last-child{border-bottom:0}
+.xi>*:not(.tx){flex:none}
+.xi .n{font:var(--fs-xs) var(--mono);color:var(--dim);width:20px}
+.xi .tx{flex:1 1 auto;min-width:0;min-height:44px;display:flex;flex-direction:column;justify-content:center;border:0;background:none;padding:0;text-align:left;font-size:var(--fs-s)}
+.xi .tx .nm{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.xi .tx .ar{color:#c3b6e6}
+.why{display:inline-block;align-self:flex-start;margin-top:2px;padding:0 6px;border-radius:5px;font:700 9px/15px var(--sans);letter-spacing:.6px;text-transform:uppercase;background:rgba(180,144,255,.18);color:#e3d6ff}
+.why.w-hal{background:rgba(255,138,31,.22);color:#ffc08a} .why.w-wild{background:rgba(63,210,192,.18);color:#9ff0e5} .why.w-mix{background:rgba(63,210,120,.2);color:#a8f5c6;text-transform:none;letter-spacing:.2px}
+.xi .b{font:700 var(--fs-xs) var(--mono);color:var(--fc,#c3b6e6)}
+.xi .tg.d{padding:0 5px}
+.xi.cur{background:var(--acc-soft);box-shadow:inset 3px 0 0 var(--acc)}
+.xi.off .tx,.xi.off .b,.xi.off .tg{opacity:.45}
+.xi .sw{width:50px}
+/* Up next: why it follows well + the join waveform (end of current | start of next) */
+#xSug{max-height:none}
+.xi.xs{flex-wrap:wrap;row-gap:0}
+.xi.xs>.tx{flex:1 1 0}
+.xi>.xd{flex:0 0 100%;width:100%;padding:0 0 8px}
+.rsn{font-size:var(--fs-xs);line-height:1.35;color:#a99bd0;overflow-wrap:anywhere;padding-left:58px}
+.jn{display:flex;align-items:center;justify-content:space-between;gap:8px;padding-left:58px;font:var(--fs-xs) var(--mono);color:#c3b6e6}
+.jn>span{min-width:0;overflow-wrap:anywhere}
+.jch{display:flex;flex-wrap:wrap;align-items:center;gap:4px 6px;padding-left:58px;margin-top:4px}
+.pch{flex:none;padding:0 8px;border-radius:6px;font:800 12px/20px var(--mono);letter-spacing:.3px;background:linear-gradient(180deg,#ffe08a,var(--amber));color:#1a0d02;box-shadow:0 0 10px rgba(255,192,64,.35);white-space:nowrap}
+.pch.na{background:rgba(255,255,255,.08);color:#c3b6e6;box-shadow:inset 0 0 0 1px rgba(160,130,255,.3);font-weight:700}
+.kch{flex:none;padding:0 7px;border-radius:6px;font:700 11px/20px var(--mono);color:#e3d6ff;box-shadow:inset 0 0 0 1px rgba(160,130,255,.35);white-space:nowrap}
+.kch b{font:700 10px var(--sans);margin-left:4px;color:#a8f5c6}
+.kch.k-ps b{color:var(--amber)} .kch.k-bad b{color:var(--bad)}
+/* stacked join view: lane A = end of the current track, lane B = start of the suggestion, lined up at the join */
+.jv{position:relative;margin-top:5px;border-radius:5px;background:rgba(5,3,15,.6);box-shadow:inset 0 0 0 1px rgba(160,130,255,.18);overflow:hidden}
+.jsc{overflow-x:auto;overflow-y:hidden;scrollbar-width:none;overscroll-behavior-x:contain;touch-action:pan-x pan-y;-webkit-overflow-scrolling:touch}
+.jsc::-webkit-scrollbar{display:none}
+.jw{display:block;height:94px;cursor:pointer}
+.jl{position:absolute;left:4px;max-width:calc(100% - 8px);pointer-events:none;padding:0 4px;border-radius:3px;background:rgba(8,5,20,.66);font:600 9px/12px var(--sans);color:rgba(232,224,255,.8);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.jl.jla{top:11px} .jl.jlb{top:49px} .jl i{font-style:normal;color:var(--amber)}
+.jzr{display:flex;align-items:center;justify-content:flex-end;gap:8px;margin:-2px 0 8px;font:var(--fs-xs) var(--sans);color:#a99bd0}
+.jzoom{display:flex;border:1px solid rgba(160,130,255,.3);border-radius:16px;overflow:hidden}
+.jzoom button{min-width:44px;min-height:32px;border:0;background:none;color:#c3b6e6;font:600 var(--fs-xs) var(--mono);padding:0 8px}
+.jzoom button[aria-pressed=true]{background:linear-gradient(180deg,#c8adff,var(--acc2));color:var(--acc-tx)}
+.chb{flex:none;display:inline-flex;align-items:center;gap:3px;min-height:32px;padding:0 10px;border-radius:16px;border:1px solid rgba(160,130,255,.3);background:rgba(255,255,255,.06);color:#d8c6ff;font:600 var(--fs-xs) var(--sans);white-space:nowrap}
+.chb svg{width:15px;height:15px}
+.shb.chb{min-height:40px;font-size:var(--fs-s)}
+.xhb{display:flex;gap:6px}
+.sbtn{min-height:36px;padding:0 14px;border-radius:18px;border:1px solid var(--acc-dim);background:linear-gradient(180deg,rgba(180,144,255,.3),rgba(138,92,255,.15));color:#e3d6ff;font-size:var(--fs-s);font-weight:600;box-shadow:var(--glow)}
+
+/* ===== Overlays: intro, sheets, toast ===== */
+.intro{position:fixed;inset:0;z-index:80;background:radial-gradient(circle at 70% 10%,rgba(48,24,92,.99),rgba(12,7,20,.99) 60%);display:flex;align-items:center;justify-content:center;
+  padding:calc(24px + env(safe-area-inset-top)) 20px calc(24px + env(safe-area-inset-bottom));overflow-y:auto}
+.intro>div{max-width:440px;width:100%;background:linear-gradient(180deg,#251a3f,#1a1230);border:1px solid #3d2f66;border-radius:18px;padding:22px 20px;box-shadow:0 10px 40px rgba(0,0,0,.6),0 0 30px rgba(140,100,255,.15)}
+.intro h2{margin:0 0 16px;font-size:22px}
+.intro h2 span{color:var(--orange)}
+.intro ol{margin:0 0 24px;padding-left:22px;display:grid;gap:12px;color:var(--mut)}
+.intro li b{color:var(--tx)}
+.dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin:0 3px 0 6px}
+.sheet{position:fixed;inset:0;z-index:60;background:rgba(0,0,0,.6);display:flex;align-items:flex-end;justify-content:center}
+.sheet>div{width:100%;max-width:640px;max-height:92vh;overflow-y:auto;display:flex;flex-direction:column;gap:12px;background:linear-gradient(180deg,#251b3d,var(--card));border:1px solid var(--line);border-radius:20px 20px 0 0;
+  padding:20px max(16px,env(safe-area-inset-right)) calc(20px + env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left))}
+.sheet h2{margin:0;font-size:var(--fs-l)}
+.sheet p{margin:0;color:var(--mut);font-size:var(--fs-s)}
+.sheet label{font-size:var(--fs-s);font-weight:600}
+.sheet textarea{width:100%;font-size:16px;background:var(--bg);border:1px solid var(--line);border-radius:var(--r-s);padding:10px 12px;resize:vertical}
+#notes{min-height:84px}
+#repTxt{min-height:220px;font:12px/1.4 var(--mono);resize:none}
+/* Chains sheet */
+.chc{border:1px solid var(--line);border-radius:var(--r);background:rgba(8,5,20,.35);padding:10px;display:flex;flex-direction:column;gap:8px}
+.chc.cur{border-color:var(--acc-dim);box-shadow:var(--glow)}
+.chh{display:flex;gap:8px;align-items:center}
+.chn{flex:1;min-width:0;height:40px;font-size:16px;font-weight:700;border:1px solid var(--line);background:var(--bg);border-radius:var(--r-s);padding:0 10px}
+.chpick{flex:none;min-height:36px;padding:0 12px;border-radius:18px;border:1px solid var(--line);background:var(--card2);color:var(--mut);font-size:var(--fs-xs);font-weight:600}
+.chpick[aria-pressed=true]{background:linear-gradient(180deg,rgba(180,144,255,.3),rgba(138,92,255,.15));border-color:var(--acc);color:#e3d6ff}
+.chl{list-style:none;margin:0;padding:0}
+.chi{--fc:var(--c-sing);display:flex;align-items:center;gap:4px;border-left:3px solid var(--fc);padding:2px 0 2px 8px;background:rgba(255,255,255,.03);border-radius:0 var(--r-s) var(--r-s) 0}
+.chi .n{flex:none;width:18px;font:var(--fs-xs) var(--mono);color:var(--dim)}
+.chi .tx{flex:1 1 auto;min-width:0;min-height:44px;border:0;background:none;padding:0;text-align:left;font-size:var(--fs-s);display:flex;flex-direction:column;justify-content:center}
+.chi .tx .ar{color:var(--mut)}
+.chi .tx small{font:var(--fs-xs) var(--mono);color:var(--fc)}
+.chi .tx small i{font-style:normal;color:var(--dim)}
+.chm{flex:none;width:36px;height:40px;border:0;border-radius:var(--r-s);background:none;color:var(--mut);font-size:13px;display:grid;place-items:center}
+.chm:disabled{opacity:.25}
+.chj{font-size:var(--fs-xs);color:#a8f5c6;padding:3px 0 3px 30px;overflow-wrap:anywhere}
+.chj.nm{color:var(--dim)}
+.chc .btns .btn{min-height:40px}
+.btns{display:flex;gap:8px;flex-wrap:wrap}
+.btn{min-height:44px;padding:0 18px;border-radius:22px;border:1px solid var(--line);background:var(--card2);font-weight:600}
+.btn.pri{background:linear-gradient(180deg,#ffa24a,var(--orange));border-color:var(--orange);color:var(--orange-tx)}
+.btn.vi{background:linear-gradient(180deg,#c8adff,var(--acc2));border-color:var(--acc);color:var(--acc-tx);box-shadow:var(--glow)}
+.btn.dan{background:var(--bad);border-color:var(--bad);color:#fff}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(96px + env(safe-area-inset-bottom));z-index:90;background:var(--tx);color:var(--bg);
+  padding:10px 16px;border-radius:var(--r);font-size:var(--fs-s);font-weight:600;max-width:calc(100% - 32px);text-align:center;box-shadow:0 6px 24px rgba(0,0,0,.5)}
+@media (hover:hover){.pb:hover,.pf:hover,.cb:hover,.ctl button:hover{filter:brightness(1.12)}}
+</style>
+</head>
+<body>
+
+<!-- Subtle background: moon + bats (top right), cobweb (bottom left) -->
+<svg class="bgart moon" aria-hidden="true" viewBox="0 0 200 180">
+  <path d="M150 30a46 46 0 1 0 38 72a38 38 0 1 1 -38 -72z" fill="#e9dcff"/>
+  <g fill="#e9dcff">
+    <path transform="translate(70 60) scale(1.4)" d="M0 6C3 2 6 2 8 5c1-2 2-2 3 0 2-3 5-3 8 1-3-1-5 1-6 3-1-2-2-1-3.5 1C8 8 7 7 6 9 5 7 3 5 0 6z"/>
+    <path transform="translate(40 110)" d="M0 6C3 2 6 2 8 5c1-2 2-2 3 0 2-3 5-3 8 1-3-1-5 1-6 3-1-2-2-1-3.5 1C8 8 7 7 6 9 5 7 3 5 0 6z"/>
+    <path transform="translate(105 140) scale(.8)" d="M0 6C3 2 6 2 8 5c1-2 2-2 3 0 2-3 5-3 8 1-3-1-5 1-6 3-1-2-2-1-3.5 1C8 8 7 7 6 9 5 7 3 5 0 6z"/>
+  </g>
+</svg>
+<svg class="bgart web" aria-hidden="true" viewBox="0 0 170 170" stroke="#e9dcff" stroke-width="1" fill="none">
+  <path d="M0 170L170 0M0 170L120 0M0 170L170 60M0 170L170 125M0 170L60 0"/>
+  <path d="M0 140Q20 135 28 142Q32 128 43 128Q52 140 58 150"/>
+  <path d="M0 105Q35 98 50 112Q62 90 82 88Q95 112 112 120Q118 140 125 150"/>
+  <path d="M0 70Q50 60 70 82Q88 50 118 48Q130 88 152 95Q160 120 170 140"/>
+</svg>
+
+<!-- ===== Header: help, changes, send, global disc tabs, both meters, legend ===== -->
+<header>
+  <div class="in">
+    <div class="top">
+      <button class="qbtn" id="helpBtn" aria-label="How to use this">?</button>
+      <div class="chg" id="chg"></div>
+      <button class="send" id="sendBtn">Send<span class="lx"> my picks</span></button>
+    </div>
+    <div class="tabs" role="tablist" aria-label="Show every BPM group on">
+      <button role="tab" data-view="1">CD1<span class="lx"> Singalongs</span></button>
+      <button role="tab" data-view="2">CD2<span class="lx"> Mix-ins</span></button>
+      <button role="tab" data-view="both">Both<span class="lx"> by BPM</span></button>
+    </div>
+    <div class="meters" id="meters"></div>
+    <div class="legend" aria-label="Colour key"><span><i class="sing"></i>Singalong</span><span><i class="mix"></i>Mix-in</span><span><i class="hal"></i>Halloween</span></div>
+  </div>
+</header>
+
+<!-- ===== Toolbar: search, filter chips, BPM index ===== -->
+<div class="tool">
+  <div class="in">
+    <div class="trow" id="chipRow">
+      <button class="ibtn" id="searchBtn" aria-label="Search"><svg viewBox="0 0 24 24"><path d="M10 3a7 7 0 0 1 5.6 11.2l5 5-1.4 1.4-5-5A7 7 0 1 1 10 3zm0 2a5 5 0 1 0 0 10 5 5 0 0 0 0-10z"/></svg></button>
+      <button class="chip" data-f="hal" aria-pressed="false">Halloween</button>
+      <button class="chip" data-f="unheard" aria-pressed="false">Unheard</button>
+      <button class="chip" data-f="remix" aria-pressed="false">Remixes</button>
+      <button class="chip" data-f="intro" aria-pressed="false">Intros</button>
+      <button class="chip" data-f="star" aria-pressed="false">Starred</button>
+    </div>
+    <div class="trow" id="searchRow" hidden>
+      <input class="search" id="q" type="search" placeholder="Artist, song or version" autocomplete="off" aria-label="Search">
+      <button class="ibtn" id="searchClose" aria-label="Close search"><svg viewBox="0 0 24 24"><path d="M6.4 5L12 10.6 17.6 5 19 6.4 13.4 12l5.6 5.6-1.4 1.4-5.6-5.6L6.4 19 5 17.6 10.6 12 5 6.4z"/></svg></button>
+    </div>
+    <div class="idx"><div class="idxh"><span class="cap">BPM</span><div class="tg2"><label class="hi" title="On: other apps keep playing, but sound stops when the screen locks or you leave Safari, and the Ring/Silent switch mutes it. Off: lock-screen controls and play with the screen off, and other apps pause.">Mix with other apps<span class="sw"><input type="checkbox" role="switch" id="mixApps" aria-describedby="mixHint"><i></i></span></label><label class="hi">Hide info<span class="sw"><input type="checkbox" role="switch" id="hideInfo" aria-label="Hide song details"><i></i></span></label></div><span class="vh" id="mixHint">On: other apps keep playing, but sound stops when the screen locks or you leave Safari, and the Ring/Silent switch mutes it. Off: lock-screen controls and play with the screen off, and other apps pause.</span></div><div class="pills" id="pills"></div></div>
+  </div>
+</div>
+
+<!-- ===== BPM groups (vertical); each group swipes sideways between CD1 / CD2 / Both ===== -->
+<div class="list" id="list"><div class="in" id="groups"></div></div>
+
+<!-- ===== Player bar (collapsed) ===== -->
+<audio id="au" playsinline preload="metadata"></audio>
+<div class="player" id="player" hidden>
+  <div class="line pline" id="pLine" role="slider" tabindex="0" aria-label="Position in track" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" aria-valuetext="0:00"><div class="ltr"><i></i></div><span class="ltick"></span><span class="lbub"></span></div>
+  <div class="in pbar">
+    <button class="star pstar" id="pStar" data-star="" aria-pressed="false" aria-label="Star this track"></button>
+    <button class="pinfo" id="pOpen" aria-label="Open player"><span class="pt" id="pTitle">–</span><span class="psw"><span class="ps" id="pSub"></span><svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 15l5-5 5 5z"/></svg></span></button>
+    <div class="ptr">
+      <button class="cb sm" data-ctl="prev" aria-label="Previous track"><svg viewBox="0 0 24 24"><path d="M6 6h2v12H6zM9.5 12l8.5 6V6z"/></svg></button>
+      <button class="cb pp" data-ctl="play" aria-label="Play or pause"><svg class="is" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg><svg class="ip" viewBox="0 0 24 24"><path d="M6 5h4v14H6zM14 5h4v14h-4z"/></svg></button>
+      <button class="cb sm" data-ctl="next" aria-label="Next track"><svg viewBox="0 0 24 24"><path d="M16 6h2v12h-2zM6 18l8.5-6L6 6z"/></svg></button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== Expanded player ===== -->
+<div class="xp" id="xp" aria-hidden="true">
+  <div class="xp-in" id="xpIn" role="dialog" aria-label="Player">
+    <div class="xp-top" id="xpTop"><button id="xpDown" aria-label="Collapse player"><svg viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"/></svg></button></div>
+    <div class="in">
+      <div class="xt" id="xTitle"></div>
+      <div class="xv" id="xVer"></div>
+      <div class="xm" id="xMeta"></div>
+      <canvas id="wave" aria-label="Waveform: tap to jump"></canvas>
+      <div class="line xline" id="xLine" role="slider" tabindex="0" aria-label="Position in track" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" aria-valuetext="0:00"><div class="ltr"><i></i></div><span class="ltick"></span><span class="lbub"></span></div>
+      <div class="xtime"><span id="xCur">0:00</span><div class="zoom" role="group" aria-label="Waveform zoom"><button data-z="1">1x</button><button data-z="4">4x</button><button data-z="16">16x</button></div><span id="xDur">0:00</span></div>
+      <div class="ctl">
+        <button data-ctl="prev" aria-label="Previous track"><svg viewBox="0 0 24 24"><path d="M6 6h2v12H6zM9.5 12l8.5 6V6z"/></svg></button>
+        <button data-ctl="back" aria-label="Back 15 seconds">−15</button>
+        <button class="pp" data-ctl="play" aria-label="Play or pause"><svg class="is" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg><svg class="ip" viewBox="0 0 24 24"><path d="M6 5h4v14H6zM14 5h4v14h-4z"/></svg></button>
+        <button data-ctl="fwd" aria-label="Forward 15 seconds">+15</button>
+        <button data-ctl="next" aria-label="Next track"><svg viewBox="0 0 24 24"><path d="M16 6h2v12h-2zM6 18l8.5-6L6 6z"/></svg></button>
+      </div>
+      <div class="shufrow"><button class="shb" data-ctl="shuffle" aria-pressed="false"><svg viewBox="0 0 24 24"><path d="M14 4h6v6l-2.3-2.3-3.3 3.3-1.4-1.4 3.3-3.3zM4 5.4 5.4 4 20 18.6 18.6 20zM20 14v6h-6l2.3-2.3-3-3 1.4-1.4 3 3z"/></svg><span>Shuffle playback: <b class="shs">off</b></span></button><button class="shb chb" id="chainCur" aria-label="Add this track to the current chain"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z"/></svg>+ chain</button></div>
+      <div class="xh"><h3 id="xFolderH">This folder</h3></div>
+      <div class="xlist" id="xFolder"></div>
+      <div class="xh"><h3>Up next</h3><div class="xhb"><button class="sbtn" id="chainsBtn">Chains</button><button class="sbtn" id="shuf">More</button></div></div>
+      <div class="jzr"><span>Join view</span><div class="jzoom" role="group" aria-label="Join view zoom"><button data-jz="8" aria-pressed="false">8 bars</button><button data-jz="16" aria-pressed="true">16</button><button data-jz="32" aria-pressed="false">32</button></div></div>
+      <div class="xlist" id="xSug"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== First-visit how-to ===== -->
+<div class="intro" id="intro" hidden>
+  <div role="dialog" aria-modal="true" aria-labelledby="introH">
+    <h2 id="introH">Hey Mike <span>🎃🎧</span></h2>
+    <ol>
+      <li>Hey Mike, here are the two discs I'm burning for the party: <b>CD1 Singalongs</b> and <b>CD2 Mix-ins</b>. Scroll down through the 8 BPM folders, same as on the CDJ.</li>
+      <li><b>Swipe a BPM group sideways</b> to see what I put on the other disc at that tempo. The tabs at the top flip every group at once.</li>
+      <li><b>Tap ▶&#xFE0E;</b> to listen; tap the player for the waveform and <b>Up next</b>: the tracks on the discs it mixes into best, and why each one follows well (tempo change, keys, intros, the kind of transition). Under each one I've put the join, zoomed right in (every thin line is a 16th of a beat, so beats are groups of 4 and bars groups of 16): the top lane is the end of this song, the bottom lane the start of the next, lined up at the bright line where you'd bring the next one in, shaded where both play, with a tick every bar and a brighter one every 8. Tap the top lane to jump this song there, the bottom lane to hear the next one from that spot; 8 / 16 / 32 bars zooms it. The yellow <b>PITCH</b> is where to set the pitch fader on the incoming deck so the tempos match, and next to it the key change and whether the keys go together. "CDJ reads" is what the deck screen will show.</li>
+      <li><b>Flip a switch</b> to take a song off or put one of the alternates on (they wait at the bottom); tap ☆ to star your favourites.</li>
+      <li>Colours:<span class="dot sing"></span>Singalong<span class="dot mix"></span>Mix-in<span class="dot hal"></span>Halloween (H). Too busy? Turn on <b>Hide info</b> for one-line rows. <b>Mix with other apps</b> On: other apps keep playing, but sound stops when the screen locks or you leave Safari, and the Ring/Silent switch mutes it. Off: lock-screen controls and play with the screen off, and other apps pause.</li>
+      <li>Found a run you like? Tap <b>+ chain</b> to build little <b>chains</b> of songs (the Chains button next to Up next lets you rename, reorder and play them). They're saved here and come back to me with <b>Send my picks</b>.</li>
+      <li>Keep both meters under 690 MB. When you're done, tap <b>Send my picks</b> and text me the file.</li>
+    </ol>
+    <button class="btn vi" id="introOk">Got it</button>
+  </div>
+</div>
+
+<!-- ===== Send sheet ===== -->
+<div class="sheet" id="sendSheet" hidden>
+  <div role="dialog" aria-modal="true" aria-labelledby="sendH">
+    <h2 id="sendH">Send my picks</h2>
+    <p id="sendSum"></p>
+    <label for="notes">Notes for me</label>
+    <textarea id="notes" placeholder="Optional: swaps, songs to find, what to cut first…"></textarea>
+    <div class="btns">
+      <button class="btn pri" id="shareBtn">Send to me</button>
+      <button class="btn" id="copyBtn">Copy text</button>
+      <button class="btn" data-close>Close</button>
+    </div>
+    <p>Share needs the page on https://. If it doesn't work, tap Copy text and paste it into a text to me. Nothing is sent until you send it.</p>
+    <textarea id="repTxt" readonly hidden aria-label="Report text"></textarea>
+  </div>
+</div>
+<div class="sheet" id="chainSheet" hidden>
+  <div role="dialog" aria-modal="true" aria-labelledby="chainH">
+    <h2 id="chainH">Chains</h2>
+    <p>Little runs of songs that mix into each other. Tap <b>+ chain</b> on Up next or under the player to add to the current chain. Between songs you see how well they join. They come back to me with Send my picks.</p>
+    <div id="chainBody"></div>
+    <div class="btns"><button class="btn" data-ch="new">New chain</button><button class="btn" data-close>Close</button></div>
+  </div>
+</div>
+<div class="sheet" id="resetSheet" hidden>
+  <div role="dialog" aria-modal="true" aria-labelledby="resetH">
+    <h2 id="resetH">Go back to my picks?</h2>
+    <p id="resetTxt"></p>
+    <div class="btns"><button class="btn dan" id="resetYes">Reset</button><button class="btn" data-close>Cancel</button></div>
+  </div>
+</div>
+<div class="toast" id="toast" hidden></div>
+
+<script src="data.js?v=20261025b"></script>
+<script>
+(function(){
+'use strict';
+/* ===== Data + storage ===== */
+const D = window.MIKE_DATA;
+if (!D || !D.tracks) { document.getElementById('groups').innerHTML = '<p class="empty">Could not load data.js.</p>'; return; }
+const T = D.tracks, BUDGET = D.budgetMB, byId = new Map(T.map(t => [t.id, t])), NF = D.folders.length;
+const mem = {};
+const store = {
+  get(k, d){ try { const v = localStorage.getItem(k); return v == null ? (k in mem ? mem[k] : d) : JSON.parse(v); } catch(e){ return k in mem ? mem[k] : d; } },
+  set(k, v){ mem[k] = v; try { localStorage.setItem(k, JSON.stringify(v)); } catch(e){} }
+};
+const K_SEL = 'mike-sel-v2', K_SEL_OLD = 'mike-sel-v1', K_HEARD = 'mike-heard-v1', K_NOTES = 'mike-notes-v1', K_HELP = 'mike-help-v1', K_VIEW = 'mike-view-v1';
+/* Mike's switches: explicit states for the ids he touched ({ states: { id: true|false } }),
+   applied over whatever baseline (selected) the data has today */
+let states = {};
+const saveStates = () => store.set(K_SEL, { states });
+(function loadStates(){
+  const v2 = store.get(K_SEL, null);
+  if (v2 && v2.states && typeof v2.states === 'object')
+    Object.keys(v2.states).forEach(id => { if (byId.has(id) && typeof v2.states[id] === 'boolean') states[id] = v2.states[id]; });
+  // one-time migration from v1 (array of ids that differed from the OLD baseline)
+  let v1 = null; try { v1 = JSON.parse(localStorage.getItem(K_SEL_OLD)); } catch(e){}
+  if (Array.isArray(v1)){
+    // these seven were ON in the old baseline; listed = Mike switched them OFF
+    const WAS_ON = new Set(['894c323ee7','b5bdc8cc9d','6489f248e0','44568fcd9b','81b5c68720','6024f262d9','a34b438689']);
+    v1.forEach(id => {
+      const t = byId.get(id); if (!t || id in states) return;
+      const want = WAS_ON.has(id) ? false : !t.selected;
+      if (want !== t.selected) states[id] = want;          // equal to today's baseline: nothing to keep
+    });
+    saveStates();
+    try { localStorage.removeItem(K_SEL_OLD); } catch(e){}
+  }
+})();
+// ids whose effective state differs from today's baseline (the change count)
+let over = new Set();
+const syncOver = () => { over = new Set(Object.keys(states).filter(id => states[id] !== byId.get(id).selected)); };
+syncOver();
+const heard = new Set((store.get(K_HEARD, []) || []).filter(id => byId.has(id)));
+const isOn = t => (t.id in states) ? states[t.id] : t.selected;
+const K_STARS = 'mike-stars-v1';
+const stars = new Set((store.get(K_STARS, []) || []).filter(id => byId.has(id)));
+const starBtn = t => `<button class="star" data-star="${t.id}" aria-pressed="${stars.has(t.id)}" aria-label="Star ${esc(t.title)}"></button>`;
+
+const $ = s => document.querySelector(s), $$ = s => Array.from(document.querySelectorAll(s));
+const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fmt = s => { s = Math.max(0, Math.floor(s || 0)); return Math.floor(s/60) + ':' + String(s%60).padStart(2,'0'); };
+const sumMB = l => l.reduce((a, t) => a + t.mb, 0);
+const verTxt = t => t.ver ? ' — ' + t.ver : '';
+const discT = d => T.filter(t => t.disc === d);
+const KIND = { Remix:['REMIX',''], Rip:['REMIX',''], 'Intro edit':['INTRO EDIT','k-intro'], 'Mash-up':['MASH-UP','k-mash'], Transition:['TRANSITION','k-trans'], Cover:['COVER','k-cover'] };
+const isRemix = t => t.kind !== 'Original';
+const fnClass = t => t.hal ? 'f-hal' : t.disc === '1' ? 'f-sing' : 'f-mix';      // colour by function
+const BAND = ['<90','90','100','110','120','125','130','135+'];
+const PLAY = '<svg class="is" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg><svg class="ip" viewBox="0 0 24 24"><path d="M6 5h4v14H6zM14 5h4v14h-4z"/></svg>';
+const VIEWS = ['1','2','both'], VLABEL = { '1':'CD1', '2':'CD2', both:'Both' };
+const ALTS = NF;                               // group index of the Alternates section
+
+let view = store.get(K_VIEW, '1'); if (!VIEWS.includes(view)) view = '1';   // last global tab choice
+const gv = Array(NF + 1).fill(view);           // what each group is showing
+let pi = 0;                                    // group currently in view
+const chips = { hal:false, unheard:false, remix:false, intro:false, star:false };
+let query = '';
+const collapsed = new Set();
+const list = $('#list'), groupsEl = $('#groups');
+
+/* ===== Deck numbering: NN = position among ON tracks of its disc folder (BPM order) ===== */
+let deckNo = new Map();
+function renumber(){
+  deckNo = new Map();
+  ['1','2'].forEach(d => { for (let fi = 0; fi < NF; fi++){ let n = 0; T.forEach(t => { if (t.disc === d && t.fi === fi && isOn(t)) deckNo.set(t.id, ++n); }); } });
+}
+const deckLine = t => (deckNo.has(t.id) ? String(deckNo.get(t.id)).padStart(2,'0') : '--') + ' ' + (t.hal ? 'H ' : '') + (t.deck || t.title);
+
+/* ===== Rows ===== */
+function kindPill(t){ const k = KIND[t.kind]; return k ? `<span class="kp ${k[1]}">${k[0]}</span>` : ''; }
+function rowHTML(t, showDisc, showBand){
+  const tags = [];
+  if (showBand) tags.push(`<span class="tg fb-tag">${esc(t.folder.replace(/^\d+ - /, ''))}</span>`);
+  if (t.hal) tags.push('<span class="tg h" title="Halloween">H</span>');
+  if (showDisc) tags.push(`<span class="tg d">CD${t.disc}</span>`);
+  if (t.oldDisc) tags.push(`<span class="tg">on old ${esc(t.oldDisc)}</span>`);
+  if (t.kind === 'Rip') tags.push(`<span class="tg lq">${t.kbps} kbps</span>`);
+  tags.push(`<span>${esc(t.len)}</span>`);
+  if (t.secs > 360) tags.push('<span class="lg">long</span>');
+  tags.push('<span class="tg hd">✓ heard</span><span class="tg er">file error</span>');
+  const on = isOn(t);
+  return `<div class="row ${fnClass(t)}${heard.has(t.id)?' heard':''}" data-id="${t.id}">
+<button class="pb" data-act="play" aria-label="Play ${esc(t.title)}">${PLAY}</button>
+<div><div class="t"><span class="ar">${esc(t.artist)} –</span> <b>${esc(t.song)}</b>${kindPill(t)}</div>${t.ver?`<div class="v">${esc(t.ver)}</div>`:''}<div class="tags">${tags.join('')}</div>${t.note?`<div class="note">${esc(t.note)}</div>`:''}<div class="deck"><small>CDJ reads:</small><div class="lcd"><span>${esc(deckLine(t))}</span></div></div></div>
+<div class="rt"><div class="bpm">${t.bpm}<small>BPM</small></div>${starBtn(t)}<label class="sw"><input type="checkbox" role="switch" data-id="${t.id}"${on?' checked':''} aria-label="${esc(t.title)} on the disc"><i></i></label></div></div>`;
+}
+
+/* ===== Filtering ===== */
+function matches(t){
+  if (chips.hal && !t.hal) return false;
+  if (chips.unheard && heard.has(t.id)) return false;
+  if (chips.remix && !isRemix(t)) return false;
+  if (chips.intro && t.kind !== 'Intro edit') return false;
+  if (chips.star && !stars.has(t.id)) return false;
+  const q = query.trim().toLowerCase();
+  return !q || (t.artist + ' ' + t.song + ' ' + t.ver + ' ' + t.deck).toLowerCase().includes(q);
+}
+const filtering = () => chips.hal || chips.unheard || chips.remix || chips.intro || chips.star || !!query.trim();
+// a BPM group with no songs on the disc(s) of the global tab is hidden (unless a filter or search is on)
+const groupEmpty = (fi, v) => fi !== ALTS && !filtering() && !(v === 'both' ? T : discT(v)).some(t => t.fi === fi && isOn(t));
+
+/* ===== BPM groups: header + a 3-pane carousel (CD1, CD2, Both) ===== */
+const tracksFor = v => v === 'both' ? T.slice().sort((a,b) => a.fi-b.fi || a.bpm-b.bpm || a.disc.localeCompare(b.disc)) : discT(v);
+function paneInner(v, fi){
+  const both = v === 'both';
+  if (fi === ALTS){
+    const all = tracksFor(v).filter(t => !isOn(t)), shown = all.filter(matches);
+    const meta = both ? `CD1 <b>${all.filter(t=>t.disc==='1').length}</b> · CD2 <b>${all.filter(t=>t.disc==='2').length}</b> not on the disc` : `CD${v} · <b>${all.length}</b> not on the disc`;
+    return `<div class="gmeta">${meta}</div><div class="rows" data-ctx="alt">${shown.map(t => rowHTML(t, both, true)).join('') || `<p class="empty">${filtering() ? 'No matches.' : 'Every song is on the disc.'}</p>`}</div>`;
+  }
+  const onAll = tracksFor(v).filter(t => t.fi === fi && isOn(t)), shown = onAll.filter(matches);
+  const meta = both ? `Both · CD1 <b>${onAll.filter(t=>t.disc==='1').length}</b> · CD2 <b>${onAll.filter(t=>t.disc==='2').length}</b> on`
+                    : `CD${v} · <b>${onAll.length}</b> on · ${Math.round(sumMB(onAll))} MB`;
+  return `<div class="gmeta">${meta}</div><div class="rows" data-ctx="m">${shown.map(t => rowHTML(t, both)).join('') || `<p class="empty">${filtering() ? 'No matches here.' : `Nothing on CD${v} at this tempo.`}</p>`}</div>`;
+}
+function groupHTML(fi){
+  const name = fi === ALTS ? 'Alternates<span class="lx"> · not on the disc</span>' : `<span class="lx">${fi + 1} - </span>${esc(D.folders[fi].replace(/^\d+ - /, ''))}`;
+  return `<section class="fold${fi === ALTS ? ' alts' : ''}${collapsed.has(fi) ? ' closed' : ''}" id="g${fi}" data-fi="${fi}"${groupEmpty(fi, view) ? ' hidden' : ''}>
+<div class="fh"><button class="fh-t" data-act="fold" aria-label="Show or hide ${fi === ALTS ? 'alternates' : 'folder ' + esc(D.folders[fi])}"><svg viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"/></svg><span class="fn">${name}</span></button>
+<div class="dots" role="tablist" aria-label="Disc shown in this group">${VIEWS.map(v => `<button role="tab" data-gv="${v}" aria-selected="${gv[fi] === v}"><span>${VLABEL[v]}</span></button>`).join('')}</div>
+<button class="pf" data-act="playfold" aria-label="Play this group">${PLAY.split('<svg class="ip"')[0]}</button></div>
+<div class="fb"><div class="gcar" data-fi="${fi}">${VIEWS.map(v => `<div class="gp" data-v="${v}" aria-label="${VLABEL[v]}">${paneInner(v, fi)}</div>`).join('')}</div></div></section>`;
+}
+const groupEl = fi => document.getElementById('g' + fi);
+const carOf = fi => groupEl(fi).querySelector('.gcar');
+// the carousel takes the height of the pane it is showing
+function fitGroup(fi){
+  const c = carOf(fi), p = c.querySelector(`.gp[data-v="${gv[fi]}"]`);
+  if (p) c.style.height = p.offsetHeight + 'px';
+}
+function placeGroup(fi){ const c = carOf(fi); c.scrollLeft = VIEWS.indexOf(gv[fi]) * c.clientWidth; fitGroup(fi); }
+function syncHidden(fi){ const g = groupEl(fi), h = groupEmpty(fi, view); if (g.hidden !== h){ g.hidden = h; if (!h) placeGroup(fi); } }
+function renderAll(){
+  const top = list.scrollTop;
+  groupsEl.innerHTML = Array.from({ length: NF + 1 }, (_, fi) => groupHTML(fi)).join('');
+  for (let fi = 0; fi <= NF; fi++) placeGroup(fi);
+  list.scrollTop = top;
+  markPlaying(); marquee(groupsEl); updatePills();
+}
+function renderGroup(fi){
+  const g = groupEl(fi);
+  VIEWS.forEach(v => { g.querySelector(`.gp[data-v="${v}"]`).innerHTML = paneInner(v, fi); });
+  syncHidden(fi); fitGroup(fi); markPlaying(); marquee(g);
+}
+function render(){ renumber(); renderAll(); updateStats(); }
+
+/* ===== CDJ marquee: scroll the LCD text only when it is longer than the panel ===== */
+function marquee(root){
+  root.querySelectorAll('.lcd').forEach(l => {
+    const s = l.firstElementChild, over = s.scrollWidth - l.clientWidth + 16;   // 16 = side padding
+    if (over > 2 && l.clientWidth > 0){ l.classList.add('mq'); l.style.setProperty('--mqx', -over + 'px'); l.style.setProperty('--mqd', Math.max(3, over / 25).toFixed(1) + 's'); }
+    else { l.classList.remove('mq'); l.style.removeProperty('--mqx'); }
+  });
+}
+
+/* ===== Meters (both discs always), pills, change count ===== */
+function meterHTML(d){
+  const on = discT(d).filter(isOn), mb = sumMB(on), left = BUDGET - mb;
+  const cls = mb > BUDGET ? ' over' : mb > BUDGET - 5 ? ' warn' : '';
+  const pct = Math.min(100, mb / BUDGET * 100);
+  return `<div class="meter${cls}" data-mb="${mb.toFixed(1)}" data-n="${on.length}" title="${mb.toFixed(1)} MB"><div class="mlab"><b>CD${d}</b> · ${on.length} songs on<br>${Math.round(mb)} of ${BUDGET} MB · <span class="st">${left < 0 ? Math.round(-left) + ' MB over' : Math.round(left) + ' MB free'}</span></div><div class="bar" role="meter" aria-valuemin="0" aria-valuemax="${BUDGET}" aria-valuenow="${mb.toFixed(1)}" aria-label="CD${d} capacity"><i style="width:${pct}%"></i></div></div>`;
+}
+function updatePills(){
+  const row = $('#pills');
+  row.innerHTML = BAND.map((b, fi) => groupEmpty(fi, view) ? '' : `<button data-jump="${fi}" aria-current="${fi === pi}" aria-label="Jump to ${esc(D.folders[fi])}">${b}</button>`).join('')
+    + `<button class="altp" data-jump="${ALTS}" aria-current="${pi === ALTS}" aria-label="Jump to alternates">Alts</button>`;
+  const c = row.querySelector('[aria-current=true]');
+  if (c && row.scrollWidth > row.clientWidth){ const l = c.offsetLeft - row.offsetLeft; if (l < row.scrollLeft || l + c.offsetWidth > row.scrollLeft + row.clientWidth) row.scrollLeft = l - (row.clientWidth - c.offsetWidth) / 2; }
+}
+function updateStats(){
+  $$('.tabs button').forEach(b => b.setAttribute('aria-selected', String(b.dataset.view === view)));
+  $('#meters').innerHTML = meterHTML('1') + meterHTML('2');
+  updatePills();
+  const n = over.size;
+  $('#chg').innerHTML = n ? `<b>${n}</b> change${n>1?'s':''} to my picks · <button id="resetBtn">Reset</button>` : 'No changes to my picks yet';
+}
+function setOn(id, on){
+  const t = byId.get(id);
+  states[id] = on; saveStates(); syncOver();
+  renumber(); renderGroup(t.fi); renderGroup(ALTS); updateStats(); if (xpOpen) renderExplore(false);
+}
+
+/* ===== Navigation ===== */
+// global tabs: every group shows that pane
+function setAll(v){
+  if (!VIEWS.includes(v)) return;
+  view = v; store.set(K_VIEW, v);
+  for (let fi = 0; fi <= NF; fi++){ gv[fi] = v; syncDots(fi); syncHidden(fi); placeGroup(fi); }
+  updateStats();
+}
+function syncDots(fi){ groupEl(fi).querySelectorAll('[data-gv]').forEach(b => b.setAttribute('aria-selected', String(b.dataset.gv === gv[fi]))); }
+// one group: swipe or its dots
+function setGroup(fi, v, scroll){
+  if (gv[fi] !== v){ gv[fi] = v; syncDots(fi); fitGroup(fi); }
+  if (scroll){ const c = carOf(fi); c.scrollTo({ left: VIEWS.indexOf(v) * c.clientWidth, behavior: 'smooth' }); }
+}
+function groupInView(){
+  let fi = null;
+  for (const s of groupsEl.children){ if (s.hidden) continue; if (fi === null || s.offsetTop <= list.scrollTop + 12) fi = +s.dataset.fi; else break; }
+  if (fi === null) fi = 0;
+  return fi;
+}
+function jumpGroup(fi){
+  const s = groupEl(fi); if (!s) return;
+  if (s.classList.contains('closed')){ s.classList.remove('closed'); collapsed.delete(fi); placeGroup(fi); }
+  pi = fi; updatePills();
+  list.scrollTo({ top: s.offsetTop, behavior: 'smooth' });
+}
+// scroll events do not bubble, so listen in the capture phase for the list and every group carousel
+list.addEventListener('scroll', e => {
+  const el = e.target;
+  if (el === list){ const fi = groupInView(); if (fi !== pi){ pi = fi; updatePills(); } return; }
+  if (el.classList && el.classList.contains('gcar')){
+    const v = VIEWS[Math.round(el.scrollLeft / Math.max(1, el.clientWidth))];
+    if (v) setGroup(+el.dataset.fi, v, false);
+  }
+}, { capture: true, passive: true });
+let rsT;
+window.addEventListener('resize', () => {
+  for (let fi = 0; fi <= NF; fi++) placeGroup(fi);
+  clearTimeout(rsT); rsT = setTimeout(() => { marquee(groupsEl); for (let fi = 0; fi <= NF; fi++) fitGroup(fi); }, 150);
+  if (xpOpen){ drawWave(); drawJoins(); }
+});
+
+/* ===== Player ===== */
+const A = $('#au');
+A.setAttribute('playsinline', ''); A.setAttribute('webkit-playsinline', '');
+let cur = null, hist = [], queue = [], qView = '1', played = 0, lastT = 0, status = '', isErr = false;
+let shuffle = !!store.get('mike-shuffle-v1', false), recent = [], back = [];
+const urlOf = t => t.path.split('/').map(encodeURIComponent).join('/');
+const ART = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><rect width="512" height="512" fill="#1d1650"/><circle cx="256" cy="256" r="190" fill="#b490ff"/><circle cx="256" cy="256" r="70" fill="#1d1650"/><circle cx="256" cy="256" r="18" fill="#ff8a1f"/></svg>');
+// every play() goes through here so the chosen audio session is applied first
+function playA(){ setAudioSession(); const p = A.play(); return (p && p.catch) ? p : Promise.resolve(); }
+const dur = () => (isFinite(A.duration) && A.duration > 0) ? A.duration : (cur ? byId.get(cur).secs : 0);
+
+// queue = ON songs of a track's disc folder (plus the track itself if it is off), in BPM order
+const folderList = t => T.filter(x => x.disc === t.disc && x.fi === t.fi && (isOn(x) || x.id === t.id));
+function rowsQueue(r){
+  // a main list continues through the same pane (CD1 / CD2 / Both) of the following groups
+  const c = r.parentElement, v = r.closest('.gp').dataset.v;
+  const rows = c.dataset.ctx === 'm' ? $$(`#groups .gp[data-v="${v}"] .rows[data-ctx=m] > .row`) : Array.from(c.querySelectorAll(':scope > .row'));
+  return rows.map(x => x.dataset.id);
+}
+function setStatus(msg, err){
+  status = msg || ''; isErr = !!err;
+  const t = cur && byId.get(cur); if (!t) return;
+  const meta = `CD${t.disc} · ${t.folder} · ${t.bpm} BPM`;
+  const s = status ? `<span class="st">${esc(status)}</span> · ` : '';
+  $('#player').classList.toggle('err', isErr); $('#xp').classList.toggle('err', isErr);
+  $('#pSub').innerHTML = s + esc(t.ver ? t.ver + ' · ' + meta : meta);
+  $('#xMeta').innerHTML = s + esc(`${D.discs[t.disc].name} · ${t.folder} · ${t.bpm} BPM · ${t.len}`);
+}
+function playId(id, q){
+  const t = byId.get(id); if (!t) return;
+  if (cur && cur !== id){ hist = [cur].concat(hist.filter(x => x !== cur)).slice(0, 2); }
+  if (q) queue = q;
+  recent = recent.filter(x => x !== id).concat(id).slice(-10);
+  cur = id; played = 0; lastT = 0; pendingSeek = null;
+  $$('.row.err').forEach(r => r.classList.remove('err'));
+  mediaMeta(t); regMS();                          // lock screen knows the new track before play()
+  $('#pStar').dataset.star = id; $('#pStar').setAttribute('aria-pressed', String(stars.has(id))); $('#pStar').setAttribute('aria-label', 'Star ' + t.title);
+  A.src = urlOf(t);
+  const p = playA();
+  if (p && p.catch) p.catch(e => { if (e && e.name === 'NotAllowedError') setStatus('Tap play to start'); });
+  $('#player').hidden = false;
+  $('#pTitle').textContent = t.artist + ' – ' + t.song;
+  $('#xTitle').innerHTML = `<span class="ar">${esc(t.artist)} –</span> ${esc(t.song)}${kindPill(t)}`;
+  $('#xVer').textContent = t.ver;
+  $('#xDur').textContent = t.len;
+  setStatus('Loading…');
+  markPlaying(); sugFor = null;
+  if (xpOpen) renderExplore(true);
+  progress();
+}
+function playFromRow(r){
+  const id = r.dataset.id;
+  if (id === cur && A.getAttribute('src')) { A.paused ? playA().catch(()=>{}) : A.pause(); return; }
+  qView = r.closest('.gp') ? r.closest('.gp').dataset.v : byId.get(id).disc;
+  playId(id, rowsQueue(r));
+}
+// Shuffle playback: a random ON track from the current disc view (Both = either disc),
+// preferring unheard, never the current one, not one of the last ten played
+function shuffleNext(){
+  const on = T.filter(t => isOn(t) && t.id !== cur && (qView === 'both' || t.disc === qView));
+  let pool = on.filter(t => !recent.includes(t.id)); if (!pool.length) pool = on;
+  const un = pool.filter(t => !heard.has(t.id)); if (un.length) pool = un;
+  return pool.length ? pool[Math.floor(Math.random() * pool.length)].id : null;
+}
+function setShuffle(on){
+  shuffle = on; store.set('mike-shuffle-v1', on);
+  $$('[data-ctl=shuffle]').forEach(b => b.setAttribute('aria-pressed', String(on)));
+  $$('.shs').forEach(x => x.textContent = on ? 'on' : 'off');
+}
+function step(dir){
+  if (!cur) return;
+  if (dir < 0 && A.currentTime > 3) { seekTo(0); return; }
+  if (shuffle){
+    if (dir > 0){ const n = shuffleNext(); if (n){ back.push(cur); back = back.slice(-20); playId(n); } return; }
+    if (back.length){ playId(back.pop()); return; }
+  }
+  let i = queue.indexOf(cur);
+  if (i < 0){ queue = folderList(byId.get(cur)).map(t => t.id); i = queue.indexOf(cur); }
+  const next = queue[i + dir];
+  if (next) playId(next);
+  else if (dir > 0) { A.pause(); setStatus('End of list'); }
+  else seekTo(0);
+}
+function skip(s){ if (!cur) return; seekTo((A.currentTime || 0) + s); }
+/* Seeking that holds up on iOS: wait for metadata if needed, never fastSeek,
+   and read the real position back in 'seeked' */
+let pendingSeek = null;
+function seekTo(sec){
+  if (!cur) return;
+  sec = Math.max(0, Math.min(Math.max(0, dur() - 0.25), sec));
+  if (A.readyState < 1){ pendingSeek = sec; return; }
+  try { A.currentTime = sec; pendingSeek = null; } catch(e){ pendingSeek = sec; }
+  progress(); posState();
+}
+function applyPending(){ if (pendingSeek != null && A.readyState >= 1){ const s = pendingSeek; pendingSeek = null; seekTo(s); } }
+function markPlaying(){
+  $$('.row.playing').forEach(r => r.classList.remove('playing'));
+  if (cur) $$(`.row[data-id="${cur}"]`).forEach(r => r.classList.add('playing'));
+  document.body.classList.toggle('is-playing', !!cur && !A.paused);
+}
+function progress(){
+  const d = dur(), ct = A.currentTime || 0;
+  const f = d ? Math.min(1, ct / d) : 0;
+  [$('#pLine'), $('#xLine')].forEach(el => { if (scrubbing !== el) lineShow(el, f, false); });
+  if (xpOpen){ if (!waveDrag) $('#xCur').textContent = fmt(ct); drawWave(); }
+}
+function posState(){
+  try { if ('mediaSession' in navigator && navigator.mediaSession.setPositionState && isFinite(A.duration) && A.duration > 0)
+    navigator.mediaSession.setPositionState({ duration: A.duration, playbackRate: A.playbackRate || 1, position: Math.min(A.currentTime, A.duration) }); } catch(e){}
+}
+function mediaMeta(t){
+  if (!('mediaSession' in navigator)) return;
+  try { navigator.mediaSession.metadata = new MediaMetadata({ title: t.song + (t.ver ? ' (' + t.ver + ')' : ''), artist: t.artist + ' · ' + t.bpm + ' BPM', album: D.discs[t.disc].name + ' · ' + t.folder, artwork: [{ src: ART, sizes: '512x512', type: 'image/svg+xml' }] }); } catch(e){}
+}
+// Lock-screen controls. No seekbackward/seekforward on purpose: iPhones then show previous/next.
+// Registered at load and again on every play and track change (iOS can drop them).
+// previoustrack: within the first 3 s go to the previous track, otherwise restart (step(-1) does this).
+function regMS(){
+  if (!('mediaSession' in navigator)) return;
+  const h = (a, f) => { try { navigator.mediaSession.setActionHandler(a, f); } catch(e){} };
+  h('play', () => playA().catch(()=>{}));
+  h('pause', () => A.pause());
+  h('previoustrack', () => step(-1));
+  h('nexttrack', () => step(1));
+  h('seekto', d => { if (d && isFinite(d.seekTime)) seekTo(d.seekTime); });
+  try { h('seekbackward', null); h('seekforward', null); } catch(e){}
+}
+regMS();
+A.addEventListener('play', () => { markPlaying(); regMS(); try { navigator.mediaSession.playbackState = 'playing'; } catch(e){} });
+A.addEventListener('pause', () => { markPlaying(); try { navigator.mediaSession.playbackState = 'paused'; } catch(e){} });
+A.addEventListener('playing', () => setStatus(''));
+A.addEventListener('waiting', () => setStatus('Buffering…'));
+A.addEventListener('loadedmetadata', () => { $('#xDur').textContent = fmt(A.duration); if (cur) mediaMeta(byId.get(cur)); applyPending(); posState(); progress(); });
+A.addEventListener('canplay', applyPending);
+A.addEventListener('seeked', () => { lastT = A.currentTime; posState(); progress(); });   // UI follows the real position
+let lastPos = 0;
+A.addEventListener('timeupdate', () => {
+  const ct = A.currentTime, d = ct - lastT;
+  if (d > 0 && d < 1.5) played += d;
+  lastT = ct; progress();
+  const now = Date.now(); if (now - lastPos > 1000){ lastPos = now; posState(); }
+  if (cur && played >= 20 && !heard.has(cur)) {
+    heard.add(cur); store.set(K_HEARD, Array.from(heard));
+    $$(`.row[data-id="${cur}"]`).forEach(r => r.classList.add('heard'));
+    fitGroup(byId.get(cur).fi); fitGroup(ALTS);
+  }
+});
+// auto-advance: set src + play() inside `ended` so iOS keeps going in the background
+A.addEventListener('ended', () => step(1));
+A.addEventListener('error', () => {
+  if (!cur || !A.getAttribute('src')) return;
+  setStatus("Couldn't load this file. Tell me which one.", true);
+  $$(`.row[data-id="${cur}"]`).forEach(r => r.classList.add('err'));
+  document.body.classList.remove('is-playing');
+});
+document.addEventListener('click', e => {
+  const b = e.target.closest('[data-ctl]'); if (!b) return;
+  const c = b.dataset.ctl;
+  if (c === 'play'){ if (cur) A.paused ? playA().catch(()=>{}) : A.pause(); }
+  else if (c === 'next') step(1); else if (c === 'prev') step(-1);
+  else if (c === 'back') skip(-15); else if (c === 'fwd') skip(15);
+  else if (c === 'shuffle') setShuffle(!shuffle);
+});
+
+/* ===== Slim-line scrubbers (bar + sheet): press anywhere on the line and drag ===== */
+let scrubbing = null;
+function lineShow(el, f, dragging){
+  const w = el.clientWidth, x = f * w;
+  el.style.setProperty('--p', (f * 100).toFixed(2) + '%');
+  el.setAttribute('aria-valuenow', Math.round(f * 100)); el.setAttribute('aria-valuetext', fmt(f * dur()));
+  if (dragging){
+    el.style.setProperty('--x', x + 'px');
+    const b = el.querySelector('.lbub'); b.textContent = fmt(f * dur()) + ' / ' + fmt(dur());
+    const half = (b.offsetWidth || 80) / 2 + 4;   // keep the bubble on screen
+    b.style.left = Math.max(half, Math.min(w - half, x)) + 'px';
+    if (el.id === 'xLine') $('#xCur').textContent = fmt(f * dur());
+  }
+}
+function bindLine(el){
+  let drag = null;
+  const fracAt = e => { const r = el.getBoundingClientRect(); return Math.max(0, Math.min(1, (e.clientX - r.left) / r.width)); };
+  el.addEventListener('pointerdown', e => {
+    if (!cur) return;
+    e.preventDefault(); e.stopPropagation();
+    try { el.setPointerCapture(e.pointerId); } catch(_){}
+    drag = { was: !A.paused, f: fracAt(e) }; scrubbing = el;
+    el.classList.add('drag'); lineShow(el, drag.f, true);
+  });
+  el.addEventListener('pointermove', e => { if (!drag) return; drag.f = fracAt(e); lineShow(el, drag.f, true); });
+  const end = e => {
+    if (!drag) return;
+    const f = e.type === 'pointercancel' ? drag.f : fracAt(e), was = drag.was;
+    drag = null; scrubbing = null; el.classList.remove('drag');
+    seekTo(f * dur());                       // guarded seek (waits for metadata on iOS)
+    if (was && A.paused) playA().catch(() => {});
+  };
+  el.addEventListener('pointerup', end); el.addEventListener('pointercancel', end);
+  el.addEventListener('click', e => e.stopPropagation());
+  // keyboard / screen readers: arrows move 5 s, Home/End jump
+  el.addEventListener('keydown', e => {
+    const k = e.key;
+    if (k === 'ArrowLeft' || k === 'ArrowDown') skip(-5); else if (k === 'ArrowRight' || k === 'ArrowUp') skip(5);
+    else if (k === 'Home') seekTo(0); else if (k === 'End') seekTo(dur() - 1); else return;
+    e.preventDefault(); e.stopPropagation();
+  });
+}
+bindLine($('#pLine')); bindLine($('#xLine'));
+
+/* ===== Expanded player: open/close, waveform, explore ===== */
+let xpOpen = false;
+function openXP(){ if (!cur) return; xpOpen = true; $('#xp').classList.add('open'); $('#xp').setAttribute('aria-hidden','false'); renderExplore(!sugFor); requestAnimationFrame(() => { drawWave(); drawJoins(); progress(); }); }
+function closeXP(){ xpOpen = false; $('#xp').classList.remove('open'); $('#xp').setAttribute('aria-hidden','true'); }
+$('#pOpen').onclick = openXP; $('#xpDown').onclick = closeXP;
+$('#xp').addEventListener('click', e => { if (e.target.id === 'xp') closeXP(); });
+// drag gestures: up on the bar opens, down on the sheet's handle (or when scrolled to top) closes
+function swipe(el, dirUp, fn, guard){
+  let y0 = null;
+  el.addEventListener('touchstart', e => { y0 = (!guard || guard(e)) ? e.touches[0].clientY : null; }, { passive: true });
+  el.addEventListener('touchmove', e => { if (y0 == null) return; const dy = e.touches[0].clientY - y0; if (dirUp ? dy < -30 : dy > 70){ y0 = null; fn(); } }, { passive: true });
+}
+swipe($('#player'), true, openXP, e => !!cur && !e.target.closest('input,.line'));
+swipe($('#xpTop'), false, closeXP);
+swipe($('#xpIn'), false, closeXP, e => $('#xpIn').scrollTop <= 0 && !e.target.closest('#wave,.xlist,input,.zoom,.line'));
+
+const B64 = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
+const waveCache = new Map();
+function waveOf(t){ if (!waveCache.has(t.id)) waveCache.set(t.id, Array.from(t.wave || '').map(c => Math.max(0, B64.indexOf(c)))); return waveCache.get(t.id); }
+let waveDrag = null;
+const cv = $('#wave');
+// zoom: 1x shows the whole track; 4x/16x show 1/zoom of it, centred on the playhead
+let zoom = [1,4,16].includes(+store.get('mike-zoom-v1', 1)) ? +store.get('mike-zoom-v1', 1) : 1, dragWin = null;
+function waveWindow(){
+  const L = 1 / zoom, f = dur() ? A.currentTime / dur() : 0;
+  return { s: Math.max(0, Math.min(1 - L, f - L / 2)), L };
+}
+function setZoom(z){ zoom = z; store.set('mike-zoom-v1', z); $$('.zoom button').forEach(b => b.setAttribute('aria-pressed', String(+b.dataset.z === z))); drawWave(); }
+function drawWave(){
+  if (!xpOpen || !cur) return;
+  const t = byId.get(cur), vals = waveOf(t), dpr = window.devicePixelRatio || 1;
+  const w = cv.clientWidth, h = cv.clientHeight; if (!w) return;
+  if (cv.width !== Math.round(w * dpr) || cv.height !== Math.round(h * dpr)) { cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr); }
+  const g = cv.getContext('2d'); g.setTransform(dpr, 0, 0, dpr, 0, 0); g.clearRect(0, 0, w, h);
+  const win = dragWin || waveWindow();
+  cv.dataset.win = win.s.toFixed(4);
+  const frac = waveDrag != null ? waveDrag : (dur() ? A.currentTime / dur() : 0);
+  const n = vals.length || 1;
+  // bars: the 180 bins at 1x; when zoomed, one bar every 3 px with linear interpolation between bins
+  const nb = zoom === 1 ? n : Math.max(n, Math.floor(w / 3)), bw = w / nb, bwid = Math.max(1, bw - (bw > 2.5 ? 1 : 0.3));
+  const level = f => { const p = f * n - 0.5, i = Math.floor(p), k = p - i, a = vals[Math.max(0, Math.min(n - 1, i))] || 0, b = vals[Math.max(0, Math.min(n - 1, i + 1))] || 0; return a + (b - a) * k; };
+  const bars = [];
+  for (let i = 0; i < nb; i++){ const f = win.s + (i + 0.5) / nb * win.L; bars.push([i * bw, Math.max(2, level(f) / 63 * (h - 10)), f <= frac]); }
+  // unplayed part: dim violet
+  g.fillStyle = 'rgba(150,125,230,.35)';
+  bars.forEach(([x, bh, p]) => { if (!p) g.fillRect(x, (h - bh) / 2, bwid, bh); });
+  // played part: glowing lavender
+  g.save(); g.shadowColor = 'rgba(200,175,255,.9)'; g.shadowBlur = 8; g.fillStyle = '#cdb6ff';
+  bars.forEach(([x, bh, p]) => { if (p) g.fillRect(x, (h - bh) / 2, bwid, bh); });
+  // scrub position with a glow
+  g.shadowColor = 'rgba(255,255,255,.95)'; g.shadowBlur = 10; g.fillStyle = '#fff';
+  g.fillRect(Math.max(0, Math.min(w - 2, (frac - win.s) / win.L * w)), 0, 2, h); g.restore();
+}
+// taps map to the visible window (kept fixed while dragging)
+const fracAt = e => { const r = cv.getBoundingClientRect(), win = dragWin || waveWindow(); return Math.max(0, Math.min(1, win.s + (e.clientX - r.left) / r.width * win.L)); };
+cv.addEventListener('pointerdown', e => { if (!cur) return; e.preventDefault(); dragWin = waveWindow(); waveDrag = fracAt(e); try { cv.setPointerCapture(e.pointerId); } catch(_){} $('#xCur').textContent = fmt(waveDrag * dur()); drawWave(); });
+cv.addEventListener('pointermove', e => { if (waveDrag == null) return; waveDrag = fracAt(e); $('#xCur').textContent = fmt(waveDrag * dur()); drawWave(); });
+const endDrag = e => { if (waveDrag == null) return; const f = e.type === 'pointercancel' ? waveDrag : fracAt(e); waveDrag = null; dragWin = null; seekTo(f * dur()); };
+$$('.zoom button').forEach(b => b.addEventListener('click', () => setZoom(+b.dataset.z)));
+cv.addEventListener('touchmove', e => e.preventDefault(), { passive: false });   // a drag on the waveform never scrolls the sheet
+cv.addEventListener('pointerup', endDrag); cv.addEventListener('pointercancel', endDrag);
+
+/* "Try next": five slots, each a random pick from its own pool.
+   Tempo compares bpm, bpm×2 and bpm÷2 as equal (70 ≈ 140). */
+let sugFor = null, sugs = [], lastSugs = [], sugOff = {}, sugAvail = 0;
+const tempoGap = (a, b) => Math.min(Math.abs(a - b), Math.abs(a * 2 - b), Math.abs(a - b * 2));
+const pick = arr => arr[Math.floor(Math.random() * arr.length)];
+function rollSugs(){
+  const c = byId.get(cur), used = new Set([cur, ...hist]);
+  const base = T.filter(t => !used.has(t.id));
+  /* "Up next": the tracks on the discs this one mixes into best (scored on tempo at the ends, key,
+     energy, vocals, phrase length and groove), ten at a time; "More" walks down the list. Plus one wild card. */
+  if (c.mix && c.mix.length){
+    const avail = c.mix.filter(m => byId.has(m.id) && !used.has(m.id) && isOn(byId.get(m.id)));
+    const off = sugOff[cur] || 0; sugAvail = avail.length;
+    const take = avail.length ? Array.from({ length: Math.min(10, avail.length) }, (_, i) => avail[(off + i) % avail.length]) : [];
+    const out = take.map(m => ({ id: m.id, why: m.why, cls: 'w-mix', m }));
+    const taken = new Set(out.map(x => x.id));
+    const wild = base.filter(t => !taken.has(t.id)), pr = wild.filter(t => !heard.has(t.id));
+    const w = pick(pr.length ? pr : wild); if (w) out.push({ id: w.id, why: 'wild', cls: 'w-wild' });
+    sugs = out; lastSugs = out.map(x => x.id); sugFor = cur; return;
+  }
+  const fresh = base.filter(t => !lastSugs.includes(t.id));
+  const gap = t => tempoGap(t.bpm, c.bpm);
+  const other = c.disc === '1' ? '2' : '1';
+  // each slot: a non-tempo rule + a tempo window; if the window is empty, fall back to the 3 nearest in tempo
+  const slots = [
+    { why: 'tempo',      cls: '',       need: t => t.disc === c.disc, max: 4, same: true },
+    { why: 'CD' + other, cls: '',       need: t => t.disc === other, max: 6 },
+    { why: null,         cls: '',       need: t => t.era !== c.era, max: 8 },
+    { why: null,         cls: 'w-hal',  need: t => t.hal !== c.hal, max: 10 },
+    { why: 'wild',       cls: 'w-wild', need: () => true, max: Infinity, prefer: t => !heard.has(t.id) }
+  ];
+  const out = [], taken = new Set();
+  const poolFrom = (l, s) => {
+    const cand = l.filter(t => !taken.has(t.id) && s.need(t));
+    let pool = cand.filter(t => gap(t) <= s.max || (s.same && t.fi === c.fi));
+    if (!pool.length) pool = cand.sort((x, y) => gap(x) - gap(y)).slice(0, 3);
+    return pool;
+  };
+  slots.forEach((s, i) => {
+    let pool = poolFrom(fresh, s); if (!pool.length) pool = poolFrom(base, s);
+    if (s.prefer){ const pr = pool.filter(s.prefer); if (pr.length) pool = pr; }
+    let t = pick(pool), why = s.why, cls = s.cls;
+    if (!t){ t = pick(base.filter(x => !taken.has(x.id))); why = 'wild'; cls = 'w-wild'; }
+    if (!t) return;
+    if (i === 2 && why === null) why = t.era;
+    if (i === 3 && why === null) why = t.hal ? 'Halloween' : (t.disc === '1' ? 'singalong' : 'mix-in');
+    taken.add(t.id); out.push({ id: t.id, why, cls });
+  });
+  sugs = out; lastSugs = out.map(x => x.id); sugFor = cur;
+}
+function folderItem(t, n){
+  return `<div class="xi${t.id === cur ? ' cur' : ''}"><span class="n">${n}</span><button class="tx" data-xplay="${t.id}"><span class="nm"><span class="ar">${esc(t.artist)} –</span> ${esc(t.song)}${t.ver ? ' <span class="ar">(' + esc(t.ver) + ')</span>' : ''}</span></button>${starBtn(t)}<span class="b" style="--fc:var(--c-${t.hal ? 'hal' : t.disc === '1' ? 'sing' : 'mix'})">${t.bpm}</span></div>`;
+}
+const LINK = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z"/></svg>';
+const bpm1 = x => (x == null || !isFinite(x)) ? '?' : (+x).toFixed(1);
+// join tempo and keys: end of A -> start of B (keys from the mix entry, else the tracks' own)
+const joinTxt = (a, b, m) => `${bpm1(a.bpmOut != null ? a.bpmOut : a.bpm)} → ${bpm1(b.bpmIn != null ? b.bpmIn : b.bpm)} BPM · ${(m && m.ka) || a.key || '?'} → ${(m && m.kb) || b.key || '?'}`;
+function sugItem(s){
+  const t = byId.get(s.id), on = isOn(t), c = byId.get(cur), m = s.m;
+  const rsn = m ? (m.reasons && m.reasons.length ? m.reasons.join(' · ') : '') : 'no match data', ji = joinInfo(c, t, m);
+  return `<div class="xi xs${on ? '' : ' off'}"><label class="sw"><input type="checkbox" role="switch" data-id="${t.id}"${on ? ' checked' : ''} aria-label="${esc(t.title)} on the disc"><i></i></label>
+<button class="tx" data-xplay="${t.id}" aria-label="Play ${esc(t.title)}"><span class="nm"><span class="ar">${esc(t.artist)} –</span> ${esc(t.song)}${t.ver ? ' <span class="ar">(' + esc(t.ver) + ')</span>' : ''}</span><span class="why ${s.cls}">${esc(s.why)}</span></button>
+${starBtn(t)}<span class="tg d">CD${t.disc}</span><span class="b" style="--fc:var(--c-${t.hal ? 'hal' : t.disc === '1' ? 'sing' : 'mix'})">${t.bpm}</span>
+<div class="xd"><div class="jch"><span class="pch${ji.bm ? '' : ' na'}">${esc(ji.pitchTxt)}</span><span class="kch ${ji.kcls}">${esc(ji.keyTxt)}<b>${esc(ji.verdict)}</b></span></div>${rsn ? `<div class="rsn">${esc(rsn)}</div>` : ''}<div class="jn"><span>${esc(joinTxt(c, t, m))}</span><button class="chb" data-chadd="${t.id}" aria-label="Add ${esc(t.title)} to the current chain">${LINK}+ chain</button></div>
+${c.wOut && t.wIn ? `<div class="jv"><div class="jsc"><canvas class="jw" data-b="${t.id}" role="button" aria-label="The join, zoomed. Top lane: end of the current track, tap to jump there. Bottom lane: start of ${esc(t.title)}, tap to play it from there."></canvas></div><span class="jl jla">end of current · ${esc(c.song)}</span><span class="jl jlb">start of next · ${esc(t.song)}${ji.bm ? '' : ' · <i>no beat-match</i>'}</span></div>` : ''}</div></div>`;
+}
+/* Pitch and key for a join A -> B. pitch: % on the incoming deck's pitch fader (CDJ tempo) so B matches A.
+   m: tempo relation (B x m ~ A); 1, 1/2 and 2 can be beat-matched, the rest (and brake/cut) cannot. */
+const MNUM = { '1': 1, '1/2': 0.5, '2': 2, '3/4': 0.75, '4/3': 4 / 3, '2/3': 2 / 3, '3/2': 1.5 };
+const sgn1 = p => (p > 0 ? '+' : p < 0 ? '−' : '±') + Math.abs(p).toFixed(1);
+function keyVerdict(ka, kb, reasons){
+  const pa = /^(\d{1,2})([AB])$/.exec(ka || ''), pb = /^(\d{1,2})([AB])$/.exec(kb || '');
+  if (!pa || !pb) return 'key unsure';
+  if (ka === kb) return 'same key';
+  const d = ((+pb[1] - +pa[1]) % 12 + 12) % 12;
+  if (pa[2] === pb[2] && (d === 1 || d === 11)) return 'neighbour';
+  if (pa[1] === pb[1]) return 'relative';
+  if (pa[2] === pb[2] && d === 2) return 'boost';
+  const r = (reasons || []).map(x => /\((pitch-shift[^)]*)\)/.exec(x)).find(Boolean);
+  return r ? r[1].replace(' B by', '') : 'clash';
+}
+function joinInfo(a, b, m){
+  let k = 1, p = null, ml = '1';
+  const tr = m ? m.tr : '';
+  if (m){ ml = m.m || '1'; k = MNUM[ml] || 1; p = m.pitch; }
+  else {                                     // wild card: no match entry, take the nearest of x1, x1/2, x2
+    const ao = a.bpmOut || a.bpmM || a.bpm, bi = b.bpmIn || b.bpmM || b.bpm;
+    [[1, '1'], [0.5, '1/2'], [2, '2']].forEach(([kk, l]) => { const pp = (ao / kk / bi - 1) * 100; if (p == null || Math.abs(pp) < Math.abs(p)){ p = pp; k = kk; ml = l; } });
+  }
+  const ok = p != null && isFinite(p), bm = tr !== 'brake_cut' && ['1', '1/2', '2'].includes(ml) && ok && Math.abs(p) <= 8;
+  const pitchTxt = tr === 'brake_cut' ? 'cut in, no beat-match'
+    : bm ? 'PITCH ' + sgn1(p) + '%' + (ml !== '1' ? ' · x' + ml : '')
+    : ml !== '1' ? 'PITCH n/a · x' + ml : 'PITCH n/a' + (ok ? ' · ' + sgn1(p) + '%' : '');
+  const ka = (m && m.ka) || a.key || '?', kb = (m && m.kb) || b.key || '?', verdict = keyVerdict(ka, kb, m && m.reasons);
+  const kcls = verdict === 'clash' ? 'k-bad' : /^pitch-shift|unsure/.test(verdict) ? 'k-ps' : '';
+  // x scale of lane B (in lane-A samples per B sample): beat-matched = the tempo relation, otherwise real time unpitched
+  const sB = bm ? k : (a.bpmM && b.bpmM ? a.bpmM / b.bpmM : 1);
+  return { bm, pitchTxt, keyTxt: `${ka} → ${kb}`, verdict, kcls, sB };
+}
+/* The join view: two lanes on one canvas, beat-synchronous snippets (4 samples per beat), lined up so A's
+   mix-out start sits over B's mix-in start. One thin line per sample; the zoom picks how many bars fit the row
+   (never under 2 device px per sample: wider spans scroll sideways). */
+const KJZ = 'mike-jzoom-v1';
+let jZoom = [8, 16, 32].includes(+store.get(KJZ, 16)) ? +store.get(KJZ, 16) : 16;
+const JH = 94, JA = [10, 46], JB = [48, 84];       // canvas height, lane A and lane B (CSS px)
+const cssVar = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const fcOf = t => cssVar('--c-' + (t.hal ? 'hal' : t.disc === '1' ? 'sing' : 'mix')) || '#b490ff';
+const snipCache = new Map();
+const snipOf = (t, w, k) => { const id = t.id + k; if (!snipCache.has(id)) snipCache.set(id, Array.from(w.s || '').map(c => Math.max(0, B64.indexOf(c)))); return snipCache.get(id); };
+const mod = (x, n) => ((x % n) + n) % n;
+function drawJoin(jc){
+  const a = byId.get(cur), b = byId.get(jc.dataset.b); if (!a || !b || !a.wOut || !b.wIn) return;
+  const sc = jc.parentElement, vw = sc.clientWidth; if (!vw) return;
+  const s = sugs.find(x => x.id === b.id), ji = joinInfo(a, b, s && s.m), sB = ji.sB;
+  const wa = a.wOut, wb = b.wIn, dpr = window.devicePixelRatio || 1;
+  const P = Math.max(2, Math.round(vw * dpr / (jZoom * 16)));        // whole device px per lane-A sample (even lines)
+  const uMin = Math.floor(Math.min(-64, -wa.win[0], -wb.win[0] * sB)); // u = lane-A samples from the join
+  const uMax = Math.max(Math.ceil(Math.max(wa.n - wa.win[0], (wb.n - wb.win[0]) * sB)), -64 + Math.ceil(vw * dpr / P));   // padded so every row can put the join at the same x
+  const Wd = (uMax - uMin) * P, Hd = Math.round(JH * dpr);
+  jc.style.width = (Wd / dpr) + 'px'; jc.style.height = JH + 'px';
+  if (jc.width !== Wd || jc.height !== Hd){ jc.width = Wd; jc.height = Hd; }
+  const g = jc.getContext('2d'); g.setTransform(1, 0, 0, 1, 0, 0); g.clearRect(0, 0, Wd, Hd); g.globalAlpha = 1;
+  const X = u => Math.round((u - uMin) * P), Y = y => Math.round(y * dpr);
+  const lwA = Math.max(1, Math.floor(P / 2)), gapA = Math.max(1, Math.ceil((P - lwA) / 2));
+  // overlap: from the join to the end of the shorter mix window, across both lanes
+  const uEnd = Math.min(wa.win[1] - wa.win[0], (wb.win[1] - wb.win[0]) * sB);
+  g.fillStyle = 'rgba(255,255,255,.1)'; g.fillRect(X(0) - gapA, Y(JA[0]), X(uEnd) - X(0), Y(JB[1]) - Y(JA[0]));
+  g.fillStyle = 'rgba(255,192,64,.75)'; g.fillRect(X(0) - gapA, Y(JA[0]), X(uEnd) - X(0), Math.max(1, Math.round(dpr))); g.fillRect(X(0) - gapA, Y(JB[1]) - Math.max(1, Math.round(dpr)), X(uEnd) - X(0), Math.max(1, Math.round(dpr)));
+  g.fillStyle = 'rgba(160,130,255,.18)'; g.fillRect(0, Y(47), Wd, Math.max(1, Math.round(dpr / 2)));
+  g.font = `600 ${Math.round(8 * dpr)}px ` + (cssVar('--mono') || 'monospace'); g.textBaseline = 'middle'; g.textAlign = 'left';
+  const lane = (t, w, vals, scl, ly, col, labY) => {
+    const pitch = P * scl, lw = Math.max(1, Math.floor(pitch / 2)), gap = Math.max(0, Math.ceil((pitch - lw) / 2));
+    const mid = (ly[0] + ly[1]) / 2 * dpr, half = (ly[1] - ly[0] - 2) / 2 * dpr;
+    g.fillStyle = col;
+    for (let i = 0; i < w.n; i++){
+      const inW = i >= w.win[0] && i < w.win[1], hh = Math.max(0.5 * dpr, (vals[i] || 0) / 63 * half);
+      g.globalAlpha = inW ? 0.95 : 0.3;
+      g.fillRect(X((i - w.win[0]) * scl), Math.round(mid - hh), lw, Math.max(1, Math.round(hh * 2)));
+    }
+    // bar ticks (faint) and 8-bar phrase ticks (bright, with the track's bar number), in the gap before the sample
+    for (let i = 0; i <= w.n; i++){
+      const k = w.beat0 * 4 + i; if (mod(k, 16)) continue;
+      const ph = mod(k, 128) === 0, x = X((i - w.win[0]) * scl) - gap;
+      g.globalAlpha = 1; g.fillStyle = ph ? 'rgba(255,255,255,.6)' : 'rgba(255,255,255,.2)';
+      g.fillRect(x, Y(ly[0]), ph ? Math.max(1, Math.round(dpr)) : 1, Y(ly[1]) - Y(ly[0]));
+      if (ph && k >= 0){ g.fillStyle = 'rgba(232,224,255,.7)'; g.fillText(String(k / 16 + 1), x + Math.round(3 * dpr), Y(labY)); }
+    }
+    // where this track's mix window ends: a solid marker in its colour
+    const xe = X((w.win[1] - w.win[0]) * scl) - gap;
+    g.globalAlpha = 1; g.fillStyle = col; g.fillRect(xe - Math.round(dpr), Y(ly[0]), Math.max(2, Math.round(2 * dpr)), Y(ly[1]) - Y(ly[0]));
+  };
+  lane(a, wa, snipOf(a, wa, 'o'), 1, JA, fcOf(a), 5);
+  lane(b, wb, snipOf(b, wb, 'i'), sB, JB, fcOf(b), 89.5);
+  // the join: bright line across both lanes
+  g.globalAlpha = 1; g.save(); g.shadowColor = 'rgba(255,255,255,.9)'; g.shadowBlur = 6 * dpr; g.fillStyle = '#fff';
+  g.fillRect(X(0) - gapA - Math.round(dpr / 2), Y(JA[0] - 2), Math.max(2, Math.round(1.5 * dpr)), Y(JB[1] + 2) - Y(JA[0] - 2)); g.restore();
+  jc._g = { uMin, pps: P / dpr, sB };
+  sc.scrollLeft = Math.max(0, X(-64) / dpr);                            // about 4 bars of A's lead-in before the join
+}
+function drawJoins(){ if (xpOpen) $$('#xSug canvas.jw').forEach(drawJoin); }
+function setJZoom(z){ jZoom = z; store.set(KJZ, z); $$('[data-jz]').forEach(b => b.setAttribute('aria-pressed', String(+b.dataset.jz === z))); drawJoins(); }
+document.addEventListener('click', e => { const b = e.target.closest('[data-jz]'); if (b) setJZoom(+b.dataset.jz); });
+function renderExplore(reroll){
+  if (!cur) return;
+  const c = byId.get(cur), fl = folderList(c);
+  $('#xFolderH').textContent = `CD${c.disc} · ${c.folder}`;
+  $('#xFolder').innerHTML = fl.map(t => folderItem(t, deckNo.has(t.id) ? String(deckNo.get(t.id)).padStart(2,'0') : '--')).join('');
+  const ci = $('#xFolder .xi.cur'); if (ci) ci.scrollIntoView({ block: 'nearest' });
+  if (reroll || sugFor !== cur) rollSugs();
+  $('#xSug').innerHTML = sugs.map(sugItem).join('');
+  drawJoins();
+}
+$('#shuf').onclick = () => {
+  const c = byId.get(cur); if (c && c.mix && c.mix.length) sugOff[cur] = (sugOff[cur] || 0) + 10;
+  rollSugs(); renderExplore(false);
+  if (c && c.mix && c.mix.length && sugAvail <= 10) toast(`That's all ${sugAvail} matches for this one; new wild card.`);
+};
+$('#xp').addEventListener('click', e => {
+  // the join view: top lane seeks the current track to the tapped sample, bottom lane starts the suggestion there
+  const jc = e.target.closest('canvas.jw');
+  if (jc && cur){
+    const G = jc._g, a = byId.get(cur), t = byId.get(jc.dataset.b); if (!t || !G) return;
+    const r = jc.getBoundingClientRect(), u = (e.clientX - r.left) / G.pps + G.uMin;
+    if (e.clientY - r.top < (JA[1] + JB[0]) / 2){
+      const w = a.wOut, i = Math.max(0, Math.min(w.n - 1, Math.floor(u) + w.win[0]));
+      seekTo(w.t0 + i * 15 / a.bpmM); if (A.paused) playA().catch(() => {});
+    } else {
+      const w = t.wIn, j = Math.max(0, Math.min(w.n - 1, Math.floor(u / G.sB) + w.win[0]));
+      qView = t.disc; playId(t.id, folderList(t).map(x => x.id)); seekTo(w.t0 + j * 15 / t.bpmM);
+    }
+    return;
+  }
+  const b = e.target.closest('[data-xplay]'); if (!b) return;
+  const t = byId.get(b.dataset.xplay);
+  qView = t.disc; playId(t.id, folderList(t).map(x => x.id));   // playing re-rolls the suggestions
+});
+
+/* ===== Chains: little runs of songs Mike keeps ({ chains:[{id, name, ids:[trackId,...]}], current: chainId }) ===== */
+const K_CHAINS = 'mike-chains-v1';
+const chainSt = (function(){
+  const v = store.get(K_CHAINS, null), out = { chains: [], current: null };
+  if (v && Array.isArray(v.chains)) v.chains.forEach(c => {
+    if (!c || typeof c.id !== 'string' || out.chains.some(x => x.id === c.id)) return;
+    const ids = (Array.isArray(c.ids) ? c.ids : []).filter((id, i, l) => byId.has(id) && l.indexOf(id) === i);
+    out.chains.push({ id: c.id, name: typeof c.name === 'string' ? c.name : '', ids });
+  });
+  out.current = v && out.chains.some(c => c.id === v.current) ? v.current : (out.chains[0] ? out.chains[0].id : null);
+  return out;
+})();
+const saveChains = () => store.set(K_CHAINS, chainSt);
+const chainById = id => chainSt.chains.find(c => c.id === id);
+const chainName = c => (c.name || '').replace(/\s+/g, ' ').trim() || 'Chain ' + (chainSt.chains.indexOf(c) + 1);
+function newChain(){
+  const names = new Set(chainSt.chains.map(chainName)); let n = chainSt.chains.length + 1; while (names.has('Chain ' + n)) n++;
+  const c = { id: 'c' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), name: 'Chain ' + n, ids: [] };
+  chainSt.chains.push(c); chainSt.current = c.id; saveChains(); return c;
+}
+function addToChain(id){
+  if (!byId.has(id)) return;
+  const c = chainById(chainSt.current) || newChain();
+  if (c.ids.includes(id)){ toast(`Already in ${chainName(c)}.`); return; }
+  c.ids.push(id); saveChains(); renderChains();
+  toast(`Added to ${chainName(c)} · ${c.ids.length} song${c.ids.length === 1 ? '' : 's'}`);
+}
+// how A joins into B, from A's mix list (score + short why), else "no match data"
+function chainJoin(aId, bId){
+  const a = byId.get(aId), m = a && (a.mix || []).find(x => x.id === bId);
+  return m ? `match ${Math.round(m.s * 100)}% · ${m.why}` : 'no match data';
+}
+function chainCard(c){
+  const isCur = c.id === chainSt.current, n = c.ids.length;
+  const items = c.ids.map((id, i) => {
+    const t = byId.get(id), j = i < n - 1 ? chainJoin(id, c.ids[i + 1]) : null;
+    return `<li class="chi" style="--fc:var(--c-${t.hal ? 'hal' : t.disc === '1' ? 'sing' : 'mix'})"><span class="n">${i + 1}</span><button class="tx" data-ch="playat" data-i="${i}" aria-label="Play the chain from ${esc(t.title)}"><span><span class="ar">${esc(t.artist)} –</span> ${esc(t.song)}</span><small>CD${t.disc} · ${t.bpm} BPM${isOn(t) ? '' : ' <i>· not on the disc</i>'}</small></button>`
+      + `<button class="chm" data-ch="up" data-i="${i}" aria-label="Move up"${i ? '' : ' disabled'}>▲&#xFE0E;</button><button class="chm" data-ch="down" data-i="${i}" aria-label="Move down"${i < n - 1 ? '' : ' disabled'}>▼&#xFE0E;</button><button class="chm" data-ch="rm" data-i="${i}" aria-label="Remove ${esc(t.title)} from the chain">✕&#xFE0E;</button></li>`
+      + (j ? `<li class="chj${j === 'no match data' ? ' nm' : ''}">↓&#xFE0E; ${esc(j)}</li>` : '');
+  }).join('');
+  return `<section class="chc${isCur ? ' cur' : ''}" data-c="${esc(c.id)}"><div class="chh"><input class="chn" data-c="${esc(c.id)}" value="${esc(c.name)}" placeholder="${esc(chainName(c))}" maxlength="40" aria-label="Chain name" autocomplete="off"><button class="chpick" data-ch="cur" aria-pressed="${isCur}">${isCur ? 'Current' : 'Make current'}</button></div>
+${n ? `<ol class="chl">${items}</ol>` : '<p class="empty">Empty. Tap + chain on Up next to add songs.</p>'}
+<div class="btns"><button class="btn vi" data-ch="play"${n ? '' : ' disabled'}>Play chain</button><button class="btn" data-ch="del">Delete chain</button></div></section>`;
+}
+function renderChains(){
+  $('#chainBody').innerHTML = chainSt.chains.length ? chainSt.chains.map(chainCard).join('') : '<p class="empty">No chains yet. Tap + chain on a song in Up next (or under the player) to start one.</p>';
+  $('#chainsBtn').textContent = chainSt.chains.length ? `Chains (${chainSt.chains.length})` : 'Chains';
+}
+function openChains(){ renderChains(); $('#chainSheet').hidden = false; }
+$('#chainsBtn').onclick = openChains;
+$('#chainCur').onclick = () => { if (cur) addToChain(cur); };
+document.addEventListener('click', e => { const b = e.target.closest('[data-chadd]'); if (b){ e.stopPropagation(); addToChain(b.dataset.chadd); } });
+$('#chainSheet').addEventListener('click', e => {
+  const b = e.target.closest('[data-ch]'); if (!b) return;
+  const a = b.dataset.ch, card = b.closest('[data-c]'), c = card && chainById(card.dataset.c), i = +b.dataset.i;
+  if (a === 'new'){ newChain(); renderChains(); const l = $('#chainBody').lastElementChild; if (l) l.scrollIntoView({ block: 'nearest' }); return; }
+  if (!c) return;
+  if (a === 'play' || a === 'playat'){
+    if (!c.ids.length) return;
+    const id = c.ids[a === 'play' ? 0 : i]; closeSheets();
+    qView = byId.get(id).disc; playId(id, c.ids.slice()); toast(`Playing ${chainName(c)}`); return;
+  }
+  if (a === 'del' && !b.dataset.armed){ b.dataset.armed = '1'; b.textContent = 'Tap again to delete'; b.classList.add('dan'); return; }
+  if (a === 'cur') chainSt.current = c.id;
+  else if (a === 'up' && i > 0) c.ids.splice(i - 1, 2, c.ids[i], c.ids[i - 1]);
+  else if (a === 'down' && i < c.ids.length - 1) c.ids.splice(i, 2, c.ids[i + 1], c.ids[i]);
+  else if (a === 'rm') c.ids.splice(i, 1);
+  else if (a === 'del'){
+    chainSt.chains = chainSt.chains.filter(x => x !== c);
+    if (chainSt.current === c.id) chainSt.current = chainSt.chains.length ? chainSt.chains[chainSt.chains.length - 1].id : null;
+  }
+  saveChains(); renderChains();
+});
+$('#chainSheet').addEventListener('input', e => {
+  if (!e.target.matches('.chn')) return;
+  const c = chainById(e.target.dataset.c); if (c){ c.name = e.target.value; saveChains(); }
+});
+renderChains();
+
+/* ===== Report + sharing ===== */
+function buildReport(){
+  const L = [];
+  L.push(`Mike's final mix — ${new Date().toLocaleString([], { weekday:'short', day:'numeric', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' })} — ${over.size} change${over.size===1?'':'s'} to your picks`);
+  L.push('', 'CHANGES');
+  const ch = T.filter(t => over.has(t.id));
+  if (!ch.length) L.push("(none: your picks as they are)");
+  ch.forEach(t => L.push(`${isOn(t)?'+':'-'} CD${t.disc} · ${t.folder} · ${t.bpm} BPM · ${t.title}${verTxt(t)}`));
+  L.push('', 'NOTES FROM MIKE', ($('#notes').value.trim() || '(none)'));
+  const st = T.filter(t => stars.has(t.id));
+  L.push('', 'STARRED');
+  if (!st.length) L.push('(none)');
+  st.forEach(t => L.push(`* CD${t.disc} · ${t.folder} · ${t.bpm} BPM · ${t.title}${verTxt(t)}${isOn(t) ? '' : ' (not on the disc)'}`));
+  L.push('', 'CHAINS');
+  if (!chainSt.chains.length) L.push('(none)');
+  chainSt.chains.forEach(c => {
+    L.push(`${chainName(c)} (${c.ids.length} song${c.ids.length === 1 ? '' : 's'})`);
+    if (!c.ids.length) L.push('  (empty)');
+    c.ids.forEach((id, i) => {
+      const t = byId.get(id);
+      L.push(`  ${i + 1}. CD${t.disc} · ${t.bpm} BPM · ${t.title}${verTxt(t)}${isOn(t) ? '' : ' (not on the disc)'}`);
+      if (i < c.ids.length - 1) L.push(`       -> ${chainJoin(id, c.ids[i + 1])}`);
+    });
+  });
+  ['1','2'].forEach(d => {
+    const on = discT(d).filter(isOn), mb = sumMB(on);
+    L.push('', `${D.discs[d].name.toUpperCase()}: ${on.length} ON, ${mb.toFixed(1)} MB of ${BUDGET} MB${mb > BUDGET ? ' — OVER BY ' + (mb - BUDGET).toFixed(1) + ' MB' : ''}`);
+    D.folders.forEach((f, fi) => {
+      const fo = on.filter(t => t.fi === fi); if (!fo.length) return;
+      L.push(`[${f}]`);
+      fo.forEach(t => L.push(`  ${String(t.bpm).padStart(3)}  ${t.hal?'H ':''}${t.title}${verTxt(t)}`));
+    });
+  });
+  L.push('', "--- for Chris's script ---");
+  ['1','2'].forEach(d => L.push(`CD${d} ON: ` + discT(d).filter(isOn).map(t => t.id).join(',')));
+  L.push('STARRED: ' + st.map(t => t.id).join(','));
+  chainSt.chains.filter(c => c.ids.length).forEach(c => L.push(`CHAIN ${chainName(c)}: ${c.ids.join('>')}`));
+  return L.join('\n');
+}
+function summary(){
+  const a = discT('1').filter(isOn), b = discT('2').filter(isOn);
+  return `CD1 ${a.length} songs (${Math.round(sumMB(a))} MB) · CD2 ${b.length} songs (${Math.round(sumMB(b))} MB) · ${over.size} change${over.size===1?'':'s'}`;
+}
+function openSend(){
+  $('#sendSum').textContent = summary();
+  $('#repTxt').hidden = true; $('#copyBtn').textContent = 'Copy text';
+  $('#sendSheet').hidden = false;
+}
+async function share(){
+  const text = buildReport();
+  let file = null;
+  try { file = new File([text], 'Mike final mix.txt', { type: 'text/plain' }); } catch(e){}
+  try {
+    if (file && navigator.canShare && navigator.canShare({ files: [file] })) await navigator.share({ files: [file], title: 'Mike final mix', text: "Mike's final mix: " + summary() });
+    else if (navigator.share) await navigator.share({ title: 'Mike final mix', text });
+    else throw new Error('no share');
+    toast('Share sheet closed. Check it reached me.');
+  } catch(e){
+    showText(text); toast("Sharing didn't open here. Use Copy text.");
+  }
+}
+function showText(text){ const ta = $('#repTxt'); ta.value = text || buildReport(); ta.hidden = false; }
+$('#sendBtn').onclick = openSend;
+$('#shareBtn').onclick = share;
+$('#copyBtn').onclick = () => {
+  showText(); const ta = $('#repTxt'), btn = $('#copyBtn');
+  let done = false;
+  const select = () => { ta.focus(); ta.select(); try { ta.setSelectionRange(0, ta.value.length); } catch(e){} };
+  const fallback = () => { if (done) return; done = true; select(); let ok = false; try { ok = document.execCommand('copy'); } catch(e){} btn.textContent = ok ? 'Copied' : 'Selected: use Copy in the menu'; };
+  if (navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(ta.value).then(() => { if (!done){ done = true; btn.textContent = 'Copied'; } }, fallback);
+    setTimeout(() => { if (!done){ done = true; select(); btn.textContent = 'Selected: use Copy in the menu'; } }, 2000);
+  } else fallback();
+};
+
+/* ===== Sheets, intro, toast, reset ===== */
+function closeSheets(){ $$('.sheet').forEach(s => s.hidden = true); }
+$$('.sheet').forEach(s => s.addEventListener('click', e => { if (e.target === s || e.target.hasAttribute('data-close')) closeSheets(); }));
+let toastT;
+function toast(msg){ const el = $('#toast'); el.textContent = msg; el.hidden = false; clearTimeout(toastT); toastT = setTimeout(() => el.hidden = true, 3500); }
+function showIntro(){ $('#intro').hidden = false; $('#introOk').focus(); }
+function hideIntro(){ $('#intro').hidden = true; store.set(K_HELP, 'seen'); }
+$('#introOk').onclick = hideIntro; $('#helpBtn').onclick = showIntro;
+$('#resetYes').onclick = () => { states = {}; saveStates(); syncOver(); closeSheets(); render(); if (xpOpen) renderExplore(false); toast("Back to my picks."); };
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape'){ closeSheets(); closeXP(); if (!$('#intro').hidden) hideIntro(); return; }
+  if (/INPUT|TEXTAREA/.test(document.activeElement.tagName)) return;
+  // left/right arrows swipe the group in view
+  const i = VIEWS.indexOf(gv[pi]);
+  if (e.key === 'ArrowRight' && i < 2) setGroup(pi, VIEWS[i + 1], true);
+  else if (e.key === 'ArrowLeft' && i > 0) setGroup(pi, VIEWS[i - 1], true);
+});
+
+/* ===== Events (delegated) ===== */
+// favourites star (rows and the player's lists); the list is not re-filtered so the row stays put
+document.addEventListener('click', e => {
+  const b = e.target.closest('[data-star]'); if (!b) return;
+  e.stopPropagation();
+  const id = b.dataset.star; if (!id || !byId.has(id)) return;
+  stars.has(id) ? stars.delete(id) : stars.add(id);
+  store.set(K_STARS, Array.from(stars));
+  $$(`[data-star="${id}"]`).forEach(x => x.setAttribute('aria-pressed', String(stars.has(id))));
+}, true);
+document.addEventListener('click', e => {
+  if (e.target.id === 'resetBtn'){ $('#resetTxt').textContent = `Undo your ${over.size} change${over.size===1?'':'s'} and go back to my picks? Your notes and heard marks stay.`; $('#resetSheet').hidden = false; return; }
+  const b = e.target.closest('[data-act],[data-view],[data-f],[data-jump],[data-gv]'); if (!b) return;
+  if (b.dataset.view){ setAll(b.dataset.view); return; }
+  if (b.dataset.gv){ setGroup(+b.closest('.fold').dataset.fi, b.dataset.gv, true); return; }
+  if (b.dataset.f){ chips[b.dataset.f] = !chips[b.dataset.f]; b.setAttribute('aria-pressed', String(chips[b.dataset.f])); renderAll(); return; }
+  if (b.dataset.jump != null){ jumpGroup(+b.dataset.jump); return; }
+  if (b.dataset.act === 'play') playFromRow(b.closest('.row'));
+  else if (b.dataset.act === 'fold'){
+    const f = b.closest('.fold'), fi = +f.dataset.fi;
+    f.classList.toggle('closed');
+    if (f.classList.contains('closed')) collapsed.add(fi); else { collapsed.delete(fi); placeGroup(fi); marquee(f); }
+  }
+  else if (b.dataset.act === 'playfold'){
+    const f = b.closest('.fold'), r = f.querySelector(`.gp[data-v="${gv[+f.dataset.fi]}"] .rows > .row`);
+    if (r) playId(r.dataset.id, rowsQueue(r));
+  }
+});
+document.addEventListener('change', e => { const cb = e.target; if (cb.matches('.sw input[data-id]')) setOn(cb.dataset.id, cb.checked); });
+// Hide info: compact rows, remembered
+const K_COMPACT = 'mike-compact-v1', hideInfo = $('#hideInfo');
+function setCompact(on){
+  document.body.classList.toggle('compact', on); hideInfo.checked = on; store.set(K_COMPACT, on);
+  for (let fi = 0; fi <= NF; fi++) fitGroup(fi);
+  if (!on) marquee(groupsEl);
+}
+hideInfo.addEventListener('change', () => setCompact(hideInfo.checked));
+// Mix with other apps: iOS audio session 'ambient' (mixes) vs 'playback' (lock screen, background)
+const K_MIX = 'mike-mix-v1', mixApps = $('#mixApps');
+function setAudioSession(){
+  if (!('audioSession' in navigator)) return;
+  try { navigator.audioSession.type = mixApps.checked ? 'ambient' : 'playback'; } catch(e){}
+}
+mixApps.checked = !!store.get(K_MIX, false);
+mixApps.addEventListener('change', () => { store.set(K_MIX, mixApps.checked); setAudioSession(); });
+let qT;
+$('#q').addEventListener('input', e => { clearTimeout(qT); qT = setTimeout(() => { query = e.target.value; renderAll(); }, 150); });
+$('#searchBtn').onclick = () => { $('#chipRow').hidden = true; $('#searchRow').hidden = false; $('#q').focus(); };
+$('#searchClose').onclick = () => { $('#q').value = ''; query = ''; $('#searchRow').hidden = true; $('#chipRow').hidden = false; renderAll(); };
+
+/* ===== Init ===== */
+const notes = $('#notes');
+notes.value = store.get(K_NOTES, '') || '';
+notes.addEventListener('input', () => store.set(K_NOTES, notes.value));
+if (store.get(K_HELP, null) !== 'seen') showIntro();
+setZoom(zoom); setJZoom(jZoom); setShuffle(shuffle);
+render();
+setCompact(!!store.get(K_COMPACT, false));
+if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => marquee(groupsEl));
+})();
+</script>
+</body>
+</html>
