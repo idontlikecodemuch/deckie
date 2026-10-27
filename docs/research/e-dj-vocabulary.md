@@ -339,3 +339,58 @@ mix" to Blend, "hard break" to Hard cut, "echo in" to Echo out or Tease (ask), "
 Not found or not verified: a Mixed In Key glossary page (its workflow and guide pages were used instead); a DJ TechTools
 or Digital DJ Tips glossary page; YouTube video titles (the search tool returned none); Reddit; Serato's own manual
 text for Keylock and pitch range; Traktor's current tempo-range list; a written definition of "echo in".
+
+## Usage check (Oct 27)
+
+A second pass asked whether DJs say these words to each other, not only in tutorials. Method: re-read
+`docs/research/codex-community.md` section 3 (Reddit quotes; it has no frequency list of transition words, only
+quoted usage), then searched forum threads, YouTube titles and manufacturer forums for each move. Reddit itself is
+blocked to this pass's search and fetch tools, so the Reddit evidence is only what the Codex report quotes. Most
+forum threads found date from 2008 to 2016; they show how DJs talk, not how often. Each card on the vocabulary page
+now starts its DJ register with **[heard in the wild]** (community usage found), **[tutorial term]** (taught, not
+seen in DJ talk) or **[ours]** (Deckie's or Christopher's own word). Result for the 22 moves: 16 heard in the wild,
+3 tutorial terms (tempo ramp, reverb wash, key shift), 3 ours (short blend, needs a bridge, echo in).
+
+| Term | Taught word | What DJs say | Where seen | Change the label? |
+|---|---|---|---|---|
+| Long blend | long blend, seamless blend | "long blends", "long mixes"; "long and smooth" | [DJTT, long or short mixes](https://forum.djtechtools.com/t/long-or-short-mixes-in-your-area/38642); Codex §3 (r/Beatmatch) | No |
+| Blend | blend, beatmix | "blend tunes"; hip-hop "blend" is still acapella over a beat | [DJTT, transition techniques](https://forum.djtechtools.com/t/transition-techniques/734) | No; keep the bar count |
+| Short blend | (none) | "fast bass swap", "short overlaps" | Codex §3; [DJTT, long or short mixes](https://forum.djtechtools.com/t/long-or-short-mixes-in-your-area/38642) | No; it is ours, plain English |
+| Bass swap | bass swap, EQ swap | "bass swap", "switch lows", "bass switch", "swap the basslines", "kill the bass" | Codex §3; [DJTT, mixing technique](https://forum.djtechtools.com/showthread.php?t=68510); [DJTT, mix techniques](https://forum.djtechtools.com/showthread.php?t=24072) | No |
+| Fade | the fade | "fade out", "crossfading", "feather out"; wedding DJs: "radio-style fade", "segue" | [DJTT, transition techniques](https://forum.djtechtools.com/t/transition-techniques/734); [VirtualDJ, radio style mix (segue)](http://www.virtualdj.com/forums/200199/General_Discussion/Radio_style_mix_(segue).html) | No |
+| Tempo ramp | tempo ramp, pitch ramp | described, not named: "build up or drop down the tempo" | [DJTT, mixing hip-hop with house](https://forum.djtechtools.com/t/help-with-mixing-house-and-hip-hop/47604) | No; mark as tutorial term |
+| Filter fade | filter fade (NI, Digital DJ Pool) | "filter sweep", "sweep the filter to high pass", "lo-cut" | [DJTT, mix techniques](https://forum.djtechtools.com/showthread.php?t=24072); [DJTT, filter sweeps](https://forum.djtechtools.com/t/filter-sweeps-in-traktor-impossible/54365) | **Yes: "Filter sweep"**, the word DJs use; still never "filter out" |
+| Echo out | echo out | "echo out", "echoed out", "echo freeze", "freeze" | [Serato, how do you echo out](https://serato.com/forum/discussion/449769); [DJTT, mixing hip-hop](https://forum.djtechtools.com/t/mixing-hip-hop-songs/41753); YouTube titles | No |
+| Reverb wash | wash-out (Thomann) | described, not named: reverb until the mix "turns into mush" | [DJTT, transition techniques](https://forum.djtechtools.com/t/transition-techniques/734) | Optional: "Reverb out" would pair with Echo out; evidence is thin either way |
+| Loop roll | loop roll, roll | "loop rolls", Beatmasher (Traktor) | [DJTT, loop rolls](https://forum.djtechtools.com/t/loop-rolls/21751); [Serato, loop roll](https://serato.com/forum/discussion/130180) | No |
+| Hard cut | the cut | "cut", "quick cuts", "abrupt cuts to a significant 1" | [DJTT, transition techniques](https://forum.djtechtools.com/t/transition-techniques/734); [DJTT, mixing hip-hop](https://forum.djtechtools.com/t/mixing-hip-hop-songs/41753) | No; "Hard cut" reads clearly; accept "cut" and "quick cut" in search |
+| Cut on the one | drop mixing | "drop it on the one" | [Serato, drop it on the one](https://serato.com/forum/discussion/72466) | Consider "Drop on the one" as the cut's second-tap flavour |
+| Slam | slam | "slam it over to B", "slam the next song in", "hip hop slam" | [DJTT, slam the fader](https://forum.djtechtools.com/showthread.php?t=16466); [DJTT, mixing hip-hop](https://forum.djtechtools.com/t/mixing-hip-hop-songs/41753) | No |
+| Chop | chop mix | "cut/chop" with the crossfader, "switching back and forth" | [DJTT, crossfader curve or cut](https://forum.djtechtools.com/t/crossfader-curve-or-cut/18808); [DJTT, do you use the crossfader](https://forum.djtechtools.com/showthread.php?t=8909) | No; avoid confusion with "chopped and screwed" |
+| Backspin | backspin, spinback | both; YouTube titles use both | [TranceAddict, what's a spinback](https://tranceaddict.com/forums/showthread/t-104634.html); [YouTube, spinback transition](https://www.youtube.com/watch?v=jRBijAiPjMI) | No |
+| Vinyl brake | vinyl brake, power-off | "hit the brake", "brake effect"; misspelt "Vinyl Break" | [Serato, drop it on the one](https://serato.com/forum/discussion/72466); [Pioneer forum, DDJ-1000 vinyl break](https://forums.pioneerdj.com/hc/en-us/community/posts/360017548043-DDJ-1000-Vinyl-Break-effect-using-jog-wheels) | No; the misspelling confirms the rule never to show "brake" alone |
+| Tease | tease | "teasing it for a bit, then finally dropped the track"; "sample stab drop" | [DJTT, mix techniques](https://forum.djtechtools.com/showthread.php?t=24072) | No |
+| Half time | half time, double time | "doubling" the slow track; "halftime" | [DJTT, 130 to hip-hop](https://forum.djtechtools.com/t/transition-from-130-bpm-edm-to-60-80-bpm-hip-hop-how-do-you-do-it/25837) | No |
+| Key shift | KEY SHIFT (hardware) | not seen | (none) | No; tutorial and hardware term |
+| Needs a bridge | transition track | "pre-made transition track"; "cutting is the easiest way" | [DJTT, mixing hip-hop with house](https://forum.djtechtools.com/t/help-with-mixing-house-and-hip-hop/47604) | No; ours, but it names the problem, not a move |
+| Scratch in | scratching in | "scratch in", "scratch and cut to the next track" | [DJTT, how to scratch in](https://forum.djtechtools.com/t/how-to-scratch-in-on-traktor/65358); [DJTT, mixing hip-hop](https://forum.djtechtools.com/t/mixing-hip-hop-songs/41753) | No |
+| Echo in | (none) | not found | (none) | No; Christopher's word, defined on Oct 27 |
+| Open format | open format | "open format" DJs, events, crates | [Serato, open format crate organization](https://serato.com/forum/discussion/1375445); [DJTT, open format event](https://forum.djtechtools.com/t/help-i-have-an-open-format-event-im-playing-at-tonight/25209) | No; "Stay in lane" is ours |
+
+**Christopher's two guesses.**
+
+- *"Sample out"*: not found as a DJ term anywhere searched (forums, YouTube titles, Serato, Pioneer). What DJs do
+  with samples at a join has other names: the "sample stab drop" (stab a sample of the next record on the downbeat,
+  then drop it; a tease variant), and sampler drops such as the air horn, which Digital DJ Tips readers call
+  overused ([DJTT](https://forum.djtechtools.com/showthread.php?t=24072),
+  [Digital DJ Tips](https://www.digitaldjtips.com/2011/08/why-samples-can-ruin-dj-sets/)). Ending a track on a
+  short loop and fading it is called "echoed out" by one Serato poster, not "sample out". Echo out keeps its name.
+- *"Hard cut crossfade"*: not a phrase DJs use. It joins two opposite things: a cut (no overlap) and a crossfade
+  (an overlap). What exists is a cut done *with the crossfader* on a sharp or "cut" curve, which forum DJs simply
+  call a cut ([DJTT, crossfader cut mode](https://forum.djtechtools.com/t/how-to-change-the-crossfader-to-do-cut-or-scratch-mode/52797)),
+  and VirtualDJ's automix mode "Fade out / Cut in". Hard cut keeps its name.
+
+Other folk names found and added as aliases: "switch lows", "bass switch", "kill the bass", "feather out",
+"segue" and "radio-style fade" (mobile and wedding), "lo-cut", "echoed out", "freeze", "quick cut", "drop it on
+the one", "hip hop slam", "sample stab drop", "hit the brake", Serato's old "Roll Out" (a brake-style effect, not a
+loop roll), and the "Vinyl Break" misspelling.

@@ -214,7 +214,8 @@ later. Android and Windows: not planned.
   with undo. Sliders are last for a reason: track C found them fine for facts and useless for style.
 - 6.5 Tunability, in the DJ's words. Every label, popup and slider uses the vocabulary from track E (the label set
   is the summary table of `docs/research/e-dj-vocabulary.md`; two rules from it: never show "brake" alone, and
-  "filter fade", not "filter out"); nothing is shown as an internal name, and a one-line plain gloss is a long-press away for new DJs. In-app popups during a set
+  "filter sweep", the word DJs say, never "filter out"; the usage check of Oct 27 marks each DJ word as heard in
+  the wild, a tutorial term, or ours); nothing is shown as an internal name, and a one-line plain gloss is a long-press away for new DJs. In-app popups during a set
   use the same move words ("more range", "fade mix", "hard cut"), so tuning during a gig is one tap, not a settings
   page. Three sliders on the booth screen: pick difficulty (safe to adventurous), options (3, 5, 10), data
   density (Minimal, Simple, Full). Five in the "How you mix" sheet: pitch range cap; key (ignore, warn, prefer); style
