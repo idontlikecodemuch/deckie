@@ -87,6 +87,16 @@ app uses the words DJs actually use. Research track E produces the dictionary; e
 it; the onboarding chain replaces sliders as the first elicitation. Also accepted as tuning inputs: upload one of
 your own sets; upload a set whose style you like. Spec 6.4 and 6.5.
 
+### D13. The crate is Deckie's own format, richer than the industry's; interchange is a button, not a sync (Oct 27)
+Christopher: key-change markers, yes; "if we can we should improve the industry standard"; import and export
+buttons for other systems, "but it shouldn't be fully interchangeable. I want a little bit of friction. We are
+building a unique analysis and product." So the crate carries what no player's format holds: key markers (a key
+per segment, so a modulation and the key at each mix window are known), tempo markers with confidence, the mix
+windows and vocal-free bars, per-bar instrument activity, the style vector, saved pairs and preferences. Export to
+rekordbox XML is explicit and lossy by nature (grids, cues, BPM, one key); import is explicit and keeps a DJ's own
+grids and cues. No live sync with other software, and the crate's own fields never leave through the export.
+Supersedes the "fully interchangeable" reading of P12.
+
 ### Note on D3 (Oct 26, from the community research): privacy covers taste, not only audio
 DJs' fear is "I'm not helping train ai for free": that their choices become someone else's product. So D3 extends
 to history, cues, saved pairs and learned preferences: all of it stays with the DJ, Deckie says who benefits from
@@ -137,7 +147,8 @@ Christopher says so; a yes moves it up into the dated decisions above.
   nine-signature catalogue, which matched 25 of 25 everywhere and needs no new code. Also: fix the tempo-only
   pitch reading to a two-match offset fit reported to 0.1 percent in about 16 s, instead of 20 s rounded to 0.5.
   Not now: an own pitch-invariant fingerprint (the proven designs are AGPL or paper-only). Spec 5.3.
-- **P12. The beat grid uses the industry's marker shape, and the crate imports and exports it.** Christopher
+- **P12 (narrowed by D13). The beat grid's tempo segment uses the industry's marker shape so export and import are
+  clean; the crate itself stays Deckie's richer format.** Christopher
   (Oct 27): a starter DJ's tool should match what they graduate to. Each tempo segment is stored as the same record
   rekordbox's open XML uses for a grid marker, a start time, a BPM, a meter such as 4/4 and the beat of the bar the
   marker sits on, and Serato's Beat Warp Markers express the same thing. Mix-in and mix-out windows and chosen

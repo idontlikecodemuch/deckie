@@ -118,9 +118,11 @@ per-device history logs, and an optional `signatures/` store. Budget about 10 KB
 145 KB with three pitch variants. Signatures are irreversible by Apple's statement, so carrying them does not breach
 D3; they travel when the receiving device has no audio to regenerate from. Schema int plus per-track engine string;
 readers ignore unknown keys; merge by timestamps; history is a union. Moves by iCloud Drive, AirDrop and Files. No
-server. Schema in track A, section 5. Tempo and key are stored as segments, and a tempo segment is the industry's
+server. Schema in track A, section 5. Tempo and key are stored as segments. A tempo segment is the industry's
 grid marker (P12): start time, BPM, meter, beat of the bar; one for most tracks, several for transition edits and
-rubato intros.
+rubato intros. A key segment is Deckie's own (D13): no player's format has key markers, so a modulation and the
+key at each mix window are things only the crate knows. The crate is deliberately richer than any interchange
+format; rekordbox XML export and import are explicit buttons and lossy by nature, never a sync.
 
 ### 5.3 Recognition
 
