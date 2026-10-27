@@ -96,6 +96,17 @@ def one(tid):
     lab_bd = [fd + (b - 1) * bar_s for b in (f.get("boundaries_bars") or []) if 1 < b < f["grid"]["n_bars"]]
     out["section_p"], out["section_r"] = boundary_pr(lab_bd, [s for s in mu_sec if s > 1.0], bar_s)
     out["n_sections_mu"] = len(mu_sec); out["n_boundaries_lab"] = len(lab_bd); out["n_phrases_mu"] = len(stt.get("phrases", []))
+    # octave: when MU and the lab disagree by a factor of two, which one agrees with the file's tempo tag?
+    tag = f.get("bpm_tag")
+    out["bpm_tag"] = tag
+    if out["bpm_ratio"] and tag and (abs(out["bpm_ratio"] - 2) < 0.06 or abs(out["bpm_ratio"] - 0.5) < 0.015):
+        out["octave_sides_with_tag"] = "mu" if abs(out["bpm_mu"] / tag - 1) < 0.03 else ("lab" if abs(out["bpm_lab"] / tag - 1) < 0.03 else "neither")
+    else: out["octave_sides_with_tag"] = ""
+    # downbeat phase: if MU bars miss the lab downbeats, do they land on beat 3 (half-bar shift) or elsewhere?
+    if bars and lab_gd and out["downbeat_f_grid"] is not None and out["downbeat_f_grid"] < 0.8:
+        half = f["grid"]["bar_s"] / 2
+        out["downbeat_f_halfbar"] = fmeasure([d + half for d in lab_gd], bars)
+    else: out["downbeat_f_halfbar"] = None
     out["secs_mu"] = None
     return out
 
@@ -131,6 +142,14 @@ def main():
     m, n = med("lufs_delta"); print(f"  loudness delta MU-lab: median {m:+.2f} LU over {n}; |delta|>1 LU in {share('lufs_delta', lambda x: abs(x) > 1)[0]*100:.0f}%")
     m, n = med("vocal_r"); print(f"  per-bar vocal correlation: median r {m:.2f} over {n}; MU vocal mean {med('vocal_mean_mu')[0]:.2f} vs lab {med('vocal_mean_lab')[0]:.2f}")
     p, _ = med("section_p"); rr, n = med("section_r"); print(f"  sections vs lab boundaries (within 1 bar): precision median {p:.2f}, recall median {rr:.2f} over {n}; MU sections/track median {med('n_sections_mu')[0]:.0f}, phrases {med('n_phrases_mu')[0]:.0f}")
+    oc = [r for r in rows if r.get("octave_sides_with_tag")]
+    if oc:
+        c = {k: sum(1 for r in oc if r["octave_sides_with_tag"] == k) for k in ("mu", "lab", "neither")}
+        print(f"  octave disagreements ({len(oc)}): the tag sides with MU in {c['mu']}, with the lab in {c['lab']}, with neither in {c['neither']}")
+    hb = [r for r in rows if r.get("downbeat_f_halfbar") is not None]
+    if hb:
+        fixed = sum(1 for r in hb if r["downbeat_f_halfbar"] >= 0.8)
+        print(f"  downbeat disagreements vs the lab grid ({len(hb)}): {fixed} are a half-bar phase shift (MU bars on the lab's beat 3), {len(hb) - fixed} are something else")
     m, n = med("secs_mu")
     if m is not None: print(f"  seconds per track in the simulator: median {m:.1f} over {n}")
     if "--tsv" in sys.argv:
