@@ -35,6 +35,7 @@ enum Bench {
         let outDir = arg("-outdir")
         let limit = Int(arg("-limit") ?? "") ?? Int.max
         let enc = JSONEncoder(); enc.outputFormatting = [.sortedKeys]
+        enc.nonConformingFloatEncodingStrategy = .convertToString(positiveInfinity: "inf", negativeInfinity: "-inf", nan: "nan")  // silence measures -inf LUFS
         var runLog: [[String: Any]] = []
         let started = Date()
         print("MUBench on \(await UIDevice.current.model) \(ProcessInfo.processInfo.operatingSystemVersionString); \(jobs.count) job(s)")

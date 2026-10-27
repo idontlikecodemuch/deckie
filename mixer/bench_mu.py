@@ -14,6 +14,9 @@ CAMELOT.update({("minor", k): v for k, v in zip(["c", "dFlat", "d", "eFlat", "e"
 ENH = {"cSharp": "dFlat", "dSharp": "eFlat", "fSharp": "gFlat", "gSharp": "aFlat", "aSharp": "bFlat"}
 
 def secs(ct): return ct["value"] / ct["timescale"] if ct.get("timescale") else float("nan")
+def num(v):
+    """the harness writes non-finite floats as strings"""
+    return float(v) if isinstance(v, str) else v
 def camelot(sig): return CAMELOT.get((sig["mode"], ENH.get(sig["tonic"], sig["tonic"])), "?")
 
 def fmeasure(ref, est, tol=TOL):
@@ -70,12 +73,12 @@ def one(tid):
     out["key_lab"] = f["key"]["camelot"]; out["key_conf_lab"] = f["key"]["confidence"]
     out["key_rel"] = key_relation(out["key_mu"], out["key_lab"])
     lo = r.get("loudness") or {}
-    out["lufs_mu"] = (lo.get("integrated") or {}).get("value"); out["lufs_lab"] = f["loudness"]["integrated_lufs"]
-    out["lufs_delta"] = (out["lufs_mu"] - out["lufs_lab"]) if out["lufs_mu"] is not None else None
-    out["peak_mu"] = (lo.get("peak") or {}).get("value"); out["peak_lab"] = f["loudness"].get("true_peak_db")
+    out["lufs_mu"] = num((lo.get("integrated") or {}).get("value")); out["lufs_lab"] = f["loudness"]["integrated_lufs"]
+    out["lufs_delta"] = (out["lufs_mu"] - out["lufs_lab"]) if out["lufs_mu"] is not None and math.isfinite(out["lufs_mu"]) else None
+    out["peak_mu"] = num((lo.get("peak") or {}).get("value")); out["peak_lab"] = f["loudness"].get("true_peak_db")
     # per-bar vocal: average MU vocal activity inside each lab bar
     ia = (r.get("instrumentActivity") or {}).get("activity") or {}
-    voc = [(secs(t["time"]), t["value"]) for t in ia.get("vocal", [])]
+    voc = [(secs(t["time"]), num(t["value"])) for t in ia.get("vocal", [])]
     labv = (f.get("per_bar") or {}).get("vocal_prob") or []
     if voc and labv and lab_gd:
         times = [t for t, _ in voc]; xs, ys = [], []
