@@ -118,7 +118,9 @@ per-device history logs, and an optional `signatures/` store. Budget about 10 KB
 145 KB with three pitch variants. Signatures are irreversible by Apple's statement, so carrying them does not breach
 D3; they travel when the receiving device has no audio to regenerate from. Schema int plus per-track engine string;
 readers ignore unknown keys; merge by timestamps; history is a union. Moves by iCloud Drive, AirDrop and Files. No
-server. Schema in track A, section 5.
+server. Schema in track A, section 5. Tempo and key are stored as segments, and a tempo segment is the industry's
+grid marker (P12): start time, BPM, meter, beat of the bar; one for most tracks, several for transition edits and
+rubato intros.
 
 ### 5.3 Recognition
 
@@ -221,7 +223,9 @@ later. Android and Windows: not planned.
   density (Minimal, Simple, Full). Five in the "How you mix" sheet: pitch range cap; key (ignore, warn, prefer); style
   spread (stay in lane to roam); blend to cut (palette order); vocals (keep apart to overlap fine). Each carries a
   learned-default marker the DJ can override. Presets per gig: later.
-- 6.6 Set recording and export. Exists. Add: CUE and Mixcloud text export; line-in recording option.
+- 6.6 Set recording and export. Exists. Add: CUE and Mixcloud text export; line-in recording option; and (P12)
+  rekordbox XML export of the crate's grids, cues, BPM and key, with import of the same so an existing DJ's grids
+  and cues are kept.
 - 6.7 Learning from use. New. As in 5.5, on device only.
 
 ## 7. Staging (revised)

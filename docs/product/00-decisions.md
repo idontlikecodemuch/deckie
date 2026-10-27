@@ -137,3 +137,11 @@ Christopher says so; a yes moves it up into the dated decisions above.
   nine-signature catalogue, which matched 25 of 25 everywhere and needs no new code. Also: fix the tempo-only
   pitch reading to a two-match offset fit reported to 0.1 percent in about 16 s, instead of 20 s rounded to 0.5.
   Not now: an own pitch-invariant fingerprint (the proven designs are AGPL or paper-only). Spec 5.3.
+- **P12. The beat grid uses the industry's marker shape, and the crate imports and exports it.** Christopher
+  (Oct 27): a starter DJ's tool should match what they graduate to. Each tempo segment is stored as the same record
+  rekordbox's open XML uses for a grid marker, a start time, a BPM, a meter such as 4/4 and the beat of the bar the
+  marker sits on, and Serato's Beat Warp Markers express the same thing. Mix-in and mix-out windows and chosen
+  start points are expressible as cue points in the same XML. Deckie exports a rekordbox XML of grids, cues, BPM
+  and key from the crate, so a DJ's work travels with them, and imports one so an existing DJ's own grids and cues
+  are respected rather than redone. Exports go to a file, never into the music files. Key-change markers have no
+  industry equivalent and stay Deckie's own. Spec 5.2 and 6.6.
