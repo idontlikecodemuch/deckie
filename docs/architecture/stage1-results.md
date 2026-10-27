@@ -90,3 +90,38 @@ structure). Decision D11 stands. Numbers over all 373 tracks:
 - New: carry the bar length (beats per bar) per track; do not assume 4/4.
 - Not yet measured: a physical iPad or iPhone (speed, battery, thermal), and the second-opinion trigger rate, which
   needs the port's grid-fit confidence to exist first.
+
+## 1c. Key over time (done Oct 27, morning)
+
+Question from Christopher: does the analysis know when a song changes key or tempo partway through, or only the
+whole song? Tempo: the framework's beat list follows a change (Get Ur Freak On's transition edit reads 70, 75, 89,
+89 BPM in successive windows, where the lab's single grid said 90 and its start-tempo regression said 93). Key: the
+framework's API returns key as time ranges, so it was tested on songs with textbook final-chorus modulations from
+the library, run through `tools/mubench` in the simulator, with the lab's Essentia key model run in 20-second
+windows as the check that the modulations are really in the files.
+
+| Song | Framework | Essentia in 20 s windows | Known |
+|---|---|---|---|
+| Beyoncé, Love On Top | one range, C major, whole song | C to 180 s, then C#, D, Eb, E in 20 s steps | four semitone steps at the end |
+| Whitney Houston, I Will Always Love You | one range, A major | A to 180 s, then B | up a tone for the last chorus |
+| Céline Dion, My Heart Will Go On | one range, E major | E (with its relative minor and dominant flickering) to 260 s, then Ab | up for the last chorus |
+| Aerosmith, I Don't Want to Miss a Thing; Boyz II Men, End of the Road | one range each | not checked | |
+| Ricky Martin, Livin' La Vida Loca | one range, C# minor | C# minor throughout | no modulation after all |
+| Beyoncé, Crazy In Love (control) | one range, G minor | G minor, D minor and B-flat alternating | no modulation; the windowed estimator flickers among related keys |
+
+Findings:
+
+- The framework's key-over-time did not report any of three clear modulations. In practice it gives one key per
+  track, like the lab. It is a good whole-song key (section 1a) and nothing more.
+- A windowed key estimate finds real modulations easily, but on ordinary songs it flickers between a key, its
+  relative and its dominant, so it needs hysteresis: report a change only when it persists and is at least a
+  semitone away from the running key.
+- The key that matters for a join is not the song's key. It is the key of the outgoing track at its mix-out window
+  and of the incoming track at its mix-in window. For Love On Top that is E major, two Camelot steps from the C
+  major every whole-song analysis reports; for Whitney it is B, not A. Both the lab and the framework would mis-key
+  the join on these.
+
+Port-plan adjustment: keep the framework's whole-song key as the track's key, and add a small windowed key
+estimator (the HPCP vote already planned as the second opinion) over the mix-in and mix-out windows, plus a
+persisted change list for the few tracks that modulate. The scorer's key term reads the window keys, not the
+song key. Cost: a few hundred milliseconds per track on top of the framework.

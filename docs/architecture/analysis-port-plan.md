@@ -12,6 +12,12 @@ the disposition means it needs Accelerate, otherwise it is plain Swift over arra
 lines of Swift, medium 60 to 200, large over 200 or involving a model. Bar numbers stay 1-based with an exclusive
 `end_bar`, as in the lab. Line numbers refer to the files at commit 96e116c.
 
+
+> Stage 1 results (Oct 27): see `stage1-results.md`. Two adjustments from measurement: keep a per-bar tempo profile
+> and beats-per-bar in the crate (the framework's beats follow tempo changes; its single BPM is an average), and
+> compute key per mix window with the HPCP estimator, because the framework reports one key per track even on songs
+> that modulate (Love On Top, I Will Always Love You, My Heart Will Go On).
+
 ## 1. Inventory: analyze.py and local_tempo.py
 
 Measured on the 373 feature files, as calibration for what matters: median track 232 s and 114 bars; grid
