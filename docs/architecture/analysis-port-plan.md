@@ -17,6 +17,17 @@ lines of Swift, medium 60 to 200, large over 200 or involving a model. Bar numbe
 > and beats-per-bar in the crate (the framework's beats follow tempo changes; its single BPM is an average), and
 > compute key per mix window with the HPCP estimator, because the framework reports one key per track even on songs
 > that modulate (Love On Top, I Will Always Love You, My Heart Will Go On).
+>
+> Tempo representation (Oct 27, from the 373 beat lists): tempo is stored as segments, not per beat and not as two
+> endpoints. Measured in 30-second windows, 89 percent of tracks hold their tempo within 2 percent end to end and get
+> one segment; 11 percent move more than 2 percent and 6 percent more than 5 percent (transition edits such as Get
+> Ur Freak On 70 to 89 and NOKIA 124 to 105, structural changes such as Haunted 87 to 125, rubato intros such as
+> I Put A Spell On You). Some apparent changes are the tracker flipping between two feels (Afraid To Feel alternates
+> 127 and 100), so a segment opens only when the tempo moves more than about 2 percent and stays there for at least
+> 8 bars, with the second opinion consulted. Each segment: start bar and time, BPM, downbeat phase, beats per bar,
+> confidence; a few dozen bytes. Mix-in and mix-out tempo are the first and last segments' BPM. Key uses the same
+> segment list (one entry for nearly every track; the modulating few get more). Wobbly live recordings stay one
+> low-confidence segment and keep being demoted to cuts.
 
 ## 1. Inventory: analyze.py and local_tempo.py
 
