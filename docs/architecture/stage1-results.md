@@ -135,3 +135,35 @@ vinyl-style pitch to within 0.03 points from one 8-second match; two matches 8 s
 ratio to 0.02 to 0.05 points, where the app today waits 20 seconds and rounds to 0.5; estimating tempo from live
 beats alone is off by 0.35 to 1.6 points and by 4 during a blend, so beat tracking is a refinement, not a primary.
 Recommendation and measurements: see the report and proposal P11.
+
+## 1e. Key over time, round two: Apple's detector on windows (Oct 27, afternoon)
+
+Christopher's question: key markers matter in the analysis, not live; what if we run Apple's framework on segments
+we identify? Tested with a window mode in `tools/mubench` (`-keywindows 30 -keyhop 10`): each window is cut from the
+file as a temporary PCM file and the framework's key analysis alone is run on it, about 0.6 s per 30 s window in the
+simulator (17 s for a four-minute track at a 10 s hop; 3 windows, the two mix windows and the whole, would be under
+2 s).
+
+| Song | Apple's key per 30 s window, hop 10 s | After the hysteresis rule |
+|---|---|---|
+| Love On Top | C major for 18 windows, then C#, (F#), D, D, Eb, (Ab), E, E, E | C major, then E major from 240 s |
+| I Will Always Love You | B minor, F# minor (the a cappella start), A major x 15, B major x 10 | A major from 20 s, B major from 170 s |
+| My Heart Will Go On | E major (with its relative minor), then Ab major from 180 s | E major, then Ab major from 180 s |
+| Livin' La Vida Loca (control) | C# minor in all 24 windows | one segment |
+| Crazy In Love (control) | G minor with its relative Bb major, D minor and F major | one segment once the first segment is seeded with the song key |
+
+Compared with the lightweight estimator built earlier today (`mixer/key_light.py`: FFT chroma, three chroma
+variants, seven published key profiles, Pearson correlation): as a whole-song detector the best lightweight variant
+reached 75 percent exact against the lab's confident keys where Apple reaches 83; on windows it caught the same
+modulations but flagged a key change on 27 of 60 ordinary songs with a full segmentation, and on 4 to 20 percent of
+tracks with an ends-only rule, because pop songs cycle through chords and a window reads the chord as the key.
+Apple's windows are far cleaner (Livin' La Vida Loca: 24 identical windows). Full table: `mixer/key_light_*.tsv`,
+`mixer/key_ends_*.tsv`.
+
+Design that follows (refines D13): the song key is Apple's whole-track key; key segments come from Apple's key
+analysis on windows, seeded with the song key, with the hysteresis rule (a new key opens a segment only when it is
+outside the running key's tonal area, which is the same key, its relative, a wheel neighbour or the parallel mode,
+and persists for two windows if far on the wheel and four if near); the join reads the key of the segment that
+covers each mix window. Minimum cost version: three analyses per track (mix-in window, mix-out window, whole).
+The lightweight estimator stays in the lab as the level-2 fallback candidate. False-change rate on 60 ordinary
+tracks with Apple's windows: see below when the run completes.

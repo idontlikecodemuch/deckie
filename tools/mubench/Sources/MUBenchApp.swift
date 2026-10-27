@@ -22,6 +22,49 @@ enum Bench {
     }
     static func flag(_ name: String) -> Bool { ProcessInfo.processInfo.arguments.contains(name) }
 
+    /// Key over time by running Music Understanding's key analysis on windows cut from the file.
+    /// -keywindows <seconds> [-keyhop <seconds>] with -manifest/-outdir or -in/-out. Each window is written as a
+    /// temporary CAF (float PCM) and analysed on its own; output per track: [{"start":s,"end":s,"tonic":..,"mode":..,"secs":..}].
+    static func keyWindows(jobs: [(id: String, path: String)], win: Double, hop: Double, outDir: String?) async {
+        let started = Date()
+        for (n, job) in jobs.enumerated() {
+            let outPath = arg("-out") ?? ((outDir ?? NSTemporaryDirectory()) + "/" + job.id + ".keywin.json")
+            if !flag("-force"), FileManager.default.fileExists(atPath: outPath) { continue }
+            do {
+                let file = try AVAudioFile(forReading: URL(fileURLWithPath: job.path))
+                let sr = file.processingFormat.sampleRate; let total = Double(file.length) / sr
+                var rows: [[String: Any]] = []; var t = 0.0
+                let tmpDir = NSTemporaryDirectory() + "keywin-" + job.id; try? FileManager.default.createDirectory(atPath: tmpDir, withIntermediateDirectories: true)
+                while t < total - 5 {
+                    let len = min(win, total - t)
+                    let frames = AVAudioFrameCount(len * sr)
+                    guard let buf = AVAudioPCMBuffer(pcmFormat: file.processingFormat, frameCapacity: frames) else { break }
+                    file.framePosition = AVAudioFramePosition(t * sr)
+                    try file.read(into: buf, frameCount: frames)
+                    let tmp = URL(fileURLWithPath: tmpDir + "/w\(Int(t)).caf")
+                    let w = try AVAudioFile(forWriting: tmp, settings: file.processingFormat.settings, commonFormat: file.processingFormat.commonFormat, interleaved: file.processingFormat.isInterleaved)
+                    try w.write(from: buf)
+                    let t0 = Date()
+                    let session = try await MusicUnderstandingSession(asset: AVURLAsset(url: tmp))
+                    let res = try await session.analyze(for: [.key])
+                    let secs = Date().timeIntervalSince(t0)
+                    var row: [String: Any] = ["start": t, "end": t + len, "secs": secs]
+                    if let k = res.key, let best = k.ranges.max(by: { $0.range.duration.seconds < $1.range.duration.seconds }) {
+                        row["tonic"] = best.value.tonic.rawValue; row["mode"] = best.value.mode.rawValue; row["nRanges"] = k.ranges.count
+                    }
+                    rows.append(row)
+                    try? FileManager.default.removeItem(at: tmp)
+                    t += hop
+                }
+                let data = try JSONSerialization.data(withJSONObject: ["id": job.id, "win": win, "hop": hop, "duration": total, "windows": rows], options: [.sortedKeys])
+                try data.write(to: URL(fileURLWithPath: outPath))
+                let keys = rows.map { "\(($0["tonic"] as? String) ?? "-")/\((($0["mode"] as? String) ?? "-").prefix(3))" }
+                print("[\(n + 1)/\(jobs.count)] \(job.id) \(rows.count) windows, \(String(format: "%.1f", rows.reduce(0.0) { $0 + (($1["secs"] as? Double) ?? 0) }))s: " + keys.joined(separator: " "))
+            } catch { print("[\(n + 1)/\(jobs.count)] \(job.id) FAILED \(error)") }
+        }
+        print("DONE keywindows \(String(format: "%.0f", Date().timeIntervalSince(started)))s"); exit(0)
+    }
+
     static func run() async {
         var jobs: [(id: String, path: String)] = []
         if let p = arg("-in") { jobs = [(id: (p as NSString).deletingPathExtension.components(separatedBy: "/").last ?? "track", path: p)] }
@@ -33,6 +76,7 @@ enum Bench {
             }
         }
         let outDir = arg("-outdir")
+        if let kw = arg("-keywindows"), let win = Double(kw) { await keyWindows(jobs: jobs, win: win, hop: Double(arg("-keyhop") ?? "") ?? win / 2, outDir: outDir); return }
         let limit = Int(arg("-limit") ?? "") ?? Int.max
         let enc = JSONEncoder(); enc.outputFormatting = [.sortedKeys]
         enc.nonConformingFloatEncodingStrategy = .convertToString(positiveInfinity: "inf", negativeInfinity: "-inf", nan: "nan")  // silence measures -inf LUFS
