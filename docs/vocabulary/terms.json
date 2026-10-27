@@ -429,13 +429,18 @@
    "id": "echo-in",
    "term": "Echo in",
    "group": "moves",
-   "aliases": [],
-   "plain": "Christopher's word from the sprint, for something heard as the next song arriving through an echo.",
-   "expert": "Not found as a term in any source. The nearest named moves are echo freeze and spin-in.",
-   "deckie": "Open: Christopher to say what he meant. Until then the onboarding asks whether it is Echo out or Tease.",
+   "aliases": [
+    "delay in",
+    "echoed entry",
+    "echo entry"
+   ],
+   "plain": "The next song arrives through an echo: its first hits ring in over the playing song before it lands clean on the beat.",
+   "expert": "The mirror of echo out. Feed the incoming track's first stabs or hook through a beat-synced delay, dry it up on the one. Christopher's own name for it; tutorials teach the pieces under echo freeze, spin-in and teasing, but not this word.",
+   "deckie": "Shown as \"Echo in\", an entry flavour on the onboarding tiles and in the move options, paired with Echo out. Suggested when the playing song has a steady beat and the next one has a sparse start to echo over.",
    "related": [
     "echo-out",
-    "tease"
+    "tease",
+    "scratch-in"
    ]
   },
   {
@@ -661,18 +666,19 @@
   },
   {
    "id": "widen-the-range",
-   "term": "Widen the range",
+   "term": "Widen the beat range",
    "group": "tempo",
    "aliases": [
-    "more range",
-    "more bass range"
+    "more beat range",
+    "more range"
    ],
-   "plain": "A one-tap popup that lets the app offer songs that need a bigger speed change.",
-   "expert": "The DJ's ask when the fader can reach further than the picks assume.",
-   "deckie": "An in-set popup: \"Widen the range (±16)\". Christopher's \"more bass range\" may mean this; it is still an open question.",
+   "plain": "A one-tap popup during a set that lets the app offer songs that need a bigger speed change to match.",
+   "expert": "The DJ's ask when the fader can reach further than the picks assume: \"give me more beat range\".",
+   "deckie": "An in-set popup, \"Widen the beat range (±16)\", that lifts the pitch range cap for this gig. Christopher's \"more beat range\"; it maps straight to the pitch range cap slider.",
    "related": [
     "pitch-range-cap",
-    "pitch-range"
+    "pitch-range",
+    "tempo-term"
    ]
   },
   {

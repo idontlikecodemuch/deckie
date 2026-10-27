@@ -204,7 +204,7 @@ later. Android and Windows: not planned.
 - 6.4 Onboarding, under five minutes, only the first two steps required. Gear and pitch range (30 s). Then the
   chain (D12): the DJ picks three to five songs from their own crate in the order they would play them, and for each
   join taps how they would mix it from a palette of move words in the DJ's own vocabulary (research track E), in the
-  style of a rhythm-game prompt: "long blend", "cut on the one", "echo out", "scratch in" and so on. Each tap is a
+  style of a rhythm-game prompt: "long blend", "cut on the one", "echo out", "echo in", "scratch in" and so on. Each tap is a
   labelled join and seeds the dimensions directly (about two minutes). Optional and stronger: upload one of your own
   recorded sets, or upload a set whose style you like (a local file; it is analysed on device and never leaves).
   Optional: listen and pick, six to eight A/B rendered joins with "neither" (needs the renderer, Mac only today).
@@ -259,8 +259,10 @@ later. Android and Windows: not planned.
 
 ## 9. Open questions
 
-- Vocabulary: Christopher's "echo in" and "more bass range" matched no source; what did he mean? Whether the brake
-  versus hard-cut split goes into `score.py` or only into the labels.
+- Vocabulary (resolved Oct 27): "echo in" is a move, the next track arriving through a beat-synced echo before it
+  lands clean, the mirror of echo out; "more beat range" (not bass) is the one-tap ask to widen the BPM range of
+  picks, which maps to the pitch range cap. Still open: whether the brake versus hard-cut split goes into
+  `score.py` or only into the labels.
 
 - YouTube: the deeper look at sites that carry YouTube data and at mapping services (track B addendum).
 - Profiles: one per style, as proposed in 5.6, or something simpler (Christopher).
