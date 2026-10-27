@@ -18,6 +18,14 @@ lines of Swift, medium 60 to 200, large over 200 or involving a model. Bar numbe
 > compute key per mix window with the HPCP estimator, because the framework reports one key per track even on songs
 > that modulate (Love On Top, I Will Always Love You, My Heart Will Go On).
 >
+> Key segments (Oct 27, afternoon): the windowed HPCP estimate is replaced by Apple's own key analysis run on
+> windows (`tools/mubench -keywindows`), seeded with the song key and filtered by the tonal-area hysteresis rule;
+> it caught every tested modulation with clean controls where the lightweight estimator flagged chord changes as
+> key changes. Cost about 0.6 s per 30 s window; the minimum product version analyses the two mix windows and the
+> whole track. `mixer/key_light.py` stays as the level-2 fallback candidate. Vocal signal (track J): Apple's
+> instrument activity, `ranges` as the presence gate and the series for the overlap term, calibrated on a listening
+> set; HTDemucs (MIT) as the optional stem pass later.
+>
 > Tempo representation (Oct 27, from the 373 beat lists): tempo is stored as segments, not per beat and not as two
 > endpoints. Measured in 30-second windows, 89 percent of tracks hold their tempo within 2 percent end to end and get
 > one segment; 11 percent move more than 2 percent and 6 percent more than 5 percent (transition edits such as Get

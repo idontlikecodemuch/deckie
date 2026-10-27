@@ -156,3 +156,16 @@ Christopher says so; a yes moves it up into the dated decisions above.
   and key from the crate, so a DJ's work travels with them, and imports one so an existing DJ's own grids and cues
   are respected rather than redone. Exports go to a file, never into the music files. Key-change markers have no
   industry equivalent and stay Deckie's own. Spec 5.2 and 6.6.
+- **P13. The v1 vocal signal is Apple's instrument activity, calibrated against a listening set; a vocal stem
+  comes later as an optional pass.** Track J: the framework's vocal activity is a 50 ms series plus a "ranges"
+  view that acts as a presence gate; where it disagrees with the lab the framework is right far more often than
+  not (instrumentals, songs opening with a sung hook), and at a 0.3 cut 39 percent of tracks get an 8-bar clean
+  intro against the lab's 14, which fixes the sprint's short mix windows at no cost. The hole is sampled, chopped
+  or vocoded vocals, which read as not vocal; that is a product question about what the vocal slider means before
+  it is a model question. Runner-up for the upgrade and for the onboarding stem: HTDemucs (MIT) on the Mac and
+  larger iPads. Rejected with licence quotes: Open-Unmix, Spleeter, the RoFormers, PANNs, AST, BEATs, CLAP, the
+  Schlüter and Lehner CNNs. Test: a 40-track listening set labelled per bar by Christopher in three classes (sung,
+  sampled, none). Spec 5.1 and 6.4.
+- **Refinement of D13 (Oct 27): key segments come from Apple's key analysis on windows**, seeded with the song key
+  and filtered by the hysteresis rule, not from the lightweight estimator, which stays in the lab as the fallback
+  candidate. Stage 1 results section 1e.
