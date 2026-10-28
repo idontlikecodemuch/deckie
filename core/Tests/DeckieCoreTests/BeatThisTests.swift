@@ -27,7 +27,10 @@ import DeckieTestSupport
         }
         print("mel filter bank: \(identical) of \(total) weights identical to torchaudio's, largest difference \(worst)")
         #expect(worst <= 1e-5)
+        #if os(Linux)
+        // With glibc's expf only that one point differs; other C libraries may round other points differently.
         #expect(identical >= total - 3 * 16, "more than the three filters around one mel point differ")
+        #endif
     }
 
     /// Reflect padding: the STFT of a signal with `.reflect` equals the zero-padded STFT of the signal mirrored by
