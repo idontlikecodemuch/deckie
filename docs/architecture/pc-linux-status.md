@@ -19,7 +19,7 @@ Mac) reviews and merges this track's branch, `pc-linux`, and runs anything that 
   (entry 4). Then Beat This! through ONNX Runtime, loudness with libebur128, the key estimator, a vocal tagger.
 - Needed from Christopher: a yes or no on vendoring dr_mp3, the public-domain MP3 decoder (entry 4).
 - Needed from the Mac: nothing yet.
-- Open questions for the main session: AAC on Linux, options in entry 4.
+- Open questions for the main session: none; AAC on Linux is decided (entry 4, decision).
 
 ## Oct 28, 2026: the environment (entry 1)
 
@@ -252,6 +252,17 @@ faad2 is GPL, fdk-aac has its own licence that is not on the allowlist. The opti
    session should make, not this session.
 My recommendation: option 2 now (Linux is the builder's second platform; MP3 first), with option 1 planned if the
 trials show AAC pools on Linux matter.
+
+**Decision on AAC for Linux (the main session, Oct 28):** option 2 now, option 3 as the planned second step,
+option 1 only if the trials show AAC pools matter on Linux. Reasons: Mac and Windows decode AAC with their own
+platform decoders, so the gap is Linux only; DJ pools are overwhelmingly MP3; and option 3 keeps Deckie's own
+code clear of the GPL question with no build recipe to maintain. The shape it asked for: `deckie-build` reports
+unsupported files plainly, counted by file type, in its summary and in the crate's import log, never silently;
+when option 3 is built, it looks for an ffmpeg program on the user's machine, runs it as a separate process with
+explicit arguments to produce plain samples, never links it, never ships it, and `DEPENDENCIES.md` records it as
+an optional program the user provides, not a dependency; option 1, if it ever comes, is pinned by the source
+tarball's hash. The main session also confirmed that vendoring dr_mp3 is within the policy and that the download
+permission is Christopher's to grant in this session.
 
 **The main session's second reply, Oct 28**, in short: the spike is decision D14 on `main` (Swift everywhere for
 Deckie's own code, Rust only as a Windows fallback); pull request #1 stays the spike milestone and step 2 goes on
