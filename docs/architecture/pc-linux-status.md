@@ -21,12 +21,13 @@ Mac) reviews and merges this track's branch, `pc-linux`, and runs anything that 
   audio-derived features too: FLAC decoding, the resampler, per-bar bands, first and last sound, mel and MFCC,
   onset pattern and density, the novelty peaks (entry 8). Beat This! runs through ONNX Runtime from Swift
   with beats identical to the Python package (entry 9). Still to come in step 2: the vocal tagger (research done,
-  `docs/research/n-vocal-tagger.md`; two licence questions with the main session). In progress: the crate
-  reader and writer (step 4). Then the analyser is assembled into one pipeline matching the lab's feature file,
-  and step 5 (`deckie-build`).
-- Open questions for the main session (licence line): whether permissively licensed weights trained on data we
-  could not ship ourselves are acceptable; whether CC BY 4.0 weights are; and MPL 2.0, which now matters because
-  ONNX Runtime bundles Eigen under it (entry 9).
+  `docs/research/n-vocal-tagger.md`; the main session said yes to the recommendation, with conditions, entry
+  10; Christopher's approval of the two model downloads is pending). Step 4, the crate reader and writer, is
+  built with a design note for the main session to review (entry 10). Next: the vocal tagger, then the analyser
+  assembled into one pipeline matching the lab's feature file, then step 5 (`deckie-build`).
+- Needed from Christopher: approval of the two vocal-model downloads (Spleeter's ONNX files, EfficientAT's weights).
+- Open questions for the main session: MPL 2.0, which now matters because ONNX Runtime bundles Eigen under it
+  (entry 9); and the crate design note's proposals (entry 10).
 - Needed from Christopher: nothing right now (dr_mp3 vendoring approved Oct 28; dr_flac next, same pattern,
   will need the same yes, see entry 4, working mode).
 - Needed from the Mac, when convenient (not blocking): one check of the loudness module against the real
@@ -502,3 +503,36 @@ quoted with sources): the lab's Essentia models are CC BY-NC-SA and cannot ship.
 estimated 2 to 5 s per track) read as vocal energy per bar, plus EfficientAT (MIT, under 1 s) as the timbre
 embedding and a second opinion. Runner-up musicnn (ISC), held back by its training data's licence. Nothing has
 been run yet; the final choice goes through track J's listening test on the Mac.
+
+## Oct 28, 2026: the crate reader and writer, and the licence decisions (entry 10)
+
+**The main session's licence decisions, Oct 28** (recorded on `main` as a note on D14 and in the charter):
+weights published under an allowed licence ship even when the training data could not be shipped by us, unless
+that data's own licence forbids commercial use, in which case the weights count as non-commercial whatever they
+say; where the data's licence is unknown, the trainer must be the data's rights-holder (Deezer on its own
+catalogue qualifies); data set, licence and trainer go into `DEPENDENCIES.md` beside the weights. CC BY 4.0 joins
+the allowlist for model weights and data only, never code, with attribution in the app's acknowledgements and in
+`DEPENDENCIES.md`, and nothing added that stops the files' extraction. So Spleeter and EfficientAT are in (with
+AudioSet attributed), musicnn and CLAP are out. Three conditions on the vocal work: the per-bar vocal number
+lands in the lab's shape (one 0-to-1 value per bar, the lab's patch-to-bar averaging) so the yardstick can
+compare it now and Apple's instrument activity later (on Apple, P13 keeps Apple's signal as v1; this pair is
+the core's own signal and the fallback everywhere else); neither model file is committed, both fetched by a
+pinned-hash script, and the analyser runs without them with the vocal field absent from `features_present`;
+and the per-track CPU time is reported like the other modules.
+
+**The crate (step 4).** The documents turned out to fix more than expected (spec section 5.2 with D11, research
+track A section 5, the overview, the port plan, track L): a package folder `<name>.deckiecrate` holding
+`manifest.json`, `crate.json` and compact half-precision sidecars for the per-bar series; an integer schema with
+a minimum reader version and unknown keys ignored; tempo and key as segments; track L's engine record, fidelity,
+per-block source and confidence and `features_present`; no audio, no absolute paths, signatures from an Apple
+device. All of that is now implemented in a new module `DeckieCrate` with a canonical writer (same analysis,
+same bytes), a reader that checks versions, required fields, array lengths against the bar count and bar ranges
+and names the field path in every problem, and a converter so every lab feature file becomes a crate record.
+Measured: all 373 lab files convert and round-trip with no problem and per-bar values within 0.03 of the lab's
+(half precision); the five-track example crate under `core/fixtures/` is 20 KB, and all 373 tracks as one crate
+come to 1.5 MB, about 4 KB a track, inside track A's budget; 26 tests. `docs/architecture/crate-format.md` (185
+lines) separates what the documents fixed from eight proposals for the main session to accept or change, among
+them: where track L's additions sit; fidelity 0 for lab records so a benchmarked engine redoes them; engine
+family names `apple-mu`, `deckie-oss`, `lab`; a few additive fields (tempo segments, fade start, tags, a style
+block); the sidecar headers; the canonical form; and the lab conversion rules (the EffNet embedding never
+travels, by the licence rule; the steady-beat end clamped on 21 files where the lab rounds past the last bar).
