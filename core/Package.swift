@@ -15,7 +15,11 @@
 // library at run time (dlopen, or LoadLibraryExW on Windows), so nothing links it and the package builds without it.
 // DeckieInference: ONNX Runtime from Swift (`OnnxRuntime`, `OnnxSession`) and the Beat This! beat tracker
 // (`BeatTracker`) on it; the tracker's front end, chunking and peak picking are plain Swift in DeckieCore.
-// DeckieTestSupport: synthesised test audio and the beat fixture, shared by the test targets (not a product).
+// DeckieEngine: the Windows and Linux analyser, mixer/analyze.py's pipeline in the lab's order on the ported pieces
+// (decoder, Beat This! through ONNX Runtime, DeckieCore's DSP); its record serialises to the lab's feature JSON and
+// converts to a crate track.
+// DeckieTestSupport: synthesised test audio (drums, chords) and the beat fixture, shared by the test targets (not a
+// product).
 import PackageDescription
 
 let package = Package(
@@ -27,6 +31,7 @@ let package = Package(
         .library(name: "DeckieDecode", targets: ["DeckieDecode"]),
         .library(name: "DeckieInference", targets: ["DeckieInference"]),
         .library(name: "DeckieCrate", targets: ["DeckieCrate"]),
+        .library(name: "DeckieEngine", targets: ["DeckieEngine"]),
     ],
     targets: [
         .target(name: "DeckieAudio"),
@@ -39,6 +44,8 @@ let package = Package(
         .target(name: "DeckieDecode", dependencies: ["DeckieAudio", "CDrMp3", "CDrFlac"]),
         .target(name: "COnnxRuntime", linkerSettings: [.linkedLibrary("dl", .when(platforms: [.linux]))]),
         .target(name: "DeckieInference", dependencies: ["COnnxRuntime", "DeckieAudio", "DeckieCore"]),
+        .target(name: "DeckieEngine",
+                dependencies: ["DeckieDecode", "DeckieCore", "DeckieInference", "DeckieCrate", "DeckieAudio"]),
         .target(name: "DeckieTestSupport", path: "Tests/DeckieTestSupport"),
         .testTarget(name: "DeckieCoreTests", dependencies: ["DeckieCore", "DeckieLab", "DeckieAudio", "DeckieTestSupport"],
                     exclude: ["Fixtures"]),
@@ -46,5 +53,8 @@ let package = Package(
         .testTarget(name: "DeckieInferenceTests", dependencies: ["DeckieInference", "DeckieCore", "DeckieAudio", "DeckieTestSupport"],
                     exclude: ["Fixtures"]),
         .testTarget(name: "DeckieCrateTests", dependencies: ["DeckieCrate", "DeckieLab", "DeckieCore"]),
+        .testTarget(name: "DeckieEngineTests",
+                    dependencies: ["DeckieEngine", "DeckieDecode", "DeckieCore", "DeckieInference", "DeckieCrate",
+                                   "DeckieLab", "DeckieAudio", "DeckieTestSupport"]),
     ]
 )
