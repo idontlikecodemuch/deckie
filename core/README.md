@@ -4,9 +4,10 @@ Deckie's own ideas, written once in plain Swift with no Apple-only framework, so
 and Linux crate builder share them. Charter: `docs/architecture/pc-linux-track.md`; running log:
 `docs/architecture/pc-linux-status.md`.
 
-- `Sources/DeckieCore`: the beat grid fit (`GridFit.swift`), the Camelot wheel (`Camelot.swift`), tempo
-  relations (`TempoMultipliers.swift`), directed pair scoring (`PairScoring.swift`) and the top lists
-  (`Recommendations.swift`). Ported line for line from `mixer/analyze.py` and `mixer/score.py`;
+- `Sources/DeckieCore`: the beat grid fit (`GridFit.swift`), start and end tempo (`LocalTempo.swift`), the
+  Camelot wheel (`Camelot.swift`), tempo relations (`TempoMultipliers.swift`), directed pair scoring
+  (`PairScoring.swift`) and the top lists (`Recommendations.swift`). Ported line for line from
+  `mixer/analyze.py`, `mixer/local_tempo.py` and `mixer/score.py`;
   `PythonCompat.swift` holds the rounding and modulo details that keep the numbers identical. `Loudness/` is the
   loudness module, `DSP/` and `Key/` the key estimator and the signal processing under it; both are described
   below.
@@ -60,6 +61,20 @@ such as one bar (`loudness(from:to:)`, the lab's per-bar `lufs_st`), is one subt
 the lab uses; it reads about 0.04 LU below the coefficients BS.1770 publishes, which `design: .bs1770` gives
 instead (as libebur128 does). The algorithms follow pyloudnorm (MIT) and scipy by description; no code is
 copied. Four minutes of stereo take about a second in a debug build.
+
+**Local tempo** (`Sources/DeckieCore/LocalTempo.swift`) is the lab's start and end tempo, `mixer/local_tempo.py`,
+for tracks that do not keep one tempo (tempo-change edits, slow intros, rideouts, live drummers).
+`LocalTempo.compute(input)` fits the raw detected beats of the first and last 30 s of sound, of both mix windows and
+of every 15 s segment with the grid fit's window regression; each window then takes the global tempo when its beats
+already sit on the grid, its own tempo when it has a steady beat (residual within 15 ms over at least 16 beats) that
+differs by more than 1.5 percent, and otherwise the global tempo, untrusted. The result is the lab's whole
+`local_tempo` block, rounded as the lab rounds it: start and end tempo with their trust and rule, drift, the 15 s
+profile and its range, the steady span in seconds and bars, the first downbeat at each end, and the six flags.
+`FeatureFile.localTempoInput` (DeckieLab) reads the input from a feature file. Run on the committed feature files it
+gives back all 373 committed blocks, every field identical on 372; on the last, one mix-in residual is a rounding tie
+(5.25 ms) that numpy's least squares rounds up and the port's rounds down (`LocalTempoTests.swift` says why that is
+accepted and nothing else is). The lab's current script reproduces every committed block from the committed data,
+so the feature files are the reference and there is no fixture.
 
 **Key estimator** (`Sources/DeckieCore/Key/`, on `Sources/DeckieCore/DSP/`) is the lab's lightweight estimator,
 `mixer/key_light.py`, in the variant the charter names: chroma from a plain FFT, the edma profile, Pearson
