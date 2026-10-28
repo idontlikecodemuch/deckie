@@ -2,8 +2,9 @@ import Foundation
 import Testing
 import DeckieInference
 
-/// What this machine has. ONNX Runtime is fetched per machine (core/Tools/fetch-onnxruntime.sh), so the tests that
-/// need it are skipped, with the reason, where it is missing: a fresh checkout, and the Windows CI probe.
+/// What this machine has. ONNX Runtime and the Beat This! model are fetched or made per machine (core/Tools/
+/// fetch-onnxruntime.sh, core/Tools/export_beat_this.py), so the tests that need them are skipped, with the reason,
+/// where they are missing: a fresh checkout, and the Windows CI probe.
 enum Available {
     static let library: String? = {
         let found = OnnxRuntime.locateLibrary()
@@ -13,7 +14,16 @@ enum Available {
         return found
     }()
 
+    static let model: String? = {
+        let found = BeatTracker.locateModel()
+        if found == nil {
+            print("Beat This! model not found (looked at: \(BeatTracker.modelCandidates().joined(separator: ", "))): the beat tracker tests are skipped; run core/Tools/export_beat_this.py or set \(BeatTracker.modelEnvironmentVariable)")
+        }
+        return found
+    }()
+
     static var runtime: Bool { library != nil }
+    static var beatTracker: Bool { library != nil && model != nil }
 
     static let fixtures = URL(fileURLWithPath: #filePath).deletingLastPathComponent().appendingPathComponent("Fixtures")
     /// Tools/make_onnx_fixture.py's model: scaled = 2 x, shifted = 2 x + bias, x of shape [n, 3].
