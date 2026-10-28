@@ -1,0 +1,120 @@
+import Foundation
+import DeckieAudio
+import DeckieCore
+
+/// What went wrong before or after the model ran (ONNX Runtime's own errors are `OnnxRuntimeError`).
+public enum BeatTrackerError: Error, Equatable, CustomStringConvertible {
+    /// The tracker reads 22,050 Hz; 44,100 Hz is halved (`Decimator`); other rates need a resampler, not built yet.
+    case resampleFirst(sampleRate: Int)
+    /// No model file at any place looked (DECKIE_BEAT_THIS_MODEL, or the checkout's core/.models).
+    case modelNotFound(searched: [String])
+    /// The model does not have Beat This!'s input and outputs.
+    case unexpectedModel(String)
+
+    public var description: String {
+        switch self {
+        case .resampleFirst(let rate):
+            return "the beat tracker reads 22050 Hz audio and can halve 44100 Hz; resample \(rate) Hz audio first"
+        case .modelNotFound(let searched):
+            return "Beat This! model not found (looked at: \(searched.joined(separator: ", "))); run core/Tools/export_beat_this.py or set \(BeatTracker.modelEnvironmentVariable)"
+        case .unexpectedModel(let message): return "not a Beat This! model: \(message)"
+        }
+    }
+}
+
+/// A piece's beats and downbeats, with the logits they came from and where the time went.
+public struct BeatTrackerResult: Sendable {
+    /// Beat and downbeat positions in frames (50 a second) and in seconds.
+    public var beats: BeatThisBeats
+    /// The network's frame-wise logits for the whole piece.
+    public var logits: BeatThisLogits
+    /// Seconds spent: mono and resampling, the spectrogram, the network (all chunks), the postprocessor.
+    public var timing: (resampling: Double, spectrogram: Double, model: Double, postprocessing: Double)
+}
+
+/// The Beat This! beat tracker (final0 checkpoint, exported to ONNX by core/Tools/export_beat_this.py) on ONNX
+/// Runtime: audio in, beat and downbeat times out, as the `beat_this` package's `Audio2Beats` computes them with its
+/// "minimal" postprocessor (no DBN).
+///
+/// Steps: the channels are averaged (`AudioBuffer.mono`); audio at 22,050 Hz is used as it is and 44,100 Hz is
+/// halved by `Decimator.halve` (the package uses soxr; the difference moves logits slightly, measured in the
+/// tests); any other rate throws `resampleFirst` until a resampler is built. Then `BeatThisFrontEnd` makes the
+/// spectrogram, `BeatThisChunking` runs the network over 1,500-frame chunks, and `BeatThisPostProcessor` picks the
+/// peaks. Nothing touches the network: the model and ONNX Runtime are files on disk.
+public final class BeatTracker: @unchecked Sendable {
+    public static let modelEnvironmentVariable = "DECKIE_BEAT_THIS_MODEL"
+    public static let modelFileName = "beat_this_final0.onnx"
+
+    /// Where the model is looked for: DECKIE_BEAT_THIS_MODEL alone if it is set, else core/.models in the checkout
+    /// this was built from (where the export script writes it).
+    public static func modelCandidates() -> [String] {
+        if let path = ProcessInfo.processInfo.environment[modelEnvironmentVariable], !path.isEmpty { return [path] }
+        return [OnnxRuntime.coreFolder.appendingPathComponent(".models").appendingPathComponent(modelFileName).path]
+    }
+
+    /// The first candidate that exists, or nil.
+    public static func locateModel() -> String? {
+        modelCandidates().first { FileManager.default.fileExists(atPath: $0) }
+    }
+
+    public let session: OnnxSession
+    public let frontEnd = BeatThisFrontEnd()
+
+    /// Loads the model (from `modelPath`, or the first of `modelCandidates()` that exists) into ONNX Runtime
+    /// (`runtime`, or `OnnxRuntime.load()`).
+    public init(modelPath: String? = nil, runtime: OnnxRuntime? = nil,
+                options: OnnxRuntime.SessionOptions = OnnxRuntime.SessionOptions()) throws {
+        let path: String
+        if let modelPath {
+            path = modelPath
+        } else {
+            guard let found = Self.locateModel() else { throw BeatTrackerError.modelNotFound(searched: Self.modelCandidates()) }
+            path = found
+        }
+        let rt = try runtime ?? OnnxRuntime.load()
+        session = try rt.makeSession(modelPath: path, options: options)
+        guard session.inputNames == ["spect"], Set(session.outputNames) == ["beat", "downbeat"] else {
+            throw BeatTrackerError.unexpectedModel("inputs \(session.inputNames), outputs \(session.outputNames); expected spect in, beat and downbeat out")
+        }
+    }
+
+    /// The network's logits for one chunk of `rows` spectrogram frames (`input`: rows x 128 values).
+    public func chunkLogits(_ input: [Float], rows: Int) throws -> BeatThisLogits {
+        let out = try session.run(["spect": OnnxTensor(shape: [1, rows, BeatThisSpectrogram.bands], values: input)])
+        guard let beat = out["beat"], let downbeat = out["downbeat"], beat.values.count == rows,
+              downbeat.values.count == rows else {
+            throw BeatTrackerError.unexpectedModel("expected \(rows) beat and downbeat logits")
+        }
+        return BeatThisLogits(beat: beat.values, downbeat: downbeat.values)
+    }
+
+    /// The logits for a whole spectrogram, chunk by chunk.
+    public func logits(_ spectrogram: BeatThisSpectrogram) throws -> BeatThisLogits {
+        try BeatThisChunking.run(spectrogram) { input, rows in try chunkLogits(input, rows: rows) }
+    }
+
+    /// Mono audio at 22,050 Hz, from mono audio at 22,050 or 44,100 Hz.
+    public static func modelRateSignal(_ mono: [Float], sampleRate: Int) throws -> [Float] {
+        switch sampleRate {
+        case BeatThisFrontEnd.sampleRate: return mono
+        case 2 * BeatThisFrontEnd.sampleRate: return Decimator.halve(mono)
+        default: throw BeatTrackerError.resampleFirst(sampleRate: sampleRate)
+        }
+    }
+
+    /// Beats and downbeats of `audio`.
+    public func track(_ audio: AudioBuffer) throws -> BeatTrackerResult {
+        let t0 = Date()
+        let y = try Self.modelRateSignal(audio.mono(), sampleRate: audio.sampleRate)
+        let t1 = Date()
+        let spectrogram = frontEnd.spectrogram(y)
+        let t2 = Date()
+        let logits = try logits(spectrogram)
+        let t3 = Date()
+        let beats = BeatThisPostProcessor.minimal(logits)
+        let t4 = Date()
+        return BeatTrackerResult(beats: beats, logits: logits,
+                                 timing: (t1.timeIntervalSince(t0), t2.timeIntervalSince(t1), t3.timeIntervalSince(t2),
+                                          t4.timeIntervalSince(t3)))
+    }
+}
