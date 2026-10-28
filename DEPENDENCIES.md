@@ -5,11 +5,15 @@ What Deckie's PC and Linux track relies on that it did not write itself; last ch
 licence is quoted here before it is adopted. A hash, or digest, is a long fingerprint computed from a file's exact
 bytes: change one byte and it changes, so a matching hash proves a file is the one recorded here.
 
-**In short:** one toolchain and two GitHub Actions helpers, used only to build and test, and two vendored C files,
+**In short:** one toolchain and three GitHub Actions helpers, used only to build and test; two vendored C files,
 dr_mp3, the MP3 decoder (section 4), and dr_flac, the FLAC decoder (section 5), which are compiled into
-`DeckieDecode` and so are runtime dependencies (code that travels inside a Deckie program). Deckie's Swift package
-(`core/`) declares no packages from elsewhere, so it has no `Package.resolved` (Swift's list of exact package
-versions); dr_mp3 and dr_flac are copied files pinned by their hashes, not packages.
+`DeckieDecode` and so are runtime dependencies (code that travels inside a Deckie program); ONNX Runtime, the engine
+that runs the beat tracker's model (section 6), of which only the C header is vendored, its library being opened at
+run time from a file fetched per machine, never linked and never committed; and the Beat This! beat tracker's
+trained weights (section 7), exported to a model file per machine by a script whose Python tools are
+development-only. Deckie's Swift package (`core/`) declares no packages from elsewhere, so it has no
+`Package.resolved` (Swift's list of exact package versions); dr_mp3, dr_flac and the ONNX Runtime header are copied
+files pinned by their hashes, not packages.
 
 ## 1. The Swift 6.4.1 toolchain
 
@@ -66,8 +70,9 @@ just because parts of Swift's runtime (the support code every Swift program runs
 |---|---|---|---|
 | `actions/checkout` | `v4` | copies this repository onto the build machine | both workflows |
 | `compnerd/gha-setup-swift` | `main` (its documented reference; its `v3` tag does not exist) | installs the Swift toolchain on Windows | `core-windows.yml` |
+| `actions/cache` | `v4` | keeps ONNX Runtime's library and the exported Beat This! model between runs (sections 6 and 7), keyed on the hashes of the scripts that make them | `core-linux.yml` |
 
-Both are recorded by version tag only, which, like an image tag, the publisher can move. Pinning each to a commit
+All three are recorded by version tag only, which, like an image tag, the publisher can move. Pinning each to a commit
 hash (the fingerprint of one exact version of its code) is pending, and so is quoting their licences: this session
 may not read other GitHub repositories, so it cannot look either up. Nothing they do ends up in a Deckie product.
 
@@ -75,7 +80,10 @@ may not read other GitHub repositories, so it cannot look either up. Nothing the
 
 When a Windows or Linux build ships, the Swift runtime and Foundation (with its copy of ICU, a text-handling
 library) travel with it; each will be listed here with its licence quoted before that build is released. dr_mp3
-and dr_flac (sections 4 and 5) already travel inside anything built with `DeckieDecode`.
+and dr_flac (sections 4 and 5) already travel inside anything built with `DeckieDecode`. A build that tracks beats
+also carries ONNX Runtime's library (section 6) and the Beat This! model file (section 7); ONNX Runtime's library
+contains Eigen, under MPL 2.0, which the allowlist has not decided, so that build needs the main session's decision
+first.
 
 ## 4. dr_mp3, the MP3 decoder (vendored)
 
@@ -269,6 +277,180 @@ and `swift test`: the FLAC tests pin every sample of the test tones and the mess
 `maxBlockSizeInPCMFrames` and `memoryStream` (its read position), and the current frame's header numbers and
 `pcmFramesRemaining`; check they still mean the same.
 
+## 6. ONNX Runtime, the model runtime (header vendored, library opened at run time)
+
+ONNX Runtime is Microsoft's engine for running trained models saved as ONNX (an open file format for neural
+networks). `DeckieInference` uses it to run the Beat This! model (section 7). Microsoft's own Swift package builds
+only on Apple's systems (track M section 6), so Deckie calls ONNX Runtime's C interface itself:
+
+- **The header is vendored.** `onnxruntime_c_api.h` and the two headers it includes, `onnxruntime_ep_c_api.h` and
+  `onnxruntime_error_code.h`, are copied unmodified from the Linux release archive into
+  `core/Sources/COnnxRuntime/include/` (the Windows archive's copies are the same but for Windows line endings).
+  With a small C file of Deckie's, `deckie_ort.c`, they make the C target `COnnxRuntime`.
+- **The library is opened at run time, not linked.** `deckie_ort.c` opens the shared library with `dlopen`
+  (`LoadLibraryExW` on Windows), looks up its one entry point, `OrtGetApiBase`, and asks it for the function table
+  of the header's API version, 31; a library too old to offer it is refused with its version. So `swift build`
+  needs no ONNX Runtime anywhere, which keeps the Windows probe and a fresh checkout building, and the tests that run
+  a model skip, saying why, where the library is missing. The library's path comes from the environment variable
+  `DECKIE_ONNXRUNTIME_LIB`, or by default `core/.deps/onnxruntime/lib/libonnxruntime.so` in the checkout.
+- **The library is fetched per machine, not committed.** `core/Tools/fetch-onnxruntime.sh` downloads the Linux
+  archive, checks its SHA-256 (below) before unpacking anything, and unpacks it into `core/.deps/onnxruntime/`, which
+  `.gitignore` keeps out of the repository; CI caches that folder. Nothing is downloaded at build time or during
+  analysis, and Deckie switches ONNX Runtime's telemetry off (`DisableTelemetryEvents`) when it opens it.
+
+Christopher approved downloading the release archives on Oct 28, 2026, and the lead took responsibility for them.
+
+| | |
+|---|---|
+| Version | 1.31.1: release tag `v1.31.1`, built Oct 23, 2026 from commit `41d4d61f14b9c1dd0b2ccda1e9b85dd415fd0496` (the archives' `GIT_COMMIT_ID`); C API version 31 |
+| Source | `https://github.com/microsoft/onnxruntime/releases/download/v1.31.1/<archive>`, downloaded Oct 28, 2026, when it was the latest release. GitHub's API refused this session (`releases/latest` answered that the repository is not enabled for it), so "latest" was read from the repository's tags (`git ls-remote --tags`, the highest `vX.Y.Z`), not from GitHub's own "latest" label |
+| Linux x86_64 archive | `onnxruntime-linux-x64-1.31.1.tgz`, 11,413,655 bytes, SHA-256 `c849e36a1ef3e22d4ff217b9d1ce4a3cf5b9467b975610913ae959ad5b16bdc9`, pinned in `fetch-onnxruntime.sh` |
+| Windows x64 archive | `onnxruntime-win-x64-1.31.1.zip`, 82,929,944 bytes, SHA-256 `5869e26bb25314375f2d5ef1877e3ea06b1543d6c710e6e4a1ec2f7177ab4b2c`; no script fetches it yet (the note at the top of `fetch-onnxruntime.sh` says how to use it); most of it is debug symbols (`.pdb`, 429 MB unpacked), which are not needed |
+| The libraries in them | `lib/libonnxruntime.so.1.31.1`, 29,345,384 bytes, SHA-256 `a96f132e5eb5ca04e23a7d2fc1078fb95aa591e8d71d0f237702ece3a1e0f4ea`; `lib/onnxruntime.dll`, 17,253,728 bytes, SHA-256 `cb2fa518b18356617f6f9f460c012501da2819ec7e5c1d80bd8f5de20492db0c` |
+| Vendored headers | `onnxruntime_c_api.h`, 422,790 bytes, SHA-256 `43d584f596ef66820421317df32a79a95fc1d39ee46cb3971a870c08d8ba4baa`; `onnxruntime_ep_c_api.h`, 165,249 bytes, `b64036772115dbc6f06a900487ce22d34e862100db03e2ad62210758e27a19b2`; `onnxruntime_error_code.h`, 2,775 bytes, `5ce3b054e798eced8d14f5b86e98692fd33470463f96194ce0700a2d53dd8721` |
+
+**Licence:** MIT, on the allowlist. Quoted from the archives' `LICENSE` (1,073 bytes, SHA-256 `2f07c72751ae...`, the
+same text in both); each vendored header begins "Licensed under the MIT License":
+
+```text
+MIT License
+
+Copyright (c) Microsoft Corporation
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+```
+
+**What the library carries.** The archives' `ThirdPartyNotices.txt` (338,088 bytes, SHA-256 `143764b952fd...`) lists
+the code of others built into ONNX Runtime, across all of its builds. Most of it is under licences on the allowlist
+(Apache 2.0, BSD, MIT, zlib, public domain). One entry is not: **Eigen**, a C++ maths library, under the Mozilla
+Public License 2.0, the licence the allowlist leaves undecided ("this decides Symphonia and Eigen"). ONNX Runtime's
+CPU kernels use Eigen, so the library file contains MPL 2.0 code. MPL 2.0 is copyleft file by file: it covers
+Eigen's own files (unmodified in ONNX Runtime's build) and not Deckie's code, and a binary distribution must tell
+its users where Eigen's source is. Nothing ships yet, so this does not hold up the mechanic, and nothing of ONNX
+Runtime's is built into Deckie's program; but a Windows or Linux build that carries ONNX Runtime needs the main
+session's MPL 2.0 decision before it is released.
+
+**How to update:** choose the release and read its notes for changes to the C API; download both archives from the
+release page; record their sizes and SHA-256 values here, and the Linux archive's in `fetch-onnxruntime.sh`
+(`VERSION`, `SHA256`, `SIZE`); copy the three headers from the Linux archive over the vendored ones and record their
+hashes (a new API version changes `ORT_API_VERSION`, so the test that expects 31 changes with it; the shim then
+refuses libraries older than the header, while newer libraries still offer the older version); re-quote `LICENSE`
+and reread `ThirdPartyNotices.txt` for new licences; delete `core/.deps/onnxruntime` and run the script again; run
+`swift build` (no warnings) and `swift test`, which reruns the beat tracker's parity tests. CI fetches the new
+archive once, since the script's hash is its cache key.
+
+## 7. Beat This!, the beat tracker (weights exported per machine; development-only Python tools)
+
+Beat This! is the beat and downbeat tracker of Francesco Foscarin, Jan Schlüter and Gerhard Widmer (Institute of
+Computational Perception, JKU Linz; "Beat This! Accurate Beat Tracking Without DBN Postprocessing", ISMIR 2024),
+published as the Python package `beat_this` with trained checkpoints (a checkpoint is a saved set of a network's
+learned numbers, its weights). Deckie uses the `final0` checkpoint, the paper's main model trained on all its data
+except the GTZAN set, with seed 0, exported to ONNX:
+
+- `core/Tools/export_beat_this.py` loads the checkpoint through the package's own loader, which downloads it once
+  from the authors' file share (the package's `CHECKPOINT_URL`; the checkpoints are not on GitHub's release pages),
+  checks its SHA-256, exports the network alone (spectrogram in, beat and downbeat logits out, for any length) to
+  `core/.models/beat_this_final0.onnx`, which `.gitignore` keeps out of the repository, and checks the export
+  against PyTorch. Like ONNX Runtime's library, the model file is made per machine; CI makes it once and caches it.
+- The rest of the package's method, the spectrogram, the chunking of long pieces and the peak picking, is ported to
+  Swift in `DeckieCore` (`Sources/DeckieCore/Beat/`), following the package's source; no Python runs during
+  analysis.
+
+Christopher approved the downloads (the model, the package and the Python tools that export it) on Oct 28, 2026,
+and the lead took responsibility for them.
+
+| | |
+|---|---|
+| Package | `beat_this` 1.1.0 from PyPI (`beat_this-1.1.0-py3-none-any.whl`, SHA-256 `3f2b2d1e027c6dac380bf80c71555e3c28a4036a7f1af20129a945915a72a645`); repository `https://github.com/CPJKU/beat_this` |
+| Checkpoint | `final0`: `https://cloud.cp.jku.at/public.php/dav/files/7ik4RrBKTS273gp/final0.ckpt`, downloaded Oct 28, 2026, 81,058,141 bytes, SHA-256 `8c328b45f59d8dd3dff219253ff6a8d6482be57d0133a29140e2febbf8eb8331` (pinned in the export script, which refuses any other file). A PyTorch Lightning 2.3.0 checkpoint of 20,251,712 parameters, read with `weights_only=True` (tensors only, no code is run) |
+| Exported model | `beat_this_final0.onnx`, 82,098,829 bytes, SHA-256 `f1d932049c9344ae3b1192673ef895c97807ba59fc1aa3d4e8d3d17c43c9b8dc` (also in the export script, which says whether a new export matches), ONNX opset 17; input `spect` (float32, 1 x T x 128), outputs `beat` and `downbeat` (float32, 1 x T), T free. Two exports here gave these same bytes: one under Python 3.13, one in a fresh Python 3.12 environment set up as CI sets it up |
+| Export check | largest difference between ONNX Runtime 1.31.1 and PyTorch in a logit: 2.3e-6 on random spectrograms of 13 to 1,512 frames, 1.1e-5 on a click track whose logits reach 12.5 |
+
+**Licence:** MIT, on the allowlist, for the code and, as the authors state, for the published weights. Quoted from
+the repository's `LICENSE`, fetched raw from GitHub (`https://raw.githubusercontent.com/CPJKU/beat_this/main/LICENSE`)
+on Oct 28, 2026 (1,113 bytes, SHA-256 `909ab6549794...`; the wheel carries the identical file):
+
+```text
+MIT License
+
+Copyright (c) 2024 Institute of Computational Perception, JKU Linz, Austria
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+```
+
+and from the repository's README (fetched the same way, 17,037 bytes, SHA-256 `be7b51a9b6ff...`), section "License":
+
+```text
+The code and the published model weights are released under the [MIT license](LICENSE). Note that some of the training files are fully copyrighted or under limited Creative Commons licenses, and it is up to the user to assess whether this may impact their use case.
+```
+
+So the weights are under the same terms as the code. The second sentence is for the main session: the authors leave
+it to their users to judge whether a model trained partly on copyrighted recordings and recordings under limited
+Creative Commons licences affects them. That is a question about the training data, not a licence on the weights,
+and the allowlist does not answer it; it is recorded here to be decided before a build carrying the weights ships.
+
+**Development-time tools (never shipped).** The export script and the fixture scripts (`make_beat_fixtures.py`,
+`make_onnx_fixture.py`) run on PyTorch and its companions, pinned by version in `core/Tools/export-requirements.txt`
+and installed only on a developer's machine and in CI's export step (licences from each package's own metadata;
+none of this code reaches a Deckie program, and nothing in `core/` imports it):
+
+| Package | Version | Licence |
+|---|---|---|
+| `torch` | 2.15.0+cpu, PyTorch's CPU-only build from `https://download.pytorch.org/whl/cpu` | Apache 2.0, BSD 2- and 3-clause, BSL 1.0, ISC, MIT, zlib (its parts) |
+| `torchaudio` | 2.11.1+cpu, same index | BSD |
+| `beat_this` | 1.1.0 | MIT |
+| `einops` | 0.8.2 | MIT |
+| `rotary-embedding-torch` | 0.9.1 | MIT |
+| `soxr` | 1.1.0 | LGPL 2.1 or later (python-soxr, around libsoxr): the package's own resampler, used only to make the reference numbers |
+| `numpy` | 2.5.3 | BSD 3-clause and others |
+| `onnx` | 1.23.2 | Apache 2.0 |
+| `onnxruntime` (for Python) | 1.31.1 | MIT |
+
+Only these direct dependencies are pinned, and by version only: what they pull in is not pinned, and no wheel is
+pinned by hash yet. The exported model is pinned by its hash and checked numerically, which is what reaches Deckie.
+torch 2.9 and later call the exporter used here (TorchScript-based, `dynamo=False`) "legacy"; their default one
+needs the `onnxscript` package as well. If a later torch drops the legacy exporter, the export moves to the new one
+and its model is checked the same way.
+
+**How to update:** change the pins in `export-requirements.txt` (and the torch line in `core-linux.yml`, which
+installs torch first); for another checkpoint, record its URL and SHA-256 in the export script and here; run the
+export script, record the new model's SHA-256 in the script (`ONNX_SHA256`) and here; regenerate the reference
+numbers with `make_beat_fixtures.py` and run `swift test`, which compares the Swift port with the package again;
+re-quote the `LICENSE` and the README's licence section. CI exports again once, since the export script and its
+requirements are its cache key.
+
 ## Checked and rejected
 
 **ffmpeg's libraries from Ubuntu 24.04**, checked Oct 28, 2026 as the Linux decoder track M section 3.1 names:
@@ -310,7 +492,8 @@ and nothing in the package links it or calls it; the files it writes are test da
 2. Re-record every hash here. Swift image: the `docker-content-digest` header Docker Hub returns for
    `registry-1.docker.io/v2/library/swift/manifests/<tag>`, confirmed by hashing the fetched index, then its amd64
    manifest and layers; the index digest also goes into `core-linux.yml`. Windows: the tag in `core-windows.yml` and
-   the installer's hash. Actions: the tag and, once possible, the commit hash.
+   the installer's hash. Actions: the tag and, once possible, the commit hash. ONNX Runtime and Beat This!: sections
+   6 and 7 say what to record.
 3. Re-quote the licence file and check it is still on the allowlist.
 4. Rerun the parity tests on both CI workflows, and ask the main session to rerun the 373-track benchmark on the Mac.
 5. Update the "last checked" date above. Any new direct dependency gets a written reason here.

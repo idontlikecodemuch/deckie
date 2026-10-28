@@ -11,7 +11,8 @@ and Linux crate builder share them. Charter: `docs/architecture/pc-linux-track.m
   `PythonCompat.swift` holds the rounding and modulo details that keep the numbers identical. `Loudness/` is the
   loudness module, `DSP/` and `Key/` the key estimator and the signal processing under it (with the spectral
   features, the resampler, the two-band split and the first and last sound), `Structure/` bars, phrases, sections,
-  the fade-out, the mix windows and the novelty; all are described below.
+  the fade-out, the mix windows and the novelty, `Beat/` the beat tracker's front end, chunking and peak picking;
+  all are described below.
 - `Sources/DeckieLab`: reads the lab's `mixer/features/<id>.json` and `mixer/candidates.json` into
   `DeckieCore` types (`FeatureFile+Structure.swift` reads the structure fields on their own).
 - `Sources/DeckieAudio`: `AudioBuffer`, decoded audio in memory (interleaved Float32 at the file's own rate, one
@@ -43,6 +44,9 @@ and Linux crate builder share them. Charter: `docs/architecture/pc-linux-track.m
   in front (which dr_flac alone cannot open), and refuses a file that is cut short or has a damaged frame, as the lab
   does, rather than let the audio after the damage come early. On the 16- and 24-bit test tones every sample is the
   lab's, at offset 0.
+- `Sources/COnnxRuntime` and `Sources/DeckieInference`: ONNX Runtime from Swift, and the beat tracker on it
+  (below). `COnnxRuntime` is ONNX Runtime's C API header (vendored unmodified, MIT, pinned in `DEPENDENCIES.md`
+  section 6) and a small C file that opens the library at run time; nothing links it.
 - `Tests/DeckieCoreTests`: parity tests against the lab. `Fixtures/` holds the reference numbers, written by
   `Tools/make_fixtures.py` with the lab's own Python (needs numpy; run from the repository root). The tests also
   read `mixer/features/`, `mixer/candidates.json` and `mixer/recs.json` straight from the repository.
@@ -58,6 +62,11 @@ and Linux crate builder share them. Charter: `docs/architecture/pc-linux-track.m
   `ResampleTests.swift` and `BandTests.swift` do the same with `Fixtures/resample.json` (113 KB: soxr's output, tone
   levels and response) and `Fixtures/bands.json` (38 KB: scipy's band split and the lab's per-bar levels and first
   and last sound), both written by `Tools/make_resample_fixtures.py` (needs numpy, scipy and soxr).
+- `Tests/DeckieInferenceTests`: the ONNX Runtime wrapper's tests on a 192-byte model (`Fixtures/affine.onnx`,
+  written by `Tools/make_onnx_fixture.py`) and the beat tracker end to end against the Beat This! package. Both
+  need ONNX Runtime, and the beat tracker the model; without them they are skipped, with the reason printed.
+  `Tests/DeckieTestSupport` is a small library shared by the test targets: the synthesised drum patterns, the
+  beat fixture's reader, and `CPUTurns`, which makes the model runs take turns.
 - `Tests/DeckieDecodeTests`: the decoder's tests. `Fixtures/` holds a generated test tone (two sines and a click)
   as WAV at 44.1 and 48 kHz, MP3 at 44.1 and 48 kHz and in mono, AAC, AIFF and AIFF-C ("sowt"), FLAC at 16 and 24
   bits and as Ogg-FLAC, plus a 648-byte stand-in for a FairPlay-protected file with no audio in it
@@ -173,6 +182,38 @@ to the bit); `Decimator.halve` is now a call into it. `BandSplit` is the lab's `
 identical and the per-bar values within 1e-13 dB, at 44.1 and 48 kHz. `SoundBounds(buffer)` is the lab's first and
 last sound (10 ms frames, the peak over channels above -60 dBFS compared in float32 as numpy compares it, a partial
 last frame dropped; at other rates frames of rate / 100 samples), identical to the lab's rule on 14 cases.
+
+**Inference and beat tracking** (`Sources/DeckieInference/`, on `Sources/DeckieCore/Beat/`). `OnnxRuntime.load()`
+opens ONNX Runtime 1.31.1 (Microsoft's engine for trained models, MIT) at run time from the path in
+`DECKIE_ONNXRUNTIME_LIB`, or from `core/.deps/onnxruntime/lib/` where `Tools/fetch-onnxruntime.sh` puts the release
+after checking its SHA-256; `makeSession(modelPath:options:)` loads a model with a chosen thread count and graph
+optimisation level, and `run` takes float32 tensors by name and returns float32 tensors with their shapes. ONNX
+Runtime's own errors come back as `OnnxRuntimeError.runtime` with its code and message. `BeatTracker` runs Beat
+This! (JKU Linz, ISMIR 2024, MIT code and weights; `DEPENDENCIES.md` section 7): `track(buffer)` averages the
+channels, takes 22,050 Hz as it is, halves 44,100 Hz with `Decimator.halve` and brings any other rate to 22,050 Hz
+with `Resampler` (soxr's "HQ" filter, as the package's `soxr.resample`), computes the package's log-mel spectrogram
+(`BeatThisFrontEnd`: reflect-padded STFT, torchaudio's Slaney mel filters rebuilt in float32 by
+`TorchaudioMelFilterBank`, log(1 + 1000 x)), runs the network over 30 s chunks as the package does
+(`BeatThisChunking`) and picks peaks with the package's minimal postprocessor (`BeatThisPostProcessor`), giving beat
+and downbeat times. The
+model is `final0` exported to `core/.models/beat_this_final0.onnx` by `Tools/export_beat_this.py` (a development
+tool: PyTorch and the package, pinned in `Tools/export-requirements.txt`, checked against PyTorch to 1.1e-5 in a
+logit); `DECKIE_BEAT_THIS_MODEL` names another file. Measured against the package on synthesised drums
+(`Fixtures/beat_this.json`, written by `Tools/make_beat_fixtures.py`): the spectrogram within 2.6e-5 relative, the
+chunking and the postprocessor identical, and every beat and downbeat identical, end to end, on a 30 s pattern at
+120 BPM (at 22.05, 44.1 and 48 kHz) and a 90 s one turning from 128 to 100 BPM (at 22.05 and 44.1 kHz), with the
+logits within 8.2e-5 of the package's at 22.05 kHz, 3.7e-4 at 44.1 kHz and 5.4e-3 at 48 kHz (where soxr adds an
+interpolating stage). On the 120 BPM pattern every click gets a beat at 0 ms and the downbeats fall on the accents.
+Four minutes at 44.1 kHz take about 6.3 s in a release build on a four-core 2.1 GHz Xeon, 0.4 s of it resampling
+and the spectrogram and the rest the network (about 9.7 s in a debug build). On a fresh machine:
+
+```
+bash core/Tools/fetch-onnxruntime.sh                   # ONNX Runtime 1.31.1 into core/.deps (11 MB, hash-checked)
+python3 -m venv /tmp/bt && . /tmp/bt/bin/activate      # the export tools, kept out of the system Python
+pip install --index-url https://download.pytorch.org/whl/cpu torch==2.15.0+cpu torchaudio==2.11.1+cpu
+pip install -r core/Tools/export-requirements.txt
+python3 core/Tools/export_beat_this.py                 # the model into core/.models (82 MB; downloads 81 MB once)
+```
 
 ```
 cd core

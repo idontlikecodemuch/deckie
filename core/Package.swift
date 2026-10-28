@@ -9,6 +9,11 @@
 // and reported as not supported yet, a copy-protected MP4 as protected. It re-exports DeckieAudio.
 // CDrMp3, CDrFlac: dr_mp3.h and dr_flac.h compiled as plain C, the same on Linux, Windows and macOS; nothing is
 // downloaded at build time.
+// COnnxRuntime: ONNX Runtime's C API header (vendored, MIT; DEPENDENCIES.md) and a small C shim that opens the
+// library at run time (dlopen, or LoadLibraryExW on Windows), so nothing links it and the package builds without it.
+// DeckieInference: ONNX Runtime from Swift (`OnnxRuntime`, `OnnxSession`) and the Beat This! beat tracker
+// (`BeatTracker`) on it; the tracker's front end, chunking and peak picking are plain Swift in DeckieCore.
+// DeckieTestSupport: synthesised test audio and the beat fixture, shared by the test targets (not a product).
 import PackageDescription
 
 let package = Package(
@@ -18,6 +23,7 @@ let package = Package(
         .library(name: "DeckieLab", targets: ["DeckieLab"]),
         .library(name: "DeckieAudio", targets: ["DeckieAudio"]),
         .library(name: "DeckieDecode", targets: ["DeckieDecode"]),
+        .library(name: "DeckieInference", targets: ["DeckieInference"]),
     ],
     targets: [
         .target(name: "DeckieAudio"),
@@ -26,8 +32,13 @@ let package = Package(
         .target(name: "CDrMp3"),
         .target(name: "CDrFlac"),
         .target(name: "DeckieDecode", dependencies: ["DeckieAudio", "CDrMp3", "CDrFlac"]),
-        .testTarget(name: "DeckieCoreTests", dependencies: ["DeckieCore", "DeckieLab", "DeckieAudio"],
+        .target(name: "COnnxRuntime", linkerSettings: [.linkedLibrary("dl", .when(platforms: [.linux]))]),
+        .target(name: "DeckieInference", dependencies: ["COnnxRuntime", "DeckieAudio", "DeckieCore"]),
+        .target(name: "DeckieTestSupport", path: "Tests/DeckieTestSupport"),
+        .testTarget(name: "DeckieCoreTests", dependencies: ["DeckieCore", "DeckieLab", "DeckieAudio", "DeckieTestSupport"],
                     exclude: ["Fixtures"]),
         .testTarget(name: "DeckieDecodeTests", dependencies: ["DeckieDecode"], exclude: ["Fixtures"]),
+        .testTarget(name: "DeckieInferenceTests", dependencies: ["DeckieInference", "DeckieCore", "DeckieAudio", "DeckieTestSupport"],
+                    exclude: ["Fixtures"]),
     ]
 )

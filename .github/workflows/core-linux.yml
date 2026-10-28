@@ -12,6 +12,9 @@ on:
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
+    # A guard, not a target. Estimated from this session's machine (not yet timed on GitHub): the caches below add
+    # about 40 s to a run when they hit (restoring 110 MB, then the beat tracker's tests), about 3 minutes when not.
+    timeout-minutes: 25
     container:
       # The official Swift 6.4.1 image on Ubuntu 24.04, pinned by its multi-architecture index digest (DEPENDENCIES.md).
       image: swift@sha256:6304481cf2717966b7ba175162e397ea2f2cc3161909f2b2a5cf40036079a0f7 # swift:6.4.1-noble
@@ -19,6 +22,38 @@ jobs:
       - uses: actions/checkout@v4
       - name: Swift version
         run: swift --version
+      # ONNX Runtime and the Beat This! model, so that the beat tracker's tests run here rather than skip. Both are
+      # cached between runs: ONNX Runtime by the fetch script's hash (the script pins the archive by its SHA-256),
+      # the model by the hash of the export script and its pinned requirements, so it is exported once and again
+      # only when either changes. A run that misses both spends about 3 minutes here (apt; pip with the CPU-only
+      # torch, 40 s here; the 81 MB checkpoint, the export and its check, 50 s here); one that hits them, seconds.
+      - name: Cache ONNX Runtime
+        id: onnxruntime
+        uses: actions/cache@v4
+        with:
+          path: core/.deps/onnxruntime
+          key: onnxruntime-linux-x64-${{ hashFiles('core/Tools/fetch-onnxruntime.sh') }}
+      - name: Cache the Beat This! model
+        id: model
+        uses: actions/cache@v4
+        with:
+          path: core/.models
+          key: beat-this-onnx-${{ hashFiles('core/Tools/export_beat_this.py', 'core/Tools/export-requirements.txt') }}
+      - name: Install curl and Python (only when a cache missed)
+        if: steps.onnxruntime.outputs.cache-hit != 'true' || steps.model.outputs.cache-hit != 'true'
+        run: |
+          apt-get update
+          apt-get install -y --no-install-recommends ca-certificates curl python3 python3-venv
+      - name: Fetch ONNX Runtime (checked by hash)
+        if: steps.onnxruntime.outputs.cache-hit != 'true'
+        run: bash core/Tools/fetch-onnxruntime.sh
+      - name: Export the Beat This! model (checked against PyTorch)
+        if: steps.model.outputs.cache-hit != 'true'
+        run: |
+          python3 -m venv /tmp/export-venv
+          /tmp/export-venv/bin/python -m pip install --index-url https://download.pytorch.org/whl/cpu torch==2.15.0+cpu torchaudio==2.11.1+cpu
+          /tmp/export-venv/bin/python -m pip install -r core/Tools/export-requirements.txt
+          /tmp/export-venv/bin/python -P core/Tools/export_beat_this.py
       - name: Build
         working-directory: core
         run: swift build -v

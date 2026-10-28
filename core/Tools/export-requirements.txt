@@ -1,0 +1,20 @@
+# The Python packages core/Tools/export_beat_this.py, make_beat_fixtures.py and make_onnx_fixture.py were run with
+# (DEPENDENCIES.md, section 7). Development and CI only: none of them ships, and nothing in core/ imports them.
+# torch and torchaudio are the CPU-only builds from PyTorch's own index, so install them first, then the rest from
+# PyPI (pip then finds torch already satisfied and never looks for the much larger CUDA build):
+#
+#   python3 -m pip install --index-url https://download.pytorch.org/whl/cpu torch==2.15.0+cpu torchaudio==2.11.1+cpu
+#   python3 -m pip install -r core/Tools/export-requirements.txt
+#
+# Only these direct dependencies are pinned, by version; what they pull in (sympy, networkx, protobuf and the like)
+# is not, and no wheel is pinned by hash yet. The exported model is pinned by its SHA-256 instead, and the export
+# script checks it numerically against PyTorch.
+torch==2.15.0+cpu
+torchaudio==2.11.1+cpu
+beat_this==1.1.0
+einops==0.8.2
+rotary-embedding-torch==0.9.1
+soxr==1.1.0
+numpy==2.5.3
+onnx==1.23.2
+onnxruntime==1.31.1
