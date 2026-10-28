@@ -8,10 +8,14 @@ public enum CrateReader {
     public static func read(from package: URL) throws -> Crate {
         var isFolder: ObjCBool = false
         guard FileManager.default.fileExists(atPath: package.path, isDirectory: &isFolder), isFolder.boolValue else {
-            throw CrateError([CrateProblem(file: package.lastPathComponent, path: "", message: "is not a crate package folder")])
+            throw problem(package.lastPathComponent, "", "is not a crate package folder")
         }
         return try decode(file: { try? Data(contentsOf: package.appendingPathComponent($0)) },
                           exists: { FileManager.default.fileExists(atPath: package.appendingPathComponent($0).path) })
+    }
+
+    private static func problem(_ file: String, _ path: String, _ message: String) -> CrateError {
+        CrateError([CrateProblem(file: file, path: path, message: message)])
     }
 
     /// Reads a crate from its files, keyed by their path inside the package (as `CrateWriter.encode` gives them, plus
@@ -22,14 +26,14 @@ public enum CrateReader {
 
     static func decode(file: (String) -> Data?, exists: (String) -> Bool) throws -> Crate {
         let mf = CrateFormat.manifestFile, tf = CrateFormat.tracksFile
-        guard let manifestData = file(mf) else { throw CrateError([CrateProblem(file: mf, path: "", message: "is missing")]) }
+        guard let manifestData = file(mf) else { throw problem(mf, "", "is missing") }
         let manifest = try decodeJSON(CrateManifest.self, manifestData, file: mf, ids: [])
         if manifest.minReader > CrateFormat.schema {
-            throw CrateError([CrateProblem(file: mf, path: "min_reader", message:
-                "the crate needs a reader of format \(manifest.minReader) or later; this one reads format \(CrateFormat.schema)")])
+            throw problem(mf, "min_reader", "the crate needs a reader of format \(manifest.minReader) or later; " +
+                                            "this one reads format \(CrateFormat.schema)")
         }
 
-        guard let tracksData = file(tf) else { throw CrateError([CrateProblem(file: tf, path: "", message: "is missing")]) }
+        guard let tracksData = file(tf) else { throw problem(tf, "", "is missing") }
         let ids = (try? JSONDecoder().decode(IDs.self, from: tracksData))?.tracks?.map(\.id) ?? []
         var tracks = try decodeJSON(TracksFile.self, tracksData, file: tf, ids: ids).tracks
         let listed = try decodeJSON(ListedFile.self, tracksData, file: tf, ids: ids).tracks
@@ -48,6 +52,9 @@ public enum CrateReader {
                 if list.contains(f) && !has.contains(f) { add(tf, fpPath, "lists \(f), but the record has no \(f)") }
                 if has.contains(f) && !list.contains(f) { add(tf, fpPath, "does not list \(f), but the record has it") }
             }
+            // The id names the sidecar files: one that is not file-safe (reported below) could point outside the
+            // package, so its sidecars are not opened.
+            guard isFileSafe(t.id) else { continue }
 
             let seriesNames = list.filter { $0.hasPrefix(CrateFormat.Feature.barsPrefix) }
                 .map { String($0.dropFirst(CrateFormat.Feature.barsPrefix.count)) }
@@ -61,7 +68,8 @@ public enum CrateReader {
                         case .failure(let e): problems += e.problems
                         }
                     } else {
-                        add(barsPath, "", "is missing; features_present lists the series \(seriesNames.joined(separator: ", "))")
+                        let listed = seriesNames.joined(separator: ", ")
+                        add(barsPath, "", "is missing; features_present lists the series \(listed)")
                     }
                 } else {
                     add(tf, fpPath, "lists per-bar series, which need the grid's bar count, but grid is null")
@@ -79,17 +87,16 @@ public enum CrateReader {
                     add(stylePath, "", "is missing; the record has a style vector")
                 }
             }
-            for variant in t.signatures.keys.sorted(by: byteOrder) {
+            for variant in t.signatures.keys.sorted(by: byteOrder) where isFileSafe(variant, also: ["-", "_", "+"]) {
                 let path = CrateFormat.signaturePath(t.id, variant)
                 if !exists(path) { add(tf, "tracks[\(i)].signatures.\(variant)", "\(path) is not in the package") }
             }
             tracks[i] = t
         }
         let crate = Crate(manifest: manifest, tracks: tracks)
-        // The model's own checks; a style vector whose sidecar failed is already reported.
-        problems += crate.problems().filter { p in
-            !(p.path.hasSuffix(".style.dims") && problems.contains { $0.track == p.track && $0.file.hasPrefix("style/") })
-        }
+        // The model's own checks, less the count of a style vector whose sidecar was not read (already reported).
+        let unread = Set(tracks.indices.filter { tracks[$0].style.map { $0.values.isEmpty && $0.dims > 0 } ?? false })
+        problems += crate.problems().filter { p in !unread.contains { p.path == "tracks[\($0)].style.dims" } }
         if !problems.isEmpty { throw CrateError(problems) }
         return crate
     }

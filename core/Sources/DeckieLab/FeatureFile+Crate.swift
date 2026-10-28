@@ -40,7 +40,8 @@ extension FeatureFile {
                              options: CrateOptions) throws -> Crate {
         var cands: [String: CandidateRecord] = [:]
         if let candidatesFile {
-            cands = Dictionary(try CandidateRecord.loadAll(candidatesFile).map { ($0.id, $0) }, uniquingKeysWith: { a, _ in a })
+            cands = Dictionary(try CandidateRecord.loadAll(candidatesFile).map { ($0.id, $0) },
+                               uniquingKeysWith: { a, _ in a })
         }
         let names = try ids.map { $0.map { "\($0).json" } }
             ?? FileManager.default.contentsOfDirectory(atPath: featuresDir.path).filter { $0.hasSuffix(".json") }
@@ -196,18 +197,22 @@ extension FeatureFile {
                            scale: spelled?.scale, votes: votes, changes: nil),
                 phrase: .init(source: "foote-novelty", confidence: phrase.confidence,
                               latticePhaseBar: phrase.latticePhaseBar, boundariesBars: boundariesBars),
-                sections: sections.map { .init(startBar: $0.startBar, endBar: $0.endBar, label: $0.label, energy: $0.energy) },
+                sections: sections.map {
+                    .init(startBar: $0.startBar, endBar: $0.endBar, label: $0.label, energy: $0.energy)
+                },
                 mixIn: .init(startBar: mixIn.startBar, endBar: mixIn.endBar, vocalFreeBars: mixIn.vocalFreeBars),
                 mixOut: .init(startBar: mixOut.startBar, endBar: mixOut.endBar, vocalFreeBars: mixOut.vocalFreeBars),
-                ends: .init(firstSoundS: firstSoundS, lastSoundS: lastSoundS, fadeOut: fadeOut, fadeStartBar: fadeStartBar,
-                            steadyInBar: line(lt?.steadyInBar), steadyOutBar: line(lt?.steadyOutBar)),
+                ends: .init(firstSoundS: firstSoundS, lastSoundS: lastSoundS, fadeOut: fadeOut,
+                            fadeStartBar: fadeStartBar, steadyInBar: line(lt?.steadyInBar),
+                            steadyOutBar: line(lt?.steadyOutBar)),
                 loudness: .init(source: "pyloudnorm", confidence: nil, integratedLufs: loudness.integratedLufs,
                                 lra: loudness.lra, truePeakDb: loudness.truePeakDb),
                 vocal: .init(source: "discogs-effnet", confidence: nil, mean: vocal.meanProb, heavy: vocal.vocalHeavy),
                 onsetPattern16: onsetPattern16,
                 flags: flags,
-                bars: BarSeries([BarSeries.lufs: perBar.lufsSt, BarSeries.lowDb: perBar.lowDb, BarSeries.highDb: perBar.highDb,
-                                 BarSeries.onsetDensity: perBar.onsetDensity, BarSeries.vocal: perBar.vocalProb]))
+                bars: BarSeries([BarSeries.lufs: perBar.lufsSt, BarSeries.lowDb: perBar.lowDb,
+                                 BarSeries.highDb: perBar.highDb, BarSeries.onsetDensity: perBar.onsetDensity,
+                                 BarSeries.vocal: perBar.vocalProb]))
         }
     }
 }

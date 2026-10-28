@@ -29,8 +29,9 @@ public enum CrateWriter {
             do {
                 records.append(try CanonicalJSON.tree(t, decimals: CrateFormat.decimals))
             } catch let EncodingError.invalidValue(_, context) {
-                throw CrateError([CrateProblem(file: CrateFormat.tracksFile, path: "tracks[\(i)]." + fieldPath(context.codingPath),
-                                               track: t.id, message: context.debugDescription)])
+                let path = "tracks[\(i)]." + fieldPath(context.codingPath)
+                throw CrateError([CrateProblem(file: CrateFormat.tracksFile, path: path, track: t.id,
+                                               message: context.debugDescription)])
             }
         }
         files[CrateFormat.tracksFile] = Data(CanonicalJSON.text(.object(["tracks": .array(records)]),

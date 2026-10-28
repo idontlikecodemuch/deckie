@@ -122,6 +122,10 @@ import DeckieCrate
         let j = try editTracks(files) { set(&$0, ["tracks", 0, "file", "rel"], "/Users/someone/Music/a.mp3") }
         #expect(readProblems(j).map(\.description) == [
             "crate.json: tracks[0].file.rel (track a1): \"/Users/someone/Music/a.mp3\" is an absolute path; the crate keeps paths relative"])
+        // An id that would lead out of the package is reported, and its sidecars are not looked for.
+        let l = try editTracks(files) { set(&$0, ["tracks", 0, "id"], "../a1") }
+        #expect(readProblems(l).map(\.description) == [
+            "crate.json: tracks[0].id (track ../a1): \"../a1\" must be letters, digits, - and _ only, as it names the sidecar files"])
         var k = files
         k["crate.json"] = Data("{\"tracks\": [".utf8)
         #expect(readProblems(k).count == 1 && readProblems(k)[0].file == "crate.json")
