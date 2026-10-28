@@ -193,7 +193,22 @@ active per gig; learning writes to the active one; a new profile starts as a cop
 from the onboarding chain. The crate and the history are shared across profiles. Start with one profile and let the
 DJ add more; never ask a new user to choose.
 
-### 5.7 Apps and roles
+### 5.7 Where crates get built (Oct 28; track L)
+
+The Mac app is the primary crate-builder: files, folders, discs, albums, rekordbox XML import, the naming editor.
+The iPad can build a crate too, with no new engine code, because D11 already puts the engine on it: a DJ without a
+Mac plugs the USB stick they already export for the CDJ into the iPad, Deckie reads the tags, analyses each track and
+makes its recognition signature on the device, and writes the crate, as an overnight batch on power. Limits: no
+optical discs; the audio must be on the stick or copied; about 12 s a track at the simulator's pace, with a real
+iPad's speed, heat and battery unmeasured; and naming and bulk edits must then be good on the iPad. A later option
+is reading the DJ's own grids and cues straight off a rekordbox stick (Pioneer's internal format, reverse-engineered,
+unlike the documented XML). For Windows and Linux, a "Desk Lite" crate-builder comes after the trials: rekordbox
+XML import first, a second analysis engine for what the XML lacks, writing the same crate file; recognition
+signatures still need an Apple device, because ShazamKit builds catalogues only there (it can load them on
+Android). Decision before stage 2: write our own DSP once as a Rust core called from Swift, so the Mac, iPad and
+Desk Lite share it (P16).
+
+### 5.8 Apps and roles
 
 One universal iOS binary plus a native macOS target from shared packages. Roles are runtime modes: Booth (iPad beside
 the decks), Pocket (iPhone: record a set, see the tracklist), Desk (Mac: import, analyse, manage the crate). Web app:

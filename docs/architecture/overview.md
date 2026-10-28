@@ -82,7 +82,16 @@ Music Understanding wrapper), crate I/O, identity and naming, preferences and le
 The porting order follows the stages: benchmark first, then analysis on the Mac writing a crate, then the iPad
 reading it, then analysis on device.
 
-## 5. Decisions this map depends on
+## 5. Where crates get built, by platform (Oct 28)
+
+| Platform | Builds a crate from | Engine | Recognition signatures | Status |
+|---|---|---|---|---|
+| Mac (Desk) | files, folders, discs, albums, rekordbox XML | DeckieAnalysis on Apple's framework | made on the Mac | primary |
+| iPad (Booth) | a USB stick or Files, overnight on power | the same engine | made on the iPad | planned, no engine work, UI only |
+| Windows, Linux (Desk Lite) | files, folders, rekordbox XML | a second engine (Rust: Beat This! on ONNX Runtime, our DSP, our key estimator, libebur128, a permissive vocal tagger) | still made on an Apple device | after the trials; see `pc-linux-track.md` |
+| Android (Booth) | consumes a crate | none | loads an Apple-built catalogue (ShazamKit for Android) | only on demand |
+
+## 6. Decisions this map depends on
 
 D11 (native engine with fallbacks) and D12 (vocabulary and the chain) are decided. P9 (profiles) decides whether
 `Profile` is one or many per crate; the map assumes many with one active. P10 (self-contained identity) decides the

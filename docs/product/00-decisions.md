@@ -177,3 +177,11 @@ Christopher says so; a yes moves it up into the dated decisions above.
   request for commercial albums (on request, no audio sent), CD-Text, opt-in AcoustID, else the DJ's own name.
   Home-burned continuous mixes split by the crate's own recognition plus the analysis boundaries. The iPad cannot
   read optical drives; it consumes the crate. YouTube confirmed out for any automated pull. Spec: "Crate from discs".
+- **P16. Our own DSP is written once as a Rust core and called from Swift, so Mac, iPad and a Windows or Linux
+  builder share it.** Track L: deciding this before stage 2 costs two to three weeks of plumbing; retrofitting later
+  costs far more. Apple's framework, ShazamKit and the UI stay in Swift. Christopher's direction on Oct 28: start
+  the PC and Linux track now, in a cloud session.
+- **P17. Crate-builder platforms, in order:** the Mac app (primary); the iPad building from a USB stick for DJs
+  without a Mac (no engine work, interface only); Desk Lite for Windows and Linux after the trials (rekordbox XML
+  import first, a second engine for the rest, signatures still from an Apple device); Android booth only on demand.
+  Spec 5.7, overview section 5.

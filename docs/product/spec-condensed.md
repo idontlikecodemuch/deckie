@@ -89,9 +89,10 @@ your crate, reads your pitch, or shows you how to bring the next one in. Not sol
   dozen things, to be gut-checked with DJs and not a fixed number: how far you push the tempo; your fader range and
   key lock; how much key matters to you; genre and era spread; energy arc; blend length; cut styles; effects; how
   you handle vocals; phrase alignment; loops; where you mix in and the tempo you feel.
-- Apps: one iOS app (iPad booth view, iPhone pocket view) and a Mac app for building the crate. Windows and Linux
-  for building the crate later; the analysis engine is Apple's, so that means a second engine, which is the honest
-  cost.
+- Apps: one iOS app (iPad booth view, iPhone pocket view) and a Mac app for building the crate. The iPad can also
+  build a crate from the USB stick a DJ already exports for the CDJ, overnight on power, with no new engine code (no
+  discs, and a real iPad's speed is unmeasured). Windows and Linux get a crate-builder after the trials, with a second
+  analysis engine; recognition signatures still come from an Apple device. Updated Oct 28 (P16, P17).
 
 ## Ways to build a crate
 
