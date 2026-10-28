@@ -5,7 +5,7 @@ import Testing
 // AIFF and AIFF-C (AIFFReader), then copy-protected MP4s (ProtectedMP4). The AIFF variants are built byte by byte
 // here, like the WAV ones. Every variant below that decodes, and the cut and unfilled files, were also read by the
 // lab's decoder on Oct 28, 2026 (soundfile 0.14.0, libsndfile 1.2.2): the same rate, frames and samples, once its
-// channels are cut to two as the lab cuts them. libsndfile also reads "twos", "ulaw", "alaw", "ima4" and "fl64",
+// channels are cut to two as the lab cuts them. libsndfile also reads "ulaw", "alaw", "ima4" and "fl64",
 // which DeckieDecode reports as not supported.
 
 @Suite struct AIFFFixtureTests {

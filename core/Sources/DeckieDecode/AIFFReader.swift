@@ -19,7 +19,7 @@ import Foundation
 /// it, left-justified: big-endian in AIFF and in AIFF-C "NONE", little-endian in AIFF-C "sowt" (what macOS writes).
 /// AIFF-C "fl32" or "FL32" is 32-bit big-endian float, whatever the bits field says. Integers are divided by
 /// 2^(8 × bytes - 1), so 16-bit by 2^15 as in the WAV reader, and 12- or 20-bit samples, left-justified in 2 or 3
-/// bytes, come out the same way as in libsndfile. Every other compression type ("twos", "ima4", "ulaw", "alaw",
+/// bytes, come out the same way as in libsndfile. Every other compression type ("ima4", "ulaw", "alaw",
 /// "fl64" and so on) is reported as not supported, by name.
 ///
 /// Where a file and its COMM chunk disagree this follows the lab's decoder, libsndfile 1.2.2 (soundfile 0.14.0),
@@ -115,15 +115,15 @@ enum AIFFReader {
 
         let encoding: Encoding
         switch c.compression {
-        case "NONE", "sowt":
+        case "NONE", "twos", "sowt":  // "twos" is big-endian PCM under another name; libsndfile reads it the same
             guard c.bits > 0 else { throw damaged("the COMM chunk gives no sample size") }
             guard c.bits <= 32 else { throw unsupported("\(c.bits)-bit integer PCM is not supported (up to 32 bits is)") }
             let bytes = (c.bits + 7) / 8
-            encoding = c.compression == "NONE" ? .bigEndian(bytes) : .littleEndian(bytes)
+            encoding = c.compression == "sowt" ? .littleEndian(bytes) : .bigEndian(bytes)
         case "fl32", "FL32":
             encoding = .float32
         default:
-            throw unsupported("AIFF-C compression type '\(c.compression)' is not supported (NONE, sowt and fl32 are)")
+            throw unsupported("AIFF-C compression type '\(c.compression)' is not supported (NONE, twos, sowt and fl32 are)")
         }
 
         let width: Int
