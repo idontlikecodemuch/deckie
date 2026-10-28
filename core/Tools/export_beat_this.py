@@ -4,7 +4,7 @@
   python3 core/Tools/export_beat_this.py [--out PATH] [--opset N]     # from anywhere
 
 A development-time tool: it never ships, and nothing in core/ runs it at build or analysis time. It needs the Python
-packages pinned in core/Tools/export-requirements.txt (which says how to install them; DEPENDENCIES.md, section 6),
+packages pinned in core/Tools/export-requirements.txt (which says how to install them; DEPENDENCIES.md, section 7),
 and the network once, for the checkpoint.
 
 What it does:

@@ -29,7 +29,7 @@ jobs:
         working-directory: core
         run: swift build -v
       # The tests that run ONNX Runtime and the Beat This! model skip here, saying so: neither is on this runner.
-      # A Windows run of them would need onnxruntime-win-x64-1.31.1.zip (SHA-256 in DEPENDENCIES.md section 5)
+      # A Windows run of them would need onnxruntime-win-x64-1.31.1.zip (SHA-256 in DEPENDENCIES.md section 6)
       # downloaded, checked and unzipped, with DECKIE_ONNXRUNTIME_LIB set to its lib\onnxruntime.dll, and the
       # exported model (the core-linux cache, passed over as an artifact, or the export run here with Windows'
       # Python) with DECKIE_BEAT_THIS_MODEL set to it. COnnxRuntime and DeckieInference still build here.

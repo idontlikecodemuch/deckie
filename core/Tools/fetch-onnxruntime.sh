@@ -10,7 +10,7 @@
 #
 # What it trusts. The archive comes from the ONNX Runtime project's release page on GitHub over HTTPS, and every
 # byte is pinned: the script recomputes the archive's SHA-256 and stops before unpacking anything if it differs from
-# the value below (recorded in DEPENDENCIES.md, section 5). It then checks that the release's copy of the C API
+# the value below (recorded in DEPENDENCIES.md, section 6). It then checks that the release's copy of the C API
 # header is the one vendored in core/Sources/COnnxRuntime/include, and warns if not (a header and a library from
 # different releases still work if the library is newer, since the API is versioned, but the pin says they match).
 #
