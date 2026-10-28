@@ -15,9 +15,12 @@ Mac) reviews and merges this track's branch, `pc-linux`, and runs anything that 
 - **Step 2 is under way on its own branch and pull request** (`pc-linux-step2`,
   https://github.com/idontlikecodemuch/deckie/pull/2), each mechanic with its own status entry. Done: WAV, MP3 and AIFF
   decoding with protected-file detection (entry 4), loudness measurement (entry 5) and the key estimator (entry
-  6), all with no dependency beyond the vendored dr_mp3, all passing on Linux and Windows. Next: FLAC (needs
-  Christopher's yes on dr_flac); then Beat This! through ONNX Runtime and a vocal tagger, which need downloads
-  Christopher must approve here.
+  6), all with no dependency beyond the vendored dr_mp3, all passing on Linux and Windows. From step 3, the logic
+  that needs no audio is ported and checked against all 373 committed tracks: start and end tempo with the trust
+  rule, the bar grid, the phrase lattice, sections, fade-out, mix windows and flags (entry 7). In progress, with
+  Christopher's approvals: FLAC through dr_flac, and Beat This! through ONNX Runtime. Still to come in step 2:
+  a permissively licensed vocal tagger (the lab's is non-commercial only); in step 3: the audio-derived features
+  (resampling, per-bar bands, onset pattern, novelty peaks).
 - Needed from Christopher: nothing right now (dr_mp3 vendoring approved Oct 28; dr_flac next, same pattern,
   will need the same yes, see entry 4, working mode).
 - Needed from the Mac, when convenient (not blocking): one check of the loudness module against the real
@@ -395,3 +398,27 @@ follows the code.
 **Needed from the Mac, when convenient.** Parity on real music: run the port over `mixer/candidates.json` and
 compare row by row with `mixer/key_light_stft.tsv` and `mixer/key_ends_stft.tsv`, which also measures the
 stopgap halving filter against soxr on real tracks. This belongs in the `bench` command of step 5.
+
+## Oct 28, 2026: step 3, the logic that needs no audio (entry 7)
+
+Working in batches now, to spend less on hand-offs: two Opus agents in parallel worktrees, merged and tested once,
+pushed once. This batch ported everything in the lab's analyser that works on numbers already in the feature
+files, so each port is checked against all 373 committed tracks with no music.
+
+**Start and end tempo** (`mixer/local_tempo.py`, the trust rule): 372 of 373 tracks reproduce the committed
+block exactly on every one of its 29 fields; the one exception is a single residual that sits on a rounding tie
+(exactly 5.25 ms, where the lab's numpy on the Mac and this port land on opposite sides by a few trillionths).
+The current lab script, run here on the committed inputs, reproduces every committed block, so the feature
+files are the reference for this one.
+
+**Bar grid, phrase lattice, sections, fade-out, mix windows, flags** (`mixer/analyze.py`): every bar number,
+label and decision matches on 369 tracks; the four others are cases where an input was written exactly on a
+threshold (a vocal probability rounded to 0.500, a tempo rounded to 100.0), and the port gives the lab's answer
+once the input is moved inside its rounding. Bar times match within 1.6 ms (the period is written to five
+decimals), section loudness within 0.01 LU, phase novelty and phrase confidence within what the rounding of the
+summed peaks allows. 57 core tests now, with the 24 decode tests, on Linux and Windows.
+
+**What this leaves for later in step 3:** the inputs these ports take as given come from audio: the novelty
+curve and its peaks (from MFCC and loudness), the onset pattern, the per-bar bands, and the per-bar vocal
+probability (from the tagger). Those are the next batch, tested against the lab's own Python libraries, which
+are installed here for testing only.
