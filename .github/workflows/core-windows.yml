@@ -15,7 +15,9 @@ jobs:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: compnerd/gha-setup-swift@v3
+      # The action's documented reference is @main; its tag v3 does not exist (first probe run, Oct 28).
+      # Pinning to a commit hash is pending (DEPENDENCIES.md).
+      - uses: compnerd/gha-setup-swift@main
         with:
           branch: swift-6.4-release
           tag: 6.4.1-RELEASE
