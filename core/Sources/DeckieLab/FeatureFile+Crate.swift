@@ -184,7 +184,7 @@ extension FeatureFile {
                              tags: (c?.hal ?? meta?.hal) == true ? ["halloween"] : []),
                 analysis: .init(engine: "lab-\(schema ?? 1)", analysedAt: options.analysedAt, device: options.device,
                                 secs: timingS.map { Py.round($0.values.sorted().reduce(0, +), 2) }, level: 1),
-                engine: .init(family: "lab", version: "\(schema ?? 1)", platform: "macos-arm64", fidelity: 0,
+                engine: .init(family: CrateFormat.EngineFamily.lab, version: "\(schema ?? 1)", platform: "macos-arm64", fidelity: 0,
                               models: models, decoder: .init(name: "soundfile")),
                 grid: .init(source: gridModel, confidence: grid.confidence, bpm: grid.bpm,
                             firstDownbeatS: grid.firstDownbeatS, nBars: n, fitMadMs: grid.fitMadMs,

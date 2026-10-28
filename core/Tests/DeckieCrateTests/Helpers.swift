@@ -13,7 +13,7 @@ enum Paths {
 
 /// A crate with every block filled, two tracks, a style vector, key changes and one signature listed.
 func sampleCrate() -> Crate {
-    let engine = CrateTrack.Engine(family: "deckie-oss", version: "0.1", platform: "linux-x86_64", fidelity: 1,
+    let engine = CrateTrack.Engine(family: CrateFormat.EngineFamily.deckie, version: "0.1", platform: "linux-x86_64", fidelity: 1,
                                    models: [.init(name: "beat-this-small", version: "1", weightsSha256: "ab12")],
                                    decoder: .init(name: "dr_mp3", version: "0.7.4"))
     func track(_ id: String, bars n: Int, title: String) -> CrateTrack {
@@ -24,7 +24,7 @@ func sampleCrate() -> Crate {
             ident: .init(title: title, artist: "Artist \u{e9}", version: nil, source: "tag", disc: "CD1",
                          folder: "3 - 120ish", track: 7, cutKey: "artist \(title)", isLongest: true, era: "90s",
                          kind: "remix", tags: ["halloween"]),
-            analysis: .init(engine: "deckie-oss-0.1", analysedAt: "2026-10-28T12:00:00Z", device: "linux-x86_64",
+            analysis: .init(engine: "deckie-0.1", analysedAt: "2026-10-28T12:00:00Z", device: "linux-x86_64",
                             secs: 18.42, level: 1),
             engine: engine,
             grid: .init(source: "beat-this-small", confidence: 0.93, bpm: 125.0, firstDownbeatS: 0.0412, nBars: n,

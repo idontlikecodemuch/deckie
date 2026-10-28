@@ -41,6 +41,18 @@ public enum CrateFormat {
                                     vocal, onsetPattern, style]
     }
 
+    /// The engine families (`engine.family`). A family names an engine, never a licence: the Windows and Linux
+    /// engine runs open-source models, but the engine itself is not open source.
+    public enum EngineFamily {
+        /// The Apple apps' engine, on Apple's Music Understanding.
+        public static let appleMU = "apple-mu"
+        /// The Windows and Linux engine.
+        public static let deckie = "deckie"
+        /// The Python lab (`mixer/`), whose feature files convert to records.
+        public static let lab = "lab"
+        public static let all = [appleMU, deckie, lab]
+    }
+
     /// The decimals a number is written with, by its field name: the lab's own rounding (mixer/analyze.py and
     /// mixer/local_tempo.py). A field name has one precision wherever it appears; the writer refuses a fractional
     /// number under a name that is not listed here, so every number in the format is documented.

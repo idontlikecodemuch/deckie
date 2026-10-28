@@ -19,7 +19,8 @@ import DeckieCrate
         let files = try CrateWriter.encode(sampleCrate())
         let manifest = String(decoding: files["manifest.json"]!, as: UTF8.self)
         #expect(manifest == #"{"crate_id":"0f6c1e2a","created_at":"2026-10-28T12:00:00Z","devices_seen":["linux-x86_64"],"# +
-            #""engines_used":["deckie-oss-0.1"],"min_reader":1,"name":"Sample","schema":1}"# + "\n")
+            #""engines_used":["deckie-0.1"],"min_reader":1,"name":"Sample","schema":1}"# + "\n")
+        #expect(String(decoding: files["crate.json"]!, as: UTF8.self).contains(#""family":"deckie","#))
         let lines = String(decoding: files["crate.json"]!, as: UTF8.self).split(separator: "\n", omittingEmptySubsequences: false)
         #expect(lines.count == 5)  // {"tracks":[, one line per track, ]}, and the empty string after the last newline
         #expect(lines.first == #"{"tracks":["#)
