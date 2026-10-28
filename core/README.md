@@ -14,7 +14,9 @@ and Linux crate builder share them. Charter: `docs/architecture/pc-linux-track.m
   the fade-out, the mix windows and the novelty, `Beat/` the beat tracker's front end, chunking and peak picking;
   all are described below.
 - `Sources/DeckieLab`: reads the lab's `mixer/features/<id>.json` and `mixer/candidates.json` into
-  `DeckieCore` types (`FeatureFile+Structure.swift` reads the structure fields on their own).
+  `DeckieCore` types (`FeatureFile+Structure.swift` reads the structure fields on their own), and turns them into
+  crate records (`FeatureFile+Crate.swift`).
+- `Sources/DeckieCrate`: the crate file, described below; `Sources/crate-from-lab` writes one from the lab's files.
 - `Sources/DeckieAudio`: `AudioBuffer`, decoded audio in memory (interleaved Float32 at the file's own rate, one
   or two channels), in a target of its own with no Foundation so the analysers in `DeckieCore` can take audio
   without depending on the decoder.
@@ -214,6 +216,21 @@ pip install --index-url https://download.pytorch.org/whl/cpu torch==2.15.0+cpu t
 pip install -r core/Tools/export-requirements.txt
 python3 core/Tools/export_beat_this.py                 # the model into core/.models (82 MB; downloads 81 MB once)
 ```
+
+**The crate file** (`Sources/DeckieCrate`; the format, with what the documents fix and what is proposed, is
+`docs/architecture/crate-format.md`) is the one file Deckie writes, never audio: a package folder `<name>.deckiecrate`
+holding `manifest.json`, `crate.json` (one record per track: grid and tempo segments, key with its votes, phrase,
+sections, mix windows, ends, loudness, vocal, onset pattern, flags, plus track L's engine record, `fidelity`, a
+`source` and confidence per block and `features_present`), float16 sidecars for the per-bar series and the style
+vector, and a `signatures` block that stays empty here, as signatures are made on an Apple device. `CrateWriter`
+checks a crate and writes it canonically (keys sorted, each number with its field's fixed decimals, nulls written), so
+the same crate always gives the same bytes; `CrateReader` checks the version, the required fields,
+`features_present`, every bar number and each sidecar's length against `n_bars`, and names the file, the field path
+and the track of every problem. `FeatureFile.crateTrack` (DeckieLab) makes a record from any committed feature file:
+all 373 convert, read back equal and write the same bytes again (`swift run crate-from-lab --out all.deckiecrate`
+writes them, 1.5 MB, about 4 KB a track). The lab's EffNet embedding is left out (non-commercial, and the port plan
+keeps it out of every crate). `core/fixtures/example.deckiecrate` (20 KB, five varied tracks, rebuilt by
+`Tools/make_crate_fixture.sh`) is the example for the Apple side; a test checks it byte for byte against the converter.
 
 ```
 cd core

@@ -66,8 +66,8 @@ is written in every record; `null` means "no value" and is allowed only where ma
 
 - `id`: letters, digits, `-` and `_` only, as it names the sidecar files (the lab's 10-character ids today).
 - `schema`: 1. `features_present`: sorted names, from `grid`, `tempo_segments`, `key`, `key_changes`, `phrase`,
-  `sections`, `mix_windows`, `ends`, `loudness`, `vocal`, `onset_pattern`, `style` and `bars.<series>`. Readers keep
-  names they do not know. **proposed** (the names).
+  `sections`, `mix_windows`, `ends`, `loudness`, `vocal`, `onset_pattern`, `style` and `bars.<series>`. Readers ignore
+  names they do not know, but keep a per-bar series they do not know. **proposed** (the names).
 - `file`: `name`, `rel` (path below the folder the crate was built from, or null; never absolute), `bytes` or null,
   `sha1_head` or null, `duration_s`.
 - `ident`: `title`, and each or null: `artist`, `version`, `source`, `mbid`, `disc`, `folder`, `track`, `cut_key`,
@@ -105,13 +105,14 @@ is written in every record; `null` means "no value" and is allowed only where ma
   `made_by` (device label) and `made_at`; the file is `signatures/<id>_<variant>.shazamsignature` and must exist.
   Empty (`{}`) until an Apple device adds signatures: this track builds no fingerprint.
 
-**Bar numbers.** A bar is 1 to `n_bars`; a bar line (an exclusive end, a boundary, a steady-beat bar) is 1 to
-`n_bars + 1`. **Per-block source and confidence** (**proposed**): `source` names a model from `engine.models` or a
-method (`votes` for a key decided from `key.votes`, `foote-novelty`, `pyloudnorm`, `deckie-core`, `rekordbox-xml`,
-`user`). `confidence` is on the block's own documented scale (the grid fit, the key vote rule, the phrase share)
-until the Mac benchmark can say how often each source is right; that reading will be added as a new field, not
-poured into `confidence`, so no field changes meaning with a version. Likewise the 0-to-1 series are on their
-source's scale until the listening-set calibration exists; a scorer mixing records checks that the sources match.
+**Bar numbers.** A bar is 1 to `n_bars`; a bar line (an exclusive end, a boundary, the start of a fade, the start or
+end of the steady beat) is 1 to `n_bars + 1`. **Per-block source and confidence** (**proposed**): `source` names a
+model from `engine.models` or a method (`votes` for a key decided from `key.votes`, `foote-novelty`, `pyloudnorm`,
+`deckie-core`, `rekordbox-xml`, `user`). `confidence` is on the block's own documented scale (the grid fit, the key
+vote rule, the phrase share) until the Mac benchmark can say how often each source is right; that reading will be
+added as a new field, not poured into `confidence`, so no field changes meaning with a version. Likewise the 0-to-1
+series are on their source's scale until the listening-set calibration exists; a scorer mixing records checks that
+the sources match.
 
 ## Sidecars **proposed** (the header and the order)
 
@@ -120,8 +121,9 @@ little-endian integer; then each series in turn, `n_bars` float16 values (little
 even). The series are the `bars.<series>` names in `features_present`, in that list's order (sorted), so a reader can
 skip a series it does not know. Known series: `lufs` (loudness of the bar), `low_db` (below 150 Hz), `high_db` (above
 4 kHz), `onset_density` (onsets per beat), and `vocal`, `drum`, `bass`, `other` (activity, 0 to 1). `style/<id>.bin`:
-`DKS1`, `dims`, 0, 0, then `dims` float16 values. Float16 keeps loudness to 0.016 dB near -20 and 0.06 dB near -100,
-and 0-to-1 values to 0.0005: enough for picks, not for parity tests, which stay on the lab's files.
+`DKS1`, `dims`, 0, 0, then `dims` float16 values. Float16 steps are 0.016 dB near -20 dB and 0.06 dB near -100,
+and 0.0005 or finer on 0-to-1 values (no per-bar value of the lab's moves more than 0.03): enough for picks, not for
+parity tests, which stay on the lab's files.
 
 ## How it is written **proposed**
 
@@ -146,10 +148,12 @@ names the file, the field path and the track, for example `crate.json: tracks[2]
 
 ## From the lab's feature files **proposed**
 
-`FeatureFile.crateTrack` maps any committed `mixer/features/<id>.json` (with its `candidates.json` row, for the artist
-and song) to a record. Engine `lab`, version `1` (the files' schema), `fidelity` 0, so any benchmarked engine redoes
+`FeatureFile.crateTrack` maps any committed `mixer/features/<id>.json` to a record, with its `candidates.json` row for
+the artist and song where the row has them (198 of 373; elsewhere the lab's "Artist - Title" stays whole in `title`).
+Engine label `lab-1`, family `lab`, version `1` (the files' schema), `fidelity` 0, so any benchmarked engine redoes
 these tracks, as Christopher's crate must be regenerated with the shipped engine before a TestFlight build (track A).
-Level 1; `analysed_at` is given by the caller, as the files carry no date; `secs` is the sum of `timing_s`. Grid source
+Level 1; `analysed_at` is given by the caller, as the files carry no date; `secs` is the sum of `timing_s` as written
+(two files hold stages of 3 to 40 minutes, Thriller's adding up to 4,277 s: the lab's record, not a speed). Grid source
 `beat-this-final0` or `madmom-rnn-dbn`; one tempo segment from the grid; key from the three votes (`votes`), no key
 changes; `rel` is the path below the lab's music folder. Two departures from the files: on 21 of the 373 the lab
 rounds the end of the steady beat to the bar line after the last partial bar (`n_bars + 2`), which the record writes as
@@ -161,5 +165,21 @@ the 15-second tempo profile and window fits, the octave-fix details, `path` and 
 
 The example crate holds five of them: a grid from madmom (Thriller), an octave-fixed grid (Livin' La Vida Loca), a
 fade-out whose steady beat needed the clamp (Blue (Da Ba Dee)), a tempo change (NOKIA, a transition edit), and the
-shortest track (Rich Baby Daddy, 44 bars). `core/Tools/make_crate_fixture.sh` rebuilds it; a test checks the
-committed bytes are what the converter makes today.
+shortest track (Rich Baby Daddy, 44 bars): 20 KB in all, with no embedding, as above.
+`core/Tools/make_crate_fixture.sh` rebuilds it; a test checks the committed bytes are what the converter makes today.
+All 373 tracks as one crate make 1.5 MB, about 4 KB a track (2.9 KB of record, 1.2 KB of sidecar), inside track A's
+budget of about 10 KB.
+
+## The proposals in one list, for the main session
+
+1. Track L's additions: the `engine` block beside `analysis` (which keeps its label); the `features_present` names;
+   `source` on `grid`, `key`, `phrase` (for structure), `loudness` and `vocal`, `confidence` on each block's own
+   scale, calibrated readings to come as new fields.
+2. `fidelity`: 0 not benchmarked, n for benchmark tier n (tier 1 the stage 1 pass marks); lab records 0.
+3. Engine families `apple-mu`, `deckie-oss`, `lab` (track L's `deckie-core` renamed).
+4. Additions to track A's record: `tempo_segments`, `ends.fade_start_bar`, `ident.tags`, the `style` block.
+5. Shape changes to track A's record (no reader exists yet): `key.changes` as objects; a signature entry as
+   `made_by` and `made_at` instead of `true`; `ident.folder` and `ident.era` as text.
+6. The sidecar headers (`DKB1`, `DKS1`) and the series order (that of `features_present`).
+7. The canonical form, and the writer's refusal to rewrite a newer crate.
+8. The lab conversion: the steady-beat clamp, no EffNet embedding ever, `analysed_at` from the caller.
