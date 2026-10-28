@@ -43,6 +43,9 @@ public struct AudioDecodeError: Error, Sendable, Equatable, CustomStringConverti
         case unsupported
         /// The file starts like a known format, but its contents do not hold together.
         case damaged
+        /// The file is locked by copy protection (DRM), such as an iTunes Store or Apple Music file: only the
+        /// store's own player can play it, so no decoder will ever read it. Counted apart from `unsupported`.
+        case protected
     }
 
     public var kind: Kind
@@ -64,7 +67,7 @@ public struct AudioDecodeError: Error, Sendable, Equatable, CustomStringConverti
 
 /// Turns an audio file into float samples at the file's own sample rate. It decodes WAV and AIFF in plain Swift and
 /// MP3 through the vendored dr_mp3, the same on every platform; AAC is recognised but reports that it is not
-/// supported yet.
+/// supported yet, and a copy-protected MP4 (an iTunes Store or Apple Music file) that it is protected.
 public enum AudioDecoder {
     /// Decodes the whole file into memory at its own sample rate (resampling is a later step). Mono stays mono,
     /// stereo stays stereo, more channels are cut to the first two.
@@ -89,6 +92,9 @@ public enum AudioDecoder {
         case .mp3:
             return try MP3Reader.decode(data, file: path)
         case .aac:
+            if let found = ProtectedMP4.check(data) {
+                throw AudioDecodeError(kind: .protected, file: path, format: format, message: found.message)
+            }
             throw unsupported(path, format, "AAC is not supported on this platform yet: it will use the platform's "
                               + "own decoder (AVFoundation on Apple, Media Foundation on Windows); Linux has no "
                               + "licence-safe AAC decoder in a distribution package")
