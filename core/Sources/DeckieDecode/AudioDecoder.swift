@@ -62,8 +62,9 @@ public struct AudioDecodeError: Error, Sendable, Equatable, CustomStringConverti
     public var description: String { "cannot decode \(file) (\(format)): \(message)" }
 }
 
-/// Turns an audio file into float samples at the file's own sample rate. Today it decodes WAV, in plain Swift on
-/// every platform; MP3 and AAC are recognised but report that they are not supported yet.
+/// Turns an audio file into float samples at the file's own sample rate. It decodes WAV in plain Swift and MP3
+/// through the vendored dr_mp3, the same on every platform; AAC is recognised but reports that it is not supported
+/// yet.
 public enum AudioDecoder {
     /// Decodes the whole file into memory at its own sample rate (resampling is a later step). Mono stays mono,
     /// stereo stays stereo, more channels are cut to the first two.
@@ -78,14 +79,13 @@ public enum AudioDecoder {
                                    message: missing ? "no such file" : "could not be read (\(error))")
         }
         let format = AudioFormat.sniff(data)
-        // One backend per format. A new decoder (the MP3 one first) is a new file with a function like
-        // WAVReader.decode and one line here; the public API does not change.
+        // One backend per format. A new decoder is a new file with a function like WAVReader.decode and one line
+        // here; the public API does not change.
         switch format {
         case .wav:
             return try WAVReader.decode(data, file: path)
         case .mp3:
-            throw unsupported(path, format, "MP3 is not supported on this platform yet: no MP3 decoder is built in "
-                              + "(dr_mp3 is the planned one)")
+            return try MP3Reader.decode(data, file: path)
         case .aac:
             throw unsupported(path, format, "AAC is not supported on this platform yet: it will use the platform's "
                               + "own decoder (AVFoundation on Apple, Media Foundation on Windows); Linux has no "
