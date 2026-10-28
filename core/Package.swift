@@ -5,9 +5,10 @@
 // DeckieLab: reads the lab's feature files (mixer/features/<id>.json, mixer/candidates.json) into DeckieCore types,
 // for the parity tests and, later, the Mac benchmark.
 // DeckieDecode: audio files to float samples for the analysers: WAV and AIFF in plain Swift; MP3 through dr_mp3
-// (CDrMp3, a vendored public-domain C file, DEPENDENCIES.md); AAC is recognised and reported as not supported yet,
-// a copy-protected MP4 as protected. It re-exports DeckieAudio.
-// CDrMp3: dr_mp3.h compiled as plain C, the same on Linux, Windows and macOS; nothing is downloaded at build time.
+// (CDrMp3) and FLAC through dr_flac (CDrFlac), vendored public-domain C files (DEPENDENCIES.md); AAC is recognised
+// and reported as not supported yet, a copy-protected MP4 as protected. It re-exports DeckieAudio.
+// CDrMp3, CDrFlac: dr_mp3.h and dr_flac.h compiled as plain C, the same on Linux, Windows and macOS; nothing is
+// downloaded at build time.
 import PackageDescription
 
 let package = Package(
@@ -23,7 +24,8 @@ let package = Package(
         .target(name: "DeckieCore", dependencies: ["DeckieAudio"]),
         .target(name: "DeckieLab", dependencies: ["DeckieCore"]),
         .target(name: "CDrMp3"),
-        .target(name: "DeckieDecode", dependencies: ["DeckieAudio", "CDrMp3"]),
+        .target(name: "CDrFlac"),
+        .target(name: "DeckieDecode", dependencies: ["DeckieAudio", "CDrMp3", "CDrFlac"]),
         .testTarget(name: "DeckieCoreTests", dependencies: ["DeckieCore", "DeckieLab", "DeckieAudio"],
                     exclude: ["Fixtures"]),
         .testTarget(name: "DeckieDecodeTests", dependencies: ["DeckieDecode"], exclude: ["Fixtures"]),
