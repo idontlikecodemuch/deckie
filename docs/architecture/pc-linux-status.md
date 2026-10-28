@@ -7,11 +7,13 @@ Mac) reviews and merges this track's branch, `pc-linux`, and runs anything that 
 ## Where things stand
 
 - Step 1 (the two-week spike) has its Linux half: the Swift package `DeckieCore` under `core/` reproduces the
-  lab's grid fit, Camelot mapping and pair scoring on Linux, number for number (entry 2). The Windows half, the
-  CI probe, is written but has not run, because this session cannot push to GitHub (entry 2, blocker).
+  lab's grid fit, Camelot mapping and pair scoring on Linux, number for number (entry 2). The branch `pc-linux`
+  is pushed. The Windows half, the CI probe, is written and on GitHub but has not run: GitHub started no
+  workflow after the push, and this session is not allowed to start one by hand (entry 2, continued, part 2).
   Step 2 does not start until the main session has read the spike result.
-- Needed from Christopher: GitHub write access for this session, so the branch can be pushed and the two
-  workflows run (entry 2 says how).
+- Needed from Christopher: a look at the repository's Actions setting (entry 2, continued, part 2).
+- Needed from the main session: review and merge of `pc-linux`; once the workflows are on `main` they run on
+  every push and appear in the Actions tab.
 - Needed from the Mac: nothing.
 - Open questions for the main session: one small one on licence lists (entry 2, continued).
 
@@ -132,3 +134,21 @@ same commits) in the session's scratch folder, named below in the session reply.
 - Both reviewed and committed by this session; nine commits on `pc-linux` now, still unpushed (the blocker above
   stands: writes were refused again after Christopher's "access restored" message, so the fix has not reached
   this session's credentials; a fresh session may be needed).
+
+### Entry 2, continued, part 2: pushed; the workflows did not start
+
+- **The push went through** once Christopher restored GitHub access and the session's credentials caught up
+  (the first attempts after his message were still refused; the fourth, some minutes later, was accepted).
+  `pc-linux` is on GitHub with its nine commits, and the same commits are mirrored on this session's own branch.
+- **GitHub Actions started nothing.** GitHub can see both workflow files on the branch and all nine commits, yet
+  several minutes after the push it lists no workflow run at all, for either workflow. Starting one by hand from
+  here was refused: the Claude GitHub App that this session pushes through has no permission to start workflows
+  (a 403 on the "dispatch" request).
+- **Two likely causes, both outside this session.** Either Actions is switched off for the repository
+  (GitHub: Settings, Actions, General, "Actions permissions": it should allow actions to run), or runs started
+  by a push from the Claude App are not created. Christopher can check the first in a minute. The second resolves
+  itself when the main session merges `pc-linux` into `main` from the Mac: a push by a person starts the
+  workflows, and from then on they run on every push to `main` or `pc-linux`.
+- **What this means for the spike.** The Linux half stands (every test passes here on the same toolchain the
+  Linux workflow pins). The Windows half is still unmeasured; it needs one workflow run on GitHub's Windows
+  machine, which no amount of work in this session can substitute for.
