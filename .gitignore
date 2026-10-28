@@ -32,3 +32,5 @@ core/.swiftpm/
 !core/Tests/DeckieDecodeTests/Fixtures/*.wav
 !core/Tests/DeckieDecodeTests/Fixtures/*.mp3
 !core/Tests/DeckieDecodeTests/Fixtures/*.m4a
+# Claude Code agent worktrees (temporary checkouts the harness makes inside the repository)
+.claude/worktrees/
