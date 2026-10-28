@@ -5,6 +5,10 @@ can do all the investigation and building / testing for the PC / Linux version."
 `docs/research/l-non-apple.md` (track L); the product context is `docs/product/spec-condensed.md` (v0.7),
 `docs/product/00-decisions.md` (D3, D11, D13, P16, P17) and `docs/architecture/overview.md` section 5.
 
+> Language under review (Oct 28): Christopher asked whether Rust is the best option and where the line between
+> own code and maintained dependencies should sit. Research track M answers that; the Rust choice below is
+> provisional until it does, and the cloud session starts after that decision.
+
 ## Goal
 
 A crate-builder for Windows and Linux, working name Desk Lite, that reads a DJ's music files and an optional rekordbox
