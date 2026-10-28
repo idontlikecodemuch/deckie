@@ -9,6 +9,7 @@
 // and reported as not supported yet, a copy-protected MP4 as protected. It re-exports DeckieAudio.
 // CDrMp3, CDrFlac: dr_mp3.h and dr_flac.h compiled as plain C, the same on Linux, Windows and macOS; nothing is
 // downloaded at build time.
+// DeckieTestSupport: synthesised test audio and the beat fixture, shared by the test targets (not a product).
 import PackageDescription
 
 let package = Package(
@@ -26,7 +27,8 @@ let package = Package(
         .target(name: "CDrMp3"),
         .target(name: "CDrFlac"),
         .target(name: "DeckieDecode", dependencies: ["DeckieAudio", "CDrMp3", "CDrFlac"]),
-        .testTarget(name: "DeckieCoreTests", dependencies: ["DeckieCore", "DeckieLab", "DeckieAudio"],
+        .target(name: "DeckieTestSupport", path: "Tests/DeckieTestSupport"),
+        .testTarget(name: "DeckieCoreTests", dependencies: ["DeckieCore", "DeckieLab", "DeckieAudio", "DeckieTestSupport"],
                     exclude: ["Fixtures"]),
         .testTarget(name: "DeckieDecodeTests", dependencies: ["DeckieDecode"], exclude: ["Fixtures"]),
     ]
