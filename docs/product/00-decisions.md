@@ -185,3 +185,17 @@ Christopher says so; a yes moves it up into the dated decisions above.
   without a Mac (no engine work, interface only); Desk Lite for Windows and Linux after the trials (rekordbox XML
   import first, a second engine for the rest, signatures still from an Apple device); Android booth only on demand.
   Spec 5.7, overview section 5.
+- **P16, revised by track M: Deckie's own code is written once in Swift, as a plain package with no Apple-only
+  framework, and runs on Windows and Linux too; Rust is the runner-up, not the default.** Track M found the shared
+  core is small (about 3,000 lines once ported: the DJ DSP, the key estimator, the scoring and the crate format),
+  that a Rust core would put a translation layer under every Mac and iPad build now for a Windows builder that P17
+  places after the trials, that Swift 6.4 runs on Windows and Linux with a Windows workgroup since Jan 2026, and
+  that the bugs that change picks are numeric, which neither compiler catches, so the parity tests against the lab
+  are the real safety net. Three-year cost, all inference: Swift everywhere 9 to 12 weeks, a Rust core 13 to 19,
+  two separate implementations 18 to 32. Guard before stage 2: a two-week spike porting the grid fit, Camelot and
+  score.py to a Swift package that reproduces pairs.json on Linux and on a Windows CI runner; if it fails, Rust.
+  Dependency policy (track M): depend on decoders, the FFT, the model runtime, loudness, XML and model weights; own
+  the DJ DSP, the key estimator, the scoring and the crate format; platform tools first, then permissive C
+  libraries; pin every dependency by version and hash in one DEPENDENCIES.md with a CI licence allowlist; vendor
+  small leaf libraries; nothing that runs or downloads code at build time; a quarterly update day with a benchmark
+  rerun. Awaiting Christopher.

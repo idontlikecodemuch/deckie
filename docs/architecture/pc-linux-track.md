@@ -5,9 +5,12 @@ can do all the investigation and building / testing for the PC / Linux version."
 `docs/research/l-non-apple.md` (track L); the product context is `docs/product/spec-condensed.md` (v0.7),
 `docs/product/00-decisions.md` (D3, D11, D13, P16, P17) and `docs/architecture/overview.md` section 5.
 
-> Language under review (Oct 28): Christopher asked whether Rust is the best option and where the line between
-> own code and maintained dependencies should sit. Research track M answers that; the Rust choice below is
-> provisional until it does, and the cloud session starts after that decision.
+> Language decision (Oct 28, track M, awaiting Christopher): the research recommends Swift everywhere for Deckie's
+> own code, a plain Swift package with no Apple-only framework, calling C libraries directly on Windows and Linux
+> (ONNX Runtime's C API, dr_mp3, the Windows AAC decoder, libebur128, PocketFFT); Rust is the runner-up. If
+> accepted: `core/` becomes a Swift package, the C-interface step (6) goes away, the first task of this session is
+> the two-week spike (grid fit, Camelot, score.py reproducing pairs.json on Linux and on a Windows CI runner), and
+> the dependency policy in P16 applies. Everything below that says Rust reads as Swift until the charter is rewritten.
 
 ## Goal
 
