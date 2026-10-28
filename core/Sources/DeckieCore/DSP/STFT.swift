@@ -19,22 +19,52 @@ public enum Window {
 /// 1 + n / hop frames for n samples (integer division). librosa pads the head and the tail separately to avoid
 /// copying the signal; the frames are the same as padding the whole signal with fftSize / 2 zeros on each side.
 ///
+/// With `padding: .reflect` the samples off either end are the signal mirrored about its first and last sample
+/// instead (x[-1] = x[1], x[n] = x[n - 2]), as `torch.stft(..., center=True, pad_mode="reflect")` pads, which is
+/// what torchaudio's spectrograms (and so Beat This!'s front end) use. torch refuses a signal no longer than
+/// fftSize / 2; here the mirroring repeats as numpy's "reflect" does, so any signal of two or more samples works.
+///
 /// Only the power (magnitude squared, librosa's `power=2`) is produced here, frame by frame, so four minutes of audio
 /// never need the whole spectrogram in memory. Everything is in double precision. (librosa, given float32 audio as
 /// the lab gives it, multiplies by the float64 window, transforms in float64 and then stores the result as complex64,
 /// so its spectrogram carries single-precision rounding, about 1e-7 relative, that this one does not.)
 public struct STFT: Sendable {
+    /// What the centred frames see beyond the signal's ends.
+    public enum Padding: Sendable, Equatable {
+        /// Zeros (librosa's default, `pad_mode="constant"`).
+        case zeros
+        /// The signal mirrored about its end samples, the end samples not repeated (torch's `pad_mode="reflect"`).
+        case reflect
+    }
+
     public let fftSize: Int
     public let hop: Int
+    public let padding: Padding
     public let window: [Double]
     let fft: RealFFT
 
-    public init(fftSize: Int, hop: Int) {
+    public init(fftSize: Int, hop: Int, padding: Padding = .zeros) {
         precondition(hop >= 1, "hop \(hop)")
         self.fftSize = fftSize
         self.hop = hop
+        self.padding = padding
         window = Window.hann(fftSize)
         fft = RealFFT(size: fftSize)
+    }
+
+    /// The sample a padded index i stands for in a signal of n samples, or nil where the padding is zero.
+    @inline(__always)
+    func source(_ i: Int, _ n: Int) -> Int? {
+        if i >= 0 && i < n { return i }
+        switch padding {
+        case .zeros: return nil
+        case .reflect:
+            if n < 2 { return n == 1 ? 0 : nil }
+            let period = 2 * (n - 1)
+            var k = i % period
+            if k < 0 { k += period }
+            return k < n ? k : period - k
+        }
     }
 
     /// Frequency bins per frame: fftSize / 2 + 1, from 0 Hz to the Nyquist frequency.
@@ -58,8 +88,7 @@ public struct STFT: Sendable {
                         return
                     }
                     while j < size {
-                        let i = start + j
-                        x[j] = i >= 0 && i < n ? Double(yb[i]) * w[j] : 0
+                        if let i = source(start + j, n) { x[j] = Double(yb[i]) * w[j] } else { x[j] = 0 }
                         j += 1
                     }
                 }, body)
@@ -81,8 +110,7 @@ public struct STFT: Sendable {
                         return
                     }
                     while j < size {
-                        let i = start + j
-                        x[j] = i >= 0 && i < n ? yb[i] * w[j] : 0
+                        if let i = source(start + j, n) { x[j] = yb[i] * w[j] } else { x[j] = 0 }
                         j += 1
                     }
                 }, body)
@@ -99,7 +127,7 @@ public struct STFT: Sendable {
     }
 
     /// Runs the frames: `fill(start, x)` writes the windowed frame that starts at sample `start` (negative for the
-    /// first frames, past the end for the last, where the signal counts as zero) into x.
+    /// first frames, past the end for the last, where the padding applies) into x.
     private func run(samples n: Int, fill: (Int, UnsafeMutablePointer<Double>) -> Void,
                      _ body: (Int, UnsafeBufferPointer<Double>) -> Void) {
         let frames = frameCount(samples: n), size = fftSize, b = bins
