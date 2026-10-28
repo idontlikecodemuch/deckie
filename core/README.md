@@ -7,11 +7,15 @@ and Linux crate builder share them. Charter: `docs/architecture/pc-linux-track.m
 - `Sources/DeckieCore`: the beat grid fit (`GridFit.swift`), the Camelot wheel (`Camelot.swift`), tempo
   relations (`TempoMultipliers.swift`), directed pair scoring (`PairScoring.swift`) and the top lists
   (`Recommendations.swift`). Ported line for line from `mixer/analyze.py` and `mixer/score.py`;
-  `PythonCompat.swift` holds the rounding and modulo details that keep the numbers identical.
+  `PythonCompat.swift` holds the rounding and modulo details that keep the numbers identical. `Loudness/` is the
+  loudness module, described below.
 - `Sources/DeckieLab`: reads the lab's `mixer/features/<id>.json` and `mixer/candidates.json` into
   `DeckieCore` types.
+- `Sources/DeckieAudio`: `AudioBuffer`, decoded audio in memory (interleaved Float32 at the file's own rate, one
+  or two channels), in a target of its own with no Foundation so the analysers in `DeckieCore` can take audio
+  without depending on the decoder.
 - `Sources/DeckieDecode`: audio files to float samples for the analysers (`AudioDecoder.decode(url)` gives an
-  `AudioBuffer`: interleaved Float32 at the file's own rate, one or two channels). It builds the same on Linux,
+  `AudioBuffer`; DeckieDecode re-exports DeckieAudio, so importing it is enough). It builds the same on Linux,
   Windows and macOS and needs nothing installed. It reads WAV (16-, 24- and 32-bit integer, 32-bit float) in plain
   Swift and MP3 through the vendored dr_mp3 (below); AAC is recognised and throws a "not supported on this platform
   yet" error until the platform decoders are wired in. Ubuntu's ffmpeg libraries were checked and rejected as GPL
@@ -27,10 +31,23 @@ and Linux crate builder share them. Charter: `docs/architecture/pc-linux-track.m
 - `Tests/DeckieCoreTests`: parity tests against the lab. `Fixtures/` holds the reference numbers, written by
   `Tools/make_fixtures.py` with the lab's own Python (needs numpy; run from the repository root). The tests also
   read `mixer/features/`, `mixer/candidates.json` and `mixer/recs.json` straight from the repository.
+  `LoudnessTests.swift` uses synthesised signals only: the published BS.1770 coefficients, the EBU Tech 3341 and
+  3342 test cases, true peak between samples, and a speed check.
 - `Tests/DeckieDecodeTests`: the decoder's tests. `Fixtures/` holds a generated test tone (two sines and a click)
   as WAV at 44.1 and 48 kHz, MP3 at 44.1 and 48 kHz and in mono, and AAC, written by `Tools/make_audio_fixtures.py`
   (needs numpy, and the ffmpeg program for the MP3 and AAC files only; the same ffmpeg gives the same bytes on
   every run). The MP3 tests also edit those bytes in memory: ID3 tags in front, edited LAME tags, damaged files.
+
+**Loudness** (`Sources/DeckieCore/Loudness/`) measures what the lab measures, for any sample rate, on every platform,
+with no dependency. `KWeighted(buffer)` filters each channel with the K-weighting of ITU-R BS.1770 (two biquads, in
+double precision) and keeps a running sum of the channel-summed K-weighted square, so the loudness of any span,
+such as one bar (`loudness(from:to:)`, the lab's per-bar `lufs_st`), is one subtraction. `Loudness.integrated` and
+`Loudness.range` give integrated loudness (LUFS) and loudness range (LU) gated exactly as pyloudnorm 0.2.0 does it,
+`Loudness.shortTerm` the lab's 3 s `st_lufs`, and `TruePeak.decibels` the lab's true peak (4x oversampling with
+`scipy.signal.resample_poly`'s default filter, in 10 s blocks). The default filter design is pyloudnorm's, which
+the lab uses; it reads about 0.04 LU below the coefficients BS.1770 publishes, which `design: .bs1770` gives
+instead (as libebur128 does). The algorithms follow pyloudnorm (MIT) and scipy by description; no code is
+copied. Four minutes of stereo take about a second in a debug build.
 
 ```
 cd core

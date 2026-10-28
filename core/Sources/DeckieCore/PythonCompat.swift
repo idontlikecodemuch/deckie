@@ -37,6 +37,23 @@ public enum Py {
         a.isEmpty ? 0 : a.reduce(0, +) / Double(a.count)
     }
 
+    /// `numpy.percentile(a, q)` with numpy's default linear method, of a non-empty array: the value at position
+    /// (n - 1) q / 100 of the sorted values, interpolated between its neighbours the way numpy's `_lerp` does it
+    /// (from the upper neighbour when the fraction is at least one half).
+    public static func percentile(_ a: [Double], _ q: Double) -> Double {
+        precondition(!a.isEmpty, "percentile of an empty array")
+        let s = a.sorted()
+        let n = s.count
+        let virtual = Double(n - 1) * (q / 100)
+        if virtual >= Double(n - 1) { return s[n - 1] }
+        if virtual < 0 { return s[0] }
+        let below = virtual.rounded(.down)
+        let lo = s[Int(below)], hi = s[Int(below) + 1]
+        let t = virtual - below
+        let diff = hi - lo
+        return t >= 0.5 ? hi - diff * (1 - t) : lo + diff * t
+    }
+
     /// Python's `f"{x:.{places}f}"`.
     public static func fixed(_ x: Double, _ places: Int) -> String { String(format: "%.\(places)f", x) }
 
