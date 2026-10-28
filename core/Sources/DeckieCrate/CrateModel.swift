@@ -33,20 +33,120 @@ public struct CrateManifest: Codable, Equatable, Sendable {
     public var createdAt: String
     /// The device labels that have written to the crate.
     public var devicesSeen: [String]
+    /// What the builder saw when it last made the crate from a folder (**proposed**); nil for a crate not built from a
+    /// folder, such as one converted from the lab's files.
+    public var importLog: ImportLog?
 
     public init(crateId: String, name: String, createdAt: String, devicesSeen: [String],
-                schema: Int = CrateFormat.schema, minReader: Int = 1) {
+                schema: Int = CrateFormat.schema, minReader: Int = 1, importLog: ImportLog? = nil) {
         self.schema = schema
         self.minReader = minReader
         self.crateId = crateId
         self.name = name
         self.createdAt = createdAt
         self.devicesSeen = devicesSeen
+        self.importLog = importLog
     }
 
     enum CodingKeys: String, CodingKey {
         case schema, name, minReader = "min_reader", crateId = "crate_id", createdAt = "created_at"
-        case devicesSeen = "devices_seen"
+        case devicesSeen = "devices_seen", importLog = "import_log"
+    }
+
+    /// The manifest's `import_log` (**proposed**): every audio file of the folder that has no record of its own, so
+    /// no file is left out silently. A file is "audio" by its extension; one that could not be analysed is listed with
+    /// its path below the folder (never an absolute path), its extension, a reason and the reason's text. `counts`
+    /// (reason, then extension, to the number of files) is written from the entries for a quick look and recomputed
+    /// by readers, as `engines_used` is.
+    public struct ImportLog: Codable, Equatable, Sendable {
+        /// Why a file has no record of its own.
+        public enum Reason {
+            /// A format, or a variant of one, that this platform's decoder cannot read (AAC on Linux, WMA, Ogg, ...).
+            public static let unsupported = "unsupported"
+            /// Locked by copy protection (an iTunes Store or Apple Music file): no decoder will ever read it.
+            public static let protected = "protected"
+            /// The file starts like a format it knows but its contents do not hold together (cut short, corrupted).
+            public static let damaged = "damaged"
+            /// The file could not be read, or decoding failed in some other way.
+            public static let decodeError = "decode_error"
+            /// Decoded, but the analysis failed (no beat grid, too few bars, the model failed).
+            public static let analysisError = "analysis_error"
+            /// The same bytes as another file of the folder, which has the record (the record id is the file's hash).
+            public static let duplicate = "duplicate"
+            public static let all = [unsupported, protected, damaged, decodeError, analysisError, duplicate]
+        }
+
+        /// One file without a record of its own.
+        public struct Entry: Codable, Equatable, Sendable {
+            /// The path below the folder the crate was built from.
+            public var rel: String
+            /// The file's extension, lower case, without the dot (`mp3`, `m4p`).
+            public var ext: String
+            /// One of `Reason`.
+            public var reason: String
+            /// The reason in words, as the decoder or the analyser gave it.
+            public var message: String
+            public init(rel: String, ext: String, reason: String, message: String) {
+                self.rel = rel; self.ext = ext; self.reason = reason; self.message = message
+            }
+        }
+
+        /// What the DJ's rekordbox collection export contributed: its track count and how many matched a file.
+        public struct Rekordbox: Codable, Equatable, Sendable {
+            public var tracks: Int
+            public var matched: Int
+            public init(tracks: Int, matched: Int) { self.tracks = tracks; self.matched = matched }
+        }
+
+        /// The program and its version (`deckie-build 0.1.0`).
+        public var builtBy: String
+        /// When the build finished, UTC to the second.
+        public var builtAt: String
+        /// Audio files found in the folder, by extension.
+        public var filesSeen: Int
+        /// Records the build wrote (files seen less the entries).
+        public var tracks: Int
+        /// Sorted by `rel`.
+        public var entries: [Entry]
+        public var rekordbox: Rekordbox?
+
+        public init(builtBy: String, builtAt: String, filesSeen: Int, tracks: Int, entries: [Entry],
+                    rekordbox: Rekordbox? = nil) {
+            self.builtBy = builtBy; self.builtAt = builtAt; self.filesSeen = filesSeen; self.tracks = tracks
+            self.entries = entries; self.rekordbox = rekordbox
+        }
+
+        /// Reason, then extension, to the number of entries.
+        public var counts: [String: [String: Int]] {
+            var c: [String: [String: Int]] = [:]
+            for e in entries { c[e.reason, default: [:]][e.ext, default: 0] += 1 }
+            return c
+        }
+
+        enum CodingKeys: String, CodingKey {
+            case entries, rekordbox, tracks, counts, builtBy = "built_by", builtAt = "built_at", filesSeen = "files_seen"
+        }
+
+        public init(from decoder: Decoder) throws {
+            let c = try decoder.container(keyedBy: CodingKeys.self)
+            builtBy = try c.decode(String.self, forKey: .builtBy)
+            builtAt = try c.decode(String.self, forKey: .builtAt)
+            filesSeen = try c.decode(Int.self, forKey: .filesSeen)
+            tracks = try c.decode(Int.self, forKey: .tracks)
+            entries = try c.decode([Entry].self, forKey: .entries)
+            rekordbox = try c.decodeIfPresent(Rekordbox.self, forKey: .rekordbox)
+        }
+
+        public func encode(to encoder: Encoder) throws {
+            var c = encoder.container(keyedBy: CodingKeys.self)
+            try c.encode(builtBy, forKey: .builtBy)
+            try c.encode(builtAt, forKey: .builtAt)
+            try c.encode(filesSeen, forKey: .filesSeen)
+            try c.encode(tracks, forKey: .tracks)
+            try c.encode(entries, forKey: .entries)
+            try c.encode(counts, forKey: .counts)
+            try c.encodeIfPresent(rekordbox, forKey: .rekordbox)
+        }
     }
 }
 
@@ -334,6 +434,85 @@ public struct CrateTrack: Codable, Equatable, Sendable {
         enum CodingKeys: String, CodingKey { case madeBy = "made_by", madeAt = "made_at" }
     }
 
+    /// What the builder knew about the track besides its audio (**proposed**): the tag tempo the analysis was steered
+    /// by, and what the DJ's rekordbox collection says. A reader that does not know it ignores it.
+    public struct Deckie: Codable, Equatable, Sendable {
+        /// A tempo the DJ or a tagger wrote down, which steered the octave alignment (`bpm`; `source` is
+        /// `rekordbox-xml` for the collection's average tempo, `file-tag` for the file's own tag, such as ID3 TBPM).
+        public struct TagTempo: Codable, Equatable, Sendable {
+            public var bpm: Double
+            public var source: String
+            public init(bpm: Double, source: String) { self.bpm = bpm; self.source = source }
+        }
+
+        /// The track's entry in a rekordbox collection export (rekordbox's XML), as rekordbox wrote it. Times are
+        /// seconds from the start of the file as rekordbox decodes it.
+        public struct Rekordbox: Codable, Equatable, Sendable {
+            /// One of rekordbox's grid markers (a TEMPO element): the beat at `startS` is beat `beatInBar` of its
+            /// bar, and the grid runs at `bpm` in `meter` from there to the next marker.
+            public struct GridMarker: Codable, Equatable, Sendable {
+                public var startS: Double
+                public var bpm: Double
+                /// As written, `4/4`, or null.
+                public var meter: String?
+                public var beatInBar: Int
+                public init(startS: Double, bpm: Double, meter: String?, beatInBar: Int) {
+                    self.startS = startS; self.bpm = bpm; self.meter = meter; self.beatInBar = beatInBar
+                }
+                enum CodingKeys: String, CodingKey {
+                    case bpm, meter, startS = "start_s", beatInBar = "beat_in_bar"
+                }
+            }
+
+            /// A cue point, a loop or another position mark (a POSITION_MARK element).
+            public struct Cue: Codable, Equatable, Sendable {
+                /// The DJ's name for it; empty when unnamed.
+                public var name: String
+                /// `cue`, `fade-in`, `fade-out`, `load` or `loop` (rekordbox's types 0 to 4).
+                public var kind: String
+                /// The hot cue's number, 0 for A to 7 for H; null for a memory cue.
+                public var hotCue: Int?
+                public var startS: Double
+                /// The end of a loop; null otherwise.
+                public var endS: Double?
+                public init(name: String, kind: String, hotCue: Int?, startS: Double, endS: Double?) {
+                    self.name = name; self.kind = kind; self.hotCue = hotCue; self.startS = startS; self.endS = endS
+                }
+                enum CodingKeys: String, CodingKey {
+                    case name, kind, hotCue = "hot_cue", startS = "start_s", endS = "end_s"
+                }
+            }
+
+            /// rekordbox's TrackID within that export.
+            public var trackId: String
+            /// The average tempo rekordbox shows (`AverageBpm`); null when it has none.
+            public var bpm: Double?
+            /// The key as rekordbox wrote it (`Tonality`: `Am`, `8A` or `1m`, by the DJ's display setting); its
+            /// Camelot code is the vote `rekordbox-xml` in `key.votes`.
+            public var tonality: String?
+            public var grid: [GridMarker]
+            public var cues: [Cue]
+            /// The playlists holding the track, each as its path of folder names from the top, the playlist last.
+            public var playlists: [[String]]
+
+            public init(trackId: String, bpm: Double?, tonality: String?, grid: [GridMarker], cues: [Cue],
+                        playlists: [[String]]) {
+                self.trackId = trackId; self.bpm = bpm; self.tonality = tonality; self.grid = grid; self.cues = cues
+                self.playlists = playlists
+            }
+            enum CodingKeys: String, CodingKey { case bpm, tonality, grid, cues, playlists, trackId = "track_id" }
+        }
+
+        public var bpmTag: TagTempo?
+        public var rekordbox: Rekordbox?
+
+        public init(bpmTag: TagTempo? = nil, rekordbox: Rekordbox? = nil) {
+            self.bpmTag = bpmTag
+            self.rekordbox = rekordbox
+        }
+        enum CodingKeys: String, CodingKey { case rekordbox, bpmTag = "bpm_tag" }
+    }
+
     public var id: String
     public var schema: Int
     public var file: File
@@ -355,6 +534,8 @@ public struct CrateTrack: Codable, Equatable, Sendable {
     public var style: Style?
     /// By variant (`o`, `r-4`, `r+4`, ...). Empty until an Apple device adds signatures.
     public var signatures: [String: Signature]
+    /// The builder's own additions (**proposed**); nil when it has nothing to add.
+    public var deckie: Deckie?
     /// The per-bar series (`bars/<id>.bin`), not part of crate.json.
     public var bars: BarSeries? = nil
 
@@ -363,12 +544,12 @@ public struct CrateTrack: Codable, Equatable, Sendable {
                 phrase: Phrase? = nil, sections: [Section]? = nil, mixIn: MixWindow? = nil, mixOut: MixWindow? = nil,
                 ends: Ends? = nil, loudness: Loudness? = nil, vocal: Vocal? = nil, onsetPattern16: [Double]? = nil,
                 flags: [String] = [], style: Style? = nil, signatures: [String: Signature] = [:],
-                bars: BarSeries? = nil) {
+                bars: BarSeries? = nil, deckie: Deckie? = nil) {
         self.id = id; self.schema = schema; self.file = file; self.ident = ident; self.analysis = analysis
         self.engine = engine; self.grid = grid; self.tempoSegments = tempoSegments; self.key = key
         self.phrase = phrase; self.sections = sections; self.mixIn = mixIn; self.mixOut = mixOut; self.ends = ends
         self.loudness = loudness; self.vocal = vocal; self.onsetPattern16 = onsetPattern16; self.flags = flags
-        self.style = style; self.signatures = signatures; self.bars = bars
+        self.style = style; self.signatures = signatures; self.bars = bars; self.deckie = deckie
     }
 
     /// The record's `features_present`: the optional blocks it holds and its per-bar series, sorted.
@@ -393,7 +574,7 @@ public struct CrateTrack: Codable, Equatable, Sendable {
 
     enum CodingKeys: String, CodingKey {
         case id, schema, file, ident, analysis, engine, grid, key, phrase, sections, ends, loudness, vocal, flags
-        case style, signatures
+        case style, signatures, deckie
         case tempoSegments = "tempo_segments", mixIn = "mix_in", mixOut = "mix_out", onsetPattern16 = "onset_pattern_16"
     }
     enum ListKeys: String, CodingKey { case featuresPresent = "features_present" }
@@ -420,6 +601,7 @@ public struct CrateTrack: Codable, Equatable, Sendable {
         try c.encode(flags, forKey: .flags)
         try c.encodeIfPresent(style, forKey: .style)
         try c.encode(signatures, forKey: .signatures)
+        try c.encodeIfPresent(deckie, forKey: .deckie)
         var l = encoder.container(keyedBy: ListKeys.self)
         try l.encode(featuresPresent, forKey: .featuresPresent)
     }

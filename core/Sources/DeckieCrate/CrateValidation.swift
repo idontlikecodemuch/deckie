@@ -42,6 +42,15 @@ extension Crate {
             p.add("manifest.json", "min_reader", nil, "\(m.minReader) must be between 1 and the schema, \(m.schema)")
         }
         if m.crateId.isEmpty { p.add("manifest.json", "crate_id", nil, "is empty") }
+        if let log = m.importLog {
+            for (j, e) in log.entries.enumerated() {
+                if isAbsolute(e.rel) {
+                    p.add("manifest.json", "import_log.entries[\(j)].rel", nil,
+                          "\"\(e.rel)\" is an absolute path; the crate keeps paths relative")
+                }
+                if e.reason.isEmpty { p.add("manifest.json", "import_log.entries[\(j)].reason", nil, "is empty") }
+            }
+        }
         var seen: [String: Int] = [:]
         for (i, t) in tracks.enumerated() {
             if let j = seen[t.id] {
@@ -63,6 +72,11 @@ struct Problems {
     }
 }
 
+/// A path that starts at the root of a disk: `/...`, `\\...` or a drive letter (`C:`).
+func isAbsolute(_ path: String) -> Bool {
+    path.hasPrefix("/") || path.hasPrefix("\\") || path.dropFirst().hasPrefix(":")
+}
+
 /// Letters, digits and the given punctuation only, and not empty: safe in a file name on every system.
 func isFileSafe(_ s: String, also extra: Set<Character> = ["-", "_"]) -> Bool {
     !s.isEmpty && s.count <= 128 && s.allSatisfy { ($0.isASCII && ($0.isLetter || $0.isNumber)) || extra.contains($0) }
@@ -80,7 +94,7 @@ extension CrateTrack {
             add("schema", "\(schema) must be between 1 and the manifest's \(manifestSchema)")
         }
         if file.name.isEmpty { add("file.name", "is empty") }
-        if let rel = file.rel, rel.hasPrefix("/") || rel.hasPrefix("\\") || rel.dropFirst().hasPrefix(":") {
+        if let rel = file.rel, isAbsolute(rel) {
             add("file.rel", "\"\(rel)\" is an absolute path; the crate keeps paths relative")
         }
         if let h = file.sha256 {
@@ -214,6 +228,21 @@ extension CrateTrack {
                 add("signatures.\(variant)", "the variant name must be letters, digits, -, + and _ only")
             }
             if signatures[variant]!.madeBy.isEmpty { add("signatures.\(variant).made_by", "is empty") }
+        }
+        if let d = deckie {
+            if let t = d.bpmTag, !(t.bpm > 0) { add("deckie.bpm_tag.bpm", "\(t.bpm) must be above 0") }
+            if let r = d.rekordbox {
+                for (j, g) in r.grid.enumerated() {
+                    if !(g.bpm > 0) { add("deckie.rekordbox.grid[\(j)].bpm", "\(g.bpm) must be above 0") }
+                    if g.beatInBar < 1 { add("deckie.rekordbox.grid[\(j)].beat_in_bar", "\(g.beatInBar) must be 1 or more") }
+                }
+                for (j, c) in r.cues.enumerated() {
+                    let path = "deckie.rekordbox.cues[\(j)]"
+                    if c.kind.isEmpty { add("\(path).kind", "is empty") }
+                    if let h = c.hotCue, h < 0 { add("\(path).hot_cue", "\(h) must be 0 or more") }
+                    if let e = c.endS, e < c.startS { add("\(path).end_s", "\(e) is before start_s \(c.startS)") }
+                }
+            }
         }
         if let b = bars {
             needsGrid("bars", true)

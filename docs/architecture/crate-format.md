@@ -59,7 +59,8 @@ Example.deckiecrate/
 
 **`manifest.json`**: `schema` (1), `min_reader` (1), `crate_id` (text, made once when the crate is created),
 `name`, `created_at` (UTC, to the second, as `2026-10-26T00:00:00Z`), `devices_seen` (device labels), and
-`engines_used` (the tracks' `analysis.engine` labels, sorted; written for a quick look, recomputed by readers).
+`engines_used` (the tracks' `analysis.engine` labels, sorted; written for a quick look, recomputed by readers), and
+`import_log` or null (**proposed** with step 5, below).
 
 ## The track record (`crate.json`)
 
@@ -124,6 +125,7 @@ is written in every record; `null` means "no value" and is allowed only where ma
 - `signatures` **proposed** (track A had variant to `true`): variant name (`o`, `r-4`, `r+4`, as P11 settles) to
   `made_by` (device label) and `made_at`; the file is `signatures/<id>_<variant>.shazamsignature` and must exist.
   Empty (`{}`) until an Apple device adds signatures: this track builds no fingerprint.
+- `deckie` or null **proposed** with step 5 (below): what the builder knew about the track besides its audio.
 
 **Bar numbers.** A bar is 1 to `n_bars`; a bar line (an exclusive end, a boundary, the start of a fade, the start or
 end of the steady beat) is 1 to `n_bars + 1`. **Per-block source and confidence** (**proposed**): `source` names a
@@ -151,7 +153,8 @@ Canonical, so two writes of the same crate are identical byte for byte, in any l
 no spaces; strings escaped only where JSON requires; `null` written, never left out; whole numbers plain; other
 numbers rounded to a fixed number of decimals by field name, trailing zeros dropped, one digit kept after the point
 (3: `bpm`, `bpm_in`, `bpm_out`, `confidence`, `duration_s`, `first_sound_s`, `last_sound_s`, `lra`; 4:
-`first_downbeat_s`, `start_s`, `mean`, `onset_pattern_16`; 2: `fit_mad_ms`, `integrated_lufs`, `true_peak_db`, `secs`).
+`first_downbeat_s`, `start_s`, `end_s`, `mean`, `onset_pattern_16`; 2: `fit_mad_ms`, `integrated_lufs`, `true_peak_db`,
+`secs`).
 These are the lab's own roundings. `crate.json` puts each track on its own line, for readable diffs; every file ends
 with a newline. The writer replaces `manifest.json`, `crate.json` and the sidecars of current tracks, deletes sidecars
 of removed tracks, and touches nothing else. It refuses a crate whose `schema` is newer than its own, because it would
@@ -192,6 +195,40 @@ shortest track (Rich Baby Daddy, 44 bars): 20 KB in all, with no embedding, as a
 All 373 tracks as one crate make 1.5 MB, about 4 KB a track (2.9 KB of record, 1.2 KB of sidecar), inside track A's
 budget of about 10 KB.
 
+## Additions proposed with the crate builder (step 5)
+
+`deckie-build` (`core/Sources/DeckieBuild`) builds a crate from a folder of audio files. It needs two places the
+format did not have, both additive (a reader that does not know them ignores them; the example crate gains two nulls):
+
+- **`manifest.import_log`**, so no file of the folder is left out silently (decision P18): `built_by`
+  (`deckie-build 0.1.0`), `built_at` (UTC), `files_seen` (audio files found, by extension: mp3, flac, wav, aif, aiff,
+  aifc, m4a, mp4, aac, wma, ogg, opus, m4p), `tracks` (records written), `entries` (one per file with no record of its
+  own, sorted by path: `rel`, the path below the folder, never absolute; `ext`, lower case; `reason`; `message`, the
+  decoder's or the analyser's own words), `counts` (reason, then extension, to a number; written from the entries for a
+  quick look and recomputed by readers, as `engines_used` is) and `rekordbox` (`tracks` in the collection export and
+  how many `matched` a file) or null. Reasons: `unsupported` (a format this platform cannot decode: AAC and WMA on
+  Linux, Ogg, Opus), `protected` (copy protection: no decoder will ever read it), `damaged` (cut short or corrupted),
+  `decode_error` (could not be read, or failed otherwise while decoding), `analysis_error` (decoded, but no beat grid,
+  too few bars, or the model failed) and `duplicate` (the same bytes as another file, which has the record: the id is
+  the file's hash). The log describes the last build; an app that later adds tracks leaves it as it is.
+- **`deckie`** on a record, null when there is nothing to say: `bpm_tag` (`bpm` and `source`: the tempo the octave
+  alignment was steered by, `rekordbox-xml` for the collection's `AverageBpm`, `file-tag` for the file's own tag such
+  as ID3 `TBPM`) or null, and `rekordbox` or null: the track's entry in a rekordbox collection export as rekordbox wrote
+  it: `track_id`, `bpm` (`AverageBpm`) or null, `tonality` (as written: `Am`, `8A` or `1m`, by the DJ's display
+  setting) or null, `grid` (the TEMPO grid markers: `start_s`, `bpm`, `meter` or null, `beat_in_bar`), `cues` (the
+  POSITION_MARK elements: `name`, `kind` one of `cue`, `fade-in`, `fade-out`, `load`, `loop`, `hot_cue` 0 for A to 7
+  for H or null for a memory cue, `start_s`, `end_s` for a loop or null) and `playlists` (each playlist holding the
+  track as its path of names from the top folder, the playlist last). Times are as rekordbox measured them, from the
+  start of the file as its decoder reads it. `end_s` is written with 4 decimals, as `start_s`.
+
+What a rekordbox export puts in fields the format already has: the track's `Name`, `Artist` and `Mix` become
+`ident.title`, `ident.artist` and `ident.version` with `ident.source` `rekordbox-xml` (else the file's own title and
+artist tags, source `tag`, else the file name, source `filename`); the DJ's key becomes the vote `rekordbox-xml` in
+`key.votes`, as a Camelot code, while `key.camelot` stays the engine's decision; the DJ's tempo steers the analysis
+(the lab's octave alignment to a tag) and is recorded in `deckie.bpm_tag`. The engine's own grid stays in `grid` and
+`tempo_segments`; the DJ's grid and cues stay in `deckie.rekordbox`, untouched, so the Apple apps can show or compare
+them without either side overwriting the other.
+
 ## The proposals in one list, for the main session
 
 1. Track L's additions: the `engine` block beside `analysis` (which keeps its label); the `features_present` names;
@@ -206,3 +243,4 @@ budget of about 10 KB.
 6. The sidecar headers (`DKB1`, `DKS1`) and the series order (that of `features_present`).
 7. The canonical form, and the writer's refusal to rewrite a newer crate.
 8. The lab conversion: the steady-beat clamp, no EffNet embedding ever, `analysed_at` from the caller.
+9. With step 5: `manifest.import_log` and the record's `deckie` block (above), and `end_s` in the decimals table.

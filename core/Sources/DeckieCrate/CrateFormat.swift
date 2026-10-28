@@ -59,7 +59,7 @@ public enum CrateFormat {
     public static let decimals: [String: Int] = [
         "bpm": 3, "bpm_in": 3, "bpm_out": 3, "confidence": 3, "duration_s": 3, "first_sound_s": 3,
         "last_sound_s": 3, "lra": 3,
-        "first_downbeat_s": 4, "start_s": 4, "mean": 4, "onset_pattern_16": 4,
+        "first_downbeat_s": 4, "start_s": 4, "end_s": 4, "mean": 4, "onset_pattern_16": 4,
         "fit_mad_ms": 2, "integrated_lufs": 2, "true_peak_db": 2, "secs": 2,
     ]
 

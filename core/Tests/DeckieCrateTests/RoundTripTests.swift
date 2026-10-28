@@ -19,7 +19,7 @@ import DeckieCrate
         let files = try CrateWriter.encode(sampleCrate())
         let manifest = String(decoding: files["manifest.json"]!, as: UTF8.self)
         #expect(manifest == #"{"crate_id":"0f6c1e2a","created_at":"2026-10-28T12:00:00Z","devices_seen":["linux-x86_64"],"# +
-            #""engines_used":["deckie-0.1"],"min_reader":1,"name":"Sample","schema":1}"# + "\n")
+            #""engines_used":["deckie-0.1"],"import_log":null,"min_reader":1,"name":"Sample","schema":1}"# + "\n")
         #expect(String(decoding: files["crate.json"]!, as: UTF8.self).contains(#""family":"deckie","#))
         let lines = String(decoding: files["crate.json"]!, as: UTF8.self).split(separator: "\n", omittingEmptySubsequences: false)
         #expect(lines.count == 5)  // {"tracks":[, one line per track, ]}, and the empty string after the last newline
@@ -29,6 +29,7 @@ import DeckieCrate
         #expect(lines[1].contains(#""features_present":["bars.drum","bars.lufs","bars.vocal","ends","grid","key","key_changes","loudness","mix_windows","onset_pattern","phrase","sections","style","tempo_segments","vocal"]"#))
         #expect(lines[2].contains(#""key_changes""#) == false && lines[2].contains(#""changes":null"#))
         #expect(lines[2].contains(#""style":null"#) && lines[2].contains(#""signatures":{}"#))
+        #expect(lines[2].contains(#""deckie":null"#))
         #expect(lines[3] == "]}")
     }
 
