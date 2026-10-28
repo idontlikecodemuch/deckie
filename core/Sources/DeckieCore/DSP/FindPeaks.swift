@@ -4,10 +4,10 @@ import Foundation
 /// `find_peaks(nov, distance=8)`), following scipy's code (scipy 1.18, `_peak_finding.py` and
 /// `_peak_finding_utils.pyx`).
 public enum FindPeaks {
-    /// scipy's `_local_maxima_1d`: every sample, or flat run of equal samples (a plateau), that is higher than the sample
-    /// before it and than the first different sample after it. Neither end can be a peak: the first sample has nothing
-    /// before it, and a plateau that reaches the last sample has no lower sample after it. A plateau's peak is its
-    /// middle sample, rounded down for an even length ((left + right) / 2); its edges are returned too.
+    /// scipy's `_local_maxima_1d`: every sample, or flat run of equal samples (a plateau), that is higher than the
+    /// sample before it and than the first different sample after it. Neither end can be a peak: the first sample has
+    /// nothing before it, and a plateau that reaches the last sample has no lower sample after it. A plateau's peak is
+    /// its middle sample, rounded down for an even length ((left + right) / 2); its edges are returned too.
     public static func localMaxima(_ x: [Double]) -> (peaks: [Int], leftEdges: [Int], rightEdges: [Int]) {
         var mid: [Int] = [], left: [Int] = [], right: [Int] = []
         let last = x.count - 1
