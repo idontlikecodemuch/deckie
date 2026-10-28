@@ -10,8 +10,11 @@ and Linux crate builder share them. Charter: `docs/architecture/pc-linux-track.m
   `PythonCompat.swift` holds the rounding and modulo details that keep the numbers identical.
 - `Sources/DeckieLab`: reads the lab's `mixer/features/<id>.json` and `mixer/candidates.json` into
   `DeckieCore` types.
+- `Sources/DeckieAudio`: `AudioBuffer`, decoded audio in memory (interleaved Float32 at the file's own rate, one
+  or two channels), in a target of its own with no Foundation so the analysers in `DeckieCore` can take audio
+  without depending on the decoder.
 - `Sources/DeckieDecode`: audio files to float samples for the analysers (`AudioDecoder.decode(url)` gives an
-  `AudioBuffer`: interleaved Float32 at the file's own rate, one or two channels). Plain Swift with no library, so
+  `AudioBuffer`; DeckieDecode re-exports DeckieAudio, so importing it is enough). Plain Swift with no library, so
   it builds the same on Linux, Windows and macOS and needs nothing installed. Today it reads WAV (16-, 24- and
   32-bit integer, 32-bit float); MP3 and AAC are recognised and throw a "not supported on this platform yet"
   error until their decoders arrive (MP3: a vendored decoder awaiting approval; AAC: the platform's own decoder).
