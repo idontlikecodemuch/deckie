@@ -70,10 +70,11 @@ public enum OnsetDetect {
     }
 
     /// librosa's greedy peak picker (`librosa.util.peak_pick`, the numba function `__peak_pick_greedy`): frame 0 is a
-    /// peak when it is the largest of the first post_max values and at least delta above the mean of the first post_avg;
-    /// then from frame 1 (or wait + 1 after a peak at 0), frame n is a peak when it equals the largest value in
-    /// n - pre_max ..< n + post_max and is at least delta above the mean of n - pre_avg ..< n + post_avg (both windows
-    /// cut at the ends); after a peak the next `wait` frames are skipped. Means are added in turn, as numba does.
+    /// peak when it is the largest of the first post_max values and at least delta above the mean of the first
+    /// post_avg; then from frame 1 (or wait + 1 after a peak at 0), frame n is a peak when it equals the largest value
+    /// in n - pre_max ..< n + post_max and is at least delta above the mean of n - pre_avg ..< n + post_avg (both
+    /// windows cut at the ends); after a peak the next `wait` frames are skipped. Means are added in turn, as numba
+    /// does.
     public static func peakPick(_ x: [Double], _ p: PeakPick) -> [Int] {
         let n = x.count
         guard n > 0 else { return [] }

@@ -25,7 +25,8 @@ public struct FooteNovelty: Sendable, Equatable {
 
     /// The lab's `hb_fr`: the STFT frame of each half-beat edge from bar 1, nBars * 8 + 1 of them.
     public var frameEdges: [Int]
-    /// `foote_novelty(S_mfcc)` and `foote_novelty(S_rms)`, one value per half-beat frame, each scaled to a maximum of 1.
+    /// `foote_novelty(S_mfcc)` and `foote_novelty(S_rms)`, one value per half-beat frame, each scaled to a maximum
+    /// of 1.
     public var mfccNovelty: [Double]
     public var rmsNovelty: [Double]
     /// Their geometric mean, the lab's `nov`.
@@ -218,9 +219,9 @@ public struct FooteNovelty: Sendable, Equatable {
     }
 
     /// The snap to bar lines: frame p is p / 8 bars after bar 1; it becomes the bar line `round(p / 8)` (Python's
-    /// round, ties to even, though a tie is half a bar away and fails the test anyway) when within 0.4 bar of it, and is
-    /// kept when that line is strictly inside the grid (not bar 1's start, not the end line). Bars come out 1-based,
-    /// so a peak at the line 0-based b starts bar b + 1; the value is the novelty at the peak. Order is kept.
+    /// round, ties to even, though a tie is half a bar away and fails the test anyway) when within 0.4 bar of it, and
+    /// is kept when that line is strictly inside the grid (not bar 1's start, not the end line). Bars come out
+    /// 1-based, so a peak at the line 0-based b starts bar b + 1; the value is the novelty at the peak. Order is kept.
     public static func snap(peakFrames: [Int], novelty nov: [Double], nBars: Int) -> [NoveltyPeak] {
         var out: [NoveltyPeak] = []
         for p in peakFrames {

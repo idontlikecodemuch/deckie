@@ -24,9 +24,9 @@ public enum OnsetPattern {
     }
 
     /// The 16 values from the cell values (8 per bar) and the per-bar loudness (`lufs_st`, one value per bar): the
-    /// cells of bars 2i and 2i + 1 (0-based) form row i, for i < nBars / 2 (an odd last bar is left out); the rows whose
-    /// two bars are both louder than median - 10 LU are averaged cell by cell (all rows when none is), added row after
-    /// row as numpy's mean down the first axis does; then the 16 values are divided by their maximum plus 1e-9.
+    /// cells of bars 2i and 2i + 1 (0-based) form row i, for i < nBars / 2 (an odd last bar is left out); the rows
+    /// whose two bars are both louder than median - 10 LU are averaged cell by cell (all rows when none is), added row
+    /// after row as numpy's mean down the first axis does; then the 16 values are divided by their maximum plus 1e-9.
     public static func pattern(cellValues cells: [Double], barLoudness lufs: [Double]) -> [Double] {
         let nBars = lufs.count
         precondition(cells.count == nBars * cellsPerBar, "\(cells.count) cells for \(nBars) bars")
@@ -57,8 +57,8 @@ public enum OnsetPattern {
 /// (`OnsetDetect.times`) counted in each bar and divided by 4, so onsets per beat.
 public enum OnsetDensity {
     /// `numpy.histogram(onsetTimes, bins=barTimes)[0] / 4`: bar k counts the onsets at or after bar line k and before
-    /// line k + 1, except the last bar, which also counts an onset exactly on the end line; onsets before bar 1 or after
-    /// the end are not counted.
+    /// line k + 1, except the last bar, which also counts an onset exactly on the end line; onsets before bar 1 or
+    /// after the end are not counted.
     public static func perBar(onsetTimes: [Double], barTimes: [Double]) -> [Double] {
         precondition(barTimes.count >= 2, "at least one bar")
         let t = onsetTimes.sorted()
