@@ -249,6 +249,19 @@ SOFTWARE.
 */
 ```
 
+**Measured against the lab.** On the generated test tones, 16-bit and 24-bit, `DeckieDecode` decodes FLAC to the
+same length as the lab's reader, at offset 0 from it, every sample identical
+(`core/Tests/DeckieDecodeTests/FLACDecodeTests.swift` has the numbers). The lab's reader is the same `soundfile`
+0.14.0 with libsndfile 1.2.2 as for MP3 (section 4); libsndfile decodes FLAC through libFLAC. It cannot read
+Ogg-FLAC, which dr_flac reads by default.
+
+**Where dr_flac alone differs from the lab**, each handled in `FLACReader.swift` and pinned by a test: it cannot
+open a file with an ID3v2 tag in front (it skips the tag, then reads the metadata blocks from byte 42, inside it),
+so the reader skips the tags itself; it drops a frame whose checksum fails and goes on, and at a frame it cannot
+parse, or a cut, stops as if the stream had ended, all without an error, so the reader reads frame by frame,
+checks the frame numbers and refuses such files, as the lab does; and it decodes past STREAMINFO's frame count,
+where the lab stops, so the reader stops there too.
+
 **How to update:** download the header again to the same path (or a release's copy, if one is chosen), record the
 new version line, SHA-256, URL and date here, re-quote the licence block, then run `swift build` (still no warnings)
 and `swift test`: the FLAC tests pin every sample of the test tones and the messages for damaged files.
@@ -276,9 +289,10 @@ files each say `License: GPL-2+`. So no Deckie code links ffmpeg, and CI install
 with the LGPL configuration would be a separate decision, recorded here first.
 
 **The ffmpeg command-line program** (Ubuntu package `ffmpeg`, the same GPL build, `7:6.1.1-3ubuntu5`) is used only
-as a development tool, on a developer's machine, to make four test files, `tone.mp3`, `tone48k.mp3`,
-`tone_mono.mp3` and `tone.m4a`, from Deckie's own generated signal (`core/Tools/make_audio_fixtures.py`). It is not installed in CI, and nothing in the package
-links it or calls it; the files it writes are test data.
+as a development tool, on a developer's machine, to make the test files that are not WAV (`tone.mp3`,
+`tone48k.mp3`, `tone_mono.mp3`, `tone.m4a`, `tone.aiff`, `tone_sowt.aifc`, `tone.flac`, `tone24.flac` and
+`tone.oga`) from Deckie's own generated signal (`core/Tools/make_audio_fixtures.py`). It is not installed in CI,
+and nothing in the package links it or calls it; the files it writes are test data.
 
 ## Licence allowlist (track M section 3.4, confirmed as the single list by the main session, Oct 28, 2026)
 
