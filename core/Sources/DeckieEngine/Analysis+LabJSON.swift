@@ -1,0 +1,213 @@
+import Foundation
+import DeckieCore
+
+extension Analysis {
+    /// The record as a lab feature file (mixer/features/<id>.json): the keys of mixer/analyze.py's `out` dict, in its
+    /// order, rounded as it rounds them, bars 1-based, followed by `local_tempo` (as the lab appends it) and one block
+    /// of the engine's own, `deckie`, which the lab's tools do not read. So the Mac can put an engine record beside the
+    /// lab's file for the same track and compare them with the lab's own code.
+    ///
+    /// What the engine cannot produce, and how it is written (the lab's own way of writing a missing value wherever it
+    /// has one):
+    /// - `bpm_essentia`, `essentia_confidence`: null, as the lab writes them when Essentia's tempo fails; then
+    ///   `essentia_agree` is false, as the lab computes it then. Essentia is not ported (the key and tempo come from
+    ///   the engine's own estimators).
+    /// - `bpm_madmom`, `madmom_downbeats_s`, `madmom_reason`: null, `madmom_ran`: false, and `grid_candidates` holds
+    ///   `beatthis` alone, as when the lab's madmom does not run: the madmom fallback is non-commercial and not ported.
+    ///   (`deckie.madmom_would_run` says when the lab would have run it.) `grid.source` is `beat-this-final0`, the
+    ///   checkpoint's name, where the lab writes `beatthis`.
+    /// - `key.essentia_edma`, `key.essentia_bgate`, `key.madmom_cnn`, `key.camelot_edma`, `key.camelot_bgate`,
+    ///   `key.camelot_madmom`: null, as the lab writes madmom's when it fails. `key.camelot`, `key.confidence` and
+    ///   `key.confidence_rule` come from the engine's one estimator (`KeyConfidence`); its key, correlation and margin,
+    ///   both mix windows' keys and the key segments are in `deckie.key`. `key.madmom_error` is left out, as the lab
+    ///   leaves it out when madmom ran.
+    /// - Without a vocal tagger: `vocal`, `per_bar.vocal_prob` and `embedding_effnet` are left out (the lab has no way
+    ///   to write them missing); each section's `vocal` and each mix window's `vocal_free_bars` are null, and
+    ///   `mix_in.first_vocal_bar` and `mix_out.last_vocal_bar` are null as the lab writes them for a track with no
+    ///   vocal bar; the flags end with `vocal_unknown`. With a tagger, all of these are written as the lab writes
+    ///   them, except `embedding_effnet`, which is never written (non-commercial; kept out of every crate).
+    /// - `meta` (the pool's bookkeeping from mixer/candidates.json): every key null.
+    /// - `beatthis_device`: `cpu`. `timing_s` has the engine's stages (`Analyser`), named as the lab's where a stage
+    ///   matches one.
+    /// - `loudness.integrated_lufs` of digital silence is minus infinity, which Python writes as `-Infinity`; this
+    ///   writes null.
+    public func labJSON() -> JSONValue {
+        typealias J = JSONValue
+        func m(_ k: String, _ v: J) -> J.Member { J.Member(k, v) }
+        let r3 = { (x: Double) in J.round(x, 3) }
+        let n = bars.nBars
+        let vocalKnown = vocal != nil
+
+        let gridOut: J = .object([
+            m("source", .string(Analysis.gridSource)), m("bpm", r3(bpm)),
+            m("first_downbeat_s", J.round(bars.firstDownbeatS, 4)), m("beat_s", J.round(bars.beatS, 5)),
+            m("bar_s", J.round(bars.barS, 5)), m("fit_mad_ms", J.round(grid.fitMadMs, 2)),
+            m("inlier_frac", r3(grid.inlierFrac)), m("downbeat_agree", r3(grid.downbeatAgree)),
+            m("confidence", r3(grid.confidence)), m("n_bars", .int(n)),
+        ])
+        let candidates: J = .object([m("beatthis", .object([
+            m("bpm", r3(grid.bpm)), m("fit_mad_ms", J.round(grid.fitMadMs, 2)), m("confidence", r3(grid.confidence)),
+            m("tag_dev_pct", J.round(gridTagDevPct, 2)),
+        ]))])
+        let octave: J = octaveFix.map { f in
+            var members = [m("mode", .string(f.mode.rawValue)), m("from_bpm", .number(f.fromBpm))]
+            if let p = f.parity { members.append(m("parity", .int(p))) }
+            return .object(members)
+        } ?? .null
+        let ibis = zip(detectedBeats.dropFirst(), detectedBeats).map { $0 - $1 }
+        let medianIBI: J = detectedBeats.count > 2 ? r3(60 / Py.median(ibis)) : .null
+
+        let sectionsOut: J = .array(sections.map { s in
+            .object([m("start_bar", .int(s.startBar)), m("end_bar", .int(s.endBar)), m("label", .string(s.label)),
+                     m("energy", .string(s.energy)), m("lufs", J.round(s.lufs, 2)),
+                     m("vocal", vocalKnown ? r3(s.vocal) : .null)])
+        })
+        let peaks = noveltyPeaks.sorted { ($0.bar, $0.value) < ($1.bar, $1.value) }
+        let mixInOut: J = .object([
+            m("start_bar", .int(mixIn.startBar)), m("end_bar", .int(mixIn.endBar)), m("bars", .int(mixIn.bars)),
+            m("start_s", r3(mixIn.startS)), m("end_s", r3(mixIn.endS)),
+            m("vocal_free_bars", vocalKnown ? .int(mixIn.vocalFreeBars) : .null),
+            m("first_vocal_bar", J.integer(mixIn.firstVocalBar)),
+        ])
+        let mixOutOut: J = .object([
+            m("start_bar", .int(mixOut.startBar)), m("end_bar", .int(mixOut.endBar)), m("bars", .int(mixOut.bars)),
+            m("start_s", r3(mixOut.startS)), m("end_s", r3(mixOut.endS)),
+            m("vocal_free_bars", vocalKnown ? .int(mixOut.vocalFreeBars) : .null),
+            m("last_vocal_bar", J.integer(mixOut.lastVocalBar)), m("fade_out", .bool(mixOut.fadeOut)),
+        ])
+        let keyOut: J = .object([
+            m("essentia_edma", .null), m("essentia_bgate", .null), m("madmom_cnn", .null),
+            m("camelot_edma", .null), m("camelot_bgate", .null), m("camelot_madmom", .null),
+            m("camelot", .string(key.whole.camelot)), m("confidence", .number(keyConfidence.value)),
+            m("confidence_rule", .string(keyConfidence.rule)),
+        ])
+        var perBarMembers = [
+            m("lufs_st", J.roundList(perBar.lufsSt, 2)), m("low_db", J.roundList(perBar.lowDb, 2)),
+            m("high_db", J.roundList(perBar.highDb, 2)), m("onset_density", J.roundList(perBar.onsetDensity, 3)),
+        ]
+        if let v = perBar.vocalProb { perBarMembers.append(m("vocal_prob", J.roundList(v, 3))) }
+
+        var out: [J.Member] = [
+            m("schema", .int(Analysis.labSchema)),
+            m("id", .string(id)), m("title", J.text(title)), m("ver", J.text(version)),
+            m("path", .string(source.path)), m("sr", .int(Analysis.sampleRate)), m("duration_s", r3(duration)),
+            m("bpm_tag", J.num(bpmTag)),
+            m("bpm_beatthis", r3(grid.bpm)), m("bpm_beatthis_median_ibi", medianIBI),
+            m("bpm_essentia", .null), m("essentia_confidence", .null), m("essentia_agree", .bool(false)),
+            m("bpm_madmom", .null), m("madmom_ran", .bool(false)), m("madmom_reason", .null),
+            m("bpm", r3(bpm)), m("bpm_agree", .bool(bpmAgree)),
+            m("multiplier_vs_tag", .string(Tempo.label(multiplierVsTag))),
+            m("multiplier_vs_tag_value", J.round(multiplierVsTag, 4)), m("tag_dev_pct", J.round(tagDevPct, 2)),
+            m("octave_fix", octave),
+            m("grid", gridOut), m("grid_candidates", candidates),
+            m("beats_s", J.roundList(bars.beatTimes, 3)), m("downbeats_s", J.roundList(bars.barTimes, 3)),
+            m("detected_beats_s", J.roundList(detectedBeats, 3)),
+            m("detected_downbeats_s", J.roundList(detectedDownbeats, 3)),
+            m("madmom_downbeats_s", .null),
+            m("phrase", .object([
+                m("lattice_phase_bar", .int(phrase.latticePhaseBar)), m("phrase_len_bars", .int(phrase.phraseLenBars)),
+                m("confidence", r3(phrase.confidence)), m("phase_novelty", J.roundList(phrase.phaseNovelty, 3)),
+                m("snap_phase_bar", .int(phrase.snapPhaseBar)),
+            ])),
+            m("boundaries_bars", .array(boundariesBars.map { .int($0) })),
+            m("novelty_peaks", .array(peaks.map { .array([.int($0.bar), r3($0.value)]) })),
+            m("sections", sectionsOut),
+            m("first_sound_s", r3(firstSound)), m("last_sound_s", r3(lastSound)),
+            m("fade_out", .bool(fade.fadeOut)), m("fade_drop_lu", J.round(fade.fadeDropLu, 2)),
+            m("end_lufs_st", .object([m("t-20", J.round(endLoudness.t20, 2)), m("t-10", J.round(endLoudness.t10, 2)),
+                                      m("t-4", J.round(endLoudness.t4, 2))])),
+            m("tail_bars", J.round(fade.tailBars, 2)),
+            m("fade_start_bar", J.integer(fade.fadeStartBar)),
+            m("mix_in", mixInOut), m("mix_out", mixOutOut),
+            m("key", keyOut),
+            m("loudness", .object([m("integrated_lufs", J.round(loudness.integratedLufs, 2)),
+                                   m("lra", J.round(loudness.lra, 3)), m("true_peak_db", J.round(loudness.truePeakDb, 2))])),
+            m("per_bar", .object(perBarMembers)),
+            m("onset_pattern_16", J.roundList(onsetPattern16, 4)),
+        ]
+        if let v = vocal {
+            out.append(m("vocal", .object([
+                m("mean_prob", J.round(v.meanProbability, 4)), m("vocal_heavy", .bool(v.meanProbability > 0.75)),
+                m("patch_hop_s", J.round(v.frameHopSeconds, 4)), m("n_patches", .int(v.frameCount)),
+            ])))
+        }
+        out += [
+            m("flags", .array(flags.map { .string($0) })),
+            m("meta", .object(["secs", "on_disc", "disc", "folder", "hal", "kind", "era", "cut_key", "is_longest"]
+                .map { m($0, .null) })),
+            m("timing_s", .object(timings.map { m($0.stage, J.round($0.seconds, 2)) })),
+            m("beatthis_device", .string(Analysis.beatTrackerDevice)),
+            m("local_tempo", Analysis.labJSON(localTempo)),
+            m("deckie", deckieBlock()),
+        ]
+        return .object(out)
+    }
+
+    /// The lab's feature JSON as compact UTF-8 text.
+    public func labJSONData() -> Data { labJSON().data }
+
+    /// The engine's own block: the file's hash, the decoder, the key estimator's detail, where the lab would have run
+    /// madmom, and whether the vocal information is missing.
+    func deckieBlock() -> JSONValue {
+        typealias J = JSONValue
+        func m(_ k: String, _ v: J) -> J.Member { J.Member(k, v) }
+        func estimate(_ e: KeyEstimate) -> J {
+            .object([m("camelot", .string(e.camelot)), m("key", .string(e.key)), m("scale", .string(e.mode)),
+                     m("r", J.round(e.r, 3)), m("margin", J.round(e.margin, 3))])
+        }
+        func window(_ w: WindowKey?) -> J {
+            guard let w else { return .null }
+            return .object([m("camelot", .string(w.camelot)), m("r", J.round(w.estimate.r, 3)),
+                            m("song_key_r", J.round(w.songKeyR, 3)), m("gain", J.round(w.gain, 2)),
+                            m("flag", .bool(w.flag))])
+        }
+        return .object([
+            m("engine", .string("\(Analysis.engineFamily)-\(Analysis.engineVersion)")),
+            m("family", .string(Analysis.engineFamily)), m("version", .string(Analysis.engineVersion)),
+            m("sha256", .string(source.sha256)), m("bytes", .int(source.bytes)),
+            m("format", .string(source.format)), m("source_sr", .int(source.sampleRate)),
+            m("source_channels", .int(source.channels)),
+            m("madmom_would_run", J.text(madmomWouldRun)),
+            m("vocal_unknown", .bool(vocalUnknown)), m("vocal_model", J.text(vocalModel)),
+            m("key", .object([
+                m("estimator", .string("fft-chroma-edma")), m("whole", estimate(key.whole)),
+                m("song_key", .string(key.songKey)), m("mix_in", window(key.mixIn)), m("mix_out", window(key.mixOut)),
+                m("segments", .array(key.segments.map {
+                    .array([.number($0.start), .string($0.camelot), .number($0.meanR)])
+                })),
+            ])),
+        ])
+    }
+
+    /// The lab's `local_tempo` block (mixer/local_tempo.py, `compute`), keys in its order; the values are already
+    /// rounded as the lab rounds them.
+    static func labJSON(_ lt: LocalTempo) -> JSONValue {
+        typealias J = JSONValue
+        func m(_ k: String, _ v: J) -> J.Member { J.Member(k, v) }
+        func window(_ w: LocalTempo.Window?) -> J {
+            guard let w else { return .null }
+            return .object([m("bpm", .number(w.bpm)), m("bpm_raw", .number(w.bpmRaw)), m("mult", .number(w.mult)),
+                            m("n_beats", .int(w.nBeats)), m("resid_ms", .number(w.residMs)), m("t0", .number(w.t0)),
+                            m("t1", .number(w.t1))])
+        }
+        return .object([
+            m("ref_bpm", .number(lt.refBpm)),
+            m("first30", window(lt.first30)), m("last30", window(lt.last30)),
+            m("mix_in", window(lt.mixIn)), m("mix_out", window(lt.mixOut)),
+            m("grid_dev_in_ms", J.num(lt.gridDevInMs)), m("grid_dev_out_ms", J.num(lt.gridDevOutMs)),
+            m("bpm_in", .number(lt.bpmIn)), m("in_trusted", .bool(lt.inTrusted)), m("in_rule", .string(lt.inRule.rawValue)),
+            m("bpm_out", .number(lt.bpmOut)), m("out_trusted", .bool(lt.outTrusted)),
+            m("out_rule", .string(lt.outRule.rawValue)),
+            m("drift_pct", .number(lt.driftPct)),
+            m("profile", .array(lt.profile.map { .array([.number($0.start), .number($0.bpm), .bool($0.trusted)]) })),
+            m("range_pct", J.num(lt.rangePct)), m("untrusted_segments", .int(lt.untrustedSegments)),
+            m("steady_in_s", J.num(lt.steadyInS)), m("steady_in_bar", J.integer(lt.steadyInBar)),
+            m("steady_out_s", J.num(lt.steadyOutS)), m("steady_out_bar", J.integer(lt.steadyOutBar)),
+            m("first_downbeat_in_s", J.num(lt.firstDownbeatInS)), m("first_downbeat_out_s", J.num(lt.firstDownbeatOutS)),
+            m("tempo_change", .bool(lt.tempoChange)), m("transition_track", .bool(lt.transitionTrack)),
+            m("in_half_time", .bool(lt.inHalfTime)), m("out_half_time", .bool(lt.outHalfTime)),
+            m("intro_no_steady_beat", .bool(lt.introNoSteadyBeat)),
+            m("outro_no_steady_beat", .bool(lt.outroNoSteadyBeat)),
+        ])
+    }
+}
