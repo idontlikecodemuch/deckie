@@ -119,4 +119,15 @@ public enum Py {
         }
         return lo
     }
+
+    /// `numpy.searchsorted(sorted, x)` with numpy's default `side="left"`: how many values are below `x`, which is
+    /// the index of the first value at least `x`.
+    public static func countBelow(_ x: Double, in sorted: [Double]) -> Int {
+        var lo = 0, hi = sorted.count
+        while lo < hi {
+            let mid = (lo + hi) / 2
+            if sorted[mid] < x { lo = mid + 1 } else { hi = mid }
+        }
+        return lo
+    }
 }
