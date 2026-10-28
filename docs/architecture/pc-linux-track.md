@@ -1,86 +1,90 @@
 # The PC and Linux track: charter for its own session
 
-Written Oct 28, 2026 for the cloud session that owns this work. Christopher's direction: "create a cloud session that
-can do all the investigation and building / testing for the PC / Linux version." The research that framed it is
-`docs/research/l-non-apple.md` (track L); the product context is `docs/product/spec-condensed.md` (v0.7),
-`docs/product/00-decisions.md` (D3, D11, D13, P16, P17) and `docs/architecture/overview.md` section 5.
+Rewritten Oct 28, 2026 after Christopher's direction: "figuring out some of this in actual practice should be a
+primary goal of this bucket, but also I want to get the actual mechanics of how we do this on a Linux and Windows
+machine started." Research behind it: `docs/research/l-non-apple.md` (what runs off Apple) and
+`docs/research/m-core-language-and-dependencies.md` (language and dependency policy). Product context:
+`docs/product/spec-condensed.md`, `docs/product/00-decisions.md` (D3, D11, D13, P16, P17), `docs/architecture/`.
 
-> Language decision (Oct 28, track M, awaiting Christopher): the research recommends Swift everywhere for Deckie's
-> own code, a plain Swift package with no Apple-only framework, calling C libraries directly on Windows and Linux
-> (ONNX Runtime's C API, dr_mp3, the Windows AAC decoder, libebur128, PocketFFT); Rust is the runner-up. If
-> accepted: `core/` becomes a Swift package, the C-interface step (6) goes away, the first task of this session is
-> the two-week spike (grid fit, Camelot, score.py reproducing pairs.json on Linux and on a Windows CI runner), and
-> the dependency policy in P16 applies. Everything below that says Rust reads as Swift until the charter is rewritten.
+## What this track is, in one paragraph
 
-## Goal
+The Apple apps keep Apple's Music Understanding framework for analysis: it ships inside iOS and macOS, costs the
+app nothing, and Apple maintains it. That framework does not exist on Windows or Linux, because it is a library
+and a set of models built into Apple's operating systems, not part of the Swift language. So this track builds a
+second analyser for Windows and Linux whose output is measured against Apple's, writing the same crate file, and
+it builds the small core of Deckie's own ideas (beat grid fit, tempo and key segments, mix windows, Camelot,
+scoring, the crate format) once, in Swift, so the Apple apps and the Windows and Linux builder share it.
 
-A crate-builder for Windows and Linux, working name Desk Lite, that reads a DJ's music files and an optional rekordbox
-XML export and writes the same `.deckiecrate` file the Apple apps read, with analysis good enough that the booth
-picks are the same picks. Secondary goal, decided as P16: the DSP we own (beat grid fit, tempo and key segments, 8-bar
-lattice, mix windows, Camelot mapping, the key estimator, the scoring) lives in one Rust core that the Apple apps can
-call too, so there is one implementation of Deckie's own ideas.
+## Decisions taken, and the one deliberately not taken
+
+- Deckie's own code is a plain Swift package, `DeckieCore`, with no Apple-only framework in it (P16 as revised by
+  track M). The Apple engine is Music Understanding plus `DeckieCore`; the non-Apple engine is permissive open
+  models plus `DeckieCore`.
+- Linux first. The cloud session is a Linux machine; Swift on Linux is mature. Every mechanic below is done on
+  Linux first.
+- Windows is probed, not decided. A GitHub Actions Windows runner builds and tests the same package from the first
+  week; if Swift on Windows proves painful, the Windows build alone falls back to Rust or C++ behind the same
+  crate file, decided on evidence, not now.
+- Dependencies are welcome for solved problems (decoding, FFT, model runtime, loudness, XML, model weights) and
+  governed by the policy in P16: pinned by version and hash in `DEPENDENCIES.md`, a licence allowlist checked in
+  CI, nothing that downloads or runs code at build time, a quarterly update day with a benchmark rerun.
 
 ## What this track owns
 
-- `core/` (new, at the repo root): a Rust workspace. `deckie-core` (the DSP and scoring, pure Rust, no I/O);
-  `deckie-crate` (reading and writing `.deckiecrate`); `deckie-engine-oss` (the second analysis engine: decoding,
-  Beat This! on ONNX Runtime, the key estimator, libebur128 loudness, a permissive vocal tagger); `deckie-desk-lite`
-  (a command-line crate-builder, the first face; a small GUI later); a C ABI for Swift.
-- `docs/architecture/pc-linux-track.md` (this file) and `docs/architecture/pc-linux-status.md` (its running log).
-- Research reports it needs, under `docs/research/` with the next free letter.
+- `core/` (new, repo root): the Swift package `DeckieCore` (DSP, scoring, crate read and write; pure computation),
+  `DeckieEngineOSS` (the non-Apple analyser: decoding, Beat This! through ONNX Runtime, the key estimator, EBU R128
+  loudness, a permissive vocal tagger) and `deckie-build`, a command-line crate-builder.
+- `docs/architecture/pc-linux-status.md`, its running log, in plain language with every term glossed.
+- `DEPENDENCIES.md` and the CI workflows (Linux and the Windows probe).
 
-It does not touch `deck-app/`, `mixer/` (except to read the yardstick) or `docs/product/`; it proposes changes to the
-crate schema in its status log and the main session merges them.
+It does not touch `deck-app/`, `mixer/` (read-only yardstick) or `docs/product/`; schema changes are proposed in the
+status log and merged by the main session.
 
 ## Constraints that do not move
 
-- Licences: MIT, BSD, Apache 2.0, ISC and public domain ship; LGPL only dynamically linked; GPL, AGPL, CC BY-NC and
-  research-only never. Quote the licence file before adopting anything.
-- No audio leaves the user's machine; no server; no network during analysis. Lookups only as the product allows.
-- The crate file is Deckie's own format (D13); this track writes it, never a player's format, and proposes the
-  engine-agnostic fields track L lists (a structured engine record, a benchmark-earned fidelity integer, per-block
-  source and confidence, normalised scales, `features_present`).
-- Recognition signatures come from an Apple device; this track does not build a fingerprint. It leaves a place in the
-  crate for signatures made elsewhere.
+Licences: MIT, BSD, Apache 2.0, ISC and public domain ship; LGPL only dynamically linked; GPL, AGPL, CC BY-NC and
+research-only never; quote the licence file before adopting anything. No audio leaves the user's machine; no
+network during analysis. The crate file is Deckie's own format and the only thing written. Recognition signatures
+come from an Apple device; this track builds no fingerprint and leaves a place in the crate for signatures made
+elsewhere.
 
 ## What it can test where
 
-- In the cloud (Linux): everything that does not need Christopher's music. Unit tests on synthetic audio (clicks at
-  known tempos, tone ladders at known keys, silence, gain steps for loudness); decoding of MP3 and AAC fixtures made
-  from permissively licensed or generated audio; the crate reader and writer; the rekordbox XML importer against
-  pyrekordbox's documented examples; the scoring port against the numbers in `mixer/pairs.json` regenerated from
-  the committed features (`mixer/score.py` is the reference and `mixer/features/` is committed); the key estimator
-  against `mixer/key_light_*.tsv`; Beat This! on ONNX Runtime against its published test data.
-- On Christopher's Mac only: the 373-track yardstick. The audio is not in the repo and must not be uploaded. This
-  track ships a `deckie-desk-lite bench` command that runs over `mixer/candidates.json` paths and writes one JSON
-  per track in the lab's feature layout, and a comparison the main session runs with `mixer/bench_mu.py`-style
-  metrics (beat and downbeat F-measure at 70 ms, tempo within 2 percent, key exact or neighbour, loudness delta,
-  vocal correlation, section recall). Pass marks: at least Apple's framework on beats and loudness (stage 1
-  results 1a), and the key estimator's known 75 percent exact, until a better permissive key detector exists.
-- Windows: not in the cloud. A GitHub Actions workflow on a Windows runner builds and runs the unit tests; packaging
-  and signing come later.
+- In the cloud (Linux): everything that needs no music. Synthetic audio with known tempo, key and loudness; MP3
+  and AAC fixtures from generated or permissively licensed audio; the crate reader and writer; the rekordbox XML
+  importer against pyrekordbox's documented examples; the scoring against `mixer/pairs.json` regenerated from the
+  committed `mixer/features/` by `mixer/score.py`; the key estimator against `mixer/key_light_*.tsv`; Beat This! on
+  ONNX Runtime against its published test data.
+- On Christopher's Mac: the 373-track yardstick. The audio is not in the repo and is not uploaded. Because the
+  non-Apple engine is plain Swift plus C libraries, it builds and runs on the Mac too, so the main session runs
+  `deckie-build bench` over `mixer/candidates.json` here and scores it with the stage 1 metrics (beat and
+  downbeat F-measure at 70 ms, tempo within 2 percent, key exact or neighbour, loudness delta, vocal correlation,
+  section recall). Pass marks: at least Apple's framework on beats and loudness (stage 1 results 1a) and the key
+  estimator's measured 75 percent exact until a better permissive key detector exists.
+- Windows: the CI probe builds and runs the unit tests on a Windows runner; packaging comes later.
 
 ## Order of work
 
-1. Investigate and decide, with a short report each: the Rust audio decoding stack (dr_mp3, platform AAC decoders,
-   Symphonia's licence and patent position); ONNX Runtime from Rust (`ort`) and the Beat This! export; the FFT
-   library (RustFFT); the EBU R128 crate; the vocal tagger (EfficientAT or YAMNet through ONNX).
-2. `deckie-crate`: read and write the package format from track A section 5 with the engine-agnostic fields;
-   round-trip tests; a fixture crate committed under `core/fixtures/`.
-3. `deckie-core`: port the DSP from `mixer/analyze.py` and `local_tempo.py` (the grid fit, start and end tempo with
-   the trust rule, the 8-bar lattice, mix windows, first and last sound, fade-out, per-bar bands, onset pattern,
-   Camelot), then `score.py`; parity tests against the committed features and pairs.
-4. `deckie-engine-oss`: decode, Beat This!, the key estimator from `mixer/key_light.py` (chroma_stft variant with
-   the edma profile, whole track and the two mix windows, with the song-key seed and hysteresis), libebur128, the
-   vocal tagger; a `bench` command for the Mac.
-5. `deckie-desk-lite`: `build <folder> [--rekordbox export.xml] --out name.deckiecrate`; progress; resumable.
-6. The C ABI and a tiny Swift package wrapper, so the Apple engine can call `deckie-core` (the P16 payoff).
-7. The Windows build on CI.
+1. The spike, two weeks: `DeckieCore` on Linux with the grid fit, Camelot mapping and the scoring from
+   `mixer/analyze.py` and `mixer/score.py`, reproducing the committed pairs; the same package building and testing
+   on the Windows runner. This is the guard on the Swift decision.
+2. The Linux mechanics, one at a time, each with a status-log entry: decode an MP3 and an AAC to float samples;
+   run Beat This! through ONNX Runtime's C API from Swift on a synthetic click track; measure loudness with
+   libebur128; port the key estimator from `mixer/key_light.py` (the FFT-chroma variant with the edma profile,
+   whole track and the two mix windows, with the song-key seed and hysteresis); a vocal tagger through ONNX.
+3. `DeckieCore` grows to the rest of the DSP: start and end tempo with the trust rule, tempo and key segments,
+   the 8-bar lattice, mix windows, first and last sound, fade-out, per-bar bands, onset pattern; parity tests
+   against the committed features.
+4. The crate reader and writer, with the engine-agnostic fields track L lists (engine record, benchmark-earned
+   fidelity, per-block source and confidence, `features_present`); a fixture crate under `core/fixtures/`.
+5. `deckie-build <folder> [--rekordbox export.xml] --out name.deckiecrate`, with progress, resumable, and a
+   `bench` subcommand for the Mac.
+6. The Mac run of the yardstick, by the main session; fixes; a second run.
+7. Windows: from probe to a packaged build, if the probe held; otherwise the fallback decision.
 
 ## Working rules for the session
 
 - Commit to its own branch (`pc-linux`), small commits, never to `main`; the main session reviews and merges.
-- Keep `docs/architecture/pc-linux-status.md` current: what is built, what is measured, what it needs from the Mac,
-  and open questions, in plain language with every term glossed, because Christopher reads it.
-- When a step needs the music, say so in the status log and stop that step; do not look for the audio elsewhere.
-- Ask the main session (not the user) for schema changes and for yardstick runs.
+- Keep `docs/architecture/pc-linux-status.md` current: built, measured, needed from the Mac, open questions.
+- When a step needs the music, say so in the status log and stop that step.
+- Ask the main session, not Christopher, for schema changes and yardstick runs; plain language throughout.
