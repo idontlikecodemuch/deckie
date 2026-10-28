@@ -19,17 +19,20 @@ Mac) reviews and merges this track's branch, `pc-linux`, and runs anything that 
   that needs no audio is ported and checked against all 373 committed tracks: start and end tempo with the trust
   rule, the bar grid, the phrase lattice, sections, fade-out, mix windows and flags (entry 7), and the
   audio-derived features too: FLAC decoding, the resampler, per-bar bands, first and last sound, mel and MFCC,
-  onset pattern and density, the novelty peaks (entry 8). In progress: Beat This! through ONNX Runtime. Still
-  to come in step 2: a permissively licensed vocal tagger (the lab's is non-commercial only). After that, step 3
-  is assembled into one analyser matching the lab's feature file, then step 4 (the crate) and step 5
-  (`deckie-build`).
+  onset pattern and density, the novelty peaks (entry 8). Beat This! runs through ONNX Runtime from Swift
+  with beats identical to the Python package (entry 9). Still to come in step 2: the vocal tagger (research done,
+  `docs/research/n-vocal-tagger.md`; two licence questions with the main session). In progress: the crate
+  reader and writer (step 4). Then the analyser is assembled into one pipeline matching the lab's feature file,
+  and step 5 (`deckie-build`).
+- Open questions for the main session (licence line): whether permissively licensed weights trained on data we
+  could not ship ourselves are acceptable; whether CC BY 4.0 weights are; and MPL 2.0, which now matters because
+  ONNX Runtime bundles Eigen under it (entry 9).
 - Needed from Christopher: nothing right now (dr_mp3 vendoring approved Oct 28; dr_flac next, same pattern,
   will need the same yes, see entry 4, working mode).
 - Needed from the Mac, when convenient (not blocking): one check of the loudness module against the real
   pyloudnorm and scipy on any file (entry 5), and the key estimator's parity run over the real tracks against
   `mixer/key_light_stft.tsv` and `mixer/key_ends_stft.tsv` (entry 6). Both can wait for the `bench` command of
   step 5, which is where they belong.
-- Open questions for the main session: none; AAC on Linux is decided (entry 4, decision).
 
 ## Oct 28, 2026: the environment (entry 1)
 
@@ -463,3 +466,39 @@ as text and stop if the copy no longer matches `mixer/analyze.py` word for word.
 **What this means.** Every piece of the lab's analyser except the two neural models (Beat This! for beats, the
 vocal tagger) now exists in Swift with a measured match to the lab's Python. What remains before the analyser
 can be assembled: Beat This! (in progress), the vocal tagger (a permissive one still to find), and the glue.
+
+## Oct 28, 2026: Beat This! through ONNX Runtime, from Swift (entry 9)
+
+**Where it landed.** ONNX Runtime (Microsoft's MIT-licensed engine for running trained models, version 1.31.1) is
+loaded at run time from a library file, never linked at build time, so the package still builds on a machine
+without it and on the Windows probe; only its C header is vendored (`DEPENDENCIES.md` section 6). A Swift wrapper
+(`DeckieInference`) creates sessions and runs models with typed errors. The Beat This! network (the beat tracker
+the lab uses; 20 million parameters, MIT code and weights) is exported once from its PyTorch checkpoint to an
+82 MB ONNX file by a committed script (`core/Tools/export_beat_this.py`; the file itself is not in the
+repository, its hash is, section 7), and the parts around the network are ported to Swift: its log-mel
+spectrogram front end, its chunking of long audio, and its "minimal" post-processor that turns the network's
+output into beat and downbeat times. `BeatTracker` ties them together: audio in, beats and downbeats out.
+
+**Measured, against the Python package on five synthesised pieces** (30 s at 120 BPM at three sample rates, 90 s
+with a tempo change at two): every beat and downbeat identical, 0 ms difference; the front end within 2.6e-5 of
+the package's own; the post-processor identical on 14 hand-made edge cases and on the package's own outputs; the
+exported network within 2.3e-6 of the PyTorch original. Against the true clicks of the 120 BPM piece, all 59
+beats at 0 ms and all 15 downbeats on the accents. Four minutes of audio take about 6 s in a release build on
+this machine (nearly all of it the network). Linux CI fetches ONNX Runtime by its pinned hash and exports the
+model once, both cached, about 40 s per run when cached and about 3 minutes when not. 12 inference tests, with
+34 decode and 94 core tests, pass here with the runtime present; on Windows the inference tests skip with the
+reason printed until the Windows runtime file is wired in (its hash is recorded).
+
+**Licence points for the main session.** (1) ONNX Runtime is MIT, but its third-party notices list Eigen under
+MPL 2.0, which the allowlist leaves undecided; nothing ships yet, but a build that carries ONNX Runtime needs
+that call. (2) Beat This!'s README releases code and weights under MIT and adds that some training files are
+copyrighted or under limited Creative Commons licences, leaving the judgement to users: the same question as the
+vocal tagger's (entry 8's successor, `docs/research/n-vocal-tagger.md`). Both are recorded in `DEPENDENCIES.md`
+and sent to the main session.
+
+**The vocal tagger, researched** (`docs/research/n-vocal-tagger.md`, by an Opus agent with web access, licences
+quoted with sources): the lab's Essentia models are CC BY-NC-SA and cannot ship. Recommendation: Spleeter's
+2-stem vocal model (Deezer; MIT code and weights; already converted to ONNX by sherpa-onnx, Apache 2.0; an
+estimated 2 to 5 s per track) read as vocal energy per bar, plus EfficientAT (MIT, under 1 s) as the timbre
+embedding and a second opinion. Runner-up musicnn (ISC), held back by its training data's licence. Nothing has
+been run yet; the final choice goes through track J's listening test on the Mac.
