@@ -207,3 +207,15 @@ Christopher says so; a yes moves it up into the dated decisions above.
   libraries; pin every dependency by version and hash in one DEPENDENCIES.md with a CI licence allowlist; vendor
   small leaf libraries; nothing that runs or downloads code at build time; a quarterly update day with a benchmark
   rerun. Awaiting Christopher.
+- **P18. Audio file types a crate can hold, by platform (Oct 28).** What DJs actually own: MP3 from pools and
+  rips; WAV, AIFF and FLAC from Beatport, Bandcamp and lossless rips; AAC (.m4a) from iTunes purchases; ALAC
+  (Apple Lossless, also .m4a); Ogg Vorbis and Opus rarely; WMA rarely and ageing. Streaming-service offline files
+  (Apple Music, Spotify, Tidal) are rights-protected and cannot be read by anyone; Deckie says so plainly and never
+  tries. Plan: on every platform, WAV, AIFF, MP3 and FLAC (plain PCM parsers of our own for WAV and AIFF; dr_mp3 and
+  dr_flac, public domain, pinned, for the other two); on Mac and iPad, anything the system plays through
+  AVFoundation, which adds AAC and ALAC; on Windows, AAC and WMA through Media Foundation, the system's own
+  decoder; on Linux, AAC and WMA only through the user's own ffmpeg run as a separate program (P-AAC decision), and
+  ALAC through Apple's open-source ALAC decoder (Apache 2.0) if demand appears; Vorbis and Opus through public-domain
+  or BSD decoders only if the trials show them. Unsupported files are always reported, counted by extension, never
+  skipped silently. Each decoder's leading-sample offset is measured against the lab's and corrected, so beat times
+  agree across platforms.

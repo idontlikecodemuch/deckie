@@ -174,6 +174,13 @@ Apple Music metadata are closed to this use by their own terms. Beatport, SoundC
 1001Tracklists are not usable sources under their terms. A burned MP3 CD is a file system with no disc id; Deckie
 writes a manifest when it builds a disc and reads it back.
 
+### 5.4a File types (P18)
+
+Every platform reads WAV, AIFF, MP3 and FLAC. Mac and iPad also read anything the system plays, which adds AAC and
+Apple Lossless. Windows adds AAC and WMA through its own decoder. Linux reads AAC and WMA only if the user has
+ffmpeg installed, run as a separate program. Rights-protected downloads from streaming services cannot be read by
+any software and Deckie says so. Unsupported files are reported, counted by type, never skipped silently.
+
 ### 5.5 Preferences and learning (track C)
 
 Preferences live in the crate file and are learned on device. Twelve measurable dimensions with proxies from the
