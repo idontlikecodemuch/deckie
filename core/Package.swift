@@ -1,9 +1,10 @@
 // swift-tools-version: 6.0
 // DeckieAudio: the in-memory audio type (`AudioBuffer`) shared by the decoder and the analysers; no Foundation.
-// DeckieCore: Deckie's own ideas (beat grid fit, Camelot, pair scoring, loudness, later the crate format), written
+// DeckieCore: Deckie's own ideas (beat grid fit, Camelot, pair scoring, loudness, key, structure), written
 // once in plain Swift with no Apple-only framework, so the Apple apps and the Windows and Linux builder share them.
 // DeckieLab: reads the lab's feature files (mixer/features/<id>.json, mixer/candidates.json) into DeckieCore types,
 // for the parity tests and, later, the Mac benchmark.
+// DeckieCrate: the crate file (docs/architecture/crate-format.md): its model, a canonical writer and a checking reader.
 // DeckieDecode: audio files to float samples for the analysers: WAV and AIFF in plain Swift; MP3 through dr_mp3
 // (CDrMp3) and FLAC through dr_flac (CDrFlac), vendored public-domain C files (DEPENDENCIES.md); AAC is recognised
 // and reported as not supported yet, a copy-protected MP4 as protected. It re-exports DeckieAudio.
@@ -24,11 +25,13 @@ let package = Package(
         .library(name: "DeckieAudio", targets: ["DeckieAudio"]),
         .library(name: "DeckieDecode", targets: ["DeckieDecode"]),
         .library(name: "DeckieInference", targets: ["DeckieInference"]),
+        .library(name: "DeckieCrate", targets: ["DeckieCrate"]),
     ],
     targets: [
         .target(name: "DeckieAudio"),
         .target(name: "DeckieCore", dependencies: ["DeckieAudio"]),
         .target(name: "DeckieLab", dependencies: ["DeckieCore"]),
+        .target(name: "DeckieCrate", dependencies: ["DeckieCore"]),
         .target(name: "CDrMp3"),
         .target(name: "CDrFlac"),
         .target(name: "DeckieDecode", dependencies: ["DeckieAudio", "CDrMp3", "CDrFlac"]),
@@ -40,5 +43,6 @@ let package = Package(
         .testTarget(name: "DeckieDecodeTests", dependencies: ["DeckieDecode"], exclude: ["Fixtures"]),
         .testTarget(name: "DeckieInferenceTests", dependencies: ["DeckieInference", "DeckieCore", "DeckieAudio", "DeckieTestSupport"],
                     exclude: ["Fixtures"]),
+        .testTarget(name: "DeckieCrateTests", dependencies: ["DeckieCrate", "DeckieCore"]),
     ]
 )
