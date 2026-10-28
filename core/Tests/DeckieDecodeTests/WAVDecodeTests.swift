@@ -3,7 +3,8 @@ import Testing
 import DeckieDecode
 
 /// What core/Tools/make_audio_fixtures.py put into every fixture: 4 s of stereo; left 440 Hz at -6 dBFS, right
-/// 1000 Hz at -12 dBFS (peak); a full-scale single-sample click on both channels at 2.000 s.
+/// 1000 Hz at -12 dBFS (peak); a full-scale single-sample click on both channels at 2.000 s. tone_mono.mp3 holds
+/// the channel mean instead.
 enum Tone {
     static let seconds = 4.0
     static let clickSeconds = 2.0
@@ -99,18 +100,35 @@ func checkTone(_ b: AudioBuffer, name: String, rate: Int) {
         #expect(b.channel(0)[2 * rate] == 32767 / 32768 && b.channel(1)[2 * rate] == 32767 / 32768)
     }
 
-    // Enabled when an MP3 backend lands. Written and checked against ffmpeg's decode of the same file on Oct 28,
-    // 2026 (status log): 176,400 frames, -6.26 and -12.26 dBFS, click at 0 ms, correlation 1.00000 and 0.99999.
-    @Test(.disabled("enabled when an MP3 backend lands"))
-    func mp3MatchesTheWav() throws {
-        let wav = try AudioDecoder.decode(Fixture.url("tone.wav"))
-        let mp3 = try AudioDecoder.decode(Fixture.url("tone.mp3"))
-        checkTone(mp3, name: "tone.mp3", rate: 44100)
+    // MP3 through dr_mp3 with the lab's gapless trimming (MP3Reader). Written against ffmpeg's decode of tone.mp3
+    // on Oct 28, 2026 (176,400 frames, -6.26 and -12.26 dBFS, click at 0 ms, correlation 1.00000 and 0.99999);
+    // DeckieDecode's own numbers, measured the same day:
+    //   tone.mp3     176,400 frames = 4.0000 s; left 440 Hz -6.265 dBFS (+108 dB over the other bins), right
+    //                1000 Hz -12.265 dBFS (+107 dB); click at sample 88,200, 0.000 ms; correlation with tone.wav
+    //                1.00000 and 0.99999 at shift 0
+    //   tone48k.mp3  192,000 frames = 4.0000 s; -6.264 dBFS (+102 dB), -12.265 dBFS (+96 dB); click at sample
+    //                96,000, 0.000 ms; correlation 1.00000 and 0.99998 at shift 0
+    // Against the lab's own decode of the same files (soundfile 0.14.0: libsndfile 1.2.2, which decodes MP3 through
+    // mpg123), offset found by cross-correlating the channel mean over 4,096 samples around the click (lags
+    // -3,000 to 3,000): offset 0 samples (correlation 1.000000), the same length, and after alignment
+    //   tone.mp3       largest difference 1.3e-6, RMS 7.9e-8
+    //   tone48k.mp3    largest difference 7.2e-7, RMS 7.6e-8
+    //   tone_mono.mp3  largest difference 5.1e-7, RMS 5.9e-8
+    // ffmpeg 6.1.1's decode, which trims the same way, is also at offset 0 from the lab's, with differences up to
+    // 1.3e-6, 1.1e-6 and 7.8e-7 (RMS 1.8e-7, 1.8e-7, 1.3e-7). Before trimming, dr_mp3 gives 178,560 frames for
+    // tone.mp3 with the click 1,105 samples (25.057 ms) late: the encoder's 576 plus the decoder's 529.
+    @Test(arguments: [("tone.mp3", "tone.wav", 44100), ("tone48k.mp3", "tone48k.wav", 48000)])
+    func mp3MatchesTheWav(_ name: String, _ wavName: String, _ rate: Int) throws {
+        let wav = try AudioDecoder.decode(Fixture.url(wavName))
+        let mp3 = try AudioDecoder.decode(Fixture.url(name))
+        checkTone(mp3, name: name, rate: rate)
         let shift = clickIndex(mp3.mono()) - clickIndex(wav.mono())
         let corrL = correlation(wav.channel(0), mp3.channel(0), shift: shift)
         let corrR = correlation(wav.channel(1), mp3.channel(1), shift: shift)
         #expect(corrL > 0.99 && corrR > 0.99, "correlation with the WAV: left \(corrL), right \(corrR)")
-        print("DeckieDecode tone.mp3 vs tone.wav: aligned on the click, shift \(shift) samples; "
+        // Gapless: exactly the WAV's length, the click on the WAV's sample.
+        #expect(mp3.frames == wav.frames && shift == 0, "\(mp3.frames) frames, click shifted \(shift) samples")
+        print("DeckieDecode \(name) vs \(wavName): aligned on the click, shift \(shift) samples; "
               + "correlation left \(fixed(corrL, 5)), right \(fixed(corrR, 5))")
     }
 }

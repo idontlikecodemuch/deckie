@@ -42,10 +42,7 @@ enum Fixture {
         #expect(error.description.contains("no-such-file.wav"))
     }
 
-    @Test func mp3AndAACAreRecognisedButNotSupportedYet() throws {
-        let mp3 = try #require(decodeError(Fixture.url("tone.mp3")))
-        #expect(mp3.kind == .unsupported && mp3.format == .mp3)
-        #expect(mp3.message.hasPrefix("MP3 is not supported on this platform yet"), "\(mp3.message)")
+    @Test func aacIsRecognisedButNotSupportedYet() throws {
         let aac = try #require(decodeError(Fixture.url("tone.m4a")))
         #expect(aac.kind == .unsupported && aac.format == .aac)
         #expect(aac.message.hasPrefix("AAC is not supported on this platform yet"), "\(aac.message)")
