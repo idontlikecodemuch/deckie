@@ -10,8 +10,8 @@ and Linux crate builder share them. Charter: `docs/architecture/pc-linux-track.m
   `mixer/analyze.py`, `mixer/local_tempo.py` and `mixer/score.py`;
   `PythonCompat.swift` holds the rounding and modulo details that keep the numbers identical. `Loudness/` is the
   loudness module, `DSP/` and `Key/` the key estimator and the signal processing under it (with the spectral
-  features), `Structure/` bars, phrases, sections, the fade-out, the mix windows and the novelty; all are described
-  below.
+  features, the resampler, the two-band split and the first and last sound), `Structure/` bars, phrases, sections,
+  the fade-out, the mix windows and the novelty; all are described below.
 - `Sources/DeckieLab`: reads the lab's `mixer/features/<id>.json` and `mixer/candidates.json` into
   `DeckieCore` types (`FeatureFile+Structure.swift` reads the structure fields on their own).
 - `Sources/DeckieAudio`: `AudioBuffer`, decoded audio in memory (interleaved Float32 at the file's own rate, one
@@ -55,6 +55,9 @@ and Linux crate builder share them. Charter: `docs/architecture/pc-linux-track.m
   and onset features, scipy's find_peaks and the lab's own structure code, written by
   `Tools/make_spectral_fixtures.py`; needs numpy, scipy and librosa): the matrices are too big to store whole, so it
   keeps a few frames in full plus every frame's and every band's sum, and the curves whole (427 KB).
+  `ResampleTests.swift` and `BandTests.swift` do the same with `Fixtures/resample.json` (113 KB: soxr's output, tone
+  levels and response) and `Fixtures/bands.json` (38 KB: scipy's band split and the lab's per-bar levels and first
+  and last sound), both written by `Tools/make_resample_fixtures.py` (needs numpy, scipy and soxr).
 - `Tests/DeckieDecodeTests`: the decoder's tests. `Fixtures/` holds a generated test tone (two sines and a click)
   as WAV at 44.1 and 48 kHz, MP3 at 44.1 and 48 kHz and in mono, AAC, AIFF and AIFF-C ("sowt"), FLAC at 16 and 24
   bits and as Ogg-FLAC, plus a 648-byte stand-in for a FairPlay-protected file with no audio in it
@@ -101,14 +104,14 @@ sampled float32 weight identical) and `Chroma.stft` (librosa's `chroma_stft` as 
 librosa 1.0.0 fed float32 audio as the lab feeds it, within 1e-14 fed doubles). The decisions (`bestKey`,
 `segments`, `windowKey`, `Camelot.relation`, `Camelot.wheelCost`) reproduce the lab's functions to the last bit on
 68 test matrices, using numpy's own summation order and dot product (`Py.pairwiseSum`, `Py.dot`). It reads mono
-audio at 22,050 Hz; 44.1 kHz goes through `Decimator.halve`, a stopgap 65-tap half-band filter where the lab uses
-soxr (on a synthesised signal its chroma is within 4e-4 of soxr's), and other rates throw "resample first" until a
-resampler is built. Four minutes take under a second in a debug build. Still needed from the Mac: parity on real
-music. `mixer/key_light_stft.tsv` (whole-track keys, all six profiles) and `mixer/key_ends_stft.tsv` (mix windows)
-hold the lab's per-track results for the 373 tracks, but the audio stays on the Mac; there the port runs over
-`mixer/candidates.json` and its keys, correlations and flags are compared row by row, which also measures the
-decimator against soxr on real tracks. Expect rare differences where the lab's margin is tiny: the lab's chroma and
-its window means are float32, the port's are double precision.
+audio at 22,050 Hz; 44.1 kHz goes through `Decimator.halve`, now the resampler below with soxr's own filter (on a
+synthesised signal its chroma is within 1.1e-6 of the chroma of soxr's output; the 65-tap stopgap it replaces gave
+4e-4), and other rates still throw "resample first" (`Resampler` can feed them). Four minutes take under a second in
+a debug build. Still needed from the Mac: parity on real music. `mixer/key_light_stft.tsv` (whole-track keys, all
+six profiles) and `mixer/key_ends_stft.tsv` (mix windows) hold the lab's per-track results for the 373 tracks, but
+the audio stays on the Mac; there the port runs over `mixer/candidates.json` and its keys, correlations and flags are
+compared row by row, which also measures the decimator against soxr on real tracks. Expect rare differences where
+the lab's margin is tiny: the lab's chroma and its window means are float32, the port's are double precision.
 
 **Structure** (`Sources/DeckieCore/Structure/`) is the part of `mixer/analyze.py` after the grid choice that lays out
 bars and phrases and places the mix windows, as pure functions of what the audio analysers measure. `BarGrid` puts bar
@@ -148,9 +151,28 @@ here the later peak wins; a novelty curve does not have such ties). On a synthes
 audio gives the lab's own code's peak frames, bars and lattice phase on both paths (novelty within 3.8e-7 of the float32
 path, 6.1e-16 of the float64), the same onsets in every bar, and the onset pattern within 1.3e-7. The float32 rounding
 could only change a result where two candidate peaks are that close in height. Four minutes take about 1.5 s in a debug
-build. Still needed: the lab resamples to 22,050 Hz with soxr (a resampler is in progress), and parity on real music
-needs the audio on the Mac (the feature files hold `novelty_peaks`, `onset_density` and `onset_pattern_16`, rounded, for
-the 373 tracks).
+build. The lab resamples to 22,050 Hz with soxr first; `Resampler` (below) does that with soxr's own filter. Still
+needed: parity on real music needs the audio on the Mac (the feature files hold `novelty_peaks`, `onset_density` and
+`onset_pattern_16`, rounded, for the 373 tracks).
+
+**Resampling, bands and first sound** (`Sources/DeckieCore/DSP/Resampler.swift`, `BandSplit.swift`,
+`SoundBounds.swift`) are three audio-side pieces of `mixer/analyze.py` that the structure module takes as inputs.
+`Resampler(from:to:)` converts between any two whole-number rates with a polyphase windowed-sinc filter of soxr's
+"HQ" design, the lab's resampler, measured from soxr's impulse response (a Kaiser window with beta 13.04, cutoff
+0.956872 of the lower Nyquist frequency, 97.25 periods of the lower rate either side): flat within 1e-5 dB to 0.9 of
+the lower Nyquist frequency, at least 126 dB down from it on, no delay, soxr's output length. Between 44.1 and
+22.05 kHz, both ways, it is soxr's own filter and the outputs agree to -103 to -137 dB of the signal (soxr's
+single-precision noise); from 48 to 44.1 kHz and 44.1 to 16 kHz, and back, soxr adds an interpolating stage
+(0.007 dB of passband droop, a slightly different transition band, a different start in its first few output
+samples), so there the two agree to about -60 dB on noise. Four minutes of stereo take 0.5 to 0.8 s in a release
+build and 6 to 8 s in a debug build (a plain-Float loop there, the same arithmetic as the release build's SIMD loop,
+to the bit); `Decimator.halve` is now a call into it. `BandSplit` is the lab's `lr4`: scipy's second-order Butterworth
+(`butter(2, fc, btype, fs, output="sos")`, computed the way scipy computes it, to the last bit) run twice the way
+`sosfilt` runs it, low-pass at 150 Hz and high-pass at 4 kHz; `levels(mono, barTimes:)` gives the lab's per-bar
+`low_db` and `high_db` in one pass (four minutes in 0.2 s in a debug build). Against scipy the filtered samples are
+identical and the per-bar values within 1e-13 dB, at 44.1 and 48 kHz. `SoundBounds(buffer)` is the lab's first and
+last sound (10 ms frames, the peak over channels above -60 dBFS compared in float32 as numpy compares it, a partial
+last frame dropped; at other rates frames of rate / 100 samples), identical to the lab's rule on 14 cases.
 
 ```
 cd core
