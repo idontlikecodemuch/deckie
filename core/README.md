@@ -190,18 +190,20 @@ after checking its SHA-256; `makeSession(modelPath:options:)` loads a model with
 optimisation level, and `run` takes float32 tensors by name and returns float32 tensors with their shapes. ONNX
 Runtime's own errors come back as `OnnxRuntimeError.runtime` with its code and message. `BeatTracker` runs Beat
 This! (JKU Linz, ISMIR 2024, MIT code and weights; `DEPENDENCIES.md` section 7): `track(buffer)` averages the
-channels, takes 22,050 Hz as it is and halves 44,100 Hz with `Decimator.halve` (other rates throw "resample first"),
-computes the package's log-mel spectrogram (`BeatThisFrontEnd`: reflect-padded STFT, torchaudio's Slaney mel filters
+channels, takes 22,050 Hz as it is, halves 44,100 Hz with `Decimator.halve` and brings any other rate to 22,050 Hz
+with `Resampler` (soxr's "HQ" filter, as the package's `soxr.resample`), computes the package's log-mel spectrogram (`BeatThisFrontEnd`: reflect-padded STFT, torchaudio's Slaney mel filters
 rebuilt in float32, log(1 + 1000 x)), runs the network over 30 s chunks as the package does (`BeatThisChunking`) and
 picks peaks with the package's minimal postprocessor (`BeatThisPostProcessor`), giving beat and downbeat times. The
 model is `final0` exported to `core/.models/beat_this_final0.onnx` by `Tools/export_beat_this.py` (a development
 tool: PyTorch and the package, pinned in `Tools/export-requirements.txt`, checked against PyTorch to 1.1e-5 in a
 logit); `DECKIE_BEAT_THIS_MODEL` names another file. Measured against the package on synthesised drums
 (`Fixtures/beat_this.json`, written by `Tools/make_beat_fixtures.py`): the spectrogram within 2.6e-5 relative, the
-chunking and the postprocessor identical, and at 22,050 Hz every beat and downbeat identical on a 30 s pattern at
-120 BPM and a 90 s one turning from 128 to 100 BPM; at 44,100 Hz one beat in 166 differs on the second, where the
-package's soxr and the stopgap decimator put a logit on either side of the threshold. Four minutes take about 9 s
-in a debug build on a four-core 2.1 GHz Xeon, nearly all of it the network. On a fresh machine:
+chunking and the postprocessor identical, and every beat and downbeat identical, end to end, on a 30 s pattern at
+120 BPM (at 22.05, 44.1 and 48 kHz) and a 90 s one turning from 128 to 100 BPM (at 22.05 and 44.1 kHz), with the
+logits within 8.2e-5 of the package's at 22.05 kHz, 3.7e-4 at 44.1 kHz and 5.4e-3 at 48 kHz (where soxr adds an
+interpolating stage). On the 120 BPM pattern every click gets a beat at 0 ms and the downbeats fall on the accents.
+Four minutes at 44.1 kHz take about 6.3 s in a release build on a four-core 2.1 GHz Xeon, 0.4 s of it resampling
+and the spectrogram and the rest the network (about 9.7 s in a debug build). On a fresh machine:
 
 ```
 bash core/Tools/fetch-onnxruntime.sh                   # ONNX Runtime 1.31.1 into core/.deps (11 MB, hash-checked)

@@ -4,8 +4,6 @@ import DeckieCore
 
 /// What went wrong before or after the model ran (ONNX Runtime's own errors are `OnnxRuntimeError`).
 public enum BeatTrackerError: Error, Equatable, CustomStringConvertible {
-    /// The tracker reads 22,050 Hz; 44,100 Hz is halved (`Decimator`); other rates need a resampler, not built yet.
-    case resampleFirst(sampleRate: Int)
     /// No model file at any place looked (DECKIE_BEAT_THIS_MODEL, or the checkout's core/.models).
     case modelNotFound(searched: [String])
     /// The model does not have Beat This!'s input and outputs.
@@ -13,8 +11,6 @@ public enum BeatTrackerError: Error, Equatable, CustomStringConvertible {
 
     public var description: String {
         switch self {
-        case .resampleFirst(let rate):
-            return "the beat tracker reads 22050 Hz audio and can halve 44100 Hz; resample \(rate) Hz audio first"
         case .modelNotFound(let searched):
             return "Beat This! model not found (looked at: \(searched.joined(separator: ", "))); run core/Tools/export_beat_this.py or set \(BeatTracker.modelEnvironmentVariable)"
         case .unexpectedModel(let message): return "not a Beat This! model: \(message)"
@@ -36,10 +32,11 @@ public struct BeatTrackerResult: Sendable {
 /// Runtime: audio in, beat and downbeat times out, as the `beat_this` package's `Audio2Beats` computes them with its
 /// "minimal" postprocessor (no DBN).
 ///
-/// Steps: the channels are averaged (`AudioBuffer.mono`); audio at 22,050 Hz is used as it is and 44,100 Hz is
-/// halved by `Decimator.halve` (the package uses soxr; the difference moves logits slightly, measured in the
-/// tests); any other rate throws `resampleFirst` until a resampler is built. Then `BeatThisFrontEnd` makes the
-/// spectrogram, `BeatThisChunking` runs the network over 1,500-frame chunks, and `BeatThisPostProcessor` picks the
+/// Steps: the channels are averaged (`AudioBuffer.mono`); audio at 22,050 Hz is used as it is, 44,100 Hz is halved
+/// by `Decimator.halve` and any other rate is brought to 22,050 Hz by `Resampler`, which are soxr's "HQ" filter, as
+/// the package's `soxr.resample` is (between 44.1 and 22.05 kHz the very same filter; from other rates soxr adds an
+/// interpolating stage that `Resampler` does not, so there the audio agrees to about -60 dB, measured on noise by
+/// the resampler's tests). Then `BeatThisFrontEnd` makes the spectrogram, `BeatThisChunking` runs the network over 1,500-frame chunks, and `BeatThisPostProcessor` picks the
 /// peaks. Nothing touches the network: the model and ONNX Runtime are files on disk.
 public final class BeatTracker: @unchecked Sendable {
     public static let modelEnvironmentVariable = "DECKIE_BEAT_THIS_MODEL"
@@ -93,19 +90,19 @@ public final class BeatTracker: @unchecked Sendable {
         try BeatThisChunking.run(spectrogram) { input, rows in try chunkLogits(input, rows: rows) }
     }
 
-    /// Mono audio at 22,050 Hz, from mono audio at 22,050 or 44,100 Hz.
-    public static func modelRateSignal(_ mono: [Float], sampleRate: Int) throws -> [Float] {
+    /// Mono audio at 22,050 Hz, from mono audio at `sampleRate`.
+    public static func modelRateSignal(_ mono: [Float], sampleRate: Int) -> [Float] {
         switch sampleRate {
         case BeatThisFrontEnd.sampleRate: return mono
         case 2 * BeatThisFrontEnd.sampleRate: return Decimator.halve(mono)
-        default: throw BeatTrackerError.resampleFirst(sampleRate: sampleRate)
+        default: return Resampler(from: sampleRate, to: BeatThisFrontEnd.sampleRate).process(mono)
         }
     }
 
     /// Beats and downbeats of `audio`.
     public func track(_ audio: AudioBuffer) throws -> BeatTrackerResult {
         let t0 = Date()
-        let y = try Self.modelRateSignal(audio.mono(), sampleRate: audio.sampleRate)
+        let y = Self.modelRateSignal(audio.mono(), sampleRate: audio.sampleRate)
         let t1 = Date()
         let spectrogram = frontEnd.spectrogram(y)
         let t2 = Date()
