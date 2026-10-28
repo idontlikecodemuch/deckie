@@ -29,11 +29,11 @@ Outputs, in core/Tests/DeckieDecodeTests/Fixtures/:
 
 The ffmpeg command-line program is a development tool here and nothing else: no Deckie code links ffmpeg
 (DEPENDENCIES.md, "Checked and rejected"). The same ffmpeg build gives the same bytes on every run: version strings
-and metadata are left out (bitexact; ffmpeg's AIFF writer adds no ID3 chunk unless asked). FLAC files must carry a
-Vorbis comment block, which holds the writer's name; bitexact makes it the constant "ffmpeg", with no version and
-no comments, and the FLAC files leave out the 8 KB padding block ffmpeg otherwise adds. The FLAC files use
-compression level 12, ffmpeg's highest, which brings tone24.flac from 443 KB to 254 KB. FFMPEG=/path/to/ffmpeg picks
-another ffmpeg; the default is /usr/bin/ffmpeg.
+and metadata are left out (bitexact; ffmpeg's AIFF writer adds no ID3 chunk unless asked). ffmpeg's FLAC writers
+always add a Vorbis comment block, which holds the writer's name; bitexact makes it the constant "ffmpeg", with no
+version and no comments, and the native FLAC files leave out the 8 KB padding block ffmpeg otherwise adds. The FLAC
+files use compression level 12, ffmpeg's highest (tone24.flac is 254 KB at that level, 435 KB at the default, 5).
+FFMPEG=/path/to/ffmpeg picks another ffmpeg; the default is /usr/bin/ffmpeg.
 """
 import hashlib, os, struct, subprocess, tempfile, wave
 import numpy as np
