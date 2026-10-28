@@ -25,3 +25,6 @@ mixer/pairs.json
 tools/mubench/build/
 tools/mubench/*.xcodeproj/xcuserdata/
 mixer/mu_raw/
+# Swift package build output (core/)
+core/.build/
+core/.swiftpm/
