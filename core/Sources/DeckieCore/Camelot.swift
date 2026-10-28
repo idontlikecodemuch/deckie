@@ -11,12 +11,23 @@ public enum Camelot {
     /// Camelot code ("8A", "12B") from a key name and "major"/"minor". Nil for an unknown key name.
     public static func code(key: String, scale: String) -> String? {
         guard let pc = pitchClass[key] else { return nil }
-        if scale.lowercased().hasPrefix("maj") {
-            let n = (pc * 7 + 8) % 12
-            return "\(n == 0 ? 12 : n)B"
-        }
-        let n = (pc * 7 + 5) % 12
-        return "\(n == 0 ? 12 : n)A"
+        return code(pitchClass: pc, major: scale.lowercased().hasPrefix("maj"))
+    }
+
+    /// Camelot code from a pitch class (0 = C ... 11 = B) and the mode: the lab's `CAM_MAJ[pc]` or `CAM_MIN[pc]`
+    /// (mixer/key_light.py). Each semitone up is 7 steps round the wheel; C major is 8B and C minor 5A.
+    public static func code(pitchClass pc: Int, major: Bool) -> String {
+        let n = Py.mod(pc * 7 + (major ? 8 : 5), 12)
+        return "\(n == 0 ? 12 : n)\(major ? "B" : "A")"
+    }
+
+    /// The tonic's pitch class and the mode of a Camelot code, the inverse of `code(pitchClass:major:)` (the lab's
+    /// `(CAM_MAJ + CAM_MIN).index(cam) % 12` and `cam.endswith("B")`). Nil for anything but 1A ... 12A, 1B ... 12B.
+    public static func tonic(_ code: String) -> (pitchClass: Int, major: Bool)? {
+        let (n, letter) = parse(code)
+        guard (1...12).contains(n), letter == "A" || letter == "B", code == "\(n)\(letter)" else { return nil }
+        let major = letter == "B"
+        return (Py.mod((n - (major ? 8 : 5)) * 7, 12), major)
     }
 
     /// Splits "11A" into (11, "A"). Codes are kept as strings, as the lab does.
