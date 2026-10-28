@@ -13,14 +13,17 @@ Mac) reviews and merges this track's branch, `pc-linux`, and runs anything that 
   step 2. The pull request is https://github.com/idontlikecodemuch/deckie/pull/1 (branch `pc-linux` into `main`);
   both CI workflows are green on it.
 - **Step 2 is under way on its own branch and pull request** (`pc-linux-step2`,
-  https://github.com/idontlikecodemuch/deckie/pull/2), each mechanic with its own status entry. Done: WAV and MP3
-  decoding (entry 4, MP3 at offset 0 from the lab's decoder) and loudness measurement with no dependency (entry
-  5). Next: FLAC (needs Christopher's yes on dr_flac), AIFF, the key estimator; then Beat This! through ONNX
-  Runtime and a vocal tagger, which need downloads Christopher must approve here.
+  https://github.com/idontlikecodemuch/deckie/pull/2), each mechanic with its own status entry. Done: WAV, MP3 and AIFF
+  decoding with protected-file detection (entry 4), loudness measurement (entry 5) and the key estimator (entry
+  6), all with no dependency beyond the vendored dr_mp3, all passing on Linux and Windows. Next: FLAC (needs
+  Christopher's yes on dr_flac); then Beat This! through ONNX Runtime and a vocal tagger, which need downloads
+  Christopher must approve here.
 - Needed from Christopher: nothing right now (dr_mp3 vendoring approved Oct 28; dr_flac next, same pattern,
   will need the same yes, see entry 4, working mode).
 - Needed from the Mac, when convenient (not blocking): one check of the loudness module against the real
-  pyloudnorm and scipy on any file (entry 5 says what to compare).
+  pyloudnorm and scipy on any file (entry 5), and the key estimator's parity run over the real tracks against
+  `mixer/key_light_stft.tsv` and `mixer/key_ends_stft.tsv` (entry 6). Both can wait for the `bench` command of
+  step 5, which is where they belong.
 - Open questions for the main session: none; AAC on Linux is decided (entry 4, decision).
 
 ## Oct 28, 2026: the environment (entry 1)
@@ -311,7 +314,22 @@ The test tone decodes to exactly 176,400 frames with the click at 2.000 s; a fou
 in about half a second. Two decisions taken here and logged: a file with damage in the middle is decoded past
 the damage, as ffmpeg does, where mpg123 gives up (the import log will carry a warning once it exists); and an
 AAC stream behind an ID3 tag is currently reported as a damaged MP3 rather than as AAC, a rare case left for the
-platform decoders. Windows probe: pending on the pull request.
+platform decoders. The Windows probe passed with dr_mp3 compiled as plain C.
+
+**AIFF, done (Oct 28).** AIFF and AIFF-C (the uncompressed kinds: "NONE", "twos", "sowt" at 8 to 32 bits, and
+32-bit float) decode in plain Swift, sample for sample identical to the same signal in WAV and to the lab's
+decoder (offset 0, largest difference 0); the odd 80-bit sample-rate field converts exactly. Other AIFF-C
+compressions (ulaw, alaw, ima4, fl64) are reported as unsupported. **Protected files**, per P18: an MP4 whose
+brand is "M4P " or whose index carries a FairPlay ('drms', 'drmi') or standard-encryption ('sinf') entry is
+reported as "protected, cannot be read", found by walking the file's box structure rather than searching bytes
+(so a title containing "sinfonia" does not trip it, and an index stored after the audio, as ffmpeg writes it, is
+still found). Spotify, Tidal, Amazon and Deezer offline caches are not files a user can hand over, so they are
+not detected; protected WMA is not recognised yet. The test fixtures now total 3.1 MB (generated tones in six
+formats plus a 648-byte protected stub), all regenerable by `core/Tools/make_audio_fixtures.py`.
+
+**A slip, logged.** One push on Oct 28 went out with a failing AIFF test for about four minutes: my local check
+piped the test output through a filter, which hid the test's own failure status. The next commit fixed the test
+and the check now reads the exit status directly.
 
 ## Oct 28, 2026: step 2, loudness (entry 5)
 
@@ -332,6 +350,8 @@ the lab's method also counts), and a full-scale click 0.0 dBTP. Against an indep
 of the lab's pipeline the module agrees to about 1e-14 LU on every number. Four minutes of stereo take about
 one second in a debug build.
 
+The Windows probe passed the loudness tests too, speed test included.
+
 **One finding worth knowing.** The lab's filters come from pyloudnorm, whose own documentation admits they do not
 reproduce the published BS.1770 coefficients exactly: the lab reads about 0.04 LU lower than the standard. The
 module keeps the lab's filters as the default, for parity with the yardstick, and offers the published ones
@@ -342,3 +362,36 @@ as an option (`design: .bs1770`). A small correction to this session's own brief
 independent re-implementation, not the real libraries. One run of the lab's `pyloudnorm` integrated loudness,
 LRA and `true_peak_db` on any file, compared with `Loudness.integrated`, `Loudness.range` and
 `TruePeak.decibels` on the same decoded samples, would close that; the expected agreement is better than 0.01.
+
+## Oct 28, 2026: step 2, the key estimator (entry 6)
+
+**Where it landed.** `DeckieCore` now carries the lab's key estimator from `mixer/key_light.py`: a real-input FFT
+and a short-time Fourier transform (STFT: the spectrum of each short frame of audio) written in Swift in double
+precision with no dependency; the chroma (the energy of each of the twelve pitch classes per frame) computed
+exactly as librosa does it with the lab's settings (22,050 Hz, 8,192-point frames every 2,048 samples); the
+published key profiles (edma, the lab's choice, and five others at no cost); the whole-track key by
+correlation against the 24 rotated profiles with the lab's margin rule; the key of each mix window judged
+against the song key; and key segments over 20-second windows every 5 seconds with the lab's hysteresis. A
+stopgap halving filter brings 44.1 kHz audio to 22,050 Hz until the resampler mechanic lands (the lab uses soxr;
+the stopgap is within 3.7e-4 of it on chroma, flat to 9.9 kHz, 57 dB down past 12.5 kHz). Done by an Opus agent
+under this session's direction, reviewed and merged here.
+
+**Measured.** Against the lab's own tools, installed here for testing only (librosa 1.0.0, the lab's version): the
+FFT within 3.5e-16 of numpy's; the Hann window bit for bit; all 168 sampled filter-bank weights identical; the
+chroma within 8.4e-7 of librosa's on seven synthesised signals (and within 8.5e-15 when both run in double
+precision, so the remaining gap is librosa's single-precision arithmetic). The decision logic, fed 68 chroma
+matrices through copies of the lab's own functions (checked against `key_light.py` before use): 408 whole-track
+keys, 249 segments and 136 mix-window judgements all identical, 1,826 of 1,826 numbers bit for bit. End to end
+on synthesised chord progressions: C major gives 8B, A minor 8A, F sharp major 2B; a change from C to D halfway
+through a 60-second signal gives two segments, the second starting where the lab's definition puts it (the
+first 20-second window that hears the new key). Four minutes of audio take 0.8 s in a debug build. 38 core tests
+pass with the 24 decode tests, on Linux and on the Windows probe.
+
+**Two things to know.** (1) The lab's chroma is single precision and the port's is double, so on real tracks a
+key could differ only where the lab's margin is around one millionth. (2) The lab's code and its comment
+disagree in one place (a window counts as "far" from the song key at wheel cost 2, the comment says 3); the port
+follows the code.
+
+**Needed from the Mac, when convenient.** Parity on real music: run the port over `mixer/candidates.json` and
+compare row by row with `mixer/key_light_stft.tsv` and `mixer/key_ends_stft.tsv`, which also measures the
+stopgap halving filter against soxr on real tracks. This belongs in the `bench` command of step 5.
