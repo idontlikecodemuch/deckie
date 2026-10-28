@@ -17,13 +17,12 @@ jobs:
       - uses: actions/checkout@v4
       # The action's documented reference is @main; its tag v3 does not exist (first probe run, Oct 28).
       # Pinning to a commit hash is pending (DEPENDENCIES.md).
-      # 6.4.0, not 6.4.1: on Oct 28 swift.org's own link for the 6.4.1 Windows installer answered 404
-      # (download.swift.org/swift-6.4.1-release/windows10/swift-6.4.1-RELEASE/swift-6.4.1-RELEASE-windows10.exe),
-      # so the probe uses the previous 6.4 build until that file is back. Linux stays on 6.4.1.
+      # swift-version names the download directory on swift.org, which for a point release is
+      # swift-6.4.1-release (not swift-6.4-release: that gave 404s on Oct 28); swift-build names the file.
       - uses: compnerd/gha-setup-swift@main
         with:
-          swift-version: swift-6.4-release
-          swift-build: 6.4.0-RELEASE
+          swift-version: swift-6.4.1-release
+          swift-build: 6.4.1-RELEASE
       - name: Swift version
         run: swift --version
       - name: Build
