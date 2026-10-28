@@ -13,13 +13,14 @@ Mac) reviews and merges this track's branch, `pc-linux`, and runs anything that 
   step 2. The pull request is https://github.com/idontlikecodemuch/deckie/pull/1 (branch `pc-linux` into `main`);
   both CI workflows are green on it.
 - **Step 2 is under way on its own branch and pull request** (`pc-linux-step2`,
-  https://github.com/idontlikecodemuch/deckie/pull/2, a draft until its first mechanic is whole), one mechanic
-  at a time, each with its own status entry. Mechanic 1, decoding audio to float samples: WAV done; MP3 waits on
-  Christopher's approval to vendor one public-domain file; AAC on Linux has a gap for the main session to decide
-  (entry 4). Then Beat This! through ONNX Runtime, loudness with libebur128, the key estimator, a vocal tagger.
+  https://github.com/idontlikecodemuch/deckie/pull/2), each mechanic with its own status entry. Done: WAV and MP3
+  decoding (entry 4, MP3 at offset 0 from the lab's decoder) and loudness measurement with no dependency (entry
+  5). Next: FLAC (needs Christopher's yes on dr_flac), AIFF, the key estimator; then Beat This! through ONNX
+  Runtime and a vocal tagger, which need downloads Christopher must approve here.
 - Needed from Christopher: nothing right now (dr_mp3 vendoring approved Oct 28; dr_flac next, same pattern,
   will need the same yes, see entry 4, working mode).
-- Needed from the Mac: nothing yet.
+- Needed from the Mac, when convenient (not blocking): one check of the loudness module against the real
+  pyloudnorm and scipy on any file (entry 5 says what to compare).
 - Open questions for the main session: none; AAC on Linux is decided (entry 4, decision).
 
 ## Oct 28, 2026: the environment (entry 1)
@@ -295,6 +296,49 @@ decoders differ in how they drop the encoder's leading delay; a constant offset 
 would shift every beat time by about 25 ms against the yardstick), and a constant offset is corrected in the
 bench path.
 
-**In progress, Oct 28:** dr_mp3 vendoring and the MP3 backend (approved by Christopher), with that offset
-measurement; and, in parallel, the loudness mechanic (BS.1770 K-weighting, integrated loudness, loudness range,
-true peak, per-bar loudness) in plain Swift with no dependency, tested on the EBU reference signals.
+**MP3, done (Oct 28, after Christopher's approval).** dr_mp3 v0.7.4 (one public-domain C file, 198,991 bytes,
+SHA-256 `390e4e0e...`; `DEPENDENCIES.md` section 4) is compiled as plain C into the package, so Windows gets the
+same decoder. The Swift wrapper reads the file's bytes, skips any ID3 tags in front, decodes to float, and then
+trims the silence that MP3 encoding adds at both ends by the same rules as the lab's decoder (libsndfile through
+mpg123), read from the tag in the first frame: the encoder's delay plus the decoder's 529 samples at the start,
+the padding less 529 at the end. dr_mp3's own trimming was switched off because it follows ffmpeg's rules, which
+differ from mpg123's in four edge cases the agent tested (tags without the LAME marker, without a frame count,
+with small padding, or with stray bytes before the first frame); Deckie matches the lab in all fifteen
+variants. The measurement the main session asked for: against the lab's own decoder (soundfile 0.14 with
+libsndfile 1.2.2, installed here for the test) the offset is **0 samples** on all three test files, with the
+largest sample difference 0.0000013 (decoding to float directly, not through 16-bit, which was 15 times worse).
+The test tone decodes to exactly 176,400 frames with the click at 2.000 s; a four-minute 320 kbps file decodes
+in about half a second. Two decisions taken here and logged: a file with damage in the middle is decoded past
+the damage, as ffmpeg does, where mpg123 gives up (the import log will carry a warning once it exists); and an
+AAC stream behind an ID3 tag is currently reported as a damaged MP3 rather than as AAC, a rare case left for the
+platform decoders. Windows probe: pending on the pull request.
+
+## Oct 28, 2026: step 2, loudness (entry 5)
+
+**Where it landed.** `DeckieCore` now measures loudness the way the lab does, in plain Swift with no dependency:
+K-weighting (the standard's ear-shaped filter, built for any sample rate), integrated loudness in LUFS with the
+standard's two gates, loudness range (LRA) per the EBU method, short-term loudness over a window ending at any
+time (the lab's fade-out check), the lab's per-bar loudness over any span of samples (a running sum, so every
+bar costs a subtraction), and true peak by 4x oversampling with the same filter the lab's `resample_poly` uses,
+in the lab's 10-second blocks. `AudioBuffer` moved into a tiny module of its own, `DeckieAudio`, so analysers and
+the decoder share it. A decision logged here: the charter named libebur128 (a C library) for this; a 400-line
+Swift port with no dependency, matching the lab's Python rather than libebur128, was the smaller and more
+faithful choice, so `DEPENDENCIES.md` gains nothing.
+
+**Measured.** 22 tests on synthesised signals, at 44.1 and 48 kHz: the EBU Tech 3341 integrated-loudness cases
+read within 0.06 LU of their targets, the Tech 3342 loudness-range cases exactly (10.0, 5.0, 20.0, 15.0 LU), a
+tone whose peaks fall between samples reads -5.88 dBTP against a true -6.0 (the 0.1 dB extra is edge ringing
+the lab's method also counts), and a full-scale click 0.0 dBTP. Against an independent numpy re-implementation
+of the lab's pipeline the module agrees to about 1e-14 LU on every number. Four minutes of stereo take about
+one second in a debug build.
+
+**One finding worth knowing.** The lab's filters come from pyloudnorm, whose own documentation admits they do not
+reproduce the published BS.1770 coefficients exactly: the lab reads about 0.04 LU lower than the standard. The
+module keeps the lab's filters as the default, for parity with the yardstick, and offers the published ones
+as an option (`design: .bs1770`). A small correction to this session's own brief, found by the agent: EBU case
+5 (-26, -20, -26 dBFS) measures -23.0, not -20.0, because nothing is gated out.
+
+**Needed from the Mac, when convenient.** pyloudnorm and scipy are not installed here, so the final check is an
+independent re-implementation, not the real libraries. One run of the lab's `pyloudnorm` integrated loudness,
+LRA and `true_peak_db` on any file, compared with `Loudness.integrated`, `Loudness.range` and
+`TruePeak.decibels` on the same decoded samples, would close that; the expected agreement is better than 0.01.
