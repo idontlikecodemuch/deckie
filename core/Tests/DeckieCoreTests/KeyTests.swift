@@ -324,7 +324,7 @@ enum Progression {
         #expect(far.mixIn?.camelot == "8B" && far.mixIn?.flag == true && far.mixOut?.flag == true)
     }
 
-    /// The input contract: 44.1 kHz is halved first (the stopgap decimator), 22.05 kHz is read as it is, any other rate
+    /// The input contract: 44.1 kHz is halved first (the decimator), 22.05 kHz is read as it is, any other rate
     /// asks for resampling first. Stereo is averaged to mono.
     @Test func sampleRates() throws {
         let y44 = Progression.render(Progression.cMajor, seconds: 24, rate: 44100).map { Float($0) }
