@@ -23,8 +23,10 @@ Mac) reviews and merges this track's branch, `pc-linux`, and runs anything that 
   with beats identical to the Python package (entry 9). Still to come in step 2: the vocal tagger (research done,
   `docs/research/n-vocal-tagger.md`; the main session said yes to the recommendation, with conditions, entry
   10; Christopher's approval of the two model downloads is pending). Step 4, the crate reader and writer, is
-  built with a design note for the main session to review (entry 10). Next: the vocal tagger, then the analyser
-  assembled into one pipeline matching the lab's feature file, then step 5 (`deckie-build`).
+  built and accepted (entry 10). The analyser is assembled: one call from an audio file to the lab's record and
+  a crate track, with everything but the vocal tagger (entry 11). Next: `deckie-build` with its `bench` command
+  (step 5, in progress), the vocal tagger once Christopher approves its two downloads, then the yardstick on the
+  Mac.
 - Needed from Christopher: approval of the two vocal-model downloads (Spleeter's ONNX files, EfficientAT's weights).
 - Open questions for the main session: none. Crate format v1 is accepted with two changes (entry 10, addendum),
   and MPL 2.0 is decided: unmodified files ship with their notices, so ONNX Runtime with Eigen inside qualifies.
@@ -551,3 +553,32 @@ still to do there: Beat This!'s training data sets and their licences, which the
 beside the weights (the paper's data list could not be fetched by that agent). The yardstick run on the Mac,
 when the engine is whole: `deckie-build bench` over the 373 files against `mixer/features`, reporting the stage 1
 numbers so the two engines are read on one sheet.
+
+## Oct 28, 2026: the analyser assembled (entry 11)
+
+**Where it landed.** A new module `DeckieEngine` runs the whole lab pipeline in the lab's order from one call:
+decode, first and last sound, beats and downbeats from Beat This!, the grid fit, the octave alignment (ported
+with the lab's loudness-at-downbeat test), the bar grid, start and end tempo, the spectral features at 22,050 Hz
+through the resampler, novelty and phrase, sections, loudness, per-bar bands, onset density and pattern,
+fade-out, mix windows, the key estimator, the flags, and timings per stage. The result writes the lab's feature
+JSON shape (same keys, same rounding, same 1-based bars, so the Mac can compare an engine record with
+`mixer/features/<id>.json` using the lab's own tools) and converts to a crate track (family `deckie`, id from
+the file's SHA-256). Measured on a synthesised 63-second track (drums at 124 BPM, chords in A minor, a quiet
+intro, a fade over the last 8 bars): tempo 124.001, bar 1 at the first beat, 32 bars, key 8A, sound bounds to
+the sample, the fade found from bar 26, mix windows on the lattice, loudness within 0.4 LU of the synthesised
+level; the same from the MP3 version; the lab's own `local_tempo.compute` and `fit_grid`, run on the engine's
+JSON, give the engine's values back exactly. About 4.7 s in a debug build for the minute of audio, nearly half
+of it the beat model; the SHA-256 was made ten times faster on the way. 11 engine tests; 185 tests in all.
+
+**Departures from the lab, each recorded in the record itself.** (1) No madmom: Beat This! is the only grid
+source (madmom is non-commercial); a field `deckie.madmom_would_run` marks where the lab's rule would have run
+it, so the Mac comparison knows where the lab's grid may differ. (2) No Essentia tempo vote. (3) Key from one
+estimator (the lab's FFT-chroma port) instead of three; its correlation, margin, mix-window keys and segments
+are recorded. (4) Key confidence from one estimator, to confirm on the Mac: a lone vote cannot count as "all
+three agree", so the rule is 0.3 when the correlation is under 0.6, else 0.65 when the margin is at least 0.10,
+0.45 between 0.04 and 0.10, 0.3 below; against the lab's 311 confident keys those steps are exactly right on
+84, 77 and 60 percent of tracks (right or a neighbour on 97, 90 and 78), at the cost of flagging 218 tracks as
+key-uncertain where the lab flags 58. (5) No vocal tagger yet: the vocal fields are absent, the mix windows
+treat every bar as vocal-free, and the record is flagged `vocal_unknown`; a tagger plugs in through a protocol
+and a stand-in is tested. The EffNet embedding is never written. The lab's `score.py` needs vocal data and will
+not read these records until the tagger lands; the Swift reader and scorer do.
