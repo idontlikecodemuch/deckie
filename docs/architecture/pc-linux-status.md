@@ -17,7 +17,8 @@ Mac) reviews and merges this track's branch, `pc-linux`, and runs anything that 
   at a time, each with its own status entry. Mechanic 1, decoding audio to float samples: WAV done; MP3 waits on
   Christopher's approval to vendor one public-domain file; AAC on Linux has a gap for the main session to decide
   (entry 4). Then Beat This! through ONNX Runtime, loudness with libebur128, the key estimator, a vocal tagger.
-- Needed from Christopher: a yes or no on vendoring dr_mp3, the public-domain MP3 decoder (entry 4).
+- Needed from Christopher: nothing right now (dr_mp3 vendoring approved Oct 28; dr_flac next, same pattern,
+  will need the same yes, see entry 4, working mode).
 - Needed from the Mac: nothing yet.
 - Open questions for the main session: none; AAC on Linux is decided (entry 4, decision).
 
@@ -269,3 +270,31 @@ Deckie's own code, Rust only as a Windows fallback); pull request #1 stays the s
 its own branch and pull request; Ubuntu's ffmpeg must not be linked; the intended route is dr_mp3 or minimp3 for
 MP3 and the platform's decoder for AAC, with the Linux AAC gap stated plainly and a proposal; an LGPL-only ffmpeg
 build is acceptable only if built and pinned by this track, with its cost stated. All applied above.
+
+**Working mode from here (Christopher's instruction, relayed by the main session, Oct 28).** This track works
+independently and asks only the big questions. Decided here and logged, without asking: dependency choices inside
+the licence policy (recorded in `DEPENDENCIES.md`, rejections included), test design, CI changes, the internal
+structure of `core/`, the order within a step, small crate-schema additions that only add fields. Big questions,
+for Christopher in this session or for the main session by message: anything that changes the licence line or
+the privacy principle (audio or metadata leaving the machine); removing or renaming a crate-file field the Apple
+apps read; anything that needs the music or the Mac (say so, skip it, the main session runs it); anything that
+changes what the product does or claims; a fallback away from Swift for any platform. One practical limit
+remains: this session's harness blocks any instruction to download code from outside the repository, so each
+vendored file (dr_mp3 today, dr_flac next) still needs Christopher's yes here before it is fetched.
+
+**File types for `deckie-build` (the main session's decision P18, Oct 28).** After MP3: FLAC next, through
+dr_flac (public domain, same author and vendoring pattern as dr_mp3; Beatport, Bandcamp and lossless rips use
+it), then AIFF through a small parser of our own like the WAV one (Beatport and Mac rips), then stop. AAC and WMA
+on Linux stay with the separate-process ffmpeg plan; on Windows, Media Foundation for both when the Windows build
+gets its own decoding path. ALAC only if demand appears (Apple's open-source decoder, Apache 2.0); Ogg Vorbis and
+Opus only if the trials show them. Streaming-service offline files are rights-protected: detect the usual
+containers and names if cheap and report them as "protected, cannot be read", not "unsupported". Every
+unsupported or protected file is counted by extension in the build summary and the crate's import log. For each
+decoder, the leading-sample offset against the lab's decoding of the same file is measured and logged (MP3
+decoders differ in how they drop the encoder's leading delay; a constant offset of about a thousand samples
+would shift every beat time by about 25 ms against the yardstick), and a constant offset is corrected in the
+bench path.
+
+**In progress, Oct 28:** dr_mp3 vendoring and the MP3 backend (approved by Christopher), with that offset
+measurement; and, in parallel, the loudness mechanic (BS.1770 K-weighting, integrated loudness, loudness range,
+true peak, per-bar loudness) in plain Swift with no dependency, tested on the EBU reference signals.
