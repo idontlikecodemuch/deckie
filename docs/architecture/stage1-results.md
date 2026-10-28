@@ -178,3 +178,23 @@ area; the alternating ones sit at 31 to 60 percent. Rule that follows: store a k
 of windows inside the song key's area) and treat it as the key confidence the scorer already weighs, so an
 ambiguous track gets a soft key rather than a wrong verdict, consistent with "key is a warning, not a score to
 chase". The segment covering each mix window supplies that window's key.
+
+## 1f. The two quick wins, built and measured (Oct 28, morning)
+
+The interim fixes from track H are in the existing Deck app (commit "pitch reading across the fader range"). Measured
+in the iOS 27 simulator by streaming a known track through the app's own microphone path at rendered pitch settings:
+
+| Setting | What the app reads | When |
+|---|---|---|
+| tempo-only +3 | 3.3, then 3.2 to 3.4 | from 14 s |
+| tempo-only +10 | 8.0 from the matched variant at 4 s; 9.2 at 12 s; 10.0 by 26 s; then 9.7 to 10.3 | |
+| tempo-only +16 | 16.0 from the variant at 4 s; 16.0 to 16.3 from 11 s | |
+| vinyl +12 | 11.9 to 12.0 | 3 s |
+| vinyl -16 | -16.0 | 4 s |
+
+Before this change the app matched nothing beyond 8 percent, reported a tempo-only variant's own percent for the rest
+of the song, and read drift only after 20 s, rounded to 0.5. The catalogue is now nine signatures per track (about
+160 MB in the bundle, fine for a development install, wrong for a shipped crate, which is why P11 proposes the
+multi-matcher). The drift fit is a median of pairwise slopes on an audio clock; a least-squares version was pulled by
+one stray match from 10.0 to 5.3 for four seconds, the median version was not. Not yet measured: a real room, and the
+iPad itself. Install command: `deck-app/README.md`.

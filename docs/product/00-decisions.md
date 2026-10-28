@@ -137,7 +137,8 @@ Christopher says so; a yes moves it up into the dated decisions above.
   analysis and take names from tags? Lean: yes. Content hash plus ShazamKit signature plus an analysis descriptor for
   versions; names from tags with an editor; edits in the crate file. Public data only suggests corrections. The
   sprint's pool needed hand maps for 98 original years and 105 new entries, which is the evidence. Spec 5.4.
-- **P11. Recognition across the fader range: shift the microphone, keep one signature per track.** Measured
+- **P11 (interim half built Oct 28: nine signatures per track and the two-match pitch reading are in the Deck app,
+  measured in stage 1 results 1f). Recognition across the fader range: shift the microphone, keep one signature per track.** Measured
   (track H): a ShazamKit signature matches within about plus or minus 4 percent of its own speed in every mode.
   Proposed: while listening for a new song, run several ShazamKit sessions in parallel on transformed copies of
   the microphone signal (as is; resampled for vinyl-style plus and minus 8 and 16; time-stretched for tempo-only
