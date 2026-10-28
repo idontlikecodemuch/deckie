@@ -496,8 +496,9 @@ private func sci(_ x: Double) -> String { String(format: "%.1e", x) }
 
 @Suite struct SpectralSpeedTests {
     /// Four minutes of mono at 22,050 Hz through mel, log-mel, MFCC, RMS, onset strength and the structure novelty in
-    /// under 4 s of this thread's processor time, in a debug build (the processor time, not the wall clock, because the
-    /// tests run side by side and the machine may be shared).
+    /// under 4 s of this thread's processor time, in a debug build. The processor time, not the wall clock, because the
+    /// tests run side by side and the machine may be shared; where there is no thread clock (Windows) the wall clock is
+    /// printed and only a loose ceiling applies, as in the other speed checks.
     @Test func fourMinutes() {
         let n = 240 * 22050
         var g = SplitMix64(42)
@@ -509,22 +510,31 @@ private func sci(_ x: Double) -> String { String(format: "%.1e", x) }
         }
         let grid = BarGrid(firstDownbeatS: 0.25, beatS: 0.5, nBars: 119)
         let clock = ContinuousClock()
-        let cpu0 = threadCPUSeconds()
+        let cpu0 = threadProcessorSeconds()
         var f: SpectralFeatures? = nil, nov: FooteNovelty? = nil
         let spectral = seconds(clock.measure { f = SpectralFeatures(y) })
         let structure = seconds(clock.measure { nov = f!.novelty(grid: grid) })
-        let cpu = threadCPUSeconds() - cpu0
+        let cpu = threadProcessorSeconds().map { $0 - cpu0! }
         print("4 min mono at 22.05 kHz: mel, MFCC, RMS and onset strength \(Py.fixed(spectral, 3)) s "
               + "(\(f!.frames) frames), novelty \(Py.fixed(structure, 3)) s (\(nov!.novelty.count) half-beat frames, "
-              + "\(nov!.peaks.count) peaks); \(Py.fixed(spectral + structure, 3)) s wall clock, "
-              + "\(Py.fixed(cpu, 3)) s processor time")
+              + "\(nov!.peaks.count) peaks); \(Py.fixed(spectral + structure, 3)) s wall clock"
+              + (cpu.map { ", \(Py.fixed($0, 3)) s processor time" } ?? ""))
         #expect(f!.frames == 1 + n / 512 && nov!.novelty.count == 119 * 8)
-        #expect(cpu < 4.0)
+        if let cpu {
+            #expect(cpu < 4.0)
+        } else {
+            #expect(spectral + structure < 40.0)
+        }
     }
 
-    private func threadCPUSeconds() -> Double {
+    /// This thread's processor time in seconds, where the platform has a thread clock.
+    private func threadProcessorSeconds() -> Double? {
+        #if canImport(Glibc) || canImport(Darwin) || canImport(Musl)
         var ts = timespec()
-        clock_gettime(CLOCK_THREAD_CPUTIME_ID, &ts)
+        guard clock_gettime(CLOCK_THREAD_CPUTIME_ID, &ts) == 0 else { return nil }
         return Double(ts.tv_sec) + Double(ts.tv_nsec) * 1e-9
+        #else
+        return nil
+        #endif
     }
 }
