@@ -9,8 +9,9 @@ and Linux crate builder share them. Charter: `docs/architecture/pc-linux-track.m
   (`PairScoring.swift`) and the top lists (`Recommendations.swift`). Ported line for line from
   `mixer/analyze.py`, `mixer/local_tempo.py` and `mixer/score.py`;
   `PythonCompat.swift` holds the rounding and modulo details that keep the numbers identical. `Loudness/` is the
-  loudness module, `DSP/` and `Key/` the key estimator and the signal processing under it, `Structure/` bars,
-  phrases, sections, the fade-out and the mix windows; all three are described below.
+  loudness module, `DSP/` and `Key/` the key estimator and the signal processing under it (with the spectral
+  features), `Structure/` bars, phrases, sections, the fade-out, the mix windows and the novelty; all are described
+  below.
 - `Sources/DeckieLab`: reads the lab's `mixer/features/<id>.json` and `mixer/candidates.json` into
   `DeckieCore` types (`FeatureFile+Structure.swift` reads the structure fields on their own).
 - `Sources/DeckieAudio`: `AudioBuffer`, decoded audio in memory (interleaved Float32 at the file's own rate, one
@@ -50,7 +51,10 @@ and Linux crate builder share them. Charter: `docs/architecture/pc-linux-track.m
   `DSPTests.swift` and `KeyTests.swift` compare against `Fixtures/dsp.json` (numpy's FFT, librosa's chroma and soxr,
   written by `Tools/make_dsp_fixtures.py`; needs numpy and librosa) and `Fixtures/key.json` (the lab's key decisions,
   written by `Tools/make_key_fixtures.py`; needs numpy only); every test signal is synthesised, in Python and again in
-  Swift, to the same bits.
+  Swift, to the same bits. `SpectralTests.swift` compares against `Fixtures/spectral.json` (librosa's mel, MFCC, RMS
+  and onset features, scipy's find_peaks and the lab's own structure code, written by
+  `Tools/make_spectral_fixtures.py`; needs numpy, scipy and librosa): the matrices are too big to store whole, so it
+  keeps a few frames in full plus every frame's and every band's sum, and the curves whole (427 KB).
 - `Tests/DeckieDecodeTests`: the decoder's tests. `Fixtures/` holds a generated test tone (two sines and a click)
   as WAV at 44.1 and 48 kHz, MP3 at 44.1 and 48 kHz and in mono, AAC, AIFF and AIFF-C ("sowt"), FLAC at 16 and 24
   bits and as Ogg-FLAC, plus a 648-byte stand-in for a FairPlay-protected file with no audio in it
@@ -115,12 +119,38 @@ boundaries intro, main, break or outro by loudness; `FadeOut` decides the fade f
 (`Loudness.shortTerm` measures it) and the per-bar loudness; `MixWindows` places `mix_in` and `mix_out` (`pickLen`,
 the lattice snapping, the fade cut-off, the vocal-free counts); `TrackFlags.flags` gives the flag list. Bar numbers in
 and out are 1-based, as the feature files write them; values are kept unrounded. The per-bar loudness is
-`KWeighted.loudness` over each bar; the novelty peaks and the per-bar vocal probability need analysers not ported yet.
+`KWeighted.loudness` over each bar; the novelty peaks come from `FooteNovelty` (below); the per-bar vocal probability
+needs an analyser not ported yet.
 `StructureTests.swift` runs each port on the inputs a committed feature file holds and compares the result with the
 outputs it holds, for all 373 tracks, with tolerances worked out from the files' rounding. Everything matches except
 on four tracks where a written input sits on a threshold (three with a bar's vocal probability written as 0.5, one
 with a tempo written as 100.000 BPM); given that input just inside its rounding, the port gives the lab's result there
 too.
+
+**Spectral features and novelty** (`Sources/DeckieCore/DSP/`, `Structure/Novelty.swift`, `Structure/OnsetPattern.swift`)
+are the lab's spectral block and what `mixer/analyze.py` computes from it. `SpectralFeatures(y)` takes mono audio at
+22,050 Hz and gives, on the same frames (2048 samples centred every 512) and in double precision, librosa's mel
+spectrogram (`LibrosaMelFilterBank`, 64 Slaney bands, and `LibrosaMel.spectrogram`; named after librosa so they are not
+mistaken for a model's own mel front end), the log-mel (`LibrosaMel.powerToDb`, floored 80 dB below the loudest value),
+13 MFCCs (`MFCC`, the orthonormal DCT-II), the RMS (`RMS`) and the onset strength (`OnsetStrength`, the mean rise of the
+log-mel, three frames late as librosa centres it). `FooteNovelty(mfcc:rms:grid:)` averages MFCC and RMS over half-beat
+frames from bar 1, builds the cosine and loudness self-similarity matrices, runs the lab's `foote_novelty` line for line
+(64-frame Gaussian checkerboard, edge padding, numpy's pairwise sums), takes the geometric mean, picks peaks with
+scipy's `find_peaks(distance=8)` (`FindPeaks`: plateaus and the distance rule as scipy has them), keeps the 20 strongest
+and snaps them to bar lines within 0.4 bar; its `peaks` go to `Phrase(peaks:)`. `OnsetDensity` counts librosa's onsets
+(`OnsetDetect`, onset_detect's greedy peak picker) per bar, per beat; `OnsetPattern` is `onset_pattern_16`. Parity, on
+signals synthesised in Python and in Swift to the same bits (`SpectralTests.swift`): librosa's 1990 non-zero float32 mel
+weights are reproduced exactly; against the lab's float32 path the mel spectrogram is within 3.9e-7 relative, the
+log-mel 2.0e-7 (8.6e-6 dB), the MFCCs 1.6e-7, the RMS 1.2e-7 and the onset strength 2.1e-7, and librosa given float64
+audio agrees to 2.3e-13 or better, so single precision is the whole difference. `FindPeaks` matches scipy on every curve
+without two peaks of exactly equal height (scipy orders those with numpy's unstable sort, which depends on the machine;
+here the later peak wins; a novelty curve does not have such ties). On a synthesised 48-bar track the whole chain from
+audio gives the lab's own code's peak frames, bars and lattice phase on both paths (novelty within 3.8e-7 of the float32
+path, 6.1e-16 of the float64), the same onsets in every bar, and the onset pattern within 1.3e-7. The float32 rounding
+could only change a result where two candidate peaks are that close in height. Four minutes take about 1.5 s in a debug
+build. Still needed: the lab resamples to 22,050 Hz with soxr (a resampler is in progress), and parity on real music
+needs the audio on the Mac (the feature files hold `novelty_peaks`, `onset_density` and `onset_pattern_16`, rounded, for
+the 373 tracks).
 
 ```
 cd core
