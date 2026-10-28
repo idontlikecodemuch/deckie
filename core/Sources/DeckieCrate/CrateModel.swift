@@ -129,7 +129,7 @@ public struct CrateTrack: Codable, Equatable, Sendable {
             public var version: String?
             public init(name: String, version: String? = nil) { self.name = name; self.version = version }
         }
-        /// `apple-mu`, `deckie-oss`, `lab`.
+        /// `apple-mu`, `deckie` or `lab` (`CrateFormat.EngineFamily`).
         public var family: String
         public var version: String
         /// `macos-arm64`, `linux-x86_64`, `windows-x86_64`.

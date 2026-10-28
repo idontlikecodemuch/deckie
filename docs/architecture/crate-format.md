@@ -76,8 +76,10 @@ is written in every record; `null` means "no value" and is allowed only where ma
 - `analysis`: `engine` (label), `analysed_at`, `device` (a model label such as `Mac15,6`, never a user's device
   name), `secs` or null, `level`.
 - `engine` **proposed** (where track L's record sits: a block beside `analysis`, which keeps its text label):
-  `family` (`apple-mu`, `deckie-oss` for the Windows and Linux engine, `lab`; track L wrote `deckie-core`, which now
-  names the code both engines share), `version`, `platform` (`macos-arm64`, `linux-x86_64`, `windows-x86_64`),
+  `family` (`apple-mu` for the Apple apps' engine, `deckie` for the Windows and Linux engine, `lab`; decided by the
+  main session: a family names an engine and must not claim a licence, and while the Windows and Linux engine's models
+  are open source, the engine is not; track L wrote `deckie-core`, which now names the code both engines share),
+  `version`, `platform` (`macos-arm64`, `linux-x86_64`, `windows-x86_64`),
   `fidelity`, `models` (each `name`, `version` or null, `weights_sha256` or null), `decoder` (`name`, `version` or
   null) or null. **proposed**: `fidelity` 0 means not benchmarked; n means the build passed benchmark tier n, tier 1
   being the stage 1 pass marks. A device with the audio re-analyses a record when its own fidelity is higher, or the
@@ -176,7 +178,8 @@ budget of about 10 KB.
    `source` on `grid`, `key`, `phrase` (for structure), `loudness` and `vocal`, `confidence` on each block's own
    scale, calibrated readings to come as new fields.
 2. `fidelity`: 0 not benchmarked, n for benchmark tier n (tier 1 the stage 1 pass marks); lab records 0.
-3. Engine families `apple-mu`, `deckie-oss`, `lab` (track L's `deckie-core` renamed).
+3. Engine families `apple-mu`, `deckie`, `lab` (track L's `deckie-core` renamed; the main session chose `deckie`
+   over the proposed `deckie-oss`).
 4. Additions to track A's record: `tempo_segments`, `ends.fade_start_bar`, `ident.tags`, the `style` block.
 5. Shape changes to track A's record (no reader exists yet): `key.changes` as objects; a signature entry as
    `made_by` and `made_at` instead of `true`; `ident.folder` and `ident.era` as text.
