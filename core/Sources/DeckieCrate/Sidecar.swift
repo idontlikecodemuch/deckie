@@ -22,27 +22,23 @@ enum Sidecar {
                          gridPath: String) -> Result<BarSeries, CrateError> {
         let b = [UInt8](data)
         var problems: [CrateProblem] = []
-        func fail(_ m: String) -> Result<BarSeries, CrateError> {
-            .failure(CrateError(problems + [CrateProblem(file: file, path: "", track: track, message: m)]))
-        }
+        func problem(_ m: String) -> CrateProblem { CrateProblem(file: file, path: "", track: track, message: m) }
+        func fail(_ m: String) -> Result<BarSeries, CrateError> { .failure(CrateError(problems + [problem(m)])) }
         guard let (count, seriesCount, reserved) = readHeader(b, CrateFormat.barsMagic) else {
             return fail("not a bars sidecar (it must start with DKB1 and a 16-byte header)")
         }
-        if reserved != 0 { problems.append(CrateProblem(file: file, path: "", track: track, message: "the header's fourth number is \(reserved), not 0")) }
-        if count != nBars {
-            return fail("holds \(count) bars but \(gridPath) is \(nBars)")
-        }
+        if reserved != 0 { problems.append(problem("the header's fourth number is \(reserved), not 0")) }
+        if count != nBars { return fail("holds \(count) bars but \(gridPath) is \(nBars)") }
         if seriesCount != names.count {
-            return fail("holds \(seriesCount) series but features_present lists \(names.count) (\(names.joined(separator: ", ")))")
+            let listed = names.joined(separator: ", ")
+            return fail("holds \(seriesCount) series but features_present lists \(names.count) (\(listed))")
         }
         let want = CrateFormat.sidecarHeaderBytes + 2 * count * seriesCount
         if b.count != want { return fail("is \(b.count) bytes; \(seriesCount) series of \(count) bars make \(want)") }
         var series: [String: [Double]] = [:]
         for (k, name) in names.enumerated() {
             let values = halves(b, from: CrateFormat.sidecarHeaderBytes + 2 * count * k, count: count)
-            if !values.allSatisfy(\.isFinite) {
-                problems.append(CrateProblem(file: file, path: "", track: track, message: "series \(name) holds a value that is not a finite number"))
-            }
+            if !values.allSatisfy(\.isFinite) { problems.append(problem("series \(name) holds a value that is not a number")) }
             series[name] = values
         }
         return problems.isEmpty ? .success(BarSeries(series)) : .failure(CrateError(problems))
@@ -63,7 +59,7 @@ enum Sidecar {
         let want = CrateFormat.sidecarHeaderBytes + 2 * count
         if b.count != want { return fail("is \(b.count) bytes; \(count) values make \(want)") }
         let values = halves(b, from: CrateFormat.sidecarHeaderBytes, count: count)
-        if !values.allSatisfy(\.isFinite) { return fail("holds a value that is not a finite number") }
+        if !values.allSatisfy(\.isFinite) { return fail("holds a value that is not a number") }
         return .success(values)
     }
 

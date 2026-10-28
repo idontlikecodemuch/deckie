@@ -73,8 +73,12 @@ extension CrateTrack {
         let base = "tracks[\(i)]"
         func add(_ path: String, _ message: String) { p.add("crate.json", "\(base).\(path)", id, message) }
 
-        if !isFileSafe(id) { add("id", "\"\(id)\" must be letters, digits, - and _ only, as it names the sidecar files") }
-        if schema < 1 || schema > manifestSchema { add("schema", "\(schema) must be between 1 and the manifest's \(manifestSchema)") }
+        if !isFileSafe(id) {
+            add("id", "\"\(id)\" must be letters, digits, - and _ only, as it names the sidecar files")
+        }
+        if schema < 1 || schema > manifestSchema {
+            add("schema", "\(schema) must be between 1 and the manifest's \(manifestSchema)")
+        }
         if file.name.isEmpty { add("file.name", "is empty") }
         if let rel = file.rel, rel.hasPrefix("/") || rel.hasPrefix("\\") || rel.dropFirst().hasPrefix(":") {
             add("file.rel", "\"\(rel)\" is an absolute path; the crate keeps paths relative")
@@ -189,11 +193,13 @@ extension CrateTrack {
         }
         if let o = onsetPattern16, o.count != 16 { add("onset_pattern_16", "has \(o.count) values, not 16") }
         for (j, f) in flags.enumerated() where f.isEmpty { add("flags[\(j)]", "is empty") }
+        // Sidecar values are kept rounded to float16, so a value beyond its range (65504) has become infinite.
+        let beyond = "holds a value that is not a number or is beyond float16's range (65504)"
         if let s = style {
             if s.model.isEmpty { add("style.model", "is empty") }
             if s.dims < 1 { add("style.dims", "\(s.dims) must be 1 or more") }
             if s.values.count != s.dims { add("style.dims", "is \(s.dims) but the style vector has \(s.values.count) values") }
-            if !s.values.allSatisfy(\.isFinite) { add("style", "holds a value that is not a finite number") }
+            if !s.values.allSatisfy(\.isFinite) { add("style", beyond) }
         }
         for variant in signatures.keys.sorted(by: byteOrder) {
             if !isFileSafe(variant, also: ["-", "_", "+"]) {
@@ -209,7 +215,7 @@ extension CrateTrack {
                     add("bars", "\"\(name)\" is not a series name (letters, digits, - and _)")
                 }
                 if let n, values.count != n { add("bars.\(name)", "has \(values.count) values for the grid's \(n) bars") }
-                if !values.allSatisfy(\.isFinite) { add("bars.\(name)", "holds a value that is not a finite number") }
+                if !values.allSatisfy(\.isFinite) { add("bars.\(name)", beyond) }
             }
         }
     }
