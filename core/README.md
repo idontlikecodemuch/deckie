@@ -8,7 +8,8 @@ and Linux crate builder share them. Charter: `docs/architecture/pc-linux-track.m
   relations (`TempoMultipliers.swift`), directed pair scoring (`PairScoring.swift`) and the top lists
   (`Recommendations.swift`). Ported line for line from `mixer/analyze.py` and `mixer/score.py`;
   `PythonCompat.swift` holds the rounding and modulo details that keep the numbers identical. `Loudness/` is the
-  loudness module, described below.
+  loudness module, `DSP/` and `Key/` the key estimator and the signal processing under it; both are described
+  below.
 - `Sources/DeckieLab`: reads the lab's `mixer/features/<id>.json` and `mixer/candidates.json` into
   `DeckieCore` types.
 - `Sources/DeckieAudio`: `AudioBuffer`, decoded audio in memory (interleaved Float32 at the file's own rate, one
@@ -33,6 +34,10 @@ and Linux crate builder share them. Charter: `docs/architecture/pc-linux-track.m
   read `mixer/features/`, `mixer/candidates.json` and `mixer/recs.json` straight from the repository.
   `LoudnessTests.swift` uses synthesised signals only: the published BS.1770 coefficients, the EBU Tech 3341 and
   3342 test cases, true peak between samples, and a speed check.
+  `DSPTests.swift` and `KeyTests.swift` compare against `Fixtures/dsp.json` (numpy's FFT, librosa's chroma and soxr,
+  written by `Tools/make_dsp_fixtures.py`; needs numpy and librosa) and `Fixtures/key.json` (the lab's key decisions,
+  written by `Tools/make_key_fixtures.py`; needs numpy only); every test signal is synthesised, in Python and again in
+  Swift, to the same bits.
 - `Tests/DeckieDecodeTests`: the decoder's tests. `Fixtures/` holds a generated test tone (two sines and a click)
   as WAV at 44.1 and 48 kHz, MP3 at 44.1 and 48 kHz and in mono, and AAC, written by `Tools/make_audio_fixtures.py`
   (needs numpy, and the ffmpeg program for the MP3 and AAC files only; the same ffmpeg gives the same bytes on
@@ -48,6 +53,28 @@ such as one bar (`loudness(from:to:)`, the lab's per-bar `lufs_st`), is one subt
 the lab uses; it reads about 0.04 LU below the coefficients BS.1770 publishes, which `design: .bs1770` gives
 instead (as libebur128 does). The algorithms follow pyloudnorm (MIT) and scipy by description; no code is
 copied. Four minutes of stereo take about a second in a debug build.
+
+**Key estimator** (`Sources/DeckieCore/Key/`, on `Sources/DeckieCore/DSP/`) is the lab's lightweight estimator,
+`mixer/key_light.py`, in the variant the charter names: chroma from a plain FFT, the edma profile, Pearson
+correlation against the 24 keys (75 percent exact against the lab's confident keys; Apple's framework gets 83).
+`KeyEstimator.estimate(buffer, mixIn:, mixOut:, songKey:)` gives what the lab records for a track: the whole-track
+key with its correlation and margin, the key of each mix window judged against the song key (Apple's, or else the
+whole-track estimate; a window is flagged only when it is far from the song key and fits better by 0.08, as the lab's
+`--ends` mode does), and the key segments (20 s windows every 5 s with the tonal-area hysteresis). The pieces under
+it: `FFT` and `RealFFT` (radix-2, double precision, within 4e-16 of numpy.fft), `STFT` and `Window.hann` (librosa's
+centred, zero-padded frames and scipy's window, to the bit), `ChromaFilterBank` (librosa's chroma filters, every
+sampled float32 weight identical) and `Chroma.stft` (librosa's `chroma_stft` as the lab calls it: within 8.4e-7 of
+librosa 1.0.0 fed float32 audio as the lab feeds it, within 1e-14 fed doubles). The decisions (`bestKey`,
+`segments`, `windowKey`, `Camelot.relation`, `Camelot.wheelCost`) reproduce the lab's functions to the last bit on
+68 test matrices, using numpy's own summation order and dot product (`Py.pairwiseSum`, `Py.dot`). It reads mono
+audio at 22,050 Hz; 44.1 kHz goes through `Decimator.halve`, a stopgap 65-tap half-band filter where the lab uses
+soxr (on a synthesised signal its chroma is within 4e-4 of soxr's), and other rates throw "resample first" until a
+resampler is built. Four minutes take under a second in a debug build. Still needed from the Mac: parity on real
+music. `mixer/key_light_stft.tsv` (whole-track keys, all six profiles) and `mixer/key_ends_stft.tsv` (mix windows)
+hold the lab's per-track results for the 373 tracks, but the audio stays on the Mac; there the port runs over
+`mixer/candidates.json` and its keys, correlations and flags are compared row by row, which also measures the
+decimator against soxr on real tracks. Expect rare differences where the lab's margin is tiny: the lab's chroma and
+its window means are float32, the port's are double precision.
 
 ```
 cd core
