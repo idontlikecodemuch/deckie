@@ -82,8 +82,9 @@ When a Windows or Linux build ships, the Swift runtime and Foundation (with its 
 library) travel with it; each will be listed here with its licence quoted before that build is released. dr_mp3
 and dr_flac (sections 4 and 5) already travel inside anything built with `DeckieDecode`. A build that tracks beats
 also carries ONNX Runtime's library (section 6) and the Beat This! model file (section 7); ONNX Runtime's library
-contains Eigen, under MPL 2.0, which the allowlist has not decided, so that build needs the main session's decision
-first.
+contains Eigen, under MPL 2.0, which ships unmodified with its notice under the main session's decision (section 6),
+and the Beat This! weights need their training data recorded under the training-data rule (section 7 and the
+allowlist) before that build ships.
 
 ## 4. dr_mp3, the MP3 decoder (vendored)
 
@@ -338,13 +339,34 @@ SOFTWARE.
 
 **What the library carries.** The archives' `ThirdPartyNotices.txt` (338,088 bytes, SHA-256 `143764b952fd...`) lists
 the code of others built into ONNX Runtime, across all of its builds. Most of it is under licences on the allowlist
-(Apache 2.0, BSD, MIT, zlib, public domain). One entry is not: **Eigen**, a C++ maths library, under the Mozilla
-Public License 2.0, the licence the allowlist leaves undecided ("this decides Symphonia and Eigen"). ONNX Runtime's
-CPU kernels use Eigen, so the library file contains MPL 2.0 code. MPL 2.0 is copyleft file by file: it covers
-Eigen's own files (unmodified in ONNX Runtime's build) and not Deckie's code, and a binary distribution must tell
-its users where Eigen's source is. Nothing ships yet, so this does not hold up the mechanic, and nothing of ONNX
-Runtime's is built into Deckie's program; but a Windows or Linux build that carries ONNX Runtime needs the main
-session's MPL 2.0 decision before it is released.
+(Apache 2.0, BSD, MIT, zlib, public domain). One entry is under the Mozilla Public License 2.0: **Eigen**, a C++
+maths library. ONNX Runtime's CPU kernels use Eigen, so the library file contains MPL 2.0 code. MPL 2.0 is copyleft
+file by file: it covers Eigen's own files (unmodified in ONNX Runtime's build) and not Deckie's code, and a binary
+distribution must tell its users where Eigen's source is. Nothing of ONNX Runtime's is built into Deckie's program.
+
+The notice text is the file `ThirdPartyNotices.txt` at the top of the archive's one folder, beside `LICENSE`;
+`fetch-onnxruntime.sh` unpacks it to `core/.deps/onnxruntime/ThirdPartyNotices.txt`. Eigen's entry starts at its
+line 417 (after the `_____` that separates entries) and runs on with the licence's full text; its first lines:
+
+```text
+Eigen
+
+MPL v2.0
+Mozilla Public License Version 2.0
+
+
+==================================
+
+1. Definitions
+
+--------------
+```
+
+**The MPL 2.0 decision** (the main session, Oct 28, 2026). Files under MPL 2.0 ship when they are unmodified, with
+their notices in the app's acknowledgements. Any change Deckie ever makes to an MPL file is published. Where an
+equivalent under a licence already on the allowlist exists, it is preferred. Eigen inside ONNX Runtime qualifies as
+it is: Deckie ships Microsoft's library file without changing or rebuilding it, and the acknowledgements carry
+Eigen's entry from the notice file above. MPL 2.0 is on the allowlist in those terms (below).
 
 **How to update:** choose the release and read its notes for changes to the C API; download both archives from the
 release page; record their sizes and SHA-256 values here, and the Linux archive's in `fetch-onnxruntime.sh`
@@ -416,10 +438,14 @@ and from the repository's README (fetched the same way, 17,037 bytes, SHA-256 `b
 The code and the published model weights are released under the [MIT license](LICENSE). Note that some of the training files are fully copyrighted or under limited Creative Commons licenses, and it is up to the user to assess whether this may impact their use case.
 ```
 
-So the weights are under the same terms as the code. The second sentence is for the main session: the authors leave
-it to their users to judge whether a model trained partly on copyrighted recordings and recordings under limited
-Creative Commons licences affects them. That is a question about the training data, not a licence on the weights,
-and the allowlist does not answer it; it is recorded here to be decided before a build carrying the weights ships.
+So the weights are under the same terms as the code. The second sentence leaves it to users to judge whether a model
+trained partly on copyrighted recordings and recordings under limited Creative Commons licences affects them. That is
+a question about the training data, not a licence on the weights, and the main session's training-data rule (in the
+allowlist below) now answers it: the MIT weights ship even though Deckie could not ship the recordings they were
+trained on, unless one of those data sets' own licences forbids commercial use, in which case the weights count as
+non-commercial. **Still to do:** the rule asks for each data set, its licence and the trainer to be recorded here
+beside the weights. Beat This!'s training sets and their licences are not listed yet, so whether any of them forbids
+commercial use is open, and it must be settled before a build carrying the weights ships.
 
 **Development-time tools (never shipped).** The export script and the fixture scripts (`make_beat_fixtures.py`,
 `make_onnx_fixture.py`) run on PyTorch and its companions, pinned by version in `core/Tools/export-requirements.txt`
@@ -478,12 +504,21 @@ and nothing in the package links it or calls it; the files it writes are test da
 
 ## Licence allowlist (track M section 3.4, confirmed as the single list by the main session, Oct 28, 2026)
 
-- **Ship:** MIT, BSD 2-clause and 3-clause, Apache 2.0, ISC, zlib, public domain, CC0.
+MPL 2.0, CC BY 4.0 and the training-data rule were added by the main session's decisions of Oct 28, 2026.
+
+- **Ship:** MIT, BSD 2-clause and 3-clause, Apache 2.0, ISC, zlib, public domain, CC0, and MPL 2.0 (unmodified,
+  with notices): any change Deckie ever makes to an MPL file is published, and an equivalent under a licence above
+  is preferred where one exists (section 6).
+- **Ship for model weights and data only, never code:** CC BY 4.0, with the attribution shown in the app's
+  acknowledgements and in this file, and nothing added that stops the files' extraction.
 - **Ship only dynamically linked** (kept as a separate library file, not built into Deckie's program), with each
   case named in this file: LGPL 2.1 and LGPL 3.
-- **Not decided, so not allowed until the main session says otherwise:** MPL 2.0 (this decides Symphonia and
-  Eigen).
 - **Never:** GPL, AGPL, CC BY-NC (non-commercial), research-only.
+- **Model weights and their training data:** weights under an allowed licence ship even when Deckie could not ship
+  their training data, unless that data's own licence forbids commercial use, in which case the weights count as
+  non-commercial whatever their own licence says. Where the data's licence is unknown, the trainer must be the
+  data's rights-holder (Deezer training on its own catalogue qualifies). The data set, its licence and the trainer
+  are recorded in this file beside the weights.
 - The CI check of this list is not built yet.
 
 ## How to update: on the quarterly update day, or within a week of a security advisory (track M)
