@@ -26,8 +26,8 @@ Mac) reviews and merges this track's branch, `pc-linux`, and runs anything that 
   built with a design note for the main session to review (entry 10). Next: the vocal tagger, then the analyser
   assembled into one pipeline matching the lab's feature file, then step 5 (`deckie-build`).
 - Needed from Christopher: approval of the two vocal-model downloads (Spleeter's ONNX files, EfficientAT's weights).
-- Open questions for the main session: MPL 2.0, which now matters because ONNX Runtime bundles Eigen under it
-  (entry 9); and the crate design note's proposals (entry 10).
+- Open questions for the main session: none. Crate format v1 is accepted with two changes (entry 10, addendum),
+  and MPL 2.0 is decided: unmodified files ship with their notices, so ONNX Runtime with Eigen inside qualifies.
 - Needed from Christopher: nothing right now (dr_mp3 vendoring approved Oct 28; dr_flac next, same pattern,
   will need the same yes, see entry 4, working mode).
 - Needed from the Mac, when convenient (not blocking): one check of the loudness module against the real
@@ -533,6 +533,21 @@ Measured: all 373 lab files convert and round-trip with no problem and per-bar v
 come to 1.5 MB, about 4 KB a track, inside track A's budget; 26 tests. `docs/architecture/crate-format.md` (185
 lines) separates what the documents fixed from eight proposals for the main session to accept or change, among
 them: where track L's additions sit; fidelity 0 for lab records so a benchmarked engine redoes them; engine
-family names `apple-mu`, `deckie-oss`, `lab`; a few additive fields (tempo segments, fade start, tags, a style
+family names `apple-mu`, `deckie`, `lab` (the main session changed `deckie-oss` to `deckie`: the models are open source, the engine is not); a few additive fields (tempo segments, fade start, tags, a style
 block); the sidecar headers; the canonical form; and the lab conversion rules (the EffNet embedding never
 travels, by the licence rule; the steady-beat end clamped on 21 files where the lab rounds past the last bar).
+
+**Addendum, Oct 28: crate v1 accepted, with two changes, and MPL 2.0 decided.** The main session accepted all
+eight proposals, changing two things: the Windows and Linux engine's family is `deckie`, not `deckie-oss` (a
+family name must not claim a licence we have not granted); and a shipped engine's record id is defined as the
+first 16 hexadecimal characters of the SHA-256 hash of the file's bytes (64 bits: about one chance in 3.7
+billion of a shared id in a 100,000-track crate), with the full hash stored in `file.sha256` beside the Apple
+apps' quick `sha1_head`; two files with the same audio in different bytes are different files with different
+ids, which is right. Both are implemented (SHA-256 written in Swift with no dependency, tested against standard
+vectors; 34 crate tests). MPL 2.0: unmodified files ship with their notices in the acknowledgements, any change
+to an MPL file is published, an allowed equivalent is preferred where one exists; Eigen inside ONNX Runtime
+qualifies as is, recorded in `DEPENDENCIES.md` beside ONNX Runtime with the notice file's location. One item
+still to do there: Beat This!'s training data sets and their licences, which the new rule needs recorded
+beside the weights (the paper's data list could not be fetched by that agent). The yardstick run on the Mac,
+when the engine is whole: `deckie-build bench` over the 373 files against `mixer/features`, reporting the stage 1
+numbers so the two engines are read on one sheet.
