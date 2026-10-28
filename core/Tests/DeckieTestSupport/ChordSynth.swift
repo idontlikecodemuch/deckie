@@ -1,12 +1,14 @@
 import Foundation
 
+// Moved here from DeckieCoreTests so the engine's tests can synthesise music too.
+
 /// SplitMix64, the random numbers of Tools/make_dsp_fixtures.py and Tools/make_key_fixtures.py: integer arithmetic,
 /// so Swift and Python draw the same values.
-struct SplitMix64 {
-    var x: UInt64
-    init(_ seed: UInt64) { x = seed }
+public struct SplitMix64: Sendable {
+    public var x: UInt64
+    public init(_ seed: UInt64) { x = seed }
 
-    mutating func next() -> UInt64 {
+    public mutating func next() -> UInt64 {
         x &+= 0x9E37_79B9_7F4A_7C15
         var z = x
         z = (z ^ (z >> 30)) &* 0xBF58_476D_1CE4_E5B9
@@ -15,23 +17,23 @@ struct SplitMix64 {
     }
 
     /// Uniform in [0, 1): (z >> 11) * 2^-53, exact.
-    mutating func uniform() -> Double { Double(next() >> 11) * 0x1p-53 }
+    public mutating func uniform() -> Double { Double(next() >> 11) * 0x1p-53 }
 
     /// Python's `int(uniform() * n)`.
-    mutating func below(_ n: Int) -> Int { Int(uniform() * Double(n)) }
+    public mutating func below(_ n: Int) -> Int { Int(uniform() * Double(n)) }
 }
 
 /// Chords with harmonics plus noise: the recipe of `synth` in Tools/make_dsp_fixtures.py.
-enum ChordSynth {
+public enum ChordSynth {
     /// (first sample, end sample, MIDI notes; C4 = 60, fractions allowed)
-    typealias Chord = (start: Int, end: Int, notes: [Double])
+    public typealias Chord = (start: Int, end: Int, notes: [Double])
 
     /// Each note: the sum over harmonics k (below rate / 2) of (0.2 / k) env sin(2 pi f k / rate * i), with
     /// f = 440 * 2^((m - 69) / 12), i the absolute sample index and env a 10 ms linear ramp in and out; then noise
     /// times (2u - 1), u from SplitMix64(seed). `exact` computes every sine as the Python script does, so the result
     /// is bit for bit the fixture's signal; otherwise each partial is a rotating phasor, resynchronised every 1024
     /// samples (within about 1e-13 of the exact values, and quick in a debug build) for the long test signals.
-    static func render(rate: Int, samples n: Int, chords: [Chord], harmonics: Int, noise: Double, seed: UInt64,
+    public static func render(rate: Int, samples n: Int, chords: [Chord], harmonics: Int, noise: Double, seed: UInt64,
                        exact: Bool = true) -> [Double] {
         var y = [Double](repeating: 0, count: n)
         let ramp = Double(Int(0.01 * Double(rate)))
@@ -77,7 +79,7 @@ enum ChordSynth {
 
     /// The chords in turn, each `chordSeconds` long (rounded down to samples), repeated to fill `n` samples, starting at
     /// sample `offset` (the script's `progression`).
-    static func progression(rate: Int, samples n: Int, chordSeconds: Double, _ chords: [[Double]], offset: Int = 0) -> [Chord] {
+    public static func progression(rate: Int, samples n: Int, chordSeconds: Double, _ chords: [[Double]], offset: Int = 0) -> [Chord] {
         let step = Int(chordSeconds * Double(rate))
         var out: [Chord] = []
         var a = 0, c = 0
@@ -90,8 +92,8 @@ enum ChordSynth {
     }
 
     // Triads with the root an octave and a half below as bass (MIDI, C4 = 60), as in the script.
-    static let C: [Double] = [48, 60, 64, 67], F: [Double] = [41, 65, 69, 72], G: [Double] = [43, 67, 71, 74]
-    static let Am: [Double] = [45, 57, 60, 64], Dm: [Double] = [38, 62, 65, 69], E: [Double] = [40, 64, 68, 71]
-    static let Fs: [Double] = [42, 66, 70, 73], B: [Double] = [47, 59, 63, 66], Cs: [Double] = [49, 61, 65, 68]
-    static let D: [Double] = [38, 62, 66, 69], A: [Double] = [45, 69, 73, 76]
+    public static let C: [Double] = [48, 60, 64, 67], F: [Double] = [41, 65, 69, 72], G: [Double] = [43, 67, 71, 74]
+    public static let Am: [Double] = [45, 57, 60, 64], Dm: [Double] = [38, 62, 65, 69], E: [Double] = [40, 64, 68, 71]
+    public static let Fs: [Double] = [42, 66, 70, 73], B: [Double] = [47, 59, 63, 66], Cs: [Double] = [49, 61, 65, 68]
+    public static let D: [Double] = [38, 62, 66, 69], A: [Double] = [45, 69, 73, 76]
 }
