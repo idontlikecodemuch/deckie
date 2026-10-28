@@ -13,7 +13,7 @@ Mac) reviews and merges this track's branch, `pc-linux`, and runs anything that 
 - Needed from Christopher: GitHub write access for this session, so the branch can be pushed and the two
   workflows run (entry 2 says how).
 - Needed from the Mac: nothing.
-- Open questions for the main session: none beyond the push.
+- Open questions for the main session: one small one on licence lists (entry 2, continued).
 
 ## Oct 28, 2026: the environment (entry 1)
 
@@ -113,3 +113,22 @@ container; as a fallback they are also saved as a patch series (text files that 
 same commits) in the session's scratch folder, named below in the session reply.
 
 **Not started**: step 2. **Needed from the Mac**: nothing. The Windows result will be entry 3.
+
+### Entry 2, continued: two additions, done by Opus agents under this session's direction
+
+- **`DEPENDENCIES.md`** at the repository root, as the charter's policy asks: what the track depends on today (the
+  Swift 6.4.1 toolchain and two GitHub Actions helpers, all build-time only, nothing shipping), each pinned by
+  version and hash, with the toolchain's licence (Apache 2.0 with the runtime library exception) quoted from the
+  file inside the toolchain. The Linux workflow now names the Swift image by its digest (its content hash) rather
+  than by the tag `6.4.1-noble`, which the publisher could move. The two actions are recorded by version tag only:
+  pinning them to a commit hash needs a look at their repositories, which this session may not do. Open question
+  for the main session: the charter's licence allowlist and track M's finer one (section 3.4, which also names zlib
+  and CC0) should be reconciled into one list; `DEPENDENCIES.md` carries the charter's for now.
+- **`core/Tools/install-swift-linux.sh`** rebuilds the toolchain after a container reset, by the same Docker Hub
+  route as entry 1, with every piece checked against its hash before anything is unpacked. Tested end to end:
+  85 s, 1.2 GB downloaded, the package builds with the result. One caveat: Docker Hub limits anonymous downloads
+  per network address, and the cloud sessions share addresses; the script waits and retries, and the README says
+  what to do if the limit is exhausted.
+- Both reviewed and committed by this session; nine commits on `pc-linux` now, still unpushed (the blocker above
+  stands: writes were refused again after Christopher's "access restored" message, so the fix has not reached
+  this session's credentials; a fresh session may be needed).
