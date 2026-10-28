@@ -1,5 +1,5 @@
 # The Python packages core/Tools/export_beat_this.py, make_beat_fixtures.py and make_onnx_fixture.py were run with
-# (DEPENDENCIES.md, section 6). Development and CI only: none of them ships, and nothing in core/ imports them.
+# (DEPENDENCIES.md, section 7). Development and CI only: none of them ships, and nothing in core/ imports them.
 # torch and torchaudio are the CPU-only builds from PyTorch's own index, so install them first, then the rest from
 # PyPI (pip then finds torch already satisfied and never looks for the much larger CUDA build):
 #

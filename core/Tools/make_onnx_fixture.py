@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Write a tiny ONNX model for the tests of DeckieInference's ONNX Runtime wrapper, so they need only the library,
-not the 82 MB beat tracker. Needs the onnx package (and onnxruntime, to check it); see DEPENDENCIES.md section 6.
+not the 82 MB beat tracker. Needs the onnx package (and onnxruntime, to check it); see DEPENDENCIES.md section 7.
 
   python3 core/Tools/make_onnx_fixture.py        # from anywhere
 
