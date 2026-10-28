@@ -49,6 +49,7 @@ and Linux crate builder share them. Charter: `docs/architecture/pc-linux-track.m
 - `Sources/COnnxRuntime` and `Sources/DeckieInference`: ONNX Runtime from Swift, and the beat tracker on it
   (below). `COnnxRuntime` is ONNX Runtime's C API header (vendored unmodified, MIT, pinned in `DEPENDENCIES.md`
   section 6) and a small C file that opens the library at run time; nothing links it.
+- `Sources/DeckieEngine`: the Windows and Linux analyser, the lab's pipeline on the pieces above (below).
 - `Tests/DeckieCoreTests`: parity tests against the lab. `Fixtures/` holds the reference numbers, written by
   `Tools/make_fixtures.py` with the lab's own Python (needs numpy; run from the repository root). The tests also
   read `mixer/features/`, `mixer/candidates.json` and `mixer/recs.json` straight from the repository.
@@ -67,8 +68,9 @@ and Linux crate builder share them. Charter: `docs/architecture/pc-linux-track.m
 - `Tests/DeckieInferenceTests`: the ONNX Runtime wrapper's tests on a 192-byte model (`Fixtures/affine.onnx`,
   written by `Tools/make_onnx_fixture.py`) and the beat tracker end to end against the Beat This! package. Both
   need ONNX Runtime, and the beat tracker the model; without them they are skipped, with the reason printed.
-  `Tests/DeckieTestSupport` is a small library shared by the test targets: the synthesised drum patterns, the
-  beat fixture's reader, and `CPUTurns`, which makes the model runs take turns.
+  `Tests/DeckieTestSupport` is a small library shared by the test targets: the synthesised drum patterns and chords
+  (`ChordSynth`), the beat fixture's reader, and `CPUTurns`, which makes the model runs take turns.
+- `Tests/DeckieEngineTests`: the engine end to end on a synthesised track, and its pieces (below).
 - `Tests/DeckieDecodeTests`: the decoder's tests. `Fixtures/` holds a generated test tone (two sines and a click)
   as WAV at 44.1 and 48 kHz, MP3 at 44.1 and 48 kHz and in mono, AAC, AIFF and AIFF-C ("sowt"), FLAC at 16 and 24
   bits and as Ogg-FLAC, plus a 648-byte stand-in for a FairPlay-protected file with no audio in it
@@ -233,6 +235,40 @@ all 373 convert, read back equal and write the same bytes again (`swift run crat
 writes them, 1.5 MB, about 4 KB a track). The lab's EffNet embedding is left out (non-commercial, and the port plan
 keeps it out of every crate). `core/fixtures/example.deckiecrate` (20 KB, five varied tracks, rebuilt by
 `Tools/make_crate_fixture.sh`) is the example for the Apple side; a test checks it byte for byte against the converter.
+
+**The engine** (`Sources/DeckieEngine`) is the Windows and Linux analyser, the charter's `DeckieEngineOSS` (its crate
+family is `deckie`). `Analyser().analyse(url:options:)` runs `mixer/analyze.py`'s `analyse()` in the lab's order on the
+pieces above: the SHA-256 of the file's bytes for its id (`CrateIDs`), decoding to 44.1 kHz and mono, the first and last
+sound, Beat This!'s beats and the grid fit, the lab's octave alignment to a tag tempo when one is given (`OctaveAlign`),
+the bars, the spectral features, the novelty and phrase lattice, the per-bar loudness, bands and onsets, integrated
+loudness, loudness range and true peak, the onset pattern, the sections, the fade-out, the mix windows, the key of the
+whole track and of both mix windows, local tempo and the flags, timing each stage as the lab's `timing_s` does. The
+`Analysis` it returns writes the lab's feature JSON (`labJSON()`: the lab's keys in its order, rounded as the lab rounds
+them, 1-based bars, what the engine cannot produce null or left out the way the lab does, listed on the function, and
+a `deckie` block of the engine's own) and the crate record (`crateTrack(options:)`). Three departures from the lab:
+Beat This! is the only grid source, as the madmom fallback is non-commercial (`madmom_ran` is false, and
+`deckie.madmom_would_run` marks the tracks where the lab would have run it); the key confidence comes from the one
+estimator's margin over the runner-up key in place of three detectors agreeing (`KeyConfidence`: 0.65, 0.45 or 0.3, with
+the figures behind the steps; a proposal to confirm on the Mac); and there is no vocal tagger yet (`VocalTagger` is its
+place), so the record has no `vocal` block, `per_bar.vocal_prob` or `embedding_effnet`, the mix windows count every bar
+as vocal-free, and the flag `vocal_unknown` asks for them to be placed again when a tagger lands. The tests
+(`Tests/DeckieEngineTests`) synthesise 63 s of drums at 124 BPM with A minor chords, a quiet 8-bar intro and an 8-bar
+fade (just over a minute, as the lab counts a fade only after a minute of sound), and check the tempo, bar 1, the bar
+count, the key, the first and last sound, the fade, the mix windows, the loudness and every per-bar series' length; the
+JSON against a committed lab file's keys and through `FeatureFile`; the crate record through the writer and reader; and
+the same bars and tempo from an MP3 of the track (made with the ffmpeg program when it is installed; skipped otherwise,
+as everything here is without ONNX Runtime and the model). The lab's own `local_tempo.compute` and `fit_grid`, run on
+the engine's JSON for that track, give back the engine's values exactly, and Python's json module reads the file and
+writes it again byte for byte. A minute of audio takes about 5 s in a debug build, half of it the network.
+
+What the Mac yardstick will compare (charter step 6): the engine run over the 373 tracks of `mixer/candidates.json`,
+each record beside the lab's `mixer/features/<id>.json` for the same track, read with the lab's own tools. Beats and
+downbeats (F-measure at 70 ms, `detected_beats_s` and `detected_downbeats_s` against the lab's), tempo within 2 percent,
+bar 1 and the bar count, the key exact or a neighbour against the lab's confident keys and how often each step of the
+proposed key confidence is right, integrated loudness, loudness range and true peak, the per-bar loudness and bands,
+first and last sound, the fade decision, sections and mix windows, and the stage times. Grids are expected to differ
+where the lab ran madmom, and mix windows where the lab's vocal probabilities moved them; the comparison reads those
+apart.
 
 ```
 cd core
