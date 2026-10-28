@@ -12,7 +12,9 @@ on:
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
-    container: swift:6.4.1-noble
+    container:
+      # The official Swift 6.4.1 image on Ubuntu 24.04, pinned by its multi-architecture index digest (DEPENDENCIES.md).
+      image: swift@sha256:6304481cf2717966b7ba175162e397ea2f2cc3161909f2b2a5cf40036079a0f7 # swift:6.4.1-noble
     steps:
       - uses: actions/checkout@v4
       - name: Swift version
