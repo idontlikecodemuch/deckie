@@ -6,16 +6,18 @@ Mac) reviews and merges this track's branch, `pc-linux`, and runs anything that 
 
 ## Where things stand
 
-- Step 1 (the two-week spike) has its Linux half: the Swift package `DeckieCore` under `core/` reproduces the
-  lab's grid fit, Camelot mapping and pair scoring on Linux, number for number (entry 2). The branch `pc-linux`
-  is pushed. The Windows half, the CI probe, is written and on GitHub but has not run: GitHub started no
-  workflow after the push, and this session is not allowed to start one by hand (entry 2, continued, part 2).
-  Step 2 does not start until the main session has read the spike result.
-- Needed from Christopher: a look at the repository's Actions setting (entry 2, continued, part 2).
-- Needed from the main session: review and merge of `pc-linux`; once the workflows are on `main` they run on
-  every push and appear in the Actions tab.
-- Needed from the Mac: nothing.
-- Open questions for the main session: one small one on licence lists (entry 2, continued).
+- **Step 1, the spike, is complete and passed on both halves** (entry 3). On Linux the Swift package reproduces
+  the lab's grid fit, Camelot mapping and all 138,608 pair scores number for number; on GitHub's Windows machine
+  the same package installs Swift 6.4.1, builds and passes the same 13 tests. The Swift-everywhere decision holds.
+- **The main session has read and accepted the spike** and told this track to open the pull request and start
+  step 2. The pull request is https://github.com/idontlikecodemuch/deckie/pull/1 (branch `pc-linux` into `main`);
+  both CI workflows are green on it.
+- **Step 2 is under way**, one mechanic at a time, each with its own status entry: first, decoding MP3 and AAC to
+  float samples on Linux (in progress, entry 4 when done); then Beat This! through ONNX Runtime, loudness with
+  libebur128, the key estimator, a vocal tagger.
+- Needed from Christopher: nothing right now.
+- Needed from the Mac: nothing yet.
+- Open questions for the main session: none open; the licence list is reconciled per its reply (entry 3).
 
 ## Oct 28, 2026: the environment (entry 1)
 
@@ -152,3 +154,46 @@ same commits) in the session's scratch folder, named below in the session reply.
 - **What this means for the spike.** The Linux half stands (every test passes here on the same toolchain the
   Linux workflow pins). The Windows half is still unmeasured; it needs one workflow run on GitHub's Windows
   machine, which no amount of work in this session can substitute for.
+
+## Oct 28, 2026: the Windows probe passed; the spike is complete (entry 3)
+
+**The result.** On GitHub's Windows machine (`windows-latest`, Windows Server 2025 with Visual Studio 2026) the
+`core-windows` workflow installed the official Swift 6.4.1 toolchain in 97 seconds, built the package in 37
+seconds and ran the same 13 parity tests as Linux: all passed, in 32 seconds (Linux takes 19). Nothing in the
+package needed changing for Windows: no platform-specific code, no special casing, the same numbers. The whole job
+takes three and a half minutes. Run: https://github.com/idontlikecodemuch/deckie/actions/runs/40750217848.
+
+**What it means for the Swift decision.** The guard track M set before stage 2 was "a two-week spike porting the
+grid fit, Camelot and score.py to a Swift package that reproduces pairs.json on Linux and on a Windows CI runner;
+if it fails, Rust". Both halves passed, in one day rather than two weeks. Swift everywhere (P16 as revised by
+track M) holds; the Rust fallback is not needed. The usual caveat stands: this proves the pure-computation core on
+Windows, not yet the C libraries (decoders, ONNX Runtime, loudness) that step 2 brings in; the Windows probe keeps
+running on every push, so each of those is probed as it lands.
+
+**Getting there took three tries, all on the toolchain installer, none on the code.** Recorded so nobody repeats
+them: (1) the action that installs Swift on Windows, `compnerd/gha-setup-swift`, has no `v3` tag; its documented
+reference is `@main`. (2) Its `swift-version` input names the download directory on swift.org, which for a point
+release is `swift-6.4.1-release`, not `swift-6.4-release`; the wrong directory gives a 404, which I first misread
+as a missing file. (3) The action's older `branch` and `tag` inputs are deprecated; the workflow now uses
+`swift-version` and `swift-build`. The Linux workflow passed every time.
+
+**How CI got its first run.** GitHub starts no workflow for a branch that only this session pushed to; the pull
+request did. The main session chose that route (its reply, below) over a merge from the Mac, and both workflows
+now run on every push to the branch and on the pull request.
+
+**The main session's reply, Oct 28** (the lead agent on Christopher's Mac), in short: the Linux spike result is
+read and accepted; open the pull request; step 2 may start now, in the charter's order, one mechanic per status
+entry, every new dependency into `DEPENDENCIES.md` with its licence quoted before use; the licence allowlist is
+track M section 3.4 as the single list (MIT, BSD 2- and 3-clause, Apache 2.0, ISC, zlib, public domain and CC0
+ship; LGPL 2.1 and 3 only dynamically linked, each case named; MPL 2.0 not decided, so not allowed until the main
+session says otherwise; GPL, AGPL, CC BY-NC and research-only never); the two GitHub Actions stay on version tags
+until their repositories can be read; the 1.2 GB toolchain rebuild after a container reset is acceptable for now,
+and the environment's setup script is Christopher's to change. All of that is applied: `DEPENDENCIES.md` carries
+the reconciled list, and the pull request is open.
+
+**Step 2 has started.** First mechanic: decoding MP3 and AAC to float samples on Linux, through ffmpeg's
+libraries from Ubuntu's packages (track M names ffmpeg, LGPL and dynamically linked, as the Linux decoder), in a
+new `DeckieDecode` module that stays buildable on Windows and macOS where ffmpeg is absent, tested on generated
+tones rather than any music. One licence check is part of it: Ubuntu builds ffmpeg with GPL components switched
+on, which may make the installed libraries GPL rather than LGPL; if so they are development-and-CI only, and a
+shipped Linux build needs an LGPL-configured ffmpeg. Entry 4 reports the outcome either way.
