@@ -4,9 +4,9 @@
 // once in plain Swift with no Apple-only framework, so the Apple apps and the Windows and Linux builder share them.
 // DeckieLab: reads the lab's feature files (mixer/features/<id>.json, mixer/candidates.json) into DeckieCore types,
 // for the parity tests and, later, the Mac benchmark.
-// DeckieDecode: audio files to float samples for the analysers: WAV in plain Swift; MP3 through dr_mp3 (CDrMp3, a
-// vendored public-domain C file, DEPENDENCIES.md); AAC is recognised and reported as not supported yet. It
-// re-exports DeckieAudio.
+// DeckieDecode: audio files to float samples for the analysers: WAV and AIFF in plain Swift; MP3 through dr_mp3
+// (CDrMp3, a vendored public-domain C file, DEPENDENCIES.md); AAC is recognised and reported as not supported yet,
+// a copy-protected MP4 as protected. It re-exports DeckieAudio.
 // CDrMp3: dr_mp3.h compiled as plain C, the same on Linux, Windows and macOS; nothing is downloaded at build time.
 import PackageDescription
 
