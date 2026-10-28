@@ -18,14 +18,22 @@ Outputs, in core/Tests/DeckieDecodeTests/Fixtures/:
   tone.aiff      tone.wav through ffmpeg as AIFF, 16-bit big-endian PCM (the same samples, byte-swapped)
   tone_sowt.aifc tone.wav through ffmpeg as AIFF-C with compression type 'sowt', 16-bit little-endian PCM, the way
                  macOS writes AIFF-C
+  tone.flac      tone.wav through ffmpeg's FLAC encoder, 16-bit (lossless: the same samples as tone.wav)
+  tone24.flac    the signal at 44.1 kHz as 24-bit PCM (full scale 8388607) in a temporary file, then through ffmpeg's
+                 FLAC encoder as 24-bit (ffmpeg takes 24-bit input as 32-bit samples, -sample_fmt s32, and writes
+                 them back as 24 bits)
+  tone.oga       tone.wav through ffmpeg's FLAC encoder into an Ogg container (Ogg-FLAC), 16-bit
   protected.m4p  no audio: a few hundred bytes written here, shaped like an iTunes Store or Apple Music file locked
                  by FairPlay (major brand "M4P ", an audio sample entry "drms" holding a "sinf" box, an empty mdat),
                  for the "protected, cannot be read" report; nothing in it is a real key or a real account
 
 The ffmpeg command-line program is a development tool here and nothing else: no Deckie code links ffmpeg
 (DEPENDENCIES.md, "Checked and rejected"). The same ffmpeg build gives the same bytes on every run: version strings
-and metadata are left out (bitexact; ffmpeg's AIFF writer adds no ID3 chunk unless asked). FFMPEG=/path/to/ffmpeg
-picks another ffmpeg; the default is /usr/bin/ffmpeg.
+and metadata are left out (bitexact; ffmpeg's AIFF writer adds no ID3 chunk unless asked). FLAC files must carry a
+Vorbis comment block, which holds the writer's name; bitexact makes it the constant "ffmpeg", with no version and
+no comments, and the FLAC files leave out the 8 KB padding block ffmpeg otherwise adds. The FLAC files use
+compression level 12, ffmpeg's highest, which brings tone24.flac from 443 KB to 254 KB. FFMPEG=/path/to/ffmpeg picks
+another ffmpeg; the default is /usr/bin/ffmpeg.
 """
 import hashlib, os, struct, subprocess, tempfile, wave
 import numpy as np
@@ -35,7 +43,10 @@ CLICK_S = 2.0
 OUT = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "Tests", "DeckieDecodeTests", "Fixtures")
 FFMPEG = os.environ.get("FFMPEG", "/usr/bin/ffmpeg")
 
-# name, source (a fixture name, or "mono" for the temporary mono file), ffmpeg output arguments
+FLAC = ["-c:a", "flac", "-compression_level", "12"]
+NO_PADDING = ["-metadata_header_padding", "0"]  # a format option: native FLAC only, the Ogg writer adds none
+
+# name, source (a fixture name, or "mono" or "24bit" for the temporary files), ffmpeg output arguments
 ENCODES = [
     ("tone.mp3", "tone.wav", ["-c:a", "libmp3lame", "-b:a", "192k", "-ar", "44100"]),
     ("tone48k.mp3", "tone48k.wav", ["-c:a", "libmp3lame", "-b:a", "192k", "-ar", "48000"]),
@@ -43,6 +54,9 @@ ENCODES = [
     ("tone.m4a", "tone.wav", ["-c:a", "aac", "-b:a", "160k", "-ar", "44100"]),
     ("tone.aiff", "tone.wav", ["-c:a", "pcm_s16be", "-f", "aiff"]),
     ("tone_sowt.aifc", "tone.wav", ["-c:a", "pcm_s16le", "-f", "aiff"]),  # little-endian PCM makes ffmpeg write 'sowt'
+    ("tone.flac", "tone.wav", FLAC + NO_PADDING),
+    ("tone24.flac", "24bit", ["-sample_fmt", "s32"] + FLAC + NO_PADDING),
+    ("tone.oga", "tone.wav", FLAC + ["-f", "ogg"]),
 ]
 
 
@@ -56,13 +70,16 @@ def signal(rate):
     return y
 
 
-def write_wav(path, y, rate):
-    pcm = np.clip(np.round(y * 32767), -32768, 32767).astype("<i2")
+def write_wav(path, y, rate, bits=16):
+    """16-bit (full scale 32767) or 24-bit (8388607) little-endian PCM."""
+    top = (1 << (bits - 1)) - 1
+    pcm = np.clip(np.round(y * top), -top - 1, top).astype("<i4")
+    data = pcm.astype("<i2").tobytes() if bits == 16 else pcm.view(np.uint8).reshape(-1, 4)[:, :3].tobytes()
     with wave.open(path, "wb") as w:
         w.setnchannels(y.shape[1])
-        w.setsampwidth(2)
+        w.setsampwidth(bits // 8)
         w.setframerate(rate)
-        w.writeframes(pcm.tobytes())
+        w.writeframes(data)
 
 
 def encode(src, name, args):
@@ -113,10 +130,11 @@ def main():
     write_wav(os.path.join(OUT, "tone.wav"), signal(44100), 44100)
     write_wav(os.path.join(OUT, "tone48k.wav"), signal(48000), 48000)
     with tempfile.TemporaryDirectory() as tmp:
-        mono = os.path.join(tmp, "tone_mono.wav")
-        write_wav(mono, signal(44100).mean(axis=1, keepdims=True), 44100)
+        temporary = {"mono": os.path.join(tmp, "tone_mono.wav"), "24bit": os.path.join(tmp, "tone24.wav")}
+        write_wav(temporary["mono"], signal(44100).mean(axis=1, keepdims=True), 44100)
+        write_wav(temporary["24bit"], signal(44100), 44100, bits=24)
         for name, source, args in ENCODES:
-            encode(mono if source == "mono" else os.path.join(OUT, source), name, args)
+            encode(temporary.get(source, os.path.join(OUT, source)), name, args)
     with open(os.path.join(OUT, "protected.m4p"), "wb") as f:
         f.write(protected_mp4())
     version = subprocess.run([FFMPEG, "-version"], capture_output=True, text=True, check=True).stdout.splitlines()[0]
