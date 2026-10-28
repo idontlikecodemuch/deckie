@@ -124,6 +124,8 @@ final class SetRecorder: @unchecked Sendable {
 /// offline engine and hands each 0.1 s buffer to the same sink as the mic tap (recognition + recorder).
 final class StreamFeeder: @unchecked Sendable {
     private var cancelled = false
+    /// seconds of audio fed so far (sample time), the clock the recogniser's drift fit uses
+    private(set) var audioSeconds: Double = 0
     let format = AVAudioFormat(commonFormat: .pcmFormatFloat32, sampleRate: 44100, channels: 1, interleaved: false)!
 
     func cancel() { cancelled = true }
@@ -154,6 +156,7 @@ final class StreamFeeder: @unchecked Sendable {
             guard try engine.renderOffline(4410, to: buf) == .success else { break }
             sink(buf)
             done += AVAudioFramePosition(buf.frameLength)
+            audioSeconds = Double(done) / 44100
             let ahead = Double(done) / 44100 - Date().timeIntervalSince(t0)    // keep real time
             if ahead > 0 { try? await Task.sleep(for: .seconds(ahead)) }
         }

@@ -9,7 +9,7 @@ import SwiftUI
     enum Source: Equatable { case idle, mic, file(String), manual }
     enum PitchKind: String { case none = "", vinyl = "vinyl", masterTempo = "master tempo" }
 
-    struct Event { let date: Date; let id: String; let offset: Double; let freqRatio: Double; let flavour: String; let pct: Int }
+    struct Event { let date: Date; let id: String; let offset: Double; let freqRatio: Double; let flavour: String; let pct: Int; let audioTime: Double }
 
     // public state
     var source: Source = .idle
@@ -162,7 +162,7 @@ import SwiftUI
             if let f = self.mic.format { self.beginRecording(f) }
             for await r in session.results {
                 if Task.isCancelled { break }
-                self.handle(r, receivedAt: Date(), latencyMs: nil, fileEnd: nil)
+                self.handle(r, receivedAt: Date(), latencyMs: nil, fileEnd: nil, audioTime: self.mic.audioSeconds)
             }
             self.note("mic session ended")
         }
@@ -200,7 +200,7 @@ import SwiftUI
         task = Task { [weak self] in
             for await r in session.results {
                 if Task.isCancelled { break }
-                self?.handle(r, receivedAt: Date(), latencyMs: nil, fileEnd: nil)
+                self?.handle(r, receivedAt: Date(), latencyMs: nil, fileEnd: nil, audioTime: fd.audioSeconds)
             }
         }
     }
@@ -265,7 +265,7 @@ import SwiftUI
                 let ms = Date().timeIntervalSince(tm) * 1000
                 guard let self, !Task.isCancelled else { return }
                 self.note(String(format: "segment @%.1fs: render %.0f ms, match %.0f ms", qStart, renderMs, ms))
-                self.handle(r, receivedAt: t0.addingTimeInterval(elapsed), latencyMs: ms, fileEnd: 0)   // offsets at the segment start, timed on the simulated playback clock
+                self.handle(r, receivedAt: t0.addingTimeInterval(elapsed), latencyMs: ms, fileEnd: 0, audioTime: elapsed)   // offsets at the segment start, timed on the simulated playback clock
                 if !loop { break }
                 try? await Task.sleep(for: .seconds(4))
             } while !Task.isCancelled
@@ -274,7 +274,7 @@ import SwiftUI
 
     // MARK: result handling
 
-    private func handle(_ r: SHSession.Result, receivedAt now: Date, latencyMs: Double?, fileEnd: Double?) {
+    private func handle(_ r: SHSession.Result, receivedAt now: Date, latencyMs: Double?, fileEnd: Double?, audioTime: Double? = nil) {
         switch r {
         case .match(let m):
             // several items can match (other cuts, repeated sections): prefer the current song at the expected position
@@ -313,7 +313,7 @@ import SwiftUI
             matchCount += 1
             lastMatch = now
             if let latencyMs { lastLatencyMs = latencyMs }
-            let ev = Event(date: now, id: id, offset: offset, freqRatio: freqRatio, flavour: flav, pct: pct)
+            let ev = Event(date: now, id: id, offset: offset, freqRatio: freqRatio, flavour: flav, pct: pct, audioTime: audioTime ?? now.timeIntervalSince(startedAt))
             hits.append((now, id))
             hits.removeAll { now.timeIntervalSince($0.0) > 40 }
             lastAnyMatch = now
@@ -389,7 +389,9 @@ import SwiftUI
                 alsoHearing = nil
             }
             pendingId = nil
+            let before = (pitchPct, pitchFrom)
             updatePitch(ev, flavour: flav, pct: pct, vr: vr)
+            if abs(pitchPct - before.0) >= 0.05 || pitchFrom != before.1 { note(String(format: "pitch %+.1f%% %@ (%@)", pitchPct, pitchKind.rawValue, pitchFrom)) }
             anchorDate = now; anchorOffset = offset; positionKnown = true
             if recActive, let t = current {
                 recorder.record(track: t, pitch: pitchPct, pitchKind: pitchKind.rawValue, confidence: confidence, newSong: justSwitched)
@@ -424,30 +426,36 @@ import SwiftUI
 
     private func updatePitch(_ ev: Event, flavour: String, pct: Int, vr: Double) {
         if abs(ev.freqRatio - 1) > 0.008 {
-            // resampled (vinyl / master tempo off): key and tempo moved together, ShazamKit's frequency skew says how much
+            // vinyl-style (master tempo off): key and tempo moved together; ShazamKit's frequency skew says how much
             let same = events.filter { $0.id == ev.id }.suffix(4).map(\.freqRatio)
             let fr = same.reduce(0, +) / Double(same.count)
-            pitchPct = (fr - 1) * 100; pitchKind = .vinyl; rate = fr
+            pitchPct = ((fr - 1) * 1000).rounded() / 10; pitchKind = .vinyl; rate = fr
             pitchFrom = flavour == "r" ? "vinyl variant \(pct > 0 ? "+" : "")\(pct)% + skew" : "frequency skew"
             return
         }
-        if flavour == "t" {
-            pitchPct = Double(pct); pitchKind = .masterTempo; rate = vr; pitchFrom = "tempo-only variant"
-            return
-        }
-        // key unchanged: estimate the tempo from how fast the matched position moves (needs 20 s of matches)
-        let same = events.filter { $0.id == ev.id }
-        if let f = same.first, let l = same.last, same.count >= 3, l.date.timeIntervalSince(f.date) >= 20 {
-            let xs = same.map { $0.date.timeIntervalSince(f.date) }, ys = same.map(\.offset)
-            let mx = xs.reduce(0, +) / Double(xs.count), my = ys.reduce(0, +) / Double(ys.count)
-            var num = 0.0, den = 0.0
-            for i in 0..<xs.count { num += (xs[i] - mx) * (ys[i] - my); den += (xs[i] - mx) * (xs[i] - mx) }
-            let slope = den > 0 ? num / den : 1
-            if slope > 0.85 && slope < 1.15 {
-                if abs(slope - 1) >= 0.015 {
-                    pitchPct = ((slope - 1) * 100 * 2).rounded() / 2; pitchKind = .masterTempo; rate = slope; pitchFrom = "position drift"
-                } else { pitchPct = 0; pitchKind = .none; rate = 1; pitchFrom = "position drift" }
+        // key unchanged (master tempo on, or no pitch): the tempo is how fast the matched position runs against the
+        // audio clock. Track H measured two matches 8 s apart to a few hundredths; in the app the first 10 s read
+        // rough, so the fit is shown from 12 s and three matches on, and refined on every match after that.
+        let same = Array(events.filter { $0.id == ev.id }.suffix(12))
+        if let f = same.first, let l = same.last, same.count >= 3, l.audioTime - f.audioTime >= 12 {
+            // median of the pairwise slopes (Theil-Sen): one stray match cannot pull the reading, unlike least squares
+            var slopes: [Double] = []
+            for i in 0..<same.count { for j in (i + 1)..<same.count {
+                let dt = same[j].audioTime - same[i].audioTime
+                if dt >= 3 { slopes.append((same[j].offset - same[i].offset) / dt) }
+            } }
+            slopes.sort()
+            let slope = slopes.isEmpty ? 1 : slopes[slopes.count / 2]
+            if slope > 0.8 && slope < 1.2 {
+                let p = ((slope - 1) * 1000).rounded() / 10
+                if abs(p) >= 0.3 { pitchPct = p; pitchKind = .masterTempo; rate = slope; pitchFrom = "position drift over \(Int(l.audioTime - f.audioTime)) s" }
+                else { pitchPct = 0; pitchKind = .none; rate = 1; pitchFrom = "position drift" }
+                return
             }
+        }
+        if flavour == "t" {
+            // a tempo-only variant matched: its percent stands in until the drift fit has 8 s of matches
+            pitchPct = Double(pct); pitchKind = .masterTempo; rate = vr; pitchFrom = "tempo-only variant, measuring"
         } else if pitchKind == .vinyl {
             pitchPct = 0; pitchKind = .none; rate = 1
         }
@@ -508,6 +516,8 @@ final class MicCapture {
     private var lastLevel = Date.distantPast
 
     private(set) var format: AVAudioFormat?
+    /// seconds of audio appended so far: the clock the drift fit runs on (sample time, not wall time)
+    private(set) var audioSeconds: Double = 0
 
     /// One engine, one tap: every buffer goes to ShazamKit and to `sink` (the set recorder).
     func start(session: SHSession, sink: @escaping (AVAudioPCMBuffer) -> Void, level: @escaping (Float) -> Void) throws {
@@ -522,10 +532,11 @@ final class MicCapture {
             throw NSError(domain: "Deck", code: 2, userInfo: [NSLocalizedDescriptionKey: "no microphone input available"])
         }
         input.removeTap(onBus: 0)
-        format = fmt
+        format = fmt; audioSeconds = 0
         input.installTap(onBus: 0, bufferSize: 4096, format: fmt) { [weak self] buf, when in
             session.matchStreamingBuffer(buf, at: when)
             sink(buf)
+            self?.audioSeconds += Double(buf.frameLength) / fmt.sampleRate
             guard let self, let ch = buf.floatChannelData?[0], Date().timeIntervalSince(self.lastLevel) > 0.25 else { return }
             self.lastLevel = Date()
             var sum: Float = 0
