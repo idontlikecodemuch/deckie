@@ -2,10 +2,10 @@ import Foundation
 import Testing
 @testable import DeckieDecode
 
-// AIFF and AIFF-C (AIFFReader). The variants are built byte by byte here, like the WAV ones. Every variant below
-// that decodes, and the cut and unfilled files, were also read by the lab's decoder on Oct 28, 2026 (soundfile
-// 0.14.0, libsndfile 1.2.2): the same rate, frames and samples, once its channels are cut to two as the lab cuts
-// them. libsndfile also reads "twos", "ulaw", "alaw", "ima4" and "fl64",
+// AIFF and AIFF-C (AIFFReader), then copy-protected MP4s (ProtectedMP4). The AIFF variants are built byte by byte
+// here, like the WAV ones. Every variant below that decodes, and the cut and unfilled files, were also read by the
+// lab's decoder on Oct 28, 2026 (soundfile 0.14.0, libsndfile 1.2.2): the same rate, frames and samples, once its
+// channels are cut to two as the lab cuts them. libsndfile also reads "twos", "ulaw", "alaw", "ima4" and "fl64",
 // which DeckieDecode reports as not supported.
 
 @Suite struct AIFFFixtureTests {
@@ -244,5 +244,90 @@ func aiffPCM(_ values: [Float], bits: Int, littleEndian: Bool = false, float: Bo
         let b = try decodeBytes(aiffFile("AIFF", [commChunk(channels: 2, bits: 16, rate: mac),
                                                   ssndChunk(aiffPCM(frames.flatMap { $0 }, bits: 16))])).get()
         #expect(b.sampleRate == 22254 && b.frames == 4)
+    }
+}
+
+// Copy-protected MP4s: reported as protected, never decoded.
+
+/// Decodes and returns the typed error, or nil when nothing is thrown.
+func decodeFailure(_ data: Data) -> AudioDecodeError? {
+    if case .failure(let e) = decodeBytes(data) { return e }
+    return nil
+}
+
+@Suite struct ProtectedFileTests {
+    @Test func theProtectedStubIsReportedAsProtected() throws {
+        let url = Fixture.url("protected.m4p")
+        var thrown: AudioDecodeError? = nil
+        do throws(AudioDecodeError) {
+            _ = try AudioDecoder.decode(url)
+        } catch {
+            thrown = error
+        }
+        let e = try #require(thrown)
+        #expect(e.kind == .protected && e.format == .aac)
+        #expect(e.message == "protected, cannot be read: an iTunes Store or Apple Music file locked to its Apple "
+                + "account (FairPlay; major brand \"M4P \"); only Apple's own apps can play it")
+        #expect(e.description.hasSuffix("protected.m4p (AAC): " + e.message))
+    }
+
+    @Test func plainAACIsStillUnsupportedNotProtected() throws {
+        let m4a = try fixtureBytes("tone.m4a")
+        #expect(ProtectedMP4.check(m4a) == nil)
+        let e = try #require(decodeFailure(m4a))
+        #expect(e.kind == .unsupported && e.format == .aac)
+        #expect(e.message.hasPrefix("AAC is not supported on this platform yet"), "\(e.message)")
+    }
+
+    /// Edits of tone.m4a (moov after 79 KB of audio, as ffmpeg writes it) and of the stub (moov first, as iTunes
+    /// writes it), each checked for what marks it as protected.
+    @Test func whatMarksAnMP4AsProtected() throws {
+        let m4a = try fixtureBytes("tone.m4a"), stub = try fixtureBytes("protected.m4p")
+        /// The file with the four letters at `at` replaced.
+        func with(_ d: Data, _ edits: [(at: Int, String)]) -> Data {
+            var d = d
+            for (at, s) in edits { d.replaceSubrange(at..<(at + 4), with: Data(s.utf8)) }
+            return d
+        }
+        /// Where the type of the first sample entry sits: 16 bytes after the stsd box's type.
+        func entryType(_ d: Data) throws -> Int { try #require(d.range(of: Data("stsd".utf8))).lowerBound + 16 }
+        func at(_ d: Data, _ s: String) throws -> Int { try #require(d.range(of: Data(s.utf8))).lowerBound }
+        let m4aEntry = try entryType(m4a), stubEntry = try entryType(stub), stubSinf = try at(stub, "sinf")
+        #expect(m4aEntry > 65_536 && String(decoding: m4a[m4aEntry..<(m4aEntry + 4)], as: UTF8.self) == "mp4a")
+        #expect(String(decoding: stub[stubEntry..<(stubEntry + 4)], as: UTF8.self) == "drms")
+        // A top-level free box holding a whole sinf box and the words drms, drmi and sinfonia, as a title might.
+        let inner = be32(12) + Array("sinf".utf8) + be32(0), text = Array(" drms drmi sinfonia".utf8)
+        let decoy = Data(be32(8 + inner.count + text.count) + Array("free".utf8) + inner + text)
+        let cases: [(String, Data, ProtectedMP4.Finding?)] = [
+            ("the stub as written", stub, .fairPlay("major brand \"M4P \"")),
+            ("the stub, brand M4A", with(stub, [(8, "M4A ")]), .fairPlay("sample entry \"drms\"")),
+            ("the stub, brand M4A, entry drmi", with(stub, [(8, "M4A "), (stubEntry, "drmi")]),
+             .fairPlay("sample entry \"drmi\"")),
+            ("the stub, brand M4A, entry enca (Common Encryption)", with(stub, [(8, "M4A "), (stubEntry, "enca")]),
+             .encrypted("a \"sinf\" box in sample entry \"enca\"")),
+            ("the stub unlocked: brand M4A, entry mp4a, sinf gone",
+             with(stub, [(8, "M4A "), (stubEntry, "mp4a"), (stubSinf, "free")]), nil),
+            ("tone.m4a", m4a, nil),
+            ("tone.m4a, entry drms, its moov after the audio", with(m4a, [(m4aEntry, "drms")]),
+             .fairPlay("sample entry \"drms\"")),
+            ("tone.m4a, brand M4P", with(m4a, [(8, "M4P ")]), .fairPlay("major brand \"M4P \"")),
+            ("tone.m4a with a decoy free box at the end", m4a + decoy, nil),
+            ("tone.m4a with the decoy box in front of the audio",
+             m4a.prefix(28) + decoy + m4a.dropFirst(28), nil),
+            ("tone.m4a cut before its moov", m4a.prefix(70_000), nil),
+            ("an ftyp box and a box claiming 3 bytes",
+             Data(be32(16) + Array("ftypM4A ".utf8) + be32(0) + be32(3) + Array("moov".utf8) + be32(0)), nil),
+            ("an ftyp box and a moov claiming 2^63 bytes",
+             Data(be32(12) + Array("ftypM4A ".utf8) + be32(1) + Array("moov".utf8) + [0x80] + Array(repeating: 0, count: 7)),
+             nil),
+        ]
+        for (what, bytes, finding) in cases {
+            #expect(ProtectedMP4.check(bytes) == finding, "\(what)")
+            // Through the decoder: protected, or the usual "AAC is not supported".
+            let e = try #require(decodeFailure(bytes), "\(what)")
+            let kind: AudioDecodeError.Kind = finding == nil ? .unsupported : .protected
+            #expect(e.kind == kind && e.format == .aac, "\(what): \(e.kind)")
+            if let finding { #expect(e.message == finding.message, "\(what)") }
+        }
     }
 }
