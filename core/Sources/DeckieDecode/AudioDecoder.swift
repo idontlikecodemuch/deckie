@@ -11,6 +11,7 @@ public enum AudioFormat: String, Sendable, Equatable, CustomStringConvertible {
     case aac = "AAC"
     /// AIFF or AIFF-C.
     case aiff = "AIFF"
+    /// FLAC, native or in an Ogg container (Ogg-FLAC), with or without an ID3v2 tag in front.
     case flac = "FLAC"
     /// Nothing DeckieDecode recognises.
     case unknown = "unknown format"
@@ -25,7 +26,12 @@ public enum AudioFormat: String, Sendable, Equatable, CustomStringConvertible {
         if ascii(0, "FORM") && (ascii(8, "AIFF") || ascii(8, "AIFC")) { return .aiff }
         if ascii(0, "fLaC") { return .flac }
         if ascii(4, "ftyp") { return .aac }
-        if ascii(0, "ID3") { return .mp3 }
+        if ascii(0, "OggS") { return data.withUnsafeBytes { FLACReader.isOggFLAC($0) } ? .flac : .unknown }
+        if ascii(0, "ID3") {
+            // Some taggers put an ID3v2 tag in front of FLAC too: look behind the tags.
+            let end = data.withUnsafeBytes { MP3Reader.id3v2End($0).end }
+            return data.dropFirst(end).starts(with: "fLaC".utf8) ? .flac : .mp3
+        }
         if b.count >= 2 && b[0] == 0xFF && b[1] & 0xE0 == 0xE0 {
             // Frame sync. The two "layer" bits are 00 for AAC in ADTS and nonzero for MPEG audio layers I to III.
             return b[1] & 0x06 == 0 ? .aac : .mp3
@@ -65,9 +71,10 @@ public struct AudioDecodeError: Error, Sendable, Equatable, CustomStringConverti
     public var description: String { "cannot decode \(file) (\(format)): \(message)" }
 }
 
-/// Turns an audio file into float samples at the file's own sample rate. It decodes WAV and AIFF in plain Swift and
-/// MP3 through the vendored dr_mp3, the same on every platform; AAC is recognised but reports that it is not
-/// supported yet, and a copy-protected MP4 (an iTunes Store or Apple Music file) that it is protected.
+/// Turns an audio file into float samples at the file's own sample rate. It decodes WAV and AIFF in plain Swift, MP3
+/// through the vendored dr_mp3 and FLAC through the vendored dr_flac, the same on every platform; AAC is recognised
+/// but reports that it is not supported yet, and a copy-protected MP4 (an iTunes Store or Apple Music file) that it
+/// is protected.
 public enum AudioDecoder {
     /// Decodes the whole file into memory at its own sample rate (resampling is a later step). Mono stays mono,
     /// stereo stays stereo, more channels are cut to the first two.
@@ -91,6 +98,8 @@ public enum AudioDecoder {
             return try AIFFReader.decode(data, file: path)
         case .mp3:
             return try MP3Reader.decode(data, file: path)
+        case .flac:
+            return try FLACReader.decode(data, file: path)
         case .aac:
             if let found = ProtectedMP4.check(data) {
                 throw AudioDecodeError(kind: .protected, file: path, format: format, message: found.message)
@@ -98,8 +107,6 @@ public enum AudioDecoder {
             throw unsupported(path, format, "AAC is not supported on this platform yet: it will use the platform's "
                               + "own decoder (AVFoundation on Apple, Media Foundation on Windows); Linux has no "
                               + "licence-safe AAC decoder in a distribution package")
-        case .flac:
-            throw unsupported(path, format, "\(format) is not supported yet")
         case .unknown:
             throw unsupported(path, format, "not a format DeckieDecode recognises (WAV, AIFF, MP3, FLAC, AAC)")
         }
