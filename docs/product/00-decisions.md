@@ -97,6 +97,14 @@ rekordbox XML is explicit and lossy by nature (grids, cues, BPM, one key); impor
 grids and cues. No live sync with other software, and the crate's own fields never leave through the export.
 Supersedes the "fully interchangeable" reading of P12.
 
+### D14. Deckie's own code is written once in Swift and runs on Linux and Windows: decided by the spike (Oct 28)
+Christopher's direction was to settle the language in practice. The two-week spike took one day: a Swift package
+with the grid fit, Camelot mapping and pair scoring reproduces the lab's numbers on all 373 tracks and all 138,608
+pairs on Linux (Swift 6.4.1), and the same package builds and passes the same 13 tests on GitHub's Windows machine
+with no Windows-specific code (run 40750217848; pull request #1, both workflows green). Rust stays the named
+fallback for the Windows build alone if a later mechanic proves painful there. The Apple apps keep Apple's Music
+Understanding framework (D11); this core is what both sides share. Dependency policy as in P16.
+
 ### Note on D3 (Oct 26, from the community research): privacy covers taste, not only audio
 DJs' fear is "I'm not helping train ai for free": that their choices become someone else's product. So D3 extends
 to history, cues, saved pairs and learned preferences: all of it stays with the DJ, Deckie says who benefits from
@@ -185,7 +193,7 @@ Christopher says so; a yes moves it up into the dated decisions above.
   without a Mac (no engine work, interface only); Desk Lite for Windows and Linux after the trials (rekordbox XML
   import first, a second engine for the rest, signatures still from an Apple device); Android booth only on demand.
   Spec 5.7, overview section 5.
-- **P16, revised by track M: Deckie's own code is written once in Swift, as a plain package with no Apple-only
+- **P16 (decided as D14 on Oct 28 by the spike). Revised by track M: Deckie's own code is written once in Swift, as a plain package with no Apple-only
   framework, and runs on Windows and Linux too; Rust is the runner-up, not the default.** Track M found the shared
   core is small (about 3,000 lines once ported: the DJ DSP, the key estimator, the scoring and the crate format),
   that a Rust core would put a translation layer under every Mac and iPad build now for a Windows builder that P17
