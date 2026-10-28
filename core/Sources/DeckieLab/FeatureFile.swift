@@ -27,21 +27,7 @@ public struct FeatureFile: Decodable, Sendable {
             case bpm, confidence, fitMadMs = "fit_mad_ms", tagDevPct = "tag_dev_pct"
         }
     }
-    public struct LocalTempo: Decodable, Sendable {
-        public var bpmIn: Double?
-        public var bpmOut: Double?
-        public var tempoChange: Bool?
-        public var driftPct: Double?
-        public var inTrusted: Bool?
-        public var outTrusted: Bool?
-        public var steadyInBar: Int?
-        public var steadyOutBar: Int?
-        enum CodingKeys: String, CodingKey {
-            case bpmIn = "bpm_in", bpmOut = "bpm_out", tempoChange = "tempo_change", driftPct = "drift_pct"
-            case inTrusted = "in_trusted", outTrusted = "out_trusted"
-            case steadyInBar = "steady_in_bar", steadyOutBar = "steady_out_bar"
-        }
-    }
+    // `LocalTempo`, the lab's local_tempo block, is in FeatureFile+LocalTempo.swift.
     public struct Key: Decodable, Sendable {
         public var camelot: String
         public var confidence: Double
@@ -50,7 +36,13 @@ public struct FeatureFile: Decodable, Sendable {
         public var startBar: Int
         public var endBar: Int
         public var bars: Int
-        enum CodingKeys: String, CodingKey { case bars, startBar = "start_bar", endBar = "end_bar" }
+        // Read by the local tempo port (FeatureFile+LocalTempo.swift).
+        public var startS: Double?
+        public var endS: Double?
+        enum CodingKeys: String, CodingKey {
+            case bars, startBar = "start_bar", endBar = "end_bar"
+            case startS = "start_s", endS = "end_s"
+        }
     }
     public struct Loudness: Decodable, Sendable {
         public var integratedLufs: Double
@@ -87,6 +79,11 @@ public struct FeatureFile: Decodable, Sendable {
     public var fadeOut: Bool?
     public var flags: [String]?
     public var meta: Meta?
+    // Read by the local tempo port (FeatureFile+LocalTempo.swift).
+    public var beatsS: [Double]?
+    public var downbeatsS: [Double]?
+    public var firstSoundS: Double?
+    public var lastSoundS: Double?
 
     enum CodingKeys: String, CodingKey {
         case id, title, ver, bpm, grid, key, loudness, meta, flags
@@ -94,6 +91,8 @@ public struct FeatureFile: Decodable, Sendable {
         case detectedBeatsS = "detected_beats_s", detectedDownbeatsS = "detected_downbeats_s"
         case localTempo = "local_tempo", mixIn = "mix_in", mixOut = "mix_out", perBar = "per_bar"
         case onsetPattern16 = "onset_pattern_16", embeddingEffnet = "embedding_effnet", fadeOut = "fade_out"
+        // Local tempo port.
+        case beatsS = "beats_s", downbeatsS = "downbeats_s", firstSoundS = "first_sound_s", lastSoundS = "last_sound_s"
     }
 
     public static func load(_ url: URL) throws -> FeatureFile {
