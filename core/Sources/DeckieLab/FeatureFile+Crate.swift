@@ -175,7 +175,7 @@ extension FeatureFile {
             return CrateTrack(
                 id: id,
                 file: .init(name: path.map { String($0.split(separator: "/").last ?? "") } ?? id, rel: rel, bytes: nil,
-                            sha1Head: nil, durationS: durationS),
+                            sha1Head: nil, sha256: nil, durationS: durationS),
                 ident: .init(title: text(c?.song) ?? text(title) ?? id, artist: text(c?.artist),
                              version: text(c?.ver) ?? text(ver), source: "lab", disc: text(c?.disc) ?? text(meta?.disc),
                              folder: text(c?.folder) ?? text(meta?.folder),

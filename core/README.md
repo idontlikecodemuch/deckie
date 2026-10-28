@@ -222,7 +222,9 @@ python3 core/Tools/export_beat_this.py                 # the model into core/.mo
 holding `manifest.json`, `crate.json` (one record per track: grid and tempo segments, key with its votes, phrase,
 sections, mix windows, ends, loudness, vocal, onset pattern, flags, plus track L's engine record, `fidelity`, a
 `source` and confidence per block and `features_present`), float16 sidecars for the per-bar series and the style
-vector, and a `signatures` block that stays empty here, as signatures are made on an Apple device. `CrateWriter`
+vector, and a `signatures` block that stays empty here, as signatures are made on an Apple device. A shipped engine's
+record id is the first 16 hexadecimal characters of the SHA-256 hash of the file's bytes, whose whole hash is kept in
+`file.sha256` (`CrateIDs`, on SHA-256 written in Swift); the lab's records keep the lab's ids. `CrateWriter`
 checks a crate and writes it canonically (keys sorted, each number with its field's fixed decimals, nulls written), so
 the same crate always gives the same bytes; `CrateReader` checks the version, the required fields,
 `features_present`, every bar number and each sidecar's length against `n_bars`, and names the file, the field path

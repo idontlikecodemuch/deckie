@@ -4,6 +4,9 @@ Dated Oct 28, 2026; step 4 of the PC and Linux track (`pc-linux-track.md`). The 
 a DJ's tracks with their analysis, names and history, never audio, moved between devices by iCloud Drive, AirDrop or
 Files. This page says what the documents already fix, what they leave open, and the choice made here for each open
 point. Every choice not taken from a document is marked **proposed**, for the main session to accept or change.
+The main session accepted the format as v1 on Oct 28 with two changes, both applied below: the Windows and Linux
+engine's family is `deckie`, and a shipped engine makes a record's `id` from the SHA-256 hash of the file, kept whole
+in the new `file.sha256`.
 Code: `core/Sources/DeckieCrate` (reader, writer, checks), `core/Sources/DeckieLab/FeatureFile+Crate.swift` (the lab's
 feature files to crate records). Example: `core/fixtures/example.deckiecrate`.
 
@@ -64,12 +67,27 @@ Numbers carry their unit in the name (`_s` seconds, `_ms`, `_db`, `_lufs`, `bpm`
 is written in every record; `null` means "no value" and is allowed only where marked "or null". A block marked
 *(feature X)* is present exactly when `features_present` lists X, and is `null` otherwise.
 
-- `id`: letters, digits, `-` and `_` only, as it names the sidecar files (the lab's 10-character ids today).
+- `id`: letters, digits, `-` and `_` only, as it names the sidecar files. **How a shipped engine makes it**
+  (main session, Oct 28): the first 16 hexadecimal characters, lower case, of the SHA-256 hash of the audio file's
+  bytes, the whole file as it is on disk, tags included; the full hash is `file.sha256`. 16 characters are 64 bits:
+  the chance that any two files of a 100,000-track crate share an id is about one in 3.7 billion. The id names the
+  file, not the recording: two files with the same audio but different bytes (another encode, a copy retagged by
+  another program) are different files with different ids, and finding them as one recording is the analysis-derived
+  version descriptor's job (spec 5.4), not the id's. Lab records keep the lab's 10-character ids and write
+  `file.sha256` as null. `CrateIDs.id(forFileBytes:)` and `CrateIDs.sha256(of:)` compute both, on SHA-256 written in
+  Swift (`SHA256.swift`), so no system library is needed.
 - `schema`: 1. `features_present`: sorted names, from `grid`, `tempo_segments`, `key`, `key_changes`, `phrase`,
   `sections`, `mix_windows`, `ends`, `loudness`, `vocal`, `onset_pattern`, `style` and `bars.<series>`. Readers ignore
   names they do not know, but keep a per-bar series they do not know. **proposed** (the names).
 - `file`: `name`, `rel` (path below the folder the crate was built from, or null; never absolute), `bytes` or null,
-  `sha1_head` or null, `duration_s`.
+  `sha1_head` or null, `sha256` or null, `duration_s`. `sha256` is the whole file's SHA-256 hash as 64 lower-case
+  hexadecimal characters, the spec's "content hash of the file for exact identity" (spec 5.4); the record's `id` is
+  its start, as above, and it is null only in lab records. `sha1_head` is track A's head hash: a SHA-1 of the start
+  of the file, which the Apple apps keep for a quick identity check. Track A section 5 defines it only by its rule,
+  "Store a relative path plus size and a head hash to re-find files", and its example record, which shows
+  `"sha1_head": "..."`; track B refers to it as the content hash "in Track A's crate file as a head hash". Neither
+  document says how many bytes of the head it covers or how the hash is written, and no code computes it yet, so this
+  format does not define it further: every record this track writes has it null, and the reader does not check it.
 - `ident`: `title`, and each or null: `artist`, `version`, `source`, `mbid`, `disc`, `folder`, `track`, `cut_key`,
   `is_longest`, `era`, `kind`; plus `tags` (list). **proposed**: `tags` (the lab's Halloween mark becomes the tag
   `halloween`, as the port plan suggests), and `folder` and `era` as text, as the lab has them (track A showed numbers).
@@ -142,9 +160,10 @@ drop fields it does not know; a newer crate can still be read.
 ## What the reader checks
 
 The version (`schema` at least 1, `min_reader` at most this reader's 1, each record's `schema` at most the
-manifest's), required fields and their types, unique and file-safe ids, `features_present` against the blocks,
-every bar number in range, starts before ends, `onset_pattern_16` of 16, Camelot codes, confidences between 0 and 1,
-each sidecar's header, size and bar count against `n_bars`, and that each listed signature file exists. A problem
+manifest's), required fields and their types, unique and file-safe ids, a `file.sha256` when present (64 lower-case
+hexadecimal characters, with the record's `id` its first 16), `features_present` against the blocks, every bar number
+in range, starts before ends, `onset_pattern_16` of 16, Camelot codes, confidences between 0 and 1, each sidecar's
+header, size and bar count against `n_bars`, and that each listed signature file exists. A problem
 names the file, the field path and the track, for example `crate.json: tracks[2].mix_in.end_bar (track 0327cf1c94):
 177 is past the end of the grid (175 bars, so at most 176)`. The writer runs the same checks before writing.
 
@@ -157,13 +176,14 @@ these tracks, as Christopher's crate must be regenerated with the shipped engine
 Level 1; `analysed_at` is given by the caller, as the files carry no date; `secs` is the sum of `timing_s` as written
 (two files hold stages of 3 to 40 minutes, Thriller's adding up to 4,277 s: the lab's record, not a speed). Grid source
 `beat-this-final0` or `madmom-rnn-dbn`; one tempo segment from the grid; key from the three votes (`votes`), no key
-changes; `rel` is the path below the lab's music folder. Two departures from the files: on 21 of the 373 the lab
-rounds the end of the steady beat to the bar line after the last partial bar (`n_bars + 2`), which the record writes as
-the grid's end, `n_bars + 1`; and the 1280-value EffNet embedding is not carried at all, because its model is
-non-commercial and the port plan says the stored embeddings must not travel in any crate, so lab records have no
-`style` and the scorer's timbre term needs the shipped style vector. Not carried, as the port plan lists: beat arrays
-(beats follow from the grid), the tempo votes, grid candidates, novelty peaks, phase novelty, end loudness, tail bars,
-the 15-second tempo profile and window fits, the octave-fix details, `path` and `timing_s`.
+changes; `rel` is the path below the lab's music folder; the lab's id stays the record's id, and `sha256` is null.
+Two departures from the files: on 21 of the 373 the lab rounds the end of the steady beat to the bar line after the
+last partial bar (`n_bars + 2`), which the record writes as the grid's end, `n_bars + 1`; and the 1280-value EffNet
+embedding is not carried at all, because its model is non-commercial and the port plan says the stored embeddings
+must not travel in any crate, so lab records have no `style` and the scorer's timbre term needs the shipped style
+vector. Not carried, as the port plan lists: beat arrays (beats follow from the grid), the tempo votes, grid
+candidates, novelty peaks, phase novelty, end loudness, tail bars, the 15-second tempo profile and window fits, the
+octave-fix details, `path` and `timing_s`.
 
 The example crate holds five of them: a grid from madmom (Thriller), an octave-fixed grid (Livin' La Vida Loca), a
 fade-out whose steady beat needed the clamp (Blue (Da Ba Dee)), a tempo change (NOKIA, a transition edit), and the
