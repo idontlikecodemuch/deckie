@@ -62,7 +62,7 @@ just because parts of Swift's runtime (the support code every Swift program runs
 | Action | Version | What it does | Used in |
 |---|---|---|---|
 | `actions/checkout` | `v4` | copies this repository onto the build machine | both workflows |
-| `compnerd/gha-setup-swift` | `v3` | installs the Swift toolchain on Windows | `core-windows.yml` |
+| `compnerd/gha-setup-swift` | `main` (its documented reference; its `v3` tag does not exist) | installs the Swift toolchain on Windows | `core-windows.yml` |
 
 Both are recorded by version tag only, which, like an image tag, the publisher can move. Pinning each to a commit
 hash (the fingerprint of one exact version of its code) is pending, and so is quoting their licences: this session
@@ -73,11 +73,15 @@ may not read other GitHub repositories, so it cannot look either up. Nothing the
 When a Windows or Linux build ships, the Swift runtime and Foundation (with its copy of ICU, a text-handling
 library) travel with it; each will be listed here with its licence quoted before that build is released.
 
-## Licence allowlist (from the charter)
+## Licence allowlist (track M section 3.4, confirmed as the single list by the main session, Oct 28, 2026)
 
-- **Ship:** MIT, BSD, Apache 2.0, ISC, public domain.
-- **Ship only dynamically linked** (kept as a separate library file, not built into Deckie's program): LGPL.
-- **Never:** GPL, AGPL, CC BY-NC (non-commercial), research-only. The CI check of this list is not built yet.
+- **Ship:** MIT, BSD 2-clause and 3-clause, Apache 2.0, ISC, zlib, public domain, CC0.
+- **Ship only dynamically linked** (kept as a separate library file, not built into Deckie's program), with each
+  case named in this file: LGPL 2.1 and LGPL 3.
+- **Not decided, so not allowed until the main session says otherwise:** MPL 2.0 (this decides Symphonia and
+  Eigen).
+- **Never:** GPL, AGPL, CC BY-NC (non-commercial), research-only.
+- The CI check of this list is not built yet.
 
 ## How to update: on the quarterly update day, or within a week of a security advisory (track M)
 
