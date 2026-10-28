@@ -17,7 +17,7 @@ ROOT = os.path.dirname(APP)  # the repo
 MIXER = os.path.join(ROOT, "mixer")
 RES = os.path.join(APP, "Deck", "Resources")
 BUILD = os.path.join(HERE, "build")
-VARIANTS = "o,r-4,r+4"
+VARIANTS = "o,r-8,r+8,r-16,r+16,t-8,t+8,t-16,t+16"   # nine signatures per track: the interim fix for the full fader range (track H, P11); was o,r-4,r+4
 for i, a in enumerate(sys.argv):
     if a == "--variants": VARIANTS = sys.argv[i + 1]
 os.makedirs(RES, exist_ok=True); os.makedirs(BUILD, exist_ok=True)
