@@ -4,8 +4,8 @@
   python3 core/Tools/export_beat_this.py [--out PATH] [--opset N]     # from anywhere
 
 A development-time tool: it never ships, and nothing in core/ runs it at build or analysis time. It needs the Python
-packages below (pinned in DEPENDENCIES.md, section 6, with the commands that install them), and the network once, for
-the checkpoint.
+packages pinned in core/Tools/export-requirements.txt (which says how to install them; DEPENDENCIES.md, section 6),
+and the network once, for the checkpoint.
 
 What it does:
   1. Loads the "final0" checkpoint through the package's own loader (beat_this.inference.load_model), which downloads
@@ -167,6 +167,7 @@ def main():
 
         os.replace(tmp, out)
         tmp = None
+        os.chmod(out, 0o644)  # mkstemp made it readable by its owner only
     finally:
         if tmp is not None and os.path.exists(tmp):
             os.remove(tmp)
