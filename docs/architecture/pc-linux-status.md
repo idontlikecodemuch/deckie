@@ -215,7 +215,8 @@ decoder direction (its second reply, below) changed the plan midway.
 two channels, the 440 Hz tone on the left at -6.0003 dBFS and the 1,000 Hz tone on the right at -12.0003 dBFS
 (dBFS: decibels below full scale, the loudest a digital file can hold), each tone at least 97 dB above every
 other frequency checked, and the click found at exactly 2.000 s. A four-minute stereo WAV decodes in 0.11 s. The
-8 new tests pass with the 13 old ones on Linux; the Windows probe runs on the pull request.
+8 new tests pass with the 13 old ones on Linux, and the Windows probe passed them too on the pull request
+(https://github.com/idontlikecodemuch/deckie/actions/runs/40753496723): the module needed nothing for Windows.
 
 **What was built and then thrown away, and why.** The first design, per track M, linked ffmpeg's libraries from
 Ubuntu's packages (ffmpeg is the open-source audio and video toolkit nearly everything uses; its libraries are
