@@ -19,8 +19,8 @@
 // DeckieEngine: the Windows and Linux analyser, mixer/analyze.py's pipeline in the lab's order on the ported pieces
 // (decoder, Beat This! through ONNX Runtime, DeckieCore's DSP); its record serialises to the lab's feature JSON and
 // converts to a crate track.
-// DeckieTestSupport: synthesised test audio (drums, chords) and the beat fixture, shared by the test targets (not a
-// product).
+// DeckieTestSupport: synthesised test audio (drums, chords, the engine's test track) and the beat fixture, shared by the
+// test targets (not a product).
 import PackageDescription
 
 let package = Package(
@@ -47,7 +47,7 @@ let package = Package(
         .target(name: "DeckieInference", dependencies: ["COnnxRuntime", "DeckieAudio", "DeckieCore"]),
         .target(name: "DeckieEngine",
                 dependencies: ["DeckieDecode", "DeckieCore", "DeckieInference", "DeckieCrate", "DeckieAudio"]),
-        .target(name: "DeckieTestSupport", path: "Tests/DeckieTestSupport"),
+        .target(name: "DeckieTestSupport", dependencies: ["DeckieAudio", "DeckieCore"], path: "Tests/DeckieTestSupport"),
         .testTarget(name: "DeckieCoreTests", dependencies: ["DeckieCore", "DeckieLab", "DeckieAudio", "DeckieTestSupport"],
                     exclude: ["Fixtures"]),
         .testTarget(name: "DeckieDecodeTests", dependencies: ["DeckieDecode"], exclude: ["Fixtures"]),
