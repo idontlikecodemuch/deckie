@@ -64,6 +64,9 @@ public enum BeatGrid {
         }
         var keptRes: [Double] = []
         for i in 0..<b.count where keep[i] { keptRes.append(abs(res[i])) }
+        // When the last pass rejects every beat numpy's median of nothing is nan (with a warning), and nan fails
+        // every trust test that follows; Py.median would stop the program instead.
+        if keptRes.isEmpty { return (P, .nan, 0) }
         return (P, Py.median(keptRes) * 1000, keptRes.count)
     }
 
