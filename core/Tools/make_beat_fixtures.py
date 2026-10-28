@@ -3,7 +3,7 @@
 (beat_this 1.1.0, MIT) itself computes, piece by piece, on synthesised drum patterns. Nothing here runs at test
 time; the Swift tests read the JSON this writes.
 
-  python3 core/Tools/make_beat_fixtures.py [--time]   # from anywhere; needs the export tools (DEPENDENCIES.md, section 6)
+  python3 core/Tools/make_beat_fixtures.py [--time]   # from anywhere; needs the export tools (DEPENDENCIES.md, section 7)
 
 The package's pieces, as read from its source (beat_this/preprocessing.py, inference.py, model/postprocessor.py):
   front end      LogMelSpect: torchaudio's MelSpectrogram at 22,050 Hz, n_fft 1024, hop 441 (50 frames a second),
@@ -34,9 +34,9 @@ Output: core/Tests/DeckieCoreTests/Fixtures/beat_this.json
                  assembles from a stand-in model whose outputs say which chunk position each frame came from
   postprocessor  hand-made logits (ties, plateaus, edges, nothing above zero) and their beats and downbeats
   pieces         the end-to-end signals (30 s at 120 BPM, and 90 s at 128 BPM turning to 100 BPM at 45 s, each at
-                 44.1 kHz, which the package resamples with soxr, and at 22.05 kHz, which it reads as it is): the
-                 true beat times, the package's logits (float32, from the final0 checkpoint) and its beat and
-                 downbeat times
+                 44.1 kHz, which the package resamples with soxr, and at 22.05 kHz, which it reads as it is; the
+                 first at 48 kHz too): the true beat times, the package's logits (float32, from the final0
+                 checkpoint) and its beat and downbeat times
 With --time it also prints how long the package takes for four minutes of the 128 BPM pattern on this machine.
 """
 import importlib.metadata as md
@@ -295,6 +295,7 @@ PIECES = [
     # name, rate, seconds, beats, seed
     ("drums_120_30s_44k", 44100, 30, steady_beats(0.5, 120, 29.75), 11),
     ("drums_120_30s_22k", 22050, 30, steady_beats(0.5, 120, 29.75), 11),
+    ("drums_120_30s_48k", 48000, 30, steady_beats(0.5, 120, 29.75), 11),
     ("drums_128_to_100_90s_44k", 44100, 90, tempo_change_beats(0.5, 128, 100, 45.0, 89.75), 12),
     ("drums_128_to_100_90s_22k", 22050, 90, tempo_change_beats(0.5, 128, 100, 45.0, 89.75), 12),
 ]

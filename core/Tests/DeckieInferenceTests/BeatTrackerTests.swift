@@ -6,12 +6,14 @@ import DeckieInference
 import DeckieTestSupport
 
 @Suite struct BeatTrackerInputTests {
-    /// 22,050 Hz passes, 44,100 Hz is halved, anything else is refused until a resampler exists.
-    @Test func sampleRates() throws {
+    /// 22,050 Hz passes, 44,100 Hz is halved, any other rate goes through the resampler.
+    @Test func sampleRates() {
         let y = (0..<1000).map { Float($0 % 7) / 7 }
-        #expect(try BeatTracker.modelRateSignal(y, sampleRate: 22050) == y)
-        #expect(try BeatTracker.modelRateSignal(y, sampleRate: 44100) == Decimator.halve(y))
-        #expect(throws: BeatTrackerError.resampleFirst(sampleRate: 48000)) { try BeatTracker.modelRateSignal(y, sampleRate: 48000) }
+        #expect(BeatTracker.modelRateSignal(y, sampleRate: 22050) == y)
+        #expect(BeatTracker.modelRateSignal(y, sampleRate: 44100) == Decimator.halve(y))
+        for rate in [48000, 16000, 96000] {
+            #expect(BeatTracker.modelRateSignal(y, sampleRate: rate) == Resampler(from: rate, to: 22050).process(y))
+        }
     }
 }
 
@@ -38,11 +40,10 @@ struct BeatTrackerTests {
         a.filter { t in !b.contains { abs($0 - t) <= Self.frame + 1e-9 } }
     }
 
-    /// At 22.05 kHz the tracker reads what the package reads, so its beats and downbeats must be the package's within
-    /// one frame, every one. At 44.1 kHz the package resamples with soxr and the tracker with the stopgap
-    /// `Decimator.halve`, which moves logits by up to about 0.6: there a beat may be found by one side only where
-    /// its logit is within 0.1 of the threshold (0) on both sides, a decision on a knife edge, and each such beat may
-    /// move a downbeat on either side; everything else must pair within one frame.
+    /// Every beat and downbeat the package's within one frame, at every rate: at 22.05 kHz the tracker reads what the
+    /// package reads; at 44.1 and 48 kHz the package resamples with soxr and the tracker with `Resampler`, soxr's
+    /// filter. (Before the resampler, the stopgap 65-tap decimator moved logits by up to 0.6, and on the 90 s piece
+    /// one beat whose logit sat within 0.04 of the threshold came out on one side only.)
     @Test func piecesMatchThePackage() async throws { try await CPUTurns.exclusive {
         let tracker = try tracker()
         for p in fx.pieces {
@@ -61,20 +62,8 @@ struct BeatTrackerTests {
                 largest logit difference \(logitDiff); time: resampling \(r.timing.resampling) s, spectrogram \(r.timing.spectrogram) s, \
                 model \(r.timing.model) s, postprocessing \(r.timing.postprocessing) s
                 """)
-            if p.rate == BeatThisFrontEnd.sampleRate {
-                #expect(b.sameCount && b.withinFrame, "\(p.name): beats differ from the package's by more than one frame")
-                #expect(d.sameCount && d.withinFrame, "\(p.name): downbeats differ from the package's by more than one frame")
-            } else {
-                for t in onlyHere + onlyThere {
-                    let f = Int((t * Double(BeatThisFrontEnd.framesPerSecond)).rounded())
-                    let here = r.logits.beat[f], there = p.beatLogits[f]
-                    #expect(abs(here) <= 0.1 && abs(there) <= 0.1,
-                            "\(p.name): a beat at \(t) s on one side only, with logits \(here) here and \(there) in the package")
-                }
-                let marginal = onlyHere.count + onlyThere.count
-                #expect(downHere.count <= marginal && downThere.count <= marginal,
-                        "\(p.name): downbeats differ beyond what the marginal beats explain")
-            }
+            #expect(b.sameCount && b.withinFrame, "\(p.name): beats differ from the package's by more than one frame")
+            #expect(d.sameCount && d.withinFrame, "\(p.name): downbeats differ from the package's by more than one frame")
         }
     } }
 
