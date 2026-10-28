@@ -1,0 +1,29 @@
+# The Windows probe: build and run the same DeckieCore tests on a Windows runner with the official Swift
+# toolchain. A failure here is evidence for the Swift-on-Windows decision, not a broken build to hide.
+name: core-windows
+
+on:
+  push:
+    branches: [main, pc-linux]
+    paths: [core/**, mixer/features/**, mixer/candidates.json, mixer/recs.json, .github/workflows/core-windows.yml]
+  pull_request:
+    paths: [core/**, mixer/features/**, mixer/candidates.json, mixer/recs.json, .github/workflows/core-windows.yml]
+  workflow_dispatch:
+
+jobs:
+  probe:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: compnerd/gha-setup-swift@v3
+        with:
+          branch: swift-6.4-release
+          tag: 6.4.1-RELEASE
+      - name: Swift version
+        run: swift --version
+      - name: Build
+        working-directory: core
+        run: swift build -v
+      - name: Test
+        working-directory: core
+        run: swift test
