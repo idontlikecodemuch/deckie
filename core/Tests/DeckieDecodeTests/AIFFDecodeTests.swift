@@ -172,11 +172,11 @@ func aiffPCM(_ values: [Float], bits: Int, littleEndian: Bool = false, float: Bo
         let cut = try fixtureBytes("tone.aiff").prefix(30)  // inside the COMM chunk
         let cases: [(String, Data, AudioDecodeError.Kind, String)] = [
             ("compression ima4", aiffFile("AIFC", [comm("ima4"), samples]), .unsupported,
-             "AIFF-C compression type 'ima4' is not supported (NONE, sowt and fl32 are)"),
+             "AIFF-C compression type 'ima4' is not supported (NONE, twos, sowt and fl32 are)"),
             ("compression ulaw", aiffFile("AIFC", [comm("ulaw"), samples]), .unsupported,
-             "AIFF-C compression type 'ulaw' is not supported (NONE, sowt and fl32 are)"),
+             "AIFF-C compression type 'ulaw' is not supported (NONE, twos, sowt and fl32 are)"),
             ("compression fl64", aiffFile("AIFC", [comm(bits: 64, "fl64"), samples]), .unsupported,
-             "AIFF-C compression type 'fl64' is not supported (NONE, sowt and fl32 are)"),
+             "AIFF-C compression type 'fl64' is not supported (NONE, twos, sowt and fl32 are)"),
             ("40-bit integers", aiffFile("AIFF", [comm(bits: 40), samples]), .unsupported,
              "40-bit integer PCM is not supported (up to 32 bits is)"),
             ("no COMM", aiffFile("AIFF", [samples]), .damaged, "no COMM chunk"),
