@@ -137,6 +137,8 @@ the listening test shows a tagger is not enough. The runtime stays ONNX Runtime:
 MPL part and nothing LGPL, GPL or non-commercial; ncnn (BSD-3, C API, no Eigen) is the named fallback. Two checks
 for the PC and Linux session: which third-party parts reach the CPU binary (the notices also list json.org's
 "JSON License", off our list), and the CPU time per track of each tagger.
+Christopher approved the YAMNet download and any further vocal-model weights the track needs, within these
+licence lines (Oct 28).
 
 ### Note on D13 (Oct 28): crate format version 1 accepted
 The PC and Linux session wrote the reader and writer (`DeckieCrate`) and a design note, `docs/architecture/crate-format.md`
