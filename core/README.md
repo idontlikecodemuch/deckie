@@ -9,10 +9,10 @@ and Linux crate builder share them. Charter: `docs/architecture/pc-linux-track.m
   (`PairScoring.swift`) and the top lists (`Recommendations.swift`). Ported line for line from
   `mixer/analyze.py`, `mixer/local_tempo.py` and `mixer/score.py`;
   `PythonCompat.swift` holds the rounding and modulo details that keep the numbers identical. `Loudness/` is the
-  loudness module, `DSP/` and `Key/` the key estimator and the signal processing under it; both are described
-  below.
+  loudness module, `DSP/` and `Key/` the key estimator and the signal processing under it, `Structure/` bars,
+  phrases, sections, the fade-out and the mix windows; all three are described below.
 - `Sources/DeckieLab`: reads the lab's `mixer/features/<id>.json` and `mixer/candidates.json` into
-  `DeckieCore` types.
+  `DeckieCore` types (`FeatureFile+Structure.swift` reads the structure fields on their own).
 - `Sources/DeckieAudio`: `AudioBuffer`, decoded audio in memory (interleaved Float32 at the file's own rate, one
   or two channels), in a target of its own with no Foundation so the analysers in `DeckieCore` can take audio
   without depending on the decoder.
@@ -97,6 +97,22 @@ hold the lab's per-track results for the 373 tracks, but the audio stays on the 
 `mixer/candidates.json` and its keys, correlations and flags are compared row by row, which also measures the
 decimator against soxr on real tracks. Expect rare differences where the lab's margin is tiny: the lab's chroma and
 its window means are float32, the port's are double precision.
+
+**Structure** (`Sources/DeckieCore/Structure/`) is the part of `mixer/analyze.py` after the grid choice that lays out
+bars and phrases and places the mix windows, as pure functions of what the audio analysers measure. `BarGrid` puts bar
+1 at the first grid downbeat at or after the first sound (less a quarter beat) and gives the bar count, the bar lines
+and the grid beats; `Phrase` sums the novelty peaks by position within 8 bars and gives the lattice phase, its
+confidence, the phase used for snapping and the section boundaries; `Section.sections` labels the stretches between
+boundaries intro, main, break or outro by loudness; `FadeOut` decides the fade from the end loudness
+(`Loudness.shortTerm` measures it) and the per-bar loudness; `MixWindows` places `mix_in` and `mix_out` (`pickLen`,
+the lattice snapping, the fade cut-off, the vocal-free counts); `TrackFlags.flags` gives the flag list. Bar numbers in
+and out are 1-based, as the feature files write them; values are kept unrounded. The per-bar loudness is
+`KWeighted.loudness` over each bar; the novelty peaks and the per-bar vocal probability need analysers not ported yet.
+`StructureTests.swift` runs each port on the inputs a committed feature file holds and compares the result with the
+outputs it holds, for all 373 tracks, with tolerances worked out from the files' rounding. Everything matches except
+on four tracks where a written input sits on a threshold (three with a bar's vocal probability written as 0.5, one
+with a tempo written as 100.000 BPM); given that input just inside its rounding, the port gives the lab's result there
+too.
 
 ```
 cd core
