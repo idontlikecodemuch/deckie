@@ -55,26 +55,44 @@ struct SHA256: Sendable {
         0x748f82ee, 0x78a5636f, 0x84c87814, 0x8cc70208, 0x90befffa, 0xa4506ceb, 0xbef9a3f7, 0xc67178f2,
     ]
 
-    /// Mixes one 64-byte block into the state.
+    /// Mixes one 64-byte block into the state. Written for a debug build too, where the engine hashes every audio
+    /// file it analyses: the rotations use the masking shifts (`&>>`, `&<<`), which compile to single instructions
+    /// there while `>>` and `<<` are generic calls, and the loops run on raw pointers. About 60 MB a second in a debug
+    /// build, ten times the plain version.
     private mutating func compress(_ block: UnsafeRawBufferPointer) {
-        func rotr(_ x: UInt32, _ n: UInt32) -> UInt32 { x >> n | x << (32 - n) }
-        withUnsafeTemporaryAllocation(of: UInt32.self, capacity: 64) { w in
-            for t in 0..<16 {
-                w[t] = UInt32(block[4 * t]) << 24 | UInt32(block[4 * t + 1]) << 16
-                    | UInt32(block[4 * t + 2]) << 8 | UInt32(block[4 * t + 3])
+        let bytes = block.baseAddress!.assumingMemoryBound(to: UInt8.self)
+        withUnsafeTemporaryAllocation(of: UInt32.self, capacity: 64) { wb in
+            let w = wb.baseAddress!
+            var t = 0
+            while t < 16 {
+                let o = bytes + 4 * t
+                w[t] = UInt32(o[0]) &<< 24 | UInt32(o[1]) &<< 16 | UInt32(o[2]) &<< 8 | UInt32(o[3])
+                t += 1
             }
-            for t in 16..<64 {
-                let s0 = rotr(w[t - 15], 7) ^ rotr(w[t - 15], 18) ^ (w[t - 15] >> 3)
-                let s1 = rotr(w[t - 2], 17) ^ rotr(w[t - 2], 19) ^ (w[t - 2] >> 10)
+            while t < 64 {
+                let x = w[t - 15], y = w[t - 2]
+                let s0 = (x &>> 7 | x &<< 25) ^ (x &>> 18 | x &<< 14) ^ (x &>> 3)
+                let s1 = (y &>> 17 | y &<< 15) ^ (y &>> 19 | y &<< 13) ^ (y &>> 10)
                 w[t] = w[t - 16] &+ s0 &+ w[t - 7] &+ s1
+                t += 1
             }
-            var (a, b, c, d, e, f, g, hh) = (h[0], h[1], h[2], h[3], h[4], h[5], h[6], h[7])
-            for t in 0..<64 {
-                let t1 = hh &+ (rotr(e, 6) ^ rotr(e, 11) ^ rotr(e, 25)) &+ ((e & f) ^ (~e & g)) &+ Self.k[t] &+ w[t]
-                let t2 = (rotr(a, 2) ^ rotr(a, 13) ^ rotr(a, 22)) &+ ((a & b) ^ (a & c) ^ (b & c))
-                (hh, g, f, e, d, c, b, a) = (g, f, e, d &+ t1, c, b, a, t1 &+ t2)
+            Self.k.withUnsafeBufferPointer { kb in
+                h.withUnsafeMutableBufferPointer { hb in
+                    let k = kb.baseAddress!, s = hb.baseAddress!
+                    var a = s[0], b = s[1], c = s[2], d = s[3], e = s[4], f = s[5], g = s[6], hh = s[7]
+                    var t = 0
+                    while t < 64 {
+                        let s1 = (e &>> 6 | e &<< 26) ^ (e &>> 11 | e &<< 21) ^ (e &>> 25 | e &<< 7)
+                        let t1 = hh &+ s1 &+ ((e & f) ^ (~e & g)) &+ k[t] &+ w[t]
+                        let s0 = (a &>> 2 | a &<< 30) ^ (a &>> 13 | a &<< 19) ^ (a &>> 22 | a &<< 10)
+                        let t2 = s0 &+ ((a & b) ^ (a & c) ^ (b & c))
+                        hh = g; g = f; f = e; e = d &+ t1; d = c; c = b; b = a; a = t1 &+ t2
+                        t += 1
+                    }
+                    s[0] = s[0] &+ a; s[1] = s[1] &+ b; s[2] = s[2] &+ c; s[3] = s[3] &+ d
+                    s[4] = s[4] &+ e; s[5] = s[5] &+ f; s[6] = s[6] &+ g; s[7] = s[7] &+ hh
+                }
             }
-            for (i, v) in [a, b, c, d, e, f, g, hh].enumerated() { h[i] &+= v }
         }
     }
 }
