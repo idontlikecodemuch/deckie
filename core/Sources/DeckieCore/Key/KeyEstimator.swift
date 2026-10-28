@@ -116,7 +116,7 @@ public struct KeyResult: Sendable, Equatable {
 }
 
 public enum KeyEstimatorError: Error, Equatable, CustomStringConvertible {
-    /// The estimator reads 22,050 Hz; 44,100 Hz is halved (`Decimator`); other rates need a resampler, not built yet.
+    /// The estimator reads 22,050 Hz; 44,100 Hz is halved (`Decimator`); other rates go through `Resampler` first.
     case resampleFirst(sampleRate: Int)
 
     public var description: String {
@@ -138,7 +138,7 @@ public enum KeyEstimator {
     // MARK: - The whole pipeline
 
     /// The chroma the estimator reads, from a mono signal: at 22,050 Hz as it is, at 44,100 Hz halved first with
-    /// `Decimator.halve` (a stopgap for the lab's soxr resampling); any other rate throws `resampleFirst`.
+    /// `Decimator.halve` (`Resampler` with soxr's HQ filter, as the lab resamples); any other rate throws `resampleFirst`.
     public static func chroma(_ signal: [Float], sampleRate rate: Int) throws -> Chromagram {
         switch rate {
         case sampleRate: return Chroma.stft(signal, sampleRate: sampleRate, fftSize: fftSize, hop: hop)

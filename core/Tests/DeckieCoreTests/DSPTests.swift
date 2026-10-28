@@ -132,40 +132,42 @@ func noiseInput(_ seed: UInt64, _ n: Int) -> [Double] {
 }
 
 @Suite struct DecimatorTests {
-    /// The filter's response: 1 at 0 Hz, flat through the band the chroma reads, -6 dB at the new Nyquist frequency,
-    /// and well down beyond it.
+    /// The filter's response (now `Resampler`'s, soxr's HQ design): 1 at 0 Hz, flat to 10 kHz, -6 dB at 10,549.5 Hz,
+    /// and at least 120 dB down from the new Nyquist frequency (11,025 Hz) on. (The stopgap it replaced had 65 taps,
+    /// -6 dB at 11,025 Hz and 55 dB from 12.5 kHz.)
     @Test func frequencyResponse() {
-        let h = Decimator.taps
-        #expect(h.count == 65)
-        #expect(abs(h.reduce(0, +) - 1) < 1e-15)
+        let h = Decimator.taps, centre = Decimator.center
+        #expect(h.count == 389 && centre == 194)
+        #expect(abs(h.reduce(0, +) - 1) < 1e-6)  // float32 taps
         func gain(_ hz: Double) -> Double {
             let w = 2 * Double.pi * hz / 44100
             var re = 0.0, im = 0.0
-            for (k, v) in h.enumerated() { re += v * cos(w * Double(k - 32)); im -= v * sin(w * Double(k - 32)) }
+            for (k, v) in h.enumerated() { re += v * cos(w * Double(k - centre)); im -= v * sin(w * Double(k - centre)) }
             return 20 * log10(hypot(re, im))
         }
-        let at = [100.0, 1000, 5000, 9000, 9900, 11025, 12100, 13000, 16000, 20000].map { ($0, gain($0)) }
-        print("decimator response: " + at.map { "\(Int($0.0)) Hz \(Py.fixed($0.1, 3)) dB" }.joined(separator: ", "))
-        #expect(abs(gain(100)) < 0.02 && abs(gain(1000)) < 0.02 && abs(gain(5000)) < 0.02 && abs(gain(9000)) < 0.02)
-        #expect(abs(gain(11025) - 20 * log10(0.5)) < 0.01)
-        #expect(gain(12100) < -45)
-        #expect(stride(from: 12500.0, through: 22050, by: 25).allSatisfy { gain($0) < -55 })
+        let at = [100.0, 1000, 5000, 9000, 9900, 10000, 10549.5, 11025, 12100, 13000, 16000, 20000].map { ($0, gain($0)) }
+        print("decimator response: " + at.map { "\($0.0) Hz \(Py.fixed($0.1, 4)) dB" }.joined(separator: ", "))
+        #expect([100.0, 1000, 5000, 9000, 9900, 10000].allSatisfy { abs(gain($0)) < 1e-4 })
+        #expect(abs(gain(10549.5) - 20 * log10(0.5)) < 0.01)
+        #expect(stride(from: 11025.0, through: 22050, by: 25).allSatisfy { gain($0) < -120 })
     }
 
-    /// Length and placement: (n + 1) / 2 samples, output k centred on input 2k (a slow sine passes unchanged but for the
-    /// passband ripple, under 0.02 dB, 0.23 percent).
+    /// Length and placement: (n + 1) / 2 samples, output k centred on input 2k (a slow sine passes unchanged but for
+    /// float32 rounding); the samples are the 44.1 to 22.05 kHz resampler's.
     @Test func lengthAndAlignment() {
         #expect(Decimator.halve([]).isEmpty)
         #expect(Decimator.halve([1]).count == 1 && Decimator.halve([1, 2, 3]).count == 2)
+        let noise = noiseInput(9, 9999).map { Float($0) }
+        #expect(Decimator.halve(noise) == Resampler(from: 44100, to: 22050).process(noise))
         let x = (0..<4411).map { Float(sin(2 * Double.pi * 200 * Double($0) / 44100)) }
         let y = Decimator.halve(x)
         #expect(y.count == 2206)
-        let err = (40..<2160).map { abs(Double(y[$0]) - Double(x[2 * $0])) }.max()!
-        #expect(err < 2.3e-3, "200 Hz through the decimator: largest difference \(err)")
+        let err = (100..<2100).map { abs(Double(y[$0]) - Double(x[2 * $0])) }.max()!
+        #expect(err < 1e-6, "200 Hz through the decimator: largest difference \(err)")
     }
 
     /// Against soxr "hq" (the lab's resampler) on a synthesised 44.1 kHz signal with harmonics up to 22 kHz: the samples
-    /// and the chroma of the result. A stopgap, so the numbers are measured and loosely bounded, not required to match.
+    /// and the chroma of the result. The filter is soxr's, so they agree to soxr's single-precision noise.
     @Test func againstSoxr() {
         let fx = DSPFixture.shared.decimate
         let y = ChordSynth.render(rate: 44100, samples: fx.samples, chords: fx.chords.map(\.chord),
@@ -181,10 +183,10 @@ func noiseInput(_ seed: UInt64, _ n: Int) -> [Double] {
         for (t, want) in zip(fx.chroma.index, fx.chroma.values) {
             for pc in 0..<12 { chromaErr = max(chromaErr, abs(c[t, pc] - want[pc])) }
         }
-        print("decimator against soxr hq: samples differ by at most \(Py.fixed(diff.max()!, 6)) (RMS difference "
-              + "\(Py.fixed(20 * log10(rms / level), 1)) dB below the signal); chroma differs by at most "
-              + "\(Py.fixed(chromaErr, 6)) over \(fx.chroma.index.count) frames")
-        #expect(rms < 0.01 * level)
-        #expect(chromaErr < 0.01)
+        print("decimator against soxr hq: samples differ by at most \(String(format: "%.1e", diff.max()!)) (RMS "
+              + "difference \(Py.fixed(20 * log10(rms / level), 1)) dB below the signal); chroma differs by at most "
+              + "\(String(format: "%.1e", chromaErr)) over \(fx.chroma.index.count) frames")
+        #expect(rms < 1e-5 * level)
+        #expect(chromaErr < 1e-5)
     }
 }
