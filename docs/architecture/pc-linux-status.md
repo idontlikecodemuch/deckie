@@ -17,10 +17,12 @@ Mac) reviews and merges this track's branch, `pc-linux`, and runs anything that 
   decoding with protected-file detection (entry 4), loudness measurement (entry 5) and the key estimator (entry
   6), all with no dependency beyond the vendored dr_mp3, all passing on Linux and Windows. From step 3, the logic
   that needs no audio is ported and checked against all 373 committed tracks: start and end tempo with the trust
-  rule, the bar grid, the phrase lattice, sections, fade-out, mix windows and flags (entry 7). In progress, with
-  Christopher's approvals: FLAC through dr_flac, and Beat This! through ONNX Runtime. Still to come in step 2:
-  a permissively licensed vocal tagger (the lab's is non-commercial only); in step 3: the audio-derived features
-  (resampling, per-bar bands, onset pattern, novelty peaks).
+  rule, the bar grid, the phrase lattice, sections, fade-out, mix windows and flags (entry 7), and the
+  audio-derived features too: FLAC decoding, the resampler, per-bar bands, first and last sound, mel and MFCC,
+  onset pattern and density, the novelty peaks (entry 8). In progress: Beat This! through ONNX Runtime. Still
+  to come in step 2: a permissively licensed vocal tagger (the lab's is non-commercial only). After that, step 3
+  is assembled into one analyser matching the lab's feature file, then step 4 (the crate) and step 5
+  (`deckie-build`).
 - Needed from Christopher: nothing right now (dr_mp3 vendoring approved Oct 28; dr_flac next, same pattern,
   will need the same yes, see entry 4, working mode).
 - Needed from the Mac, when convenient (not blocking): one check of the loudness module against the real
@@ -422,3 +424,42 @@ summed peaks allows. 57 core tests now, with the 24 decode tests, on Linux and W
 curve and its peaks (from MFCC and loudness), the onset pattern, the per-bar bands, and the per-bar vocal
 probability (from the tagger). Those are the next batch, tested against the lab's own Python libraries, which
 are installed here for testing only.
+
+## Oct 28, 2026: FLAC, and the audio-derived features (entry 8)
+
+Three agents in parallel worktrees, merged and tested once. 34 decode tests and 87 core tests pass on Linux; the
+Windows probe runs on the push.
+
+**FLAC** through dr_flac v0.13.4 (one public-domain C file, 523,451 bytes, SHA-256 `b0bf3971...`,
+`DEPENDENCIES.md` section 5; Christopher approved it): native FLAC and Ogg-FLAC, 8 to 24 bits, decoding sample for
+sample identical to the same signal in WAV and to the lab's decoder (offset 0). The wrapper does what dr_flac
+alone does not: skips ID3 tags in front, stops at the declared length, and reports damage (dr_flac silently drops
+a frame whose checksum fails, which would shift everything after it by 104 ms; the lab's decoder refuses such
+files, and so does Deckie now). A five-minute file decodes in 0.7 s.
+
+**The resampler** (the lab uses soxr, LGPL, in Python): a windowed-sinc design fitted to soxr's own "HQ" response
+(within 6e-8 of its impulse response), with no dependency. At the ratio the lab uses everywhere, 44.1 kHz to
+22.05 kHz and back, it matches soxr to about -120 dB (soxr's own noise), with zero net delay and the same output
+lengths; the stopband is 127 dB down. At 48 kHz to 44.1 kHz and 44.1 kHz to 16 kHz it agrees to about -60 dB
+only, because soxr runs an extra interpolating stage at those ratios; good enough for now (48 kHz files are rare
+in DJ pools) and logged as a known difference the Mac bench can weigh. 0.6 s per four minutes of stereo in a
+release build. The key estimator's stopgap halving filter now calls it.
+
+**Per-bar low and high bands** (the lab's twice-applied second-order Butterworth filters at 150 Hz and 4 kHz):
+filter coefficients bit-identical to scipy's, every filtered sample identical, per-bar levels within 1e-13 dB.
+**First and last sound** (the -60 dBFS rule on 10 ms frames): identical to the lab on all cases, including its
+float32 comparison and its dropped partial last frame.
+
+**Mel, MFCC, RMS, onset strength, onset detection, novelty and peaks, onset pattern and density** (the lab's
+librosa and scipy calls, and its own `foote_novelty` and structure code): the mel filter bank identical to
+librosa's in all 1,990 weights; mel spectrogram, log-mel, MFCC, RMS and onset strength within 4e-7 of librosa
+(librosa works in single precision; run in double, the two agree to 1e-14); scipy's `find_peaks` identical except
+on exact ties, which real novelty curves do not have; the lab's `foote_novelty` within 2e-16; on a synthesised
+48-bar track with four section changes the full chain from audio gives the same 17 peaks and the same lattice
+phase as the lab's code, and the same 387 onsets, bar densities and pattern. Four minutes take 1.5 s in a debug
+build. The fixtures the tests compare against are written by committed Python scripts that copy the lab's code
+as text and stop if the copy no longer matches `mixer/analyze.py` word for word.
+
+**What this means.** Every piece of the lab's analyser except the two neural models (Beat This! for beats, the
+vocal tagger) now exists in Swift with a measured match to the lab's Python. What remains before the analyser
+can be assembled: Beat This! (in progress), the vocal tagger (a permissive one still to find), and the glue.
