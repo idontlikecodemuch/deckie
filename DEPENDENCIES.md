@@ -74,6 +74,30 @@ may not read other GitHub repositories, so it cannot look either up. Nothing the
 When a Windows or Linux build ships, the Swift runtime and Foundation (with its copy of ICU, a text-handling
 library) travel with it; each will be listed here with its licence quoted before that build is released.
 
+## Checked and rejected
+
+**ffmpeg's libraries from Ubuntu 24.04**, checked Oct 28, 2026 as the Linux decoder track M section 3.1 names:
+`libavformat-dev`, `libavcodec-dev`, `libswresample-dev`, `libavutil-dev` and the runtime libraries they require
+(`libavformat60`, `libavcodec60`, `libswresample4`, `libavutil58`), all version `7:6.1.1-3ubuntu5` (ffmpeg 6.1.1)
+from the archive's `universe` section. **Rejected: these builds are GPL**, which the allowlist forbids even
+dynamically linked. ffmpeg's own code is mostly LGPL, but Debian and Ubuntu build it with its GPL parts switched on
+(`--enable-gpl`, with GPL libraries such as x264 linked in). Quoted from `/usr/share/doc/libavcodec60/copyright`
+(SHA-256 `2be0250f940dc713...`; the eight packages carry the identical file):
+
+```text
+For building the default Debian packages some of the GPL licensed files are used,
+so the resulting binaries are licensed under GPL v2+.
+```
+
+The installed `libavcodec.so.60` bears it out: it links libx264, libx265 and libxvidcore, whose own copyright
+files each say `License: GPL-2+`. So no Deckie code links ffmpeg, and CI installs none of it. An ffmpeg built
+with the LGPL configuration would be a separate decision, recorded here first.
+
+**The ffmpeg command-line program** (Ubuntu package `ffmpeg`, the same GPL build, `7:6.1.1-3ubuntu5`) is used only
+as a development tool, on a developer's machine, to make two test files, `tone.mp3` and `tone.m4a`, from Deckie's
+own generated signal (`core/Tools/make_audio_fixtures.py`). It is not installed in CI, and nothing in the package
+links it or calls it; the files it writes are test data.
+
 ## Licence allowlist (track M section 3.4, confirmed as the single list by the main session, Oct 28, 2026)
 
 - **Ship:** MIT, BSD 2-clause and 3-clause, Apache 2.0, ISC, zlib, public domain, CC0.
