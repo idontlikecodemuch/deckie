@@ -6,11 +6,14 @@ Mac) reviews and merges this track's branch, `pc-linux`, and runs anything that 
 
 ## Where things stand
 
-- Step 1 of the order of work (the two-week spike) is in progress: a Swift package `DeckieCore` under `core/` with
-  the beat grid fit, the Camelot mapping and the pair scoring ported from the lab, with tests against the lab's
-  committed numbers. Step 2 does not start until the main session has read the spike result.
-- Needed from the Mac: nothing yet.
-- Open questions for the main session: none yet.
+- Step 1 (the two-week spike) has its Linux half: the Swift package `DeckieCore` under `core/` reproduces the
+  lab's grid fit, Camelot mapping and pair scoring on Linux, number for number (entry 2). The Windows half, the
+  CI probe, is written but has not run, because this session cannot push to GitHub (entry 2, blocker).
+  Step 2 does not start until the main session has read the spike result.
+- Needed from Christopher: GitHub write access for this session, so the branch can be pushed and the two
+  workflows run (entry 2 says how).
+- Needed from the Mac: nothing.
+- Open questions for the main session: none beyond the push.
 
 ## Oct 28, 2026: the environment (entry 1)
 
@@ -50,3 +53,63 @@ language the charter chose for Deckie's own code, was not installed.
 - **GitHub Actions** (GitHub's service that builds and tests code on its own machines on every push) has no
   workflows in this repository yet. This track adds two: a Linux build-and-test and the Windows probe.
 - **Nothing needed from the Mac** for step 1. No music is involved; every test input is in the repository.
+
+## Oct 28, 2026: the spike on Linux, and a blocked push (entry 2)
+
+**Built**, under `core/`, as a Swift package (a package is Swift's unit of code with its own build and test
+commands; this one has no Apple-only framework in it, so it builds on Linux and should on Windows):
+
+- `DeckieCore`, about 800 lines: the beat grid fit with both of the lab's estimators, the Camelot wheel (the DJ
+  key notation where neighbouring numbers mix well), the tempo relations, the directed pair scoring with its
+  eight terms, the transition choice, the wording of the reasons, the timbre ranking over the whole pool and the
+  top-8 lists. Ported line for line from `mixer/analyze.py` and `mixer/score.py`.
+- `DeckieLab`, about 200 lines: reads the lab's feature files and `candidates.json` into those types.
+- Parity tests (tests that check the port gives the same numbers as the original), about 400 lines, under Swift
+  Testing. Their reference numbers come from `core/Tools/make_fixtures.py`, which runs the lab's own Python
+  unchanged and writes them to `core/Tests/DeckieCoreTests/Fixtures/`; the tests also read `mixer/features/`,
+  `mixer/candidates.json` and `mixer/recs.json` straight from the repository, so nothing was copied by hand.
+
+**Measured** on this machine with Swift 6.4.1: the package builds in 7 s and its 13 tests pass in 19 s.
+
+- Camelot: all 42 key spellings in both scales, all 576 key-pair compatibility values, every pitch shift and
+  every neighbour relation: identical to the lab.
+- Grid fit, all 373 tracks: the current two-estimator fit lands on the lab's numbers for every track, with the
+  tempo within 0.000001 BPM and the same estimator chosen every time (271 by the robust line fit, 102 by the
+  window method). The median beat error, a number in milliseconds, differs from numpy by up to 0.00003 ms on a
+  handful of tracks whose grid does not fit at all (errors above 80 ms); that is the last digits of a 2-by-2
+  equation solved slightly differently, twelve times over, on a hopeless fit, and nothing audible lives there.
+  Every committed grid candidate is reproduced by one of the two paths (334 by the current fit, 39 by the
+  robust line fit alone, matching entry 1's wrinkle).
+- Pair scoring, all 138,608 directed pairs (138,756 minus 40 that are cuts of the same song, minus 108 too far
+  apart in tempo): the same count, the same sum of scores to four decimals (74,163.6218), the same number of
+  pairs at or above the 0.45 threshold (99,832), identical counts per transition type and per tempo relation.
+  On 2,449 sampled pairs checked field by field: every score identical to four decimals; every transition,
+  move list, overlap, key shift and multiplier identical; the reasons text identical in all 2,449; of the
+  19,592 term values, 2 differ by 0.001 (the vocal term, where adding the same numbers in a different order
+  landed on the other side of a rounding boundary; the score did not move). Against the committed
+  `recs.json`: all 1,492 top-8 lists have identical scores position by position, and 9,986 of 9,986
+  recommended tracks are identical where the lab's score is unique (ties were excluded, per entry 1).
+
+**What it means for the Swift decision.** On Linux the port is exact: half the guard is met. Swift itself was
+not the hard part. The port took one session, the numbers line up with numpy to the last printed digit, and the
+only traps were Python conventions (rounding halves to even, remainders of negative numbers, the exact order of
+a weighted sum) that `core/Sources/DeckieCore/PythonCompat.swift` isolates in forty lines. The other half of
+the guard is Windows, below.
+
+**The Windows probe is written but has not run.** `.github/workflows/core-windows.yml` builds and tests the
+same package on GitHub's `windows-latest` machine with the official Swift 6.4.1 toolchain (installed by
+`compnerd/gha-setup-swift`, the action maintained by the Swift-on-Windows lead); `core-linux.yml` does the
+same in the official Swift 6.4.1 Linux image. Both run on every push to `main` or `pc-linux` that touches
+`core/` or the lab files they read, and can be started by hand from the Actions tab. They have not run
+because of the blocker below, so the probe's result is still open.
+
+**Blocker: this session cannot push to GitHub.** The push of the branch `pc-linux` was refused with "Claude
+doesn't have GitHub access to idontlikecodemuch/deckie for your organization" (a 403, the web's "forbidden"),
+by plain `git push` and by the GitHub connector alike; reading the repository works. The fix is on
+Christopher's side: connect or reconnect GitHub at https://claude.ai/connect-github, and if the Claude GitHub
+App is not installed on `deckie`, install it from that same page. Once that is done, this session pushes the
+branch and the two workflows run on their own. Until then the six commits exist only in this session's
+container; as a fallback they are also saved as a patch series (text files that `git am` turns back into the
+same commits) in the session's scratch folder, named below in the session reply.
+
+**Not started**: step 2. **Needed from the Mac**: nothing. The Windows result will be entry 3.
