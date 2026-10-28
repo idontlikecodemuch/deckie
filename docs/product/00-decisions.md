@@ -119,7 +119,8 @@ CC BY-NC stay off. Christopher can overrule either line; neither is needed by th
 Third line, same day: MPL 2.0 (file-level copyleft: changes to those files must be published) ships when its files are
 unmodified, with its notices in the acknowledgements; any change we make to an MPL file is published; an allowlisted
 equivalent is preferred where one exists. Needed because ONNX Runtime (MIT) carries Eigen (MPL 2.0) inside it. For
-the attorney to confirm alongside the DECKEE review.
+the attorney to confirm alongside the DECKEE review. Christopher approved all three lines on Oct 28, with a
+search for alternatives to the vocal models and the model runtime still to run.
 
 ### Note on D13 (Oct 28): crate format version 1 accepted
 The PC and Linux session wrote the reader and writer (`DeckieCrate`) and a design note, `docs/architecture/crate-format.md`
@@ -129,7 +130,7 @@ Accepted as proposed, with two changes: the engine family for the Windows and Li
 must say how a shipped engine makes a record's `id` (a prefix of the file's content hash, with the full hash stored),
 since the lab's ids were made another way. Measured: 373 lab files round-trip; about 4 KB a track without
 signatures, inside the 10 KB budget. The writer refuses to rewrite a crate from a newer schema rather than drop
-fields, so an older app will need a line of copy for that case.
+fields, so an older app will need a line of copy for that case. Christopher approved on Oct 28.
 
 ### Note on D3 (Oct 26, from the community research): privacy covers taste, not only audio
 DJs' fear is "I'm not helping train ai for free": that their choices become someone else's product. So D3 extends
