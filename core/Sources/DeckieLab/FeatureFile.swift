@@ -114,8 +114,11 @@ public struct CandidateRecord: Decodable, Sendable {
     public var hal: Bool?
     public var kind: String?
     public var era: String?
+    // Read by the crate converter (FeatureFile+Crate.swift).
+    public var artist: String?
+    public var song: String?
     enum CodingKeys: String, CodingKey {
-        case id, title, ver, secs, disc, folder, hal, kind, era
+        case id, title, ver, secs, disc, folder, hal, kind, era, artist, song
         case cutKey = "cut_key", isLongest = "is_longest", onDisc = "on_disc"
     }
 
