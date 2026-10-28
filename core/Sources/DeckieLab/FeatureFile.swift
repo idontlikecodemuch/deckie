@@ -50,7 +50,9 @@ public struct FeatureFile: Decodable, Sendable {
     }
     public struct PerBar: Decodable, Sendable {
         public var lufsSt: [Double]
-        public var vocalProb: [Double]
+        /// Nil in a record made without a vocal tagger (the engine's, flagged `vocal_unknown`); the lab's files all
+        /// have it.
+        public var vocalProb: [Double]?
         enum CodingKeys: String, CodingKey { case lufsSt = "lufs_st", vocalProb = "vocal_prob" }
     }
     public struct Meta: Decodable, Sendable {
@@ -75,7 +77,8 @@ public struct FeatureFile: Decodable, Sendable {
     public var loudness: Loudness
     public var perBar: PerBar
     public var onsetPattern16: [Double]
-    public var embeddingEffnet: [Double]
+    /// Nil in the engine's records, which never carry the lab's EffNet embedding; the lab's files all have it.
+    public var embeddingEffnet: [Double]?
     public var fadeOut: Bool?
     public var flags: [String]?
     public var meta: Meta?

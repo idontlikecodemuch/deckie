@@ -38,7 +38,8 @@ public enum PairScorer {
             for j in i..<n {
                 var dot = 0.0
                 let ei = tracks[i].embedding, ej = tracks[j].embedding
-                for d in 0..<ei.count { dot += ei[d] * ej[d] }
+                // A record without an embedding (an engine record) has an empty one, which scores 0 against any.
+                for d in 0..<min(ei.count, ej.count) { dot += ei[d] * ej[d] }
                 C[i][j] = dot; C[j][i] = dot
             }
         }
