@@ -58,12 +58,21 @@ public struct CrateTrack: Codable, Equatable, Sendable {
         /// The path below the folder the crate was built from.
         public var rel: String?
         public var bytes: Int?
+        /// Track A's head hash: a SHA-1 of the start of the file, kept for a quick identity check. The documents fix
+        /// neither how much of the file it covers nor how it is written, so nothing here checks it.
         public var sha1Head: String?
+        /// The SHA-256 hash of the whole file, 64 lower-case hexadecimal characters; the record's id is its first 16
+        /// (`CrateIDs`). Nil in lab records, which keep the lab's ids.
+        public var sha256: String?
         public var durationS: Double
-        public init(name: String, rel: String?, bytes: Int?, sha1Head: String?, durationS: Double) {
-            self.name = name; self.rel = rel; self.bytes = bytes; self.sha1Head = sha1Head; self.durationS = durationS
+        public init(name: String, rel: String?, bytes: Int?, sha1Head: String?, sha256: String? = nil,
+                    durationS: Double) {
+            self.name = name; self.rel = rel; self.bytes = bytes; self.sha1Head = sha1Head; self.sha256 = sha256
+            self.durationS = durationS
         }
-        enum CodingKeys: String, CodingKey { case name, rel, bytes, sha1Head = "sha1_head", durationS = "duration_s" }
+        enum CodingKeys: String, CodingKey {
+            case name, rel, bytes, sha256, sha1Head = "sha1_head", durationS = "duration_s"
+        }
     }
 
     /// The track's name and its place in the DJ's collection.

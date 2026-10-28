@@ -60,6 +60,49 @@ import Testing
         #expect(CrateIDs.id(forFileBytes: other) != CrateIDs.id(forFileBytes: SHA256Tests.megabyte))
     }
 
+    /// The sample crate with its first track named as a shipped engine names it, from stand-in file bytes.
+    static func hashedCrate() -> (Crate, String) {
+        var crate = sampleCrate()
+        let hash = CrateIDs.sha256(of: SHA256Tests.megabyte)
+        crate.tracks[0].id = CrateIDs.id(forSHA256: hash)
+        crate.tracks[0].file.sha256 = hash
+        crate.tracks[0].signatures = [:]
+        return (crate, hash)
+    }
+
+    @Test func aRecordWithItsHashRoundTrips() throws {
+        let (crate, hash) = Self.hashedCrate()
+        #expect(crate.problems().isEmpty, "\(crate.problems())")
+        let files = try CrateWriter.encode(crate)
+        let text = String(decoding: files["crate.json"]!, as: UTF8.self)
+        let lines = text.split(separator: "\n")
+        #expect(lines[1].contains(#""sha1_head":"f00d","sha256":"\#(hash)"}"#) && lines[1].contains(#""id":"631b84027d6b9e52""#))
+        #expect(lines[2].contains(#""sha1_head":"f00d","sha256":null}"#) && lines[2].contains(#""id":"b2""#))
+        let back = try CrateReader.decode(files)
+        #expect(back == crate && back.tracks.first { $0.id == "631b84027d6b9e52" }?.file.sha256 == hash)
+
+        // A crate written before the field existed reads, the hash as null.
+        let older = try editTracks(files) { set(&$0, ["tracks", 1, "file", "sha256"], nil) }
+        #expect(try CrateReader.decode(older) == crate)
+    }
+
+    @Test func aHashOfTheWrongFormOrAnIdThatIsNotItsStartIsRefused() throws {
+        let (crate, hash) = Self.hashedCrate()
+        let files = try CrateWriter.encode(crate)
+        // The tracks sort by id, so the hashed one is tracks[0]; b2 follows.
+        let f = try editTracks(files) { set(&$0, ["tracks", 0, "file", "sha256"], hash.uppercased()) }
+        #expect(readProblems(f).map(\.description) == [
+            "crate.json: tracks[0].file.sha256 (track 631b84027d6b9e52): \"\(hash.uppercased())\" must be 64 " +
+            "lower-case hexadecimal characters (a SHA-256 hash)"])
+        let g = try editTracks(files) { set(&$0, ["tracks", 1, "file", "sha256"], hash) }
+        #expect(readProblems(g).map(\.description) == [
+            "crate.json: tracks[1].id (track b2): \"b2\" must be the first 16 characters of file.sha256, 631b84027d6b9e52"])
+        var c = crate
+        c.tracks[1].file.sha256 = String(hash.dropLast())
+        let error = try #require(throws: CrateError.self) { try CrateWriter.encode(c) }
+        #expect(error.problems.map(\.path) == ["tracks[1].file.sha256"])
+    }
+
     @Test func theFormOfAHash() {
         #expect(CrateIDs.isSHA256(SHA256Tests.megabyteDigest))
         #expect(!CrateIDs.isSHA256(SHA256Tests.megabyteDigest.uppercased()))

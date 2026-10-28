@@ -98,6 +98,7 @@ struct RawFeatures {
             #expect(t.onsetPattern16 == raw.nums("onset_pattern_16") && t.flags == (raw.any("flags") as! [String]))
             #expect(t.bars?[BarSeries.lufs] == raw.nums("per_bar.lufs_st").map(Half.rounded))
             #expect(t.bars?[BarSeries.vocal]?.count == n && t.style == nil && t.signatures.isEmpty)
+            #expect(t.engine.family == "lab" && t.file.sha256 == nil)  // lab records keep the lab's ids
         }
         // What each was chosen for.
         let byId = Dictionary(uniqueKeysWithValues: crate.tracks.map { ($0.id, $0) })

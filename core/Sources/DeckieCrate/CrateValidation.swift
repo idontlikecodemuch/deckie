@@ -83,6 +83,14 @@ extension CrateTrack {
         if let rel = file.rel, rel.hasPrefix("/") || rel.hasPrefix("\\") || rel.dropFirst().hasPrefix(":") {
             add("file.rel", "\"\(rel)\" is an absolute path; the crate keeps paths relative")
         }
+        if let h = file.sha256 {
+            if !CrateIDs.isSHA256(h) {
+                add("file.sha256", "\"\(h)\" must be 64 lower-case hexadecimal characters (a SHA-256 hash)")
+            } else if id != CrateIDs.id(forSHA256: h) {
+                add("id", "\"\(id)\" must be the first \(CrateIDs.idLength) characters of file.sha256, " +
+                          "\(CrateIDs.id(forSHA256: h))")
+            }
+        }
         if !(file.durationS > 0) { add("file.duration_s", "\(file.durationS) must be above 0") }
         if !(1...3).contains(analysis.level) { add("analysis.level", "\(analysis.level) must be 1, 2 or 3") }
         if engine.fidelity < 0 { add("engine.fidelity", "\(engine.fidelity) must be 0 or more") }
