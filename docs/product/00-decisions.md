@@ -117,10 +117,26 @@ trained on CC BY-NC-SA audio) and CLAP (mixed-licence web audio) are out. Second
 model weights and data only, never code, with the attribution shown in the app's acknowledgements; CC BY-SA and
 CC BY-NC stay off. Christopher can overrule either line; neither is needed by the recommended models.
 Third line, same day: MPL 2.0 (file-level copyleft: changes to those files must be published) ships when its files are
-unmodified, with its notices in the acknowledgements; any change we make to an MPL file is published; an allowlisted
-equivalent is preferred where one exists. Needed because ONNX Runtime (MIT) carries Eigen (MPL 2.0) inside it. For
+unmodified by us, with its notices in the acknowledgements; any change we make to an MPL file is published; an
+allowlisted equivalent is preferred where one exists. (A patch an upstream applies and publishes, as ONNX Runtime
+does to Eigen, is that upstream's obligation, met by the notices it ships.) Needed because ONNX Runtime (MIT) carries Eigen (MPL 2.0) inside it. For
 the attorney to confirm alongside the DECKEE review. Christopher approved all three lines on Oct 28, with a
 search for alternatives to the vocal models and the model runtime still to run.
+
+The alternatives search ran the same day (`docs/research/o-alternatives-vocal-and-runtime.md`). It changed the vocal
+pick. EfficientAT's small models start from ImageNet weights, and ImageNet's terms are research-only, so it fails
+the training-data line; Spleeter's weights are called MIT only in Deezer's paper, which says the training set is
+Deezer's internal catalogue without saying Deezer owns it, so it fails the rights-holder test; and every other
+separator with a stated licence was trained on MUSDB18-HQ, which is non-commercial. So the Windows and Linux
+vocal signal is a tagger, as the lab's was: Google's YAMNet (Apache 2.0, trained on AudioSet alone, 3.7 million
+weights), with PANNs MobileNetV2 (MIT code, CC BY 4.0 weights, AudioSet) as the optional second opinion, read per
+bar from the singing classes and calibrated by track J's listening set. AudioSet's labels are CC BY 4.0 and
+Google ships YAMNet for commercial use, which is the anchor for accepting AudioSet-trained weights; the app uses
+its own class words, not AudioSet's share-alike ontology file. A separator returns only if a clean one appears or
+the listening test shows a tagger is not enough. The runtime stays ONNX Runtime: its notices name Eigen as the only
+MPL part and nothing LGPL, GPL or non-commercial; ncnn (BSD-3, C API, no Eigen) is the named fallback. Two checks
+for the PC and Linux session: which third-party parts reach the CPU binary (the notices also list json.org's
+"JSON License", off our list), and the CPU time per track of each tagger.
 
 ### Note on D13 (Oct 28): crate format version 1 accepted
 The PC and Linux session wrote the reader and writer (`DeckieCrate`) and a design note, `docs/architecture/crate-format.md`
