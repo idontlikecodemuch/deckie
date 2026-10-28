@@ -116,6 +116,20 @@ catalogue) and EfficientAT (MIT, trained on AudioSet, whose labels are CC BY 4.0
 trained on CC BY-NC-SA audio) and CLAP (mixed-licence web audio) are out. Second: CC BY 4.0 joins the allowlist for
 model weights and data only, never code, with the attribution shown in the app's acknowledgements; CC BY-SA and
 CC BY-NC stay off. Christopher can overrule either line; neither is needed by the recommended models.
+Third line, same day: MPL 2.0 (file-level copyleft: changes to those files must be published) ships when its files are
+unmodified, with its notices in the acknowledgements; any change we make to an MPL file is published; an allowlisted
+equivalent is preferred where one exists. Needed because ONNX Runtime (MIT) carries Eigen (MPL 2.0) inside it. For
+the attorney to confirm alongside the DECKEE review.
+
+### Note on D13 (Oct 28): crate format version 1 accepted
+The PC and Linux session wrote the reader and writer (`DeckieCrate`) and a design note, `docs/architecture/crate-format.md`
+on its branch, listing what spec 5.2, track A and track L fix and eight proposals for the open field-level detail.
+Accepted as proposed, with two changes: the engine family for the Windows and Linux engine is `deckie`, not
+`deckie-oss` (the models are open source; the engine is not, and the name must not claim a licence); and the note
+must say how a shipped engine makes a record's `id` (a prefix of the file's content hash, with the full hash stored),
+since the lab's ids were made another way. Measured: 373 lab files round-trip; about 4 KB a track without
+signatures, inside the 10 KB budget. The writer refuses to rewrite a crate from a newer schema rather than drop
+fields, so an older app will need a line of copy for that case.
 
 ### Note on D3 (Oct 26, from the community research): privacy covers taste, not only audio
 DJs' fear is "I'm not helping train ai for free": that their choices become someone else's product. So D3 extends

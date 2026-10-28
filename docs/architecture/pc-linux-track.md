@@ -46,7 +46,8 @@ Licences: MIT, BSD, Apache 2.0, ISC and public domain ship; LGPL only dynamicall
 research-only never; quote the licence file before adopting anything. Model weights and data may also be CC BY 4.0
 (never code; attribution shown in the app). Weights ship under their own licence even when their training data
 could not be shipped, unless that data's licence forbids commercial use; the data set, its licence and the
-trainer are recorded beside the weights in `DEPENDENCIES.md` (note on D14). No audio leaves the user's machine; no
+trainer are recorded beside the weights in `DEPENDENCIES.md` (note on D14). MPL 2.0 ships only with its files unmodified
+and its notices shown; a change to an MPL file is published (note on D14). No audio leaves the user's machine; no
 network during analysis. The crate file is Deckie's own format and the only thing written. Recognition signatures
 come from an Apple device; this track builds no fingerprint and leaves a place in the crate for signatures made
 elsewhere.
