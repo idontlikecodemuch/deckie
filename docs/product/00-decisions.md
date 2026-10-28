@@ -105,6 +105,18 @@ with no Windows-specific code (run 40750217848; pull request #1, both workflows 
 fallback for the Windows build alone if a later mechanic proves painful there. The Apple apps keep Apple's Music
 Understanding framework (D11); this core is what both sides share. Dependency policy as in P16.
 
+### Note on D14 (Oct 28): model weights, their training data, and CC BY 4.0
+Settled with the PC and Linux session while it chose a vocal model (its report is `docs/research/n-vocal-tagger.md`
+on its branch). Two lines added to the dependency policy. First: weights published under an allowlisted licence
+ship even when we could not ship their training data ourselves, unless that data's own licence forbids commercial
+use, in which case the weights are treated as non-commercial whatever their stated licence; where the data's
+licence is unknown, the trainer must be the data's rights-holder. The data set, its licence and who trained are
+recorded in `DEPENDENCIES.md` beside the weights. So Spleeter's vocal model (Deezer, MIT, trained on Deezer's own
+catalogue) and EfficientAT (MIT, trained on AudioSet, whose labels are CC BY 4.0) are in; musicnn (ISC code, but
+trained on CC BY-NC-SA audio) and CLAP (mixed-licence web audio) are out. Second: CC BY 4.0 joins the allowlist for
+model weights and data only, never code, with the attribution shown in the app's acknowledgements; CC BY-SA and
+CC BY-NC stay off. Christopher can overrule either line; neither is needed by the recommended models.
+
 ### Note on D3 (Oct 26, from the community research): privacy covers taste, not only audio
 DJs' fear is "I'm not helping train ai for free": that their choices become someone else's product. So D3 extends
 to history, cues, saved pairs and learned preferences: all of it stays with the DJ, Deckie says who benefits from
