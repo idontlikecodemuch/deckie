@@ -12,12 +12,14 @@ Mac) reviews and merges this track's branch, `pc-linux`, and runs anything that 
 - **The main session has read and accepted the spike** and told this track to open the pull request and start
   step 2. The pull request is https://github.com/idontlikecodemuch/deckie/pull/1 (branch `pc-linux` into `main`);
   both CI workflows are green on it.
-- **Step 2 is under way**, one mechanic at a time, each with its own status entry: first, decoding MP3 and AAC to
-  float samples on Linux (in progress, entry 4 when done); then Beat This! through ONNX Runtime, loudness with
-  libebur128, the key estimator, a vocal tagger.
-- Needed from Christopher: nothing right now.
+- **Step 2 is under way on its own branch and pull request** (`pc-linux-step2`,
+  https://github.com/idontlikecodemuch/deckie/pull/2, a draft until its first mechanic is whole), one mechanic
+  at a time, each with its own status entry. Mechanic 1, decoding audio to float samples: WAV done; MP3 waits on
+  Christopher's approval to vendor one public-domain file; AAC on Linux has a gap for the main session to decide
+  (entry 4). Then Beat This! through ONNX Runtime, loudness with libebur128, the key estimator, a vocal tagger.
+- Needed from Christopher: a yes or no on vendoring dr_mp3, the public-domain MP3 decoder (entry 4).
 - Needed from the Mac: nothing yet.
-- Open questions for the main session: none open; the licence list is reconciled per its reply (entry 3).
+- Open questions for the main session: AAC on Linux, options in entry 4.
 
 ## Oct 28, 2026: the environment (entry 1)
 
@@ -197,3 +199,61 @@ new `DeckieDecode` module that stays buildable on Windows and macOS where ffmpeg
 tones rather than any music. One licence check is part of it: Ubuntu builds ffmpeg with GPL components switched
 on, which may make the installed libraries GPL rather than LGPL; if so they are development-and-CI only, and a
 shipped Linux build needs an LGPL-configured ffmpeg. Entry 4 reports the outcome either way.
+
+## Oct 28, 2026: step 2, mechanic 1, decoding audio to float samples (entry 4)
+
+**Where it landed.** A new module `DeckieDecode` turns an audio file into float samples (the numbers between -1
+and 1 that every analyser works on), at the file's own sample rate, with the channel count kept (stereo stays
+stereo, anything beyond two channels is cut to the first two), a mono view that averages the channels as the lab
+does, and a typed error that names the file, the format and the reason. It recognises WAV, MP3, AAC, AIFF and
+FLAC from the first bytes. WAV decodes today, in plain Swift with no library at all, so it builds everywhere,
+Windows included. MP3 and AAC are recognised and report "not supported on this platform yet". The work was done
+by an Opus agent under this session's direction, reviewed and committed by this session; the main session's
+decoder direction (its second reply, below) changed the plan midway.
+
+**Measured, in this session.** Both generated test files decode exactly: 4.0000 s at 44,100 Hz and at 48,000 Hz,
+two channels, the 440 Hz tone on the left at -6.0003 dBFS and the 1,000 Hz tone on the right at -12.0003 dBFS
+(dBFS: decibels below full scale, the loudest a digital file can hold), each tone at least 97 dB above every
+other frequency checked, and the click found at exactly 2.000 s. A four-minute stereo WAV decodes in 0.11 s. The
+8 new tests pass with the 13 old ones on Linux; the Windows probe runs on the pull request.
+
+**What was built and then thrown away, and why.** The first design, per track M, linked ffmpeg's libraries from
+Ubuntu's packages (ffmpeg is the open-source audio and video toolkit nearly everything uses; its libraries are
+LGPL, which the allowlist accepts when kept as separate library files). It worked: MP3 decoded to exactly the
+right length with the encoder's padding removed, correlation 0.99999 with the original. But the licence check
+that was part of the job found what the main session then confirmed independently: Ubuntu builds ffmpeg with its
+GPL parts switched on (`ffmpeg -buildconf` shows `--enable-gpl` and `--enable-libx264`), and the package's own
+copyright file says "the resulting binaries are licensed under GPL v2+". Linking that, even as a separate file,
+would put Deckie under the GPL, which the charter forbids. So the ffmpeg code was deleted before it was ever
+committed; the finding is recorded in `DEPENDENCIES.md` under "Checked and rejected". The ffmpeg command-line
+program is still used on a developer's machine, as a tool, to make two test files; nothing links it.
+
+**MP3: waiting on one approval.** The charter's route is dr_mp3, a single C file of public-domain code (also
+offered under a no-attribution MIT licence) that decodes MP3 and is vendored, meaning copied into the repository
+and pinned by its hash, so nothing is downloaded at build time. This session's harness blocked the instruction to
+fetch that file ("code from an external source"): that is a decision for Christopher, not for the session. Once
+he says yes, the agent fetches the file, records its version, hash and licence in `DEPENDENCIES.md`, and the
+disabled MP3 test (already written, with the ffmpeg-measured reference numbers in it) comes alive.
+
+**AAC on Linux: a real gap, for the main session to decide.** AAC is the format of iTunes purchases and most
+`.m4a` files. On Apple the platform decoder (AVFoundation) will do it; on Windows, the platform's Media
+Foundation. On Linux there is no licence-safe AAC decoder in a distribution package: ffmpeg's is GPL as built,
+faad2 is GPL, fdk-aac has its own licence that is not on the allowlist. The options, with costs:
+1. Build our own ffmpeg with only its LGPL parts and only the AAC and MP3 decoders, dynamically linked and pinned
+   by the source tarball's hash. Cost: a build recipe to write and maintain, a few minutes per CI run, one more
+   thing to bump on the quarterly update day; licence clean (LGPL 2.1, named in `DEPENDENCIES.md` as the policy
+   asks). This is the only route to AAC on Linux that fits the list.
+2. No AAC on Linux for now: `deckie-build` reports such files as unsupported and carries on. Cost: Linux users
+   with AAC pools get partial crates; MP3 pools are unaffected. Nothing to maintain.
+3. Convert on the user's machine with whatever decoder they have (for example the distribution's ffmpeg program,
+   run as a separate process, never linked). Cost: depends on the user's installs; the GPL question moves from
+   Deckie's code to a tool the user runs themselves, which is the usual reading, but it is a judgement the main
+   session should make, not this session.
+My recommendation: option 2 now (Linux is the builder's second platform; MP3 first), with option 1 planned if the
+trials show AAC pools on Linux matter.
+
+**The main session's second reply, Oct 28**, in short: the spike is decision D14 on `main` (Swift everywhere for
+Deckie's own code, Rust only as a Windows fallback); pull request #1 stays the spike milestone and step 2 goes on
+its own branch and pull request; Ubuntu's ffmpeg must not be linked; the intended route is dr_mp3 or minimp3 for
+MP3 and the platform's decoder for AAC, with the Linux AAC gap stated plainly and a proposal; an LGPL-only ffmpeg
+build is acceptable only if built and pinned by this track, with its cost stated. All applied above.
