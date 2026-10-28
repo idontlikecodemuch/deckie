@@ -26,7 +26,7 @@ public struct BeatThisSpectrogram: Sendable, Equatable {
 ///   1. the STFT with a 1,024-sample periodic Hann window every 441 samples (50 frames a second), centred frames
 ///      with the signal mirrored at its ends (torch's reflect padding): 1 + n / 441 frames for n samples;
 ///   2. the magnitude of each bin, divided by sqrt(1024) (torchaudio's `normalized="frame_length"`);
-///   3. 128 triangular mel filters on the Slaney scale from 30 Hz to 11 kHz, unnormalised (`MelFilterBank`);
+///   3. 128 triangular mel filters on the Slaney scale from 30 Hz to 11 kHz, unnormalised (`TorchaudioMelFilterBank`);
 ///   4. log(1 + 1000 x each mel value), rounded to float32.
 ///
 /// The package computes all of this in float32; here everything up to the final rounding is double precision, which
@@ -42,11 +42,11 @@ public struct BeatThisFrontEnd: Sendable {
     public static let logMultiplier = 1000.0
 
     public let stft: STFT
-    public let filterBank: MelFilterBank
+    public let filterBank: TorchaudioMelFilterBank
 
     public init() {
         stft = STFT(fftSize: Self.fftSize, hop: Self.hop, padding: .reflect)
-        filterBank = MelFilterBank(sampleRate: Self.sampleRate, fftSize: Self.fftSize, melCount: BeatThisSpectrogram.bands,
+        filterBank = TorchaudioMelFilterBank(sampleRate: Self.sampleRate, fftSize: Self.fftSize, melCount: BeatThisSpectrogram.bands,
                                    fMin: Self.fMin, fMax: Self.fMax)
     }
 

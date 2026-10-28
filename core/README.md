@@ -191,9 +191,11 @@ optimisation level, and `run` takes float32 tensors by name and returns float32 
 Runtime's own errors come back as `OnnxRuntimeError.runtime` with its code and message. `BeatTracker` runs Beat
 This! (JKU Linz, ISMIR 2024, MIT code and weights; `DEPENDENCIES.md` section 7): `track(buffer)` averages the
 channels, takes 22,050 Hz as it is, halves 44,100 Hz with `Decimator.halve` and brings any other rate to 22,050 Hz
-with `Resampler` (soxr's "HQ" filter, as the package's `soxr.resample`), computes the package's log-mel spectrogram (`BeatThisFrontEnd`: reflect-padded STFT, torchaudio's Slaney mel filters
-rebuilt in float32, log(1 + 1000 x)), runs the network over 30 s chunks as the package does (`BeatThisChunking`) and
-picks peaks with the package's minimal postprocessor (`BeatThisPostProcessor`), giving beat and downbeat times. The
+with `Resampler` (soxr's "HQ" filter, as the package's `soxr.resample`), computes the package's log-mel spectrogram
+(`BeatThisFrontEnd`: reflect-padded STFT, torchaudio's Slaney mel filters rebuilt in float32 by
+`TorchaudioMelFilterBank`, log(1 + 1000 x)), runs the network over 30 s chunks as the package does
+(`BeatThisChunking`) and picks peaks with the package's minimal postprocessor (`BeatThisPostProcessor`), giving beat
+and downbeat times. The
 model is `final0` exported to `core/.models/beat_this_final0.onnx` by `Tools/export_beat_this.py` (a development
 tool: PyTorch and the package, pinned in `Tools/export-requirements.txt`, checked against PyTorch to 1.1e-5 in a
 logit); `DECKIE_BEAT_THIS_MODEL` names another file. Measured against the package on synthesised drums
