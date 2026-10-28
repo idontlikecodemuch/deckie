@@ -33,9 +33,11 @@ Built Oct 26, 2026 (manifest labels). On Oct 28 the index digest was read from D
 confirmed by hashing the downloaded index, whose amd64 entry is the manifest above. This session unpacked these four
 layers, each checked against its hash, into `/opt/swift-641` (status log entry 1), where Swift reports 6.4.1-RELEASE.
 
-**On Windows** (the `core-windows` CI workflow) the Swift project's official 6.4.1-RELEASE installer is installed by
-the action `compnerd/gha-setup-swift` (section 2), asked for branch `swift-6.4-release`, tag `6.4.1-RELEASE`. Its
-hash is not recorded yet: Swift's download site is blocked from this cloud session (status log entry 1).
+**On Windows** (the `core-windows` CI workflow) the Swift project's official installer is installed by the action
+`compnerd/gha-setup-swift` (section 2), asked for `swift-version: swift-6.4-release`, `swift-build: 6.4.0-RELEASE`.
+6.4.0 rather than 6.4.1 because on Oct 28, 2026 swift.org's own link for the 6.4.1 Windows installer answered
+404 (not found); the probe moves to 6.4.1 when that file is back. The installer's hash is not recorded yet:
+Swift's download site is blocked from this cloud session (status log entry 1).
 
 **Inside the toolchain:** Swift Testing (the test framework the parity tests use) and Foundation (Swift's library of
 everyday types: text, dates, files) ship with it, so neither is a separate package dependency.
