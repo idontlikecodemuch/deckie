@@ -5,9 +5,11 @@ What Deckie's PC and Linux track relies on that it did not write itself; last ch
 licence is quoted here before it is adopted. A hash, or digest, is a long fingerprint computed from a file's exact
 bytes: change one byte and it changes, so a matching hash proves a file is the one recorded here.
 
-**In short:** one toolchain and two GitHub Actions helpers, all used only to build and test. Deckie's Swift package
-(`core/`) declares no packages from elsewhere, so it has no `Package.resolved` (Swift's list of exact package
-versions), and no runtime dependency (code that would travel inside a Deckie program) ships in any product.
+**In short:** one toolchain and two GitHub Actions helpers, used only to build and test, and one vendored C file,
+dr_mp3, the MP3 decoder (section 4), which is compiled into `DeckieDecode` and so is a runtime dependency (code that
+travels inside a Deckie program). Deckie's Swift package (`core/`) declares no packages from elsewhere, so it has no
+`Package.resolved` (Swift's list of exact package versions); dr_mp3 is a copied file pinned by its hash, not a
+package.
 
 ## 1. The Swift 6.4.1 toolchain
 
@@ -72,7 +74,103 @@ may not read other GitHub repositories, so it cannot look either up. Nothing the
 ## 3. What will ship later
 
 When a Windows or Linux build ships, the Swift runtime and Foundation (with its copy of ICU, a text-handling
-library) travel with it; each will be listed here with its licence quoted before that build is released.
+library) travel with it; each will be listed here with its licence quoted before that build is released. dr_mp3
+(section 4) already travels inside anything built with `DeckieDecode`.
+
+## 4. dr_mp3, the MP3 decoder (vendored)
+
+dr_mp3 is a single C header file by David Reid that decodes MP3 (MPEG-1, 2 and 2.5 audio, layers I to III); its
+decoding core is minimp3 by Lion (lieff). It is vendored: copied into the repository unmodified at
+`core/Sources/CDrMp3/include/dr_mp3.h`, compiled as the C target `CDrMp3` (whose `dr_mp3.c` switches on the
+implementation, leaves out the file-opening functions, `DR_MP3_NO_STDIO`, and decodes straight to float,
+`DR_MP3_FLOAT_OUTPUT`), and used by `core/Sources/DeckieDecode/MP3Reader.swift`. Nothing is downloaded at build
+time. Christopher approved vendoring it on Oct 28, 2026, and the lead took responsibility for the one download.
+
+| | |
+|---|---|
+| Version | the header's first lines say `dr_mp3 - v0.7.4 - TBD` (`DRMP3_VERSION_STRING` "0.7.4"): the copy on the `master` branch, whose release date is not set yet, so not a tagged release |
+| Source | `https://raw.githubusercontent.com/mackron/dr_libs/master/dr_mp3.h`, downloaded Oct 28, 2026 |
+| SHA-256 | `390e4e0ef0cff80fb86ebf1b461d6947cfa4ed699a4fe107e5a5e69a47db2950` |
+| Size | 198,991 bytes, 5,140 lines |
+
+The URL names a branch, which moves, so the hash is the pin: anything that does not hash to the value above is not
+this file. The commit the branch pointed at is not recorded (the download was the only access to the repository
+allowed). Compiled with clang it gives no warnings under the package's flags, `-Wall -Wextra` or `-pedantic
+-std=c99`, so no warning is silenced.
+
+**Licence:** a choice of public domain (the Unlicense) or MIT No Attribution (MIT-0). Deckie takes it as public
+domain, and under MIT-0 where public domain is not recognised; both are on the allowlist (MIT-0 is MIT without the
+condition to keep the notice). The minimp3 code inside is dedicated to the public domain under CC0, also on the
+allowlist. Quoted from the end of the header:
+
+```text
+This software is available as a choice of the following licenses. Choose
+whichever you prefer.
+
+===============================================================================
+ALTERNATIVE 1 - Public Domain (www.unlicense.org)
+===============================================================================
+This is free and unencumbered software released into the public domain.
+
+Anyone is free to copy, modify, publish, use, compile, sell, or distribute this
+software, either in source code form or as a compiled binary, for any purpose,
+commercial or non-commercial, and by any means.
+
+In jurisdictions that recognize copyright laws, the author or authors of this
+software dedicate any and all copyright interest in the software to the public
+domain. We make this dedication for the benefit of the public at large and to
+the detriment of our heirs and successors. We intend this dedication to be an
+overt act of relinquishment in perpetuity of all present and future rights to
+this software under copyright law.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
+ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+For more information, please refer to <http://unlicense.org/>
+
+===============================================================================
+ALTERNATIVE 2 - MIT No Attribution
+===============================================================================
+Copyright 2023 David Reid
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of
+this software and associated documentation files (the "Software"), to deal in
+the Software without restriction, including without limitation the rights to
+use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
+of the Software, and to permit persons to whom the Software is furnished to do
+so.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+*/
+
+/*
+    https://github.com/lieff/minimp3
+    To the extent possible under law, the author(s) have dedicated all copyright and related and neighboring rights to this software to the public domain worldwide.
+    This software is distributed without any warranty.
+    See <http://creativecommons.org/publicdomain/zero/1.0/>.
+```
+
+**Measured against the lab.** On the generated test tones, `DeckieDecode` decodes MP3 to the same length as the lab's
+reader and at offset 0 from it, within 1.3e-6 sample for sample (`core/Tests/DeckieDecodeTests/WAVDecodeTests.swift`
+has the numbers). The lab's reader, Python's `soundfile` 0.14.0 with its own libsndfile 1.2.2 (which decodes MP3
+through mpg123), was installed from PyPI into this cloud session's user folder for that measurement only; nothing
+in `core/` uses it.
+
+**How to update:** download the header again to the same path (or a release's copy, if one is chosen), record the
+new version line, SHA-256, URL and date here, re-quote the licence block, then run `swift build` (still no warnings)
+and `swift test`: the MP3 tests pin frame counts and click positions to the sample. `MP3Reader.swift` switches off
+dr_mp3's own trimming through four fields of its `drmp3` struct (`delayInPCMFrames`, `paddingInPCMFrames`,
+`totalPCMFrameCount`, `onMeta`) and reads the tag through its metadata callback; check they still mean the same.
 
 ## Checked and rejected
 
@@ -94,8 +192,8 @@ files each say `License: GPL-2+`. So no Deckie code links ffmpeg, and CI install
 with the LGPL configuration would be a separate decision, recorded here first.
 
 **The ffmpeg command-line program** (Ubuntu package `ffmpeg`, the same GPL build, `7:6.1.1-3ubuntu5`) is used only
-as a development tool, on a developer's machine, to make two test files, `tone.mp3` and `tone.m4a`, from Deckie's
-own generated signal (`core/Tools/make_audio_fixtures.py`). It is not installed in CI, and nothing in the package
+as a development tool, on a developer's machine, to make four test files, `tone.mp3`, `tone48k.mp3`,
+`tone_mono.mp3` and `tone.m4a`, from Deckie's own generated signal (`core/Tools/make_audio_fixtures.py`). It is not installed in CI, and nothing in the package
 links it or calls it; the files it writes are test data.
 
 ## Licence allowlist (track M section 3.4, confirmed as the single list by the main session, Oct 28, 2026)

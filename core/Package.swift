@@ -3,8 +3,9 @@
 // plain Swift with no Apple-only framework, so the Apple apps and the Windows and Linux builder share them.
 // DeckieLab: reads the lab's feature files (mixer/features/<id>.json, mixer/candidates.json) into DeckieCore types,
 // for the parity tests and, later, the Mac benchmark.
-// DeckieDecode: audio files to float samples for the analysers, in plain Swift with no library: WAV today; MP3 and
-// AAC are recognised and reported as not supported yet.
+// DeckieDecode: audio files to float samples for the analysers: WAV in plain Swift; MP3 through dr_mp3 (CDrMp3, a
+// vendored public-domain C file, DEPENDENCIES.md); AAC is recognised and reported as not supported yet.
+// CDrMp3: dr_mp3.h compiled as plain C, the same on Linux, Windows and macOS; nothing is downloaded at build time.
 import PackageDescription
 
 let package = Package(
@@ -17,7 +18,8 @@ let package = Package(
     targets: [
         .target(name: "DeckieCore"),
         .target(name: "DeckieLab", dependencies: ["DeckieCore"]),
-        .target(name: "DeckieDecode"),
+        .target(name: "CDrMp3"),
+        .target(name: "DeckieDecode", dependencies: ["CDrMp3"]),
         .testTarget(name: "DeckieCoreTests", dependencies: ["DeckieCore", "DeckieLab"], exclude: ["Fixtures"]),
         .testTarget(name: "DeckieDecodeTests", dependencies: ["DeckieDecode"], exclude: ["Fixtures"]),
     ]
