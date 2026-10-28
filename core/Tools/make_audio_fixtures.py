@@ -15,12 +15,19 @@ Outputs, in core/Tests/DeckieDecodeTests/Fixtures/:
   tone_mono.mp3  the signal's channel mean (440 Hz at -12 dBFS, 1000 Hz at -18 dBFS, the click at full scale), at
                  44.1 kHz as 16-bit PCM in a temporary file, then through libmp3lame as mono, 128 kbps
   tone.m4a       tone.wav through ffmpeg's native AAC encoder, 160 kbps, 44.1 kHz (the MP4 edit list records priming)
+  tone.aiff      tone.wav through ffmpeg as AIFF, 16-bit big-endian PCM (the same samples, byte-swapped)
+  tone_sowt.aifc tone.wav through ffmpeg as AIFF-C with compression type 'sowt', 16-bit little-endian PCM, the way
+                 macOS writes AIFF-C
+  protected.m4p  no audio: a few hundred bytes written here, shaped like an iTunes Store or Apple Music file locked
+                 by FairPlay (major brand "M4P ", an audio sample entry "drms" holding a "sinf" box, an empty mdat),
+                 for the "protected, cannot be read" report; nothing in it is a real key or a real account
 
 The ffmpeg command-line program is a development tool here and nothing else: no Deckie code links ffmpeg
 (DEPENDENCIES.md, "Checked and rejected"). The same ffmpeg build gives the same bytes on every run: version strings
-and metadata are left out (bitexact). FFMPEG=/path/to/ffmpeg picks another ffmpeg; the default is /usr/bin/ffmpeg.
+and metadata are left out (bitexact; ffmpeg's AIFF writer adds no ID3 chunk unless asked). FFMPEG=/path/to/ffmpeg
+picks another ffmpeg; the default is /usr/bin/ffmpeg.
 """
-import hashlib, os, subprocess, tempfile, wave
+import hashlib, os, struct, subprocess, tempfile, wave
 import numpy as np
 
 SECONDS = 4
@@ -34,6 +41,8 @@ ENCODES = [
     ("tone48k.mp3", "tone48k.wav", ["-c:a", "libmp3lame", "-b:a", "192k", "-ar", "48000"]),
     ("tone_mono.mp3", "mono", ["-c:a", "libmp3lame", "-b:a", "128k", "-ar", "44100", "-ac", "1"]),
     ("tone.m4a", "tone.wav", ["-c:a", "aac", "-b:a", "160k", "-ar", "44100"]),
+    ("tone.aiff", "tone.wav", ["-c:a", "pcm_s16be", "-f", "aiff"]),
+    ("tone_sowt.aifc", "tone.wav", ["-c:a", "pcm_s16le", "-f", "aiff"]),  # little-endian PCM makes ffmpeg write 'sowt'
 ]
 
 
@@ -62,6 +71,43 @@ def encode(src, name, args):
                     os.path.join(OUT, name)], check=True)
 
 
+def box(kind, *parts):
+    """An MP4 box: 32-bit size, four-letter type, body."""
+    body = b"".join(parts)
+    return struct.pack(">I", 8 + len(body)) + kind + body
+
+
+def full_box(kind, *parts, version=0, flags=0):
+    """A box whose body starts with a version byte and 24 bits of flags."""
+    return box(kind, struct.pack(">I", version << 24 | flags), *parts)
+
+
+def protected_mp4():
+    """The smallest file shaped like a FairPlay-protected iTunes purchase: ftyp, then moov down to one audio sample
+    entry "drms" (an "mp4a" entry renamed, as FairPlay does) with its "sinf" box (original format "mp4a", scheme
+    "itun", the scheme's boxes zeroed), then an empty mdat. No samples, no keys."""
+    unity = struct.pack(">9I", 0x10000, 0, 0, 0, 0x10000, 0, 0, 0, 0x40000000)  # the identity matrix
+    esds = full_box(b"esds", bytes([
+        0x03, 25, 0, 1, 0,  # ES descriptor: id 1, no flags
+        0x04, 17, 0x40, 0x15, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  # MPEG-4 audio; buffer size, peak and mean bit rate 0
+        0x05, 2, 0x12, 0x10,  # AAC LC, 44.1 kHz, stereo
+        0x06, 1, 2]))  # SL config: predefined 2
+    sinf = box(b"sinf", box(b"frma", b"mp4a"), full_box(b"schm", b"itun", struct.pack(">I", 0)),
+               box(b"schi", box(b"user", bytes(4)), box(b"key ", bytes(4)), box(b"iviv", bytes(16))))
+    drms = box(b"drms", bytes(6), struct.pack(">HQHHHHI", 1, 0, 2, 16, 0, 0, 44100 << 16), esds, sinf)
+    stbl = box(b"stbl", full_box(b"stsd", struct.pack(">I", 1), drms), full_box(b"stts", bytes(4)),
+               full_box(b"stsc", bytes(4)), full_box(b"stsz", bytes(8)), full_box(b"stco", bytes(4)))
+    minf = box(b"minf", full_box(b"smhd", bytes(4)),
+               box(b"dinf", full_box(b"dref", struct.pack(">I", 1), full_box(b"url ", flags=1))), stbl)
+    mdia = box(b"mdia", full_box(b"mdhd", struct.pack(">IIIIHH", 0, 0, 44100, 0, 0x55C4, 0)),  # language "und"
+               full_box(b"hdlr", bytes(4), b"soun", bytes(12), b"\0"), minf)
+    trak = box(b"trak", full_box(b"tkhd", struct.pack(">IIIIIQHHHH", 0, 0, 1, 0, 0, 0, 0, 0, 0x100, 0), unity,
+                                 bytes(8), flags=7), mdia)
+    moov = box(b"moov", full_box(b"mvhd", struct.pack(">IIIIIH", 0, 0, 44100, 0, 0x10000, 0x100), bytes(10), unity,
+                                 bytes(24), struct.pack(">I", 2)), trak)
+    return box(b"ftyp", b"M4P ", struct.pack(">I", 0), b"M4P ", b"mp42", b"isom") + moov + box(b"mdat")
+
+
 def main():
     os.makedirs(OUT, exist_ok=True)
     write_wav(os.path.join(OUT, "tone.wav"), signal(44100), 44100)
@@ -71,10 +117,12 @@ def main():
         write_wav(mono, signal(44100).mean(axis=1, keepdims=True), 44100)
         for name, source, args in ENCODES:
             encode(mono if source == "mono" else os.path.join(OUT, source), name, args)
+    with open(os.path.join(OUT, "protected.m4p"), "wb") as f:
+        f.write(protected_mp4())
     version = subprocess.run([FFMPEG, "-version"], capture_output=True, text=True, check=True).stdout.splitlines()[0]
     print(version)
     total = 0
-    for name in ["tone.wav", "tone48k.wav"] + [e[0] for e in ENCODES]:
+    for name in ["tone.wav", "tone48k.wav"] + [e[0] for e in ENCODES] + ["protected.m4p"]:
         p = os.path.join(OUT, name)
         size = os.path.getsize(p)
         total += size

@@ -20,7 +20,12 @@ and Linux crate builder share them. Charter: `docs/architecture/pc-linux-track.m
   Windows and macOS and needs nothing installed. It reads WAV (16-, 24- and 32-bit integer, 32-bit float) in plain
   Swift and MP3 through the vendored dr_mp3 (below); AAC is recognised and throws a "not supported on this platform
   yet" error until the platform decoders are wired in. Ubuntu's ffmpeg libraries were checked and rejected as GPL
-  builds (`DEPENDENCIES.md`).
+  builds (`DEPENDENCIES.md`). AIFF and AIFF-C are read in plain Swift too (`AIFFReader.swift`: big-endian PCM up to
+  32 bits, AIFF-C "sowt" little-endian as macOS writes it, and "fl32" float), with the length and the sample rate
+  taken as libsndfile takes them, so the samples match the lab's. Copy-protected MP4s (FairPlay: older iTunes Store
+  purchases and Apple Music downloads; any sample entry carrying a "sinf" protection box) are recognised from their
+  box tree (`ProtectedMP4.swift`, which also lists what is not detected) and throw a `.protected` error, "protected,
+  cannot be read", which the build summary counts apart from `.unsupported`.
 - `Sources/CDrMp3`: dr_mp3, a public-domain MP3 decoder in one C header (`include/dr_mp3.h`, copied unmodified
   and pinned by its SHA-256 in `DEPENDENCIES.md`, with its licence quoted), compiled as plain C by `dr_mp3.c`.
   `DeckieDecode/MP3Reader.swift` hands it the file's bytes from memory and gets 32-bit float back, then trims the
@@ -39,9 +44,11 @@ and Linux crate builder share them. Charter: `docs/architecture/pc-linux-track.m
   written by `Tools/make_key_fixtures.py`; needs numpy only); every test signal is synthesised, in Python and again in
   Swift, to the same bits.
 - `Tests/DeckieDecodeTests`: the decoder's tests. `Fixtures/` holds a generated test tone (two sines and a click)
-  as WAV at 44.1 and 48 kHz, MP3 at 44.1 and 48 kHz and in mono, and AAC, written by `Tools/make_audio_fixtures.py`
-  (needs numpy, and the ffmpeg program for the MP3 and AAC files only; the same ffmpeg gives the same bytes on
-  every run). The MP3 tests also edit those bytes in memory: ID3 tags in front, edited LAME tags, damaged files.
+  as WAV at 44.1 and 48 kHz, MP3 at 44.1 and 48 kHz and in mono, AAC, AIFF and AIFF-C ("sowt"), plus a 648-byte
+  stand-in for a FairPlay-protected file with no audio in it (`protected.m4p`), written by
+  `Tools/make_audio_fixtures.py` (needs numpy, and the ffmpeg program for the MP3, AAC and AIFF files only; the same
+  ffmpeg gives the same bytes on every run). The MP3 tests also edit those bytes in memory: ID3 tags in front,
+  edited LAME tags, damaged files; the AIFF and protected-file tests build their variants the same way.
 
 **Loudness** (`Sources/DeckieCore/Loudness/`) measures what the lab measures, for any sample rate, on every platform,
 with no dependency. `KWeighted(buffer)` filters each channel with the K-weighting of ITU-R BS.1770 (two biquads, in
