@@ -22,9 +22,9 @@ scoring, the crate format) once, in Swift, so the Apple apps and the Windows and
   models plus `DeckieCore`.
 - Linux first. The cloud session is a Linux machine; Swift on Linux is mature. Every mechanic below is done on
   Linux first.
-- Windows is probed, not decided. A GitHub Actions Windows runner builds and tests the same package from the first
-  week; if Swift on Windows proves painful, the Windows build alone falls back to Rust or C++ behind the same
-  crate file, decided on evidence, not now.
+- Windows: probed and passed (Oct 28, D14). GitHub's Windows runner installed Swift 6.4.1, built the package and
+  passed the same 13 parity tests with no Windows-specific code (pull request #1, both workflows green). Rust or C++
+  stays the fallback for the Windows build alone if a later mechanic proves painful there.
 - Dependencies are welcome for solved problems (decoding, FFT, model runtime, loudness, XML, model weights) and
   governed by the policy in P16: pinned by version and hash in `DEPENDENCIES.md`, a licence allowlist checked in
   CI, nothing that downloads or runs code at build time, a quarterly update day with a benchmark rerun.
