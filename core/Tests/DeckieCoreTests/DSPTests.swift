@@ -1,6 +1,7 @@
 import Foundation
 import Testing
 import DeckieCore
+import DeckieTestSupport
 
 /// Fixtures/dsp.json, written by Tools/make_dsp_fixtures.py (numpy.fft, scipy's Hann window, librosa's chroma filter
 /// bank and chroma, soxr through librosa.resample).

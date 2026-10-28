@@ -1,6 +1,7 @@
 import Foundation
 import Testing
 import DeckieCore
+import DeckieTestSupport
 
 /// Fixtures/spectral.json, written by Tools/make_spectral_fixtures.py: librosa's mel filter bank, mel spectrogram,
 /// log-mel, MFCC, RMS and onset strength exactly as mixer/analyze.py calls them; scipy's find_peaks; the lab's own

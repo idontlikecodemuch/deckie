@@ -2,6 +2,7 @@ import Foundation
 import Testing
 import DeckieAudio
 import DeckieCore
+import DeckieTestSupport
 
 /// Fixtures/bands.json, written by Tools/make_resample_fixtures.py (scipy's butter and sosfilt, the lab's per-bar loop
 /// and first / last sound rule).

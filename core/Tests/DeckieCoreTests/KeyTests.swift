@@ -2,6 +2,7 @@ import Foundation
 import Testing
 import DeckieAudio
 import DeckieCore
+import DeckieTestSupport
 
 /// Fixtures/key.json, written by Tools/make_key_fixtures.py: the lab's key decisions (mixer/key_light.py's functions,
 /// copied and checked against the lab's source) on made-up chroma.
