@@ -402,10 +402,10 @@ The engine is plain Swift and C, so the bench builds and runs on the Mac as it d
 
 1. Swift: Xcode's toolchain (Swift 6 or later) is enough; `cd core && swift build -c release --product deckie-build`.
 2. ONNX Runtime 1.31.1 for macOS, by the same pattern as Linux: the release archive for the Mac
-   (`onnxruntime-osx-arm64-1.31.1.tgz` on an Apple-silicon Mac, from the project's GitHub release page), its SHA-256
-   recorded in `DEPENDENCIES.md` section 6 beside the Linux and Windows ones before it is used (this session could not
-   fetch it, so it is not pinned yet), unpacked so that `lib/libonnxruntime.dylib` is at
-   `core/.deps/onnxruntime/lib/libonnxruntime.dylib`, or anywhere with `DECKIE_ONNXRUNTIME_LIB` naming it. Fetched with
+   (`onnxruntime-osx-arm64-1.31.1.tgz` on an Apple-silicon Mac, from the project's GitHub release page), checked
+   against the size and SHA-256 that `DEPENDENCIES.md` section 6 records for it, unpacked so that
+   `lib/libonnxruntime.dylib` is at `core/.deps/onnxruntime/lib/libonnxruntime.dylib`, or anywhere with
+   `DECKIE_ONNXRUNTIME_LIB` naming it (as section 6 says, fetching it waits on Christopher's yes). Fetched with
    `curl` it carries no quarantine flag; if a browser fetched it, `xattr -dr com.apple.quarantine` on the folder lets
    it load. The vendored C header is the same on every platform.
 3. The Beat This! model: the exported `beat_this_final0.onnx` is the same file on every machine, so it can be copied
