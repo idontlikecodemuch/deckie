@@ -43,6 +43,12 @@ Mac) reviews and merges this track's branch, `pc-linux`, and runs anything that 
   estimator's parity run (entry 6) and the vocal tagger's first look at real voices (entry 12). The Mac needs
   ONNX Runtime's macOS archive (facts in entry 12, third addendum) and the two models exported there; Christopher's
   yes for that download is asked in the main session.
+- In flight elsewhere, to keep merges easy: a Mac session (Christopher's, from the task card in entry 13) is cutting
+  the analyser's peak memory on its own branch `perf/analyser-memory`, touching `Analyser.swift`, the DSP files,
+  the key estimator and the beat tracker's session options, with every number unchanged; it will push its branch
+  for this track to merge. Here, the memo O agent adds a step to `Analyser.swift` after the vocal tagger and new
+  fields in `Analysis*.swift` and the crate model, nothing in the DSP; the ONNX Runtime build agent touches only
+  the workflows, `fetch-onnxruntime.sh` and DEPENDENCIES.md section 6.
 - For the main session's yes: the crate builder's two additive proposals, the manifest's import log and the
   record's `deckie` block for the DJ's own rekordbox data (entry 13; `crate-format.md` item 9).
 
