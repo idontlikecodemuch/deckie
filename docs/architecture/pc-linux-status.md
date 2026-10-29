@@ -999,3 +999,32 @@ byte-identical, which the Mac verifies on the real files. If dr_mp3 exposes no p
 a physical bound on a frame's output that no correct frame can reach, fixed from the format and not tuned on the
 373. An agent is on it, with a fixture damaged on purpose. Also decided: the bench's tag-tempo change stands, the
 sheet is rerun once the key vote lands so the three changes show together, and no separate madmom flag.
+
+**Addendum: the key quick vote, shipped with a caution.** The evaluation (`core/Tools/key_vote_eval.py`, its
+table in the script's header) first confirmed that the engine's key equals the lab's STFT-chroma, edma-profile
+column on all 373 tracks, then tried 374 vote rules built from the lab's own sweep (three chroma kinds, six key
+profiles, end-window variants), none with a threshold or weight fitted to the set. The rule taken: three votes over
+the one STFT chroma the engine already computes, with the edma, bgate and Krumhansl–Kessler profiles; two or
+three agreeing win, else edma's key. It is the lab's own rule from `analyze.py` (section B.9) with Krumhansl in the
+slot the lab gave madmom's key, so nothing new was ported. Profile sources: Krumhansl and Kessler, *Psychological
+Review* 89 (1982); edma and bgate from Faraldo, Gómez, Jordà and Herrera, "Key estimation in electronic dance
+music", ECIR 2016 (edma learned from an EDM corpus, bgate the Beatport median profile with its four weakest
+degrees zeroed), all copied verbatim from Essentia's `key.cpp` as the lab already does. On the sheet: 237 of 311
+confident tracks exact, 76.2 percent against the mark of 75 (from 232, 74.6); exact or neighbour 90.0 from 89.1;
+7 of 373 keys change, 5 to right, 0 to wrong. Per folder, exact before → after: CD1 90s 82.0 → 82.0 (50 tracks),
+CD2 2000s to now 73.9 → 76.1 (46), CD3 Halloween 70.0 → 70.0 (50), CD4 House 71.2 → 75.0 (52), NOW Halloween 75.0
+→ 75.0 (16), loose files 76.1 → 77.3 (88), other compilations 66.7 → 77.8 (9): the gain sits in four folders and no
+folder loses. Five no-port rules tie at 237; three put most of their gain in CD4 House and were flagged and not
+taken; this one is the lab's own, changes the fewest tracks, and spreads its gain. **The caution, library-blind:**
+a held-out check (pick the rule on half the tracks, score it on the other half) finds the no-port family's gain
+about zero out of sample; only the HPCP chroma's gain partly survives (+0.4 points). So this clears the mark on
+this sheet, as the main session asked, but is not a better estimator for new music; the Mac's research R (the full
+method spec measured against the lab's and Apple's keys) is where a real gain must come from, and it replaces
+this vote if it measures better on the same sheet. Shipped: `KeyVote.swift` in DeckieCore, the lab's B.9
+confidence levels in the engine (replacing the one-estimator steps that had been read off this same sheet), the
+record's `key.votes` with three entries and `key.source` = `votes`, the lab JSON's `deckie.key` with `votes`,
+`vote` and `vote_rule`; parity: the fixture script now runs the lab's own B.9 code and the vote matches it on 68
+test matrices, 14 constructed cases and all 373 sheet tracks; engine version 0.3.0 so the Mac's work folder is
+redone. 265 tests. What the Mac rerun should show: key exact 76.2 (237/311), neighbour 13.8, other 10.0; all 373
+exact 70.5; exactly those 7 keys changed; `key_uncertain` on about 88 tracks instead of 218; every other column
+unchanged, plus the tag-tempo fix's three octave cases gone.

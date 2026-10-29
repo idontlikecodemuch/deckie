@@ -103,8 +103,9 @@ memo Q's vocal fields, `vocal_structure` and `hooks`, are instead left out when 
   source, the engine is not; track L wrote `deckie-core`, which now names the code both engines share), `version`,
   `platform` (`macos-arm64`, `linux-x86_64`, `windows-x86_64`), `fidelity`, `models` (each `name`, `version` or null,
   `weights_sha256` or null), `decoder` (`name`, `version` or null) or null. An engine's `version` goes up whenever the
-  record it writes gains or changes fields (the Windows and Linux engine's is 0.2.0, since the vocal blocks and
-  `file.tag_bpm`), so a builder's work folder made by an older version is analysed again rather than reused.
+  record it writes gains or changes fields (the Windows and Linux engine's is 0.3.0: 0.2.0 brought the vocal
+  blocks and `file.tag_bpm`, 0.3.0 the three-profile key vote, which changes keys), so a builder's work folder made
+  by an older version is analysed again rather than reused.
   **proposed**: `fidelity` 0 means not benchmarked; n means the build passed benchmark tier n, tier 1 being the stage 1
   pass marks. A device with the audio re-analyses a record when its own fidelity is higher, or the record's level is a
   fallback the device can better.
