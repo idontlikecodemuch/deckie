@@ -26,7 +26,34 @@ public enum AudioFiles {
     /// The audio files below `folder`, sorted by path. Hidden files and folders (a name starting with a dot) are left
     /// out, and so are crate packages and builder work folders (`.deckiecrate`, `.deckiebuild`), so an output inside
     /// the folder is never read as music. A link to a file counts as the file.
-    public static func find(in folder: URL) throws -> [SourceFile] {
+    public static func find(in folder: URL) throws -> [SourceFile] { try find(in: folder, skippingFolderPrefixes: []).files }
+
+    /// A folder the build left out: its path below the root and how many audio files it holds.
+    public struct SkippedFolder: Sendable, Equatable { public var rel: String; public var audioFiles: Int }
+
+    /// `find`, leaving out every folder whose name starts with one of `prefixes` (and everything below it), and
+    /// saying which folders were left out so the import log can name them.
+    public static func find(in folder: URL, skippingFolderPrefixes prefixes: [String]) throws -> (files: [SourceFile], skipped: [SkippedFolder]) {
+        var skipped: [SkippedFolder] = []
+        let files = try find(in: folder) { rel, name in
+            guard prefixes.contains(where: { !$0.isEmpty && name.hasPrefix($0) }) else { return false }
+            skipped.append(SkippedFolder(rel: rel, audioFiles: countAudioFiles(in: folder.appendingPathComponent(rel))))
+            return true
+        }
+        return (files, skipped)
+    }
+
+    static func countAudioFiles(in folder: URL) -> Int {
+        guard let walker = FileManager.default.enumerator(atPath: folder.path) else { return 0 }
+        var n = 0
+        while let rel = walker.nextObject() as? String {
+            if extensions.contains(((rel as NSString).pathExtension).lowercased()) { n += 1 }
+        }
+        return n
+    }
+
+    /// The walk itself; `skipFolder(rel, name)` says whether a folder (and all below it) is left out.
+    static func find(in folder: URL, skipFolder: (String, String) -> Bool) throws -> [SourceFile] {
         let fm = FileManager.default
         let root = folder.standardizedFileURL
         var isFolder: ObjCBool = false
@@ -44,6 +71,10 @@ public enum AudioFiles {
             }
             let ext = (name as NSString).pathExtension.lowercased()
             if ext == CrateFormat.packageExtension || ext == Builder.workExtension {
+                walker.skipDescendants()
+                continue
+            }
+            if (walker.fileAttributes?[.type] as? FileAttributeType) == .typeDirectory, skipFolder(rel, name) {
                 walker.skipDescendants()
                 continue
             }

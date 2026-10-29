@@ -79,8 +79,11 @@ public struct CrateManifest: Codable, Equatable, Sendable {
             public static let analysisError = "analysis_error"
             /// The same bytes as another file of the folder, which has the record (the record id is the file's hash).
             public static let duplicate = "duplicate"
+            /// A folder the build left out by its rule (a name starting with an underscore, such as `_old` or
+            /// `_stale - safe to delete`); one entry per folder, saying how many audio files it holds.
+            public static let skipped = "skipped"
             /// The reasons a file has no record of its own.
-            public static let all = [unsupported, protected, damaged, decodeError, analysisError, duplicate]
+            public static let all = [unsupported, protected, damaged, decodeError, analysisError, duplicate, skipped]
         }
 
         /// One file without a record of its own, or with damaged frames.
