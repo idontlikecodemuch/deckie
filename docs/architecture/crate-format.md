@@ -116,7 +116,8 @@ memo Q's vocal fields, `vocal_structure` and `hooks`, are instead left out when 
 - `tempo_segments` *(tempo_segments)* **proposed** (spec 5.2's grid marker): a list of `start_bar`, `start_s`, `bpm`,
   `beats_per_bar`, `beat_in_bar` (1 when the segment starts on a downbeat, as rekordbox's `Battito`), `confidence`
   or null. One segment for a steady track.
-- `key` *(key)*: `source`, `confidence`, `camelot`, `key` or null, `scale` or null, `votes` (source name to Camelot
+- `key` *(key)*: `source` (`hpcp-whitened` from engine 0.4.0, research R's method; `votes` from 0.3.0, `stft-edma`
+  before), `confidence`, `camelot`, `key` or null, `scale` or null, `votes` (source name to Camelot
   code), `changes` *(key_changes)*: a list of `start_bar`, `end_bar`, `camelot`, or null. **proposed**: objects
   rather than track A's three-element lists.
 - `phrase` *(phrase)*: `source`, `confidence`, `lattice_phase_bar` (1 to 8), `boundaries_bars`. Its `source` is track

@@ -35,8 +35,10 @@ Mac) reviews and merges this track's branch, `pc-linux`, and runs anything that 
   a second model is being prepared. The damaged-frame concealment is in (entry 17, addendum; engine 0.3.1): the
   Mac's byte-identity check over the 372 other MP3s and the combined rerun of the sheet are the next step there,
   and the crate's `file.damaged_frames` and the import-log reason `damaged_frames` are accepted by the main
-  session as proposed. Research R's key method is being
-  ported under parity. 281 tests. Then the first PC build.
+  session as proposed. Research R's key method is ported
+  (entry 18; engine 0.4.0) with parity fixtures and paper-sourced numbers; the Mac's one 0.4.0 pass reads the parity
+  column. PANNs is parked on `wip/panns`. 292 tests. **The track is paused** on the main session's orders while it
+  resets scope with Christopher (entry 18): nothing new starts; two research R decisions await its answer.
 - Needed from Christopher: nothing right now. The vocal-model downloads were approved on Oct 28 ("Allow vocal
   models", with a standing yes for any further vocal model the work needs); dr_mp3, dr_flac, ONNX Runtime and
   Beat This! were approved before.
@@ -954,6 +956,53 @@ bytes), `yamnet.onnx` (14,938,528 bytes) and their `.sha256` files; `fetch-model
 and verified the pinned hashes end to end. The ONNX Runtime archives' release follows from a publish run of the
 build workflow, started with his approval and queued behind run 4; its hashes go into DEPENDENCIES.md when it
 lands. The assets branch stays as the record of what was published; it is not merged anywhere.
+
+## Oct 29, 2026: research R's key method ported; the second opinion parked; the track pauses (entry 18)
+
+**The key method.** Research R's method (entry 17, last addendum) is now the engine's key, a line-by-line port of the
+Mac's reference `mixer/key_parity.py` with no parameter changed: whitened spectral peaks folded onto the twelve
+notes (the HPCP), summed over the track, scored against three published key profiles averaged, "sure" when the
+three agree and the lead is at least 0.08. Engine version 0.4.0, so the Mac's work folder is analysed again. Parity
+is built in stage by stage: a script runs the reference's own functions on nine synthesised signals and 66 made-up
+note profiles, and the Swift matches each stage (the spectrum within 1.5 parts in ten million of the loudest bin,
+the notes within 1.4 parts in a million, the 24 key scores to the last digit, every key, agreement and sure flag
+identical, every margin within 1.1 parts in a million; the small gaps are numpy's single-precision logarithms
+against the C library's). The bench gains a `par` column against the Mac's 373-track sheet, = where the Swift gives
+the same key, a margin within 0.001 and the same sure flag; the Mac's one 0.4.0 pass reads it. Six tracks sit within
+0.001 of a decision edge and may flip either way from decoding differences alone.
+
+**The profile numbers, all 72 checked against the papers, none unverified.** The reference transcribed them from
+Essentia's `key.cpp` (AGPL), which the port did not read: edma from Faraldo's 2017 thesis (figure 6.5, where the ECIR
+2016 paper only draws them), braw and bgate from the thesis's figure 6.12 (equal to the reference's to four
+decimals), the HPCP's settings from Gómez 2006. One number differs: edma major's sixth degree is 0.32 in the thesis
+and 0.31 in Essentia. The engine decides with the paper's 0.32 and also records the decision with the reference's
+0.31 (`deckie.key.parity`) so that parity is checked without redoing the sheet; the citations sit beside the numbers
+(`HPCPKeyProfiles.swift`) and in DEPENDENCIES.md's last section. The attorney's question on the values stands as the
+main session put it. 292 tests; 0.21 s per four-minute track in release.
+
+**Two decisions sent to the main session.** (1) The 0.32: keep the paper's value as the deciding one (the port's
+condition was paper-sourced numbers) with parity read from the recorded 0.31 decision, or decide with 0.31 for
+exact parity now. (2) Confidence: the method's own flag maps sure to 1.0 and everything else to 0.45, so every
+unsure track gets `key_uncertain`, 156 of 373 on the sheet against 88 under the vote and 58 in the lab; a finer
+mapping has not been measured and would need a rule from the literature, not from this set.
+
+**The second opinion, parked.** The PANNs agent finished: the model's weights (CC BY 4.0, on the allowlist for
+weights with attribution) fetched from Zenodo, which answers from here after all, exported with its front end
+inside the graph, run in Swift within 6 parts in a hundred million of Python, two-second windows every 0.48 s, its
+readings written beside YAMNet's under `deckie.vocal.second_opinion`, nothing else in the record changed, 289 tests
+on its base. On the vocal test track it separates sung from instrumental bars by 9 to 1 (YAMNet 250 to 1, from a
+lower floor). The branch is rebased onto this tip and pushed as `wip/panns`, not merged: the main session's orders
+of this hour say land only what is in flight and start nothing new. Its export hash is unpinned (waits on CI's first
+export) and its DEPENDENCIES section 9 is written.
+
+**The pause.** The main session, resetting this track's orders with Christopher: land the span fix (the mp3-check
+line now lists each damaged frame's own span with its count, and fails if any change lies outside a damaged frame's
+reach), the key port and nothing else; no new agents, features, crate fields or reruns. The likely shape: the engine
+rests at the charter marks it has met plus the ported key method, PR #2 merges to `main`, crate v1 freezes at what
+the apps read next month, and the track rests with CI green while the Apple apps catch up. Mac results in: mp3-check
+over 3,009 MP3s (the 373 and a DJ pool's copies) gives 2,999 bit-identical, 10 with damaged frames, 0 failed; the
+outlier is caught (one frame at 82.1 s, true peak +9.20 before, +2.03 concealed, below mpg123's +2.50 and ffmpeg's
++5.8) and three more tracks carry quiet damage the other decoders hid.
 
 ## Oct 29, 2026: the first Mac bench sheet, all 373 tracks (entry 17)
 
