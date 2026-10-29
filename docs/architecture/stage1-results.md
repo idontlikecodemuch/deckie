@@ -198,3 +198,16 @@ of the song, and read drift only after 20 s, rounded to 0.5. The catalogue is no
 multi-matcher). The drift fit is a median of pairwise slopes on an audio clock; a least-squares version was pulled by
 one stray match from 10.0 to 5.3 for four seconds, the median version was not. Not yet measured: a real room, and the
 iPad itself. Install command: `deck-app/README.md`.
+
+## 1g. Do beats need a model? (Oct 28)
+
+Asked by Christopher. Two model-free methods scored against the shipped grid (Beat This! or madmom plus the lab's
+grid fit). Tempo from Essentia's signal-processing estimator, already in the feature files, on all 373 tracks: within
+2 percent of the grid's BPM on 343 (92 percent), double or half on 26 (7 percent), wrong on 4. Beats from librosa's
+dynamic-programming tracker (onset strength, autocorrelation, no weights), 60 tracks sampled evenly: tempo within 2
+percent on 38 (63 percent), wrong on 13; beat F-measure at 70 ms mean 0.63 (the model: 0.987), at least 0.9 on 19 of
+60; allowing half or double tempo, mean 0.73. Bar 1 (the downbeat) by a plain heuristic on the lab's own beats, the
+beat class with the most low-band onset energy: right on 28 of 60 (chance is 15), by overall spectral flux 14 of 60.
+About one second a track. Reading: tempo mostly does not need a model; beat positions and above all the bar line do,
+and the bar line is what phrase-aligned mixing needs. A model-free path remains the named fallback for tempo and a
+rough grid when no model is present (D15 replacement path), not a substitute. Script: scratchpad `modelfree/run.py`.
