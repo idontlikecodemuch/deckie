@@ -60,8 +60,10 @@ public enum AnalyserError: Error, Equatable, CustomStringConvertible {
 ///              loudness, loudness range, true peak
 ///   vocal      only with a `VocalTagger` (by default `DeckieVocalTagger`, YAMNet, when its model is there): the
 ///              per-bar vocal probability on the mono mix at 44.1 kHz; the onset pattern is computed just before it
-///   windows    sections, fade-out (`Loudness.shortTerm`, `FadeOut`), mix windows (`MixWindows`), the key of the whole
-///              track and of both mix windows with its confidence (`KeyConfidence`), local tempo, flags
+///   windows    sections, fade-out (`Loudness.shortTerm`, `FadeOut`), mix windows (`MixWindows`), with a tagger the
+///              vocal structure (`VocalStructure`, from its frame-by-frame scores) and the hook candidates (`Hooks`),
+///              the key of the whole track and of both mix windows with its confidence (`KeyConfidence`), local tempo,
+///              flags
 ///
 /// The stage names are the lab's `timing_s` keys where a stage matches one (`decode`, `beatthis`, `key`, `spectral`,
 /// `structure`, `loudness`); every step is inside one stage, so the times add up to the whole run.
@@ -234,6 +236,25 @@ public final class Analyser: Sendable {
                                                  snapPhaseBar: phrase.snapPhaseBar, lastSound: ls,
                                                  fadeOut: fade.fadeOut, fadeStartBar: fade.fadeStartBar)
 
+        // ------------------------------------------------------------------ vocal structure and hooks (with a tagger)
+        // The tagger's frames when it gives them (YAMNet's patches, 0.48 s apart), otherwise its bars; the hooks
+        // compare bars by the MFCC the novelty already averaged, on the novelty's own frame edges.
+        var vocalStructure: VocalStructure? = nil
+        var hooks: Hooks? = nil
+        if let v = vocal {
+            let frames = v.perFrame.map {
+                VocalStructure.Frames(scores: $0, hopSeconds: v.frameHopSeconds,
+                                      centreSeconds: v.frameCentreSeconds ?? v.frameHopSeconds / 2)
+            } ?? .perBar(v.perBar, grid: bars)
+            let structure = VocalStructure(frames: frames, grid: bars, latticePhaseBar: phrase.latticePhaseBar,
+                                           lowDb: levels.lowDB, highDb: levels.highDB, onsetDensity: onsetDensity,
+                                           fadeStartBar: fade.fadeOut ? fade.fadeStartBar : nil)
+            let features = Hooks.barFeatures(mfcc: spectral.mfcc, halfBeatEdges: novelty.frameEdges)
+            vocalStructure = structure
+            hooks = Hooks(barSimilarity: Hooks.barSimilarity(features), lufs: lufs, vocalCoverage: structure.barCoverage,
+                          latticePhaseBar: phrase.latticePhaseBar)
+        }
+
         // ------------------------------------------------------------------ key: whole track and the two windows
         // mixer/key_light.py reads the windows from the feature file, where they are rounded to 3 decimals.
         let key = KeyEstimator.estimate(chroma, mixIn: (Py.round(mixIn.startS, 3), Py.round(mixIn.endS, 3)),
@@ -271,6 +292,6 @@ public final class Analyser: Sendable {
             perBar: .init(lufsSt: lufs, lowDb: levels.lowDB, highDb: levels.highDB, onsetDensity: onsetDensity,
                           vocalProb: vocal?.perBar),
             onsetPattern16: pattern, vocal: vocal, vocalModel: vocal == nil ? nil : vocalTagger?.modelName,
-            flags: flags, localTempo: localTempo, timings: timings)
+            vocalStructure: vocalStructure, hooks: hooks, flags: flags, localTempo: localTempo, timings: timings)
     }
 }
