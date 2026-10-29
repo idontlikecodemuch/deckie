@@ -1,31 +1,37 @@
 #!/usr/bin/env bash
 # fetch-models.sh: put the two models Deckie runs into core/.models, the pinned files, checked by their hashes.
 #
-#   core/Tools/fetch-models.sh [--beat-this] [--yamnet] [--no-export] [--python PYTHON] [--force] [--check]
+#   core/Tools/fetch-models.sh [--beat-this] [--yamnet] [--panns] [--no-export] [--python PYTHON] [--force] [--check]
 #
 # The engine runs two models through ONNX Runtime, each exported once from its published weights and pinned by the
 # SHA-256 of the exported file (DEPENDENCIES.md, sections 7 and 8):
 #   beat_this_final0.onnx  the beat tracker, Beat This! final0, 82,098,829 bytes (core/Tools/export_beat_this.py)
 #   yamnet.onnx            the vocal tagger, YAMNet, 14,938,528 bytes (core/Tools/fetch-vocal-models.sh, export_yamnet.py)
+# and a third, optional, only with --panns (DEPENDENCIES.md, section 9):
+#   panns_mobilenetv2.onnx the vocal tagger's second opinion, PANNs MobileNetV2 (core/Tools/fetch-panns.sh,
+#                          export_panns.py). Its pin is a TODO until CI's first export is recorded, and until then it
+#                          is never downloaded: it is exported (or reported missing with --no-export, or with --check).
+#                          Once pinned and published, it comes from the release like the other two.
 # An export gives the same bytes only with the same tool versions (another torch writes another graph, and some
 # machines have no wheel of the pinned TensorFlow at all), so every machine fetches the pinned files instead. They are
 # assets of this repository's release models-1, each with its .sha256 beside it:
 #   https://github.com/idontlikecodemuch/deckie/releases/download/models-1/<file>
 # DECKIE_MODELS_URL replaces that base for a mirror (any URL curl takes, file:// included).
 #
-# What it trusts. Only the hash: for each model asked for (both by default), a file already in core/.models with the
-# pinned SHA-256 is reported and left alone; otherwise the file is downloaded into a temporary folder in core/.models,
-# its SHA-256 is recomputed, and it is moved into place, in one rename, only if it is the pinned value. A file with
-# any other hash already there is replaced only then. The pinned values are read from the export scripts' ONNX_SHA256
-# lines (export_beat_this.py, export_yamnet.py), the one place the code records them.
+# What it trusts. Only the hash: for each model asked for (the first two by default), a file already in core/.models
+# with the pinned SHA-256 is reported and left alone; otherwise the file is downloaded into a temporary folder in
+# core/.models, its SHA-256 is recomputed, and it is moved into place, in one rename, only if it is the pinned value. A
+# file with any other hash already there is replaced only then. The pinned values are read from the export scripts'
+# ONNX_SHA256 lines (export_beat_this.py, export_yamnet.py, export_panns.py), the one place the code records them.
 #
 # On a miss (the release or the file is not there, another download error, or a hash mismatch) it says what happened
 # and, unless --no-export, makes the model the old way: export_beat_this.py for Beat This!, fetch-vocal-models.sh for
-# YAMNet (which fetches YAMNet's weights by their own pinned hashes). Both need a Python with their pinned packages,
-# and the two want separate environments (TensorFlow brings its own protobuf): --python names it (default: python3),
-# so when both models are missing, run once per model with --beat-this or --yamnet. If that Python lacks the packages,
-# the message says how to set one up. An export made with other tool versions may have another hash: it is kept (its
-# numerical check passed) and reported. The export is also how the next version of a model is made (DEPENDENCIES.md,
+# YAMNet (which fetches YAMNet's weights by their own pinned hashes), fetch-panns.sh for PANNs (likewise). Each needs
+# a Python with its pinned packages, and YAMNet's wants an environment of its own (TensorFlow brings its own protobuf;
+# Beat This!'s and PANNs' can share one): --python names it (default: python3), so when models are missing, run once
+# per model with --beat-this, --yamnet or --panns. If that Python lacks the packages, the message says how to set
+# one up. An export made with other tool versions may have another hash: it is kept (its numerical check passed) and
+# reported. The export is also how the next version of a model is made (DEPENDENCIES.md,
 # "How to update").
 #
 # --force downloads again even when a file is in place with the pinned hash. --check only reports whether each model
@@ -51,6 +57,7 @@ base="${base%/}"
 
 beat_this=0
 yamnet=0
+panns=0
 do_export=1
 python="python3"
 force=0
@@ -59,15 +66,16 @@ while [ $# -gt 0 ]; do
     case "$1" in
         --beat-this) beat_this=1; shift ;;
         --yamnet) yamnet=1; shift ;;
+        --panns) panns=1; shift ;;
         --no-export) do_export=0; shift ;;
         --python) [ $# -ge 2 ] || die "--python needs an interpreter"; python="$2"; shift 2 ;;
         --force) force=1; shift ;;
         --check) check=1; shift ;;
-        -h|--help) sed -n '2,35p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; exit 0 ;;
+        -h|--help) sed -n '2,40p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; exit 0 ;;
         *) die "unknown argument $1 (see --help)" ;;
     esac
 done
-if [ "$beat_this" = 0 ] && [ "$yamnet" = 0 ]; then beat_this=1; yamnet=1; fi
+if [ "$beat_this" = 0 ] && [ "$yamnet" = 0 ] && [ "$panns" = 0 ]; then beat_this=1; yamnet=1; fi
 
 if command -v sha256sum >/dev/null; then
     hash_of() { sha256sum "$1" | cut -d' ' -f1; }
@@ -79,9 +87,11 @@ fi
 [ "$check" = 1 ] || command -v curl >/dev/null || die "needs curl"
 size_of() { wc -c < "$1" | tr -d ' '; }
 
-# The pinned SHA-256 of an export: the line ONNX_SHA256 = "<64 hexadecimal digits>" in the export script $1.
+# The pinned SHA-256 of an export: the line ONNX_SHA256 = "<64 hexadecimal digits>" in the export script $1; nothing
+# (an empty string) when the line is ONNX_SHA256 = "TODO-after-first-ci-export", as for PANNs until CI's first export.
 pinned_hash() {
     local value
+    if grep -qx 'ONNX_SHA256 = "TODO-after-first-ci-export"' "$1"; then return 0; fi
     value="$(sed -n 's/^ONNX_SHA256 = "\([0-9a-f]\{64\}\)"$/\1/p' "$1")"
     [[ "$value" =~ ^[0-9a-f]{64}$ ]] || die "cannot read the pinned SHA-256 from $1 (one line ONNX_SHA256 = \"<64 hex digits>\")"
     printf '%s' "$value"
@@ -112,6 +122,11 @@ export_yamnet() {
     bash "$here/fetch-vocal-models.sh" --force --python "$python" "$models"
 }
 
+export_panns() {
+    # It checks its Python before downloading anything and, if the packages are missing, says how to set one up.
+    bash "$here/fetch-panns.sh" --force --python "$python" "$models"
+}
+
 work=""
 trap 'rm -rf "$work"' EXIT
 missing=""
@@ -122,6 +137,34 @@ fetch() {
     pinned="$(pinned_hash "$here/$3")"
     path="$models/$file"
     url="$base/$file"
+
+    if [ -z "$pinned" ]; then  # no pin yet: nothing on the release can be trusted, so nothing is downloaded
+        if [ -f "$path" ]; then
+            have="$(hash_of "$path")"
+            if [ "$check" = 1 ] || [ "$force" = 0 ]; then
+                say "$name: $path is there, SHA-256 $have, an export; no pinned hash yet ($3's ONNX_SHA256 is a TODO)"
+                if [ "$check" = 1 ]; then missing="$missing${missing:+, }$name (no pin yet)"; fi
+                return 0
+            fi
+        elif [ "$check" = 1 ]; then
+            say "$name is missing: no $path (and no pinned hash yet)"
+            missing="$missing${missing:+, }$name"
+            return 0
+        fi
+        if [ "$do_export" = 0 ]; then
+            warn "$name: no pinned hash yet, so nothing to download; not exporting (--no-export)"
+            missing="$missing${missing:+, }$name"
+            return 0
+        fi
+        say "$name: no pinned hash yet, so nothing to download; exporting it with $5 (Python: $python)"
+        if ! "$4"; then
+            warn "$name: the export did not run or failed (see above)"
+            missing="$missing${missing:+, }$name"
+            return 0
+        fi
+        say "$name is in place: $path, exported, SHA-256 $(hash_of "$path") (no pin yet)"
+        return 0
+    fi
 
     if [ -f "$path" ]; then
         have="$(hash_of "$path")"
@@ -193,5 +236,8 @@ if [ "$beat_this" = 1 ]; then
 fi
 if [ "$yamnet" = 1 ]; then
     fetch "YAMNet" yamnet.onnx export_yamnet.py export_yamnet "core/Tools/fetch-vocal-models.sh and export_yamnet.py"
+fi
+if [ "$panns" = 1 ]; then
+    fetch "PANNs" panns_mobilenetv2.onnx export_panns.py export_panns "core/Tools/fetch-panns.sh and export_panns.py"
 fi
 if [ -n "$missing" ]; then die "not in place with the pinned hash: $missing"; fi
