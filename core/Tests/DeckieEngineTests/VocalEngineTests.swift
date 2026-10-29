@@ -81,6 +81,9 @@ struct VocalEngineTests {
         #expect(json["vocal"]?["vocal_heavy"] == .bool(false))
         let deckie = try #require((ours["deckie"] as? [String: Any])?["vocal"] as? [String: Any])
         #expect((deckie["singing_prob"] as? [Any])?.count == a.bars.nBars && (deckie["style"] as? [Any])?.count == 1024)
+        for name in ["rapping_prob", "choir_prob", "speech_prob", "music_prob"] {
+            #expect((deckie[name] as? [Any])?.count == a.bars.nBars, "\(name)")
+        }
         #expect(deckie["model"] as? String == "yamnet" && (deckie["rule"] as? String)?.hasPrefix("max of") == true)
         #expect(json["deckie"]?["vocal_unknown"] == .bool(false))
         // The lab's readers: the feature file, its structure fields, and the scorer's track.

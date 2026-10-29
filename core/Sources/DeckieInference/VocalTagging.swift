@@ -7,7 +7,8 @@ import DeckieCore
 public struct VocalPatches: Sendable, Equatable {
     /// The patches' vocal scores.
     public var vocal: [Double]
-    /// Other per-patch series by name (YAMNet: `singing`, `speech`, `music`), each as long as `vocal`.
+    /// Other per-patch series by name (YAMNet: `singing`, `rapping`, `choir`, `speech`, `music`), each as long as
+    /// `vocal`.
     public var series: [String: [Double]]
     /// The style embedding of the whole piece (unit length), if the model gives one.
     public var style: [Double]?
@@ -61,7 +62,9 @@ extension YAMNet: VocalPatchModel {
         let t0 = Date()
         let p = r.patches
         let vocal = (0..<p.count).map { Self.vocalScore(p, patch: $0) }
-        let series = ["singing": p.scores(.singing), "speech": p.scores(.speech), "music": p.scores(.music)]
+        // Sung, rapped, choral and spoken apart (research O: rap over rap is the worst clash), and music.
+        let series = ["singing": p.scores(.singing), "rapping": p.scores(.rapping), "choir": p.scores(.choir),
+                      "speech": p.scores(.speech), "music": p.scores(.music)]
         let style = p.meanEmbedding()
         let rules = Date().timeIntervalSince(t0)
         return VocalPatches(vocal: vocal, series: series, style: style, hopSeconds: YAMNetFrontEnd.patchHopSeconds,
@@ -99,7 +102,8 @@ public struct VocalTagging: Sendable, Equatable {
     public var patchHopSeconds: Double
     public var patchCentreSeconds: Double
     public var patchCount: Int
-    /// The model's other per-patch series averaged into bars the same way (`singing`, `speech`, `music`).
+    /// The model's other per-patch series averaged into bars the same way (`singing`, `rapping`, `choir`, `speech`,
+    /// `music`).
     public var seriesPerBar: [String: [Double]]
     /// The style vector (unit length) and the model that gave it.
     public var style: [Double]?
@@ -110,8 +114,8 @@ public struct VocalTagging: Sendable, Equatable {
 }
 
 /// Deckie's vocal tagger: YAMNet's vocal score per patch (`YAMNet.vocalScore`), averaged into the bars of the grid as
-/// the lab averages its EffNet voice probabilities, with YAMNet's singing and speech scores per bar beside it and the
-/// mean of its embeddings as the track's style vector. The engine (DeckieEngine) uses it through its `VocalTagger`
+/// the lab averages its EffNet voice probabilities, with YAMNet's singing, rapping, choir, speech and music scores per
+/// bar beside it and the mean of its embeddings as the track's style vector. The engine (DeckieEngine) uses it through its `VocalTagger`
 /// protocol; `loadDefault()` finds the model where core/Tools/fetch-vocal-models.sh puts it, and says what is missing
 /// when it is not there, so the analyser runs without a vocal block.
 public final class DeckieVocalTagger: Sendable {

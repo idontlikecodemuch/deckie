@@ -273,7 +273,8 @@ scores 521 kinds of sound for each 0.96 s patch, a patch every 0.48 s: the mono 
 (`Resampler`), cut into YAMNet's log-mel patches by a Swift rewrite of its feature code, and run through the network
 on ONNX Runtime. A patch's vocal score is the largest of YAMNet's scores for singing, choir, yodelling, chant, mantra,
 child singing, synthetic singing, rapping, humming, vocal music and a cappella (speech is left out and recorded beside
-it, as are singing and music on their own, under `deckie.vocal`); the patches are averaged into bars exactly as the lab
+it, as are singing, rapping, choir and music on their own, under `deckie.vocal`, since rap over rap is the worst clash
+in a mix, research O); the patches are averaged into bars exactly as the lab
 averages its EffNet patches (the patches centred in a bar, else the value at the bar's middle), and the mean of the
 patches' 1,024-value embeddings, scaled to length 1, is the track's style vector (the crate's `style` block). The scores
 are not calibrated: the lab's thresholds (0.5 a vocal bar, 0.75 a vocal-heavy track) were tuned on EffNet, and track
