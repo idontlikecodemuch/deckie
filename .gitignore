@@ -28,8 +28,9 @@ mixer/mu_raw/
 # Swift package build output (core/)
 core/.build/
 core/.swiftpm/
-# ONNX Runtime's release (core/Tools/fetch-onnxruntime.sh) and the exported Beat This! model
-# (core/Tools/export_beat_this.py): fetched or made on each machine, pinned by hash in DEPENDENCIES.md
+# ONNX Runtime's release (core/Tools/fetch-onnxruntime.sh) and the exported Beat This! and YAMNet models
+# (core/Tools/export_beat_this.py, core/Tools/fetch-vocal-models.sh): fetched or made on each machine, pinned by hash
+# in DEPENDENCIES.md
 core/.deps/
 core/.models/
 # ...except Deckie's own generated test tones (core/Tools/make_audio_fixtures.py; no music), which the tests need

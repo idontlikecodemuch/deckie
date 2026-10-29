@@ -1,19 +1,20 @@
 # Dependencies
 
-What Deckie's PC and Linux track relies on that it did not write itself; last checked Oct 28, 2026. The rule (charter
-`docs/architecture/pc-linux-track.md`, decision P16): every dependency is pinned by version and by hash, and its
-licence is quoted here before it is adopted. A hash, or digest, is a long fingerprint computed from a file's exact
+What Deckie's PC and Linux track relies on that it did not write itself; last checked Oct 28, 2026 (section 8,
+Oct 29). The rule (charter `docs/architecture/pc-linux-track.md`, decision P16): every dependency is pinned by version
+and by hash, and its licence is quoted here before it is adopted. A hash, or digest, is a long fingerprint computed from a file's exact
 bytes: change one byte and it changes, so a matching hash proves a file is the one recorded here.
 
 **In short:** one toolchain and three GitHub Actions helpers, used only to build and test; two vendored C files,
 dr_mp3, the MP3 decoder (section 4), and dr_flac, the FLAC decoder (section 5), which are compiled into
 `DeckieDecode` and so are runtime dependencies (code that travels inside a Deckie program); ONNX Runtime, the engine
 that runs the beat tracker's model (section 6), of which only the C header is vendored, its library being opened at
-run time from a file fetched per machine, never linked and never committed; and the Beat This! beat tracker's
+run time from a file fetched per machine, never linked and never committed; the Beat This! beat tracker's
 trained weights (section 7), exported to a model file per machine by a script whose Python tools are
-development-only. Deckie's Swift package (`core/`) declares no packages from elsewhere, so it has no
-`Package.resolved` (Swift's list of exact package versions); dr_mp3, dr_flac and the ONNX Runtime header are copied
-files pinned by their hashes, not packages.
+development-only; and the weights of Google's YAMNet audio tagger, the vocal tagger's model (section 8), fetched by
+pinned URL and hash and exported the same way. Deckie's Swift package (`core/`) declares no packages from elsewhere,
+so it has no `Package.resolved` (Swift's list of exact package versions); dr_mp3, dr_flac and the ONNX Runtime header
+are copied files pinned by their hashes, not packages.
 
 ## 1. The Swift 6.4.1 toolchain
 
@@ -70,7 +71,7 @@ just because parts of Swift's runtime (the support code every Swift program runs
 |---|---|---|---|
 | `actions/checkout` | `v4` | copies this repository onto the build machine | both workflows |
 | `compnerd/gha-setup-swift` | `main` (its documented reference; its `v3` tag does not exist) | installs the Swift toolchain on Windows | `core-windows.yml` |
-| `actions/cache` | `v4` | keeps ONNX Runtime's library and the exported Beat This! model between runs (sections 6 and 7), keyed on the hashes of the scripts that make them | `core-linux.yml` |
+| `actions/cache` | `v4` | keeps ONNX Runtime's library and the exported Beat This! and YAMNet models between runs (sections 6 to 8), keyed on the hashes of the scripts that make them | `core-linux.yml` |
 
 All three are recorded by version tag only, which, like an image tag, the publisher can move. Pinning each to a commit
 hash (the fingerprint of one exact version of its code) is pending, and so is quoting their licences: this session
@@ -84,7 +85,8 @@ and dr_flac (sections 4 and 5) already travel inside anything built with `Deckie
 also carries ONNX Runtime's library (section 6) and the Beat This! model file (section 7); ONNX Runtime's library
 contains Eigen, under MPL 2.0, which ships unmodified with its notice under the main session's decision (section 6),
 and the Beat This! weights need their training data recorded under the training-data rule (section 7 and the
-allowlist) before that build ships.
+allowlist) before that build ships. A build that tags vocals carries the YAMNet model file (section 8), Apache 2.0,
+with AudioSet's attribution in the acknowledgements.
 
 ## 4. dr_mp3, the MP3 decoder (vendored)
 
@@ -477,6 +479,108 @@ numbers with `make_beat_fixtures.py` and run `swift test`, which compares the Sw
 re-quote the `LICENSE` and the README's licence section. CI exports again once, since the export script and its
 requirements are its cache key.
 
+## 8. YAMNet, the vocal tagger's model (weights fetched by pinned hash and exported per machine; development-only Python tools)
+
+YAMNet is Google's audio event tagger (tensorflow/models, `research/audioset/yamnet`, maintained by Manoj Plakal and
+Dan Ellis): a MobileNet v1 network of 3.7 million weights that scores 521 classes of sound, singing, choir and
+rapping among them, for each 0.96 s patch of audio, every 0.48 s, and gives a 1,024-value embedding (a vector
+describing how the patch sounds) before its classifier. `DeckieInference`'s vocal tagger reads it as one vocal
+probability per bar in the lab's shape and uses the mean embedding as the track's style vector (the research and the
+choice: `docs/research/n-vocal-tagger.md`; the main session chose YAMNet on Oct 28, 2026 after ruling out Spleeter
+and EfficientAT under the training-data rule).
+
+- `core/Tools/fetch-vocal-models.sh` downloads the Keras weights, `yamnet.h5`, from Google's own storage (the URL
+  the model's README gives) and the three source files that define the network and its features (`params.py`,
+  `features.py`, `yamnet.py`) from tensorflow/models at a pinned commit, checks every file's SHA-256 (below) before
+  using it, and runs `core/Tools/export_yamnet.py`, which builds the network with those files in TensorFlow, loads
+  the weights, converts the network alone to ONNX with tf2onnx (log-mel patches in, scores and embeddings out),
+  checks ONNX Runtime against TensorFlow and writes `core/.models/yamnet.onnx`, which `.gitignore` keeps out of the
+  repository. The weights are not kept. CI does the same once and caches the model file.
+- The front end (YAMNet's log-mel patches, from `features.py`) is rewritten in Swift in `DeckieCore`
+  (`Sources/DeckieCore/Vocal/YAMNetFrontEnd.swift`), checked against `features.py` run in TensorFlow by
+  `core/Tools/make_yamnet_fixtures.py`; no Python runs during analysis.
+
+Christopher approved the download (vocal-model weights, and the one-time export tools) on Oct 28, 2026, and the
+lead took responsibility for it.
+
+| | |
+|---|---|
+| Weights | `https://storage.googleapis.com/audioset/yamnet.h5`, downloaded Oct 28, 2026: 15,296,092 bytes, SHA-256 `13c3308955bbfaef262f175ac9c40e47b134573a93984f009220dd7cc12a1744` (pinned in the fetch script and the export script, which refuse any other file); the server's own record of the file: last modified Nov 18, 2019, MD5 `8234225c045859752bd4a2e101f8cd1a` |
+| Model code | tensorflow/models commit `a6e25e28dc8433dde6c1319186a41e6d81a03f2d` (Oct 28, 2026), `research/audioset/yamnet/`, fetched raw from `https://raw.githubusercontent.com/tensorflow/models/<commit>/research/audioset/yamnet/<file>`: `params.py` 1,847 bytes, SHA-256 `925bb1e62461016031f98aea09aeac28975dd516f5747513767de5d1b06b6145`; `features.py` 7,490 bytes, `e6cd53f81d072c7c43be4c7fff2b9dd0c5ccc7d64f2fbcfc85b44013d6d2ed5e`; `yamnet.py` 5,541 bytes, `7ef3df32b7ecb782490b5a04d7581a23cfcf701dbf476bc4d03deefe22cdb040`. Used to build the network for the export and to make the reference numbers; nothing of them is copied into Deckie |
+| Exported model | `yamnet.onnx`, 14,938,528 bytes, SHA-256 `96bb0dc54745dbbc95ef3f289830c94eec92a6914c4ab711a821bc8aa1c93cfd` (also in the export script, the fetch script and `YAMNet.recordedExportSHA256`, which say whether a new export matches), ONNX opset 17; input `patches` (float32, n x 96 x 64), outputs `scores` (float32, n x 521, after the sigmoid) and `embeddings` (float32, n x 1024), n free. Every export here gave these same bytes: three under Python 3.13, one in a fresh Python 3.12 environment set up as CI sets it up |
+| Export check | largest difference between ONNX Runtime 1.31.1 and TensorFlow 2.21.0: 2.6e-6 in a score and 1.6e-6 (relative) in an embedding, on random patches in batches of 1, 7 and 33 and on the patches of synthesised music; the network as built for the export against the source's own waveform model: identical |
+| Class indices | read from `yamnet_class_map.csv` beside the code at the same commit (14,096 bytes, SHA-256 `cdf24d193e19...`), which is not copied: Deckie names the classes it uses in its own words (`YAMNetClass`), and the crate never carries the ontology's names |
+
+**Licence:** Apache 2.0, on the allowlist, for the code and the weights. tensorflow/models' `LICENSE` at the pinned
+commit (11,512 bytes, SHA-256 `5b17814bf0de8cf65069bc6d7cc38cff19fcaa864d243423ad3ef3db01b52385`) opens:
+
+```text
+Copyright 2022 Google LLC. All rights reserved.
+
+All files in the following folders:
+/community
+/official
+/orbit
+/research
+/tensorflow_models
+
+Are licensed as follows:
+
+                                 Apache License
+                           Version 2.0, January 2004
+                        http://www.apache.org/licenses/
+```
+
+and each of the three source files begins "Copyright 2019 The TensorFlow Authors All Rights Reserved. Licensed under
+the Apache License, Version 2.0". The weights file is not in the repository: the model's README in that folder
+(5,183 bytes, SHA-256 `e837352cc874...`) points to it ("YAMNet model weights ... in Keras saved weights in HDF5
+format") and states no other terms for it, and the TensorFlow Hub and Kaggle listing of the same model gives Apache
+2.0 (second-hand, from track N; kaggle.com could not be reached from this session). So the weights are taken as
+Apache 2.0, published by the code's owner beside its Apache 2.0 code.
+
+**Training data and trainer, and the attribution (the training-data rule).** The README: "YAMNet is a pretrained
+deep net that predicts 521 audio event classes based on the AudioSet-YouTube corpus". Data set: **AudioSet**, by
+Google: about two million 10-second excerpts of YouTube videos labelled with 527 sound classes (YAMNet drops six:
+"the gendered versions (Male/Female) of Speech and Singing", "Battle cry and Funny music"). Its labels are published
+under CC BY 4.0, which allows commercial use (second-hand, from track N: research.google.com could not be reached
+from this session to quote it). AudioSet publishes no audio, only video IDs, times and labels; the audio is each
+YouTube video's, under its uploader's copyright and YouTube's terms. Trainer: Google, which runs YouTube; Google is
+not the owner of the uploaders' audio. The main session accepted AudioSet-trained weights under the rule on Oct 28,
+2026 (YAMNet "trained on AudioSet alone", with AudioSet attributed). Attribution, for the app's acknowledgements:
+
+```text
+YAMNet audio event model by Google (tensorflow/models, research/audioset/yamnet), Apache License 2.0.
+Trained on AudioSet by Google: J. F. Gemmeke, D. P. W. Ellis, D. Freedman, A. Jansen, W. Lawrence, R. C. Moore,
+M. Plakal and M. Ritter, "Audio Set: An ontology and human-labeled dataset for audio events", ICASSP 2017;
+https://research.google.com/audioset/ ; AudioSet labels licensed under CC BY 4.0.
+```
+
+**Development-time tools (never shipped).** The export and the fixture script run in a Python environment of their
+own, pinned by version in `core/Tools/yamnet-export-requirements.txt`, installed only on a developer's machine and
+in CI's export step (licences from each package's own metadata; none of this code reaches a Deckie program):
+
+| Package | Version | Licence |
+|---|---|---|
+| `tensorflow-cpu` | 2.21.0 (TensorFlow's CPU-only build, 274 MB wheel) | Apache 2.0 |
+| `tf-keras` | 2.21.0 (Keras 2, which YAMNet's code needs; installed without its dependencies, since it asks for the full `tensorflow` package) | Apache 2.0 |
+| `tf2onnx` | 1.17.0 | Apache 2.0 |
+| `onnx` | 1.23.2 | Apache 2.0 |
+| `onnxruntime` (for Python) | 1.31.1 | MIT |
+| `numpy` | 2.5.4 | BSD 3-clause and others |
+
+They pull in, unpinned, among others protobuf 7.36.2 (BSD 3-clause), h5py 3.14.0 (BSD 3-clause) and keras 3.15.1
+(Apache 2.0, unused by the export). Like section 7's, only the direct dependencies are pinned, by version; the model
+that reaches Deckie is pinned by its hash and checked numerically.
+
+**How to update:** for new weights or code, record the new URL or commit and the SHA-256 values in
+`fetch-vocal-models.sh` (`WEIGHTS_*`, `SOURCE_COMMIT`, `SOURCE_SHA256`) and in `export_yamnet.py`, and here; check
+the class indices `YAMNetClass` uses against the class list at the new commit; change the tool pins in
+`yamnet-export-requirements.txt` (and the tf-keras line in `core-linux.yml` and in the fetch script's message); run
+`fetch-vocal-models.sh --force --keep-source`, record the new model's SHA-256 in both scripts, in
+`YAMNet.recordedExportSHA256` and here; regenerate the reference numbers with `make_yamnet_fixtures.py --source
+core/.models/yamnet-source` and run `swift test`; re-quote the licence. CI exports again once, since the scripts and
+the requirements are its cache key.
+
 ## Checked and rejected
 
 **ffmpeg's libraries from Ubuntu 24.04**, checked Oct 28, 2026 as the Linux decoder track M section 3.1 names:
@@ -527,8 +631,8 @@ MPL 2.0, CC BY 4.0 and the training-data rule were added by the main session's d
 2. Re-record every hash here. Swift image: the `docker-content-digest` header Docker Hub returns for
    `registry-1.docker.io/v2/library/swift/manifests/<tag>`, confirmed by hashing the fetched index, then its amd64
    manifest and layers; the index digest also goes into `core-linux.yml`. Windows: the tag in `core-windows.yml` and
-   the installer's hash. Actions: the tag and, once possible, the commit hash. ONNX Runtime and Beat This!: sections
-   6 and 7 say what to record.
+   the installer's hash. Actions: the tag and, once possible, the commit hash. ONNX Runtime, Beat This! and YAMNet:
+   sections 6 to 8 say what to record.
 3. Re-quote the licence file and check it is still on the allowlist.
 4. Rerun the parity tests on both CI workflows, and ask the main session to rerun the 373-track benchmark on the Mac.
 5. Update the "last checked" date above. Any new direct dependency gets a written reason here.
