@@ -481,6 +481,98 @@ non-commercial. **Still to do:** the rule asks for each data set, its licence an
 beside the weights. Beat This!'s training sets and their licences are not listed yet, so whether any of them forbids
 commercial use is open, and it must be settled before a build carrying the weights ships.
 
+**Training data.** This is the record the "Still to do" above asks for: what the `final0` checkpoint was trained on,
+on what terms each data set's audio and beat annotations are published, and who trained it. All of it was read on
+Oct 29, 2026, from the places named; where a host did not answer, the text says so. A *beat annotation* is a list of
+the times of a piece's beats, in most sets with the first beat of each bar (the *downbeat*) marked; the network learns
+to reproduce them. A *spectrogram* is a picture of a recording's frequencies over time, which the network reads in
+place of the audio. Creative Commons (CC) terms: BY means credit the author, NC non-commercial use only, SA
+share-alike (adaptations keep the same licence); CC BY and CC BY-SA allow commercial use, CC BY-NC and CC BY-NC-SA do
+not. "Own page" below means the distributor's own page, read on GitHub. "mirdata" means the loader for that set in
+mirdata (`https://github.com/mir-dataset-loaders/mirdata`, file `mirdata/datasets/<set>.py`), an open-source Python
+library for music data sets whose loaders record a licence line and a download address; that is second-hand evidence,
+its maintainers' reading and not the distributor's word.
+
+*What `final0` saw.* The README (`https://raw.githubusercontent.com/CPJKU/beat_this/main/README.md`): "`final0`,
+`final1`, `final2`: Our main model, trained on all data except the GTZAN dataset, with three different seeds"; its
+training section says "All 16 datasets and annotations must be correctly set up". The training code (`launch_scripts/train.py` and
+`beat_this/dataset/dataset.py` on GitHub, read through the fetch tool) makes GTZAN the only test set and keeps it out of
+training and validation. From every other set it takes each piece that the set's `single.split` file marks `train` or
+`val` (all 15 have one; GTZAN has none), and the `--no-val` flag, which the README's commands for `final0` to `final2`
+use, moves the `val` pieces into training as well. No piece is marked as a test piece. So `final0` was trained on every
+piece of the 15 sets in the table below, including the pieces the paper holds out as test folds in its 8-fold
+cross-validation (testing in which each eighth of the data takes a turn at being held out); the only data it never saw
+is GTZAN. The paper could not be fetched (see the last paragraph); web-search excerpts of its text give 4,556 pieces for
+these sets after dropping two (a Beatles piece without downbeats and one with empty beats), with about 15 percent of
+each set as the validation part, GTZAN's 993 pieces as the test set, SIMAC and SMC as beats only, and RWC as four
+collections (classical, pop, royalty-free, jazz). One excerpt says Filosax is used as its backing tracks only and
+GuitarSet as its comping (accompaniment) tracks only; a second search did not repeat that, so it is unconfirmed.
+
+*Where the files come from.* The beat annotations are copied into `https://github.com/CPJKU/beat_this_annotations`
+(own page: v1.0 is the paper's set, v1.1 has corrections; `LICENSE` is MIT, "Copyright (c) 2024 Institute of
+Computational Perception"). Its README names each set's source, says only "Please cite the relevant papers when using
+these beat annotations", and states no terms for any set; the MIT line is on the repository. The authors do not publish
+the audio. The spectrograms they trained on are published as one .zip per set in Zenodo record 13922116 (named in the
+README; zenodo.org did not resolve, so any licence the record carries is unread), and the README's way to rebuild them
+needs the user to hold the original audio.
+
+| Data set: what it is | Audio: who has it, on what terms | Beat annotations: who, on what terms |
+|---|---|---|
+| **Ballroom**: 698 excerpts of about 30 s, eight dance styles (Gouyon et al., ISMIR 2004 tempo contest) | Commercial music the set does not license: the 30 s previews on ballroomdancers.com, a CD seller (search text of the Extended Ballroom paper, Marchand and Peeters); the contest copy is at mtg.upf.edu (not read). No licence read. mirdata: CC BY-NC-SA 4.0, without saying for which part | Krebs, Böck and Widmer (ISMIR 2013), `https://github.com/CPJKU/BallroomAnnotations`: no licence stated (own page); "It does not include the audio files" |
+| **SIMAC**: the rhythm part of the EU project Semantic Interaction with Music Audio Contents; beats only | Not published (mirdata: "not available for download"); where the audio comes from is not stated in what I read. mirdata: CC BY-NC-SA 4.0 (its source, semanticaudio.org, not tried) | Böck, Davies and Knees (ISMIR 2019), `https://github.com/superbock/ISMIR2019`, folder `simac/`: no licence file or statement on the page (own page) |
+| **SMC**: 217 excerpts of 40 s chosen because beat trackers find them hard (Holzapfel et al., IEEE TASLP 2012; MIREX 2012); beats only | Source of the audio and its licence not found: search excerpts give no licence and no public download | Holzapfel et al.; copy in `superbock/ISMIR2019`, folder `smc/`: no licence stated (own page) |
+| **Hainsworth**: 222 excerpts of about 60 s, six genres (Hainsworth's PhD thesis, 2004) | Commercial music the set does not license: "drawn directly from CD recordings" (search text of a downbeat-tracking review, arXiv 1906.03870). mirdata: "not available for download", yet gives CC BY-NC-SA 4.0 with no source I could read | Hainsworth's, revised by Böck et al. in 2014 (mirdata); copy in `superbock/ISMIR2019`, folder `hainsworth/`: no licence stated (own page) |
+| **HJDB**: hardcore, jungle and drum and bass dance music, 235 or 236 excerpts of 30 s to 2 min, sources differ (Hockman, Davies and Fujinaga, ISMIR 2012) | Source and licence not stated in anything read; the Zenodo record is said to link to where the audio can be had, and to say that many of these sets' audio is not public (search text; zenodo.org not resolved) | Downbeats by a drum-and-bass musician (search text); copy in `superbock/ISMIR2019`, folder `hjdb/`: no licence stated (own page) |
+| **Beatles**: 179 songs with beats, chords, keys, sections (Isophonics, Queen Mary C4DM) | Commercial recordings the set does not license: mirdata, "audio files ... are not available for download", the user supplies a copy | Isophonics, isophonics.net (not tried); mirdata: "we couldn't find the license information"; copy in `superbock/ISMIR2019`, folder `beatles/`: no licence stated (own page) |
+| **Harmonix Set**: 912 Western pop tracks, beats, downbeats, structure (Nieto et al., ISMIR 2019; reproduced and partly corrected in a later paper the annotation README says to cite as well) | Not included: YouTube links (the uploaders' audio) and alignment scores; no audio licence on the page. A 1.2 GB archive of mel spectrograms (spectrograms on a hearing-based pitch scale) is on Dropbox: "Users must agree to the License included before using these data" (own page) | Oriol Nieto, `https://github.com/urinieto/harmonixset`: MIT, "Copyright (c) 2019 Oriol Nieto" (`LICENSE` read raw): commercial use allowed |
+| **RWC**: the Real World Computing music database, AIST, Japan (Goto et al.); pop (100 songs), jazz (50), classical (50) per mirdata, plus royalty-free | Recorded for the database, not released commercial music (mirdata). Original terms, as mirdata quotes them: "Users who have submitted the Pledge and received authorization may freely use the database for research purposes". Re-released as RWC 2.0 on Zenodo (record 17177919) "under a Creative Commons license" of unnamed kind (own page, `https://github.com/rwc-music/rwc-annotations`; zenodo.org not resolved); mirdata gives CC BY-NC 4.0 for RWC Popular | AIST's annotations (staff.aist.go.jp, not tried), partly corrected by Böck and by Foscarin (annotation README). The newer set at `rwc-music/rwc-annotations`: "licensed under the CC BY-NC 4.0" (own page): non-commercial |
+| **TapCorrect**: 101 tracks, tapped beats corrected by a program and by hand, with downbeats (Driedger, Schreiber, de Haas and Müller, ISMIR 2019) | Not hosted: "YouTube links to all 101 music recordings" (own page); the set licenses none of that audio | "The TapCorrect dataset is published under a Creative Commons Attribution-ShareAlike 4.0 International" (own page, `https://github.com/chordify/tapcorrect`): commercial use allowed, adaptations under the same terms; the program's code is LGPL 3, not used here |
+| **JAAH**: Jazz Audio-Aligned Harmony, 113 tracks from two Smithsonian jazz anthologies (Eremenko, Demirel, Bozkurt and Serra, ISMIR 2018, UPF MTG) | Not in the repository (annotations and chroma features only); the tracks come from two commercial anthologies (search text), which the set does not license | `https://github.com/MTG/JAAH`: no licence file or statement on the page (own page); the Zenodo record v0.1 is said to list "CC-BY" (search text; zenodo.org not resolved). Beats and downbeats corrected and added for Beat This! by Vogl and Foscarin (annotation README) |
+| **Filosax**: 48 multitrack jazz recordings of about 6 min, up to five saxophonists, stems including the original Aebersold backing track (Foster and Dixon, Queen Mary University of London, ISMIR 2021) | Under an access agreement that mirdata quotes: "Filosax may be used only for non-commercial research purposes", and it "may not be sold, leased, published or distributed to any third party without written permission". The Aebersold backing tracks are commercial play-alongs (mirdata links their sales pages), not licensed by the set | Foster and Dixon (bar starts and chord changes), partly corrected by Foscarin (annotation README); the one agreement covers the whole set (mirdata): non-commercial research only |
+| **ASAP**: Aligned Scores and Performances, classical piano with beat, downbeat and time-signature annotations (Foscarin et al., ISMIR 2020) | Not distributed there: "The audio files are not distributed in this repository" (own page); taken from MAESTRO v2.0.0 by Google Magenta, which mirdata gives as CC BY-NC-SA 4.0 | Foscarin, `https://github.com/fosfrancesco/asap-dataset`: "made available under a Creative Commons Attribution Non-Commercial Share-Alike 4.0 (CC BY-NC-SA 4.0) license" (README, and `LICENSE.md` read raw): non-commercial |
+| **Groove MIDI**: 1,150 MIDI files, 13.6 hours of drumming on an electronic kit, with audio synthesised from the playing (Gillick et al., Google Magenta, ICML 2019) | Google Magenta; synthesised audio, not recorded music (mirdata). mirdata: CC BY 4.0 (magenta.tensorflow.org not tried) | From Magenta's data (the annotation README names its page); terms as for the audio, CC BY 4.0 per mirdata |
+| **GuitarSet**: 360 excerpts of about 30 s of acoustic guitar, 16 annotations each (Xi, Bittner, Ye, Pauwels and Bello, NYU MARL, ISMIR 2018) | Recorded for the set (hexaphonic pickup and a Neumann U-87 microphone, mirdata), not released music. On Zenodo, record 3371780 (own page); the data's licence is unread (zenodo.org not resolved). The GitHub repository is MIT ("Copyright (c) 2018 Music and Audio Research Laboratory - NYU"); mirdata's "MIT License" matches it and is not a statement about the data | In the same Zenodo archive; terms unread, as for the audio |
+| **Candombe**: 35 studio recordings, over 2 hours, of candombe drumming in groups of three to five drums, beats and downbeats by an expert (Nunes, Rocamora, Jure and Biscainho, ISMIR 2015) | Recorded in studio for musicological research (mirdata); Zenodo record 6533068; mirdata: CC BY 4.0 (zenodo.org not resolved) | In the same record, same terms (mirdata) |
+
+Not in `final0`'s training: **GTZAN**, the test set (Tzanetakis and Cook; 1,000 excerpts of 30 s, 10 genres). mirdata says
+its audio is "no longer available for download" and that it "couldn't find the license information"; beat annotations
+in `superbock/ISMIR2019`, folder `gtzan/`.
+
+*Reading the table.* The audio is commercial music that its set does not itself license for Ballroom, Hainsworth, the
+Beatles, JAAH and Filosax's backing tracks; for Harmonix and TapCorrect it is YouTube recordings whose rights are the
+uploaders' and rights-holders'; for SIMAC, SMC and HJDB no source read says what the audio is. Terms stated as
+non-commercial: ASAP (CC BY-NC-SA 4.0, on its own page; its audio source MAESTRO is CC BY-NC-SA 4.0 per mirdata), RWC
+(CC BY-NC 4.0 on the re-release's annotations; the original was for research purposes under a pledge) and Filosax
+(non-commercial research only); second-hand only, from mirdata, for SIMAC, Hainsworth and Ballroom (CC BY-NC-SA 4.0).
+Terms that allow commercial use, stated by the distributor: Harmonix (MIT) and TapCorrect (CC BY-SA 4.0); second-hand,
+from mirdata, for Groove MIDI and Candombe (CC BY 4.0). No licence stated on the page read: the SIMAC, SMC, HJDB,
+Hainsworth, Beatles and Ballroom annotations, and JAAH's repository. Not read: the data licences of GuitarSet,
+Candombe, Groove MIDI and JAAH at their own hosts.
+
+*What the authors say, and the trainers.* Only the README's "License" section (quoted above): the code and the
+published weights are MIT, and "some of the training files are fully copyrighted or under limited Creative Commons
+licenses, and it is up to the user to assess whether this may impact their use case." Nothing in the README, the
+annotations README or the training code that I read says more about rights in the training audio, or states that the
+data's licences were checked. The trainer is the Institute of Computational Perception, JKU Linz (the `LICENSE`'s
+copyright holder). No source read says it holds rights in any of the training audio, and the README's own sentence
+says some of it is copyrighted by others. Two of the paper's authors made or corrected beat annotations: Foscarin
+(ASAP, and corrections to RWC, Harmonix, JAAH and Filosax) and Widmer (Ballroom, with Krebs and Böck; the annotation
+README also credits Böck with RWC corrections and Vogl with JAAH's). That is authorship of annotations, not ownership of
+the recordings.
+
+*What could not be read.* These hosts did not resolve from this session ("getaddrinfo ENOTFOUND"): arxiv.org and
+ar5iv.labs.arxiv.org (the paper, arXiv 2407.21658), zenodo.org (the spectrogram record and the Zenodo pages of
+GuitarSet, Candombe and JAAH), huggingface.co, ismir2024program.ismir.net, research.jku.at and themoonlight.io. After
+those failed no further host outside GitHub was tried, so isophonics.net, staff.aist.go.jp, magenta.tensorflow.org,
+dave-foster.github.io, mtg.upf.edu, mtg.github.io, semanticaudio.org and mirdata.readthedocs.io are unread. The paper
+is therefore known only from excerpts of its text in web-search results (the data set list, the 4,556, the 15 percent,
+GTZAN as the test set, the second-hand claims marked "search text"). The fetch tool returns a summary with quotations
+of at most 125 characters; the quotations above are from it, and, unlike the `LICENSE` and README quotations earlier
+in this section, were not saved, counted or hashed. The GitHub tool here covers only this repository. Nothing was
+downloaded and no dataset or code was run.
+
+Whether these weights ship under the training-data rule is for the main session to decide; this records the facts.
+
 **Development-time tools (never shipped).** The export script and the fixture scripts (`make_beat_fixtures.py`,
 `make_onnx_fixture.py`) run on PyTorch and its companions, pinned by version in `core/Tools/export-requirements.txt`
 and installed only on a developer's machine and in CI's export step (licences from each package's own metadata;
