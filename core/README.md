@@ -140,6 +140,17 @@ the audio stays on the Mac; there the port runs over `mixer/candidates.json` and
 compared row by row, which also measures the decimator against soxr on real tracks. Expect rare differences where
 the lab's margin is tiny: the lab's chroma and its window means are float32, the port's are double precision.
 
+**Key vote** (`Sources/DeckieCore/Key/KeyVote.swift`): the track's key is decided by three votes over the one chroma,
+the whole-track key by the edma, bgate and Krumhansl-Kessler profiles (all published: Faraldo et al. 2016 for edma
+and bgate, Krumhansl and Kessler 1982), put in the slots of the lab's three detectors (Essentia's edma and bgate,
+madmom's CNN) and decided by the lab's own rule, `mixer/analyze.py` B.9: two or three agree, that key, else edma's;
+its confidence levels 1.0, 0.65, 0.6, 0.45 and 0.3 with the lab's strength of 0.6. `Tools/key_vote_eval.py` picked
+the two extra profiles from the lab's sweep (`mixer/key_light_*.tsv`) against the first Mac bench sheet: 237 of the
+311 confident keys exact (76.2 percent, edma alone 74.6), 7 of 373 keys changed, the gain spread over four of the
+lab's folders; its header holds the table, and its held-out check says a second profile on the same chroma is no
+better estimator for new music. `KeyTests.swift` checks the vote against the lab's B.9 block, run from analyze.py's
+own source by `Tools/make_key_fixtures.py`, on the 68 test matrices, on made-up votes and on the lab's 373 tracks.
+
 **Structure** (`Sources/DeckieCore/Structure/`) is the part of `mixer/analyze.py` after the grid choice that lays out
 bars and phrases and places the mix windows, as pure functions of what the audio analysers measure. `BarGrid` puts bar
 1 at the first grid downbeat at or after the first sound (less a quarter beat) and gives the bar count, the bar lines
@@ -264,15 +275,16 @@ family is `deckie`). `Analyser().analyse(url:options:)` runs `mixer/analyze.py`'
 pieces above: the SHA-256 of the file's bytes for its id (`CrateIDs`), decoding to 44.1 kHz and mono, the first and last
 sound, Beat This!'s beats and the grid fit, the lab's octave alignment to a tag tempo when one is given (`OctaveAlign`),
 the bars, the spectral features, the novelty and phrase lattice, the per-bar loudness, bands and onsets, integrated
-loudness, loudness range and true peak, the onset pattern, the sections, the fade-out, the mix windows, the key of the
-whole track and of both mix windows, local tempo and the flags, timing each stage as the lab's `timing_s` does. The
+loudness, loudness range and true peak, the onset pattern, the sections, the fade-out, the mix windows, the key (the
+vote above) and the key of both mix windows judged against it, local tempo and the flags, timing each stage as the
+lab's `timing_s` does. The
 `Analysis` it returns writes the lab's feature JSON (`labJSON()`: the lab's keys in its order, rounded as the lab rounds
 them, 1-based bars, what the engine cannot produce null or left out the way the lab does, listed on the function, and
 a `deckie` block of the engine's own) and the crate record (`crateTrack(options:)`). Three departures from the lab:
 Beat This! is the only grid source, as the madmom fallback is non-commercial (`madmom_ran` is false, and
-`deckie.madmom_would_run` marks the tracks where the lab would have run it); the key confidence comes from the one
-estimator's margin over the runner-up key in place of three detectors agreeing (`KeyConfidence`: 0.65, 0.45 or 0.3, with
-the figures behind the steps; a proposal to confirm on the Mac); and the vocal probability comes from YAMNet, not the
+`deckie.madmom_would_run` marks the tracks where the lab would have run it); the key and its confidence come from the
+lab's B.9 rule on three key profiles over the engine's chroma in place of the lab's three detectors (`KeyVote`,
+`KeyConfidence`; each vote in `deckie.key.votes` and the crate's `key.votes`); and the vocal probability comes from YAMNet, not the
 lab's non-commercial EffNet (below), and `embedding_effnet` is never written. Without the YAMNet model the engine runs
 on without a vocal tagger: the record has no `vocal` block or `per_bar.vocal_prob`, the mix windows count every bar
 as vocal-free, and the flag `vocal_unknown` asks for them to be placed again when a tagger has run. The tests
@@ -362,8 +374,8 @@ no record, counted by reason and extension.
   (no reading at all); otherwise it hashes the file and takes the record of those bytes if there is one (a file that
   was moved, renamed or only touched), and analyses only what is left. An interrupted run (Ctrl-C) loses only the files
   that were being analysed, one per job. A record is reused only if it came from the same engine version with the same
-  tag tempo; the version (0.2.0) goes up whenever the record gains or changes fields, so a work folder made by 0.1.0 is
-  analysed again. `--fresh` empties the work folder first; deleting it is always safe.
+  tag tempo; the version (0.3.0) goes up whenever the record gains or changes fields, so a work folder made by an
+  older version is analysed again. `--fresh` empties the work folder first; deleting it is always safe.
 - **Nothing left out silently** (decision P18). Every file that cannot be analysed is counted by reason and extension
   in the summary and listed in the manifest's `import_log` with its path below the folder and the reason in words:
   `unsupported` (a format this platform cannot decode: AAC, M4A and WMA on Linux, Ogg, Opus), `protected` (FairPlay),

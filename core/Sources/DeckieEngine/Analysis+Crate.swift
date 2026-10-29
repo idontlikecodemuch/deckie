@@ -57,7 +57,9 @@ extension Analysis {
     /// the record has no `vocal` block and no `bars.vocal` series, so `features_present` lists neither, and the mix
     /// windows' `vocal_free_bars` are null; the flags carry `vocal_unknown`. With one, the `vocal` block (source: the
     /// tagger's model), the `bars.vocal` series and, when the tagger gives one, the `style` block (YAMNet's mean
-    /// embedding, 1,024 values, unit length) are written. The key's changes are the estimator's segments placed on
+    /// embedding, 1,024 values, unit length) are written. The key is the vote's (`KeyVote`): `source` `votes`, the
+    /// three votes in `votes` by name, `key` and `scale` spelled as the first vote giving the decided key spells it,
+    /// the lab's B.9 confidence. The key's changes are the estimator's segments placed on
     /// bars. The lab's EffNet embedding is never written. With a tagger the record also carries the proposed
     /// `vocal_structure` and `hooks` blocks (`crateVocalStructure()`, `crateHooks()`); without one it has neither.
     public func crateTrack(options: CrateOptions) -> CrateTrack {
@@ -105,8 +107,9 @@ extension Analysis {
                         inTrusted: lt.inTrusted, outTrusted: lt.outTrusted),
             tempoSegments: [.init(startBar: 1, startS: Py.round(bars.firstDownbeatS, 4), bpm: r3(bpm), beatsPerBar: 4,
                                   beatInBar: 1, confidence: r3(grid.confidence))],
-            key: .init(source: "deckie-core", confidence: keyConfidence.value, camelot: key.whole.camelot,
-                       key: key.whole.key, scale: key.whole.mode, votes: ["deckie-key-edma": key.whole.camelot],
+            key: .init(source: "votes", confidence: keyConfidence.value, camelot: keyVote.camelot,
+                       key: keyVote.decided.key, scale: keyVote.decided.mode,
+                       votes: Dictionary(uniqueKeysWithValues: keyVote.votes.map { ($0.name, $0.camelot) }),
                        changes: keyChanges()),
             phrase: .init(source: "foote-novelty", confidence: r3(phrase.confidence),
                           latticePhaseBar: phrase.latticePhaseBar, boundariesBars: boundariesBars),

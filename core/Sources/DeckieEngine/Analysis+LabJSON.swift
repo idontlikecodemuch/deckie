@@ -18,9 +18,10 @@ extension Analysis {
     ///   checkpoint's name, where the lab writes `beatthis`.
     /// - `key.essentia_edma`, `key.essentia_bgate`, `key.madmom_cnn`, `key.camelot_edma`, `key.camelot_bgate`,
     ///   `key.camelot_madmom`: null, as the lab writes madmom's when it fails. `key.camelot`, `key.confidence` and
-    ///   `key.confidence_rule` come from the engine's one estimator (`KeyConfidence`); its key, correlation and margin,
-    ///   both mix windows' keys and the key segments are in `deckie.key`. `key.madmom_error` is left out, as the lab
-    ///   leaves it out when madmom ran.
+    ///   `key.confidence_rule` come from the engine's key vote (`KeyVote`, `KeyConfidence`: the lab's B.9 rule on three
+    ///   profiles over the engine's chroma); each vote's key, correlation and margin, the edma estimate's mix windows
+    ///   and key segments are in `deckie.key`. `key.madmom_error` is left out, as the lab leaves it out when madmom
+    ///   ran.
     /// - Without a vocal tagger: `vocal`, `per_bar.vocal_prob` and `embedding_effnet` are left out (the lab has no way
     ///   to write them missing); each section's `vocal` and each mix window's `vocal_free_bars` are null, and
     ///   `mix_in.first_vocal_bar` and `mix_out.last_vocal_bar` are null as the lab writes them for a track with no
@@ -82,7 +83,7 @@ extension Analysis {
         let keyOut: J = .object([
             m("essentia_edma", .null), m("essentia_bgate", .null), m("madmom_cnn", .null),
             m("camelot_edma", .null), m("camelot_bgate", .null), m("camelot_madmom", .null),
-            m("camelot", .string(key.whole.camelot)), m("confidence", .number(keyConfidence.value)),
+            m("camelot", .string(keyVote.camelot)), m("confidence", .number(keyConfidence.value)),
             m("confidence_rule", .string(keyConfidence.rule)),
         ])
         var perBarMembers = [
@@ -150,7 +151,9 @@ extension Analysis {
     /// The lab's feature JSON as compact UTF-8 text.
     public func labJSONData() -> Data { labJSON().data }
 
-    /// The engine's own block: the file's hash, the decoder, the key estimator's detail, where the lab would have run
+    /// The engine's own block: the file's hash, the decoder, the key estimator's detail (the edma estimate as `whole`,
+    /// each key vote under its name in `votes`, the decided key and the lab's rule words as `vote` and `vote_rule`,
+    /// the song key the windows were judged against, the windows and the segments), where the lab would have run
     /// madmom, whether the vocal information is missing, the tagger's detail, the vocal structure and the hooks.
     func deckieBlock() -> JSONValue {
         typealias J = JSONValue
@@ -178,6 +181,8 @@ extension Analysis {
             m("hooks", hooksBlock()),
             m("key", .object([
                 m("estimator", .string("fft-chroma-edma")), m("whole", estimate(key.whole)),
+                m("votes", .object(keyVote.votes.map { m($0.name, estimate($0.estimate)) })),
+                m("vote", .string(keyVote.camelot)), m("vote_rule", .string(keyVote.rule)),
                 m("song_key", .string(key.songKey)), m("mix_in", window(key.mixIn)), m("mix_out", window(key.mixOut)),
                 m("segments", .array(key.segments.map {
                     .array([.number($0.start), .string($0.camelot), .number($0.meanR)])

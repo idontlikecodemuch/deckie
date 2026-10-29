@@ -11,8 +11,10 @@ public struct Analysis: Sendable {
     public static let engineFamily = CrateFormat.EngineFamily.deckie
     /// The engine's version (`engine.version`; `analysis.engine` is `deckie-<version>`). It goes up whenever the
     /// record gains or changes fields, so the builder's work folders made by an older version are analysed again
-    /// rather than reused. 0.2.0: the vocal structure and hook blocks, and `file.tag_bpm`.
-    public static let engineVersion = "0.2.0"
+    /// rather than reused. 0.2.0: the vocal structure and hook blocks, and `file.tag_bpm`. 0.3.0: the key decided by
+    /// three votes (`KeyVote`): `key.source` `votes` with three entries in `key.votes`, the lab's B.9 confidence, and
+    /// `votes`, `vote` and `vote_rule` in the lab JSON's `deckie.key`.
+    public static let engineVersion = "0.3.0"
     /// The lab's feature-file schema the JSON follows (`schema`).
     public static let labSchema = 1
     /// The rate everything is analysed at: the lab decodes at 44.1 kHz and resamples other files to it first (`sr`).
@@ -130,10 +132,13 @@ public struct Analysis: Sendable {
     public var mixIn: MixIn
     public var mixOut: MixOut
 
-    /// The key estimator's results: the whole track, both mix windows judged against the whole-track key, and the key
-    /// segments.
+    /// The key estimator's results with the edma profile: the whole-track key (the vote's first slot), both mix
+    /// windows judged against the song key (`songKey`, the vote's key), and the key segments.
     public var key: KeyResult
-    /// The key confidence by the one-estimator rule (`KeyConfidence`).
+    /// The track's key: three profiles over the chroma, decided by the lab's B.9 rule (`KeyVote`). Its `camelot` is
+    /// the record's key.
+    public var keyVote: KeyVote
+    /// The key confidence, the lab's B.9 rule on the vote (`KeyConfidence`).
     public var keyConfidence: KeyConfidence
 
     public var loudness: Loudness
