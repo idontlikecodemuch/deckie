@@ -40,8 +40,12 @@ and Linux crate builder share them. Charter: `docs/architecture/pc-linux-track.m
   silence MP3 encoding adds the way the lab's decoder (libsndfile through mpg123) does: the encoder delay plus the
   decoder's 529 samples at the start and the padding less 529 at the end, read from the LAME tag in the first
   frame. dr_mp3's own version of that trimming is switched off so the rule stays Deckie's. On the test tones the
-  result has the original's exact length and sits at offset 0 from the lab's decode, within 1.3e-6 per sample. To
-  update it, see `DEPENDENCIES.md` section 4.
+  result has the original's exact length and sits at offset 0 from the lab's decode, within 1.3e-6 per sample. A
+  damaged frame whose Huffman data runs past its own end, which dr_mp3 decodes into a burst, is found with mpg123's
+  own test and played as silence, and reported with its time (`DamagedFrame`); the check is a small C helper beside
+  the header (`dr_mp3.c`, `include/deckie_mp3.h`) that calls dr_mp3's own functions, and a frame that passes it is
+  exactly what dr_mp3 decoded. To update dr_mp3, see `DEPENDENCIES.md` section 4, and run the MP3 tests, which check
+  the helper against dr_mp3's own pull reader.
 - `Sources/CDrFlac`: dr_flac, the same author's public-domain FLAC decoder in one C header (`include/dr_flac.h`,
   copied unmodified, pinned and quoted in `DEPENDENCIES.md` section 5), compiled as plain C by `dr_flac.c`.
   `DeckieDecode/FLACReader.swift` decodes native FLAC and Ogg-FLAC up to 24 bits from memory, skipping ID3v2 tags
@@ -89,9 +93,10 @@ and Linux crate builder share them. Charter: `docs/architecture/pc-linux-track.m
   as WAV at 44.1 and 48 kHz, MP3 at 44.1 and 48 kHz and in mono, AAC, AIFF and AIFF-C ("sowt"), FLAC at 16 and 24
   bits and as Ogg-FLAC, plus a 648-byte stand-in for a FairPlay-protected file with no audio in it
   (`protected.m4p`), written by `Tools/make_audio_fixtures.py` (needs numpy, and the ffmpeg program for the MP3,
-  AAC, AIFF and FLAC files only; the same ffmpeg gives the same bytes on every run). The MP3 tests also edit those
-  bytes in memory: ID3 tags in front, edited LAME tags, damaged files; the AIFF, FLAC and protected-file tests build
-  their variants the same way.
+  AAC, AIFF and FLAC files only; the same ffmpeg gives the same bytes on every run), and `tone_damaged.mp3`, the
+  MP3 tone with one frame's Huffman data overwritten so that it decodes into a burst, written from `tone.mp3` by
+  `Tools/make_damaged_mp3_fixture.py` (Python only). The MP3 tests also edit those bytes in memory: ID3 tags in front,
+  edited LAME tags, damaged files; the AIFF, FLAC and protected-file tests build their variants the same way.
 
 **Loudness** (`Sources/DeckieCore/Loudness/`) measures what the lab measures, for any sample rate, on every platform,
 with no dependency. `KWeighted(buffer)` filters each channel with the K-weighting of ITU-R BS.1770 (two biquads, in
@@ -295,7 +300,8 @@ fade (just over a minute, as the lab counts a fade only after a minute of sound)
 count, the key, the first and last sound, the fade, the mix windows, the loudness and every per-bar series' length; the
 JSON against a committed lab file's keys and through `FeatureFile`; the crate record through the writer and reader; and
 the same bars and tempo from an MP3 of the track (made with the ffmpeg program when it is installed; skipped otherwise,
-as everything here is without ONNX Runtime and the model). The lab's own `local_tempo.compute` and `fit_grid`, run on
+as everything here is without ONNX Runtime and the model), and, from a copy of that MP3 with one frame damaged on
+purpose, the frame silenced and listed as `deckie.damaged_frames` and `file.damaged_frames`. The lab's own `local_tempo.compute` and `fit_grid`, run on
 the engine's JSON for that track, give back the engine's values exactly, and Python's json module reads the file and
 writes it again byte for byte. A minute of audio takes about 5 s in a debug build, half of it the network.
 
@@ -368,8 +374,8 @@ It finds every audio file below the folder by its extension (mp3, flac, wav, aif
 ogg, opus and the protected m4p; hidden files and folders, crate packages and work folders are skipped), analyses each
 with the engine, several at a time, and writes the crate with `CrateWriter`. While it runs it prints a line per file:
 the count, the time since the start, an estimate of the time left and the file's own analysis time, or why it could
-not be analysed. At the end it prints a summary: files seen, analysed, taken from the work folder, and the files with
-no record, counted by reason and extension.
+not be analysed. At the end it prints a summary: files seen, analysed, taken from the work folder, the files with no
+record, counted by reason and extension, and the files in the crate with damaged frames, with their times.
 
 - **Jobs.** `--jobs N` files at once; the default is the processor count, or fewer when memory is short, as one
   analysis of a four-minute track peaks at about 1.1 GB (0.2 GB of it the models, shared; each further job adds
@@ -383,7 +389,7 @@ no record, counted by reason and extension.
   (no reading at all); otherwise it hashes the file and takes the record of those bytes if there is one (a file that
   was moved, renamed or only touched), and analyses only what is left. An interrupted run (Ctrl-C) loses only the files
   that were being analysed, one per job. A record is reused only if it came from the same engine version with the same
-  tag tempo; the version (0.3.0) goes up whenever the record gains or changes fields, so a work folder made by an
+  tag tempo; the version (0.3.1) goes up whenever the record gains or changes fields, so a work folder made by an
   older version is analysed again. `--fresh` empties the work folder first; deleting it is always safe.
 - **Nothing left out silently** (decision P18). Every file that cannot be analysed is counted by reason and extension
   in the summary and listed in the manifest's `import_log` with its path below the folder and the reason in words:
@@ -391,7 +397,9 @@ no record, counted by reason and extension.
   `damaged`, `decode_error` (could not be read), `analysis_error` (no beat grid, too few bars, the model failed) and
   `duplicate` (the same bytes as another file, which has the record). Failures are remembered in the work folder too,
   except a file that could not be read, which is tried again. The log's `built_by` is the building device's model
-  label, the same as each record's `analysis.device`, never the machine's own name.
+  label, the same as each record's `analysis.device`, never the machine's own name. A file that is in the crate but
+  whose decoder played damaged MP3 frames as silence is listed too, reason `damaged_frames`, with the frames' times
+  ("damaged frame at 1:01.234 (26 ms), played as silence"), so the DJ knows the file is faulty though playable.
 - **An existing crate** at `--out` keeps its id, name, creation date and devices, and its records' signatures are
   carried over; something at `--out` that is not a crate is never overwritten.
 - **rekordbox** (`--rekordbox export.xml`, rekordbox's File, Export Collection in xml format): each file is matched to
@@ -533,6 +541,18 @@ reason printed when ONNX Runtime or the beat model is missing. Without the YAMNe
 without its vocal tagger: both commands say so when they start, the records have no vocal block, and the bench marks
 the vocal correlation absent. A work record or a bench record made without the tagger is made again once the model is
 there.
+
+### Checking the MP3 concealment: `deckie-build mp3-check`
+
+```
+.build/release/deckie-build mp3-check "/Users/christophershannon/personal/90s2000 playlist"
+```
+
+decodes every MP3 below the folder twice, as the engine decodes it (a damaged frame played as silence) and by dr_mp3's
+own pull reader (as the decoder did before that), and compares them sample for sample. It needs no model and takes a
+few minutes for the lab's folder. Every file without a damaged frame must decode the same, bit for bit; a file with
+one is listed with the frame's time, where its samples differ (only from that frame's start to the end of the next) and
+its true peak both ways. It exits with 1 if anything changed that no damaged frame explains.
 
 ## Reinstalling the toolchain on Linux
 
