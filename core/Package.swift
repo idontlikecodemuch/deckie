@@ -21,6 +21,7 @@
 // converts to a crate track.
 // DeckieBuild: the crate builder's logic (the folder walk, the resumable work folder, the parallel analysis, the import
 // log, the rekordbox XML reader, the file tag reader and the yardstick bench); deckie-build: its command line.
+// deckie-memprobe: measures the analyser's peak memory on audio files (and synthesises a test track), for tuning.
 // DeckieTestSupport: synthesised test audio (drums, chords, the engine's test track) and the beat fixture, shared by the
 // test targets (not a product).
 import PackageDescription
@@ -55,6 +56,7 @@ let package = Package(
                 dependencies: ["DeckieEngine", "DeckieCrate", "DeckieDecode", "DeckieCore", "DeckieLab", "DeckieInference",
                                "DeckieAudio"]),
         .executableTarget(name: "deckie-build", dependencies: ["DeckieBuild"]),
+        .executableTarget(name: "deckie-memprobe", dependencies: ["DeckieEngine", "DeckieInference", "DeckieAudio"]),
         .target(name: "DeckieTestSupport", dependencies: ["DeckieAudio", "DeckieCore"], path: "Tests/DeckieTestSupport"),
         .testTarget(name: "DeckieCoreTests", dependencies: ["DeckieCore", "DeckieLab", "DeckieAudio", "DeckieTestSupport"],
                     exclude: ["Fixtures"]),
