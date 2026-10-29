@@ -16,6 +16,22 @@ pinned URL and hash and exported the same way. Deckie's Swift package (`core/`) 
 so it has no `Package.resolved` (Swift's list of exact package versions); dr_mp3, dr_flac and the ONNX Runtime header
 are copied files pinned by their hashes, not packages.
 
+## Acknowledgements table (the shape the apps render; keep it equal to the sections below)
+
+The apps show an acknowledgements screen generated from this file (the main session, Oct 29, 2026): one row per
+entry that ships, with its name, version, licence as the licence names itself, and for a model its training sets
+with their terms and the replacement path. The sections below hold the quotes and the evidence; this table must say
+the same thing in one line each, and is updated in the same commit as any section.
+
+| Entry | Version | Licence | Training sets and their terms (models) | Replacement path (models) |
+|---|---|---|---|---|
+| Swift runtime and Foundation (with ICU) | 6.4.1 | Apache 2.0 with the Runtime Library Exception (section 1); listed in full before the first PC or Linux build ships (section 3) | | |
+| dr_mp3 | 0.7.4 | public domain (the Unlicense) or MIT No Attribution, taken as public domain (section 4) | | |
+| dr_flac | 0.13.4 | the same choice, taken as public domain (section 5) | | |
+| ONNX Runtime | 1.31.1 | MIT; carries Eigen under MPL 2.0, unmodified, with its notice (section 6); the shipped library is Deckie's own build without Microsoft's usage-reporting client | | |
+| Beat This! (beat tracker, checkpoint `final0`) | ISMIR 2024 release, checkpoint `final0` | MIT (section 7) | 15 sets, everything but GTZAN; terms range from MIT and CC BY to CC BY-NC and all rights reserved, each in section 7's table | tempo and bar grid from Deckie's own code at lower confidence (section 7) |
+| YAMNet (vocal tagger) | tensorflow/models commit a6e25e2 weights | Apache 2.0 (section 8) | AudioSet: labels CC BY 4.0, clips are their YouTube uploaders'; trained by Google (section 8) | vocal fields absent, record flagged `vocal_unknown` (section 8) |
+
 ## 1. The Swift 6.4.1 toolchain
 
 The toolchain is the compiler plus the libraries that come with it; 6.4.1 is the version track M chose.
@@ -86,8 +102,8 @@ also carries ONNX Runtime's library (section 6) and the Beat This! model file (s
 Deckie's own build of the pinned release without Microsoft's usage-reporting client, never the official archive's
 (section 6), and it contains Eigen, under MPL 2.0, which ships unmodified with its notice under the main session's
 decision (section 6),
-and the Beat This! weights need their training data recorded under the training-data rule (section 7 and the
-allowlist) before that build ships. A build that tags vocals carries the YAMNet model file (section 8), Apache 2.0,
+and the Beat This! weights ship under D15 with their training sets recorded (section 7) and shown in the
+acknowledgements. A build that tags vocals carries the YAMNet model file (section 8), Apache 2.0,
 with AudioSet's attribution in the acknowledgements.
 
 ## 4. dr_mp3, the MP3 decoder (vendored)
@@ -481,8 +497,9 @@ trained on, unless one of those data sets' own licences forbids commercial use, 
 non-commercial. The rule asks for each data set, its licence and the trainer to be recorded here beside the weights:
 that record follows (Oct 29, 2026). In short, three sets state non-commercial terms on their own pages (ASAP, RWC,
 Filosax), much of the rest is commercial music the sets do not license, and the trainer holds no rights in the
-recordings. Under the rule as written that reads as non-commercial; the decision is the main session's (status log
-entry 12, second addendum), and no build carrying the weights ships before it.
+recordings. Under the Oct 28 wording that read as non-commercial; Christopher decided on Oct 29 (P19, now D15 in the
+allowlist below) that weights ship under their publisher's licence with the training sets recorded as disclosure, so
+Beat This! ships, MIT, with the record below shown in the acknowledgements.
 
 **Training data.** This is the record the "Still to do" above asks for: what the `final0` checkpoint was trained on,
 on what terms each data set's audio and beat annotations are published, and who trained it. All of it was read on
@@ -574,7 +591,13 @@ of at most 125 characters; the quotations above are from it, and, unlike the `LI
 in this section, were not saved, counted or hashed. The GitHub tool here covers only this repository. Nothing was
 downloaded and no dataset or code was run.
 
-Whether these weights ship under the training-data rule is for the main session to decide; this records the facts.
+These are the facts the allowlist's D15 asks to be recorded and shown; under it the weights ship (above).
+
+**Replacement path** (D15 asks for one per model): without the beat model, Deckie's own code in `DeckieCore` still
+gives a tempo and a bar grid, the lab's model-free way (the grid fit over onsets with the tempo multipliers, the
+phrase lattice from novelty), at lower confidence and with `grid.source` saying so; the main session is measuring
+that path against the shipped grid on the 373 tracks (Oct 29, 2026) and its result settles whether the path is the
+fallback or, as Christopher asked, whether a model is needed for beats at all.
 
 **Development-time tools (never shipped).** The export script and the fixture scripts (`make_beat_fixtures.py`,
 `make_onnx_fixture.py`) run on PyTorch and its companions, pinned by version in `core/Tools/export-requirements.txt`
@@ -605,6 +628,10 @@ export script, record the new model's SHA-256 in the script (`ONNX_SHA256`) and 
 numbers with `make_beat_fixtures.py` and run `swift test`, which compares the Swift port with the package again;
 re-quote the `LICENSE` and the README's licence section. CI exports again once, since the export script and its
 requirements are its cache key.
+
+**Replacement path** (D15): without YAMNet the vocal fields are absent, the mix windows treat every bar as
+vocal-free and the record carries the flag `vocal_unknown` (status log entry 11); the place for a second model
+(`VocalPatchModel`) is built and empty.
 
 ## 8. YAMNet, the vocal tagger's model (weights fetched by pinned hash and exported per machine; development-only Python tools)
 
@@ -745,11 +772,15 @@ MPL 2.0, CC BY 4.0 and the training-data rule were added by the main session's d
 - **Ship only dynamically linked** (kept as a separate library file, not built into Deckie's program), with each
   case named in this file: LGPL 2.1 and LGPL 3.
 - **Never:** GPL, AGPL, CC BY-NC (non-commercial), research-only.
-- **Model weights and their training data:** weights under an allowed licence ship even when Deckie could not ship
-  their training data, unless that data's own licence forbids commercial use, in which case the weights count as
-  non-commercial whatever their own licence says. Where the data's licence is unknown, the trainer must be the
-  data's rights-holder (Deezer training on its own catalogue qualifies). The data set, its licence and the trainer
-  are recorded in this file beside the weights.
+- **Model weights and their training data** (D15, Christopher's decision of Oct 29, 2026 on P19, replacing the Oct
+  28 wording): weights ship under the licence their publisher grants. A model is refused only when the publisher's
+  own terms restrict the use (madmom, Essentia, umxl) or when an owner of its training data has objected. For
+  every model, this file records the training sets and their terms as disclosure, and the app's acknowledgements
+  show them, together with a named replacement path (what Deckie does without the model). Christopher's words: "I
+  agree with your assessment, though we should clarify that in the terms of service / use"; the attorney reviews
+  the line. The reason for the change: the Oct 28 wording refused sets that say "non-commercial" while accepting
+  all-rights-reserved recordings that grant nothing at all, which is most sets, YAMNet's clips and whatever Apple
+  trained its own framework on, and no permissively licensed beat tracker with clean training terms exists.
 - The CI check of this list is not built yet.
 
 ## How to update: on the quarterly update day, or within a week of a security advisory (track M)

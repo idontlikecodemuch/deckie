@@ -19,30 +19,32 @@ Mac) reviews and merges this track's branch, `pc-linux`, and runs anything that 
   Python package (entry 9), and the vocal tagger on YAMNet (entry 12). Step 3, the logic that needs no audio, is
   ported and checked against all 373 committed tracks (entry 7). Step 4, the crate reader and writer, is built and
   accepted (entry 10). The analyser is assembled: one call from an audio file to the lab's record and a crate
-  track, now with the vocal tagger in it (entries 11 and 12). 204 tests pass on Linux; Windows builds and passes
-  everything that needs no model. Next: `deckie-build` with its `bench` command (step 5, in progress), then the
-  vocal-derived fields from memo O (where the vocals are, free intro and outro, hooks) as added crate fields, then
-  the yardstick on the Mac.
+  track, now with the vocal tagger in it (entries 11 and 12). Step 5, `deckie-build` with its `bench` command, is
+  built (entry 13): a crate from a folder, resumable, with the yardstick ready for the Mac. 231 tests pass on
+  Linux; Windows builds and passes everything that needs no model. Next: the vocal-derived fields from memo O
+  (where the vocals are, free intro and outro, hooks) as added crate fields (an agent is on it), ONNX Runtime
+  built by us without the reporting client (an agent is on the workflow), then the yardstick on the Mac.
 - Needed from Christopher: nothing right now. The vocal-model downloads were approved on Oct 28 ("Allow vocal
   models", with a standing yes for any further vocal model the work needs); dr_mp3, dr_flac, ONNX Runtime and
   Beat This! were approved before.
-- With Christopher, as P19 (put by the main session): whether Beat This!'s weights can ship under the
-  training-data rule, now that its training sets are recorded and three of them state non-commercial terms
-  (entry 12, second addendum; DEPENDENCIES.md section 7). The main session recommends keeping the weights and
-  rewriting the rule so that weights ship under their publisher's licence, with the training sets recorded as
-  disclosure and the attorney reviewing the line; the alternative is the literal rule, which means a clean-data
-  beat tracker as a research track and no shipped beats on PC until it lands. Until he answers: Beat This!
-  stays in the engine for the bench, nothing in the code changes, and the research memo is not started. Decided:
+- Decided by Christopher, Oct 29 (P19, now D15): weights ship under their publisher's licence, with every
+  model's training sets recorded in DEPENDENCIES.md and shown in the app's acknowledgements, plus a named
+  replacement path; Beat This! ships (entry 13). Two asks from the main session that follow: keep DEPENDENCIES.md
+  in the shape the apps render (an acknowledgements table now heads the file), and a replacement-path line per
+  model (added; Beat This!'s names the model-free grid, which the main session is measuring now). Also decided:
   ONNX Runtime's usage reporting (entry 12, addendum: the switch set before the library starts covers
   development, CI and the bench; a shipped build carries a library built by us without the reporting client,
   proven by a release test; curl stays off the allowlist), YAMNet's training data (confirmed), crate format v1
   (entry 10, addendum) and MPL 2.0.
 - Added to the order of work, before the first PC build: ONNX Runtime built on CI from its pinned tag without the
   reporting client, pinned by hash, with the release test already in place (entry 12, addendum).
-- Needed from the Mac, when step 5 lands (not blocking): the `bench` run over the 373 files, which folds in the
-  loudness check against pyloudnorm (entry 5), the key estimator's parity run (entry 6) and the vocal tagger's
-  first look at real voices (entry 12). The Mac needs ONNX Runtime's macOS archive fetched by the same pinned
-  pattern as Linux (DEPENDENCIES.md, section 6).
+- Needed from the Mac, now that step 5 is built (not blocking this track): the `bench` run over the 373 files
+  (`deckie-build bench`, entry 13), which folds in the loudness check against pyloudnorm (entry 5), the key
+  estimator's parity run (entry 6) and the vocal tagger's first look at real voices (entry 12). The Mac needs
+  ONNX Runtime's macOS archive (facts in entry 12, third addendum) and the two models exported there; Christopher's
+  yes for that download is asked in the main session.
+- For the main session's yes: the crate builder's two additive proposals, the manifest's import log and the
+  record's `deckie` block for the DJ's own rekordbox data (entry 13; `crate-format.md` item 9).
 
 ## Oct 28, 2026: the environment (entry 1)
 
@@ -694,3 +696,50 @@ carries the reporting client as the Linux one does, through the system's own net
 honours the same switch, so the bench on the Mac runs under the same rule as here: the switch for development, our
 own no-telemetry build for anything that ships. The scan built today finds the client in it (three of its markers),
 so the release test covers macOS libraries as it does Linux and Windows ones.
+
+## Oct 29, 2026: `deckie-build`, the crate builder, and `bench`, the yardstick (entry 13)
+
+**Where it landed.** A new module `DeckieBuild` and the program `deckie-build` turn a folder of music into a crate:
+`deckie-build <folder> --out <name>.deckiecrate` reads every audio file (several at a time, `--jobs`), runs the
+analyser on each and writes the crate. It is resumable: a work folder beside the crate keeps each file's record, a
+file with the same size and modification time is taken without reading it, a moved or renamed file is found again
+by its hash, and a record is reused only if the same engine version, the same vocal tagger and the same tag tempo
+made it; stopping it part way loses only the files in flight. Every file it cannot read is counted by reason
+(unsupported, protected, damaged, decode error, analysis error, duplicate) and listed in the manifest's import log
+with the decoder's own words. It reads rekordbox's collection export (`--rekordbox export.xml`) for the DJ's own
+titles, keys, tempo, grid markers, cues, loops and playlists, and a file's own tags (`--bpm-tags`) for a tempo that
+steers the octave choice. The `bench` command is the stage 1 yardstick: `deckie-build bench <folder> --features
+mixer/features --candidates mixer/candidates.json` runs the engine over the lab's tracks and scores it against the
+lab's files the way `mixer/bench_mu.py` does (beats and downbeats both ways round, tempo within 2 percent with and
+without the octave, key, loudness and true peak, section recall, vocal correlation, bar-1 offset, bar count), with
+medians, means and the charter's pass marks, as a table and as JSON. Its measures match `bench_mu.py`'s own
+functions bit for bit on all 373 committed feature files (that needed Python's compensated sum in the correlation).
+Against itself the engine scores perfectly; against a copy shifted by 100 ms at double tempo it scores as it
+should (beats wrong, an octave apart, bar 1 off by 100 ms). 25 builder tests; 231 tests in all (22 inference, 15
+engine, 34 decode, 36 crate, 99 core, 25 build), run here with both models loaded.
+
+**Measured.** 8.3 s per four-minute file in a release build on this shared 4-core machine, 6.3 s of it the beat
+model; four at a time, 6 to 9 s per file. Peak memory about 1.8 GB for one job and 5.4 GB for four, so the default
+job count leaves each job about 2 GB; cutting the engine's peak memory is a task card for later, not urgent on a
+desktop, worth doing before a laptop sees the builder.
+
+**Two additive proposals for the crate format, for the main session's yes** (`crate-format.md`, item 9; nothing
+existing renamed or removed, the example crate gains two nulls): the manifest's `import_log` (who built it, when,
+files seen, tracks, each failure with its reason, the rekordbox match count), and a `deckie` block on each record,
+null when empty, holding the tag tempo and its source and the DJ's own rekordbox grid markers, cues, loops and
+playlist paths as rekordbox wrote them. rekordbox's title, artist and mix fill the existing `ident` fields, its key
+becomes a vote in `key.votes` with `key.camelot` staying the engine's, and its tempo steers the octave alignment.
+
+**What the Mac does with it.** The bench run over the 373 files is now one command away on the Mac, once ONNX
+Runtime's macOS archive and the two models are there (entry 12, third addendum); it folds in the loudness, key and
+vocal checks this log has been deferring to it. The builder has not run on Windows (it builds there; folder paths
+may come back with backslashes).
+
+**Decided meanwhile (P19, now D15).** Christopher decided the training-data question: weights ship under the licence
+their publisher grants; a model is refused only when the publisher's own terms restrict use or a data owner has
+objected; every model's training sets and terms are recorded in DEPENDENCIES.md and shown in the app's
+acknowledgements, with a named replacement path. Beat This! ships with the section 7 record. Two things followed
+today: an acknowledgements table now heads DEPENDENCIES.md, one line per shipped entry in the shape the apps will
+render, and each model has a replacement-path line (Beat This!: Deckie's own model-free tempo and grid, which the
+main session is measuring against the shipped grid now, after Christopher asked whether a model is needed for beats
+at all).
