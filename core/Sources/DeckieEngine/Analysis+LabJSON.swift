@@ -27,7 +27,8 @@ extension Analysis {
     ///   `mix_in.first_vocal_bar` and `mix_out.last_vocal_bar` are null as the lab writes them for a track with no
     ///   vocal bar; the flags end with `vocal_unknown`. With a tagger, all of these are written as the lab writes
     ///   them, except `embedding_effnet`, which is never written (non-commercial; kept out of every crate); the
-    ///   tagger's own detail (its rule, its singing, rapping, choir, speech and music scores per bar, its style vector) goes in
+    ///   tagger's own detail (its rule, its singing, rapping, choir, speech and music scores per bar, four readings of
+    ///   its class scores per bar with the classes each read, its style vector) goes in
     ///   `deckie.vocal` (`vocalBlock()`), null without a tagger, and the vocal structure and the hook candidates in
     ///   `deckie.vocal_structure` and `deckie.hooks` (the crate's proposed blocks, same fields and values), null
     ///   without a tagger. The lab's tools do not read the `deckie` block, so they read the file unchanged.
@@ -193,7 +194,7 @@ extension Analysis {
 
     /// The vocal tagger's detail, null without one: its model and rule, its frame timing, its other per-bar series
     /// as `<name>_prob` (YAMNet: `singing_prob`, `rapping_prob`, `choir_prob`, `speech_prob`, `music_prob`; 3 decimals,
-    /// as `per_bar.vocal_prob`),
+    /// as `per_bar.vocal_prob`), the four readings of its class scores (`readingsMembers`),
     /// a second model's opinion if there is one, the style vector (4 decimals) and the tagger's own step times.
     func vocalBlock() -> JSONValue {
         typealias J = JSONValue
@@ -207,6 +208,7 @@ extension Analysis {
         for name in v.seriesPerBar.keys.sorted() {
             members.append(m("\(name)_prob", J.roundList(v.seriesPerBar[name]!, 3)))
         }
+        members += readingsMembers(v.readings)
         members.append(m("second_opinion", v.secondOpinion.map {
             .object([m("model", .string($0.model)), m("mean_prob", J.round($0.meanProbability, 4)),
                      m("per_bar", J.roundList($0.perBar, 3))])
@@ -215,6 +217,38 @@ extension Analysis {
         members.append(m("style", v.style.map { J.roundList($0, 4) } ?? .null))
         members.append(m("timing_s", .object(v.stages.map { m($0.name, J.round($0.seconds, 3)) })))
         return .object(members)
+    }
+
+    /// Decimals the readings are written to: more than `vocal_prob`'s 3, since on a full mix most bars of `max11` and
+    /// `voice_sum` lie below 0.02, where 3 decimals leave a score a few dozen steps; all four alike, so they compare
+    /// like with like.
+    public static let readingsDecimals = 5
+
+    /// The readings' members of `deckie.vocal` (null each without readings): `readings`, the four per-bar series by
+    /// name in `VocalReadings.names`' order (`readingsDecimals` decimals); `readings_classes`, for each reading the
+    /// classes it read (name and column) and the names asked for that the model does not have (`voice_vs_music`
+    /// lists its voice and music classes apart); `readings_note`, one sentence a reading.
+    func readingsMembers(_ r: VocalReadings?) -> [JSONValue.Member] {
+        typealias J = JSONValue
+        func m(_ k: String, _ v: J) -> J.Member { J.Member(k, v) }
+        guard let r else { return [m("readings", .null), m("readings_classes", .null), m("readings_note", .null)] }
+        func list(_ cs: [VocalReadings.Class]) -> J {
+            .array(cs.map { .object([m("name", .string($0.name)), m("index", .int($0.index))]) })
+        }
+        func names(_ ns: [String]) -> J { .array(ns.map { .string($0) }) }
+        let c = r.classes
+        let voice: J = .object([m("classes", list(c.voice)), m("missing", names(c.missingVoice))])
+        return [
+            m("readings", .object(r.series.map { m($0.name, J.roundList($0.values, Self.readingsDecimals)) })),
+            m("readings_classes", .object([
+                m("max11", .object([m("classes", list(c.max)), m("missing", names(c.missingMax))])),
+                m("voice_sum", voice),
+                m("voice_logit_sum", voice),
+                m("voice_vs_music", .object([m("voice", list(c.voice)), m("music", list(c.music)),
+                                             m("missing", names(c.missingVoice + c.missingMusic))])),
+            ])),
+            m("readings_note", .object(VocalReadings.notes.map { m($0.name, .string($0.note)) })),
+        ]
     }
 
     /// The vocal structure (memo Q's items A1 to A6), null without a tagger: the crate's proposed `vocal_structure`

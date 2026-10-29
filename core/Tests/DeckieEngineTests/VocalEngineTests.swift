@@ -97,6 +97,70 @@ struct VocalEngineTests {
               + "scorer's track: voc_in \(t.vocIn.map { Py.fixed($0, 3) }), voc_out \(t.vocOut.map { Py.fixed($0, 3) })")
     }
 
+    /// The four readings of YAMNet's class scores (`VocalReadings`) in the lab JSON's `deckie.vocal`: one value per bar
+    /// each, in order; `max11` is the per-bar vocal probability itself (`per_bar.vocal_prob` is it to 3 decimals);
+    /// `voice_sum` is at least `max11` bar for bar; the classes each read and a note each beside them.
+    @Test func labJSONCarriesTheReadings() async throws {
+        let a = try await Shared.shared.run("yamnet").analysis
+        let v = try #require(a.vocal), r = try #require(v.readings)
+        let n = a.bars.nBars
+        #expect(r.max11 == v.perBar)
+        #expect(r.series.allSatisfy { $0.values.count == n })
+        #expect(zip(r.voiceSum, r.max11).allSatisfy { $0 >= $1 })
+
+        func numbers(_ value: JSONValue?) -> [Double]? {
+            guard case .array(let items)? = value else { return nil }
+            return items.compactMap {
+                switch $0 { case .number(let x): return x; case .int(let i): return Double(i); default: return nil }
+            }
+        }
+        let json = a.labJSON()
+        let block = try #require(json["deckie"]?["vocal"])
+        let readings = try #require(block["readings"])
+        #expect(readings.keys == VocalReadings.names)
+        let series = VocalReadings.names.map { numbers(readings[$0]) ?? [] }
+        #expect(series.allSatisfy { $0.count == n }, "\(series.map(\.count)) for \(n) bars")
+        #expect(zip(series[1], series[0]).allSatisfy { $0 >= $1 }, "voice_sum against max11 in the record")
+        #expect(numbers(json["per_bar"]?["vocal_prob"]) == r.max11.map { Py.round($0, 3) })
+        #expect(series[0] == r.max11.map { Py.round($0, Analysis.readingsDecimals) })
+        let classes = try #require(block["readings_classes"])
+        #expect(classes.keys == VocalReadings.names)
+        guard case .array(let voice)? = classes["voice_sum"]?["classes"] else { Issue.record("no voice classes"); return }
+        #expect(voice.count == 12 && voice.first == .object([.init("name", .string("Singing")), .init("index", .int(24))]))
+        #expect(classes["voice_sum"]?["missing"] == .array([.string("Male singing"), .string("Female singing")]))
+        #expect(classes["voice_vs_music"]?["music"] == .array([
+            .object([.init("name", .string("Music")), .init("index", .int(132))]),
+            .object([.init("name", .string("Musical instrument")), .init("index", .int(133))]),
+        ]))
+        #expect(classes["max11"]?["missing"] == .array([]))
+        let notes = try #require(block["readings_note"])
+        #expect(notes.keys == VocalReadings.names)
+        // Nothing of them in the crate record.
+        let t = a.crateTrack(options: .init(analysedAt: "2026-10-29T12:00:00Z"))
+        #expect(!t.featuresPresent.contains { $0.contains("reading") || VocalReadings.names.contains($0) })
+
+        // The series on the sung bars against the instrumental bars: mean and standard deviation each.
+        let bars = Array(0..<min(n, VocalTrack.bars))
+        func summary(_ values: [Double]) -> String {
+            func stats(_ x: [Double]) -> String {
+                let mean = x.reduce(0, +) / Double(x.count)
+                let sd = (x.map { ($0 - mean) * ($0 - mean) }.reduce(0, +) / Double(x.count)).squareRoot()
+                return "\(Py.fixed(mean, 5)) sd \(Py.fixed(sd, 5))"
+            }
+            let sung = bars.filter { VocalTrack.isVocal(bar: $0) }.map { values[$0] }
+            let other = bars.filter { !VocalTrack.isVocal(bar: $0) }.map { values[$0] }
+            return "sung \(stats(sung)), instrumental \(stats(other)), all bars \(stats(values))"
+        }
+        print("readings on the vocal test track (\(n) bars):\n" + r.series.map { "  \($0.name): \(summary($0.values))" }
+            .joined(separator: "\n"))
+        // Each reading puts the sung bars above the instrumental ones on average.
+        for s in r.series {
+            let sung = bars.filter { VocalTrack.isVocal(bar: $0) }.map { s.values[$0] }
+            let other = bars.filter { !VocalTrack.isVocal(bar: $0) }.map { s.values[$0] }
+            #expect(sung.reduce(0, +) / Double(sung.count) > other.reduce(0, +) / Double(other.count), "\(s.name)")
+        }
+    }
+
     /// The crate record: the vocal block, the vocal series and the style vector, listed in `features_present`; the
     /// crate validates, writes and reads back.
     @Test func crateCarriesVocalAndStyle() async throws {

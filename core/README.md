@@ -318,7 +318,14 @@ network with TensorFlow's tools (`Tools/export_yamnet.py`, development-only, in 
 `Analyser()` loads the model when it is there (`DECKIE_YAMNET_MODEL` names another place) and says what is missing
 when it is not. A second model can be
 added beside it as a second opinion through `VocalPatchModel` (PANNs' MobileNetV2 is the candidate, should the Mac's
-yardstick find YAMNet alone reads badly). Measured: the front end within 1.8e-4 of YAMNet's own feature code, the
+yardstick find YAMNet alone reads badly). For the yardstick, the same class scores are also read four fixed ways per
+bar (`VocalReadings` in `Sources/DeckieCore/Vocal`; nothing fitted, nothing in the crate): `max11`, the vocal score
+itself; `voice_sum`, the sum of the scores of the twelve voice classes YAMNet has (the eleven, and speech; AudioSet's
+male and female singing are not among its 521); `voice_logit_sum`, the same classes' logits summed; and
+`voice_vs_music`, the voice sum's share against it plus music and musical instrument. The lab JSON writes them in
+`deckie.vocal` as `readings` (5 decimals), with `readings_classes` (the classes each read, by name and index) and
+`readings_note`; a second model that gives its class scores under AudioSet's names is read the same four ways.
+Measured: the front end within 1.8e-4 of YAMNet's own feature code, the
 network identical to Python's ONNX Runtime on the same patches, and on a synthesised track alternating 8-bar stretches
 of drums and chords with and without a sung-like line, 0.029 on the sung bars against 0.0001 on the others (YAMNet
 hears the synthetic voice only faintly; real singing scores far higher); drums alone score 1e-5. Four minutes of
