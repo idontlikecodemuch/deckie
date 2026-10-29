@@ -79,12 +79,17 @@ def check_source(a):
     lines = git("ls-remote", "--tags", a.remote, ref, ref + "^{}").splitlines()
     listed = {name: sha for sha, name in (line.split("\t") for line in lines)}
     tagged = listed.get(ref + "^{}") or listed.get(ref)
-    if tagged != a.commit:
-        die(f"{a.tag} at {a.remote} points at {tagged or 'nothing'}, expected {a.commit}")
+    # Microsoft's 1.31.1 archives name 41d4d61f as their source (GIT_COMMIT_ID), but the tag v1.31.1 points at
+    # 6af1a932 (found by the first run, Oct 29, 2026). Deckie builds the archives' commit, the source of the binaries
+    # it was developed against, and pins the tag's commit separately, so that either moving still stops the build.
+    expected_tag = a.tag_commit or a.commit
+    if tagged != expected_tag:
+        die(f"{a.tag} at {a.remote} points at {tagged or 'nothing'}, expected {expected_tag}")
     version = pathlib.Path(a.source, "VERSION_NUMBER").read_text(encoding="utf-8").strip()
     if version != a.version:
         die(f"VERSION_NUMBER says {version}, expected {a.version}")
-    print(f"{a.tag} points at {a.commit}, the checkout is that commit, VERSION_NUMBER says {version}")
+    where = "that commit" if expected_tag == a.commit else f"{expected_tag} as pinned; the build uses the archives' commit {a.commit}"
+    print(f"{a.tag} points at {where}, the checkout is {head}, VERSION_NUMBER says {version}")
 
 
 # fetch-dep
@@ -269,6 +274,7 @@ def main():
     p = sub.add_parser("check-source")
     for arg in ("--source", "--remote", "--tag", "--commit", "--version"):
         p.add_argument(arg, required=True)
+    p.add_argument("--tag-commit", default=None, help="the commit the tag must point at, when that is not --commit")
     p = sub.add_parser("fetch-dep")
     for arg in ("--deps", "--name", "--dest"):
         p.add_argument(arg, required=True)

@@ -38,8 +38,10 @@ Mac) reviews and merges this track's branch, `pc-linux`, and runs anything that 
   (entry 10, addendum) and MPL 2.0.
 - ONNX Runtime built by us without the reporting client: the workflow is merged (`onnxruntime-build.yml`: Linux,
   Windows, macOS arm64, the scan as a gate before upload, archives pinned by hash, publish to a release on
-  request) and its first run started with this push; the build times, sizes and hashes go into entry 14 when it
-  finishes. Two findings from reading ONNX Runtime's build files are with the main session: its build patches
+  request). Its first run stopped at its own guard within a minute: the release tag `v1.31.1` points at a different
+  commit than the one Microsoft's archives name as their source, so the guard now pins both and the build uses the
+  archives' commit; the second run started with that fix. The build times, sizes and hashes go into entry 14 when
+  it finishes. Two findings from reading ONNX Runtime's build files are with the main session: its build patches
   four Eigen files on every platform (Microsoft's builds too), and on Windows the event-log provider's name stays
   in the library even though nothing registers it. Both decided (Oct 29): the two patch files now ship beside
   Eigen's notice (`core/notices/eigen/`) and the wording is "unmodified by Deckie; carries ONNX Runtime's two

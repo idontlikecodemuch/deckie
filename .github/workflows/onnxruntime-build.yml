@@ -50,6 +50,11 @@ env:
   # The commit Microsoft's 1.31.1 archives name as their GIT_COMMIT_ID (DEPENDENCIES.md, section 6). The build checks
   # out this commit, not the tag, and stops if the tag points anywhere else.
   ORT_COMMIT: 41d4d61f14b9c1dd0b2ccda1e9b85dd415fd0496
+  # The commit the tag v1.31.1 itself points at (a lightweight tag; read Oct 29, 2026 by the first run). It is not
+  # the archives' commit above: Microsoft packaged 1.31.1 from a later point of the release branch than it tagged.
+  # Deckie builds the archives' commit, the source of the binaries it was developed and tested against, and pins
+  # the tag's commit too, so the build stops if either moves.
+  ORT_TAG_COMMIT: 6af1a932e2286d5c58166085d24c68783033edee
   RELEASE_TAG: onnxruntime-1.31.1-deckie-no-telemetry
   # The flags every platform's build gets, each checked against tools/ci_build/build_args.py and build.py at the
   # pinned commit (read Oct 29, 2026):
@@ -145,7 +150,7 @@ jobs:
         with:
           python-version: "3.12"
       - name: Check the tag, the commit and the version
-        run: python -I core/Tools/onnxruntime-build.py check-source --source ort --remote https://github.com/microsoft/onnxruntime.git --tag "$ORT_TAG" --commit "$ORT_COMMIT" --version "$ORT_VERSION"
+        run: python -I core/Tools/onnxruntime-build.py check-source --source ort --remote https://github.com/microsoft/onnxruntime.git --tag "$ORT_TAG" --tag-commit "$ORT_TAG_COMMIT" --commit "$ORT_COMMIT" --version "$ORT_VERSION"
       - name: Fetch mp11, checked against its SHA-1 in deps.txt
         run: |
           mp11=$(python -I core/Tools/onnxruntime-build.py fetch-dep --deps ort/cmake/deps.txt --name mp11 --dest "$RUNNER_TEMP/ort-deps")
@@ -213,7 +218,7 @@ jobs:
         with:
           python-version: "3.12"
       - name: Check the tag, the commit and the version
-        run: python -I core/Tools/onnxruntime-build.py check-source --source ort --remote https://github.com/microsoft/onnxruntime.git --tag $env:ORT_TAG --commit $env:ORT_COMMIT --version $env:ORT_VERSION
+        run: python -I core/Tools/onnxruntime-build.py check-source --source ort --remote https://github.com/microsoft/onnxruntime.git --tag $env:ORT_TAG --tag-commit $env:ORT_TAG_COMMIT --commit $env:ORT_COMMIT --version $env:ORT_VERSION
       - name: Fetch mp11, checked against its SHA-1 in deps.txt
         run: |
           $mp11 = python -I core/Tools/onnxruntime-build.py fetch-dep --deps ort/cmake/deps.txt --name mp11 --dest "$env:RUNNER_TEMP/ort-deps"
@@ -294,7 +299,7 @@ jobs:
         with:
           python-version: "3.12"
       - name: Check the tag, the commit and the version
-        run: python -I core/Tools/onnxruntime-build.py check-source --source ort --remote https://github.com/microsoft/onnxruntime.git --tag "$ORT_TAG" --commit "$ORT_COMMIT" --version "$ORT_VERSION"
+        run: python -I core/Tools/onnxruntime-build.py check-source --source ort --remote https://github.com/microsoft/onnxruntime.git --tag "$ORT_TAG" --tag-commit "$ORT_TAG_COMMIT" --commit "$ORT_COMMIT" --version "$ORT_VERSION"
       - name: Fetch mp11, checked against its SHA-1 in deps.txt
         run: |
           mp11=$(python -I core/Tools/onnxruntime-build.py fetch-dep --deps ort/cmake/deps.txt --name mp11 --dest "$RUNNER_TEMP/ort-deps")
@@ -363,7 +368,7 @@ jobs:
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
           ls -l dist
-          notes="ONNX Runtime $ORT_VERSION (tag $ORT_TAG, commit $ORT_COMMIT), built by this repository's onnxruntime-build workflow with --no_telemetry, so without Microsoft's usage-reporting client; each library passed the scan for the client's traces (core/Tools/scan-onnxruntime.sh, .ps1) before it was uploaded. The assets were last uploaded by $RUN_URL, whose job summaries give each library's and archive's size and SHA-256; each archive has a .sha256 file beside it. Recorded in DEPENDENCIES.md, section 6."
+          notes="ONNX Runtime $ORT_VERSION (the commit Microsoft's archives name, $ORT_COMMIT; the tag $ORT_TAG itself points at $ORT_TAG_COMMIT), built by this repository's onnxruntime-build workflow with --no_telemetry, so without Microsoft's usage-reporting client; each library passed the scan for the client's traces (core/Tools/scan-onnxruntime.sh, .ps1) before it was uploaded. The assets were last uploaded by $RUN_URL, whose job summaries give each library's and archive's size and SHA-256; each archive has a .sha256 file beside it. Recorded in DEPENDENCIES.md, section 6."
           if gh release view "$RELEASE_TAG" > /dev/null 2>&1; then
             gh release edit "$RELEASE_TAG" --notes "$notes"
           else

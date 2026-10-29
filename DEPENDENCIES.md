@@ -345,7 +345,7 @@ Christopher approved downloading the release archives on Oct 28, 2026, and the l
 
 | | |
 |---|---|
-| Version | 1.31.1: release tag `v1.31.1`, built Oct 23, 2026 from commit `41d4d61f14b9c1dd0b2ccda1e9b85dd415fd0496` (the archives' `GIT_COMMIT_ID`); C API version 31 |
+| Version | 1.31.1: release tag `v1.31.1`, built Oct 23, 2026 from commit `41d4d61f14b9c1dd0b2ccda1e9b85dd415fd0496` (the archives' `GIT_COMMIT_ID`); C API version 31. The tag itself points at `6af1a932e2286d5c58166085d24c68783033edee`, not at that commit (a lightweight tag; found by the first run of Deckie's own build, Oct 29, 2026): Microsoft packaged 1.31.1 from a later point of the release branch than it tagged. Deckie's own build uses the archives' commit, the source of the binaries developed against, and the workflow pins both and stops if either moves |
 | Source | `https://github.com/microsoft/onnxruntime/releases/download/v1.31.1/<archive>`, downloaded Oct 28, 2026, when it was the latest release. GitHub's API refused this session (`releases/latest` answered that the repository is not enabled for it), so "latest" was read from the repository's tags (`git ls-remote --tags`, the highest `vX.Y.Z`), not from GitHub's own "latest" label |
 | Linux x86_64 archive | `onnxruntime-linux-x64-1.31.1.tgz`, 11,413,655 bytes, SHA-256 `c849e36a1ef3e22d4ff217b9d1ce4a3cf5b9467b975610913ae959ad5b16bdc9`, pinned in `fetch-onnxruntime.sh` |
 | Windows x64 archive | `onnxruntime-win-x64-1.31.1.zip`, 82,929,944 bytes, SHA-256 `5869e26bb25314375f2d5ef1877e3ea06b1543d6c710e6e4a1ec2f7177ab4b2c`; no script fetches it yet (the note at the top of `fetch-onnxruntime.sh` says how to use it); most of it is debug symbols (`.pdb`, 429 MB unpacked), which are not needed |
@@ -357,7 +357,8 @@ Christopher approved downloading the release archives on Oct 28, 2026, and the l
 `.github/workflows/onnxruntime-build.yml` builds the release above on GitHub's machines, Linux x86_64
 (`ubuntu-latest`), Windows x64 (`windows-latest`) and macOS arm64 (`macos-latest`), when started by hand (Actions,
 onnxruntime-build, Run workflow) and when a push changes the workflow or its scripts. Each job checks out commit
-`41d4d61f14b9c1dd0b2ccda1e9b85dd415fd0496` and stops if the tag `v1.31.1` points anywhere else, then runs ONNX Runtime's
+`41d4d61f14b9c1dd0b2ccda1e9b85dd415fd0496`, the archives' commit, and stops if the tag `v1.31.1` moves from the commit
+pinned beside it (the table above), then runs ONNX Runtime's
 own `build.sh` (`build.bat` on Windows) with `--config Release --build_shared_lib --parallel --skip_tests
 --skip_submodule_sync --no_telemetry --compile_no_warning_as_error --cmake_extra_defines onnxruntime_BUILD_UNIT_TESTS=OFF
 FETCHCONTENT_TRY_FIND_PACKAGE_MODE=NEVER`, plus `--osx_arch arm64 --apple_deploy_target 14.0` on macOS (14.0 being the
