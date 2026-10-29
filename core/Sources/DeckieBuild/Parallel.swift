@@ -34,8 +34,16 @@ func runParallel(count: Int, workers: Int, _ body: @escaping @Sendable (Int) -> 
     group.wait()
 }
 
-/// The machine's processor count, the default number of jobs.
+/// The machine's processor count.
 public var processorCount: Int { max(1, ProcessInfo.processInfo.activeProcessorCount) }
+
+/// The default number of jobs: the processor count, or fewer when memory is short. One analysis of a four-minute
+/// track peaks at about 1.8 GB (measured on Linux in a release build; each further job adds about 1.3 GB), so a job
+/// is given 2 GB and 2 GB are left for everything else.
+public var defaultJobs: Int {
+    let gb = Double(ProcessInfo.processInfo.physicalMemory) / Double(1 << 30)
+    return max(1, min(processorCount, Int((gb - 2) / 2)))
+}
 
 /// Seconds as `0:04:07` (or `1:02:03:04` past a day, never needed).
 public func clock(_ seconds: Double) -> String {

@@ -12,7 +12,7 @@ public struct BuildOptions: Sendable {
     public var output: URL
     /// A rekordbox collection export (XML) to take names, the DJ's tempo and key, cues and playlists from.
     public var rekordbox: URL?
-    /// Files analysed at once; the default is the processor count.
+    /// Files analysed at once; the default is the processor count, or fewer when memory is short (`defaultJobs`).
     public var jobs: Int
     /// Take a file's own tempo tag (ID3 TBPM, FLAC BPM) as the tag tempo the octave alignment follows, when rekordbox
     /// gives none.
@@ -25,7 +25,7 @@ public struct BuildOptions: Sendable {
     /// machine.
     public var device: String
 
-    public init(folder: URL, output: URL, rekordbox: URL? = nil, jobs: Int = processorCount, fileBPMTags: Bool = false,
+    public init(folder: URL, output: URL, rekordbox: URL? = nil, jobs: Int = defaultJobs, fileBPMTags: Bool = false,
                 fresh: Bool = false, name: String? = nil, device: String = Analysis.platform) {
         self.folder = folder; self.output = output; self.rekordbox = rekordbox; self.jobs = max(1, jobs)
         self.fileBPMTags = fileBPMTags; self.fresh = fresh; self.name = name; self.device = device

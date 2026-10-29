@@ -19,7 +19,7 @@ public struct BenchOptions: Sendable {
     /// lab's tools), and taken again on a later run when the file, the tag tempo and the engine are the same; nil
     /// keeps none. The default is `<output>.records` beside the JSON.
     public var records: URL?
-    /// Tracks analysed at once.
+    /// Tracks analysed at once (`defaultJobs`).
     public var jobs: Int
     /// Only these lab ids.
     public var ids: [String]?
@@ -27,7 +27,7 @@ public struct BenchOptions: Sendable {
     public var fresh: Bool
 
     public init(folder: URL, features: URL, candidates: URL, musicRoot: String? = nil, output: URL? = nil,
-                records: URL? = nil, jobs: Int = processorCount, ids: [String]? = nil, fresh: Bool = false) {
+                records: URL? = nil, jobs: Int = defaultJobs, ids: [String]? = nil, fresh: Bool = false) {
         self.folder = folder; self.features = features; self.candidates = candidates; self.musicRoot = musicRoot
         self.output = output; self.jobs = max(1, jobs); self.ids = ids; self.fresh = fresh
         self.records = records ?? output.map {
