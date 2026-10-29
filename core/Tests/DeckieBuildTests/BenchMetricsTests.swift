@@ -40,8 +40,9 @@ import DeckieLab
         #expect(BenchMetrics.pearson([1, 1, 1], [1, 2, 3]) == nil)
     }
 
-    /// The "key vs key_parity.py" column: the engine's parity decision (`deckie.key.parity`) against the sheet's row,
-    /// by the main session's rule (same key, margin within 1e-3, same sure flag); absent without either side.
+    /// The "key vs key_parity.py" column: the engine's own decision (`deckie.key`) against the sheet's row, by the
+    /// main session's rule (same key, margin within 1e-3, same sure flag); absent without either side. The
+    /// transcription's decision (`deckie.key.parity`) is only counted.
     @Test func keyParityColumn() throws {
         func record(_ deckie: String) throws -> BenchRecord {
             let text = #"{"id":"t1","bpm":120,"grid":{"bpm":120,"first_downbeat_s":0.5,"n_bars":8},"key":{"camelot":"8A"}"#
@@ -49,8 +50,8 @@ import DeckieLab
             return try JSONDecoder().decode(BenchRecord.self, from: Data(text.utf8))
         }
         func parity(_ camelot: String, _ margin: Double, _ sure: Bool) -> String {
-            ",\"deckie\":{\"key\":{\"camelot\":\"8A\",\"margin\":0.2,\"agree\":3,\"sure\":true,\"parity\":"
-                + "{\"camelot\":\"\(camelot)\",\"margin\":\(margin),\"agree\":3,\"sure\":\(sure)}}}"
+            ",\"deckie\":{\"key\":{\"camelot\":\"\(camelot)\",\"margin\":\(margin),\"agree\":3,\"sure\":\(sure),\"parity\":"
+                + "{\"camelot\":\"8A\",\"margin\":0.2,\"agree\":3,\"sure\":true}}}"
         }
         let row = KeyParityRow(id: "t1", key: "8A", margin: 0.1234, agree: 3, sure: true, lab: "8A", labConfident: true,
                                apple: "8A")
@@ -65,7 +66,7 @@ import DeckieLab
         let noRow = BenchMetrics.compare(engine: try record(parity("8A", 0.1240, true)), lab: lab, rel: "a", seconds: nil)
         #expect(noRow.keyParity == nil)
         let summary = BenchSummary([same, differ])
-        #expect(summary.keyParityTracks == 2 && summary.keyParitySame == 1 && summary.keyDecidedAsParity == 2)
+        #expect(summary.keyParityTracks == 2 && summary.keyParitySame == 1 && summary.keyTranscriptionSame == 2)
         #expect(summary.keyParityDiffering.map(\.id) == ["t1"])
     }
 

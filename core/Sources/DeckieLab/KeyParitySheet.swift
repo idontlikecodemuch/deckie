@@ -62,7 +62,9 @@ public enum KeyParitySheet {
     /// The rows, in the file's order.
     public static func load(_ url: URL) throws -> [KeyParityRow] {
         let text = try String(contentsOf: url, encoding: .utf8)
-        var lines = text.split(separator: "\n", omittingEmptySubsequences: true).map(String.init)
+        // By line, whatever the line ending: a Windows checkout gives the file "\r\n", which Swift reads as one
+        // character that a split on "\n" never matches (then the whole file is one header line).
+        var lines = text.split(omittingEmptySubsequences: true, whereSeparator: \.isNewline).map(String.init)
         guard let header = lines.first else { throw KeyParitySheetError.header("(empty file)") }
         guard header.split(separator: "\t", omittingEmptySubsequences: false).map(String.init) == columns else {
             throw KeyParitySheetError.header(header)

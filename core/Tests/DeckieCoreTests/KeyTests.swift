@@ -825,4 +825,16 @@ func relativeDifference(_ got: [Double], _ want: [Double]) -> Double {
         #expect(r.differences(key: r.key, margin: r.margin + 0.0011, sure: !r.sure)?.contains("sure") == true)
         #expect(r.differences(key: "1A", margin: r.margin, sure: r.sure)?.hasPrefix("key 1A, key_parity.py") == true)
     }
+
+    /// The sheet as a Windows checkout gives it, lines ending "\r\n" (the first Windows run read the whole file as
+    /// one header line): the same rows.
+    @Test func readsTheSheetWithWindowsLineEndings() throws {
+        let url = RepoPaths.mixer.appendingPathComponent(KeyParitySheet.fileName)
+        let lines = try String(contentsOf: url, encoding: .utf8).split(whereSeparator: \.isNewline).prefix(3)
+        let crlf = FileManager.default.temporaryDirectory.appendingPathComponent("deckie-crlf-\(UUID().uuidString).tsv")
+        try Data((lines.joined(separator: "\r\n") + "\r\n").utf8).write(to: crlf)
+        defer { try? FileManager.default.removeItem(at: crlf) }
+        let rows = try KeyParitySheet.load(crlf), first = Array(try KeyParitySheet.load(url).prefix(2))
+        #expect(rows.count == 2 && rows == first)
+    }
 }
