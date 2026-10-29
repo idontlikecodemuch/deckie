@@ -352,9 +352,7 @@ export into `.models/yamnet.onnx` from the repository's release `models-1`, chec
 cannot does it run `Tools/fetch-vocal-models.sh`, which fetches the weights by pinned URL and SHA-256 and exports the
 network with TensorFlow's tools (`Tools/export_yamnet.py`, development-only, in a Python environment of their own).
 `Analyser()` loads the model when it is there (`DECKIE_YAMNET_MODEL` names another place) and says what is missing
-when it is not. A second model can be
-added beside it as a second opinion through `VocalPatchModel` (PANNs' MobileNetV2 is the candidate, should the Mac's
-yardstick find YAMNet alone reads badly). For the yardstick, the same class scores are also read four fixed ways per
+when it is not. For the yardstick, the same class scores are also read four fixed ways per
 bar (`VocalReadings` in `Sources/DeckieCore/Vocal`; nothing fitted, nothing in the crate): `max11`, the vocal score
 itself; `voice_sum`, the sum of the scores of the twelve voice classes YAMNet has (the eleven, and speech; AudioSet's
 male and female singing are not among its 521); `voice_logit_sum`, the same classes' logits summed; and
@@ -366,6 +364,14 @@ network identical to Python's ONNX Runtime on the same patches, and on a synthes
 of drums and chords with and without a sung-like line, 0.029 on the sung bars against 0.0001 on the others (YAMNet
 hears the synthetic voice only faintly; real singing scores far higher); drums alone score 1e-5. Four minutes of
 stereo take 0.6 s in a release build (resampling 0.28 s, front end 0.10 s, network 0.20 s) and 4.6 s in a debug build.
+A second opinion runs beside YAMNet when its model is there: PANNs' MobileNetV2 (`PANNs` in `Sources/DeckieInference`,
+through `VocalPatchModel`; MIT code, CC BY 4.0 weights, trained on AudioSet; `DEPENDENCIES.md` section 9), on 2 s
+windows every 0.48 s of the mix resampled to 32 kHz, its log-mel front end inside its ONNX graph; the analyser writes
+its vocal score per bar, its four readings and its singing, speech and music scores per bar to
+`deckie.vocal.second_opinion` and changes nothing else (`VocalSecondOpinion`). `Tools/fetch-panns.sh` makes its model
+(`.models/panns_mobilenetv2.onnx`, or `DECKIE_PANNS_MODEL`) from the authors' checkpoint, pinned by hash, with
+PyTorch. On the vocal test track it scores 0.066 on the sung bars against 0.007, and its network takes 1.8 s on four
+minutes of audio (the resampling 2.9 s more in a debug build).
 
 **The vocal structure and the hook candidates** (`VocalStructure` and `Hooks` in `Sources/DeckieCore/Structure`) are
 research Q's per-track vocal fields (`docs/research/q-vocal-uses.md`, items A1 to A6 and B7): with a tagger, the
@@ -561,6 +567,13 @@ The engine is plain Swift and C, so the bench builds and runs on the Mac as it d
    file elsewhere.
 4. The vocal tagger's model, `yamnet.onnx`, comes with step 3 (`--yamnet` takes it alone), or is named by
    `DECKIE_YAMNET_MODEL`. Optional: without it the yardstick has no vocal correlation.
+   Its second opinion, PANNs (optional; `DEPENDENCIES.md` section 9): `bash core/Tools/fetch-models.sh --panns
+   --python <python>` exports `panns_mobilenetv2.onnx` into `core/.models/` with `fetch-panns.sh` (PyTorch at the
+   pinned versions, as for Beat This!; the checkpoint comes from zenodo.org) until its export is pinned and published;
+   or take CI's export, the artifact `models-panns-<digits>-unpinned` of a recent `core-linux` run (`gh run download
+   <run id> -n <name> -D core/.models`); `DECKIE_PANNS_MODEL` names a file elsewhere. With it the bench's records carry
+   `deckie.vocal.second_opinion`; records kept from a run without it do not, since the tagger's name is unchanged, so
+   run the bench once with `--fresh` (or a new `--records` folder).
 5. Run, from `core/`, with the music where the lab had it:
 
 ```
