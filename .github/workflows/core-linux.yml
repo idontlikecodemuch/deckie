@@ -1,0 +1,27 @@
+# DeckieCore on Linux: build and run the parity tests in the official Swift 6.4.1 image (Ubuntu 24.04).
+name: core-linux
+
+on:
+  push:
+    branches: [main, pc-linux]
+    paths: [core/**, mixer/features/**, mixer/candidates.json, mixer/recs.json, .github/workflows/core-linux.yml]
+  pull_request:
+    paths: [core/**, mixer/features/**, mixer/candidates.json, mixer/recs.json, .github/workflows/core-linux.yml]
+  workflow_dispatch:
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    container:
+      # The official Swift 6.4.1 image on Ubuntu 24.04, pinned by its multi-architecture index digest (DEPENDENCIES.md).
+      image: swift@sha256:6304481cf2717966b7ba175162e397ea2f2cc3161909f2b2a5cf40036079a0f7 # swift:6.4.1-noble
+    steps:
+      - uses: actions/checkout@v4
+      - name: Swift version
+        run: swift --version
+      - name: Build
+        working-directory: core
+        run: swift build -v
+      - name: Test
+        working-directory: core
+        run: swift test
