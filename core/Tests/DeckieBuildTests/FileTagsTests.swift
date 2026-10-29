@@ -114,11 +114,27 @@ import Testing
     }
 }
 
-/// A fresh folder of its own under the system's temporary folder, one per test process.
+/// A folder of its own under the system's temporary folder, one per test process (the music folder is about 13 MB).
+/// The folders of earlier runs whose process has ended are removed the first time.
 func temporaryFolder(_ name: String) throws -> URL {
+    _ = removeEarlierRuns
     let url = FileManager.default.temporaryDirectory
-        .appendingPathComponent("deckie-build-tests-\(ProcessInfo.processInfo.processIdentifier)")
+        .appendingPathComponent("\(temporaryPrefix)\(ProcessInfo.processInfo.processIdentifier)")
         .appendingPathComponent(name)
     try FileManager.default.createDirectory(at: url, withIntermediateDirectories: true)
     return url
 }
+
+private let temporaryPrefix = "deckie-build-tests-"
+
+private let removeEarlierRuns: Void = {
+    #if !os(Windows)
+    let fm = FileManager.default, tmp = fm.temporaryDirectory
+    for name in (try? fm.contentsOfDirectory(atPath: tmp.path)) ?? [] where name.hasPrefix(temporaryPrefix) {
+        // kill with signal 0 only asks whether the process is still there.
+        if let pid = Int32(name.dropFirst(temporaryPrefix.count)), pid != getpid(), kill(pid, 0) != 0 {
+            try? fm.removeItem(at: tmp.appendingPathComponent(name))
+        }
+    }
+    #endif
+}()
