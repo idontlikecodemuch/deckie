@@ -58,10 +58,15 @@ public struct CrateManifest: Codable, Equatable, Sendable {
     /// no file is left out silently. A file is "audio" by its extension; one that could not be analysed is listed with
     /// its path below the folder (never an absolute path), its extension, a reason and the reason's text. `counts`
     /// (reason, then extension, to the number of files) is written from the entries for a quick look and recomputed
-    /// by readers, as `engines_used` is.
+    /// by readers, as `engines_used` is. **proposed** too: a file whose record is in the crate but whose decoder played
+    /// damaged frames as silence is listed as well, reason `damaged_frames`, the times in its message, so the DJ hears
+    /// that the file is faulty (the times are also in the record's `file.damaged_frames`).
     public struct ImportLog: Codable, Equatable, Sendable {
-        /// Why a file has no record of its own.
+        /// Why a file has no record of its own, or (`damagedFrames`) why a file with one is listed.
         public enum Reason {
+            /// The file is in the crate, but damaged frames were played as silence (`file.damaged_frames`): faulty
+            /// but playable. Not counted among the files left out.
+            public static let damagedFrames = "damaged_frames"
             /// A format, or a variant of one, that this platform's decoder cannot read (AAC on Linux, WMA, Ogg, ...).
             public static let unsupported = "unsupported"
             /// Locked by copy protection (an iTunes Store or Apple Music file): no decoder will ever read it.
@@ -74,10 +79,11 @@ public struct CrateManifest: Codable, Equatable, Sendable {
             public static let analysisError = "analysis_error"
             /// The same bytes as another file of the folder, which has the record (the record id is the file's hash).
             public static let duplicate = "duplicate"
+            /// The reasons a file has no record of its own.
             public static let all = [unsupported, protected, damaged, decodeError, analysisError, duplicate]
         }
 
-        /// One file without a record of its own.
+        /// One file without a record of its own, or with damaged frames.
         public struct Entry: Codable, Equatable, Sendable {
             /// The path below the folder the crate was built from.
             public var rel: String
@@ -107,7 +113,7 @@ public struct CrateManifest: Codable, Equatable, Sendable {
         public var builtAt: String
         /// Audio files found in the folder, by extension.
         public var filesSeen: Int
-        /// Records the build wrote (files seen less the entries).
+        /// Records the build wrote (files seen less the entries of files without a record).
         public var tracks: Int
         /// Sorted by `rel`.
         public var entries: [Entry]
@@ -172,13 +178,28 @@ public struct CrateTrack: Codable, Equatable, Sendable {
         /// such as ID3 TBPM), which steered the analysis between double and half tempo; nil when there was none. It is
         /// a fact about the file, not something imported, so it sits here and not in `imported`.
         public var tagBpm: Double?
+        /// **proposed**: the frames the decoder found damaged and played as silence instead (an MP3 frame whose data
+        /// runs past its own end, as on a damaged or badly spliced file), in order; nil when there were none. The file
+        /// is faulty but playable, and the analysis was made on the audio with those frames silent.
+        public var damagedFrames: [DamagedFrame]?
+
+        /// One damaged frame: where its decoded audio starts, in seconds from the start of the decoded audio, and how
+        /// long it is (one MP3 frame, 26.1 ms at 44.1 kHz).
+        public struct DamagedFrame: Codable, Equatable, Sendable {
+            public var startS: Double
+            public var seconds: Double
+            public init(startS: Double, seconds: Double) { self.startS = startS; self.seconds = seconds }
+            enum CodingKeys: String, CodingKey { case seconds, startS = "start_s" }
+        }
+
         public init(name: String, rel: String?, bytes: Int?, sha1Head: String?, sha256: String? = nil,
-                    durationS: Double, tagBpm: Double? = nil) {
+                    durationS: Double, tagBpm: Double? = nil, damagedFrames: [DamagedFrame]? = nil) {
             self.name = name; self.rel = rel; self.bytes = bytes; self.sha1Head = sha1Head; self.sha256 = sha256
-            self.durationS = durationS; self.tagBpm = tagBpm
+            self.durationS = durationS; self.tagBpm = tagBpm; self.damagedFrames = damagedFrames
         }
         enum CodingKeys: String, CodingKey {
             case name, rel, bytes, sha256, sha1Head = "sha1_head", durationS = "duration_s", tagBpm = "tag_bpm"
+            case damagedFrames = "damaged_frames"
         }
     }
 

@@ -83,7 +83,8 @@ memo Q's vocal fields, `vocal_structure` and `hooks`, are instead left out when 
   `bars.<series>`. Readers ignore names they do not know, but keep a per-bar series they do not know. **proposed** (the
   names; `vocal_structure` and `hooks` with memo Q's vocal fields).
 - `file`: `name`, `rel` (path below the folder the crate was built from, or null; never absolute), `bytes` or null,
-  `sha1_head` or null, `sha256` or null, `duration_s`, `tag_bpm` or null (with step 5, below). `sha256` is the whole
+  `sha1_head` or null, `sha256` or null, `duration_s`, `tag_bpm` or null (with step 5, below), `damaged_frames` or
+  null (**proposed**, with the damaged-frame concealment, below). `sha256` is the whole
   file's SHA-256 hash as 64 lower-case hexadecimal characters, the spec's "content hash of the file for exact identity"
   (spec 5.4); the record's `id` is its start, as above, and it is null only in lab records. `sha1_head` is track A's
   head hash: a SHA-1 of the start of the file, which the Apple apps keep for a quick identity check. Track A section 5
@@ -103,9 +104,10 @@ memo Q's vocal fields, `vocal_structure` and `hooks`, are instead left out when 
   source, the engine is not; track L wrote `deckie-core`, which now names the code both engines share), `version`,
   `platform` (`macos-arm64`, `linux-x86_64`, `windows-x86_64`), `fidelity`, `models` (each `name`, `version` or null,
   `weights_sha256` or null), `decoder` (`name`, `version` or null) or null. An engine's `version` goes up whenever the
-  record it writes gains or changes fields (the Windows and Linux engine's is 0.3.0: 0.2.0 brought the vocal
-  blocks and `file.tag_bpm`, 0.3.0 the three-profile key vote, which changes keys), so a builder's work folder made
-  by an older version is analysed again rather than reused.
+  record it writes gains or changes fields (the Windows and Linux engine's is 0.3.1: 0.2.0 brought the vocal
+  blocks and `file.tag_bpm`, 0.3.0 the three-profile key vote, which changes keys, 0.3.1 `file.damaged_frames`, with
+  damaged MP3 frames silenced), so a builder's work folder made by an older version is analysed again rather than
+  reused.
   **proposed**: `fidelity` 0 means not benchmarked; n means the build passed benchmark tier n, tier 1 being the stage 1
   pass marks. A device with the audio re-analyses a record when its own fidelity is higher, or the record's level is a
   fallback the device can better.
@@ -163,8 +165,8 @@ no spaces; strings escaped only where JSON requires; `null` written, never left 
 `vocal_structure` and `hooks`, which are left out); whole numbers plain; other
 numbers rounded to a fixed number of decimals by field name, trailing zeros dropped, one digit kept after the point
 (3: `bpm`, `bpm_in`, `bpm_out`, `confidence`, `duration_s`, `first_sound_s`, `last_sound_s`, `lra`, `tag_bpm`; 4:
-`first_downbeat_s`, `start_s`, `end_s`, `mean`, `onset_pattern_16`; 2: `fit_mad_ms`, `integrated_lufs`, `true_peak_db`,
-`secs`; the vocal blocks' numbers are listed with them, below).
+`first_downbeat_s`, `start_s`, `end_s`, `mean`, `onset_pattern_16`, `seconds`; 2: `fit_mad_ms`, `integrated_lufs`,
+`true_peak_db`, `secs`; the vocal blocks' numbers are listed with them, below).
 These are the lab's own roundings. `crate.json` puts each track on its own line, for readable diffs; every file ends
 with a newline. The writer replaces `manifest.json`, `crate.json` and the sidecars of current tracks, deletes sidecars
 of removed tracks, and touches nothing else. It refuses a crate whose `schema` is newer than its own, because it would
@@ -258,6 +260,26 @@ artist tags, source `tag`, else the file name, source `filename`); the DJ's key 
 (the lab's octave alignment to a tag) and is recorded in `file.tag_bpm`. The engine's own grid stays in `grid` and
 `tempo_segments`; the DJ's grid markers, cues and loops stay in `imported.rekordbox`, untouched, so the Apple apps can
 show or compare them without either side overwriting the other.
+
+## Proposed with the damaged-frame concealment (Oct 29, 2026)
+
+The main session decided on Oct 29, 2026 that the Windows and Linux MP3 decoder plays a damaged frame (one whose
+Huffman data runs past its own end, as on a damaged or badly spliced file) as silence, as mpg123 does, rather than
+decode it into a burst (dr_mp3 alone gave one lab track a true peak of +9.2 dBTP where the lab's decoder gave +2.5), and
+that the DJ is told. Both fields are additive: a reader that does not know them ignores them, a crate written before
+them reads them as null, and the example crate gains `file.damaged_frames`, null, in each record. **proposed**:
+
+- **`file.damaged_frames`**, a list or null: the frames played as silence, in order, each `start_s` (where the frame's
+  decoded audio starts, in seconds from the start of the decoded audio, 4 decimals) and `seconds` (its length, one MP3
+  frame, 0.0261 at 44.1 kHz; 4 decimals); null when there were none, as for every file that is not MP3. Reason: the
+  file is faulty but playable, and every other number in the record was measured on the audio with those frames silent,
+  so the record says where the audio is not the file's own. The engine's lab JSON carries the same list as
+  `deckie.damaged_frames`.
+- **`import_log` entries with reason `damaged_frames`**: a file whose record is in the crate but has damaged frames is
+  listed too, the times in its `message` ("damaged frame at 1:01.234 (26 ms), played as silence; the track is in the
+  crate"), and counted under its reason in `counts`; `tracks` still counts it, and the builder's summary does not count
+  it among the files left out. Reason: decision P18's "nothing left out silently" extended to a file that was changed
+  on its way in.
 
 ## Additions accepted with the vocal fields (memo Q; the main session's yes, Oct 29, 2026)
 

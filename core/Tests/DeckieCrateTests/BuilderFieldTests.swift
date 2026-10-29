@@ -61,6 +61,37 @@ import DeckieCrate
         #expect(crate.problems().map(\.description) == ["crate.json: tracks[0].file.tag_bpm (track a1): 0.0 must be above 0"])
     }
 
+    /// The proposed `file.damaged_frames` (a damaged MP3 frame the decoder played as silence) and its import log entry,
+    /// reason `damaged_frames`, for a file that is in the crate: both round-trip, the times with 4 decimals; a record
+    /// without damaged frames writes null; a record written before the field reads as nil; a negative start or an
+    /// empty length is refused.
+    @Test func damagedFramesRoundTripAndAreChecked() throws {
+        var crate = Self.crateWithAdditions()
+        crate.tracks[0].file.damagedFrames = [.init(startS: 61.2342, seconds: 0.0261)]
+        crate.manifest.importLog?.entries.append(.init(
+            rel: "CD2/edit.mp3", ext: "mp3", reason: CrateManifest.ImportLog.Reason.damagedFrames,
+            message: "damaged frame at 1:01.234 (26 ms), played as silence; the track is in the crate"))
+        #expect(crate.problems().isEmpty, "\(crate.problems())")
+        let files = try CrateWriter.encode(crate)
+        let back = try CrateReader.decode(withSignatureFiles(files, crate))
+        #expect(back == crate)
+        let tracks = String(decoding: files["crate.json"]!, as: UTF8.self)
+        #expect(tracks.contains(#""file":{"bytes":"#) && tracks.contains(#""damaged_frames":[{"seconds":0.0261,"start_s":61.2342}]"#))
+        #expect(tracks.contains(#""damaged_frames":null"#))  // the other track
+        let manifest = String(decoding: files["manifest.json"]!, as: UTF8.self)
+        #expect(manifest.contains(#""damaged_frames":{"mp3":1}"#))
+        #expect(!CrateManifest.ImportLog.Reason.all.contains(CrateManifest.ImportLog.Reason.damagedFrames))
+
+        var older = withSignatureFiles(files, crate)
+        older["crate.json"] = Data(tracks.replacingOccurrences(of: #""damaged_frames":null,"#, with: "").utf8)
+        #expect(try CrateReader.decode(older).tracks[1].file.damagedFrames == nil)
+
+        crate.tracks[0].file.damagedFrames = [.init(startS: -0.5, seconds: 0)]
+        #expect(crate.problems().map(\.description) == [
+            "crate.json: tracks[0].file.damaged_frames[0].start_s (track a1): -0.5 must be 0 or more",
+            "crate.json: tracks[0].file.damaged_frames[0].seconds (track a1): 0.0 must be above 0"])
+    }
+
     /// A record written before these fields existed (no `tag_bpm`, no `imported`) still reads, as nulls.
     @Test func recordsWithoutTheFieldsStillRead() throws {
         let crate = sampleCrate()

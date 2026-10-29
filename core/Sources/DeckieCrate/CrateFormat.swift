@@ -70,6 +70,8 @@ public enum CrateFormat {
         "beat_density_ratio": 3, "bright_margin_db": 2, "exposed_low_drop_db": 2, "exposed_density_ratio": 3,
         "strength": 3, "repetition": 3, "loudness_score": 3, "vocal_density": 3, "weight_repetition": 3,
         "weight_loudness": 3, "weight_vocal": 3, "min_repetition": 3, "short_margin": 3, "sung_share": 3,
+        // A damaged frame's length (`file.damaged_frames`, proposed), as its `start_s`.
+        "seconds": 4,
     ]
 
     /// The four-byte tags that open the sidecar files.
