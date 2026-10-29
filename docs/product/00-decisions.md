@@ -148,7 +148,13 @@ Accepted as proposed, with two changes: the engine family for the Windows and Li
 must say how a shipped engine makes a record's `id` (a prefix of the file's content hash, with the full hash stored),
 since the lab's ids were made another way. Measured: 373 lab files round-trip; about 4 KB a track without
 signatures, inside the 10 KB budget. The writer refuses to rewrite a crate from a newer schema rather than drop
-fields, so an older app will need a line of copy for that case. Christopher approved on Oct 28.
+fields, so an older app will need a line of copy for that case. Christopher approved on Oct 28. Later the same day, two
+additive blocks accepted: `manifest.import_log` (device model label, time, files seen, tracks, failures with reasons,
+rekordbox matches; the count P18 asks for) and a per-record `imported` block keyed by source (`imported.rekordbox`:
+grid markers, cues, loops, playlists, with the import time; null when nothing was imported), the DJ's own data named
+for where it came from; the file's tag tempo is `file.tag_bpm`. The acknowledgements screen reads
+`core/dependencies.json`, the source of truth, from which the Markdown table in `DEPENDENCIES.md` is generated and
+checked by a test, so the apps never parse Markdown.
 
 ### D15. Model weights ship under their publisher's licence; training data is disclosed, not a gate (Oct 28)
 Christopher accepted P19: "I agree with your assessment, though we should clarify that in the terms of service /
