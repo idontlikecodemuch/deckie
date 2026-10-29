@@ -108,16 +108,22 @@ public final class Analyser: Sendable {
         }
 
         // ------------------------------------------------------------------ hash
-        let data: Data
+        // The file's bytes are let go as soon as they are hashed (the decoder reads the file itself), so they are not
+        // held through the whole analysis: for a WAV that is as much memory again as the decoded audio.
+        let sha: String, format: AudioFormat, bytes: Int
         do {
-            data = try Data(contentsOf: url)
-        } catch {
-            let missing = !FileManager.default.fileExists(atPath: url.path)
-            throw AudioDecodeError(kind: .cannotRead, file: url.path, format: .unknown,
-                                   message: missing ? "no such file" : "could not be read (\(error))")
+            let data: Data
+            do {
+                data = try Data(contentsOf: url)
+            } catch {
+                let missing = !FileManager.default.fileExists(atPath: url.path)
+                throw AudioDecodeError(kind: .cannotRead, file: url.path, format: .unknown,
+                                       message: missing ? "no such file" : "could not be read (\(error))")
+            }
+            sha = CrateIDs.sha256(of: data)
+            format = AudioFormat.sniff(data)
+            bytes = data.count
         }
-        let sha = CrateIDs.sha256(of: data)
-        let format = AudioFormat.sniff(data)
         lap("hash")
 
         // ------------------------------------------------------------------ decode (44.1 kHz, mono = channel mean)
@@ -192,13 +198,17 @@ public final class Analyser: Sendable {
         lap("structure")
 
         // ------------------------------------------------------------------ per-bar loudness, bands, onsets; loudness
-        let kw = KWeighted(buffer)
-        let barFrames = bars.barTimes.map { kw.frame(at: $0) }
-        let lufs = (0..<bars.nBars).map { kw.loudness(from: barFrames[$0], to: barFrames[$0 + 1]) }
-        let levels = BandSplit(sampleRate: SR).levels(mono, barFrames: barFrames)
-        let onsetDensity = spectral.onsetDensity(grid: bars)
-        let loudness = Analysis.Loudness(integratedLufs: Loudness.integrated(kw), lra: Loudness.range(kw),
+        // The K-weighted running sum (8 bytes a sample) is needed only here, so it lives only in this block.
+        let lufs: [Double], levels: BandSplit.Levels, loudness: Analysis.Loudness
+        do {
+            let kw = KWeighted(buffer)
+            let barFrames = bars.barTimes.map { kw.frame(at: $0) }
+            lufs = (0..<bars.nBars).map { kw.loudness(from: barFrames[$0], to: barFrames[$0 + 1]) }
+            levels = BandSplit(sampleRate: SR).levels(mono, barFrames: barFrames)
+            loudness = Analysis.Loudness(integratedLufs: Loudness.integrated(kw), lra: Loudness.range(kw),
                                          truePeakDb: TruePeak.decibels(buffer))
+        }
+        let onsetDensity = spectral.onsetDensity(grid: bars)
         lap("loudness")
         let pattern = spectral.onsetPattern(grid: bars, barLoudness: lufs)
 
@@ -251,7 +261,7 @@ public final class Analyser: Sendable {
         return Analysis(
             id: CrateIDs.id(forSHA256: sha), title: options.title ?? url.deletingPathExtension().lastPathComponent,
             version: options.version,
-            source: .init(path: path, name: url.lastPathComponent, bytes: data.count, sha256: sha,
+            source: .init(path: path, name: url.lastPathComponent, bytes: bytes, sha256: sha,
                           format: format.rawValue, sampleRate: sourceRate, channels: sourceChannels),
             duration: duration, bpmTag: tag, detectedBeats: beats, detectedDownbeats: downbeats, octaveFix: octaveFix,
             grid: G, bars: bars, multiplierVsTag: multTag, tagDevPct: devTag, bpmAgree: bpmAgree,
