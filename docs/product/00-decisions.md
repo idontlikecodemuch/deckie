@@ -164,8 +164,9 @@ vocal-free gaps of 8 bars or more; an "exposed vocal" proxy from the low band an
 real reading preferred when present) and `hooks` (up to three candidates for the DJ to confirm), each listed in
 features_present and left out entirely when absent so older records keep their bytes; every rule and threshold is
 written into the record so the Mac's listening test can tune them. The id of a shipped record is the first 16
-hex characters of the file's SHA-256, with the full hash in `file.sha256`. The session's memo is renamed to
-research P, since research O on main is the alternatives search.
+hex characters of the file's SHA-256, with the full hash in `file.sha256`. The session's memo is
+research Q (`docs/research/q-vocal-uses.md`): O on main is the alternatives search and P is the Mac session's
+machine estimates.
 
 ### D15. Model weights ship under their publisher's licence; training data is disclosed, not a gate (Oct 28)
 Christopher accepted P19: "I agree with your assessment, though we should clarify that in the terms of service /
