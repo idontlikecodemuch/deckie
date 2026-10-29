@@ -221,6 +221,16 @@ One universal iOS binary plus a native macOS target from shared packages. Roles 
 the decks), Pocket (iPhone: record a set, see the tracklist), Desk (Mac: import, analyse, manage the crate). Web app:
 later. Android and Windows: not planned.
 
+### 5.9 Legal texts (D15)
+
+Three short texts, written in the app's voice (`voice.md`), reviewed by the attorney with the DECKEE question:
+the terms of use, the privacy statement and the acknowledgements. They say, in this order: the music and everything
+Deckie learns from it stay on the DJ's devices, with no account, no upload and no training on the DJ's content (D3);
+the DJ is responsible for the rights to the files they analyse; Deckie contains third-party models and libraries
+published under open licences, each listed in the acknowledgements with its licence and, for a model, the training
+sets it was built from and their terms (D15); and the app's store listing claims "Data Not Collected" only while
+that is true (P8). The acknowledgements are generated from `DEPENDENCIES.md`, so they cannot drift from what ships.
+
 ## 6. Features
 
 - 6.1 Hear and identify. Exists. Add: loud-room measurement; pitch sweep; wider variants only if the sweep says so.

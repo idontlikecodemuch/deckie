@@ -150,6 +150,16 @@ since the lab's ids were made another way. Measured: 373 lab files round-trip; a
 signatures, inside the 10 KB budget. The writer refuses to rewrite a crate from a newer schema rather than drop
 fields, so an older app will need a line of copy for that case. Christopher approved on Oct 28.
 
+### D15. Model weights ship under their publisher's licence; training data is disclosed, not a gate (Oct 28)
+Christopher accepted P19: "I agree with your assessment, though we should clarify that in the terms of service /
+use." So the training-data line of the note on D14 is replaced by this: weights ship under the licence their
+publisher grants; a model is refused when the publisher's own terms restrict use or when a data owner has objected;
+every model's training sets and their terms are recorded in `DEPENDENCIES.md` and shown in the app's
+acknowledgements, with a named replacement path; the attorney reviews the line with DECKEE. Beat This! ships with
+its record. The terms of use say it plainly: Deckie contains third-party models published under open licences,
+listed with their licences and training-data disclosures in the acknowledgements; Deckie never trains on the user's
+content (D3). Spec 5.9.
+
 ### Note on D3 (Oct 26, from the community research): privacy covers taste, not only audio
 DJs' fear is "I'm not helping train ai for free": that their choices become someone else's product. So D3 extends
 to history, cues, saved pairs and learned preferences: all of it stays with the DJ, Deckie says who benefits from
