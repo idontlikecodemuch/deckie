@@ -34,23 +34,22 @@ public struct BenchRecord: Decodable, Sendable {
         public var bytes: Int?
         public var madmomWouldRun: String?
         public var vocalModel: String?
-        /// `deckie.key` (engine 0.4.0 on): the HPCP method's decision and its parity decision.
+        /// `deckie.key` (engine 0.4.0 on): the HPCP method's decision.
         public var key: EngineKey?
         enum CodingKeys: String, CodingKey {
             case engine, bytes, key, madmomWouldRun = "madmom_would_run", vocalModel = "vocal_model"
         }
     }
     /// The HPCP key method's decision as the engine's record writes it (`deckie.key`): the key, margin, agreement and
-    /// sure flag with the literature's profile numbers, and `parity`, the same with key_light.py's (what
-    /// mixer/key_parity.py decides). Older records have neither (their fields are nil).
+    /// sure flag with the literature's profile numbers (what mixer/key_parity.py decides with too). Older records
+    /// have none (their fields are nil).
     public struct EngineKey: Decodable, Sendable {
         public var camelot: String?
         public var margin: Double?
         public var agree: Int?
         public var sure: Bool?
-        public var parity: KeyDecision?
     }
-    /// One decision of the HPCP key method as `deckie.key.parity` writes it.
+    /// One decision of the HPCP key method, as `deckie.key` writes it.
     public struct KeyDecision: Decodable, Sendable, Equatable {
         public var camelot: String
         public var margin: Double
@@ -127,9 +126,6 @@ public struct TrackScore: Sendable, Equatable {
     /// a record made before engine 0.4.0. The sheet is made with the same numbers (the main session's decision of
     /// Oct 29, 2026: key_parity.py's edma_paper profile, edma major's minor sixth 0.32), so this is what `par` compares.
     public var keyParityEngine: BenchRecord.KeyDecision?
-    /// The engine's decision with key_light.py's transcription of Essentia's numbers (`deckie.key.parity`, 0.31 at
-    /// that degree), kept in the record until `par` reads the same on every track; nil before engine 0.4.0.
-    public var keyParityTranscription: BenchRecord.KeyDecision?
     /// Parity of the engine's key with key_parity.py's (the main session's rule: the same key, the margin within
     /// 1e-3, the same sure flag): nil without both sides, `same`, or the differences in words.
     public var keyParity: String? {
@@ -293,7 +289,6 @@ public enum BenchMetrics {
                 guard let c = k.camelot, let m = k.margin, let a = k.agree, let s = k.sure else { return nil }
                 return BenchRecord.KeyDecision(camelot: c, margin: m, agree: a, sure: s)
             },
-            keyParityTranscription: e.deckie?.key?.parity,
             lufsDelta: lufsDelta, truePeakDelta: peakDelta,
             sectionRecall: sections?.recall, sectionPrecision: sections?.precision,
             vocalR: vocalR, vocalNote: vocalNote,

@@ -763,7 +763,9 @@ func relativeDifference(_ got: [Double], _ want: [Double]) -> Double {
             let d = relativeDifference(result.pcp, s.hpcp)
             worstMean = max(worstMean, d)
             #expect(d <= 1e-4, "\(s.name) mean HPCP: \(d)")
-            for (table, got) in [(HPCPKey.Table.literature, result.decision), (.keyLight, result.parity)] {
+            // Both tables: the engine decides with the literature's; key_light's decision is checked the same way.
+            let keyLight = HPCPKey.decide(result.pcp, table: .keyLight)
+            for (table, got) in [(HPCPKey.Table.literature, result.decision), (.keyLight, keyLight)] {
                 let w = Self.fx.decision(s, table)
                 #expect(got.camelot == w.key && got.agree == w.agree && got.sure == w.sure,
                         "\(s.name) \(table): \(got.camelot) agree \(got.agree) sure \(got.sure); reference \(w.key) \(w.agree) \(w.sure)")
@@ -771,8 +773,8 @@ func relativeDifference(_ got: [Double], _ want: [Double]) -> Double {
                 #expect(near(got.margin, w.margin, 1e-4), "\(s.name) \(table) margin \(got.margin) vs \(w.margin)")
             }
             print("HPCP key, \(s.name): \(result.decision.camelot) margin \(Py.fixed(result.decision.margin, 4)) agree "
-                  + "\(result.decision.agree) sure \(result.decision.sure); parity \(result.parity.camelot) "
-                  + "\(Py.fixed(result.parity.margin, 4)) (reference \(s.keyLight.key) \(Py.fixed(s.keyLight.margin, 4)))")
+                  + "\(result.decision.agree) sure \(result.decision.sure); with key_light's numbers \(keyLight.camelot) "
+                  + "\(Py.fixed(keyLight.margin, 4)) (reference \(s.keyLight.key) \(Py.fixed(s.keyLight.margin, 4)))")
         }
         print("HPCP key from the audio: worst frame HPCP \(worstFrame), mean HPCP \(worstMean) of the largest bin; "
               + "worst margin difference \(worstMargin)")

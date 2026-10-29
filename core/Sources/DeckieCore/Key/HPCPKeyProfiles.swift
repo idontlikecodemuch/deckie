@@ -43,8 +43,8 @@ extension HPCPKey {
     public enum Table: String, Sendable, CaseIterable {
         /// As the literature prints them (above); the engine's key is decided with these.
         case literature
-        /// As mixer/key_light.py carries them (`KeyProfile`, from Essentia's key.cpp), which mixer/key_parity.py
-        /// reads: for parity with its per-track sheet only.
+        /// As mixer/key_light.py carries them (`KeyProfile`, from Essentia's key.cpp): the stage fixtures carry both
+        /// tables' decisions (`make_key_parity_fixtures.py`); the engine no longer decides with these.
         case keyLight = "key_light"
 
         /// edma, bgate and braw, in research R's order (key_parity.py's `FARALDO`).

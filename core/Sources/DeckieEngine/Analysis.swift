@@ -146,8 +146,7 @@ public struct Analysis: Sendable {
     /// (`songKey`, the HPCP method's key), and the key segments.
     public var key: KeyResult
     /// The track's key: research R's whitened HPCP with the edma, bgate and braw profiles (`HPCPKey`). Its
-    /// `decision` (the literature's profile numbers) is the record's key; its `parity` decision (key_light.py's
-    /// numbers) is what mixer/key_parity.py decides, for the bench's parity column.
+    /// `decision` (the literature's profile numbers) is the record's key, and what mixer/key_parity.py decides.
     public var hpcpKey: HPCPKey.Result
     /// The key confidence, research R's sure rule on the decision (`KeyConfidence`).
     public var keyConfidence: KeyConfidence
