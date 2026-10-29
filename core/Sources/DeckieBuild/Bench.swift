@@ -53,7 +53,7 @@ public struct BenchReport: Sendable {
 
     public func json() -> JSONValue {
         .object([
-            .init("tool", .string(Builder.builtBy)), .init("engine", .string(Builder.engineLabel)),
+            .init("tool", .string(Builder.programLabel)), .init("engine", .string(Builder.engineLabel)),
             .init("platform", .string(Analysis.platform)), .init("vocal_model", vocalModel.map(JSONValue.string) ?? .null),
             .init("music_root", .string(musicRoot)),
             .init("candidates", .int(candidates)), .init("compared", .int(scores.count)),

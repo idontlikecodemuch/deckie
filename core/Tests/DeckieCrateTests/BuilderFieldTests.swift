@@ -9,7 +9,7 @@ import DeckieCrate
     static func crateWithAdditions() -> Crate {
         var crate = sampleCrate()
         crate.manifest.importLog = .init(
-            builtBy: "deckie-build 0.1.0", builtAt: "2026-10-28T13:00:00Z", filesSeen: 5, tracks: 2,
+            builtBy: "Mac15,6", builtAt: "2026-10-28T13:00:00Z", filesSeen: 5, tracks: 2,
             entries: [.init(rel: "CD1/locked.m4p", ext: "m4p", reason: "protected", message: "protected, cannot be read"),
                       .init(rel: "CD1/odd.m4a", ext: "m4a", reason: "unsupported", message: "AAC is not supported here"),
                       .init(rel: "CD2/broken.mp3", ext: "mp3", reason: "damaged", message: "no complete MPEG audio frame")],

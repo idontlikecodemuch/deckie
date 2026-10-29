@@ -109,7 +109,7 @@ do {
         let options = BuildOptions(folder: url(folder), output: output, rekordbox: o["rekordbox"].map(url), jobs: jobs(o),
                                    fileBPMTags: o["bpm-tags"] != nil, fresh: o["fresh"] != nil, name: o["name"])
         let builder = try Builder(options: options)
-        say("\(Builder.builtBy), engine \(Builder.engineLabel) on \(Analysis.platform); work folder "
+        say("\(Builder.programLabel), engine \(Builder.engineLabel) on \(Analysis.platform); work folder "
             + options.workFolder.path)
         if let note = Builder.vocalTaggerNote { say(note) }
         let result = try builder.run(progress: { say(ProgressText.line($0)) })

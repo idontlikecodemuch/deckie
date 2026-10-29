@@ -99,7 +99,9 @@ public struct CrateManifest: Codable, Equatable, Sendable {
             public init(tracks: Int, matched: Int) { self.tracks = tracks; self.matched = matched }
         }
 
-        /// The program and its version (`deckie-build 0.1.0`).
+        /// The device that built the crate: a model label (`Mac15,6`, `linux-x86_64`), never a name the user gave the
+        /// machine, by the same rule and with the same value as the records' `analysis.device`, so a crate names no
+        /// person's computer.
         public var builtBy: String
         /// When the build finished, UTC to the second.
         public var builtAt: String
