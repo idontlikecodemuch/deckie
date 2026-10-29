@@ -15,8 +15,11 @@ public struct Analysis: Sendable {
     /// rather than reused. 0.2.0: the vocal structure and hook blocks, and `file.tag_bpm`. 0.3.0: the key decided by
     /// three votes (`KeyVote`): `key.source` `votes` with three entries in `key.votes`, the lab's B.9 confidence, and
     /// `votes`, `vote` and `vote_rule` in the lab JSON's `deckie.key`. 0.3.1: the decoder conceals damaged MP3 frames,
-    /// listed as `file.damaged_frames` (`deckie.damaged_frames` in the lab JSON).
-    public static let engineVersion = "0.3.1"
+    /// listed as `file.damaged_frames` (`deckie.damaged_frames` in the lab JSON). 0.4.0: the key decided by research
+    /// R's whitened HPCP (`HPCPKey`), which changes keys: `key.source` `hpcp-whitened`, its three profiles' keys and
+    /// the STFT estimate in `key.votes`, research R's sure rule as the confidence (`KeyConfidence`), and the method's
+    /// detail in `deckie.key`.
+    public static let engineVersion = "0.4.0"
     /// The lab's feature-file schema the JSON follows (`schema`).
     public static let labSchema = 1
     /// The rate everything is analysed at: the lab decodes at 44.1 kHz and resamples other files to it first (`sr`).
@@ -138,13 +141,15 @@ public struct Analysis: Sendable {
     public var mixIn: MixIn
     public var mixOut: MixOut
 
-    /// The key estimator's results with the edma profile: the whole-track key (the vote's first slot), both mix
-    /// windows judged against the song key (`songKey`, the vote's key), and the key segments.
+    /// The STFT key estimator's results with the edma profile (`KeyEstimator`, mixer/key_light.py): its whole-track
+    /// key (no longer deciding; recorded as `stft_edma` for comparison), both mix windows judged against the song key
+    /// (`songKey`, the HPCP method's key), and the key segments.
     public var key: KeyResult
-    /// The track's key: three profiles over the chroma, decided by the lab's B.9 rule (`KeyVote`). Its `camelot` is
-    /// the record's key.
-    public var keyVote: KeyVote
-    /// The key confidence, the lab's B.9 rule on the vote (`KeyConfidence`).
+    /// The track's key: research R's whitened HPCP with the edma, bgate and braw profiles (`HPCPKey`). Its
+    /// `decision` (the literature's profile numbers) is the record's key; its `parity` decision (key_light.py's
+    /// numbers) is what mixer/key_parity.py decides, for the bench's parity column.
+    public var hpcpKey: HPCPKey.Result
+    /// The key confidence, research R's sure rule on the decision (`KeyConfidence`).
     public var keyConfidence: KeyConfidence
 
     public var loudness: Loudness

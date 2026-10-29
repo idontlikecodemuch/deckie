@@ -389,7 +389,7 @@ record, counted by reason and extension, and the files in the crate with damaged
   (no reading at all); otherwise it hashes the file and takes the record of those bytes if there is one (a file that
   was moved, renamed or only touched), and analyses only what is left. An interrupted run (Ctrl-C) loses only the files
   that were being analysed, one per job. A record is reused only if it came from the same engine version with the same
-  tag tempo; the version (0.3.1) goes up whenever the record gains or changes fields, so a work folder made by an
+  tag tempo; the version (0.4.0) goes up whenever the record gains or changes fields, so a work folder made by an
   older version is analysed again. `--fresh` empties the work folder first; deleting it is always safe.
 - **Nothing left out silently** (decision P18). Every file that cannot be analysed is counted by reason and extension
   in the summary and listed in the manifest's `import_log` with its path below the folder and the reason in words:

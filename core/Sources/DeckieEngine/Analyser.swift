@@ -47,13 +47,14 @@ public enum AnalyserError: Error, Equatable, CustomStringConvertible {
 ///   decode     `AudioDecoder` (WAV, AIFF, MP3, FLAC), damaged MP3 frames silenced and listed (`damagedFrames`); not
 ///              44.1 kHz: `Resampler` to 44.1 kHz, as the lab resamples with soxr; mono is the channels' mean
 ///              (`AudioBuffer.mono`)
-///   resample   the mono mix to 22,050 Hz (`Decimator.halve`, soxr's filter): what Beat This!, the key estimator and
-///              the spectral features all read (the lab resamples it once for the spectral features and Beat This!
+///   resample   the mono mix to 22,050 Hz (`Decimator.halve`, soxr's filter): what Beat This!, the STFT key estimator
+///              and the spectral features all read (the lab resamples it once for the spectral features and Beat This!
 ///              again inside its package; the samples are the same)
 ///   beatthis   first and last sound (`SoundBounds`, on the stereo audio as the lab does); beats and downbeats from
 ///              `BeatTracker`, the only grid source (the lab's madmom fallback is non-commercial and not ported);
 ///              `BeatGrid.fit`; the octave alignment when a tag tempo is given (`OctaveAlign`)
-///   key        chroma for the key estimator (`KeyEstimator.chroma`); the lab runs its key detectors here
+///   key        the track's key by research R's whitened HPCP on the 44.1 kHz mono mix (`HPCPKey`), and the STFT
+///              chroma (`KeyEstimator.chroma`) for the mix windows and segments; the lab runs its key detectors here
 ///   spectral   `SpectralFeatures` (mel, MFCC, RMS, onset strength) at 22,050 Hz; before it, the grid choice (one
 ///              candidate) and the bar grid (`BarGrid`), and the tag comparisons
 ///   structure  `FooteNovelty` and its peaks, `Phrase`, the boundaries
@@ -63,8 +64,8 @@ public enum AnalyserError: Error, Equatable, CustomStringConvertible {
 ///              per-bar vocal probability on the mono mix at 44.1 kHz; the onset pattern is computed just before it
 ///   windows    sections, fade-out (`Loudness.shortTerm`, `FadeOut`), mix windows (`MixWindows`), with a tagger the
 ///              vocal structure (`VocalStructure`, from its frame-by-frame scores) and the hook candidates (`Hooks`),
-///              the key (`KeyVote`: three profiles over the chroma, decided by the lab's B.9 rule) with its confidence
-///              (`KeyConfidence`), the key of both mix windows judged against it, local tempo, flags
+///              the key's confidence (`KeyConfidence`, research R's sure rule), the key of both mix windows judged
+///              against the key, local tempo, flags
 ///
 /// The stage names are the lab's `timing_s` keys where a stage matches one (`decode`, `beatthis`, `key`, `spectral`,
 /// `structure`, `loudness`); every step is inside one stage, so the times add up to the whole run.
@@ -167,7 +168,8 @@ public final class Analyser: Sendable {
         }
         lap("beatthis")
 
-        // ------------------------------------------------------------------ key (chroma; decided after the windows)
+        // ------------------------------------------------------------------ key (the windows' keys come later)
+        let hpcpKey = try HPCPKey.estimate(mono, sampleRate: SR)
         let chroma = try KeyEstimator.chroma(m22, sampleRate: KeyEstimator.sampleRate)
         lap("key")
 
@@ -270,14 +272,14 @@ public final class Analyser: Sendable {
                           latticePhaseBar: phrase.latticePhaseBar)
         }
 
-        // ------------------------------------------------------------------ key: the vote, the two windows, segments
-        // The song key is the vote's (`KeyVote`); the windows are judged against it, as the lab judged them against
-        // the product's song key. mixer/key_light.py reads the windows from the feature file, rounded to 3 decimals.
-        let keyVote = KeyVote.whole(chroma)
+        // ------------------------------------------------------------------ key: confidence, the two windows, segments
+        // The song key is the HPCP method's (`HPCPKey`); the windows are judged against it, as the lab judged them
+        // against the product's song key. mixer/key_light.py reads the windows from the feature file, rounded to 3
+        // decimals.
         let key = KeyEstimator.estimate(chroma, mixIn: (Py.round(mixIn.startS, 3), Py.round(mixIn.endS, 3)),
                                         mixOut: (Py.round(mixOut.startS, 3), Py.round(mixOut.endS, 3)),
-                                        songKey: keyVote.camelot)
-        let keyConfidence = KeyConfidence.votes(keyVote)
+                                        songKey: hpcpKey.decision.camelot)
+        let keyConfidence = KeyConfidence.hpcp(hpcpKey.decision)
 
         // ------------------------------------------------------------------ local tempo, from the rounded record
         let r3 = { (x: Double) in Py.round(x, 3) }
@@ -307,7 +309,7 @@ public final class Analyser: Sendable {
             grid: G, bars: bars, multiplierVsTag: multTag, tagDevPct: devTag, bpmAgree: bpmAgree,
             madmomWouldRun: madmomWouldRun, noveltyPeaks: novelty.peaks, phrase: phrase, boundariesBars: boundaries,
             sections: sections, firstSound: sound.firstSound, lastSound: ls, endLoudness: end, fade: fade,
-            mixIn: mixIn, mixOut: mixOut, key: key, keyVote: keyVote, keyConfidence: keyConfidence, loudness: loudness,
+            mixIn: mixIn, mixOut: mixOut, key: key, hpcpKey: hpcpKey, keyConfidence: keyConfidence, loudness: loudness,
             perBar: .init(lufsSt: lufs, lowDb: levels.lowDB, highDb: levels.highDB, onsetDensity: onsetDensity,
                           vocalProb: vocal?.perBar),
             onsetPattern16: pattern, vocal: vocal, vocalModel: vocal == nil ? nil : vocalTagger?.modelName,
