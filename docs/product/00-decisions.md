@@ -157,7 +157,15 @@ rekordbox matches; the count P18 asks for) and a per-record `imported` block key
 grid markers, cues, loops, playlists, with the import time; null when nothing was imported), the DJ's own data named
 for where it came from; the file's tag tempo is `file.tag_bpm`. The acknowledgements screen reads
 `core/dependencies.json`, the source of truth, from which the Markdown table in `DEPENDENCIES.md` is generated and
-checked by a test, so the apps never parse Markdown.
+checked by a test, so the apps never parse Markdown. Later still, proposal 10 accepted: two additive blocks
+from the session's vocal-uses memo, `vocal_structure` (sung stretches to the beat with each end's distance from the
+nearest 8-bar point; the first and last sung beat, with the pickup; free intro and outro bars and what they hold;
+vocal-free gaps of 8 bars or more; an "exposed vocal" proxy from the low band and onsets, with the Apple engine's
+real reading preferred when present) and `hooks` (up to three candidates for the DJ to confirm), each listed in
+features_present and left out entirely when absent so older records keep their bytes; every rule and threshold is
+written into the record so the Mac's listening test can tune them. The id of a shipped record is the first 16
+hex characters of the file's SHA-256, with the full hash in `file.sha256`. The session's memo is renamed to
+research P, since research O on main is the alternatives search.
 
 ### D15. Model weights ship under their publisher's licence; training data is disclosed, not a gate (Oct 28)
 Christopher accepted P19: "I agree with your assessment, though we should clarify that in the terms of service /
