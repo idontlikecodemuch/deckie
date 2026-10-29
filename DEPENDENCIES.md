@@ -471,7 +471,28 @@ equivalent under a licence already on the allowlist exists, it is preferred. Eig
 it is: Deckie ships Microsoft's library file without changing or rebuilding it, and the acknowledgements carry
 Eigen's entry from the notice file above. MPL 2.0 is on the allowlist in those terms (below).
 
-**How to update:** choose the release and read its notes for changes to the C API; download both archives from the
+**Eigen is patched by ONNX Runtime's build, and the wording follows** (the main session, Oct 29, 2026, a note on
+D14). Reading the build files for Deckie's own build showed that ONNX Runtime applies two patches of its own to
+Eigen's source on every platform, in Microsoft's builds too: `cmake/patches/eigen/s390x-build.patch` (three files used
+only on IBM Z and one big-endian-only branch in `Eigen/src/Core/RandomImpl.h`) and `s390x-build-werror.patch`. Nothing
+compiled on Linux, Windows or macOS differs. The MPL asks that modified files' source be available, so the two patch
+files (ONNX Runtime's own, MIT) are committed in `core/notices/eigen/` with their hashes and ship beside Eigen's notice
+in the acknowledgements, and the acknowledgements say: "unmodified by Deckie; carries ONNX Runtime's two published
+patches (IBM Z builds; nothing compiled on Linux, Windows or macOS differs)".
+
+**The Windows event-tracing provider and the scan** (the main session, Oct 29, 2026, a note on D3). With
+`--no_telemetry` the Windows build never registers its event-tracing provider, but the provider's definition
+(`onnxruntime/core/platform/windows/telemetry.cc`, name `Microsoft.ML.ONNXRuntime`) is compiled into every Windows
+build, so its name may stay in the library. Once the first build confirms that, the Windows scan reports that one
+marker as "present, never registered", naming the function that would register it and that `--no_telemetry` leaves
+it uncalled, so a reader can check the source; it keeps failing hard on every other marker on Windows and on all
+markers on Linux and macOS. No patched build. Because a later version could register the provider whatever the flag,
+the scan is not the only guard: the update steps below include rereading `windows/telemetry.cc`.
+
+**How to update:** choose the release and read its notes for changes to the C API; reread
+`onnxruntime/core/platform/windows/telemetry.cc` and `windows/env.cc` and confirm that nothing registers the
+event-tracing provider when `onnxruntime_USE_TELEMETRY` is off; fetch the Eigen patches at the new commit into
+`core/notices/eigen/` and update its table; download both archives from the
 release page; record their sizes and SHA-256 values here, and the Linux archive's in `fetch-onnxruntime.sh`
 (`VERSION`, `SHA256`, `SIZE`); copy the three headers from the Linux archive over the vendored ones and record their
 hashes (a new API version changes `ORT_API_VERSION`, so the test that expects 31 changes with it; the shim then

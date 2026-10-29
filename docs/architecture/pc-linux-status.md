@@ -40,9 +40,12 @@ Mac) reviews and merges this track's branch, `pc-linux`, and runs anything that 
   Windows, macOS arm64, the scan as a gate before upload, archives pinned by hash, publish to a release on
   request) and its first run started with this push; the build times, sizes and hashes go into entry 14 when it
   finishes. Two findings from reading ONNX Runtime's build files are with the main session: its build patches
-  four Eigen files on every platform (Microsoft's builds too), which the MPL decision's word "unmodified" did not
-  know; and on Windows the event-log provider's name stays in the library even though nothing registers it, so
-  the Windows gate is expected to fail on that one marker until the rule for it is decided.
+  four Eigen files on every platform (Microsoft's builds too), and on Windows the event-log provider's name stays
+  in the library even though nothing registers it. Both decided (Oct 29): the two patch files now ship beside
+  Eigen's notice (`core/notices/eigen/`) and the wording is "unmodified by Deckie; carries ONNX Runtime's two
+  published patches"; the Windows scan will report that one marker as present but never registered, naming the
+  function that would register it, and fail hard on everything else, applied once the first run confirms it; the
+  version-bump checklist now includes rereading `windows/telemetry.cc` (DEPENDENCIES.md, section 6).
 - Needed from the Mac, now that step 5 is built (not blocking this track): the `bench` run over the 373 files
   (`deckie-build bench`, entry 13), which folds in the loudness check against pyloudnorm (entry 5), the key
   estimator's parity run (entry 6) and the vocal tagger's first look at real voices (entry 12). The Mac needs
