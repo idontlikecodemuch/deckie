@@ -986,6 +986,20 @@ exact parity now. (2) Confidence: the method's own flag maps sure to 1.0 and eve
 unsure track gets `key_uncertain`, 156 of 373 on the sheet against 88 under the vote and 58 in the lab; a finer
 mapping has not been measured and would need a rule from the literature, not from this set.
 
+**Addendum: the two decisions, answered by the main session.** (1) The paper's 0.32 decides, and the sheet moves
+to the engine: the main session regenerates `mixer/key_parity_keys.tsv` with that value (a profile named
+`edma_paper` in `key_parity.py`; `key_light.py`'s transcription stays as the baseline row) and pushes it to `main`;
+the bench's `par` column now compares the engine's own key with the sheet (not the recorded 0.31 decision, which
+the summary only counts), and `deckie.key.parity` can leave the record once `par` reads = on all 373, so the record
+carries one key. (2) Confidence stays binary: sure is 1.0, unsure 0.45, and `key_uncertain` fires on every unsure
+track, 156 of 373 on the sheet (the vote flagged 88, the lab 58). That is the honest reading: the flag says exactly
+what the method knows (the three profiles disagree, or the lead is under 0.08), the count is reported as it is,
+and any finer grading would need a rule from outside this set; the apps decide what to show, likely the margin.
+(3) PANNs stays parked; the PC and Linux vocal signal remains YAMNet's `max11` reading until the listening set
+exists, with the four readings recorded for the Mac's sheet. Also fixed on the way: the first Windows run of the key
+port read the sheet as one line (a Windows checkout ends lines with "\r\n", which Swift treats as one character
+that a split on "\n" never matches); the reader now splits on any line ending, with a test on a "\r\n" copy.
+
 **The second opinion, parked.** The PANNs agent finished: the model's weights (CC BY 4.0, on the allowlist for
 weights with attribution) fetched from Zenodo, which answers from here after all, exported with its front end
 inside the graph, run in Swift within 6 parts in a hundred million of Python, two-second windows every 0.48 s, its

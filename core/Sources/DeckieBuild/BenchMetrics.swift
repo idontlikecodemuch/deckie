@@ -123,9 +123,13 @@ public struct TrackScore: Sendable, Equatable {
     /// mixer/key_parity_keys.tsv's row for the track (research R's key method as key_parity.py decided it), nil when
     /// the sheet was not given or has no row for it.
     public var keyParityReference: KeyParityRow?
-    /// The engine's parity decision (its HPCP method with key_light.py's profile numbers, `deckie.key.parity`), nil
-    /// in a record made before engine 0.4.0.
+    /// The engine's own key decision (`deckie.key`: the HPCP method with the literature's profile numbers), nil in
+    /// a record made before engine 0.4.0. The sheet is made with the same numbers (the main session's decision of
+    /// Oct 29, 2026: key_parity.py's edma_paper profile, edma major's minor sixth 0.32), so this is what `par` compares.
     public var keyParityEngine: BenchRecord.KeyDecision?
+    /// The engine's decision with key_light.py's transcription of Essentia's numbers (`deckie.key.parity`, 0.31 at
+    /// that degree), kept in the record until `par` reads the same on every track; nil before engine 0.4.0.
+    public var keyParityTranscription: BenchRecord.KeyDecision?
     /// Parity of the engine's key with key_parity.py's (the main session's rule: the same key, the margin within
     /// 1e-3, the same sure flag): nil without both sides, `same`, or the differences in words.
     public var keyParity: String? {
@@ -284,7 +288,12 @@ public enum BenchMetrics {
             tempoWithin2Octave: abs(octave - 1) < 0.02, octaveApart: abs(ratio - 2) < 0.04 || abs(ratio - 0.5) < 0.01,
             keyEngine: e.key.camelot, keyLab: l.key.camelot, keyConfidenceLab: l.key.confidence,
             keyRelation: keyRelation(e.key.camelot, l.key.camelot),
-            keyParityReference: parity, keyParityEngine: e.deckie?.key?.parity,
+            keyParityReference: parity,
+            keyParityEngine: e.deckie?.key.flatMap { k in
+                guard let c = k.camelot, let m = k.margin, let a = k.agree, let s = k.sure else { return nil }
+                return BenchRecord.KeyDecision(camelot: c, margin: m, agree: a, sure: s)
+            },
+            keyParityTranscription: e.deckie?.key?.parity,
             lufsDelta: lufsDelta, truePeakDelta: peakDelta,
             sectionRecall: sections?.recall, sectionPrecision: sections?.precision,
             vocalR: vocalR, vocalNote: vocalNote,

@@ -133,8 +133,8 @@ public struct BenchReport: Sendable {
             + "\(pct(m.keyConfident["neighbour"])), other \(pct(m.keyConfident["other"]))\n"
         if m.keyParityTracks > 0 {
             out += "  key vs key_parity.py (same key, margin within 0.001, same sure flag; column par): "
-                + "\(m.keyParitySame) of \(m.keyParityTracks) the same; the engine's key (the literature's edma) "
-                + "equals key_parity.py's on \(m.keyDecidedAsParity) of \(m.keyParityTracks)\n"
+                + "\(m.keyParitySame) of \(m.keyParityTracks) the same; the transcription's decision (key.cpp's 0.31, "
+                + "deckie.key.parity) gives the sheet's key on \(m.keyTranscriptionSame) of \(m.keyParityTracks)\n"
             for (id, text) in m.keyParityDiffering { out += "    port difference \(id): \(text)\n" }
         }
         out += stat("integrated loudness delta (LU)", m.lufsDelta, 2)
