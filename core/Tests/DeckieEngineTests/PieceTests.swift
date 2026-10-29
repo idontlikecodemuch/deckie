@@ -28,21 +28,20 @@ import DeckieEngine
 }
 
 @Suite struct KeyConfidenceTests {
-    /// The one-estimator steps: r under 0.6 gives 0.3 whatever the margin; then margin 0.10 and up 0.65, 0.04 to 0.10
-    /// 0.45, under 0.04 0.3.
-    @Test func steps() {
-        func c(_ r: Double, _ margin: Double) -> Double {
-            KeyConfidence.oneEstimator(KeyEstimate(pitchClass: 9, mode: "minor", r: r, margin: margin)).value
+    /// The record's confidence is the vote's (the lab's B.9 levels), its rule the lab's words after the engine's prefix.
+    @Test func fromTheVote() {
+        func vote(_ keys: [(Int, String, Double)]) -> KeyVote {
+            KeyVote.decide(zip(KeyVote.slots, keys).map { slot, k in
+                KeyVote.Vote(name: slot.name, profile: slot.profile,
+                             estimate: KeyEstimate(pitchClass: k.0, mode: k.1, r: k.2, margin: 0.1))
+            })
         }
-        #expect(c(0.59, 0.3) == 0.3)
-        #expect(c(0.8, 0.10) == 0.65)
-        #expect(c(0.8, 0.25) == 0.65)
-        #expect(c(0.8, 0.0999) == 0.45)
-        #expect(c(0.6, 0.04) == 0.45)
-        #expect(c(0.8, 0.0399) == 0.3)
-        #expect(c(.nan, 0.2) == 0.3)
-        let rule = KeyConfidence.oneEstimator(KeyEstimate(pitchClass: 0, mode: "major", r: 0.8, margin: 0.2)).rule
-        #expect(rule.contains("one estimator"))
+        let agree = KeyConfidence.votes(vote([(9, "minor", 0.8), (9, "minor", 0.7), (9, "minor", 0.6)]))
+        #expect(agree == KeyConfidence(value: 1.0, rule: "deckie votes (edma, bgate, krumhansl): all three agree"))
+        let none = KeyConfidence.votes(vote([(9, "minor", 0.8), (2, "major", 0.7), (6, "major", 0.6)]))
+        #expect(none.value == 0.3 && none.rule == KeyConfidence.prefix + "no two detectors agree")
+        let weak = KeyConfidence.votes(vote([(0, "major", 0.5), (0, "major", 0.9), (7, "major", 0.9)]))
+        #expect(weak.value == 0.3 && weak.rule.hasSuffix("; strength < 0.6"))
     }
 }
 

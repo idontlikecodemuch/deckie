@@ -62,8 +62,8 @@ public enum AnalyserError: Error, Equatable, CustomStringConvertible {
 ///              per-bar vocal probability on the mono mix at 44.1 kHz; the onset pattern is computed just before it
 ///   windows    sections, fade-out (`Loudness.shortTerm`, `FadeOut`), mix windows (`MixWindows`), with a tagger the
 ///              vocal structure (`VocalStructure`, from its frame-by-frame scores) and the hook candidates (`Hooks`),
-///              the key of the whole track and of both mix windows with its confidence (`KeyConfidence`), local tempo,
-///              flags
+///              the key (`KeyVote`: three profiles over the chroma, decided by the lab's B.9 rule) with its confidence
+///              (`KeyConfidence`), the key of both mix windows judged against it, local tempo, flags
 ///
 /// The stage names are the lab's `timing_s` keys where a stage matches one (`decode`, `beatthis`, `key`, `spectral`,
 /// `structure`, `loudness`); every step is inside one stage, so the times add up to the whole run.
@@ -261,11 +261,14 @@ public final class Analyser: Sendable {
                           latticePhaseBar: phrase.latticePhaseBar)
         }
 
-        // ------------------------------------------------------------------ key: whole track and the two windows
-        // mixer/key_light.py reads the windows from the feature file, where they are rounded to 3 decimals.
+        // ------------------------------------------------------------------ key: the vote, the two windows, segments
+        // The song key is the vote's (`KeyVote`); the windows are judged against it, as the lab judged them against
+        // the product's song key. mixer/key_light.py reads the windows from the feature file, rounded to 3 decimals.
+        let keyVote = KeyVote.whole(chroma)
         let key = KeyEstimator.estimate(chroma, mixIn: (Py.round(mixIn.startS, 3), Py.round(mixIn.endS, 3)),
-                                        mixOut: (Py.round(mixOut.startS, 3), Py.round(mixOut.endS, 3)))
-        let keyConfidence = KeyConfidence.oneEstimator(key.whole)
+                                        mixOut: (Py.round(mixOut.startS, 3), Py.round(mixOut.endS, 3)),
+                                        songKey: keyVote.camelot)
+        let keyConfidence = KeyConfidence.votes(keyVote)
 
         // ------------------------------------------------------------------ local tempo, from the rounded record
         let r3 = { (x: Double) in Py.round(x, 3) }
@@ -294,7 +297,7 @@ public final class Analyser: Sendable {
             grid: G, bars: bars, multiplierVsTag: multTag, tagDevPct: devTag, bpmAgree: bpmAgree,
             madmomWouldRun: madmomWouldRun, noveltyPeaks: novelty.peaks, phrase: phrase, boundariesBars: boundaries,
             sections: sections, firstSound: sound.firstSound, lastSound: ls, endLoudness: end, fade: fade,
-            mixIn: mixIn, mixOut: mixOut, key: key, keyConfidence: keyConfidence, loudness: loudness,
+            mixIn: mixIn, mixOut: mixOut, key: key, keyVote: keyVote, keyConfidence: keyConfidence, loudness: loudness,
             perBar: .init(lufsSt: lufs, lowDb: levels.lowDB, highDb: levels.highDB, onsetDensity: onsetDensity,
                           vocalProb: vocal?.perBar),
             onsetPattern16: pattern, vocal: vocal, vocalModel: vocal == nil ? nil : vocalTagger?.modelName,
