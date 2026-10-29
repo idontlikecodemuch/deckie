@@ -64,6 +64,85 @@ extension Crate {
     }
 }
 
+extension CrateTrack {
+    /// The `vocal_structure` block's checks: bars and beats in range, spans in order and not overlapping, `first` and
+    /// `last` there exactly when a span is, the free bars and kinds, the gaps' lengths and the stretches' bars.
+    func checkVocalStructure(_ vs: VocalStructure, nBars n: Int?, add: (String, String) -> Void) {
+        let base = "vocal_structure"
+        if vs.source.isEmpty { add("\(base).source", "is empty") }
+        if !(vs.frameHopS > 0) { add("\(base).frame_hop_s", "\(vs.frameHopS) must be above 0") }
+        if !(1...8).contains(vs.latticePhaseBar) {
+            add("\(base).lattice_phase_bar", "\(vs.latticePhaseBar) must be 1 to 8")
+        }
+        if !(vs.rule.threshold >= 0) { add("\(base).rule.threshold", "\(vs.rule.threshold) must be 0 or more") }
+        /// A beat of a bar (bars 1 to n_bars, beats 1 to 4), or a beat line (up to beat 1 of bar n_bars + 1) when
+        /// `line`; `path` is the field's name less `_bar` and `_beat`.
+        func beat(_ path: String, _ b: Int, _ beat: Int, line: Bool) {
+            if !(1...4).contains(beat) { add("\(path)_beat", "\(beat) must be 1 to 4") }
+            guard let n else { return }
+            if b < 1 { add("\(path)_bar", "\(b) is before bar 1") }
+            if line {
+                if b > n + 1 { add("\(path)_bar", "\(b) is past the end of the grid (\(n) bars, so at most \(n + 1))") }
+                if b == n + 1 && beat != 1 {
+                    add("\(path)_beat", "\(beat) is past the grid's end line, beat 1 of bar \(n + 1)")
+                }
+            } else if b > n {
+                add("\(path)_bar", "\(b) is past the last bar (\(n) bars)")
+            }
+        }
+        func index(_ bar: Int, _ beat: Int) -> Int { 4 * (bar - 1) + beat - 1 }
+        var previousEnd = Int.min
+        for (j, sp) in vs.spans.enumerated() {
+            let path = "\(base).spans[\(j)]"
+            beat("\(path).start", sp.startBar, sp.startBeat, line: false)
+            beat("\(path).end", sp.endBar, sp.endBeat, line: true)
+            let a = index(sp.startBar, sp.startBeat), b = index(sp.endBar, sp.endBeat)
+            if b <= a { add("\(path).end_bar", "bar \(sp.endBar) beat \(sp.endBeat) is not after the span's start") }
+            if a < previousEnd { add("\(path).start_bar", "starts before the previous span ends") }
+            if sp.endS < sp.startS { add("\(path).end_s", "\(sp.endS) is before start_s \(sp.startS)") }
+            for (name, o) in [("start_offset_beats", sp.startOffsetBeats), ("end_offset_beats", sp.endOffsetBeats)]
+                where !(-16...16).contains(o) {
+                add("\(path).\(name)", "\(o) must be -16 to 16 (beats from the nearest 8-bar lattice point)")
+            }
+            previousEnd = b
+        }
+        if (vs.first == nil) != vs.spans.isEmpty {
+            add("\(base).first", vs.spans.isEmpty ? "is set, but there is no span" : "is null, but there are spans")
+        }
+        if (vs.last == nil) != vs.spans.isEmpty {
+            add("\(base).last", vs.spans.isEmpty ? "is set, but there is no span" : "is null, but there are spans")
+        }
+        if let f = vs.first { beat("\(base).first", f.bar, f.beat, line: false) }
+        if let l = vs.last { beat("\(base).last", l.bar, l.beat, line: false) }
+        for (name, free) in [("intro_free_bars", vs.introFreeBars), ("outro_free_bars", vs.outroFreeBars)] {
+            if free < 0 { add("\(base).\(name)", "\(free) must be 0 or more") }
+            if let n, free > n { add("\(base).\(name)", "\(free) is more than the grid's \(n) bars") }
+        }
+        for (name, kind) in [("intro_kind", vs.introKind), ("outro_kind", vs.outroKind)]
+            where !VocalStructure.kinds.contains(kind) {
+            add("\(base).\(name)", "\"\(kind)\" must be one of \(VocalStructure.kinds.joined(separator: ", "))")
+        }
+        func stretch(_ path: String, _ start: Int, _ end: Int) {
+            if let n {
+                if start < 1 { add("\(path).start_bar", "\(start) is before bar 1") }
+                if start > n { add("\(path).start_bar", "\(start) is past the last bar (\(n) bars)") }
+                if end > n + 1 {
+                    add("\(path).end_bar", "\(end) is past the end of the grid (\(n) bars, so at most \(n + 1))")
+                }
+            }
+            if end <= start { add("\(path).end_bar", "\(end) is not after start_bar \(start)") }
+        }
+        for (j, g) in vs.freeGaps.enumerated() {
+            let path = "\(base).free_gaps[\(j)]"
+            stretch(path, g.startBar, g.endBar)
+            if g.bars != g.endBar - g.startBar {
+                add("\(path).bars", "\(g.bars) is not end_bar - start_bar, \(g.endBar - g.startBar)")
+            }
+        }
+        for (j, e) in vs.exposedProxy.enumerated() { stretch("\(base).exposed_proxy[\(j)]", e.startBar, e.endBar) }
+    }
+}
+
 /// Collects problems.
 struct Problems {
     var list: [CrateProblem] = []
@@ -212,6 +291,27 @@ extension CrateTrack {
         if let v = vocal {
             unit("vocal.mean", v.mean)
             unit("vocal.confidence", v.confidence)
+        }
+        needsGrid("vocal_structure", vocalStructure != nil)
+        if let vs = vocalStructure { checkVocalStructure(vs, nBars: n, add: add) }
+        needsGrid("hooks", hooks != nil)
+        if let h = hooks {
+            if h.source.isEmpty { add("hooks.source", "is empty") }
+            if !(1...8).contains(h.latticePhaseBar) {
+                add("hooks.lattice_phase_bar", "\(h.latticePhaseBar) must be 1 to 8")
+            }
+            for (j, c) in h.candidates.enumerated() {
+                let path = "hooks.candidates[\(j)]"
+                span(path, c.startBar, c.endBar)
+                bar("\(path).repeat_start_bar", c.repeatStartBar)
+                unit("\(path).strength", c.strength)
+                unit("\(path).repetition", c.repetition)
+                unit("\(path).loudness_score", c.loudnessScore)
+                unit("\(path).vocal_density", c.vocalDensity)
+                if j > 0 && c.strength > h.candidates[j - 1].strength {
+                    add("\(path).strength", "\(c.strength) is above the previous candidate's; strongest come first")
+                }
+            }
         }
         if let o = onsetPattern16, o.count != 16 { add("onset_pattern_16", "has \(o.count) values, not 16") }
         for (j, f) in flags.enumerated() where f.isEmpty { add("flags[\(j)]", "is empty") }
