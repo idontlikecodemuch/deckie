@@ -863,6 +863,18 @@ provider regardless, the version-bump checklist includes rereading those two sou
 change, rebuilds all three; when the Windows archive is uploaded, the three are published by hand and their hashes
 pinned.
 
+
+**Addendum: run 4, all three clean under the rule; the publish run under way.** Run 4 (the push that carried the
+Windows rule) built Linux in 27 min 43 s, macOS in 18 min 40 s and Windows in 47 min 11 s; the Linux and macOS
+gates found nothing, and the Windows gate reported the provider's name as present but never registered and
+passed, so the Windows archive was uploaded for the first time. Christopher then approved both releases, and the
+publish run of the same workflow (started by hand with "publish" ticked; it rebuilds the three and then creates
+the release `onnxruntime-1.31.1-deckie-no-telemetry` with GitHub's own token) is under way; its archives' sizes
+and hashes go into DEPENDENCIES.md and `fetch-onnxruntime.sh --deckie` when it lands. One lesson on the way: a
+feature branch that carries the workflow file starts a build on its first push (the Mac's memory branch did, an
+hour of machines for nothing; cancelled), so the push trigger will be narrowed to `main` and `pc-linux*` once the
+publish run is done, since a push to the workflow file now would cancel it.
+
 ## Oct 29, 2026: the crate renames, the memory defaults, and the models as pinned downloads (entry 16)
 
 **The renames (the main session's three naming changes to item 9, now in).** The manifest's import log says who
