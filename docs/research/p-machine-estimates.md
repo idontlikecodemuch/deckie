@@ -53,8 +53,10 @@ about 80 percent of perfect sharing. The model below reproduces the measurements
 track for four).
 
 The memory work of Oct 29 first cost one job about 20 percent in speed (giving the beat model's memory back after
-every 30-second chunk); the fix that gives it back only after a track's first and last chunk is being measured
-(round 3). The tables assume the earlier speed.
+every 30-second chunk); giving it back only after a track's first and last chunk, the default since, measured at
+the old speed (8.6 to 9.1 s a file against 8.3 to 9.8, run alternately) with the same 1.09 GB peak. Four jobs at
+once peaked at 4.4 to 4.5 GB in `deckie-build`, so the tables' 0.95 GB a job may be a little high for the first jobs
+and low for many; the per-job figure is the least certain number here.
 
 ## 2. How the rows are scaled
 - **Beat model, per core:** fp32 multiply-adds per clock times the clock a core holds under load, against the cloud
