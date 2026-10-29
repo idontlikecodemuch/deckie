@@ -205,9 +205,9 @@ struct EngineTests {
         #expect(abs(a.bars.firstDownbeatS - TestTrack.firstBeat) < 0.03, "bar 1 at \(a.bars.firstDownbeatS)")
         #expect(abs(a.bars.nBars - TestTrack.bars) <= 1, "\(a.bars.nBars) bars")
         #expect(a.key.whole.camelot == TestTrack.camelot)
-        // The key by the HPCP method, from the 44.1 kHz mono mix: the record's key and the windows' song key; its
-        // parity decision (key_light.py's profile numbers) agrees here; the confidence is the sure rule's.
-        #expect(a.hpcpKey.decision.camelot == TestTrack.camelot && a.hpcpKey.parity.camelot == TestTrack.camelot)
+        // The key by the HPCP method, from the 44.1 kHz mono mix: the record's key and the windows' song key; the
+        // confidence is the sure rule's.
+        #expect(a.hpcpKey.decision.camelot == TestTrack.camelot)
         #expect(a.hpcpKey.frames == HPCPKey.frameCount(samples: Int((a.duration * 44100).rounded())))
         #expect(a.hpcpKey.decision.profileKeys.map(\.name) == ["edma", "bgate", "braw"])
         #expect(a.key.songKey == a.hpcpKey.decision.camelot && a.keyConfidence == KeyConfidence.hpcp(a.hpcpKey.decision))
@@ -268,11 +268,11 @@ struct EngineTests {
         #expect(json["key"]?["confidence_rule"] == .string(a.keyConfidence.rule))
         let dk = try #require(json["deckie"]?["key"])
         #expect(dk.keys == ["estimator", "whitening", "frames", "camelot", "key", "scale", "r", "margin", "agree", "sure",
-                            "tables", "profiles", "parity", "stft_edma", "song_key", "windows_estimator", "mix_in",
+                            "tables", "profiles", "stft_edma", "song_key", "windows_estimator", "mix_in",
                             "mix_out", "segments"])
         #expect(dk["estimator"] == .string("hpcp-whitened") && dk["whitening"] == .bool(true))
         #expect(dk["margin"] == .number(Py.round(a.hpcpKey.decision.margin, 4)) && dk["sure"] == .bool(a.hpcpKey.decision.sure))
-        #expect(dk["profiles"]?.keys == ["edma", "bgate", "braw"] && dk["parity"]?["tables"] == .string("key_light"))
+        #expect(dk["profiles"]?.keys == ["edma", "bgate", "braw"] && dk["tables"] == .string("literature"))
         #expect(dk["stft_edma"]?["camelot"] == .string(a.key.whole.camelot))
         #expect(f.localTempo?.bpmIn != nil)
         // The local tempo block decodes as the lab's and the port's input reads back from the file.

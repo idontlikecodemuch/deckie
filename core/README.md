@@ -176,16 +176,16 @@ bgate and braw, averaged; the best mean wins. Sure when the three profiles agree
 at least 0.08; the record's confidence is 1.0 when sure and 0.45 (so `key_uncertain`) otherwise (`KeyConfidence`). The
 profile numbers are the literature's (`HPCPKeyProfiles.swift`, sources beside each and in `DEPENDENCIES.md`'s last
 section): they match `key_light.py`'s copy of Essentia's key.cpp except edma's major minor sixth, 0.32 in Faraldo's
-thesis where key.cpp has 0.31. The engine decides with the literature's numbers and decides again with key_light's
-(`parity` in `deckie.key`), which is what `key_parity.py` decides, for the bench's parity column. `KeyTests.swift`
+thesis where key.cpp has 0.31. The engine decides with the literature's numbers, and so does `key_parity.py` since
+Oct 29, 2026 (its `edma_paper` profile); the Mac's 0.4.0 pass read the two equal on all 373 tracks. `KeyTests.swift`
 checks each stage against `Fixtures/key_parity.json` (nine synthesised signals and 66 made-up profiles): spectra within
 1.5e-7 of the frame's largest bin (the port's FFT is double precision, numpy's float32: the one detail that differs),
 peaks from the reference's spectrum within 4.8e-6 in frequency and 2.3e-6 in magnitude (numpy's float32 log10 is up to 2
 units in the last place off), a frame's HPCP from the reference's peaks within 1.4e-6, correlations within 4e-16, and
 from the audio every key, agreement and sure flag identical and every margin within 1.2e-6. Four minutes take about
 0.9 s in a debug build and 0.2 s in release (one core of a 2.1 GHz Xeon). `KeyParitySheetTests` reads
-`mixer/key_parity_keys.tsv` (`DeckieLab`'s `KeyParitySheet`): 259 of 311 exact, 217 sure. The 373-track parity happens
-on the Mac (below).
+`mixer/key_parity_keys.tsv` (`DeckieLab`'s `KeyParitySheet`): 259 of 311 exact, 218 sure. The 373-track parity happened
+on the Mac (below): 373 of 373.
 
 **Structure** (`Sources/DeckieCore/Structure/`) is the part of `mixer/analyze.py` after the grid choice that lays out
 bars and phrases and places the mix windows, as pure functions of what the audio analysers measure. `BarGrid` puts bar
@@ -320,7 +320,7 @@ a `deckie` block of the engine's own) and the crate record (`crateTrack(options:
 Beat This! is the only grid source, as the madmom fallback is non-commercial (`madmom_ran` is false, and
 `deckie.madmom_would_run` marks the tracks where the lab would have run it); the key and its confidence come from
 research R's whitened HPCP and its sure rule in place of the lab's three detectors (`HPCPKey`, `KeyConfidence`; the
-margin, agreement, each profile's key, the parity decision and the STFT estimate in `deckie.key`, the profiles' keys
+margin, agreement, each profile's key and the STFT estimate in `deckie.key`, the profiles' keys
 and the STFT estimate as non-deciding entries of the crate's `key.votes`); and the vocal probability comes from YAMNet, not the
 lab's non-commercial EffNet (below), and `embedding_effnet` is never written. Without the YAMNet model the engine runs
 on without a vocal tagger: the record has no `vocal` block or `per_bar.vocal_prob`, the mix windows count every bar
@@ -519,10 +519,9 @@ the file with the row's tag tempo, as the lab did, and compares the engine's rec
 - key exact, neighbour (the relative key or one step round the wheel) or other, over all tracks and over the lab's
   confident keys (confidence 0.65 or more, 311 tracks);
 - key against `key_parity.py` (column `par`, when `mixer/key_parity_keys.tsv` sits beside the features folder, as it
-  does in the repository): the engine's parity decision (`deckie.key.parity`, key_light's profile numbers) against
-  the sheet's row by the main session's rule, the same key, the margin within 0.001 and the same sure flag; every
-  other track is listed as a port difference, and the summary also says on how many the engine's own key (the
-  literature's numbers) equals the sheet's;
+  does in the repository): the engine's key decision (`deckie.key`) against the sheet's row by the main session's
+  rule, the same key, the margin within 0.001 and the same sure flag; every other track is listed as a port
+  difference (the Mac's 0.4.0 pass: 373 of 373 the same);
 - integrated loudness and true peak, engine minus lab; section boundary recall and precision within one bar (the
   lab's inner boundaries against the engine's); per-bar vocal correlation when both sides have it (the engine's bar
   under the middle of each lab bar), marked absent otherwise (the engine runs its vocal tagger only when the YAMNet
