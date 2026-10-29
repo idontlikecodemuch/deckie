@@ -1,7 +1,7 @@
 import Foundation
 
 // The two blocks accepted with memo Q's vocal fields (docs/research/q-vocal-uses.md, sections 3 and 4;
-// docs/architecture/crate-format.md, "Additions proposed with the vocal fields"): `vocal_structure` and `hooks`. Both
+// docs/architecture/crate-format.md, "Additions accepted with the vocal fields"): `vocal_structure` and `hooks`. Both
 // are additive: a record without them reads as before, and a writer leaves them out rather than writing null, so the
 // records of engines that do not make them (the lab's, the Apple apps' until they add them) keep their bytes.
 
