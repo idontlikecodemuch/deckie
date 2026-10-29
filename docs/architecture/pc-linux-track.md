@@ -22,9 +22,9 @@ scoring, the crate format) once, in Swift, so the Apple apps and the Windows and
   models plus `DeckieCore`.
 - Linux first. The cloud session is a Linux machine; Swift on Linux is mature. Every mechanic below is done on
   Linux first.
-- Windows is probed, not decided. A GitHub Actions Windows runner builds and tests the same package from the first
-  week; if Swift on Windows proves painful, the Windows build alone falls back to Rust or C++ behind the same
-  crate file, decided on evidence, not now.
+- Windows: probed and passed (Oct 28, D14). GitHub's Windows runner installed Swift 6.4.1, built the package and
+  passed the same 13 parity tests with no Windows-specific code (pull request #1, both workflows green). Rust or C++
+  stays the fallback for the Windows build alone if a later mechanic proves painful there.
 - Dependencies are welcome for solved problems (decoding, FFT, model runtime, loudness, XML, model weights) and
   governed by the policy in P16: pinned by version and hash in `DEPENDENCIES.md`, a licence allowlist checked in
   CI, nothing that downloads or runs code at build time, a quarterly update day with a benchmark rerun.
@@ -43,8 +43,13 @@ status log and merged by the main session.
 ## Constraints that do not move
 
 Licences: MIT, BSD, Apache 2.0, ISC and public domain ship; LGPL only dynamically linked; GPL, AGPL, CC BY-NC and
-research-only never; quote the licence file before adopting anything. No audio leaves the user's machine; no
-network during analysis. The crate file is Deckie's own format and the only thing written. Recognition signatures
+research-only never; quote the licence file before adopting anything. Model weights and data may also be CC BY 4.0
+(never code; attribution shown in the app). Weights ship under their own licence even when their training data
+could not be shipped, unless that data's licence forbids commercial use; the data set, its licence and the
+trainer are recorded beside the weights in `DEPENDENCIES.md` (note on D14). MPL 2.0 ships only with its files unmodified by
+us and its notices shown; a change we make to an MPL file is published (note on D14). No audio leaves the user's machine; no
+network during analysis, including by a dependency: a library with a reporting client is built without it before
+any user build, and a release test scans each shipped library for it (note on D3, Oct 28). The crate file is Deckie's own format and the only thing written. Recognition signatures
 come from an Apple device; this track builds no fingerprint and leaves a place in the crate for signatures made
 elsewhere.
 

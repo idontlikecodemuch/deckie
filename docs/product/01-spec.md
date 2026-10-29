@@ -174,6 +174,13 @@ Apple Music metadata are closed to this use by their own terms. Beatport, SoundC
 1001Tracklists are not usable sources under their terms. A burned MP3 CD is a file system with no disc id; Deckie
 writes a manifest when it builds a disc and reads it back.
 
+### 5.4a File types (P18)
+
+Every platform reads WAV, AIFF, MP3 and FLAC. Mac and iPad also read anything the system plays, which adds AAC and
+Apple Lossless. Windows adds AAC and WMA through its own decoder. Linux reads AAC and WMA only if the user has
+ffmpeg installed, run as a separate program. Rights-protected downloads from streaming services cannot be read by
+any software and Deckie says so. Unsupported files are reported, counted by type, never skipped silently.
+
 ### 5.5 Preferences and learning (track C)
 
 Preferences live in the crate file and are learned on device. Twelve measurable dimensions with proxies from the
@@ -213,6 +220,16 @@ Desk Lite share it (P16).
 One universal iOS binary plus a native macOS target from shared packages. Roles are runtime modes: Booth (iPad beside
 the decks), Pocket (iPhone: record a set, see the tracklist), Desk (Mac: import, analyse, manage the crate). Web app:
 later. Android and Windows: not planned.
+
+### 5.9 Legal texts (D15)
+
+Three short texts, written in the app's voice (`voice.md`), reviewed by the attorney with the DECKEE question:
+the terms of use, the privacy statement and the acknowledgements. They say, in this order: the music and everything
+Deckie learns from it stay on the DJ's devices, with no account, no upload and no training on the DJ's content (D3);
+the DJ is responsible for the rights to the files they analyse; Deckie contains third-party models and libraries
+published under open licences, each listed in the acknowledgements with its licence and, for a model, the training
+sets it was built from and their terms (D15); and the app's store listing claims "Data Not Collected" only while
+that is true (P8). The acknowledgements are generated from `DEPENDENCIES.md`, so they cannot drift from what ships.
 
 ## 6. Features
 

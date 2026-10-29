@@ -97,10 +97,109 @@ rekordbox XML is explicit and lossy by nature (grids, cues, BPM, one key); impor
 grids and cues. No live sync with other software, and the crate's own fields never leave through the export.
 Supersedes the "fully interchangeable" reading of P12.
 
+### D14. Deckie's own code is written once in Swift and runs on Linux and Windows: decided by the spike (Oct 28)
+Christopher's direction was to settle the language in practice. The two-week spike took one day: a Swift package
+with the grid fit, Camelot mapping and pair scoring reproduces the lab's numbers on all 373 tracks and all 138,608
+pairs on Linux (Swift 6.4.1), and the same package builds and passes the same 13 tests on GitHub's Windows machine
+with no Windows-specific code (run 40750217848; pull request #1, both workflows green). Rust stays the named
+fallback for the Windows build alone if a later mechanic proves painful there. The Apple apps keep Apple's Music
+Understanding framework (D11); this core is what both sides share. Dependency policy as in P16.
+
+### Note on D14 (Oct 28): model weights, their training data, and CC BY 4.0
+Settled with the PC and Linux session while it chose a vocal model (its report is `docs/research/n-vocal-tagger.md`
+on its branch). Two lines added to the dependency policy. First: weights published under an allowlisted licence
+ship even when we could not ship their training data ourselves, unless that data's own licence forbids commercial
+use, in which case the weights are treated as non-commercial whatever their stated licence; where the data's
+licence is unknown, the trainer must be the data's rights-holder. The data set, its licence and who trained are
+recorded in `DEPENDENCIES.md` beside the weights. So Spleeter's vocal model (Deezer, MIT, trained on Deezer's own
+catalogue) and EfficientAT (MIT, trained on AudioSet, whose labels are CC BY 4.0) are in; musicnn (ISC code, but
+trained on CC BY-NC-SA audio) and CLAP (mixed-licence web audio) are out. Second: CC BY 4.0 joins the allowlist for
+model weights and data only, never code, with the attribution shown in the app's acknowledgements; CC BY-SA and
+CC BY-NC stay off. Christopher can overrule either line; neither is needed by the recommended models.
+Third line, same day: MPL 2.0 (file-level copyleft: changes to those files must be published) ships when its files are
+unmodified by us, with its notices in the acknowledgements; any change we make to an MPL file is published; an
+allowlisted equivalent is preferred where one exists. (A patch an upstream applies and publishes, as ONNX Runtime
+does to Eigen, is that upstream's obligation, met by the notices it ships.) Found the same evening: ONNX Runtime
+patches Eigen on every platform (two published patches for IBM Z builds, touching nothing these three platforms
+compile), so the acknowledgements say "unmodified by Deckie; carries ONNX Runtime's two published patches" and ship
+the two patch files beside Eigen's notice, which is the licence's source-availability ask met in the simplest way. Needed because ONNX Runtime (MIT) carries Eigen (MPL 2.0) inside it. For
+the attorney to confirm alongside the DECKEE review. Christopher approved all three lines on Oct 28, with a
+search for alternatives to the vocal models and the model runtime still to run.
+
+The alternatives search ran the same day (`docs/research/o-alternatives-vocal-and-runtime.md`). It changed the vocal
+pick. EfficientAT's small models start from ImageNet weights, and ImageNet's terms are research-only, so it fails
+the training-data line; Spleeter's weights are called MIT only in Deezer's paper, which says the training set is
+Deezer's internal catalogue without saying Deezer owns it, so it fails the rights-holder test; and every other
+separator with a stated licence was trained on MUSDB18-HQ, which is non-commercial. So the Windows and Linux
+vocal signal is a tagger, as the lab's was: Google's YAMNet (Apache 2.0, trained on AudioSet alone, 3.7 million
+weights), with PANNs MobileNetV2 (MIT code, CC BY 4.0 weights, AudioSet) as the optional second opinion, read per
+bar from the singing classes and calibrated by track J's listening set. AudioSet's labels are CC BY 4.0 and
+Google ships YAMNet for commercial use, which is the anchor for accepting AudioSet-trained weights; the app uses
+its own class words, not AudioSet's share-alike ontology file. A separator returns only if a clean one appears or
+the listening test shows a tagger is not enough. The runtime stays ONNX Runtime: its notices name Eigen as the only
+MPL part and nothing LGPL, GPL or non-commercial; ncnn (BSD-3, C API, no Eigen) is the named fallback. Two checks
+for the PC and Linux session: which third-party parts reach the CPU binary (the notices also list json.org's
+"JSON License", off our list), and the CPU time per track of each tagger.
+Christopher approved the YAMNet download and any further vocal-model weights the track needs, within these
+licence lines (Oct 28).
+
+### Note on D13 (Oct 28): crate format version 1 accepted
+The PC and Linux session wrote the reader and writer (`DeckieCrate`) and a design note, `docs/architecture/crate-format.md`
+on its branch, listing what spec 5.2, track A and track L fix and eight proposals for the open field-level detail.
+Accepted as proposed, with two changes: the engine family for the Windows and Linux engine is `deckie`, not
+`deckie-oss` (the models are open source; the engine is not, and the name must not claim a licence); and the note
+must say how a shipped engine makes a record's `id` (a prefix of the file's content hash, with the full hash stored),
+since the lab's ids were made another way. Measured: 373 lab files round-trip; about 4 KB a track without
+signatures, inside the 10 KB budget. The writer refuses to rewrite a crate from a newer schema rather than drop
+fields, so an older app will need a line of copy for that case. Christopher approved on Oct 28. Later the same day, two
+additive blocks accepted: `manifest.import_log` (device model label, time, files seen, tracks, failures with reasons,
+rekordbox matches; the count P18 asks for) and a per-record `imported` block keyed by source (`imported.rekordbox`:
+grid markers, cues, loops, playlists, with the import time; null when nothing was imported), the DJ's own data named
+for where it came from; the file's tag tempo is `file.tag_bpm`. The acknowledgements screen reads
+`core/dependencies.json`, the source of truth, from which the Markdown table in `DEPENDENCIES.md` is generated and
+checked by a test, so the apps never parse Markdown. Later still, proposal 10 accepted: two additive blocks
+from the session's vocal-uses memo, `vocal_structure` (sung stretches to the beat with each end's distance from the
+nearest 8-bar point; the first and last sung beat, with the pickup; free intro and outro bars and what they hold;
+vocal-free gaps of 8 bars or more; an "exposed vocal" proxy from the low band and onsets, with the Apple engine's
+real reading preferred when present) and `hooks` (up to three candidates for the DJ to confirm), each listed in
+features_present and left out entirely when absent so older records keep their bytes; every rule and threshold is
+written into the record so the Mac's listening test can tune them. The id of a shipped record is the first 16
+hex characters of the file's SHA-256, with the full hash in `file.sha256`. The session's memo is
+research Q (`docs/research/q-vocal-uses.md`): O on main is the alternatives search and P is the Mac session's
+machine estimates.
+
+### D15. Model weights ship under their publisher's licence; training data is disclosed, not a gate (Oct 28)
+Christopher accepted P19: "I agree with your assessment, though we should clarify that in the terms of service /
+use." So the training-data line of the note on D14 is replaced by this: weights ship under the licence their
+publisher grants; a model is refused when the publisher's own terms restrict use or when a data owner has objected;
+every model's training sets and their terms are recorded in `DEPENDENCIES.md` and shown in the app's
+acknowledgements, with a named replacement path; the attorney reviews the line with DECKEE. Beat This! ships with
+its record. The terms of use say it plainly: Deckie contains third-party models published under open licences,
+listed with their licences and training-data disclosures in the acknowledgements; Deckie never trains on the user's
+content (D3). Spec 5.9.
+
 ### Note on D3 (Oct 26, from the community research): privacy covers taste, not only audio
 DJs' fear is "I'm not helping train ai for free": that their choices become someone else's product. So D3 extends
 to history, cues, saved pairs and learned preferences: all of it stays with the DJ, Deckie says who benefits from
 learning (only the DJ), and the DJ can see, export and delete it. Spec 3.
+
+### Note on D3 (Oct 28): dependencies that report home
+ONNX Runtime's official builds send usage events to Microsoft: its `docs/Privacy.md` says telemetry is "turned ON by
+default in the official builds", over HTTPS through Microsoft's 1DS client on Linux and macOS and through the
+operating system's event tracing on Windows. Counts and timings, never audio, but it is a network call during
+analysis, which the charter forbids, and it would make the "Data Not Collected" line (P8) false. Found by the PC and
+Linux session. Decided: development builds, CI and the bench may use the official binaries with the
+`ORT_DISABLE_TELEMETRY=1` switch set inside the process before the library loads, checked by a test; no build that
+reaches a user carries a reporting client, so before the first TestFlight or PC build ONNX Runtime is built by us
+with its `--no_telemetry` flag, which leaves the client out, and pinned like any dependency; a release test scans
+each shipped library for the client's endpoint and symbols, so the promise is checked rather than assumed. The client's
+own dependencies (curl, mbedTLS, SQLite) leave with it; curl's MIT-style licence is not added to the allowlist and is
+recorded as present in development builds only. General rule: a dependency with a reporting client is built without
+it or not used. Windows detail, same evening: ONNX Runtime built without telemetry never registers its
+event-tracing provider, but the provider's name stays in the library as a string, so the Windows scan reports that one
+marker as "present, never registered", with the registration path documented, and fails on every other marker as
+the Linux and Mac scans do; events through that path reach nothing unless the user runs a trace session, and the
+build never registers. A patched build that removes the definition was judged not worth its upkeep.
 
 ### Note on D5 (Oct 26): Mike's data is a special case
 Mike's party set was curated by Christopher and held music Mike does not usually play, so the sprint's data describes a
@@ -185,7 +284,7 @@ Christopher says so; a yes moves it up into the dated decisions above.
   without a Mac (no engine work, interface only); Desk Lite for Windows and Linux after the trials (rekordbox XML
   import first, a second engine for the rest, signatures still from an Apple device); Android booth only on demand.
   Spec 5.7, overview section 5.
-- **P16, revised by track M: Deckie's own code is written once in Swift, as a plain package with no Apple-only
+- **P16 (decided as D14 on Oct 28 by the spike). Revised by track M: Deckie's own code is written once in Swift, as a plain package with no Apple-only
   framework, and runs on Windows and Linux too; Rust is the runner-up, not the default.** Track M found the shared
   core is small (about 3,000 lines once ported: the DJ DSP, the key estimator, the scoring and the crate format),
   that a Rust core would put a translation layer under every Mac and iPad build now for a Windows builder that P17
@@ -199,3 +298,33 @@ Christopher says so; a yes moves it up into the dated decisions above.
   libraries; pin every dependency by version and hash in one DEPENDENCIES.md with a CI licence allowlist; vendor
   small leaf libraries; nothing that runs or downloads code at build time; a quarterly update day with a benchmark
   rerun. Awaiting Christopher.
+- **P18. Audio file types a crate can hold, by platform (Oct 28).** What DJs actually own: MP3 from pools and
+  rips; WAV, AIFF and FLAC from Beatport, Bandcamp and lossless rips; AAC (.m4a) from iTunes purchases; ALAC
+  (Apple Lossless, also .m4a); Ogg Vorbis and Opus rarely; WMA rarely and ageing. Streaming-service offline files
+  (Apple Music, Spotify, Tidal) are rights-protected and cannot be read by anyone; Deckie says so plainly and never
+  tries. Plan: on every platform, WAV, AIFF, MP3 and FLAC (plain PCM parsers of our own for WAV and AIFF; dr_mp3 and
+  dr_flac, public domain, pinned, for the other two); on Mac and iPad, anything the system plays through
+  AVFoundation, which adds AAC and ALAC; on Windows, AAC and WMA through Media Foundation, the system's own
+  decoder; on Linux, AAC and WMA only through the user's own ffmpeg run as a separate program (P-AAC decision), and
+  ALAC through Apple's open-source ALAC decoder (Apache 2.0) if demand appears; Vorbis and Opus through public-domain
+  or BSD decoders only if the trials show them. Unsupported files are always reported, counted by extension, never
+  skipped silently. Each decoder's leading-sample offset is measured against the lab's and corrected, so beat times
+  agree across platforms.
+- **P19. The training-data line re-read for the beat model (Oct 28, awaiting Christopher).** The PC and Linux
+  session recorded Beat This!'s training sets as the note on D14 asks: fifteen sets, three with non-commercial terms
+  on their own pages (ASAP with MAESTRO audio, RWC, Filosax), several of commercial recordings the sets do not
+  license at all (Ballroom, Hainsworth, Beatles, JAAH), some with YouTube links, some unstated; the weights are MIT
+  from the authors (JKU), who say the user must assess the training files' terms. Read literally, the morning's
+  line ("weights whose training data carries a non-commercial licence are out") refuses Beat This!, and no
+  permissively licensed beat tracker with clean training terms exists: madmom's models are CC BY-NC-SA, model-free
+  trackers are far weaker and find no downbeats, and training our own on licensed data is months of work for a
+  worse result. The line is also inconsistent: it refuses sets that say "non-commercial" while accepting
+  all-rights-reserved recordings that grant nothing (most sets, YAMNet's YouTube clips, and whatever Apple trained
+  its framework on). Proposed re-read: weights ship under the licence their publisher grants; a model is refused when
+  the publisher's own terms restrict use (madmom, Essentia, umxl) or when a data owner has objected; the training
+  sets and their terms are recorded for every model as disclosure, with a named replacement path; the attorney
+  reviews the line with DECKEE. Under this reading Beat This! ships with its record, YAMNet is unchanged, and the
+  Spleeter and musicnn refusals of the morning stand on other grounds (YAMNet is the like-for-like signal). The
+  alternative is to keep the literal line and fund a clean-data beat tracker as a research track, with the PC and
+  Linux engine unable to ship beats until it lands. Until Christopher answers, Beat This! stays in the engine for the
+  bench only, which is development.

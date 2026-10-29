@@ -174,7 +174,7 @@ The five lines in section 1, plus the details:
 
 - **Allowlist.** MIT, BSD-2, BSD-3, Apache 2.0, ISC, zlib, public domain and CC0 ship. LGPL ships only as a
   separately loaded library (a DLL), never linked into our binary. MPL 2.0 (file-level copyleft: changes to those
-  files must be published) needs a decision; Symphonia and Eigen are MPL. GPL, AGPL, any NonCommercial and
+  files must be published) ships unmodified with notices, decided Oct 28 (note on D14); Symphonia and Eigen are MPL. GPL, AGPL, any NonCommercial and
   research-only licences never ship. Model weights get their own licence line. Their training-data caveat is
   recorded (Beat This!'s maintainers: "we are not lawyers").
 - **Admission test for a new dependency.** It does something we should not own. It has a licence on the allowlist,
