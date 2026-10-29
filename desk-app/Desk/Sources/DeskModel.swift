@@ -1,5 +1,6 @@
 import Foundation
 import AppKit
+import UniformTypeIdentifiers
 import DeckieCrate
 import DeckieBuild
 import DeckieEngine
@@ -48,18 +49,31 @@ final class DeskModel: ObservableObject {
         } catch { errorText = "Could not open the crate: \(error)" }
     }
 
-    func askNewCrate() {
+    func askNewCrate(withRekordbox: Bool = false) {
+        if withRekordbox {
+            let x = NSOpenPanel()
+            x.canChooseDirectories = false; x.canChooseFiles = true; x.allowsMultipleSelection = false
+            x.allowedContentTypes = [.xml]
+            x.message = "Choose the collection you exported from rekordbox (File > Export Collection in xml format). Deckie takes names, tempos, keys, cues and playlists from it; nothing is sent anywhere."
+            x.begin { [weak self] r in
+                guard r == .OK, let xml = x.url, let self else { return }
+                self.askFolder(rekordbox: xml)
+            }
+        } else { askFolder(rekordbox: nil) }
+    }
+
+    private func askFolder(rekordbox: URL?) {
         let p = NSOpenPanel()
         p.canChooseDirectories = true; p.canChooseFiles = false; p.allowsMultipleSelection = false
         p.prompt = "Build"
         p.message = "Choose the folder of music. Deckie analyses every audio file below it and writes a crate; the music stays where it is."
         p.begin { [weak self] r in
             guard r == .OK, let folder = p.url, let self else { return }
-            self.askWhereToSave(folder: folder)
+            self.askWhereToSave(folder: folder, rekordbox: rekordbox)
         }
     }
 
-    private func askWhereToSave(folder: URL) {
+    private func askWhereToSave(folder: URL, rekordbox: URL?) {
         let s = NSSavePanel()
         s.nameFieldStringValue = folder.lastPathComponent + ".deckiecrate"
         s.directoryURL = Remembered.cratesFolder()
@@ -67,7 +81,7 @@ final class DeskModel: ObservableObject {
         s.begin { [weak self] r in
             guard r == .OK, let out = s.url, let self else { return }
             Remembered.setCratesFolder(out.deletingLastPathComponent())
-            self.build(folder: folder, output: out)
+            self.build(folder: folder, output: out, rekordbox: rekordbox)
         }
     }
 
