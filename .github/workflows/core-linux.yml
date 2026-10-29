@@ -12,6 +12,10 @@ on:
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
+    env:
+      # ONNX Runtime's official builds report usage to Microsoft unless this is set before they start; Deckie's
+      # shim and the Python tools set it themselves, this covers every step here as well (DEPENDENCIES.md, 6).
+      ORT_DISABLE_TELEMETRY: "1"
     # A guard, not a target. Estimated from this session's machine (not yet timed on GitHub): the caches below add
     # about 40 s to a run when they hit (restoring 110 MB, then the beat tracker's tests), about 3 minutes when not;
     # the vocal tagger's cache and tests add about 45 s more when it hits and about 2 minutes when not.

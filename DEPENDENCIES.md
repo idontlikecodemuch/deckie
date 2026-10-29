@@ -299,7 +299,15 @@ only on Apple's systems (track M section 6), so Deckie calls ONNX Runtime's C in
 - **The library is fetched per machine, not committed.** `core/Tools/fetch-onnxruntime.sh` downloads the Linux
   archive, checks its SHA-256 (below) before unpacking anything, and unpacks it into `core/.deps/onnxruntime/`, which
   `.gitignore` keeps out of the repository; CI caches that folder. Nothing is downloaded at build time or during
-  analysis, and Deckie switches ONNX Runtime's telemetry off (`DisableTelemetryEvents`) when it opens it.
+  analysis.
+- **Its usage reporting is switched off before it starts.** Microsoft's official builds report usage to Microsoft
+  unless the environment variable `ORT_DISABLE_TELEMETRY` is set before the library starts (the archive's
+  `Privacy.md` says so; the Linux library carries Microsoft's 1DS reporting client and the address
+  `mobile.events.data.microsoft.com`, the Windows one reports through Windows' event tracing). `deckie_ort.c` sets
+  the variable to `1` in Deckie's own process before opening the library, unless the user already set it, and a test
+  checks it; the C API's `DisableTelemetryEvents` is called too, as a second layer, though on its own it would come
+  after the client has started. The Python tools below that import the `onnxruntime` package set the same variable
+  before importing it, and the Linux workflow sets it for every step. Found Oct 29, 2026 (status log entry 12).
 
 Christopher approved downloading the release archives on Oct 28, 2026, and the lead took responsibility for them.
 
@@ -364,6 +372,14 @@ Mozilla Public License Version 2.0
 --------------
 ```
 
+**What the Linux library carries for its reporting client** (read from the library's own strings, Oct 29, 2026).
+Besides the notice file's entries, the Linux library statically contains, for the 1DS client above: **curl 8.20.0**
+(the curl licence, an MIT-style permission notice that is not on the allowlist word for word; the notice file lists
+it), **mbedTLS** (Apache 2.0), **SQLite 3.53.1** (public domain) and **zlib** (zlib licence). The Windows library
+has none of these. Whether the curl licence joins the allowlist as an MIT variant, or ONNX Runtime is rebuilt
+without its reporting client at a later update, is an open question for the main session (status log entry 12).
+RapidJSON, whose test files carry the JSON Licence, leaves no trace in either library.
+
 **The MPL 2.0 decision** (the main session, Oct 28, 2026). Files under MPL 2.0 ship when they are unmodified, with
 their notices in the app's acknowledgements. Any change Deckie ever makes to an MPL file is published. Where an
 equivalent under a licence already on the allowlist exists, it is preferred. Eigen inside ONNX Runtime qualifies as
@@ -375,8 +391,9 @@ release page; record their sizes and SHA-256 values here, and the Linux archive'
 (`VERSION`, `SHA256`, `SIZE`); copy the three headers from the Linux archive over the vendored ones and record their
 hashes (a new API version changes `ORT_API_VERSION`, so the test that expects 31 changes with it; the shim then
 refuses libraries older than the header, while newer libraries still offer the older version); re-quote `LICENSE`
-and reread `ThirdPartyNotices.txt` for new licences; delete `core/.deps/onnxruntime` and run the script again; run
-`swift build` (no warnings) and `swift test`, which reruns the beat tracker's parity tests. CI fetches the new
+and reread `ThirdPartyNotices.txt` for new licences; reread `Privacy.md` and check that `ORT_DISABLE_TELEMETRY` is
+still the switch (`strings` on the library should show it); delete `core/.deps/onnxruntime` and run the script again;
+run `swift build` (no warnings) and `swift test`, which reruns the beat tracker's parity tests. CI fetches the new
 archive once, since the script's hash is its cache key.
 
 ## 7. Beat This!, the beat tracker (weights exported per machine; development-only Python tools)

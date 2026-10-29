@@ -52,12 +52,24 @@ enum Available {
         }
     }
 
+    /// ONNX Runtime's official builds report usage to Microsoft unless ORT_DISABLE_TELEMETRY is set before the
+    /// library starts; the shim sets it before opening the library, whether or not the open succeeds (the test
+    /// above tried one), so after any load attempt the switch is on in this process.
+    @Test func telemetryIsSwitchedOffBeforeTheLibraryStarts() {
+        let path = FileManager.default.temporaryDirectory.appendingPathComponent("no-such-dir/\(OnnxRuntime.libraryFileName)").path
+        _ = try? OnnxRuntime.load(libraryPath: path)
+        let setting = OnnxRuntime.telemetrySetting
+        #expect(setting != nil, "ORT_DISABLE_TELEMETRY is unset after a load attempt")
+        print("ORT_DISABLE_TELEMETRY=\(setting ?? "unset") (\"1\" unless the environment set it before the tests)")
+    }
+
     @Test(.enabled(if: Available.runtime, "ONNX Runtime not found: run core/Tools/fetch-onnxruntime.sh or set DECKIE_ONNXRUNTIME_LIB"))
     func libraryLoads() throws {
         let rt = try OnnxRuntime.load()
-        print("ONNX Runtime \(rt.version) from \(rt.libraryPath), C API version \(rt.apiVersion)")
+        print("ONNX Runtime \(rt.version) from \(rt.libraryPath), C API version \(rt.apiVersion), ORT_DISABLE_TELEMETRY=\(OnnxRuntime.telemetrySetting ?? "unset")")
         #expect(rt.apiVersion == 31)
         #expect(rt.version.hasPrefix("1."))
+        #expect(OnnxRuntime.telemetrySetting != nil)
         #expect(try OnnxRuntime.load() === rt, "one OnnxRuntime per library")
     }
 

@@ -35,6 +35,7 @@ import torch
 from beat_this.inference import CHECKPOINT_URL, load_model
 from beat_this.preprocessing import LogMelSpect
 from rotary_embedding_torch import RotaryEmbedding
+os.environ.setdefault("ORT_DISABLE_TELEMETRY", "1")  # official ONNX Runtime builds report usage to Microsoft otherwise
 import onnxruntime as ort
 
 # The tracer warns that the batch size (1) and a few shape checks become constants in the graph; that is intended:
