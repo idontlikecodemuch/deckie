@@ -104,11 +104,24 @@ public struct DecodedAudio: Sendable {
 /// concealment, both trimmed the same way. A file with no damaged frame must give the same samples, bit for bit; one
 /// with damaged frames may differ only from each frame's start to the end of the frame after it.
 public struct MP3ConcealmentCheck: Sendable {
+    /// A stretch of sample frames in which the two decodes differ: runs of differing sample frames less than one
+    /// MPEG-1 frame (1,152 sample frames) apart are one span, so a concealed frame gives one span even where a
+    /// sample inside it happens to agree. `count` is how many sample frames in the span differ.
+    public struct DifferingSpan: Sendable, Equatable {
+        public var frames: ClosedRange<Int>
+        public var count: Int
+        public init(frames: ClosedRange<Int>, count: Int) { self.frames = frames; self.count = count }
+    }
     public var damagedFrames: [DamagedFrame]
     public var pullReader: AudioBuffer
     public var decoded: AudioBuffer
-    /// The first and last sample frames where the two differ (by bit pattern), nil when they are the same.
-    public var differing: ClosedRange<Int>?
+    /// Where the two differ (by bit pattern), span by span in order; empty when they are the same.
+    public var differingSpans: [DifferingSpan]
+    /// The first and last sample frames where the two differ, nil when they are the same.
+    public var differing: ClosedRange<Int>? {
+        guard let f = differingSpans.first, let l = differingSpans.last else { return nil }
+        return f.frames.lowerBound...l.frames.upperBound
+    }
 
     /// Decodes the MP3 at `url` both ways.
     public static func check(_ url: URL) throws(AudioDecodeError) -> MP3ConcealmentCheck {

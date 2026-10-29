@@ -13,19 +13,42 @@ public enum MP3Check {
     public struct FileResult: Sendable {
         public var rel: String
         public var damagedFrames: [DamagedFrame] = []
-        /// Where the samples differ from the pull reader's, in seconds; nil when they are the same.
-        public var differing: ClosedRange<Double>?
+        /// One stretch in which the samples differ from the pull reader's (`MP3ConcealmentCheck.DifferingSpan`), in
+        /// seconds, with how many sample frames in it differ.
+        public struct Span: Sendable, Equatable {
+            public var seconds: ClosedRange<Double>
+            public var count: Int
+        }
+        /// Where the samples differ from the pull reader's, span by span in order; empty when they are the same.
+        public var spans: [Span] = []
+        /// The first and last differing times; nil when the samples are the same.
+        public var differing: ClosedRange<Double>? {
+            guard let f = spans.first, let l = spans.last else { return nil }
+            return f.seconds.lowerBound...l.seconds.upperBound
+        }
         /// The true peak (dBTP) of the pull reader's samples and of the concealed ones, for a file with damaged frames.
         public var truePeakBefore: Double?, truePeakAfter: Double?
         /// Why the file could not be decoded, if it could not.
         public var error: String?
 
-        /// Whether the concealment changed nothing it should not have: no difference at all, or differences only from
-        /// the first damaged frame's start to three frames' time after the last one's.
+        /// Whether the concealment changed nothing it should not have: no difference at all, or every span of
+        /// differences inside the reach of a damaged frame, from its start to three frames' time after it (the frame,
+        /// the overlap into the next and the filter bank's delay), reaches that touch taken together. A span outside
+        /// every reach, between two damaged frames included, fails: the decoder's state did not come back.
         public var holds: Bool {
-            guard let d = differing else { return true }
-            guard let first = damagedFrames.first, let last = damagedFrames.last else { return false }
-            return d.lowerBound >= first.startSeconds - 1e-9 && d.upperBound < last.startSeconds + 3 * last.seconds
+            if spans.isEmpty { return true }
+            var reaches: [ClosedRange<Double>] = []
+            for f in damagedFrames {
+                let lo = f.startSeconds - 1e-9, hi = f.startSeconds + 3 * f.seconds
+                if let r = reaches.last, lo <= r.upperBound {
+                    reaches[reaches.count - 1] = r.lowerBound...max(r.upperBound, hi)
+                } else {
+                    reaches.append(lo...hi)
+                }
+            }
+            return spans.allSatisfy { s in
+                reaches.contains { s.seconds.lowerBound >= $0.lowerBound && s.seconds.upperBound < $0.upperBound }
+            }
         }
     }
 
@@ -46,7 +69,9 @@ public enum MP3Check {
                 let c = try MP3ConcealmentCheck.check(files[i].url)
                 let rate = Double(c.decoded.sampleRate)
                 r.damagedFrames = c.damagedFrames
-                r.differing = c.differing.map { Double($0.lowerBound) / rate...Double($0.upperBound) / rate }
+                r.spans = c.differingSpans.map {
+                    .init(seconds: Double($0.frames.lowerBound) / rate...Double($0.frames.upperBound) / rate, count: $0.count)
+                }
                 if !c.damagedFrames.isEmpty {
                     r.truePeakBefore = TruePeak.decibels(c.pullReader)
                     r.truePeakAfter = TruePeak.decibels(c.decoded)
@@ -62,7 +87,8 @@ public enum MP3Check {
         return results.list.map { $0! }
     }
 
-    /// One file's line: its damaged frames, where its samples differ and its true peak both ways.
+    /// One file's line: its damaged frames, each span where its samples differ (so a file with several damaged
+    /// frames shows one span per frame, never one stretch from the first to the last) and its true peak both ways.
     public static func line(_ r: FileResult) -> String {
         if let e = r.error { return "\(r.rel): not decoded: \(e)" }
         var s = r.rel + ": "
@@ -72,8 +98,11 @@ public enum MP3Check {
             s += r.damagedFrames.map { "damaged frame at \(Py.fixed($0.startSeconds, 3)) s (\(Py.fixed($0.seconds * 1000, 1)) ms)" }
                 .joined(separator: ", ")
         }
-        if let d = r.differing {
-            s += "; samples differ from dr_mp3's pull reader from \(Py.fixed(d.lowerBound, 4)) s to \(Py.fixed(d.upperBound, 4)) s"
+        if !r.spans.isEmpty {
+            let n = r.spans.count
+            s += "; samples differ from dr_mp3's pull reader in \(n) span\(n == 1 ? "" : "s"): "
+                + r.spans.map { "\(Py.fixed($0.seconds.lowerBound, 4)) to \(Py.fixed($0.seconds.upperBound, 4)) s "
+                                + "(\($0.count) sample frames)" }.joined(separator: ", ")
         } else {
             s += "; samples as dr_mp3's pull reader"
         }
