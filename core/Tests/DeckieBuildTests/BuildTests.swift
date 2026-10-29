@@ -68,7 +68,7 @@ struct BuildTests {
         let crate = try CrateReader.read(from: crateURL)
         #expect(crate.tracks.count == 2)
         let log = try #require(crate.manifest.importLog)
-        #expect(log.filesSeen == 4 && log.tracks == 2 && log.builtBy == Builder.builtBy)
+        #expect(log.filesSeen == 4 && log.tracks == 2 && log.builtBy == options.device && log.builtBy == Analysis.platform)
         #expect(log.entries.map(\.rel) == ["CD2/broken.mp3", "locked.m4p"])
         #expect(log.entries.map(\.reason) == ["damaged", "protected"])
         #expect(log.entries.map(\.ext) == ["mp3", "m4p"])

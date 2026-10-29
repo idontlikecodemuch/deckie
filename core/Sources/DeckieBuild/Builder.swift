@@ -118,7 +118,9 @@ public struct BuildResult: Sendable {
 /// file that has no record listed in the manifest's import log.
 public final class Builder: Sendable {
     public static let version = "0.1.0"
-    public static var builtBy: String { "deckie-build \(version)" }
+    /// The program and its version (`deckie-build 0.1.0`), printed when a build starts and written as the bench
+    /// report's `tool`. Not written in the crate: the manifest's `import_log.built_by` names the device instead.
+    public static var programLabel: String { "deckie-build \(version)" }
     /// The work folder's extension.
     public static let workExtension = "deckiebuild"
     /// The engine's label (`deckie-0.1.0`, as `analysis.engine` writes it).
@@ -310,7 +312,8 @@ public final class Builder: Sendable {
         }
 
         let builtAt = utcNow()
-        let log = CrateManifest.ImportLog(builtBy: Builder.builtBy, builtAt: builtAt, filesSeen: files.count,
+        // built_by is the device label the records' analysis.device carries, never the machine's own name.
+        let log = CrateManifest.ImportLog(builtBy: options.device, builtAt: builtAt, filesSeen: files.count,
                                           tracks: tracks.count, entries: entries, rekordbox: rbSummary)
         let devices = Set((existing?.manifest.devicesSeen ?? []) + [options.device]).sorted()
         let manifest = CrateManifest(
