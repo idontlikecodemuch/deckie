@@ -20,10 +20,12 @@ Mac) reviews and merges this track's branch, `pc-linux`, and runs anything that 
   ported and checked against all 373 committed tracks (entry 7). Step 4, the crate reader and writer, is built and
   accepted (entry 10). The analyser is assembled: one call from an audio file to the lab's record and a crate
   track, now with the vocal tagger in it (entries 11 and 12). Step 5, `deckie-build` with its `bench` command, is
-  built (entry 13): a crate from a folder, resumable, with the yardstick ready for the Mac. 231 tests pass on
-  Linux; Windows builds and passes everything that needs no model. Next: the vocal-derived fields from memo O
-  (where the vocals are, free intro and outro, hooks) as added crate fields (an agent is on it), ONNX Runtime
-  built by us without the reporting client (an agent is on the workflow), then the yardstick on the Mac.
+  built (entry 13): a crate from a folder, resumable, with the yardstick ready for the Mac. The memo O fields are
+  in (entry 15): where the vocals are, bar and beat, free intro and outro, free gaps on the lattice, hook
+  candidates, all additive crate blocks. The Mac's memory work is merged (entry 15): a job's peak falls from 1.9 GB
+  to 1.1 GB with every number unchanged. 258 tests pass on Linux; Windows builds and passes everything that needs
+  no model. Next: the three crate renames the main session asked for (an agent is on it), the first clean ONNX
+  Runtime build (run 2 in progress), then the yardstick on the Mac.
 - Needed from Christopher: nothing right now. The vocal-model downloads were approved on Oct 28 ("Allow vocal
   models", with a standing yes for any further vocal model the work needs); dr_mp3, dr_flac, ONNX Runtime and
   Beat This! were approved before.
@@ -766,3 +768,45 @@ today: an acknowledgements table now heads DEPENDENCIES.md, one line per shipped
 render, and each model has a replacement-path line (Beat This!: Deckie's own model-free tempo and grid, which the
 main session is measuring against the shipped grid now, after Christopher asked whether a model is needed for beats
 at all).
+
+## Oct 29, 2026: the vocal-derived fields, and the memory work from the Mac (entry 15)
+
+**Where the vocals are, for the DJ (memo O).** The research memo `docs/research/o-vocal-uses.md` found six ways DJs
+use vocals (keep them apart, hand off, acapella, tease, echo out, singalong) and that a per-bar probability alone
+serves few of them. The engine now writes two more blocks when it has a tagger, in the lab JSON under the record's
+`deckie` block and in the crate as `vocal_structure` and `hooks`, both listed in `features_present` and left out
+entirely when absent, so a reader without them is unaffected. `vocal_structure` holds the sung stretches
+(`spans`, each with start and end as bar and beat and seconds, and each end's distance in beats from the nearest
+8-bar point, so a reader knows "near zero means on the phrase"), the first and last sung point with whether the
+first is a pickup (sung within a beat before a downbeat), the free bars at each end with their kind (`beat_only`,
+`ambient`, `vocal`, `fade`), the vocal-free gaps of 8 or more bars snapped to the lattice, and `exposed_proxy`
+(sung bars with little bass and few onsets, a stand-in for the Apple family's real `exposed` from stems, which a
+reader prefers when present). `hooks` holds up to three candidates (start and end bar, strength, sung or not, where
+the repeat is) from repetition on the per-bar MFCC similarity the novelty step already computes, loudness and vocal
+density. Every rule and threshold is written into the record (`rule`), because the scores are uncalibrated until
+the Mac listening test: the sung-frame threshold is a quarter of the track's 95th-percentile frame score with a
+floor sized for the synthetic voice, dips under 8 beats are bridged, stretches under 2 beats dropped. On the
+synthesised 40-bar track (sung from bar 8 beat 4 to 16, and 25 to 32) the fields come out as built: spans
+8.4 to 16.4 and 25.2 to 33.1 (every end within two beats of the construction), first 8.4 with pickup, last 32.4,
+free bars 7 and 8 both `beat_only`, gaps 17 to 25 and 33 to 41, the sung hook 9 to 17 at strength 0.970 repeating
+at 25. 22 new tests. For the Mac to tune: the threshold fraction and floor, the bridge, the kind rule, the exposed
+proxy and the hook weights. Work folders made before this change lack the new blocks; the engine version bumps
+with the renames below so they are redone.
+
+**The memory work, from a Mac session.** Christopher's Mac session (from the task card in entry 13) found where the
+1.8 GB per job goes: the beat model's stage, where ONNX Runtime's memory arena grows in doubling steps and never
+gives memory back, holding 1.1 to 1.9 GB after the stage. It measured here through its `deckie-memprobe` program
+(this machine has the models; the Mac does not yet): with the arena told to give back its free regions after each
+run, a single job's peak falls from 1,855 MB to 1,092 MB at no cost in time (9.4 s against 10.0 s), and four jobs
+from 5.6 GB to 3.8 GB; the thread count changes time only (21.7 s, 13.5 s, 8.8 s at 1, 2 and 4 threads); capping
+how many model runs happen at once trades throughput for memory (four jobs, eight files: 3.8 GB in 57 s uncapped,
+2.6 GB in 81 s at two at a time, 1.7 GB in 105 s at one at a time, the capped runs disturbed by other load). Every
+record came out byte for byte identical under every setting, and the beat model's raw numbers hashed the same.
+Its branch is merged with shrinkage on by default, no cap, and the builder's default job count giving each job
+1 GB and leaving 2 GB; the file's bytes are released once hashed and the loudness running sum after its stage. The
+parity suite passed on the merge with both models (236, then 258 with the vocal fields). Two tests failed on the
+Mac and are judged: the Butterworth-coefficient test now allows four units in the last place (macOS's tan rounds
+three off; the filtered samples still match), and the telemetry test's failure was a real bug, fixed earlier today
+(every load attempt now sets the switch). The same before-and-after on `deckie-build` itself, with the four-job
+figure and a crate-record comparison between the two commits, is being measured as this is written and goes in
+an addendum.
