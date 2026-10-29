@@ -206,6 +206,15 @@ Mike's party set was curated by Christopher and held music Mike does not usually
 DJ with an unfamiliar crate, and his 16 percent pitch range is not typical. That is itself a use case (new DJs, a
 themed party, a new toy). Christopher will supply a recording of the set Mike actually played as the real reference.
 
+### Note on D5 (Oct 28, Christopher): tuning is library-blind
+The 373-track yardstick is one DJ's crate, mostly house and pop, and Deckie must work for any DJ's music. So no
+parameter of the analysis (key profiles and vote rules, vocal thresholds, section rules, anything) is fitted to
+that set: values come from the literature or first principles with their source named; where a value must be chosen
+by measurement, it is chosen on one half of the set and reported on the other, split by kind (era, style, folder)
+rather than at random; results are reported per bucket as well as overall, and a gain that lives in one bucket is a
+flag, not a win. Outside key-annotated data sets are the real test and are listed with licence and size before any
+is fetched. Applies to research R (key parity) and to the vocal listening set.
+
 ## Proposed on Oct 26, 2026, from the research (awaiting Christopher)
 
 Each of these follows from a research report and is written into spec v0.2 as "proposed". None is decided until
