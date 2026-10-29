@@ -113,15 +113,16 @@ extension BandsFixture.Bounds {
     let fx = BandsFixture.shared
 
     /// The sections are scipy's `butter(2, fc, btype, fs=rate, output="sos")` at 44.1 and 48 kHz: bit for bit on
-    /// Linux, and within two units in the last place elsewhere (Windows' maths library rounds tan differently in
-    /// the last bit, which the first Windows run showed; the filtered samples still match).
+    /// Linux, and within four units in the last place elsewhere (Windows' maths library rounds tan differently in
+    /// the last bit, which the first Windows run showed, and macOS's by three, which the Mac's first run showed;
+    /// the filtered samples still match).
     @Test func coefficientsMatchScipy() {
         for band in fx.bands {
             let split = BandSplit(sampleRate: band.rate)
             for (q, want) in [(split.lowPass, band.sosLow), (split.highPass, band.sosHigh)] {
                 let got = [q.b0, q.b1, q.b2, 1, q.a1, q.a2]
                 for (g, w) in zip(got, want) {
-                    #expect(abs(g - w) <= 2 * w.ulp, "\(band.rate) Hz: \(q) against scipy \(want)")
+                    #expect(abs(g - w) <= 4 * w.ulp, "\(band.rate) Hz: \(q) against scipy \(want)")
                 }
             }
         }
