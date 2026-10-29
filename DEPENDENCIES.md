@@ -10,9 +10,10 @@ dr_mp3, the MP3 decoder (section 4), and dr_flac, the FLAC decoder (section 5), 
 `DeckieDecode` and so are runtime dependencies (code that travels inside a Deckie program); ONNX Runtime, the engine
 that runs the beat tracker's model (section 6), of which only the C header is vendored, its library being opened at
 run time from a file fetched per machine, never linked and never committed; the Beat This! beat tracker's
-trained weights (section 7), exported to a model file per machine by a script whose Python tools are
-development-only; and the weights of Google's YAMNet audio tagger, the vocal tagger's model (section 8), fetched by
-pinned URL and hash and exported the same way. Deckie's Swift package (`core/`) declares no packages from elsewhere,
+trained weights (section 7), exported once to a model file by a script whose Python tools are development-only,
+the file published on this repository's release `models-1` and fetched by its hash; and the weights of Google's
+YAMNet audio tagger, the vocal tagger's model (section 8), fetched by pinned URL and hash and exported and published
+the same way. Deckie's Swift package (`core/`) declares no packages from elsewhere,
 so it has no `Package.resolved` (Swift's list of exact package versions); dr_mp3, dr_flac and the ONNX Runtime header
 are copied files pinned by their hashes, not packages.
 
@@ -95,7 +96,7 @@ just because parts of Swift's runtime (the support code every Swift program runs
 | `compnerd/gha-setup-swift` | `main` (its documented reference; its `v3` tag does not exist) | installs the Swift toolchain on Windows | `core-windows.yml` |
 | `actions/cache` | `v4` | keeps ONNX Runtime's library and the exported Beat This! and YAMNet models between runs (sections 6 to 8), keyed on the hashes of the scripts that make them | `core-linux.yml` |
 | `actions/setup-python` | `v5` | installs Python 3.12, which runs ONNX Runtime's build scripts and Deckie's helper for that build | `onnxruntime-build.yml` |
-| `actions/upload-artifact` | `v4` | keeps each built ONNX Runtime archive with the run that made it | `onnxruntime-build.yml` |
+| `actions/upload-artifact` | `v4` | keeps each built ONNX Runtime archive, and the two pinned model files, with the run that made them | `onnxruntime-build.yml`, `core-linux.yml` |
 | `actions/download-artifact` | `v4` | gathers those archives for the job that publishes them | `onnxruntime-build.yml` |
 
 All six are recorded by version tag only, which, like an image tag, the publisher can move. Pinning each to a commit
@@ -522,7 +523,7 @@ archive once, since the script's hash is its cache key. Then rebuild Deckie's ow
 `ORT_TAG`, `ORT_COMMIT`, `RELEASE_TAG` and the archive names in `onnxruntime-build.yml`, run it with `publish`, and
 record its archives above and the Linux one in `fetch-onnxruntime.sh` (`--deckie`).
 
-## 7. Beat This!, the beat tracker (weights exported per machine; development-only Python tools)
+## 7. Beat This!, the beat tracker (exported once, fetched by pinned hash; development-only Python tools)
 
 Beat This! is the beat and downbeat tracker of Francesco Foscarin, Jan Schlüter and Gerhard Widmer (Institute of
 Computational Perception, JKU Linz; "Beat This! Accurate Beat Tracking Without DBN Postprocessing", ISMIR 2024),
@@ -534,10 +535,23 @@ except the GTZAN set, with seed 0, exported to ONNX:
   from the authors' file share (the package's `CHECKPOINT_URL`; the checkpoints are not on GitHub's release pages),
   checks its SHA-256, exports the network alone (spectrogram in, beat and downbeat logits out, for any length) to
   `core/.models/beat_this_final0.onnx`, which `.gitignore` keeps out of the repository, and checks the export
-  against PyTorch. Like ONNX Runtime's library, the model file is made per machine; CI makes it once and caches it.
+  against PyTorch. The model file is not committed: it is published once and fetched by its hash (below).
 - The rest of the package's method, the spectrogram, the chunking of long pieces and the peak picking, is ported to
   Swift in `DeckieCore` (`Sources/DeckieCore/Beat/`), following the package's source; no Python runs during
   analysis.
+
+An export gives the same bytes only with the same tool versions (another torch writes another graph), so every
+machine fetches the pinned file instead of exporting it (the main session, Oct 29, 2026): the exported graph is
+published as an asset of this repository's release `models-1`,
+`https://github.com/idontlikecodemuch/deckie/releases/download/models-1/beat_this_final0.onnx` (82,098,829 bytes,
+SHA-256 `f1d932049c9344ae3b1192673ef895c97807ba59fc1aa3d4e8d3d17c43c9b8dc`), with `beat_this_final0.onnx.sha256`
+beside it. `core/Tools/fetch-models.sh` downloads it and moves it into `core/.models/` only once its SHA-256 is the
+one pinned in the export script (`ONNX_SHA256`, read from there, so the value is recorded in code once); CI does the
+same when its cache misses. When the release or the file cannot be had, or a file does not match, the script says
+which and falls back to the export above, which also remains the way to make the next version: that goes into a new
+release (`models-2`, with both models, its tag then written in `fetch-models.sh`), so that an older checkout still
+finds the file its hash names. Until `models-1` exists, each run of `core-linux.yml` keeps the two pinned files and
+their `.sha256` files for 90 days as the run artifact `models-beat-this-f1d93204-yamnet-96bb0dc5`.
 
 Christopher approved the downloads (the model, the package and the Python tools that export it) on Oct 28, 2026,
 and the lead took responsibility for them.
@@ -720,14 +734,14 @@ and its model is checked the same way.
 installs torch first); for another checkpoint, record its URL and SHA-256 in the export script and here; run the
 export script, record the new model's SHA-256 in the script (`ONNX_SHA256`) and here; regenerate the reference
 numbers with `make_beat_fixtures.py` and run `swift test`, which compares the Swift port with the package again;
-re-quote the `LICENSE` and the README's licence section. CI exports again once, since the export script and its
-requirements are its cache key.
+re-quote the `LICENSE` and the README's licence section; publish the new file as above. CI exports again once
+(the release's old file no longer matches the hash), since the export script and its requirements are its cache key.
 
 **Replacement path** (D15): without YAMNet the vocal fields are absent, the mix windows treat every bar as
 vocal-free and the record carries the flag `vocal_unknown` (status log entry 11); the place for a second model
 (`VocalPatchModel`) is built and empty.
 
-## 8. YAMNet, the vocal tagger's model (weights fetched by pinned hash and exported per machine; development-only Python tools)
+## 8. YAMNet, the vocal tagger's model (exported once, fetched by pinned hash; development-only Python tools)
 
 YAMNet is Google's audio event tagger (tensorflow/models, `research/audioset/yamnet`, maintained by Manoj Plakal and
 Dan Ellis): a MobileNet v1 network of 3.7 million weights that scores 521 classes of sound, singing, choir and
@@ -743,10 +757,20 @@ and EfficientAT under the training-data rule).
   using it, and runs `core/Tools/export_yamnet.py`, which builds the network with those files in TensorFlow, loads
   the weights, converts the network alone to ONNX with tf2onnx (log-mel patches in, scores and embeddings out),
   checks ONNX Runtime against TensorFlow and writes `core/.models/yamnet.onnx`, which `.gitignore` keeps out of the
-  repository. The weights are not kept. CI does the same once and caches the model file.
+  repository. The weights are not kept. The model file is published once and fetched by its hash (below).
 - The front end (YAMNet's log-mel patches, from `features.py`) is rewritten in Swift in `DeckieCore`
   (`Sources/DeckieCore/Vocal/YAMNetFrontEnd.swift`), checked against `features.py` run in TensorFlow by
   `core/Tools/make_yamnet_fixtures.py`; no Python runs during analysis.
+
+As with Beat This! (section 7), every machine fetches the pinned file instead of exporting it (the main session,
+Oct 29, 2026); here it matters more, since the pinned TensorFlow has no wheel for every Python (none for the Mac's
+Python 3.14). The exported graph is published as an asset of this repository's release `models-1`,
+`https://github.com/idontlikecodemuch/deckie/releases/download/models-1/yamnet.onnx` (14,938,528 bytes, SHA-256
+`96bb0dc54745dbbc95ef3f289830c94eec92a6914c4ab711a821bc8aa1c93cfd`), with `yamnet.onnx.sha256` beside it, and
+`core/Tools/fetch-models.sh` moves it into `core/.models/` only once its SHA-256 is the one pinned in
+`export_yamnet.py` (`ONNX_SHA256`); CI does the same when its cache misses. When the release or the file cannot be
+had, or a file does not match, the script says which and falls back to `fetch-vocal-models.sh` above, which also
+remains the way to make the next version, published as section 7 says.
 
 Christopher approved the download (vocal-model weights, and the one-time export tools) on Oct 28, 2026, and the
 lead took responsibility for it.
@@ -826,8 +850,8 @@ the class indices `YAMNetClass` uses against the class list at the new commit; c
 `yamnet-export-requirements.txt` (and the tf-keras line in `core-linux.yml` and in the fetch script's message); run
 `fetch-vocal-models.sh --force --keep-source`, record the new model's SHA-256 in both scripts, in
 `YAMNet.recordedExportSHA256` and here; regenerate the reference numbers with `make_yamnet_fixtures.py --source
-core/.models/yamnet-source` and run `swift test`; re-quote the licence. CI exports again once, since the scripts and
-the requirements are its cache key.
+core/.models/yamnet-source` and run `swift test`; re-quote the licence; publish the new file as section 7 says. CI
+exports again once, since the scripts and the requirements are its cache key.
 
 ## Checked and rejected
 

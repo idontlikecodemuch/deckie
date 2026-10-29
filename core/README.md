@@ -227,10 +227,19 @@ and the spectrogram and the rest the network (about 9.7 s in a debug build). On 
 
 ```
 bash core/Tools/fetch-onnxruntime.sh                   # ONNX Runtime 1.31.1 into core/.deps (11 MB, hash-checked)
-python3 -m venv /tmp/bt && . /tmp/bt/bin/activate      # the export tools, kept out of the system Python
-pip install --index-url https://download.pytorch.org/whl/cpu torch==2.15.0+cpu torchaudio==2.11.1+cpu
-pip install -r core/Tools/export-requirements.txt
-python3 core/Tools/export_beat_this.py                 # the model into core/.models (82 MB; downloads 81 MB once)
+bash core/Tools/fetch-models.sh                        # both models into core/.models (97 MB, hash-checked)
+```
+
+`fetch-models.sh` takes the pinned exports from this repository's release `models-1` (`DEPENDENCIES.md` sections 7
+and 8) and keeps a file only if its SHA-256 is the one pinned in its export script; `--beat-this` or `--yamnet` takes
+one, `--check` only reports. A model it cannot fetch it exports instead, unless `--no-export`; for Beat This! that
+needs the export tools, kept out of the system Python:
+
+```
+python3 -m venv /tmp/bt
+/tmp/bt/bin/python -m pip install --index-url https://download.pytorch.org/whl/cpu torch==2.15.0+cpu torchaudio==2.11.1+cpu
+/tmp/bt/bin/python -m pip install -r core/Tools/export-requirements.txt
+bash core/Tools/fetch-models.sh --beat-this --python /tmp/bt/bin/python   # exports it if the release lacks it
 ```
 
 **The crate file** (`Sources/DeckieCrate`; the format, with what the documents fix and what is proposed, is
@@ -288,10 +297,12 @@ in a mix, research Q); the patches are averaged into bars exactly as the lab
 averages its EffNet patches (the patches centred in a bar, else the value at the bar's middle), and the mean of the
 patches' 1,024-value embeddings, scaled to length 1, is the track's style vector (the crate's `style` block). The scores
 are not calibrated: the lab's thresholds (0.5 a vocal bar, 0.75 a vocal-heavy track) were tuned on EffNet, and track
-J's listening test on the Mac sets YAMNet's. The model is not committed: `Tools/fetch-vocal-models.sh` fetches its
-weights by pinned URL and SHA-256 and exports the network to `.models/yamnet.onnx` with TensorFlow's tools
-(`Tools/export_yamnet.py`, development-only, in a Python environment of their own), and `Analyser()` loads it when it
-is there (`DECKIE_YAMNET_MODEL` names another place) and says what is missing when it is not. A second model can be
+J's listening test on the Mac sets YAMNet's. The model is not committed: `Tools/fetch-models.sh` fetches the pinned
+export into `.models/yamnet.onnx` from the repository's release `models-1`, checked by its SHA-256, and only when it
+cannot does it run `Tools/fetch-vocal-models.sh`, which fetches the weights by pinned URL and SHA-256 and exports the
+network with TensorFlow's tools (`Tools/export_yamnet.py`, development-only, in a Python environment of their own).
+`Analyser()` loads the model when it is there (`DECKIE_YAMNET_MODEL` names another place) and says what is missing
+when it is not. A second model can be
 added beside it as a second opinion through `VocalPatchModel` (PANNs' MobileNetV2 is the candidate, should the Mac's
 yardstick find YAMNet alone reads badly). Measured: the front end within 1.8e-4 of YAMNet's own feature code, the
 network identical to Python's ONNX Runtime on the same patches, and on a synthesised track alternating 8-bar stretches
@@ -475,13 +486,17 @@ The engine is plain Swift and C, so the bench builds and runs on the Mac as it d
    `DECKIE_ONNXRUNTIME_LIB` naming it (as section 6 says, fetching it waits on Christopher's yes). Fetched with
    `curl` it carries no quarantine flag; if a browser fetched it, `xattr -dr com.apple.quarantine` on the folder lets
    it load. The vendored C header is the same on every platform.
-3. The Beat This! model: the exported `beat_this_final0.onnx` is the same file on every machine, so it can be copied
-   from a machine that has it (its SHA-256 is in `DEPENDENCIES.md` section 7) to `core/.models/`, or exported on the
-   Mac with `Tools/export_beat_this.py` (PyTorch at the pinned versions; the Mac's wheels have no `+cpu` suffix), or
-   named by `DECKIE_BEAT_THIS_MODEL`.
-4. The vocal tagger's model, `yamnet.onnx`, made by `Tools/fetch-vocal-models.sh` (pinned in `DEPENDENCIES.md`
-   section 8) into `core/.models/`, or named by `DECKIE_YAMNET_MODEL`; like the beat model it is the same file on
-   every machine. Optional: without it the yardstick has no vocal correlation.
+3. The Beat This! model: `bash core/Tools/fetch-models.sh` puts it and the vocal tagger's model, the same files on
+   every machine, into `core/.models/` from this repository's release `models-1`, each kept only if its SHA-256 is
+   the pinned one (`DEPENDENCIES.md` sections 7 and 8). Until that release exists, the four files (the two models
+   and their `.sha256`) are the artifact `models-beat-this-f1d93204-yamnet-96bb0dc5` of a recent `core-linux` run:
+   `gh run download <run id> -n models-beat-this-f1d93204-yamnet-96bb0dc5 -D core/.models`, then
+   `bash core/Tools/fetch-models.sh --check` confirms them. A model the script cannot fetch it exports instead
+   (`--no-export` stops that), which for Beat This! needs PyTorch at the pinned versions (the Mac's wheels have no
+   `+cpu` suffix) and for YAMNet a Python the pinned TensorFlow has a wheel for. `DECKIE_BEAT_THIS_MODEL` names a
+   file elsewhere.
+4. The vocal tagger's model, `yamnet.onnx`, comes with step 3 (`--yamnet` takes it alone), or is named by
+   `DECKIE_YAMNET_MODEL`. Optional: without it the yardstick has no vocal correlation.
 5. Run, from `core/`, with the music where the lab had it:
 
 ```
