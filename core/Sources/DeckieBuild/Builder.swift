@@ -24,11 +24,16 @@ public struct BuildOptions: Sendable {
     /// The device label written to each record and to `devices_seen`: the platform, never a name the user gave the
     /// machine.
     public var device: String
+    /// Folders whose name starts with one of these are left out of the build, with an import-log entry each; the
+    /// default leaves out `_` folders (`_old`, `_stale - safe to delete`), the usual way a DJ parks files.
+    public var skipFolderPrefixes: [String]
 
     public init(folder: URL, output: URL, rekordbox: URL? = nil, jobs: Int = defaultJobs, fileBPMTags: Bool = false,
-                fresh: Bool = false, name: String? = nil, device: String = Analysis.platform) {
+                fresh: Bool = false, name: String? = nil, device: String = Analysis.platform,
+                skipFolderPrefixes: [String] = ["_"]) {
         self.folder = folder; self.output = output; self.rekordbox = rekordbox; self.jobs = max(1, jobs)
         self.fileBPMTags = fileBPMTags; self.fresh = fresh; self.name = name; self.device = device
+        self.skipFolderPrefixes = skipFolderPrefixes
     }
 
     /// The work folder: `<name>.deckiebuild` beside the crate.
@@ -222,7 +227,7 @@ public final class Builder: Sendable {
     /// Runs the build, reporting through `progress` (called from the jobs' threads, one call at a time).
     public func run(progress: @escaping @Sendable (BuildEvent) -> Void = { _ in }) throws -> BuildResult {
         let t0 = Date()
-        let files = try AudioFiles.find(in: options.folder)
+        let (files, skippedFolders) = try AudioFiles.find(in: options.folder, skippingFolderPrefixes: options.skipFolderPrefixes)
         var collection: RekordboxCollection? = nil
         var matcher: RekordboxMatcher? = nil
         let importedAt = utcNow()
@@ -302,6 +307,11 @@ public final class Builder: Sendable {
         // The crate: files in path order; the first file with given bytes has the record, a copy is logged.
         var tracks: [CrateTrack] = []
         var entries: [CrateManifest.ImportLog.Entry] = []
+        for sf in skippedFolders {
+            entries.append(.init(rel: sf.rel, ext: "", reason: CrateManifest.ImportLog.Reason.skipped,
+                                 message: "folder left out by the build's rule (its name starts with \"\(options.skipFolderPrefixes.first ?? "_")\"); "
+                                 + "\(sf.audioFiles) audio file\(sf.audioFiles == 1 ? "" : "s") not looked at"))
+        }
         var firstWithID: [String: String] = [:]
         for (i, f) in files.enumerated() {
             switch done[f.rel] {

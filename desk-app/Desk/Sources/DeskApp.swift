@@ -86,6 +86,39 @@ enum Headless {
                 exit(0)
             } catch { print("build failed:", error); exit(1) }
         }
+        if a[1] == "--apply", a.count >= 4 {
+            // "Deckie Desk" --apply <crate.deckiecrate> <names.tsv>: names and facts from a table, by track id or rel path.
+            // Columns (header row, tab-separated, any order): id or rel, then any of title, artist, version, era, kind, tags
+            // (comma-separated). An empty cell leaves the field as it is; "-" clears it.
+            let crateURL = URL(fileURLWithPath: a[2]); let tsv = URL(fileURLWithPath: a[3])
+            do {
+                var crate = try CrateReader.read(from: crateURL)
+                let text = try String(contentsOf: tsv, encoding: .utf8)
+                var lines = text.split(whereSeparator: \.isNewline).map { $0.split(separator: "\t", omittingEmptySubsequences: false).map(String.init) }
+                guard let header = lines.first else { print("empty table"); exit(1) }
+                lines.removeFirst()
+                let col = Dictionary(uniqueKeysWithValues: header.enumerated().map { ($1.lowercased(), $0) })
+                var byId: [String: Int] = [:], byRel: [String: Int] = [:]
+                for (i, t) in crate.tracks.enumerated() { byId[t.id] = i; if let r = t.file.rel { byRel[r] = i } }
+                var changed = 0, missed = 0
+                for row in lines {
+                    func cell(_ k: String) -> String? { col[k].flatMap { $0 < row.count ? row[$0] : nil } }
+                    guard let i = cell("id").flatMap({ byId[$0] }) ?? cell("rel").flatMap({ byRel[$0] }) else { missed += 1; continue }
+                    var t = crate.tracks[i]; let before = t
+                    func set(_ v: String?, _ apply: (String?) -> Void) { guard let v, !v.isEmpty else { return }; apply(v == "-" ? nil : v) }
+                    set(cell("title")) { if let v = $0 { t.ident.title = v } }
+                    set(cell("artist")) { t.ident.artist = $0 }
+                    set(cell("version")) { t.ident.version = $0 }
+                    set(cell("era")) { t.ident.era = $0 }
+                    set(cell("kind")) { t.ident.kind = $0 }
+                    set(cell("tags")) { t.ident.tags = ($0 ?? "").split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty } }
+                    if t != before { crate.tracks[i] = t; changed += 1 }
+                }
+                try CrateWriter.write(crate, to: crateURL)
+                print("\(changed) tracks changed, \(missed) rows matched no track; crate saved")
+                exit(0)
+            } catch { print("apply failed:", error); exit(1) }
+        }
         if a[1] == "--sign", a.count >= 4 {
             // "Deckie Desk" --sign <crate.deckiecrate> <music folder>: one plain signature per track, into the crate.
             let crateURL = URL(fileURLWithPath: a[2]); let folder = URL(fileURLWithPath: a[3])
