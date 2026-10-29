@@ -42,14 +42,16 @@ build, four-minute 44.1 kHz stereo files:
 
 | Measure | Value |
 |---|---|
-| One job, seconds per track (before the memory work) | 8.3 |
+| One job, seconds per track (before the memory work; after it, 8.6 to 9.1) | 8.3 |
 | One job, seconds per track with the model on 1, 2, 4 threads | 21.7, 13.5, 8.8 |
 | Four jobs at once, seconds per track (wall clock) | 6.7 to 7.0 |
 | Peak memory, one job / four jobs (after the memory work) | 1.1 GB / 3.8 to 4.4 GB |
 
-From these: per track the beat model costs about 19 core-seconds of this machine's core and everything else about
-2.5, mostly single-threaded; the beat model speeds up about 3.1 times on 4 threads; four jobs on four cores run at
-about 80 percent of perfect sharing. The model below reproduces the measurements (8.6 s for one job, 6.7 s per
+Measured per stage (one job, quiet machine, two passes): the beat model 6.5 s of 8.9 to 9.0 s; everything else 2.3 s
+(loudness 0.5, vocal tagger 0.7, the rest under 0.3 each). So per track the beat model costs about 19 to 20
+core-seconds of this machine's core and everything else about 2.3, mostly single-threaded; the beat model speeds up
+about 3.1 times on 4 threads; four jobs on four cores run at about 80 percent of perfect sharing. (The tables were
+first computed with 19 and 2.5; with the measured split every row moves by 0.2 s or less.) The model below reproduces the measurements (8.6 s for one job, 6.7 s per
 track for four).
 
 The memory work of Oct 29 first cost one job about 20 percent in speed (giving the beat model's memory back after
