@@ -213,7 +213,14 @@ that set: values come from the literature or first principles with their source 
 by measurement, it is chosen on one half of the set and reported on the other, split by kind (era, style, folder)
 rather than at random; results are reported per bucket as well as overall, and a gain that lives in one bucket is a
 flag, not a win. Outside key-annotated data sets are the real test and are listed with licence and size before any
-is fetched. Applies to research R (key parity) and to the vocal listening set.
+is fetched. Applies to research R (key parity) and to the vocal listening set. Research R (Oct 29) ran under it: a whitened
+HPCP with Faraldo's three published profiles averaged reaches 83.3 percent exact against the lab's confident keys
+(the engine shipped 74.6; held-out split 83.2; against Apple 70.4 from 63.4) with the gain in every era, style and
+tempo bucket; its few choices were made on the 90s and 2000s and reported on the other eras. The PC and Linux
+session ports it, with the profile values re-sourced from the papers rather than Essentia's AGPL code. The real
+outside test, GiantSteps-MTG-key (1,486 EDM clips, annotations CC BY-SA 4.0, audio bundled on Zenodo), waits on
+Christopher's word to fetch, and a Codex pass on what DJs say about key tools is briefed in
+`docs/research/briefs/codex-key-reddit.md`.
 
 ## Proposed on Oct 26, 2026, from the research (awaiting Christopher)
 
