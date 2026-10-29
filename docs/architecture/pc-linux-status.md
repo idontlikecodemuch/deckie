@@ -27,8 +27,10 @@ Mac) reviews and merges this track's branch, `pc-linux`, and runs anything that 
   no model. The three crate renames are in and the engine is at 0.2.0 (entry 16); the Mac's final memory defaults
   are merged. 260 tests pass. Christopher approved both releases: the pinned model files are published (release `models-1`, entry 16) and
   every machine, CI included, now fetches them by hash; the ONNX Runtime archives' release follows from the
-  publish run queued behind run 4. Next: the yardstick on the Mac (running there now; with the pinned models from
-  here on), then the first PC build.
+  publish run queued behind run 4. The first Mac bench sheet is in (entry 17): every charter mark passes but one, key exact where the lab is
+  confident, 74.6 against the mark of 75; four follow-ups from it are under way (a cheap second key vote, one true
+  peak outlier, one bar-1 outlier and the unequal bar counts, the madmom guard). A second Mac run with the pinned
+  YAMNet gives the vocal correlation. Then the first PC build.
 - Needed from Christopher: nothing right now. The vocal-model downloads were approved on Oct 28 ("Allow vocal
   models", with a standing yes for any further vocal model the work needs); dr_mp3, dr_flac, ONNX Runtime and
   Beat This! were approved before.
@@ -920,3 +922,29 @@ bytes), `yamnet.onnx` (14,938,528 bytes) and their `.sha256` files; `fetch-model
 and verified the pinned hashes end to end. The ONNX Runtime archives' release follows from a publish run of the
 build workflow, started with his approval and queued behind run 4; its hashes go into DEPENDENCIES.md when it
 lands. The assets branch stays as the record of what was published; it is not merged anywhere.
+
+## Oct 29, 2026: the first Mac bench sheet, all 373 tracks (entry 17)
+
+**Where it landed.** The main session ran `deckie-build bench` on the Mac over all 373 lab tracks (this branch at
+439a6bc, Microsoft's macOS ONNX Runtime with reporting off, the Mac's own Beat This! export, no vocal tagger) and
+published the sheet on `main` (`docs/architecture/stage1-results.md` section 2a; per-track JSON at
+`docs/architecture/bench/pc-engine-2026-10-28-mac.json`). Every charter mark passes except one. Beats: the engine's
+beats against the lab's detected beats, median F 1.000, mean 0.998, under 0.8 on 0.8 percent of tracks; against the
+lab's final grid, mean 0.967, under 0.8 on 5.1 percent, almost all of it the 57 tracks whose lab grid came from
+madmom (mean 0.79 there, 0.999 on the 316 Beat This! tracks): the engine reproduces the model, not the lab's
+fallback. Downbeats the same shape. Tempo within 2 percent on 98.9 percent (Apple's framework: 91). Loudness
+identical, largest difference 0.01 LU. Sections: recall and precision mean 0.95, median 1.0. Bar 1 offset median 0,
+mean −11 ms; bar counts equal on 95.7 percent. 9.2 s per track median with two jobs at low priority. The one open
+charter mark: key exact where the lab is confident, 74.6 percent against 75 (Apple 83.3; neighbour 14.5, other
+10.9 on the 311 confident tracks). The lab's key was a three-way vote with Essentia's models in it, which the engine
+cannot ship, so the single estimator is the gap. A second run with the pinned YAMNet from `models-1` is on the Mac
+now and gives the vocal correlation.
+
+**Follow-ups, under way as this is written.** (1) The cheap second key vote: an offline evaluation of the lab's own
+key sweep (`mixer/key_light_*.tsv`: chroma kinds and key profiles per track) against this sheet, then the port of
+the winning second estimator and a vote rule if one beats the mark. (2) The one track whose true peak differs by
+6.7 dB: which, and why (decoder or method). (3) The one track whose bar 1 is 2 s off and the 4.3 percent with
+unequal bar counts: the list, split into madmom-fallback tracks and the rest, and the pattern. (4) The madmom guard:
+the lab fell back per file for a recorded reason; the engine marks where that rule would fire but cannot run madmom
+(non-commercial); it should carry the same guard as a lowered confidence and a flag, or a written reason why not.
+Results go in an addendum.
