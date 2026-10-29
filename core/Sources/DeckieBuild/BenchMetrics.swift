@@ -32,7 +32,10 @@ public struct BenchRecord: Decodable, Sendable {
         public var engine: String?
         public var bytes: Int?
         public var madmomWouldRun: String?
-        enum CodingKeys: String, CodingKey { case engine, bytes, madmomWouldRun = "madmom_would_run" }
+        public var vocalModel: String?
+        enum CodingKeys: String, CodingKey {
+            case engine, bytes, madmomWouldRun = "madmom_would_run", vocalModel = "vocal_model"
+        }
     }
 
     public var id: String
@@ -221,7 +224,7 @@ public enum BenchMetrics {
         let vocalNote: String
         switch (e.perBar?.vocalProb, l.perBar?.vocalProb) {
         case (nil, nil): vocalNote = "absent on both sides"
-        case (nil, _): vocalNote = "absent: the engine has no vocal tagger yet"
+        case (nil, _): vocalNote = "absent: the engine ran without its vocal tagger"
         case (_, nil): vocalNote = "absent: the lab has none"
         case (let ev?, let lv?):
             var xs: [Double] = [], ys: [Double] = []

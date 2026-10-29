@@ -61,7 +61,11 @@ struct BenchTests {
         #expect(s.keyRelation == "exact" && s.keyConfidenceLab == 0.9)
         #expect(s.lufsDelta == 0 && s.truePeakDelta == 0)
         #expect(s.sectionRecall == nil || s.sectionRecall == 1)
-        #expect(s.vocalR == nil && s.vocalNote == "absent on both sides")
+        if analysis.vocal == nil {
+            #expect(s.vocalR == nil && s.vocalNote == "absent on both sides" && report.vocalModel == nil)
+        } else {  // with the vocal tagger's model installed: the same series on both sides
+            #expect(s.vocalR.map { abs($0 - 1) < 1e-9 } ?? true, "\(s.vocalNote)")
+        }
         #expect(s.bar1OffsetMs == 0 && s.nBarsMatch)
         #expect(report.summary.charterPass == true, "\(report.summary.marks.filter { $0.charter && $0.pass != true })")
         #expect(report.table.contains("charter pass marks: all met"))

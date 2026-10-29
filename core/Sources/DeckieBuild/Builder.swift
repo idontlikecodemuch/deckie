@@ -121,8 +121,25 @@ public final class Builder: Sendable {
     public static var builtBy: String { "deckie-build \(version)" }
     /// The work folder's extension.
     public static let workExtension = "deckiebuild"
-    /// The engine label a work record must carry to be reused.
+    /// The engine's label (`deckie-0.1.0`, as `analysis.engine` writes it).
     public static var engineLabel: String { "\(Analysis.engineFamily)-\(Analysis.engineVersion)" }
+
+    /// What a work record must have been made with to be reused: the engine's label and the vocal tagger's model, or
+    /// none (`deckie-0.1.0 vocal:yamnet`, `deckie-0.1.0 vocal:none`), so records made before the vocal model was
+    /// installed are made again once it is.
+    public static func engineKey(vocalModel: String?) -> String { "\(engineLabel) vocal:\(vocalModel ?? "none")" }
+
+    /// The vocal tagger's model a default analyser will have: YAMNet's name when its model file is there, else nil.
+    public static var defaultVocalModel: String? { YAMNet.locateModel() == nil ? nil : YAMNet.modelName }
+
+    /// Why a default analyser will have no vocal tagger (what is missing and how to get it), or nil when it will.
+    public static var vocalTaggerNote: String? {
+        defaultVocalModel != nil ? nil : "no vocal tagger, so the records have no vocal block (flag vocal_unknown): "
+            + DeckieVocalTagger.missingModels().map(\.description).joined(separator: "; ")
+    }
+
+    /// The vocal model this build's analyser has (or will have).
+    var vocalModel: String? { analyser.map { $0.vocalTagger?.modelName } ?? Builder.defaultVocalModel }
 
     public let options: BuildOptions
     /// The analyser given; nil makes one when there is something to analyse (`makeAnalyser`).
@@ -147,12 +164,18 @@ public final class Builder: Sendable {
         }
     }
 
-    /// One analyser shared by all jobs: its beat model's ONNX Runtime session may be run from several threads at once
-    /// (`OnnxSession`), and everything else in an analysis is the call's own. Each run gets the processor count over
-    /// the jobs in threads of its own, so the jobs do not fight over the cores.
+    /// One analyser shared by all jobs, with the vocal tagger when its model is there (as `Analyser()` has it): the
+    /// models' ONNX Runtime sessions may be run from several threads at once (`OnnxSession`), and everything else in
+    /// an analysis is the call's own. Each run gets the processor count over the jobs in threads of its own, so the
+    /// jobs do not fight over the cores.
     public static func makeAnalyser(jobs: Int) throws -> Analyser {
         let threads = jobs <= 1 ? 0 : max(1, processorCount / jobs)
-        return try Analyser(beatTracker: BeatTracker(options: .init(intraOpThreads: threads)))
+        let options = OnnxRuntime.SessionOptions(intraOpThreads: threads)
+        let tracker = try BeatTracker(options: options)
+        let tagger = try YAMNet.locateModel().map {
+            DeckieVocalTagger(yamnet: try YAMNet(modelPath: $0, runtime: tracker.session.runtime, options: options))
+        }
+        return try Analyser(beatTracker: tracker, vocalTagger: tagger)
     }
 
     /// The tag tempo a file's analysis follows: the DJ's rekordbox tempo, else (with `fileBPMTags`) the file's own tag.
@@ -191,7 +214,7 @@ public final class Builder: Sendable {
         }
         let existing = try existingCrate()
         let work = try WorkStore(folder: options.workFolder, fresh: options.fresh)
-        let label = Builder.engineLabel
+        let label = Builder.engineKey(vocalModel: vocalModel)
         let rekordboxOf = files.map { f in matcher?.match(absolutePath: f.url.path, rel: f.rel, size: f.size) }
         let rbSummary = collection.map {
             CrateManifest.ImportLog.Rekordbox(tracks: $0.tracks.count, matched: rekordboxOf.compactMap { $0 }.count)
@@ -230,7 +253,8 @@ public final class Builder: Sendable {
             let i = queued[k]
             let f = files[i]
             var seconds: Double? = nil
-            let outcome = self.process(f, rekordbox: rekordboxOf[i], work: work, engine: engine!, seconds: &seconds)
+            let outcome = self.process(f, rekordbox: rekordboxOf[i], work: work, engine: engine!, label: label,
+                                       seconds: &seconds)
             results.lock.lock()
             defer { results.lock.unlock() }
             results.done[f.rel] = outcome
@@ -323,9 +347,8 @@ public final class Builder: Sendable {
 
     /// One queued file: tags, hash, then the work folder's record for those bytes or a fresh analysis.
     private func process(_ f: SourceFile, rekordbox: RekordboxCollection.Track?, work: WorkStore, engine: Analyser,
-                         seconds: inout Double?) -> Done {
+                         label: String, seconds: inout Double?) -> Done {
         typealias R = CrateManifest.ImportLog.Reason
-        let label = Builder.engineLabel
         let tags = FileTags.read(f.url)
         let tag = tagTempo(rekordbox: rekordbox, tags: tags)
         func line(_ status: String, id: String? = nil, failure: FileFailure? = nil) -> WorkStore.FileLine {
@@ -362,7 +385,8 @@ public final class Builder: Sendable {
             } catch {
                 return failed(FileFailure(reason: R.analysisError, message: "the record does not hold together: \(error)"))
             }
-            try work.save(WorkStore.Record(engine: label, bpmTag: tag?.bpm, track: track, bars: track.bars?.series))
+            try work.save(WorkStore.Record(engine: label, bpmTag: tag?.bpm, track: track, bars: track.bars?.series,
+                                           style: track.style?.values))
             try work.append(line("ok", id: analysis.id))
             seconds = elapsed
             return .ok(id: analysis.id, tags: tags)

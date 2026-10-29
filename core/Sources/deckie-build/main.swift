@@ -96,6 +96,7 @@ do {
                                    musicRoot: o["music-root"], output: o["out"].map(url), records: o["records"].map(url),
                                    jobs: jobs(o), ids: o["ids"].map { $0.split(separator: ",").map(String.init) },
                                    fresh: o["fresh"] != nil)
+        if let note = Builder.vocalTaggerNote { say(note) }
         let report = try Bench.run(options, progress: { say($0) })
         say("")
         say(report.table)
@@ -110,6 +111,7 @@ do {
         let builder = try Builder(options: options)
         say("\(Builder.builtBy), engine \(Builder.engineLabel) on \(Analysis.platform); work folder "
             + options.workFolder.path)
+        if let note = Builder.vocalTaggerNote { say(note) }
         let result = try builder.run(progress: { say(ProgressText.line($0)) })
         say("")
         FileHandle.standardOutput.write(Data(result.summary.utf8))

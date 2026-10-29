@@ -2,7 +2,20 @@ import Foundation
 import Testing
 import DeckieBuild
 import DeckieCrate
+import DeckieEngine
 import DeckieTestSupport
+
+/// A vocal tagger for the tests: singing over the middle half of the bars, and a style vector.
+struct StyledStubTagger: VocalTagger {
+    var modelName: String { "stub-styled" }
+    func vocalActivity(mono: [Float], sampleRate: Int, barTimes: [Double]) throws -> VocalActivity {
+        let n = barTimes.count - 1
+        let p = (0..<n).map { $0 >= n / 4 && $0 < 3 * n / 4 ? 0.9 : 0.1 }
+        let style = (0..<8).map { Double($0 + 1) / 14.2829 }
+        return VocalActivity(perBar: p, meanProbability: p.reduce(0, +) / Double(n), frameHopSeconds: 0.48,
+                             frameCount: 128, style: style, styleModel: modelName)
+    }
+}
 
 /// A rekordbox export naming the folder's first track by its full path, percent-encoded as rekordbox writes it.
 func rekordboxXML(for track: URL) -> String {
@@ -119,6 +132,36 @@ struct BuildTests {
             }
             let tagged = try #require(try CrateReader.read(from: crateURL).tracks.first { $0.file.rel == Fixture.secondTrack })
             #expect(tagged.deckie?.bpmTag == .init(bpm: 124, source: "file-tag"))
+        }
+    }
+
+    /// With a vocal tagger (a stand-in here, as YAMNet's model may not be installed), the records carry the vocal
+    /// block, the per-bar vocal series and the style vector through the work folder into the crate; a record made
+    /// without the tagger is not reused by a build with one.
+    @Test func vocalRecordsSurviveTheWorkFolder() async throws {
+        let music = try await Fixture.shared.music()
+        let base = try await Fixture.shared.analyser()
+        let folder = try temporaryFolder("vocal-music")
+        try? FileManager.default.removeItem(at: folder.appendingPathComponent("one.wav"))
+        try FileManager.default.copyItem(at: music.appendingPathComponent(Fixture.firstTrack),
+                                         to: folder.appendingPathComponent("one.wav"))
+        let out = try temporaryFolder("vocal-build").appendingPathComponent("Vocal.deckiecrate")
+        let tagged = try Analyser(beatTracker: base.beatTracker, vocalTagger: StyledStubTagger())
+        let options = BuildOptions(folder: folder, output: out, jobs: 1, fresh: true)
+        let first = try await CPUTurns.exclusive { try Builder(options: options, analyser: tagged).run() }
+        #expect(first.analysed == 1)
+        var again = options
+        again.fresh = false
+        let second = try Builder(options: again, analyser: tagged).run()
+        #expect(second.analysed == 0 && second.reused == 1)
+        let t = try #require(try CrateReader.read(from: out).tracks.first)
+        #expect(t.vocal?.source == "stub-styled" && t.bars?[BarSeries.vocal]?.count == t.grid?.nBars)
+        #expect(t.style?.model == "stub-styled" && t.style?.values.count == 8 && !t.flags.contains("vocal_unknown"))
+        // The same file with the plain analyser (no tagger, unless YAMNet's model is installed) is analysed again.
+        if base.vocalTagger == nil {
+            let third = try await CPUTurns.exclusive { try Builder(options: again, analyser: base).run() }
+            #expect(third.analysed == 1)
+            #expect(try CrateReader.read(from: out).tracks.first?.vocal == nil)
         }
     }
 
