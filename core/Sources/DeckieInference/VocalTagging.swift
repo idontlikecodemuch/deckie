@@ -102,6 +102,9 @@ public struct VocalTagging: Sendable, Equatable {
     public var patchHopSeconds: Double
     public var patchCentreSeconds: Double
     public var patchCount: Int
+    /// The patches' own vocal scores, in order (patch k centred at `patchCentreSeconds + k patchHopSeconds`): finer
+    /// than a bar, so the engine can find where a sung stretch starts and ends to the beat (`VocalStructure`).
+    public var perPatch: [Double]
     /// The model's other per-patch series averaged into bars the same way (`singing`, `rapping`, `choir`, `speech`,
     /// `music`).
     public var seriesPerBar: [String: [Double]]
@@ -174,7 +177,7 @@ public final class DeckieVocalTagger: Sendable {
         }
         return VocalTagging(model: YAMNet.modelName, rule: YAMNet.vocalRule, perBar: bars(p.vocal, p),
                             meanProbability: mean, patchHopSeconds: p.hopSeconds, patchCentreSeconds: p.centreSeconds,
-                            patchCount: p.vocal.count, seriesPerBar: p.series.mapValues { bars($0, p) },
+                            patchCount: p.vocal.count, perPatch: p.vocal, seriesPerBar: p.series.mapValues { bars($0, p) },
                             style: p.style, styleModel: p.style == nil ? nil : YAMNet.modelName,
                             secondOpinion: opinion, timing: timing)
     }

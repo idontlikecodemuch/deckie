@@ -37,6 +37,10 @@ public struct VocalActivity: Sendable, Equatable {
     public var frameCentreSeconds: Double?
     /// How a frame's vocal score is made, in words; nil when the tagger does not say.
     public var rule: String?
+    /// The vocal score of each frame, in order (frame k centred at `frameCentreSeconds + k frameHopSeconds`), finer
+    /// than a bar: where a sung stretch starts and ends is read from it to the beat (`VocalStructure`). Nil when the
+    /// tagger gives bars only; the vocal structure then works from `perBar`, at bar resolution.
+    public var perFrame: [Double]?
     /// Other per-bar series the tagger gives, averaged into bars as `perBar` is, by name (YAMNet: `singing`,
     /// `rapping`, `choir`, `speech`, `music`); the lab JSON writes them in its `deckie.vocal` block as `<name>_prob`.
     public var seriesPerBar: [String: [Double]]
@@ -48,15 +52,16 @@ public struct VocalActivity: Sendable, Equatable {
     public var stages: [Stage]
 
     public init(perBar: [Double], meanProbability: Double, frameHopSeconds: Double, frameCount: Int,
-                frameCentreSeconds: Double? = nil, rule: String? = nil, seriesPerBar: [String: [Double]] = [:],
-                style: [Double]? = nil, styleModel: String? = nil, secondOpinion: SecondOpinion? = nil,
-                stages: [Stage] = []) {
+                frameCentreSeconds: Double? = nil, rule: String? = nil, perFrame: [Double]? = nil,
+                seriesPerBar: [String: [Double]] = [:], style: [Double]? = nil, styleModel: String? = nil,
+                secondOpinion: SecondOpinion? = nil, stages: [Stage] = []) {
         self.perBar = perBar
         self.meanProbability = meanProbability
         self.frameHopSeconds = frameHopSeconds
         self.frameCount = frameCount
         self.frameCentreSeconds = frameCentreSeconds
         self.rule = rule
+        self.perFrame = perFrame
         self.seriesPerBar = seriesPerBar
         self.style = style
         self.styleModel = styleModel
@@ -80,14 +85,13 @@ public protocol VocalTagger: Sendable {
 }
 
 extension DeckieVocalTagger: VocalTagger {
-    /// YAMNet's vocal score per bar, its singing, rapping, choir, speech and music scores per bar, and its mean
-    /// embedding as the
-    /// style vector (`DeckieVocalTagger.tag`).
+    /// YAMNet's vocal score per bar and per patch, its singing, rapping, choir, speech and music scores per bar, and
+    /// its mean embedding as the style vector (`DeckieVocalTagger.tag`).
     public func vocalActivity(mono: [Float], sampleRate: Int, barTimes: [Double]) throws -> VocalActivity {
         let t = try tag(mono: mono, sampleRate: sampleRate, barTimes: barTimes)
         return VocalActivity(
             perBar: t.perBar, meanProbability: t.meanProbability, frameHopSeconds: t.patchHopSeconds,
-            frameCount: t.patchCount, frameCentreSeconds: t.patchCentreSeconds, rule: t.rule,
+            frameCount: t.patchCount, frameCentreSeconds: t.patchCentreSeconds, rule: t.rule, perFrame: t.perPatch,
             seriesPerBar: t.seriesPerBar, style: t.style, styleModel: t.styleModel,
             secondOpinion: t.secondOpinion.map { .init(model: $0.model, perBar: $0.perBar, meanProbability: $0.meanProbability) },
             stages: t.timing.map { .init($0.name, $0.seconds) })
