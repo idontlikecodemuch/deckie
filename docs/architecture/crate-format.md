@@ -60,7 +60,7 @@ Example.deckiecrate/
 **`manifest.json`**: `schema` (1), `min_reader` (1), `crate_id` (text, made once when the crate is created),
 `name`, `created_at` (UTC, to the second, as `2026-10-26T00:00:00Z`), `devices_seen` (device labels), and
 `engines_used` (the tracks' `analysis.engine` labels, sorted; written for a quick look, recomputed by readers), and
-`import_log` or null (**proposed** with step 5, below).
+`import_log` or null (with step 5, accepted Oct 29, below).
 
 ## The track record (`crate.json`)
 
@@ -83,28 +83,31 @@ memo O's vocal fields, `vocal_structure` and `hooks`, are instead left out when 
   `bars.<series>`. Readers ignore names they do not know, but keep a per-bar series they do not know. **proposed** (the
   names; `vocal_structure` and `hooks` with memo O's vocal fields).
 - `file`: `name`, `rel` (path below the folder the crate was built from, or null; never absolute), `bytes` or null,
-  `sha1_head` or null, `sha256` or null, `duration_s`. `sha256` is the whole file's SHA-256 hash as 64 lower-case
-  hexadecimal characters, the spec's "content hash of the file for exact identity" (spec 5.4); the record's `id` is
-  its start, as above, and it is null only in lab records. `sha1_head` is track A's head hash: a SHA-1 of the start
-  of the file, which the Apple apps keep for a quick identity check. Track A section 5 defines it only by its rule,
-  "Store a relative path plus size and a head hash to re-find files", and its example record, which shows
-  `"sha1_head": "..."`; track B refers to it as the content hash "in Track A's crate file as a head hash". Neither
-  document says how many bytes of the head it covers or how the hash is written, and no code computes it yet, so this
-  format does not define it further: every record this track writes has it null, and the reader does not check it.
+  `sha1_head` or null, `sha256` or null, `duration_s`, `tag_bpm` or null (with step 5, below). `sha256` is the whole
+  file's SHA-256 hash as 64 lower-case hexadecimal characters, the spec's "content hash of the file for exact identity"
+  (spec 5.4); the record's `id` is its start, as above, and it is null only in lab records. `sha1_head` is track A's
+  head hash: a SHA-1 of the start of the file, which the Apple apps keep for a quick identity check. Track A section 5
+  defines it only by its rule, "Store a relative path plus size and a head hash to re-find files", and its example
+  record, which shows `"sha1_head": "..."`; track B refers to it as the content hash "in Track A's crate file as a head
+  hash". Neither document says how many bytes of the head it covers or how the hash is written, and no code computes it
+  yet, so this format does not define it further: every record this track writes has it null, and the reader does not
+  check it.
 - `ident`: `title`, and each or null: `artist`, `version`, `source`, `mbid`, `disc`, `folder`, `track`, `cut_key`,
   `is_longest`, `era`, `kind`; plus `tags` (list). **proposed**: `tags` (the lab's Halloween mark becomes the tag
   `halloween`, as the port plan suggests), and `folder` and `era` as text, as the lab has them (track A showed numbers).
 - `analysis`: `engine` (label), `analysed_at`, `device` (a model label such as `Mac15,6`, never a user's device
   name), `secs` or null, `level`.
-- `engine` **proposed** (where track L's record sits: a block beside `analysis`, which keeps its text label):
-  `family` (`apple-mu` for the Apple apps' engine, `deckie` for the Windows and Linux engine, `lab`; decided by the
-  main session: a family names an engine and must not claim a licence, and while the Windows and Linux engine's models
-  are open source, the engine is not; track L wrote `deckie-core`, which now names the code both engines share),
-  `version`, `platform` (`macos-arm64`, `linux-x86_64`, `windows-x86_64`),
-  `fidelity`, `models` (each `name`, `version` or null, `weights_sha256` or null), `decoder` (`name`, `version` or
-  null) or null. **proposed**: `fidelity` 0 means not benchmarked; n means the build passed benchmark tier n, tier 1
-  being the stage 1 pass marks. A device with the audio re-analyses a record when its own fidelity is higher, or the
-  record's level is a fallback the device can better.
+- `engine` **proposed** (where track L's record sits: a block beside `analysis`, which keeps its text label): `family`
+  (`apple-mu` for the Apple apps' engine, `deckie` for the Windows and Linux engine, `lab`; decided by the main session:
+  a family names an engine and must not claim a licence, and while the Windows and Linux engine's models are open
+  source, the engine is not; track L wrote `deckie-core`, which now names the code both engines share), `version`,
+  `platform` (`macos-arm64`, `linux-x86_64`, `windows-x86_64`), `fidelity`, `models` (each `name`, `version` or null,
+  `weights_sha256` or null), `decoder` (`name`, `version` or null) or null. An engine's `version` goes up whenever the
+  record it writes gains or changes fields (the Windows and Linux engine's is 0.2.0, since the vocal blocks and
+  `file.tag_bpm`), so a builder's work folder made by an older version is analysed again rather than reused.
+  **proposed**: `fidelity` 0 means not benchmarked; n means the build passed benchmark tier n, tier 1 being the stage 1
+  pass marks. A device with the audio re-analyses a record when its own fidelity is higher, or the record's level is a
+  fallback the device can better.
 - `grid` *(grid)*: `source`, `confidence` (0 to 1), `bpm`, `first_downbeat_s` (the start of bar 1), `n_bars` (whole
   bars from bar 1 to the end), `fit_mad_ms` or null, `bpm_in`, `bpm_out`, `in_trusted`, `out_trusted`.
 - `tempo_segments` *(tempo_segments)* **proposed** (spec 5.2's grid marker): a list of `start_bar`, `start_s`, `bpm`,
@@ -127,7 +130,8 @@ memo O's vocal fields, `vocal_structure` and `hooks`, are instead left out when 
 - `signatures` **proposed** (track A had variant to `true`): variant name (`o`, `r-4`, `r+4`, as P11 settles) to
   `made_by` (device label) and `made_at`; the file is `signatures/<id>_<variant>.shazamsignature` and must exist.
   Empty (`{}`) until an Apple device adds signatures: this track builds no fingerprint.
-- `deckie` or null **proposed** with step 5 (below): what the builder knew about the track besides its audio.
+- `imported` or null (with step 5, accepted Oct 29, below): what was imported with the track from the DJ's own
+  software, by source (`imported.rekordbox`).
 - `vocal_structure` *(vocal_structure)* and `hooks` *(hooks)* **proposed** with memo O's vocal fields (below): where
   the track is sung, to the beat, and up to three hook candidates. Left out when absent, never written as null.
 
@@ -157,7 +161,7 @@ Canonical, so two writes of the same crate are identical byte for byte, in any l
 no spaces; strings escaped only where JSON requires; `null` written, never left out (except a record's absent
 `vocal_structure` and `hooks`, which are left out); whole numbers plain; other
 numbers rounded to a fixed number of decimals by field name, trailing zeros dropped, one digit kept after the point
-(3: `bpm`, `bpm_in`, `bpm_out`, `confidence`, `duration_s`, `first_sound_s`, `last_sound_s`, `lra`; 4:
+(3: `bpm`, `bpm_in`, `bpm_out`, `confidence`, `duration_s`, `first_sound_s`, `last_sound_s`, `lra`, `tag_bpm`; 4:
 `first_downbeat_s`, `start_s`, `end_s`, `mean`, `onset_pattern_16`; 2: `fit_mad_ms`, `integrated_lufs`, `true_peak_db`,
 `secs`; the vocal blocks' numbers are listed with them, below).
 These are the lab's own roundings. `crate.json` puts each track on its own line, for readable diffs; every file ends
@@ -200,39 +204,59 @@ shortest track (Rich Baby Daddy, 44 bars): 20 KB in all, with no embedding, as a
 All 373 tracks as one crate make 1.5 MB, about 4 KB a track (2.9 KB of record, 1.2 KB of sidecar), inside track A's
 budget of about 10 KB.
 
-## Additions proposed with the crate builder (step 5)
+## Additions with the crate builder (step 5), accepted Oct 29, 2026
 
-`deckie-build` (`core/Sources/DeckieBuild`) builds a crate from a folder of audio files. It needs two places the
-format did not have, both additive (a reader that does not know them ignores them; the example crate gains two nulls):
+`deckie-build` (`core/Sources/DeckieBuild`) builds a crate from a folder of audio files. It needed places the format did
+not have, all additive: a reader that does not know them ignores them, a crate written before them reads them as null,
+and the example crate gains `file.tag_bpm` and `imported`, both null, in each record. The builder proposed
+`manifest.import_log` and a record block named `deckie`; the main session accepted both on Oct 29, 2026 with three
+renames, applied here: `import_log.built_by` is a device label, the block is `imported`, and the tag tempo is
+`file.tag_bpm`.
 
-- **`manifest.import_log`**, so no file of the folder is left out silently (decision P18): `built_by`
-  (`deckie-build 0.1.0`), `built_at` (UTC), `files_seen` (audio files found, by extension: mp3, flac, wav, aif, aiff,
-  aifc, m4a, mp4, aac, wma, ogg, opus, m4p), `tracks` (records written), `entries` (one per file with no record of its
-  own, sorted by path: `rel`, the path below the folder, never absolute; `ext`, lower case; `reason`; `message`, the
-  decoder's or the analyser's own words), `counts` (reason, then extension, to a number; written from the entries for a
-  quick look and recomputed by readers, as `engines_used` is) and `rekordbox` (`tracks` in the collection export and
-  how many `matched` a file) or null. Reasons: `unsupported` (a format this platform cannot decode: AAC and WMA on
-  Linux, Ogg, Opus), `protected` (copy protection: no decoder will ever read it), `damaged` (cut short or corrupted),
-  `decode_error` (could not be read, or failed otherwise while decoding), `analysis_error` (decoded, but no beat grid,
-  too few bars, or the model failed) and `duplicate` (the same bytes as another file, which has the record: the id is
-  the file's hash). The log describes the last build; an app that later adds tracks leaves it as it is.
-- **`deckie`** on a record, null when there is nothing to say: `bpm_tag` (`bpm` and `source`: the tempo the octave
-  alignment was steered by, `rekordbox-xml` for the collection's `AverageBpm`, `file-tag` for the file's own tag such
-  as ID3 `TBPM`) or null, and `rekordbox` or null: the track's entry in a rekordbox collection export as rekordbox wrote
-  it: `track_id`, `bpm` (`AverageBpm`) or null, `tonality` (as written: `Am`, `8A` or `1m`, by the DJ's display
-  setting) or null, `grid` (the TEMPO grid markers: `start_s`, `bpm`, `meter` or null, `beat_in_bar`), `cues` (the
-  POSITION_MARK elements: `name`, `kind` one of `cue`, `fade-in`, `fade-out`, `load`, `loop`, `hot_cue` 0 for A to 7
-  for H or null for a memory cue, `start_s`, `end_s` for a loop or null) and `playlists` (each playlist holding the
-  track as its path of names from the top folder, the playlist last). Times are as rekordbox measured them, from the
-  start of the file as its decoder reads it. `end_s` is written with 4 decimals, as `start_s`.
+- **`manifest.import_log`**, so no file of the folder is left out silently (decision P18): `built_by`, `built_at`
+  (UTC), `files_seen` (audio files found, by extension: mp3, flac, wav, aif, aiff, aifc, m4a, mp4, aac, wma, ogg, opus,
+  m4p), `tracks` (records written), `entries` (one per file with no record of its own, sorted by path: `rel`, the path
+  below the folder, never absolute; `ext`, lower case; `reason`; `message`, the decoder's or the analyser's own words),
+  `counts` (reason, then extension, to a number; written from the entries for a quick look and recomputed by readers,
+  as `engines_used` is) and `rekordbox` (`tracks` in the collection export and how many `matched` a file) or null.
+  `built_by` is the device that built the crate: a model label such as `Mac15,6` or `linux-x86_64`, never the user's
+  own name for the device, by the same rule and with the same value as `analysis.device` (the builder writes its one
+  device label, `Analysis.platform` on Windows and Linux, to both); the builder had proposed its program and version,
+  which the records' `engine` blocks already give. Reasons: `unsupported` (a format this platform cannot decode: AAC
+  and WMA on Linux, Ogg, Opus), `protected` (copy protection: no decoder will ever read it), `damaged` (cut short or
+  corrupted), `decode_error` (could not be read, or failed otherwise while decoding), `analysis_error` (decoded, but no
+  beat grid, too few bars, or the model failed) and `duplicate` (the same bytes as another file, which has the record:
+  the id is the file's hash). The log describes the last build; an app that later adds tracks leaves it as it is.
+- **`file.tag_bpm`**, a number or null: the tag tempo, the tempo written down for the file before it was analysed (the
+  collection's `AverageBpm` from a rekordbox export, else, with `--bpm-tags`, the file's own tag such as ID3 `TBPM`),
+  which the octave alignment was steered by. The main session's reason: the tag tempo is a fact about the file, not an
+  import, so it sits with the file. Its source, which the proposal recorded beside it, is dropped, from the record and
+  from the import log alike: rekordbox's tempo is taken whenever the collection has one, so the tag came from rekordbox
+  exactly when it equals `imported.rekordbox.bpm`, and from the file's own tag otherwise. `ident.tags` stays the list of
+  labels.
+- **`imported`** on a record, null when nothing was imported: what came with the track from the DJ's own software,
+  keyed by source, so a Serato import can sit beside a rekordbox one later. The main session's reason for the name: it
+  holds the DJ's own data, so the name says where it came from; `deckie`, as proposed, would read as ours. (The lab
+  JSON the engine writes keeps its own `deckie` block, `deckie.madmom_would_run`, `deckie.vocal` and the rest: the
+  engine's fields in the lab's file, a different thing.) `imported.rekordbox` or null is the track's entry in a
+  rekordbox collection export as rekordbox wrote it: `imported_at` (when the builder took it from the export, UTC to the
+  second; a rebuild that finds the entry unchanged keeps the first time, so rebuilding from the same export changes no
+  record), `track_id`, `bpm` (`AverageBpm`) or null, `tonality` (as written: `Am`, `8A` or `1m`, by the DJ's display
+  setting) or null, `grid_markers` (the TEMPO elements: `start_s`, `bpm`, `meter` or null, `beat_in_bar`), `cues` (the
+  POSITION_MARK elements that are not loops: `name`, `kind` one of `cue`, `fade-in`, `fade-out`, `load`, `hot_cue` 0
+  for A to 7 for H or null for a memory cue, `start_s`), `loops` (the POSITION_MARK loops, rekordbox's type 4: `name`,
+  `hot_cue` or null, `start_s`, `end_s`, null only when rekordbox wrote no end) and `playlists` (each playlist holding
+  the track as its path of names from the top folder, the playlist last). Times are as rekordbox measured them, from
+  the start of the file as its decoder reads it. `end_s` is written with 4 decimals, as `start_s`; `tag_bpm` with 3, as
+  `bpm`.
 
 What a rekordbox export puts in fields the format already has: the track's `Name`, `Artist` and `Mix` become
 `ident.title`, `ident.artist` and `ident.version` with `ident.source` `rekordbox-xml` (else the file's own title and
 artist tags, source `tag`, else the file name, source `filename`); the DJ's key becomes the vote `rekordbox-xml` in
 `key.votes`, as a Camelot code, while `key.camelot` stays the engine's decision; the DJ's tempo steers the analysis
-(the lab's octave alignment to a tag) and is recorded in `deckie.bpm_tag`. The engine's own grid stays in `grid` and
-`tempo_segments`; the DJ's grid and cues stay in `deckie.rekordbox`, untouched, so the Apple apps can show or compare
-them without either side overwriting the other.
+(the lab's octave alignment to a tag) and is recorded in `file.tag_bpm`. The engine's own grid stays in `grid` and
+`tempo_segments`; the DJ's grid markers, cues and loops stay in `imported.rekordbox`, untouched, so the Apple apps can
+show or compare them without either side overwriting the other.
 
 ## Additions proposed with the vocal fields (memo O)
 
@@ -357,7 +381,11 @@ hook weights. Size: about 1.5 KB a record on the test track (two spans, three ho
 6. The sidecar headers (`DKB1`, `DKS1`) and the series order (that of `features_present`).
 7. The canonical form, and the writer's refusal to rewrite a newer crate.
 8. The lab conversion: the steady-beat clamp, no EffNet embedding ever, `analysed_at` from the caller.
-9. With step 5: `manifest.import_log` and the record's `deckie` block (above), and `end_s` in the decimals table.
+9. With step 5, **accepted Oct 29, 2026** with three renames (above): `manifest.import_log`, its `built_by` a device
+   model label as `analysis.device` is, never the user's device name; the record's per-track block named `imported`,
+   keyed by source (`imported.rekordbox`, null when nothing was imported), not `deckie`, because it holds the DJ's own
+   data and its name should say where that came from; the tag tempo as `file.tag_bpm`, a fact about the file rather
+   than an import, without its source; `end_s` and `tag_bpm` in the decimals table.
 10. With memo O's vocal fields: the record's `vocal_structure` and `hooks` blocks and their `features_present` names,
     left out when absent rather than written as null (the one exception to the canonical form's nulls, so existing
     records keep their bytes); `exposed_proxy` named apart from the Apple family's `exposed`, which a reader prefers;
