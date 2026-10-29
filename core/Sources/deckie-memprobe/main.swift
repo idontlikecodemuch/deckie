@@ -7,7 +7,10 @@
 //   deckie-memprobe synth <out.wav> [--seconds 240] [--bpm 124] [--seed 1]
 //   deckie-memprobe <file>... [--jobs N] [--repeat R] [--arena on|off] [--pattern on|off] [--shrink on|off]
 //                   [--threads T] [--no-vocal] [--records DIR] [--sample-ms MS] [--logits]
-//                   [--model-runs M]
+//                   [--model-runs M] [--beat-shrink every|ends]
+//
+// --beat-shrink chooses when the beat model's chunks shrink the arena (BeatTracker.ArenaShrinking): after every
+// chunk, or after a piece's first and last (the default).
 //
 // --model-runs M lets at most M runs of each model happen at once (OnnxRuntime.SessionOptions.concurrentRuns); the
 // intra-op threads then default to the processor count over M instead of over the jobs.
@@ -218,7 +221,7 @@ if args.first == "-h" || args.first == "--help" || args.isEmpty {
           deckie-memprobe synth <out.wav> [--seconds 240] [--bpm 124] [--seed 1]
           deckie-memprobe <file>... [--jobs N] [--repeat R] [--arena on|off] [--pattern on|off] [--shrink on|off]
                           [--threads T] [--no-vocal] [--records DIR] [--sample-ms MS] [--logits]
-                          [--model-runs M]
+                          [--model-runs M] [--beat-shrink every|ends]
         """)
     exit(0)
 }
@@ -261,7 +264,7 @@ if args.first == "synth" {
 
 let (files, o) = options(args, flags: ["no-vocal", "logits"],
                          values: ["jobs", "repeat", "arena", "pattern", "shrink", "threads", "records", "sample-ms",
-                                  "model-runs"])
+                                  "model-runs", "beat-shrink"])
 guard !files.isEmpty else { fail("no audio files given", code: 2) }
 let jobs = max(1, Int(o["jobs"] ?? "1") ?? 1)
 let repeatCount = max(1, Int(o["repeat"] ?? "1") ?? 1)
@@ -286,7 +289,13 @@ let sampler = Sampler(intervalMS: Double(o["sample-ms"] ?? "5") ?? 5)
 sampler.start()
 let analyser: Analyser
 do {
-    let tracker = try BeatTracker(options: sessionOptions)
+    let shrinking: BeatTracker.ArenaShrinking
+    switch o["beat-shrink"] ?? "ends" {
+    case "every": shrinking = .everyChunk
+    case "ends": shrinking = .firstAndLastChunk
+    default: fail("--beat-shrink takes every or ends", code: 2)
+    }
+    let tracker = try BeatTracker(options: sessionOptions, arenaShrinking: shrinking)
     var tagger: (any VocalTagger)? = nil
     if o["no-vocal"] == nil, let path = YAMNet.locateModel() {
         tagger = DeckieVocalTagger(yamnet: try YAMNet(modelPath: path, runtime: tracker.session.runtime,
@@ -303,7 +312,8 @@ let reset = Memory.resetPeak()
 say("settings: jobs \(jobs), intra-op threads \(threads == 0 ? "auto" : String(threads)), arena "
     + "\(sessionOptions.cpuMemoryArena ? "on" : "off"), memory pattern \(sessionOptions.memoryPattern ? "on" : "off"), "
     + "shrinkage \(sessionOptions.arenaShrinkage ? "on" : "off"), model runs at once "
-    + "\(modelRuns == 0 ? "unlimited" : String(modelRuns)), vocal tagger \(analyser.vocalTagger == nil ? "none" : analyser.vocalTagger!.modelName)")
+    + "\(modelRuns == 0 ? "unlimited" : String(modelRuns)), beat model shrinks after "
+    + "\(analyser.beatTracker.arenaShrinking == .everyChunk ? "every chunk" : "the first and last chunk"), vocal tagger \(analyser.vocalTagger == nil ? "none" : analyser.vocalTagger!.modelName)")
 say("resident: \(Memory.mb(start)) at start, \(Memory.mb(loaded)) with the models loaded (peak \(Memory.mb(peakAtLoad)) while loading)")
 
 final class Log: @unchecked Sendable {
