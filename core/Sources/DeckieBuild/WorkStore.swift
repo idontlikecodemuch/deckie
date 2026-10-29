@@ -75,7 +75,10 @@ final class WorkStore: @unchecked Sendable {
         if fresh { try? fm.removeItem(at: folder) }
         if fm.fileExists(atPath: folder.path) {
             let format = (try? JSONDecoder().decode([String: Int].self, from: Data(contentsOf: marker)))?["format"]
-            guard format == Self.format else {
+            // A folder with nothing but the work folder's own names (a run stopped before it wrote work.json) is one.
+            let names = Set((try? fm.contentsOfDirectory(atPath: folder.path)) ?? [])
+            let ours = format == nil && names.isSubset(of: ["records", "files.jsonl", "work.json"])
+            guard format == Self.format || ours else {
                 throw BuildError("\(folder.path) is not a work folder of this deckie-build; remove it or use --fresh")
             }
         }
