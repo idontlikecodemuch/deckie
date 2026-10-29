@@ -18,6 +18,18 @@ extension Available {
     }()
 }
 
+/// Where the YAMNet model is missing (and ONNX Runtime and Beat This! are there), the default analyser runs without
+/// a vocal tagger and says why; its records are the "wav" run's of `EngineTests`, without a vocal block.
+@Suite(.enabled(if: Available.engine && !DeckieVocalTagger.missingModels().isEmpty, "runs only where the YAMNet model is missing"))
+struct NoVocalModelTests {
+    @Test func defaultAnalyserRunsWithoutTheTagger() throws {
+        let analyser = try Analyser()
+        let note = try #require(analyser.vocalTaggerNote)
+        print("default analyser without the model: \(note)")
+        #expect(analyser.vocalTagger == nil && note.contains(YAMNet.modelEnvironmentVariable))
+    }
+}
+
 /// The engine with Deckie's vocal tagger, on the vocal test track (`VocalTrack`: alternate 8-bar stretches of drums
 /// and chords, and the same with a sung-like line, stereo at 44.1 kHz, 63 s).
 @Suite(.enabled(if: Available.yamnet, "needs ONNX Runtime, the Beat This! model and the YAMNet model (core/Tools/fetch-vocal-models.sh)"))
