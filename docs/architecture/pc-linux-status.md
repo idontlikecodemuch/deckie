@@ -30,7 +30,10 @@ Mac) reviews and merges this track's branch, `pc-linux`, and runs anything that 
   publish run queued behind run 4. The first Mac bench sheet is in (entry 17): every charter mark passes but one, key exact where the lab is
   confident, 74.6 against the mark of 75; four follow-ups from it are under way (a cheap second key vote, one true
   peak outlier, one bar-1 outlier and the unequal bar counts, the madmom guard). A second Mac run with the pinned
-  YAMNet gives the vocal correlation. Then the first PC build.
+  YAMNet gave the vocal correlation, 0.31 against the lab, with the engine's series sitting at a floor; four
+  other readings of the same scores are in every record (entry 17, addendum) for the Mac's next sheet to score, and
+  a second model is being prepared. Research R's key method is being ported under parity. 272 tests. Then the first
+  PC build.
 - Needed from Christopher: nothing right now. The vocal-model downloads were approved on Oct 28 ("Allow vocal
   models", with a standing yes for any further vocal model the work needs); dr_mp3, dr_flac, ONNX Runtime and
   Beat This! were approved before.
@@ -1066,6 +1069,20 @@ the main session adds the Apple column; the default series stays as it is so not
 YAMNet pattern, the Swift model and its front end, CI export (Zenodo, where the checkpoint lives, does not resolve
 from this container; GitHub's machines and the Mac reach it), DEPENDENCIES.md section 9 (MIT; AudioSet, as YAMNet),
 under Christopher's standing approval for vocal models.
+
+**Addendum: the four vocal readings are in (403b51f).** Every record now carries, under `deckie.vocal`, a
+`readings` block with four per-bar series computed from the same per-patch class scores the tagger already has
+(nothing is run twice and no threshold is fitted): `max11`, today's reading written to 5 decimals instead of 3 so
+the floor's small movements are visible; `voice_sum`, the sum of the model's twelve voice classes (the eleven
+singing classes plus speech); `voice_logit_sum`, the same scores turned back into the network's raw outputs before
+its squashing step, which spreads out the floor; and `voice_vs_music`, the voice sum divided by itself plus the
+Music and Musical instrument scores in the same patch, which removes the "it is all Music" effect. Beside it,
+`readings_classes` names the classes each reading uses and `readings_note` gives one sentence per reading, so the
+sheet explains itself. The default series (`per_bar.vocal_prob`) is untouched, so nothing else on the sheet moves.
+`mixer/vocal3way.py` already reads the block. 272 tests. The Mac rerun that yields all four series is the one
+already planned (`deckie-build bench "<music folder>" --features ../mixer/features --candidates
+../mixer/candidates.json --out ~/deckie-bench/bench.json --fresh`, readings in `bench.records/<id>.json`); it waits
+for the damaged-frame fix so that one run shows the key vote, the tag fix, the concealment and the readings together.
 
 **Addendum: research R, the key method to port.** The Mac's key agent delivered research R
 (`docs/research/r-key-parity.md`, reference `mixer/key_parity.py`, figures in `mixer/key_parity_results.tsv`, now
