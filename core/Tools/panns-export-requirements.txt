@@ -1,0 +1,22 @@
+# The Python packages core/Tools/export_panns.py and make_panns_fixtures.py are run with (DEPENDENCIES.md, section 9).
+# Development and CI only: none of them ships, and nothing in core/ imports them. torch is the CPU-only build from
+# PyTorch's own index, so install it first, then the rest from PyPI (pip then finds torch already satisfied and never
+# looks for the much larger CUDA build); best in a virtual environment of its own:
+#
+#   python3 -m venv /tmp/panns-venv
+#   /tmp/panns-venv/bin/python -m pip install --index-url https://download.pytorch.org/whl/cpu torch==2.15.0+cpu
+#   /tmp/panns-venv/bin/python -m pip install -r core/Tools/panns-export-requirements.txt
+#
+# (On a Mac, whose torch wheels carry no +cpu, install torch==2.15.0 from PyPI and drop the +cpu below.) Then:
+# bash core/Tools/fetch-panns.sh --python /tmp/panns-venv/bin/python
+#
+# Not torchlibrosa or librosa, which PANNs' model code imports: export_panns.py provides the three front-end classes
+# itself (its docstring says how), checked against torchlibrosa 0.1.0 with librosa 1.0.0 when the script was written.
+# Only these direct dependencies are pinned, by version; what they pull in (sympy, networkx, protobuf and the like) is
+# not, and no wheel is pinned by hash yet. The exported model is pinned by its SHA-256 instead (once CI has made it),
+# and the export script checks it numerically against PyTorch. The versions are Beat This!'s
+# (export-requirements.txt), so one environment can serve both exports.
+torch==2.15.0+cpu
+numpy==2.5.3
+onnx==1.23.2
+onnxruntime==1.31.1
