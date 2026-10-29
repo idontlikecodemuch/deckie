@@ -389,9 +389,10 @@ the library's and the archive's sizes and SHA-256 values and the build time into
 | macOS arm64 | `onnxruntime-osx-arm64-1.31.1-deckie-no-telemetry.tgz` | first run pending | first run pending |
 | | `lib/libonnxruntime.1.31.1.dylib` in it | first run pending | first run pending |
 
-The build times, and the sizes against Microsoft's libraries (29,345,384 bytes on Linux, 17,253,728 on Windows), go
-into the status log with the first run. Two things found while reading ONNX Runtime's build files at the pinned
-commit, both with the main session: **on Windows**, `--no_telemetry` means the event-tracing provider is never
+The build times, and the sizes against Microsoft's libraries (29,345,384 bytes on Linux, 17,253,728 on Windows,
+44,797,256 on macOS, where Microsoft's also holds the CoreML and WebGPU execution providers this CPU-only build leaves
+out), go into the status log with the first run. Two things found while reading ONNX Runtime's build files at the
+pinned commit, both with the main session: **on Windows**, `--no_telemetry` means the event-tracing provider is never
 registered (the Windows environment then holds ONNX Runtime's base telemetry class, whose functions do nothing,
 instead of `WindowsTelemetry`), but the provider's definition, `onnxruntime/core/platform/windows/telemetry.cc`, is
 compiled into every Windows build and referred to by `inference_session.cc`, so its name, `Microsoft.ML.ONNXRuntime`,
