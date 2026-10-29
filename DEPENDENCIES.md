@@ -20,8 +20,12 @@ are copied files pinned by their hashes, not packages.
 
 The apps show an acknowledgements screen generated from this file (the main session, Oct 29, 2026): one row per
 entry that ships, with its name, version, licence as the licence names itself, and for a model its training sets
-with their terms and the replacement path. The sections below hold the quotes and the evidence; this table must say
-the same thing in one line each, and is updated in the same commit as any section.
+with their terms and the replacement path. Its source is now `core/dependencies.json`, which the apps read instead of
+this file: the table below is generated from it by `core/Tools/render_dependencies_table.py` and a test fails when
+the two differ, while the sections below remain the quotes and the evidence, written by hand; a change there that
+alters a row goes into the JSON in the same commit.
+
+<!-- dependencies-table: generated from core/dependencies.json by core/Tools/render_dependencies_table.py; do not edit by hand -->
 
 | Entry | Version | Licence | Training sets and their terms (models) | Replacement path (models) |
 |---|---|---|---|---|
@@ -31,6 +35,8 @@ the same thing in one line each, and is updated in the same commit as any sectio
 | ONNX Runtime | 1.31.1 | MIT; carries Eigen under MPL 2.0, unmodified, with its notice (section 6); the shipped library is Deckie's own build without Microsoft's usage-reporting client | | |
 | Beat This! (beat tracker, checkpoint `final0`) | ISMIR 2024 release, checkpoint `final0` | MIT (section 7) | 15 sets, everything but GTZAN; terms range from MIT and CC BY to CC BY-NC and all rights reserved, each in section 7's table | tempo and bar grid from Deckie's own code at lower confidence (section 7) |
 | YAMNet (vocal tagger) | tensorflow/models commit a6e25e2 weights | Apache 2.0 (section 8) | AudioSet: labels CC BY 4.0, clips are their YouTube uploaders'; trained by Google (section 8) | vocal fields absent, record flagged `vocal_unknown` (section 8) |
+
+<!-- /dependencies-table -->
 
 ## 1. The Swift 6.4.1 toolchain
 
