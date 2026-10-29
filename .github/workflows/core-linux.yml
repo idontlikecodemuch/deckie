@@ -13,7 +13,8 @@ jobs:
   build-and-test:
     runs-on: ubuntu-latest
     # A guard, not a target. Estimated from this session's machine (not yet timed on GitHub): the caches below add
-    # about 40 s to a run when they hit (restoring 110 MB, then the beat tracker's tests), about 3 minutes when not.
+    # about 40 s to a run when they hit (restoring 110 MB, then the beat tracker's tests), about 3 minutes when not;
+    # the vocal tagger's cache and tests add about 45 s more when it hits and about 2 minutes when not.
     timeout-minutes: 25
     container:
       # The official Swift 6.4.1 image on Ubuntu 24.04, pinned by its multi-architecture index digest (DEPENDENCIES.md).
@@ -39,8 +40,20 @@ jobs:
         with:
           path: core/.models
           key: beat-this-onnx-${{ hashFiles('core/Tools/export_beat_this.py', 'core/Tools/export-requirements.txt') }}
+      # The vocal tagger's model (YAMNet, 14.9 MB), so its tests and the engine's vocal tests run here rather than
+      # skip: fetched by the pinned-hash script, which exports it with TensorFlow, cached by the hash of the script, the
+      # export script and their pinned requirements. A run that misses spends about 70 s more here, measured in a fresh
+      # Python 3.12 environment as this image has (pip with TensorFlow's CPU build, a 274 MB wheel, 51 s with nothing
+      # cached; the 15 MB weights, the export and its check, 17 s; the same model bytes as the recorded export); the
+      # tests themselves add about 45 s to every run (the vocal track, four minutes of audio, the engine on the track).
+      - name: Cache the YAMNet model
+        id: yamnet
+        uses: actions/cache@v4
+        with:
+          path: core/.models/yamnet.onnx
+          key: yamnet-onnx-${{ hashFiles('core/Tools/fetch-vocal-models.sh', 'core/Tools/export_yamnet.py', 'core/Tools/yamnet-export-requirements.txt') }}
       - name: Install curl and Python (only when a cache missed)
-        if: steps.onnxruntime.outputs.cache-hit != 'true' || steps.model.outputs.cache-hit != 'true'
+        if: steps.onnxruntime.outputs.cache-hit != 'true' || steps.model.outputs.cache-hit != 'true' || steps.yamnet.outputs.cache-hit != 'true'
         run: |
           apt-get update
           apt-get install -y --no-install-recommends ca-certificates curl python3 python3-venv
@@ -54,6 +67,14 @@ jobs:
           /tmp/export-venv/bin/python -m pip install --index-url https://download.pytorch.org/whl/cpu torch==2.15.0+cpu torchaudio==2.11.1+cpu
           /tmp/export-venv/bin/python -m pip install -r core/Tools/export-requirements.txt
           /tmp/export-venv/bin/python -P core/Tools/export_beat_this.py
+      - name: Fetch and export the YAMNet model (checked by hash and against TensorFlow)
+        if: steps.yamnet.outputs.cache-hit != 'true'
+        run: |
+          python3 -m venv /tmp/yamnet-venv
+          /tmp/yamnet-venv/bin/python -m pip install -r core/Tools/yamnet-export-requirements.txt
+          /tmp/yamnet-venv/bin/python -m pip install --no-deps tf-keras==2.21.0
+          # --force: export even if the Beat This! cache, which holds all of core/.models, brought back an older file.
+          bash core/Tools/fetch-vocal-models.sh --force --python /tmp/yamnet-venv/bin/python
       - name: Build
         working-directory: core
         run: swift build -v
