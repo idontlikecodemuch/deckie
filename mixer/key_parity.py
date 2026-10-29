@@ -321,7 +321,10 @@ def buckets(tracks, keys):
 
 
 # ----------------------------------------------------------------------------------------------- the recommended method
-FARALDO = ("edma", "bgate", "braw")   # Faraldo et al. 2016 (edma) and 2017 (braw, bgate): the EDM corpus profiles
+# edma as the paper gives it: Faraldo's 2017 thesis (fig. 6.5) has the major profile's minor sixth at 0.32, where
+# key_light.py's transcription from Essentia's key.cpp has 0.31; the engine decides with the paper's value (Oct 29).
+PROFILES["edma_paper"] = ([1.00, 0.29, 0.50, 0.40, 0.60, 0.56, 0.32, 0.80, 0.32, 0.45, 0.42, 0.39], list(PROFILES["edma"][1]))
+FARALDO = ("edma_paper", "bgate", "braw")   # Faraldo et al. 2016 (edma) and 2017 (braw, bgate): the EDM corpus profiles
 
 def recommended(y44):
     """Research R's recommended whole-track key, from mono float audio at 44.1 kHz. Returns (camelot, margin, agree,
