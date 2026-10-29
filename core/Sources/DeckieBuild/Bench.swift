@@ -25,14 +25,21 @@ public struct BenchOptions: Sendable {
     public var ids: [String]?
     /// Analyse every track again, ignoring kept records.
     public var fresh: Bool
+    /// research R's per-track keys (mixer/key_parity_keys.tsv), for the "key vs key_parity.py" column; by default
+    /// the file of that name beside the features folder, when it is there; nil leaves the column out.
+    public var keyParity: URL?
 
     public init(folder: URL, features: URL, candidates: URL, musicRoot: String? = nil, output: URL? = nil,
-                records: URL? = nil, jobs: Int = defaultJobs, ids: [String]? = nil, fresh: Bool = false) {
+                records: URL? = nil, jobs: Int = defaultJobs, ids: [String]? = nil, fresh: Bool = false,
+                keyParity: URL? = nil) {
         self.folder = folder; self.features = features; self.candidates = candidates; self.musicRoot = musicRoot
         self.output = output; self.jobs = max(1, jobs); self.ids = ids; self.fresh = fresh
         self.records = records ?? output.map {
             $0.deletingLastPathComponent().appendingPathComponent($0.deletingPathExtension().lastPathComponent + ".records")
         }
+        let beside = features.standardizedFileURL.deletingLastPathComponent()
+            .appendingPathComponent(KeyParitySheet.fileName)
+        self.keyParity = keyParity ?? (FileManager.default.fileExists(atPath: beside.path) ? beside : nil)
     }
 }
 
@@ -83,7 +90,8 @@ public struct BenchReport: Sendable {
             + "\(failed.count) failed; engine \(Builder.engineLabel), vocal tagger \(vocalModel ?? "none")\n\n"
         let head = [pad("id", 11), pad("title", 24), pad("beatF det", 9, left: true), pad("grid", 6, left: true),
                     pad("dbF det", 8, left: true), pad("grid", 6, left: true), pad("bpm e/l", 8, left: true),
-                    pad("key", 9, left: true), pad("LU d", 6, left: true), pad("TP d", 6, left: true),
+                    pad("key", 9, left: true), pad("par", 3, left: true), pad("LU d", 6, left: true),
+                    pad("TP d", 6, left: true),
                     pad("sec r", 6, left: true), pad("voc r", 6, left: true), pad("bar1 ms", 8, left: true),
                     pad("bars e/l", 9, left: true)]
         out += head.joined(separator: " ") + "\n"
@@ -91,7 +99,9 @@ public struct BenchReport: Sendable {
             out += [pad(s.id, 11), pad(s.title ?? "", 24), pad(f(s.beatFDetected), 9, left: true),
                     pad(f(s.beatFGrid), 6, left: true), pad(f(s.downbeatFDetected), 8, left: true),
                     pad(f(s.downbeatFGrid), 6, left: true), pad(f(s.bpmRatio, 4), 8, left: true),
-                    pad(s.keyRelation, 9, left: true), pad(f(s.lufsDelta, 2, signed: true), 6, left: true),
+                    pad(s.keyRelation, 9, left: true),
+                    pad(s.keyParity.map { $0 == "same" ? "=" : "x" } ?? "-", 3, left: true),
+                    pad(f(s.lufsDelta, 2, signed: true), 6, left: true),
                     pad(f(s.truePeakDelta, 2, signed: true), 6, left: true), pad(f(s.sectionRecall, 2), 6, left: true),
                     pad(f(s.vocalR, 2), 6, left: true), pad(f(s.bar1OffsetMs, 1, signed: true), 8, left: true),
                     pad("\(s.nBarsEngine)/\(s.nBarsLab)", 9, left: true)].joined(separator: " ") + "\n"
@@ -121,6 +131,12 @@ public struct BenchReport: Sendable {
             + "\(pct(m.keyAll["other"]))\n"
         out += "  key, lab confident (\(m.keyConfidentCount)): exact \(pct(m.keyConfident["exact"])), neighbour "
             + "\(pct(m.keyConfident["neighbour"])), other \(pct(m.keyConfident["other"]))\n"
+        if m.keyParityTracks > 0 {
+            out += "  key vs key_parity.py (same key, margin within 0.001, same sure flag; column par): "
+                + "\(m.keyParitySame) of \(m.keyParityTracks) the same; the engine's key (the literature's edma) "
+                + "equals key_parity.py's on \(m.keyDecidedAsParity) of \(m.keyParityTracks)\n"
+            for (id, text) in m.keyParityDiffering { out += "    port difference \(id): \(text)\n" }
+        }
         out += stat("integrated loudness delta (LU)", m.lufsDelta, 2)
         out += "  " + pad("", 42) + " more than 1 LU off: \(pct(m.lufsOver1))\n"
         out += stat("true peak delta (dB)", m.truePeakDelta, 2)
@@ -174,6 +190,7 @@ public enum Bench {
     public static func run(_ o: BenchOptions, analyser: Analyser? = nil,
                            progress: @escaping @Sendable (String) -> Void = { _ in }) throws -> BenchReport {
         let rows = try CandidateRecord.loadAll(o.candidates)
+        let paritySheet = try o.keyParity.map { try KeyParitySheet.byID($0) } ?? [:]
         let paths = rows.compactMap(\.path)
         let root = o.musicRoot.map { $0.hasSuffix("/") && $0.count > 1 ? String($0.dropLast()) : $0 } ?? commonFolder(paths)
         let prefix = root == "/" ? "/" : root + "/"
@@ -236,7 +253,8 @@ public enum Bench {
                     engineData = data
                 }
                 let mine = try decoder.decode(BenchRecord.self, from: engineData!)
-                var score = BenchMetrics.compare(engine: mine, lab: lab, rel: job.rel, seconds: seconds)
+                var score = BenchMetrics.compare(engine: mine, lab: lab, rel: job.rel, seconds: seconds,
+                                                 parity: paritySheet[job.row.id])
                 score.id = job.row.id  // the candidates row's id, which names the lab's file
                 return score
             }

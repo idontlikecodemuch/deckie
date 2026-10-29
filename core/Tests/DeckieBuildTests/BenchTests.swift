@@ -43,6 +43,13 @@ struct BenchTests {
         ]
         try JSONSerialization.data(withJSONObject: rows).write(to: candidates)
         try Data("{}".utf8).write(to: features.appendingPathComponent("fake000002.json"))
+        // research R's per-track keys beside the features folder, as mixer/key_parity_keys.tsv sits beside
+        // mixer/features: the track's row holds the engine's own parity decision, so the column reads "same".
+        let p = analysis.hpcpKey.parity
+        try Data(("id\tkey_3f\tmargin\tagree\tsure\tlab\tlab_confident\tapple\n"
+                  + "\(Self.labID)\t\(p.camelot)\t\(String(format: "%.4f", p.margin))\t\(p.agree)\t\(p.sure ? 1 : 0)\t8A\t1\t\n"
+                  + "fake000002\t8A\t0.1000\t3\t1\t8A\t1\t8A\n").utf8)
+            .write(to: root.appendingPathComponent("key_parity_keys.tsv"))
 
         let records = root.appendingPathComponent("records")
         let output = root.appendingPathComponent("bench.json")
@@ -59,6 +66,8 @@ struct BenchTests {
         #expect(s.downbeatFDetected == 1 && s.downbeatFGrid == 1)
         #expect(s.bpmRatio == 1 && s.tempoWithin2 && s.tempoWithin2Octave && !s.octaveApart)
         #expect(s.keyRelation == "exact" && s.keyConfidenceLab == 0.9)
+        #expect(s.keyParity == "same" && report.summary.keyParityTracks == 1 && report.summary.keyParitySame == 1)
+        #expect(report.table.contains("key vs key_parity.py") && report.table.contains("1 of 1 the same"))
         #expect(s.lufsDelta == 0 && s.truePeakDelta == 0)
         #expect(s.sectionRecall == nil || s.sectionRecall == 1)
         if analysis.vocal == nil {

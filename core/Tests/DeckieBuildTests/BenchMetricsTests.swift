@@ -1,6 +1,7 @@
 import Foundation
 import Testing
 import DeckieBuild
+import DeckieLab
 
 /// The stage 1 measures, ported from mixer/bench_mu.py, on hand-made numbers whose answers are worked out here (and
 /// match what the Python gives for the same lists).
@@ -37,6 +38,35 @@ import DeckieBuild
         #expect(BenchMetrics.pearson([1, 2, 3, 4], [2, 4, 6, 8]).map { abs($0 - 1) < 1e-12 } == true)
         #expect(BenchMetrics.pearson([1, 2], [1, 2]) == nil)
         #expect(BenchMetrics.pearson([1, 1, 1], [1, 2, 3]) == nil)
+    }
+
+    /// The "key vs key_parity.py" column: the engine's parity decision (`deckie.key.parity`) against the sheet's row,
+    /// by the main session's rule (same key, margin within 1e-3, same sure flag); absent without either side.
+    @Test func keyParityColumn() throws {
+        func record(_ deckie: String) throws -> BenchRecord {
+            let text = #"{"id":"t1","bpm":120,"grid":{"bpm":120,"first_downbeat_s":0.5,"n_bars":8},"key":{"camelot":"8A"}"#
+                + deckie + "}"
+            return try JSONDecoder().decode(BenchRecord.self, from: Data(text.utf8))
+        }
+        func parity(_ camelot: String, _ margin: Double, _ sure: Bool) -> String {
+            ",\"deckie\":{\"key\":{\"camelot\":\"8A\",\"margin\":0.2,\"agree\":3,\"sure\":true,\"parity\":"
+                + "{\"camelot\":\"\(camelot)\",\"margin\":\(margin),\"agree\":3,\"sure\":\(sure)}}}"
+        }
+        let row = KeyParityRow(id: "t1", key: "8A", margin: 0.1234, agree: 3, sure: true, lab: "8A", labConfident: true,
+                               apple: "8A")
+        let lab = try record("")
+        let same = BenchMetrics.compare(engine: try record(parity("8A", 0.1240, true)), lab: lab, rel: "a", seconds: nil,
+                                        parity: row)
+        #expect(same.keyParity == "same" && same.keyParityEngine?.margin == 0.124)
+        let differ = BenchMetrics.compare(engine: try record(parity("9A", 0.13, false)), lab: lab, rel: "a", seconds: nil,
+                                          parity: row)
+        #expect(differ.keyParity == "key 9A, key_parity.py 8A; margin 0.1300, key_parity.py 0.1234; sure false, key_parity.py true")
+        #expect(BenchMetrics.compare(engine: lab, lab: lab, rel: "a", seconds: nil, parity: row).keyParity == nil)
+        let noRow = BenchMetrics.compare(engine: try record(parity("8A", 0.1240, true)), lab: lab, rel: "a", seconds: nil)
+        #expect(noRow.keyParity == nil)
+        let summary = BenchSummary([same, differ])
+        #expect(summary.keyParityTracks == 2 && summary.keyParitySame == 1 && summary.keyDecidedAsParity == 2)
+        #expect(summary.keyParityDiffering.map(\.id) == ["t1"])
     }
 
     @Test func musicRootIsTheSharedFolder() {
