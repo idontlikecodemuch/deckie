@@ -213,7 +213,10 @@ public enum Bench {
             var reused = false
             let outcome: Result<TrackScore, Error> = Result {
                 let lab = try decoder.decode(BenchRecord.self, from: Data(contentsOf: job.lab))
-                let tag = job.row.bpmTag.flatMap { $0 > 0 ? $0 : nil } ?? lab.bpmTag
+                // The lab's own file records the tag tempo the lab analysed with; candidates.json's can be newer
+                // (55 of the 373 differ), and the first Mac sheet showed three octave "errors" that were only
+                // the engine following a different tag than the lab had. The yardstick compares like with like.
+                let tag = lab.bpmTag.flatMap { $0 > 0 ? $0 : nil } ?? job.row.bpmTag.flatMap { $0 > 0 ? $0 : nil }
                 let size = ((try? FileManager.default.attributesOfItem(atPath: job.url.path))?[.size] as? NSNumber)?.intValue
                 let kept = o.records?.appendingPathComponent("\(job.row.id).json")
                 var engineData: Data? = nil

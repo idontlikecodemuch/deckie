@@ -960,3 +960,29 @@ unequal bar counts: the list, split into madmom-fallback tracks and the rest, an
 the lab fell back per file for a recorded reason; the engine marks where that rule would fire but cannot run madmom
 (non-commercial); it should carry the same guard as a lowered confidence and a flag, or a written reason why not.
 Results go in an addendum.
+
+**Addendum: findings 2 to 4 answered; the key vote is still running.** (2) The true-peak outlier is f068a57770,
+"Doja Cat - Demons (Epiphany Hip-Hop flip)", an MP3 from a DJ pool: the lab read +2.50 dBTP (the level between
+samples, against full scale), the engine +9.20. The method is the same (the engine's true peak is a line-for-line
+port and matches the lab to 0.00 dB on the other 372 MP3s), neither side clips (314 of the 373 files peak above
+full scale and the engine matches every one), and everything else on the track matches (beats, bar 1, key,
+sections; loudness within 0.01 LU, the only loudness difference in the set), so the decoded samples differ for at
+most a tenth of a second: most likely a damaged or spliced frame that mpg123 (the lab's decoder) drops or
+silences and dr_mp3 decodes into a burst. Which decoder is right needs the file: one ffmpeg command on the Mac
+settles it (sent to the main session). (3) Bar counts differ on 16 tracks; 15 are madmom-fallback tracks, where
+the lab's grid came from a different model: three have bar 1 one bar apart at the very start (sound from 0.0 s and
+a downbeat within 31 ms of it, the engine's just after zero and madmom's just before; Ace of Base's 1,995.7 ms is
+this), two a half-bar downbeat choice, one the off-beat, one a different tempo, five unsteady tracks where both
+sides have confidence 0, one the last bar missed by 3 ms, two an octave. The one non-madmom track (Beyoncé,
+"Haunted") is an octave the engine chose from the tag tempo it was given: the bench passed `candidates.json`'s tag
+(62) while the lab had analysed with its own file's (67), and 125/62 is within the lab's rule for "double"; 55 of
+the 373 tag tempos differ between the two files. No decoder length difference appears anywhere. The bench now
+takes the lab file's tag first, so the next sheet compares like with like; that also aligns the engine's
+`madmom_would_run` mark with the lab's recorded reason on 10 of the 27 tracks where they differ (the other 17 were
+fitted by an older lab grid fit; the engine's rule agrees with the lab's current rule on 372 of 373). (4) The
+madmom guard: the engine already carries it. "Poor grid fit", the lab's reason on 51 tracks, is the same test that
+sets the engine's `low_grid_confidence` flag (grid confidence under 0.5), and on the four "tag more than 2 percent
+off" tracks the engine's grid matched the lab's final grid perfectly (the tag was what was wrong). A second flag
+would be a second name for the same thing, and capping `grid.confidence` would give the grid-fit field a second
+meaning, which the crate format rules out; the record carries the tag tempo beside the grid's. A comment in
+`Analyser.swift` records the reasoning.
