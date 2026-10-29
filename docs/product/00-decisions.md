@@ -187,7 +187,13 @@ points of Apple's framework on the same clips, measured on the major and minor h
 record's key block is absent or marked not read, the app says "key not read on this computer yet", and nothing is
 scored on it. Three cheap, library-blind improvements are being tested first (a separate mode test after the home
 note; chroma weighted toward downbeats, since we know the bar grid; reading the key the DJ's tools wrote into the
-tags), and a mixed-genre listening set with keys written down by a musician is the next thing to commission.
+tags), and a mixed-genre listening set with keys written down by a musician is the next thing to commission. Same
+evening, two of the three measured (letter R, "Mode test and tag survey"): a separate mode rule from Temperley's and
+Krumhansl's profiles changes 3f's answer on 81 of 1,122 clips for a net gain of about nine, within chance, because in
+this music the minor third is louder than the major third in barely half of the minor-key clips; and only 4.3 percent
+of Christopher's library carries a key tag at all (Serato, on the loose files; none in the compilations), so reading
+tags fills gaps but cannot make the reading better. The downbeat-weighted chroma waits for the engine's grid on the
+clips. Short of a trained model, D16 stands: no key from our own reader on non-Apple platforms.
 
 ### Note on D3 (Oct 26, from the community research): privacy covers taste, not only audio
 DJs' fear is "I'm not helping train ai for free": that their choices become someone else's product. So D3 extends
