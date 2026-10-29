@@ -682,3 +682,15 @@ commercial use; unknown data, the trainer must be the rights-holder") that reads
 licence-line decision, so it is put to the main session as a question, with the facts; nothing changes in the code
 until it answers. If the answer is no, the alternatives are a beat tracker trained on data with clear terms, or
 Deckie's own training on licensed data, both research items for later.
+
+**Third addendum, Oct 29, 2026: the facts the Mac needs for its ONNX Runtime download.** The main session asks
+Christopher for each download in its own session, with the facts in hand, so here they are for the official macOS
+archive (Christopher's earlier yes to ONNX Runtime downloads covered fetching it here to read them): address
+`https://github.com/microsoft/onnxruntime/releases/download/v1.31.1/onnxruntime-osx-arm64-1.31.1.tgz`, release tag
+`v1.31.1`, 36,936,435 bytes, SHA-256 `2e1344a1926ee50eb25b38153cb6992c3567515aef0e677a1a520a1798896d6f`; inside it,
+`lib/libonnxruntime.1.31.1.dylib`, 44,797,256 bytes, SHA-256 `17500d6b1e37e70f43a2c57d94233a1bc29fbcb297be0a5f8c7c13184f3307ba`
+(the same source commit as the Linux and Windows archives; recorded in DEPENDENCIES.md section 6). The macOS library
+carries the reporting client as the Linux one does, through the system's own network libraries rather than curl, and
+honours the same switch, so the bench on the Mac runs under the same rule as here: the switch for development, our
+own no-telemetry build for anything that ships. The scan built today finds the client in it (three of its markers),
+so the release test covers macOS libraries as it does Linux and Windows ones.
