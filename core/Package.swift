@@ -56,7 +56,11 @@ let package = Package(
                 dependencies: ["DeckieEngine", "DeckieCrate", "DeckieDecode", "DeckieCore", "DeckieLab", "DeckieInference",
                                "DeckieAudio"]),
         .executableTarget(name: "deckie-build", dependencies: ["DeckieBuild"]),
+#if !os(Windows)
+        // The probe reads peak memory from Linux's /proc and Mach's task_info; it has no Windows port yet, and the
+        // Windows build (the CI probe among them) must not fail for a tuning tool.
         .executableTarget(name: "deckie-memprobe", dependencies: ["DeckieEngine", "DeckieInference", "DeckieAudio"]),
+#endif
         .target(name: "DeckieTestSupport", dependencies: ["DeckieAudio", "DeckieCore"], path: "Tests/DeckieTestSupport"),
         .testTarget(name: "DeckieCoreTests", dependencies: ["DeckieCore", "DeckieLab", "DeckieAudio", "DeckieTestSupport"],
                     exclude: ["Fixtures"]),
