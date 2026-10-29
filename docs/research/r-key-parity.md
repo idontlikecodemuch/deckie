@@ -256,3 +256,69 @@ unverified]. **Forum evidence is thin; a Reddit pass by Codex would help.**
 4. Swift timing and agreement with this Python on the 373 tracks, the way 2a checked the old port [unmeasured].
 5. A major/minor tie-break aimed at the 16 percent major-for-minor reads against Apple, for example discounting the
    fifth harmonic's share of the major third. Untested [inf]; it must be chosen on dev.
+
+## Outside test: GiantSteps-MTG-key (Oct 29, 2026)
+
+**The data set as fetched.** Zenodo record 1101082, "Beatport EDM Key Dataset" (Faraldo, UPF), version 1, DOI
+10.5281/zenodo.1101082, published 2017-12-21, annotations CC BY-SA 4.0. It is the 1,486 two-minute Beatport EDM
+excerpts of GiantSteps-MTG-key. The audio belongs to Beatport and the labels, so it was fetched for internal
+evaluation only, kept in the session scratchpad, and is not committed and does not ship. Files fetched from the
+Zenodo record by plain HTTP (no script from the data set was run): audio.zip 2,127,891,180 bytes (2.13 GB, MD5
+matched Zenodo's), keys.zip 380 KB, Beatport-EDM-Key-Dataset.xlsx 148 KB, original_metadata.zip 921 KB. The
+annotations used are the spreadsheet's main_key and confidence (0, 1, 2) columns.
+
+**Subsets scored** (`mixer/key_outside.py`; per-clip results in `mixer/key_outside_results.tsv`):
+
+- All 1,275 clips whose main key is a plain "note major" or "note minor". The other 211 (X, unknown, "other", modal
+  names, key changes, two-key labels) are left out.
+- High confidence: confidence 2 and a plain key, 1,122 clips (352 major, 770 minor). This is my own definition. The
+  thesis reports 1,077 high-confidence single-key clips and I could not reproduce that count from the spreadsheet
+  (confidence 2 without a key change gives 1,100) [unverified against the thesis]. The set is about 70 percent minor
+  here and 85 percent minor in GiantSteps Key.
+
+Row 3f is `key_parity.recommended` on the decoded clip; row 0 is the shipped engine's STFT chroma with edma. Neither
+was tuned on this set. Exact, neighbour (relative key or one step on the wheel) and other follow the bench; parallel
+keys count as other. MIREX weighted: exact 1, fifth 0.5, relative 0.3, parallel 0.2.
+
+| Subset | Row | n | Exact | Neighbour | Other | MIREX weighted |
+|---|---|---|---|---|---|---|
+| All plain-key clips | 3f | 1,275 | 47.4 | 15.9 | 36.7 | 58.5 |
+| All plain-key clips | 0 shipped | 1,275 | 45.5 | 15.4 | 39.1 | 56.2 |
+| High confidence | 3f | 1,122 | 50.0 | 15.3 | 34.7 | 60.9 |
+| High confidence | 0 shipped | 1,122 | 47.9 | 14.6 | 37.5 | 58.3 |
+| High confidence, major keys | 3f | 352 | 61.9 | 16.2 | 21.9 | 71.0 |
+| High confidence, major keys | 0 shipped | 352 | 49.7 | 18.2 | 32.1 | 61.0 |
+| High confidence, minor keys | 3f | 770 | 44.5 | 14.9 | 40.5 | 56.4 |
+| High confidence, minor keys | 0 shipped | 770 | 47.0 | 13.0 | 40.0 | 57.1 |
+
+**Sure flag** (3f, high confidence): 43.6 percent of clips are flagged sure (489 of 1,122); exact is 58.5 among sure
+and 43.4 among unsure. Over all 1,275 clips: 43.4 percent sure, exact 55.0 and 41.6. The flag still separates better
+from worse reads, but the gap is 15 points, not the large gap the threshold was set for on the crate.
+
+**Confusions** (3f, high confidence, percent of all clips): relative 5.6, fifth 9.7, parallel 22.0 (the parallel key
+has the same tonic and the other mode, for example A minor read as A major). Major read as minor 7.8 (25 percent of the
+major clips); minor read as major 30.0 (44 percent of the minor clips). Row 0 shows the same shape (major as minor
+11.2, minor as major 26.6).
+
+**Against published numbers.** Nothing here is a like-for-like exact-rate comparison.
+
+| Source | Set | Metric | Value |
+|---|---|---|---|
+| Faraldo 2017 | GiantSteps Key (604 clips), not this set | MIREX weighted: Mixed In Key 0.672, edmm 0.642, bgate 0.641, KeyFinder 0.604, edma 0.581 | |
+| Knees et al. 2015 | GiantSteps Key (604 clips) | exact percent: rekordbox 71.9, Mixed In Key 67.2, KeyFinder 45.4 | |
+| This test | the 1,486-clip MTG set (the 604-clip set is a different, older annotation of other excerpts), high-confidence subset | MIREX weighted 60.9 (3f), 58.3 (row 0); exact 50.0 and 47.9 | |
+
+The only like-for-like figure is Faraldo's MIREX-weighted scale, and even that is on a different set, so it is a
+rough guide only: 3f at 0.609 sits between KeyFinder (0.604) and the better Faraldo methods (0.64), and the shipped
+row 0 at 0.583 sits level with edma (0.581), as it should since it is edma on STFT chroma. The exact rates of Knees
+et al. (rekordbox, Mixed In Key at 67 to 72) are on the other set and a different scorer, and are not comparable;
+our 50 percent exact is well below them. That our exact rate is below commercial products is consistent with the
+DJ listening tests above, but I have not run any commercial product on these clips [inf].
+
+**What it says.** On music the method never saw, the new method is a little better than the engine we ship (about 2
+points exact, 2.6 on the weighted score), and all of the gain is in major keys (12 points); in minor keys, which are
+most of this music, it is 2.5 points worse. Both get about half of the keys exactly right, and the main mistake for
+both is naming the wrong mode on the right note, so the crate result (83 percent) overstates how well this will do on
+unfamiliar dance music. The sure flag still tells a better read from a worse one, but less sharply than on the crate.
+The gain on this outside set is small, and the minor-key weakness is the thing to fix next: the open-item tie-break
+(item 5) should be tried against minor-key losses, chosen on a split and not on this set.
