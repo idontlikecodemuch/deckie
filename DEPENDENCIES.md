@@ -609,6 +609,11 @@ recordings. Under the Oct 28 wording that read as non-commercial; Christopher de
 allowlist below) that weights ship under their publisher's licence with the training sets recorded as disclosure, so
 Beat This! ships, MIT, with the record below shown in the acknowledgements.
 
+**Published** Oct 29, 2026, with Christopher's approval: the release `models-1`
+(`https://github.com/idontlikecodemuch/deckie/releases/tag/models-1`) carries `beat_this_final0.onnx` and `yamnet.onnx`
+with their `.sha256` files, published by `.github/workflows/models-publish.yml` from the branch `assets/models-1`
+after checking the pinned hashes; `fetch-models.sh` verified both downloads against the pins the same day.
+
 **The export is not reproducible byte for byte.** The same script with the same pinned requirements gives a graph
 whose numbers agree (the export's check against PyTorch passes everywhere) but whose bytes differ with the torch
 build that made it: this container's export is the pinned `f1d93204…`, GitHub's Ubuntu machine makes `ab1203af…`,

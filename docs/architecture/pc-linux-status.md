@@ -908,3 +908,14 @@ pinned `96bb0dc5…`). So the pinned Beat This! bytes exist only in this contain
 from here once Christopher says yes, is the one way every machine (CI included, which now fetches first) runs the
 same graph. Until then the Mac's bench runs on its own export, numerically fine, and its sheet should name the graph
 it ran on.
+
+**Addendum: both releases approved, the models published.** Christopher approved both releases ("you have approval
+on the releases", Oct 29). GitHub itself then refused this session's attempt to create one ("not permitted for this
+session type"), so both go through GitHub's own machines with the workflow token: the pinned model files ride a
+branch `assets/models-1` (the only copy of the pinned Beat This! bytes is this container's), whose workflow
+`models-publish.yml` checks each file against the hash pinned in its export script and publishes. The release is
+up: https://github.com/idontlikecodemuch/deckie/releases/tag/models-1, with `beat_this_final0.onnx` (82,098,829
+bytes), `yamnet.onnx` (14,938,528 bytes) and their `.sha256` files; `fetch-models.sh --force` fetched both from it
+and verified the pinned hashes end to end. The ONNX Runtime archives' release follows from a publish run of the
+build workflow, started with his approval and queued behind run 4; its hashes go into DEPENDENCIES.md when it
+lands. The assets branch stays as the record of what was published; it is not merged anywhere.
