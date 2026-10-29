@@ -5,6 +5,7 @@
 //                [--fresh]
 //   deckie-build bench <folder> --features mixer/features --candidates mixer/candidates.json [--music-root path]
 //                [--out bench.json] [--records dir] [--jobs N] [--ids id,id,...] [--fresh]
+//   deckie-build mp3-check <folder> [--jobs N]
 //
 // The engine needs ONNX Runtime and the Beat This! model: DECKIE_ONNXRUNTIME_LIB and DECKIE_BEAT_THIS_MODEL, or
 // core/.deps and core/.models of the checkout it was built from (core/README.md).
@@ -19,6 +20,7 @@ let usage = """
       deckie-build <folder> --out <name>.deckiecrate [--rekordbox export.xml] [--jobs N] [--bpm-tags] [--name N] [--fresh]
       deckie-build bench <folder> --features <dir> --candidates <file> [--music-root path] [--out bench.json]
                    [--records dir] [--jobs N] [--ids id,id,...] [--fresh]
+      deckie-build mp3-check <folder> [--jobs N]
 
     build: analyses every audio file below <folder> (mp3, flac, wav, aif, aiff, aifc, m4a, mp4, aac, wma, ogg, opus,
       m4p), N at a time (default: the processor count, fewer if memory is short, as a job needs about 1 GB: \(defaultJobs)
@@ -31,6 +33,10 @@ let usage = """
       defaults to the folder the rows' paths share) and compares it with the lab's feature file by the stage 1
       measures; prints a table and writes the JSON. The engine's records go to <out>.records and are taken again on
       a later run while the file and the engine are the same; --fresh analyses everything again.
+    mp3-check: decodes every MP3 below <folder> as the engine does (damaged frames played as silence) and by dr_mp3's
+      own pull reader (as before that), and compares them sample for sample: a file without a damaged frame must
+      decode the same, bit for bit. Lists each damaged frame, where the samples differ and the true peak both ways;
+      exits with 1 if anything changed that no damaged frame explains. Needs no model.
     """
 
 func fail(_ message: String, code: Int32 = 1) -> Never {
@@ -101,6 +107,15 @@ do {
         say("")
         say(report.table)
         if let out = options.output { say("wrote \(out.path)" + (options.records.map { "; engine records in \($0.path)" } ?? "")) }
+    } else if args.first == "mp3-check" {
+        args.removeFirst()
+        let (folder, o) = parse(args, flags: [], values: ["jobs"])
+        let results = try MP3Check.run(folder: url(folder), jobs: o["jobs"] == nil ? processorCount : jobs(o),
+                                       progress: { say($0) })
+        let (text, holds) = MP3Check.summary(results)
+        say("")
+        FileHandle.standardOutput.write(Data(text.utf8))
+        if !holds { exit(1) }
     } else {
         let (folder, o) = parse(args, flags: ["bpm-tags", "fresh"], values: ["out", "rekordbox", "jobs", "name"])
         guard let out = o["out"] else { fail("--out <name>.deckiecrate is required\n\(usage)", code: 2) }
