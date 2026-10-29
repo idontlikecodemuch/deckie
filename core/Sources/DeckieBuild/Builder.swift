@@ -117,18 +117,20 @@ public struct BuildResult: Sendable {
 /// keeps every finished file in the work folder so a second run skips what is done, and writes the crate with every
 /// file that has no record listed in the manifest's import log.
 public final class Builder: Sendable {
-    public static let version = "0.1.0"
-    /// The program and its version (`deckie-build 0.1.0`), printed when a build starts and written as the bench
+    /// The builder's own version, raised with the engine's when what the builder writes changes (0.2.0: the import
+    /// log's device label and the record's `imported` block).
+    public static let version = "0.2.0"
+    /// The program and its version (`deckie-build 0.2.0`), printed when a build starts and written as the bench
     /// report's `tool`. Not written in the crate: the manifest's `import_log.built_by` names the device instead.
     public static var programLabel: String { "deckie-build \(version)" }
     /// The work folder's extension.
     public static let workExtension = "deckiebuild"
-    /// The engine's label (`deckie-0.1.0`, as `analysis.engine` writes it).
+    /// The engine's label (`deckie-0.2.0`, as `analysis.engine` writes it).
     public static var engineLabel: String { "\(Analysis.engineFamily)-\(Analysis.engineVersion)" }
 
     /// What a work record must have been made with to be reused: the engine's label and the vocal tagger's model, or
-    /// none (`deckie-0.1.0 vocal:yamnet`, `deckie-0.1.0 vocal:none`), so records made before the vocal model was
-    /// installed are made again once it is.
+    /// none (`deckie-0.2.0 vocal:yamnet`, `deckie-0.2.0 vocal:none`), so records made before the vocal model was
+    /// installed are made again once it is, and so are records of an older engine version.
     public static func engineKey(vocalModel: String?) -> String { "\(engineLabel) vocal:\(vocalModel ?? "none")" }
 
     /// The vocal tagger's model a default analyser will have: YAMNet's name when its model file is there, else nil.

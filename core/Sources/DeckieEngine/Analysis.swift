@@ -9,8 +9,10 @@ import DeckieCrate
 public struct Analysis: Sendable {
     /// The engine family written to the crate (`engine.family`): `deckie`, the name of the engine, not of a licence.
     public static let engineFamily = CrateFormat.EngineFamily.deckie
-    /// The engine's version (`engine.version`; `analysis.engine` is `deckie-<version>`).
-    public static let engineVersion = "0.1.0"
+    /// The engine's version (`engine.version`; `analysis.engine` is `deckie-<version>`). It goes up whenever the
+    /// record gains or changes fields, so the builder's work folders made by an older version are analysed again
+    /// rather than reused. 0.2.0: the vocal structure and hook blocks, and `file.tag_bpm`.
+    public static let engineVersion = "0.2.0"
     /// The lab's feature-file schema the JSON follows (`schema`).
     public static let labSchema = 1
     /// The rate everything is analysed at: the lab decodes at 44.1 kHz and resamples other files to it first (`sr`).
