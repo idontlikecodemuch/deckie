@@ -71,6 +71,61 @@ public struct AudioDecodeError: Error, Sendable, Equatable, CustomStringConverti
     public var description: String { "cannot decode \(file) (\(format)): \(message)" }
 }
 
+/// A frame of a file that was damaged and was decoded as silence instead (concealed), so the file still plays: an MP3
+/// frame whose data runs past its own end, as on a damaged or badly spliced file (MP3Reader's comment). The file is
+/// faulty but playable, and the frame's time lets the crate builder's import log point the DJ to it.
+public struct DamagedFrame: Sendable, Equatable {
+    /// Where the frame's output starts, in seconds from the start of the decoded audio.
+    public var startSeconds: Double
+    /// Its length: one MP3 frame, 1,152 samples (26.1 ms at 44.1 kHz), or 576 for MPEG-2 and 2.5.
+    public var seconds: Double
+
+    public init(startSeconds: Double, seconds: Double) {
+        self.startSeconds = startSeconds
+        self.seconds = seconds
+    }
+}
+
+/// A decoded file and the damaged frames concealed in it.
+public struct DecodedAudio: Sendable {
+    public var buffer: AudioBuffer
+    /// In order; empty for a file decoded as written, and always for WAV, AIFF and FLAC (dr_flac refuses a damaged
+    /// FLAC file rather than concealing anything).
+    public var damagedFrames: [DamagedFrame]
+
+    public init(buffer: AudioBuffer, damagedFrames: [DamagedFrame] = []) {
+        self.buffer = buffer
+        self.damagedFrames = damagedFrames
+    }
+}
+
+/// The damaged-frame concealment checked on one MP3 (`deckie-build mp3-check`): the file decoded as `AudioDecoder`
+/// decodes it, beside the samples of dr_mp3's own pull reader, which is what the MP3 reader gave before the
+/// concealment, both trimmed the same way. A file with no damaged frame must give the same samples, bit for bit; one
+/// with damaged frames may differ only from each frame's start to the end of the frame after it.
+public struct MP3ConcealmentCheck: Sendable {
+    public var damagedFrames: [DamagedFrame]
+    public var pullReader: AudioBuffer
+    public var decoded: AudioBuffer
+    /// The first and last sample frames where the two differ (by bit pattern), nil when they are the same.
+    public var differing: ClosedRange<Int>?
+
+    /// Decodes the MP3 at `url` both ways.
+    public static func check(_ url: URL) throws(AudioDecodeError) -> MP3ConcealmentCheck {
+        let data: Data
+        do {
+            data = try Data(contentsOf: url)
+        } catch {
+            throw AudioDecodeError(kind: .cannotRead, file: url.path, format: .unknown,
+                                   message: "could not be read (\(error))")
+        }
+        guard AudioFormat.sniff(data) == .mp3 else {
+            throw AudioDecoder.unsupported(url.path, AudioFormat.sniff(data), "not an MP3 file")
+        }
+        return try MP3Reader.concealmentCheck(data, file: url.path)
+    }
+}
+
 /// Turns an audio file into float samples at the file's own sample rate. It decodes WAV and AIFF in plain Swift, MP3
 /// through the vendored dr_mp3 and FLAC through the vendored dr_flac, the same on every platform; AAC is recognised
 /// but reports that it is not supported yet, and a copy-protected MP4 (an iTunes Store or Apple Music file) that it
@@ -79,6 +134,11 @@ public enum AudioDecoder {
     /// Decodes the whole file into memory at its own sample rate (resampling is a later step). Mono stays mono,
     /// stereo stays stereo, more channels are cut to the first two.
     public static func decode(_ url: URL) throws(AudioDecodeError) -> AudioBuffer {
+        try decodeReporting(url).buffer
+    }
+
+    /// `decode`, with the damaged frames it concealed (MP3 only), for a report such as the crate builder's import log.
+    public static func decodeReporting(_ url: URL) throws(AudioDecodeError) -> DecodedAudio {
         let path = url.path
         let data: Data
         do {
@@ -93,13 +153,13 @@ public enum AudioDecoder {
         // here; the public API does not change.
         switch format {
         case .wav:
-            return try WAVReader.decode(data, file: path)
+            return DecodedAudio(buffer: try WAVReader.decode(data, file: path))
         case .aiff:
-            return try AIFFReader.decode(data, file: path)
+            return DecodedAudio(buffer: try AIFFReader.decode(data, file: path))
         case .mp3:
-            return try MP3Reader.decode(data, file: path)
+            return try MP3Reader.decodeReporting(data, file: path)
         case .flac:
-            return try FLACReader.decode(data, file: path)
+            return DecodedAudio(buffer: try FLACReader.decode(data, file: path))
         case .aac:
             if let found = ProtectedMP4.check(data) {
                 throw AudioDecodeError(kind: .protected, file: path, format: format, message: found.message)

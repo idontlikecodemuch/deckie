@@ -38,12 +38,68 @@ import Foundation
 /// decoding. Behind a second ID3v2 tag, or stray bytes after the tag, it decodes the tag frame as 1,152 samples of
 /// silence and trims nothing (tone.mp3 came out 51 ms late). So this reader skips the ID3v2 tags itself, finds the
 /// first frame with dr_mp3's own frame search, and hands dr_mp3 the bytes from that frame on.
+///
+/// **Damaged frames** (decided by the main session, Oct 29, 2026). In a damaged or badly spliced frame, codes that
+/// decode as large values can make dr_mp3's Huffman decoder read on past the end of a granule's data, which it neither
+/// notices nor stops: it outputs them, and the next granule's bits decoded as more, as a burst (on one lab track,
+/// +9.2 dBTP where the lab's decoder gave +2.5). mpg123, the lab's decoder, treats the overrun as an error and plays
+/// silence. So each frame goes through `deckie_mp3_decode_frame`
+/// (`Sources/CDrMp3/dr_mp3.c`, beside the unmodified dr_mp3): dr_mp3 decodes it as before, then the frame is checked
+/// with mpg123's test (did any granule's big values read past its declared length?), using dr_mp3's own Huffman
+/// decoder, and a frame that fails is decoded again as silence, through dr_mp3's own windows and filter bank, so the
+/// music fades out and back in around it rather than clicking. The file is not refused: mpg123 and ffmpeg play it.
+/// Each concealed frame is reported with its time (`DamagedFrame`), so the crate builder can tell the DJ. A frame that
+/// passes the check is exactly what dr_mp3 decoded, so a file without a flagged frame decodes to the same samples as
+/// before, sample for sample; with one, the samples differ only from the flagged frame's start to the end of the frame
+/// after it (MPEG-1; for the one-granule frames of MPEG-2 and 2.5, 480 samples into the frame after that), where the
+/// decoder's state is the same again.
+///
+/// The frames are driven here rather than by dr_mp3's pull reader (`drmp3_read_pcm_frames_f32`), whose loop this one
+/// copies (`drmp3_decode_next_frame_ex__memory` and `drmp3_read_pcm_frames_raw` with its trimming off): the same
+/// frames from the same bytes, frames with no output skipped, the tag frame's silence dropped and the decoder reset
+/// after it, each frame's samples appended as the first frame's channel count says. The tests check the two give the
+/// same samples (`Driver.pullReader`).
 enum MP3Reader {
     /// Samples every MPEG audio decoder adds at the start: the filter bank's 528-sample overlap, plus 1.
     static let decoderDelay = 529
 
     static func decode(_ data: Data, file: String) throws(AudioDecodeError) -> AudioBuffer {
         try decodeUntrimmed(data, file: file).trimmed()
+    }
+
+    /// The decoded, trimmed audio and the frames concealed in it.
+    static func decodeReporting(_ data: Data, file: String) throws(AudioDecodeError) -> DecodedAudio {
+        let u = try decodeUntrimmed(data, file: file)
+        return DecodedAudio(buffer: u.trimmed(), damagedFrames: u.damagedFrameTimes())
+    }
+
+    /// `MP3ConcealmentCheck`'s two decodes.
+    static func concealmentCheck(_ data: Data, file: String) throws(AudioDecodeError) -> MP3ConcealmentCheck {
+        let pull = try decodeUntrimmed(data, file: file, driver: .pullReader)
+        let now = try decodeUntrimmed(data, file: file)
+        let before = pull.trimmed(), after = now.trimmed()
+        let c = after.channelCount
+        var first: Int? = nil, last: Int? = nil
+        if before.channelCount != c {
+            first = 0
+            last = max(before.frames, after.frames) - 1
+        } else {
+            let common = min(before.frames, after.frames) * c
+            before.samples.withUnsafeBufferPointer { b in
+                after.samples.withUnsafeBufferPointer { a in
+                    for i in 0..<common where a[i].bitPattern != b[i].bitPattern {
+                        if first == nil { first = i / c }
+                        last = i / c
+                    }
+                }
+            }
+            if before.frames != after.frames {
+                first = first ?? min(before.frames, after.frames)
+                last = max(before.frames, after.frames) - 1
+            }
+        }
+        return MP3ConcealmentCheck(damagedFrames: now.damagedFrameTimes(), pullReader: before, decoded: after,
+                                   differing: first.map { $0...(last ?? $0) })
     }
 
     /// Everything dr_mp3 decoded after the tag frame, before trimming, with what the trimming reads.
@@ -55,6 +111,9 @@ enum MP3Reader {
         var samplesPerFrame: Int
         /// The first frame's Xing or Info tag, nil when the first frame is audio.
         var tag: XingTag?
+        /// The frames that failed the damaged-frame check (concealed, unless the decode was asked not to), as
+        /// sample frames of `buffer`, in order.
+        var damagedFrames: [Range<Int>] = []
 
         /// The frames the lab's decoder keeps; see the type's comment.
         var kept: Range<Int> {
@@ -69,6 +128,16 @@ enum MP3Reader {
             if k == 0..<buffer.frames { return buffer }
             return AudioBuffer(sampleRate: buffer.sampleRate, channelCount: c,
                                samples: Array(buffer.samples[(k.lowerBound * c)..<(k.upperBound * c)]))
+        }
+
+        /// The damaged frames as times in the trimmed audio: each frame's start (clamped to the trimmed audio, for a
+        /// frame in the part trimmed off) and its length.
+        func damagedFrameTimes() -> [DamagedFrame] {
+            let k = kept, rate = Double(buffer.sampleRate)
+            return damagedFrames.map { f in
+                DamagedFrame(startSeconds: Double(min(max(f.lowerBound - k.lowerBound, 0), k.count)) / rate,
+                             seconds: Double(f.count) / rate)
+            }
         }
     }
 
@@ -115,10 +184,18 @@ enum MP3Reader {
         }
     }
 
-    static func decodeUntrimmed(_ data: Data, file: String) throws(AudioDecodeError) -> Untrimmed {
+    /// How `decodeUntrimmed` drives dr_mp3: frame by frame with the damaged-frame check, concealing what fails it (as
+    /// files are decoded) or only noting it (to see what dr_mp3 alone makes of a damaged frame); or through dr_mp3's
+    /// own pull reader, the loop the frame loop copies, kept for the tests to compare the two.
+    enum Driver {
+        case concealing, checking, pullReader
+    }
+
+    static func decodeUntrimmed(_ data: Data, file: String,
+                                driver: Driver = .concealing) throws(AudioDecodeError) -> Untrimmed {
         let result: Result<Untrimmed, AudioDecodeError> = data.withUnsafeBytes { raw in
             do throws(AudioDecodeError) {
-                return .success(try decodeUntrimmed(raw, file: file))
+                return .success(try decodeUntrimmed(raw, file: file, driver: driver))
             } catch {
                 return .failure(error)
             }
@@ -126,8 +203,8 @@ enum MP3Reader {
         return try result.get()
     }
 
-    private static func decodeUntrimmed(_ raw: UnsafeRawBufferPointer,
-                                        file: String) throws(AudioDecodeError) -> Untrimmed {
+    private static func decodeUntrimmed(_ raw: UnsafeRawBufferPointer, file: String,
+                                        driver: Driver) throws(AudioDecodeError) -> Untrimmed {
         func damaged(_ m: String) -> AudioDecodeError { .init(kind: .damaged, file: file, format: .mp3, message: m) }
         // dr_mp3 counts bytes in a C int.
         guard raw.count <= Int(Int32.max) else {
@@ -166,19 +243,59 @@ enum MP3Reader {
         let channels = Int(mp3.pointee.channels), rate = Int(mp3.pointee.sampleRate)
         guard channels > 0, rate > 0 else { throw damaged("the first frame gives no channels or no sample rate") }
         var samples = [Float]()
-        let chunk = 16 * 1152
-        var buffer = [Float](repeating: 0, count: chunk * channels)
-        while true {
-            let read = Int(buffer.withUnsafeMutableBufferPointer {
-                drmp3_read_pcm_frames_f32(mp3, UInt64(chunk), $0.baseAddress)
-            })
-            if read == 0 { break }
-            samples.append(contentsOf: buffer[0..<(read * channels)])
+        var damagedFrames: [Range<Int>] = []
+        if driver == .pullReader {
+            let chunk = 16 * 1152
+            var buffer = [Float](repeating: 0, count: chunk * channels)
+            while true {
+                let read = Int(buffer.withUnsafeMutableBufferPointer {
+                    drmp3_read_pcm_frames_f32(mp3, UInt64(chunk), $0.baseAddress)
+                })
+                if read == 0 { break }
+                samples.append(contentsOf: buffer[0..<(read * channels)])
+            }
+        } else {
+            // The pull reader's loop (see the type's comment), from the first byte again with a decoder of its own:
+            // dr_mp3's opening decoded the first frame already, unchecked. The stream ends where dr_mp3's opening
+            // put its end, before an ID3v1 or APE tag.
+            guard let check = deckie_mp3_check_new() else { preconditionFailure("out of memory") }
+            defer { deckie_mp3_check_free(check) }
+            let dec = UnsafeMutablePointer<drmp3dec>.allocate(capacity: 1)
+            defer { dec.deallocate() }
+            dec.initialize(to: drmp3dec())
+            drmp3dec_init(dec)
+            let bytes = start.assumingMemoryBound(to: UInt8.self), end = Int(mp3.pointee.memory.dataSize)
+            // One frame's samples (DRMP3_MAX_SAMPLES_PER_FRAME), kept from frame to frame as dr_mp3 keeps its own.
+            var pcm = [Float](repeating: 0, count: 2 * 1152)
+            var tagFrame = tagBytes != nil  // dr_mp3's opening found the tag in the first frame with output
+            var pos = 0
+            while true {
+                var info = drmp3dec_frame_info()
+                var flagged: Int32 = 0
+                let n = Int(pcm.withUnsafeMutableBufferPointer {
+                    deckie_mp3_decode_frame(check, dec, bytes + pos, Int32(end - pos), $0.baseAddress, &info,
+                                            driver == .concealing ? 1 : 0, &flagged)
+                })
+                if n > 0 {
+                    if tagFrame {
+                        // Not audio: dropped, and the decoder reset, as dr_mp3's opening does.
+                        tagFrame = false
+                        drmp3dec_init(dec)
+                    } else {
+                        let at = samples.count / channels
+                        if flagged != 0 { damagedFrames.append(at..<(at + n)) }
+                        samples.append(contentsOf: pcm[0..<(n * channels)])
+                    }
+                } else if info.frame_bytes == 0 {
+                    break  // nothing more found
+                }
+                pos += Int(info.frame_bytes)  // a frame with no output (bit reservoir not filled yet) is skipped
+            }
         }
         guard !samples.isEmpty else { throw damaged("no audio frame could be decoded") }
         return Untrimmed(buffer: AudioBuffer(sampleRate: rate, channelCount: channels, samples: samples),
                          firstFrameOffset: first.offset, samplesPerFrame: first.samplesPerFrame,
-                         tag: tagBytes.flatMap { XingTag($0) })
+                         tag: tagBytes.flatMap { XingTag($0) }, damagedFrames: damagedFrames)
     }
 
     /// Where the ID3v2 tags at the start end, one after another: "ID3", two version bytes, a flags byte, the size
