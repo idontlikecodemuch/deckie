@@ -32,6 +32,35 @@ extension OnnxRuntime {
             .init(name: "the Windows event-tracing provider", text: "Microsoft.ML.ONNXRuntime"),
         ]
 
+        /// The name of the Windows event-tracing provider, the one marker that may stay in a library built without
+        /// the client (below).
+        public static let windowsProviderName = "Microsoft.ML.ONNXRuntime"
+
+        /// What a scan means for a library a build ships: `fatal` markers refuse it; `reported` ones are shown and
+        /// allowed. The rule (the main session, Oct 29, 2026, confirmed by the first build): in a Windows library
+        /// (a `.dll`) the event-tracing provider's name is present but never registered. ONNX Runtime's
+        /// `onnxruntime/core/platform/windows/telemetry.cc` defines the provider with its name
+        /// (`TRACELOGGING_DEFINE_PROVIDER(telemetry_provider_handle, "Microsoft.ML.ONNXRuntime", ...)`, line 61 at the
+        /// pinned commit) and is compiled into every Windows build (`cmake/onnxruntime_common.cmake`); the one call
+        /// that registers it, `TraceLoggingRegisterEx` in `WindowsTelemetry::WindowsTelemetry()`, runs only when
+        /// `WindowsEnv` holds a `WindowsTelemetry`, which needs `USE_WINDOWS_TELEMETRY` or `USE_1DS_TELEMETRY`
+        /// (`windows/env.h`), both left undefined by `--no_telemetry`; the environment then holds the base
+        /// `Telemetry` class, whose functions do nothing. Every other marker is fatal everywhere, and the name is
+        /// fatal too in a file that is not a `.dll`. The version-bump checklist (DEPENDENCIES.md, section 6) rereads
+        /// those files, since the scan cannot see whether a later version registers the provider regardless.
+        public struct Verdict: Sendable, Equatable {
+            public let fatal: [Marker]
+            public let reported: [Marker]
+            public var passes: Bool { fatal.isEmpty }
+        }
+
+        public static func verdict(libraryAt path: String) throws -> Verdict {
+            let found = try scan(libraryAt: path)
+            let isDLL = (path as NSString).pathExtension.lowercased() == "dll"
+            return Verdict(fatal: found.filter { !(isDLL && $0.text == windowsProviderName) },
+                           reported: found.filter { isDLL && $0.text == windowsProviderName })
+        }
+
         /// The markers found in the file at `path`, in `markers` order; empty for a library without the client.
         public static func scan(libraryAt path: String) throws -> [Marker] {
             guard FileManager.default.fileExists(atPath: path) else {

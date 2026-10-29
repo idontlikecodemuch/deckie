@@ -38,12 +38,11 @@ Mac) reviews and merges this track's branch, `pc-linux`, and runs anything that 
   development, CI and the bench; a shipped build carries a library built by us without the reporting client,
   proven by a release test; curl stays off the allowlist), YAMNet's training data (confirmed), crate format v1
   (entry 10, addendum) and MPL 2.0.
-- ONNX Runtime built by us without the reporting client: the workflow is merged (`onnxruntime-build.yml`: Linux,
-  Windows, macOS arm64, the scan as a gate before upload, archives pinned by hash, publish to a release on
-  request). Its first run stopped at its own guard within a minute: the release tag `v1.31.1` points at a different
-  commit than the one Microsoft's archives name as their source, so the guard now pins both and the build uses the
-  archives' commit; the second run started with that fix. The build times, sizes and hashes go into entry 14 when
-  it finishes. Two findings from reading ONNX Runtime's build files are with the main session: its build patches
+- ONNX Runtime built by us without the reporting client: done on Linux and macOS, the Windows archive one run
+  away (entry 14). Run 2 built all three libraries in 22 to 47 minutes; the Linux and macOS gates found no trace
+  of the client; the Windows gate found the one marker predicted, the event-log provider's name, and the rule the
+  main session set for it is now in the scan, so run 3 (started by that change) should upload the Windows archive
+  too. Then the archives are published to a release by hand and their hashes pinned. Two findings from reading ONNX Runtime's build files are with the main session: its build patches
   four Eigen files on every platform (Microsoft's builds too), and on Windows the event-log provider's name stays
   in the library even though nothing registers it. Both decided (Oct 29): the two patch files now ship beside
   Eigen's notice (`core/notices/eigen/`) and the wording is "unmodified by Deckie; carries ONNX Runtime's two
@@ -820,3 +819,41 @@ when more than one job runs. The crates: the same ten files from both commits, e
 byte for byte identical (across all eight crates, 64 sidecar files hash to 8 values, each seen 8 times), and the
 JSON differing only in the analysis times, the crate id, the creation time and the run's name. The engine version
 is unchanged by the memory work; it bumps to 0.2.0 with the renames below.
+
+## Oct 29, 2026: ONNX Runtime built by us, without the reporting client (entry 14)
+
+**Where it landed.** The workflow `.github/workflows/onnxruntime-build.yml` builds ONNX Runtime 1.31.1 from
+Microsoft's source on GitHub's machines, for Linux x86_64, Windows x64 and macOS arm64, with the build option that
+leaves the usage-reporting client out (`--no_telemetry`), and scans each library for the client's traces before
+uploading it, with the same nine markers the Swift release test uses (a first job checks the three lists are
+equal). Each run writes the library's and the archive's size and SHA-256 and the build time into its summary, ready
+for DEPENDENCIES.md; started by hand with "publish" ticked, it puts the archives on this repository's release
+`onnxruntime-1.31.1-deckie-no-telemetry`, from which `fetch-onnxruntime.sh --deckie` will fetch them once the
+hashes are pinned. The build's dependencies come from ONNX Runtime's own pinned list (`cmake/deps.txt`, each by
+SHA-1); the one declared without a hash, mp11, is fetched and checked by Deckie's helper first.
+
+**The first run stopped at its own guard, and taught something.** Microsoft's release tag `v1.31.1` points at a
+different commit than the one its archives name as their source (the tag is a lightweight one at 6af1a932; the
+archives say 41d4d61f: Microsoft packaged 1.31.1 from a later point of the release branch than it tagged). Deckie
+builds the archives' commit, the source of the binaries this track was developed and tested against, and the guard
+now pins both commits and stops if either moves.
+
+**Run 2, the numbers.** Linux: 22 min 42 s; `libonnxruntime.so.1.31.1` 27,162,888 bytes (7.4 percent smaller than
+Microsoft's; the client and its curl, mbedTLS, SQLite and zlib are gone); gate 0 of 9 markers; uploaded. macOS:
+21 min 53 s; 28,793,144 bytes (35.7 percent smaller: Microsoft's also carries the CoreML and WebGPU back ends
+this CPU-only build leaves out); 0 of 9; uploaded. Windows: 46 min 54 s; `onnxruntime.dll` 18,449,408 bytes (6.9
+percent larger than Microsoft's, which is built with link-time optimisation and this is not); gate 1 of 9: the
+event-log provider's name, `Microsoft.ML.ONNXRuntime`, exactly as predicted from the source, so the archive was
+not uploaded. The hashes are in DEPENDENCIES.md section 6.
+
+**The Windows rule, now applied.** The main session had decided in advance: the provider's name is reported, not
+fatal, in a Windows library, with the proof written beside it. ONNX Runtime's `windows/telemetry.cc` defines the
+provider with its name and is compiled into every Windows build; the one call that registers it,
+`TraceLoggingRegisterEx` in `WindowsTelemetry`'s constructor, runs only when the Windows environment holds a
+`WindowsTelemetry`, which `--no_telemetry` prevents (neither `USE_WINDOWS_TELEMETRY` nor `USE_1DS_TELEMETRY` is
+defined, so the environment holds the base class, whose functions do nothing). The PowerShell gate and the Swift
+scan's new `verdict` both apply it, for `.dll` files only; every other marker still fails, everywhere; a test plants
+the name in a `.dll` and in a `.so` and checks the two verdicts. Since a later ONNX Runtime could register the
+provider regardless, the version-bump checklist includes rereading those two source files. Run 3, started by this
+change, rebuilds all three; when the Windows archive is uploaded, the three are published by hand and their hashes
+pinned.

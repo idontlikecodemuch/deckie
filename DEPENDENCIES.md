@@ -359,7 +359,7 @@ Christopher approved downloading the release archives on Oct 28, 2026, and the l
 | The libraries in them | `lib/libonnxruntime.so.1.31.1`, 29,345,384 bytes, SHA-256 `a96f132e5eb5ca04e23a7d2fc1078fb95aa591e8d71d0f237702ece3a1e0f4ea`; `lib/onnxruntime.dll`, 17,253,728 bytes, SHA-256 `cb2fa518b18356617f6f9f460c012501da2819ec7e5c1d80bd8f5de20492db0c`; `lib/libonnxruntime.1.31.1.dylib`, 44,797,256 bytes, SHA-256 `17500d6b1e37e70f43a2c57d94233a1bc29fbcb297be0a5f8c7c13184f3307ba`. The macOS library carries the 1DS reporting client too (its address, namespace and source-file names are in it) but none of curl, mbedTLS or SQLite: on macOS the client uses the system's own HTTP, TLS and database libraries. `ORT_DISABLE_TELEMETRY` is honoured there as on Linux |
 | Vendored headers | `onnxruntime_c_api.h`, 422,790 bytes, SHA-256 `43d584f596ef66820421317df32a79a95fc1d39ee46cb3971a870c08d8ba4baa`; `onnxruntime_ep_c_api.h`, 165,249 bytes, `b64036772115dbc6f06a900487ce22d34e862100db03e2ad62210758e27a19b2`; `onnxruntime_error_code.h`, 2,775 bytes, `5ce3b054e798eced8d14f5b86e98692fd33470463f96194ce0700a2d53dd8721` |
 
-**Deckie's own build** (the library a shipped build carries; first run pending). The workflow
+**Deckie's own build** (the library a shipped build carries; first built Oct 29, 2026, the workflow's run 2). The workflow
 `.github/workflows/onnxruntime-build.yml` builds the release above on GitHub's machines, Linux x86_64
 (`ubuntu-latest`), Windows x64 (`windows-latest`) and macOS arm64 (`macos-latest`), when started by hand (Actions,
 onnxruntime-build, Run workflow) and when a push changes the workflow or its scripts. Each job checks out commit
@@ -389,21 +389,29 @@ the library's and the archive's sizes and SHA-256 values and the build time into
 
 | Platform | File | Bytes | SHA-256 |
 |---|---|---|---|
-| Linux x86_64 | `onnxruntime-linux-x64-1.31.1-deckie-no-telemetry.tgz` | first run pending | first run pending |
-| | `lib/libonnxruntime.so.1.31.1` in it | first run pending | first run pending |
-| Windows x64 | `onnxruntime-win-x64-1.31.1-deckie-no-telemetry.zip` | first run pending | first run pending |
-| | `lib/onnxruntime.dll` in it | first run pending | first run pending |
-| macOS arm64 | `onnxruntime-osx-arm64-1.31.1-deckie-no-telemetry.tgz` | first run pending | first run pending |
-| | `lib/libonnxruntime.1.31.1.dylib` in it | first run pending | first run pending |
+| Linux x86_64 | `onnxruntime-linux-x64-1.31.1-deckie-no-telemetry.tgz` | published run pending | published run pending |
+| | `lib/libonnxruntime.so.1.31.1` in it (run 2, Oct 29, 2026) | 27,162,888 | `e7f280f9f2805cfe1b5f0e488388f845bded5bd7dee8e75883cb4dd604c175a3` |
+| Windows x64 | `onnxruntime-win-x64-1.31.1-deckie-no-telemetry.zip` | published run pending | published run pending |
+| | `lib/onnxruntime.dll` in it (run 2) | 18,449,408 | `790026a5e0362fa21e3d578eb9b17abe3c2be37aba8927af916dbf61a5030d95` |
+| macOS arm64 | `onnxruntime-osx-arm64-1.31.1-deckie-no-telemetry.tgz` | published run pending | published run pending |
+| | `lib/libonnxruntime.1.31.1.dylib` in it (run 2) | 28,793,144 | `11aaad020b6da108e1ba24393d77a431884cf1a9b4097198e3c48f7c31b0f7c1` |
 
-The build times, and the sizes against Microsoft's libraries (29,345,384 bytes on Linux, 17,253,728 on Windows,
-44,797,256 on macOS, where Microsoft's also holds the CoreML and WebGPU execution providers this CPU-only build leaves
-out), go into the status log with the first run. Two things found while reading ONNX Runtime's build files at the
-pinned commit, both with the main session: **on Windows**, `--no_telemetry` means the event-tracing provider is never
-registered (the Windows environment then holds ONNX Runtime's base telemetry class, whose functions do nothing,
-instead of `WindowsTelemetry`), but the provider's definition, `onnxruntime/core/platform/windows/telemetry.cc`, is
-compiled into every Windows build and referred to by `inference_session.cc`, so its name, `Microsoft.ML.ONNXRuntime`,
-may still be in the DLL, in which case the Windows gate fails by design; and **Eigen**: ONNX Runtime's build applies
+The archives' own sizes and hashes are recorded from the run that publishes them to the release (the run's job
+summaries give them); every run builds afresh, so a later run's library may hash differently (build dates inside
+the files), and the pinned values are the published ones.
+
+Run 2 (Oct 29, 2026), wall clock from configure to the finished library, on GitHub's 4-core machines: Linux 22 min
+42 s, macOS 21 min 53 s, Windows 46 min 54 s. Against Microsoft's libraries: Linux 27,162,888 bytes against
+29,345,384 (7.4 percent smaller, the client and its curl, mbedTLS, SQLite and zlib gone); macOS 28,793,144 against
+44,797,256 (35.7 percent smaller: Microsoft's also holds the CoreML and WebGPU execution providers this CPU-only
+build leaves out); Windows 18,449,408 against 17,253,728 (6.9 percent larger, Microsoft's being built with
+link-time optimisation this build does not use). The Linux and macOS gates found 0 of 9 markers; the Windows gate
+found 1 of 9, the event-tracing provider's name, as predicted below. Two things found while reading ONNX Runtime's
+build files at the pinned commit, both decided by the main session: **on Windows**, `--no_telemetry` means the
+event-tracing provider is never registered (the Windows environment then holds ONNX Runtime's base telemetry class,
+whose functions do nothing, instead of `WindowsTelemetry`), but the provider's definition,
+`onnxruntime/core/platform/windows/telemetry.cc`, is compiled into every Windows build, so its name,
+`Microsoft.ML.ONNXRuntime`, stays in the DLL (run 2 confirmed it), and the rule for it is below; and **Eigen**: ONNX Runtime's build applies
 two patches of its own to Eigen's source on every platform (`cmake/patches/eigen/s390x-build.patch` and
 `s390x-build-werror.patch`, as Microsoft's builds do), changing three files used only on IBM Z (s390x) and
 `Eigen/src/Core/RandomImpl.h` (a branch for big-endian machines only), so the MPL decision below, which rests on
@@ -490,10 +498,13 @@ patches (IBM Z builds; nothing compiled on Linux, Windows or macOS differs)".
 **The Windows event-tracing provider and the scan** (the main session, Oct 29, 2026, a note on D3). With
 `--no_telemetry` the Windows build never registers its event-tracing provider, but the provider's definition
 (`onnxruntime/core/platform/windows/telemetry.cc`, name `Microsoft.ML.ONNXRuntime`) is compiled into every Windows
-build, so its name may stay in the library. Once the first build confirms that, the Windows scan reports that one
-marker as "present, never registered", naming the function that would register it and that `--no_telemetry` leaves
-it uncalled, so a reader can check the source; it keeps failing hard on every other marker on Windows and on all
-markers on Linux and macOS. No patched build. Because a later version could register the provider whatever the flag,
+build, so its name stays in the library: run 2 confirmed it (1 of 9 markers, the name alone). So the Windows scan
+(`core/Tools/scan-onnxruntime.ps1`) and the Swift scan's `ReportingClientScan.verdict` report that one marker, in a
+`.dll` only, as "present, never registered", naming the one call that would register it, `TraceLoggingRegisterEx`
+in `WindowsTelemetry::WindowsTelemetry()`, and why it never runs: with `--no_telemetry` neither
+`USE_WINDOWS_TELEMETRY` nor `USE_1DS_TELEMETRY` is defined, so `WindowsEnv` (`windows/env.h`) holds the base
+`Telemetry` class and that constructor is never called. Every other marker still fails hard, in any file, and the
+name fails too in a file that is not a `.dll`. No patched build. Because a later version could register the provider whatever the flag,
 the scan is not the only guard: the update steps below include rereading `windows/telemetry.cc`.
 
 **How to update:** choose the release and read its notes for changes to the C API; reread
