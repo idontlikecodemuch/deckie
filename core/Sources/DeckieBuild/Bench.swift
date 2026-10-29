@@ -216,7 +216,7 @@ public enum Bench {
         }
         if let records = o.records { try FileManager.default.createDirectory(at: records, withIntermediateDirectories: true) }
         if analyser == nil && !jobs.isEmpty { try Builder.checkEngine() }
-        let engine = jobs.isEmpty ? nil : try analyser ?? Builder.makeAnalyser(jobs: min(o.jobs, jobs.count))
+        let engine = jobs.isEmpty ? nil : try analyser ?? Bench.makeAnalyser(jobs: min(o.jobs, jobs.count))
         let label = Builder.engineLabel
         let collected = Collected()
         let all = jobs

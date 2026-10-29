@@ -61,7 +61,9 @@ public enum AnalyserError: Error, Equatable, CustomStringConvertible {
 ///   loudness   per-bar `lufs_st` (`KWeighted`), `low_db` and `high_db` (`BandSplit`), onset density, integrated
 ///              loudness, loudness range, true peak
 ///   vocal      only with a `VocalTagger` (by default `DeckieVocalTagger`, YAMNet, when its model is there): the
-///              per-bar vocal probability on the mono mix at 44.1 kHz; the onset pattern is computed just before it
+///              per-bar vocal probability on the mono mix at 44.1 kHz; the onset pattern is computed just before it;
+///              then, with a second model (`secondOpinion`: by default PANNs when its model is there), its opinion
+///              on the same mono mix and bars (`VocalSecondOpinion`), which changes nothing else
 ///   windows    sections, fade-out (`Loudness.shortTerm`, `FadeOut`), mix windows (`MixWindows`), with a tagger the
 ///              vocal structure (`VocalStructure`, from its frame-by-frame scores) and the hook candidates (`Hooks`),
 ///              the key's confidence (`KeyConfidence`, research R's sure rule), the key of both mix windows judged
@@ -75,28 +77,39 @@ public final class Analyser: Sendable {
     /// Why there is no vocal tagger, when the default construction found none (the models that are missing and what
     /// to do); nil otherwise.
     public let vocalTaggerNote: String?
+    /// A second vocal model, run after the tagger on the same audio and bars, whose opinion is recorded beside the
+    /// tagger's (`Analysis.vocalSecondOpinion`, the lab JSON's `deckie.vocal.second_opinion`) and changes nothing
+    /// else: not the tagger's model name, the vocal values the sections, windows and flags read, or the crate. Only
+    /// with a tagger.
+    public let secondOpinion: (any VocalPatchModel)?
 
     /// The default analyser: `beatTracker` (nil loads the Beat This! model from where `BeatTracker` looks for it)
-    /// and Deckie's vocal tagger (`DeckieVocalTagger.loadDefault()`, YAMNet) when its model is there. When it is not,
-    /// the analyser runs without one (no vocal block in its records, the flag `vocal_unknown`) and
-    /// `vocalTaggerNote` says what is missing. A model that is there but does not load is an error.
+    /// and Deckie's vocal tagger (`DeckieVocalTagger.loadDefault()`, YAMNet) when its model is there, with PANNs as
+    /// the second opinion when its model is there too (`PANNs.loadDefault()`). When YAMNet's is not, the analyser
+    /// runs without a tagger (no vocal block in its records, the flag `vocal_unknown`) and `vocalTaggerNote` says
+    /// what is missing. A model that is there but does not load is an error.
     public convenience init(beatTracker: BeatTracker? = nil) throws {
         let tracker = try beatTracker ?? BeatTracker()
         let tagger = try DeckieVocalTagger.loadDefault(runtime: tracker.session.runtime)
         let note = tagger == nil
             ? "no vocal tagger: " + DeckieVocalTagger.missingModels().map(\.description).joined(separator: "; ") : nil
-        self.init(beatTracker: tracker, vocalTagger: tagger, note: note)
+        let second = tagger == nil ? nil : try PANNs.loadDefault(runtime: tracker.session.runtime)
+        self.init(beatTracker: tracker, vocalTagger: tagger, secondOpinion: second, note: note)
     }
 
-    /// An analyser with `beatTracker` (nil loads the Beat This! model from where `BeatTracker` looks for it) and the
-    /// given vocal tagger, or none.
-    public convenience init(beatTracker: BeatTracker?, vocalTagger: (any VocalTagger)?) throws {
-        self.init(beatTracker: try beatTracker ?? BeatTracker(), vocalTagger: vocalTagger, note: nil)
+    /// An analyser with `beatTracker` (nil loads the Beat This! model from where `BeatTracker` looks for it), the
+    /// given vocal tagger or none, and the given second vocal model or none.
+    public convenience init(beatTracker: BeatTracker?, vocalTagger: (any VocalTagger)?,
+                            secondOpinion: (any VocalPatchModel)? = nil) throws {
+        self.init(beatTracker: try beatTracker ?? BeatTracker(), vocalTagger: vocalTagger, secondOpinion: secondOpinion,
+                  note: nil)
     }
 
-    init(beatTracker: BeatTracker, vocalTagger: (any VocalTagger)?, note: String?) {
+    init(beatTracker: BeatTracker, vocalTagger: (any VocalTagger)?, secondOpinion: (any VocalPatchModel)? = nil,
+         note: String?) {
         self.beatTracker = beatTracker
         self.vocalTagger = vocalTagger
+        self.secondOpinion = vocalTagger == nil ? nil : secondOpinion
         self.vocalTaggerNote = note
     }
 
@@ -233,9 +246,16 @@ public final class Analyser: Sendable {
 
         // ------------------------------------------------------------------ vocal probability (optional)
         var vocal: VocalActivity? = nil
+        var secondOpinion: VocalSecondOpinion? = nil
         if let tagger = vocalTagger {
-            let v = try tagger.vocalActivity(mono: mono, sampleRate: SR, barTimes: bars.barTimes)
+            var v = try tagger.vocalActivity(mono: mono, sampleRate: SR, barTimes: bars.barTimes)
             guard v.perBar.count == bars.nBars else { throw AnalyserError.vocalBars(got: v.perBar.count, bars: bars.nBars) }
+            if let model = self.secondOpinion {
+                let s = try VocalSecondOpinion.run(model, mono: mono, sampleRate: SR, barTimes: bars.barTimes)
+                v.secondOpinion = s.summary
+                v.stages.append(.init(model.name, s.seconds))
+                secondOpinion = s
+            }
             vocal = v
             lap("vocal")
         }
@@ -313,6 +333,7 @@ public final class Analyser: Sendable {
             perBar: .init(lufsSt: lufs, lowDb: levels.lowDB, highDb: levels.highDB, onsetDensity: onsetDensity,
                           vocalProb: vocal?.perBar),
             onsetPattern16: pattern, vocal: vocal, vocalModel: vocal == nil ? nil : vocalTagger?.modelName,
+            vocalSecondOpinion: secondOpinion,
             vocalStructure: vocalStructure, hooks: hooks, flags: flags, localTempo: localTempo, timings: timings)
     }
 }

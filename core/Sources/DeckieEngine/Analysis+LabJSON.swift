@@ -238,10 +238,7 @@ extension Analysis {
             members.append(m("\(name)_prob", J.roundList(v.seriesPerBar[name]!, 3)))
         }
         members += readingsMembers(v.readings)
-        members.append(m("second_opinion", v.secondOpinion.map {
-            .object([m("model", .string($0.model)), m("mean_prob", J.round($0.meanProbability, 4)),
-                     m("per_bar", J.roundList($0.perBar, 3))])
-        } ?? .null))
+        members.append(m("second_opinion", secondOpinionBlock(v)))
         members.append(m("style_model", J.text(v.style == nil ? nil : v.styleModel)))
         members.append(m("style", v.style.map { J.roundList($0, 4) } ?? .null))
         members.append(m("timing_s", .object(v.stages.map { m($0.name, J.round($0.seconds, 3)) })))

@@ -14,8 +14,9 @@
 // COnnxRuntime: ONNX Runtime's C API header (vendored, MIT; DEPENDENCIES.md) and a small C shim that opens the
 // library at run time (dlopen, or LoadLibraryExW on Windows), so nothing links it and the package builds without it.
 // DeckieInference: ONNX Runtime from Swift (`OnnxRuntime`, `OnnxSession`), the Beat This! beat tracker
-// (`BeatTracker`) and the vocal tagger (`YAMNet`, `DeckieVocalTagger`) on it; the models' front ends, the tracker's
-// chunking and peak picking, and the averaging of patches into bars are plain Swift in DeckieCore.
+// (`BeatTracker`), the vocal tagger (`YAMNet`, `DeckieVocalTagger`) and its second opinion (`PANNs`) on it; the models'
+// front ends (PANNs' is inside its graph), the tracker's chunking and peak picking, and the averaging of patches into
+// bars are plain Swift in DeckieCore.
 // DeckieEngine: the Windows and Linux analyser, mixer/analyze.py's pipeline in the lab's order on the ported pieces
 // (decoder, Beat This! through ONNX Runtime, DeckieCore's DSP); its record serialises to the lab's feature JSON and
 // converts to a crate track.

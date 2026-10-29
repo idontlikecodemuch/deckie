@@ -160,6 +160,9 @@ public struct Analysis: Sendable {
     /// `per_bar.vocal_prob`, the flag `vocal_unknown`).
     public var vocal: VocalActivity?
     public var vocalModel: String?
+    /// A second vocal model's opinion in full (`Analyser.secondOpinion`, PANNs when its model file is there), for the
+    /// lab JSON's `deckie.vocal.second_opinion`; nil without one. `vocal.secondOpinion` carries its summary.
+    public var vocalSecondOpinion: VocalSecondOpinion? = nil
     /// Where the track is sung, to the beat (memo Q's items A1 to A6: spans, first and last sung beat with the pickup,
     /// free intro and outro and their kinds, free gaps, the exposed-vocal proxy, span ends against the lattice); nil
     /// without a vocal tagger.
