@@ -204,11 +204,38 @@ public final class OnnxRuntime: @unchecked Sendable {
         /// Runtime's parallel execution mode is on, which these sessions leave off (its default, sequential).
         public var interOpThreads: Int
         public var graphOptimization: GraphOptimization
+        /// ONNX Runtime's CPU memory arena: on, the session keeps the memory of its first runs and grows it in regions
+        /// that double in size, so it never returns it and can hold up to twice what a run needs; off, each run takes
+        /// its memory from the system allocator and gives it back when it ends. Either way the same kernels run in the
+        /// same order on the same values, so the outputs are the same.
+        public var cpuMemoryArena: Bool
+        /// ONNX Runtime's memory pattern: on, the session plans one block for a run's intermediate values from the
+        /// shapes of an earlier run with the same input shapes; off, each value is allocated as it is made and freed
+        /// after its last use. Allocation only; the outputs are the same.
+        public var memoryPattern: Bool
+        /// With the arena on, return the arena's unused regions to the system at the end of every run (ONNX Runtime's
+        /// run option `memory.enable_memory_arena_shrinkage`). Without the arena it does nothing. On by default: without
+        /// it the arena keeps what the largest run needed, 1.4 GB for Beat This!'s 30-second chunks, for the life of
+        /// the session, and one analysis peaks at 1.9 GB instead of 1.1 GB (Linux, release build, measured with
+        /// deckie-memprobe); with it the runs take the same time and give bit-identical outputs.
+        public var arenaShrinkage: Bool
+        /// At most this many runs of the session at once; further callers wait their turn. 0: no limit (the default).
+        /// Each run of a large model holds its intermediate values while it runs (Beat This!'s 30-second chunk, about
+        /// 0.7 GB), so this bounds the memory of many threads sharing one session, at a cost in speed: on a four-core
+        /// machine, four analyses at once took 40 percent longer with two runs at a time and 80 percent with one,
+        /// because one run does not use more cores well (deckie-memprobe --model-runs).
+        public var concurrentRuns: Int
 
-        public init(intraOpThreads: Int = 0, interOpThreads: Int = 0, graphOptimization: GraphOptimization = .all) {
+        public init(intraOpThreads: Int = 0, interOpThreads: Int = 0, graphOptimization: GraphOptimization = .all,
+                    cpuMemoryArena: Bool = true, memoryPattern: Bool = true, arenaShrinkage: Bool = true,
+                    concurrentRuns: Int = 0) {
             self.intraOpThreads = intraOpThreads
             self.interOpThreads = interOpThreads
             self.graphOptimization = graphOptimization
+            self.cpuMemoryArena = cpuMemoryArena
+            self.memoryPattern = memoryPattern
+            self.arenaShrinkage = arenaShrinkage
+            self.concurrentRuns = concurrentRuns
         }
     }
 
@@ -229,15 +256,18 @@ public final class OnnxSession: @unchecked Sendable {
     public let outputNames: [String]
 
     let session: OpaquePointer
+    /// Holds back runs beyond `options.concurrentRuns`.
+    let turns: DispatchSemaphore?
 
     init(runtime: OnnxRuntime, modelPath: String, options: OnnxRuntime.SessionOptions) throws {
         self.runtime = runtime
         self.modelPath = modelPath
         self.options = options
         let api = runtime.api.pointee
-        guard options.intraOpThreads >= 0 && options.interOpThreads >= 0 else {
-            throw OnnxRuntimeError.invalidInput("thread counts cannot be negative")
+        guard options.intraOpThreads >= 0 && options.interOpThreads >= 0 && options.concurrentRuns >= 0 else {
+            throw OnnxRuntimeError.invalidInput("thread and run counts cannot be negative")
         }
+        turns = options.concurrentRuns > 0 ? DispatchSemaphore(value: options.concurrentRuns) : nil
         var so: OpaquePointer? = nil
         try runtime.check(api.CreateSessionOptions(&so))
         guard let so else { throw OnnxRuntimeError.runtime(code: .fail, message: "CreateSessionOptions returned nothing") }
@@ -252,6 +282,8 @@ public final class OnnxSession: @unchecked Sendable {
         case .all: level = ORT_ENABLE_ALL
         }
         try runtime.check(api.SetSessionGraphOptimizationLevel(so, level))
+        try runtime.check(options.cpuMemoryArena ? api.EnableCpuMemArena(so) : api.DisableCpuMemArena(so))
+        try runtime.check(options.memoryPattern ? api.EnableMemPattern(so) : api.DisableMemPattern(so))
         var s: OpaquePointer? = nil
         try runtime.check(deckie_ort_create_session(runtime.api, runtime.env, modelPath, so, &s))
         guard let s else { throw OnnxRuntimeError.runtime(code: .fail, message: "CreateSession returned no session") }
@@ -328,11 +360,19 @@ public final class OnnxSession: @unchecked Sendable {
         let inPointers = inC.map { Optional(UnsafePointer($0)) }, outPointers = outC.map { Optional(UnsafePointer($0)) }
         var results = [OpaquePointer?](repeating: nil, count: outNames.count)
         defer { for r in results where r != nil { api.ReleaseValue(r) } }
+        var runOptions: OpaquePointer? = nil
+        defer { if runOptions != nil { api.ReleaseRunOptions(runOptions) } }
+        if options.arenaShrinkage && options.cpuMemoryArena {
+            try runtime.check(api.CreateRunOptions(&runOptions))
+            try runtime.check(api.AddRunConfigEntry(runOptions, "memory.enable_memory_arena_shrinkage", "cpu:0"))
+        }
+        turns?.wait()
+        defer { turns?.signal() }
         let status = inPointers.withUnsafeBufferPointer { ip in
             outPointers.withUnsafeBufferPointer { op in
                 values.withUnsafeBufferPointer { vp in
                     results.withUnsafeMutableBufferPointer { rp in
-                        api.Run(session, nil, ip.baseAddress, vp.baseAddress, inNames.count, op.baseAddress, outNames.count,
+                        api.Run(session, runOptions, ip.baseAddress, vp.baseAddress, inNames.count, op.baseAddress, outNames.count,
                                 rp.baseAddress)
                     }
                 }
