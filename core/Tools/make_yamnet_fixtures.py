@@ -156,6 +156,7 @@ def main():
     args = ap.parse_args()
 
     import tensorflow as tf
+    os.environ.setdefault("ORT_DISABLE_TELEMETRY", "1")  # official ONNX Runtime builds report usage to Microsoft otherwise
     import onnxruntime as ort
     sys.path.insert(0, os.path.abspath(args.source))
     import params as yamnet_params

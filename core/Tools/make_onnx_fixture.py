@@ -14,6 +14,7 @@ import os
 import numpy as np
 import onnx
 from onnx import TensorProto, helper
+os.environ.setdefault("ORT_DISABLE_TELEMETRY", "1")  # official ONNX Runtime builds report usage to Microsoft otherwise
 import onnxruntime as ort
 
 HERE = os.path.dirname(os.path.abspath(__file__))

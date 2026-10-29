@@ -134,6 +134,7 @@ def main():
     import tf_keras
     import tf2onnx
     import onnx
+    os.environ.setdefault("ORT_DISABLE_TELEMETRY", "1")  # official ONNX Runtime builds report usage to Microsoft otherwise
     import onnxruntime as ort
     sys.path.insert(0, source)
     import params as yamnet_params

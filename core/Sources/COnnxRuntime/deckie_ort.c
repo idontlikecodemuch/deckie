@@ -1,14 +1,14 @@
 // deckie_ort.c: opens ONNX Runtime's shared library at run time (see deckie_ort.h). Nothing here reaches the
-// network; it only opens a file the caller names.
+// network; it only opens a file the caller names, after switching the library's own reporting off.
 #include "deckie_ort.h"
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 #ifdef _WIN32
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
-#include <stdlib.h>
 #else
 #include <dlfcn.h>
 #endif
@@ -21,6 +21,25 @@ static void put_message(char *message, size_t capacity, const char *text) {
 }
 
 uint32_t deckie_ort_header_api_version(void) { return ORT_API_VERSION; }
+
+static const char *const telemetry_variable = "ORT_DISABLE_TELEMETRY";
+
+const char *deckie_ort_telemetry_setting(void) { return getenv(telemetry_variable); }
+
+/// ONNX Runtime's official builds report usage to Microsoft unless ORT_DISABLE_TELEMETRY is set before the library
+/// starts: the Linux build carries Microsoft's 1DS reporting client (with curl, mbedTLS, SQLite and zlib inside it)
+/// and the address mobile.events.data.microsoft.com; the Windows build reports through Windows' event tracing.
+/// The C API's DisableTelemetryEvents, called once the environment exists, comes after the client has started and
+/// stored a device identifier, so the variable is set here, in this process, before the library is opened. A value
+/// the user set stands.
+static void disable_telemetry(void) {
+    if (getenv(telemetry_variable) != NULL) return;
+#ifdef _WIN32
+    _putenv_s(telemetry_variable, "1");
+#else
+    setenv(telemetry_variable, "1", 0);
+#endif
+}
 
 #ifdef _WIN32
 /// UTF-8 to a newly allocated wide string (free() it), or NULL.
@@ -54,6 +73,7 @@ const OrtApi *deckie_ort_load(const char *utf8_path, DeckieOrtLoadError *error, 
     if (error == NULL) error = &ignored;
     if (library_version != NULL) *library_version = NULL;
     put_message(message, message_capacity, "");
+    disable_telemetry();
     DeckieGetApiBase get_api_base = NULL;
 
 #ifdef _WIN32

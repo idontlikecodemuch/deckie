@@ -31,10 +31,16 @@ typedef enum DeckieOrtLoadError {
 /// The API version of the vendored header (ORT_API_VERSION).
 uint32_t deckie_ort_header_api_version(void);
 
+/// The value of ORT_DISABLE_TELEMETRY in this process, or NULL when it is unset. ONNX Runtime's official builds
+/// report usage to Microsoft unless it is set before the library starts; deckie_ort_load sets it to "1" first
+/// unless the user already set it.
+const char *deckie_ort_telemetry_setting(void);
+
 /// Opens the ONNX Runtime library at `utf8_path` and returns its function table for ORT_API_VERSION, or NULL.
 /// On return `*error` says which step failed; `message` (if not NULL) gets a NUL-terminated explanation of at most
 /// `message_capacity` bytes; `*library_version` (if not NULL) points to ONNX Runtime's version string (owned by the
 /// library) when the file was ONNX Runtime, else NULL. The library stays loaded for the life of the process.
+/// Before opening it, sets ORT_DISABLE_TELEMETRY=1 in this process unless it is already set (above).
 const OrtApi *deckie_ort_load(const char *utf8_path, DeckieOrtLoadError *error, const char **library_version,
                               char *message, size_t message_capacity);
 

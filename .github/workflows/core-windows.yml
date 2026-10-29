@@ -13,6 +13,9 @@ on:
 jobs:
   probe:
     runs-on: windows-latest
+    env:
+      # As in core-linux.yml: ONNX Runtime's usage reporting off, should a later step ever run it here.
+      ORT_DISABLE_TELEMETRY: "1"
     steps:
       - uses: actions/checkout@v4
       # The action's documented reference is @main; its tag v3 does not exist (first probe run, Oct 28).

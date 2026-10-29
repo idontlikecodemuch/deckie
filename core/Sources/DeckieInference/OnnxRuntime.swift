@@ -164,7 +164,16 @@ public final class OnnxRuntime: @unchecked Sendable {
         try Self.check(table, table.pointee.CreateEnv(ORT_LOGGING_LEVEL_WARNING, "deckie", &e))
         guard let e else { throw OnnxRuntimeError.runtime(code: .fail, message: "CreateEnv returned no environment") }
         env = e
+        // The real switch is ORT_DISABLE_TELEMETRY, which deckie_ort_load sets before opening the library (see
+        // deckie_ort.c); this call is the C API's own, kept as a second layer.
         try Self.check(table, table.pointee.DisableTelemetryEvents(e))
+    }
+
+    /// The value of `ORT_DISABLE_TELEMETRY` in this process, the switch that stops ONNX Runtime's official builds
+    /// reporting usage to Microsoft. `load` sets it to "1" before opening the library unless it is already set, so
+    /// after a successful load it is never nil.
+    public static var telemetrySetting: String? {
+        deckie_ort_telemetry_setting().map { String(cString: $0) }
     }
 
     deinit { api.pointee.ReleaseEnv(env) }
