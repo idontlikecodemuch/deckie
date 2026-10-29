@@ -51,6 +51,14 @@ public struct BenchSummary: Sendable {
     public var keyAll: [String: Double]
     public var keyConfident: [String: Double]
     public var keyConfidentCount: Int
+    /// The key against mixer/key_parity_keys.tsv (research R's key method as key_parity.py decided it): the tracks
+    /// with both sides, how many are the same by the parity rule (`TrackScore.keyParity`), the others with their
+    /// differences, and on how many the engine's own key (decided with the literature's profile numbers) equals the
+    /// sheet's key.
+    public var keyParityTracks: Int
+    public var keyParitySame: Int
+    public var keyParityDiffering: [(id: String, text: String)]
+    public var keyDecidedAsParity: Int
     public var lufsDelta, truePeakDelta: Stat
     /// Share of tracks more than 1 LU from the lab.
     public var lufsOver1: Double?
@@ -93,6 +101,11 @@ public struct BenchSummary: Sendable {
         let confident = scores.filter { ($0.keyConfidenceLab ?? 0) >= 0.65 }
         keyConfident = relations(confident)
         keyConfidentCount = confident.count
+        let parity = scores.filter { $0.keyParity != nil }
+        keyParityTracks = parity.count
+        keyParitySame = parity.filter { $0.keyParity == "same" }.count
+        keyParityDiffering = parity.compactMap { $0.keyParity == "same" ? nil : ($0.id, $0.keyParity!) }
+        keyDecidedAsParity = parity.filter { $0.keyEngine == $0.keyParityReference?.key }.count
         let lufs = scores.compactMap(\.lufsDelta)
         lufsDelta = Stat(lufs, signed: true)
         lufsOver1 = lufs.isEmpty ? nil : Double(lufs.filter { abs($0) > 1 }.count) / Double(lufs.count)
@@ -184,6 +197,13 @@ extension BenchSummary {
             .init("key", .object([.init("all", shares(keyAll)),
                                   .init("lab_confident", shares(keyConfident)),
                                   .init("lab_confident_tracks", .int(keyConfidentCount))])),
+            .init("key_parity", .object([
+                .init("tracks", .int(keyParityTracks)), .init("same", .int(keyParitySame)),
+                .init("decided_as_key_parity_py", .int(keyDecidedAsParity)),
+                .init("differing", .array(keyParityDiffering.map {
+                    .object([.init("id", .string($0.id)), .init("differences", .string($0.text))])
+                })),
+            ])),
             .init("integrated_lufs_delta", lufsDelta.json()), .init("integrated_lufs_over_1_lu", num(lufsOver1)),
             .init("true_peak_delta_db", truePeakDelta.json()),
             .init("section_recall", sectionRecall.json()), .init("section_precision", sectionPrecision.json()),
@@ -214,6 +234,13 @@ extension TrackScore {
             .init("octave_apart", .bool(octaveApart)),
             .init("key_engine", .string(keyEngine)), .init("key_lab", .string(keyLab)),
             .init("key_confidence_lab", num(keyConfidenceLab, 3)), .init("key_relation", .string(keyRelation)),
+            .init("key_parity_py", keyParityReference.map { .string($0.key) } ?? .null),
+            .init("key_parity_py_margin", num(keyParityReference?.margin)),
+            .init("key_parity_py_sure", keyParityReference.map { .bool($0.sure) } ?? .null),
+            .init("key_engine_parity", keyParityEngine.map { .string($0.camelot) } ?? .null),
+            .init("key_engine_parity_margin", num(keyParityEngine?.margin)),
+            .init("key_engine_parity_sure", keyParityEngine.map { .bool($0.sure) } ?? .null),
+            .init("key_parity", keyParity.map(JSONValue.string) ?? .null),
             .init("integrated_lufs_delta", num(lufsDelta)), .init("true_peak_delta_db", num(truePeakDelta)),
             .init("section_recall", num(sectionRecall)), .init("section_precision", num(sectionPrecision)),
             .init("vocal_r", num(vocalR)), .init("vocal", .string(vocalNote)),

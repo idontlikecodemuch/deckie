@@ -1,5 +1,6 @@
 import Foundation
 import DeckieCore
+import DeckieLab
 
 /// The fields of a lab feature file (mixer/features/<id>.json) that the bench compares, read from either side: the
 /// lab's committed file, or the engine's record in the same shape (`Analysis.labJSON()`).
@@ -33,8 +34,30 @@ public struct BenchRecord: Decodable, Sendable {
         public var bytes: Int?
         public var madmomWouldRun: String?
         public var vocalModel: String?
+        /// `deckie.key` (engine 0.4.0 on): the HPCP method's decision and its parity decision.
+        public var key: EngineKey?
         enum CodingKeys: String, CodingKey {
-            case engine, bytes, madmomWouldRun = "madmom_would_run", vocalModel = "vocal_model"
+            case engine, bytes, key, madmomWouldRun = "madmom_would_run", vocalModel = "vocal_model"
+        }
+    }
+    /// The HPCP key method's decision as the engine's record writes it (`deckie.key`): the key, margin, agreement and
+    /// sure flag with the literature's profile numbers, and `parity`, the same with key_light.py's (what
+    /// mixer/key_parity.py decides). Older records have neither (their fields are nil).
+    public struct EngineKey: Decodable, Sendable {
+        public var camelot: String?
+        public var margin: Double?
+        public var agree: Int?
+        public var sure: Bool?
+        public var parity: KeyDecision?
+    }
+    /// One decision of the HPCP key method as `deckie.key.parity` writes it.
+    public struct KeyDecision: Decodable, Sendable, Equatable {
+        public var camelot: String
+        public var margin: Double
+        public var agree: Int
+        public var sure: Bool
+        public init(camelot: String, margin: Double, agree: Int, sure: Bool) {
+            self.camelot = camelot; self.margin = margin; self.agree = agree; self.sure = sure
         }
     }
 
@@ -97,6 +120,18 @@ public struct TrackScore: Sendable, Equatable {
     public var keyConfidenceLab: Double?
     /// `exact`, `neighbour` (the relative key, or one step round the wheel) or `other`.
     public var keyRelation: String
+    /// mixer/key_parity_keys.tsv's row for the track (research R's key method as key_parity.py decided it), nil when
+    /// the sheet was not given or has no row for it.
+    public var keyParityReference: KeyParityRow?
+    /// The engine's parity decision (its HPCP method with key_light.py's profile numbers, `deckie.key.parity`), nil
+    /// in a record made before engine 0.4.0.
+    public var keyParityEngine: BenchRecord.KeyDecision?
+    /// Parity of the engine's key with key_parity.py's (the main session's rule: the same key, the margin within
+    /// 1e-3, the same sure flag): nil without both sides, `same`, or the differences in words.
+    public var keyParity: String? {
+        guard let r = keyParityReference, let e = keyParityEngine else { return nil }
+        return r.differences(key: e.camelot, margin: e.margin, sure: e.sure) ?? "same"
+    }
 
     /// Engine minus lab: integrated loudness (LU) and true peak (dB).
     public var lufsDelta: Double?
@@ -205,8 +240,10 @@ public enum BenchMetrics {
     /// Every other element, from the first (Python's `a[::2]`).
     static func everyOther(_ a: [Double]) -> [Double] { stride(from: 0, to: a.count, by: 2).map { a[$0] } }
 
-    /// Compares the engine's record with the lab's for one track.
-    public static func compare(engine e: BenchRecord, lab l: BenchRecord, rel: String, seconds: Double?) -> TrackScore {
+    /// Compares the engine's record with the lab's for one track, and its key with key_parity.py's (`parity`, the
+    /// track's row of mixer/key_parity_keys.tsv) when given.
+    public static func compare(engine e: BenchRecord, lab l: BenchRecord, rel: String, seconds: Double?,
+                               parity: KeyParityRow? = nil) -> TrackScore {
         let eb = e.detectedBeatsS ?? [], lb = l.detectedBeatsS ?? []
         let beatF = fMeasure(reference: lb, estimate: eb)
         let best = [beatF ?? 0, fMeasure(reference: lb, estimate: everyOther(eb)) ?? 0,
@@ -247,6 +284,7 @@ public enum BenchMetrics {
             tempoWithin2Octave: abs(octave - 1) < 0.02, octaveApart: abs(ratio - 2) < 0.04 || abs(ratio - 0.5) < 0.01,
             keyEngine: e.key.camelot, keyLab: l.key.camelot, keyConfidenceLab: l.key.confidence,
             keyRelation: keyRelation(e.key.camelot, l.key.camelot),
+            keyParityReference: parity, keyParityEngine: e.deckie?.key?.parity,
             lufsDelta: lufsDelta, truePeakDelta: peakDelta,
             sectionRecall: sections?.recall, sectionPrecision: sections?.precision,
             vocalR: vocalR, vocalNote: vocalNote,
