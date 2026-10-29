@@ -67,6 +67,7 @@ let package = Package(
                                    "DeckieLab", "DeckieAudio", "DeckieTestSupport"]),
         .testTarget(name: "DeckieBuildTests",
                     dependencies: ["DeckieBuild", "DeckieEngine", "DeckieCrate", "DeckieLab", "DeckieCore", "DeckieInference",
-                                   "DeckieDecode", "DeckieAudio", "DeckieTestSupport"]),
+                                   "DeckieDecode", "DeckieAudio", "DeckieTestSupport"],
+                    exclude: ["Fixtures"]),
     ]
 )

@@ -173,11 +173,24 @@ public enum BenchMetrics {
     public static func pearson(_ x: [Double], _ y: [Double]) -> Double? {
         let n = x.count
         guard n >= 3, y.count == n else { return nil }
-        let mx = x.reduce(0, +) / Double(n), my = y.reduce(0, +) / Double(n)
-        let sx = x.reduce(0) { $0 + ($1 - mx) * ($1 - mx) }.squareRoot()
-        let sy = y.reduce(0) { $0 + ($1 - my) * ($1 - my) }.squareRoot()
+        let mx = pySum(x) / Double(n), my = pySum(y) / Double(n)
+        let sx = pySum(x.map { ($0 - mx) * ($0 - mx) }).squareRoot()
+        let sy = pySum(y.map { ($0 - my) * ($0 - my) }).squareRoot()
         guard sx != 0, sy != 0 else { return nil }
-        return zip(x, y).reduce(0) { $0 + ($1.0 - mx) * ($1.1 - my) } / (sx * sy)
+        return pySum(zip(x, y).map { ($0 - mx) * ($1 - my) }) / (sx * sy)
+    }
+
+    /// Python's built-in `sum` of floats as CPython 3.12 and later computes it: Neumaier's compensated summation, the
+    /// running compensation added once at the end. (`x ** 2` in the lab is `x * x` here: both are one correctly rounded
+    /// product.)
+    static func pySum(_ values: [Double]) -> Double {
+        var sum = 0.0, c = 0.0
+        for x in values {
+            let t = sum + x
+            if abs(sum) >= abs(x) { c += (sum - t) + x } else { c += (x - t) + sum }
+            sum = t
+        }
+        return c != 0 && c.isFinite ? sum + c : sum
     }
 
     /// The bar lines strictly inside the grid, in seconds (mixer/bench_mu.py's `lab_bd`).

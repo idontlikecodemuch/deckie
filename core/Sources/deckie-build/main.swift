@@ -74,11 +74,13 @@ func jobs(_ options: [String: String]) -> Int {
 func url(_ path: String) -> URL { URL(fileURLWithPath: (path as NSString).expandingTildeInPath).standardizedFileURL }
 
 // An interrupted run keeps every finished file in the work folder; say so.
+#if !os(Windows)
 signal(SIGINT) { _ in
     let message = "\ndeckie-build: interrupted; finished files are kept, run the same command again to carry on\n"
     _ = message.withCString { write(2, $0, strlen($0)) }
     _exit(130)
 }
+#endif
 
 var args = Array(CommandLine.arguments.dropFirst())
 if args.isEmpty { say(usage); exit(2) }
