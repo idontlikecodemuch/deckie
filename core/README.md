@@ -351,13 +351,15 @@ no record, counted by reason and extension.
   (no reading at all); otherwise it hashes the file and takes the record of those bytes if there is one (a file that
   was moved, renamed or only touched), and analyses only what is left. An interrupted run (Ctrl-C) loses only the files
   that were being analysed, one per job. A record is reused only if it came from the same engine version with the same
-  tag tempo. `--fresh` empties the work folder first; deleting it is always safe.
+  tag tempo; the version (0.2.0) goes up whenever the record gains or changes fields, so a work folder made by 0.1.0 is
+  analysed again. `--fresh` empties the work folder first; deleting it is always safe.
 - **Nothing left out silently** (decision P18). Every file that cannot be analysed is counted by reason and extension
   in the summary and listed in the manifest's `import_log` with its path below the folder and the reason in words:
   `unsupported` (a format this platform cannot decode: AAC, M4A and WMA on Linux, Ogg, Opus), `protected` (FairPlay),
   `damaged`, `decode_error` (could not be read), `analysis_error` (no beat grid, too few bars, the model failed) and
   `duplicate` (the same bytes as another file, which has the record). Failures are remembered in the work folder too,
-  except a file that could not be read, which is tried again.
+  except a file that could not be read, which is tried again. The log's `built_by` is the building device's model
+  label, the same as each record's `analysis.device`, never the machine's own name.
 - **An existing crate** at `--out` keeps its id, name, creation date and devices, and its records' signatures are
   carried over; something at `--out` that is not a crate is never overwritten.
 - **rekordbox** (`--rekordbox export.xml`, rekordbox's File, Export Collection in xml format): each file is matched to
@@ -365,14 +367,17 @@ no record, counted by reason and extension.
   folder, for an export made on another machine; else the one entry with the same name and size). The DJ's
   `AverageBpm` is the tag tempo the octave alignment follows (as the lab follows its folders' tags); `Name`, `Artist`
   and `Mix` give `ident.title`, `artist` and `version` (source `rekordbox-xml`); the DJ's `Tonality` (classic, Camelot or
-  Open Key notation) becomes the vote `rekordbox-xml` in `key.votes`; the grid markers (`TEMPO`), cue points, loops
-  (`POSITION_MARK`) and playlist membership go into the record's `deckie.rekordbox` block, a proposed addition
-  (`docs/architecture/crate-format.md`, "Additions proposed with the crate builder"). The reader is written here
-  (`XMLScanner`, `RekordboxCollection`) from the format pyrekordbox documents, so no XML library is needed at run time.
+  Open Key notation) becomes the vote `rekordbox-xml` in `key.votes`; the grid markers (`TEMPO`), cue points and loops
+  (`POSITION_MARK`) and playlist membership go into the record's `imported.rekordbox` block as `grid_markers`, `cues`,
+  `loops` and `playlists`, with `imported_at` and rekordbox's own `track_id`, `bpm` and `tonality`; `imported`, the
+  DJ's own data keyed by where it came from, is null for a file the export does not hold (accepted Oct 29:
+  `docs/architecture/crate-format.md`, "Additions with the crate builder"). The reader is written here (`XMLScanner`,
+  `RekordboxCollection`) from the format pyrekordbox documents, so no XML library is needed at run time.
 - **File tags.** A file's own title and artist (ID3v2 2.2 to 2.4 at the front of the file or in a WAV or AIFF chunk,
   or a FLAC Vorbis comment) name the track when rekordbox does not (source `tag`; else the file name, `filename`).
   `--bpm-tags` also takes the file's tempo tag (TBPM, or BPM in a Vorbis comment) as the tag tempo where rekordbox gives
-  none. The tag tempo used is recorded in `deckie.bpm_tag` with its source.
+  none. The tag tempo used is a fact about the file, recorded in `file.tag_bpm`; its source is not kept, as rekordbox's
+  tempo is taken whenever there is one, so the tag is rekordbox's exactly when it equals `imported.rekordbox.bpm`.
 
 Speed, release build on this machine (a shared four-core 2.1 GHz Xeon, Linux), four-minute 44.1 kHz stereo files,
 WAV and 320 kbps MP3: one at a time, 8.3 s a file when nothing else ran (6.3 s of it the beat model; the stages
