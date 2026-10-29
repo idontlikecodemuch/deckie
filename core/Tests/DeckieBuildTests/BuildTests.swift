@@ -84,11 +84,13 @@ struct BuildTests {
         #expect(one.ident.title == "Track One" && one.ident.artist == "The Synths" && one.ident.version == "Extended Mix")
         #expect(one.ident.source == "rekordbox-xml")
         #expect(one.key?.votes["rekordbox-xml"] == "8A" && one.key?.votes["deckie-key-edma"] != nil)
-        #expect(one.deckie?.bpmTag == .init(bpm: 124, source: "rekordbox-xml"))
-        let rb = try #require(one.deckie?.rekordbox)
-        #expect(rb.trackId == "7" && rb.playlists == [["Tonight"]] && rb.grid.count == 1)
-        #expect(rb.cues == [.init(name: "Drop", kind: "cue", hotCue: 0, startS: 16.629, endS: nil),
-                            .init(name: "", kind: "loop", hotCue: nil, startS: 8.242, endS: 16)])
+        // The tag tempo is the file's (rekordbox's AverageBpm here, as imported.rekordbox.bpm shows).
+        #expect(one.file.tagBpm == 124)
+        let rb = try #require(one.imported?.rekordbox)
+        #expect(rb.trackId == "7" && rb.bpm == 124 && rb.playlists == [["Tonight"]] && rb.gridMarkers.count == 1)
+        #expect(rb.cues == [.init(name: "Drop", kind: "cue", hotCue: 0, startS: 16.629)])
+        #expect(rb.loops == [.init(name: "", hotCue: nil, startS: 8.242, endS: 16)])
+        #expect(rb.importedAt.count == 20 && rb.importedAt <= log.builtAt)
         #expect(abs((one.grid?.bpm ?? 0) - TestTrack.bpm) < 0.5 && one.engine.family == "deckie")
         #expect(one.file.sha256.map { $0.hasPrefix(one.id) } == true)
         // The second, named by its own tags (or its file name without ffmpeg); no tag tempo without --bpm-tags.
@@ -98,7 +100,7 @@ struct BuildTests {
         } else {
             #expect(two.ident.title == "Track Two" && two.ident.source == "filename")
         }
-        #expect(two.deckie == nil)
+        #expect(two.imported == nil && two.file.tagBpm == nil)
 
         // Second run: everything unchanged, nothing analysed, the same records.
         options.fresh = false
@@ -107,6 +109,7 @@ struct BuildTests {
         print(second.summary)
         #expect(events2.started.map { [$0.files, $0.unchanged, $0.queued] } == [4, 4, 0])
         #expect(second.analysed == 0 && second.reused == 2)
+        // The same records, the rekordbox entry's imported_at included: it was imported unchanged.
         #expect(try CrateReader.read(from: crateURL).tracks == crate.tracks)
         #expect(try CrateReader.read(from: crateURL).manifest.crateId == crate.manifest.crateId)
 
@@ -131,7 +134,7 @@ struct BuildTests {
                 Issue.record("the MP3 was not analysed again: \(String(describing: events4.outcomes[Fixture.secondTrack]))")
             }
             let tagged = try #require(try CrateReader.read(from: crateURL).tracks.first { $0.file.rel == Fixture.secondTrack })
-            #expect(tagged.deckie?.bpmTag == .init(bpm: 124, source: "file-tag"))
+            #expect(tagged.file.tagBpm == 124 && tagged.imported == nil)
         }
     }
 

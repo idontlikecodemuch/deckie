@@ -104,14 +104,16 @@ let sampleRekordboxXML = """
 
     @Test func whatATrackContributesToTheCrate() throws {
         let c = try RekordboxCollection.parse(Data(sampleRekordboxXML.utf8))
-        let block = c.crateBlock(for: c.tracks[0])
+        let block = c.crateBlock(for: c.tracks[0], importedAt: "2026-10-29T09:00:00Z")
+        #expect(block.importedAt == "2026-10-29T09:00:00Z")
         #expect(block.trackId == "101" && block.bpm == 124 && block.tonality == "Am")
-        #expect(block.grid == [.init(startS: 0.5, bpm: 124, meter: "4/4", beatInBar: 1),
-                               .init(startS: 31.468, bpm: 124, meter: "4/4", beatInBar: 1)])
-        #expect(block.cues == [.init(name: "", kind: "cue", hotCue: nil, startS: 0.5, endS: nil),
-                               .init(name: "Drop", kind: "cue", hotCue: 0, startS: 16.629, endS: nil),
-                               .init(name: "Outro", kind: "cue", hotCue: 2, startS: 47.597, endS: nil),
-                               .init(name: "Loop", kind: "loop", hotCue: nil, startS: 8.242, endS: 16)])
+        #expect(block.gridMarkers == [.init(startS: 0.5, bpm: 124, meter: "4/4", beatInBar: 1),
+                                      .init(startS: 31.468, bpm: 124, meter: "4/4", beatInBar: 1)])
+        // Loops apart from the cues.
+        #expect(block.cues == [.init(name: "", kind: "cue", hotCue: nil, startS: 0.5),
+                               .init(name: "Drop", kind: "cue", hotCue: 0, startS: 16.629),
+                               .init(name: "Outro", kind: "cue", hotCue: 2, startS: 47.597)])
+        #expect(block.loops == [.init(name: "Loop", hotCue: nil, startS: 8.242, endS: 16)])
         #expect(block.playlists == [["Gigs", "Halloween"], ["By location"]])
     }
 

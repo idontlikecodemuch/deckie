@@ -210,16 +210,25 @@ public struct RekordboxCollection: Sendable {
         return v
     }
 
-    /// What the track's entry contributes to its crate record's `deckie.rekordbox` block.
-    public func crateBlock(for track: Track) -> CrateTrack.Deckie.Rekordbox {
-        let kinds = ["cue", "fade-in", "fade-out", "load", "loop"]
+    /// What the track's entry contributes to its crate record's `imported.rekordbox` block, taken from the export at
+    /// `importedAt` (UTC to the second).
+    public func crateBlock(for track: Track, importedAt: String) -> CrateTrack.Imported.Rekordbox {
+        let kinds = ["cue", "fade-in", "fade-out", "load"]
+        // Loops (type 4) are kept apart from the cues, as rekordbox lists them apart; any other type is a cue, an
+        // unknown one kept under its number rather than dropped.
+        let loop = 4
         return .init(
-            trackId: track.trackID, bpm: track.averageBpm, tonality: track.tonality,
-            grid: track.tempos.map { .init(startS: $0.inizio, bpm: $0.bpm, meter: $0.metro, beatInBar: max($0.battito, 1)) },
-            cues: track.marks.map { m in
-                .init(name: m.name, kind: (0..<kinds.count).contains(m.type) ? kinds[m.type] : "type-\(m.type)",
-                      hotCue: m.num >= 0 ? m.num : nil, startS: max(m.start, 0),
-                      endS: m.type == 4 ? m.end.map { max($0, max(m.start, 0)) } : nil)
+            importedAt: importedAt, trackId: track.trackID, bpm: track.averageBpm, tonality: track.tonality,
+            gridMarkers: track.tempos.map {
+                .init(startS: $0.inizio, bpm: $0.bpm, meter: $0.metro, beatInBar: max($0.battito, 1))
+            },
+            cues: track.marks.filter { $0.type != loop }.map { m in
+                .init(name: m.name, kind: kinds.indices.contains(m.type) ? kinds[m.type] : "type-\(m.type)",
+                      hotCue: m.num >= 0 ? m.num : nil, startS: max(m.start, 0))
+            },
+            loops: track.marks.filter { $0.type == loop }.map { m in
+                let start = max(m.start, 0)
+                return .init(name: m.name, hotCue: m.num >= 0 ? m.num : nil, startS: start, endS: m.end.map { max($0, start) })
             },
             playlists: playlists(holding: track.trackID))
     }

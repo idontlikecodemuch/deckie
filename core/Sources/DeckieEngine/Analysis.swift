@@ -88,7 +88,8 @@ public struct Analysis: Sendable {
     public var source: Source
     /// Length of the decoded audio at 44.1 kHz (`duration_s`).
     public var duration: Double
-    /// The tag tempo given in the options (`bpm_tag`); it only steers the octave alignment and the tag comparisons.
+    /// The tag tempo given in the options (the lab JSON's `bpm_tag`, the crate record's `file.tag_bpm`); it only steers
+    /// the octave alignment and the tag comparisons.
     public var bpmTag: Double?
 
     /// The tracker's beats and downbeats, after the octave alignment (`detected_beats_s`, `detected_downbeats_s`).

@@ -90,8 +90,9 @@ extension Analysis {
 
         return CrateTrack(
             id: id,
+            // The tag tempo the analysis was given is a fact about the file, so the record keeps it there.
             file: .init(name: source.name, rel: rel, bytes: source.bytes, sha1Head: nil, sha256: source.sha256,
-                        durationS: r3(duration)),
+                        durationS: r3(duration), tagBpm: bpmTag.flatMap { $0 > 0 ? r3($0) : nil }),
             ident: .init(title: title ?? source.name, version: version,
                          source: fromFileName ? "filename" : "user"),
             analysis: .init(engine: "\(Analysis.engineFamily)-\(Analysis.engineVersion)", analysedAt: options.analysedAt,
