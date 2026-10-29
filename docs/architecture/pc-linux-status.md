@@ -19,7 +19,7 @@ Mac) reviews and merges this track's branch, `pc-linux`, and runs anything that 
   Python package (entry 9), and the vocal tagger on YAMNet (entry 12). Step 3, the logic that needs no audio, is
   ported and checked against all 373 committed tracks (entry 7). Step 4, the crate reader and writer, is built and
   accepted (entry 10). The analyser is assembled: one call from an audio file to the lab's record and a crate
-  track, now with the vocal tagger in it (entries 11 and 12). 201 tests pass on Linux; Windows builds and passes
+  track, now with the vocal tagger in it (entries 11 and 12). 204 tests pass on Linux; Windows builds and passes
   everything that needs no model. Next: `deckie-build` with its `bench` command (step 5, in progress), then the
   vocal-derived fields from memo O (where the vocals are, free intro and outro, hooks) as added crate fields, then
   the yardstick on the Mac.
@@ -597,7 +597,7 @@ the model's 1,024-value "style" vector (a numeric sketch of how a track sounds, 
 later). The crate gets its `vocal` block, `bars.vocal` and a `style` block, all listed in `features_present`.
 Measured: Swift's scores are identical to Python's ONNX Runtime on the same patches; the exported model is within
 2.6 millionths of TensorFlow's original; the front end (the log-mel patches) within 1.8 ten-thousandths. 0.62 s for
-four minutes of stereo in a release build. 201 tests in all (19 inference, 15 engine, 34 decode, 34 crate, 99
+four minutes of stereo in a release build. 204 tests in all (22 inference, 15 engine, 34 decode, 34 crate, 99
 core), no warnings. `Analyser()` now picks the tagger up by itself when the model file is there, and says what is
 missing when it is not.
 
@@ -657,3 +657,21 @@ training data fits the training-data rule, as read. For the Mac bench, the main 
 address, tag and SHA-256 in this log when the bench command is ready; Christopher's word for that download is asked
 in that session. The memo O vocal-derived fields follow the bench, under `features_present` names so a reader
 without them is unaffected.
+
+**Second addendum, Oct 29, 2026: Beat This!'s training data, recorded, with a question for the main session.** The
+one gap in DEPENDENCIES.md was the training-data rule's record for Beat This! (the beat tracker): each data set the
+weights were trained on, its licence and the trainer. A research agent filled it in (section 7, "Training data")
+from the authors' pages on GitHub and the mirdata loaders, with every host that would not answer named. The
+`final0` weights were trained on 15 sets (everything but GTZAN, the test set). Three sets state non-commercial terms
+on their own pages: ASAP and its audio source (CC BY-NC-SA 4.0), RWC (CC BY-NC 4.0 on the re-released annotations;
+the original was research-only) and Filosax (non-commercial research only). Ballroom, Hainsworth, the Beatles and
+JAAH are commercial recordings their sets do not license; Harmonix and TapCorrect point at YouTube; for SIMAC, SMC
+and HJDB no page read says where the audio came from. Only Harmonix (MIT), TapCorrect (CC BY-SA 4.0), Groove MIDI
+and Candombe (CC BY 4.0, second-hand) state terms that allow commercial use. The weights themselves are MIT, and the
+authors say only that "some of the training files are fully copyrighted or under limited Creative Commons licenses,
+and it is up to the user to assess". The trainer, JKU Linz's Institute of Computational Perception, holds no rights
+in the recordings. Under the training-data rule as written ("weights ship unless a data set's licence forbids
+commercial use; unknown data, the trainer must be the rights-holder") that reads as non-commercial. That is a
+licence-line decision, so it is put to the main session as a question, with the facts; nothing changes in the code
+until it answers. If the answer is no, the alternatives are a beat tracker trained on data with clear terms, or
+Deckie's own training on licensed data, both research items for later.

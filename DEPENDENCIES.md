@@ -477,9 +477,11 @@ trained partly on copyrighted recordings and recordings under limited Creative C
 a question about the training data, not a licence on the weights, and the main session's training-data rule (in the
 allowlist below) now answers it: the MIT weights ship even though Deckie could not ship the recordings they were
 trained on, unless one of those data sets' own licences forbids commercial use, in which case the weights count as
-non-commercial. **Still to do:** the rule asks for each data set, its licence and the trainer to be recorded here
-beside the weights. Beat This!'s training sets and their licences are not listed yet, so whether any of them forbids
-commercial use is open, and it must be settled before a build carrying the weights ships.
+non-commercial. The rule asks for each data set, its licence and the trainer to be recorded here beside the weights:
+that record follows (Oct 29, 2026). In short, three sets state non-commercial terms on their own pages (ASAP, RWC,
+Filosax), much of the rest is commercial music the sets do not license, and the trainer holds no rights in the
+recordings. Under the rule as written that reads as non-commercial; the decision is the main session's (status log
+entry 12, second addendum), and no build carrying the weights ships before it.
 
 **Training data.** This is the record the "Still to do" above asks for: what the `final0` checkpoint was trained on,
 on what terms each data set's audio and beat annotations are published, and who trained it. All of it was read on
