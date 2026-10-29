@@ -37,8 +37,9 @@ Mac) reviews and merges this track's branch, `pc-linux`, and runs anything that 
   and the crate's `file.damaged_frames` and the import-log reason `damaged_frames` are accepted by the main
   session as proposed. Research R's key method is ported
   (entry 18; engine 0.4.0) with parity fixtures and paper-sourced numbers; the Mac's one 0.4.0 pass reads the parity
-  column. PANNs is parked on `wip/panns`. 292 tests. **The track is paused** on the main session's orders while it
-  resets scope with Christopher (entry 18): nothing new starts; two research R decisions await its answer.
+  column. PANNs is parked on `wip/panns`. **PR #2 is merged into `main` and the track rests** (entry 19): the Mac's 0.4.0
+  pass read parity on 373 of 373 and every charter mark met; the orders are no new features, crate fields, models or
+  reruns, CI on `main` kept green, questions answered. 293 tests.
 - Needed from Christopher: nothing right now. The vocal-model downloads were approved on Oct 28 ("Allow vocal
   models", with a standing yes for any further vocal model the work needs); dr_mp3, dr_flac, ONNX Runtime and
   Beat This! were approved before.
@@ -956,6 +957,27 @@ bytes), `yamnet.onnx` (14,938,528 bytes) and their `.sha256` files; `fetch-model
 and verified the pinned hashes end to end. The ONNX Runtime archives' release follows from a publish run of the
 build workflow, started with his approval and queued behind run 4; its hashes go into DEPENDENCIES.md when it
 lands. The assets branch stays as the record of what was published; it is not merged anywhere.
+
+## Oct 29, 2026: PR #2 merged; the track rests (entry 19)
+
+**Merged.** The main session merged PR #2 into `main` (merge commit 3fa4175, the branch at af29172), built the engine
+in release on the Mac from `main`, and ran the one 0.4.0 pass from it: the parity column reads = on 373 of 373
+tracks (the same key, the margin within 0.001, the same sure flag), key exact where the lab is confident 83.3
+percent (neighbour 10.3, other 6.4), every charter mark met, tempo within 2 percent on 99.7, vocal correlation 0.31
+as before; recorded on `main` as stage 2d with the per-track JSON. With parity proven, the record's second key
+decision (`deckie.key.parity`, the one made with Essentia's 0.31) is removed (efe8430), so the record carries one
+key; the stage fixtures still check both tables of numbers. 293 tests.
+
+**The rest orders, agreed with Christopher.** The engine stays at the marks it has met plus the ported key method:
+no new features, crate fields, models or reruns. CI on `main` is kept green if a push breaks it, and this track
+answers the main session's questions. The Mac Desk app is being built on top of `main` (folder in, crate out, names,
+import log, signatures) with this engine, since Apple's framework needs the next macOS. The first PC build waits for
+new orders.
+
+**Parked.** PANNs, the vocal tagger's second opinion, complete on branch `wip/panns` (entry 18), not merged. The
+vocal signal on PC and Linux remains YAMNet's `max11` reading, with the four readings in every record for the Mac's
+sheet. Open for the attorney: the key profile numbers (now sourced from the papers, DEPENDENCIES.md's last section)
+and D15's terms-of-service line.
 
 ## Oct 29, 2026: research R's key method ported; the second opinion parked; the track pauses (entry 18)
 
