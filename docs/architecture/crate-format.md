@@ -332,7 +332,7 @@ line is clamped to the grid in bars and beats, not in seconds.
     having its background read as singing; it is set for YAMNet's scores on the synthesised voice (a few hundredths)
     and should rise once real voices are measured. Two bars of bridge: longer than a breath or a fill between lines,
     shorter than the 4-bar breaks DJs mix in.
-- `hooks` *(hooks)* **proposed** (B7): up to three hook candidates, strongest first, for the DJ to confirm with one tap
+- `hooks` *(hooks)* **accepted** (Oct 29, 2026; B7): up to three hook candidates, strongest first, for the DJ to confirm with one tap
   (whether a line is recognisable is not in the audio): `source` (`deckie-core`), `lattice_phase_bar`, `candidates`
   (each `start_bar`, `end_bar`, 4 or 8 bars on, `strength` 0 to 1, `sung`, the terms behind the strength,
   `repetition`, `loudness_score` and `vocal_density`, each 0 to 1, and `repeat_start_bar`, where the same stretch comes
