@@ -214,15 +214,21 @@ public final class OnnxRuntime: @unchecked Sendable {
         /// With the arena on, return the arena's unused regions to the system at the end of every run (ONNX Runtime's
         /// run option `memory.enable_memory_arena_shrinkage`). Without the arena it does nothing.
         public var arenaShrinkage: Bool
+        /// At most this many runs of the session at once; further callers wait their turn. 0: no limit. Each run of a
+        /// large model holds its intermediate values while it runs (Beat This!'s 30-second chunk, about 0.7 GB), so
+        /// this bounds the memory of many threads sharing one session.
+        public var concurrentRuns: Int
 
         public init(intraOpThreads: Int = 0, interOpThreads: Int = 0, graphOptimization: GraphOptimization = .all,
-                    cpuMemoryArena: Bool = true, memoryPattern: Bool = true, arenaShrinkage: Bool = false) {
+                    cpuMemoryArena: Bool = true, memoryPattern: Bool = true, arenaShrinkage: Bool = false,
+                    concurrentRuns: Int = 0) {
             self.intraOpThreads = intraOpThreads
             self.interOpThreads = interOpThreads
             self.graphOptimization = graphOptimization
             self.cpuMemoryArena = cpuMemoryArena
             self.memoryPattern = memoryPattern
             self.arenaShrinkage = arenaShrinkage
+            self.concurrentRuns = concurrentRuns
         }
     }
 
@@ -243,15 +249,18 @@ public final class OnnxSession: @unchecked Sendable {
     public let outputNames: [String]
 
     let session: OpaquePointer
+    /// Holds back runs beyond `options.concurrentRuns`.
+    let turns: DispatchSemaphore?
 
     init(runtime: OnnxRuntime, modelPath: String, options: OnnxRuntime.SessionOptions) throws {
         self.runtime = runtime
         self.modelPath = modelPath
         self.options = options
         let api = runtime.api.pointee
-        guard options.intraOpThreads >= 0 && options.interOpThreads >= 0 else {
-            throw OnnxRuntimeError.invalidInput("thread counts cannot be negative")
+        guard options.intraOpThreads >= 0 && options.interOpThreads >= 0 && options.concurrentRuns >= 0 else {
+            throw OnnxRuntimeError.invalidInput("thread and run counts cannot be negative")
         }
+        turns = options.concurrentRuns > 0 ? DispatchSemaphore(value: options.concurrentRuns) : nil
         var so: OpaquePointer? = nil
         try runtime.check(api.CreateSessionOptions(&so))
         guard let so else { throw OnnxRuntimeError.runtime(code: .fail, message: "CreateSessionOptions returned nothing") }
@@ -350,6 +359,8 @@ public final class OnnxSession: @unchecked Sendable {
             try runtime.check(api.CreateRunOptions(&runOptions))
             try runtime.check(api.AddRunConfigEntry(runOptions, "memory.enable_memory_arena_shrinkage", "cpu:0"))
         }
+        turns?.wait()
+        defer { turns?.signal() }
         let status = inPointers.withUnsafeBufferPointer { ip in
             outPointers.withUnsafeBufferPointer { op in
                 values.withUnsafeBufferPointer { vp in
