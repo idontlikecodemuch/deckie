@@ -211,3 +211,68 @@ beat class with the most low-band onset energy: right on 28 of 60 (chance is 15)
 About one second a track. Reading: tempo mostly does not need a model; beat positions and above all the bar line do,
 and the bar line is what phrase-aligned mixing needs. A model-free path remains the named fallback for tempo and a
 rough grid when no model is present (D15 replacement path), not a substitute. Script: scratchpad `modelfree/run.py`.
+
+## 2a. The PC and Linux engine on the 373-track yardstick, run on the Mac (Oct 28)
+
+The first run of `deckie-build bench` (branch `pc-linux-step2` at 439a6bc, built in release on this Mac) over all 373
+lab tracks, two jobs at the lowest priority while Christopher used the machine. ONNX Runtime 1.31.1, Microsoft's
+macOS build with its reporting switched off (archive 2e1344a1…, library 17500d6b…, both as pinned). Beat This!
+exported here from the cached checkpoint with torch 2.14.1 (graph 442de936…, numerically within 3e-5 of PyTorch;
+the pinned graph f1d93204… was published as release `models-1` after this run). No vocal tagger in this run; the
+second run with YAMNet (96bb0dc5…, from the release) follows as 2b. Engine record: {"tool": "deckie-build 0.1.0", "engine": "deckie-0.1.0", "platform": "macos-arm64", "vocal_model": null}.
+Full per-track figures: `bench/pc-engine-2026-10-28-mac.json`.
+
+```
+Over 373 tracks:
+  beat F@70ms, detected vs detected          median 1.000  mean 0.998  below 0.8: 0.8 percent  (n 373)
+  beat F@70ms, grid vs grid                  median 1.000  mean 0.967  below 0.8: 5.1 percent  (n 373)
+  beat F, best octave                        median 1.000  mean 0.999  below 0.8: 0.5 percent  (n 373)
+  downbeat F, detected vs detected           median 1.000  mean 0.997  below 0.8: 0.8 percent  (n 373)
+  downbeat F, grid vs grid                   median 1.000  mean 0.950  below 0.8: 6.2 percent  (n 373)
+    lab grid from beatthis: beat, grid       median 1.000  mean 0.999  below 0.8: 0.3 percent  (n 316)
+    lab grid from beatthis: downbeat, grid   median 1.000  mean 0.999  below 0.8: 0.3 percent  (n 316)
+    lab grid from madmom: beat, grid         median 1.000  mean 0.793  below 0.8: 31.6 percent  (n 57)
+    lab grid from madmom: downbeat, grid     median 1.000  mean 0.680  below 0.8: 38.6 percent  (n 57)
+  tempo within 2 percent: 99.7 percent after octave normalisation, 98.9 percent without; an octave apart: 0.8 percent
+  key, all tracks: exact 68.9 percent, neighbour 14.5 percent, other 16.6 percent
+  key, lab confident (311): exact 74.6 percent, neighbour 14.5 percent, other 10.9 percent
+  integrated loudness delta (LU)             median 0.00  mean 0.00  median |x| 0.00  (n 373)
+                                             more than 1 LU off: 0.0 percent
+  true peak delta (dB)                       median 0.00  mean 0.02  median |x| 0.00  (n 373)
+  section recall (within a bar)              median 1.00  mean 0.95  (n 363)
+  section precision                          median 1.00  mean 0.95  (n 363)
+  vocal correlation: absent (the engine ran without its vocal tagger)
+  bar 1 offset (ms, engine - lab)            median 0.0  mean -11.4  median |x| 0.0  (n 373)
+  bar counts equal: 95.7 percent
+  seconds per track: median 9.2, p90 13.4, max 26.7 (n 373)
+
+Pass marks (charter: at least Apple's framework on beats and loudness, stage 1 1a; the key estimator's 75 percent exact). Reference marks are Apple's other figures:
+  charter   beat F@70ms, detected vs detected, median                  1.000  >= 0.987  pass
+  charter   beat F@70ms, detected vs detected, share below 0.8         0.008  <= 0.078  pass
+  charter   beat F@70ms, grid vs grid, median                          1.000  >= 0.997  pass
+  charter   beat F@70ms, grid vs grid, share below 0.8                 0.051  <= 0.145  pass
+  charter   downbeat F@70ms, detected vs detected, median              1.000  >= 0.968  pass
+  charter   downbeat F@70ms, detected vs detected, share below 0.8     0.008  <= 0.185  pass
+  charter   downbeat F@70ms, grid vs grid, median                      1.000  >= 1.000  pass
+  charter   downbeat F@70ms, grid vs grid, share below 0.8             0.062  <= 0.225  pass
+  charter   integrated loudness, median |delta| (LU)                    0.00  <= 0.04  pass
+  charter   integrated loudness, share more than 1 LU off              0.000  <= 0.000  pass
+  charter   key exact where the lab is confident                       0.746  >= 0.750  FAIL
+  reference tempo within 2 percent (no octave normalisation)           0.989  >= 0.914  pass
+  reference key exact where the lab is confident, against Apple        0.746  >= 0.833  FAIL
+  reference per-bar vocal correlation, median                              -  >= 0.645  n/a
+  reference section boundary recall within one bar, median             1.000  >= 1.000  pass
+charter pass marks: not all met
+```
+
+Reading. Beats, downbeats, tempo, loudness and sections match the lab at or above the charter's marks, and the beat
+tracker is Beat This! on both sides, so where the lab's grid came from Beat This! (316 tracks) the engine's grid is
+the lab's to 0.999; the 57 tracks where the lab fell back to madmom are where the two disagree, which says the
+engine reproduces the model and not the lab's fallback rule. Tempo within 2 percent on 98.9 percent, against
+Apple's 91. Loudness identical to 0.01 LU. One true-peak outlier of 6.7 dB and one bar-1 offset of 2 s are for the
+session to look at. The one mark missed is key: 74.6 percent exact where the lab is confident, against the charter's
+75 and Apple's 83.3; with neighbours (compatible keys on the wheel, still a clean mix) 89.3 percent, against Apple's
+96. The engine's estimator is the lab's own one-vote method, since every stronger open detector is unshippable
+(track L); the lab's key was a three-way vote that included Essentia's non-commercial models. So on Mac and iPad the
+key comes from Apple's framework (D11), and on PC and Linux the estimator needs a second vote or better profiles
+before it meets the mark. 9.2 s per track median on this Mac at low priority with two jobs.
