@@ -78,25 +78,29 @@ public struct BuildResult: Sendable {
     public var analysisSeconds: [Double]
     /// Files taken from the work folder: unchanged since the last run, or the same bytes found by their hash.
     public var reused: Int
-    /// The files without a record of their own (the import log's entries).
+    /// The import log's entries: the files without a record of their own, and the files whose record is in the crate
+    /// but whose decoder silenced damaged frames (reason `damaged_frames`).
     public var entries: [CrateManifest.ImportLog.Entry]
     public var rekordbox: CrateManifest.ImportLog.Rekordbox?
     /// Wall-clock seconds of the whole build.
     public var seconds: Double
 
-    /// The summary printed at the end: the counts, the files not in the crate by reason and extension, and where the
-    /// import log is.
+    /// The summary printed at the end: the counts, the files not in the crate by reason and extension, the files in
+    /// it with damaged frames, and where the import log is.
     public var summary: String {
+        typealias Reason = CrateManifest.ImportLog.Reason
         var s = "\(filesSeen) audio file\(filesSeen == 1 ? "" : "s"): \(analysed) analysed"
         if analysed > 0, let m = mean(analysisSeconds) {
             s += " (\(Py.fixed(analysisSeconds.reduce(0, +), 1)) s of analysis, \(Py.fixed(m, 1)) s a file on average)"
         }
-        s += ", \(reused) taken from the work folder, \(entries.count) not in the crate"
-        if entries.isEmpty { s += "\n" } else {
+        let left = entries.filter { $0.reason != Reason.damagedFrames }
+        let damaged = entries.filter { $0.reason == Reason.damagedFrames }
+        s += ", \(reused) taken from the work folder, \(left.count) not in the crate"
+        if left.isEmpty { s += "\n" } else {
             s += ":\n"
-            let log = CrateManifest.ImportLog(builtBy: "", builtAt: "", filesSeen: 0, tracks: 0, entries: entries)
+            let log = CrateManifest.ImportLog(builtBy: "", builtAt: "", filesSeen: 0, tracks: 0, entries: left)
             let reasons = log.counts
-            let known = CrateManifest.ImportLog.Reason.all
+            let known = Reason.all
             for reason in known + reasons.keys.sorted().filter({ !known.contains($0) }) where reasons[reason] != nil {
                 let byExt = reasons[reason]!
                 let total = byExt.values.reduce(0, +)
@@ -104,6 +108,13 @@ public struct BuildResult: Sendable {
                 s += "  " + reason.padding(toLength: 15, withPad: " ", startingAt: 0) + String(format: "%5d", total)
                     + "   " + list + "\n"
             }
+        }
+        if !damaged.isEmpty {
+            s += "\(damaged.count) file\(damaged.count == 1 ? "" : "s") in the crate with damaged frames, played as "
+                + "silence (faulty but playable):\n"
+            for e in damaged { s += "  \(e.rel): \(e.message)\n" }
+        }
+        if !entries.isEmpty {
             s += "  each file and its reason: import_log in \(output.lastPathComponent)/manifest.json\n"
         }
         if let rb = rekordbox { s += "rekordbox: \(rb.matched) of \(rb.tracks) collection tracks matched a file\n" }
@@ -115,21 +126,22 @@ public struct BuildResult: Sendable {
 
 /// Builds a crate from a folder of music: finds the audio files, analyses each with the engine (several at once),
 /// keeps every finished file in the work folder so a second run skips what is done, and writes the crate with every
-/// file that has no record listed in the manifest's import log.
+/// file that has no record listed in the manifest's import log, and every file whose decoder silenced damaged frames
+/// listed there too, with their times.
 public final class Builder: Sendable {
     /// The builder's own version, raised with the engine's when what the builder writes changes (0.2.0: the import
-    /// log's device label and the record's `imported` block).
-    public static let version = "0.2.0"
-    /// The program and its version (`deckie-build 0.2.0`), printed when a build starts and written as the bench
+    /// log's device label and the record's `imported` block; 0.2.1: the import log's `damaged_frames` entries).
+    public static let version = "0.2.1"
+    /// The program and its version (`deckie-build 0.2.1`), printed when a build starts and written as the bench
     /// report's `tool`. Not written in the crate: the manifest's `import_log.built_by` names the device instead.
     public static var programLabel: String { "deckie-build \(version)" }
     /// The work folder's extension.
     public static let workExtension = "deckiebuild"
-    /// The engine's label (`deckie-0.2.0`, as `analysis.engine` writes it).
+    /// The engine's label (`deckie-0.2.1`, as `analysis.engine` writes it).
     public static var engineLabel: String { "\(Analysis.engineFamily)-\(Analysis.engineVersion)" }
 
     /// What a work record must have been made with to be reused: the engine's label and the vocal tagger's model, or
-    /// none (`deckie-0.2.0 vocal:yamnet`, `deckie-0.2.0 vocal:none`), so records made before the vocal model was
+    /// none (`deckie-0.2.1 vocal:yamnet`, `deckie-0.2.1 vocal:none`), so records made before the vocal model was
     /// installed are made again once it is, and so are records of an older engine version.
     public static func engineKey(vocalModel: String?) -> String { "\(engineLabel) vocal:\(vocalModel ?? "none")" }
 
@@ -319,6 +331,11 @@ public final class Builder: Sendable {
                     }
                 }
                 tracks.append(t)
+                // Analysed and in the crate, but faulty: the DJ is told where.
+                if let frames = t.file.damagedFrames, !frames.isEmpty {
+                    entries.append(.init(rel: f.rel, ext: f.ext, reason: CrateManifest.ImportLog.Reason.damagedFrames,
+                                         message: Builder.damagedFramesMessage(frames)))
+                }
             case nil:
                 entries.append(.init(rel: f.rel, ext: f.ext, reason: CrateManifest.ImportLog.Reason.analysisError,
                                      message: "not finished"))
@@ -410,6 +427,21 @@ public final class Builder: Sendable {
         } catch {
             return failed(FileFailure.classify(error, path: f.url.path))
         }
+    }
+
+    /// The import log's words for a file's damaged frames, times as minutes and seconds from the start of the track:
+    /// "damaged frame at 1:01.234 (26 ms), played as silence; the track is in the crate", or with several, "3 damaged
+    /// frames, played as silence: at 0:12.345 (26 ms), ...; the track is in the crate" (the first 10 listed).
+    static func damagedFramesMessage(_ frames: [CrateTrack.File.DamagedFrame]) -> String {
+        func at(_ f: CrateTrack.File.DamagedFrame) -> String {
+            let ms = Int((f.startS * 1000).rounded())
+            return "at \(ms / 60_000):" + String(format: "%02d.%03d", ms / 1000 % 60, ms % 1000)
+                + " (\(Int((f.seconds * 1000).rounded())) ms)"
+        }
+        var times = frames.prefix(10).map(at).joined(separator: ", ")
+        if frames.count > 10 { times += " and \(frames.count - 10) more" }
+        return frames.count == 1 ? "damaged frame \(times), played as silence; the track is in the crate"
+            : "\(frames.count) damaged frames, played as silence: \(times); the track is in the crate"
     }
 
     /// A work record made ready for the crate: the file's current name and path, the track's names (from rekordbox,
