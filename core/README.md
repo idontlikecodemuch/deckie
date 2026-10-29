@@ -50,6 +50,8 @@ and Linux crate builder share them. Charter: `docs/architecture/pc-linux-track.m
   tagger on it (below). `COnnxRuntime` is ONNX Runtime's C API header (vendored unmodified, MIT, pinned in `DEPENDENCIES.md`
   section 6) and a small C file that opens the library at run time; nothing links it.
 - `Sources/DeckieEngine`: the Windows and Linux analyser, the lab's pipeline on the pieces above (below).
+- `Sources/DeckieBuild` and `Sources/deckie-build`: the crate builder and its yardstick bench, as a library (so the
+  tests can drive it) and a command line; see "Building a crate" below.
 - `Tests/DeckieCoreTests`: parity tests against the lab. `Fixtures/` holds the reference numbers, written by
   `Tools/make_fixtures.py` with the lab's own Python (needs numpy; run from the repository root). The tests also
   read `mixer/features/`, `mixer/candidates.json` and `mixer/recs.json` straight from the repository.
@@ -72,9 +74,13 @@ and Linux crate builder share them. Charter: `docs/architecture/pc-linux-track.m
   reference numbers are `DeckieCoreTests/Fixtures/yamnet.json` (285 KB, written by `Tools/make_yamnet_fixtures.py`
   with TensorFlow), which the front end's tests read too.
   `Tests/DeckieTestSupport` is a small library shared by the test targets: the synthesised drum patterns and chords
-  (`ChordSynth`), a sung-like line and the vocal test track (`VoiceSynth`, `VocalTrack`), the beat fixture's reader,
-  and `CPUTurns`, which makes the model runs take turns.
+  (`ChordSynth`), a sung-like line and the vocal test track (`VoiceSynth`, `VocalTrack`), the engine's test track
+  (`TestTrack`, shared with the builder's tests), the beat fixture's reader, and `CPUTurns`, which makes the model
+  runs take turns.
 - `Tests/DeckieEngineTests`: the engine end to end on a synthesised track, and its pieces (below).
+- `Tests/DeckieBuildTests`: the crate builder and the bench (below). `Fixtures/bench_parity.json` holds what
+  `mixer/bench_mu.py`'s own functions give on pairs of series from every committed feature file, written by
+  `Tools/make_bench_fixtures.py` (Python's standard library only).
 - `Tests/DeckieDecodeTests`: the decoder's tests. `Fixtures/` holds a generated test tone (two sines and a click)
   as WAV at 44.1 and 48 kHz, MP3 at 44.1 and 48 kHz and in mono, AAC, AIFF and AIFF-C ("sowt"), FLAC at 16 and 24
   bits and as Ogg-FLAC, plus a 648-byte stand-in for a FairPlay-protected file with no audio in it
@@ -296,13 +302,126 @@ bar 1 and the bar count, the key exact or a neighbour against the lab's confiden
 proposed key confidence is right, integrated loudness, loudness range and true peak, the per-bar loudness and bands,
 first and last sound, the fade decision, sections and mix windows, and the stage times. Grids are expected to differ
 where the lab ran madmom, and mix windows where the lab's vocal probabilities moved them; the comparison reads those
-apart.
+apart. `deckie-build bench` (below) runs it and computes the stage 1 numbers.
 
 ```
 cd core
 swift build
 swift test
 ```
+
+## Building a crate: `deckie-build`
+
+```
+deckie-build <folder> --out <name>.deckiecrate [--rekordbox export.xml] [--jobs N] [--bpm-tags] [--name N] [--fresh]
+```
+
+It finds every audio file below the folder by its extension (mp3, flac, wav, aif, aiff, aifc, m4a, mp4, aac, wma,
+ogg, opus and the protected m4p; hidden files and folders, crate packages and work folders are skipped), analyses each
+with the engine, several at a time, and writes the crate with `CrateWriter`. While it runs it prints a line per file:
+the count, the time since the start, an estimate of the time left and the file's own analysis time, or why it could
+not be analysed. At the end it prints a summary: files seen, analysed, taken from the work folder, and the files with
+no record, counted by reason and extension.
+
+- **Jobs.** `--jobs N` files at once; the default is the processor count, or fewer when memory is short, as one
+  analysis of a four-minute track peaks at about 1.8 GB (each further job adds about 1.3 GB), so each job is given
+  2 GB (`defaultJobs`). The jobs share one analyser: its ONNX Runtime session may be run from several threads at once,
+  and each run gets the processor count over the jobs in threads of its own.
+- **Resumable.** A work folder beside the crate, `<name>.deckiebuild`, keeps every finished file as it finishes:
+  `records/<id>.json` (the engine's record, by the file's SHA-256 id, written whole or not at all) and `files.jsonl`
+  (one line per finished file: its path below the folder, size, modification time, the engine, the tag tempo, the
+  record's id or why it failed). A second run takes a file as it is when its size and modification time are the same
+  (no reading at all); otherwise it hashes the file and takes the record of those bytes if there is one (a file that
+  was moved, renamed or only touched), and analyses only what is left. An interrupted run (Ctrl-C) loses only the files
+  that were being analysed, one per job. A record is reused only if it came from the same engine version with the same
+  tag tempo. `--fresh` empties the work folder first; deleting it is always safe.
+- **Nothing left out silently** (decision P18). Every file that cannot be analysed is counted by reason and extension
+  in the summary and listed in the manifest's `import_log` with its path below the folder and the reason in words:
+  `unsupported` (a format this platform cannot decode: AAC, M4A and WMA on Linux, Ogg, Opus), `protected` (FairPlay),
+  `damaged`, `decode_error` (could not be read), `analysis_error` (no beat grid, too few bars, the model failed) and
+  `duplicate` (the same bytes as another file, which has the record). Failures are remembered in the work folder too,
+  except a file that could not be read, which is tried again.
+- **An existing crate** at `--out` keeps its id, name, creation date and devices, and its records' signatures are
+  carried over; something at `--out` that is not a crate is never overwritten.
+- **rekordbox** (`--rekordbox export.xml`, rekordbox's File, Export Collection in xml format): each file is matched to
+  its collection entry by its location (the same path; else the entry whose path ends with the file's path below the
+  folder, for an export made on another machine; else the one entry with the same name and size). The DJ's
+  `AverageBpm` is the tag tempo the octave alignment follows (as the lab follows its folders' tags); `Name`, `Artist`
+  and `Mix` give `ident.title`, `artist` and `version` (source `rekordbox-xml`); the DJ's `Tonality` (classic, Camelot or
+  Open Key notation) becomes the vote `rekordbox-xml` in `key.votes`; the grid markers (`TEMPO`), cue points, loops
+  (`POSITION_MARK`) and playlist membership go into the record's `deckie.rekordbox` block, a proposed addition
+  (`docs/architecture/crate-format.md`, "Additions proposed with the crate builder"). The reader is written here
+  (`XMLScanner`, `RekordboxCollection`) from the format pyrekordbox documents, so no XML library is needed at run time.
+- **File tags.** A file's own title and artist (ID3v2 2.2 to 2.4 at the front of the file or in a WAV or AIFF chunk,
+  or a FLAC Vorbis comment) name the track when rekordbox does not (source `tag`; else the file name, `filename`).
+  `--bpm-tags` also takes the file's tempo tag (TBPM, or BPM in a Vorbis comment) as the tag tempo where rekordbox gives
+  none. The tag tempo used is recorded in `deckie.bpm_tag` with its source.
+
+Speed, release build on this machine (a shared four-core 2.1 GHz Xeon, Linux), four-minute 44.1 kHz stereo files,
+WAV and 320 kbps MP3: one at a time, 8.3 s a file when nothing else ran (6.3 s of it the beat model; the stages
+after it take under 2 s), and 8 to 21 s while another session shared the machine; four at a time, 49 to 73 s for
+eight files, so 6 to 9 s a file of wall-clock time (each file 20 to 40 s on its own). The tests' build of two
+one-minute files takes about 10 s in a debug build.
+
+## The yardstick bench: `deckie-build bench`
+
+```
+deckie-build bench <folder> --features mixer/features --candidates mixer/candidates.json [--music-root path]
+             [--out bench.json] [--records dir] [--jobs N] [--ids id,id,...] [--fresh]
+```
+
+For every row of `candidates.json` whose audio is under the folder (the row's `path` less the lab's music root, which
+defaults to the folder all the rows' paths share: `/Users/christophershannon/personal/90s2000 playlist`), it analyses
+the file with the row's tag tempo, as the lab did, and compares the engine's record with the lab's
+`mixer/features/<id>.json`, by the measures of stage 1 (`docs/architecture/stage1-results.md`, 1a), ported from
+`mixer/bench_mu.py` and checked against its own functions on all 373 committed files (`BenchParityTests`):
+
+- beat and downbeat F-measure at 70 ms, both the engine's detected beats against the lab's detected beats and its grid
+  beats against the lab's grid beats, plus the best octave of the detected pair; shares below 0.8;
+- tempo within 2 percent after octave normalisation, within 2 percent as stage 1 counted it, and an octave apart;
+- key exact, neighbour (the relative key or one step round the wheel) or other, over all tracks and over the lab's
+  confident keys (confidence 0.65 or more, 311 tracks);
+- integrated loudness and true peak, engine minus lab; section boundary recall and precision within one bar (the
+  lab's inner boundaries against the engine's); per-bar vocal correlation when both sides have it, marked absent
+  otherwise (no vocal tagger yet); bar 1 offset in milliseconds and whether the bar counts match; seconds per track;
+  and the grid measures split by where the lab's grid came from (Beat This! or madmom).
+
+Each per track, then medians and means, then the pass marks: the charter's (at least Apple's framework on beats and
+loudness, from `mixer/mu_bench.tsv`: beat F medians 0.987 detected and 0.997 grid, downbeat 0.968 and 1.000, shares
+below 0.8 of 7.8, 14.5, 18.5 and 22.5 percent, median absolute loudness difference 0.04 LU and none over 1 LU; and the
+key estimator's 75 percent exact on the confident keys) and Apple's other figures for reference (tempo 91.4 percent,
+key 83.3 percent, vocal correlation 0.645, section recall 1.00). It prints the table and writes the JSON (`--out`).
+The engine's own records, in the lab's feature-file shape, go to `<out>.records/<id>.json` (or `--records`), beside the
+lab's for its own tools, and are taken again on a later run while the file's size, the tag tempo and the engine are
+the same (`--fresh` analyses everything again). The bench writes nothing in the repository unless told to.
+
+### What the Mac needs
+
+The engine is plain Swift and C, so the bench builds and runs on the Mac as it does here:
+
+1. Swift: Xcode's toolchain (Swift 6 or later) is enough; `cd core && swift build -c release --product deckie-build`.
+2. ONNX Runtime 1.31.1 for macOS, by the same pattern as Linux: the release archive for the Mac
+   (`onnxruntime-osx-arm64-1.31.1.tgz` on an Apple-silicon Mac, from the project's GitHub release page), its SHA-256
+   recorded in `DEPENDENCIES.md` section 6 beside the Linux and Windows ones before it is used (this session could not
+   fetch it, so it is not pinned yet), unpacked so that `lib/libonnxruntime.dylib` is at
+   `core/.deps/onnxruntime/lib/libonnxruntime.dylib`, or anywhere with `DECKIE_ONNXRUNTIME_LIB` naming it. Fetched with
+   `curl` it carries no quarantine flag; if a browser fetched it, `xattr -dr com.apple.quarantine` on the folder lets
+   it load. The vendored C header is the same on every platform.
+3. The Beat This! model: the exported `beat_this_final0.onnx` is the same file on every machine, so it can be copied
+   from a machine that has it (its SHA-256 is in `DEPENDENCIES.md` section 7) to `core/.models/`, or exported on the
+   Mac with `Tools/export_beat_this.py` (PyTorch at the pinned versions; the Mac's wheels have no `+cpu` suffix), or
+   named by `DECKIE_BEAT_THIS_MODEL`.
+4. Run, from `core/`, with the music where the lab had it:
+
+```
+export DECKIE_ONNXRUNTIME_LIB="$PWD/.deps/onnxruntime/lib/libonnxruntime.dylib"   # if not in the default place
+export DECKIE_BEAT_THIS_MODEL="$PWD/.models/beat_this_final0.onnx"                 # likewise
+.build/release/deckie-build bench "/Users/christophershannon/personal/90s2000 playlist" \
+    --features ../mixer/features --candidates ../mixer/candidates.json --out ~/deckie-bench/bench.json
+```
+
+The same two variables serve `deckie-build` itself and the tests (`swift test`), which skip the engine's tests with
+the reason printed when either file is missing.
 
 ## Reinstalling the toolchain on Linux
 
