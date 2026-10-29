@@ -1052,3 +1052,21 @@ the main session adds the Apple column; the default series stays as it is so not
 YAMNet pattern, the Swift model and its front end, CI export (Zenodo, where the checkpoint lives, does not resolve
 from this container; GitHub's machines and the Mac reach it), DEPENDENCIES.md section 9 (MIT; AudioSet, as YAMNet),
 under Christopher's standing approval for vocal models.
+
+**Addendum: research R, the key method to port.** The Mac's key agent delivered research R
+(`docs/research/r-key-parity.md`, reference `mixer/key_parity.py`, figures in `mixer/key_parity_results.tsv`, now
+merged into this branch): a licence-clean method that reaches 83.3 percent exact against the lab's confident keys
+(held-out 83.2; the shipped engine 74.6; this evening's quick vote 76.2) and 70.4 against Apple's keys (shipped
+63.4), with the gain present in every era, style and tempo bucket. In plain words: find the strongest spectral
+peaks in each short frame, divide each by the loudest thing within a third of an octave of it (whitening, the step
+that does most of the work), fold the peaks and their harmonics onto the twelve pitch classes with a smooth
+window (an HPCP after Gómez 2006), sum over the track, and correlate the result with three published key profiles
+averaged; "sure" when the three agree and the margin is at least 0.08 (sure tracks 92 percent exact on the held-out
+split, unsure 65). The main session's decision: port it; it replaces the quick vote, which it beats on the same
+sheet. Three conditions, all binding: parity first (the Swift port must reproduce the reference's key on all 373
+tracks, which the Mac checks, with stage-by-stage fixtures here); the profile values are sourced from the papers
+(Faraldo et al. 2016 for edma; Faraldo's 2017 thesis for bgate and braw; Gómez 2006 for the HPCP) and cited in
+DEPENDENCIES.md and the code, since the reference transcribed them from Essentia's `key.cpp`, which is AGPL, a
+question for the attorney either way (it applies to the current engine's edma profile too); and library-blind
+stays, no parameter changes during the port. Known remaining error, not for now: mode, 16 percent of tracks read
+major where Apple says minor. An agent is on the port; engine version 0.4.0 when it lands.
