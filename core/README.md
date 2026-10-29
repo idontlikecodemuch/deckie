@@ -46,8 +46,8 @@ and Linux crate builder share them. Charter: `docs/architecture/pc-linux-track.m
   in front (which dr_flac alone cannot open), and refuses a file that is cut short or has a damaged frame, as the lab
   does, rather than let the audio after the damage come early. On the 16- and 24-bit test tones every sample is the
   lab's, at offset 0.
-- `Sources/COnnxRuntime` and `Sources/DeckieInference`: ONNX Runtime from Swift, and the beat tracker on it
-  (below). `COnnxRuntime` is ONNX Runtime's C API header (vendored unmodified, MIT, pinned in `DEPENDENCIES.md`
+- `Sources/COnnxRuntime` and `Sources/DeckieInference`: ONNX Runtime from Swift, and the beat tracker and the vocal
+  tagger on it (below). `COnnxRuntime` is ONNX Runtime's C API header (vendored unmodified, MIT, pinned in `DEPENDENCIES.md`
   section 6) and a small C file that opens the library at run time; nothing links it.
 - `Sources/DeckieEngine`: the Windows and Linux analyser, the lab's pipeline on the pieces above (below).
 - `Tests/DeckieCoreTests`: parity tests against the lab. `Fixtures/` holds the reference numbers, written by
@@ -66,10 +66,14 @@ and Linux crate builder share them. Charter: `docs/architecture/pc-linux-track.m
   levels and response) and `Fixtures/bands.json` (38 KB: scipy's band split and the lab's per-bar levels and first
   and last sound), both written by `Tools/make_resample_fixtures.py` (needs numpy, scipy and soxr).
 - `Tests/DeckieInferenceTests`: the ONNX Runtime wrapper's tests on a 192-byte model (`Fixtures/affine.onnx`,
-  written by `Tools/make_onnx_fixture.py`) and the beat tracker end to end against the Beat This! package. Both
-  need ONNX Runtime, and the beat tracker the model; without them they are skipped, with the reason printed.
+  written by `Tools/make_onnx_fixture.py`), the beat tracker end to end against the Beat This! package, and YAMNet
+  and the vocal tagger against Python's ONNX Runtime and on the vocal test track. They need ONNX Runtime, and the
+  beat tracker and the vocal tagger their models; without them they are skipped, with the reason printed. YAMNet's
+  reference numbers are `DeckieCoreTests/Fixtures/yamnet.json` (285 KB, written by `Tools/make_yamnet_fixtures.py`
+  with TensorFlow), which the front end's tests read too.
   `Tests/DeckieTestSupport` is a small library shared by the test targets: the synthesised drum patterns and chords
-  (`ChordSynth`), the beat fixture's reader, and `CPUTurns`, which makes the model runs take turns.
+  (`ChordSynth`), a sung-like line and the vocal test track (`VoiceSynth`, `VocalTrack`), the beat fixture's reader,
+  and `CPUTurns`, which makes the model runs take turns.
 - `Tests/DeckieEngineTests`: the engine end to end on a synthesised track, and its pieces (below).
 - `Tests/DeckieDecodeTests`: the decoder's tests. `Fixtures/` holds a generated test tone (two sines and a click)
   as WAV at 44.1 and 48 kHz, MP3 at 44.1 and 48 kHz and in mono, AAC, AIFF and AIFF-C ("sowt"), FLAC at 16 and 24
@@ -249,9 +253,10 @@ a `deckie` block of the engine's own) and the crate record (`crateTrack(options:
 Beat This! is the only grid source, as the madmom fallback is non-commercial (`madmom_ran` is false, and
 `deckie.madmom_would_run` marks the tracks where the lab would have run it); the key confidence comes from the one
 estimator's margin over the runner-up key in place of three detectors agreeing (`KeyConfidence`: 0.65, 0.45 or 0.3, with
-the figures behind the steps; a proposal to confirm on the Mac); and there is no vocal tagger yet (`VocalTagger` is its
-place), so the record has no `vocal` block, `per_bar.vocal_prob` or `embedding_effnet`, the mix windows count every bar
-as vocal-free, and the flag `vocal_unknown` asks for them to be placed again when a tagger lands. The tests
+the figures behind the steps; a proposal to confirm on the Mac); and the vocal probability comes from YAMNet, not the
+lab's non-commercial EffNet (below), and `embedding_effnet` is never written. Without the YAMNet model the engine runs
+on without a vocal tagger: the record has no `vocal` block or `per_bar.vocal_prob`, the mix windows count every bar
+as vocal-free, and the flag `vocal_unknown` asks for them to be placed again when a tagger has run. The tests
 (`Tests/DeckieEngineTests`) synthesise 63 s of drums at 124 BPM with A minor chords, a quiet 8-bar intro and an 8-bar
 fade (just over a minute, as the lab counts a fade only after a minute of sound), and check the tempo, bar 1, the bar
 count, the key, the first and last sound, the fade, the mix windows, the loudness and every per-bar series' length; the
@@ -260,6 +265,28 @@ the same bars and tempo from an MP3 of the track (made with the ffmpeg program w
 as everything here is without ONNX Runtime and the model). The lab's own `local_tempo.compute` and `fit_grid`, run on
 the engine's JSON for that track, give back the engine's values exactly, and Python's json module reads the file and
 writes it again byte for byte. A minute of audio takes about 5 s in a debug build, half of it the network.
+
+**The vocal tagger** (`DeckieVocalTagger` in `Sources/DeckieInference`, on `YAMNetFrontEnd` and `PatchBars` in
+`Sources/DeckieCore/Vocal`) gives the engine its per-bar vocal probability in the lab's shape. It runs Google's YAMNet
+audio tagger (Apache 2.0, trained by Google on AudioSet, 3.7 million weights; `DEPENDENCIES.md` section 8), which
+scores 521 kinds of sound for each 0.96 s patch, a patch every 0.48 s: the mono mix is resampled to 16 kHz
+(`Resampler`), cut into YAMNet's log-mel patches by a Swift rewrite of its feature code, and run through the network
+on ONNX Runtime. A patch's vocal score is the largest of YAMNet's scores for singing, choir, yodelling, chant, mantra,
+child singing, synthetic singing, rapping, humming, vocal music and a cappella (speech is left out and recorded beside
+it, as are singing and music on their own, under `deckie.vocal`); the patches are averaged into bars exactly as the lab
+averages its EffNet patches (the patches centred in a bar, else the value at the bar's middle), and the mean of the
+patches' 1,024-value embeddings, scaled to length 1, is the track's style vector (the crate's `style` block). The scores
+are not calibrated: the lab's thresholds (0.5 a vocal bar, 0.75 a vocal-heavy track) were tuned on EffNet, and track
+J's listening test on the Mac sets YAMNet's. The model is not committed: `Tools/fetch-vocal-models.sh` fetches its
+weights by pinned URL and SHA-256 and exports the network to `.models/yamnet.onnx` with TensorFlow's tools
+(`Tools/export_yamnet.py`, development-only, in a Python environment of their own), and `Analyser()` loads it when it
+is there (`DECKIE_YAMNET_MODEL` names another place) and says what is missing when it is not. A second model can be
+added beside it as a second opinion through `VocalPatchModel` (PANNs' MobileNetV2 is the candidate, should the Mac's
+yardstick find YAMNet alone reads badly). Measured: the front end within 1.8e-4 of YAMNet's own feature code, the
+network identical to Python's ONNX Runtime on the same patches, and on a synthesised track alternating 8-bar stretches
+of drums and chords with and without a sung-like line, 0.029 on the sung bars against 0.0001 on the others (YAMNet
+hears the synthetic voice only faintly; real singing scores far higher); drums alone score 1e-5. Four minutes of
+stereo take 0.6 s in a release build (resampling 0.28 s, front end 0.10 s, network 0.20 s) and 4.6 s in a debug build.
 
 What the Mac yardstick will compare (charter step 6): the engine run over the 373 tracks of `mixer/candidates.json`,
 each record beside the lab's `mixer/features/<id>.json` for the same track, read with the lab's own tools. Beats and
