@@ -66,9 +66,11 @@ and Linux crate builder share them. Charter: `docs/architecture/pc-linux-track.m
   `LoudnessTests.swift` uses synthesised signals only: the published BS.1770 coefficients, the EBU Tech 3341 and
   3342 test cases, true peak between samples, and a speed check.
   `DSPTests.swift` and `KeyTests.swift` compare against `Fixtures/dsp.json` (numpy's FFT, librosa's chroma and soxr,
-  written by `Tools/make_dsp_fixtures.py`; needs numpy and librosa) and `Fixtures/key.json` (the lab's key decisions,
-  written by `Tools/make_key_fixtures.py`; needs numpy only); every test signal is synthesised, in Python and again in
-  Swift, to the same bits. `SpectralTests.swift` compares against `Fixtures/spectral.json` (librosa's mel, MFCC, RMS
+  written by `Tools/make_dsp_fixtures.py`; needs numpy and librosa), `Fixtures/key.json` (the lab's key decisions,
+  written by `Tools/make_key_fixtures.py`; needs numpy only) and `Fixtures/key_parity.json` (research R's key method
+  stage by stage, written by `Tools/make_key_parity_fixtures.py` with `mixer/key_parity.py`'s own functions; needs
+  numpy, scipy, librosa and soundfile); every test signal is synthesised, in Python and again in Swift, to the same
+  bits. `SpectralTests.swift` compares against `Fixtures/spectral.json` (librosa's mel, MFCC, RMS
   and onset features, scipy's find_peaks and the lab's own structure code, written by
   `Tools/make_spectral_fixtures.py`; needs numpy, scipy and librosa): the matrices are too big to store whole, so it
   keeps a few frames in full plus every frame's and every band's sum, and the curves whole (427 KB).
@@ -125,7 +127,9 @@ so the feature files are the reference and there is no fixture.
 
 **Key estimator** (`Sources/DeckieCore/Key/`, on `Sources/DeckieCore/DSP/`) is the lab's lightweight estimator,
 `mixer/key_light.py`, in the variant the charter names: chroma from a plain FFT, the edma profile, Pearson
-correlation against the 24 keys (75 percent exact against the lab's confident keys; Apple's framework gets 83).
+correlation against the 24 keys (75 percent exact against the lab's confident keys; Apple's framework gets 83). Since
+engine 0.4.0 it no longer decides the track's key (the whitened HPCP below does); it gives the mix windows' keys, the
+key segments and, for comparison, its own whole-track key (`stft_edma`).
 `KeyEstimator.estimate(buffer, mixIn:, mixOut:, songKey:)` gives what the lab records for a track: the whole-track
 key with its correlation and margin, the key of each mix window judged against the song key (Apple's, or else the
 whole-track estimate; a window is flagged only when it is far from the song key and fits better by 0.08, as the lab's
@@ -145,7 +149,8 @@ the audio stays on the Mac; there the port runs over `mixer/candidates.json` and
 compared row by row, which also measures the decimator against soxr on real tracks. Expect rare differences where
 the lab's margin is tiny: the lab's chroma and its window means are float32, the port's are double precision.
 
-**Key vote** (`Sources/DeckieCore/Key/KeyVote.swift`): the track's key is decided by three votes over the one chroma,
+**Key vote** (`Sources/DeckieCore/Key/KeyVote.swift`), the engine's key in 0.3.0 and kept, with its tests, for the
+lab's B.9 rule it documents; it no longer decides. Three votes over the one chroma,
 the whole-track key by the edma, bgate and Krumhansl-Kessler profiles (all published: Faraldo et al. 2016 for edma
 and bgate, Krumhansl and Kessler 1982), put in the slots of the lab's three detectors (Essentia's edma and bgate,
 madmom's CNN) and decided by the lab's own rule, `mixer/analyze.py` B.9: two or three agree, that key, else edma's;
@@ -157,6 +162,30 @@ engine because it is the lab's own rule with nothing fitted, and the held-out ch
 score on the other half) says it clears the mark on this sheet without being a better estimator for new music; a
 real gain has to come from the key method research on the Mac (research R), measured per folder and held out. `KeyTests.swift` checks the vote against the lab's B.9 block, run from analyze.py's
 own source by `Tools/make_key_fixtures.py`, on the 68 test matrices, on made-up votes and on the lab's 373 tracks.
+
+**Key method** (`Sources/DeckieCore/Key/HPCPKey.swift`), the engine's key since 0.4.0: research R's recommended
+estimator (`docs/research/r-key-parity.md`, row 3f; 83.3 percent exact against the lab's 311 confident keys, 83.2 held
+out, where the STFT estimator gets 74.6 and the vote 76.2; 70.4 against Apple), ported from `mixer/key_parity.py`'s
+`recommended` with no parameter changed. A harmonic pitch-class profile (HPCP: how much of each of the twelve notes the
+track has, counting each note's overtones towards it) from the spectral peaks of 4,096-sample Hann frames at 44.1 kHz
+(hop 4,096, 25 Hz to 3.5 kHz, the 60 largest per frame, refined on the dB spectrum), each peak whitened (divided by the
+largest value within a third of an octave, so quiet registers count as much as loud ones: the step that does most of the
+work), credited with 4 harmonics weighted 0.6^(h-1) through a cos^2 window 4/3 semitone wide (Gomez 2006), squared and
+averaged over the frames; then the Pearson correlation with the 24 keys by each of Faraldo's three EDM profiles, edma,
+bgate and braw, averaged; the best mean wins. Sure when the three profiles agree and the margin over the second key is
+at least 0.08; the record's confidence is 1.0 when sure and 0.45 (so `key_uncertain`) otherwise (`KeyConfidence`). The
+profile numbers are the literature's (`HPCPKeyProfiles.swift`, sources beside each and in `DEPENDENCIES.md`'s last
+section): they match `key_light.py`'s copy of Essentia's key.cpp except edma's major minor sixth, 0.32 in Faraldo's
+thesis where key.cpp has 0.31. The engine decides with the literature's numbers and decides again with key_light's
+(`parity` in `deckie.key`), which is what `key_parity.py` decides, for the bench's parity column. `KeyTests.swift`
+checks each stage against `Fixtures/key_parity.json` (nine synthesised signals and 66 made-up profiles): spectra within
+1.5e-7 of the frame's largest bin (the port's FFT is double precision, numpy's float32: the one detail that differs),
+peaks from the reference's spectrum within 4.8e-6 in frequency and 2.3e-6 in magnitude (numpy's float32 log10 is up to 2
+units in the last place off), a frame's HPCP from the reference's peaks within 1.4e-6, correlations within 4e-16, and
+from the audio every key, agreement and sure flag identical and every margin within 1.2e-6. Four minutes take about
+0.9 s in a debug build and 0.2 s in release (one core of a 2.1 GHz Xeon). `KeyParitySheetTests` reads
+`mixer/key_parity_keys.tsv` (`DeckieLab`'s `KeyParitySheet`): 259 of 311 exact, 217 sure. The 373-track parity happens
+on the Mac (below).
 
 **Structure** (`Sources/DeckieCore/Structure/`) is the part of `mixer/analyze.py` after the grid choice that lays out
 bars and phrases and places the mix windows, as pure functions of what the audio analysers measure. `BarGrid` puts bar
@@ -283,15 +312,16 @@ pieces above: the SHA-256 of the file's bytes for its id (`CrateIDs`), decoding 
 sound, Beat This!'s beats and the grid fit, the lab's octave alignment to a tag tempo when one is given (`OctaveAlign`),
 the bars, the spectral features, the novelty and phrase lattice, the per-bar loudness, bands and onsets, integrated
 loudness, loudness range and true peak, the onset pattern, the sections, the fade-out, the mix windows, the key (the
-vote above) and the key of both mix windows judged against it, local tempo and the flags, timing each stage as the
-lab's `timing_s` does. The
+whitened HPCP above) and the key of both mix windows judged against it, local tempo and the flags, timing each stage
+as the lab's `timing_s` does. The
 `Analysis` it returns writes the lab's feature JSON (`labJSON()`: the lab's keys in its order, rounded as the lab rounds
 them, 1-based bars, what the engine cannot produce null or left out the way the lab does, listed on the function, and
 a `deckie` block of the engine's own) and the crate record (`crateTrack(options:)`). Three departures from the lab:
 Beat This! is the only grid source, as the madmom fallback is non-commercial (`madmom_ran` is false, and
-`deckie.madmom_would_run` marks the tracks where the lab would have run it); the key and its confidence come from the
-lab's B.9 rule on three key profiles over the engine's chroma in place of the lab's three detectors (`KeyVote`,
-`KeyConfidence`; each vote in `deckie.key.votes` and the crate's `key.votes`); and the vocal probability comes from YAMNet, not the
+`deckie.madmom_would_run` marks the tracks where the lab would have run it); the key and its confidence come from
+research R's whitened HPCP and its sure rule in place of the lab's three detectors (`HPCPKey`, `KeyConfidence`; the
+margin, agreement, each profile's key, the parity decision and the STFT estimate in `deckie.key`, the profiles' keys
+and the STFT estimate as non-deciding entries of the crate's `key.votes`); and the vocal probability comes from YAMNet, not the
 lab's non-commercial EffNet (below), and `embedding_effnet` is never written. Without the YAMNet model the engine runs
 on without a vocal tagger: the record has no `vocal` block or `per_bar.vocal_prob`, the mix windows count every bar
 as vocal-free, and the flag `vocal_unknown` asks for them to be placed again when a tagger has run. The tests
@@ -488,6 +518,11 @@ the file with the row's tag tempo, as the lab did, and compares the engine's rec
 - tempo within 2 percent after octave normalisation, within 2 percent as stage 1 counted it, and an octave apart;
 - key exact, neighbour (the relative key or one step round the wheel) or other, over all tracks and over the lab's
   confident keys (confidence 0.65 or more, 311 tracks);
+- key against `key_parity.py` (column `par`, when `mixer/key_parity_keys.tsv` sits beside the features folder, as it
+  does in the repository): the engine's parity decision (`deckie.key.parity`, key_light's profile numbers) against
+  the sheet's row by the main session's rule, the same key, the margin within 0.001 and the same sure flag; every
+  other track is listed as a port difference, and the summary also says on how many the engine's own key (the
+  literature's numbers) equals the sheet's;
 - integrated loudness and true peak, engine minus lab; section boundary recall and precision within one bar (the
   lab's inner boundaries against the engine's); per-bar vocal correlation when both sides have it (the engine's bar
   under the middle of each lab bar), marked absent otherwise (the engine runs its vocal tagger only when the YAMNet
@@ -535,6 +570,12 @@ export DECKIE_YAMNET_MODEL="$PWD/.models/yamnet.onnx"                           
 .build/release/deckie-build bench "/Users/christophershannon/personal/90s2000 playlist" \
     --features ../mixer/features --candidates ../mixer/candidates.json --out ~/deckie-bench/bench.json
 ```
+
+For the key (engine 0.4.0): parity holds when the `par` column reads `=` on all 373 tracks; then the engine's own key
+should read about 83.3 percent exact on the lab's 311 confident keys, give or take the tracks the literature's edma
+number moves (the summary line counts them). Tracks with a margin under 0.001 or within 0.001 of 0.08 on the sheet
+(three and three) are where a decoder or rounding difference shows first. The mode errors research R notes (we say
+major where Apple says minor on 16 percent) are known and not for this port.
 
 The same variables serve `deckie-build` itself and the tests (`swift test`), which skip the engine's tests with the
 reason printed when ONNX Runtime or the beat model is missing. Without the YAMNet model (step 4 above) the engine runs

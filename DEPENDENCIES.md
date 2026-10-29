@@ -932,3 +932,33 @@ MPL 2.0, CC BY 4.0 and the training-data rule were added by the main session's d
 6. Update the entry in `core/dependencies.json` (a new shipped dependency gets one of its own) and run
    `python3 core/Tools/render_dependencies_table.py` to regenerate the table at the top; `DependenciesTests`
    fails until the two agree.
+
+## Key profiles and the HPCP: numbers from the literature
+
+The engine's key method (`HPCPKey`, `core/Sources/DeckieCore/Key/`; research R, `docs/research/r-key-parity.md`, row
+3f) is Deckie's own code on numbers published in research papers: three key profiles (twelve weights per mode, how
+much of each note a key tends to have) and the parameters of the harmonic pitch-class profile (HPCP) it builds from
+the audio. No file, code or data set of anyone else's is used or shipped; the numbers sit in the Swift beside their
+citation (`HPCPKeyProfiles.swift`, `HPCPKey.swift`). Essentia's `key.cpp` (AGPL), from which `mixer/key_light.py`
+transcribed its profiles, was not read: the numbers were checked against the papers instead (Oct 29, 2026), and where
+the two disagree the paper's is used.
+
+| | |
+|---|---|
+| edma | Faraldo, Gómez, Jordà and Herrera, "Key estimation in electronic dance music", ECIR 2016 (Springer LNCS 9626, pp. 335-347, doi 10.1007/978-3-319-30671-1_25): the median of the averaged chromagrams of 925 EDM tracks. The paper draws the profiles (figure 3, scaled to sum to 1) but prints no numbers; they are printed above the bars of figure 6.5 (p. 150) of Faraldo's thesis (below), two decimals, tonic 1.00. All 24 equal `key_light.py`'s but one: major, minor sixth, **0.32** in the thesis, 0.31 in key.cpp (the point the thesis plots there reads 0.3159). The engine uses 0.32 |
+| braw | Faraldo, Jordà and Herrera, "A multi-profile method for key estimation in EDM", AES International Conference on Semantic Audio 2017 (paper P2-5): the median profile of 600 Beatport tracks, half major, half minor. Drawn in the paper (figure 2), whose section 3.1 says the major profile's four weakest degrees sit just under 0.2 and the minor's only weak one is the tritone; printed to two decimals above the bars of the thesis's figure 6.12 (p. 158), and plotted to four, which the PDF's vector data give: the four-decimal values, equal to `key_light.py`'s in every place |
+| bgate | braw with its four weakest degrees set to zero (major: minor second, minor third, tritone, minor sixth; minor: minor second, major third, tritone, major sixth; the AES paper, section 3.1), the rest to two decimals; the thesis's figure 6.12, printed and plotted alike; equal to `key_light.py`'s |
+| HPCP | Gómez, "Tonal description of music audio signals", PhD thesis, Universitat Pompeu Fabra, 2006: squared peak amplitudes (equation 3.30, p. 76); the cos^2 weighting window, `cos^2(pi/2 · d / (0.5 l))` within `0.5 l` of the bin, l = 4/3 semitone (equation 3.33, p. 77); the harmonic weight `s^(n-1)` with s = 0.6 (equation 3.35 and table 3.2, pp. 78-79); "the first four harmonics" (section 4.2.2, p. 106); bins from A4 = 440 Hz (equations 3.29 and 3.31; the method leaves out the tuning correction). Faraldo's thesis, table 6.1 (p. 147), lists Essentia's settings after Gómez (4 harmonics and slope 0.6 for the key) and Faraldo's own analysis: a 4,096-sample Hann window, 60 peaks per frame, 25 to 3,500 Hz; ECIR 2016's footnote 7 gives the same window and band at 44.1 kHz, and the AES paper's section 3 non-overlapping frames of 4,096 samples (the hop) |
+| Not from the literature | Research R's own choices, measured on its dev split or from first principles, as the memo's parameter table records: the peak floor 1e-5 (Essentia's default, the "defaults" column of the thesis's table 6.1), whitening by the largest value within a third of an octave (the memo's stand-in for the envelope of Röbel and Rodet, DAFx 2005), no per-frame normalisation (Gómez normalises each frame, equation 3.36; the memo measured without), the three-profile average and the sure margin 0.08 |
+| Files read | ECIR 2016, the accepted version in UPF's repository (`repositori.upf.edu`, handle 10230/33060, `Faraldo_ECIR2016_key.pdf`, 884,200 bytes); AES 2017, likewise (`faraldo_aes2017_multi.pdf`, 344,098 bytes); Faraldo, "Tonality estimation in electronic dance music: a computational and musically informed examination", PhD thesis, Universitat Pompeu Fabra, 2017, from Zenodo (record 1154586, doi 10.5281/zenodo.1154586, `Faraldo_PhDThesis.pdf`, 17,075,729 bytes); Gómez 2006 from the Music Technology Group's own copy (`mtg.upf.edu/system/files/publications/emilia-PhD-2006.pdf`, 8,669,499 bytes). Tried and refused: the thesis portal TDX (`tdx.cat`, reached through `hdl.handle.net`: blocked by its firewall); the authors' code on GitHub (`angelfaraldo/edmkey`, `angelfaraldo/keyest-paper`: not reachable from the session). Springer's and AES's own pages and arXiv were not needed. Nothing downloaded is kept in the repository |
+
+**Licence:** numbers taken from a paper are facts and carry no licence; nothing of the papers' text, figures or code
+is copied or shipped. The thesis PDF is published under CC BY-NC 4.0 and the two papers' accepted versions under
+their publishers' terms (Springer, the Audio Engineering Society), which govern the documents, not the values cited.
+Not legal advice; research R's licence notes say the same of the method.
+
+**Checks:** `core/Tools/make_key_parity_fixtures.py` runs `mixer/key_parity.py`'s own functions with both tables
+(`key_light` and `literature`) and `KeyTests.swift` compares each stage; `HPCPKeyTests.constantsWindowAndTables`
+fails if a profile number here changes without the fixture, and names edma's major minor sixth as the one difference
+from `key_light.py`. When a profile number changes, the 373-track sheet (`mixer/key_parity_keys.tsv`) is made again
+on the Mac with the same numbers.
