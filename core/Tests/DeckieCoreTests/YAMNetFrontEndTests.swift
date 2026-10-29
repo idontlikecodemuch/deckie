@@ -91,7 +91,8 @@ struct YAMNetFixture: Decodable {
             let y = YAMNetFixture.signal(samples: s.samples)
             let sum = y.reduce(0.0) { $0 + Double($1) }
             #expect(abs(sum - s.sampleSum) < 1e-6 * max(1, abs(s.sampleSum)), "\(s.name): sample sum \(sum) vs \(s.sampleSum)")
-            #expect(zip(y, s.firstSamples).allSatisfy { Double($0) == $1 }, "\(s.name): first samples differ")
+            // The same float32 samples, but where another C library's sin rounds a double differently in its last bit.
+            #expect(zip(y, s.firstSamples).allSatisfy { abs(Double($0) - $1) <= 1e-7 }, "\(s.name): first samples differ")
             let spec = fe.logMel(y)
             #expect(spec.frames == s.frames)
             guard spec.values.count == s.logMel.count else { Issue.record("\(s.name): size"); continue }
