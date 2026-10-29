@@ -21,8 +21,9 @@ let usage = """
                    [--records dir] [--jobs N] [--ids id,id,...] [--fresh]
 
     build: analyses every audio file below <folder> (mp3, flac, wav, aif, aiff, aifc, m4a, mp4, aac, wma, ogg, opus,
-      m4p), N at a time (default: the processor count, \(processorCount) here), and writes the crate. Finished files are
-      kept in <name>.deckiebuild beside the crate, so a second run skips files that are unchanged; --fresh starts over.
+      m4p), N at a time (default: the processor count, fewer if memory is short, as a job needs about 2 GB: \(defaultJobs)
+      here), and writes the crate. Finished files are kept in <name>.deckiebuild beside the crate, so a second run
+      skips files that are unchanged; --fresh starts over.
       Files that cannot be analysed are counted in the summary and listed in the crate's manifest (import_log).
       --rekordbox takes names, the DJ's tempo (which steers the analysis), key, cues and playlists from a rekordbox
       collection export; --bpm-tags takes a file's own tempo tag (ID3 TBPM, FLAC BPM) when rekordbox gives none.
@@ -65,7 +66,7 @@ func parse(_ args: [String], flags: Set<String>, values: Set<String>) -> (folder
 }
 
 func jobs(_ options: [String: String]) -> Int {
-    guard let j = options["jobs"] else { return processorCount }
+    guard let j = options["jobs"] else { return defaultJobs }
     guard let n = Int(j), n >= 1 else { fail("--jobs needs a whole number of 1 or more", code: 2) }
     return n
 }
