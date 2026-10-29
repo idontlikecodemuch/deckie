@@ -45,7 +45,10 @@ jobs:
         uses: actions/cache@v4
         with:
           path: core/.models
-          key: beat-this-onnx-${{ hashFiles('core/Tools/export_beat_this.py', 'core/Tools/export-requirements.txt') }}
+          # "models-1" in the key: the release of that name now carries the pinned file, and a key change made the
+          # cache miss once so that the fetch below replaced CI's own export (numerically equal, different bytes)
+          # with the pinned one; bump it with the next models release.
+          key: beat-this-onnx-models-1-${{ hashFiles('core/Tools/export_beat_this.py', 'core/Tools/export-requirements.txt') }}
       # The vocal tagger's model (YAMNet, 14.9 MB), so its tests and the engine's vocal tests run here rather than
       # skip: fetched from the release like the beat model or, when the release does not have it, by the pinned-hash
       # script, which exports it with TensorFlow; cached by the hash of the script, the export script and their pinned
@@ -58,7 +61,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: core/.models/yamnet.onnx
-          key: yamnet-onnx-${{ hashFiles('core/Tools/fetch-vocal-models.sh', 'core/Tools/export_yamnet.py', 'core/Tools/yamnet-export-requirements.txt') }}
+          key: yamnet-onnx-models-1-${{ hashFiles('core/Tools/fetch-vocal-models.sh', 'core/Tools/export_yamnet.py', 'core/Tools/yamnet-export-requirements.txt') }}
       - name: Install curl (only when a cache missed)
         if: steps.onnxruntime.outputs.cache-hit != 'true' || steps.model.outputs.cache-hit != 'true' || steps.yamnet.outputs.cache-hit != 'true'
         run: |

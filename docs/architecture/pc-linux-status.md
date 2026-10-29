@@ -25,9 +25,10 @@ Mac) reviews and merges this track's branch, `pc-linux`, and runs anything that 
   candidates, all additive crate blocks. The Mac's memory work is merged (entry 15): a job's peak falls from 1.9 GB
   to 1.1 GB with every number unchanged. 258 tests pass on Linux; Windows builds and passes everything that needs
   no model. The three crate renames are in and the engine is at 0.2.0 (entry 16); the Mac's final memory defaults
-  are merged. 260 tests pass. Next: the pinned model files as a release (Christopher's yes needed, entry 16), the
-  first clean ONNX Runtime build's publication (run 4 in progress), the yardstick on the Mac (running there now
-  with its own Beat This! export and no vocal tagger; the sheet follows).
+  are merged. 260 tests pass. Christopher approved both releases: the pinned model files are published (release `models-1`, entry 16) and
+  every machine, CI included, now fetches them by hash; the ONNX Runtime archives' release follows from the
+  publish run queued behind run 4. Next: the yardstick on the Mac (running there now; with the pinned models from
+  here on), then the first PC build.
 - Needed from Christopher: nothing right now. The vocal-model downloads were approved on Oct 28 ("Allow vocal
   models", with a standing yes for any further vocal model the work needs); dr_mp3, dr_flac, ONNX Runtime and
   Beat This! were approved before.
