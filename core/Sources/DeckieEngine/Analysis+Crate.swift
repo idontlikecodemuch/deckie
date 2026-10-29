@@ -92,9 +92,14 @@ extension Analysis {
 
         return CrateTrack(
             id: id,
-            // The tag tempo the analysis was given is a fact about the file, so the record keeps it there.
+            // The tag tempo the analysis was given is a fact about the file, so the record keeps it there; so are the
+            // damaged frames the decoder silenced (null when none).
             file: .init(name: source.name, rel: rel, bytes: source.bytes, sha1Head: nil, sha256: source.sha256,
-                        durationS: r3(duration), tagBpm: bpmTag.flatMap { $0 > 0 ? r3($0) : nil }),
+                        durationS: r3(duration), tagBpm: bpmTag.flatMap { $0 > 0 ? r3($0) : nil },
+                        damagedFrames: damagedFrames.isEmpty ? nil : damagedFrames.map {
+                            .init(startS: Analysis.rounded($0.startSeconds, "start_s"),
+                                  seconds: Analysis.rounded($0.seconds, "seconds"))
+                        }),
             ident: .init(title: title ?? source.name, version: version,
                          source: fromFileName ? "filename" : "user"),
             analysis: .init(engine: "\(Analysis.engineFamily)-\(Analysis.engineVersion)", analysedAt: options.analysedAt,

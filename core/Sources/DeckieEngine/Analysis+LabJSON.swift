@@ -152,10 +152,12 @@ extension Analysis {
     /// The lab's feature JSON as compact UTF-8 text.
     public func labJSONData() -> Data { labJSON().data }
 
-    /// The engine's own block: the file's hash, the decoder, the key estimator's detail (the edma estimate as `whole`,
-    /// each key vote under its name in `votes`, the decided key and the lab's rule words as `vote` and `vote_rule`,
-    /// the song key the windows were judged against, the windows and the segments), where the lab would have run
-    /// madmom, whether the vocal information is missing, the tagger's detail, the vocal structure and the hooks.
+    /// The engine's own block: the file's hash, the decoder, the damaged frames it silenced (`damaged_frames`, each
+    /// `start_s` and `seconds`, 4 decimals as in the crate's `file.damaged_frames`; null when none), the key
+    /// estimator's detail (the edma estimate as `whole`, each key vote under its name in `votes`, the decided key and
+    /// the lab's rule words as `vote` and `vote_rule`, the song key the windows were judged against, the windows and
+    /// the segments), where the lab would have run madmom, whether the vocal information is missing, the tagger's
+    /// detail, the vocal structure and the hooks.
     func deckieBlock() -> JSONValue {
         typealias J = JSONValue
         func m(_ k: String, _ v: J) -> J.Member { J.Member(k, v) }
@@ -175,6 +177,9 @@ extension Analysis {
             m("sha256", .string(source.sha256)), m("bytes", .int(source.bytes)),
             m("format", .string(source.format)), m("source_sr", .int(source.sampleRate)),
             m("source_channels", .int(source.channels)),
+            m("damaged_frames", damagedFrames.isEmpty ? .null : .array(damagedFrames.map {
+                .object([m("start_s", J.round($0.startSeconds, 4)), m("seconds", J.round($0.seconds, 4))])
+            })),
             m("madmom_would_run", J.text(madmomWouldRun)),
             m("vocal_unknown", .bool(vocalUnknown)), m("vocal_model", J.text(vocalModel)),
             m("vocal", vocalBlock()),

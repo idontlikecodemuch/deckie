@@ -108,9 +108,39 @@ actor Shared {
         return url
     }
 
-    /// The analysis of the WAV ("wav"), of its MP3 ("mp3"), of the WAV with the stub vocal tagger ("vocal"), of the
-    /// vocal test track by the default analyser, which loads YAMNet ("yamnet"), or of the vocal-structure test track by
-    /// the default analyser ("structure").
+    /// The test track as a 192 kbps MP3, made with the ffmpeg program.
+    func mp3() throws -> URL {
+        let (wav, _) = try testTrack()
+        let url = wav.deletingPathExtension().appendingPathExtension("mp3")
+        if !FileManager.default.fileExists(atPath: url.path) {
+            let p = Process()
+            p.executableURL = URL(fileURLWithPath: Available.ffmpeg!)
+            p.arguments = ["-y", "-hide_banner", "-loglevel", "error", "-i", wav.path, "-codec:a", "libmp3lame",
+                           "-b:a", "192k", url.path]
+            try p.run()
+            p.waitUntilExit()
+            if p.terminationStatus != 0 { throw CocoaError(.fileWriteUnknown) }
+        }
+        return url
+    }
+
+    private var damaged: (url: URL, frame: DamagedFrame)?
+
+    /// That MP3 with one frame near 30 s damaged so its big values run past the granule's end (`MP3Damage`), and the
+    /// frame as the decoder reports it.
+    func damagedMP3() throws -> (url: URL, frame: DamagedFrame) {
+        if let damaged { return damaged }
+        let url = try mp3().deletingLastPathComponent().appendingPathComponent("test-track-damaged.mp3")
+        guard let frame = try MP3Damage.damagedCopy(of: try mp3(), nearSeconds: 30, to: url) else {
+            throw CocoaError(.fileWriteUnknown, userInfo: [NSLocalizedDescriptionKey: "no damage the decoder flags"])
+        }
+        damaged = (url, frame)
+        return (url, frame)
+    }
+
+    /// The analysis of the WAV ("wav"), of its MP3 ("mp3"), of that MP3 with a damaged frame ("damaged"), of the WAV
+    /// with the stub vocal tagger ("vocal"), of the vocal test track by the default analyser, which loads YAMNet
+    /// ("yamnet"), or of the vocal-structure test track by the default analyser ("structure").
     func run(_ name: String) async throws -> Run {
         if let task = runs[name] { return try await task.value }
         let (wav, _) = try testTrack()
@@ -122,16 +152,9 @@ actor Shared {
         case "structure":
             url = try structureTrack()
         case "mp3":
-            url = wav.deletingPathExtension().appendingPathExtension("mp3")
-            if !FileManager.default.fileExists(atPath: url.path) {
-                let p = Process()
-                p.executableURL = URL(fileURLWithPath: Available.ffmpeg!)
-                p.arguments = ["-y", "-hide_banner", "-loglevel", "error", "-i", wav.path, "-codec:a", "libmp3lame",
-                               "-b:a", "192k", url.path]
-                try p.run()
-                p.waitUntilExit()
-                if p.terminationStatus != 0 { throw CocoaError(.fileWriteUnknown) }
-            }
+            url = try mp3()
+        case "damaged":
+            url = try damagedMP3().url
         default:
             url = wav
         }
@@ -311,6 +334,44 @@ struct EngineTests {
         #expect(abs(mp3.bpm - wav.bpm) < 0.05, "mp3 \(mp3.bpm), wav \(wav.bpm)")
         #expect(abs(mp3.bars.firstDownbeatS - wav.bars.firstDownbeatS) < 0.02)
         #expect(mp3.key.whole.camelot == wav.key.whole.camelot && mp3.keyVote.camelot == wav.keyVote.camelot)
+        #expect(mp3.damagedFrames.isEmpty && wav.damagedFrames.isEmpty)
+    }
+
+    /// The MP3 with a damaged frame near 30 s: the decoder plays the frame as silence and reports it, and the record
+    /// carries it, as `deckie.damaged_frames` in the lab JSON and `file.damaged_frames` in the crate (null for the clean
+    /// MP3); everything else is measured on the concealed audio (26 ms of silence in 63 s), so the bars, the tempo
+    /// and the key are the clean MP3's, and the true peak stays within the concealment's fade of it.
+    @Test(.enabled(if: Available.ffmpeg != nil, "needs the ffmpeg program to make the MP3"))
+    func damagedMP3FrameReachesTheRecordAndTheCrate() async throws {
+        let clean = try await Shared.shared.run("mp3").analysis
+        let a = try await Shared.shared.run("damaged").analysis
+        let frame = try await Shared.shared.damagedMP3().frame
+        print(describe(a))
+        #expect(a.damagedFrames == [frame])
+        #expect(frame.startSeconds > 29.5 && frame.startSeconds < 30.5 && abs(frame.seconds - 1152.0 / 44100) < 1e-12)
+        #expect(a.bars.nBars == clean.bars.nBars && abs(a.bpm - clean.bpm) < 1e-6)
+        #expect(a.key.whole.camelot == clean.key.whole.camelot && a.keyVote.camelot == clean.keyVote.camelot)
+        #expect(a.loudness.truePeakDb <= clean.loudness.truePeakDb + 1.7,
+                "true peak \(a.loudness.truePeakDb) dBTP, the clean MP3's \(clean.loudness.truePeakDb)")
+
+        let json = a.labJSON()
+        let listed: JSONValue = .array([.object([.init("start_s", .number(Py.round(frame.startSeconds, 4))),
+                                                 .init("seconds", .number(Py.round(frame.seconds, 4)))])])
+        #expect(json["deckie"]?["damaged_frames"] == listed, "\(json["deckie"]?["damaged_frames"]?.text ?? "-")")
+        #expect(clean.labJSON()["deckie"]?["damaged_frames"] == .null)
+
+        let t = a.crateTrack(options: .init(analysedAt: "2026-10-29T12:00:00Z"))
+        #expect(t.file.damagedFrames == [.init(startS: Py.round(frame.startSeconds, 4), seconds: Py.round(frame.seconds, 4))])
+        #expect(clean.crateTrack(options: .init(analysedAt: "2026-10-29T12:00:00Z")).file.damagedFrames == nil)
+        let crate = Crate(manifest: CrateManifest(crateId: "engine-test", name: "engine test",
+                                                  createdAt: "2026-10-29T12:00:00Z", devicesSeen: [Analysis.platform]),
+                          tracks: [t])
+        #expect(crate.problems().isEmpty, "\(crate.problems())")
+        let line = String(decoding: try CrateWriter.encode(crate)["crate.json"]!, as: UTF8.self)
+        #expect(line.contains(#""damaged_frames":[{"seconds":0.0261,"start_s":"#), "\(line.prefix(400))")
+        print("damaged MP3: frame at \(Py.fixed(frame.startSeconds, 4)) s; true peak \(Py.fixed(a.loudness.truePeakDb, 2)) "
+              + "dBTP (the clean MP3 \(Py.fixed(clean.loudness.truePeakDb, 2))); deckie.damaged_frames "
+              + "\(json["deckie"]?["damaged_frames"]?.text ?? "-")")
     }
 
     /// With a vocal tagger the record has the vocal block, the per-bar vocal probability and vocal-aware windows,
