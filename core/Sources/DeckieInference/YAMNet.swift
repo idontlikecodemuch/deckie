@@ -18,28 +18,39 @@ public enum YAMNetError: Error, Equatable, CustomStringConvertible {
     }
 }
 
-/// One of YAMNet's 521 classes: its index in the model's output, and a short name in Deckie's own words (the class
-/// list YAMNet was trained with comes from AudioSet's ontology, which is not copied here).
+/// One of YAMNet's 521 classes: its index in the model's output, a short name in Deckie's own words, and its label, the
+/// display name YAMNet's class map gives it (AudioSet's spelling, which another AudioSet model's list shares, so the
+/// readings find a class by it in either: `VocalReadings`). Only the classes Deckie uses are named here: the class list
+/// YAMNet was trained with comes from AudioSet's ontology, which is not copied here.
 public struct YAMNetClass: Sendable, Equatable, Hashable {
     public var index: Int
     public var name: String
-    public init(_ index: Int, _ name: String) { self.index = index; self.name = name }
+    public var label: String
+    public init(_ index: Int, _ name: String, label: String) { self.index = index; self.name = name; self.label = label }
 
-    // The indices were read from the class list beside the model's code (tensorflow/models, research/audioset/yamnet,
-    // at the commit core/Tools/fetch-vocal-models.sh pins).
-    public static let speech = YAMNetClass(0, "speech")
-    public static let singing = YAMNetClass(24, "singing")
-    public static let choir = YAMNetClass(25, "choir")
-    public static let yodelling = YAMNetClass(26, "yodelling")
-    public static let chant = YAMNetClass(27, "chant")
-    public static let mantra = YAMNetClass(28, "mantra")
-    public static let childSinging = YAMNetClass(29, "child singing")
-    public static let syntheticSinging = YAMNetClass(30, "synthetic singing")
-    public static let rapping = YAMNetClass(31, "rapping")
-    public static let humming = YAMNetClass(32, "humming")
-    public static let music = YAMNetClass(132, "music")
-    public static let vocalMusic = YAMNetClass(249, "vocal music")
-    public static let aCappella = YAMNetClass(250, "a cappella")
+    // The indices and labels were read from the class list beside the model's code (tensorflow/models,
+    // research/audioset/yamnet/yamnet_class_map.csv, at the commit core/Tools/fetch-vocal-models.sh pins; the file's
+    // SHA-256 is cdf24d193e196d9e95912a2667051ae203e92a2ba09449218ccb40ef787c6df2). AudioSet's "Male singing" and
+    // "Female singing" are not among its 521.
+    public static let speech = YAMNetClass(0, "speech", label: "Speech")
+    public static let singing = YAMNetClass(24, "singing", label: "Singing")
+    public static let choir = YAMNetClass(25, "choir", label: "Choir")
+    public static let yodelling = YAMNetClass(26, "yodelling", label: "Yodeling")
+    public static let chant = YAMNetClass(27, "chant", label: "Chant")
+    public static let mantra = YAMNetClass(28, "mantra", label: "Mantra")
+    public static let childSinging = YAMNetClass(29, "child singing", label: "Child singing")
+    public static let syntheticSinging = YAMNetClass(30, "synthetic singing", label: "Synthetic singing")
+    public static let rapping = YAMNetClass(31, "rapping", label: "Rapping")
+    public static let humming = YAMNetClass(32, "humming", label: "Humming")
+    public static let music = YAMNetClass(132, "music", label: "Music")
+    public static let musicalInstrument = YAMNetClass(133, "musical instrument", label: "Musical instrument")
+    public static let vocalMusic = YAMNetClass(249, "vocal music", label: "Vocal music")
+    public static let aCappella = YAMNetClass(250, "a cappella", label: "A capella")
+
+    /// Every class named above, in index order.
+    public static let named: [YAMNetClass] = [.speech, .singing, .choir, .yodelling, .chant, .mantra, .childSinging,
+                                              .syntheticSinging, .rapping, .humming, .music, .musicalInstrument,
+                                              .vocalMusic, .aCappella]
 }
 
 /// YAMNet's output for a run of patches: 521 class scores (0 to 1, after the network's sigmoid) and the 1,024-value
@@ -65,6 +76,17 @@ public struct YAMNetPatches: Sendable, Equatable {
 
     /// Every patch's score for `cls`.
     public func scores(_ cls: YAMNetClass) -> [Double] { (0..<count).map { Double(score($0, cls)) } }
+
+    /// The 521 columns' names as the readings see them: the label of each class `YAMNetClass` names, empty for the
+    /// others.
+    public static let classNames: [String] = {
+        var names = [String](repeating: "", count: classes)
+        for c in YAMNetClass.named { names[c.index] = c.label }
+        return names
+    }()
+
+    /// The scores as a class-score matrix with `classNames` (the same storage, not a copy).
+    public var classScores: ClassScoreMatrix { ClassScoreMatrix(patches: count, names: Self.classNames, scores: scores) }
 
     /// Patch `k`'s embedding.
     public func embedding(_ k: Int) -> ArraySlice<Float> {

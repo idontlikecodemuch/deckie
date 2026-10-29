@@ -58,6 +58,36 @@ struct YAMNetModelFixture: Decodable {
         #expect(YAMNet.vocalClasses.allSatisfy { $0.index >= 0 && $0.index < YAMNetPatches.classes })
     }
 
+    /// The readings find YAMNet's classes by their labels: max11's are the vocal rule's eleven, in its order; the
+    /// voice classes are twelve of the fourteen asked for (male and female singing are not among YAMNet's 521); the
+    /// music classes are music and musical instrument.
+    @Test func readingsFindYAMNetsClasses() {
+        let empty = YAMNetPatches(count: 0, scores: [], embeddings: [])
+        #expect(empty.classScores.names.count == YAMNetPatches.classes)
+        let c = VocalReadings.read(empty.classScores).classes
+        #expect(c.max.map(\.index) == YAMNet.vocalClasses.map(\.index) && c.missingMax.isEmpty)
+        #expect(c.voice.map(\.index) == [24, 25, 31, 249, 0, 29, 27, 26, 32, 28, 30, 250])
+        #expect(c.voice.map(\.name) == VocalReadings.voiceClassNames.filter { $0 != "Male singing" && $0 != "Female singing" })
+        #expect(c.missingVoice == ["Male singing", "Female singing"])
+        #expect(c.music == [.init("Music", 132), .init("Musical instrument", 133)] && c.missingMusic.isEmpty)
+        #expect(YAMNetPatches.classNames.filter { !$0.isEmpty }.count == YAMNetClass.named.count)
+        #expect(Set(YAMNetClass.named.map(\.index)).count == YAMNetClass.named.count)
+    }
+
+    /// On made-up scores for every class: max11 is the vocal score patch for patch, exactly (so its bars are
+    /// `vocal_prob`'s), and voice_sum is never below it.
+    @Test func max11IsTheVocalScore() {
+        let count = 40
+        var g = SplitMix64(29)
+        // Uniform to the fourth power: most scores small, as on a full mix, a few large.
+        let scores = (0..<(count * YAMNetPatches.classes)).map { _ in Float(pow(g.uniform(), 4)) }
+        let p = YAMNetPatches(count: count, scores: scores, embeddings: [Float](repeating: 0, count: count * YAMNetPatches.embeddingSize))
+        let r = VocalReadings.read(p.classScores)
+        #expect(r.max11 == (0..<count).map { YAMNet.vocalScore(p, patch: $0) })
+        #expect(zip(r.voiceSum, r.max11).allSatisfy { $0 >= $1 })
+        #expect(r.voiceVsMusic.allSatisfy { $0 > 0 && $0 < 1 })
+    }
+
     /// The style vector is the mean embedding scaled to length 1.
     @Test func meanEmbeddingIsUnitLength() {
         var e = [Float](repeating: 0, count: 2 * YAMNetPatches.embeddingSize)

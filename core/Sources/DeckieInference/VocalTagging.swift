@@ -3,7 +3,8 @@ import DeckieAudio
 import DeckieCore
 
 /// A vocal model's opinion patch by patch: the vocal score of each patch (0 to 1, the model's rule already applied),
-/// other per-patch series it can give, and a style embedding if it has one.
+/// other per-patch series it can give, a style embedding if it has one, and its class scores if it is a tagger of
+/// named classes (from which the tagger reads `VocalReadings`).
 public struct VocalPatches: Sendable, Equatable {
     /// The patches' vocal scores.
     public var vocal: [Double]
@@ -17,17 +18,29 @@ public struct VocalPatches: Sendable, Equatable {
     public var centreSeconds: Double
     /// Where the time went, in order.
     public var timing: [VocalTagging.Stage]
+    /// Every class's score per patch with the classes' names, one row per patch of `vocal`; nil for a model that
+    /// gives no per-class scores. A second model that fills it is read the same four ways as YAMNet
+    /// (`VocalReadings.read`).
+    public var classScores: ClassScoreMatrix?
 
     public init(vocal: [Double], series: [String: [Double]], style: [Double]?, hopSeconds: Double, centreSeconds: Double,
-                timing: [VocalTagging.Stage]) {
+                timing: [VocalTagging.Stage], classScores: ClassScoreMatrix? = nil) {
+        precondition(classScores.map { $0.patches == vocal.count } ?? true, "one row of class scores per patch")
         self.vocal = vocal; self.series = series; self.style = style; self.hopSeconds = hopSeconds
-        self.centreSeconds = centreSeconds; self.timing = timing
+        self.centreSeconds = centreSeconds; self.timing = timing; self.classScores = classScores
+    }
+
+    /// The readings of the class scores averaged into the bars whose lines are `barTimes`; nil without class scores.
+    public func readings(barTimes: [Double]) -> VocalReadings? {
+        classScores.map { VocalReadings.read($0).averaged(hop: hopSeconds, centreOffset: centreSeconds, barTimes: barTimes) }
     }
 }
 
 /// A model that scores vocal activity patch by patch. YAMNet is the one Deckie runs; the seam is here so a second
 /// model can be added beside it as a second opinion (PANNs' MobileNetV2, MIT code and CC BY 4.0 weights, if the
-/// yardstick on the Mac shows YAMNet alone reads badly) without touching the averaging or the engine.
+/// yardstick on the Mac shows YAMNet alone reads badly) without touching the averaging or the engine. A model that
+/// gives its per-class scores and their AudioSet names (`VocalPatches.classScores`) is read the four ways YAMNet is
+/// (`VocalReadings`) by the same function.
 public protocol VocalPatchModel: Sendable {
     /// The model's name, as records give it.
     var name: String { get }
@@ -70,7 +83,8 @@ extension YAMNet: VocalPatchModel {
         return VocalPatches(vocal: vocal, series: series, style: style, hopSeconds: YAMNetFrontEnd.patchHopSeconds,
                             centreSeconds: YAMNetFrontEnd.patchCentreSeconds,
                             timing: [.init("resample", r.timing.resampling), .init("front_end", r.timing.frontEnd),
-                                     .init("model", r.timing.model), .init("scores", rules)])
+                                     .init("model", r.timing.model), .init("scores", rules)],
+                            classScores: p.classScores)
     }
 }
 
@@ -108,6 +122,9 @@ public struct VocalTagging: Sendable, Equatable {
     /// The model's other per-patch series averaged into bars the same way (`singing`, `rapping`, `choir`, `speech`,
     /// `music`).
     public var seriesPerBar: [String: [Double]]
+    /// Four readings of the model's class scores, averaged into bars the same way (`VocalReadings`; `max11` is
+    /// `perBar`): research series for the yardstick.
+    public var readings: VocalReadings?
     /// The style vector (unit length) and the model that gave it.
     public var style: [Double]?
     public var styleModel: String?
@@ -118,7 +135,8 @@ public struct VocalTagging: Sendable, Equatable {
 
 /// Deckie's vocal tagger: YAMNet's vocal score per patch (`YAMNet.vocalScore`), averaged into the bars of the grid as
 /// the lab averages its EffNet voice probabilities, with YAMNet's singing, rapping, choir, speech and music scores per
-/// bar beside it and the mean of its embeddings as the track's style vector. The engine (DeckieEngine) uses it through its `VocalTagger`
+/// bar beside it, four readings of its class scores per bar (`VocalReadings`), and the mean of its embeddings as the
+/// track's style vector. The engine (DeckieEngine) uses it through its `VocalTagger`
 /// protocol; `loadDefault()` finds the model where core/Tools/fetch-vocal-models.sh puts it, and says what is missing
 /// when it is not there, so the analyser runs without a vocal block.
 public final class DeckieVocalTagger: Sendable {
@@ -178,7 +196,7 @@ public final class DeckieVocalTagger: Sendable {
         return VocalTagging(model: YAMNet.modelName, rule: YAMNet.vocalRule, perBar: bars(p.vocal, p),
                             meanProbability: mean, patchHopSeconds: p.hopSeconds, patchCentreSeconds: p.centreSeconds,
                             patchCount: p.vocal.count, perPatch: p.vocal, seriesPerBar: p.series.mapValues { bars($0, p) },
-                            style: p.style, styleModel: p.style == nil ? nil : YAMNet.modelName,
-                            secondOpinion: opinion, timing: timing)
+                            readings: p.readings(barTimes: barTimes), style: p.style,
+                            styleModel: p.style == nil ? nil : YAMNet.modelName, secondOpinion: opinion, timing: timing)
     }
 }
