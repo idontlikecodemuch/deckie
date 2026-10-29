@@ -227,9 +227,14 @@ is fetched. Applies to research R (key parity) and to the vocal listening set. R
 HPCP with Faraldo's three published profiles averaged reaches 83.3 percent exact against the lab's confident keys
 (the engine shipped 74.6; held-out split 83.2; against Apple 70.4 from 63.4) with the gain in every era, style and
 tempo bucket; its few choices were made on the 90s and 2000s and reported on the other eras. The PC and Linux
-session ports it, with the profile values re-sourced from the papers rather than Essentia's AGPL code. The real
-outside test, GiantSteps-MTG-key (1,486 EDM clips, annotations CC BY-SA 4.0, audio bundled on Zenodo), waits on
-Christopher's word to fetch, and a Codex pass on what DJs say about key tools is briefed in
+session ports it, with the profile values re-sourced from the papers rather than Essentia's AGPL code. The outside test
+ran on Oct 29 with Christopher's yes (GiantSteps-MTG-key, 1,486 EDM clips, 85 percent minor, annotations CC BY-SA 4.0,
+audio from Zenodo for internal evaluation only; letter R's last section): the method is exact on 50 percent of the
+high-confidence clips (MIREX-weighted 0.61), the shipped baseline 48; the gain is all in major keys (+12 points) and
+minor keys are 2.5 points worse; the main error is the wrong mode on the right note (44 percent of minor clips read
+as major). That puts our own key reader near the free KeyFinder and well below rekordbox and Mixed In Key on
+unfamiliar dance music; the crate's 83 percent flatters it. Apple's framework reads key on Mac and iPad; on Windows
+and Linux this is the known gap, parked under the Oct 29 plateau. A Codex pass on what DJs say about key tools is briefed in
 `docs/research/briefs/codex-key-reddit.md`.
 
 ## Proposed on Oct 26, 2026, from the research (awaiting Christopher)
