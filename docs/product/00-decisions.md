@@ -155,6 +155,20 @@ DJs' fear is "I'm not helping train ai for free": that their choices become some
 to history, cues, saved pairs and learned preferences: all of it stays with the DJ, Deckie says who benefits from
 learning (only the DJ), and the DJ can see, export and delete it. Spec 3.
 
+### Note on D3 (Oct 28): dependencies that report home
+ONNX Runtime's official builds send usage events to Microsoft: its `docs/Privacy.md` says telemetry is "turned ON by
+default in the official builds", over HTTPS through Microsoft's 1DS client on Linux and macOS and through the
+operating system's event tracing on Windows. Counts and timings, never audio, but it is a network call during
+analysis, which the charter forbids, and it would make the "Data Not Collected" line (P8) false. Found by the PC and
+Linux session. Decided: development builds, CI and the bench may use the official binaries with the
+`ORT_DISABLE_TELEMETRY=1` switch set inside the process before the library loads, checked by a test; no build that
+reaches a user carries a reporting client, so before the first TestFlight or PC build ONNX Runtime is built by us
+with its `--no_telemetry` flag, which leaves the client out, and pinned like any dependency; a release test scans
+each shipped library for the client's endpoint and symbols, so the promise is checked rather than assumed. The client's
+own dependencies (curl, mbedTLS, SQLite) leave with it; curl's MIT-style licence is not added to the allowlist and is
+recorded as present in development builds only. General rule: a dependency with a reporting client is built without
+it or not used.
+
 ### Note on D5 (Oct 26): Mike's data is a special case
 Mike's party set was curated by Christopher and held music Mike does not usually play, so the sprint's data describes a
 DJ with an unfamiliar crate, and his 16 percent pitch range is not typical. That is itself a use case (new DJs, a

@@ -48,7 +48,8 @@ research-only never; quote the licence file before adopting anything. Model weig
 could not be shipped, unless that data's licence forbids commercial use; the data set, its licence and the
 trainer are recorded beside the weights in `DEPENDENCIES.md` (note on D14). MPL 2.0 ships only with its files unmodified by
 us and its notices shown; a change we make to an MPL file is published (note on D14). No audio leaves the user's machine; no
-network during analysis. The crate file is Deckie's own format and the only thing written. Recognition signatures
+network during analysis, including by a dependency: a library with a reporting client is built without it before
+any user build, and a release test scans each shipped library for it (note on D3, Oct 28). The crate file is Deckie's own format and the only thing written. Recognition signatures
 come from an Apple device; this track builds no fingerprint and leaves a place in the crate for signatures made
 elsewhere.
 
