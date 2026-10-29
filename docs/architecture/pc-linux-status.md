@@ -12,30 +12,29 @@ Mac) reviews and merges this track's branch, `pc-linux`, and runs anything that 
 - **The main session has read and accepted the spike** and told this track to open the pull request and start
   step 2. The pull request is https://github.com/idontlikecodemuch/deckie/pull/1 (branch `pc-linux` into `main`);
   both CI workflows are green on it.
-- **Step 2 is under way on its own branch and pull request** (`pc-linux-step2`,
-  https://github.com/idontlikecodemuch/deckie/pull/2), each mechanic with its own status entry. Done: WAV, MP3 and AIFF
-  decoding with protected-file detection (entry 4), loudness measurement (entry 5) and the key estimator (entry
-  6), all with no dependency beyond the vendored dr_mp3, all passing on Linux and Windows. From step 3, the logic
-  that needs no audio is ported and checked against all 373 committed tracks: start and end tempo with the trust
-  rule, the bar grid, the phrase lattice, sections, fade-out, mix windows and flags (entry 7), and the
-  audio-derived features too: FLAC decoding, the resampler, per-bar bands, first and last sound, mel and MFCC,
-  onset pattern and density, the novelty peaks (entry 8). Beat This! runs through ONNX Runtime from Swift
-  with beats identical to the Python package (entry 9). Still to come in step 2: the vocal tagger (research done,
-  `docs/research/n-vocal-tagger.md`; the main session said yes to the recommendation, with conditions, entry
-  10; Christopher's approval of the two model downloads is pending). Step 4, the crate reader and writer, is
-  built and accepted (entry 10). The analyser is assembled: one call from an audio file to the lab's record and
-  a crate track, with everything but the vocal tagger (entry 11). Next: `deckie-build` with its `bench` command
-  (step 5, in progress), the vocal tagger once Christopher approves its two downloads, then the yardstick on the
-  Mac.
-- Needed from Christopher: approval of the two vocal-model downloads (Spleeter's ONNX files, EfficientAT's weights).
-- Open questions for the main session: none. Crate format v1 is accepted with two changes (entry 10, addendum),
-  and MPL 2.0 is decided: unmodified files ship with their notices, so ONNX Runtime with Eigen inside qualifies.
-- Needed from Christopher: nothing right now (dr_mp3 vendoring approved Oct 28; dr_flac next, same pattern,
-  will need the same yes, see entry 4, working mode).
-- Needed from the Mac, when convenient (not blocking): one check of the loudness module against the real
-  pyloudnorm and scipy on any file (entry 5), and the key estimator's parity run over the real tracks against
-  `mixer/key_light_stft.tsv` and `mixer/key_ends_stft.tsv` (entry 6). Both can wait for the `bench` command of
-  step 5, which is where they belong.
+- **Step 2 is complete on its own branch and pull request** (`pc-linux-step2`,
+  https://github.com/idontlikecodemuch/deckie/pull/2), each mechanic with its own status entry: WAV, MP3 and AIFF
+  decoding with protected-file detection (entry 4), loudness (entry 5), the key estimator (entry 6), FLAC, the
+  resampler and the audio-derived features (entry 8), Beat This! through ONNX Runtime with beats identical to the
+  Python package (entry 9), and the vocal tagger on YAMNet (entry 12). Step 3, the logic that needs no audio, is
+  ported and checked against all 373 committed tracks (entry 7). Step 4, the crate reader and writer, is built and
+  accepted (entry 10). The analyser is assembled: one call from an audio file to the lab's record and a crate
+  track, now with the vocal tagger in it (entries 11 and 12). 201 tests pass on Linux; Windows builds and passes
+  everything that needs no model. Next: `deckie-build` with its `bench` command (step 5, in progress), then the
+  vocal-derived fields from memo O (where the vocals are, free intro and outro, hooks) as added crate fields, then
+  the yardstick on the Mac.
+- Needed from Christopher: nothing right now. The vocal-model downloads were approved on Oct 28 ("Allow vocal
+  models", with a standing yes for any further vocal model the work needs); dr_mp3, dr_flac, ONNX Runtime and
+  Beat This! were approved before.
+- Open questions for the main session (entry 12): (1) ONNX Runtime's usage reporting to Microsoft, found on by
+  default and now switched off before the library starts; whether that closes it under the privacy line, and
+  whether the curl licence inside the Linux library goes on the allowlist or ONNX Runtime gets rebuilt without
+  its reporting client at a later update. (2) A confirmation that YAMNet's training data fits the
+  training-data rule as written. Crate format v1 is accepted (entry 10, addendum) and MPL 2.0 is decided.
+- Needed from the Mac, when step 5 lands (not blocking): the `bench` run over the 373 files, which folds in the
+  loudness check against pyloudnorm (entry 5), the key estimator's parity run (entry 6) and the vocal tagger's
+  first look at real voices (entry 12). The Mac needs ONNX Runtime's macOS archive fetched by the same pinned
+  pattern as Linux (DEPENDENCIES.md, section 6).
 
 ## Oct 28, 2026: the environment (entry 1)
 
@@ -582,3 +581,57 @@ key-uncertain where the lab flags 58. (5) No vocal tagger yet: the vocal fields 
 treat every bar as vocal-free, and the record is flagged `vocal_unknown`; a tagger plugs in through a protocol
 and a stand-in is tested. The EffNet embedding is never written. The lab's `score.py` needs vocal data and will
 not read these records until the tagger lands; the Swift reader and scorer do.
+
+## Oct 29, 2026: the vocal tagger on YAMNet, and ONNX Runtime's reporting switched off (entry 12)
+
+**Where it landed.** The analyser now hears singing. The tagger is YAMNet, Google's small sound-recognition model
+(3.75 million numbers, 14.9 MB once exported), trained on AudioSet, Google's catalogue of YouTube clips labelled by
+the kind of sound in them. It runs through ONNX Runtime like the beat model. For every 0.96-second patch of audio
+it gives a score for 521 kinds of sound; Deckie's vocal score for a patch is the largest of eleven singing-related
+scores (singing, choir, yodelling, chant, mantra, child singing, synthetic singing, rapping, humming, vocal music, a
+cappella), the largest rather than the sum because one voice lights several of these at once. Speech is kept
+apart, as its own score. Patches are averaged into bars with the lab's rule. The record gets the lab's
+`per_bar.vocal_prob` and `vocal` block in the lab's shape, plus rapping, choir, speech and music scores per bar and
+the model's 1,024-value "style" vector (a numeric sketch of how a track sounds, kept for "sounds like" matching
+later). The crate gets its `vocal` block, `bars.vocal` and a `style` block, all listed in `features_present`.
+Measured: Swift's scores are identical to Python's ONNX Runtime on the same patches; the exported model is within
+2.6 millionths of TensorFlow's original; the front end (the log-mel patches) within 1.8 ten-thousandths. 0.62 s for
+four minutes of stereo in a release build. 201 tests in all (19 inference, 15 engine, 34 decode, 34 crate, 99
+core), no warnings. `Analyser()` now picks the tagger up by itself when the model file is there, and says what is
+missing when it is not.
+
+**What it is not yet.** The scores are uncalibrated. On the synthesised test track (a sung line alternating with
+instrumental bars) the sung bars score 0.0294 and the instrumental bars 0.0001, every sung bar above every
+instrumental bar, so the tagger tells them apart; but a synthetic voice is a weak stand-in, a real voice will score
+far higher, and the "vocal-heavy" thresholds wait for the Mac yardstick and track J's listening test. The research
+memo (`docs/research/n-vocal-tagger.md`) had recommended Spleeter and EfficientAT; on the main session's direction
+those were dropped for YAMNet, everything downloaded for them was deleted, and nothing of them was committed. The
+place for a second opinion (PANNs, a larger model) is built but empty; it is only worth filling if the yardstick
+shows YAMNet missing voices.
+
+**Approval and licence.** Christopher approved the vocal-model downloads on Oct 28, with a standing yes for any
+further vocal model the work needs. YAMNet's weights are fetched per machine by a pinned hash and exported with
+TensorFlow, never committed (`core/Tools/fetch-vocal-models.sh`, `export_yamnet.py`), and CI caches the export.
+DEPENDENCIES.md section 8 records the weights, the three source files at a pinned commit, the export's hash, the
+licence (Apache 2.0, on the allowlist; quoted from the repository's LICENSE, the weights' own terms read second-hand
+because the two hosts that state them were blocked here) and AudioSet's attribution text for the acknowledgements.
+Training data: AudioSet's labels are CC BY 4.0; the audio is YouTube clips belonging to their uploaders; Google
+trained the model. That reads as fitting the training-data rule (the trainer is the rights-holder of the model, no
+data licence forbids commercial use), but it is a licence-line judgement, so it goes to the main session to confirm.
+
+**A privacy finding, fixed in the code and raised with the main session.** While checking what ONNX Runtime's
+library file contains, the agent found that Microsoft's official builds report usage to Microsoft by default
+("telemetry": counts and timings of what the library did, not audio, not file names). The Linux library carries
+Microsoft's reporting client and the address it reports to; the Windows library reports through Windows' own event
+log instead. Deckie had been switching reporting off through the library's own call, but that call runs after the
+client has already started and stored a device identifier, so it could come too late. The full switch is an
+environment variable, `ORT_DISABLE_TELEMETRY=1`, that must be set before the library starts. Now `deckie_ort.c`
+sets it in Deckie's own process before opening the library (unless the user already set it), a test checks it, the
+Python export tools set it before loading their copy, and both CI workflows set it for every step. No analysis of
+real music has run anywhere but this container and GitHub's machines, and no audio was ever involved, but the
+charter's line is that nothing leaves the machine during analysis, so it is logged here and put to the main session.
+Two things follow for the licence list: the reporting client brings curl (its licence is MIT-style but not on the
+allowlist word for word), mbedTLS (Apache 2.0), SQLite (public domain) and zlib into the Linux library; and the clean
+way out, at a later update, would be to build ONNX Runtime ourselves without the client. Both are the main session's
+call. For the record: the Linux library is 29,345,384 bytes, the Windows one 17,253,728 bytes and needs Microsoft's
+Visual C++ runtime installed beside it.
