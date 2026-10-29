@@ -806,9 +806,10 @@ func relativeDifference(_ got: [Double], _ want: [Double]) -> Double {
 
 /// mixer/key_parity_keys.tsv, research R's per-track keys (row 3f), read as the bench reads it.
 @Suite struct KeyParitySheetTests {
-    /// 373 rows; on the lab's 311 confident keys 259 exact (the memo's 83.3 percent), against Apple 262 of 372 (70.4);
-    /// 217 sure; and the sure rule holds on every row except one whose margin, written to 4 decimals, rounds to 0.0800
-    /// from just under it.
+    /// The sheet as regenerated on Oct 29, 2026 with the paper's edma value (0.32 at the major profile's minor sixth,
+    /// key_parity.py's edma_paper): 373 rows; on the lab's 311 confident keys 259 exact (the memo's 83.3 percent),
+    /// against Apple 262 of 372 (70.4); 218 sure; and the sure rule holds on every row (with the 0.31 transcription
+    /// one row's margin rounded to 0.0800 from just under it; it no longer sits on the edge).
     @Test func readsResearchRsPerTrackKeys() throws {
         let rows = try KeyParitySheet.load(RepoPaths.mixer.appendingPathComponent(KeyParitySheet.fileName))
         #expect(rows.count == 373 && Set(rows.map(\.id)).count == 373)
@@ -816,9 +817,9 @@ func relativeDifference(_ got: [Double], _ want: [Double]) -> Double {
         #expect(confident.count == 311 && confident.filter { $0.key == $0.lab }.count == 259)
         let apple = rows.filter { $0.apple != nil }
         #expect(apple.count == 372 && apple.filter { $0.key == $0.apple }.count == 262)
-        #expect(rows.filter(\.sure).count == 217)
+        #expect(rows.filter(\.sure).count == 218)
         let off = rows.filter { $0.sure != ($0.agree == 3 && $0.margin >= HPCPKey.marginSure) }
-        #expect(off.map(\.id) == ["23aac209d3"] && off.first?.margin == 0.08)
+        #expect(off.isEmpty, "\(off.map { "\($0.id) \($0.margin)" })")
         // The parity rule: the same key, the margin within 1e-3, the same flag.
         let r = rows[0]
         #expect(r.differences(key: r.key, margin: r.margin + 0.0009, sure: r.sure) == nil)

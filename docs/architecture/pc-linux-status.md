@@ -1000,6 +1000,11 @@ exists, with the four readings recorded for the Mac's sheet. Also fixed on the w
 port read the sheet as one line (a Windows checkout ends lines with "\r\n", which Swift treats as one character
 that a split on "\n" never matches); the reader now splits on any line ending, with a test on a "\r\n" copy.
 
+**Addendum: the sheet at 0.32 is in.** `main`'s regenerated `mixer/key_parity_keys.tsv` (5afd268) is merged into
+this branch; the reference's figures are unchanged at 259 of 311 exact and 262 of 372 against Apple, with 218 sure
+tracks instead of 217 and no row left on the 0.08 edge; the sheet test reads those counts. The Mac's 0.4.0 pass runs
+from this branch, so its `par` column compares like with like.
+
 **The second opinion, parked.** The PANNs agent finished: the model's weights (CC BY 4.0, on the allowlist for
 weights with attribution) fetched from Zenodo, which answers from here after all, exported with its front end
 inside the graph, run in Swift within 6 parts in a hundred million of Python, two-second windows every 0.48 s, its
