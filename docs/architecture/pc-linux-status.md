@@ -36,8 +36,13 @@ Mac) reviews and merges this track's branch, `pc-linux`, and runs anything that 
   development, CI and the bench; a shipped build carries a library built by us without the reporting client,
   proven by a release test; curl stays off the allowlist), YAMNet's training data (confirmed), crate format v1
   (entry 10, addendum) and MPL 2.0.
-- Added to the order of work, before the first PC build: ONNX Runtime built on CI from its pinned tag without the
-  reporting client, pinned by hash, with the release test already in place (entry 12, addendum).
+- ONNX Runtime built by us without the reporting client: the workflow is merged (`onnxruntime-build.yml`: Linux,
+  Windows, macOS arm64, the scan as a gate before upload, archives pinned by hash, publish to a release on
+  request) and its first run started with this push; the build times, sizes and hashes go into entry 14 when it
+  finishes. Two findings from reading ONNX Runtime's build files are with the main session: its build patches
+  four Eigen files on every platform (Microsoft's builds too), which the MPL decision's word "unmodified" did not
+  know; and on Windows the event-log provider's name stays in the library even though nothing registers it, so
+  the Windows gate is expected to fail on that one marker until the rule for it is decided.
 - Needed from the Mac, now that step 5 is built (not blocking this track): the `bench` run over the 373 files
   (`deckie-build bench`, entry 13), which folds in the loudness check against pyloudnorm (entry 5), the key
   estimator's parity run (entry 6) and the vocal tagger's first look at real voices (entry 12). The Mac needs
