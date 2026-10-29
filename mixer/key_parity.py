@@ -10,6 +10,8 @@ as a reference: the lab's stored Essentia keys (features/<id>.json) are scored a
   .venv/bin/python key_parity.py extract [--jobs 6] [--limit N]   decode each track once, cache per-frame features
   .venv/bin/python key_parity.py score                            score every method, write key_parity_results.tsv
   .venv/bin/python key_parity.py check                            the recommended method's speed on 10 tracks
+  .venv/bin/python key_parity.py keys                             per-track key, margin, agreement and sure flag of the
+                                                                  recommended method (row 3f) -> key_parity_keys.tsv
 
 Cache: $DECKIE_KEY_CACHE or <tmp>/deckie_key_parity_cache/ (about 1.2 GB, not committed; rebuild with `extract`).
 Run from mixer/ (imports key_light for the shipped baseline's profiles and Camelot tables)."""
@@ -459,10 +461,23 @@ def main_check():
         kc = decide(S[t["id"]]["hpcp_h4_e3"]["mean"])[0]
         print(f"  {t['title'][:36]:36} {k:>3} (cached {kc:>3}, lab {t['lab']:>3}, Apple {t['mu'] or '-':>3}) margin {mg:.3f} agree {ag} sure {sure}  decode {t1-t0:.1f} s, key {t2-t1:.2f} s")
 
+def main_keys():
+    """The recommended method's decision per track (row 3f), for the engine's parity column: id, Camelot key, the
+    margin over the second key, how many of the three profiles agreed, the sure flag, and the lab's and Apple's keys."""
+    tracks = load_tracks(); S = all_summaries(tracks)
+    path = os.path.join(HERE, "key_parity_keys.tsv")
+    with open(path, "w") as f:
+        f.write("id\tkey_3f\tmargin\tagree\tsure\tlab\tlab_confident\tapple\n")
+        for t in tracks:
+            k, mg, ag, sure = decide(S[t["id"]]["hpcp_h4_e3"]["mean"])
+            f.write(f"{t['id']}\t{k}\t{mg:.4f}\t{ag}\t{int(sure)}\t{t['lab']}\t{int(t['conf'] >= 0.65)}\t{t['mu'] or ''}\n")
+    print("wrote", path, len(tracks), "rows")
+
 if __name__ == "__main__":
     a = sys.argv
     if len(a) > 1 and a[1] == "extract":
         extract(int(a[a.index("--jobs") + 1]) if "--jobs" in a else 6, int(a[a.index("--limit") + 1]) if "--limit" in a else 10**6)
     elif len(a) > 1 and a[1] == "score": main_score()
     elif len(a) > 1 and a[1] == "check": main_check()
+    elif len(a) > 1 and a[1] == "keys": main_keys()
     else: print(__doc__)
