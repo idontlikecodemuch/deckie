@@ -507,3 +507,298 @@ enum Progression {
         #expect(chromaTime + keyTime < 30.0)
     }
 }
+
+// MARK: - The whitened-HPCP key method (research R, row 3f)
+
+/// Fixtures/key_parity.json, written by Tools/make_key_parity_fixtures.py: mixer/key_parity.py's own functions run
+/// stage by stage on synthesised signals, and its correlation and decision stages on made-up HPCP vectors, with
+/// key_light.py's profile table (the parity reference) and the literature's (the engine's).
+struct KeyParityFixture: Decodable {
+    struct Constants: Decodable {
+        var sampleRate: Int, frame: Int, hop: Int, fmin: Double, fmax: Double, peaks: Int, marginSure: Double
+        var profiles: [String], envelopeBins: Int, windowSum: Double, window: [[Double]]
+        enum CodingKeys: String, CodingKey {
+            case frame, hop, fmin, fmax, peaks, profiles, window
+            case sampleRate = "sample_rate", marginSure = "margin_sure", envelopeBins = "envelope_bins"
+            case windowSum = "window_sum"
+        }
+    }
+    /// The correlation and decision stages: each profile's 24 correlations (key_light's table, and the signals'
+    /// literature decisions), their mean, each profile's own key, and `decide`'s key, margin, agreement and flag.
+    struct Decision: Decodable {
+        var r: [String: [Double]]?
+        var meanR: [Double]
+        var profileKeys: [String]
+        var key: String, margin: Double, agree: Int, sure: Bool
+        enum CodingKeys: String, CodingKey { case r, key, margin, agree, sure, meanR = "mean_r", profileKeys = "profile_keys" }
+    }
+    /// One frame in full: the spectrum (bins 0 to 460), the 60 peaks (frequency, magnitude, whitening envelope; zero
+    /// where the frame has fewer) and the frame's HPCP.
+    struct Frame: Decodable {
+        var frame: Int
+        var X: [Double], F: [Double], M: [Double], E: [Double]
+        var hpcp: [Double]
+    }
+    struct Chord: Decodable {
+        var start: Int, end: Int, notes: [Double]
+        init(from decoder: Decoder) throws {
+            var c = try decoder.unkeyedContainer()
+            start = try c.decode(Int.self); end = try c.decode(Int.self); notes = try c.decode([Double].self)
+        }
+    }
+    struct Check: Decodable {
+        var sum: Double, sumSq: Double, samples: [[Double]]
+        enum CodingKeys: String, CodingKey { case sum, samples, sumSq = "sum_sq" }
+    }
+    struct Signal: Decodable {
+        var name: String, samples: Int, harmonics: Int, noise: Double, seed: UInt64
+        var chords: [Chord], check: Check, frames: Int, selected: [Frame]
+        var hpcpFrames: [[Double]], hpcp: [Double]
+        var keyLight: Decision, literature: Decision
+        enum CodingKeys: String, CodingKey {
+            case name, samples, harmonics, noise, seed, chords, check, frames, selected, hpcp, literature
+            case hpcpFrames = "hpcp_frames", keyLight = "key_light"
+        }
+
+        /// The signal, rebuilt from its recipe (ChordSynth, as make_dsp_fixtures.py's `synth`), in float32.
+        var audio: [Float] {
+            ChordSynth.render(rate: HPCPKey.sampleRate, samples: samples, chords: chords.map { ($0.start, $0.end, $0.notes) },
+                              harmonics: harmonics, noise: noise, seed: seed).map { Float($0) }
+        }
+    }
+    struct Vector: Decodable {
+        var name: String, hpcp: [Double], keyLight: Decision, literature: Decision
+        enum CodingKeys: String, CodingKey { case name, hpcp, literature, keyLight = "key_light" }
+    }
+    var versions: [String: String]
+    var constants: Constants
+    var profiles: [String: [String: [[Double]]]]
+    var signals: [Signal]
+    var vectors: [Vector]
+
+    func decision(_ s: Signal, _ table: HPCPKey.Table) -> Decision { table == .literature ? s.literature : s.keyLight }
+    func decision(_ v: Vector, _ table: HPCPKey.Table) -> Decision { table == .literature ? v.literature : v.keyLight }
+}
+
+/// The largest |got - want| over `want`'s largest |value| (0 when both are all zero).
+func relativeDifference(_ got: [Double], _ want: [Double]) -> Double {
+    precondition(got.count == want.count, "\(got.count) values against \(want.count)")
+    let scale = want.map(abs).max() ?? 0
+    let worst = zip(got, want).map { abs($0 - $1) }.max() ?? 0
+    return scale > 0 ? worst / scale : worst
+}
+
+@Suite struct HPCPKeyTests {
+    static let fx = try! RepoPaths.fixture("key_parity.json", as: KeyParityFixture.self)
+    /// Every signal rebuilt once.
+    static let audio: [String: [Float]] = Dictionary(uniqueKeysWithValues: fx.signals.map { ($0.name, $0.audio) })
+
+    /// The reference's constants, its window to the bit, and the two profile tables: key_light's as `KeyProfile`
+    /// carries it, the literature's as `HPCPKey.literatureProfiles`, differing in edma's major minor sixth alone.
+    @Test func constantsWindowAndTables() {
+        let c = Self.fx.constants
+        #expect(c.sampleRate == HPCPKey.sampleRate && c.frame == HPCPKey.frameSize && c.hop == HPCPKey.hop)
+        #expect(Float(c.fmin) == HPCPKey.minFrequency && Float(c.fmax) == HPCPKey.maxFrequency)
+        #expect(c.peaks == HPCPKey.peaksPerFrame && c.marginSure == HPCPKey.marginSure)
+        #expect(c.envelopeBins == HPCPKey.envelopeBins && c.profiles == ["edma", "bgate", "braw"])
+        #expect(c.windowSum == 2048 && HPCPKey.spectrumScale == 1.0 / 1024)
+        for pair in c.window { #expect(HPCPKey.window[Int(pair[0])] == Float(pair[1]), "window[\(Int(pair[0]))]") }
+        for table in HPCPKey.Table.allCases {
+            let want = Self.fx.profiles[table.rawValue]!
+            #expect(table.profiles.map(\.name) == ["edma", "bgate", "braw"])
+            for p in table.profiles { #expect(want[p.name] == [p.major, p.minor], "\(table) \(p.name)") }
+        }
+        let lit = HPCPKey.Table.literature.profiles, kl = HPCPKey.Table.keyLight.profiles
+        var differ: [String] = []
+        for (a, b) in zip(lit, kl) {
+            for i in 0..<12 where a.major[i] != b.major[i] { differ.append("\(a.name) major \(i): \(a.major[i]) vs \(b.major[i])") }
+            for i in 0..<12 where a.minor[i] != b.minor[i] { differ.append("\(a.name) minor \(i): \(a.minor[i]) vs \(b.minor[i])") }
+        }
+        #expect(differ == ["edma major 8: 0.32 vs 0.31"], "\(differ)")
+    }
+
+    /// The signals rebuild to the same float32 samples (checked at four samples and by their sums).
+    @Test func signalsRebuildToTheReferenceSamples() throws {
+        for s in Self.fx.signals {
+            let y = try #require(Self.audio[s.name])
+            #expect(y.count == s.samples)
+            for pair in s.check.samples { #expect(y[Int(pair[0])] == Float(pair[1]), "\(s.name) sample \(Int(pair[0]))") }
+            let sum = y.reduce(0.0) { $0 + Double($1) }, sumSq = y.reduce(0.0) { $0 + Double($1) * Double($1) }
+            #expect(near(sum, s.check.sum, 1e-9 * max(1, abs(s.check.sum))), "\(s.name) sum \(sum) vs \(s.check.sum)")
+            #expect(near(sumSq, s.check.sumSq, 1e-9 * max(1, s.check.sumSq)), "\(s.name) sum of squares")
+            #expect(HPCPKey.frameCount(samples: y.count) == s.frames, "\(s.name) frames")
+        }
+    }
+
+    /// Stage 1, the spectrum, from the same samples: the port's double-precision FFT against numpy's single-precision
+    /// one. Within 2e-7 of each frame's largest bin (numpy's float32 rounding); stated as the measured worst.
+    @Test func spectraWithinTheReferenceFloat32Rounding() throws {
+        var worst = 0.0, frames = 0
+        for s in Self.fx.signals {
+            let y = try #require(Self.audio[s.name])
+            for f in s.selected {
+                let start = f.frame * HPCPKey.hop
+                let got = HPCPKey.spectrum(frame: Array(y[start..<(start + HPCPKey.frameSize)])).map(Double.init)
+                let d = relativeDifference(got, f.X)
+                worst = max(worst, d)
+                frames += 1
+                #expect(d <= 2e-7, "\(s.name) frame \(f.frame): \(d)")
+            }
+        }
+        print("HPCP key, spectra: \(frames) frames, worst difference \(worst) of the frame's largest bin")
+    }
+
+    /// Stage 2, the peaks after interpolation and their whitening envelopes, from the reference's own spectrum: the
+    /// same peaks in the same order and the same envelopes; frequency within 1e-5 and magnitude within 4e-6 relative.
+    /// Both sides compute the dB values in float32, but numpy's float32 log10 (its own vector code on this x86 machine)
+    /// is up to 2 units in the last place from the correctly rounded value on half of all inputs, where the C
+    /// library's is within one; the parabola through three dB values magnifies that in the frequency of a flat peak.
+    @Test func peaksFromTheReferenceSpectrum() {
+        var peaks = 0, worstF = 0.0, worstM = 0.0, identical = 0
+        for s in Self.fx.signals {
+            for f in s.selected {
+                let got = HPCPKey.peaks(spectrum: f.X.map { Float($0) })
+                let n = f.M.filter { $0 > 0 }.count
+                #expect(got.count == n, "\(s.name) frame \(f.frame): \(got.count) peaks, reference \(n)")
+                for (i, p) in got.prefix(n).enumerated() {
+                    let dF = abs(Double(p.frequency) - f.F[i]) / f.F[i], dM = abs(Double(p.magnitude) - f.M[i]) / f.M[i]
+                    worstF = max(worstF, dF)
+                    worstM = max(worstM, dM)
+                    if p.frequency == Float(f.F[i]) && p.magnitude == Float(f.M[i]) { identical += 1 }
+                    #expect(dF <= 1e-5 && dM <= 4e-6, "\(s.name) frame \(f.frame) peak \(i): \(p) vs \(f.F[i]), \(f.M[i])")
+                    #expect(p.envelope == Float(f.E[i]), "\(s.name) frame \(f.frame) peak \(i) envelope \(p.envelope) vs \(f.E[i])")
+                    peaks += 1
+                }
+            }
+        }
+        print("HPCP key, peaks from the reference spectra: \(peaks) peaks, \(identical) identical; worst frequency "
+              + "\(worstF), magnitude \(worstM) (relative)")
+    }
+
+    /// Stage 3, the HPCP of a frame, from the reference's own peaks: within 2e-6 of the frame's largest bin (the aim
+    /// was 1e-6; numpy's float32 log2 is one unit in the last place off on about 1 percent of inputs, and one unit of
+    /// a semitone position near 45 moves a cos^2 weight by up to 1e-5 of that peak's share).
+    @Test func frameHPCPFromTheReferencePeaks() {
+        var worst = 0.0, frames = 0
+        for s in Self.fx.signals {
+            for f in s.selected {
+                let peaks = (0..<f.M.count).map {
+                    HPCPKey.Peak(frequency: Float(f.F[$0]), magnitude: Float(f.M[$0]), envelope: Float(f.E[$0]))
+                }
+                var pcp = [Double](repeating: 0, count: 12)
+                HPCPKey.addHPCP(peaks, to: &pcp)
+                let d = relativeDifference(pcp, f.hpcp)
+                worst = max(worst, d)
+                frames += 1
+                #expect(d <= 2e-6, "\(s.name) frame \(f.frame): \(d)")
+            }
+        }
+        print("HPCP key, frame HPCP from the reference peaks: \(frames) frames, worst \(worst) of the largest bin")
+    }
+
+    /// Stages 4 and 5, the correlations and the decision, from the reference's own HPCP (every signal's and 66
+    /// made-up vectors, with both tables): correlations within 1e-12, key, agreement, flag and each profile's key
+    /// identical, margin within 1e-12; exact ties as noted below.
+    @Test func correlationsAndDecisionsFromTheReferenceHPCP() {
+        var cases = 0, ties = 0, worst = 0.0
+        let fx = Self.fx
+        let inputs: [(String, [Double], (HPCPKey.Table) -> KeyParityFixture.Decision)] =
+            fx.signals.map { s in (s.name, s.hpcp, { fx.decision(s, $0) }) }
+            + fx.vectors.map { v in (v.name, v.hpcp, { fx.decision(v, $0) }) }
+        for (name, pcp, want) in inputs {
+            for table in HPCPKey.Table.allCases {
+                let w = want(table), got = HPCPKey.decide(pcp, table: table)
+                for (i, p) in table.profiles.enumerated() {
+                    if let r = w.r?[p.name] {
+                        let d = zip(got.correlations[i], r).map { abs($0 - $1) }.max()!
+                        worst = max(worst, d)
+                        #expect(d <= 1e-12, "\(name) \(table) \(p.name): \(d)")
+                    }
+                }
+                let dm = zip(got.meanCorrelations, w.meanR).map { abs($0 - $1) }.max()!
+                worst = max(worst, dm)
+                #expect(dm <= 1e-12, "\(name) \(table) mean r: \(dm)")
+                #expect(near(got.margin, w.margin, 1e-12), "\(name) \(table) margin \(got.margin) vs \(w.margin)")
+                // An exact tie (the symmetric hand-made vectors: augmented, whole tone) is broken by the last bit of
+                // the arithmetic on either side; then the port's winner need only be one of the tied keys.
+                let best = w.meanR.max()!
+                let flat = w.meanR.allSatisfy { $0 == 0 }   // a flat HPCP: every correlation 0, decided as key 0
+                if !flat && w.meanR.filter({ $0 >= best - 1e-12 }).count > 1 {
+                    let i = got.pitchClass + (got.mode == "major" ? 0 : 12)
+                    #expect(w.meanR[i] >= best - 1e-12, "\(name) \(table): \(got.camelot) is not among the tied keys")
+                    ties += 1
+                } else {
+                    #expect(got.camelot == w.key && got.agree == w.agree && got.sure == w.sure,
+                            "\(name) \(table): \(got.camelot) agree \(got.agree) sure \(got.sure); reference \(w.key) \(w.agree) \(w.sure)")
+                    #expect(got.profileKeys.map(\.camelot) == w.profileKeys, "\(name) \(table) profile keys")
+                }
+                cases += 1
+            }
+        }
+        print("HPCP key, correlations and decisions from the reference HPCP: \(cases) cases (\(ties) exact ties), worst "
+              + "difference \(worst)")
+        #expect(ties == 4)
+    }
+
+    /// The whole method from the audio: every frame's HPCP, their mean, and the decision with both tables. The
+    /// spectra differ from numpy's by its float32 rounding (above), which whitening carries into quiet peaks, so the
+    /// HPCP tolerances are the measured worst rounded up; the key, the agreement and the sure flag are identical, the
+    /// margin within 1e-4.
+    @Test func wholeMethodFromTheAudio() throws {
+        var worstFrame = 0.0, worstMean = 0.0, worstMargin = 0.0
+        for s in Self.fx.signals {
+            let y = try #require(Self.audio[s.name])
+            var t = 0
+            HPCPKey.forEachFrame(y) { frame, peaks in
+                var pcp = [Double](repeating: 0, count: 12)
+                HPCPKey.addHPCP(peaks, to: &pcp)
+                let d = relativeDifference(pcp, s.hpcpFrames[frame])
+                worstFrame = max(worstFrame, d)
+                #expect(d <= 1e-3, "\(s.name) frame \(frame): \(d)")
+                t += 1
+            }
+            #expect(t == s.frames)
+            let result = try HPCPKey.estimate(y, sampleRate: 44100)
+            let d = relativeDifference(result.pcp, s.hpcp)
+            worstMean = max(worstMean, d)
+            #expect(d <= 1e-4, "\(s.name) mean HPCP: \(d)")
+            for (table, got) in [(HPCPKey.Table.literature, result.decision), (.keyLight, result.parity)] {
+                let w = Self.fx.decision(s, table)
+                #expect(got.camelot == w.key && got.agree == w.agree && got.sure == w.sure,
+                        "\(s.name) \(table): \(got.camelot) agree \(got.agree) sure \(got.sure); reference \(w.key) \(w.agree) \(w.sure)")
+                worstMargin = max(worstMargin, abs(got.margin - w.margin))
+                #expect(near(got.margin, w.margin, 1e-4), "\(s.name) \(table) margin \(got.margin) vs \(w.margin)")
+            }
+            print("HPCP key, \(s.name): \(result.decision.camelot) margin \(Py.fixed(result.decision.margin, 4)) agree "
+                  + "\(result.decision.agree) sure \(result.decision.sure); parity \(result.parity.camelot) "
+                  + "\(Py.fixed(result.parity.margin, 4)) (reference \(s.keyLight.key) \(Py.fixed(s.keyLight.margin, 4)))")
+        }
+        print("HPCP key from the audio: worst frame HPCP \(worstFrame), mean HPCP \(worstMean) of the largest bin; "
+              + "worst margin difference \(worstMargin)")
+    }
+
+    /// Less than a frame gives no frames and a flat HPCP, decided as the reference decides a flat one (C major, 8B,
+    /// margin 0, all three agree, not sure); other rates ask for resampling first.
+    @Test func edgeCases() throws {
+        let short = try HPCPKey.estimate([Float](repeating: 0.1, count: 4095), sampleRate: 44100)
+        #expect(short.frames == 0 && short.pcp == [Double](repeating: 0, count: 12))
+        #expect(short.decision.camelot == "8B" && short.decision.margin == 0 && short.decision.agree == 3 && !short.decision.sure)
+        #expect(HPCPKey.frameCount(samples: 4096) == 1 && HPCPKey.frameCount(samples: 8191) == 1
+                && HPCPKey.frameCount(samples: 8192) == 2)
+        #expect(throws: HPCPKey.EstimateError.resampleFirst(sampleRate: 48000)) {
+            try HPCPKey.estimate([Float](repeating: 0, count: 48000), sampleRate: 48000)
+        }
+    }
+
+    /// Four minutes of chords at 44.1 kHz in a debug build; the time is printed (release is measured separately).
+    @Test func fourMinutes() throws {
+        let y = Progression.render(Progression.aMinor, seconds: 240, rate: 44100, harmonics: 4).map { Float($0) }
+        let clock = ContinuousClock()
+        var result: HPCPKey.Result? = nil
+        let t = seconds(clock.measure { result = try? HPCPKey.estimate(y, sampleRate: 44100) })
+        print("HPCP key, 4 min at 44.1 kHz in this build: \(Py.fixed(t, 3)) s, \(result!.frames) frames, key "
+              + "\(result!.decision.camelot) margin \(Py.fixed(result!.decision.margin, 3)) sure \(result!.decision.sure)")
+        #expect(result!.decision.camelot == "8A")
+        #expect(t < 60.0)
+    }
+}

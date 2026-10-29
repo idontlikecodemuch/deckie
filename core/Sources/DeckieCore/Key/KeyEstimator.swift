@@ -10,6 +10,8 @@ import DeckieAudio
 
 /// The key profiles key_light.py carries (Essentia's key.cpp, verbatim): twelve weights per mode, tonic first.
 /// The lab's estimator uses `edma`; the others are kept because they cost nothing (the lab compared all six).
+/// Kept as the lab has them for parity with its scripts; the engine's key method takes edma, bgate and braw from the
+/// literature instead (`HPCPKey.literatureProfiles`), where edma's major minor sixth is 0.32, not 0.31.
 public enum KeyProfile: String, CaseIterable, Sendable {
     case krumhansl, temperley, shaath, edma, bgate, braw
 
