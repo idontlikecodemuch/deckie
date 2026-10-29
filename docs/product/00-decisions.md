@@ -178,6 +178,17 @@ its record. The terms of use say it plainly: Deckie contains third-party models 
 listed with their licences and training-data disclosures in the acknowledgements; Deckie never trains on the user's
 content (D3). Spec 5.9.
 
+### D16. No key is better than a wrong key: Deckie's own key reading ships only when it is good enough (Oct 29)
+Christopher: "If key tagging isn't good enough, not with Apple's framework, we just don't record it and release
+without it, or with a caveat till it is." So, on a platform without Apple's framework (Windows, Linux, a Mac before
+macOS 27), the crate carries the DJ's own key where the file's tags or a rekordbox import have one, and Deckie's
+own reading only once it meets the bar on the outside set (research R's GiantSteps-MTG-key test): exact within five
+points of Apple's framework on the same clips, measured on the major and minor halves separately. Until then the
+record's key block is absent or marked not read, the app says "key not read on this computer yet", and nothing is
+scored on it. Three cheap, library-blind improvements are being tested first (a separate mode test after the home
+note; chroma weighted toward downbeats, since we know the bar grid; reading the key the DJ's tools wrote into the
+tags), and a mixed-genre listening set with keys written down by a musician is the next thing to commission.
+
 ### Note on D3 (Oct 26, from the community research): privacy covers taste, not only audio
 DJs' fear is "I'm not helping train ai for free": that their choices become someone else's product. So D3 extends
 to history, cues, saved pairs and learned preferences: all of it stays with the DJ, Deckie says who benefits from
