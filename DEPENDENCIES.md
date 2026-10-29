@@ -5,7 +5,7 @@ Oct 29). The rule (charter `docs/architecture/pc-linux-track.md`, decision P16):
 and by hash, and its licence is quoted here before it is adopted. A hash, or digest, is a long fingerprint computed from a file's exact
 bytes: change one byte and it changes, so a matching hash proves a file is the one recorded here.
 
-**In short:** one toolchain and three GitHub Actions helpers, used only to build and test; two vendored C files,
+**In short:** one toolchain and six GitHub Actions helpers, used only to build and test; two vendored C files,
 dr_mp3, the MP3 decoder (section 4), and dr_flac, the FLAC decoder (section 5), which are compiled into
 `DeckieDecode` and so are runtime dependencies (code that travels inside a Deckie program); ONNX Runtime, the engine
 that runs the beat tracker's model (section 6), of which only the C header is vendored, its library being opened at
@@ -85,11 +85,14 @@ just because parts of Swift's runtime (the support code every Swift program runs
 
 | Action | Version | What it does | Used in |
 |---|---|---|---|
-| `actions/checkout` | `v4` | copies this repository onto the build machine | both workflows |
+| `actions/checkout` | `v4` | copies this repository onto the build machine, and ONNX Runtime's source at its pinned commit for its build (section 6) | all three workflows |
 | `compnerd/gha-setup-swift` | `main` (its documented reference; its `v3` tag does not exist) | installs the Swift toolchain on Windows | `core-windows.yml` |
 | `actions/cache` | `v4` | keeps ONNX Runtime's library and the exported Beat This! and YAMNet models between runs (sections 6 to 8), keyed on the hashes of the scripts that make them | `core-linux.yml` |
+| `actions/setup-python` | `v5` | installs Python 3.12, which runs ONNX Runtime's build scripts and Deckie's helper for that build | `onnxruntime-build.yml` |
+| `actions/upload-artifact` | `v4` | keeps each built ONNX Runtime archive with the run that made it | `onnxruntime-build.yml` |
+| `actions/download-artifact` | `v4` | gathers those archives for the job that publishes them | `onnxruntime-build.yml` |
 
-All three are recorded by version tag only, which, like an image tag, the publisher can move. Pinning each to a commit
+All six are recorded by version tag only, which, like an image tag, the publisher can move. Pinning each to a commit
 hash (the fingerprint of one exact version of its code) is pending, and so is quoting their licences: this session
 may not read other GitHub repositories, so it cannot look either up. Nothing they do ends up in a Deckie product.
 
@@ -350,6 +353,55 @@ Christopher approved downloading the release archives on Oct 28, 2026, and the l
 | The libraries in them | `lib/libonnxruntime.so.1.31.1`, 29,345,384 bytes, SHA-256 `a96f132e5eb5ca04e23a7d2fc1078fb95aa591e8d71d0f237702ece3a1e0f4ea`; `lib/onnxruntime.dll`, 17,253,728 bytes, SHA-256 `cb2fa518b18356617f6f9f460c012501da2819ec7e5c1d80bd8f5de20492db0c`; `lib/libonnxruntime.1.31.1.dylib`, 44,797,256 bytes, SHA-256 `17500d6b1e37e70f43a2c57d94233a1bc29fbcb297be0a5f8c7c13184f3307ba`. The macOS library carries the 1DS reporting client too (its address, namespace and source-file names are in it) but none of curl, mbedTLS or SQLite: on macOS the client uses the system's own HTTP, TLS and database libraries. `ORT_DISABLE_TELEMETRY` is honoured there as on Linux |
 | Vendored headers | `onnxruntime_c_api.h`, 422,790 bytes, SHA-256 `43d584f596ef66820421317df32a79a95fc1d39ee46cb3971a870c08d8ba4baa`; `onnxruntime_ep_c_api.h`, 165,249 bytes, `b64036772115dbc6f06a900487ce22d34e862100db03e2ad62210758e27a19b2`; `onnxruntime_error_code.h`, 2,775 bytes, `5ce3b054e798eced8d14f5b86e98692fd33470463f96194ce0700a2d53dd8721` |
 
+**Deckie's own build** (the library a shipped build carries; first run pending). The workflow
+`.github/workflows/onnxruntime-build.yml` builds the release above on GitHub's machines, Linux x86_64
+(`ubuntu-latest`), Windows x64 (`windows-latest`) and macOS arm64 (`macos-latest`), when started by hand (Actions,
+onnxruntime-build, Run workflow) and when a push changes the workflow or its scripts. Each job checks out commit
+`41d4d61f14b9c1dd0b2ccda1e9b85dd415fd0496` and stops if the tag `v1.31.1` points anywhere else, then runs ONNX Runtime's
+own `build.sh` (`build.bat` on Windows) with `--config Release --build_shared_lib --parallel --skip_tests
+--skip_submodule_sync --no_telemetry --compile_no_warning_as_error --cmake_extra_defines onnxruntime_BUILD_UNIT_TESTS=OFF
+FETCHCONTENT_TRY_FIND_PACKAGE_MODE=NEVER`, plus `--osx_arch arm64 --apple_deploy_target 14.0` on macOS (14.0 being the
+oldest macOS Microsoft's macOS archive is built for) and, on Windows, the Visual Studio generator the machine has: a
+CPU-only release build of the shared library, tests neither built nor run, without the reporting client. The
+workflow's comments say where each flag comes from. **Its dependencies** (abseil, Eigen, protobuf, ONNX, flatbuffers
+and the rest of what a CPU build needs) are downloaded by the build itself, through CMake, from the addresses in
+ONNX Runtime's `cmake/deps.txt` at that commit, each checked against the SHA-1 written beside it there, and never
+taken from what the build machine has installed. One of them, mp11 (Boost.Mp11, header-only), is declared without a
+hash in ONNX Runtime's CMake, so `core/Tools/onnxruntime-build.py` fetches it first, checked against deps.txt the same
+way, and hands CMake that copy. With `--no_telemetry` the 1DS client, and the curl, mbedTLS, SQLite and zlib it
+brings, are neither fetched nor built. **The gate:** before uploading, each job scans its library with
+`core/Tools/scan-onnxruntime.sh` (Linux, macOS) or `scan-onnxruntime.ps1` (Windows), whose markers are copies of
+`ReportingClientScan.markers` that a first job checks against the Swift list, and uploads nothing that carries any.
+Each job then uploads an archive named like Microsoft's with `-deckie-no-telemetry` added and laid out the same way
+(the library and its links, the three vendored headers, checked against the vendored copies, `LICENSE`,
+`ThirdPartyNotices.txt`, `Privacy.md`, `VERSION_NUMBER`, `GIT_COMMIT_ID`), with a `.sha256` file beside it, and writes
+the library's and the archive's sizes and SHA-256 values and the build time into its job summary. Started with
+`publish` ticked, the workflow puts them on this repository's release `onnxruntime-1.31.1-deckie-no-telemetry`
+(`https://github.com/idontlikecodemuch/deckie/releases/tag/onnxruntime-1.31.1-deckie-no-telemetry`), from which
+`fetch-onnxruntime.sh --deckie` fetches the Linux archive once its hash is recorded here and in the script.
+
+| Platform | File | Bytes | SHA-256 |
+|---|---|---|---|
+| Linux x86_64 | `onnxruntime-linux-x64-1.31.1-deckie-no-telemetry.tgz` | first run pending | first run pending |
+| | `lib/libonnxruntime.so.1.31.1` in it | first run pending | first run pending |
+| Windows x64 | `onnxruntime-win-x64-1.31.1-deckie-no-telemetry.zip` | first run pending | first run pending |
+| | `lib/onnxruntime.dll` in it | first run pending | first run pending |
+| macOS arm64 | `onnxruntime-osx-arm64-1.31.1-deckie-no-telemetry.tgz` | first run pending | first run pending |
+| | `lib/libonnxruntime.1.31.1.dylib` in it | first run pending | first run pending |
+
+The build times, and the sizes against Microsoft's libraries (29,345,384 bytes on Linux, 17,253,728 on Windows), go
+into the status log with the first run. Two things found while reading ONNX Runtime's build files at the pinned
+commit, both with the main session: **on Windows**, `--no_telemetry` means the event-tracing provider is never
+registered (the Windows environment then holds ONNX Runtime's base telemetry class, whose functions do nothing,
+instead of `WindowsTelemetry`), but the provider's definition, `onnxruntime/core/platform/windows/telemetry.cc`, is
+compiled into every Windows build and referred to by `inference_session.cc`, so its name, `Microsoft.ML.ONNXRuntime`,
+may still be in the DLL, in which case the Windows gate fails by design; and **Eigen**: ONNX Runtime's build applies
+two patches of its own to Eigen's source on every platform (`cmake/patches/eigen/s390x-build.patch` and
+`s390x-build-werror.patch`, as Microsoft's builds do), changing three files used only on IBM Z (s390x) and
+`Eigen/src/Core/RandomImpl.h` (a branch for big-endian machines only), so the MPL decision below, which rests on
+Deckie shipping Microsoft's library unrebuilt with Eigen unmodified, meets a rebuilt library whose Eigen files are
+patched, though not in any code these three platforms compile differently.
+
 **Licence:** MIT, on the allowlist. Quoted from the archives' `LICENSE` (1,073 bytes, SHA-256 `2f07c72751ae...`, the
 same text in both); each vendored header begins "Licensed under the MIT License":
 
@@ -426,7 +478,9 @@ refuses libraries older than the header, while newer libraries still offer the o
 and reread `ThirdPartyNotices.txt` for new licences; reread `Privacy.md` and check that `ORT_DISABLE_TELEMETRY` is
 still the switch (`strings` on the library should show it); delete `core/.deps/onnxruntime` and run the script again;
 run `swift build` (no warnings) and `swift test`, which reruns the beat tracker's parity tests. CI fetches the new
-archive once, since the script's hash is its cache key.
+archive once, since the script's hash is its cache key. Then rebuild Deckie's own archives: change `ORT_VERSION`,
+`ORT_TAG`, `ORT_COMMIT`, `RELEASE_TAG` and the archive names in `onnxruntime-build.yml`, run it with `publish`, and
+record its archives above and the Linux one in `fetch-onnxruntime.sh` (`--deckie`).
 
 ## 7. Beat This!, the beat tracker (weights exported per machine; development-only Python tools)
 
