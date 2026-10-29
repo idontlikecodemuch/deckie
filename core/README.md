@@ -147,8 +147,10 @@ madmom's CNN) and decided by the lab's own rule, `mixer/analyze.py` B.9: two or 
 its confidence levels 1.0, 0.65, 0.6, 0.45 and 0.3 with the lab's strength of 0.6. `Tools/key_vote_eval.py` picked
 the two extra profiles from the lab's sweep (`mixer/key_light_*.tsv`) against the first Mac bench sheet: 237 of the
 311 confident keys exact (76.2 percent, edma alone 74.6), 7 of 373 keys changed, the gain spread over four of the
-lab's folders; its header holds the table, and its held-out check says a second profile on the same chroma is no
-better estimator for new music. `KeyTests.swift` checks the vote against the lab's B.9 block, run from analyze.py's
+lab's folders; its header holds the table. Read 76.2 as the sheet's number, not as progress: the vote is in the
+engine because it is the lab's own rule with nothing fitted, and the held-out check (pick on half the tracks,
+score on the other half) says it clears the mark on this sheet without being a better estimator for new music; a
+real gain has to come from the key method research on the Mac (research R), measured per folder and held out. `KeyTests.swift` checks the vote against the lab's B.9 block, run from analyze.py's
 own source by `Tools/make_key_fixtures.py`, on the 68 test matrices, on made-up votes and on the lab's 373 tracks.
 
 **Structure** (`Sources/DeckieCore/Structure/`) is the part of `mixer/analyze.py` after the grid choice that lays out

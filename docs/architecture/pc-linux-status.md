@@ -1018,7 +1018,8 @@ folder loses. Five no-port rules tie at 237; three put most of their gain in CD4
 taken; this one is the lab's own, changes the fewest tracks, and spreads its gain. **The caution, library-blind:**
 a held-out check (pick the rule on half the tracks, score it on the other half) finds the no-port family's gain
 about zero out of sample; only the HPCP chroma's gain partly survives (+0.4 points). So this clears the mark on
-this sheet, as the main session asked, but is not a better estimator for new music; the Mac's research R (the full
+this sheet without being a better estimator for new music, and 76.2 is not to be read as progress; it is in the
+engine because it is the lab's own rule with nothing fitted (the main session's reading too); the Mac's research R (the full
 method spec measured against the lab's and Apple's keys) is where a real gain must come from, and it replaces
 this vote if it measures better on the same sheet. Shipped: `KeyVote.swift` in DeckieCore, the lab's B.9
 confidence levels in the engine (replacing the one-estimator steps that had been read off this same sheet), the
