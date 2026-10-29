@@ -84,7 +84,7 @@ struct BuildTests {
         let one = try #require(crate.tracks.first { $0.file.rel == Fixture.firstTrack })
         #expect(one.ident.title == "Track One" && one.ident.artist == "The Synths" && one.ident.version == "Extended Mix")
         #expect(one.ident.source == "rekordbox-xml")
-        #expect(one.key?.votes["rekordbox-xml"] == "8A" && one.key?.votes["deckie-key-edma"] != nil)
+        #expect(one.key?.votes["rekordbox-xml"] == "8A" && one.key?.votes["hpcp_edma"] != nil)
         // The tag tempo is the file's (rekordbox's AverageBpm here, as imported.rekordbox.bpm shows).
         #expect(one.file.tagBpm == 124)
         let rb = try #require(one.imported?.rekordbox)

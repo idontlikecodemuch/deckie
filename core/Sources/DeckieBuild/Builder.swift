@@ -137,11 +137,11 @@ public final class Builder: Sendable {
     public static var programLabel: String { "deckie-build \(version)" }
     /// The work folder's extension.
     public static let workExtension = "deckiebuild"
-    /// The engine's label (`deckie-0.3.1`, as `analysis.engine` writes it).
+    /// The engine's label (`deckie-0.4.0`, as `analysis.engine` writes it).
     public static var engineLabel: String { "\(Analysis.engineFamily)-\(Analysis.engineVersion)" }
 
     /// What a work record must have been made with to be reused: the engine's label and the vocal tagger's model, or
-    /// none (`deckie-0.3.1 vocal:yamnet`, `deckie-0.3.1 vocal:none`), so records made before the vocal model was
+    /// none (`deckie-0.4.0 vocal:yamnet`, `deckie-0.4.0 vocal:none`), so records made before the vocal model was
     /// installed are made again once it is, and so are records of an older engine version.
     public static func engineKey(vocalModel: String?) -> String { "\(engineLabel) vocal:\(vocalModel ?? "none")" }
 

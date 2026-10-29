@@ -18,10 +18,10 @@ extension Analysis {
     ///   checkpoint's name, where the lab writes `beatthis`.
     /// - `key.essentia_edma`, `key.essentia_bgate`, `key.madmom_cnn`, `key.camelot_edma`, `key.camelot_bgate`,
     ///   `key.camelot_madmom`: null, as the lab writes madmom's when it fails. `key.camelot`, `key.confidence` and
-    ///   `key.confidence_rule` come from the engine's key vote (`KeyVote`, `KeyConfidence`: the lab's B.9 rule on three
-    ///   profiles over the engine's chroma); each vote's key, correlation and margin, the edma estimate's mix windows
-    ///   and key segments are in `deckie.key`. `key.madmom_error` is left out, as the lab leaves it out when madmom
-    ///   ran.
+    ///   `key.confidence_rule` come from the engine's key method (`HPCPKey`, research R's whitened HPCP, and
+    ///   `KeyConfidence`, its sure rule); the method's margin, agreement, per-profile keys, the parity decision, the
+    ///   STFT estimate and its mix windows and key segments are in `deckie.key`. `key.madmom_error` is left out, as the
+    ///   lab leaves it out when madmom ran.
     /// - Without a vocal tagger: `vocal`, `per_bar.vocal_prob` and `embedding_effnet` are left out (the lab has no way
     ///   to write them missing); each section's `vocal` and each mix window's `vocal_free_bars` are null, and
     ///   `mix_in.first_vocal_bar` and `mix_out.last_vocal_bar` are null as the lab writes them for a track with no
@@ -84,7 +84,7 @@ extension Analysis {
         let keyOut: J = .object([
             m("essentia_edma", .null), m("essentia_bgate", .null), m("madmom_cnn", .null),
             m("camelot_edma", .null), m("camelot_bgate", .null), m("camelot_madmom", .null),
-            m("camelot", .string(keyVote.camelot)), m("confidence", .number(keyConfidence.value)),
+            m("camelot", .string(hpcpKey.decision.camelot)), m("confidence", .number(keyConfidence.value)),
             m("confidence_rule", .string(keyConfidence.rule)),
         ])
         var perBarMembers = [
@@ -153,24 +153,12 @@ extension Analysis {
     public func labJSONData() -> Data { labJSON().data }
 
     /// The engine's own block: the file's hash, the decoder, the damaged frames it silenced (`damaged_frames`, each
-    /// `start_s` and `seconds`, 4 decimals as in the crate's `file.damaged_frames`; null when none), the key
-    /// estimator's detail (the edma estimate as `whole`, each key vote under its name in `votes`, the decided key and
-    /// the lab's rule words as `vote` and `vote_rule`, the song key the windows were judged against, the windows and
-    /// the segments), where the lab would have run madmom, whether the vocal information is missing, the tagger's
-    /// detail, the vocal structure and the hooks.
+    /// `start_s` and `seconds`, 4 decimals as in the crate's `file.damaged_frames`; null when none), the key method's
+    /// detail (`keyBlock()`), where the lab would have run madmom, whether the vocal information is missing, the
+    /// tagger's detail, the vocal structure and the hooks.
     func deckieBlock() -> JSONValue {
         typealias J = JSONValue
         func m(_ k: String, _ v: J) -> J.Member { J.Member(k, v) }
-        func estimate(_ e: KeyEstimate) -> J {
-            .object([m("camelot", .string(e.camelot)), m("key", .string(e.key)), m("scale", .string(e.mode)),
-                     m("r", J.round(e.r, 3)), m("margin", J.round(e.margin, 3))])
-        }
-        func window(_ w: WindowKey?) -> J {
-            guard let w else { return .null }
-            return .object([m("camelot", .string(w.camelot)), m("r", J.round(w.estimate.r, 3)),
-                            m("song_key_r", J.round(w.songKeyR, 3)), m("gain", J.round(w.gain, 2)),
-                            m("flag", .bool(w.flag))])
-        }
         return .object([
             m("engine", .string("\(Analysis.engineFamily)-\(Analysis.engineVersion)")),
             m("family", .string(Analysis.engineFamily)), m("version", .string(Analysis.engineVersion)),
@@ -185,15 +173,51 @@ extension Analysis {
             m("vocal", vocalBlock()),
             m("vocal_structure", vocalStructureBlock()),
             m("hooks", hooksBlock()),
-            m("key", .object([
-                m("estimator", .string("fft-chroma-edma")), m("whole", estimate(key.whole)),
-                m("votes", .object(keyVote.votes.map { m($0.name, estimate($0.estimate)) })),
-                m("vote", .string(keyVote.camelot)), m("vote_rule", .string(keyVote.rule)),
-                m("song_key", .string(key.songKey)), m("mix_in", window(key.mixIn)), m("mix_out", window(key.mixOut)),
-                m("segments", .array(key.segments.map {
-                    .array([.number($0.start), .string($0.camelot), .number($0.meanR)])
-                })),
-            ])),
+            m("key", keyBlock()),
+        ])
+    }
+
+    /// `deckie.key`: the key method's detail, then the STFT estimator's. The method (`HPCPKey`): `estimator`
+    /// (`hpcp-whitened`), `whitening` (true: research R asked for it in the record), the frames read, the key as
+    /// `camelot`, `key` and `scale`, the winner's mean correlation `r` (3 decimals), `margin` (4, as
+    /// mixer/key_parity_keys.tsv writes it), `agree` (how many of the three profiles pick it alone), `sure`, each
+    /// profile's own key and correlation under `profiles`, the profile numbers' source (`literature`), and `parity`:
+    /// the same decision with key_light.py's numbers (`key_light`), which is what mixer/key_parity.py decides and what
+    /// the bench compares with its per-track sheet. The STFT estimator (`KeyEstimator`, mixer/key_light.py, edma):
+    /// its whole-track key as `stft_edma` (not deciding, kept for comparison), the song key the mix windows were
+    /// judged against (the method's key), the windows (`windows_estimator` names their chroma) and the segments.
+    func keyBlock() -> JSONValue {
+        typealias J = JSONValue
+        func m(_ k: String, _ v: J) -> J.Member { J.Member(k, v) }
+        func estimate(_ e: KeyEstimate) -> J {
+            .object([m("camelot", .string(e.camelot)), m("key", .string(e.key)), m("scale", .string(e.mode)),
+                     m("r", J.round(e.r, 3)), m("margin", J.round(e.margin, 3))])
+        }
+        func window(_ w: WindowKey?) -> J {
+            guard let w else { return .null }
+            return .object([m("camelot", .string(w.camelot)), m("r", J.round(w.estimate.r, 3)),
+                            m("song_key_r", J.round(w.songKeyR, 3)), m("gain", J.round(w.gain, 2)),
+                            m("flag", .bool(w.flag))])
+        }
+        func decision(_ d: HPCPKey.Decision, tables: HPCPKey.Table) -> [J.Member] {
+            [m("camelot", .string(d.camelot)), m("key", .string(d.key)), m("scale", .string(d.mode)),
+             m("r", J.round(d.meanR, 3)), m("margin", J.round(d.margin, 4)), m("agree", .int(d.agree)),
+             m("sure", .bool(d.sure)), m("tables", .string(tables.rawValue))]
+        }
+        let h = hpcpKey
+        return .object([
+            m("estimator", .string("hpcp-whitened")), m("whitening", .bool(h.whitening)), m("frames", .int(h.frames)),
+        ] + decision(h.decision, tables: .literature) + [
+            m("profiles", .object(h.decision.profileKeys.map {
+                m($0.name, .object([m("camelot", .string($0.camelot)), m("r", J.round($0.r, 3))]))
+            })),
+            m("parity", .object(decision(h.parity, tables: .keyLight))),
+            m("stft_edma", estimate(key.whole)),
+            m("song_key", .string(key.songKey)), m("windows_estimator", .string("fft-chroma-edma")),
+            m("mix_in", window(key.mixIn)), m("mix_out", window(key.mixOut)),
+            m("segments", .array(key.segments.map {
+                .array([.number($0.start), .string($0.camelot), .number($0.meanR)])
+            })),
         ])
     }
 

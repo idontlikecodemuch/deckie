@@ -28,20 +28,26 @@ import DeckieEngine
 }
 
 @Suite struct KeyConfidenceTests {
-    /// The record's confidence is the vote's (the lab's B.9 levels), its rule the lab's words after the engine's prefix.
-    @Test func fromTheVote() {
-        func vote(_ keys: [(Int, String, Double)]) -> KeyVote {
-            KeyVote.decide(zip(KeyVote.slots, keys).map { slot, k in
-                KeyVote.Vote(name: slot.name, profile: slot.profile,
-                             estimate: KeyEstimate(pitchClass: k.0, mode: k.1, r: k.2, margin: 0.1))
-            })
+    /// The record's confidence is research R's sure rule on the HPCP method's decision: 1.0 when all three profiles
+    /// agree and the margin is at least 0.08, else 0.45 (under 0.5, so `key_uncertain`); the rule names the case.
+    @Test func fromTheSureRule() {
+        func confidence(_ pcp: [Double]) -> (HPCPKey.Decision, KeyConfidence) {
+            let d = HPCPKey.decide(pcp)
+            return (d, KeyConfidence.hpcp(d))
         }
-        let agree = KeyConfidence.votes(vote([(9, "minor", 0.8), (9, "minor", 0.7), (9, "minor", 0.6)]))
-        #expect(agree == KeyConfidence(value: 1.0, rule: "deckie votes (edma, bgate, krumhansl): all three agree"))
-        let none = KeyConfidence.votes(vote([(9, "minor", 0.8), (2, "major", 0.7), (6, "major", 0.6)]))
-        #expect(none.value == 0.3 && none.rule == KeyConfidence.prefix + "no two detectors agree")
-        let weak = KeyConfidence.votes(vote([(0, "major", 0.5), (0, "major", 0.9), (7, "major", 0.9)]))
-        #expect(weak.value == 0.3 && weak.rule.hasSuffix("; strength < 0.6"))
+        let (triad, sure) = confidence([1, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0])   // C E G
+        #expect(triad.camelot == "8B" && triad.agree == 3 && triad.margin >= 0.08 && triad.sure)
+        #expect(sure == KeyConfidence(value: 1.0,
+                                      rule: "hpcp-whitened (edma, bgate, braw): sure: all three profiles agree, margin at least 0.08"))
+        let (single, close) = confidence([0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0])  // A alone: all agree, small margin
+        #expect(single.agree == 3 && single.margin < 0.08 && !single.sure)
+        #expect(close == KeyConfidence(value: 0.45, rule: KeyConfidence.prefix + "unsure: all three profiles agree, margin under 0.08"))
+        let (seventh, two) = confidence([1, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 1])  // C E G B
+        #expect(seventh.agree == 2 && two.value == 0.45)
+        #expect(two.rule == KeyConfidence.prefix + "unsure: 2 of 3 profiles agree, margin under 0.08")
+        let (mixed, one) = confidence([1, 0, 0.5, 0, 1, 0, 0, 1, 0, 1, 0, 0.3])
+        #expect(mixed.agree == 1 && one.value == 0.45 && one.rule.hasPrefix(KeyConfidence.prefix + "unsure: 1 of 3"))
+        #expect(KeyConfidence.unsure < 0.5 && KeyConfidence.sure == 1.0)
     }
 }
 

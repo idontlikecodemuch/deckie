@@ -57,11 +57,12 @@ extension Analysis {
     /// the record has no `vocal` block and no `bars.vocal` series, so `features_present` lists neither, and the mix
     /// windows' `vocal_free_bars` are null; the flags carry `vocal_unknown`. With one, the `vocal` block (source: the
     /// tagger's model), the `bars.vocal` series and, when the tagger gives one, the `style` block (YAMNet's mean
-    /// embedding, 1,024 values, unit length) are written. The key is the vote's (`KeyVote`): `source` `votes`, the
-    /// three votes in `votes` by name, `key` and `scale` spelled as the first vote giving the decided key spells it,
-    /// the lab's B.9 confidence. The key's changes are the estimator's segments placed on
-    /// bars. The lab's EffNet embedding is never written. With a tagger the record also carries the proposed
-    /// `vocal_structure` and `hooks` blocks (`crateVocalStructure()`, `crateHooks()`); without one it has neither.
+    /// embedding, 1,024 values, unit length) are written. The key is the HPCP method's (`HPCPKey`): `source`
+    /// `hpcp-whitened`, research R's sure rule as the confidence (`KeyConfidence`: 1.0 or 0.45), and in `votes` the
+    /// three profiles' own keys (`hpcp_edma`, `hpcp_bgate`, `hpcp_braw`) and the STFT estimator's key (`stft_edma`),
+    /// none of which decides. The key's changes are the STFT estimator's segments placed on bars. The lab's EffNet
+    /// embedding is never written. With a tagger the record also carries the proposed `vocal_structure` and `hooks`
+    /// blocks (`crateVocalStructure()`, `crateHooks()`); without one it has neither.
     public func crateTrack(options: CrateOptions) -> CrateTrack {
         let n = bars.nBars
         let r3 = { (x: Double) in Py.round(x, 3) }
@@ -112,10 +113,8 @@ extension Analysis {
                         inTrusted: lt.inTrusted, outTrusted: lt.outTrusted),
             tempoSegments: [.init(startBar: 1, startS: Py.round(bars.firstDownbeatS, 4), bpm: r3(bpm), beatsPerBar: 4,
                                   beatInBar: 1, confidence: r3(grid.confidence))],
-            key: .init(source: "votes", confidence: keyConfidence.value, camelot: keyVote.camelot,
-                       key: keyVote.decided.key, scale: keyVote.decided.mode,
-                       votes: Dictionary(uniqueKeysWithValues: keyVote.votes.map { ($0.name, $0.camelot) }),
-                       changes: keyChanges()),
+            key: .init(source: Analysis.keySource, confidence: keyConfidence.value, camelot: hpcpKey.decision.camelot,
+                       key: hpcpKey.decision.key, scale: hpcpKey.decision.mode, votes: keyVotes, changes: keyChanges()),
             phrase: .init(source: "foote-novelty", confidence: r3(phrase.confidence),
                           latticePhaseBar: phrase.latticePhaseBar, boundariesBars: boundariesBars),
             sections: sections.map { .init(startBar: $0.startBar, endBar: $0.endBar, label: $0.label, energy: $0.energy) },
@@ -185,6 +184,20 @@ extension Analysis {
                       repetition: r($0.repetition, "repetition"), loudnessScore: r($0.loudness, "loudness_score"),
                       vocalDensity: r($0.vocalDensity, "vocal_density"), repeatStartBar: $0.repeatStartBar)
             })
+    }
+
+    /// The crate's `key.source`: the method that decides the key.
+    public static let keySource = "hpcp-whitened"
+
+    /// The crate's `key.votes`: each of the HPCP method's profiles' own key (`hpcp_edma`, `hpcp_bgate`, `hpcp_braw`)
+    /// and the STFT estimator's whole-track key (`stft_edma`, the engine's key before 0.3.0), for comparison; none
+    /// decides.
+    var keyVotes: [String: String] {
+        var votes = Dictionary(uniqueKeysWithValues: hpcpKey.decision.profileKeys.map {
+            ("hpcp_" + $0.name, $0.camelot)
+        })
+        votes["stft_edma"] = key.whole.camelot
+        return votes
     }
 
     /// The key segments as bar spans: each segment starts at the bar line nearest its start time (bar 1 for the

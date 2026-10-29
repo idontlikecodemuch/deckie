@@ -180,9 +180,9 @@ actor Shared {
 func describe(_ a: Analysis) -> String {
     let t = a.timings.map { "\($0.stage) \(Py.fixed($0.seconds, 2))" }.joined(separator: ", ")
     return "\(a.source.name): bpm \(Py.fixed(a.bpm, 3)), bar 1 at \(Py.fixed(a.bars.firstDownbeatS, 4)) s, "
-        + "\(a.bars.nBars) bars, key \(a.keyVote.camelot) (votes "
-        + a.keyVote.votes.map { "\($0.profile.rawValue) \($0.camelot) r \(Py.fixed($0.estimate.r, 3))" }.joined(separator: ", ")
-        + "; confidence \(a.keyConfidence.value)), sound \(Py.fixed(a.firstSound, 2))"
+        + "\(a.bars.nBars) bars, key \(a.hpcpKey.decision.camelot) (margin \(Py.fixed(a.hpcpKey.decision.margin, 4)), "
+        + a.hpcpKey.decision.profileKeys.map { "\($0.name) \($0.camelot) r \(Py.fixed($0.r, 3))" }.joined(separator: ", ")
+        + ", stft edma \(a.key.whole.camelot); confidence \(a.keyConfidence.value)), sound \(Py.fixed(a.firstSound, 2))"
         + " to \(Py.fixed(a.lastSound, 2)) s, fade \(a.fade.fadeOut) from bar \(a.fade.fadeStartBar.map(String.init) ?? "-"), "
         + "mix in \(a.mixIn.startBar)-\(a.mixIn.endBar), mix out \(a.mixOut.startBar)-\(a.mixOut.endBar), "
         + "integrated \(a.loudness.integratedLufs.map { Py.fixed($0, 2) } ?? "-") LUFS, flags \(a.flags)\n  stages: \(t)"
@@ -205,10 +205,13 @@ struct EngineTests {
         #expect(abs(a.bars.firstDownbeatS - TestTrack.firstBeat) < 0.03, "bar 1 at \(a.bars.firstDownbeatS)")
         #expect(abs(a.bars.nBars - TestTrack.bars) <= 1, "\(a.bars.nBars) bars")
         #expect(a.key.whole.camelot == TestTrack.camelot)
-        // The key vote: the edma vote is the estimate above, the decided key is the record's and the windows' song key.
-        #expect(a.keyVote.camelot == TestTrack.camelot && a.keyVote.votes[0].estimate == a.key.whole)
-        #expect(a.keyVote.votes.map(\.name) == ["deckie-key-edma", "deckie-key-bgate", "deckie-key-krumhansl"])
-        #expect(a.key.songKey == a.keyVote.camelot && a.keyConfidence == KeyConfidence.votes(a.keyVote))
+        // The key by the HPCP method, from the 44.1 kHz mono mix: the record's key and the windows' song key; its
+        // parity decision (key_light.py's profile numbers) agrees here; the confidence is the sure rule's.
+        #expect(a.hpcpKey.decision.camelot == TestTrack.camelot && a.hpcpKey.parity.camelot == TestTrack.camelot)
+        #expect(a.hpcpKey.frames == HPCPKey.frameCount(samples: Int((a.duration * 44100).rounded())))
+        #expect(a.hpcpKey.decision.profileKeys.map(\.name) == ["edma", "bgate", "braw"])
+        #expect(a.key.songKey == a.hpcpKey.decision.camelot && a.keyConfidence == KeyConfidence.hpcp(a.hpcpKey.decision))
+        #expect(a.flags.contains("key_uncertain") == !a.hpcpKey.decision.sure)
         // First and last sound: the 10 ms frames around the first and last sample above -60 dBFS.
         let bounds = TestTrack.soundBounds(buffer)
         #expect(abs(a.firstSound - bounds.first) < 0.0101, "first sound \(a.firstSound), samples say \(bounds.first)")
@@ -260,11 +263,17 @@ struct EngineTests {
         let data = json.data
         let f = try JSONDecoder().decode(FeatureFile.self, from: data)
         #expect(f.id == a.id && f.grid.nBars == a.bars.nBars && f.perBar.vocalProb == nil && f.embeddingEffnet == nil)
-        #expect(f.grid.source == Analysis.gridSource && f.key.camelot == a.keyVote.camelot)
-        #expect(f.key.confidence == a.keyVote.confidence)
-        #expect(json["key"]?["confidence_rule"] == .string(KeyConfidence.prefix + a.keyVote.rule))
-        let votes = try #require(json["deckie"]?["key"]?["votes"])
-        #expect(votes.keys == KeyVote.slots.map(\.name) && json["deckie"]?["key"]?["vote"] == .string(a.keyVote.camelot))
+        #expect(f.grid.source == Analysis.gridSource && f.key.camelot == a.hpcpKey.decision.camelot)
+        #expect(f.key.confidence == a.keyConfidence.value && [1.0, 0.45].contains(f.key.confidence))
+        #expect(json["key"]?["confidence_rule"] == .string(a.keyConfidence.rule))
+        let dk = try #require(json["deckie"]?["key"])
+        #expect(dk.keys == ["estimator", "whitening", "frames", "camelot", "key", "scale", "r", "margin", "agree", "sure",
+                            "tables", "profiles", "parity", "stft_edma", "song_key", "windows_estimator", "mix_in",
+                            "mix_out", "segments"])
+        #expect(dk["estimator"] == .string("hpcp-whitened") && dk["whitening"] == .bool(true))
+        #expect(dk["margin"] == .number(Py.round(a.hpcpKey.decision.margin, 4)) && dk["sure"] == .bool(a.hpcpKey.decision.sure))
+        #expect(dk["profiles"]?.keys == ["edma", "bgate", "braw"] && dk["parity"]?["tables"] == .string("key_light"))
+        #expect(dk["stft_edma"]?["camelot"] == .string(a.key.whole.camelot))
         #expect(f.localTempo?.bpmIn != nil)
         // The local tempo block decodes as the lab's and the port's input reads back from the file.
         #expect(f.localTempoInput.bpm == Py.round(a.bpm, 3))
@@ -305,11 +314,13 @@ struct EngineTests {
         #expect(!t.featuresPresent.contains("vocal") && !t.featuresPresent.contains("bars.vocal"))
         #expect(t.featuresPresent.contains("bars.lufs") && t.featuresPresent.contains("key_changes"))
         #expect(t.mixIn?.vocalFreeBars == nil && t.vocal == nil && t.style == nil && t.flags.contains("vocal_unknown"))
-        // The key decided by the vote: its three votes by name, the lab's B.9 confidence.
-        #expect(t.key?.source == "votes" && t.key?.camelot == a.keyVote.camelot && t.key?.confidence == a.keyVote.confidence)
-        #expect(t.key?.votes == ["deckie-key-edma": a.keyVote.votes[0].camelot, "deckie-key-bgate": a.keyVote.votes[1].camelot,
-                                 "deckie-key-krumhansl": a.keyVote.votes[2].camelot])
-        #expect(t.key?.key == a.keyVote.decided.key && t.key?.scale == a.keyVote.decided.mode)
+        // The key decided by the HPCP method: its three profiles' keys and the STFT estimate in the votes, none
+        // deciding; the sure rule's confidence.
+        let d = a.hpcpKey.decision
+        #expect(t.key?.source == "hpcp-whitened" && t.key?.camelot == d.camelot && t.key?.confidence == a.keyConfidence.value)
+        #expect(t.key?.votes == ["hpcp_edma": d.profileKeys[0].camelot, "hpcp_bgate": d.profileKeys[1].camelot,
+                                 "hpcp_braw": d.profileKeys[2].camelot, "stft_edma": a.key.whole.camelot])
+        #expect(t.key?.key == d.key && t.key?.scale == d.mode)
         let crate = Crate(manifest: CrateManifest(crateId: "engine-test", name: "engine test",
                                                   createdAt: "2026-10-28T12:00:00Z", devicesSeen: [Analysis.platform]),
                           tracks: [t])
@@ -333,7 +344,8 @@ struct EngineTests {
         #expect(mp3.bars.nBars == wav.bars.nBars)
         #expect(abs(mp3.bpm - wav.bpm) < 0.05, "mp3 \(mp3.bpm), wav \(wav.bpm)")
         #expect(abs(mp3.bars.firstDownbeatS - wav.bars.firstDownbeatS) < 0.02)
-        #expect(mp3.key.whole.camelot == wav.key.whole.camelot && mp3.keyVote.camelot == wav.keyVote.camelot)
+        #expect(mp3.key.whole.camelot == wav.key.whole.camelot)
+        #expect(mp3.hpcpKey.decision.camelot == wav.hpcpKey.decision.camelot)
         #expect(mp3.damagedFrames.isEmpty && wav.damagedFrames.isEmpty)
     }
 
@@ -350,7 +362,8 @@ struct EngineTests {
         #expect(a.damagedFrames == [frame])
         #expect(frame.startSeconds > 29.5 && frame.startSeconds < 30.5 && abs(frame.seconds - 1152.0 / 44100) < 1e-12)
         #expect(a.bars.nBars == clean.bars.nBars && abs(a.bpm - clean.bpm) < 1e-6)
-        #expect(a.key.whole.camelot == clean.key.whole.camelot && a.keyVote.camelot == clean.keyVote.camelot)
+        #expect(a.key.whole.camelot == clean.key.whole.camelot)
+        #expect(a.hpcpKey.decision.camelot == clean.hpcpKey.decision.camelot)
         #expect(a.loudness.truePeakDb <= clean.loudness.truePeakDb + 1.7,
                 "true peak \(a.loudness.truePeakDb) dBTP, the clean MP3's \(clean.loudness.truePeakDb)")
 
