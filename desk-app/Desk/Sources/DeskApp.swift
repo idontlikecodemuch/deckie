@@ -18,6 +18,7 @@ struct DeskApp: App {
     var body: some Scene {
         WindowGroup("Deckie Desk") {
             ContentView().environmentObject(model).frame(minWidth: 900, minHeight: 560)
+                .onAppear { if let p = Headless.openOnLaunch { model.open(URL(fileURLWithPath: p)) } }
         }
         .commands {
             CommandGroup(replacing: .newItem) {
@@ -52,6 +53,12 @@ enum Bundled {
 ///   "Deckie Desk" --check-engine                      says where the runtime and the models were found, and exits
 ///   "Deckie Desk" --build <folder> <out.deckiecrate> [jobs]   builds a crate with the bundled engine, printing progress
 enum Headless {
+    /// "Deckie Desk" --open <crate.deckiecrate>: open that crate in the window on launch.
+    static var openOnLaunch: String? {
+        let a = CommandLine.arguments
+        return a.count >= 3 && a[1] == "--open" ? a[2] : nil
+    }
+
     static func runIfAsked() {
         let a = CommandLine.arguments
         guard a.count >= 2 else { return }
