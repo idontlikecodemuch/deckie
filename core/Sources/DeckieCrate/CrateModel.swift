@@ -1,8 +1,9 @@
 import Foundation
 
 // The crate in memory (docs/architecture/crate-format.md). Swift names are the format's names in camel case; the
-// coding keys carry the format's own. Every optional is written as null, never left out (CrateWriter); a reader
-// takes a missing optional as null. A block that is optional in a record is there exactly when its feature is in
+// coding keys carry the format's own. Every optional is written as null, never left out (CrateWriter), except the
+// two blocks added with memo O's vocal fields, `vocal_structure` and `hooks` (CrateModel+Vocal.swift), which are left
+// out when absent; a reader takes a missing optional as null. A block that is optional in a record is there exactly when its feature is in
 // `features_present`, which is worked out from the blocks (`CrateTrack.featuresPresent`), never stored apart.
 
 /// A whole crate: the manifest and the track records, each with its sidecar values.
@@ -536,6 +537,11 @@ public struct CrateTrack: Codable, Equatable, Sendable {
     public var signatures: [String: Signature]
     /// The builder's own additions (**proposed**); nil when it has nothing to add.
     public var deckie: Deckie?
+    /// Where the track is sung, to the beat, and the hook candidates (**proposed** with memo O's vocal fields); nil
+    /// when the engine made none. Unlike every other field, a nil one is left out of crate.json rather than written as
+    /// null, so the records of engines that do not make them keep their bytes.
+    public var vocalStructure: VocalStructure?
+    public var hooks: Hooks?
     /// The per-bar series (`bars/<id>.bin`), not part of crate.json.
     public var bars: BarSeries? = nil
 
@@ -544,12 +550,14 @@ public struct CrateTrack: Codable, Equatable, Sendable {
                 phrase: Phrase? = nil, sections: [Section]? = nil, mixIn: MixWindow? = nil, mixOut: MixWindow? = nil,
                 ends: Ends? = nil, loudness: Loudness? = nil, vocal: Vocal? = nil, onsetPattern16: [Double]? = nil,
                 flags: [String] = [], style: Style? = nil, signatures: [String: Signature] = [:],
-                bars: BarSeries? = nil, deckie: Deckie? = nil) {
+                bars: BarSeries? = nil, deckie: Deckie? = nil, vocalStructure: VocalStructure? = nil,
+                hooks: Hooks? = nil) {
         self.id = id; self.schema = schema; self.file = file; self.ident = ident; self.analysis = analysis
         self.engine = engine; self.grid = grid; self.tempoSegments = tempoSegments; self.key = key
         self.phrase = phrase; self.sections = sections; self.mixIn = mixIn; self.mixOut = mixOut; self.ends = ends
         self.loudness = loudness; self.vocal = vocal; self.onsetPattern16 = onsetPattern16; self.flags = flags
         self.style = style; self.signatures = signatures; self.bars = bars; self.deckie = deckie
+        self.vocalStructure = vocalStructure; self.hooks = hooks
     }
 
     /// The record's `features_present`: the optional blocks it holds and its per-bar series, sorted.
@@ -568,14 +576,17 @@ public struct CrateTrack: Codable, Equatable, Sendable {
         if vocal != nil { f.append(F.vocal) }
         if onsetPattern16 != nil { f.append(F.onsetPattern) }
         if style != nil { f.append(F.style) }
+        if vocalStructure != nil { f.append(F.vocalStructure) }
+        if hooks != nil { f.append(F.hooks) }
         if let bars { f += bars.names.map(F.bars) }
         return f.sorted(by: byteOrder)
     }
 
     enum CodingKeys: String, CodingKey {
         case id, schema, file, ident, analysis, engine, grid, key, phrase, sections, ends, loudness, vocal, flags
-        case style, signatures, deckie
+        case style, signatures, deckie, hooks
         case tempoSegments = "tempo_segments", mixIn = "mix_in", mixOut = "mix_out", onsetPattern16 = "onset_pattern_16"
+        case vocalStructure = "vocal_structure"
     }
     enum ListKeys: String, CodingKey { case featuresPresent = "features_present" }
 
@@ -602,6 +613,9 @@ public struct CrateTrack: Codable, Equatable, Sendable {
         try c.encodeIfPresent(style, forKey: .style)
         try c.encode(signatures, forKey: .signatures)
         try c.encodeIfPresent(deckie, forKey: .deckie)
+        // Left out when nil (crate-format.md, "Additions proposed with the vocal fields").
+        if let vocalStructure { try c.encode(vocalStructure, forKey: .vocalStructure) }
+        if let hooks { try c.encode(hooks, forKey: .hooks) }
         var l = encoder.container(keyedBy: ListKeys.self)
         try l.encode(featuresPresent, forKey: .featuresPresent)
     }
