@@ -1,0 +1,48 @@
+# Publishes the pinned model exports carried on an assets/models-* branch to the release named in TAG, after checking
+# each file against the hash pinned in its export script. Why a workflow: the pinned Beat This! bytes exist only on
+# the machine that exported them (the export is not reproducible byte for byte across torch builds), and the cloud
+# session may not create releases itself; GitHub's own token can, with Christopher's approval (Oct 29, 2026).
+name: models-publish
+
+on:
+  push:
+    branches: ['assets/models-*']
+    paths: [models/**, .github/workflows/models-publish.yml]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      TAG: models-1
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check the files against the hashes pinned in the export scripts
+        run: |
+          set -euo pipefail
+          beat=$(grep -o 'ONNX_SHA256 = "[0-9a-f]*"' core/Tools/export_beat_this.py | cut -d'"' -f2)
+          yam=$(grep -o 'ONNX_SHA256 = "[0-9a-f]*"' core/Tools/export_yamnet.py | cut -d'"' -f2)
+          [ -n "$beat" ] && [ -n "$yam" ] || { echo "::error::no pinned hashes read from the export scripts"; exit 1; }
+          cd models
+          echo "$beat  beat_this_final0.onnx" | sha256sum -c -
+          echo "$yam  yamnet.onnx" | sha256sum -c -
+          sha256sum -c beat_this_final0.onnx.sha256 yamnet.onnx.sha256
+          ls -l beat_this_final0.onnx yamnet.onnx
+      - name: Publish the release, or add the files to it
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          files="models/beat_this_final0.onnx models/beat_this_final0.onnx.sha256 models/yamnet.onnx models/yamnet.onnx.sha256"
+          if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            gh release upload "$TAG" --repo "$GITHUB_REPOSITORY" --clobber $files
+          else
+            gh release create "$TAG" --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" \
+              --title "Model exports 1: Beat This! final0 and YAMNet, the pinned ONNX graphs" \
+              --notes-file models/RELEASE.md $files
+          fi
+          gh release view "$TAG" --repo "$GITHUB_REPOSITORY" --json url,assets --jq '.url, (.assets[] | "\(.name) \(.size) \(.url)")'
