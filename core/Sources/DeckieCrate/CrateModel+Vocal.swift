@@ -1,12 +1,12 @@
 import Foundation
 
-// The two blocks proposed with memo O's vocal fields (docs/research/o-vocal-uses.md, sections 3 and 4;
+// The two blocks accepted with memo Q's vocal fields (docs/research/q-vocal-uses.md, sections 3 and 4;
 // docs/architecture/crate-format.md, "Additions proposed with the vocal fields"): `vocal_structure` and `hooks`. Both
 // are additive: a record without them reads as before, and a writer leaves them out rather than writing null, so the
 // records of engines that do not make them (the lab's, the Apple apps' until they add them) keep their bytes.
 
 extension CrateTrack {
-    /// Where the track is sung, to the beat (**proposed**): memo O's items A1 to A6, from the vocal tagger's
+    /// Where the track is sung, to the beat (accepted Oct 29, 2026): memo Q's items A1 to A6, from the vocal tagger's
     /// frame-by-frame scores, the grid and the lattice. Bars are 1-based and beats 1 to 4 within a bar; a span's end is
     /// the beat line it stops at (exclusive), so it can be beat 1 of bar `n_bars + 1`.
     public struct VocalStructure: Codable, Equatable, Sendable {
@@ -14,7 +14,7 @@ extension CrateTrack {
         public static let kinds = ["beat_only", "ambient", "vocal", "fade"]
 
         /// A sung stretch: the beat it starts on and the beat line it stops at, with the times they were read from,
-        /// and each end's signed distance in beats from the nearest 8-bar lattice point (memo O's `span_end_offset`;
+        /// and each end's signed distance in beats from the nearest 8-bar lattice point (memo Q's `span_end_offset`;
         /// near zero, on a phrase boundary).
         public struct Span: Codable, Equatable, Sendable {
             public var startBar: Int
@@ -146,7 +146,7 @@ extension CrateTrack {
         /// Vocal-free stretches of `rule.min_gap_bars` or more, each starting on the lattice.
         public var freeGaps: [Gap]
         /// Stretches where the voice goes on over little bass and few onsets: a stand-in, from `low_db` and the onset
-        /// density, for memo O's `exposed` (vocal high, drums and bass low), which the Apple apps' records can carry
+        /// density, for memo Q's `exposed` (vocal high, drums and bass low), which the Apple apps' records can carry
         /// from real drum and bass activity; a reader prefers that when present.
         public var exposedProxy: [Stretch]
 
@@ -166,7 +166,7 @@ extension CrateTrack {
         }
     }
 
-    /// Up to three hook candidates, strongest first (**proposed**): memo O's item B7, stretches of 4 to 8 bars that
+    /// Up to three hook candidates, strongest first (accepted Oct 29, 2026): memo Q's item B7, stretches of 4 to 8 bars that
     /// repeat, are loud for the track and are sung, for the DJ to confirm with one tap.
     public struct Hooks: Codable, Equatable, Sendable {
         /// One candidate: bars `start_bar ..< end_bar`, its `strength` (0 to 1) and the three terms it is made of, whether
