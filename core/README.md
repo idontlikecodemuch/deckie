@@ -17,6 +17,8 @@ and Linux crate builder share them. Charter: `docs/architecture/pc-linux-track.m
   `DeckieCore` types (`FeatureFile+Structure.swift` reads the structure fields on their own), and turns them into
   crate records (`FeatureFile+Crate.swift`).
 - `Sources/DeckieCrate`: the crate file, described below; `Sources/crate-from-lab` writes one from the lab's files.
+  `Dependencies` there reads `dependencies.json`, the source of the apps' acknowledgements screen;
+  `Tools/render_dependencies_table.py` regenerates the table at the top of `DEPENDENCIES.md` from it.
 - `Sources/DeckieAudio`: `AudioBuffer`, decoded audio in memory (interleaved Float32 at the file's own rate, one
   or two channels), in a target of its own with no Foundation so the analysers in `DeckieCore` can take audio
   without depending on the decoder.

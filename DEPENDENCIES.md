@@ -877,3 +877,6 @@ MPL 2.0, CC BY 4.0 and the training-data rule were added by the main session's d
 3. Re-quote the licence file and check it is still on the allowlist.
 4. Rerun the parity tests on both CI workflows, and ask the main session to rerun the 373-track benchmark on the Mac.
 5. Update the "last checked" date above. Any new direct dependency gets a written reason here.
+6. Update the entry in `core/dependencies.json` (a new shipped dependency gets one of its own) and run
+   `python3 core/Tools/render_dependencies_table.py` to regenerate the table at the top; `DependenciesTests`
+   fails until the two agree.
