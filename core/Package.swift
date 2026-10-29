@@ -36,6 +36,7 @@ let package = Package(
         .library(name: "DeckieCrate", targets: ["DeckieCrate"]),
         .library(name: "DeckieEngine", targets: ["DeckieEngine"]),
         .library(name: "DeckieBuild", targets: ["DeckieBuild"]),
+        .executable(name: "deckie-build", targets: ["deckie-build"]),
     ],
     targets: [
         .target(name: "DeckieAudio"),
@@ -53,6 +54,7 @@ let package = Package(
         .target(name: "DeckieBuild",
                 dependencies: ["DeckieEngine", "DeckieCrate", "DeckieDecode", "DeckieCore", "DeckieLab", "DeckieInference",
                                "DeckieAudio"]),
+        .executableTarget(name: "deckie-build", dependencies: ["DeckieBuild"]),
         .target(name: "DeckieTestSupport", dependencies: ["DeckieAudio", "DeckieCore"], path: "Tests/DeckieTestSupport"),
         .testTarget(name: "DeckieCoreTests", dependencies: ["DeckieCore", "DeckieLab", "DeckieAudio", "DeckieTestSupport"],
                     exclude: ["Fixtures"]),
