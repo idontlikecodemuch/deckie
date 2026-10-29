@@ -327,3 +327,14 @@ So the reading is not the gap; the shipped maximum is already the best of the fo
 same scores will not reach Apple's 0.64. The PC and Linux vocal signal stays YAMNet's maximum, flagged as a
 first-cut, until the listening set (track J) exists; the second model (PANNs) is parked, unmerged, under the plateau
 decision of Oct 29.
+
+## 2d. Engine 0.4.0 on the Mac: the research R key method ported (Oct 29)
+
+A fresh run from main after the PR #2 merge (engine `deckie-0.4.0`, key source `hpcp-whitened`), everything else as
+2c. Key exact where the lab is confident 83.3 percent (from 76.2; neighbour 10.3, other 6.4), which meets the
+charter's 75 and equals Apple's 83.3; the Swift port gives the same key, margin (within 0.001) and sure flag as
+`mixer/key_parity.py` on 373 of 373 tracks, so the port is the research method exactly. Tempo within 2 percent
+99.7, loudness and sections unchanged, vocal correlation 0.31 as before. Every charter mark met; the one reference
+mark still short is the vocal signal. 17.5 s per track median this run, because Deckie Desk was building a crate on
+the same machine at the same time; the engine's own speed is the 9.6 s of 2c. Per-track figures:
+`bench/pc-engine-2026-10-29-mac-0.4.0.json`. The Windows and Linux engine rests here (Oct 29 plateau).
