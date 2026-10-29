@@ -1,0 +1,61 @@
+name: Desk
+options:
+  bundleIdPrefix: io.christophershannon
+  deploymentTarget:
+    macOS: "14.0"
+  createIntermediateGroups: true
+settings:
+  base:
+    SWIFT_VERSION: "6.0"
+    SWIFT_STRICT_CONCURRENCY: minimal
+    CODE_SIGN_STYLE: Manual
+    CODE_SIGN_IDENTITY: "-"
+    DEVELOPMENT_TEAM: ""
+    ENABLE_HARDENED_RUNTIME: NO
+    MACOSX_DEPLOYMENT_TARGET: "14.0"
+packages:
+  DeckieCore:
+    path: ../core
+targets:
+  Desk:
+    type: application
+    platform: macOS
+    sources:
+      - path: Desk/Sources
+    dependencies:
+      - package: DeckieCore
+        product: DeckieBuild
+      - package: DeckieCore
+        product: DeckieCrate
+      - package: DeckieCore
+        product: DeckieEngine
+      - package: DeckieCore
+        product: DeckieInference
+      - sdk: ShazamKit.framework
+      - sdk: AVFoundation.framework
+    info:
+      path: Desk/Info.plist
+      properties:
+        CFBundleDisplayName: Deckie Desk
+        CFBundleShortVersionString: "0.1"
+        CFBundleVersion: "1"
+        LSMinimumSystemVersion: "14.0"
+        NSHumanReadableCopyright: "App Hold Media LLC"
+        LSApplicationCategoryType: public.app-category.music
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: io.christophershannon.deckie.desk
+        PRODUCT_NAME: Deckie Desk
+        INFOPLIST_KEY_NSHumanReadableCopyright: "App Hold Media LLC"
+    postBuildScripts:
+      - name: Embed the model runtime and the models
+        shell: /bin/sh
+        script: |
+          set -e
+          V="$SRCROOT/Vendor"
+          F="$TARGET_BUILD_DIR/$FRAMEWORKS_FOLDER_PATH"
+          R="$TARGET_BUILD_DIR/$UNLOCALIZED_RESOURCES_FOLDER_PATH/models"
+          mkdir -p "$F" "$R"
+          cp -f "$V/libonnxruntime.1.31.1.dylib" "$F/"
+          cp -f "$V/models/beat_this_final0.onnx" "$V/models/yamnet.onnx" "$R/"
+          codesign --force --sign - "$F/libonnxruntime.1.31.1.dylib"
