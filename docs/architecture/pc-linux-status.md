@@ -26,10 +26,13 @@ Mac) reviews and merges this track's branch, `pc-linux`, and runs anything that 
 - Needed from Christopher: nothing right now. The vocal-model downloads were approved on Oct 28 ("Allow vocal
   models", with a standing yes for any further vocal model the work needs); dr_mp3, dr_flac, ONNX Runtime and
   Beat This! were approved before.
-- Open questions for the main session: none. ONNX Runtime's usage reporting is decided (entry 12, addendum): the
-  switch set before the library starts covers development, CI and the bench; a shipped build carries a library
-  built by us without the reporting client, proven by a release test, and curl stays off the allowlist. YAMNet's
-  training data is confirmed. Crate format v1 is accepted (entry 10, addendum) and MPL 2.0 is decided.
+- Open question for the main session, one: whether Beat This!'s weights can ship under the training-data rule,
+  now that its training sets are recorded and three of them state non-commercial terms (entry 12, second
+  addendum; DEPENDENCIES.md section 7). The bench keeps using Beat This! meanwhile, as development. Decided:
+  ONNX Runtime's usage reporting (entry 12, addendum: the switch set before the library starts covers
+  development, CI and the bench; a shipped build carries a library built by us without the reporting client,
+  proven by a release test; curl stays off the allowlist), YAMNet's training data (confirmed), crate format v1
+  (entry 10, addendum) and MPL 2.0.
 - Added to the order of work, before the first PC build: ONNX Runtime built on CI from its pinned tag without the
   reporting client, pinned by hash, with the release test already in place (entry 12, addendum).
 - Needed from the Mac, when step 5 lands (not blocking): the `bench` run over the 373 files, which folds in the
