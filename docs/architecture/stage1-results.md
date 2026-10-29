@@ -276,3 +276,26 @@ session to look at. The one mark missed is key: 74.6 percent exact where the lab
 (track L); the lab's key was a three-way vote that included Essentia's non-commercial models. So on Mac and iPad the
 key comes from Apple's framework (D11), and on PC and Linux the estimator needs a second vote or better profiles
 before it meets the mark. 9.2 s per track median on this Mac at low priority with two jobs.
+
+## 2b. The same run with the vocal tagger (Oct 28, late)
+
+A fresh run with YAMNet from release `models-1` (96bb0dc5…), everything else as 2a. Every other column came out
+identical to 2a. Vocal correlation per bar against the lab: median 0.31, mean 0.32 (n 373), against the reference
+mark of Apple's 0.645; the time per track rose to 11.1 s median, 25.7 s at the 90th percentile.
+
+A three-way comparison on the lab's bar grid (`mixer/vocal3way.py`, rows in `bench/vocal-3way-2026-10-28.json`;
+357 tracks where the engine's bar count matches the lab's and Apple's series exist):
+
+| per-bar correlation, median | |
+|---|---|
+| Apple against the lab | 0.64 |
+| engine (YAMNet) against Apple | 0.49 |
+| engine (YAMNet) against the lab | 0.31 |
+
+Mean level of the series: lab 0.81, Apple 0.51, engine 0.017; the engine's mean is below 0.02 on 264 of 357
+tracks. Reading: YAMNet's singing-class scores sit near zero on most full mixes, because a mix scores as "Music"
+and the voice classes get what is left, so the per-bar series is mostly noise around a floor; it follows Apple
+more than it follows the lab (0.49 against 0.31), which says the lab's own reference is part of the gap, but it is
+far from either. The reading of YAMNet has to change before the listening set calibrates anything: which classes
+are summed, whether the logits rather than the sigmoid scores are read, or the second opinion (PANNs MobileNetV2).
+This is a reference mark, not a charter mark, and the Apple apps take the vocal signal from Apple (P13).
