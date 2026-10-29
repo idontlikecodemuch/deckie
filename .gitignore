@@ -39,3 +39,6 @@ core/.models/
 !core/Tests/DeckieDecodeTests/Fixtures/*.m4a
 # Claude Code agent worktrees (temporary checkouts the harness makes inside the repository)
 .claude/worktrees/
+desk-app/Vendor/
+desk-app/build/
+desk-app/*.xcodeproj
