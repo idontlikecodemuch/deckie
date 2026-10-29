@@ -278,3 +278,21 @@ Christopher says so; a yes moves it up into the dated decisions above.
   or BSD decoders only if the trials show them. Unsupported files are always reported, counted by extension, never
   skipped silently. Each decoder's leading-sample offset is measured against the lab's and corrected, so beat times
   agree across platforms.
+- **P19. The training-data line re-read for the beat model (Oct 28, awaiting Christopher).** The PC and Linux
+  session recorded Beat This!'s training sets as the note on D14 asks: fifteen sets, three with non-commercial terms
+  on their own pages (ASAP with MAESTRO audio, RWC, Filosax), several of commercial recordings the sets do not
+  license at all (Ballroom, Hainsworth, Beatles, JAAH), some with YouTube links, some unstated; the weights are MIT
+  from the authors (JKU), who say the user must assess the training files' terms. Read literally, the morning's
+  line ("weights whose training data carries a non-commercial licence are out") refuses Beat This!, and no
+  permissively licensed beat tracker with clean training terms exists: madmom's models are CC BY-NC-SA, model-free
+  trackers are far weaker and find no downbeats, and training our own on licensed data is months of work for a
+  worse result. The line is also inconsistent: it refuses sets that say "non-commercial" while accepting
+  all-rights-reserved recordings that grant nothing (most sets, YAMNet's YouTube clips, and whatever Apple trained
+  its framework on). Proposed re-read: weights ship under the licence their publisher grants; a model is refused when
+  the publisher's own terms restrict use (madmom, Essentia, umxl) or when a data owner has objected; the training
+  sets and their terms are recorded for every model as disclosure, with a named replacement path; the attorney
+  reviews the line with DECKEE. Under this reading Beat This! ships with its record, YAMNet is unchanged, and the
+  Spleeter and musicnn refusals of the morning stand on other grounds (YAMNet is the like-for-like signal). The
+  alternative is to keep the literal line and fund a clean-data beat tracker as a research track, with the PC and
+  Linux engine unable to ship beats until it lands. Until Christopher answers, Beat This! stays in the engine for the
+  bench only, which is development.
