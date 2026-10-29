@@ -3,7 +3,7 @@ import Testing
 import DeckieCore
 import DeckieTestSupport
 
-// The vocal structure (memo O's items A1 to A6) and the hook candidates (item B7) from constructed inputs, so every
+// The vocal structure (memo Q's items A1 to A6) and the hook candidates (item B7) from constructed inputs, so every
 // field can be checked exactly against the construction; they need neither ONNX Runtime nor a model. The engine's
 // run on synthesised audio is in VocalStructureEngineTests.
 

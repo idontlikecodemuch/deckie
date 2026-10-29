@@ -144,11 +144,11 @@ public struct Analysis: Sendable {
     /// `per_bar.vocal_prob`, the flag `vocal_unknown`).
     public var vocal: VocalActivity?
     public var vocalModel: String?
-    /// Where the track is sung, to the beat (memo O's items A1 to A6: spans, first and last sung beat with the pickup,
+    /// Where the track is sung, to the beat (memo Q's items A1 to A6: spans, first and last sung beat with the pickup,
     /// free intro and outro and their kinds, free gaps, the exposed-vocal proxy, span ends against the lattice); nil
     /// without a vocal tagger.
     public var vocalStructure: VocalStructure?
-    /// Up to three hook candidates (memo O's item B7); nil without a vocal tagger.
+    /// Up to three hook candidates (memo Q's item B7); nil without a vocal tagger.
     public var hooks: Hooks?
     /// The lab's flags, then the local-tempo flags, then `vocal_unknown` when there is no tagger.
     public var flags: [String]

@@ -67,7 +67,7 @@ Example.deckiecrate/
 Numbers carry their unit in the name (`_s` seconds, `_ms`, `_db`, `_lufs`, `bpm`); `lra` is in LU. Every field below
 is written in every record; `null` means "no value" and is allowed only where marked "or null". A block marked
 *(feature X)* is present exactly when `features_present` lists X, and is `null` otherwise; the two blocks proposed with
-memo O's vocal fields, `vocal_structure` and `hooks`, are instead left out when absent (below).
+memo Q's vocal fields, `vocal_structure` and `hooks`, are instead left out when absent (below).
 
 - `id`: letters, digits, `-` and `_` only, as it names the sidecar files. **How a shipped engine makes it**
   (main session, Oct 28): the first 16 hexadecimal characters, lower case, of the SHA-256 hash of the audio file's
@@ -81,7 +81,7 @@ memo O's vocal fields, `vocal_structure` and `hooks`, are instead left out when 
 - `schema`: 1. `features_present`: sorted names, from `grid`, `tempo_segments`, `key`, `key_changes`, `phrase`,
   `sections`, `mix_windows`, `ends`, `loudness`, `vocal`, `onset_pattern`, `style`, `vocal_structure`, `hooks` and
   `bars.<series>`. Readers ignore names they do not know, but keep a per-bar series they do not know. **proposed** (the
-  names; `vocal_structure` and `hooks` with memo O's vocal fields).
+  names; `vocal_structure` and `hooks` with memo Q's vocal fields).
 - `file`: `name`, `rel` (path below the folder the crate was built from, or null; never absolute), `bytes` or null,
   `sha1_head` or null, `sha256` or null, `duration_s`, `tag_bpm` or null (with step 5, below). `sha256` is the whole
   file's SHA-256 hash as 64 lower-case hexadecimal characters, the spec's "content hash of the file for exact identity"
@@ -132,7 +132,7 @@ memo O's vocal fields, `vocal_structure` and `hooks`, are instead left out when 
   Empty (`{}`) until an Apple device adds signatures: this track builds no fingerprint.
 - `imported` or null (with step 5, accepted Oct 29, below): what was imported with the track from the DJ's own
   software, by source (`imported.rekordbox`).
-- `vocal_structure` *(vocal_structure)* and `hooks` *(hooks)* **proposed** with memo O's vocal fields (below): where
+- `vocal_structure` *(vocal_structure)* and `hooks` *(hooks)* **accepted** (Oct 29, 2026) with memo Q's vocal fields (below): where
   the track is sung, to the beat, and up to three hook candidates. Left out when absent, never written as null.
 
 **Bar numbers.** A bar is 1 to `n_bars`; a bar line (an exclusive end, a boundary, the start of a fade, the start or
@@ -258,9 +258,9 @@ artist tags, source `tag`, else the file name, source `filename`); the DJ's key 
 `tempo_segments`; the DJ's grid markers, cues and loops stay in `imported.rekordbox`, untouched, so the Apple apps can
 show or compare them without either side overwriting the other.
 
-## Additions proposed with the vocal fields (memo O)
+## Additions accepted with the vocal fields (memo Q; the main session's yes, Oct 29, 2026)
 
-Memo O (`docs/research/o-vocal-uses.md`, sections 3 and 4) found that DJs use vocals six ways (keep two apart, hand off,
+Memo Q (`docs/research/q-vocal-uses.md`, sections 3 and 4) found that DJs use vocals six ways (keep two apart, hand off,
 acapella, tease, echo out, singalong) and that a per-bar probability serves few of them: a hand-off needs the beat of
 the last word, a "drop on the four" the pickup, an acapella a vocal-free stretch in the middle of the track. Two blocks
 carry its items A1 to A6 and B7, computed from what the engine already measures: the vocal tagger's frame-by-frame
@@ -286,12 +286,12 @@ beat 1 of bar `n_bars + 1`. Times (`start_s`, `end_s`, `time_s`) are those cross
 by straight-line interpolation, in seconds from the start of the decoded audio; singing before bar 1 or past the end
 line is clamped to the grid in bars and beats, not in seconds.
 
-- `vocal_structure` *(vocal_structure)* **proposed**:
+- `vocal_structure` *(vocal_structure)* **accepted** (Oct 29, 2026):
   - `source`: the tagger's model, as `vocal.source`. `frame_hop_s`: seconds between the frames read (0.48 for YAMNet;
     a bar's length when the tagger gives bars only, and then a change is placed on the bar line). `lattice_phase_bar`:
     the lattice used below (`phrase.lattice_phase_bar`).
   - `spans` (A1): the sung stretches in order, none overlapping, each `start_bar`, `start_beat`, `start_s`, `end_bar`,
-    `end_beat`, `end_s`, and `start_offset_beats`, `end_offset_beats` (A6, memo O's `span_end_offset`): each end's
+    `end_beat`, `end_s`, and `start_offset_beats`, `end_offset_beats` (A6, memo Q's `span_end_offset`): each end's
     signed distance in beats from the nearest 8-bar lattice point, -15 to 16, negative before it (a tie at 16 counts
     as after the earlier point). Near zero, the stretch starts or stops on a phrase boundary, where a hand-off or an
     echo out sounds intended. The rule: a frame is sung when its score is at least `rule.threshold`; dips shorter than
@@ -316,7 +316,7 @@ line is clamped to the grid in bars and beats, not in seconds.
   - `exposed_proxy` (A5): `start_bar`, `end_bar` of runs of `rule.exposed_min_bars` bars or more in which at least half
     of each bar's beats are sung, its `low_db` is at least `rule.exposed_low_drop_db` under the track's median and its
     onset density at most `rule.exposed_density_ratio` of the track's median: the bass and the drums drop while the
-    voice goes on. Memo O's `exposed` wants vocal high and drums and bass low; this engine measures no drum or bass
+    voice goes on. Memo Q's `exposed` wants vocal high and drums and bass low; this engine measures no drum or bass
     activity, so `low_db` and the onset density stand in, and the name says so. The Apple apps' records will carry
     `exposed` (same shape) from SoundAnalysis's real drum and bass activity; a reader prefers `exposed` when present
     and falls back to `exposed_proxy`.
@@ -363,7 +363,7 @@ each gap's `bars` its length; the hooks' bars in range, their scores between 0 a
 **What is uncalibrated, for the Mac to tune.** Everything above rests on YAMNet's scores, which no listening test has
 calibrated: on the synthesised voice its frames dip far below their peak inside a sung stretch, so on the engine's
 test track a span's ends land within two beats of the construction (the pickup, the last sung beat and the free bars
-exactly), not on it every time. The listening set (memo O section 4, "Next") should mark the first and last sung beat,
+exactly), not on it every time. The listening set (memo Q section 4, "Next") should mark the first and last sung beat,
 the hook and the exposed line, and tune the threshold fraction and floor, the bridge, the kind rule, the proxy and the
 hook weights. Size: about 1.5 KB a record on the test track (two spans, three hooks), most of it the two rules.
 
@@ -386,7 +386,7 @@ hook weights. Size: about 1.5 KB a record on the test track (two spans, three ho
    keyed by source (`imported.rekordbox`, null when nothing was imported), not `deckie`, because it holds the DJ's own
    data and its name should say where that came from; the tag tempo as `file.tag_bpm`, a fact about the file rather
    than an import, without its source; `end_s` and `tag_bpm` in the decimals table.
-10. With memo O's vocal fields: the record's `vocal_structure` and `hooks` blocks and their `features_present` names,
+10. Accepted Oct 29, 2026. With memo Q's vocal fields: the record's `vocal_structure` and `hooks` blocks and their `features_present` names,
     left out when absent rather than written as null (the one exception to the canonical form's nulls, so existing
     records keep their bytes); `exposed_proxy` named apart from the Apple family's `exposed`, which a reader prefers;
     their decimals.

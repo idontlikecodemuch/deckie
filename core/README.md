@@ -284,7 +284,7 @@ scores 521 kinds of sound for each 0.96 s patch, a patch every 0.48 s: the mono 
 on ONNX Runtime. A patch's vocal score is the largest of YAMNet's scores for singing, choir, yodelling, chant, mantra,
 child singing, synthetic singing, rapping, humming, vocal music and a cappella (speech is left out and recorded beside
 it, as are singing, rapping, choir and music on their own, under `deckie.vocal`, since rap over rap is the worst clash
-in a mix, research O); the patches are averaged into bars exactly as the lab
+in a mix, research Q); the patches are averaged into bars exactly as the lab
 averages its EffNet patches (the patches centred in a bar, else the value at the bar's middle), and the mean of the
 patches' 1,024-value embeddings, scaled to length 1, is the track's style vector (the crate's `style` block). The scores
 are not calibrated: the lab's thresholds (0.5 a vocal bar, 0.75 a vocal-heavy track) were tuned on EffNet, and track
@@ -300,7 +300,7 @@ hears the synthetic voice only faintly; real singing scores far higher); drums a
 stereo take 0.6 s in a release build (resampling 0.28 s, front end 0.10 s, network 0.20 s) and 4.6 s in a debug build.
 
 **The vocal structure and the hook candidates** (`VocalStructure` and `Hooks` in `Sources/DeckieCore/Structure`) are
-research O's per-track vocal fields (`docs/research/o-vocal-uses.md`, items A1 to A6 and B7): with a tagger, the
+research Q's per-track vocal fields (`docs/research/q-vocal-uses.md`, items A1 to A6 and B7): with a tagger, the
 engine reads YAMNet's patch-by-patch scores (0.48 s apart, finer than a bar) against the grid for the sung spans in bars
 and beats, the first sung beat and whether it is a pickup, the last, the free intro and outro and what they hold, the
 8-bar free gaps on the lattice, a stand-in for an exposed vocal from `low_db` and the onset density, and each span's

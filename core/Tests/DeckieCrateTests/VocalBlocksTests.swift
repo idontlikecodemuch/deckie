@@ -2,7 +2,7 @@ import Foundation
 import Testing
 import DeckieCrate
 
-// The two blocks proposed with memo O's vocal fields, `vocal_structure` and `hooks`: they round-trip, are listed in
+// The two blocks accepted with memo Q's vocal fields, `vocal_structure` and `hooks`: they round-trip, are listed in
 // `features_present`, are checked, and a crate without them (every crate written before them) reads as it did and
 // keeps its bytes.
 

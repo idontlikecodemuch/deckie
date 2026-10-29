@@ -33,7 +33,7 @@ public enum CrateFormat {
         public static let vocal = "vocal"
         public static let onsetPattern = "onset_pattern"
         public static let style = "style"
-        /// Where the track is sung, to the beat, and the hook candidates (**proposed** with memo O's vocal fields).
+        /// Where the track is sung, to the beat, and the hook candidates (accepted Oct 29, 2026, with memo Q's vocal fields).
         public static let vocalStructure = "vocal_structure"
         public static let hooks = "hooks"
         public static let barsPrefix = "bars."
@@ -64,7 +64,7 @@ public enum CrateFormat {
         "last_sound_s": 3, "lra": 3, "tag_bpm": 3,
         "first_downbeat_s": 4, "start_s": 4, "end_s": 4, "mean": 4, "onset_pattern_16": 4,
         "fit_mad_ms": 2, "integrated_lufs": 2, "true_peak_db": 2, "secs": 2,
-        // The vocal structure and the hooks (proposed with memo O's vocal fields): times as the other times, scores
+        // The vocal structure and the hooks (accepted with memo Q's vocal fields): times as the other times, scores
         // and shares as `confidence`, the rules' thresholds as their inputs are written.
         "time_s": 4, "frame_hop_s": 4, "threshold": 4, "score_p95": 4, "threshold_floor": 4, "threshold_fraction": 3,
         "beat_density_ratio": 3, "bright_margin_db": 2, "exposed_low_drop_db": 2, "exposed_density_ratio": 3,

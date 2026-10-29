@@ -212,7 +212,7 @@ extension Analysis {
         return .object(members)
     }
 
-    /// The vocal structure (memo O's items A1 to A6), null without a tagger: the crate's proposed `vocal_structure`
+    /// The vocal structure (memo Q's items A1 to A6), null without a tagger: the crate's proposed `vocal_structure`
     /// block (`crateVocalStructure()`), its fields in the order crate-format.md lists them and its values as rounded
     /// there.
     func vocalStructureBlock() -> JSONValue {
@@ -258,7 +258,7 @@ extension Analysis {
         ])
     }
 
-    /// The hook candidates (memo O's item B7), null without a tagger: the crate's proposed `hooks` block
+    /// The hook candidates (memo Q's item B7), null without a tagger: the crate's proposed `hooks` block
     /// (`crateHooks()`), fields in crate-format.md's order, values as rounded there.
     func hooksBlock() -> JSONValue {
         typealias J = JSONValue

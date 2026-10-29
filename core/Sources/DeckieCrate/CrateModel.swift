@@ -2,7 +2,7 @@ import Foundation
 
 // The crate in memory (docs/architecture/crate-format.md). Swift names are the format's names in camel case; the
 // coding keys carry the format's own. Every optional is written as null, never left out (CrateWriter), except the
-// two blocks added with memo O's vocal fields, `vocal_structure` and `hooks` (CrateModel+Vocal.swift), which are left
+// two blocks added with memo Q's vocal fields, `vocal_structure` and `hooks` (CrateModel+Vocal.swift), which are left
 // out when absent; a reader takes a missing optional as null. A block that is optional in a record is there exactly when its feature is in
 // `features_present`, which is worked out from the blocks (`CrateTrack.featuresPresent`), never stored apart.
 
@@ -551,7 +551,7 @@ public struct CrateTrack: Codable, Equatable, Sendable {
     public var signatures: [String: Signature]
     /// What was imported with the track from the DJ's own software, by source; nil when nothing was.
     public var imported: Imported?
-    /// Where the track is sung, to the beat, and the hook candidates (**proposed** with memo O's vocal fields); nil
+    /// Where the track is sung, to the beat, and the hook candidates (accepted Oct 29, 2026, with memo Q's vocal fields); nil
     /// when the engine made none. Unlike every other field, a nil one is left out of crate.json rather than written as
     /// null, so the records of engines that do not make them keep their bytes.
     public var vocalStructure: VocalStructure?

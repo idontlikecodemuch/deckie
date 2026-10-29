@@ -1,6 +1,6 @@
 import Foundation
 
-/// Where a track is sung, to the beat: research O's section 3, items A1 to A6 (docs/research/o-vocal-uses.md). Memo O
+/// Where a track is sung, to the beat: research Q's section 3, items A1 to A6 (docs/research/q-vocal-uses.md). Memo Q
 /// found that DJs use vocals six ways (keep two apart, hand off, acapella, tease, echo out, singalong) and that a
 /// per-bar probability serves few of them: a hand-off needs the beat of the last word, a "drop on the four" the
 /// pickup, an acapella a vocal-free stretch in the middle of the track. This reads all of that from what the engine
@@ -44,7 +44,7 @@ public struct VocalStructure: Sendable, Equatable {
         public func time(_ k: Int) -> Double { centreSeconds + Double(k) * hopSeconds }
     }
 
-    /// The rules' parameters. The defaults are a first cut, chosen on the synthesised test tracks and memo O's
+    /// The rules' parameters. The defaults are a first cut, chosen on the synthesised test tracks and memo Q's
     /// reading of how DJs work; none is tuned on real music yet.
     public struct Parameters: Sendable, Equatable {
         /// A frame is sung when its score is at least `max(thresholdFloor, thresholdFraction x the 95th percentile of
@@ -60,7 +60,7 @@ public struct VocalStructure: Sendable, Equatable {
         public var thresholdFraction = 0.25
         public var thresholdFloor = 0.01
         /// Dips shorter than this many beats between sung stretches are bridged, so a span is a verse or a chorus
-        /// rather than a line (memo O, section 4: Apple's `ranges` bridges dips the same way). Two bars: longer than a
+        /// rather than a line (memo Q, section 4: Apple's `ranges` bridges dips the same way). Two bars: longer than a
         /// breath or a fill between lines, shorter than the 4-bar breaks DJs mix in.
         public var bridgeBeats = 8
         /// After bridging, a sung stretch shorter than this many beats is dropped as a blip (one YAMNet frame is about a
@@ -113,7 +113,7 @@ public struct VocalStructure: Sendable, Equatable {
         public var endBeatIndex: Int
         /// Beats from the nearest 8-bar lattice point to `start` and to `end`, signed (-15 to 16; negative is before
         /// the lattice point): near zero, the stretch starts or stops on a phrase boundary, where a hand-off or an echo
-        /// out sounds intended and anywhere else reads as a mistake (memo O, item A6).
+        /// out sounds intended and anywhere else reads as a mistake (memo Q, item A6).
         public var startOffsetBeats: Int
         public var endOffsetBeats: Int
 
@@ -166,7 +166,7 @@ public struct VocalStructure: Sendable, Equatable {
     public var outroKind: EdgeKind
     /// Vocal-free stretches of `minGapBars` or more, anywhere, each starting on the lattice (A4).
     public var freeGaps: [Stretch]
-    /// Stretches where the voice goes on over little bass and few onsets: a stand-in for memo O's `exposed` (vocal
+    /// Stretches where the voice goes on over little bass and few onsets: a stand-in for memo Q's `exposed` (vocal
     /// high, drums and bass low, A5), which needs drum and bass activity this engine does not measure.
     public var exposedProxy: [Stretch]
     /// For each bar, the share of its four beats inside a span (0, 0.25, ..., 1).

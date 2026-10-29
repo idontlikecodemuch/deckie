@@ -20,7 +20,7 @@ Mac) reviews and merges this track's branch, `pc-linux`, and runs anything that 
   ported and checked against all 373 committed tracks (entry 7). Step 4, the crate reader and writer, is built and
   accepted (entry 10). The analyser is assembled: one call from an audio file to the lab's record and a crate
   track, now with the vocal tagger in it (entries 11 and 12). Step 5, `deckie-build` with its `bench` command, is
-  built (entry 13): a crate from a folder, resumable, with the yardstick ready for the Mac. The memo O fields are
+  built (entry 13): a crate from a folder, resumable, with the yardstick ready for the Mac. The memo Q fields are
   in (entry 15): where the vocals are, bar and beat, free intro and outro, free gaps on the lattice, hook
   candidates, all additive crate blocks. The Mac's memory work is merged (entry 15): a job's peak falls from 1.9 GB
   to 1.1 GB with every number unchanged. 258 tests pass on Linux; Windows builds and passes everything that needs
@@ -62,7 +62,7 @@ Mac) reviews and merges this track's branch, `pc-linux`, and runs anything that 
   for this track to merge. Its measurement matrix ran here (the Mac has no models yet): on a synthesised four-minute
   track the peak is the beat model's stage in every setting; ONNX Runtime's memory arena keeps 1.1 to 1.9 GB resident
   after it, and switching the arena off (or its shrinkage on) brings a job back to 0.3 to 0.7 GB with records byte
-  for byte identical; four jobs peak at 5.8 GB with the arena, 4.5 GB without. The Mac picks the default from it. Here, the memo O agent adds a step to `Analyser.swift` after the vocal tagger and new
+  for byte identical; four jobs peak at 5.8 GB with the arena, 4.5 GB without. The Mac picks the default from it. Here, the memo Q agent adds a step to `Analyser.swift` after the vocal tagger and new
   fields in `Analysis*.swift` and the crate model, nothing in the DSP; the ONNX Runtime build agent touches only
   the workflows, `fetch-onnxruntime.sh` and DEPENDENCIES.md section 6.
 - Accepted by the main session (Oct 29) with three renames, now applied (entry 16): the crate builder's two
@@ -690,7 +690,7 @@ curl, mbedTLS, SQLite and zlib are present only in the official development bina
 if our build still links any of them, the main session hears which and why before anything ships. (3) YAMNet's
 training data fits the training-data rule, as read. For the Mac bench, the main session needs the macOS archive's
 address, tag and SHA-256 in this log when the bench command is ready; Christopher's word for that download is asked
-in that session. The memo O vocal-derived fields follow the bench, under `features_present` names so a reader
+in that session. The memo Q vocal-derived fields follow the bench, under `features_present` names so a reader
 without them is unaffected.
 
 **Second addendum, Oct 29, 2026: Beat This!'s training data, recorded, with a question for the main session.** The
@@ -772,7 +772,7 @@ at all).
 
 ## Oct 29, 2026: the vocal-derived fields, and the memory work from the Mac (entry 15)
 
-**Where the vocals are, for the DJ (memo O).** The research memo `docs/research/o-vocal-uses.md` found six ways DJs
+**Where the vocals are, for the DJ (memo Q).** The research memo `docs/research/q-vocal-uses.md` found six ways DJs
 use vocals (keep them apart, hand off, acapella, tease, echo out, singalong) and that a per-bar probability alone
 serves few of them. The engine now writes two more blocks when it has a tagger, in the lab JSON under the record's
 `deckie` block and in the crate as `vocal_structure` and `hooks`, both listed in `features_present` and left out

@@ -62,7 +62,7 @@ extension YAMNet: VocalPatchModel {
         let t0 = Date()
         let p = r.patches
         let vocal = (0..<p.count).map { Self.vocalScore(p, patch: $0) }
-        // Sung, rapped, choral and spoken apart (research O: rap over rap is the worst clash), and music.
+        // Sung, rapped, choral and spoken apart (research Q: rap over rap is the worst clash), and music.
         let series = ["singing": p.scores(.singing), "rapping": p.scores(.rapping), "choir": p.scores(.choir),
                       "speech": p.scores(.speech), "music": p.scores(.music)]
         let style = p.meanEmbedding()

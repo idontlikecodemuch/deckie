@@ -1,6 +1,6 @@
 import Foundation
 
-/// Hook candidates: research O's item B7 (docs/research/o-vocal-uses.md). A DJ teases the next track's hook, cuts to
+/// Hook candidates: research Q's item B7 (docs/research/q-vocal-uses.md). A DJ teases the next track's hook, cuts to
 /// the chorus or lets the room sing it; "recognisable" is not in the audio, so this only proposes up to three
 /// stretches of 4 to 8 bars, strongest first, for the DJ to confirm with one tap later. A hook here is a stretch that
 /// repeats elsewhere in the track, is loud for the track and is sung.
@@ -12,10 +12,10 @@ import Foundation
 public struct Hooks: Sendable, Equatable {
     /// The rule's parameters (a first cut, chosen on synthesised tracks; nothing is tuned on real music yet).
     public struct Parameters: Sendable, Equatable {
-        /// Candidate lengths in bars, longest first: memo O's 4 to 8 bars, a phrase or half of one.
+        /// Candidate lengths in bars, longest first: memo Q's 4 to 8 bars, a phrase or half of one.
         public var lengthsBars = [8, 4]
         /// Candidates start every this many bars from the lattice phase, so on a phrase boundary or halfway through
-        /// one: a tease or a cut goes in on a phrase boundary (memo O, use 4).
+        /// one: a tease or a cut goes in on a phrase boundary (memo Q, use 4).
         public var stepBars = 4
         /// strength = (weightRepetition x repetition + weightLoudness x loudness + weightVocal x vocal density) / the
         /// weights' sum, each term 0 to 1. Repetition counts most: it is what makes a stretch a hook rather than
