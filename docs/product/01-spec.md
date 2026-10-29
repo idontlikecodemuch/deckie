@@ -217,9 +217,14 @@ Desk Lite share it (P16).
 
 ### 5.8 Apps and roles
 
-One universal iOS binary plus a native macOS target from shared packages. Roles are runtime modes: Booth (iPad beside
-the decks), Pocket (iPhone: record a set, see the tracklist), Desk (Mac: import, analyse, manage the crate). Web app:
-later. Android and Windows: not planned.
+Three names, decided Oct 29: Deckie Booth (iPad beside the decks: hears, names, suggests, records), Deckie Pocket
+(iPhone: record a set, see the tracklist) and Deckie Desk (the computer: build the crate from folders, discs and
+albums; fix names; import and export rekordbox with a button; see and tune "How you mix"; play with the crate and
+plan a set before a gig; export a set's tracklist). Booth and Pocket are one universal iOS binary; Desk is a native
+macOS app (`desk-app/`, first cut Oct 29) and, with the same Swift core, a Windows and Linux app whose screens follow
+the Mac's. Desk on Windows and Linux starts with the crate side only, since recognition signatures need an Apple
+device; the iPad makes them from the files on a USB stick ("sign my files"). On a Mac before macOS 27, Desk runs the
+shared engine (Beat This!, YAMNet, the research R key method) in place of Apple's framework. Web app: later.
 
 ### 5.9 Legal texts (D15)
 
@@ -275,9 +280,12 @@ that is true (P8). The acknowledgements are generated from `DEPENDENCIES.md`, so
   track on an iPhone, memory at a few thousand signatures, and a pitch sweep with `catalogtool bench` including
   tempo-only variants. (c) Does the iPad Air 4 run iPadOS 27. (d) Regenerate Christopher's crate with the new engine once
   (a) passes.
-- Stage 2: DeckieAnalysis on the Mac and crate file v1. Point it at any folder and get a crate file; the identification
-  pipeline; the iPad reads the crate file instead of bundled data; the catalogue is built from the user's files.
-  Christopher's crate is test fixture number one.
+- Stage 2 (Oct 28 to 29): the shared engine meets the charter's marks on the 373-track yardstick (stage 2a to 2c);
+  crate file v1 written and read; Deckie Desk on the Mac, first cut: folder in, crate out, names, import log,
+  signatures. Christopher's crate is test fixture number one. Next in this stage: the iPad reads the crate and builds
+  its catalogue from the crate's signatures; the quick-wins build installed for Mike; the Apple-framework analyser
+  when a macOS 27 machine is at hand. The Windows and Linux engine rests at its marks (Oct 29 plateau) until an app
+  needs more.
 - Stage 3: on device. The engine on iPad and iPhone; on-device signatures; onboarding; the sliders; the learning loop.
 - Stage 4: trial. TestFlight with five to ten DJs from the primary segment, observed in three situations: a vinyl
   or CD DJ working unfamiliar records into a familiar bag; a DJ adapting to house gear; a DJ turning a hardware set
