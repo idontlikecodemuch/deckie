@@ -26,9 +26,10 @@ on:
   # A push that changes the build or its gate builds once. Not pull_request: its path filter looks at the whole pull
   # request, not at the push, so once this file is in an open pull request every later push there would start three
   # builds of an hour or two each; a push's filter looks only at what that push changed. Branches only, since path
-  # filters are not applied to tag pushes.
+  # filters are not applied to tag pushes. The claude/* branches mirror this track's branch for the cloud session
+  # and would start the same build twice.
   push:
-    branches: ['**']
+    branches: ['**', '!claude/**']
     paths:
       - .github/workflows/onnxruntime-build.yml
       - core/Tools/scan-onnxruntime.sh
