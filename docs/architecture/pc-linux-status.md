@@ -897,3 +897,14 @@ and a wrong file from a local server, which it refused), CI tries it before expo
 uploads the two files with their `.sha256` as a run artifact named by their hashes, the interim download until the
 release exists. The ONNX Runtime archives' publication is a release too, so both go to Christopher in one ask. The main session also declined to create the release from the
 Mac, rightly: a refusal here is Christopher's to lift, not a teammate's to route around.
+
+**Addendum: the Beat This! export is not reproducible byte for byte, so the release is the only shared copy.** The
+first CI run with the artifact step refused to upload, correctly: CI's own export of Beat This! (the pinned
+requirements, Python 3.12, the CPU build of torch on Ubuntu) hashes `ab1203af…`, not the pinned `f1d93204…` made
+here, and the Mac's hashes `442de936…`. All three pass the export's numerical check against PyTorch (differences far
+under the tolerance) and every CI test passes on CI's copy, so the graphs agree in their numbers but not in their
+bytes: an ONNX export depends on the torch build that made it. YAMNet's export is reproducible (CI's bytes match the
+pinned `96bb0dc5…`). So the pinned Beat This! bytes exist only in this container, and the release `models-1`, made
+from here once Christopher says yes, is the one way every machine (CI included, which now fetches first) runs the
+same graph. Until then the Mac's bench runs on its own export, numerically fine, and its sheet should name the graph
+it ran on.

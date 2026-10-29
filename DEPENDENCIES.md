@@ -609,6 +609,13 @@ recordings. Under the Oct 28 wording that read as non-commercial; Christopher de
 allowlist below) that weights ship under their publisher's licence with the training sets recorded as disclosure, so
 Beat This! ships, MIT, with the record below shown in the acknowledgements.
 
+**The export is not reproducible byte for byte.** The same script with the same pinned requirements gives a graph
+whose numbers agree (the export's check against PyTorch passes everywhere) but whose bytes differ with the torch
+build that made it: this container's export is the pinned `f1d93204…`, GitHub's Ubuntu machine makes `ab1203af…`,
+the Mac `442de936…` (Oct 29, 2026). That is why the pinned file is published once (the release `models-1`) and
+fetched by hash rather than re-exported per machine; the export remains the fallback, numerically equivalent, and
+a machine running on its own export records that graph's hash, not the pinned one.
+
 **Training data.** This is the record the "Still to do" above asks for: what the `final0` checkpoint was trained on,
 on what terms each data set's audio and beat annotations are published, and who trained it. All of it was read on
 Oct 29, 2026, from the places named; where a host did not answer, the text says so. A *beat annotation* is a list of
