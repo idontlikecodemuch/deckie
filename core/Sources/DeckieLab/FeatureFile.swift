@@ -120,9 +120,12 @@ public struct CandidateRecord: Decodable, Sendable {
     // Read by the crate converter (FeatureFile+Crate.swift).
     public var artist: String?
     public var song: String?
+    // Read by deckie-build's bench: where the audio was on the lab's Mac, and the tag tempo the lab analysed it with.
+    public var path: String?
+    public var bpmTag: Double?
     enum CodingKeys: String, CodingKey {
-        case id, title, ver, secs, disc, folder, hal, kind, era, artist, song
-        case cutKey = "cut_key", isLongest = "is_longest", onDisc = "on_disc"
+        case id, title, ver, secs, disc, folder, hal, kind, era, artist, song, path
+        case cutKey = "cut_key", isLongest = "is_longest", onDisc = "on_disc", bpmTag = "bpm_tag"
     }
 
     public static func loadAll(_ url: URL) throws -> [CandidateRecord] {
