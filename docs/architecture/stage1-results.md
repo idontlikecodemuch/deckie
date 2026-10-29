@@ -299,3 +299,31 @@ more than it follows the lab (0.49 against 0.31), which says the lab's own refer
 far from either. The reading of YAMNet has to change before the listening set calibrates anything: which classes
 are summed, whether the logits rather than the sigmoid scores are read, or the second opinion (PANNs MobileNetV2).
 This is a reference mark, not a charter mark, and the Apple apps take the vocal signal from Apple (P13).
+
+## 2c. Engine 0.3.1 on the Mac: the key vote, the tag fix, the damaged-frame concealment, four vocal readings (Oct 29)
+
+A fresh run of the session's branch at 4e4bd1e (merged to main as PR #2 the same night), YAMNet from `models-1`.
+Changes against 2b, all as the session predicted: key exact where the lab is confident 76.2 percent (from 74.6; the
+lab's own three-profile vote rule, nothing fitted, and the session's held-out check says the gain is about zero on
+new music), tempo within 2 percent 99.7 (the three tag-tempo octave cases gone, the bench now reads the lab file's
+tag), the true-peak outlier gone (the damaged frame in f068a57770 concealed: +9.20 dBTP to +2.03), bar counts
+equal 96.2 percent, 9.6 s per track median. Every charter mark met; the key and vocal reference marks still short
+of Apple's. Per-track figures: `bench/pc-engine-2026-10-29-mac-0.3.1.json`.
+
+The MP3 byte-identity check over the whole music folder (3,009 files): 2,999 decode to exactly dr_mp3's own samples,
+10 carry damaged frames (three tracks and their copies in Mike's pool besides the outlier), 0 fail.
+
+Four readings of YAMNet's scores, written side by side from one pass and scored three ways on the lab's bar grid
+(`mixer/vocal3way.py`, 359 tracks):
+
+| reading | r vs lab | r vs Apple |
+|---|---|---|
+| max of eleven singing classes (shipped) | 0.31 | 0.49 |
+| sum of the voice classes' logits | 0.29 | 0.45 |
+| sum of the voice classes' scores | 0.20 | 0.32 |
+| voice classes relative to the music classes | 0.08 | 0.16 |
+
+So the reading is not the gap; the shipped maximum is already the best of the four, and a different reading of the
+same scores will not reach Apple's 0.64. The PC and Linux vocal signal stays YAMNet's maximum, flagged as a
+first-cut, until the listening set (track J) exists; the second model (PANNs) is parked, unmerged, under the plateau
+decision of Oct 29.
