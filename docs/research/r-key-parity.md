@@ -322,3 +322,179 @@ both is naming the wrong mode on the right note, so the crate result (83 percent
 unfamiliar dance music. The sure flag still tells a better read from a worse one, but less sharply than on the crate.
 The gain on this outside set is small, and the minor-key weakness is the thing to fix next: the open-item tie-break
 (item 5) should be tried against minor-key losses, chosen on a split and not on this set.
+
+## Mode test and tag survey (Oct 29, 2026)
+
+Two cheap ideas for the outside set's main error (minor keys read as major), tested without fitting anything to the
+set. Scripts `mixer/key_mode.py` (per-variant and per-subset figures in `mixer/key_mode_results.tsv`) and
+`mixer/key_tags_survey.py` (per-folder counts in `mixer/key_tags_survey.tsv`). Same clips, labels and scorer as the
+outside test above; the cached features reproduce that test's row 3f and row 0 keys on all 1,275 clips.
+
+### In plain words
+
+A key has two parts: the home note and the mode (major, which sounds bright, or minor, which sounds dark). The only
+written difference between the two modes on the same home note is three of the seven notes: the third, sixth and
+seventh notes above the home note are each a half step lower in minor. Test 1 asks: once we know the home note, can we
+decide the mode just by checking which version of those notes is louder? Test 2 asks: do the music files already
+carry a key that a DJ program wrote, which we could read instead of working it out?
+
+### Test 1: the mode test
+
+**Method.** Row 3f picks the home note (T1: the tonic of its winning key; T2, a mode-neutral variant: the tonic whose
+major and minor match scores add up highest). Then a separate rule picks the mode from the twelve-note profile p, with
+the tonic at t:
+
+- **a, third only:** minor if p[t+3] (the minor third) is larger than p[t+4] (the major third), else major.
+- **b, third, sixth and seventh, equal weights:** minor if (p[t+3] - p[t+4]) + (p[t+8] - p[t+9]) + (p[t+10] - p[t+11]) > 0.
+- **b2, third and sixth:** the same without the seventh.
+- Each rule runs on three profiles: **H4w**, the whitened 4-harmonic HPCP that 3f itself uses; **C0**, the shipped
+  engine's plain STFT chroma; and **H1w**, whitened HPCP with no harmonic folding. A tie keeps 3f's mode.
+
+**Where the rules come from.** Temperley's revised profiles (Temperley 1999, *Music Perception* 17(1), 65-100) differ
+between major and minor only at the third and the sixth; his minor uses the raised seventh. That is rule b2.
+Krumhansl and Kessler's probe-tone profiles (1982, *Psychological Review* 89(4), 334-368) differ most at the third,
+then the sixth, then the minor seventh. Faraldo's EDM profiles (edma, braw, bgate) show the same three degrees. That
+is rule b. As a share of each profile's total, minor minus major at the minor and major third, minor and major sixth
+and minor and major seventh: Krumhansl +6.5/-4.6, +3.2/-2.7, +2.0/+0.2; Temperley +6.5/-6.5, +3.9/-3.9, 0/0; edma
++3.4/-4.2, +2.3/-2.4, +2.2/-0.9; braw +4.9/-5.3, +2.1/-3.7, +4.4/-1.6 (computed from `key_light.PROFILES`). The decision
+is a plain comparison. A ratio such as p[t+3]/p[t+4] against 1 is the same rule, and no source gives another threshold,
+so no threshold was set.
+
+**No fitting.** No rule has a parameter. Picking the best of the 18 variants is still a choice, so it was made on the
+odd-numbered clip ids (high confidence, 579 clips) by **balanced exact**: the mean of the major-key and minor-key exact
+rates, so a rule that just says "minor" more often cannot win on a set that is 70 percent minor. The even ids (543 clips)
+are the held-out result.
+
+**High confidence, 1,122 clips** (352 major, 770 minor; percent):
+
+| Row | Exact | Nbr | Other | MIREX | Major exact | Major MIREX | Minor exact | Minor MIREX |
+|---|---|---|---|---|---|---|---|---|
+| 3f (outside test) | 50.0 | 15.3 | 34.7 | 60.9 | 61.9 | 71.0 | 44.5 | 56.4 |
+| 0 shipped (outside test) | 47.9 | 14.6 | 37.5 | 58.3 | 49.7 | 61.0 | 47.0 | 57.1 |
+| T1, H4w, a | 44.3 | 14.1 | 41.6 | 55.8 | 66.8 | 75.0 | 34.0 | 47.0 |
+| **T1, H4w, b (best on odd ids)** | **50.8** | 15.3 | 33.9 | **61.6** | 63.1 | 72.0 | 45.2 | 56.8 |
+| T1, H4w, b2 | 43.8 | 15.5 | 40.7 | 56.0 | 64.2 | 73.5 | 34.4 | 48.0 |
+| T1, C0, a | 45.0 | 13.8 | 41.2 | 56.3 | 61.4 | 70.5 | 37.5 | 49.7 |
+| T1, C0, b | 41.0 | 14.4 | 44.6 | 53.3 | 66.2 | 74.8 | 29.5 | 43.5 |
+| T1, C0, b2 | 48.1 | 14.5 | 37.3 | 59.1 | 57.4 | 67.4 | 43.9 | 55.2 |
+| T1, H1w, a | 41.9 | 14.0 | 44.1 | 53.8 | 66.5 | 74.8 | 30.6 | 44.2 |
+| T1, H1w, b | 49.3 | 15.2 | 35.5 | 60.3 | 62.8 | 71.8 | 43.1 | 55.1 |
+| T1, H1w, b2 | 42.8 | 15.1 | 42.2 | 55.0 | 63.6 | 73.1 | 33.2 | 46.8 |
+| T2, H4w, b (best T2) | 48.5 | 16.6 | 34.9 | 60.0 | 55.7 | 66.8 | 45.2 | 56.9 |
+
+**All 1,275 plain-key clips** (388 major, 887 minor):
+
+| Row | Exact | Nbr | Other | MIREX | Major exact | Minor exact |
+|---|---|---|---|---|---|---|
+| 3f | 47.4 | 15.9 | 36.7 | 58.5 | 60.3 | 41.7 |
+| 0 shipped | 45.5 | 15.4 | 39.1 | 56.2 | 48.5 | 44.2 |
+| T1, H4w, a | 41.8 | 14.5 | 43.7 | 53.4 | 64.9 | 31.7 |
+| **T1, H4w, b** | **48.1** | 15.8 | 36.2 | **59.0** | 61.1 | 42.4 |
+| T1, C0, a | 42.7 | 14.4 | 42.8 | 54.1 | 59.0 | 35.6 |
+| T1, C0, b2 | 45.9 | 15.2 | 38.9 | 57.0 | 55.9 | 41.5 |
+| T1, H1w, b | 46.8 | 15.6 | 37.6 | 57.9 | 60.8 | 40.7 |
+
+The other T1 and all T2 rows are in the TSV. Every T2 row is below its T1 row.
+
+**Confusions** (high confidence, percent of all 1,122 clips):
+
+| Row | Major as minor | Minor as major | Fifth | Relative | Parallel |
+|---|---|---|---|---|---|
+| 3f | 7.8 | 30.0 | 9.7 | 5.6 | 22.0 |
+| 0 shipped | 11.2 | 26.6 | 9.8 | 4.8 | 20.5 |
+| T1, H4w, a | 5.8 | 38.7 | 8.6 | 5.5 | 27.7 |
+| T1, H4w, b | 7.4 | 30.0 | 9.7 | 5.6 | 21.2 |
+| T1, C0, a | 7.8 | 35.1 | 8.6 | 5.3 | 27.0 |
+| T1, C0, b2 | 9.2 | 30.8 | 9.0 | 5.5 | 23.9 |
+
+**Held-out.** Balanced exact on the odd ids, where the choice was made: 3f 54.6, best rule (T1, H4w, b) 54.5, row 0
+52.2. No rule beat 3f on the selection half. On the even ids: the rule scores 53.8 balanced (exact 50.3; major 62.9,
+minor 44.7; MIREX 61.2), against 3f's 51.8 (exact 48.3; major 61.1, minor 42.6; MIREX 59.6) and row 0's 44.2. The
+rule changes 3f's mode on only 81 of 1,122 clips (7 percent). On those 81 clips it is right 45.7 percent of the time,
+where 3f was right 34.6 percent, a net of about nine clips. Gaining on one half and level on the other is what noise
+looks like at this size, so the gain is not established.
+
+**One-sided variants (flag).** On whitened HPCP, rules a and b2 gain 2 to 5 exact points on major keys and lose 10
+to 14 on minor keys (H4w a: +4.9 / -10.5; H1w a: +4.6 / -13.9). Rule b on plain chroma gains 4.3 on major and loses
+15.0 on minor. These rules push reads toward major, the direction of the existing error. On plain chroma, rules a and
+b2 lose on both halves (a: -0.5 / -7.0; b2: -4.5 / -0.6). Only rule b on whitened 4-harmonic HPCP is better on both
+halves (+1.2 / +0.7). On H1w the same rule is +0.9 / -1.4.
+
+**Why the rules fail: a check with the right home note given.** This is a diagnostic, not a method, because it uses
+the label's tonic. With the true home note given, here is how often each rule names the right mode (percent of major
+clips / minor clips):
+
+| Profile | a | b | b2 |
+|---|---|---|---|
+| H4w (whitened HPCP) | 94.0 / 55.5 | 89.2 / 66.0 | 90.6 / 52.5 |
+| C0 (plain chroma) | 85.8 / 58.1 | 91.5 / 48.7 | 80.7 / 63.0 |
+| H1w (whitened, no harmonics) | 93.5 / 50.9 | 88.9 / 62.7 | 90.3 / 50.5 |
+
+In about half of the minor clips, the major third above the home note carries as much energy as the minor third
+(51 to 58 percent "minor" by the third alone), even with the right home note. For comparison, 3f's own profile match
+gets the mode right on about 62 percent of minor clips and 86 percent of major clips when its tonic is right. The
+twelve-note profile of this music does not separate the modes at the third. This fits two causes. The tonic's fifth
+harmonic lands on the major third (Faraldo 2017 [2nd], above). And EDM minor tracks often play the major third in
+chords or leads, for example in a borrowed major chord or a raised-seventh dominant [inf]. Whitening and the harmonic
+folding are not the main cause: by the third alone, plain chroma is only slightly better (58 against 56).
+
+**The sure flag under the best rule.** 3f's flag as is (high confidence): 489 clips sure (43.6 percent), exact 58.7
+with the rule against 44.7 unsure (3f's own key: 58.5 / 43.4). Tightening the flag to also require that the rule
+agrees with 3f's mode changes 4 clips (485 sure, 58.8 against 44.7). The rule agreeing with 3f is not a useful flag
+by itself: 92.8 percent of clips, exact 51.2 against 45.7. On all 1,275: sure 43.4 percent, 55.2 against 42.7. The
+flag behaves as before.
+
+**On the 214 clips Apple has read:** Apple 74.3 exact (MIREX 80.9), 3f 50.0 (61.4), row 0 50.0 (61.4), best rule 50.9
+(61.6). The mode rule closes none of the 24-point gap to Apple.
+
+**What it says.** Checking which version of the third, sixth and seventh notes is louder does not fix our major/minor
+mistakes. In this dance music, the "major" version of the third is often just as loud in songs that people hear as
+minor, so the sound itself, measured this way, does not give the answer. The one rule that is not worse moves results
+by about a point, which is within chance. The mode is decided by something a twelve-note count does not capture, such
+as which chords come where and how the bass moves. A fix needs a method that looks at that, for example a trained
+model or Apple's framework, not a smarter count.
+
+**Cost.** Extraction 175 s wall time for 1,272 clips (2 workers at nice 19, 0.27 s per clip per worker; free plus
+inactive memory stayed at 7.6 to 8.2 GB). Scoring all variants from the cache takes 2 s. The cache is 203 MB in the
+scratchpad and not committed.
+
+### Test 2: the tag survey
+
+**Method.** Tags only, no decoding, no file changed. ffprobe reads each file's container metadata, and a small ID3v2
+reader lists the frames that ffprobe hides (GEOB and PRIV owner names). The script looks for:
+
+- a TKEY frame;
+- an INITIALKEY or KEY field (ID3 TXXX, Vorbis or MP4);
+- a Mixed In Key style comment (a Camelot code such as "8A", or "Energy 6") or an EnergyLevel field;
+- a Camelot prefix on the title;
+- Serato, rekordbox/Pioneer, Traktor or Mixed In Key data.
+
+Folders whose name starts with "_" are skipped. The sprint's `_pool build/newfiles/probe.json` is summarised from its
+tag_key column, which `probe_new.py` read from TKEY.
+
+| Source | Files | Any key tag | TKEY | Other key fields | Serato data | Format |
+|---|---|---|---|---|---|---|
+| 90s2000 playlist, top level | 117 | 61 | 61 | 0 | 63 | short ("Gm", "F#m") |
+| Mike page | 198 | 54 | 54 | 0 | 55 | short |
+| 17 other folders (CDs, CDs v2, CDs v3, PARTY CD'S, the album and compilation folders, dance-hits-collection) | 2,345 | 0 | 0 | 0 | 0 | |
+| **Library total** | **2,660** | **115 (4.3 %)** | 115 | 0 | 118 | all 115 short notation |
+| probe.json tag_key (the sprint's 106 new files) | 106 | 61 | 61 | | | short |
+| Outside set (GiantSteps-MTG-key clips) | 1,486 | 7 | 7 | 0 | 0 | 6 read "o", 1 "B" |
+
+No file had an INITIALKEY field, a Camelot or open-key value, a Mixed In Key comment or energy field, a title prefix, or
+any rekordbox data. One Traktor mark in dance-hits-collection carries no key. Every key tag present is a TKEY in short
+notation ("Am", "F#m", "D"), and every one sits in a file that also carries Serato's GEOB frames, so Serato wrote it.
+Mike page probably holds copies of the top-level Serato files [inf; not checked by content].
+
+**Against the human labels (outside set).** The Beatport clips carry no usable key: 7 of 1,486 have a TKEY, 6 of them
+the single letter "o". The one readable tag ("B", B major) does not match its label. The audio in the Zenodo
+archive was stripped of Beatport's key tags, so this set cannot say what reading tags is worth.
+
+**Against references (the crate, agreement not accuracy).** The crate has no human labels, so this compares tags with
+our other readings. 61 of the 373 crate tracks have a Serato TKEY. On those 61, Serato's key equals Apple's on 41
+(67 percent), row 3f's on 40 and the lab's on 36. Row 3f equals Apple's on 44 of the same 61 (72 percent).
+
+**What it says.** Only about one file in 25 in this library has a key written by a DJ program, all of them from Serato
+in the same format. On those, Serato's answer agrees with Apple's about as often as ours does, no more. Reading the tag
+is cheap and could fill in a key where we have none, but it would not make our keys more accurate. The outside set
+cannot tell us how good tags are, because its files carry none.
