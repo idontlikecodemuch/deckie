@@ -16,19 +16,32 @@ chord-like flicker to a related key, and of a silent frame, each frame divided b
 is. The matrices are 12 rows of frames in column (Fortran) order, as librosa returns chroma, so numpy's means over
 frames add frame after frame, as they do in the lab.
 
+The engine's key vote (DeckieCore/Key/KeyVote.swift) is the lab's own decision and confidence rule, mixer/analyze.py's
+B.9 block, with three votes over the one chroma in the lab's three slots: the edma profile in Essentia edma's, bgate in
+Essentia bgate's, krumhansl in madmom's (core/Tools/key_vote_eval.py chose them). That block is not a function and
+analyze.py cannot be imported without Essentia and madmom, so the script reads the block, and the camelot helpers it
+calls, out of analyze.py's source and runs them as they are: nothing of the rule is copied.
+
 Output: core/Tests/DeckieCoreTests/Fixtures/key.json
   relation, wheel_cost   every pair of the 24 Camelot codes
   random                 per seed: the whole-track key by every profile, the segments (lab defaults, and with other
-                         settings), and both mix windows judged against a song key
+                         settings), both mix windows judged against a song key, and the key vote (`vote`: the three
+                         votes' keys, then the lab's B.9 key, confidence and rule)
   hand                   the same for the hand-made matrices, given as blocks of identical frames
+  sheet                  the key vote on the lab's own run of the estimator over its 373 tracks (mixer/key_light_stft.tsv:
+                         each profile's key and r on the real audio), with the lab's key and confidence per track
+  vote_cases             the B.9 block on made-up votes that reach every branch
 """
-import ast, inspect, json, os, sys
+import ast, csv, inspect, json, os, sys, textwrap
 import numpy as np
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(os.path.dirname(HERE))
 OUT = os.path.join(ROOT, "core", "Tests", "DeckieCoreTests", "Fixtures")
 LAB = os.path.join(ROOT, "mixer", "key_light.py")
+ANALYZE = os.path.join(ROOT, "mixer", "analyze.py")
+SHEET = os.path.join(ROOT, "mixer", "key_light_stft.tsv")
+VOTES = ("edma", "bgate", "krumhansl")  # the engine's votes, in B.9's slots: Essentia edma, Essentia bgate, madmom
 
 # ---- copied verbatim from mixer/key_light.py (checked by check_copies) ---------------------------------------------
 PC = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"]
@@ -143,6 +156,81 @@ def check_copies():
     if "\nSR = 22050; NFFT = 8192; HOP = 2048" not in open(LAB).read():
         sys.exit("SR, NFFT or HOP differs from mixer/key_light.py")
     print("copies match mixer/key_light.py", file=sys.stderr)
+
+
+def lab_key_decision():
+    """mixer/analyze.py's key decision and confidence, taken from its source: the lines from the "key confidence (B.9)"
+    comment to the `key = {...}` dict they feed, with the lab's PC, camelot, camelot_parse and camelot_neighbour, all
+    run unchanged. Returns decide(k1, k2, mm_key) -> (camelot, confidence, rule), where k1, k2 and mm_key are the lab's
+    (key name, scale, strength) for its three slots."""
+    src = open(ANALYZE).read()
+    env = {}
+    for node in ast.parse(src).body:
+        named = (isinstance(node, ast.FunctionDef) and node.name in ("camelot", "camelot_parse", "camelot_neighbour")) or (
+            isinstance(node, ast.Assign) and any(isinstance(t, ast.Name) and t.id == "PC" for t in node.targets))
+        if named:
+            exec(compile(ast.Module([node], []), ANALYZE, "exec"), env)
+    assert {"PC", "camelot", "camelot_parse", "camelot_neighbour"} <= set(env), "analyze.py's camelot helpers moved"
+    head = "    # ---------------------------------------------------------- key confidence (B.9)\n"
+    start = src.index(head)
+    end = src.index('    key = {"essentia_edma"', start)
+    block = compile(textwrap.dedent(src[start:end]), ANALYZE + " (B.9)", "exec")
+
+    def decide(k1, k2, mm_key):
+        ns = dict(env, k1=k1, k2=k2, mm_key=mm_key)
+        exec(block, ns)
+        return ns["top"], ns["kc"], ns["rule"]
+    return decide
+
+
+def vote_of(whole, decide):
+    """The key vote from a matrix's whole-track keys (best_key's (pc, mode, r, margin) per profile)."""
+    k = [(PC[whole[p][0]], whole[p][1], whole[p][2]) for p in VOTES]
+    top, kc, rule = decide(*k)
+    return {"keys": [camelot(whole[p][0], whole[p][1]) for p in VOTES], "camelot": top, "confidence": kc, "rule": rule}
+
+
+def sheet(decide):
+    """The vote on the lab's own per-track estimates (mixer/key_light_stft.tsv: Camelot code and r per profile, the r
+    as the TSV rounds it), with the lab's key and confidence from the same rows."""
+    rows = []
+    codes = CAM_MAJ + CAM_MIN
+    for r in csv.DictReader(open(SHEET), delimiter="\t"):
+        votes = []
+        for p in VOTES:
+            i = codes.index(r[p])
+            votes.append((PC[i % 12], "major" if i < 12 else "minor", float(r[p + "_r"])))
+        top, kc, rule = decide(*votes)
+        rows.append({"id": r["id"], "votes": [[r[p], float(r[p + "_r"]), float(r[p + "_margin"])] for p in VOTES],
+                     "lab": r["lab"], "lab_conf": float(r["lab_conf"]), "camelot": top, "confidence": kc, "rule": rule})
+    return rows
+
+
+def vote_cases(decide):
+    """Made-up votes for every branch of the rule: (C major, A minor, G major, ... as key names) with strengths either
+    side of 0.6; each case is [[key, scale, r] x 3]."""
+    S, W, X = 0.8, 0.5, 0.6  # strong, weak, and exactly the lab's 0.6
+    cases = [
+        [["C", "major", S], ["C", "major", S], ["C", "major", S]],     # all three agree
+        [["C", "major", W], ["C", "major", S], ["C", "major", S]],     # all agree, edma's strength under 0.6 -> 0.6
+        [["C", "major", X], ["C", "major", W], ["C", "major", W]],     # exactly 0.6 counts as strong
+        [["C", "major", S], ["C", "major", S], ["G", "major", S]],     # 2 of 3, the third a neighbour (9B)
+        [["C", "major", S], ["C", "major", S], ["A", "minor", S]],     # 2 of 3, the third the relative (8A)
+        [["C", "major", S], ["C", "major", S], ["F#", "major", S]],    # 2 of 3, the third incompatible
+        [["C", "major", W], ["C", "major", S], ["G", "major", S]],     # 2 of 3, strength (edma's) under 0.6 -> 0.3
+        [["G", "major", S], ["C", "major", W], ["C", "major", S]],     # bgate and krumhansl agree: bgate's strength
+        [["G", "major", W], ["C", "major", S], ["C", "major", W]],     # ... strong bgate, weak edma: 0.65
+        [["G", "major", S], ["D", "major", S], ["G", "major", W]],     # edma and krumhansl agree: edma's strength
+        [["G", "major", W], ["D", "major", S], ["G", "major", S]],     # ... weak edma: 0.3
+        [["C", "major", S], ["G", "major", S], ["F#", "major", S]],    # no two agree -> edma's key, 0.3
+        [["E", "minor", W], ["Bb", "major", S], ["D", "minor", S]],    # no two agree, weak edma
+        [["C", "major", S], ["A", "minor", S], ["A", "minor", S]],     # the relative pair outvotes edma
+    ]
+    out = []
+    for c in cases:
+        top, kc, rule = decide(*[tuple(v) for v in c])
+        out.append({"votes": c, "camelot": top, "confidence": kc, "rule": rule})
+    return out
 
 
 # ---- the made-up chroma ---------------------------------------------------------------------------------------------
@@ -269,6 +357,7 @@ def main():
            "relation": {f"{a}>{b}": relation(a, b) for a in codes for b in codes},
            "wheel_cost": {f"{a}>{b}": wheel_cost(a, b) for a in codes for b in codes},
            "random": [], "hand": []}
+    b9 = lab_key_decision()
     for seed in range(1, 51):
         frames, meta = random_chroma(seed)
         C = as_matrix(frames)
@@ -277,13 +366,22 @@ def main():
         frames = [list(map(float, v)) for count, v in blocks for _ in range(count)]
         blocks = [[count, list(map(float, v))] for count, v in blocks]
         doc["hand"].append({"name": name, "blocks": blocks, **decide(as_matrix(frames), SplitMix64(5000 + i))})
+    for case in doc["random"] + doc["hand"]:
+        case["vote"] = vote_of(case["whole"], b9)
+    doc["sheet"] = sheet(b9)
+    doc["vote_cases"] = vote_cases(b9)
     path = os.path.join(OUT, "key.json")
     with open(path, "w") as f:
         json.dump(doc, f, separators=(",", ":"))
     multi = sum(1 for r in doc["random"] if len(r["segments"]) > 1)
     flags = sum(1 for r in doc["random"] + doc["hand"] for e in ("mix_in", "mix_out") if r["ends"][e]["result"].get("flag"))
+    conf = [r for r in doc["sheet"] if r["lab_conf"] >= 0.65]
+    exact = sum(1 for r in conf if r["camelot"] == r["lab"])
+    split = sum(1 for r in doc["random"] + doc["hand"] if len(set(r["vote"]["keys"])) > 1)
     print(f"wrote {path} ({os.path.getsize(path) // 1024} KB): {len(doc['random'])} random matrices "
-          f"({multi} with more than one segment), {len(doc['hand'])} made by hand, {flags} flagged windows")
+          f"({multi} with more than one segment), {len(doc['hand'])} made by hand, {flags} flagged windows; key vote "
+          f"split on {split} matrices; on the sheet exact {exact} of {len(conf)} confident tracks; "
+          f"{len(doc['vote_cases'])} made-up vote cases")
 
 
 if __name__ == "__main__":
