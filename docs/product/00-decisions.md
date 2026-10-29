@@ -233,8 +233,10 @@ audio from Zenodo for internal evaluation only; letter R's last section): the me
 high-confidence clips (MIREX-weighted 0.61), the shipped baseline 48; the gain is all in major keys (+12 points) and
 minor keys are 2.5 points worse; the main error is the wrong mode on the right note (44 percent of minor clips read
 as major). That puts our own key reader near the free KeyFinder and well below rekordbox and Mixed In Key on
-unfamiliar dance music; the crate's 83 percent flatters it. Apple's framework reads key on Mac and iPad; on Windows
-and Linux this is the known gap, parked under the Oct 29 plateau. A Codex pass on what DJs say about key tools is briefed in
+unfamiliar dance music; the crate's 83 percent flatters it. Apple's framework on the same clips (the iOS 27 simulator harness, first 214 of the 1,275, Oct 29 afternoon,
+`mixer/key_outside_apple.py`): exact 74.3 percent against ours 50.0 on those clips, neighbour 11.7, other 14.0;
+the rest of the clips run when the Mac is free. So Apple's framework reads key on Mac and iPad, and on Windows
+and Linux ours is the known gap, parked under the Oct 29 plateau. A Codex pass on what DJs say about key tools is briefed in
 `docs/research/briefs/codex-key-reddit.md`.
 
 ## Proposed on Oct 26, 2026, from the research (awaiting Christopher)
