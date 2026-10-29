@@ -310,13 +310,13 @@ public enum HPCPKey {
                         meanCorrelations: mean, correlations: rs)
     }
 
-    /// The method's result for a track: its HPCP and frame count, the decision with the literature's profiles (the
-    /// engine's key) and the same with key_light.py's (the parity reference: what mixer/key_parity.py decides).
+    /// The method's result for a track: its HPCP and frame count and the decision with the literature's profiles
+    /// (the engine's key; mixer/key_parity.py decides with the same numbers since Oct 29, 2026, and the Mac's 0.4.0
+    /// pass read the two equal on all 373 tracks, so the record carries one key).
     public struct Result: Sendable, Equatable {
         public var pcp: [Double]
         public var frames: Int
         public var decision: Decision
-        public var parity: Decision
         /// Whitening is part of the method (always on); written into the record as research R asked.
         public var whitening: Bool { true }
     }
@@ -334,7 +334,6 @@ public enum HPCPKey {
     public static func estimate(_ mono: [Float], sampleRate rate: Int) throws -> Result {
         guard rate == sampleRate else { throw EstimateError.resampleFirst(sampleRate: rate) }
         let (pcp, frames) = hpcp(mono)
-        return Result(pcp: pcp, frames: frames, decision: decide(pcp, table: .literature),
-                      parity: decide(pcp, table: .keyLight))
+        return Result(pcp: pcp, frames: frames, decision: decide(pcp, table: .literature))
     }
 }

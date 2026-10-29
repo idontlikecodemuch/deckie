@@ -53,12 +53,10 @@ public struct BenchSummary: Sendable {
     public var keyConfidentCount: Int
     /// The key against mixer/key_parity_keys.tsv (research R's key method as key_parity.py decided it): the tracks
     /// with both sides, how many are the same by the parity rule (`TrackScore.keyParity`), the others with their
-    /// differences, and on how many the transcription's decision (`deckie.key.parity`, Essentia's 0.31 where the
-    /// paper says 0.32) gives the sheet's key.
+    /// differences.
     public var keyParityTracks: Int
     public var keyParitySame: Int
     public var keyParityDiffering: [(id: String, text: String)]
-    public var keyTranscriptionSame: Int
     public var lufsDelta, truePeakDelta: Stat
     /// Share of tracks more than 1 LU from the lab.
     public var lufsOver1: Double?
@@ -105,7 +103,6 @@ public struct BenchSummary: Sendable {
         keyParityTracks = parity.count
         keyParitySame = parity.filter { $0.keyParity == "same" }.count
         keyParityDiffering = parity.compactMap { $0.keyParity == "same" ? nil : ($0.id, $0.keyParity!) }
-        keyTranscriptionSame = parity.filter { $0.keyParityTranscription?.camelot == $0.keyParityReference?.key }.count
         let lufs = scores.compactMap(\.lufsDelta)
         lufsDelta = Stat(lufs, signed: true)
         lufsOver1 = lufs.isEmpty ? nil : Double(lufs.filter { abs($0) > 1 }.count) / Double(lufs.count)
@@ -199,7 +196,6 @@ extension BenchSummary {
                                   .init("lab_confident_tracks", .int(keyConfidentCount))])),
             .init("key_parity", .object([
                 .init("tracks", .int(keyParityTracks)), .init("same", .int(keyParitySame)),
-                .init("transcription_decision_same_key", .int(keyTranscriptionSame)),
                 .init("differing", .array(keyParityDiffering.map {
                     .object([.init("id", .string($0.id)), .init("differences", .string($0.text))])
                 })),

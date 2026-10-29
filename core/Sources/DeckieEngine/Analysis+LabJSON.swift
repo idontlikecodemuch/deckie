@@ -181,9 +181,10 @@ extension Analysis {
     /// (`hpcp-whitened`), `whitening` (true: research R asked for it in the record), the frames read, the key as
     /// `camelot`, `key` and `scale`, the winner's mean correlation `r` (3 decimals), `margin` (4, as
     /// mixer/key_parity_keys.tsv writes it), `agree` (how many of the three profiles pick it alone), `sure`, each
-    /// profile's own key and correlation under `profiles`, the profile numbers' source (`literature`), and `parity`:
-    /// the same decision with key_light.py's numbers (`key_light`), which is what mixer/key_parity.py decides and what
-    /// the bench compares with its per-track sheet. The STFT estimator (`KeyEstimator`, mixer/key_light.py, edma):
+    /// profile's own key and correlation under `profiles` and the profile numbers' source (`literature`, which is
+    /// what mixer/key_parity.py decides with too, so the bench compares this decision with its per-track sheet; the
+    /// `parity` member with key_light.py's numbers left after the Mac's 0.4.0 pass read the two equal on all 373
+    /// tracks). The STFT estimator (`KeyEstimator`, mixer/key_light.py, edma):
     /// its whole-track key as `stft_edma` (not deciding, kept for comparison), the song key the mix windows were
     /// judged against (the method's key), the windows (`windows_estimator` names their chroma) and the segments.
     func keyBlock() -> JSONValue {
@@ -211,7 +212,6 @@ extension Analysis {
             m("profiles", .object(h.decision.profileKeys.map {
                 m($0.name, .object([m("camelot", .string($0.camelot)), m("r", J.round($0.r, 3))]))
             })),
-            m("parity", .object(decision(h.parity, tables: .keyLight))),
             m("stft_edma", estimate(key.whole)),
             m("song_key", .string(key.songKey)), m("windows_estimator", .string("fft-chroma-edma")),
             m("mix_in", window(key.mixIn)), m("mix_out", window(key.mixOut)),
