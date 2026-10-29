@@ -1,0 +1,2 @@
+# The example crate is compared byte for byte: never convert line endings.
+* -text

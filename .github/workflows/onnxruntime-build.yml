@@ -1,0 +1,378 @@
+# ONNX Runtime built from its pinned release without Microsoft's usage-reporting client, for Deckie's shipped builds.
+#
+# Microsoft's official archives carry the client ("telemetry"). A shipped Deckie build carries this build instead
+# (the main session's decision, Oct 29, 2026; DEPENDENCIES.md section 6). Each platform's job builds release v1.31.1
+# at its pinned commit with --no_telemetry, scans the library for the client's traces and refuses to upload it if it
+# finds any, then uploads an archive laid out like Microsoft's with a .sha256 beside it, and writes the library's and
+# the archive's sizes and SHA-256 values and the build time into its job summary, ready to copy into DEPENDENCIES.md.
+#
+# Run it by hand from the Actions tab (onnxruntime-build, Run workflow): choose the platforms, and tick publish to put
+# the archives on this repository's release onnxruntime-1.31.1-deckie-no-telemetry, where fetch-onnxruntime.sh
+# --deckie fetches them from.
+name: onnxruntime-build
+
+on:
+  workflow_dispatch:
+    inputs:
+      platforms:
+        description: Platforms to build
+        type: choice
+        options: [all, linux, windows, macos]
+        default: all
+      publish:
+        description: Put the archives on the release onnxruntime-1.31.1-deckie-no-telemetry (only if every chosen build passes)
+        type: boolean
+        default: false
+  # A push that changes the build or its gate builds once. Not pull_request: its path filter looks at the whole pull
+  # request, not at the push, so once this file is in an open pull request every later push there would start three
+  # builds of an hour or two each; a push's filter looks only at what that push changed. Branches only, since path
+  # filters are not applied to tag pushes. The claude/* branches mirror this track's branch for the cloud session
+  # and would start the same build twice.
+  push:
+    branches: ['**', '!claude/**']
+    paths:
+      - .github/workflows/onnxruntime-build.yml
+      - core/Tools/scan-onnxruntime.sh
+      - core/Tools/scan-onnxruntime.ps1
+      - core/Tools/onnxruntime-build.py
+
+# A newer push to the same branch makes a running build pointless; a run started by hand is never cancelled.
+concurrency:
+  group: onnxruntime-build-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'push' }}
+
+permissions:
+  contents: read
+
+env:
+  ORT_VERSION: "1.31.1"
+  ORT_TAG: v1.31.1
+  # The commit Microsoft's 1.31.1 archives name as their GIT_COMMIT_ID (DEPENDENCIES.md, section 6). The build checks
+  # out this commit, not the tag, and stops if the tag points anywhere else.
+  ORT_COMMIT: 41d4d61f14b9c1dd0b2ccda1e9b85dd415fd0496
+  # The commit the tag v1.31.1 itself points at (a lightweight tag; read Oct 29, 2026 by the first run). It is not
+  # the archives' commit above: Microsoft packaged 1.31.1 from a later point of the release branch than it tagged.
+  # Deckie builds the archives' commit, the source of the binaries it was developed and tested against, and pins
+  # the tag's commit too, so the build stops if either moves.
+  ORT_TAG_COMMIT: 6af1a932e2286d5c58166085d24c68783033edee
+  RELEASE_TAG: onnxruntime-1.31.1-deckie-no-telemetry
+  # The flags every platform's build gets, each checked against tools/ci_build/build_args.py and build.py at the
+  # pinned commit (read Oct 29, 2026):
+  # - --config Release --build_shared_lib --parallel: an optimised shared library, compiled on all the machine's
+  #   cores (--parallel alone means "0", all of them). Microsoft's own packaging passes the same three
+  #   (tools/ci_build/github/azure-pipelines/templates/mac-cpu-packaging-steps.yml).
+  # - --no_telemetry: leaves the reporting client out. At this version telemetry is on by default on Windows, macOS
+  #   and Linux x86_64 ("Telemetry is enabled by default for supported native builds"); this turns CMake's
+  #   onnxruntime_USE_TELEMETRY off, so the 1DS client and the curl, mbedTLS, SQLite and zlib it brings are neither
+  #   fetched nor built (cmake/external/onnxruntime_external_deps.cmake, cmake/onnxruntime_common.cmake).
+  # - --skip_tests: runs no tests. It does not stop them being built: CMake's onnxruntime_BUILD_UNIT_TESTS defaults
+  #   to ON and build.py never turns it off for this, so onnxruntime_BUILD_UNIT_TESTS=OFF does, which saves a large
+  #   share of the build.
+  # - --skip_submodule_sync: does not clone ONNX Runtime's three git submodules (onnx, libprotobuf-mutator, emsdk);
+  #   the CPU library uses none of them (its ONNX sources come from deps.txt, the others are for fuzzing and
+  #   WebAssembly), and Microsoft's packaging passes it too.
+  # - --compile_no_warning_as_error: a newer compiler's new warnings must not stop the build. Microsoft's pipelines
+  #   build this way (build.py's use_dev_mode is off on Azure DevOps, which hands CMake
+  #   --compile-no-warning-as-error); warnings change nothing in the library.
+  # - FETCHCONTENT_TRY_FIND_PACKAGE_MODE=NEVER: every dependency is built from its pinned archive, never from a copy
+  #   the build machine happens to have installed (thirteen of the declarations would otherwise try find_package
+  #   first; ONNX Runtime's own error messages suggest this setting).
+  # Not --allow_running_as_root: GitHub's machines build as an ordinary user. Not --use_vcpkg (which Microsoft's
+  # packaging uses): without it the dependencies come from cmake/deps.txt, each downloaded by CMake from the address
+  # there and checked against the SHA-1 written beside it. mp11 is the one exception (its declaration gives CMake no
+  # hash), so each job fetches mp11 itself, checked against deps.txt, and hands CMake that copy.
+  BUILD_FLAGS: >-
+    --config Release --build_shared_lib --parallel --skip_tests --skip_submodule_sync --no_telemetry
+    --compile_no_warning_as_error
+    --cmake_extra_defines onnxruntime_BUILD_UNIT_TESTS=OFF FETCHCONTENT_TRY_FIND_PACKAGE_MODE=NEVER
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  # Before an hour of building relies on it: the gate's markers are the Swift scan's, and the gate can fail.
+  gate-check:
+    name: Check the gate
+    runs-on: ubuntu-latest
+    # Seconds of work; a guard.
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: The scan scripts' markers are ReportingClientScan.markers
+        run: |
+          swift=$(grep -o 'text: "[^"]*"' core/Sources/DeckieInference/ReportingClientScan.swift | sed 's/^text: "//; s/"$//')
+          [ -n "$swift" ] || { echo "::error::no markers read from ReportingClientScan.swift"; exit 1; }
+          diff <(printf '%s\n' "$swift") <(bash core/Tools/scan-onnxruntime.sh --list)
+          diff <(printf '%s\n' "$swift") <(pwsh -NoProfile -File core/Tools/scan-onnxruntime.ps1 -List)
+          echo "$(printf '%s\n' "$swift" | wc -l) markers, the same in the Swift file and both scripts"
+      - name: Both scans pass a clean file and catch each marker
+        run: |
+          dir="$RUNNER_TEMP/scan-check"
+          mkdir -p "$dir"
+          head -c 100000 /dev/zero > "$dir/clean.bin"
+          for scan in "bash core/Tools/scan-onnxruntime.sh" "pwsh -NoProfile -File core/Tools/scan-onnxruntime.ps1"; do
+            $scan "$dir/clean.bin" || { echo "::error::$scan refused a clean file"; exit 1; }
+            while IFS= read -r text; do
+              { head -c 5000 /dev/zero; printf '%s' "$text"; head -c 5000 /dev/zero; } > "$dir/planted.bin"
+              rc=0
+              $scan "$dir/planted.bin" > /dev/null || rc=$?
+              [ "$rc" -eq 1 ] || { echo "::error::$scan gave $rc, not 1, for a file holding $text"; exit 1; }
+            done < <(bash core/Tools/scan-onnxruntime.sh --list)
+          done
+          echo "both scans pass a clean file and catch every marker"
+
+  linux:
+    name: Linux x86_64
+    needs: gate-check
+    if: github.event_name != 'workflow_dispatch' || inputs.platforms == 'all' || inputs.platforms == 'linux'
+    runs-on: ubuntu-latest
+    # A guard, not a target: ONNX Runtime's CPU build takes roughly 45 to 120 minutes on GitHub's 4-core machines.
+    timeout-minutes: 240
+    env:
+      ARCHIVE: onnxruntime-linux-x64-1.31.1-deckie-no-telemetry
+      LIBRARY: libonnxruntime.so.1.31.1
+      # Microsoft's lib/libonnxruntime.so.1.31.1 (DEPENDENCIES.md, section 6), for the size comparison.
+      OFFICIAL_SIZE: "29345384"
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check out ONNX Runtime at the pinned commit
+        uses: actions/checkout@v4
+        with:
+          repository: microsoft/onnxruntime
+          ref: ${{ env.ORT_COMMIT }}
+          path: ort
+          persist-credentials: false
+      # ONNX Runtime's CMake looks for Python 3.10 or newer (cmake/CMakeLists.txt) and build.py needs 3.8; the same
+      # version on all three machines rather than whatever each image puts first on the path. Nothing is installed
+      # into it: the build scripts use only Python's standard library.
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Check the tag, the commit and the version
+        run: python -I core/Tools/onnxruntime-build.py check-source --source ort --remote https://github.com/microsoft/onnxruntime.git --tag "$ORT_TAG" --tag-commit "$ORT_TAG_COMMIT" --commit "$ORT_COMMIT" --version "$ORT_VERSION"
+      - name: Fetch mp11, checked against its SHA-1 in deps.txt
+        run: |
+          mp11=$(python -I core/Tools/onnxruntime-build.py fetch-dep --deps ort/cmake/deps.txt --name mp11 --dest "$RUNNER_TEMP/ort-deps")
+          echo "MP11_DIR=$mp11" >> "$GITHUB_ENV"
+      # build.sh runs tools/ci_build/build.py with --build_dir build/Linux; the library lands in build/Linux/Release.
+      - name: Build
+        working-directory: ort
+        run: |
+          cmake --version
+          start=$(date +%s)
+          # BUILD_FLAGS unquoted on purpose: one word per flag.
+          ./build.sh $BUILD_FLAGS --cmake_extra_defines "FETCHCONTENT_SOURCE_DIR_MP11=$MP11_DIR"
+          echo "BUILD_SECONDS=$(( $(date +%s) - start ))" >> "$GITHUB_ENV"
+      # The install tree is what Microsoft's own packaging starts from (tools/ci_build/github/linux/copy_strip_binary.sh).
+      - name: Install
+        run: cmake --install ort/build/Linux/Release --config Release --prefix "$RUNNER_TEMP/ort-install"
+      - name: Package, with sizes, hashes and build time in the job summary
+        run: >-
+          python -I core/Tools/onnxruntime-build.py package --platform linux
+          --version "$ORT_VERSION" --commit "$ORT_COMMIT" --source ort --install "$RUNNER_TEMP/ort-install"
+          --vendored core/Sources/COnnxRuntime/include --name "$ARCHIVE" --stage "$RUNNER_TEMP/stage"
+          --out "$RUNNER_TEMP/dist" --official-size "$OFFICIAL_SIZE" --build-seconds "$BUILD_SECONDS"
+      # The gate. Both the shipped file and the install tree's copy before stripping (symbol table and all) are
+      # scanned; any trace of the reporting client fails the job here, and nothing is uploaded.
+      - name: "Gate: no trace of the reporting client"
+        run: |
+          rc=0
+          bash core/Tools/scan-onnxruntime.sh "$RUNNER_TEMP/stage/$ARCHIVE/lib/$LIBRARY" "$RUNNER_TEMP"/ort-install/lib*/"$LIBRARY" > "$RUNNER_TEMP/scan.txt" || rc=$?
+          cat "$RUNNER_TEMP/scan.txt"
+          { echo '### The gate'; echo; echo '```'; cat "$RUNNER_TEMP/scan.txt"; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+          [ "$rc" -eq 0 ] || { echo "::error::the library carries traces of the reporting client (or could not be scanned); not uploaded"; exit 1; }
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.ARCHIVE }}
+          path: ${{ runner.temp }}/dist/
+          if-no-files-found: error
+          # The archive is compressed already.
+          compression-level: 0
+
+  windows:
+    name: Windows x64
+    needs: gate-check
+    if: github.event_name != 'workflow_dispatch' || inputs.platforms == 'all' || inputs.platforms == 'windows'
+    runs-on: windows-latest
+    # A guard, not a target, as for Linux.
+    timeout-minutes: 240
+    defaults:
+      run:
+        shell: pwsh
+    env:
+      ARCHIVE: onnxruntime-win-x64-1.31.1-deckie-no-telemetry
+      # Microsoft's lib/onnxruntime.dll (DEPENDENCIES.md, section 6), for the size comparison.
+      OFFICIAL_SIZE: "17253728"
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check out ONNX Runtime at the pinned commit
+        uses: actions/checkout@v4
+        with:
+          repository: microsoft/onnxruntime
+          ref: ${{ env.ORT_COMMIT }}
+          path: ort
+          persist-credentials: false
+      # As for Linux.
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Check the tag, the commit and the version
+        run: python -I core/Tools/onnxruntime-build.py check-source --source ort --remote https://github.com/microsoft/onnxruntime.git --tag $env:ORT_TAG --tag-commit $env:ORT_TAG_COMMIT --commit $env:ORT_COMMIT --version $env:ORT_VERSION
+      - name: Fetch mp11, checked against its SHA-1 in deps.txt
+        run: |
+          $mp11 = python -I core/Tools/onnxruntime-build.py fetch-dep --deps ort/cmake/deps.txt --name mp11 --dest "$env:RUNNER_TEMP/ort-deps"
+          if ($LASTEXITCODE -ne 0) { exit 1 }
+          Add-Content -Path $env:GITHUB_ENV -Value "MP11_DIR=$mp11"
+      # build.bat runs tools/ci_build/build.py with --build_dir build\Windows, after putting Git's Unix tools (patch,
+      # which the Eigen download needs) on the path. build.py picks "Visual Studio 17 2022" unless told otherwise, so
+      # the generator is named after the Visual Studio this image actually has (build_args.py accepts 2022 and 2026).
+      - name: Build
+        working-directory: ort
+        run: |
+          cmake --version
+          $vswhere = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
+          $vs = & $vswhere -latest -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationVersion
+          if (-not $vs) { throw "vswhere found no Visual Studio with the C++ tools" }
+          $generator = @{ '17' = 'Visual Studio 17 2022'; '18' = 'Visual Studio 18 2026' }[$vs.Split('.')[0]]
+          if (-not $generator) { throw "no CMake generator known for Visual Studio $vs" }
+          Write-Output "Visual Studio $vs, generator $generator"
+          $flags = $env:BUILD_FLAGS -split '\s+' | Where-Object { $_ }
+          $start = Get-Date
+          .\build.bat @flags --cmake_generator $generator --cmake_extra_defines "FETCHCONTENT_SOURCE_DIR_MP11=$env:MP11_DIR"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          Add-Content -Path $env:GITHUB_ENV -Value "BUILD_SECONDS=$([int]((Get-Date) - $start).TotalSeconds)"
+      - name: Install
+        run: cmake --install ort/build/Windows/Release --config Release --prefix "$env:RUNNER_TEMP/ort-install"
+      - name: Package, with sizes, hashes and build time in the job summary
+        run: >-
+          python -I core/Tools/onnxruntime-build.py package --platform windows
+          --version $env:ORT_VERSION --commit $env:ORT_COMMIT --source ort --install "$env:RUNNER_TEMP/ort-install"
+          --vendored core/Sources/COnnxRuntime/include --name $env:ARCHIVE --stage "$env:RUNNER_TEMP/stage"
+          --out "$env:RUNNER_TEMP/dist" --official-size $env:OFFICIAL_SIZE --build-seconds $env:BUILD_SECONDS
+      # The gate, as for Linux; a DLL is not stripped, so the shipped file is the install tree's. This is where the
+      # Windows event-tracing provider's name, Microsoft.ML.ONNXRuntime, would show (see DEPENDENCIES.md, section 6).
+      - name: "Gate: no trace of the reporting client"
+        run: |
+          $scan = & pwsh -NoProfile -File core/Tools/scan-onnxruntime.ps1 "$env:RUNNER_TEMP/stage/$env:ARCHIVE/lib/onnxruntime.dll"
+          $rc = $LASTEXITCODE
+          $scan | Write-Output
+          Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value (@('### The gate', '', '```') + $scan + @('```'))
+          if ($rc -ne 0) {
+            Write-Output "::error::the library carries traces of the reporting client (or could not be scanned); not uploaded"
+            exit 1
+          }
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.ARCHIVE }}
+          path: ${{ runner.temp }}/dist/
+          if-no-files-found: error
+          # The archive is compressed already.
+          compression-level: 0
+
+  macos:
+    name: macOS arm64
+    needs: gate-check
+    if: github.event_name != 'workflow_dispatch' || inputs.platforms == 'all' || inputs.platforms == 'macos'
+    runs-on: macos-latest
+    # A guard, not a target, as for Linux.
+    timeout-minutes: 240
+    env:
+      ARCHIVE: onnxruntime-osx-arm64-1.31.1-deckie-no-telemetry
+      LIBRARY: libonnxruntime.1.31.1.dylib
+      # Microsoft's lib/libonnxruntime.1.31.1.dylib (DEPENDENCIES.md, section 6), for the size comparison. It also
+      # holds the CoreML and WebGPU execution providers (--use_coreml --use_webgpu in
+      # templates/mac-cpu-packing-jobs.yml), which this CPU-only build leaves out, so not all of the difference is the
+      # reporting client.
+      OFFICIAL_SIZE: "44797256"
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check out ONNX Runtime at the pinned commit
+        uses: actions/checkout@v4
+        with:
+          repository: microsoft/onnxruntime
+          ref: ${{ env.ORT_COMMIT }}
+          path: ort
+          persist-credentials: false
+      # As for Linux.
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Check the tag, the commit and the version
+        run: python -I core/Tools/onnxruntime-build.py check-source --source ort --remote https://github.com/microsoft/onnxruntime.git --tag "$ORT_TAG" --tag-commit "$ORT_TAG_COMMIT" --commit "$ORT_COMMIT" --version "$ORT_VERSION"
+      - name: Fetch mp11, checked against its SHA-1 in deps.txt
+        run: |
+          mp11=$(python -I core/Tools/onnxruntime-build.py fetch-dep --deps ort/cmake/deps.txt --name mp11 --dest "$RUNNER_TEMP/ort-deps")
+          echo "MP11_DIR=$mp11" >> "$GITHUB_ENV"
+      # build.sh runs build.py with --build_dir build/MacOS. --osx_arch arm64 is build.py's default on this machine,
+      # named so a change of runner cannot quietly change it. --apple_deploy_target 14.0, the oldest macOS the
+      # library runs on, is what Microsoft's macOS archive is built for (MACOSX_DEPLOYMENT_TARGET in
+      # tools/ci_build/github/azure-pipelines/templates/mac-cpu-packing-jobs.yml); without it, the library would
+      # need the build machine's own macOS.
+      - name: Build
+        working-directory: ort
+        run: |
+          cmake --version
+          start=$(date +%s)
+          # BUILD_FLAGS unquoted on purpose: one word per flag.
+          ./build.sh $BUILD_FLAGS --osx_arch arm64 --apple_deploy_target 14.0 --cmake_extra_defines "FETCHCONTENT_SOURCE_DIR_MP11=$MP11_DIR"
+          echo "BUILD_SECONDS=$(( $(date +%s) - start ))" >> "$GITHUB_ENV"
+      - name: Install
+        run: cmake --install ort/build/MacOS/Release --config Release --prefix "$RUNNER_TEMP/ort-install"
+      - name: Package, with sizes, hashes and build time in the job summary
+        run: >-
+          python -I core/Tools/onnxruntime-build.py package --platform macos
+          --version "$ORT_VERSION" --commit "$ORT_COMMIT" --source ort --install "$RUNNER_TEMP/ort-install"
+          --vendored core/Sources/COnnxRuntime/include --name "$ARCHIVE" --stage "$RUNNER_TEMP/stage"
+          --out "$RUNNER_TEMP/dist" --official-size "$OFFICIAL_SIZE" --build-seconds "$BUILD_SECONDS"
+      - name: "Gate: no trace of the reporting client"
+        run: |
+          rc=0
+          bash core/Tools/scan-onnxruntime.sh "$RUNNER_TEMP/stage/$ARCHIVE/lib/$LIBRARY" "$RUNNER_TEMP"/ort-install/lib*/"$LIBRARY" > "$RUNNER_TEMP/scan.txt" || rc=$?
+          cat "$RUNNER_TEMP/scan.txt"
+          { echo '### The gate'; echo; echo '```'; cat "$RUNNER_TEMP/scan.txt"; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+          [ "$rc" -eq 0 ] || { echo "::error::the library carries traces of the reporting client (or could not be scanned); not uploaded"; exit 1; }
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.ARCHIVE }}
+          path: ${{ runner.temp }}/dist/
+          if-no-files-found: error
+          # The archive is compressed already.
+          compression-level: 0
+
+  publish:
+    name: Publish the release
+    needs: [linux, windows, macos]
+    # Only when asked, and only when every chosen build passed its gate; a platform not chosen is skipped, which
+    # does not stop the others being published.
+    if: >-
+      always() && github.event_name == 'workflow_dispatch' && inputs.publish &&
+      !contains(needs.*.result, 'failure') && !contains(needs.*.result, 'cancelled') &&
+      contains(needs.*.result, 'success')
+    runs-on: ubuntu-latest
+    # Minutes of work; a guard.
+    timeout-minutes: 15
+    # The only job that may write to the repository: creating the release and its tag, and uploading to it.
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+      # GitHub's own command-line tool, preinstalled on the runner, with this job's token.
+      - name: Create or update the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          ls -l dist
+          notes="ONNX Runtime $ORT_VERSION (the commit Microsoft's archives name, $ORT_COMMIT; the tag $ORT_TAG itself points at $ORT_TAG_COMMIT), built by this repository's onnxruntime-build workflow with --no_telemetry, so without Microsoft's usage-reporting client; each library passed the scan for the client's traces (core/Tools/scan-onnxruntime.sh, .ps1) before it was uploaded. The assets were last uploaded by $RUN_URL, whose job summaries give each library's and archive's size and SHA-256; each archive has a .sha256 file beside it. Recorded in DEPENDENCIES.md, section 6."
+          if gh release view "$RELEASE_TAG" > /dev/null 2>&1; then
+            gh release edit "$RELEASE_TAG" --notes "$notes"
+          else
+            gh release create "$RELEASE_TAG" --target "$GITHUB_SHA" --latest=false \
+              --title "ONNX Runtime $ORT_VERSION without the usage-reporting client" --notes "$notes"
+          fi
+          gh release upload "$RELEASE_TAG" dist/* --clobber

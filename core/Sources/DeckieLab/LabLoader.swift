@@ -29,11 +29,13 @@ public enum LabLoader {
 
     public static func track(from d: FeatureFile, _ cands: [String: CandidateRecord]) -> Track {
         let c = cands[d.id]
-        let lufs = d.perBar.lufsSt, voc = d.perBar.vocalProb
+        // A record without vocal probabilities (an engine record flagged vocal_unknown) counts every bar as
+        // vocal-free, as the engine placed its mix windows; one without an embedding has an empty one.
+        let lufs = d.perBar.lufsSt, voc = d.perBar.vocalProb ?? [Double](repeating: 0, count: d.grid.nBars)
         let i0 = d.mixIn.startBar - 1, i1 = d.mixIn.endBar - 1
         let o0 = d.mixOut.startBar - 1, o1 = d.mixOut.endBar - 1
         let integ = d.loudness.integratedLufs
-        let emb = d.embeddingEffnet
+        let emb = d.embeddingEffnet ?? []
         var norm = 0.0
         for v in emb { norm += v * v }
         norm = norm.squareRoot() + 1e-9
