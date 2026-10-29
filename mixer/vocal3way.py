@@ -38,8 +38,16 @@ def main(records, out):
         idx = [i for i, m in enumerate(mu) if m is not None]
         if len(idx) < 8: no_apple += 1; continue
         L = [labv[i] for i in idx]; E = [engv[i] for i in idx]; M = [mu[i] for i in idx]
-        rows.append(dict(id=tid, r_eng_lab=pearson(E, L), r_mu_lab=pearson(M, L), r_eng_mu=pearson(E, M),
-                         mean_lab=st.mean(L), mean_eng=st.mean(E), mean_mu=st.mean(M)))
+        row = dict(id=tid, r_eng_lab=pearson(E, L), r_mu_lab=pearson(M, L), r_eng_mu=pearson(E, M),
+                   mean_lab=st.mean(L), mean_eng=st.mean(E), mean_mu=st.mean(M))
+        # alternative readings of the tagger (deckie.vocal.readings: name -> per-bar series) and a second opinion
+        dv = ((e.get("deckie") or {}).get("vocal") or {})
+        for group in ("readings", "second_opinion"):
+            for name, series in (dv.get(group) or {}).items():
+                if isinstance(series, list) and len(series) == len(labv):
+                    X = [series[i] for i in idx]
+                    row[f"{group}.{name}.r_lab"] = pearson(X, L); row[f"{group}.{name}.r_mu"] = pearson(X, M)
+        rows.append(row)
     print("tracks compared", len(rows), "no apple series", no_apple, "bar-count mismatch", lenmis)
     def med(k):
         v = [r[k] for r in rows if r[k] is not None]; return st.median(v), st.mean(v), len(v)
@@ -49,6 +57,11 @@ def main(records, out):
     print("across tracks, r of per-track means: engine vs lab %.2f, apple vs lab %.2f, engine vs apple %.2f" % (
         pearson([r["mean_eng"] for r in rows], [r["mean_lab"] for r in rows]), pearson([r["mean_mu"] for r in rows], [r["mean_lab"] for r in rows]), pearson([r["mean_eng"] for r in rows], [r["mean_mu"] for r in rows])))
     print("engine mean below 0.02 on", sum(1 for r in rows if r["mean_eng"] < 0.02), "tracks")
+    extra = sorted({k for r in rows for k in r if k.endswith(".r_lab")})
+    for k in extra:
+        base = k[:-6]
+        ml, nl = med(k)[0], med(k)[2]; mm = med(base + ".r_mu")[0]
+        print(f"{base:36s} r vs lab median {ml:.2f}  vs Apple {mm:.2f}  (n {nl})")
     if out: json.dump(rows, open(out, "w"), indent=0)
 
 if __name__ == "__main__":
