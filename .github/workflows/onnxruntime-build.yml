@@ -274,6 +274,11 @@ jobs:
     env:
       ARCHIVE: onnxruntime-osx-arm64-1.31.1-deckie-no-telemetry
       LIBRARY: libonnxruntime.1.31.1.dylib
+      # Microsoft's lib/libonnxruntime.1.31.1.dylib (DEPENDENCIES.md, section 6), for the size comparison. It also
+      # holds the CoreML and WebGPU execution providers (--use_coreml --use_webgpu in
+      # templates/mac-cpu-packing-jobs.yml), which this CPU-only build leaves out, so not all of the difference is the
+      # reporting client.
+      OFFICIAL_SIZE: "44797256"
     steps:
       - uses: actions/checkout@v4
       - name: Check out ONNX Runtime at the pinned commit
@@ -308,13 +313,12 @@ jobs:
           echo "BUILD_SECONDS=$(( $(date +%s) - start ))" >> "$GITHUB_ENV"
       - name: Install
         run: cmake --install ort/build/MacOS/Release --config Release --prefix "$RUNNER_TEMP/ort-install"
-      # No size comparison: Microsoft's macOS archive is not recorded in DEPENDENCIES.md.
       - name: Package, with sizes, hashes and build time in the job summary
         run: >-
           python -I core/Tools/onnxruntime-build.py package --platform macos
           --version "$ORT_VERSION" --commit "$ORT_COMMIT" --source ort --install "$RUNNER_TEMP/ort-install"
           --vendored core/Sources/COnnxRuntime/include --name "$ARCHIVE" --stage "$RUNNER_TEMP/stage"
-          --out "$RUNNER_TEMP/dist" --build-seconds "$BUILD_SECONDS"
+          --out "$RUNNER_TEMP/dist" --official-size "$OFFICIAL_SIZE" --build-seconds "$BUILD_SECONDS"
       - name: "Gate: no trace of the reporting client"
         run: |
           rc=0
