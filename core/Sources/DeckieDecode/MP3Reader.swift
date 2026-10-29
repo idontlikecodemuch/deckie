@@ -79,27 +79,34 @@ enum MP3Reader {
         let now = try decodeUntrimmed(data, file: file)
         let before = pull.trimmed(), after = now.trimmed()
         let c = after.channelCount
-        var first: Int? = nil, last: Int? = nil
+        var spans: [MP3ConcealmentCheck.DifferingSpan] = []
+        // Sample frames `r` differ (given in order): joined to the last span when less than one MPEG-1 frame after it.
+        func differs(_ r: ClosedRange<Int>) {
+            if var s = spans.last, r.lowerBound - s.frames.upperBound <= 1152 {
+                if r.upperBound > s.frames.upperBound {
+                    s.count += r.upperBound - max(r.lowerBound, s.frames.upperBound + 1) + 1
+                    s.frames = s.frames.lowerBound...r.upperBound
+                    spans[spans.count - 1] = s
+                }
+            } else {
+                spans.append(.init(frames: r, count: r.count))
+            }
+        }
         if before.channelCount != c {
-            first = 0
-            last = max(before.frames, after.frames) - 1
+            if max(before.frames, after.frames) > 0 { differs(0...(max(before.frames, after.frames) - 1)) }
         } else {
             let common = min(before.frames, after.frames) * c
             before.samples.withUnsafeBufferPointer { b in
                 after.samples.withUnsafeBufferPointer { a in
-                    for i in 0..<common where a[i].bitPattern != b[i].bitPattern {
-                        if first == nil { first = i / c }
-                        last = i / c
-                    }
+                    for i in 0..<common where a[i].bitPattern != b[i].bitPattern { differs((i / c)...(i / c)) }
                 }
             }
             if before.frames != after.frames {
-                first = first ?? min(before.frames, after.frames)
-                last = max(before.frames, after.frames) - 1
+                differs(min(before.frames, after.frames)...(max(before.frames, after.frames) - 1))
             }
         }
         return MP3ConcealmentCheck(damagedFrames: now.damagedFrameTimes(), pullReader: before, decoded: after,
-                                   differing: first.map { $0...(last ?? $0) })
+                                   differingSpans: spans)
     }
 
     /// Everything dr_mp3 decoded after the tag frame, before trimming, with what the trimming reads.

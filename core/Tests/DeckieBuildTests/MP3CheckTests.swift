@@ -24,6 +24,10 @@ import DeckieDecode
         #expect(damaged.damagedFrames == [DamagedFrame(startSeconds: start, seconds: length)])
         let d = try #require(damaged.differing)
         #expect(d.lowerBound >= start && d.upperBound < start + 2 * length, "\(d)")
+        // One span, the frame and the next: at most two frames' sample frames differ in it.
+        #expect(damaged.spans.count == 1 && damaged.spans[0].count <= 2 * 1152 && damaged.spans[0].count > 1152,
+                "\(damaged.spans)")
+        #expect(MP3Check.line(damaged).contains("in 1 span: ") && MP3Check.line(damaged).contains(" sample frames)"))
         #expect((damaged.truePeakBefore ?? 0) > 8 && abs((damaged.truePeakAfter ?? 0) + 1.76) < 0.01)
         let (text, holds) = MP3Check.summary(results)
         print(text)
