@@ -42,6 +42,7 @@ struct EmptyCrateView: View {
                 .multilineTextAlignment(.center).foregroundStyle(.secondary).frame(maxWidth: 520)
             HStack {
                 Button("New crate from folder…") { model.askNewCrate() }.buttonStyle(.borderedProminent)
+                Button("With a rekordbox collection…") { model.askNewCrate(withRekordbox: true) }
                 Button("Open a crate…") { model.askOpenCrate() }
             }
         }.padding(40)

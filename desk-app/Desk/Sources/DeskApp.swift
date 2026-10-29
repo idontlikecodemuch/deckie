@@ -22,6 +22,7 @@ struct DeskApp: App {
         .commands {
             CommandGroup(replacing: .newItem) {
                 Button("New Crate from Folder…") { model.askNewCrate() }.keyboardShortcut("n")
+                Button("New Crate from Folder with rekordbox Collection…") { model.askNewCrate(withRekordbox: true) }
                 Button("Open Crate…") { model.askOpenCrate() }.keyboardShortcut("o")
                 Button("Save") { model.save() }.keyboardShortcut("s").disabled(model.crate == nil)
             }
