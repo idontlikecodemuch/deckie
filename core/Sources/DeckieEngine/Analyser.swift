@@ -167,7 +167,13 @@ public final class Analyser: Sendable {
             guard let tag else { return 999.0 }
             return Tempo.closest(bpm: g.bpm, reference: tag, among: Tempo.octaveMultipliers).deviationPct
         }
-        // The lab's madmom --auto rule, recorded so the Mac comparison knows where the lab's grid may differ.
+        // The lab's madmom --auto rule, recorded so the Mac comparison knows where the lab's grid may differ. It
+        // changes nothing else in the record, on purpose (decided after the first Mac bench, Oct 28, 2026, where it
+        // fired on 55 of 373 tracks). "poor grid fit" is the very test that sets `low_grid_confidence`: the kept
+        // grid's own confidence under 0.5, so a reader already sees a weak grid. "Beat This vs tag > 2%" fires on a
+        // grid that fits (the engine's matched the lab's final grid to the beat on all 4 such tracks): the doubt is
+        // the tag's, whose tempo the record carries beside the grid's, and capping `grid.confidence` for it would
+        // give the fit's confidence a second meaning, which the crate format rules out.
         var madmomWouldRun: String? = nil
         if gridBT.confidence < 0.5 {
             madmomWouldRun = "poor grid fit"
