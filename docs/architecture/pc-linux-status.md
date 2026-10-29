@@ -807,6 +807,16 @@ Its branch is merged with shrinkage on by default, no cap, and the builder's def
 parity suite passed on the merge with both models (236, then 258 with the vocal fields). Two tests failed on the
 Mac and are judged: the Butterworth-coefficient test now allows four units in the last place (macOS's tan rounds
 three off; the filtered samples still match), and the telemetry test's failure was a real bug, fixed earlier today
-(every load attempt now sets the switch). The same before-and-after on `deckie-build` itself, with the four-job
-figure and a crate-record comparison between the two commits, is being measured as this is written and goes in
-an addendum.
+(every load attempt now sets the switch). The same before-and-after on `deckie-build` itself follows.
+
+**Addendum: `deckie-build` before and after, same tool.** Four distinct synthesised four-minute files, `--fresh`,
+the process's kernel high-water mark, the Mac's branch against its base, on this shared machine: one job, 1,937 MB
+before and 1,086 MB after (44 percent less, three runs within 7 MB); four jobs, 5,504 and 5,592 MB before, 3,932
+and 4,366 MB after (22 to 29 percent less; the after figure varies more, probably in how the four threads' peaks
+overlap). Four-job wall time unchanged within noise (27.5 against 27.4 s). One job is slower after in steady
+state, 42.7 and 43.4 s against 35.9 s twice (about 10.3 against 8.3 s per file), and one after run took 87.9 s for
+no reason the load explains; raised with the Mac session, whose call it is whether shrinkage should apply only
+when more than one job runs. The crates: the same ten files from both commits, every per-bar and style sidecar
+byte for byte identical (across all eight crates, 64 sidecar files hash to 8 values, each seen 8 times), and the
+JSON differing only in the analysis times, the crate id, the creation time and the run's name. The engine version
+is unchanged by the memory work; it bumps to 0.2.0 with the renames below.
