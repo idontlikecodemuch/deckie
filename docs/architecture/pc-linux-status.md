@@ -56,7 +56,10 @@ Mac) reviews and merges this track's branch, `pc-linux`, and runs anything that 
 - In flight elsewhere, to keep merges easy: a Mac session (Christopher's, from the task card in entry 13) is cutting
   the analyser's peak memory on its own branch `perf/analyser-memory`, touching `Analyser.swift`, the DSP files,
   the key estimator and the beat tracker's session options, with every number unchanged; it will push its branch
-  for this track to merge. Here, the memo O agent adds a step to `Analyser.swift` after the vocal tagger and new
+  for this track to merge. Its measurement matrix ran here (the Mac has no models yet): on a synthesised four-minute
+  track the peak is the beat model's stage in every setting; ONNX Runtime's memory arena keeps 1.1 to 1.9 GB resident
+  after it, and switching the arena off (or its shrinkage on) brings a job back to 0.3 to 0.7 GB with records byte
+  for byte identical; four jobs peak at 5.8 GB with the arena, 4.5 GB without. The Mac picks the default from it. Here, the memo O agent adds a step to `Analyser.swift` after the vocal tagger and new
   fields in `Analysis*.swift` and the crate model, nothing in the DSP; the ONNX Runtime build agent touches only
   the workflows, `fetch-onnxruntime.sh` and DEPENDENCIES.md section 6.
 - Accepted by the main session (Oct 29) with three renames, being applied: the crate builder's two additive
