@@ -29,7 +29,7 @@ import DeckieCrate
         #expect(lines[1].contains(#""features_present":["bars.drum","bars.lufs","bars.vocal","ends","grid","key","key_changes","loudness","mix_windows","onset_pattern","phrase","sections","style","tempo_segments","vocal"]"#))
         #expect(lines[2].contains(#""key_changes""#) == false && lines[2].contains(#""changes":null"#))
         #expect(lines[2].contains(#""style":null"#) && lines[2].contains(#""signatures":{}"#))
-        #expect(lines[2].contains(#""deckie":null"#))
+        #expect(lines[2].contains(#""imported":null"#) && lines[2].contains(#""tag_bpm":null"#))
         #expect(lines[3] == "]}")
     }
 

@@ -76,8 +76,8 @@ import Testing
         let files = try CrateWriter.encode(crate)
         let text = String(decoding: files["crate.json"]!, as: UTF8.self)
         let lines = text.split(separator: "\n")
-        #expect(lines[1].contains(#""sha1_head":"f00d","sha256":"\#(hash)"}"#) && lines[1].contains(#""id":"631b84027d6b9e52""#))
-        #expect(lines[2].contains(#""sha1_head":"f00d","sha256":null}"#) && lines[2].contains(#""id":"b2""#))
+        #expect(lines[1].contains(#""sha1_head":"f00d","sha256":"\#(hash)","tag_bpm":null}"#) && lines[1].contains(#""id":"631b84027d6b9e52""#))
+        #expect(lines[2].contains(#""sha1_head":"f00d","sha256":null,"tag_bpm":null}"#) && lines[2].contains(#""id":"b2""#))
         let back = try CrateReader.decode(files)
         #expect(back == crate && back.tracks.first { $0.id == "631b84027d6b9e52" }?.file.sha256 == hash)
 

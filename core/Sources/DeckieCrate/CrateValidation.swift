@@ -185,6 +185,7 @@ extension CrateTrack {
             }
         }
         if !(file.durationS > 0) { add("file.duration_s", "\(file.durationS) must be above 0") }
+        if let t = file.tagBpm, !(t > 0) { add("file.tag_bpm", "\(t) must be above 0") }
         if !(1...3).contains(analysis.level) { add("analysis.level", "\(analysis.level) must be 1, 2 or 3") }
         if engine.fidelity < 0 { add("engine.fidelity", "\(engine.fidelity) must be 0 or more") }
         if let s = analysis.secs, s < 0 { add("analysis.secs", "\(s) must be 0 or more") }
@@ -329,19 +330,22 @@ extension CrateTrack {
             }
             if signatures[variant]!.madeBy.isEmpty { add("signatures.\(variant).made_by", "is empty") }
         }
-        if let d = deckie {
-            if let t = d.bpmTag, !(t.bpm > 0) { add("deckie.bpm_tag.bpm", "\(t.bpm) must be above 0") }
-            if let r = d.rekordbox {
-                for (j, g) in r.grid.enumerated() {
-                    if !(g.bpm > 0) { add("deckie.rekordbox.grid[\(j)].bpm", "\(g.bpm) must be above 0") }
-                    if g.beatInBar < 1 { add("deckie.rekordbox.grid[\(j)].beat_in_bar", "\(g.beatInBar) must be 1 or more") }
-                }
-                for (j, c) in r.cues.enumerated() {
-                    let path = "deckie.rekordbox.cues[\(j)]"
-                    if c.kind.isEmpty { add("\(path).kind", "is empty") }
-                    if let h = c.hotCue, h < 0 { add("\(path).hot_cue", "\(h) must be 0 or more") }
-                    if let e = c.endS, e < c.startS { add("\(path).end_s", "\(e) is before start_s \(c.startS)") }
-                }
+        if let r = imported?.rekordbox {
+            let rb = "imported.rekordbox"
+            if r.importedAt.isEmpty { add("\(rb).imported_at", "is empty") }
+            for (j, g) in r.gridMarkers.enumerated() {
+                if !(g.bpm > 0) { add("\(rb).grid_markers[\(j)].bpm", "\(g.bpm) must be above 0") }
+                if g.beatInBar < 1 { add("\(rb).grid_markers[\(j)].beat_in_bar", "\(g.beatInBar) must be 1 or more") }
+            }
+            for (j, c) in r.cues.enumerated() {
+                let path = "\(rb).cues[\(j)]"
+                if c.kind.isEmpty { add("\(path).kind", "is empty") }
+                if let h = c.hotCue, h < 0 { add("\(path).hot_cue", "\(h) must be 0 or more") }
+            }
+            for (j, l) in r.loops.enumerated() {
+                let path = "\(rb).loops[\(j)]"
+                if let h = l.hotCue, h < 0 { add("\(path).hot_cue", "\(h) must be 0 or more") }
+                if let e = l.endS, e < l.startS { add("\(path).end_s", "\(e) is before start_s \(l.startS)") }
             }
         }
         if let b = bars {

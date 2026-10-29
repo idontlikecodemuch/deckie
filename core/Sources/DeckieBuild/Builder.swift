@@ -181,9 +181,11 @@ public final class Builder: Sendable {
     }
 
     /// The tag tempo a file's analysis follows: the DJ's rekordbox tempo, else (with `fileBPMTags`) the file's own tag.
-    func tagTempo(rekordbox: RekordboxCollection.Track?, tags: FileTags?) -> CrateTrack.Deckie.TagTempo? {
-        if let bpm = rekordbox?.averageBpm { return .init(bpm: bpm, source: "rekordbox-xml") }
-        if options.fileBPMTags, let bpm = tags?.bpm { return .init(bpm: bpm, source: "file-tag") }
+    /// The record keeps the tempo (`file.tag_bpm`) and not where it came from: rekordbox's is taken whenever it has
+    /// one, so it came from rekordbox exactly when it equals `imported.rekordbox.bpm`.
+    func tagTempo(rekordbox: RekordboxCollection.Track?, tags: FileTags?) -> Double? {
+        if let bpm = rekordbox?.averageBpm { return bpm }
+        if options.fileBPMTags, let bpm = tags?.bpm { return bpm }
         return nil
     }
 
@@ -209,6 +211,7 @@ public final class Builder: Sendable {
         let files = try AudioFiles.find(in: options.folder)
         var collection: RekordboxCollection? = nil
         var matcher: RekordboxMatcher? = nil
+        let importedAt = utcNow()
         if let xml = options.rekordbox {
             let c = try RekordboxCollection.read(xml)
             collection = c
@@ -228,7 +231,7 @@ public final class Builder: Sendable {
         for (i, f) in files.enumerated() {
             if let line = work.line(for: f.rel), line.size == f.size, line.modified == f.modified, line.engine == label {
                 if line.status == "ok", let id = line.id,
-                   tagTempo(rekordbox: rekordboxOf[i], tags: line.tags)?.bpm == line.bpmTag,
+                   tagTempo(rekordbox: rekordboxOf[i], tags: line.tags) == line.bpmTag,
                    FileManager.default.fileExists(atPath: work.recordURL(id).path) {
                     done[f.rel] = .ok(id: id, tags: line.tags)
                     continue
@@ -302,8 +305,17 @@ public final class Builder: Sendable {
                     continue
                 }
                 firstWithID[id] = f.rel
-                var t = dressed(record, file: f, tags: tags, rekordbox: rekordboxOf[i], collection: collection)
-                if let old = existing?.tracks.first(where: { $0.id == id }) { t.signatures = old.signatures }
+                var t = dressed(record, file: f, tags: tags, rekordbox: rekordboxOf[i], collection: collection,
+                                importedAt: importedAt)
+                if let old = existing?.tracks.first(where: { $0.id == id }) {
+                    t.signatures = old.signatures
+                    // An entry imported again unchanged keeps the time it was first imported, so a rebuild from the
+                    // same export leaves the record as it was.
+                    if var now = t.imported?.rekordbox, let was = old.imported?.rekordbox {
+                        now.importedAt = was.importedAt
+                        if now == was { t.imported?.rekordbox = was }
+                    }
+                }
                 tracks.append(t)
             case nil:
                 entries.append(.init(rel: f.rel, ext: f.ext, reason: CrateManifest.ImportLog.Reason.analysisError,
@@ -356,7 +368,7 @@ public final class Builder: Sendable {
         let tag = tagTempo(rekordbox: rekordbox, tags: tags)
         func line(_ status: String, id: String? = nil, failure: FileFailure? = nil) -> WorkStore.FileLine {
             .init(rel: f.rel, size: f.size, modified: f.modified, status: status, engine: label, id: id,
-                  bpmTag: status == "ok" ? tag?.bpm : nil, tags: tags.isEmpty ? nil : tags, reason: failure?.reason,
+                  bpmTag: status == "ok" ? tag : nil, tags: tags.isEmpty ? nil : tags, reason: failure?.reason,
                   message: failure?.message)
         }
         func failed(_ failure: FileFailure) -> Done {
@@ -371,13 +383,13 @@ public final class Builder: Sendable {
             return failed(FileFailure(reason: R.decodeError, message: "could not be read (\(error.localizedDescription))"))
         }
         let id = CrateIDs.id(forSHA256: CrateIDs.sha256(of: data))
-        if let record = work.record(id), record.engine == label, record.bpmTag == tag?.bpm {
+        if let record = work.record(id), record.engine == label, record.bpmTag == tag {
             try? work.append(line("ok", id: id))
             return .ok(id: id, tags: tags)
         }
         do {
             let t0 = Date()
-            let analysis = try engine.analyse(url: f.url, options: AnalysisOptions(bpmTag: tag?.bpm))
+            let analysis = try engine.analyse(url: f.url, options: AnalysisOptions(bpmTag: tag))
             let elapsed = Date().timeIntervalSince(t0)
             var track = analysis.crateTrack(options: .init(analysedAt: utcNow(), device: options.device))
             track.file.rel = f.rel
@@ -388,7 +400,7 @@ public final class Builder: Sendable {
             } catch {
                 return failed(FileFailure(reason: R.analysisError, message: "the record does not hold together: \(error)"))
             }
-            try work.save(WorkStore.Record(engine: label, bpmTag: tag?.bpm, track: track, bars: track.bars?.series,
+            try work.save(WorkStore.Record(engine: label, bpmTag: tag, track: track, bars: track.bars?.series,
                                            style: track.style?.values))
             try work.append(line("ok", id: analysis.id))
             seconds = elapsed
@@ -399,9 +411,10 @@ public final class Builder: Sendable {
     }
 
     /// A work record made ready for the crate: the file's current name and path, the track's names (from rekordbox,
-    /// else the file's tags, else the file name), the DJ's key as a vote, and the `deckie` block.
+    /// else the file's tags, else the file name), the DJ's key as a vote, and the `imported` block, its rekordbox entry
+    /// taken at `importedAt`. The tag tempo is already in the record (`file.tag_bpm`), as the analysis was given it.
     func dressed(_ record: WorkStore.Record, file f: SourceFile, tags: FileTags?, rekordbox rb: RekordboxCollection.Track?,
-                 collection: RekordboxCollection?) -> CrateTrack {
+                 collection: RekordboxCollection?, importedAt: String) -> CrateTrack {
         var t = record.crateTrack
         t.file.name = (f.rel as NSString).lastPathComponent
         t.file.rel = f.rel
@@ -425,12 +438,12 @@ public final class Builder: Sendable {
         if let tonality = rb?.tonality, let code = RekordboxCollection.camelot(fromTonality: tonality) {
             t.key?.votes["rekordbox-xml"] = code
         }
-        var block = CrateTrack.Deckie()
-        if let bpm = record.bpmTag {
-            block.bpmTag = .init(bpm: bpm, source: rb?.averageBpm == bpm ? "rekordbox-xml" : "file-tag")
+        // The DJ's own data under the name of the program it came from; null when nothing was imported.
+        if let rb, let collection {
+            t.imported = .init(rekordbox: collection.crateBlock(for: rb, importedAt: importedAt))
+        } else {
+            t.imported = nil
         }
-        if let rb, let collection { block.rekordbox = collection.crateBlock(for: rb) }
-        t.deckie = block.bpmTag == nil && block.rekordbox == nil ? nil : block
         return t
     }
 }

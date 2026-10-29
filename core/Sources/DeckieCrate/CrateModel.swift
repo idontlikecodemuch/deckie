@@ -168,13 +168,17 @@ public struct CrateTrack: Codable, Equatable, Sendable {
         /// (`CrateIDs`). Nil in lab records, which keep the lab's ids.
         public var sha256: String?
         public var durationS: Double
+        /// The tempo written down for the file before it was analysed (the DJ's rekordbox tempo, or the file's own tag
+        /// such as ID3 TBPM), which steered the analysis between double and half tempo; nil when there was none. It is
+        /// a fact about the file, not something imported, so it sits here and not in `imported`.
+        public var tagBpm: Double?
         public init(name: String, rel: String?, bytes: Int?, sha1Head: String?, sha256: String? = nil,
-                    durationS: Double) {
+                    durationS: Double, tagBpm: Double? = nil) {
             self.name = name; self.rel = rel; self.bytes = bytes; self.sha1Head = sha1Head; self.sha256 = sha256
-            self.durationS = durationS
+            self.durationS = durationS; self.tagBpm = tagBpm
         }
         enum CodingKeys: String, CodingKey {
-            case name, rel, bytes, sha256, sha1Head = "sha1_head", durationS = "duration_s"
+            case name, rel, bytes, sha256, sha1Head = "sha1_head", durationS = "duration_s", tagBpm = "tag_bpm"
         }
     }
 
@@ -437,17 +441,11 @@ public struct CrateTrack: Codable, Equatable, Sendable {
         enum CodingKeys: String, CodingKey { case madeBy = "made_by", madeAt = "made_at" }
     }
 
-    /// What the builder knew about the track besides its audio (**proposed**): the tag tempo the analysis was steered
-    /// by, and what the DJ's rekordbox collection says. A reader that does not know it ignores it.
-    public struct Deckie: Codable, Equatable, Sendable {
-        /// A tempo the DJ or a tagger wrote down, which steered the octave alignment (`bpm`; `source` is
-        /// `rekordbox-xml` for the collection's average tempo, `file-tag` for the file's own tag, such as ID3 TBPM).
-        public struct TagTempo: Codable, Equatable, Sendable {
-            public var bpm: Double
-            public var source: String
-            public init(bpm: Double, source: String) { self.bpm = bpm; self.source = source }
-        }
-
+    /// What was imported with the track from the DJ's own software, keyed by source: `rekordbox` now, and a Serato
+    /// import would sit beside it under its own name. It holds the DJ's data as their software wrote it, never the
+    /// engine's, so the block is named for where it came from. Nil when nothing was imported. A reader that does not
+    /// know it ignores it.
+    public struct Imported: Codable, Equatable, Sendable {
         /// The track's entry in a rekordbox collection export (rekordbox's XML), as rekordbox wrote it. Times are
         /// seconds from the start of the file as rekordbox decodes it.
         public struct Rekordbox: Codable, Equatable, Sendable {
@@ -467,25 +465,40 @@ public struct CrateTrack: Codable, Equatable, Sendable {
                 }
             }
 
-            /// A cue point, a loop or another position mark (a POSITION_MARK element).
+            /// A cue point or another position mark that is not a loop (a POSITION_MARK element of type 0 to 3).
             public struct Cue: Codable, Equatable, Sendable {
                 /// The DJ's name for it; empty when unnamed.
                 public var name: String
-                /// `cue`, `fade-in`, `fade-out`, `load` or `loop` (rekordbox's types 0 to 4).
+                /// `cue`, `fade-in`, `fade-out` or `load` (rekordbox's types 0 to 3).
                 public var kind: String
                 /// The hot cue's number, 0 for A to 7 for H; null for a memory cue.
                 public var hotCue: Int?
                 public var startS: Double
-                /// The end of a loop; null otherwise.
-                public var endS: Double?
-                public init(name: String, kind: String, hotCue: Int?, startS: Double, endS: Double?) {
-                    self.name = name; self.kind = kind; self.hotCue = hotCue; self.startS = startS; self.endS = endS
+                public init(name: String, kind: String, hotCue: Int?, startS: Double) {
+                    self.name = name; self.kind = kind; self.hotCue = hotCue; self.startS = startS
                 }
-                enum CodingKeys: String, CodingKey {
-                    case name, kind, hotCue = "hot_cue", startS = "start_s", endS = "end_s"
-                }
+                enum CodingKeys: String, CodingKey { case name, kind, hotCue = "hot_cue", startS = "start_s" }
             }
 
+            /// A loop (a POSITION_MARK element of type 4), from `startS` to `endS`.
+            public struct Loop: Codable, Equatable, Sendable {
+                /// The DJ's name for it; empty when unnamed.
+                public var name: String
+                /// The hot cue holding it, 0 for A to 7 for H; null for a memory loop.
+                public var hotCue: Int?
+                public var startS: Double
+                /// Null only when rekordbox wrote no end.
+                public var endS: Double?
+                public init(name: String, hotCue: Int?, startS: Double, endS: Double?) {
+                    self.name = name; self.hotCue = hotCue; self.startS = startS; self.endS = endS
+                }
+                enum CodingKeys: String, CodingKey { case name, hotCue = "hot_cue", startS = "start_s", endS = "end_s" }
+            }
+
+            /// When the entry was taken from the export, UTC to the second. A rebuild that finds the entry unchanged
+            /// keeps the first time, so a rebuild from the same export changes no record, and of two devices'
+            /// different imports the newer can be told.
+            public var importedAt: String
             /// rekordbox's TrackID within that export.
             public var trackId: String
             /// The average tempo rekordbox shows (`AverageBpm`); null when it has none.
@@ -493,27 +506,26 @@ public struct CrateTrack: Codable, Equatable, Sendable {
             /// The key as rekordbox wrote it (`Tonality`: `Am`, `8A` or `1m`, by the DJ's display setting); its
             /// Camelot code is the vote `rekordbox-xml` in `key.votes`.
             public var tonality: String?
-            public var grid: [GridMarker]
+            public var gridMarkers: [GridMarker]
             public var cues: [Cue]
+            public var loops: [Loop]
             /// The playlists holding the track, each as its path of folder names from the top, the playlist last.
             public var playlists: [[String]]
 
-            public init(trackId: String, bpm: Double?, tonality: String?, grid: [GridMarker], cues: [Cue],
-                        playlists: [[String]]) {
-                self.trackId = trackId; self.bpm = bpm; self.tonality = tonality; self.grid = grid; self.cues = cues
-                self.playlists = playlists
+            public init(importedAt: String, trackId: String, bpm: Double?, tonality: String?, gridMarkers: [GridMarker],
+                        cues: [Cue], loops: [Loop], playlists: [[String]]) {
+                self.importedAt = importedAt; self.trackId = trackId; self.bpm = bpm; self.tonality = tonality
+                self.gridMarkers = gridMarkers; self.cues = cues; self.loops = loops; self.playlists = playlists
             }
-            enum CodingKeys: String, CodingKey { case bpm, tonality, grid, cues, playlists, trackId = "track_id" }
+            enum CodingKeys: String, CodingKey {
+                case bpm, tonality, cues, loops, playlists, importedAt = "imported_at", trackId = "track_id",
+                     gridMarkers = "grid_markers"
+            }
         }
 
-        public var bpmTag: TagTempo?
         public var rekordbox: Rekordbox?
 
-        public init(bpmTag: TagTempo? = nil, rekordbox: Rekordbox? = nil) {
-            self.bpmTag = bpmTag
-            self.rekordbox = rekordbox
-        }
-        enum CodingKeys: String, CodingKey { case rekordbox, bpmTag = "bpm_tag" }
+        public init(rekordbox: Rekordbox? = nil) { self.rekordbox = rekordbox }
     }
 
     public var id: String
@@ -537,8 +549,8 @@ public struct CrateTrack: Codable, Equatable, Sendable {
     public var style: Style?
     /// By variant (`o`, `r-4`, `r+4`, ...). Empty until an Apple device adds signatures.
     public var signatures: [String: Signature]
-    /// The builder's own additions (**proposed**); nil when it has nothing to add.
-    public var deckie: Deckie?
+    /// What was imported with the track from the DJ's own software, by source; nil when nothing was.
+    public var imported: Imported?
     /// Where the track is sung, to the beat, and the hook candidates (**proposed** with memo O's vocal fields); nil
     /// when the engine made none. Unlike every other field, a nil one is left out of crate.json rather than written as
     /// null, so the records of engines that do not make them keep their bytes.
@@ -552,13 +564,13 @@ public struct CrateTrack: Codable, Equatable, Sendable {
                 phrase: Phrase? = nil, sections: [Section]? = nil, mixIn: MixWindow? = nil, mixOut: MixWindow? = nil,
                 ends: Ends? = nil, loudness: Loudness? = nil, vocal: Vocal? = nil, onsetPattern16: [Double]? = nil,
                 flags: [String] = [], style: Style? = nil, signatures: [String: Signature] = [:],
-                bars: BarSeries? = nil, deckie: Deckie? = nil, vocalStructure: VocalStructure? = nil,
+                bars: BarSeries? = nil, imported: Imported? = nil, vocalStructure: VocalStructure? = nil,
                 hooks: Hooks? = nil) {
         self.id = id; self.schema = schema; self.file = file; self.ident = ident; self.analysis = analysis
         self.engine = engine; self.grid = grid; self.tempoSegments = tempoSegments; self.key = key
         self.phrase = phrase; self.sections = sections; self.mixIn = mixIn; self.mixOut = mixOut; self.ends = ends
         self.loudness = loudness; self.vocal = vocal; self.onsetPattern16 = onsetPattern16; self.flags = flags
-        self.style = style; self.signatures = signatures; self.bars = bars; self.deckie = deckie
+        self.style = style; self.signatures = signatures; self.bars = bars; self.imported = imported
         self.vocalStructure = vocalStructure; self.hooks = hooks
     }
 
@@ -586,7 +598,7 @@ public struct CrateTrack: Codable, Equatable, Sendable {
 
     enum CodingKeys: String, CodingKey {
         case id, schema, file, ident, analysis, engine, grid, key, phrase, sections, ends, loudness, vocal, flags
-        case style, signatures, deckie, hooks
+        case style, signatures, imported, hooks
         case tempoSegments = "tempo_segments", mixIn = "mix_in", mixOut = "mix_out", onsetPattern16 = "onset_pattern_16"
         case vocalStructure = "vocal_structure"
     }
@@ -614,7 +626,7 @@ public struct CrateTrack: Codable, Equatable, Sendable {
         try c.encode(flags, forKey: .flags)
         try c.encodeIfPresent(style, forKey: .style)
         try c.encode(signatures, forKey: .signatures)
-        try c.encodeIfPresent(deckie, forKey: .deckie)
+        try c.encodeIfPresent(imported, forKey: .imported)
         // Left out when nil (crate-format.md, "Additions proposed with the vocal fields").
         if let vocalStructure { try c.encode(vocalStructure, forKey: .vocalStructure) }
         if let hooks { try c.encode(hooks, forKey: .hooks) }
