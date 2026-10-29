@@ -78,9 +78,9 @@ and Linux crate builder share them. Charter: `docs/architecture/pc-linux-track.m
   reference numbers are `DeckieCoreTests/Fixtures/yamnet.json` (285 KB, written by `Tools/make_yamnet_fixtures.py`
   with TensorFlow), which the front end's tests read too.
   `Tests/DeckieTestSupport` is a small library shared by the test targets: the synthesised drum patterns and chords
-  (`ChordSynth`), a sung-like line and the vocal test track (`VoiceSynth`, `VocalTrack`), the engine's test track
-  (`TestTrack`, shared with the builder's tests), the beat fixture's reader, and `CPUTurns`, which makes the model
-  runs take turns.
+  (`ChordSynth`), a sung-like line and the vocal test tracks (`VoiceSynth`, `VocalTrack`, `VocalStructureTrack`), the
+  engine's test track (`TestTrack`, shared with the builder's tests), the beat fixture's reader, and `CPUTurns`, which
+  makes the model runs take turns.
 - `Tests/DeckieEngineTests`: the engine end to end on a synthesised track, and its pieces (below).
 - `Tests/DeckieBuildTests`: the crate builder and the bench (below). `Fixtures/bench_parity.json` holds what
   `mixer/bench_mu.py`'s own functions give on pairs of series from every committed feature file, written by
@@ -298,6 +298,18 @@ network identical to Python's ONNX Runtime on the same patches, and on a synthes
 of drums and chords with and without a sung-like line, 0.029 on the sung bars against 0.0001 on the others (YAMNet
 hears the synthetic voice only faintly; real singing scores far higher); drums alone score 1e-5. Four minutes of
 stereo take 0.6 s in a release build (resampling 0.28 s, front end 0.10 s, network 0.20 s) and 4.6 s in a debug build.
+
+**The vocal structure and the hook candidates** (`VocalStructure` and `Hooks` in `Sources/DeckieCore/Structure`) are
+research O's per-track vocal fields (`docs/research/o-vocal-uses.md`, items A1 to A6 and B7): with a tagger, the
+engine reads YAMNet's patch-by-patch scores (0.48 s apart, finer than a bar) against the grid for the sung spans in bars
+and beats, the first sung beat and whether it is a pickup, the last, the free intro and outro and what they hold, the
+8-bar free gaps on the lattice, a stand-in for an exposed vocal from `low_db` and the onset density, and each span's
+ends against the lattice; and proposes up to three hooks from repetition (the novelty's MFCC, bar against bar),
+loudness and vocal density. Every rule is relative to the track and a first cut for the Mac's listening test to tune;
+its parameters and threshold are written beside the result. The lab JSON carries both under `deckie`, the crate as the
+proposed `vocal_structure` and `hooks` blocks (`docs/architecture/crate-format.md`). On a 40-bar synthesised track
+sung from a pickup before bar 9 to bar 16 and over bars 25 to 32 the engine finds the pickup, the last sung beat, 7 and
+8 free bars and the gaps exactly, and every span end within two beats.
 
 What the Mac yardstick will compare (charter step 6): the engine run over the 373 tracks of `mixer/candidates.json`,
 each record beside the lab's `mixer/features/<id>.json` for the same track, read with the lab's own tools. Beats and
