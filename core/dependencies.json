@@ -48,6 +48,14 @@
       "licence": "Apache 2.0 (section 8)",
       "training_sets": "AudioSet: labels CC BY 4.0, clips are their YouTube uploaders'; trained by Google (section 8)",
       "replacement_path": "vocal fields absent, record flagged vocal_unknown (section 8)"
+    },
+    {
+      "id": "panns-mobilenetv2",
+      "name": "PANNs MobileNetV2 (the vocal tagger's second opinion, optional)",
+      "version": "Zenodo record 3987831, MobileNetV2_mAP=0.383; code at commit d2f4b8c; exported file's pin pending the first CI export",
+      "licence": "weights CC BY 4.0, with the attribution in section 9; code MIT (section 9)",
+      "training_sets": "AudioSet: labels CC BY 4.0, clips are their YouTube uploaders'; trained by the PANNs authors on their own download (section 9)",
+      "replacement_path": "YAMNet alone, the default: no second opinion in the record (section 9)"
     }
   ]
 }

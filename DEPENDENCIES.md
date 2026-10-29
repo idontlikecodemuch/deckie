@@ -1,7 +1,7 @@
 # Dependencies
 
-What Deckie's PC and Linux track relies on that it did not write itself; last checked Oct 28, 2026 (section 8,
-Oct 29). The rule (charter `docs/architecture/pc-linux-track.md`, decision P16): every dependency is pinned by version
+What Deckie's PC and Linux track relies on that it did not write itself; last checked Oct 28, 2026 (sections 8 and
+9, Oct 29). The rule (charter `docs/architecture/pc-linux-track.md`, decision P16): every dependency is pinned by version
 and by hash, and its licence is quoted here before it is adopted. A hash, or digest, is a long fingerprint computed from a file's exact
 bytes: change one byte and it changes, so a matching hash proves a file is the one recorded here.
 
@@ -13,7 +13,8 @@ run time from a file fetched per machine, never linked and never committed; the 
 trained weights (section 7), exported once to a model file by a script whose Python tools are development-only,
 the file published on this repository's release `models-1` and fetched by its hash; and the weights of Google's
 YAMNet audio tagger, the vocal tagger's model (section 8), fetched by pinned URL and hash and exported and published
-the same way. Deckie's Swift package (`core/`) declares no packages from elsewhere,
+the same way; and, optional, the weights of PANNs' MobileNetV2 tagger, the vocal tagger's second opinion (section 9),
+fetched and exported the same way, its exported file's pin awaiting CI's first export. Deckie's Swift package (`core/`) declares no packages from elsewhere,
 so it has no `Package.resolved` (Swift's list of exact package versions); dr_mp3, dr_flac and the ONNX Runtime header
 are copied files pinned by their hashes, not packages.
 
@@ -36,6 +37,7 @@ alters a row goes into the JSON in the same commit.
 | ONNX Runtime | 1.31.1 | MIT; carries Eigen under MPL 2.0, unmodified by Deckie; carries ONNX Runtime's two published patches (IBM Z builds; nothing compiled on Linux, Windows or macOS differs), shipped beside Eigen's notice (section 6); the shipped library is Deckie's own build without Microsoft's usage-reporting client | | |
 | Beat This! (beat tracker, checkpoint final0) | ISMIR 2024 release, checkpoint final0 | MIT (section 7) | 15 sets, everything but GTZAN; terms range from MIT and CC BY to CC BY-NC and all rights reserved, each in section 7's table | tempo and bar grid from Deckie's own code at lower confidence (section 7) |
 | YAMNet (vocal tagger) | tensorflow/models commit a6e25e2 weights | Apache 2.0 (section 8) | AudioSet: labels CC BY 4.0, clips are their YouTube uploaders'; trained by Google (section 8) | vocal fields absent, record flagged vocal_unknown (section 8) |
+| PANNs MobileNetV2 (the vocal tagger's second opinion, optional) | Zenodo record 3987831, MobileNetV2_mAP=0.383; code at commit d2f4b8c; exported file's pin pending the first CI export | weights CC BY 4.0, with the attribution in section 9; code MIT (section 9) | AudioSet: labels CC BY 4.0, clips are their YouTube uploaders'; trained by the PANNs authors on their own download (section 9) | YAMNet alone, the default: no second opinion in the record (section 9) |
 
 <!-- /dependencies-table -->
 
@@ -94,9 +96,9 @@ just because parts of Swift's runtime (the support code every Swift program runs
 |---|---|---|---|
 | `actions/checkout` | `v4` | copies this repository onto the build machine, and ONNX Runtime's source at its pinned commit for its build (section 6) | all three workflows |
 | `compnerd/gha-setup-swift` | `main` (its documented reference; its `v3` tag does not exist) | installs the Swift toolchain on Windows | `core-windows.yml` |
-| `actions/cache` | `v4` | keeps ONNX Runtime's library and the exported Beat This! and YAMNet models between runs (sections 6 to 8), keyed on the hashes of the scripts that make them | `core-linux.yml` |
+| `actions/cache` | `v4` | keeps ONNX Runtime's library and the exported Beat This!, YAMNet and PANNs models between runs (sections 6 to 9), keyed on the hashes of the scripts that make them | `core-linux.yml` |
 | `actions/setup-python` | `v5` | installs Python 3.12, which runs ONNX Runtime's build scripts and Deckie's helper for that build | `onnxruntime-build.yml` |
-| `actions/upload-artifact` | `v4` | keeps each built ONNX Runtime archive, and the two pinned model files, with the run that made them | `onnxruntime-build.yml`, `core-linux.yml` |
+| `actions/upload-artifact` | `v4` | keeps each built ONNX Runtime archive, the two pinned model files, and the PANNs model (section 9), with the run that made them | `onnxruntime-build.yml`, `core-linux.yml` |
 | `actions/download-artifact` | `v4` | gathers those archives for the job that publishes them | `onnxruntime-build.yml` |
 
 All six are recorded by version tag only, which, like an image tag, the publisher can move. Pinning each to a commit
@@ -756,7 +758,7 @@ re-quote the `LICENSE` and the README's licence section; publish the new file as
 
 **Replacement path** (D15): without YAMNet the vocal fields are absent, the mix windows treat every bar as
 vocal-free and the record carries the flag `vocal_unknown` (status log entry 11); the place for a second model
-(`VocalPatchModel`) is built and empty.
+(`VocalPatchModel`) now holds PANNs, optional (section 9).
 
 ## 8. YAMNet, the vocal tagger's model (exported once, fetched by pinned hash; development-only Python tools)
 
@@ -870,6 +872,156 @@ the class indices `YAMNetClass` uses against the class list at the new commit; c
 core/.models/yamnet-source` and run `swift test`; re-quote the licence; publish the new file as section 7 says. CI
 exports again once, since the scripts and the requirements are its cache key.
 
+## 9. PANNs MobileNetV2, the vocal tagger's second opinion (exported once; development-only Python tools)
+
+PANNs ("PANNs: Large-Scale Pretrained Audio Neural Networks for Audio Pattern Recognition", Qiuqiang Kong, Yin Cao,
+Turab Iqbal, Yuxuan Wang, Wenwu Wang and Mark D. Plumbley, IEEE/ACM Transactions on Audio, Speech, and Language
+Processing 28, 2020, 2880-2894) is a family of audio taggers trained on AudioSet, published with their code at
+`https://github.com/qiuqiangkong/audioset_tagging_cnn` and their trained checkpoints on Zenodo. Deckie uses the
+MobileNetV2 one (`MobileNetV2_mAP=0.383.pth`; 0.383 is its mean average precision on AudioSet's evaluation set, a
+score of how well it ranks the 527 classes): 4,075,343 learned weights and 34,293 batch-norm statistics (running
+means and variances that fix how each layer scales its input), which score AudioSet's 527 classes, among them
+singing, male, female and child singing, choir, rapping, humming, vocal music, speech, music and musical instrument,
+and give a 1,024-value embedding before the classifier. It is the second opinion the vocal tagger's seam
+(`VocalPatchModel`) was built for: YAMNet's per-bar series correlates only 0.31 with the lab's reference on the Mac's
+yardstick (status log entry 17), and PANNs is read beside it the same four ways (`VocalReadings`) so the yardstick can
+compare them. It is optional: the analyser uses it only when its model file is there, records its opinion in the lab
+JSON's `deckie.vocal.second_opinion` only, and changes nothing else (not the vocal values the sections, windows and
+flags read, not the tagger's model name, not the crate).
+
+- `core/Tools/fetch-panns.sh` downloads the checkpoint from the authors' Zenodo record (the record the repository's
+  README names) and the files that define the network and its classes (`pytorch/models.py`, `pytorch/pytorch_utils.py`,
+  `metadata/class_labels_indices.csv`) from the repository at a pinned commit, checks every file's hash (below) before
+  using it, and runs `core/Tools/export_panns.py`, which builds the network with those files in PyTorch, loads the
+  checkpoint, exports the whole model to ONNX, checks ONNX Runtime against PyTorch and writes
+  `core/.models/panns_mobilenetv2.onnx`, which `.gitignore` keeps out of the repository. The checkpoint is not kept.
+  `core/Tools/fetch-models.sh --panns` will fetch the exported file from the release once it is pinned and published;
+  until then it runs the export.
+- The front end is inside the exported graph, so no Swift port of it exists: the graph takes the waveform. The model
+  code builds its log-mel spectrogram with torchlibrosa (a PyTorch package by the same author), whose short-time
+  Fourier transform is two convolutions with fixed kernels and whose mel filter bank is a fixed matrix; the checkpoint
+  carries those kernels and that matrix, and the export writes torchlibrosa's three classes itself (with its parameter
+  names) so the checkpoint loads into them, without installing torchlibrosa or librosa. PyTorch 2.15 exports that to
+  ONNX opset 17 as plain convolutions, a reflect padding and arithmetic, which ONNX Runtime runs as PyTorch does. The
+  Swift side (`Sources/DeckieInference/PANNs.swift`) only resamples to 32 kHz (`Resampler`, soxr's HQ filter) and cuts
+  windows of 2 s every 0.48 s. Why 2 s: the network was trained on 10 s clips and pools globally over time at a 32nd of
+  its frame rate, so YAMNet's 0.96 s would leave that pooling 3 steps against 31 in training, while 2 s leaves 6 and
+  is the length the authors themselves run the tagger on for sound event detection (their README); 0.48 s is YAMNet's
+  hop, so a bar of about 2 s gets four windows, as it gets four YAMNet patches.
+
+The front end's values, confirmed from `models.py` at the pinned commit (class `MobileNetV2`: `window = 'hann'`,
+`center = True`, `pad_mode = 'reflect'`, `ref = 1.0`, `amin = 1e-10`, `top_db = None`; the export checks these lines
+are still there) and from the code's training and inference defaults (`pytorch/inference.py`'s arguments,
+`utils/config.py`, the README's training command, `scripts/4_train.sh`): 32,000 Hz mono; a 1,024-sample periodic Hann
+window every 320 samples (10 ms), padded by reflection at both ends; power spectrum; 64 mel bands from 50 to 14,000 Hz
+on librosa's Slaney scale with Slaney's area normalisation; 10 log10(max(mel, 1e-10)) - 10 log10(max(1e-10, 1.0)), no
+top_db floor; then the network's own batch norm over the 64 bands (`bn0`). The export recomputes the kernels and the
+matrix from those values and compares them with the checkpoint's: 6.0e-8 at most for the kernels (float32 rounding;
+largest value 1.0), identical for the matrix. Checked once in this session against torchlibrosa 0.1.0 itself (with
+librosa 1.0.0 and scipy 1.18.1): the same tensors within 6.0e-8 and 1.9e-9, and the same log-mel spectrogram from the
+same tensors, to the bit.
+
+Christopher's standing approval for vocal-model downloads (Oct 28, 2026, status log entry 12) covers the checkpoint,
+the model code and the export tools; the lead takes responsibility for them.
+
+| | |
+|---|---|
+| Checkpoint | `https://zenodo.org/records/3987831/files/MobileNetV2_mAP%3D0.383.pth?download=1`, downloaded Oct 29, 2026 (zenodo.org answered from this session that day): 20,834,417 bytes, SHA-256 `22437af9eb5ed1854b5ad285b4a17d5fc566f1a3b23df40db5541f5705ca340f`, MD5 `838421a9262cce976aa247946d6e2983`, which is the checksum Zenodo's own record gives for the file (`https://zenodo.org/api/records/3987831`, read the same day); both pinned in the fetch and export scripts, which refuse any other file. PyTorch's format from before 1.6 (not a zip), holding `model` (324 tensors) and `iteration`; read with `weights_only=True` (tensors only, no code is run). The record: "PANNs: Large-Scale Pretrained Audio Neural Networks for Audio Pattern Recognition (Pretrained Models)", DOI 10.5281/zenodo.3987831, 24 files, creators Qiuqiang Kong, Yin Cao, Turab Iqbal, Yuxuan Wang, Wenwu Wang, Mark Plumbley |
+| Model code | qiuqiangkong/audioset_tagging_cnn commit `d2f4b8c18eab44737fcc0de1248ae21eb43f6aa4` (Jul 13, 2021, the repository's latest), fetched raw from `https://raw.githubusercontent.com/qiuqiangkong/audioset_tagging_cnn/<commit>/<path>`: `pytorch/models.py` 121,525 bytes, SHA-256 `7f9af440395ace5160bbb51d654a0dc35fb887fbf5edecb12da61ff6efb306d9`; `pytorch/pytorch_utils.py` 8,309 bytes, `1464fcfbfc0fe4c55f690f6b39e1c80eeed5de1e7fd1b7fd30334d304de7dbe9`. Used to build the network for the export; nothing of them is copied into Deckie |
+| Class list | `metadata/class_labels_indices.csv` at the same commit, 14,675 bytes, SHA-256 `cdd1049833c4b86127c2773ac0d14a2754b6a6d0d1798002ed5c66e699708429` (AudioSet's 527 classes in order). Not copied: Deckie names the 16 classes it reads (`PANNsClass`, index and display name), and the export and the fixture check each against the list |
+| Exported model | `panns_mobilenetv2.onnx`, ONNX opset 17; input `waveform` (float32, n x samples, mono at 32 kHz), outputs `scores` (float32, n x 527, after the sigmoid) and `embeddings` (float32, n x 1024), n and samples free. **The pinned export is pending CI's first export**: the `ONNX_SHA256` of `export_panns.py` and `fetch-panns.sh` is `TODO-after-first-ci-export`, and no hash is checked while it is. This container's export (Oct 29, 2026, Python 3.13 with the pinned tools; three runs gave the same bytes) is 20,715,598 bytes, SHA-256 `54b6b2624bc0edee3104a325ade7b7dab9cc4e29f3ee603060f8a32c280815d7`, not pinned; another torch build writes other bytes of the same numbers, as section 7 found |
+| Export check | largest difference between ONNX Runtime 1.31.1 and PyTorch 2.15.0: 1.8e-6 in a score and 2.4e-6 (relative) in an embedding, on random audio of 2 s in batches of 1, 4 and 9, of 0.96 s, 10 s and 1.5 s, and on 6 s of synthesised music cut as the Swift side cuts it, whose top class is Music (0.68); from Swift against Python's ONNX Runtime on the fixture's four windows: 6e-8 |
+
+**Licence:** the code is MIT and the weights are CC BY 4.0; both on the allowlist, CC BY 4.0 for model weights with
+the attribution below shown. The repository's `LICENSE.MIT` at the pinned commit, fetched raw from GitHub (1,081
+bytes, SHA-256 `7e540655d851d9737fafaa9f0cbd064c3a29bdfe5e937ee07a09360f85161975`):
+
+```text
+The MIT License
+  
+Copyright (c) 2018-2020 Qiuqiang Kong
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+```
+
+The weights are not in the repository. The Zenodo record that holds them states its licence in its metadata, read
+from the record's API on Oct 29, 2026: `"license": {"id": "cc-by-4.0"}`, Creative Commons Attribution 4.0, which
+allows commercial use with credit. The repository's README (12,248 bytes, SHA-256 `409cef0d9fd9...`) points to the
+record ("downloaded one pretrained model from https://zenodo.org/record/3987831") and states no other terms for the
+weights. So the weights are taken as CC BY 4.0, published by the code's authors beside their MIT code. The exported
+file is an adaptation of the weights (the same numbers, rearranged into an ONNX graph with the front end's fixed
+tensors), so it carries the same attribution.
+
+**Training data and trainer, and the attribution (D15).** The README: "A variety of CNNs are trained on the
+large-scale AudioSet dataset [2] containing 5000 hours audio with 527 sound classes"; its training section adds that
+the authors downloaded the clips themselves ("Our downloaded version contains 20550 / 22160 of the balaned training
+subset, 1913637 / 2041789 of the unbalanced training subset, and 18887 / 20371 of the evaluation subset", spelling as
+in the README). Data set: **AudioSet**, as for YAMNet (section 8): about two million 10-second excerpts of YouTube
+videos labelled with 527 classes, labels under CC BY 4.0, no audio published, the audio each YouTube video's under its
+uploader's copyright and YouTube's terms. Trainer: the paper's authors, who hold no rights in the uploaders' audio
+(and, unlike YAMNet's trainer, are not YouTube's operator). Under D15 the weights ship under their publisher's licence
+with the training set recorded here as disclosure. Attribution, for the app's acknowledgements:
+
+```text
+PANNs MobileNetV2 audio tagging model by Q. Kong, Y. Cao, T. Iqbal, Y. Wang, W. Wang and M. D. Plumbley, "PANNs:
+Large-Scale Pretrained Audio Neural Networks for Audio Pattern Recognition", IEEE/ACM Transactions on Audio, Speech,
+and Language Processing 28 (2020) 2880-2894. Code: https://github.com/qiuqiangkong/audioset_tagging_cnn, MIT License,
+Copyright (c) 2018-2020 Qiuqiang Kong. Pretrained weights: https://doi.org/10.5281/zenodo.3987831, licensed under
+CC BY 4.0; converted to ONNX by Deckie. Trained on AudioSet: J. F. Gemmeke, D. P. W. Ellis, D. Freedman, A. Jansen,
+W. Lawrence, R. C. Moore, M. Plakal and M. Ritter, "Audio Set: An ontology and human-labeled dataset for audio events",
+ICASSP 2017; https://research.google.com/audioset/ ; AudioSet labels licensed under CC BY 4.0.
+```
+
+**Development-time tools (never shipped).** The export and the fixture script run in a Python environment of their
+own, pinned by version in `core/Tools/panns-export-requirements.txt` (Beat This!'s versions, so one environment can
+serve both), installed only on a developer's machine and in CI's export step; licences as in section 7's table:
+
+| Package | Version | Licence |
+|---|---|---|
+| `torch` | 2.15.0+cpu, PyTorch's CPU-only build from `https://download.pytorch.org/whl/cpu` | Apache 2.0, BSD 2- and 3-clause, BSL 1.0, ISC, MIT, zlib (its parts) |
+| `numpy` | 2.5.3 | BSD 3-clause and others |
+| `onnx` | 1.23.2 | Apache 2.0 |
+| `onnxruntime` (for Python) | 1.31.1 | MIT |
+
+Not torchlibrosa or librosa, which the model code imports: the export provides torchlibrosa's three classes itself
+(above). torchlibrosa 0.1.0 (MIT, by Qiuqiang Kong; its wheel's SHA-256 `89b65fd28b83...`) and the librosa 1.0.0
+already in this container were used once, in a scratch check in this session, to compare; nothing committed runs them.
+Only the direct dependencies are pinned, by version; the model that reaches Deckie will be pinned by its hash, and is
+checked numerically.
+
+**Replacement path** (D15): YAMNet alone, the default. Without PANNs' model file the analyser runs as before: no
+second opinion in the record, nothing else different.
+
+**Still to do:** record CI's first export as `ONNX_SHA256` (in `export_panns.py` and `fetch-panns.sh`; CI uploads it
+as the run artifact `models-panns-<digits>-unpinned` and prints its SHA-256) and here, set
+`PANNs.recordedExportSHA256`, and publish the file with the next models release (section 7) so that
+`fetch-models.sh --panns` fetches it.
+
+**How to update:** for another checkpoint or commit, record its URL, SHA-256 and MD5 and the source files' SHA-256 in
+`fetch-panns.sh` and `export_panns.py` and here; check the class indices `PANNsClass` uses against the class list at
+the new commit (the export refuses a list that moved: `NAMED_CLASSES`, and the fixture script's names); change the
+tool pins in `panns-export-requirements.txt` (and the torch line in `core-linux.yml`); run `fetch-panns.sh --force
+--keep-source`, record the new model's SHA-256 in both scripts, in `PANNs.recordedExportSHA256` and here; regenerate
+the reference numbers with `make_panns_fixtures.py --source core/.models/panns-source` and run `swift test`; re-quote
+the licence and re-read the record's licence. CI exports again once, since the scripts and the requirements are its
+cache key.
+
 ## Checked and rejected
 
 **ffmpeg's libraries from Ubuntu 24.04**, checked Oct 28, 2026 as the Linux decoder track M section 3.1 names:
@@ -924,8 +1076,8 @@ MPL 2.0, CC BY 4.0 and the training-data rule were added by the main session's d
 2. Re-record every hash here. Swift image: the `docker-content-digest` header Docker Hub returns for
    `registry-1.docker.io/v2/library/swift/manifests/<tag>`, confirmed by hashing the fetched index, then its amd64
    manifest and layers; the index digest also goes into `core-linux.yml`. Windows: the tag in `core-windows.yml` and
-   the installer's hash. Actions: the tag and, once possible, the commit hash. ONNX Runtime, Beat This! and YAMNet:
-   sections 6 to 8 say what to record.
+   the installer's hash. Actions: the tag and, once possible, the commit hash. ONNX Runtime, Beat This!, YAMNet and
+   PANNs: sections 6 to 9 say what to record.
 3. Re-quote the licence file and check it is still on the allowlist.
 4. Rerun the parity tests on both CI workflows, and ask the main session to rerun the 373-track benchmark on the Mac.
 5. Update the "last checked" date above. Any new direct dependency gets a written reason here.
