@@ -23,7 +23,7 @@ final class WorkStore: @unchecked Sendable {
         var modified: Double
         /// `ok` or `failed`.
         var status: String
-        /// The engine label (`deckie-0.2.0`): a line from another engine or engine version is not reused.
+        /// The engine label (`deckie-0.2.1`): a line from another engine or engine version is not reused.
         var engine: String
         /// The record's id, when `ok`.
         var id: String?

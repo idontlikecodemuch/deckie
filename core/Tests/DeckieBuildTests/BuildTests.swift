@@ -1,6 +1,7 @@
 import Foundation
 import Testing
 import DeckieBuild
+import DeckieCore
 import DeckieCrate
 import DeckieEngine
 import DeckieTestSupport
@@ -166,6 +167,43 @@ struct BuildTests {
             #expect(third.analysed == 1)
             #expect(try CrateReader.read(from: out).tracks.first?.vocal == nil)
         }
+    }
+
+    /// A file with a damaged MP3 frame (the test track's MP3, one frame near 30 s damaged on purpose, `MP3Damage`) is
+    /// analysed and in the crate, and the import log lists it, reason `damaged_frames`, with the frame's time, so the
+    /// DJ hears the file is faulty; a second run takes the record from the work folder and lists it again.
+    @Test(.enabled(if: Available.ffmpeg != nil, "needs the ffmpeg program to make the MP3"))
+    func damagedFramesAreLoggedAndTheTrackIsKept() async throws {
+        let music = try await Fixture.shared.music()
+        let analyser = try await Fixture.shared.analyser()
+        let folder = try temporaryFolder("damaged-music")
+        let name = "Edit (damaged).mp3"
+        let frame = try #require(try MP3Damage.damagedCopy(of: music.appendingPathComponent(Fixture.secondTrack),
+                                                           nearSeconds: 30, to: folder.appendingPathComponent(name)))
+        let out = try temporaryFolder("damaged-build").appendingPathComponent("Damaged.deckiecrate")
+        let options = BuildOptions(folder: folder, output: out, jobs: 1, fresh: true)
+        let first = try await CPUTurns.exclusive { try Builder(options: options, analyser: analyser).run() }
+        print(first.summary)
+        #expect(first.analysed == 1 && first.crate.tracks.count == 1)
+        let ms = Int((frame.startSeconds * 1000).rounded())
+        let at = "\(ms / 60_000):" + String(format: "%02d.%03d", ms / 1000 % 60, ms % 1000)
+        let entry = CrateManifest.ImportLog.Entry(
+            rel: name, ext: "mp3", reason: CrateManifest.ImportLog.Reason.damagedFrames,
+            message: "damaged frame at \(at) (26 ms), played as silence; the track is in the crate")
+        let crate = try CrateReader.read(from: out)
+        let log = try #require(crate.manifest.importLog)
+        #expect(log.entries == [entry] && log.filesSeen == 1 && log.tracks == 1)
+        #expect(log.counts == [CrateManifest.ImportLog.Reason.damagedFrames: ["mp3": 1]])
+        let t = try #require(crate.tracks.first)
+        #expect(t.file.rel == name)
+        #expect(t.file.damagedFrames == [.init(startS: Py.round(frame.startSeconds, 4), seconds: Py.round(frame.seconds, 4))])
+        #expect(first.summary.contains("0 not in the crate") && first.summary.contains(
+            "1 file in the crate with damaged frames, played as silence (faulty but playable):\n  \(name): \(entry.message)"))
+
+        var again = options
+        again.fresh = false
+        let second = try Builder(options: again, analyser: analyser).run()
+        #expect(second.analysed == 0 && second.reused == 1 && second.entries == [entry])
     }
 
     /// An output that is not a crate is never overwritten.
