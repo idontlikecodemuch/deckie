@@ -36,7 +36,9 @@ import Testing
 
     @Test func theTableInDependenciesMdIsGenerated() throws {
         let deps = try Dependencies.read(from: Paths.dependencies)
-        let doc = try String(contentsOf: Paths.dependenciesDoc, encoding: .utf8)
+        // GitHub's Windows machines check the repository out with Windows line endings (Git's autocrlf), which the
+        // generated table, written with plain newlines, must not fail on: compare line by line, not byte by byte.
+        let doc = try String(contentsOf: Paths.dependenciesDoc, encoding: .utf8).replacingOccurrences(of: "\r\n", with: "\n")
         let starts = doc.ranges(of: Self.start), ends = doc.ranges(of: Self.end)
         try #require(starts.count == 1 && ends.count == 1 && starts[0].upperBound <= ends[0].lowerBound,
                      "DEPENDENCIES.md needs one opening and one closing dependencies-table marker, in that order")
