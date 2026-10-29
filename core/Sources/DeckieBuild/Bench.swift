@@ -48,11 +48,14 @@ public struct BenchReport: Sendable {
     public var failed: [(id: String, rel: String, failure: FileFailure)]
     /// Records taken from the records folder.
     public var reused: Int
+    /// The engine's vocal tagger, or nil when it ran without one (the vocal correlation is then absent).
+    public var vocalModel: String?
 
     public func json() -> JSONValue {
         .object([
             .init("tool", .string(Builder.builtBy)), .init("engine", .string(Builder.engineLabel)),
-            .init("platform", .string(Analysis.platform)), .init("music_root", .string(musicRoot)),
+            .init("platform", .string(Analysis.platform)), .init("vocal_model", vocalModel.map(JSONValue.string) ?? .null),
+            .init("music_root", .string(musicRoot)),
             .init("candidates", .int(candidates)), .init("compared", .int(scores.count)),
             .init("taken_from_records", .int(reused)),
             .init("not_found", .array(notFound.map { .object([.init("id", .string($0.id)), .init("rel", .string($0.rel))]) })),
@@ -77,7 +80,7 @@ public struct BenchReport: Sendable {
         }
         var out = "Bench: \(candidates) lab tracks, \(scores.count) compared"
         out += " (\(reused) taken from the records folder), \(notFound.count) not found under the folder, "
-            + "\(failed.count) failed\n\n"
+            + "\(failed.count) failed; engine \(Builder.engineLabel), vocal tagger \(vocalModel ?? "none")\n\n"
         let head = [pad("id", 11), pad("title", 24), pad("beatF det", 9, left: true), pad("grid", 6, left: true),
                     pad("dbF det", 8, left: true), pad("grid", 6, left: true), pad("bpm e/l", 8, left: true),
                     pad("key", 9, left: true), pad("LU d", 6, left: true), pad("TP d", 6, left: true),
@@ -123,7 +126,8 @@ public struct BenchReport: Sendable {
         out += stat("true peak delta (dB)", m.truePeakDelta, 2)
         out += stat("section recall (within a bar)", m.sectionRecall, 2)
         out += stat("section precision", m.sectionPrecision, 2)
-        out += m.vocalR.n == 0 ? "  vocal correlation: absent (no vocal tagger yet)\n" : stat("vocal correlation", m.vocalR, 2)
+        out += m.vocalR.n == 0 ? "  vocal correlation: absent (the engine ran without its vocal tagger)\n"
+            : stat("vocal correlation", m.vocalR, 2)
         out += stat("bar 1 offset (ms, engine - lab)", m.bar1OffsetMs, 1)
         out += "  bar counts equal: \(pct(m.nBarsMatch))\n"
         if m.seconds.n > 0 {
@@ -215,7 +219,8 @@ public enum Bench {
                 var engineData: Data? = nil
                 if !o.fresh, let kept, let data = try? Data(contentsOf: kept),
                    let old = try? decoder.decode(BenchRecord.self, from: data),
-                   old.deckie?.engine == label, old.deckie?.bytes == size, old.bpmTag == tag {
+                   old.deckie?.engine == label, old.deckie?.vocalModel == engine?.vocalTagger?.modelName,
+                   old.deckie?.bytes == size, old.bpmTag == tag {
                     engineData = data
                     reused = true
                 }
@@ -253,7 +258,8 @@ public enum Bench {
         let scores = (0..<all.count).compactMap { collected.scores[$0] }
         let failed = (0..<all.count).compactMap { k in collected.failed[k].map { (all[k].row.id, all[k].rel, $0) } }
         let report = BenchReport(musicRoot: root, candidates: rows.count, scores: scores, summary: BenchSummary(scores),
-                                 notFound: notFound, failed: failed, reused: collected.reused)
+                                 notFound: notFound, failed: failed, reused: collected.reused,
+                                 vocalModel: engine?.vocalTagger?.modelName)
         if let out = o.output {
             var data = report.json().data
             data.append(0x0A)

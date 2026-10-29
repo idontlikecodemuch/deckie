@@ -382,8 +382,9 @@ the file with the row's tag tempo, as the lab did, and compares the engine's rec
 - key exact, neighbour (the relative key or one step round the wheel) or other, over all tracks and over the lab's
   confident keys (confidence 0.65 or more, 311 tracks);
 - integrated loudness and true peak, engine minus lab; section boundary recall and precision within one bar (the
-  lab's inner boundaries against the engine's); per-bar vocal correlation when both sides have it, marked absent
-  otherwise (no vocal tagger yet); bar 1 offset in milliseconds and whether the bar counts match; seconds per track;
+  lab's inner boundaries against the engine's); per-bar vocal correlation when both sides have it (the engine's bar
+  under the middle of each lab bar), marked absent otherwise (the engine runs its vocal tagger only when the YAMNet
+  model is installed); bar 1 offset in milliseconds and whether the bar counts match; seconds per track;
   and the grid measures split by where the lab's grid came from (Beat This! or madmom).
 
 Each per track, then medians and means, then the pass marks: the charter's (at least Apple's framework on beats and
@@ -411,17 +412,24 @@ The engine is plain Swift and C, so the bench builds and runs on the Mac as it d
    from a machine that has it (its SHA-256 is in `DEPENDENCIES.md` section 7) to `core/.models/`, or exported on the
    Mac with `Tools/export_beat_this.py` (PyTorch at the pinned versions; the Mac's wheels have no `+cpu` suffix), or
    named by `DECKIE_BEAT_THIS_MODEL`.
-4. Run, from `core/`, with the music where the lab had it:
+4. The vocal tagger's model, `yamnet.onnx`, made by `Tools/fetch-vocal-models.sh` (pinned in `DEPENDENCIES.md`
+   section 8) into `core/.models/`, or named by `DECKIE_YAMNET_MODEL`; like the beat model it is the same file on
+   every machine. Optional: without it the yardstick has no vocal correlation.
+5. Run, from `core/`, with the music where the lab had it:
 
 ```
 export DECKIE_ONNXRUNTIME_LIB="$PWD/.deps/onnxruntime/lib/libonnxruntime.dylib"   # if not in the default place
 export DECKIE_BEAT_THIS_MODEL="$PWD/.models/beat_this_final0.onnx"                 # likewise
+export DECKIE_YAMNET_MODEL="$PWD/.models/yamnet.onnx"                              # likewise, for the vocal tagger
 .build/release/deckie-build bench "/Users/christophershannon/personal/90s2000 playlist" \
     --features ../mixer/features --candidates ../mixer/candidates.json --out ~/deckie-bench/bench.json
 ```
 
-The same two variables serve `deckie-build` itself and the tests (`swift test`), which skip the engine's tests with
-the reason printed when either file is missing.
+The same variables serve `deckie-build` itself and the tests (`swift test`), which skip the engine's tests with the
+reason printed when ONNX Runtime or the beat model is missing. Without the YAMNet model (step 4 above) the engine runs
+without its vocal tagger: both commands say so when they start, the records have no vocal block, and the bench marks
+the vocal correlation absent. A work record or a bench record made without the tagger is made again once the model is
+there.
 
 ## Reinstalling the toolchain on Linux
 

@@ -41,20 +41,22 @@ final class WorkStore: @unchecked Sendable {
     }
 
     /// One finished record: the engine's crate record as it came from the analysis (the builder adds the names,
-    /// the rekordbox block and the file's current path when it writes the crate), its per-bar series, and what it
-    /// was made with.
+    /// the rekordbox block and the file's current path when it writes the crate), its per-bar series and style vector
+    /// (which the crate keeps in sidecars, not in the record's JSON), and what it was made with.
     struct Record: Codable {
         var engine: String
         var bpmTag: Double?
         var track: CrateTrack
         var bars: [String: [Double]]?
+        var style: [Double]?
 
-        enum CodingKeys: String, CodingKey { case engine, track, bars, bpmTag = "bpm_tag" }
+        enum CodingKeys: String, CodingKey { case engine, track, bars, style, bpmTag = "bpm_tag" }
 
-        /// The record with its per-bar series in place.
+        /// The record with its per-bar series and style vector in place.
         var crateTrack: CrateTrack {
             var t = track
             t.bars = bars.map(BarSeries.init)
+            if let model = t.style?.model { t.style = CrateTrack.Style(model: model, values: style ?? []) }
             return t
         }
     }
