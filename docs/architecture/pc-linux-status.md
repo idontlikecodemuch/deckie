@@ -986,3 +986,16 @@ off" tracks the engine's grid matched the lab's final grid perfectly (the tag wa
 would be a second name for the same thing, and capping `grid.confidence` would give the grid-fit field a second
 meaning, which the crate format rules out; the record carries the tag tempo beside the grid's. A comment in
 `Analyser.swift` records the reasoning.
+
+**Addendum: the true-peak outlier settled, and the fix decided.** The Mac ran ffmpeg on the track: one decode error
+("overread": the compressed data for one stretch ran past its declared length, the mark of a damaged or spliced
+frame) and a true peak of +5.8 dBTP, between the lab's +2.5 (mpg123) and the engine's +9.2 (dr_mp3). So the file
+is faulty and each decoder makes a different burst of the bad frame: mpg123 conceals it best, ffmpeg partly, dr_mp3
+not at all. The main session's decision: the MP3 reader conceals a damaged frame (silence, or the previous frame
+repeated, whichever dr_mp3 lets us do cleanly), reports it with its time so the crate builder's import log can say
+"damaged frame at <time>" and the DJ sees the file is faulty, and measures the true peak on the concealed audio
+like the other two; the file is not rejected, since mpg123 and ffmpeg both play it. The other 372 MP3s must stay
+byte-identical, which the Mac verifies on the real files. If dr_mp3 exposes no per-frame error, the last resort is
+a physical bound on a frame's output that no correct frame can reach, fixed from the format and not tuned on the
+373. An agent is on it, with a fixture damaged on purpose. Also decided: the bench's tag-tempo change stands, the
+sheet is rerun once the key vote lands so the three changes show together, and no separate madmom flag.
