@@ -7,6 +7,10 @@
 //   deckie-memprobe synth <out.wav> [--seconds 240] [--bpm 124] [--seed 1]
 //   deckie-memprobe <file>... [--jobs N] [--repeat R] [--arena on|off] [--pattern on|off] [--shrink on|off]
 //                   [--threads T] [--no-vocal] [--records DIR] [--sample-ms MS] [--logits]
+//                   [--model-runs M]
+//
+// --model-runs M lets at most M runs of each model happen at once (OnnxRuntime.SessionOptions.concurrentRuns); the
+// intra-op threads then default to the processor count over M instead of over the jobs.
 //
 // --logits also runs the beat model alone on each file's 22,050 Hz mono mix and prints a hash of its raw outputs
 // (every bit of every beat and downbeat logit), so settings that should change nothing can be shown to.
@@ -214,6 +218,7 @@ if args.first == "-h" || args.first == "--help" || args.isEmpty {
           deckie-memprobe synth <out.wav> [--seconds 240] [--bpm 124] [--seed 1]
           deckie-memprobe <file>... [--jobs N] [--repeat R] [--arena on|off] [--pattern on|off] [--shrink on|off]
                           [--threads T] [--no-vocal] [--records DIR] [--sample-ms MS] [--logits]
+                          [--model-runs M]
         """)
     exit(0)
 }
@@ -255,18 +260,22 @@ if args.first == "synth" {
 }
 
 let (files, o) = options(args, flags: ["no-vocal", "logits"],
-                         values: ["jobs", "repeat", "arena", "pattern", "shrink", "threads", "records", "sample-ms"])
+                         values: ["jobs", "repeat", "arena", "pattern", "shrink", "threads", "records", "sample-ms",
+                                  "model-runs"])
 guard !files.isEmpty else { fail("no audio files given", code: 2) }
 let jobs = max(1, Int(o["jobs"] ?? "1") ?? 1)
 let repeatCount = max(1, Int(o["repeat"] ?? "1") ?? 1)
 let defaults = OnnxRuntime.SessionOptions()
 let cores = max(1, ProcessInfo.processInfo.activeProcessorCount)
-let threads = Int(o["threads"] ?? "") ?? (jobs <= 1 ? 0 : max(1, cores / jobs))
+let modelRuns = max(0, Int(o["model-runs"] ?? "0") ?? 0)
+let sharing = modelRuns > 0 ? min(modelRuns, jobs) : jobs  // model runs that can happen at once
+let threads = Int(o["threads"] ?? "") ?? (sharing <= 1 ? 0 : max(1, cores / sharing))
 let sessionOptions = OnnxRuntime.SessionOptions(
     intraOpThreads: threads,
     cpuMemoryArena: onOff(o["arena"], "arena", default: defaults.cpuMemoryArena),
     memoryPattern: onOff(o["pattern"], "pattern", default: defaults.memoryPattern),
-    arenaShrinkage: onOff(o["shrink"], "shrink", default: defaults.arenaShrinkage))
+    arenaShrinkage: onOff(o["shrink"], "shrink", default: defaults.arenaShrinkage),
+    concurrentRuns: modelRuns)
 let recordsDir = o["records"]
 if let recordsDir { try? FileManager.default.createDirectory(atPath: recordsDir, withIntermediateDirectories: true) }
 
@@ -293,7 +302,8 @@ let reset = Memory.resetPeak()
 
 say("settings: jobs \(jobs), intra-op threads \(threads == 0 ? "auto" : String(threads)), arena "
     + "\(sessionOptions.cpuMemoryArena ? "on" : "off"), memory pattern \(sessionOptions.memoryPattern ? "on" : "off"), "
-    + "shrinkage \(sessionOptions.arenaShrinkage ? "on" : "off"), vocal tagger \(analyser.vocalTagger == nil ? "none" : analyser.vocalTagger!.modelName)")
+    + "shrinkage \(sessionOptions.arenaShrinkage ? "on" : "off"), model runs at once "
+    + "\(modelRuns == 0 ? "unlimited" : String(modelRuns)), vocal tagger \(analyser.vocalTagger == nil ? "none" : analyser.vocalTagger!.modelName)")
 say("resident: \(Memory.mb(start)) at start, \(Memory.mb(loaded)) with the models loaded (peak \(Memory.mb(peakAtLoad)) while loading)")
 
 final class Log: @unchecked Sendable {
