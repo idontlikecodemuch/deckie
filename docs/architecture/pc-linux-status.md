@@ -26,11 +26,12 @@ Mac) reviews and merges this track's branch, `pc-linux`, and runs anything that 
 - Needed from Christopher: nothing right now. The vocal-model downloads were approved on Oct 28 ("Allow vocal
   models", with a standing yes for any further vocal model the work needs); dr_mp3, dr_flac, ONNX Runtime and
   Beat This! were approved before.
-- Open questions for the main session (entry 12): (1) ONNX Runtime's usage reporting to Microsoft, found on by
-  default and now switched off before the library starts; whether that closes it under the privacy line, and
-  whether the curl licence inside the Linux library goes on the allowlist or ONNX Runtime gets rebuilt without
-  its reporting client at a later update. (2) A confirmation that YAMNet's training data fits the
-  training-data rule as written. Crate format v1 is accepted (entry 10, addendum) and MPL 2.0 is decided.
+- Open questions for the main session: none. ONNX Runtime's usage reporting is decided (entry 12, addendum): the
+  switch set before the library starts covers development, CI and the bench; a shipped build carries a library
+  built by us without the reporting client, proven by a release test, and curl stays off the allowlist. YAMNet's
+  training data is confirmed. Crate format v1 is accepted (entry 10, addendum) and MPL 2.0 is decided.
+- Added to the order of work, before the first PC build: ONNX Runtime built on CI from its pinned tag without the
+  reporting client, pinned by hash, with the release test already in place (entry 12, addendum).
 - Needed from the Mac, when step 5 lands (not blocking): the `bench` run over the 373 files, which folds in the
   loudness check against pyloudnorm (entry 5), the key estimator's parity run (entry 6) and the vocal tagger's
   first look at real voices (entry 12). The Mac needs ONNX Runtime's macOS archive fetched by the same pinned
@@ -635,3 +636,24 @@ allowlist word for word), mbedTLS (Apache 2.0), SQLite (public domain) and zlib 
 way out, at a later update, would be to build ONNX Runtime ourselves without the client. Both are the main session's
 call. For the record: the Linux library is 29,345,384 bytes, the Windows one 17,253,728 bytes and needs Microsoft's
 Visual C++ runtime installed beside it.
+
+**Addendum, Oct 29, 2026: the main session's decisions on the reporting finding.** The main session read ONNX
+Runtime's own privacy note and confirmed the finding: reporting is on by default in the official builds, over the
+network on Linux and macOS and through Windows' event log on Windows, and the environment switch must be set before
+the library starts, which the shim now does. Its decisions, recorded on `main` as a note on decision D3 and in the
+charter's constraints: (1) the switch closes the matter for development, CI and the bench only, because it trusts
+the library to honour a setting. Before the first PC build, and before any Mac bench binary is handed to an engine
+bound for TestFlight, ONNX Runtime is built by us on the same CI from its pinned release tag with the build option
+that leaves the reporting client out (`--no_telemetry`), and the resulting archives are pinned by hash like the
+official ones. The promise is a release test, not the switch: a scan of each shipped library file for the client's
+traces (the reporting address, the client's own names, the SQLite and mbedTLS text inside it, the Windows
+event-log provider name), which fails on any library that carries one. The scan and its test are in place now
+(`OnnxRuntime.ReportingClientScan`; the release test runs on the libraries named in `DECKIE_SHIPPED_ONNXRUNTIME`,
+and a second test confirms the scan finds the client in the official library we develop with). The build's time
+and the size difference go in this log when the build exists. (2) The curl licence is not added to the allowlist:
+curl, mbedTLS, SQLite and zlib are present only in the official development binaries and leave with the client;
+if our build still links any of them, the main session hears which and why before anything ships. (3) YAMNet's
+training data fits the training-data rule, as read. For the Mac bench, the main session needs the macOS archive's
+address, tag and SHA-256 in this log when the bench command is ready; Christopher's word for that download is asked
+in that session. The memo O vocal-derived fields follow the bench, under `features_present` names so a reader
+without them is unaffected.

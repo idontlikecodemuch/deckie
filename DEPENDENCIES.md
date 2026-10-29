@@ -82,8 +82,10 @@ may not read other GitHub repositories, so it cannot look either up. Nothing the
 When a Windows or Linux build ships, the Swift runtime and Foundation (with its copy of ICU, a text-handling
 library) travel with it; each will be listed here with its licence quoted before that build is released. dr_mp3
 and dr_flac (sections 4 and 5) already travel inside anything built with `DeckieDecode`. A build that tracks beats
-also carries ONNX Runtime's library (section 6) and the Beat This! model file (section 7); ONNX Runtime's library
-contains Eigen, under MPL 2.0, which ships unmodified with its notice under the main session's decision (section 6),
+also carries ONNX Runtime's library (section 6) and the Beat This! model file (section 7); the shipped library is
+Deckie's own build of the pinned release without Microsoft's usage-reporting client, never the official archive's
+(section 6), and it contains Eigen, under MPL 2.0, which ships unmodified with its notice under the main session's
+decision (section 6),
 and the Beat This! weights need their training data recorded under the training-data rule (section 7 and the
 allowlist) before that build ships. A build that tags vocals carries the YAMNet model file (section 8), Apache 2.0,
 with AudioSet's attribution in the acknowledgements.
@@ -307,7 +309,18 @@ only on Apple's systems (track M section 6), so Deckie calls ONNX Runtime's C in
   the variable to `1` in Deckie's own process before opening the library, unless the user already set it, and a test
   checks it; the C API's `DisableTelemetryEvents` is called too, as a second layer, though on its own it would come
   after the client has started. The Python tools below that import the `onnxruntime` package set the same variable
-  before importing it, and the Linux workflow sets it for every step. Found Oct 29, 2026 (status log entry 12).
+  before importing it, and both workflows set it for every step. Found Oct 29, 2026 (status log entry 12).
+- **A shipped build carries a library we build ourselves, without the client** (the main session's decision, Oct
+  29, 2026, recorded on `main` as a note on D3 and in the charter's constraints). The variable closes the matter for
+  development, CI and the bench only, because it trusts the library to honour it. Before the first PC build, and
+  before any Mac bench binary is handed to an engine bound for TestFlight, ONNX Runtime is built on the same CI from
+  its pinned release tag with `--no_telemetry` (the build option that leaves the 1DS client out), and the resulting
+  archives are pinned here by size and SHA-256 like the official ones. The promise is a release test, not the
+  variable: `OnnxRuntime.ReportingClientScan` reads a library file for the client's traces (the reporting address,
+  the 1DS client's own names, the SQLite and mbedTLS text inside it, and the Windows event-tracing provider name),
+  and the test `shippedLibrariesCarryNoReportingClient` fails on any library named in `DECKIE_SHIPPED_ONNXRUNTIME`
+  (paths separated by `:`, `;` on Windows) that carries one. The build time and the size difference against the
+  official library go into the status log when the build exists.
 
 Christopher approved downloading the release archives on Oct 28, 2026, and the lead took responsibility for them.
 
@@ -372,13 +385,15 @@ Mozilla Public License Version 2.0
 --------------
 ```
 
-**What the Linux library carries for its reporting client** (read from the library's own strings, Oct 29, 2026).
-Besides the notice file's entries, the Linux library statically contains, for the 1DS client above: **curl 8.20.0**
-(the curl licence, an MIT-style permission notice that is not on the allowlist word for word; the notice file lists
-it), **mbedTLS** (Apache 2.0), **SQLite 3.53.1** (public domain) and **zlib** (zlib licence). The Windows library
-has none of these. Whether the curl licence joins the allowlist as an MIT variant, or ONNX Runtime is rebuilt
-without its reporting client at a later update, is an open question for the main session (status log entry 12).
-RapidJSON, whose test files carry the JSON Licence, leaves no trace in either library.
+**What the official Linux library carries for its reporting client** (read from the library's own strings, Oct
+29, 2026). Besides the notice file's entries, the official Linux library statically contains, for the 1DS client
+above: **curl 8.20.0** (the curl licence, an MIT-style permission notice that is not on the allowlist word for
+word; the notice file lists it), **mbedTLS** (Apache 2.0), **SQLite 3.53.1** (public domain) and **zlib** (zlib
+licence). The official Windows library has none of these. **Decision** (the main session, Oct 29, 2026): the curl
+licence is not added to the allowlist; these four are present only in the official development binaries and leave
+with the client when Deckie's own `--no_telemetry` build replaces them (above). Should that build still link any of
+them, which and why is reported to the main session before anything ships. RapidJSON, whose test files carry the
+JSON Licence, leaves no trace in either library.
 
 **The MPL 2.0 decision** (the main session, Oct 28, 2026). Files under MPL 2.0 ship when they are unmodified, with
 their notices in the app's acknowledgements. Any change Deckie ever makes to an MPL file is published. Where an
