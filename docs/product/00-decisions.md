@@ -206,6 +206,16 @@ Mike's party set was curated by Christopher and held music Mike does not usually
 DJ with an unfamiliar crate, and his 16 percent pitch range is not typical. That is itself a use case (new DJs, a
 themed party, a new toy). Christopher will supply a recording of the set Mike actually played as the real reference.
 
+### Note on D5 (Oct 29, Christopher): what in the sprint's data is known, and what the early version decided
+The sprint's data (pool.json, candidates.json, discs_def.json, library_probe.json under the music folder's
+`_pool build/`) is two kinds of thing, and a test of Deckie must keep them apart. Known facts, usable as an answer
+key: a track's name and artist, the compilation or album it came from and its release year (the compilations' and
+discography's own tags; the disc map). Decided by the early version of the analysis, not confirmed, usable only as
+"agrees with the early version": the BPMs (including the hand-set overrides and the folded ones), keys, the era and
+kind labels, the Halloween flag and the version groupings. The lab's 373 feature files are the same second kind: a
+parity yardstick for the engine, not truth. Any sheet that scores Deckie against this data says which column is
+which.
+
 ### Note on D5 (Oct 28, Christopher): tuning is library-blind
 The 373-track yardstick is one DJ's crate, mostly house and pop, and Deckie must work for any DJ's music. So no
 parameter of the analysis (key profiles and vote rules, vocal thresholds, section rules, anything) is fitted to
