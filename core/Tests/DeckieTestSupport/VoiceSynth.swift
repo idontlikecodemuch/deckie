@@ -1,4 +1,5 @@
 import Foundation
+import DeckieAudio
 
 /// A sung-like line for the vocal tagger's tests: no recording, only arithmetic. Each note is a harmonic tone (every
 /// harmonic below 7 kHz, falling 6 dB an octave) shaped by four formant resonances of a vowel (the magnitude of a
@@ -164,4 +165,68 @@ public enum VocalTrack {
     }
 
     public static func samples(rate: Int) -> Int { Int((musicEnd + 1) * Double(rate)) }
+}
+
+/// The vocal-structure test track: 40 bars of drums at 124 BPM (`DrumPattern`) and the A minor progression
+/// (`ChordSynth`, one chord a bar) throughout, with the sung-like line (`VoiceSynth`, one note a beat, at twice the
+/// instruments' RMS level) over two stretches: from beat 4 of bar 8 (a pickup, one beat before bar 9's downbeat) to the
+/// end of bar 16, and over bars 25 to 32. The first beat is at 0.5 s; 1 s of silence follows bar 40. So the record
+/// should read: spans from bar 8 beat 4 to bar 17 beat 1 and from bar 25 beat 1 to bar 33 beat 1, the first sung beat a
+/// pickup, 7 free intro bars (bar 8 holds the pickup), 8 free outro bars, both beat-only, free gaps of bars 17 to 24 and
+/// 33 to 40, and the sung stretches as the loud repeated sections.
+public enum VocalStructureTrack {
+    public static let bpm = 124.0
+    public static let firstBeat = 0.5
+    public static let bars = 40
+    /// The voiced stretches, as beat indices from bar 1's downbeat (0-based), the end exclusive: beat 31 is bar 8's
+    /// fourth beat.
+    public static let voiced = [31..<64, 96..<128]
+    public static var beatS: Double { 60 / bpm }
+    public static var barS: Double { 4 * beatS }
+    public static var musicEnd: Double { firstBeat + Double(bars) * barS }
+
+    public static func samples(rate: Int) -> Int { Int((musicEnd + 1) * Double(rate)) }
+
+    /// The track at `rate`: (instruments, voice), mono, each `samples(rate:)` long; their sum is the track.
+    public static func parts(rate: Int) -> (instruments: [Double], voice: [Double]) {
+        let r = Double(rate), n = samples(rate: rate)
+        let beats = DrumPattern.steadyBeats(first: firstBeat, bpm: bpm, end: musicEnd - 1e-6)
+        let drums = DrumPattern.render(rate: rate, samples: n, beats: beats, seed: 7)
+        let start = DrumPattern.onset(firstBeat, rate: rate), span = DrumPattern.onset(musicEnd, rate: rate) - start
+        let chords = ChordSynth.render(rate: rate, samples: n,
+                                       chords: ChordSynth.progression(rate: rate, samples: span, chordSeconds: barS,
+                                                                      [ChordSynth.Am, ChordSynth.Dm, ChordSynth.E, ChordSynth.Am],
+                                                                      offset: start),
+                                       harmonics: 5, noise: 0, seed: 11, exact: false)
+        var instruments = (0..<n).map { Double(drums[$0]) + 0.25 * chords[$0] }
+        for i in Int(musicEnd * r)..<n { instruments[i] = 0 }
+        var voice = [Double](repeating: 0, count: n)
+        for (q, beatsVoiced) in voiced.enumerated() {
+            let notes = (0..<beatsVoiced.count).map { VoiceSynth.melody[$0 % VoiceSynth.melody.count] }
+            let part = VoiceSynth.render(rate: rate, samples: n, start: firstBeat + Double(beatsVoiced.lowerBound) * beatS,
+                                         noteSeconds: beatS, midi: notes, seed: UInt64(200 + q))
+            for i in 0..<n { voice[i] += part[i] }
+        }
+        // The voice at twice the instruments' RMS, both measured over the voiced stretches.
+        var si = 0.0, sv = 0.0
+        for b in voiced {
+            let a = Int((firstBeat + Double(b.lowerBound) * beatS) * r)
+            let e = Int((firstBeat + Double(b.upperBound) * beatS) * r)
+            for i in a..<min(e, n) { si += instruments[i] * instruments[i]; sv += voice[i] * voice[i] }
+        }
+        let scale = 2 * (si / max(sv, 1e-12)).squareRoot()
+        return (instruments, voice.map { $0 * scale })
+    }
+
+    /// The track as stereo float32 audio: the instruments slightly wider on the left, the voice in the middle, as the
+    /// vocal engine tests mix `VocalTrack`.
+    public static func render(rate: Int) -> AudioBuffer {
+        let (instruments, voice) = parts(rate: rate)
+        var stereo = [Float](repeating: 0, count: 2 * instruments.count)
+        for i in 0..<instruments.count {
+            stereo[2 * i] = Float(0.5 * (instruments[i] + voice[i]))
+            stereo[2 * i + 1] = Float(0.5 * (0.9 * instruments[i] + voice[i]))
+        }
+        return AudioBuffer(sampleRate: rate, channelCount: 2, samples: stereo)
+    }
 }

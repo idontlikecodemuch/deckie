@@ -27,7 +27,9 @@ extension Analysis {
     ///   vocal bar; the flags end with `vocal_unknown`. With a tagger, all of these are written as the lab writes
     ///   them, except `embedding_effnet`, which is never written (non-commercial; kept out of every crate); the
     ///   tagger's own detail (its rule, its singing, rapping, choir, speech and music scores per bar, its style vector) goes in
-    ///   `deckie.vocal` (`vocalBlock()`), null without a tagger.
+    ///   `deckie.vocal` (`vocalBlock()`), null without a tagger, and the vocal structure and the hook candidates in
+    ///   `deckie.vocal_structure` and `deckie.hooks` (the crate's proposed blocks, same fields and values), null
+    ///   without a tagger. The lab's tools do not read the `deckie` block, so they read the file unchanged.
     /// - `meta` (the pool's bookkeeping from mixer/candidates.json): every key null.
     /// - `beatthis_device`: `cpu`. `timing_s` has the engine's stages (`Analyser`), named as the lab's where a stage
     ///   matches one.
@@ -149,7 +151,7 @@ extension Analysis {
     public func labJSONData() -> Data { labJSON().data }
 
     /// The engine's own block: the file's hash, the decoder, the key estimator's detail, where the lab would have run
-    /// madmom, and whether the vocal information is missing.
+    /// madmom, whether the vocal information is missing, the tagger's detail, the vocal structure and the hooks.
     func deckieBlock() -> JSONValue {
         typealias J = JSONValue
         func m(_ k: String, _ v: J) -> J.Member { J.Member(k, v) }
@@ -172,6 +174,8 @@ extension Analysis {
             m("madmom_would_run", J.text(madmomWouldRun)),
             m("vocal_unknown", .bool(vocalUnknown)), m("vocal_model", J.text(vocalModel)),
             m("vocal", vocalBlock()),
+            m("vocal_structure", vocalStructureBlock()),
+            m("hooks", hooksBlock()),
             m("key", .object([
                 m("estimator", .string("fft-chroma-edma")), m("whole", estimate(key.whole)),
                 m("song_key", .string(key.songKey)), m("mix_in", window(key.mixIn)), m("mix_out", window(key.mixOut)),
@@ -206,6 +210,77 @@ extension Analysis {
         members.append(m("style", v.style.map { J.roundList($0, 4) } ?? .null))
         members.append(m("timing_s", .object(v.stages.map { m($0.name, J.round($0.seconds, 3)) })))
         return .object(members)
+    }
+
+    /// The vocal structure (memo O's items A1 to A6), null without a tagger: the crate's proposed `vocal_structure`
+    /// block (`crateVocalStructure()`), its fields in the order crate-format.md lists them and its values as rounded
+    /// there.
+    func vocalStructureBlock() -> JSONValue {
+        typealias J = JSONValue
+        func m(_ k: String, _ v: J) -> J.Member { J.Member(k, v) }
+        guard let vs = crateVocalStructure() else { return .null }
+        let rule = vs.rule
+        func stretch(_ start: Int, _ end: Int) -> J { .object([m("start_bar", .int(start)), m("end_bar", .int(end))]) }
+        return .object([
+            m("source", .string(vs.source)), m("frame_hop_s", .number(vs.frameHopS)),
+            m("lattice_phase_bar", .int(vs.latticePhaseBar)),
+            m("spans", .array(vs.spans.map {
+                .object([m("start_bar", .int($0.startBar)), m("start_beat", .int($0.startBeat)),
+                         m("start_s", .number($0.startS)), m("end_bar", .int($0.endBar)), m("end_beat", .int($0.endBeat)),
+                         m("end_s", .number($0.endS)), m("start_offset_beats", .int($0.startOffsetBeats)),
+                         m("end_offset_beats", .int($0.endOffsetBeats))])
+            })),
+            m("first", vs.first.map {
+                .object([m("bar", .int($0.bar)), m("beat", .int($0.beat)), m("time_s", .number($0.timeS)),
+                         m("pickup", .bool($0.pickup))])
+            } ?? .null),
+            m("last", vs.last.map {
+                .object([m("bar", .int($0.bar)), m("beat", .int($0.beat)), m("time_s", .number($0.timeS))])
+            } ?? .null),
+            m("intro_free_bars", .int(vs.introFreeBars)), m("intro_kind", .string(vs.introKind)),
+            m("outro_free_bars", .int(vs.outroFreeBars)), m("outro_kind", .string(vs.outroKind)),
+            m("free_gaps", .array(vs.freeGaps.map {
+                .object([m("start_bar", .int($0.startBar)), m("end_bar", .int($0.endBar)), m("bars", .int($0.bars))])
+            })),
+            m("exposed_proxy", .array(vs.exposedProxy.map { stretch($0.startBar, $0.endBar) })),
+            m("rule", .object([
+                m("threshold", .number(rule.threshold)), m("score_p95", .number(rule.scoreP95)),
+                m("threshold_fraction", .number(rule.thresholdFraction)),
+                m("threshold_floor", .number(rule.thresholdFloor)), m("bridge_beats", .int(rule.bridgeBeats)),
+                m("min_span_beats", .int(rule.minSpanBeats)), m("pickup_beats", .int(rule.pickupBeats)),
+                m("min_gap_bars", .int(rule.minGapBars)), m("kind_bars", .int(rule.kindBars)),
+                m("beat_density_ratio", .number(rule.beatDensityRatio)),
+                m("bright_margin_db", .number(rule.brightMarginDb)),
+                m("exposed_low_drop_db", .number(rule.exposedLowDropDb)),
+                m("exposed_density_ratio", .number(rule.exposedDensityRatio)),
+                m("exposed_min_bars", .int(rule.exposedMinBars)),
+            ])),
+        ])
+    }
+
+    /// The hook candidates (memo O's item B7), null without a tagger: the crate's proposed `hooks` block
+    /// (`crateHooks()`), fields in crate-format.md's order, values as rounded there.
+    func hooksBlock() -> JSONValue {
+        typealias J = JSONValue
+        func m(_ k: String, _ v: J) -> J.Member { J.Member(k, v) }
+        guard let h = crateHooks() else { return .null }
+        let rule = h.rule
+        return .object([
+            m("source", .string(h.source)), m("lattice_phase_bar", .int(h.latticePhaseBar)),
+            m("candidates", .array(h.candidates.map {
+                .object([m("start_bar", .int($0.startBar)), m("end_bar", .int($0.endBar)),
+                         m("strength", .number($0.strength)), m("sung", .bool($0.sung)),
+                         m("repetition", .number($0.repetition)), m("loudness_score", .number($0.loudnessScore)),
+                         m("vocal_density", .number($0.vocalDensity)), m("repeat_start_bar", .int($0.repeatStartBar))])
+            })),
+            m("rule", .object([
+                m("lengths_bars", .array(rule.lengthsBars.map { .int($0) })), m("step_bars", .int(rule.stepBars)),
+                m("weight_repetition", .number(rule.weightRepetition)),
+                m("weight_loudness", .number(rule.weightLoudness)), m("weight_vocal", .number(rule.weightVocal)),
+                m("min_repetition", .number(rule.minRepetition)), m("short_margin", .number(rule.shortMargin)),
+                m("sung_share", .number(rule.sungShare)), m("max_hooks", .int(rule.maxHooks)),
+            ])),
+        ])
     }
 
     /// The lab's `local_tempo` block (mixer/local_tempo.py, `compute`), keys in its order; the values are already

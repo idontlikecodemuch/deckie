@@ -58,7 +58,8 @@ extension Analysis {
     /// windows' `vocal_free_bars` are null; the flags carry `vocal_unknown`. With one, the `vocal` block (source: the
     /// tagger's model), the `bars.vocal` series and, when the tagger gives one, the `style` block (YAMNet's mean
     /// embedding, 1,024 values, unit length) are written. The key's changes are the estimator's segments placed on
-    /// bars. The lab's EffNet embedding is never written.
+    /// bars. The lab's EffNet embedding is never written. With a tagger the record also carries the proposed
+    /// `vocal_structure` and `hooks` blocks (`crateVocalStructure()`, `crateHooks()`); without one it has neither.
     public func crateTrack(options: CrateOptions) -> CrateTrack {
         let n = bars.nBars
         let r3 = { (x: Double) in Py.round(x, 3) }
@@ -120,7 +121,61 @@ extension Analysis {
             onsetPattern16: onsetPattern16.map { Py.round($0, 4) },
             flags: flags,
             style: vocal.flatMap { v in v.style.map { CrateTrack.Style(model: v.styleModel ?? vocalModel ?? "vocal-tagger", values: $0) } },
-            bars: BarSeries(series))
+            bars: BarSeries(series), vocalStructure: crateVocalStructure(), hooks: crateHooks())
+    }
+
+    /// `x` rounded to the decimals the crate writes the field `name` with (`CrateFormat.decimals`), so the record read
+    /// back equals the one written.
+    private static func rounded(_ x: Double, _ name: String) -> Double { Py.round(x, CrateFormat.decimals[name]!) }
+
+    /// The proposed `vocal_structure` block: the vocal structure with its rule, rounded as the crate writes it; its
+    /// source is the vocal tagger's model. Nil without a tagger.
+    public func crateVocalStructure() -> CrateTrack.VocalStructure? {
+        guard let vs = vocalStructure else { return nil }
+        let r = Analysis.rounded, p = vs.parameters
+        return CrateTrack.VocalStructure(
+            source: vocalModel ?? "vocal-tagger", frameHopS: r(vs.frameHopSeconds, "frame_hop_s"),
+            latticePhaseBar: vs.latticePhaseBar,
+            rule: .init(threshold: r(vs.threshold, "threshold"), scoreP95: r(vs.scoreP95, "score_p95"),
+                        thresholdFraction: r(p.thresholdFraction, "threshold_fraction"),
+                        thresholdFloor: r(p.thresholdFloor, "threshold_floor"), bridgeBeats: p.bridgeBeats,
+                        minSpanBeats: p.minSpanBeats, pickupBeats: p.pickupBeats, minGapBars: p.minGapBars,
+                        kindBars: p.kindBars, beatDensityRatio: r(p.beatDensityRatio, "beat_density_ratio"),
+                        brightMarginDb: r(p.brightMarginDb, "bright_margin_db"),
+                        exposedLowDropDb: r(p.exposedLowDropDb, "exposed_low_drop_db"),
+                        exposedDensityRatio: r(p.exposedDensityRatio, "exposed_density_ratio"),
+                        exposedMinBars: p.exposedMinBars),
+            spans: vs.spans.map {
+                .init(startBar: $0.start.bar, startBeat: $0.start.beat, startS: r($0.start.seconds, "start_s"),
+                      endBar: $0.end.bar, endBeat: $0.end.beat, endS: r($0.end.seconds, "end_s"),
+                      startOffsetBeats: $0.startOffsetBeats, endOffsetBeats: $0.endOffsetBeats)
+            },
+            first: vs.first.map { .init(bar: $0.bar, beat: $0.beat, timeS: r($0.seconds, "time_s"), pickup: vs.pickup) },
+            last: vs.last.map { .init(bar: $0.bar, beat: $0.beat, timeS: r($0.seconds, "time_s")) },
+            introFreeBars: vs.introFreeBars, introKind: vs.introKind.rawValue, outroFreeBars: vs.outroFreeBars,
+            outroKind: vs.outroKind.rawValue,
+            freeGaps: vs.freeGaps.map { .init(startBar: $0.startBar, endBar: $0.endBar) },
+            exposedProxy: vs.exposedProxy.map { .init(startBar: $0.startBar, endBar: $0.endBar) })
+    }
+
+    /// The proposed `hooks` block: the hook candidates with their rule, rounded as the crate writes them, source
+    /// `deckie-core`. Nil without a tagger.
+    public func crateHooks() -> CrateTrack.Hooks? {
+        guard let h = hooks else { return nil }
+        let r = Analysis.rounded, p = h.parameters
+        return CrateTrack.Hooks(
+            source: "deckie-core", latticePhaseBar: h.latticePhaseBar,
+            rule: .init(lengthsBars: p.lengthsBars, stepBars: p.stepBars,
+                        weightRepetition: r(p.weightRepetition, "weight_repetition"),
+                        weightLoudness: r(p.weightLoudness, "weight_loudness"),
+                        weightVocal: r(p.weightVocal, "weight_vocal"), minRepetition: r(p.minRepetition, "min_repetition"),
+                        shortMargin: r(p.shortMargin, "short_margin"), sungShare: r(p.sungShare, "sung_share"),
+                        maxHooks: p.maxHooks),
+            candidates: h.candidates.map {
+                .init(startBar: $0.startBar, endBar: $0.endBar, strength: r($0.strength, "strength"), sung: $0.sung,
+                      repetition: r($0.repetition, "repetition"), loudnessScore: r($0.loudness, "loudness_score"),
+                      vocalDensity: r($0.vocalDensity, "vocal_density"), repeatStartBar: $0.repeatStartBar)
+            })
     }
 
     /// The key segments as bar spans: each segment starts at the bar line nearest its start time (bar 1 for the

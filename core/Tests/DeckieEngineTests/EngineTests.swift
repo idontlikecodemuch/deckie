@@ -96,8 +96,21 @@ actor Shared {
         return url
     }
 
-    /// The analysis of the WAV ("wav"), of its MP3 ("mp3"), of the WAV with the stub vocal tagger ("vocal"), or of
-    /// the vocal test track by the default analyser, which loads YAMNet ("yamnet").
+    private var structureTrackFile: URL?
+
+    /// The vocal-structure test track (`VocalStructureTrack`: 40 bars, sung from a pickup before bar 9 to bar 16 and
+    /// over bars 25 to 32) as a stereo float WAV.
+    func structureTrack() throws -> URL {
+        if let structureTrackFile { return structureTrackFile }
+        let url = try temporaryFolder("track").appendingPathComponent("vocal-structure-track.wav")
+        try TestTrack.wav(VocalStructureTrack.render(rate: TestTrack.rate)).write(to: url)
+        structureTrackFile = url
+        return url
+    }
+
+    /// The analysis of the WAV ("wav"), of its MP3 ("mp3"), of the WAV with the stub vocal tagger ("vocal"), of the
+    /// vocal test track by the default analyser, which loads YAMNet ("yamnet"), or of the vocal-structure test track by
+    /// the default analyser ("structure").
     func run(_ name: String) async throws -> Run {
         if let task = runs[name] { return try await task.value }
         let (wav, _) = try testTrack()
@@ -106,6 +119,8 @@ actor Shared {
         switch name {
         case "yamnet":
             url = try vocalTrack()
+        case "structure":
+            url = try structureTrack()
         case "mp3":
             url = wav.deletingPathExtension().appendingPathExtension("mp3")
             if !FileManager.default.fileExists(atPath: url.path) {
@@ -123,13 +138,14 @@ actor Shared {
         let analyser: Analyser
         switch name {
         case "vocal": analyser = try Analyser(beatTracker: base.beatTracker, vocalTagger: StubVocalTagger())
-        case "yamnet": analyser = try Analyser(beatTracker: base.beatTracker)
+        case "yamnet", "structure": analyser = try Analyser(beatTracker: base.beatTracker)
         default: analyser = base
         }
         let task = Task.detached {
             try await CPUTurns.exclusive {
                 let t0 = Date()
-                let a = try analyser.analyse(url: url, options: AnalysisOptions(title: name == "yamnet" ? "Vocal test track" : "Test track"))
+                let title = name == "yamnet" ? "Vocal test track" : name == "structure" ? "Vocal structure test track" : "Test track"
+                let a = try analyser.analyse(url: url, options: AnalysisOptions(title: title))
                 return Run(analysis: a, seconds: Date().timeIntervalSince(t0))
             }
         }
