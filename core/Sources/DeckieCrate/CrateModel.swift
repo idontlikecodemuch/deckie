@@ -178,7 +178,7 @@ public struct CrateTrack: Codable, Equatable, Sendable {
         /// such as ID3 TBPM), which steered the analysis between double and half tempo; nil when there was none. It is
         /// a fact about the file, not something imported, so it sits here and not in `imported`.
         public var tagBpm: Double?
-        /// **proposed**: the frames the decoder found damaged and played as silence instead (an MP3 frame whose data
+        /// Accepted Oct 29, 2026: the frames the decoder found damaged and played as silence instead (an MP3 frame whose data
         /// runs past its own end, as on a damaged or badly spliced file), in order; nil when there were none. The file
         /// is faulty but playable, and the analysis was made on the audio with those frames silent.
         public var damagedFrames: [DamagedFrame]?

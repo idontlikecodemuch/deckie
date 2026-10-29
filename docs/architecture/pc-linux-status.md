@@ -34,7 +34,8 @@ Mac) reviews and merges this track's branch, `pc-linux`, and runs anything that 
   other readings of the same scores are in every record (entry 17, addendum) for the Mac's next sheet to score, and
   a second model is being prepared. The damaged-frame concealment is in (entry 17, addendum; engine 0.3.1): the
   Mac's byte-identity check over the 372 other MP3s and the combined rerun of the sheet are the next step there,
-  and the crate's `file.damaged_frames` waits on the main session's acceptance. Research R's key method is being
+  and the crate's `file.damaged_frames` and the import-log reason `damaged_frames` are accepted by the main
+  session as proposed. Research R's key method is being
   ported under parity. 281 tests. Then the first PC build.
 - Needed from Christopher: nothing right now. The vocal-model downloads were approved on Oct 28 ("Allow vocal
   models", with a standing yes for any further vocal model the work needs); dr_mp3, dr_flac, ONNX Runtime and
@@ -1100,8 +1101,8 @@ identical again. On the fixture (`tone_damaged.mp3`, one frame's codes overwritt
 the undamaged file, with every sample outside the two frames bit-identical. Unflagged frames are dr_mp3's own output,
 untouched, which the tests check on every MP3 fixture. Reported: the lab JSON's `deckie.damaged_frames` (a list of
 `start_s` and `seconds`, or null); the crate's `file.damaged_frames` and an import-log entry of reason
-`damaged_frames` ("damaged frame at 1:01.234 (26 ms), played as silence; the track is in the crate"), both marked
-**proposed** in `crate-format.md` for the main session, since they are crate fields. Cost: a six-minute MP3 decodes
+`damaged_frames` ("damaged frame at 1:01.234 (26 ms), played as silence; the track is in the crate"), both proposed in
+`crate-format.md` and accepted by the main session as they stand (no rename; it adds them to D13's note on `main`). Cost: a six-minute MP3 decodes
 in 0.69 s instead of 0.40. 281 tests. For the Mac: `deckie-build mp3-check "<music folder>"` decodes every MP3 both
 ways and compares them bit for bit; expected "372 decode to exactly dr_mp3's own samples, 1 with damaged frames",
 with the Doja Cat track's true peak about +2.5 or less after. One caution: if that track is not flagged, its damage

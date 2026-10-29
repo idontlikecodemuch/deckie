@@ -84,7 +84,7 @@ memo Q's vocal fields, `vocal_structure` and `hooks`, are instead left out when 
   names; `vocal_structure` and `hooks` with memo Q's vocal fields).
 - `file`: `name`, `rel` (path below the folder the crate was built from, or null; never absolute), `bytes` or null,
   `sha1_head` or null, `sha256` or null, `duration_s`, `tag_bpm` or null (with step 5, below), `damaged_frames` or
-  null (**proposed**, with the damaged-frame concealment, below). `sha256` is the whole
+  null (accepted Oct 29, 2026, with the damaged-frame concealment, below). `sha256` is the whole
   file's SHA-256 hash as 64 lower-case hexadecimal characters, the spec's "content hash of the file for exact identity"
   (spec 5.4); the record's `id` is its start, as above, and it is null only in lab records. `sha1_head` is track A's
   head hash: a SHA-1 of the start of the file, which the Apple apps keep for a quick identity check. Track A section 5
@@ -261,13 +261,14 @@ artist tags, source `tag`, else the file name, source `filename`); the DJ's key 
 `tempo_segments`; the DJ's grid markers, cues and loops stay in `imported.rekordbox`, untouched, so the Apple apps can
 show or compare them without either side overwriting the other.
 
-## Proposed with the damaged-frame concealment (Oct 29, 2026)
+## Accepted with the damaged-frame concealment (proposed and accepted Oct 29, 2026)
 
 The main session decided on Oct 29, 2026 that the Windows and Linux MP3 decoder plays a damaged frame (one whose
 Huffman data runs past its own end, as on a damaged or badly spliced file) as silence, as mpg123 does, rather than
 decode it into a burst (dr_mp3 alone gave one lab track a true peak of +9.2 dBTP where the lab's decoder gave +2.5), and
 that the DJ is told. Both fields are additive: a reader that does not know them ignores them, a crate written before
-them reads them as null, and the example crate gains `file.damaged_frames`, null, in each record. **proposed**:
+them reads them as null, and the example crate gains `file.damaged_frames`, null, in each record. Accepted by the
+main session on Oct 29, 2026 as proposed, no rename (it adds them to the note on D13 on `main`):
 
 - **`file.damaged_frames`**, a list or null: the frames played as silence, in order, each `start_s` (where the frame's
   decoded audio starts, in seconds from the start of the decoded audio, 4 decimals) and `seconds` (its length, one MP3
