@@ -66,7 +66,8 @@ Example.deckiecrate/
 
 Numbers carry their unit in the name (`_s` seconds, `_ms`, `_db`, `_lufs`, `bpm`); `lra` is in LU. Every field below
 is written in every record; `null` means "no value" and is allowed only where marked "or null". A block marked
-*(feature X)* is present exactly when `features_present` lists X, and is `null` otherwise.
+*(feature X)* is present exactly when `features_present` lists X, and is `null` otherwise; the two blocks proposed with
+memo O's vocal fields, `vocal_structure` and `hooks`, are instead left out when absent (below).
 
 - `id`: letters, digits, `-` and `_` only, as it names the sidecar files. **How a shipped engine makes it**
   (main session, Oct 28): the first 16 hexadecimal characters, lower case, of the SHA-256 hash of the audio file's
@@ -78,8 +79,9 @@ is written in every record; `null` means "no value" and is allowed only where ma
   `file.sha256` as null. `CrateIDs.id(forFileBytes:)` and `CrateIDs.sha256(of:)` compute both, on SHA-256 written in
   Swift (`SHA256.swift`), so no system library is needed.
 - `schema`: 1. `features_present`: sorted names, from `grid`, `tempo_segments`, `key`, `key_changes`, `phrase`,
-  `sections`, `mix_windows`, `ends`, `loudness`, `vocal`, `onset_pattern`, `style` and `bars.<series>`. Readers ignore
-  names they do not know, but keep a per-bar series they do not know. **proposed** (the names).
+  `sections`, `mix_windows`, `ends`, `loudness`, `vocal`, `onset_pattern`, `style`, `vocal_structure`, `hooks` and
+  `bars.<series>`. Readers ignore names they do not know, but keep a per-bar series they do not know. **proposed** (the
+  names; `vocal_structure` and `hooks` with memo O's vocal fields).
 - `file`: `name`, `rel` (path below the folder the crate was built from, or null; never absolute), `bytes` or null,
   `sha1_head` or null, `sha256` or null, `duration_s`. `sha256` is the whole file's SHA-256 hash as 64 lower-case
   hexadecimal characters, the spec's "content hash of the file for exact identity" (spec 5.4); the record's `id` is
@@ -126,6 +128,8 @@ is written in every record; `null` means "no value" and is allowed only where ma
   `made_by` (device label) and `made_at`; the file is `signatures/<id>_<variant>.shazamsignature` and must exist.
   Empty (`{}`) until an Apple device adds signatures: this track builds no fingerprint.
 - `deckie` or null **proposed** with step 5 (below): what the builder knew about the track besides its audio.
+- `vocal_structure` *(vocal_structure)* and `hooks` *(hooks)* **proposed** with memo O's vocal fields (below): where
+  the track is sung, to the beat, and up to three hook candidates. Left out when absent, never written as null.
 
 **Bar numbers.** A bar is 1 to `n_bars`; a bar line (an exclusive end, a boundary, the start of a fade, the start or
 end of the steady beat) is 1 to `n_bars + 1`. **Per-block source and confidence** (**proposed**): `source` names a
@@ -150,11 +154,12 @@ parity tests, which stay on the lab's files.
 ## How it is written **proposed**
 
 Canonical, so two writes of the same crate are identical byte for byte, in any language: UTF-8; keys sorted by byte;
-no spaces; strings escaped only where JSON requires; `null` written, never left out; whole numbers plain; other
+no spaces; strings escaped only where JSON requires; `null` written, never left out (except a record's absent
+`vocal_structure` and `hooks`, which are left out); whole numbers plain; other
 numbers rounded to a fixed number of decimals by field name, trailing zeros dropped, one digit kept after the point
 (3: `bpm`, `bpm_in`, `bpm_out`, `confidence`, `duration_s`, `first_sound_s`, `last_sound_s`, `lra`; 4:
 `first_downbeat_s`, `start_s`, `end_s`, `mean`, `onset_pattern_16`; 2: `fit_mad_ms`, `integrated_lufs`, `true_peak_db`,
-`secs`).
+`secs`; the vocal blocks' numbers are listed with them, below).
 These are the lab's own roundings. `crate.json` puts each track on its own line, for readable diffs; every file ends
 with a newline. The writer replaces `manifest.json`, `crate.json` and the sidecars of current tracks, deletes sidecars
 of removed tracks, and touches nothing else. It refuses a crate whose `schema` is newer than its own, because it would
@@ -229,6 +234,115 @@ artist tags, source `tag`, else the file name, source `filename`); the DJ's key 
 `tempo_segments`; the DJ's grid and cues stay in `deckie.rekordbox`, untouched, so the Apple apps can show or compare
 them without either side overwriting the other.
 
+## Additions proposed with the vocal fields (memo O)
+
+Memo O (`docs/research/o-vocal-uses.md`, sections 3 and 4) found that DJs use vocals six ways (keep two apart, hand off,
+acapella, tease, echo out, singalong) and that a per-bar probability serves few of them: a hand-off needs the beat of
+the last word, a "drop on the four" the pickup, an acapella a vocal-free stretch in the middle of the track. Two blocks
+carry its items A1 to A6 and B7, computed from what the engine already measures: the vocal tagger's frame-by-frame
+scores (YAMNet's, 0.48 s apart, finer than a bar), the grid, the 8-bar lattice, the per-bar `lufs`, `low_db`, `high_db`
+and onset density, and the fade-out. Code: `core/Sources/DeckieCore/Structure/VocalStructure.swift` and `Hooks.swift`
+(the rules), `core/Sources/DeckieCrate/CrateModel+Vocal.swift` (the blocks).
+
+Both are additive: a record without them reads as before. Unlike every other field they are **left out when absent,
+not written as null**, so the records of engines that do not make them (the lab's, the Apple apps' until they add
+them) keep their bytes, and the example crate is unchanged; `features_present` lists each exactly when it is there. The
+Windows and Linux engine writes both whenever it has a vocal tagger and neither without one (the record keeps its flag
+`vocal_unknown`). The lab JSON the engine writes carries the same fields and values under its `deckie` block
+(`deckie.vocal_structure`, `deckie.hooks`, null without a tagger), where the lab's own tools do not look.
+
+The rules are a first cut on uncalibrated scores. Each is relative to the track, and its parameters and the threshold
+it used are written in the block's `rule`, so the Mac's listening test can tune them and a scorer mixing records can
+tell which rule made each.
+
+**Bars and beats.** Bars are 1-based and beats 1 to 4 within the bar (the grid's beats, 4/4). A start is the beat a
+stretch begins on: the grid beat nearest the time the score rises through the threshold. An end is the beat line it
+stops at: the grid beat nearest the time the score falls through it, exclusive like every `end_bar`, so an end can be
+beat 1 of bar `n_bars + 1`. Times (`start_s`, `end_s`, `time_s`) are those crossing times, read between frame centres
+by straight-line interpolation, in seconds from the start of the decoded audio; singing before bar 1 or past the end
+line is clamped to the grid in bars and beats, not in seconds.
+
+- `vocal_structure` *(vocal_structure)* **proposed**:
+  - `source`: the tagger's model, as `vocal.source`. `frame_hop_s`: seconds between the frames read (0.48 for YAMNet;
+    a bar's length when the tagger gives bars only, and then a change is placed on the bar line). `lattice_phase_bar`:
+    the lattice used below (`phrase.lattice_phase_bar`).
+  - `spans` (A1): the sung stretches in order, none overlapping, each `start_bar`, `start_beat`, `start_s`, `end_bar`,
+    `end_beat`, `end_s`, and `start_offset_beats`, `end_offset_beats` (A6, memo O's `span_end_offset`): each end's
+    signed distance in beats from the nearest 8-bar lattice point, -15 to 16, negative before it (a tie at 16 counts
+    as after the earlier point). Near zero, the stretch starts or stops on a phrase boundary, where a hand-off or an
+    echo out sounds intended. The rule: a frame is sung when its score is at least `rule.threshold`; dips shorter than
+    `rule.bridge_beats` between sung stretches are bridged, so a span is a verse or a chorus rather than a line (Apple's
+    `ranges` bridges the same way); then stretches shorter than `rule.min_span_beats` are dropped as blips.
+  - `first` (A2): `bar`, `beat` and `time_s` of the first sung beat, and `pickup`, true when that beat is within
+    `rule.pickup_beats` before a downbeat (with 1, it is beat 4): the "drop on the four" case. `last`: `bar` and `beat`
+    of the last sung beat (the beat before the last span's end line) and `time_s`, when the singing stops: the beat of
+    the last word, for an echo out. Both null when there is no span.
+  - `intro_free_bars`, `outro_free_bars` (A3): whole bars before the bar of the first sung beat and after the bar of the
+    last (`n_bars` when nothing is sung); a pickup's bar is not free. `intro_kind`, `outro_kind`: what they hold, one of
+    `beat_only`, `ambient`, `vocal`, `fade`. The rule, a first cut for the Mac to tune: `vocal` when there is no free
+    bar (sung from bar 1, or into the last bar); for the outro, `fade` when the fade-out starts at or before the first
+    bar read; otherwise the first `rule.kind_bars` free bars of the intro, or the last `kind_bars` free bars of the
+    outro before any fade, are `beat_only` when their median onset density is at least `rule.beat_density_ratio` of the
+    track's median (a beat goes on) and their median `high_db` at most `rule.bright_margin_db` above the track's median
+    (not a riser or a noise sweep, whose onsets are not a beat), and `ambient` otherwise. The intro is never `fade`: no
+    fade-in is detected.
+  - `free_gaps` (A4): vocal-free stretches anywhere (whole bars with no sung beat), each with its start moved forward
+    to the next lattice bar and kept when `rule.min_gap_bars` or more remain: `start_bar`, `end_bar` (the bar line
+    where singing resumes, or `n_bars + 1`), `bars`. Where A's vocal drops out, where an acapella fits, where to loop.
+  - `exposed_proxy` (A5): `start_bar`, `end_bar` of runs of `rule.exposed_min_bars` bars or more in which at least half
+    of each bar's beats are sung, its `low_db` is at least `rule.exposed_low_drop_db` under the track's median and its
+    onset density at most `rule.exposed_density_ratio` of the track's median: the bass and the drums drop while the
+    voice goes on. Memo O's `exposed` wants vocal high and drums and bass low; this engine measures no drum or bass
+    activity, so `low_db` and the onset density stand in, and the name says so. The Apple apps' records will carry
+    `exposed` (same shape) from SoundAnalysis's real drum and bass activity; a reader prefers `exposed` when present
+    and falls back to `exposed_proxy`.
+  - `rule`: `threshold`, the frame score used, `max(threshold_floor, threshold_fraction x score_p95)` with `score_p95`
+    the track's 95th-percentile frame score; `threshold_fraction` (0.25), `threshold_floor` (0.01), `bridge_beats` (8),
+    `min_span_beats` (2), `pickup_beats` (1), `min_gap_bars` (8), `kind_bars` (16), `beat_density_ratio` (0.5),
+    `bright_margin_db` (6), `exposed_low_drop_db` (6), `exposed_density_ratio` (0.5), `exposed_min_bars` (2): the
+    engine's values in brackets. Why a quarter: YAMNet's score rose late as the voice filled a frame's 0.96 s window
+    (on the synthesised test voice, 4 percent of its peak with the window 35 percent voiced, 10 percent at 58, about
+    half at 85), so a quarter of the peak is crossed when the window is about half voiced, near the voice's start or
+    stop; half the peak split verses apart, because sung frames dip far below their peak. It also errs toward hearing a
+    voice: a missed vocal makes a clash, a false one only an unused bar. The floor keeps a track with no voice from
+    having its background read as singing; it is set for YAMNet's scores on the synthesised voice (a few hundredths)
+    and should rise once real voices are measured. Two bars of bridge: longer than a breath or a fill between lines,
+    shorter than the 4-bar breaks DJs mix in.
+- `hooks` *(hooks)* **proposed** (B7): up to three hook candidates, strongest first, for the DJ to confirm with one tap
+  (whether a line is recognisable is not in the audio): `source` (`deckie-core`), `lattice_phase_bar`, `candidates`
+  (each `start_bar`, `end_bar`, 4 or 8 bars on, `strength` 0 to 1, `sung`, the terms behind the strength,
+  `repetition`, `loudness_score` and `vocal_density`, each 0 to 1, and `repeat_start_bar`, where the same stretch comes
+  again), and `rule`. The rule: candidates of `rule.lengths_bars` (8 and 4) bars start every `rule.step_bars` (4) bars
+  from the lattice phase, on a phrase boundary or halfway through one. `repetition` is the best mean bar-to-bar
+  similarity with a window of the same length elsewhere that does not overlap it, and must be at least
+  `rule.min_repetition` (0.5); the similarity is the cosine between bars of the frame-wise MFCC the structure novelty
+  already uses, averaged over each bar on the novelty's own frame edges, its first coefficient (the level) left out and
+  the others centred on the track. `loudness_score` places the stretch's mean bar `lufs` between the track's 10th and
+  90th percentile bar loudness (taken at least 1 LU apart). `vocal_density` is the share of its beats inside a span,
+  and `sung` is true from `rule.sung_share` (0.5). `strength` = (`weight_repetition` x repetition + `weight_loudness` x
+  loudness_score + `weight_vocal` x vocal_density) / the weights' sum (0.5, 0.25, 0.25): repetition counts most,
+  because it is what makes a stretch a hook rather than merely the loudest part. A shorter candidate inside a longer
+  one is kept only when stronger by more than `rule.short_margin` (0.05), so an 8-bar chorus is not cut to the 4 bars
+  that score a hair higher; a candidate overlapping one already taken, or that one's repeat, is the same hook and is
+  skipped; at most `rule.max_hooks` (3).
+
+**Decimals** (`CrateFormat.decimals`): 4 for `time_s`, `frame_hop_s`, `threshold`, `score_p95`, `threshold_floor`
+(`start_s` and `end_s` keep their 4); 3 for `threshold_fraction`, `beat_density_ratio`, `exposed_density_ratio`,
+`strength`, `repetition`, `loudness_score`, `vocal_density`, `weight_repetition`, `weight_loudness`, `weight_vocal`,
+`min_repetition`, `short_margin`, `sung_share`; 2 for `bright_margin_db`, `exposed_low_drop_db`.
+
+**What the reader checks** for them: the grid is there; bars and beats in range (a start on a bar of the grid, an end up
+to beat 1 of bar `n_bars + 1`); spans in order, not overlapping, each ending after it starts; offsets between -16 and
+16; `first` and `last` there exactly when a span is; free bars between 0 and `n_bars`; the kinds from the four names;
+each gap's `bars` its length; the hooks' bars in range, their scores between 0 and 1, strongest first.
+
+**What is uncalibrated, for the Mac to tune.** Everything above rests on YAMNet's scores, which no listening test has
+calibrated: on the synthesised voice its frames dip far below their peak inside a sung stretch, so on the engine's
+test track a span's ends land within two beats of the construction (the pickup, the last sung beat and the free bars
+exactly), not on it every time. The listening set (memo O section 4, "Next") should mark the first and last sung beat,
+the hook and the exposed line, and tune the threshold fraction and floor, the bridge, the kind rule, the proxy and the
+hook weights. Size: about 1.5 KB a record on the test track (two spans, three hooks), most of it the two rules.
+
 ## The proposals in one list, for the main session
 
 1. Track L's additions: the `engine` block beside `analysis` (which keeps its label); the `features_present` names;
@@ -244,3 +358,7 @@ them without either side overwriting the other.
 7. The canonical form, and the writer's refusal to rewrite a newer crate.
 8. The lab conversion: the steady-beat clamp, no EffNet embedding ever, `analysed_at` from the caller.
 9. With step 5: `manifest.import_log` and the record's `deckie` block (above), and `end_s` in the decimals table.
+10. With memo O's vocal fields: the record's `vocal_structure` and `hooks` blocks and their `features_present` names,
+    left out when absent rather than written as null (the one exception to the canonical form's nulls, so existing
+    records keep their bytes); `exposed_proxy` named apart from the Apple family's `exposed`, which a reader prefers;
+    their decimals.
