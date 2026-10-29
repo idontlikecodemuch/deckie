@@ -348,10 +348,11 @@ for _ in 0..<min(jobs, work.count) {
                     var parts: [String] = []
                     for s in a.timings {
                         let to = from.addingTimeInterval(s.seconds)
-                        parts.append("\(s.stage) \(Memory.mb(sampler.maximum(from: from, to: to)))")
+                        parts.append(String(format: "%@ %.2f s %@", s.stage, s.seconds,
+                                            Memory.mb(sampler.maximum(from: from, to: to))))
                         from = to
                     }
-                    line += "\n  sampled resident peak by stage: " + parts.joined(separator: ", ")
+                    line += "\n  stages, seconds and sampled resident peak: " + parts.joined(separator: ", ")
                 }
                 if let recordsDir {
                     let name = ((path as NSString).lastPathComponent as NSString).deletingPathExtension + ".json"
