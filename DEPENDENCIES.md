@@ -390,16 +390,21 @@ the library's and the archive's sizes and SHA-256 values and the build time into
 
 | Platform | File | Bytes | SHA-256 |
 |---|---|---|---|
-| Linux x86_64 | `onnxruntime-linux-x64-1.31.1-deckie-no-telemetry.tgz` | published run pending | published run pending |
-| | `lib/libonnxruntime.so.1.31.1` in it (run 2, Oct 29, 2026) | 27,162,888 | `e7f280f9f2805cfe1b5f0e488388f845bded5bd7dee8e75883cb4dd604c175a3` |
-| Windows x64 | `onnxruntime-win-x64-1.31.1-deckie-no-telemetry.zip` | published run pending | published run pending |
-| | `lib/onnxruntime.dll` in it (run 2) | 18,449,408 | `790026a5e0362fa21e3d578eb9b17abe3c2be37aba8927af916dbf61a5030d95` |
-| macOS arm64 | `onnxruntime-osx-arm64-1.31.1-deckie-no-telemetry.tgz` | published run pending | published run pending |
-| | `lib/libonnxruntime.1.31.1.dylib` in it (run 2) | 28,793,144 | `11aaad020b6da108e1ba24393d77a431884cf1a9b4097198e3c48f7c31b0f7c1` |
+| Linux x86_64 | `onnxruntime-linux-x64-1.31.1-deckie-no-telemetry.tgz` (published) | 10,183,126 | `aa2ea7283836606d6a7eda70b0e67d7a35a801ef99268d275c62c7b9374b9ecf` |
+| | `lib/libonnxruntime.so.1.31.1` in it | 27,162,888 | `e7f280f9f2805cfe1b5f0e488388f845bded5bd7dee8e75883cb4dd604c175a3` |
+| Windows x64 | `onnxruntime-win-x64-1.31.1-deckie-no-telemetry.zip` (published) | 6,632,634 | `6a5b551f3b446f1d38f3b55cfb058e8ae8e9a6632834ada83a26da624a79a48f` |
+| | `lib/onnxruntime.dll` in it | 18,449,408 | `7e271be626f38602c07c9a9e40d578b4739c3f48047b34f9cc74748d99c1909f` |
+| macOS arm64 | `onnxruntime-osx-arm64-1.31.1-deckie-no-telemetry.tgz` (published) | 8,078,821 | `f6f5b2909767ab8c032e0d60b757c5853f1fd4866261d016ceb1003c3fcc9d43` |
+| | `lib/libonnxruntime.1.31.1.dylib` in it | 28,793,144 | `11aaad020b6da108e1ba24393d77a431884cf1a9b4097198e3c48f7c31b0f7c1` |
 
-The archives' own sizes and hashes are recorded from the run that publishes them to the release (the run's job
-summaries give them); every run builds afresh, so a later run's library may hash differently (build dates inside
-the files), and the pinned values are the published ones.
+**Published** Oct 29, 2026, with Christopher's approval, by the workflow's publish run (run 6) to the release
+`https://github.com/idontlikecodemuch/deckie/releases/tag/onnxruntime-1.31.1-deckie-no-telemetry`, each archive
+with a `.sha256` beside it. All three were fetched back here the same day, matched their hashes, and passed the
+Swift release test (`shippedLibrariesCarryNoReportingClient`: no marker on Linux and macOS; on Windows the
+provider's name alone, reported, not fatal). Reproducibility: the Linux and macOS libraries hashed the same in two
+independent builds (runs 2 and 6), the Windows one did not (`790026a5…` in run 2, `7e271be6…` in run 6: the linker
+writes a build time into the file), so the pinned values are the published ones and a rebuild of Windows gives a
+new hash to record. Build times in run 6: Linux 21 min 34 s, macOS 24 min 42 s, Windows 46 min 33 s.
 
 Run 2 (Oct 29, 2026), wall clock from configure to the finished library, on GitHub's 4-core machines: Linux 22 min
 42 s, macOS 21 min 53 s, Windows 46 min 54 s. Against Microsoft's libraries: Linux 27,162,888 bytes against

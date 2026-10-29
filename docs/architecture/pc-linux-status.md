@@ -43,11 +43,10 @@ Mac) reviews and merges this track's branch, `pc-linux`, and runs anything that 
   development, CI and the bench; a shipped build carries a library built by us without the reporting client,
   proven by a release test; curl stays off the allowlist), YAMNet's training data (confirmed), crate format v1
   (entry 10, addendum) and MPL 2.0.
-- ONNX Runtime built by us without the reporting client: done on Linux and macOS, the Windows archive one run
-  away (entry 14). Run 2 built all three libraries in 22 to 47 minutes; the Linux and macOS gates found no trace
-  of the client; the Windows gate found the one marker predicted, the event-log provider's name, and the rule the
-  main session set for it is now in the scan, so run 3 (started by that change) should upload the Windows archive
-  too. Then the archives are published to a release by hand and their hashes pinned. Two findings from reading ONNX Runtime's build files are with the main session: its build patches
+- ONNX Runtime built by us without the reporting client: done and published (entry 14 and its addenda). The
+  release carries the Linux, Windows and macOS archives with their hashes, pinned in DEPENDENCIES.md and the fetch
+  script, verified here, and the Swift release test passes on all three shipped libraries. A shipped build fetches
+  with `fetch-onnxruntime.sh --deckie`; development keeps Microsoft's archive with the switch. Two findings from reading ONNX Runtime's build files are with the main session: its build patches
   four Eigen files on every platform (Microsoft's builds too), and on Windows the event-log provider's name stays
   in the library even though nothing registers it. Both decided (Oct 29): the two patch files now ship beside
   Eigen's notice (`core/notices/eigen/`) and the wording is "unmodified by Deckie; carries ONNX Runtime's two
@@ -874,6 +873,21 @@ and hashes go into DEPENDENCIES.md and `fetch-onnxruntime.sh --deckie` when it l
 feature branch that carries the workflow file starts a build on its first push (the Mac's memory branch did, an
 hour of machines for nothing; cancelled), so the push trigger will be narrowed to `main` and `pc-linux*` once the
 publish run is done, since a push to the workflow file now would cancel it.
+
+
+**Addendum: published, pinned and verified.** Christopher approved both releases; the publish run (run 6) built
+the three again and created the release `onnxruntime-1.31.1-deckie-no-telemetry` with GitHub's own token: Linux
+`onnxruntime-linux-x64-1.31.1-deckie-no-telemetry.tgz` (10,183,126 bytes, SHA-256 `aa2ea728…`), macOS
+`onnxruntime-osx-arm64-…tgz` (8,078,821, `f6f5b290…`), Windows `onnxruntime-win-x64-…zip` (6,632,634, `6a5b551f…`),
+each with a `.sha256` beside it; the full hashes are in DEPENDENCIES.md section 6, and `fetch-onnxruntime.sh
+--deckie` now carries the Linux pin. All three archives were fetched back here, matched their hashes, and their
+libraries passed the Swift release test: no marker on Linux and macOS, and on Windows the provider's name alone,
+reported and not fatal, so the rule works end to end. Two notes: the Linux and macOS libraries hashed the same in
+two independent builds (runs 2 and 6), the Windows one did not (the linker writes a build time into the file), so a
+Windows rebuild gives a new hash to record; and the workflow's push trigger is still wide (any branch carrying the
+file builds on its first push), to be narrowed with the next change to the workflow file rather than now, since
+each change to it costs a full rebuild. Build times in run 6: Linux 21 min 34 s, macOS 24 min 42 s, Windows 46 min
+33 s. The Mac bench can now run on our macOS library instead of Microsoft's.
 
 ## Oct 29, 2026: the crate renames, the memory defaults, and the models as pinned downloads (entry 16)
 

@@ -12,9 +12,10 @@
 # Microsoft's usage-reporting client (switched off by ORT_DISABLE_TELEMETRY, which deckie_ort.c sets; DEPENDENCIES.md,
 # section 6). With --deckie, Deckie's own build of the same release instead, made without that client by
 # .github/workflows/onnxruntime-build.yml and published on this repository's release
-# onnxruntime-1.31.1-deckie-no-telemetry: the library a shipped build carries. Its hash is not recorded yet (the
-# first run of that workflow gives it, see SHA256 below), and until it is, --deckie stops before downloading anything
-# and Microsoft's archive stays the default. Once fetched, the release test checks the library:
+# onnxruntime-1.31.1-deckie-no-telemetry: the library a shipped build carries, published Oct 29, 2026 with
+# Christopher's approval and pinned below (the Linux library in it hashed the same in two independent builds).
+# Microsoft's archive stays the default for development; a shipped build fetches with --deckie. Once fetched, the
+# release test checks the library:
 #   DECKIE_SHIPPED_ONNXRUNTIME=core/.deps/onnxruntime/lib/libonnxruntime.so.1.31.1 swift test
 #
 # What it trusts. The archive comes from GitHub over HTTPS, and every byte is pinned: the script recomputes the
@@ -60,8 +61,8 @@ if [ "$deckie" = 1 ]; then
     # TODO-after-first-build: the first run of .github/workflows/onnxruntime-build.yml gives this archive's SHA-256
     # and size in its Linux job's summary (and in the .sha256 file beside the archive on the release). Put them here
     # and in DEPENDENCIES.md, section 6; then --deckie works, and can become the default.
-    SHA256="TODO-after-first-build"
-    SIZE="TODO-after-first-build"
+    SHA256="aa2ea7283836606d6a7eda70b0e67d7a35a801ef99268d275c62c7b9374b9ecf"
+    SIZE=10183126
 else
     ARCHIVE="onnxruntime-linux-x64-${VERSION}.tgz"
     URL="https://github.com/microsoft/onnxruntime/releases/download/v${VERSION}/${ARCHIVE}"
