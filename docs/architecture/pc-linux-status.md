@@ -32,8 +32,10 @@ Mac) reviews and merges this track's branch, `pc-linux`, and runs anything that 
   peak outlier, one bar-1 outlier and the unequal bar counts, the madmom guard). A second Mac run with the pinned
   YAMNet gave the vocal correlation, 0.31 against the lab, with the engine's series sitting at a floor; four
   other readings of the same scores are in every record (entry 17, addendum) for the Mac's next sheet to score, and
-  a second model is being prepared. Research R's key method is being ported under parity. 272 tests. Then the first
-  PC build.
+  a second model is being prepared. The damaged-frame concealment is in (entry 17, addendum; engine 0.3.1): the
+  Mac's byte-identity check over the 372 other MP3s and the combined rerun of the sheet are the next step there,
+  and the crate's `file.damaged_frames` waits on the main session's acceptance. Research R's key method is being
+  ported under parity. 281 tests. Then the first PC build.
 - Needed from Christopher: nothing right now. The vocal-model downloads were approved on Oct 28 ("Allow vocal
   models", with a standing yes for any further vocal model the work needs); dr_mp3, dr_flac, ONNX Runtime and
   Beat This! were approved before.
@@ -1083,6 +1085,28 @@ sheet explains itself. The default series (`per_bar.vocal_prob`) is untouched, s
 already planned (`deckie-build bench "<music folder>" --features ../mixer/features --candidates
 ../mixer/candidates.json --out ~/deckie-bench/bench.json --fresh`, readings in `bench.records/<id>.json`); it waits
 for the damaged-frame fix so that one run shows the key vote, the tag fix, the concealment and the readings together.
+
+**Addendum: the damaged-frame concealment is in (9cd28da; engine 0.3.1, builder 0.2.1).** What dr_mp3 does
+with a damaged frame, read from its code: it decodes the damaged codes as large values, runs on into the next
+granule's bits, and notices nothing; that is the burst. mpg123's test, which the lab's decoder applies, is "did the
+big values read past the granule's declared length"; when they did, it silences the rest of the frame. The engine
+now applies the same test with dr_mp3's own decoder, unmodified: after each frame it decodes the granule's codes a
+second time from a copy in which every bit past the granule's end is inverted, and the values differ exactly when
+the decoder read past the end (a C helper beside dr_mp3; the vendored file is untouched; no tuned number anywhere).
+A flagged frame is decoded again with every spectral value zero, through dr_mp3's own windows and filter bank, so
+the previous frame fades out, there is silence, and the next frame fades in; after that frame the decoder's state is
+identical again. On the fixture (`tone_damaged.mp3`, one frame's codes overwritten, made by
+`core/Tools/make_damaged_mp3_fixture.py`) dr_mp3 alone gives +8.7 dBTP and the concealed audio −1.8, the same as
+the undamaged file, with every sample outside the two frames bit-identical. Unflagged frames are dr_mp3's own output,
+untouched, which the tests check on every MP3 fixture. Reported: the lab JSON's `deckie.damaged_frames` (a list of
+`start_s` and `seconds`, or null); the crate's `file.damaged_frames` and an import-log entry of reason
+`damaged_frames` ("damaged frame at 1:01.234 (26 ms), played as silence; the track is in the crate"), both marked
+**proposed** in `crate-format.md` for the main session, since they are crate fields. Cost: a six-minute MP3 decodes
+in 0.69 s instead of 0.40. 281 tests. For the Mac: `deckie-build mp3-check "<music folder>"` decodes every MP3 both
+ways and compares them bit for bit; expected "372 decode to exactly dr_mp3's own samples, 1 with damaged frames",
+with the Doja Cat track's true peak about +2.5 or less after. One caution: if that track is not flagged, its damage
+is not a big-values overrun and this test misses it (ffmpeg's message named the small-value groups, which every
+decoder drops silently; mpg123's clean +2.5 suggests a big-values overrun too, but only the file settles it).
 
 **Addendum: research R, the key method to port.** The Mac's key agent delivered research R
 (`docs/research/r-key-parity.md`, reference `mixer/key_parity.py`, figures in `mixer/key_parity_results.tsv`, now
