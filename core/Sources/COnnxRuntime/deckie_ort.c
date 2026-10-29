@@ -32,7 +32,7 @@ const char *deckie_ort_telemetry_setting(void) { return getenv(telemetry_variabl
 /// The C API's DisableTelemetryEvents, called once the environment exists, comes after the client has started and
 /// stored a device identifier, so the variable is set here, in this process, before the library is opened. A value
 /// the user set stands.
-static void disable_telemetry(void) {
+void deckie_ort_disable_telemetry(void) {
     if (getenv(telemetry_variable) != NULL) return;
 #ifdef _WIN32
     _putenv_s(telemetry_variable, "1");
@@ -73,7 +73,7 @@ const OrtApi *deckie_ort_load(const char *utf8_path, DeckieOrtLoadError *error, 
     if (error == NULL) error = &ignored;
     if (library_version != NULL) *library_version = NULL;
     put_message(message, message_capacity, "");
-    disable_telemetry();
+    deckie_ort_disable_telemetry();
     DeckieGetApiBase get_api_base = NULL;
 
 #ifdef _WIN32

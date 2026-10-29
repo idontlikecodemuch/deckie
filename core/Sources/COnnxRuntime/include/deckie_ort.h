@@ -36,6 +36,11 @@ uint32_t deckie_ort_header_api_version(void);
 /// unless the user already set it.
 const char *deckie_ort_telemetry_setting(void);
 
+/// Sets ORT_DISABLE_TELEMETRY=1 in this process unless it is already set. deckie_ort_load calls it before opening
+/// the library; the Swift side calls it before it checks that the library file exists, so that any attempt to load
+/// ONNX Runtime, even one that fails, leaves the switch set.
+void deckie_ort_disable_telemetry(void);
+
 /// Opens the ONNX Runtime library at `utf8_path` and returns its function table for ORT_API_VERSION, or NULL.
 /// On return `*error` says which step failed; `message` (if not NULL) gets a NUL-terminated explanation of at most
 /// `message_capacity` bytes; `*library_version` (if not NULL) points to ONNX Runtime's version string (owned by the

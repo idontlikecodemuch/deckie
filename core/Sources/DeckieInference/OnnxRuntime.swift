@@ -141,6 +141,8 @@ public final class OnnxRuntime: @unchecked Sendable {
     let env: OpaquePointer
 
     private init(path: String) throws {
+        // Before anything else, so that even a failed attempt leaves the switch set (the test relies on that).
+        deckie_ort_disable_telemetry()
         guard FileManager.default.fileExists(atPath: path) else { throw OnnxRuntimeError.libraryNotFound(searched: [path]) }
         var error = DECKIE_ORT_LOADED
         var versionPointer: UnsafePointer<CChar>? = nil
