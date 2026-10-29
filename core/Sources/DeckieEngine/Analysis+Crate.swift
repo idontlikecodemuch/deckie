@@ -55,8 +55,10 @@ extension Analysis {
     /// The crate record (docs/architecture/crate-format.md), engine family `deckie`. It takes the values the lab
     /// JSON writes, rounded the same way, so a record made here equals one made from the JSON. Without a vocal tagger
     /// the record has no `vocal` block and no `bars.vocal` series, so `features_present` lists neither, and the mix
-    /// windows' `vocal_free_bars` are null; the flags carry `vocal_unknown`. The key's changes are the estimator's
-    /// segments placed on bars; the style vector is absent (the lab's EffNet embedding is never written).
+    /// windows' `vocal_free_bars` are null; the flags carry `vocal_unknown`. With one, the `vocal` block (source: the
+    /// tagger's model), the `bars.vocal` series and, when the tagger gives one, the `style` block (YAMNet's mean
+    /// embedding, 1,024 values, unit length) are written. The key's changes are the estimator's segments placed on
+    /// bars. The lab's EffNet embedding is never written.
     public func crateTrack(options: CrateOptions) -> CrateTrack {
         let n = bars.nBars
         let r3 = { (x: Double) in Py.round(x, 3) }
@@ -117,6 +119,7 @@ extension Analysis {
                                      mean: Py.round($0.meanProbability, 4), heavy: $0.meanProbability > 0.75) },
             onsetPattern16: onsetPattern16.map { Py.round($0, 4) },
             flags: flags,
+            style: vocal.flatMap { v in v.style.map { CrateTrack.Style(model: v.styleModel ?? vocalModel ?? "vocal-tagger", values: $0) } },
             bars: BarSeries(series))
     }
 

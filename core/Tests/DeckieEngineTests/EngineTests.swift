@@ -69,20 +69,43 @@ actor Shared {
         return (url, buffer)
     }
 
+    /// The analyser without a vocal tagger, whatever is installed: the runs on the test track check the record a
+    /// machine without the vocal model writes.
     func engine() throws -> Analyser {
         if let analyser { return analyser }
-        let a = try Analyser()
+        let a = try Analyser(beatTracker: nil, vocalTagger: nil)
         analyser = a
         return a
     }
 
-    /// The analysis of the WAV ("wav"), of its MP3 ("mp3"), or of the WAV with the stub vocal tagger ("vocal").
+    private var vocalTrackFile: URL?
+
+    /// The vocal test track (`VocalTrack`) as a stereo float WAV: the instruments slightly wider on the left, the voice
+    /// in the middle.
+    func vocalTrack() throws -> URL {
+        if let vocalTrackFile { return vocalTrackFile }
+        let (instruments, voice) = VocalTrack.parts(rate: TestTrack.rate)
+        var stereo = [Float](repeating: 0, count: 2 * instruments.count)
+        for i in 0..<instruments.count {
+            stereo[2 * i] = Float(0.5 * (instruments[i] + voice[i]))
+            stereo[2 * i + 1] = Float(0.5 * (0.9 * instruments[i] + voice[i]))
+        }
+        let url = try temporaryFolder("track").appendingPathComponent("vocal-track.wav")
+        try TestTrack.wav(AudioBuffer(sampleRate: TestTrack.rate, channelCount: 2, samples: stereo)).write(to: url)
+        vocalTrackFile = url
+        return url
+    }
+
+    /// The analysis of the WAV ("wav"), of its MP3 ("mp3"), of the WAV with the stub vocal tagger ("vocal"), or of
+    /// the vocal test track by the default analyser, which loads YAMNet ("yamnet").
     func run(_ name: String) async throws -> Run {
         if let task = runs[name] { return try await task.value }
         let (wav, _) = try testTrack()
         let base = try engine()
         let url: URL
         switch name {
+        case "yamnet":
+            url = try vocalTrack()
         case "mp3":
             url = wav.deletingPathExtension().appendingPathExtension("mp3")
             if !FileManager.default.fileExists(atPath: url.path) {
@@ -97,12 +120,16 @@ actor Shared {
         default:
             url = wav
         }
-        let analyser = name == "vocal" ? try Analyser(beatTracker: base.beatTracker, vocalTagger: StubVocalTagger())
-            : base
+        let analyser: Analyser
+        switch name {
+        case "vocal": analyser = try Analyser(beatTracker: base.beatTracker, vocalTagger: StubVocalTagger())
+        case "yamnet": analyser = try Analyser(beatTracker: base.beatTracker)
+        default: analyser = base
+        }
         let task = Task.detached {
             try await CPUTurns.exclusive {
                 let t0 = Date()
-                let a = try analyser.analyse(url: url, options: AnalysisOptions(title: "Test track"))
+                let a = try analyser.analyse(url: url, options: AnalysisOptions(title: name == "yamnet" ? "Vocal test track" : "Test track"))
                 return Run(analysis: a, seconds: Date().timeIntervalSince(t0))
             }
         }

@@ -58,7 +58,8 @@ public enum AnalyserError: Error, Equatable, CustomStringConvertible {
 ///   structure  `FooteNovelty` and its peaks, `Phrase`, the boundaries
 ///   loudness   per-bar `lufs_st` (`KWeighted`), `low_db` and `high_db` (`BandSplit`), onset density, integrated
 ///              loudness, loudness range, true peak
-///   vocal      only with a `VocalTagger`; the onset pattern is computed just before it
+///   vocal      only with a `VocalTagger` (by default `DeckieVocalTagger`, YAMNet, when its model is there): the
+///              per-bar vocal probability on the mono mix at 44.1 kHz; the onset pattern is computed just before it
 ///   windows    sections, fade-out (`Loudness.shortTerm`, `FadeOut`), mix windows (`MixWindows`), the key of the whole
 ///              track and of both mix windows with its confidence (`KeyConfidence`), local tempo, flags
 ///
@@ -67,12 +68,32 @@ public enum AnalyserError: Error, Equatable, CustomStringConvertible {
 public final class Analyser: Sendable {
     public let beatTracker: BeatTracker
     public let vocalTagger: (any VocalTagger)?
+    /// Why there is no vocal tagger, when the default construction found none (the models that are missing and what
+    /// to do); nil otherwise.
+    public let vocalTaggerNote: String?
 
-    /// An analyser with `beatTracker` (nil loads the Beat This! model from where `BeatTracker` looks for it) and an
-    /// optional vocal tagger (none ships yet).
-    public init(beatTracker: BeatTracker? = nil, vocalTagger: (any VocalTagger)? = nil) throws {
-        self.beatTracker = try beatTracker ?? BeatTracker()
+    /// The default analyser: `beatTracker` (nil loads the Beat This! model from where `BeatTracker` looks for it)
+    /// and Deckie's vocal tagger (`DeckieVocalTagger.loadDefault()`, YAMNet) when its model is there. When it is not,
+    /// the analyser runs without one (no vocal block in its records, the flag `vocal_unknown`) and
+    /// `vocalTaggerNote` says what is missing. A model that is there but does not load is an error.
+    public convenience init(beatTracker: BeatTracker? = nil) throws {
+        let tracker = try beatTracker ?? BeatTracker()
+        let tagger = try DeckieVocalTagger.loadDefault(runtime: tracker.session.runtime)
+        let note = tagger == nil
+            ? "no vocal tagger: " + DeckieVocalTagger.missingModels().map(\.description).joined(separator: "; ") : nil
+        self.init(beatTracker: tracker, vocalTagger: tagger, note: note)
+    }
+
+    /// An analyser with `beatTracker` (nil loads the Beat This! model from where `BeatTracker` looks for it) and the
+    /// given vocal tagger, or none.
+    public convenience init(beatTracker: BeatTracker?, vocalTagger: (any VocalTagger)?) throws {
+        self.init(beatTracker: try beatTracker ?? BeatTracker(), vocalTagger: vocalTagger, note: nil)
+    }
+
+    init(beatTracker: BeatTracker, vocalTagger: (any VocalTagger)?, note: String?) {
+        self.beatTracker = beatTracker
         self.vocalTagger = vocalTagger
+        self.vocalTaggerNote = note
     }
 
     /// Analyses the audio file at `url`.
