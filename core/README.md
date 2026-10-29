@@ -52,6 +52,8 @@ and Linux crate builder share them. Charter: `docs/architecture/pc-linux-track.m
 - `Sources/DeckieEngine`: the Windows and Linux analyser, the lab's pipeline on the pieces above (below).
 - `Sources/DeckieBuild` and `Sources/deckie-build`: the crate builder and its yardstick bench, as a library (so the
   tests can drive it) and a command line; see "Building a crate" below.
+- `Sources/deckie-memprobe`: measures the analyser's peak memory under chosen ONNX Runtime settings; see "Measuring
+  memory" below.
 - `Tests/DeckieCoreTests`: parity tests against the lab. `Fixtures/` holds the reference numbers, written by
   `Tools/make_fixtures.py` with the lab's own Python (needs numpy; run from the repository root). The tests also
   read `mixer/features/`, `mixer/candidates.json` and `mixer/recs.json` straight from the repository.
@@ -324,8 +326,9 @@ not be analysed. At the end it prints a summary: files seen, analysed, taken fro
 no record, counted by reason and extension.
 
 - **Jobs.** `--jobs N` files at once; the default is the processor count, or fewer when memory is short, as one
-  analysis of a four-minute track peaks at about 1.8 GB (each further job adds about 1.3 GB), so each job is given
-  2 GB (`defaultJobs`). The jobs share one analyser: its ONNX Runtime session may be run from several threads at once,
+  analysis of a four-minute track peaks at about 1.1 GB (0.2 GB of it the models, shared; each further job adds
+  about 0.9 GB, almost all the beat model's working memory for one 30-second chunk), so each job is given 1 GB and
+  2 GB are left for the rest (`defaultJobs`; `deckie-memprobe` below measures it). The jobs share one analyser: its ONNX Runtime session may be run from several threads at once,
   and each run gets the processor count over the jobs in threads of its own.
 - **Resumable.** A work folder beside the crate, `<name>.deckiebuild`, keeps every finished file as it finishes:
   `records/<id>.json` (the engine's record, by the file's SHA-256 id, written whole or not at all) and `files.jsonl`
@@ -362,6 +365,37 @@ WAV and 320 kbps MP3: one at a time, 8.3 s a file when nothing else ran (6.3 s o
 after it take under 2 s), and 8 to 21 s while another session shared the machine; four at a time, 49 to 73 s for
 eight files, so 6 to 9 s a file of wall-clock time (each file 20 to 40 s on its own). The tests' build of two
 one-minute files takes about 10 s in a debug build.
+
+## Measuring memory: `deckie-memprobe`
+
+```
+deckie-memprobe synth <out.wav> [--seconds 240] [--bpm 124] [--seed 1]
+deckie-memprobe <file>... [--jobs N] [--repeat R] [--arena on|off] [--pattern on|off] [--shrink on|off]
+                [--threads T] [--model-runs M] [--no-vocal] [--records DIR] [--logits]
+```
+
+It runs the analyser on the files as `deckie-build` does (one analyser shared by the jobs) while a thread samples the
+resident memory, and prints the memory with the models loaded, the kernel's high-water mark of the analyses (VmHWM on
+Linux, reset once the models are in; `ru_maxrss` on macOS) and, with one job, the sampled peak of each stage.
+`--records` writes each record without its timings, so two builds or two settings can be compared with `cmp`;
+`--logits` prints a hash of every bit of the beat model's raw outputs. `synth` writes a four-minute stereo test track.
+The switches are `OnnxRuntime.SessionOptions`': ONNX Runtime's memory arena, its memory pattern, shrinking the arena
+after each run, and a cap on runs of a model at once.
+
+Measured on Linux (release build, shared four-core machine, the synthesised four-minute track, both models), with the
+records and the logits identical under every setting and every thread count:
+
+| Setting | One job, peak | Four jobs, peak | Four jobs, wall time for 8 files |
+|---|---|---|---|
+| ONNX Runtime's defaults (before) | 1.9 GB | 5.6 GB | 62 s |
+| Arena shrunk after each run (now the default) | 1.1 GB | 3.8 GB | 57 s |
+| Shrunk, and two beat-model runs at a time | | 2.6 GB | 81 s |
+| Shrunk, and one beat-model run at a time | | 1.7 GB | 105 s |
+
+The peak is in the beat-model stage every time: a run over one 30-second chunk holds about 0.7 GB of intermediate
+values, and without shrinking the arena keeps about 1.4 GB after it for the life of the session. Turning the arena
+off instead peaks higher (1.3 GB for one job) and turning the memory pattern off costs half as much time again.
+The models take 0.2 GB once loaded; the decoded audio and its copies about 0.2 GB a job.
 
 ## The yardstick bench: `deckie-build bench`
 

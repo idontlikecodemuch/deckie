@@ -212,15 +212,20 @@ public final class OnnxRuntime: @unchecked Sendable {
         /// after its last use. Allocation only; the outputs are the same.
         public var memoryPattern: Bool
         /// With the arena on, return the arena's unused regions to the system at the end of every run (ONNX Runtime's
-        /// run option `memory.enable_memory_arena_shrinkage`). Without the arena it does nothing.
+        /// run option `memory.enable_memory_arena_shrinkage`). Without the arena it does nothing. On by default: without
+        /// it the arena keeps what the largest run needed, 1.4 GB for Beat This!'s 30-second chunks, for the life of
+        /// the session, and one analysis peaks at 1.9 GB instead of 1.1 GB (Linux, release build, measured with
+        /// deckie-memprobe); with it the runs take the same time and give bit-identical outputs.
         public var arenaShrinkage: Bool
-        /// At most this many runs of the session at once; further callers wait their turn. 0: no limit. Each run of a
-        /// large model holds its intermediate values while it runs (Beat This!'s 30-second chunk, about 0.7 GB), so
-        /// this bounds the memory of many threads sharing one session.
+        /// At most this many runs of the session at once; further callers wait their turn. 0: no limit (the default).
+        /// Each run of a large model holds its intermediate values while it runs (Beat This!'s 30-second chunk, about
+        /// 0.7 GB), so this bounds the memory of many threads sharing one session, at a cost in speed: on a four-core
+        /// machine, four analyses at once took 40 percent longer with two runs at a time and 80 percent with one,
+        /// because one run does not use more cores well (deckie-memprobe --model-runs).
         public var concurrentRuns: Int
 
         public init(intraOpThreads: Int = 0, interOpThreads: Int = 0, graphOptimization: GraphOptimization = .all,
-                    cpuMemoryArena: Bool = true, memoryPattern: Bool = true, arenaShrinkage: Bool = false,
+                    cpuMemoryArena: Bool = true, memoryPattern: Bool = true, arenaShrinkage: Bool = true,
                     concurrentRuns: Int = 0) {
             self.intraOpThreads = intraOpThreads
             self.interOpThreads = interOpThreads
