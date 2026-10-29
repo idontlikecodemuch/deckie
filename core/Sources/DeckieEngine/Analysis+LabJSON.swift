@@ -25,7 +25,9 @@ extension Analysis {
     ///   to write them missing); each section's `vocal` and each mix window's `vocal_free_bars` are null, and
     ///   `mix_in.first_vocal_bar` and `mix_out.last_vocal_bar` are null as the lab writes them for a track with no
     ///   vocal bar; the flags end with `vocal_unknown`. With a tagger, all of these are written as the lab writes
-    ///   them, except `embedding_effnet`, which is never written (non-commercial; kept out of every crate).
+    ///   them, except `embedding_effnet`, which is never written (non-commercial; kept out of every crate); the
+    ///   tagger's own detail (its rule, its singing, speech and music scores per bar, its style vector) goes in
+    ///   `deckie.vocal` (`vocalBlock()`), null without a tagger.
     /// - `meta` (the pool's bookkeeping from mixer/candidates.json): every key null.
     /// - `beatthis_device`: `cpu`. `timing_s` has the engine's stages (`Analyser`), named as the lab's where a stage
     ///   matches one.
@@ -169,6 +171,7 @@ extension Analysis {
             m("source_channels", .int(source.channels)),
             m("madmom_would_run", J.text(madmomWouldRun)),
             m("vocal_unknown", .bool(vocalUnknown)), m("vocal_model", J.text(vocalModel)),
+            m("vocal", vocalBlock()),
             m("key", .object([
                 m("estimator", .string("fft-chroma-edma")), m("whole", estimate(key.whole)),
                 m("song_key", .string(key.songKey)), m("mix_in", window(key.mixIn)), m("mix_out", window(key.mixOut)),
@@ -177,6 +180,31 @@ extension Analysis {
                 })),
             ])),
         ])
+    }
+
+    /// The vocal tagger's detail, null without one: its model and rule, its frame timing, its other per-bar series
+    /// as `<name>_prob` (YAMNet: `singing_prob`, `speech_prob`, `music_prob`; 3 decimals, as `per_bar.vocal_prob`),
+    /// a second model's opinion if there is one, the style vector (4 decimals) and the tagger's own step times.
+    func vocalBlock() -> JSONValue {
+        typealias J = JSONValue
+        func m(_ k: String, _ v: J) -> J.Member { J.Member(k, v) }
+        guard let v = vocal else { return .null }
+        var members = [
+            m("model", J.text(vocalModel)), m("rule", J.text(v.rule)),
+            m("patch_hop_s", J.round(v.frameHopSeconds, 4)), m("patch_centre_s", J.round(v.frameCentreSeconds, 4)),
+            m("n_patches", .int(v.frameCount)),
+        ]
+        for name in v.seriesPerBar.keys.sorted() {
+            members.append(m("\(name)_prob", J.roundList(v.seriesPerBar[name]!, 3)))
+        }
+        members.append(m("second_opinion", v.secondOpinion.map {
+            .object([m("model", .string($0.model)), m("mean_prob", J.round($0.meanProbability, 4)),
+                     m("per_bar", J.roundList($0.perBar, 3))])
+        } ?? .null))
+        members.append(m("style_model", J.text(v.style == nil ? nil : v.styleModel)))
+        members.append(m("style", v.style.map { J.roundList($0, 4) } ?? .null))
+        members.append(m("timing_s", .object(v.stages.map { m($0.name, J.round($0.seconds, 3)) })))
+        return .object(members)
     }
 
     /// The lab's `local_tempo` block (mixer/local_tempo.py, `compute`), keys in its order; the values are already
