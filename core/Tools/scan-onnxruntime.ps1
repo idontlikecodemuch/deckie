@@ -62,12 +62,28 @@ foreach ($lib in $Paths) {
     }
     $text = $latin1.GetString($bytes)
     $found = @($markers | Where-Object { $text.IndexOf($_.Text, [System.StringComparison]::Ordinal) -ge 0 })
-    if ($found.Count -eq 0) {
-        Write-Output "$lib ($($bytes.Length) bytes): no trace of the reporting client (0 of $($markers.Count) markers)"
+    # In a Windows library (.dll) the event-tracing provider's name is present but never registered, so it is
+    # reported, not fatal (the main session's rule, Oct 29, 2026, confirmed by the first build): windows/telemetry.cc
+    # defines the provider with its name (TRACELOGGING_DEFINE_PROVIDER(telemetry_provider_handle,
+    # "Microsoft.ML.ONNXRuntime", ...), line 61 at the pinned commit) and is compiled into every Windows build
+    # (cmake/onnxruntime_common.cmake); the one call that registers it, TraceLoggingRegisterEx in
+    # WindowsTelemetry::WindowsTelemetry(), runs only when WindowsEnv holds a WindowsTelemetry, which needs
+    # USE_WINDOWS_TELEMETRY or USE_1DS_TELEMETRY (windows/env.h), both left undefined by --no_telemetry; the
+    # environment then holds the base Telemetry class, whose functions do nothing. Every other marker still fails,
+    # and the name fails too in any file that is not a .dll.
+    $providerName = 'Microsoft.ML.ONNXRuntime'
+    $isDll = [System.IO.Path]::GetExtension($lib).ToLowerInvariant() -eq '.dll'
+    $fatal = @($found | Where-Object { -not ($isDll -and $_.Text -eq $providerName) })
+    $reported = @($found | Where-Object { $isDll -and $_.Text -eq $providerName })
+    if ($fatal.Count -eq 0) {
+        Write-Output "$lib ($($bytes.Length) bytes): no trace of the reporting client ($($fatal.Count) of $($markers.Count) markers)"
     } else {
         $carrying = $true
-        Write-Output "$lib ($($bytes.Length) bytes): REPORTING CLIENT FOUND, $($found.Count) of $($markers.Count) markers:"
-        foreach ($m in $found) { Write-Output "  $($m.Name): $($m.Text)" }
+        Write-Output "$lib ($($bytes.Length) bytes): REPORTING CLIENT FOUND, $($fatal.Count) of $($markers.Count) markers:"
+        foreach ($m in $fatal) { Write-Output "  $($m.Name): $($m.Text)" }
+    }
+    foreach ($m in $reported) {
+        Write-Output "  reported, not fatal: $($m.Name), $($m.Text): present, never registered (TraceLoggingRegisterEx is called only by WindowsTelemetry::WindowsTelemetry(), which --no_telemetry leaves unconstructed; see the comment above)"
     }
 }
 if ($carrying) { exit 1 }

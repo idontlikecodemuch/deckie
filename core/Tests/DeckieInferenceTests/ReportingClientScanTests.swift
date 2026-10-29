@@ -19,14 +19,37 @@ import DeckieInference
     }()
 
     /// The release test: no library a build ships carries the client. Runs only where the shipped libraries are
-    /// named; the development library is Microsoft's official build and does carry it (the next test).
+    /// named; the development library is Microsoft's official build and does carry it (the next test). A Windows
+    /// library's unregistered provider name is reported, not fatal (`Verdict`).
     @Test(.enabled(if: !shipped.isEmpty, "no shipped library named: set DECKIE_SHIPPED_ONNXRUNTIME to the library files a build ships"))
     func shippedLibrariesCarryNoReportingClient() throws {
         for path in Self.shipped {
-            let found = try Scan.scan(libraryAt: path)
-            #expect(found.isEmpty, "\(path) carries the usage-reporting client: \(found.map(\.name).joined(separator: ", "))")
-            print("shipped library \(path): \(found.isEmpty ? "no reporting client" : "REPORTING CLIENT FOUND")")
+            let v = try Scan.verdict(libraryAt: path)
+            #expect(v.passes, "\(path) carries the usage-reporting client: \(v.fatal.map(\.name).joined(separator: ", "))")
+            let reported = v.reported.isEmpty ? "" : "; reported, not fatal: \(v.reported.map(\.text).joined(separator: ", ")) (present, never registered)"
+            print("shipped library \(path): \(v.passes ? "no reporting client" : "REPORTING CLIENT FOUND")\(reported)")
         }
+    }
+
+    /// The Windows rule: the provider's name alone passes a .dll and is reported; the same bytes fail any other
+    /// file; any other marker fails a .dll too.
+    @Test func theWindowsProviderNameIsReportedNotFatalInADll() throws {
+        let dir = FileManager.default.temporaryDirectory.appendingPathComponent("deckie-verdict-\(UUID().uuidString)")
+        try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: dir) }
+        let provider = try #require(Scan.markers.first { $0.text == Scan.windowsProviderName })
+        let sqlite = try #require(Scan.markers.first { $0.text == "SQLite format 3" })
+        let filler = Data(count: 1000)
+        let nameOnly = filler + Data(provider.text.utf8) + filler
+        try nameOnly.write(to: dir.appendingPathComponent("onnxruntime.dll"))
+        try nameOnly.write(to: dir.appendingPathComponent("libonnxruntime.so"))
+        try (nameOnly + Data(sqlite.text.utf8)).write(to: dir.appendingPathComponent("both.DLL"))
+        let dll = try Scan.verdict(libraryAt: dir.appendingPathComponent("onnxruntime.dll").path)
+        #expect(dll.passes && dll.fatal.isEmpty && dll.reported == [provider])
+        let so = try Scan.verdict(libraryAt: dir.appendingPathComponent("libonnxruntime.so").path)
+        #expect(!so.passes && so.fatal == [provider] && so.reported.isEmpty)
+        let both = try Scan.verdict(libraryAt: dir.appendingPathComponent("both.DLL").path)
+        #expect(!both.passes && both.fatal == [sqlite] && both.reported == [provider])
     }
 
     /// The official 1.31.1 Linux library (29,345,384 bytes) is known to carry the client; the scan must say so, or the
