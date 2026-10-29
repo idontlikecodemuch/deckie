@@ -32,9 +32,9 @@ alters a row goes into the JSON in the same commit.
 | Swift runtime and Foundation (with ICU) | 6.4.1 | Apache 2.0 with the Runtime Library Exception (section 1); listed in full before the first PC or Linux build ships (section 3) | | |
 | dr_mp3 | 0.7.4 | public domain (the Unlicense) or MIT No Attribution, taken as public domain (section 4) | | |
 | dr_flac | 0.13.4 | the same choice, taken as public domain (section 5) | | |
-| ONNX Runtime | 1.31.1 | MIT; carries Eigen under MPL 2.0, unmodified, with its notice (section 6); the shipped library is Deckie's own build without Microsoft's usage-reporting client | | |
-| Beat This! (beat tracker, checkpoint `final0`) | ISMIR 2024 release, checkpoint `final0` | MIT (section 7) | 15 sets, everything but GTZAN; terms range from MIT and CC BY to CC BY-NC and all rights reserved, each in section 7's table | tempo and bar grid from Deckie's own code at lower confidence (section 7) |
-| YAMNet (vocal tagger) | tensorflow/models commit a6e25e2 weights | Apache 2.0 (section 8) | AudioSet: labels CC BY 4.0, clips are their YouTube uploaders'; trained by Google (section 8) | vocal fields absent, record flagged `vocal_unknown` (section 8) |
+| ONNX Runtime | 1.31.1 | MIT; carries Eigen under MPL 2.0, unmodified by Deckie; carries ONNX Runtime's two published patches (IBM Z builds; nothing compiled on Linux, Windows or macOS differs), shipped beside Eigen's notice (section 6); the shipped library is Deckie's own build without Microsoft's usage-reporting client | | |
+| Beat This! (beat tracker, checkpoint final0) | ISMIR 2024 release, checkpoint final0 | MIT (section 7) | 15 sets, everything but GTZAN; terms range from MIT and CC BY to CC BY-NC and all rights reserved, each in section 7's table | tempo and bar grid from Deckie's own code at lower confidence (section 7) |
+| YAMNet (vocal tagger) | tensorflow/models commit a6e25e2 weights | Apache 2.0 (section 8) | AudioSet: labels CC BY 4.0, clips are their YouTube uploaders'; trained by Google (section 8) | vocal fields absent, record flagged vocal_unknown (section 8) |
 
 <!-- /dependencies-table -->
 
