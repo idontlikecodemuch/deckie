@@ -1029,3 +1029,26 @@ test matrices, 14 constructed cases and all 373 sheet tracks; engine version 0.3
 redone. 265 tests. What the Mac rerun should show: key exact 76.2 (237/311), neighbour 13.8, other 10.0; all 373
 exact 70.5; exactly those 7 keys changed; `key_uncertain` on about 88 tracks instead of 218; every other column
 unchanged, plus the tag-tempo fix's three octave cases gone.
+
+**Addendum: the vocal result, and the readings to try.** The Mac's second run, with the pinned YAMNet, gives the
+vocal correlation: the engine's per-bar vocal series correlates 0.31 with the lab's reference (median over 373
+tracks); Apple's framework reaches 0.645 (a reference, not a charter mark: the Apple apps take their vocal signal
+from Apple, so this decides the PC and Linux signal only); everything else on the sheet is unchanged; 11.1 s per
+track median. A three-way comparison on the lab's bar grid (357 tracks; `mixer/vocal3way.py` and section 2b of
+`stage1-results.md` on `main`): Apple against the lab 0.64, the engine against Apple 0.49, the engine against the
+lab 0.31. The cause is visible: the engine's series sits at a floor (mean level 0.017 against the lab's 0.81 and
+Apple's 0.51; under 0.02 on 264 of 357 tracks). YAMNet's singing classes get almost nothing on a full mix, which it
+scores as "Music", so the per-bar series is noise around a floor; that it follows Apple better than the lab says
+the lab's reference is part of the gap, but 0.49 is still far off. Correlation ignores scale, so the floor itself
+is not the problem; the lack of spread is. What the engine reads today: the maximum of eleven singing-related
+scores per patch (entry 12), speech apart. The main session's ask, library-blind (no threshold fitted to these
+tracks; the reading chosen must be one of the named ones with a sentence of justification): before the listening
+set, try other readings of the same scores, scored on the three-way sheet. Under way: (1) four per-bar readings
+written into every record from the same per-patch scores (today's max of eleven; the sum of the voice classes
+including speech; the sum of their logits, which spreads the floor out; the voice classes relative to the music
+classes in the same patch, which removes the "it is all Music" effect), so one Mac rerun yields all four series and
+the main session adds the Apple column; the default series stays as it is so nothing else on the sheet moves.
+(2) PANNs MobileNetV2 as the planned second opinion, read the same four ways: fetch and export scripts in the
+YAMNet pattern, the Swift model and its front end, CI export (Zenodo, where the checkpoint lives, does not resolve
+from this container; GitHub's machines and the Mac reach it), DEPENDENCIES.md section 9 (MIT; AudioSet, as YAMNet),
+under Christopher's standing approval for vocal models.
