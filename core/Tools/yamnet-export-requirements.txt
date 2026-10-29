@@ -1,0 +1,20 @@
+# The Python packages core/Tools/export_yamnet.py and make_yamnet_fixtures.py were run with (DEPENDENCIES.md,
+# section 8). Development and CI only: none of them ships, and nothing in core/ imports them. Install them in a
+# virtual environment of their own (TensorFlow brings its own protobuf, which the Beat This! export tools may not
+# want), and tf-keras on its own without its dependencies: it asks for the full "tensorflow" package (572 MB, with
+# GPU support), while the CPU build below (274 MB) provides the same module:
+#
+#   python3 -m venv /tmp/yamnet-venv
+#   /tmp/yamnet-venv/bin/python -m pip install -r core/Tools/yamnet-export-requirements.txt
+#   /tmp/yamnet-venv/bin/python -m pip install --no-deps tf-keras==2.21.0
+#
+# Then: bash core/Tools/fetch-vocal-models.sh --python /tmp/yamnet-venv/bin/python
+#
+# Only these direct dependencies are pinned, by version; what they pull in (protobuf, h5py, absl-py and the like) is
+# not, and no wheel is pinned by hash yet. The exported model is pinned by its SHA-256 instead, and the export script
+# checks it numerically against TensorFlow.
+tensorflow-cpu==2.21.0
+tf2onnx==1.17.0
+onnx==1.23.2
+onnxruntime==1.31.1
+numpy==2.5.4

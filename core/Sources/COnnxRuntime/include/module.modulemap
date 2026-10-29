@@ -1,0 +1,4 @@
+module COnnxRuntime {
+    header "deckie_ort.h"
+    export *
+}
