@@ -38,7 +38,7 @@ public struct VocalActivity: Sendable, Equatable {
     /// How a frame's vocal score is made, in words; nil when the tagger does not say.
     public var rule: String?
     /// Other per-bar series the tagger gives, averaged into bars as `perBar` is, by name (YAMNet: `singing`,
-    /// `speech`, `music`); the lab JSON writes them in its `deckie.vocal` block as `<name>_prob`.
+    /// `rapping`, `choir`, `speech`, `music`); the lab JSON writes them in its `deckie.vocal` block as `<name>_prob`.
     public var seriesPerBar: [String: [Double]]
     /// The track's style vector (unit length) and the model that made it: the crate's `style` block.
     public var style: [Double]?
@@ -80,7 +80,8 @@ public protocol VocalTagger: Sendable {
 }
 
 extension DeckieVocalTagger: VocalTagger {
-    /// YAMNet's vocal score per bar, its singing, speech and music scores per bar, and its mean embedding as the
+    /// YAMNet's vocal score per bar, its singing, rapping, choir, speech and music scores per bar, and its mean
+    /// embedding as the
     /// style vector (`DeckieVocalTagger.tag`).
     public func vocalActivity(mono: [Float], sampleRate: Int, barTimes: [Double]) throws -> VocalActivity {
         let t = try tag(mono: mono, sampleRate: sampleRate, barTimes: barTimes)

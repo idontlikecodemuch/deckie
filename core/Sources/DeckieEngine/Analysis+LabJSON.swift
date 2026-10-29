@@ -26,7 +26,7 @@ extension Analysis {
     ///   `mix_in.first_vocal_bar` and `mix_out.last_vocal_bar` are null as the lab writes them for a track with no
     ///   vocal bar; the flags end with `vocal_unknown`. With a tagger, all of these are written as the lab writes
     ///   them, except `embedding_effnet`, which is never written (non-commercial; kept out of every crate); the
-    ///   tagger's own detail (its rule, its singing, speech and music scores per bar, its style vector) goes in
+    ///   tagger's own detail (its rule, its singing, rapping, choir, speech and music scores per bar, its style vector) goes in
     ///   `deckie.vocal` (`vocalBlock()`), null without a tagger.
     /// - `meta` (the pool's bookkeeping from mixer/candidates.json): every key null.
     /// - `beatthis_device`: `cpu`. `timing_s` has the engine's stages (`Analyser`), named as the lab's where a stage
@@ -183,7 +183,8 @@ extension Analysis {
     }
 
     /// The vocal tagger's detail, null without one: its model and rule, its frame timing, its other per-bar series
-    /// as `<name>_prob` (YAMNet: `singing_prob`, `speech_prob`, `music_prob`; 3 decimals, as `per_bar.vocal_prob`),
+    /// as `<name>_prob` (YAMNet: `singing_prob`, `rapping_prob`, `choir_prob`, `speech_prob`, `music_prob`; 3 decimals,
+    /// as `per_bar.vocal_prob`),
     /// a second model's opinion if there is one, the style vector (4 decimals) and the tagger's own step times.
     func vocalBlock() -> JSONValue {
         typealias J = JSONValue
