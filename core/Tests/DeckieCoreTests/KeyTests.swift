@@ -51,6 +51,12 @@ struct KeyFixture: Decodable {
         var mixIn: End, mixOut: End
         enum CodingKeys: String, CodingKey { case ref, mixIn = "mix_in", mixOut = "mix_out" }
     }
+    /// The lab's B.9 key decision on the three votes: their keys (edma, bgate, krumhansl), then the lab's key,
+    /// confidence and rule.
+    struct Vote: Decodable {
+        var keys: [String]
+        var camelot: String, confidence: Double, rule: String
+    }
     /// One matrix's decisions; `seed` for the random ones, `name` and `blocks` for the hand-made ones.
     struct Case: Decodable {
         var seed: UInt64?
@@ -61,7 +67,38 @@ struct KeyFixture: Decodable {
         var segments: [Segment]
         var segmentsAlt: AltSegments
         var ends: Ends
-        enum CodingKeys: String, CodingKey { case seed, frames, name, blocks, whole, segments, ends, segmentsAlt = "segments_alt" }
+        var vote: Vote
+        enum CodingKeys: String, CodingKey {
+            case seed, frames, name, blocks, whole, segments, ends, vote, segmentsAlt = "segments_alt"
+        }
+    }
+    /// [camelot, r, margin] of one vote on the lab's sheet.
+    struct SheetVote: Decodable {
+        var camelot: String, r: Double, margin: Double
+        init(from decoder: Decoder) throws {
+            var c = try decoder.unkeyedContainer()
+            camelot = try c.decode(String.self); r = try c.decode(Double.self); margin = try c.decode(Double.self)
+        }
+    }
+    /// One track of mixer/key_light_stft.tsv: the three votes, the lab's key and confidence, and the lab's B.9 result.
+    struct SheetRow: Decodable {
+        var id: String
+        var votes: [SheetVote]
+        var lab: String, labConf: Double
+        var camelot: String, confidence: Double, rule: String
+        enum CodingKeys: String, CodingKey { case id, votes, lab, camelot, confidence, rule, labConf = "lab_conf" }
+    }
+    /// [key name, scale, strength] as the lab's B.9 block takes each slot.
+    struct NamedVote: Decodable {
+        var key: String, scale: String, r: Double
+        init(from decoder: Decoder) throws {
+            var c = try decoder.unkeyedContainer()
+            key = try c.decode(String.self); scale = try c.decode(String.self); r = try c.decode(Double.self)
+        }
+    }
+    struct VoteCase: Decodable {
+        var votes: [NamedVote]
+        var camelot: String, confidence: Double, rule: String
     }
     /// [count, 12 values]: count identical frames.
     struct Block: Decodable {
@@ -76,7 +113,21 @@ struct KeyFixture: Decodable {
     var wheelCost: [String: Int]
     var random: [Case]
     var hand: [Case]
-    enum CodingKeys: String, CodingKey { case numpy, relation, random, hand, wheelCost = "wheel_cost" }
+    var sheet: [SheetRow]
+    var voteCases: [VoteCase]
+    enum CodingKeys: String, CodingKey {
+        case numpy, relation, random, hand, sheet, wheelCost = "wheel_cost", voteCases = "vote_cases"
+    }
+
+    /// Every matrix with its chroma rebuilt (the random ones from their seeds, the hand-made ones from their blocks)
+    /// and a label.
+    var matrices: [(Case, Chromagram, String)] {
+        random.map { ($0, randomChroma(seed: $0.seed!), "seed \($0.seed!)") }
+            + hand.map { c in
+                (c, Chromagram(frames: c.blocks!.reduce(0) { $0 + $1.count },
+                               values: c.blocks!.flatMap { b in (0..<b.count).flatMap { _ in b.values } }), c.name!)
+            }
+    }
 }
 
 /// The script's `random_chroma`: the same draws in the same order, so the same matrix to the last bit.
@@ -140,11 +191,7 @@ func randomChroma(seed: UInt64) -> Chromagram {
             worst = max(worst, abs(got - want))
             #expect(near(got, want, 1e-9), "\(what()): \(got), lab \(want)")
         }
-        let cases = Self.fx.random.map { ($0, randomChroma(seed: $0.seed!), "seed \($0.seed!)") }
-            + Self.fx.hand.map { c in
-                (c, Chromagram(frames: c.blocks!.reduce(0) { $0 + $1.count },
-                               values: c.blocks!.flatMap { b in (0..<b.count).flatMap { _ in b.values } }), c.name!)
-            }
+        let cases = Self.fx.matrices
         for (c, chroma, label) in cases {
             if let n = c.frames { #expect(chroma.frames == n, "\(label): \(chroma.frames) frames, lab \(n)") }
             // whole-track key, every profile
@@ -195,6 +242,109 @@ func randomChroma(seed: UInt64) -> Chromagram {
         print("key decisions against the lab's functions (numpy \(Self.fx.numpy)): \(cases.count) matrices, \(keys) "
               + "whole-track keys, \(segments) segments, \(windows) mix windows; \(identical) of \(numbers) numbers "
               + "identical, largest difference \(worst)")
+    }
+}
+
+@Suite struct KeyVoteTests {
+    static var fx: KeyFixture { KeyDecisionTests.fx }
+
+    static func vote(_ slot: Int, _ camelot: String, r: Double, margin: Double = 0.1) -> KeyVote.Vote {
+        let t = Camelot.tonic(camelot)!
+        return KeyVote.Vote(name: KeyVote.slots[slot].name, profile: KeyVote.slots[slot].profile,
+                            estimate: KeyEstimate(pitchClass: t.pitchClass, mode: t.major ? "major" : "minor", r: r,
+                                                  margin: margin))
+    }
+
+    /// The vote on the 68 matrices: the three votes' keys, and the lab's decision, confidence and rule word for word,
+    /// the rule run from mixer/analyze.py's own source by the fixture script.
+    @Test func matricesMatchTheLab() {
+        var split = 0
+        for (c, chroma, label) in Self.fx.matrices {
+            let v = KeyVote.whole(chroma)
+            #expect(v.votes.map(\.camelot) == c.vote.keys, "\(label): votes \(v.votes.map(\.camelot)), lab \(c.vote.keys)")
+            #expect(v.camelot == c.vote.camelot && v.confidence == c.vote.confidence && v.rule == c.vote.rule,
+                    "\(label): \(v.camelot) \(v.confidence) \(v.rule); lab \(c.vote.camelot) \(c.vote.confidence) \(c.vote.rule)")
+            // The edma vote is the whole-track key the estimator gives.
+            #expect(v.votes[0].estimate == KeyEstimator.estimate(chroma).whole, "\(label)")
+            if Set(v.votes.map(\.camelot)).count > 1 { split += 1 }
+        }
+        print("key vote on \(Self.fx.matrices.count) matrices: identical to the lab's B.9 rule; the votes split on \(split)")
+    }
+
+    /// Made-up votes through every branch of the rule: agreement, a neighbour or relative dissenting, an incompatible
+    /// one, the strength either side of 0.6 (0.6 itself counts as strong), which slot's strength is read, no agreement.
+    @Test func madeUpVotesMatchTheLab() {
+        for (n, c) in Self.fx.voteCases.enumerated() {
+            let votes = c.votes.enumerated().map { i, v in
+                Self.vote(i, Camelot.code(key: v.key, scale: v.scale)!, r: v.r)
+            }
+            let got = KeyVote.decide(votes)
+            #expect(got.camelot == c.camelot && got.confidence == c.confidence && got.rule == c.rule,
+                    "case \(n): \(got.camelot) \(got.confidence) \(got.rule); lab \(c.camelot) \(c.confidence) \(c.rule)")
+        }
+    }
+
+    /// The lab's own run of the three profiles over its 373 tracks (mixer/key_light_stft.tsv, the real audio): the
+    /// vote equals the lab's rule on every track, and scores what core/Tools/key_vote_eval.py says it scores against
+    /// the lab's confident keys: 237 of 311 exact, 280 exact or a Camelot neighbour, 7 tracks changed from the edma key.
+    @Test func theLabSheet() {
+        let rows = Self.fx.sheet
+        #expect(rows.count == 373)
+        var exact = 0, near = 0, confident = 0, changed = 0, engineExact = 0
+        var levels: [Double: Int] = [:]
+        for row in rows {
+            let v = KeyVote.decide(row.votes.enumerated().map { i, x in Self.vote(i, x.camelot, r: x.r, margin: x.margin) })
+            #expect(v.camelot == row.camelot && v.confidence == row.confidence && v.rule == row.rule,
+                    "\(row.id): \(v.camelot) \(v.confidence) \(v.rule); lab \(row.camelot) \(row.confidence) \(row.rule)")
+            levels[v.confidence, default: 0] += 1
+            if v.camelot != row.votes[0].camelot { changed += 1 }
+            guard row.labConf >= 0.65 else { continue }
+            confident += 1
+            if v.camelot == row.lab { exact += 1 }
+            if row.votes[0].camelot == row.lab { engineExact += 1 }
+            if [.exact, .relative, .neighbour].contains(Camelot.relation(v.camelot, row.lab)) { near += 1 }
+        }
+        print("key vote on the lab's sheet: exact \(exact) of \(confident) confident tracks (edma alone \(engineExact)), "
+              + "exact or neighbour \(near), \(changed) of \(rows.count) keys changed; confidence levels "
+              + levels.sorted { $0.key > $1.key }.map { "\($0.key): \($0.value)" }.joined(separator: ", "))
+        #expect(confident == 311 && exact == 237 && engineExact == 232 && near == 280 && changed == 7)
+        #expect(levels == [1.0: 217, 0.65: 25, 0.6: 43, 0.45: 36, 0.3: 52])
+    }
+
+    /// The rule's parts on constructed votes: what is decided, from which vote it is spelled, how many agree, whose
+    /// strength is read.
+    @Test func constructedVotes() {
+        // All three agree on A minor: 1.0, spelled from the edma vote.
+        let all = KeyVote.decide([Self.vote(0, "8A", r: 0.7), Self.vote(1, "8A", r: 0.9), Self.vote(2, "8A", r: 0.4)])
+        #expect(all.camelot == "8A" && all.agreeing == 3 && all.strength == 0.7 && all.confidence == 1.0)
+        #expect(all.decided.key == "A" && all.decided.mode == "minor")
+        // bgate and krumhansl outvote edma: their key, bgate's strength, spelled from bgate's vote; edma's 8B is the
+        // relative, so a neighbour.
+        let outvoted = KeyVote.decide([Self.vote(0, "8B", r: 0.9), Self.vote(1, "8A", r: 0.55), Self.vote(2, "8A", r: 0.8)])
+        #expect(outvoted.camelot == "8A" && outvoted.agreeing == 2 && outvoted.strength == 0.55)
+        #expect(outvoted.confidence == 0.3 && outvoted.rule == "2 of 3 agree, dissenter is a Camelot neighbour; strength < 0.6")
+        #expect(outvoted.decided == outvoted.votes[1].estimate)
+        // edma and krumhansl agree against a far bgate: edma's strength, 0.45.
+        let far = KeyVote.decide([Self.vote(0, "3B", r: 0.65), Self.vote(1, "9B", r: 0.95), Self.vote(2, "3B", r: 0.2)])
+        #expect(far.camelot == "3B" && far.strength == 0.65 && far.confidence == 0.45)
+        // No two agree: edma's key whatever the others' correlations, 0.3; strength edma's.
+        let none = KeyVote.decide([Self.vote(0, "1A", r: 0.3), Self.vote(1, "5B", r: 0.99), Self.vote(2, "7A", r: 0.99)])
+        #expect(none.camelot == "1A" && none.agreeing == 1 && none.strength == 0.3 && none.confidence == 0.3)
+        #expect(none.rule == "no two detectors agree")
+        // A flat chroma: every profile gives (C, major, 0, 0), so all three agree with strength 0: 0.6.
+        let flat = KeyVote.whole(Chromagram(frames: 4, values: [Double](repeating: 0.5, count: 48)))
+        #expect(flat.camelot == "8B" && flat.agreeing == 3 && flat.confidence == 0.6)
+    }
+
+    /// On synthesised chord progressions the three votes agree on the key: C major, A minor, F sharp major.
+    @Test func progressionsGiveOneKey() throws {
+        for (chords, want) in [(Progression.cMajor, "8B"), (Progression.aMinor, "8A"), (Progression.fSharpMajor, "2B")] {
+            let y = Progression.render(chords, seconds: 32).map { Float($0) }
+            let v = KeyVote.whole(try KeyEstimator.chroma(y, sampleRate: 22050))
+            print("progression in \(want): votes " + v.votes.map { "\($0.profile.rawValue) \($0.camelot)" }.joined(separator: ", ")
+                  + "; \(v.camelot), \(v.confidence) (\(v.rule))")
+            #expect(v.camelot == want && v.agreeing == 3, "\(want): \(v.votes.map(\.camelot))")
+        }
     }
 }
 
