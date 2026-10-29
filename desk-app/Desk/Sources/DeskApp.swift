@@ -55,6 +55,7 @@ enum Headless {
     static func runIfAsked() {
         let a = CommandLine.arguments
         guard a.count >= 2 else { return }
+        setvbuf(stdout, nil, _IOLBF, 0)   // progress lines reach a log file as they happen
         if a[1] == "--check-engine" {
             do {
                 try Builder.checkEngine()
