@@ -1,6 +1,7 @@
 import Foundation
 import DeckieCore
 import DeckieCrate
+import DeckieDecode
 
 /// One track analysed by the engine: everything mixer/analyze.py writes to a feature file that the engine can measure,
 /// kept unrounded (the lab rounds when it writes; `labJSON()` rounds the same way), plus what only the engine knows.
@@ -13,8 +14,9 @@ public struct Analysis: Sendable {
     /// record gains or changes fields, so the builder's work folders made by an older version are analysed again
     /// rather than reused. 0.2.0: the vocal structure and hook blocks, and `file.tag_bpm`. 0.3.0: the key decided by
     /// three votes (`KeyVote`): `key.source` `votes` with three entries in `key.votes`, the lab's B.9 confidence, and
-    /// `votes`, `vote` and `vote_rule` in the lab JSON's `deckie.key`.
-    public static let engineVersion = "0.3.0"
+    /// `votes`, `vote` and `vote_rule` in the lab JSON's `deckie.key`. 0.3.1: the decoder conceals damaged MP3 frames,
+    /// listed as `file.damaged_frames` (`deckie.damaged_frames` in the lab JSON).
+    public static let engineVersion = "0.3.1"
     /// The lab's feature-file schema the JSON follows (`schema`).
     public static let labSchema = 1
     /// The rate everything is analysed at: the lab decodes at 44.1 kHz and resamples other files to it first (`sr`).
@@ -95,6 +97,10 @@ public struct Analysis: Sendable {
     /// The tag tempo given in the options (the lab JSON's `bpm_tag`, the crate record's `file.tag_bpm`); it only steers
     /// the octave alignment and the tag comparisons.
     public var bpmTag: Double?
+    /// The frames the decoder found damaged and played as silence (MP3 only; `AudioDecoder.decodeReporting`), in
+    /// order; everything else in the record was measured on the audio with them silent (the lab JSON's
+    /// `deckie.damaged_frames`, the crate record's `file.damaged_frames`, null when empty).
+    public var damagedFrames: [DamagedFrame] = []
 
     /// The tracker's beats and downbeats, after the octave alignment (`detected_beats_s`, `detected_downbeats_s`).
     public var detectedBeats: [Double]

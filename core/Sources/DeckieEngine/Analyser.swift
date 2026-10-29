@@ -44,8 +44,9 @@ public enum AnalyserError: Error, Equatable, CustomStringConvertible {
 /// The Windows and Linux analyser: mixer/analyze.py's `analyse()` in the lab's order, on the ported pieces.
 ///
 ///   hash       SHA-256 of the file's bytes (`CrateIDs`), whose first 16 hex characters are the record's id
-///   decode     `AudioDecoder` (WAV, AIFF, MP3, FLAC); not 44.1 kHz: `Resampler` to 44.1 kHz, as the lab resamples
-///              with soxr; mono is the channels' mean (`AudioBuffer.mono`)
+///   decode     `AudioDecoder` (WAV, AIFF, MP3, FLAC), damaged MP3 frames silenced and listed (`damagedFrames`); not
+///              44.1 kHz: `Resampler` to 44.1 kHz, as the lab resamples with soxr; mono is the channels' mean
+///              (`AudioBuffer.mono`)
 ///   resample   the mono mix to 22,050 Hz (`Decimator.halve`, soxr's filter): what Beat This!, the key estimator and
 ///              the spectral features all read (the lab resamples it once for the spectral features and Beat This!
 ///              again inside its package; the samples are the same)
@@ -129,7 +130,15 @@ public final class Analyser: Sendable {
         lap("hash")
 
         // ------------------------------------------------------------------ decode (44.1 kHz, mono = channel mean)
-        var buffer = try AudioDecoder.decode(url)
+        // A damaged MP3 frame comes out silent, and is listed (`damagedFrames`): everything below, the true peak
+        // included, is measured on the audio as it plays, without the frame's burst.
+        var buffer: AudioBuffer, damagedFrames: [DamagedFrame]
+        do {
+            // In a block of its own, so the decoded samples are not held beyond `buffer` once it is resampled.
+            let decoded = try AudioDecoder.decodeReporting(url)
+            buffer = decoded.buffer
+            damagedFrames = decoded.damagedFrames
+        }
         let sourceRate = buffer.sampleRate, sourceChannels = buffer.channelCount
         if buffer.sampleRate != SR { buffer = Resampler(from: buffer.sampleRate, to: SR).process(buffer) }
         let mono = buffer.mono()
@@ -293,7 +302,8 @@ public final class Analyser: Sendable {
             version: options.version,
             source: .init(path: path, name: url.lastPathComponent, bytes: bytes, sha256: sha,
                           format: format.rawValue, sampleRate: sourceRate, channels: sourceChannels),
-            duration: duration, bpmTag: tag, detectedBeats: beats, detectedDownbeats: downbeats, octaveFix: octaveFix,
+            duration: duration, bpmTag: tag, damagedFrames: damagedFrames, detectedBeats: beats,
+            detectedDownbeats: downbeats, octaveFix: octaveFix,
             grid: G, bars: bars, multiplierVsTag: multTag, tagDevPct: devTag, bpmAgree: bpmAgree,
             madmomWouldRun: madmomWouldRun, noveltyPeaks: novelty.peaks, phrase: phrase, boundariesBars: boundaries,
             sections: sections, firstSound: sound.firstSound, lastSound: ls, endLoudness: end, fade: fade,
