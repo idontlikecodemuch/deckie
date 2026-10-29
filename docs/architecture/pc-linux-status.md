@@ -26,9 +26,13 @@ Mac) reviews and merges this track's branch, `pc-linux`, and runs anything that 
 - Needed from Christopher: nothing right now. The vocal-model downloads were approved on Oct 28 ("Allow vocal
   models", with a standing yes for any further vocal model the work needs); dr_mp3, dr_flac, ONNX Runtime and
   Beat This! were approved before.
-- Open question for the main session, one: whether Beat This!'s weights can ship under the training-data rule,
-  now that its training sets are recorded and three of them state non-commercial terms (entry 12, second
-  addendum; DEPENDENCIES.md section 7). The bench keeps using Beat This! meanwhile, as development. Decided:
+- With Christopher, as P19 (put by the main session): whether Beat This!'s weights can ship under the
+  training-data rule, now that its training sets are recorded and three of them state non-commercial terms
+  (entry 12, second addendum; DEPENDENCIES.md section 7). The main session recommends keeping the weights and
+  rewriting the rule so that weights ship under their publisher's licence, with the training sets recorded as
+  disclosure and the attorney reviewing the line; the alternative is the literal rule, which means a clean-data
+  beat tracker as a research track and no shipped beats on PC until it lands. Until he answers: Beat This!
+  stays in the engine for the bench, nothing in the code changes, and the research memo is not started. Decided:
   ONNX Runtime's usage reporting (entry 12, addendum: the switch set before the library starts covers
   development, CI and the bench; a shipped build carries a library built by us without the reporting client,
   proven by a release test; curl stays off the allowlist), YAMNet's training data (confirmed), crate format v1
