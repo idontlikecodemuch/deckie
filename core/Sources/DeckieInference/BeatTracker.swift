@@ -57,10 +57,26 @@ public final class BeatTracker: @unchecked Sendable {
     public let session: OnnxSession
     public let frontEnd = BeatThisFrontEnd()
 
+    /// When a piece's chunks give the arena's unused memory back (with `session.options.arenaShrinkage` on; off,
+    /// never). Only memory moves; the logits are the same either way.
+    public enum ArenaShrinking: Sendable, Equatable {
+        /// After every chunk: each chunk takes its working memory (about 0.7 GB) from the system again.
+        case everyChunk
+        /// After a piece's first chunk and its last. The first run of a chunk shape allocates value by value and leaves
+        /// the arena in pieces that cannot hold the one planned block the later runs ask for (ONNX Runtime's memory
+        /// pattern), so without a shrink there the arena holds both, about twice what a chunk needs. After it, the
+        /// planned block is kept from chunk to chunk and given back when the piece is done.
+        case firstAndLastChunk
+    }
+
+    public let arenaShrinking: ArenaShrinking
+
     /// Loads the model (from `modelPath`, or the first of `modelCandidates()` that exists) into ONNX Runtime
     /// (`runtime`, or `OnnxRuntime.load()`).
     public init(modelPath: String? = nil, runtime: OnnxRuntime? = nil,
-                options: OnnxRuntime.SessionOptions = OnnxRuntime.SessionOptions()) throws {
+                options: OnnxRuntime.SessionOptions = OnnxRuntime.SessionOptions(),
+                arenaShrinking: ArenaShrinking = .firstAndLastChunk) throws {
+        self.arenaShrinking = arenaShrinking
         let path: String
         if let modelPath {
             path = modelPath
@@ -76,8 +92,10 @@ public final class BeatTracker: @unchecked Sendable {
     }
 
     /// The network's logits for one chunk of `rows` spectrogram frames (`input`: rows x 128 values).
-    public func chunkLogits(_ input: [Float], rows: Int) throws -> BeatThisLogits {
-        let out = try session.run(["spect": OnnxTensor(shape: [1, rows, BeatThisSpectrogram.bands], values: input)])
+    /// `shrinkArena` as `OnnxSession.run` takes it (nil: the session's setting).
+    public func chunkLogits(_ input: [Float], rows: Int, shrinkArena: Bool? = nil) throws -> BeatThisLogits {
+        let out = try session.run(["spect": OnnxTensor(shape: [1, rows, BeatThisSpectrogram.bands], values: input)],
+                                  shrinkArena: shrinkArena)
         guard let beat = out["beat"], let downbeat = out["downbeat"], beat.values.count == rows,
               downbeat.values.count == rows else {
             throw BeatTrackerError.unexpectedModel("expected \(rows) beat and downbeat logits")
@@ -87,7 +105,14 @@ public final class BeatTracker: @unchecked Sendable {
 
     /// The logits for a whole spectrogram, chunk by chunk.
     public func logits(_ spectrogram: BeatThisSpectrogram) throws -> BeatThisLogits {
-        try BeatThisChunking.run(spectrogram) { input, rows in try chunkLogits(input, rows: rows) }
+        let count = BeatThisChunking.split(frames: spectrogram.frames).count
+        let shrinking = session.options.arenaShrinkage
+        var index = 0
+        return try BeatThisChunking.run(spectrogram) { input, rows in
+            defer { index += 1 }
+            let shrink = shrinking && (arenaShrinking == .everyChunk || index == 0 || index == count - 1)
+            return try chunkLogits(input, rows: rows, shrinkArena: shrink)
+        }
     }
 
     /// Mono audio at 22,050 Hz, from mono audio at `sampleRate`.

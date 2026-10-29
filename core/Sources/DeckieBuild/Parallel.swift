@@ -38,11 +38,12 @@ func runParallel(count: Int, workers: Int, _ body: @escaping @Sendable (Int) -> 
 public var processorCount: Int { max(1, ProcessInfo.processInfo.activeProcessorCount) }
 
 /// The default number of jobs: the processor count, or fewer when memory is short. One analysis of a four-minute
-/// track peaks at about 1.1 GB, 0.2 GB of it the models, which the jobs share; each further job adds about 0.9 GB,
-/// almost all of it the beat model's working memory for one 30-second chunk (measured on Linux in a release build
-/// with deckie-memprobe: 1.1 GB for one job, 3.8 GB for four). So a job is given 1 GB and 2 GB are left for
-/// everything else. (Before ONNX Runtime's arena was shrunk after each run, one job peaked at 1.9 GB and four at
-/// 5.6 GB, and a job was given 2 GB.)
+/// track peaks at about 1.1 GB, 0.2 GB of it the models, which the jobs share; each further job adds about 1 GB,
+/// almost all of it the beat model's working memory for one 30-second chunk (measured on Linux in a release build:
+/// deckie-build peaked at 1.09 GB for one job and 4.4 GB for four). So a job is given 1 GB and 2 GB are left for
+/// everything else. (Before the beat model shrank ONNX Runtime's arena after a track's first and last chunk, one job
+/// peaked at 1.9 GB and four at 5.5 GB, and a job was given 2 GB.) docs/research/p-machine-estimates.md estimates what
+/// this gives on DJs' machines.
 public var defaultJobs: Int {
     let gb = Double(ProcessInfo.processInfo.physicalMemory) / Double(1 << 30)
     return max(1, min(processorCount, Int(gb - 2)))

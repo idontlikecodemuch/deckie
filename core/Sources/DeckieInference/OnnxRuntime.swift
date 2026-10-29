@@ -314,8 +314,10 @@ public final class OnnxSession: @unchecked Sendable {
     deinit { runtime.api.pointee.ReleaseSession(session) }
 
     /// Runs the model on float32 inputs, given by name, and returns the requested outputs (all of them by default),
-    /// by name, as float32 tensors with their shapes.
-    public func run(_ inputs: [String: OnnxTensor], outputs requested: [String]? = nil) throws -> [String: OnnxTensor] {
+    /// by name, as float32 tensors with their shapes. `shrinkArena` decides for this run whether the arena's unused
+    /// regions go back to the system at its end; nil follows `options.arenaShrinkage`.
+    public func run(_ inputs: [String: OnnxTensor], outputs requested: [String]? = nil,
+                    shrinkArena: Bool? = nil) throws -> [String: OnnxTensor] {
         let api = runtime.api.pointee
         for (name, tensor) in inputs {
             guard inputNames.contains(name) else {
@@ -362,7 +364,7 @@ public final class OnnxSession: @unchecked Sendable {
         defer { for r in results where r != nil { api.ReleaseValue(r) } }
         var runOptions: OpaquePointer? = nil
         defer { if runOptions != nil { api.ReleaseRunOptions(runOptions) } }
-        if options.arenaShrinkage && options.cpuMemoryArena {
+        if (shrinkArena ?? options.arenaShrinkage) && options.cpuMemoryArena {
             try runtime.check(api.CreateRunOptions(&runOptions))
             try runtime.check(api.AddRunConfigEntry(runOptions, "memory.enable_memory_arena_shrinkage", "cpu:0"))
         }
