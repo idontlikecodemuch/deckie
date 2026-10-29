@@ -1,4 +1,5 @@
 import Foundation
+import DeckieCore
 import DeckieInference
 
 /// Vocal activity over a track, as a vocal tagger reports it: what the lab's Discogs-EffNet voice head gives
@@ -44,6 +45,11 @@ public struct VocalActivity: Sendable, Equatable {
     /// Other per-bar series the tagger gives, averaged into bars as `perBar` is, by name (YAMNet: `singing`,
     /// `rapping`, `choir`, `speech`, `music`); the lab JSON writes them in its `deckie.vocal` block as `<name>_prob`.
     public var seriesPerBar: [String: [Double]]
+    /// Four readings of the tagger's class scores, one value per bar each, averaged as `perBar` is (`VocalReadings`:
+    /// `max11`, which is `perBar` for YAMNet, `voice_sum`, `voice_logit_sum`, `voice_vs_music`), with the classes each
+    /// used; the lab JSON writes them in `deckie.vocal` (`readings`, `readings_classes`, `readings_note`) and nothing
+    /// goes into the crate. Nil when the tagger gives no class scores.
+    public var readings: VocalReadings?
     /// The track's style vector (unit length) and the model that made it: the crate's `style` block.
     public var style: [Double]?
     public var styleModel: String?
@@ -54,7 +60,7 @@ public struct VocalActivity: Sendable, Equatable {
     public init(perBar: [Double], meanProbability: Double, frameHopSeconds: Double, frameCount: Int,
                 frameCentreSeconds: Double? = nil, rule: String? = nil, perFrame: [Double]? = nil,
                 seriesPerBar: [String: [Double]] = [:], style: [Double]? = nil, styleModel: String? = nil,
-                secondOpinion: SecondOpinion? = nil, stages: [Stage] = []) {
+                secondOpinion: SecondOpinion? = nil, stages: [Stage] = [], readings: VocalReadings? = nil) {
         self.perBar = perBar
         self.meanProbability = meanProbability
         self.frameHopSeconds = frameHopSeconds
@@ -63,6 +69,7 @@ public struct VocalActivity: Sendable, Equatable {
         self.rule = rule
         self.perFrame = perFrame
         self.seriesPerBar = seriesPerBar
+        self.readings = readings
         self.style = style
         self.styleModel = styleModel
         self.secondOpinion = secondOpinion
@@ -85,8 +92,8 @@ public protocol VocalTagger: Sendable {
 }
 
 extension DeckieVocalTagger: VocalTagger {
-    /// YAMNet's vocal score per bar and per patch, its singing, rapping, choir, speech and music scores per bar, and
-    /// its mean embedding as the style vector (`DeckieVocalTagger.tag`).
+    /// YAMNet's vocal score per bar and per patch, its singing, rapping, choir, speech and music scores per bar, the
+    /// four readings of its class scores per bar, and its mean embedding as the style vector (`DeckieVocalTagger.tag`).
     public func vocalActivity(mono: [Float], sampleRate: Int, barTimes: [Double]) throws -> VocalActivity {
         let t = try tag(mono: mono, sampleRate: sampleRate, barTimes: barTimes)
         return VocalActivity(
@@ -94,6 +101,6 @@ extension DeckieVocalTagger: VocalTagger {
             frameCount: t.patchCount, frameCentreSeconds: t.patchCentreSeconds, rule: t.rule, perFrame: t.perPatch,
             seriesPerBar: t.seriesPerBar, style: t.style, styleModel: t.styleModel,
             secondOpinion: t.secondOpinion.map { .init(model: $0.model, perBar: $0.perBar, meanProbability: $0.meanProbability) },
-            stages: t.timing.map { .init($0.name, $0.seconds) })
+            stages: t.timing.map { .init($0.name, $0.seconds) }, readings: t.readings)
     }
 }
