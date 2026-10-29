@@ -1,6 +1,6 @@
 {
  "title": "Deckie vocabulary",
- "updated": "2026-10-27",
+ "updated": "2026-10-28",
  "sources": [
   "docs/research/e-dj-vocabulary.md",
   "docs/product/spec-condensed.md",
@@ -1067,10 +1067,12 @@
    ],
    "plain": "The bars at the edge of a song with no singing.",
    "expert": "Room to blend without two voices fighting.",
-   "deckie": "Counted for each mix window. Long blends need at least 16 vocal-free bars; too few flags a short intro or outro.",
+   "deckie": "Counted for each mix window. Long blends need at least 16 vocal-free bars; too few flags a short intro or outro. Also recorded with what the free bars hold: beat only, ambient (a riser or a pad), fade, or sung from bar 1.",
    "related": [
+    "long-blend",
+    "pickup",
     "vocal-activity",
-    "long-blend"
+    "vocal-free-gap"
    ]
   },
   {
@@ -2406,6 +2408,118 @@
    "related": [
     "privacy-promise",
     "app-store-category"
+   ]
+  },
+  {
+   "id": "pickup",
+   "term": "Pickup",
+   "group": "structure",
+   "aliases": [
+    "comes in on the four",
+    "before the one",
+    "anacrusis (music)"
+   ],
+   "plain": "A sung note or two that start just before the first beat of a bar and lead into it.",
+   "expert": "[tutorial term] The music-school word is anacrusis; DJs say the vocal \"comes in on the four\" or \"before the one\". It matters when you drop a vocal on the one: the drop has to land a beat early or the first word is lost.",
+   "deckie": "Written into the crate as the first sung beat with a pickup flag when it falls on beat 4 before a downbeat. Shown as \"Vocal starts a beat before bar 9\".",
+   "related": [
+    "drop",
+    "vocal-activity",
+    "vocal-free-bars",
+    "vocal-hand-off"
+   ]
+  },
+  {
+   "id": "hook",
+   "term": "Hook",
+   "group": "structure",
+   "aliases": [
+    "the chorus (loosely)",
+    "the bit everyone knows",
+    "drop (EDM)"
+   ],
+   "plain": "The most recognisable few bars of a song, the part the crowd sings back.",
+   "expert": "[heard in the wild] Everyday DJ and producer word; in EDM the drop plays the same role. Teasing the hook of the next song is a classic move.",
+   "deckie": "The app proposes up to three hook candidates per song from repetition, loudness and singing and asks the DJ to confirm one with a tap. It never claims to know which line people recognise; that is not in the audio.",
+   "related": [
+    "drop",
+    "tease",
+    "phrase",
+    "eight-bar-lattice"
+   ]
+  },
+  {
+   "id": "acapella",
+   "term": "Acapella",
+   "group": "moves",
+   "aliases": [
+    "a cappella (music)",
+    "pella",
+    "vocal (as a file type in pools)"
+   ],
+   "plain": "A singing part with no beat under it, played on its own or laid over another song's beat.",
+   "expert": "[heard in the wild] Spelled \"acapella\" in DJ pools and on the Serato forum (\"a cappella\" in music). DJs lay an acapella over an instrumental or ride it into a vocal-free gap of the playing song.",
+   "deckie": "Proposed: the crate records vocal-free gaps of 8 bars or more where an acapella fits. The live screen does not make acapellas; it points at the gap.",
+   "related": [
+    "vocal-free-gap",
+    "vocal-free-bars",
+    "long-blend"
+   ]
+  },
+  {
+   "id": "vocal-hand-off",
+   "term": "Vocal hand-off",
+   "group": "moves",
+   "aliases": [
+    "vocal to vocal",
+    "let the vocal finish",
+    "clean vocal swap"
+   ],
+   "plain": "The old song's singing stops and the new song's singing starts, on the beat, so two voices never overlap.",
+   "expert": "[ours] DJs describe it as \"let the vocal finish, then bring the next one in\" or mixing \"vocal to vocal\" without a clash; there is no single word for it in the wild.",
+   "deckie": "Uses the beat of the last word of the playing song and the first sung beat of the next. Proposed join line: \"Last word at bar 93, beat 3; next vocal starts at bar 9\".",
+   "related": [
+    "pickup",
+    "echo-out",
+    "vocal-activity",
+    "vocal-term"
+   ]
+  },
+  {
+   "id": "exposed-vocal",
+   "term": "Exposed vocal",
+   "group": "structure",
+   "aliases": [
+    "dry vocal",
+    "vocal breakdown",
+    "the vocal on its own"
+   ],
+   "plain": "A stretch where the voice carries on while the drums and bass drop away.",
+   "expert": "[ours] Producers say \"the vocal is exposed\" or \"dry vocal\"; DJs call the same bars a breakdown with vocals. Loud and clear, so it clashes with any other voice and sits well over a beat-only intro.",
+   "deckie": "On iPad and Mac, read from Apple's drum and bass activity. On PC and Linux, a stand-in from the low band and the onset density, named as a proxy in the crate so the two are never confused.",
+   "related": [
+    "vocal-activity",
+    "vocal-free-gap",
+    "intro"
+   ]
+  },
+  {
+   "id": "vocal-free-gap",
+   "term": "Vocal-free gap",
+   "group": "structure",
+   "aliases": [
+    "the breakdown",
+    "the instrumental section",
+    "where the vocal drops out"
+   ],
+   "plain": "Eight bars or more in the middle of a song with no singing, lined up with the 8-bar grid.",
+   "expert": "[ours] DJs say \"the breakdown\", \"the instrumental bit\" or \"where the vocal drops out\". Room to bring a second song in mid-track, to loop, or to lay an acapella.",
+   "deckie": "Recorded in the crate with its start moved forward to the next 8-bar point. Different from vocal-free bars, which are the edges of the song.",
+   "related": [
+    "vocal-free-bars",
+    "eight-bar-lattice",
+    "acapella",
+    "exposed-vocal"
    ]
   }
  ]
