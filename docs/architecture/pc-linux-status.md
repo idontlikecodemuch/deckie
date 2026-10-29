@@ -890,7 +890,10 @@ pinned exports (`beat_this_final0.onnx`, 82,098,829 bytes, `f1d93204…`; `yamne
 `96bb0dc5…`) as downloadable files with their hashes, so every machine runs the exact graphs the parity tests ran
 on. Creating a public release on the repository is an action this session may not take without Christopher's say
 (the harness refused it), so: the release `models-1` waits for his yes (its text is drafted, with sizes, hashes,
-licences, the training-data pointers and the one line that both licences permit redistribution); meanwhile a
-fetch-first script (`core/Tools/fetch-models.sh`: release asset by pinned hash first, the export as fallback) and
-a CI artifact of the two files are being written. The main session also declined to create the release from the
+licences, the training-data pointers and the one line that both licences permit redistribution); meanwhile the
+fetch-first script is in (`core/Tools/fetch-models.sh`: the release asset by its pinned hash first, read from the
+export scripts' own pinned lines; the export as fallback; tested against the absent release, the files in place
+and a wrong file from a local server, which it refused), CI tries it before exporting, and every CI run now
+uploads the two files with their `.sha256` as a run artifact named by their hashes, the interim download until the
+release exists. The ONNX Runtime archives' publication is a release too, so both go to Christopher in one ask. The main session also declined to create the release from the
 Mac, rightly: a refusal here is Christopher's to lift, not a teammate's to route around.
