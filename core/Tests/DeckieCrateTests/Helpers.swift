@@ -9,6 +9,8 @@ enum Paths {
     static let features = root.appendingPathComponent("mixer/features")
     static let candidates = root.appendingPathComponent("mixer/candidates.json")
     static let example = core.appendingPathComponent("fixtures/example.deckiecrate")
+    static let dependencies = core.appendingPathComponent("dependencies.json")
+    static let dependenciesDoc = root.appendingPathComponent("DEPENDENCIES.md")
 }
 
 /// A crate with every block filled, two tracks, a style vector, key changes and one signature listed.
