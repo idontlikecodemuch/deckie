@@ -119,7 +119,10 @@ CC BY-NC stay off. Christopher can overrule either line; neither is needed by th
 Third line, same day: MPL 2.0 (file-level copyleft: changes to those files must be published) ships when its files are
 unmodified by us, with its notices in the acknowledgements; any change we make to an MPL file is published; an
 allowlisted equivalent is preferred where one exists. (A patch an upstream applies and publishes, as ONNX Runtime
-does to Eigen, is that upstream's obligation, met by the notices it ships.) Needed because ONNX Runtime (MIT) carries Eigen (MPL 2.0) inside it. For
+does to Eigen, is that upstream's obligation, met by the notices it ships.) Found the same evening: ONNX Runtime
+patches Eigen on every platform (two published patches for IBM Z builds, touching nothing these three platforms
+compile), so the acknowledgements say "unmodified by Deckie; carries ONNX Runtime's two published patches" and ship
+the two patch files beside Eigen's notice, which is the licence's source-availability ask met in the simplest way. Needed because ONNX Runtime (MIT) carries Eigen (MPL 2.0) inside it. For
 the attorney to confirm alongside the DECKEE review. Christopher approved all three lines on Oct 28, with a
 search for alternatives to the vocal models and the model runtime still to run.
 
@@ -183,7 +186,11 @@ with its `--no_telemetry` flag, which leaves the client out, and pinned like any
 each shipped library for the client's endpoint and symbols, so the promise is checked rather than assumed. The client's
 own dependencies (curl, mbedTLS, SQLite) leave with it; curl's MIT-style licence is not added to the allowlist and is
 recorded as present in development builds only. General rule: a dependency with a reporting client is built without
-it or not used.
+it or not used. Windows detail, same evening: ONNX Runtime built without telemetry never registers its
+event-tracing provider, but the provider's name stays in the library as a string, so the Windows scan reports that one
+marker as "present, never registered", with the registration path documented, and fails on every other marker as
+the Linux and Mac scans do; events through that path reach nothing unless the user runs a trace session, and the
+build never registers. A patched build that removes the definition was judged not worth its upkeep.
 
 ### Note on D5 (Oct 26): Mike's data is a special case
 Mike's party set was curated by Christopher and held music Mike does not usually play, so the sprint's data describes a
