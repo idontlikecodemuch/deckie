@@ -363,3 +363,10 @@ from the compilations' own tags and the disc map) and the `early.` columns are w
 with its overrides and folded values, the lab's key for the 373 candidates, era, kind, the Halloween flag, cut_key).
 Agreement with an `early.` column is agreement, not correctness. Deckie writes no era, kind, Halloween flag or cut_key
 yet, so those are reported as sprint-only.
+
+## key_downbeat.py (Oct 29, 2026): chroma weighted toward the beat grid, on the outside set
+`.venv/bin/python key_downbeat.py <mu outdir> <manifest.json> [--jobs 2]` reads the beat grid Apple's run wrote for
+each GiantSteps clip (tools/mubench output) and scores the recommended reader (3f) with four fixed frame weightings:
+equal (reproduces `key_outside_results.tsv` clip for clip), downbeat frames only, beat frames only, and metrical
+(downbeat 1, beat 1/2, between 1/4). Writes `key_downbeat.tsv` and prints the table overall, per major and minor
+half, and per data set confidence level. Nothing is tuned and no variant is chosen by the script.
