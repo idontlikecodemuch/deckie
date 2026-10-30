@@ -190,3 +190,14 @@ team 566NNM5HT8 added in Xcode > Settings > Accounts, or an App Store Connect AP
 `-authenticationKeyPath ~/.appstoreconnect/private_keys/AuthKey_<KEYID>.p8 -authenticationKeyID <KEYID>
 -authenticationKeyIssuerID <ISSUER>` to the export command). The App Store Connect app record for
 `io.christophershannon.deck` must exist (Apps > + > New App).
+
+## Crates (Oct 29, 2026)
+
+The app can run from a crate made by Deckie Desk instead of the bundled data: put a `.deckiecrate` package in the
+app's Documents folder (Files app > On My iPad > Deck, or Finder > iPad > Files) and relaunch, or point a test launch at
+one with `deck://crate?path=/abs/x.deckiecrate`. The crate gives the tracks and their analysis, the whole-song wave
+(from the per-bar loudness), the recognition catalogue (one plain signature per track, made on the Mac) and the picks:
+the pair scores are computed on the iPad with the shared scoring in `core` (DeckieCore's PairScoring, the port of
+mixer/score.py), so any DJ's crate works and the crate stays exactly as Desk wrote it. 238 tracks score in about
+7 s on the simulator. Not yet from a crate: the per-beat waveforms of the join view (rows show text), pitch-variant
+signatures, disc and folder labels beyond the file's own folder.

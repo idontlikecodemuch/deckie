@@ -69,7 +69,8 @@ struct LibraryFilter: Equatable {
     var cd1 = true      // CD1 Singalongs
     var cd2 = true      // CD2 Mix-ins
     var other = false   // everything else in the catalogue (alternates, benched tracks)
-    func allows(_ t: Track) -> Bool { t.on ? (t.disc == "S" ? cd1 : cd2) : other }
+    /// A crate with no discs has nothing "on the discs", so every track is allowed there.
+    func allows(_ t: Track) -> Bool { Library.shared.data.discs.isEmpty || (t.on ? (t.disc == "S" ? cd1 : cd2) : other) }
     var label: String { [cd1 ? "CD1" : nil, cd2 ? "CD2" : nil, other ? "all" : nil].compactMap { $0 }.joined(separator: "+") }
 }
 

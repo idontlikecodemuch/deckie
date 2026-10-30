@@ -378,3 +378,13 @@ Christopher says so; a yes moves it up into the dated decisions above.
   alternative is to keep the literal line and fund a clean-data beat tracker as a research track, with the PC and
   Linux engine unable to ship beats until it lands. Until Christopher answers, Beat This! stays in the engine for the
   bench only, which is development.
+
+**Note on D13 and the plateau (Oct 29, 2026, evening): the booth reads a crate.** The iPad app can now run from a
+.deckiecrate made by Deckie Desk instead of its bundled data: the tracks and their analysis, the whole-song wave from
+the per-bar loudness, the recognition catalogue from the crate's signatures, and the picks. The picks' pair scores are
+computed on the iPad with the shared scoring in `core` (the port of the lab's score.py), from the crate's grid, mix
+windows, loudness, vocal series and style vector, so the crate carries no pair table and stays as Desk wrote it; any
+DJ's crate works the same way. On Christopher's 238-track crate the scores take about 7 s on the simulator and the
+first picks match the lab's character (same words, same bands). Not yet from a crate: per-beat waveforms in the join
+view (rows show text), pitch-variant signatures, disc labels beyond the file's own folder. This is the step that lets
+another DJ test Deckie on their own music: Desk makes the crate, the iPad reads it.

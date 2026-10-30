@@ -61,12 +61,27 @@ import SwiftUI
 
     static let kID = SHMediaItemProperty("deck_id"), kFlav = SHMediaItemProperty("deck_flavour"), kPct = SHMediaItemProperty("deck_pct")
 
-    init() {
+    init() { rebuildCatalog() }
+
+    /// The recognition catalogue: from the crate's signatures when a crate is in use (one plain signature per
+    /// track, made on the Mac), else the bundled catalog with its pitch variants.
+    func rebuildCatalog() {
         let c = SHCustomCatalog()
-        if let url = Bundle.main.url(forResource: "Deck", withExtension: "shazamcatalog") {
+        let sigs = Library.shared.crate?.signatures ?? []
+        if !sigs.isEmpty {
+            var n = 0
+            for s in sigs {
+                guard let d = try? Data(contentsOf: s.url), let sig = try? SHSignature(dataRepresentation: d) else { continue }
+                let item = SHMediaItem(properties: [.title: s.title, .artist: s.artist, Self.kID: s.id, Self.kFlav: "o", Self.kPct: 0])
+                do { try c.addReferenceSignature(sig, representing: [item]); n += 1 }
+                catch { note("signature \(s.id): \(error.localizedDescription)") }
+            }
+            catalog = c
+            note("catalog from the crate: \(n) of \(sigs.count) signatures")
+        } else if let url = Bundle.main.url(forResource: "Deck", withExtension: "shazamcatalog") {
             do { try c.add(from: url); catalog = c; note("catalog loaded (query \(c.minimumQuerySignatureDuration)-\(c.maximumQuerySignatureDuration) s)") }
             catch { note("catalog error: \(error.localizedDescription)") }
-        } else { note("Deck.shazamcatalog missing from the bundle") }
+        } else { note("no crate and no bundled catalog") }
     }
 
     func note(_ s: String) {

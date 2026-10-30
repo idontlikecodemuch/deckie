@@ -22,6 +22,7 @@ struct Wave: Codable, Hashable {
 
 /// whole-song waveform (Resources/overview.json, tools/overview_waves.py)
 struct Overview: Codable {
+    static let alphabet = Array("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/")
     let n: Int
     let dur: Double
     let s: String
@@ -92,11 +93,12 @@ struct Track: Codable, Identifiable, Hashable {
     }
     /// "CD1 · 8 - 135 plus · 02": disc, folder as named on the disc, track number (the CDJ browser's view)
     var discLocation: String {
-        guard let cd, let num else { return "not on the CDs" }
+        guard let cd, let num else { return folder }
         return "CD\(cd) · \(folder) · \(String(format: "%02d", num))"
     }
     /// "CD1 / 6 - 125-129 /": the folder path on the disc
-    var folderPath: String { cd.map { "CD\($0) / \(folder) /" } ?? "not on the CDs" }
+    /// Off the discs (or in a crate without discs): the file's own folder, which is how the DJ's software shows it.
+    var folderPath: String { cd.map { "CD\($0) / \(folder) /" } ?? folder }
     /// "06 Lady (Hear Me Tonight)": track number as in the file name on the deck
     var numberedSong: String { num.map { String(format: "%02d · ", $0) + song } ?? song }
     /// the disc's colour (CD1 lavender, CD2 teal; off the discs: the accent)
@@ -132,21 +134,51 @@ struct DeckData: Codable {
 
 final class Library {
     static let shared = Library()
-    let data: DeckData
-    let byId: [String: Track]
-    let overview: [String: Overview]
+    private(set) var data: DeckData
+    private(set) var byId: [String: Track]
+    private(set) var overview: [String: Overview]
+    /// The crate in use, if the data came from one rather than the bundled deck_data.json.
+    private(set) var crate: CrateLibrary?
 
     private init() {
-        guard let url = Bundle.main.url(forResource: "deck_data", withExtension: "json"),
-              let d = try? Data(contentsOf: url),
-              let dd = try? JSONDecoder().decode(DeckData.self, from: d) else {
-            fatalError("deck_data.json missing or invalid: run tools/prep_data.py")
+        data = DeckData(generated: "", tracks: [], discs: [], pairs: [:], catalogVariants: nil)
+        byId = [:]; overview = [:]
+        // A crate first: the one remembered, else one placed in the app's Documents folder (Files app, Finder);
+        // the bundled data otherwise.
+        if let url = Library.rememberedCrate ?? Library.crateInDocuments, let c = try? CrateLibrary.load(url) {
+            apply(c)
+        } else if let url = Bundle.main.url(forResource: "deck_data", withExtension: "json"),
+                  let d = try? Data(contentsOf: url), let dd = try? JSONDecoder().decode(DeckData.self, from: d) {
+            data = dd
+            byId = Dictionary(uniqueKeysWithValues: dd.tracks.map { ($0.id, $0) })
+            if let u = Bundle.main.url(forResource: "overview", withExtension: "json"), let d2 = try? Data(contentsOf: u),
+               let ov = try? JSONDecoder().decode([String: Overview].self, from: d2) { overview = ov }
         }
-        data = dd
-        byId = Dictionary(uniqueKeysWithValues: dd.tracks.map { ($0.id, $0) })
-        if let u = Bundle.main.url(forResource: "overview", withExtension: "json"), let d2 = try? Data(contentsOf: u),
-           let ov = try? JSONDecoder().decode([String: Overview].self, from: d2) { overview = ov } else { overview = [:] }
     }
+
+    func load(crate url: URL) throws {
+        apply(try CrateLibrary.load(url))
+        UserDefaults.standard.set(url.path, forKey: "cratePath")
+    }
+
+    private func apply(_ c: CrateLibrary) {
+        crate = c
+        data = c.data
+        byId = Dictionary(uniqueKeysWithValues: c.data.tracks.map { ($0.id, $0) })
+        overview = c.overview
+    }
+
+    static var rememberedCrate: URL? {
+        guard let p = UserDefaults.standard.string(forKey: "cratePath"), FileManager.default.fileExists(atPath: p) else { return nil }
+        return URL(fileURLWithPath: p)
+    }
+    /// The first .deckiecrate in the app's Documents folder (Files app > On My iPad > Deck).
+    static var crateInDocuments: URL? {
+        guard let docs = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first,
+              let names = try? FileManager.default.contentsOfDirectory(atPath: docs.path) else { return nil }
+        return names.filter { $0.hasSuffix(".deckiecrate") }.sorted().first.map { docs.appendingPathComponent($0) }
+    }
+
     func track(_ id: String?) -> Track? { id.flatMap { byId[$0] } }
 }
 

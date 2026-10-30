@@ -9,6 +9,9 @@ settings:
     SWIFT_VERSION: "5.0"
     DEVELOPMENT_TEAM: 566NNM5HT8
     CODE_SIGN_STYLE: Automatic
+packages:
+  DeckieCore:
+    path: ../core
 targets:
   Deck:
     type: application
@@ -18,6 +21,11 @@ targets:
       - path: Deck/Assets.xcassets
       - path: Deck/Resources
         buildPhase: resources
+    dependencies:
+      - package: DeckieCore
+        product: DeckieCore
+      - package: DeckieCore
+        product: DeckieCrate
     info:
       path: Deck/Info.plist
       properties:
