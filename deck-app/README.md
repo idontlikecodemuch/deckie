@@ -199,5 +199,13 @@ one with `deck://crate?path=/abs/x.deckiecrate`. The crate gives the tracks and 
 (from the per-bar loudness), the recognition catalogue (one plain signature per track, made on the Mac) and the picks:
 the pair scores are computed on the iPad with the shared scoring in `core` (DeckieCore's PairScoring, the port of
 mixer/score.py), so any DJ's crate works and the crate stays exactly as Desk wrote it. 238 tracks score in about
-7 s on the simulator. Not yet from a crate: the per-beat waveforms of the join view (rows show text), pitch-variant
+7 s on the simulator (a Debug build). The full library (Oct 30, 2026: 2,327 tracks, 141 MB with signatures; the
+Release build on the iPad A16 iOS 27 simulator) loads in about 2 min 7 s, every track with picks and the catalogue
+from all 2,327 signatures, and a streamed track is then matched within a few seconds, each 4 s segment in 1 to 4
+ms. But the process holds 4.3 GB afterwards, because the picks are scored for every track into every other (5.4
+million pairs) and kept in one table before each source's best 80 are chosen; an iPad will not give an app that
+much, so a library-sized crate needs one of two changes before the booth runs from it on the device: keep only
+each source's best 80 while scoring (the same picks, little memory, the same two minutes, which can move off the
+main thread behind a progress note), or score the playing track's picks when it is recognised (2,326 pairs, well
+under a second, an instant load) and keep no table. Not yet from a crate: the per-beat waveforms of the join view (rows show text), pitch-variant
 signatures, disc and folder labels beyond the file's own folder.
