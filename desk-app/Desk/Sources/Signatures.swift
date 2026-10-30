@@ -13,11 +13,13 @@ enum Signatures {
         guard let buffer = AVAudioPCMBuffer(pcmFormat: format, frameCapacity: frames) else {
             throw NSError(domain: "Signatures", code: 1, userInfo: [NSLocalizedDescriptionKey: "could not make an audio buffer"])
         }
-        while true {
+        // Stop at the file's end by position: a read at the very end of an MP3 whose length is a whole number of
+        // buffers fails with an empty error instead of returning no frames (three library tracks of exactly 192,
+        // 200 and 224 s, Oct 30, 2026), and the signature was already complete.
+        while file.framePosition < file.length {
             try file.read(into: buffer, frameCount: frames)
             if buffer.frameLength == 0 { break }
             try gen.append(buffer, at: nil)
-            if buffer.frameLength < frames { break }
         }
         return try gen.signature().dataRepresentation
     }
