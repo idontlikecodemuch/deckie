@@ -219,6 +219,19 @@ own reader is a research track of its own, apart from the product work, under D1
 the facts to start from are letter R's last four sections (the outside test, Apple on the same clips, the beat-grid
 weighting, the overtones). Spec 5's key bullet carries the caveat.
 
+### D18. The booth scores picks for the song that is playing, and draws the join lanes from the crate's per-bar loudness (Oct 30)
+Christopher, on the two booth choices put to him: "Score when recognized and draw the lanes from the per bar values. Agree
+on both." So: the booth keeps no table of every pair. When a song is recognised (or set by hand) its picks are scored
+then, from the crate's own analysis with the shared scoring, and the last few songs' lists are kept. The one thing that
+needs the whole crate, the timbre rank (where a pair's sound similarity sits among every pair of the crate), is a sorted
+list built once when the crate loads. The picks are the ones the whole table gave, with the same trim (the best 40 on the
+discs and the best 40 of the rest); lifting that trim is a separate step. With the 2,327-track library crate the booth
+loads in about five seconds and holds about half a gigabyte, where it took two minutes and 4.3 GB before. And the join
+view's two lanes, the end of the playing song over the start of the next, come from the crate's loudness per bar, one
+flat step a bar, cut by the beat and bar lines the view already draws; the bundled sprint data's lanes are finer (an
+eighth of a beat, from the audio) and stay as they are. No crate field is added (crate v1 stays frozen). Commits cdeb021
+and 6abc147.
+
 ### Note on D3 (Oct 26, from the community research): privacy covers taste, not only audio
 DJs' fear is "I'm not helping train ai for free": that their choices become someone else's product. So D3 extends
 to history, cues, saved pairs and learned preferences: all of it stays with the DJ, Deckie says who benefits from
