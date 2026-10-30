@@ -67,7 +67,8 @@ struct DeckApp: App {
             do {
                 try Library.shared.load(crate: URL(fileURLWithPath: p))
                 rec.stop(); rec.rebuildCatalog(); sug.reroll(rec)
-                rec.note("crate loaded: \(Library.shared.data.tracks.count) tracks, \(Library.shared.data.pairs.count) with picks")
+                let secs = Library.shared.crate.map { String(format: "%.1f", $0.poolSecs) } ?? "?"
+                rec.note("crate loaded: \(Library.shared.data.tracks.count) tracks; picks are scored per song (timbre list \(secs) s)")
             } catch { rec.note("crate failed: \(error)") }
         case "after":
             // deck://after?s=<seconds>&u=<url-encoded deck:// hook>: run that hook later (a scripted walk-through;
@@ -110,7 +111,8 @@ struct DeckApp: App {
         sets = r.sets; rest = r.rest; page = 0
         options = sets.first ?? []
         rolledFor = cur.id
-        rec.note("suggestions for \(cur.song) [\(mode.rawValue)\(", " + target.label)]: " + sets.flatMap { $0 }.map { o in
+        let scored = Library.shared.takePickSecs().map { String(format: " (scored in %.0f ms)", $0 * 1000) } ?? ""
+        rec.note("suggestions for \(cur.song)\(scored) [\(mode.rawValue)\(", " + target.label)]: " + sets.flatMap { $0 }.map { o in
             let t = Library.shared.track(o.id)
             let k = o.kind == .best ? "B" : o.kind == .hard ? "H" : "m"
             return "\(k) \(t?.song ?? o.id) \(String(format: "%.2f", o.pair.s))\(o.tags.isEmpty ? "" : " <" + o.tags.joined(separator: ",") + ">")"

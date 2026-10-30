@@ -2,10 +2,10 @@ import Foundation
 import DeckieCore
 import DeckieCrate
 
-/// A crate made by Deckie Desk, as the booth sees it: the tracks and discs, the picks' pair scores (scored here on
-/// the iPad with the shared scoring, so any DJ's crate works and the crate itself stays as Desk wrote it), the
-/// whole-song waves from the per-bar loudness, and where the recognition signatures are. The bundled deck_data.json
-/// is the other source of the same `DeckData`.
+/// A crate made by Deckie Desk, as the booth sees it: the tracks and discs, the picks (scored here on the iPad with
+/// the shared scoring, one song at a time as it plays, so any DJ's crate works and the crate itself stays as Desk
+/// wrote it), the whole-song waves from the per-bar loudness, and where the recognition signatures are. The bundled
+/// deck_data.json is the other source of the same `DeckData`; a crate's `DeckData` has no pairs (`picks(from:)`).
 struct CrateLibrary {
     struct SignatureRef { let id: String; let title: String; let artist: String; let url: URL }
 
@@ -14,6 +14,12 @@ struct CrateLibrary {
     let data: DeckData
     let overview: [String: Overview]
     let signatures: [SignatureRef]
+    /// The scoring tracks and the sorted cosine list, for scoring one song's picks at a time.
+    let pool: PairPool
+    let coreById: [String: DeckieCore.Track]
+    let onDisc: Set<String>
+    /// How long building the sorted cosine list took when the crate loaded, in seconds.
+    let poolSecs: Double
 
     static let moveLabels = ["bass_swap_8": "short blend", "bass_swap_16": "blend", "bass_swap_32": "long blend",
                              "ramped_blend": "ramp blend", "filter_sweep": "filter out", "quick_blend_echo": "echo out",
@@ -73,37 +79,41 @@ struct CrateLibrary {
             }))
         }
 
-        // Pairs: every track into every other, then per source the best 40 on-disc targets and the best 40 overall,
-        // as tools/prep_data.py trims the lab's table.
+        // Picks are scored per song when it plays (`picks(from:)`), not here: the pool keeps the sorted list of
+        // track-to-track cosines the timbre rank needs, built once.
         let core = crate.tracks.compactMap { $0.scoringTrack() }
-        let coreById = Dictionary(uniqueKeysWithValues: core.map { ($0.id, $0) })
-        let scores = PairScorer.scoreAll(core)
-        var bySource: [String: [PairScore]] = [:]
-        for (k, p) in scores { bySource[k.a, default: []].append(p) }
+        let coreById = Dictionary(core.map { ($0.id, $0) }, uniquingKeysWith: { a, _ in a })
+        let t0 = Date()
+        let pool = PairPool(core)
+        let poolSecs = Date().timeIntervalSince(t0)
         let onDisc = Set(tracks.filter(\.on).map(\.id))
-        var pairs: [String: [Pair]] = [:]
-        for (a, list) in bySource {
-            let sorted = list.sorted { $0.scoreBase > $1.scoreBase }
-            var keep = sorted.filter { onDisc.contains($0.b) }.prefix(40).map { $0 }
-            let have = Set(keep.map(\.b))
-            keep += sorted.filter { !have.contains($0.b) }.prefix(40)
-            keep.sort { $0.scoreBase > $1.scoreBase }
-            guard let A = coreById[a] else { continue }
-            pairs[a] = keep.map { p in
-                let B = coreById[p.b]
-                let km = MNUM[p.multiplier] ?? 1
-                let pitch = B.map { ((A.bpmOut / ($0.bpmIn * km)) - 1) * 100 }.map { ($0 * 10).rounded() / 10 }
-                let moves = p.moves.isEmpty ? [p.suggestedTransition] : p.moves
-                return Pair(b: p.b, s: (p.scoreBase * 1000).rounded() / 1000, st: (p.stretchPct * 10).rounded() / 10,
-                            m: p.multiplier, pitch: pitch, tr: p.suggestedTransition,
-                            trl: moveLabels[p.suggestedTransition] ?? p.suggestedTransition,
-                            ka: A.camelot.isEmpty ? "?" : A.camelot, kb: (B?.camelot).flatMap { $0.isEmpty ? nil : $0 } ?? "?",
-                            reasons: Array(p.reasons.prefix(5)), mv: Array(moves.map { moveLabels[$0] ?? $0 }.prefix(3)),
-                            ks: p.keyShiftSt)
-            }
-        }
 
-        let data = DeckData(generated: crate.manifest.createdAt, tracks: tracks, discs: discs, pairs: pairs, catalogVariants: ["o"])
-        return CrateLibrary(url: url, name: crate.manifest.name, data: data, overview: overview, signatures: sigs)
+        let data = DeckData(generated: crate.manifest.createdAt, tracks: tracks, discs: discs, pairs: [:], catalogVariants: ["o"])
+        return CrateLibrary(url: url, name: crate.manifest.name, data: data, overview: overview, signatures: sigs,
+                            pool: pool, coreById: coreById, onDisc: onDisc, poolSecs: poolSecs)
+    }
+
+    /// The picks for one song: every other track scored from it, then the best 40 on-disc targets and the best 40
+    /// of the rest, best first, as tools/prep_data.py trims the lab's table (so a song gets the same picks the
+    /// whole-crate table gave it).
+    func picks(from a: String) -> [Pair] {
+        guard let A = coreById[a] else { return [] }
+        let sorted = pool.scores(from: A).sorted { $0.scoreBase > $1.scoreBase }
+        var keep = sorted.filter { onDisc.contains($0.b) }.prefix(40).map { $0 }
+        let have = Set(keep.map(\.b))
+        keep += sorted.filter { !have.contains($0.b) }.prefix(40)
+        keep.sort { $0.scoreBase > $1.scoreBase }
+        return keep.map { p in
+            let B = coreById[p.b]
+            let km = MNUM[p.multiplier] ?? 1
+            let pitch = B.map { ((A.bpmOut / ($0.bpmIn * km)) - 1) * 100 }.map { ($0 * 10).rounded() / 10 }
+            let moves = p.moves.isEmpty ? [p.suggestedTransition] : p.moves
+            return Pair(b: p.b, s: (p.scoreBase * 1000).rounded() / 1000, st: (p.stretchPct * 10).rounded() / 10,
+                        m: p.multiplier, pitch: pitch, tr: p.suggestedTransition,
+                        trl: CrateLibrary.moveLabels[p.suggestedTransition] ?? p.suggestedTransition,
+                        ka: A.camelot.isEmpty ? "?" : A.camelot, kb: (B?.camelot).flatMap { $0.isEmpty ? nil : $0 } ?? "?",
+                        reasons: Array(p.reasons.prefix(5)), mv: Array(moves.map { CrateLibrary.moveLabels[$0] ?? $0 }.prefix(3)),
+                        ks: p.keyShiftSt)
+        }
     }
 }

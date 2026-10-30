@@ -163,6 +163,7 @@ final class Library {
 
     private func apply(_ c: CrateLibrary) {
         crate = c
+        recentPicks = [:]; recentOrder = []
         data = c.data
         byId = Dictionary(uniqueKeysWithValues: c.data.tracks.map { ($0.id, $0) })
         overview = c.overview
@@ -180,6 +181,28 @@ final class Library {
     }
 
     func track(_ id: String?) -> Track? { id.flatMap { byId[$0] } }
+
+    /// The picks for a song, the one place the views get them: the bundled data's trimmed list, or for a crate the
+    /// list scored when the song is first asked for. The last few songs' lists are kept so going back and forth
+    /// between songs does not score them again.
+    func pairs(from id: String) -> [Pair] {
+        guard let crate else { return data.pairs[id] ?? [] }
+        if let hit = recentPicks[id] { return hit }
+        let t0 = Date()
+        let list = crate.picks(from: id)
+        lastPickSecs = Date().timeIntervalSince(t0)
+        recentPicks[id] = list
+        recentOrder.removeAll { $0 == id }
+        recentOrder.append(id)
+        while recentOrder.count > Library.recentLimit { recentPicks[recentOrder.removeFirst()] = nil }
+        return list
+    }
+    private static let recentLimit = 8
+    private var recentPicks: [String: [Pair]] = [:]
+    private var recentOrder: [String] = []
+    /// How long the last song's picks took to score, in seconds; read once, for the booth's log.
+    private var lastPickSecs: Double?
+    func takePickSecs() -> Double? { defer { lastPickSecs = nil }; return lastPickSecs }
 }
 
 // MARK: - theme (the web player's tokens)

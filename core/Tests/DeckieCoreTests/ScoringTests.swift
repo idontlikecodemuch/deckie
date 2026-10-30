@@ -196,6 +196,26 @@ final class ScoredPool: Sendable {
         print("recommendation lists compared: \(lists); ids checked where the lab's score is unique: \(idChecks), matching \(idMatches)")
     }
 
+    /// The booth scores one song at a time (`PairPool`); for every source that must give exactly the pairs the
+    /// whole-pool table holds for it, field by field.
+    @Test func oneSourceAtATimeMatchesTheWholeTable() throws {
+        let pool = ScoredPool.shared
+        let one = PairPool(pool.tracks)
+        var bySource: [String: [PairKey: PairScore]] = [:]
+        for (k, p) in pool.pairs { bySource[k.a, default: [:]][k] = p }
+        var compared = 0
+        for A in pool.tracks {
+            let got = one.scores(from: A)
+            let want = bySource[A.id] ?? [:]
+            #expect(got.count == want.count, "\(A.id): \(got.count) pairs, table has \(want.count)")
+            for p in got {
+                #expect(want[PairKey(p.a, p.b)] == p, "\(p.a) -> \(p.b) differs")
+                compared += 1
+            }
+        }
+        #expect(compared == pool.pairs.count)
+    }
+
     @Test func tempoAndKeyTermsOnHandMadeTracks() throws {
         var a = ScoredPool.shared.tracks[0], b = a
         a.bpmOut = 126; b.bpmIn = 128
