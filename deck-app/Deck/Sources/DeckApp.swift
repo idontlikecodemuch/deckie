@@ -61,6 +61,12 @@ struct DeckApp: App {
         case "scroll": let t = v("to"); DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { sug.scrollRequest = t }
         case "lib": sug.target = LibraryFilter(cd1: v("cd1") != "0", cd2: v("cd2") != "0", other: v("all") == "1"); sug.reroll(rec)
         case "startpt": let n = Int(v("i") ?? "1") ?? 1; let want = v("id"); DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { if let id = want ?? sug.pinned ?? sug.options.first?.id { sug.startIdx[id] = n } }
+        case "after":
+            // deck://after?s=<seconds>&u=<url-encoded deck:// hook>: run that hook later (a scripted walk-through;
+            // several hooks in one -deckURL are separated by " ; ")
+            if let s = Double(v("s") ?? ""), let u = v("u"), let next = URL(string: u) {
+                DispatchQueue.main.asyncAfter(deadline: .now() + s) { handle(next) }
+            }
         case "shuffle": sug.reroll(rec)
         case "page": let p = Int(v("i") ?? "0") ?? 0; DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { withAnimation { sug.page = p } }
         case "pin": if let i = Int(v("i") ?? ""), i < sug.options.count { sug.pin(sug.options[i].id, rec) }
