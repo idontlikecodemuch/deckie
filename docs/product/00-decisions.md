@@ -197,7 +197,14 @@ Apple's grid on the clips standing in for the engine's), is worse the more weigh
 frames only 32.8 percent exact against 47.4 with equal weights, beat frames 42.0, a metrical weighting 46.7, on both
 halves alike. All three are measured and none moves the minor half; and Apple's own framework reads 65.2 percent of
 these clips exactly (75.6 of the minor, 41.5 of the major), so the bar is missed on the minor half by 34 points.
-Short of a trained model, D16 stands: no key from our own reader on non-Apple platforms.
+Short of a trained model, D16 stands: no key from our own reader on non-Apple platforms. A fourth test (Oct 30, letter R, "Overtones taken out of the chroma"): taking the overtones out of the twelve-note
+profile before the key is decided, either by the reader's own harmonic discount (a few multiplications a frame) or by Mauch
+and Dixon's note transcription (heavier: 2.3 s a clip in Python), lifts exact from 47.4 to 55.4 percent on all 1,275 clips,
+and the gain holds on the half the choice never saw (sign test p 0.001 or better). It is the mode lean that the overtones
+were causing; the home note does not move beyond chance (held-out 71.6 to 72.6). Against Apple the exact gap narrows from
+17.6 points to 9.6: the major half is now ahead of Apple on both measures, the minor half is 23 points short of the bar.
+D16 still stands; whether the engine takes the discount now, the transcription later, or neither until a trained model
+is Christopher's call, with the facts in the letter.
 
 ### Note on D3 (Oct 26, from the community research): privacy covers taste, not only audio
 DJs' fear is "I'm not helping train ai for free": that their choices become someone else's product. So D3 extends
@@ -260,7 +267,10 @@ unfamiliar dance music; the crate's 83 percent flatters it. Apple's framework on
 ways on the mode: Apple reads 75.6 percent of the minor clips and 41.5 of the major exactly, ours 41.9 and 60.6, and
 Apple calls half of the major-key clips minor. Where they agree (604 clips) the key is right three times in four.
 D16's bar (within five points of Apple on each half) is met on the major half and missed on the minor half by 34
-points. So Apple's framework reads key on Mac and iPad, and on Windows
+points. Overtones taken out of the chroma (Oct 30; `mixer/key_overtones.py`; letter R, "Overtones taken out of the chroma"):
+exact 55.4 from 47.4 on all 1,275 with either the harmonic discount or NNLS note transcription, held on the even ids;
+the home note 72.2 (transcription) against 68.8, within chance; beside Apple on the 1,270: exact 55.6 against 65.2, home
+note 72.4 against 76.4. So Apple's framework reads key on Mac and iPad, and on Windows
 and Linux ours is the known gap, parked under the Oct 29 plateau. A Codex pass on what DJs say about key tools is briefed in
 `docs/research/briefs/codex-key-reddit.md`.
 
