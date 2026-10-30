@@ -382,6 +382,12 @@ each single profile set), writes `key_overtones.tsv` (per clip: every row's key,
 prints the Markdown tables. The best row is chosen by balanced home note on odd ids with confidence 2 and reported on
 the even ids; `--a-only` skips Part B. The audio stays in the scratchpad and is never committed.
 
+## key_abstain.py (Oct 30, 2026): "key unsure" rules from the committed sheets
+`nice -n 19 .venv/bin/python key_abstain.py [out.tsv]` reads `key_overtones.tsv` and `key_outside_apple.tsv` only and
+prints, for a few abstain rules fixed in its docstring (3f's and B's sure flags; two or three of 3f, A and B agreeing on
+the key or on the home note), the share of outside clips each rule keeps and the exact and home-note rates on the kept
+clips and on the rest, by odd and even half, with Apple beside as context only. Letter T, avenue 3. No rule is chosen.
+
 ## key_outside_apple.py (Oct 29 to 30, 2026): Apple's key on the outside set
 `.venv/bin/python key_outside_apple.py <mu outdir> [key_outside_apple.tsv]` reads the key Apple's framework wrote for
 each GiantSteps clip (tools/mubench output; the longest key range), scores it against the annotation beside the
