@@ -370,3 +370,10 @@ each GiantSteps clip (tools/mubench output) and scores the recommended reader (3
 equal (reproduces `key_outside_results.tsv` clip for clip), downbeat frames only, beat frames only, and metrical
 (downbeat 1, beat 1/2, between 1/4). Writes `key_downbeat.tsv` and prints the table overall, per major and minor
 half, and per data set confidence level. Nothing is tuned and no variant is chosen by the script.
+
+## key_outside_apple.py (Oct 29 to 30, 2026): Apple's key on the outside set
+`.venv/bin/python key_outside_apple.py <mu outdir> [key_outside_apple.tsv]` reads the key Apple's framework wrote for
+each GiantSteps clip (tools/mubench output; the longest key range), scores it against the annotation beside the
+stored row 3f (`key_outside_results.tsv`) and writes the per-clip sheet. The full run's sheet is committed
+(`key_outside_apple.tsv`, 1,270 clips; Apple gave no key on 5). The tables in letter R were computed from it with
+`key_parity.relation`, which names the fifth, relative and parallel classes the MIREX weighting needs.

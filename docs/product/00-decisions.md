@@ -192,8 +192,12 @@ evening, two of the three measured (letter R, "Mode test and tag survey"): a sep
 Krumhansl's profiles changes 3f's answer on 81 of 1,122 clips for a net gain of about nine, within chance, because in
 this music the minor third is louder than the major third in barely half of the minor-key clips; and only 4.3 percent
 of Christopher's library carries a key tag at all (Serato, on the loose files; none in the compilations), so reading
-tags fills gaps but cannot make the reading better. The downbeat-weighted chroma waits for the engine's grid on the
-clips. Short of a trained model, D16 stands: no key from our own reader on non-Apple platforms.
+tags fills gaps but cannot make the reading better. The third, chroma weighted toward the beat grid (Oct 30, with
+Apple's grid on the clips standing in for the engine's), is worse the more weight the strong beats get: downbeat
+frames only 32.8 percent exact against 47.4 with equal weights, beat frames 42.0, a metrical weighting 46.7, on both
+halves alike. All three are measured and none moves the minor half; and Apple's own framework reads 65.2 percent of
+these clips exactly (75.6 of the minor, 41.5 of the major), so the bar is missed on the minor half by 34 points.
+Short of a trained model, D16 stands: no key from our own reader on non-Apple platforms.
 
 ### Note on D3 (Oct 26, from the community research): privacy covers taste, not only audio
 DJs' fear is "I'm not helping train ai for free": that their choices become someone else's product. So D3 extends
@@ -250,9 +254,13 @@ audio from Zenodo for internal evaluation only; letter R's last section): the me
 high-confidence clips (MIREX-weighted 0.61), the shipped baseline 48; the gain is all in major keys (+12 points) and
 minor keys are 2.5 points worse; the main error is the wrong mode on the right note (44 percent of minor clips read
 as major). That puts our own key reader near the free KeyFinder and well below rekordbox and Mixed In Key on
-unfamiliar dance music; the crate's 83 percent flatters it. Apple's framework on the same clips (the iOS 27 simulator harness, first 214 of the 1,275, Oct 29 afternoon,
-`mixer/key_outside_apple.py`): exact 74.3 percent against ours 50.0 on those clips, neighbour 11.7, other 14.0;
-the rest of the clips run when the Mac is free. So Apple's framework reads key on Mac and iPad, and on Windows
+unfamiliar dance music; the crate's 83 percent flatters it. Apple's framework on the same clips (the iOS 27 simulator harness, all 1,275, finished Oct 30, 00:49;
+`mixer/key_outside_apple.py`; letter R, "Apple's framework on the outside set"): exact 65.2 percent against ours
+47.6 on the 1,270 clips it read (a first pass over 214 clips had shown 74.3 against 50.0). The two lean opposite
+ways on the mode: Apple reads 75.6 percent of the minor clips and 41.5 of the major exactly, ours 41.9 and 60.6, and
+Apple calls half of the major-key clips minor. Where they agree (604 clips) the key is right three times in four.
+D16's bar (within five points of Apple on each half) is met on the major half and missed on the minor half by 34
+points. So Apple's framework reads key on Mac and iPad, and on Windows
 and Linux ours is the known gap, parked under the Oct 29 plateau. A Codex pass on what DJs say about key tools is briefed in
 `docs/research/briefs/codex-key-reddit.md`.
 

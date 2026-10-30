@@ -498,3 +498,104 @@ our other readings. 61 of the 373 crate tracks have a Serato TKEY. On those 61, 
 in the same format. On those, Serato's answer agrees with Apple's about as often as ours does, no more. Reading the tag
 is cheap and could fill in a key where we have none, but it would not make our keys more accurate. The outside set
 cannot tell us how good tags are, because its files carry none.
+
+## Apple's framework on the outside set (Oct 30, 2026)
+
+**Method.** Apple's Music Understanding (iOS 27) ran over the same 1,275 clips in the iPad simulator (`tools/mubench`,
+one clip at a time, about 7 s a clip, Oct 29 afternoon to Oct 30, 00:49). Its key for a clip is the longest key range
+it reports, read as a Camelot code. Scored against the same annotations with the same scorer as row 3f
+(`mixer/key_outside_apple.py`; per-clip results in `mixer/key_outside_apple.tsv`). Apple returned no key on 5 clips
+(ids 277874, 299040, 574896, 797707, 1077935), so the tables are on 1,270 clips, and row 3f's figures below are on the
+same 1,270 (they differ from the 1,275-clip table above in the first decimal only). Nothing here was tuned: Apple's
+framework is a black box, and row 3f is the stored result.
+
+| Subset | Reader | n | Exact | Fifth | Relative | Parallel | Other | MIREX weighted |
+|---|---|---|---|---|---|---|---|---|
+| All plain-key clips | Apple | 1,270 | 65.2 | 8.0 | 5.2 | 11.2 | 10.5 | 73.0 |
+| All plain-key clips | 3f | 1,270 | 47.6 | 10.3 | 5.7 | 21.5 | 15.0 | 58.7 |
+| Major keys | Apple | 386 | 41.5 | 6.0 | 12.2 | 29.3 | 11.1 | 53.9 |
+| Major keys | 3f | 386 | 60.6 | 11.4 | 5.2 | 9.6 | 13.2 | 69.8 |
+| Minor keys | Apple | 884 | 75.6 | 8.8 | 2.1 | 3.3 | 10.2 | 81.3 |
+| Minor keys | 3f | 884 | 41.9 | 9.8 | 5.9 | 26.7 | 15.7 | 53.9 |
+| Confidence 2 | Apple | 1,120 | 68.8 | 7.1 | 5.1 | 11.5 | 7.5 | 76.2 |
+| Confidence 2 | 3f | 1,120 | 50.1 | 9.7 | 5.6 | 22.1 | 12.5 | 61.1 |
+| Confidence 1 | Apple | 135 | 40.0 | 16.3 | 6.7 | 8.1 | 28.9 | 51.8 |
+| Confidence 1 | 3f | 135 | 28.9 | 14.8 | 6.7 | 17.0 | 32.6 | 41.7 |
+| Confidence 0 | Apple | 15 | 20.0 | 0.0 | 0.0 | 13.3 | 66.7 | 22.7 |
+| Confidence 0 | 3f | 15 | 26.7 | 13.3 | 0.0 | 20.0 | 40.0 | 37.3 |
+
+In the earlier table's terms (neighbour is the relative key or one step on the wheel; parallel counts as other): Apple
+exact 65.2, neighbour 13.1, other 21.7; row 3f 47.6, 16.0, 36.5.
+
+**The mode.** The set is 70 percent minor. Apple answers minor on 1,003 of the 1,270 clips (the truth is 884); row 3f
+answers minor on 598. Apple reads 51.6 percent of the major clips as minor; row 3f reads 44.0 percent of the minor
+clips as major. So the two readers lean opposite ways on the mode, and the set's minor majority is what puts Apple
+ahead overall. On the home note alone (exact or parallel): Apple 76.4, row 3f 69.1.
+
+**Where they agree.** The two give the same key on 604 clips, and there the key is exact 75.3 percent of the time
+(major 63.7, minor 80.2). Where they differ (666 clips), Apple is right on 56.0 percent and row 3f on 22.4, neither on
+21.6. Split by mode: on the minor clips they differ on, Apple is right on 71.2 percent and row 3f on 6.3; on the major
+clips, row 3f on 58.0 and Apple on 22.2.
+
+**Against the first pass.** The first 214 clips (Oct 29 afternoon, noted in 00-decisions) gave Apple 74.3 exact against
+row 3f's 50.0; the full set gives 65.2 against 47.6. The first 214 (the lowest ids) were easier clips for Apple.
+
+**Against published numbers.** Same caveat as above: GiantSteps Key (604 clips) is a different, older annotation of
+other excerpts, and Knees et al. 2015 used a different scorer. Their exact rates (rekordbox 71.9, Mixed In Key 67.2,
+KeyFinder 45.4) are a rough scale only; on it Apple's 65.2 sits near Mixed In Key and row 3f's 47.6 near KeyFinder.
+
+**Against D16's bar.** D16 asks that our own reader be exact within five points of Apple's framework on the same clips,
+on the major and minor halves separately. Major half: row 3f 60.6, Apple 41.5 (ours ahead by 19 points). Minor half:
+row 3f 41.9, Apple 75.6 (ours behind by 34 points). The bar is not met; the minor half decides it. Overall, ours
+trails by 17.6 points.
+
+**What it says.** Apple's framework is not a gold standard on this music: it gets two clips in three exactly, and it
+calls half of the major-key clips minor. Ours is the better reader of major keys and much the worse reader of minor
+keys, which are most of dance music. The two readers' mistakes are different enough that their agreement says
+something (three in four right when they agree, against one in two overall); on Mac and iPad, where Apple's key is
+what ships (D11), that is an observation about the sure flag, not a change. For Windows and Linux, D16 holds, and
+the minor-key weakness is the gap. The downbeat-weighted chroma, the last of the three cheap ideas, is scored in the
+next section.
+
+## Chroma weighted toward the beat grid (Oct 30, 2026)
+
+The third cheap idea of D16. Harmony is carried most by what sounds on the strong beats (the bass note on the downbeat
+names the chord root, and chords change on bar lines far more often than inside a bar: the metrical hierarchy of
+Lerdahl and Jackendoff 1983), so the frames on the downbeat and on the beat might deserve more weight than the frames
+between them. Script `mixer/key_downbeat.py`; per-clip results in `mixer/key_downbeat.tsv`.
+
+**Method.** Row 3f as stored, with one change: the whitened HPCP frames (4,096 samples at 44.1 kHz, about 93 ms, no
+overlap) are summed with a weight per frame instead of equally. The beat grid is Apple's, from the run in the section
+above (each clip's rhythm.bars and rhythm.beats), standing in for the engine's grid, which is the same kind of thing;
+all 1,275 clips have one. Four weightings, fixed before the run, none tuned: equal (the baseline, which reproduces the
+stored row 3f clip for clip), downbeat frames only (one frame per bar), beat frames only (one per beat), and metrical
+(the downbeat frame 1, the other beat frames 1/2, the frames between beats 1/4). The profiles, the tie rules and the
+sure flag are unchanged.
+
+| Weighting (all 1,275 clips) | Exact | Fifth | Relative | Parallel | Other | MIREX weighted |
+|---|---|---|---|---|---|---|
+| equal (row 3f) | 47.4 | 10.3 | 5.6 | 21.4 | 15.3 | 58.5 |
+| downbeat frames only | 32.8 | 12.7 | 7.4 | 19.6 | 27.5 | 45.3 |
+| beat frames only | 42.0 | 10.6 | 7.1 | 18.9 | 21.4 | 53.2 |
+| metrical (1, 1/2, 1/4) | 46.7 | 10.8 | 6.3 | 20.5 | 15.7 | 58.1 |
+
+| Subset | n | equal | downbeat | beat | metrical |
+|---|---|---|---|---|---|
+| Major keys, exact | 388 | 60.3 | 44.8 | 50.3 | 58.0 |
+| Minor keys, exact | 887 | 41.7 | 27.5 | 38.3 | 41.7 |
+| Confidence 2, exact | 1,122 | 50.0 | 34.7 | 43.9 | 49.2 |
+| Confidence 1, exact | 138 | 28.3 | 20.3 | 28.3 | 29.0 |
+| Confidence 0, exact | 15 | 26.7 | 6.7 | 20.0 | 20.0 |
+
+Against equal: downbeat answers differently on 597 clips, exact gained 79 and lost 265 (net 186 lost); beat differs
+on 361, gained 70, lost 139 (net 69 lost); metrical differs on 94, gained 26, lost 35 (net 9 lost).
+
+**What it says.** Weighting the chroma toward the grid does not help, and the more weight the strong beats get, the
+worse the key, on both halves and at every confidence level. The frames on the beat are where the kick drum lands in
+this music, and a kick's energy is broad and low and sits on top of whatever the bass is playing, so the frames
+between the hits are where the harmony is clearest [inf: the shape of the numbers, not measured on the frames]. The
+metrical weighting, which keeps every frame, lands within chance of equal and gains nothing on the minor half. So all
+three cheap ideas are now measured: the mode rule is within chance, the tags are too few to matter, and the grid
+weighting is worse. None moves the minor-key weakness, and D16 stands: on a computer without Apple's framework,
+Deckie's own key waits for a better reader than a profile match. What remains is larger: the open items above (the
+tie-break of item 5 tried against minor-key losses) or a trained model.
