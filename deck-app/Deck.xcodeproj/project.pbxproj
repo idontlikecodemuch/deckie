@@ -9,11 +9,13 @@
 /* Begin PBXBuildFile section */
 		05BCC8C1945690F7C9BD6C72 /* Recognizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = AD0D6A7A5D1690A64DABA356 /* Recognizer.swift */; };
 		0B29084E58A5B9AB321403C7 /* overview.json in Resources */ = {isa = PBXBuildFile; fileRef = 4447CC9085D9EB4279C04CF0 /* overview.json */; };
+		15077272C4ECBD996B12A98E /* DeckieCore in Frameworks */ = {isa = PBXBuildFile; productRef = 12304D4AEAAC6FCC6B163B1D /* DeckieCore */; };
 		42CBE67850ABEF9626F8760F /* SetRecorder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 001E556F1E189DBC15BA3038 /* SetRecorder.swift */; };
 		4B4016B134222CC851A98ED2 /* Model.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0323AAE739FAF03D4A3174D4 /* Model.swift */; };
 		6041AA18AF863039125F90A1 /* OtherViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 21AD0C7E80EC8F7390973AC9 /* OtherViews.swift */; };
 		6D412B519593C96765D95340 /* SuggestionsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F33A59DF2EA4FB46DB59A0A /* SuggestionsView.swift */; };
 		817B4E4D74AE2997C7F966B6 /* Mixing.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E018A3260ABD70DED456CA5 /* Mixing.swift */; };
+		827B79B64A1E31FD990CA700 /* DeckieCrate in Frameworks */ = {isa = PBXBuildFile; productRef = B49D1D7567EBFBB382FD970D /* DeckieCrate */; };
 		82FB6E3B4B79F9ED651B7A58 /* deck_data.json in Resources */ = {isa = PBXBuildFile; fileRef = FCF6D813B16B533041BE8EC9 /* deck_data.json */; };
 		A363EF687A2B1A25437BA175 /* DeckApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A0CD63E51A2860949AEFB3B /* DeckApp.swift */; };
 		C14D34FFF4EB371C93C4BC9F /* mixmap.html in Resources */ = {isa = PBXBuildFile; fileRef = E92D407609A47C60440A7251 /* mixmap.html */; };
@@ -21,6 +23,7 @@
 		CEE3667911D1572F5C0F6754 /* ListenView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 51FCBBBC567C3AF3489222CD /* ListenView.swift */; };
 		DE19D92003CD73810706209C /* Deck.shazamcatalog in Resources */ = {isa = PBXBuildFile; fileRef = 2709C9CA316750E190590F23 /* Deck.shazamcatalog */; };
 		E38F5D0613A3EA31C4BA6F1B /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = C87E434C1DA957EE6100DE2C /* Assets.xcassets */; };
+		EE162494D55A34B7ACE5838A /* CrateLibrary.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEF7E88C03C4E70C553BFF09 /* CrateLibrary.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -37,9 +40,23 @@
 		9A0CD63E51A2860949AEFB3B /* DeckApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeckApp.swift; sourceTree = "<group>"; };
 		AD0D6A7A5D1690A64DABA356 /* Recognizer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Recognizer.swift; sourceTree = "<group>"; };
 		C87E434C1DA957EE6100DE2C /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		DEF7E88C03C4E70C553BFF09 /* CrateLibrary.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CrateLibrary.swift; sourceTree = "<group>"; };
 		E92D407609A47C60440A7251 /* mixmap.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = mixmap.html; sourceTree = "<group>"; };
 		FCF6D813B16B533041BE8EC9 /* deck_data.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = deck_data.json; sourceTree = "<group>"; };
+		FE51C304FBE843B7DC646F5B /* core */ = {isa = PBXFileReference; lastKnownFileType = folder; name = core; path = ../core; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		D1F93072562E51D291A702FC /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				15077272C4ECBD996B12A98E /* DeckieCore in Frameworks */,
+				827B79B64A1E31FD990CA700 /* DeckieCrate in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
 		1344B21C7D3B3D1D3EC00E6C /* Resources */ = {
@@ -56,6 +73,7 @@
 		38CFBFD8D604A67DF5C6C94E /* Sources */ = {
 			isa = PBXGroup;
 			children = (
+				DEF7E88C03C4E70C553BFF09 /* CrateLibrary.swift */,
 				549771412DCA2A83C4F58275 /* DebugSheet.swift */,
 				9A0CD63E51A2860949AEFB3B /* DeckApp.swift */,
 				51FCBBBC567C3AF3489222CD /* ListenView.swift */,
@@ -87,10 +105,19 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
+		A790816E405651BC6937C5B9 /* Packages */ = {
+			isa = PBXGroup;
+			children = (
+				FE51C304FBE843B7DC646F5B /* core */,
+			);
+			name = Packages;
+			sourceTree = "<group>";
+		};
 		B5B1F6A761E8EBFFEE1B26F4 = {
 			isa = PBXGroup;
 			children = (
 				39AE5C464AB623FE18424D1F /* Deck */,
+				A790816E405651BC6937C5B9 /* Packages */,
 				5B4C6186FD2E4700749071F2 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -104,6 +131,7 @@
 			buildPhases = (
 				8ED3620B64360147D46D3636 /* Sources */,
 				10C3C3BFA2C41D56C5FAE656 /* Resources */,
+				D1F93072562E51D291A702FC /* Frameworks */,
 			);
 			buildRules = (
 			);
@@ -111,6 +139,8 @@
 			);
 			name = Deck;
 			packageProductDependencies = (
+				12304D4AEAAC6FCC6B163B1D /* DeckieCore */,
+				B49D1D7567EBFBB382FD970D /* DeckieCrate */,
 			);
 			productName = Deck;
 			productReference = 9768B101742C7EC94619E350 /* Deck.app */;
@@ -140,6 +170,9 @@
 			);
 			mainGroup = B5B1F6A761E8EBFFEE1B26F4;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				7F349974FDEB2E30AFEAA62F /* XCLocalSwiftPackageReference "../core" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 5B4C6186FD2E4700749071F2 /* Products */;
 			projectDirPath = "";
@@ -170,6 +203,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				EE162494D55A34B7ACE5838A /* CrateLibrary.swift in Sources */,
 				CE3B6D0B375CF18CB83E44B5 /* DebugSheet.swift in Sources */,
 				A363EF687A2B1A25437BA175 /* DeckApp.swift in Sources */,
 				CEE3667911D1572F5C0F6754 /* ListenView.swift in Sources */,
@@ -364,6 +398,24 @@
 			defaultConfigurationName = Debug;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCLocalSwiftPackageReference section */
+		7F349974FDEB2E30AFEAA62F /* XCLocalSwiftPackageReference "../core" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = ../core;
+		};
+/* End XCLocalSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		12304D4AEAAC6FCC6B163B1D /* DeckieCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = DeckieCore;
+		};
+		B49D1D7567EBFBB382FD970D /* DeckieCrate */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = DeckieCrate;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = BDAD56553BA1FA8ECC4CDD4E /* Project object */;
 }
