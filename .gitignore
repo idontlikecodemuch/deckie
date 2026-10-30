@@ -42,3 +42,7 @@ core/.models/
 desk-app/Vendor/
 desk-app/build/
 desk-app/*.xcodeproj
+
+# device drop folder: nothing but its README is committed
+ref/*
+!ref/README.md
