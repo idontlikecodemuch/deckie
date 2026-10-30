@@ -1,0 +1,60 @@
+clock	a_id	a_song	b_id	b_song	b_disc	pick_rank_disc	picks_disc	score	p_first_screen_simple	p_first_screen_full	p_more_simple	pick_rank_all	picks_all	camelot_catalogue	camelot_played	tempo_a	tempo_b	tempo_change_pct	octave	a_span_s	clean	a_left_at_s	a_dur_s	a_mix_out	a_where
+14:27:51	089908ae2a	...Baby One More Time	edfc2ee251	Get Lucky	disc		39		0.0	0.0	0.0		78	other	other	93.44	109.14	16.80	1.0	374.6	1	331.9	360.2	314.5-355.8	inside mix-out
+15:21:01	edfc2ee251	Get Lucky	5585ea39f9	Levitating	disc	2	39	0.865	0.42	0.595	0.58	2	75	same	same	109.14	116.01	6.29	1.0	3190	0	348.6	369.6	314.5-347.5	after mix-out
+15:24:30	5585ea39f9	Levitating	730db3ecc1	Break My Soul (The Queens Remix)	disc	5	39	0.830	0.206	0.347	0.794	9	74	other	other	116.01	115.97	-0.03	1.0	209	1	220.4	250.4	202.8-235.9	inside mix-out
+15:31:48	730db3ecc1	Break My Soul (The Queens Remix)	7931a6a51a	Drop It Like It's Hot	disc	1	38	0.869	0.312	0.47	0.688	1	70	boost	boost	115.97	116.14	0.15	1.0	438	0	323.0	356.0	320.0-352.0	inside mix-out
+15:35:01	7931a6a51a	Drop It Like It's Hot	fda0386599	One More Time	disc	11	38	0.876	0.114	0.138	0.886	23	72	other	other	116.14	117.07	0.80	1.0	193	1	203.2	236.7	173.2-236.1	inside mix-out
+15:39:02	fda0386599	One More Time	a744522f06	This Is How We Do It	disc	15	36	0.779	0.017	0.044	0.425	28	68	other	other	117.07	117.08	0.01	1.0	241	1	204.5	210.8	171.8-203.0	to the end
+15:43:11	a744522f06	This Is How We Do It	77ea962f88	Too Close	disc		36		0.0	0.0	0.0		70	other	other	117.08	118.00	0.78	1.0	249	1	229.9	244.2	226.5-242.1	inside mix-out
+15:47:15	77ea962f88	Too Close	58a945ccc1	Thong Song	disc	6	36	0.788	0.14	0.212	0.86	11	68	other	other	118.00	118.05	0.04	1.0	244	1	162.5	240.2	201.7-217.2	before mix-out
+16:50:40	79db510db9	Pony	dbc03c2426	GNARLY	disc	35	35	0.611	0.033	0.057	0.0	70	70	other	neighbour	137.08	137.55	0.34	1.0	151	1	231.9	272.0	226.9-253.5	inside mix-out
+16:52:13	dbc03c2426	GNARLY	87bf5bba45	Barbie Girl	disc	36	39	0.593	0.032	0.082	0.0	69	72	other	relative	137.55	123.75	-10.03	1.0	93	1	103.1	104.3	87.6-101.8	to the end
+17:13:26	87bf5bba45	Barbie Girl	f642dd68c2	...Baby One More Time	loose		38		0.0	0.0	0.0		72	other	other	123.75	93.06	-24.80	1.0	1273	0	300.1	316.5	268.3-297.8	after mix-out
+17:18:27	f642dd68c2	...Baby One More Time	edfc2ee251	Get Lucky	disc		34		0.0	0.0	0.0		74	other	other	93.06	114.96	23.52	1.0	301	0	293.2	211.1	166.6-207.9	to the end
+17:18:55	edfc2ee251	Get Lucky	089908ae2a	...Baby One More Time	disc	30	34	0.665	0.039	0.146	0.0	66	70	other	other	114.96	93.45	-18.71	1.0	28	0		369.6	314.5-347.5	unknown
+17:19:37	089908ae2a	...Baby One More Time	edfc2ee251	Get Lucky	disc		36		0.0	0.0	0.0		75	other	other	93.45	117.43	25.66	1.0	42	0	120.8	360.2	314.5-355.8	before mix-out
+17:28:37	edfc2ee251	Get Lucky	54610602f8	Backstreet Boys - Everybody (Backstreet's Back)	loose	33	35	0.658	0.042	0.05	0.0	69	71	other	other	117.43	108.10	-7.94	1.0	540	0	350.7	369.6	314.5-347.5	after mix-out
+17:30:41	54610602f8	Backstreet Boys - Everybody (Backstreet's Back)	15744579e6	Electricity	disc		37		0.0	0.0	0.0		75	other	other	108.10	114.81	6.20	1.0	90.7	1	130.3	287.3	245.8-281.4	before mix-out
+19:22:52	9c0a47d25a	Empire State Of Mind	7b4e00b93b	Do It Again	loose		38		0.0	0.0	0.0	11	70	boost	boost	122.52	124.15	1.33	1.0	320	0		247.5	228.3-244.3	unknown
+19:25:53	7b4e00b93b	Do It Again	f068a57770	Doja Cat - Demons	loose		37		0.0	0.0	0.0		70	neighbour	neighbour	124.15	70.00	12.77	2.0	129.2	0	167.4	306.5	248.2-279.2	before mix-out
+20:12:43	e0dc3c7ab5	Somebody's Watching Me	8daf56a8e0	Sing It Back	loose		38		0.0	0.0	0.0	12	69	boost	boost	120.11	123.00	2.41	1.0	130	1	48.1	200.6	160.1-192.1	before mix-out
+20:17:45	8daf56a8e0	Sing It Back	386cbfae4c	Hot In Herre	loose		38		0.0	0.0	0.0	11	72	other	other	123.00	124.00	0.81	1.0	302	1		279.5	218.9-250.2	unknown
+20:21:51	386cbfae4c	Hot In Herre	4282f056a7	Umbrella	loose		38		0.0	0.0	0.0	26	71	other	other	124.00	126.00	1.61	1.0	246	1		257.6	224.6-255.6	unknown
+20:55:56	4282f056a7	Umbrella	9c3b804bd6	vampire	disc		40		0.0	0.0	0.0		69	other	other	126.00	155.00	23.02	1.0	2045	0		552.4	535.7-550.9	unknown
+21:00:31	9c3b804bd6	vampire	15e073a272	Disturbia	disc	14	39	0.619	0.03	0.048	0.97	24	70	other	other	155.00	128.03	-17.40	1.0	275	0		209.9	180.4-205.2	unknown
+21:04:07	15e073a272	Disturbia	ec7890a2d4	Lose Control	disc		40		0.0	0.0	0.0		71	other	other	128.03	130.01	1.54	1.0	216	1	153.7	218.2	168.2-198.2	before mix-out
+21:08:32	ec7890a2d4	Lose Control	79e7a45d90	Daft Punk Is Playing At My House	disc		40		0.0	0.0	0.0		69	other	other	130.01	136.12	4.70	1.0	265	1	151.0	207.2	190.2-205.0	before mix-out
+21:14:07	79e7a45d90	Daft Punk Is Playing At My House	e0fc19ea05	PROBLEMZ	loose		39		0.0	0.0	0.0		74	neighbour	neighbour	136.12	110.00	-19.19	1.0	335	0	195.4	201.6	183.9-198.1	inside mix-out
+21:22:16	e0fc19ea05	PROBLEMZ	b18ba51986	Rhythm Is A Dancer	loose		39		0.0	0.0	0.0	43	76	neighbour	neighbour	110.00	124.45	13.13	1.0	489	0		180.6	157.3-174.8	unknown
+21:28:03	b18ba51986	Rhythm Is A Dancer	e196f47e7d	American Boy	loose		39		0.0	0.0	0.0		71	neighbour	neighbour	124.45	128.00	2.86	1.0	347	1	325.8	332.2	252.0-282.9	to the end
+21:32:58	e196f47e7d	American Boy	04c326848f	Blue (Da Ba Dee)	loose		39		0.0	0.0	0.0	45	70	other	other	128.00	128.00	0.00	1.0	295	0		213.8	165.0-195.0	unknown
+21:49:33	aed6b25f60	Stranger Things Theme	cef5acce17	Goodies	disc	18	39	0.869	0.036	0.069	0.0	34	68	other	other	130.56	127.37	-2.44	1.0	67	1		270.2	240.1-270.1	unknown
+21:51:47	cef5acce17	Goodies	2c4bc602dc	No Diggity	disc	15	38	0.823	0.028	0.05	0.299	26	68	other	other	127.37	126.56	-0.64	1.0	134	1	99.6	228.0	195.5-226.0	before mix-out
+21:55:13	2c4bc602dc	No Diggity	15e073a272	Disturbia	disc		37		0.0	0.0	0.0		70	neighbour	neighbour	126.56	129.27	2.14	1.0	180.9	1	191.0	201.0	167.7-198.1	inside mix-out
+21:59:59	15e073a272	Disturbia	f0688dffae	Zombieboy	disc	37	37	0.746	0.035	0.095	0.0	72	72	other	other	129.27	124.37	-3.80	1.0	137.1	1	167.3	218.2	168.2-198.2	before mix-out
+22:03:19	f0688dffae	Zombieboy	58a945ccc1	Thong Song	disc	8	36	0.790	0.132	0.215	0.868	15	69	other	other	124.37	123.31	-0.85	1.0	200	1	198.9	213.3	193.1-208.8	inside mix-out
+22:07:13	58a945ccc1	Thong Song	730db3ecc1	Break My Soul (The Queens Remix)	disc	8	36	0.809	0.19	0.275	0.81	12	69	neighbour	neighbour	123.31	122.18	-0.92	1.0	234	1	222.7	279.0	263.3-278.8	before mix-out
+22:11:55	730db3ecc1	Break My Soul (The Queens Remix)	be5f4e069d	In Da Club	disc	19	34	0.749	0.042	0.088	0.0	40	66	other	other	122.18	122.42	0.20	1.0	282	1	316.5	356.0	320.0-352.0	before mix-out
+22:14:11	be5f4e069d	In Da Club	9c0a47d25a	Empire State Of Mind	disc	20	33	0.785	0.036	0.072	0.0	35	65	other	other	122.42	118.76	-2.99	1.0	136	1	105.6	146.0	107.6-138.3	before mix-out
+22:17:29	9c0a47d25a	Empire State Of Mind	da6e2527c5	Maneater	disc	1	32	0.865	0.388	0.558	0.612	2	65	neighbour	neighbour	118.76	121.49	2.30	1.0	198	1	215.3	247.5	228.3-244.3	before mix-out
+22:20:46	da6e2527c5	Maneater	9550a2af00	Friday (Dopamine Re-Edit)	loose	5	31	0.892	0.178	0.281	0.822	9	65	other	other	121.49	122.02	0.44	1.0	197	1	238.5	245.1	208.0-240.0	inside mix-out
+22:23:21	9550a2af00	Friday (Dopamine Re-Edit)	71d7922d2d	We Are Your Friends	disc		30		0.0	0.0	0.0		66	other	other	122.02	121.87	-0.12	1.0	155	1	127.0	169.2	135.4-166.6	before mix-out
+22:25:55	71d7922d2d	We Are Your Friends	9b81bc4b78	This Is What You Came For	disc	4	33	0.851	0.182	0.285	0.818	9	69	relative	relative	121.87	121.89	0.02	1.0	148.8	1	156.7	165.0	127.9-159.1	inside mix-out
+22:30:23	9b81bc4b78	This Is What You Came For	85e9c129e6	Look What You Made Me Do	disc	4	35	0.895	0.206	0.327	0.793	6	68	relative	relative	121.89	127.00	4.19	1.0	268	1	229.1	296.2	263.4-294.4	before mix-out
+22:33:29	85e9c129e6	Look What You Made Me Do	f8b9c2903d	Put Your Hands Up For Detroit	disc	23	33	0.783	0.035	0.063	0.0	45	66	other	other	127.00	128.00	0.79	1.0	186	1	183.6	211.9	180.4-210.4	inside mix-out
+22:36:36	f8b9c2903d	Put Your Hands Up For Detroit	8bd22f1602	Call on Me	disc	6	36	0.861	0.128	0.202	0.872	11	72	other	other	128.00	127.20	-0.63	1.0	187	1		277.7	210.1-270.1	unknown
+22:43:53	8bd22f1602	Call on Me	366dc91024	Von Dutch	disc	30	34	0.774	0.019	0.051	0.0	66	70	other	other	127.20	126.99	-0.17	1.0	437	1	381.0	515.9	441.4-502.2	before mix-out
+22:48:31	366dc91024	Von Dutch	ec27aa8f79	Lady Gaga - Abracadabra	loose	2	35	0.832	0.253	0.365	0.747	1	66	same	same	126.99	126.90	-0.07	1.0	278	1	161.7	295.2	252.1-266.9	before mix-out
+22:50:42	ec27aa8f79	Lady Gaga - Abracadabra	bedd2ea40c	Running Up That Hill (A Deal With God)	disc	2	34	0.947	0.438	0.605	0.562	2	68	neighbour	neighbour	126.90	126.75	-0.12	1.0	131	1	143.8	223.4	188.8-219.3	before mix-out
+22:53:03	bedd2ea40c	Running Up That Hill (A Deal With God)	64a3aaa1c2	Dancing On My Own	disc		34		0.0	0.0	0.0		67	other	other	126.75	121.40	-4.22	1.0	141	1		184.5	151.8-182.5	unknown
+22:57:02	64a3aaa1c2	Dancing On My Own	e46b81e5ab	Pink Pony Club	disc	17	34	0.702	0.029	0.052	0.0	42	68	relative	other	121.40	117.58	-3.15	1.0	239	1	188.2	279.4	213.8-246.7	before mix-out
+22:59:17	e46b81e5ab	Pink Pony Club	c28f4e7450	Lost In Music	disc		34		0.0	0.0	0.0		72	other	other	117.58	121.09	2.99	1.0	135	1	157.7	169.5	128.8-145.9	after mix-out
+23:04:40	c28f4e7450	Lost In Music	a34b438689	Monster	disc	32	33	0.760	0.049	0.084	0.0	67	68	neighbour	other	121.09	123.95	2.36	1.0	319.5	1	406.9	471.1	403.0-434.0	inside mix-out
+23:09:03	a34b438689	Monster	59b14556e8	Summertime Sadness (Remix)	disc	14	33	0.791	0.047	0.084	0.953	29	67	other	other	123.95	124.25	0.24	1.0	263	1	208.7	249.3	212.1-244.1	before mix-out
+23:13:47	59b14556e8	Summertime Sadness (Remix)	5585ea39f9	Levitating	disc		33		0.0	0.0	0.0		67	other	other	124.25	124.47	0.17	1.0	100.8	1	159.3	415.6	381.2-411.7	before mix-out
+23:22:12	5585ea39f9	Levitating	fc58560f11	Vogue	disc	5	33	0.839	0.172	0.341	0.829	8	67	other	other	124.47	124.42	-0.04	1.0	505	0		250.4	202.8-235.9	unknown
+23:30:04	fc58560f11	Vogue	64cfcb19f3	I Put A Spell On You	disc	22	32	0.678	0.028	0.053	0.0	56	66	other	other	124.42	136.47	9.68	1.0	472	0	276.6	289.6	254.4-287.4	inside mix-out
+23:34:33	64cfcb19f3	I Put A Spell On You	6478f7d1bd	It Feels So Good	disc	30	36	0.813	0.044	0.107	0.0	59	69	other	other	136.47	136.81	0.25	1.0	269	1	321.0	393.6	348.9-376.4	before mix-out
+23:37:42	6478f7d1bd	It Feels So Good	890c95ce6f	Born Slippy	disc	22	36	0.712	0.019	0.045	0.0	51	70	other	other	136.81	136.70	-0.08	1.0	189	1	304.1	485.1	415.1-443.6	before mix-out
+23:41:52	890c95ce6f	Born Slippy	fb5e2fb59f	Children	disc	2	37	0.787	0.273	0.393	0.727	6	73	other	other	136.70	138.94	1.64	1.0	250	1	80.5	257.0	233.4-247.1	before mix-out
+23:43:24	fb5e2fb59f	Children	fdb6138e05	Midnight Sun	disc		34		0.0	0.0	0.0		71	other	relative	138.94	139.76	0.59	1.0	92	1	54.0	246.0	211.1-239.1	before mix-out
