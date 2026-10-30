@@ -4,8 +4,9 @@ import DeckieCrate
 
 /// A crate made by Deckie Desk, as the booth sees it: the tracks and discs, the picks (scored here on the iPad with
 /// the shared scoring, one song at a time as it plays, so any DJ's crate works and the crate itself stays as Desk
-/// wrote it), the whole-song waves from the per-bar loudness, and where the recognition signatures are. The bundled
-/// deck_data.json is the other source of the same `DeckData`; a crate's `DeckData` has no pairs (`picks(from:)`).
+/// wrote it), the whole-song waves and the join lanes from the per-bar loudness, and where the recognition
+/// signatures are. The bundled deck_data.json is the other source of the same `DeckData`; a crate's `DeckData` has
+/// no pairs (`picks(from:)`).
 struct CrateLibrary {
     struct SignatureRef { let id: String; let title: String; let artist: String; let url: URL }
 
@@ -45,6 +46,12 @@ struct CrateLibrary {
             let deckName = (t.file.name as NSString).deletingPathExtension
             // The folder as the DJ's software shows it: the crate's own label, else the file's parent folder.
             let folder = t.ident.folder ?? ((t.file.rel ?? "") as NSString).deletingLastPathComponent.components(separatedBy: "/").last ?? ""
+            let waves: (out: Wave, in: Wave, head: Wave)? = {
+                guard let grid, let mi = t.mixIn, let mo = t.mixOut, let lufs = t.bars?[BarSeries.lufs], !lufs.isEmpty else { return nil }
+                return CrateLibrary.joinWaves(lufs: lufs, bpm: grid.bpm, firstDownbeat: grid.firstDownbeatS, dur: t.file.durationS,
+                                              mixIn: [barStart(mi.startBar), barStart(mi.endBar)],
+                                              mixOut: [barStart(mo.startBar), barStart(mo.endBar)])
+            }()
             tracks.append(Track(
                 id: t.id, title: artist.isEmpty ? song : "\(artist) - \(song)", artist: artist, song: song,
                 ver: t.ident.version ?? "", deck: deckName, on: t.ident.disc != nil, disc: t.ident.disc,
@@ -56,7 +63,8 @@ struct CrateLibrary {
                 mixIn: t.mixIn.map { [barStart($0.startBar), barStart($0.endBar)] },
                 mixOut: t.mixOut.map { [barStart($0.startBar), barStart($0.endBar)] },
                 mixInBars: t.mixIn.map { $0.endBar - $0.startBar }, mixOutBars: t.mixOut.map { $0.endBar - $0.startBar },
-                fade: t.ends?.fadeOut, firstBeat: grid?.firstDownbeatS, wOut: nil, wIn: nil, wHead: nil, spb: nil,
+                fade: t.ends?.fadeOut, firstBeat: grid?.firstDownbeatS, wOut: waves?.out, wIn: waves?.in, wHead: waves?.head,
+                spb: waves == nil ? nil : CrateLibrary.waveSPB,
                 steadyIn: t.ends?.steadyInBar.map { barStart($0) }, bpmGrid: grid?.bpm))
             if let lufs = t.bars?[BarSeries.lufs], !lufs.isEmpty {
                 // One value per bar, loudness -40 to 0 dB on the 0...63 scale the bundled overviews use.
@@ -91,6 +99,39 @@ struct CrateLibrary {
         let data = DeckData(generated: crate.manifest.createdAt, tracks: tracks, discs: discs, pairs: [:], catalogVariants: ["o"])
         return CrateLibrary(url: url, name: crate.manifest.name, data: data, overview: overview, signatures: sigs,
                             pool: pool, coreById: coreById, onDisc: onDisc, poolSecs: poolSecs)
+    }
+
+    /// Samples per beat of the join lanes built from a crate: a quarter beat per sample, 16 per bar.
+    static let waveSPB = 4
+
+    /// The join view's three snippets (the end of the song, its mix-in, its first 64 bars) from the per-bar
+    /// loudness, over the same windows tools/mixwaves_all.py cuts from the audio. Each bar's value fills its 16
+    /// samples, so a lane is a flat step per bar, cut by the beat and bar lines the join view draws. The height is
+    /// the bar's loudness as an amplitude (10^(dB/20)) next to the snippet's loudest bar, 0...63; a bar without a
+    /// value, and anything before bar 1 or after the last bar, is 0.
+    static func joinWaves(lufs: [Double], bpm: Double, firstDownbeat fd: Double, dur: Double,
+                          mixIn mi: [Double], mixOut mo: [Double]) -> (out: Wave, in: Wave, head: Wave) {
+        let spb = waveSPB, perBar = 4 * spb
+        let P = 60 / bpm / Double(spb), bar = 240 / bpm
+        let amp = lufs.map { $0.isFinite ? pow(10, $0 / 20) : 0 }
+        func snippet(_ ta: Double, _ tb: Double, _ win: [Double]) -> Wave {
+            let k0 = Int(((ta - fd) / P).rounded(.down)), k1 = Int(((tb - fd) / P).rounded(.up))
+            let vals = (k0..<max(k0, k1)).map { k -> Double in
+                let b = k >= 0 ? k / perBar : -1
+                return b >= 0 && b < amp.count ? amp[b] : 0
+            }
+            let mx = vals.max().flatMap { $0 > 0 ? $0 : nil } ?? 1
+            let t0 = fd + Double(k0) * P
+            let s = String(vals.map { Overview.alphabet[min(63, Int(($0 / mx * 63).rounded()))] })
+            let beat0 = Int((Double(k0) / Double(spb)).rounded(.down))
+            return Wave(t0: (t0 * 1000).rounded() / 1000, n: s.count, s: s,
+                        win: win.map { Int((($0 - t0) / P).rounded()) }, beat0: beat0, k0: k0)
+        }
+        let leadBars = 8.0, maxBars = 32.0, headBars = 64.0
+        let out = snippet(max(0, mo[0] - leadBars * bar), min(dur, mo[0] + maxBars * bar, mo[1]), mo)
+        let inn = snippet(max(0, mi[0]), min(dur, mi[1] + leadBars * bar, mi[0] + (maxBars + leadBars) * bar), mi)
+        let head = snippet(0, min(dur, fd + headBars * bar), mi)
+        return (out, inn, head)
     }
 
     /// The picks for one song: every other track scored from it, then the best 40 on-disc targets and the best 40
