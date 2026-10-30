@@ -353,3 +353,13 @@ pair and marked), 1 s of silence between clips, mastered like the mixes; list in
 1. register/analyse it (Part 1: `add_tracks.py`, `analyze.py --ids ...`, then `score.py` for new pairs);
 2. to force it into a mix add its id to `MUST` in plan.py (mix, role), or to keep it out add it to `EXCLUDE`;
 3. `plan.py`, check the tracklists, then `render.py plan_mix1.json` / `plan_mix2.json` and `sampler.py`.
+
+## sprint_check.py (Oct 29, 2026): a Deckie crate against the sprint's data
+`python3 sprint_check.py <crate.deckiecrate>` joins the sprint's pool (`<music folder>/_pool build/newfiles/pool.json`
+and `mixer/candidates.json`) with a crate by file path (files the build dropped as duplicates follow the import log
+to the file that has the record) and writes `sprint_check.tsv` and `sprint_check.md`. The sheet keeps the two kinds
+of sprint data apart, as the D5 note of Oct 29 asks: the `fact.` columns are the known facts (artist and song name,
+from the compilations' own tags and the disc map) and the `early.` columns are what the early version decided (BPM
+with its overrides and folded values, the lab's key for the 373 candidates, era, kind, the Halloween flag, cut_key).
+Agreement with an `early.` column is agreement, not correctness. Deckie writes no era, kind, Halloween flag or cut_key
+yet, so those are reported as sprint-only.
