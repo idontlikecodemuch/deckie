@@ -18,7 +18,10 @@ struct DeskApp: App {
     var body: some Scene {
         WindowGroup("Deckie Desk") {
             ContentView().environmentObject(model).frame(minWidth: 900, minHeight: 560)
-                .onAppear { if let p = Headless.openOnLaunch { model.open(URL(fileURLWithPath: p)) } }
+                .onAppear {
+                    if let p = Headless.openOnLaunch { model.open(URL(fileURLWithPath: p)) }
+                    if let s = Snapshot.request { model.open(URL(fileURLWithPath: s.crate)); Snapshot.run(model: model, out: s.out) }
+                }
         }
         .commands {
             CommandGroup(replacing: .newItem) {
@@ -52,6 +55,8 @@ enum Bundled {
 /// A way to drive the app without its window, for checks and for long builds from a terminal:
 ///   "Deckie Desk" --check-engine                      says where the runtime and the models were found, and exits
 ///   "Deckie Desk" --build <folder> <out.deckiecrate> [jobs]   builds a crate with the bundled engine, printing progress
+///   "Deckie Desk" --open <crate>                      opens that crate in the window
+///   "Deckie Desk" --snapshot <crate> <folder>         opens it, steps through it and writes PNGs of the window (Snapshot.swift)
 enum Headless {
     /// "Deckie Desk" --open <crate.deckiecrate>: open that crate in the window on launch.
     static var openOnLaunch: String? {
