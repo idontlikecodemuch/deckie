@@ -87,7 +87,7 @@ struct Suggester {
 
     /// Candidate pairs for `cur`, limited to the target discs; one cut per song; nothing recently played.
     func candidates(for cur: Track, target: LibraryFilter, exclude: Set<String>) -> [Pair] {
-        let pairs = lib.data.pairs[cur.id] ?? []
+        let pairs = lib.pairs(from: cur.id)
         var bestPerCut: [String: Pair] = [:]
         var order: [String] = []
         for p in pairs {
@@ -158,7 +158,7 @@ struct Suggester {
     }
 
     /// The pair for a pinned target (may be absent from the trimmed list: then a nil pair -> computed join).
-    func pair(from a: String, to b: String) -> Pair? { lib.data.pairs[a]?.first { $0.b == b } }
+    func pair(from a: String, to b: String) -> Pair? { lib.pairs(from: a).first { $0.b == b } }
 }
 
 func weightedIndex<R: RandomNumberGenerator>(_ w: [Double], _ rng: inout R) -> Int {

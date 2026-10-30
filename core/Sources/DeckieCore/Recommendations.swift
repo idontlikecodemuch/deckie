@@ -36,10 +36,7 @@ public enum PairScorer {
         var C = [[Double]](repeating: [Double](repeating: 0, count: n), count: n)
         for i in 0..<n {
             for j in i..<n {
-                var dot = 0.0
-                let ei = tracks[i].embedding, ej = tracks[j].embedding
-                // A record without an embedding (an engine record) has an empty one, which scores 0 against any.
-                for d in 0..<min(ei.count, ej.count) { dot += ei[d] * ej[d] }
+                let dot = cosine(tracks[i].embedding, tracks[j].embedding)
                 C[i][j] = dot; C[j][i] = dot
             }
         }
@@ -49,6 +46,16 @@ public enum PairScorer {
         vals.sort()
         let denom = Double(max(1, vals.count))
         return C.map { row in row.map { Double(Py.countAtMost($0, in: vals)) / denom } }
+    }
+
+    /// The cosine similarity of two unit-length embeddings: their dot product, summed in order. A record without an
+    /// embedding (an engine record) has an empty one, which scores 0 against any. Every timbre rank uses this one
+    /// sum, so the same pair gives the same bits wherever it is computed.
+    @inline(__always)
+    static func cosine(_ ei: [Double], _ ej: [Double]) -> Double {
+        var dot = 0.0
+        for d in 0..<min(ei.count, ej.count) { dot += ei[d] * ej[d] }
+        return dot
     }
 
     /// Every directed pair that passes the gates (same-cut pairs are skipped).
@@ -127,5 +134,45 @@ public enum PairScorer {
         e.enumerated().sorted { l, r in
             l.element.score != r.element.score ? l.element.score > r.element.score : l.offset < r.offset
         }.map { $0.element }
+    }
+}
+
+/// A pool kept for scoring one song at a time: the booth asks for the picks of the song now playing, so it does not
+/// need the table of every pair (5.4 million entries for a 2,327-track crate). The one thing that needs the whole
+/// pool is the timbre rank (the share of all track-to-track cosines at or below a pair's own), so the sorted list of
+/// those cosines, one per unordered pair, is built once here; scoring a song then costs one cosine per other track.
+/// `scores(from:)` gives exactly what `PairScorer.scoreAll` gives for the same source.
+public struct PairPool: Sendable {
+    public let tracks: [Track]
+    /// Position in `tracks` by id (the first, if an id repeats).
+    public let index: [String: Int]
+    /// Every unordered pair's cosine, ascending (n·(n−1)/2 values; about 22 MB for 2,327 tracks).
+    public let sortedCosines: [Double]
+
+    public init(_ tracks: [Track]) {
+        self.tracks = tracks
+        index = Dictionary(tracks.enumerated().map { ($1.id, $0) }, uniquingKeysWith: { a, _ in a })
+        let n = tracks.count
+        var vals: [Double] = []
+        vals.reserveCapacity(n * max(0, n - 1) / 2)
+        for i in 0..<n {
+            let ei = tracks[i].embedding
+            for j in (i + 1)..<max(i + 1, n) { vals.append(PairScorer.cosine(ei, tracks[j].embedding)) }
+        }
+        vals.sort()
+        sortedCosines = vals
+    }
+
+    /// Every pair from `a` into the pool that passes the gates, same-cut pairs skipped, in pool order.
+    public func scores(from a: Track) -> [PairScore] {
+        let i = index[a.id]
+        let denom = Double(max(1, sortedCosines.count))
+        var out: [PairScore] = []
+        for (j, B) in tracks.enumerated() {
+            if j == i || a.cutKey == B.cutKey { continue }
+            let pct = Double(Py.countAtMost(PairScorer.cosine(a.embedding, B.embedding), in: sortedCosines)) / denom
+            if let r = PairScoring.scorePair(a, B, timbrePct: pct) { out.append(r) }
+        }
+        return out
     }
 }
