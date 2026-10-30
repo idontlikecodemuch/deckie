@@ -61,6 +61,14 @@ struct DeckApp: App {
         case "scroll": let t = v("to"); DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { sug.scrollRequest = t }
         case "lib": sug.target = LibraryFilter(cd1: v("cd1") != "0", cd2: v("cd2") != "0", other: v("all") == "1"); sug.reroll(rec)
         case "startpt": let n = Int(v("i") ?? "1") ?? 1; let want = v("id"); DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { if let id = want ?? sug.pinned ?? sug.options.first?.id { sug.startIdx[id] = n } }
+        case "crate":
+            // deck://crate?path=/abs/x.deckiecrate: use that crate (tracks, picks, signatures) instead of the bundled data
+            guard let p = v("path") else { return }
+            do {
+                try Library.shared.load(crate: URL(fileURLWithPath: p))
+                rec.stop(); rec.rebuildCatalog(); sug.reroll(rec)
+                rec.note("crate loaded: \(Library.shared.data.tracks.count) tracks, \(Library.shared.data.pairs.count) with picks")
+            } catch { rec.note("crate failed: \(error)") }
         case "after":
             // deck://after?s=<seconds>&u=<url-encoded deck:// hook>: run that hook later (a scripted walk-through;
             // several hooks in one -deckURL are separated by " ; ")

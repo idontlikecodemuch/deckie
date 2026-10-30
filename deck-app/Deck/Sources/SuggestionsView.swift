@@ -102,9 +102,11 @@ struct PickControls: View {
         return HStack(spacing: 14) {
             toggle(["Simple", "Full"], sug.mode == .simple ? 0 : 1) { i in sug.mode = i == 0 ? .simple : .full; sug.reroll(rec) }
             Spacer()
-            libChip("CD1", on: sug.target.cd1, color: Theme.sing) { sug.target.cd1.toggle(); sug.reroll(rec) }
-            libChip("CD2", on: sug.target.cd2, color: Theme.mix) { sug.target.cd2.toggle(); sug.reroll(rec) }
-            libChip("All", on: sug.target.other, color: Theme.acc) { sug.target.other.toggle(); sug.reroll(rec) }
+            if !Library.shared.data.discs.isEmpty {   // a crate without discs has one pool: nothing to narrow
+                libChip("CD1", on: sug.target.cd1, color: Theme.sing) { sug.target.cd1.toggle(); sug.reroll(rec) }
+                libChip("CD2", on: sug.target.cd2, color: Theme.mix) { sug.target.cd2.toggle(); sug.reroll(rec) }
+                libChip("All", on: sug.target.other, color: Theme.acc) { sug.target.other.toggle(); sug.reroll(rec) }
+            }
         }
     }
 
