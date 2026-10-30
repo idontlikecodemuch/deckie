@@ -68,7 +68,10 @@ your crate, reads your pitch, or shows you how to bring the next one in. Not sol
 - Key: Apple's detector on the whole track and again on 30-second windows, with a rule that opens a new key segment
   only when the key moves outside the current key's family and stays there. Measured: every tested key change found;
   9 of 60 ordinary songs got a second segment, and a stability score turns those into "key uncertain" rather than a
-  wrong answer.
+  wrong answer. No key reader is right every time, Apple's included: on an outside set of unfamiliar dance tracks
+  Apple's reading is exact about two times in three and finds the home note three times in four, and the part most
+  often wrong is the mode, major against minor on the right home note. Deckie says so once, in plain words, and marks
+  a key it is unsure of instead of hiding it (D17).
 - Vocals: Apple's instrument activity says, every 50 milliseconds, how much singing, drums and bass are playing. We
   calibrate it against tracks labelled by ear by DJs across styles, not by us. The open problem is sampled and
   chopped vocals, which it reads as not singing; a real vocal separation (HTDemucs, MIT licence) comes later as an

@@ -206,6 +206,19 @@ were causing; the home note does not move beyond chance (held-out 71.6 to 72.6).
 D16 still stands; whether the engine takes the discount now, the transcription later, or neither until a trained model
 is Christopher's call, with the facts in the letter.
 
+### D17. Key is shown with its limits: Apple's reading where it exists, a plain caveat everywhere, the mode named as the weak part (Oct 30)
+Christopher, on the overtones test: "Apple does a better job and I think we use that when it is available. On a
+completely separate track we need to investigate a way to improve the native tone detector. In the product we should
+just flag that tone detection isn't perfect (even for apple) and flag the mode issue." So: on a device with Apple's
+framework (iOS 27, macOS 27) the crate's key is Apple's reading, as D11 has it. The product says, once and plainly, that
+no key reader is right every time, Apple's included (on the outside set of unfamiliar dance tracks Apple's reading is
+exact about two times in three and finds the home note three times in four), and that the part most often wrong is the
+mode: major against minor on the right home note. Where Deckie shows a key it shows the Camelot code and, when the
+reading is unsure, says so rather than hiding it (the key-stability confidence of D13 carries this). Improving Deckie's
+own reader is a research track of its own, apart from the product work, under D16's bar and D5's library-blind rule;
+the facts to start from are letter R's last four sections (the outside test, Apple on the same clips, the beat-grid
+weighting, the overtones). Spec 5's key bullet carries the caveat.
+
 ### Note on D3 (Oct 26, from the community research): privacy covers taste, not only audio
 DJs' fear is "I'm not helping train ai for free": that their choices become someone else's product. So D3 extends
 to history, cues, saved pairs and learned preferences: all of it stays with the DJ, Deckie says who benefits from
