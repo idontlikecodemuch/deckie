@@ -65,16 +65,19 @@ public enum AudioFiles {
         while let rel = walker.nextObject() as? String {
             let name = (rel as NSString).lastPathComponent
             let url = root.appendingPathComponent(rel)
+            // `skipDescendants()` is only for a folder: called after a file (a `.DS_Store`, say) it skips the rest
+            // of the folder that file is in, and the music after it is never seen.
+            let isFolder = (walker.fileAttributes?[.type] as? FileAttributeType) == .typeDirectory
             if name.hasPrefix(".") {
-                walker.skipDescendants()
+                if isFolder { walker.skipDescendants() }
                 continue
             }
             let ext = (name as NSString).pathExtension.lowercased()
             if ext == CrateFormat.packageExtension || ext == Builder.workExtension {
-                walker.skipDescendants()
+                if isFolder { walker.skipDescendants() }
                 continue
             }
-            if (walker.fileAttributes?[.type] as? FileAttributeType) == .typeDirectory, skipFolder(rel, name) {
+            if isFolder, skipFolder(rel, name) {
                 walker.skipDescendants()
                 continue
             }
