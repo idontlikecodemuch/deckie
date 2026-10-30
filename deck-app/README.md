@@ -207,5 +207,7 @@ best 40 of the rest (lifting that trim is a separate step). The full library (Oc
 signatures; the Release build on the iPad A16 iOS 27 simulator) loads in about 5 s, 2.8 s of it the similarity
 list, and holds about 0.5 GB afterwards (it held 4.3 GB and took 2 min 7 s when every pair was scored at load); one
 song's picks take 55 to 80 ms, and a streamed track is matched within a few seconds, each 4 s segment in 1 to 4 ms.
-A 238-track crate loads at once and scores a song in about 7 ms. Not yet from a crate: the per-beat waveforms of the join view (rows show text), pitch-variant
-signatures, disc and folder labels beyond the file's own folder.
+A 238-track crate loads at once and scores a song in about 7 ms. From a crate, the join view's two lanes come from
+the per-bar loudness, one flat step per bar cut by the beat and bar lines (the bundled data's lanes are finer, a
+an eighth of a beat per sample from the audio). Not yet from a crate: pitch-variant signatures, disc and folder labels
+beyond the file's own folder.
