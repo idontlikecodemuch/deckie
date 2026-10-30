@@ -371,6 +371,17 @@ equal (reproduces `key_outside_results.tsv` clip for clip), downbeat frames only
 (downbeat 1, beat 1/2, between 1/4). Writes `key_downbeat.tsv` and prints the table overall, per major and minor
 half, and per data set confidence level. Nothing is tuned and no variant is chosen by the script.
 
+## key_overtones.py (Oct 30, 2026): overtones taken out of the chroma, on the outside set
+`nice -n 19 .venv/bin/python key_overtones.py check` confirms the per-frame cache from `key_mode.py extract`
+reproduces row 3f clip for clip. `... key_overtones.py extract --data <giantsteps folder> --jobs 2` writes the NNLS
+note activations per frame (Mauch and Dixon 2010; four fixed values of the harmonic rolloff s) to the scratchpad cache
+(`keynnls_cache/`, resumable, never committed; 24 minutes for the 1,275 clips at 2 workers). `... score --data
+<folder>` scores Part A (the reader's own harmonic slope taken off the fifth and the major third, per frame or on the
+summed vector, on H4w and H1w) and Part B (NNLS chroma, full, treble and bass ranges, against the Faraldo average and
+each single profile set), writes `key_overtones.tsv` (per clip: every row's key, relation, margin and sure flag) and
+prints the Markdown tables. The best row is chosen by balanced home note on odd ids with confidence 2 and reported on
+the even ids; `--a-only` skips Part B. The audio stays in the scratchpad and is never committed.
+
 ## key_outside_apple.py (Oct 29 to 30, 2026): Apple's key on the outside set
 `.venv/bin/python key_outside_apple.py <mu outdir> [key_outside_apple.tsv]` reads the key Apple's framework wrote for
 each GiantSteps clip (tools/mubench output; the longest key range), scores it against the annotation beside the

@@ -255,7 +255,8 @@ unverified]. **Forum evidence is thin; a Reddit pass by Codex would help.**
    the window majority (row 4d) was measured here.
 4. Swift timing and agreement with this Python on the 373 tracks, the way 2a checked the old port [unmeasured].
 5. A major/minor tie-break aimed at the 16 percent major-for-minor reads against Apple, for example discounting the
-   fifth harmonic's share of the major third. Untested [inf]; it must be chosen on dev.
+   fifth harmonic's share of the major third. Tested Oct 30, 2026: see "Overtones taken out of the chroma" at the end
+   of this letter (the discount, and NNLS chroma beside it; chosen on the odd ids, reported on the even ids).
 
 ## Outside test: GiantSteps-MTG-key (Oct 29, 2026)
 
@@ -599,3 +600,219 @@ three cheap ideas are now measured: the mode rule is within chance, the tags are
 weighting is worse. None moves the minor-key weakness, and D16 stands: on a computer without Apple's framework,
 Deckie's own key waits for a better reader than a profile match. What remains is larger: the open items above (the
 tie-break of item 5 tried against minor-key losses) or a trained model.
+
+## Overtones taken out of the chroma (Oct 30, 2026)
+
+The next test after the three cheap ideas, aimed first at the home note and second at the mode. Script
+`mixer/key_overtones.py`; per-clip results for every row in `mixer/key_overtones.tsv` (key, relation, margin and sure
+flag per row, the half of the split, row 3f's stored key and Apple's).
+
+### In plain words
+
+A key has a home note (the note a piece keeps coming back to and feels finished on; it is the key's letter, such as A
+in A minor) and a mode (major, which sounds bright, or minor, which sounds dark). Every note an instrument plays also
+sounds a ladder of fainter, higher notes at the same moment, its overtones. Two rungs of that ladder land on notes that
+matter for the key: the third overtone sounds the note a fifth above (for A, the E), and the fifth overtone sounds the
+major third above (for A, the C sharp). So a bass line on A makes an E and a C sharp ring faintly even when nobody
+plays them, and a reader that counts how loud each of the twelve notes is will hear "A major" in a track that is in A
+minor, or "E" as the home note in a track at home on A. The principle of this test is to take that overtone energy out
+before the key is decided. Part A does it with simple arithmetic: from each note's loudness, subtract the share the
+note below it would have put there through its overtones. Part B does it the way the published method does, by
+approximate transcription: working out, moment by moment, which notes were most likely played (each note with its
+whole ladder of overtones) and counting only those. Nothing was fitted to the music; the same reader should hold for
+any DJ's crate.
+
+### Method
+
+**Part A, the harmonic discount (open item 5).** From the per-frame cache of the mode test (row 3f's own whitened
+4-harmonic HPCP per 93 ms frame, H4w, and the 1-harmonic version, H1w), for each frame and pitch class k:
+p'[k] = max(0, p[k] − w · p[k − d]), with (d, w) = (7, 0.6²) for the third harmonic and (4, 0.6⁴) for the fifth
+harmonic; "both" takes both shares off the original frame at once. Twelve rows: {third, fifth, both} × {per frame, on
+the clip's summed vector} × {H4w, H1w}, each decided as 3f (the three Faraldo profiles averaged). Per frame is the
+principled version: an overtone sounds at the same moment as its root, so the share to take off is set by the root's
+energy in the same frame; on the summed vector a root in one bar would discount a fifth played in another. The summed
+form is shown for comparison.
+
+**Part B, NNLS chroma.** Our own implementation of the published method: audio at 11,025 Hz, Hamming frames of 4,096
+samples (0.37 s), a log-frequency spectrum of 256 bins a third of a semitone apart, global tuning, the "std"
+pre-processing (subtract a running mean over a Hamming-weighted octave, divide by the running standard deviation,
+negatives to zero; this plays the part of 3f's whitening), a dictionary of 84 notes A0 to G#7 each with 20 harmonics of
+amplitude s^(k−1), a non-negative least-squares fit per frame, and the note activations summed into twelve pitch
+classes. The hop is 1,024 samples at 11,025 Hz (93 ms, the reader's own frame rate; the plugin's is twice as dense),
+padded so frame centres coincide with the H4w frames. Four values of s ran as fixed variants (0.6, 0.7, 0.9 and the
+paper's "LS", 0.9 for the lowest note down to 0.6 for the highest); three ranges (full, and the paper's treble and bass
+windows); seven decisions (the Faraldo average as 3f, and each single profile set in `key_light.PROFILES`). 84 rows.
+
+**Selection.** The best row of each part is chosen on the selection half (odd clip ids, data set confidence 2, 579
+clips) by balanced home note (the mean of the major-key and minor-key home-note rates, home note = exact + parallel),
+ties by balanced exact, and reported on the held-out half (even ids, confidence 2, 543 clips), on all 1,275 clips and
+on the 1,270 Apple read. A paired sign test on the held-out half (clips one reader gets right and the other wrong)
+says whether a difference is more than noise.
+
+**Checks.** The cache reproduces row 3f's stored key on all 1,275 clips. The treble and bass windows are the plugin's
+tabulated values, reproduced by closed forms to within 1e-5 and 1.1e-3.
+
+### Where the numbers come from
+
+- The overtone ladder and the slope 0.6 per harmonic: Gómez 2006, *Tonal Description of Music Audio Signals*, PhD
+  thesis, Universitat Pompeu Fabra, section 3 (the reader's own `harmonic_template`).
+- NNLS chroma: Mauch and Dixon 2010, "Approximate note transcription for the improved identification of difficult
+  chords", ISMIR 2010 (Utrecht), pp. 135-140: frame length and sample rate (2.2), 3 bins a semitone and 256 bins
+  (2.2), the "std" pre-processing over an octave, bins k−18 to k+18 (2.3), s^(k−1) with s = 0.6, 0.9 and LS tested and
+  84 tones from 27.5 Hz to 3,322 Hz, each normalised to sum 1 (2.4), the treble and bass chroma windows (2.5, Figure
+  2). The paper's best rows were std with s = 0.6 (80.0 on the MIREX chord metric) and std with LS (63.3 on the finer
+  metric).
+- NNLS Chroma / Chordino Vamp plugin (Mauch, QMUL; release 0.2 README and source, GPL; read, not copied): spectral shape
+  default s = 0.7, whitening 1.0 (the std case), 20 harmonics per note, tuning from the lower 62 percent of the bins,
+  the window tables.
+- Non-negative least squares: Lawson and Hanson 1974, *Solving Least Squares Problems*, ch. 23 (scipy.optimize.nnls).
+
+### No fitting
+
+Every value is the reader's own or published, written into the script before the run. The only choice is which row
+to report, and it was made on the selection half. Caution: braw and bgate (Faraldo, Jordà and Herrera, AES Semantic
+Audio 2017) were made from Beatport EDM, the music of this data set, so rows that use them are not clean outside
+measurements of those profiles; the outside-test section above does not note this [2nd: the derivation is as the 2017
+paper's abstract and this letter's profile note describe it; I could not open the paper to check whether the very same
+clips were used]. The chosen Part B row decides with the Faraldo average, which includes them, as row 3f does.
+
+### Results
+
+Chosen rows: Part A **A-both-frame-H4w** (both shares, per frame, on H4w); Part B **B-s07-full-faraldo** (s = 0.7, full
+range, Faraldo average). Columns are percent of clips; home note = exact + parallel; Camelot number = exact +
+relative.
+
+| Subset | Row | n | Exact | Fifth | Relative | Parallel | Other | Home note | Camelot number | MIREX |
+|---|---|---|---|---|---|---|---|---|---|---|
+| Selection half | 3f | 579 | 51.6 | 10.0 | 4.7 | 20.7 | 13.0 | 72.4 | 56.3 | 62.2 |
+| Selection half | A-both-frame-H4w | 579 | 60.4 | 9.8 | 5.7 | 13.3 | 10.7 | 73.7 | 66.1 | 69.7 |
+| Selection half | B-s07-full-faraldo | 579 | 62.0 | 7.6 | 4.1 | 16.2 | 10.0 | 78.2 | 66.1 | 70.3 |
+| Held-out half | 3f | 543 | 48.3 | 9.4 | 6.6 | 23.4 | 12.3 | 71.6 | 54.9 | 59.6 |
+| Held-out half | A-both-frame-H4w | 543 | 56.0 | 10.9 | 5.5 | 14.2 | 13.4 | 70.2 | 61.5 | 65.9 |
+| Held-out half | B-s07-full-faraldo | 543 | 54.9 | 8.1 | 6.3 | 17.7 | 13.1 | 72.6 | 61.1 | 64.3 |
+| Held-out, major | 3f | 167 | 61.1 | 12.0 | 6.0 | 11.4 | 9.6 | 72.5 | 67.1 | 71.1 |
+| Held-out, major | A-both-frame-H4w | 167 | 56.9 | 8.4 | 3.0 | 22.2 | 9.6 | 79.0 | 59.9 | 66.4 |
+| Held-out, major | B-s07-full-faraldo | 167 | 62.3 | 8.4 | 3.0 | 16.8 | 9.6 | 79.0 | 65.3 | 70.7 |
+| Held-out, minor | 3f | 376 | 42.6 | 8.2 | 6.9 | 28.7 | 13.6 | 71.3 | 49.5 | 54.5 |
+| Held-out, minor | A-both-frame-H4w | 376 | 55.6 | 12.0 | 6.6 | 10.6 | 15.2 | 66.2 | 62.2 | 65.7 |
+| Held-out, minor | B-s07-full-faraldo | 376 | 51.6 | 8.0 | 7.7 | 18.1 | 14.6 | 69.7 | 59.3 | 61.5 |
+| All 1,275 | 3f | 1,275 | 47.4 | 10.3 | 5.6 | 21.4 | 15.3 | 68.8 | 53.0 | 58.5 |
+| All 1,275 | A-both-frame-H4w | 1,275 | 55.4 | 10.6 | 5.8 | 13.5 | 14.7 | 68.9 | 61.2 | 65.1 |
+| All 1,275 | B-s07-full-faraldo | 1,275 | 55.4 | 8.1 | 5.3 | 16.9 | 14.4 | 72.2 | 60.6 | 64.4 |
+| All, confidence 1 | 3f / A / B | 138 | 28.3 / 32.6 / 31.9 | | | | | 44.9 / 44.9 / 49.3 | | 40.8 / 43.8 / 42.5 |
+| All, confidence 0 | 3f / A / B | 15 | 26.7 / 46.7 / 33.3 | | | | | 46.7 / 53.3 / 40.0 | | 37.3 / 53.3 / 36.7 |
+
+**Beside Apple** (the 1,270 clips Apple read):
+
+| Half | Reader | n | Exact | Fifth | Relative | Parallel | Other | Home note | Camelot number | MIREX |
+|---|---|---|---|---|---|---|---|---|---|---|
+| All | Apple | 1,270 | 65.2 | 8.0 | 5.2 | 11.2 | 10.5 | 76.4 | 70.4 | 73.0 |
+| All | 3f | 1,270 | 47.6 | 10.3 | 5.7 | 21.5 | 15.0 | 69.1 | 53.2 | 58.7 |
+| All | A-both-frame-H4w | 1,270 | 55.6 | 10.6 | 5.8 | 13.5 | 14.5 | 69.1 | 61.4 | 65.3 |
+| All | B-s07-full-faraldo | 1,270 | 55.6 | 8.1 | 5.3 | 16.9 | 14.2 | 72.4 | 60.9 | 64.6 |
+| Major | Apple | 386 | 41.5 | 6.0 | 12.2 | 29.3 | 11.1 | 70.7 | 53.6 | 53.9 |
+| Major | 3f | 386 | 60.6 | 11.4 | 5.2 | 9.6 | 13.2 | 70.2 | 65.8 | 69.8 |
+| Major | A-both-frame-H4w | 386 | 53.9 | 9.6 | 3.4 | 20.7 | 12.4 | 74.6 | 57.3 | 63.8 |
+| Major | B-s07-full-faraldo | 386 | 63.2 | 8.8 | 2.6 | 14.0 | 11.4 | 77.2 | 65.8 | 71.2 |
+| Minor | Apple | 884 | 75.6 | 8.8 | 2.1 | 3.3 | 10.2 | 78.8 | 77.7 | 81.3 |
+| Minor | 3f | 884 | 41.9 | 9.8 | 5.9 | 26.7 | 15.7 | 68.6 | 47.7 | 53.9 |
+| Minor | A-both-frame-H4w | 884 | 56.3 | 11.1 | 6.9 | 10.3 | 15.4 | 66.6 | 63.2 | 66.0 |
+| Minor | B-s07-full-faraldo | 884 | 52.3 | 7.8 | 6.4 | 18.1 | 15.4 | 70.4 | 58.7 | 61.7 |
+
+**Home-note errors by interval** (predicted home note minus the true one, in semitones; clip counts on the 1,270):
+
+| Interval | +1 | +2 | +3 | +4 | +5 | +6 | +7 | +8 | +9 | +10 | +11 |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| Apple | 9 | 22 | 27 | 16 | 59 | 5 | 67 | 13 | 58 | 17 | 7 |
+| 3f | 11 | 21 | 53 | 32 | 65 | 6 | 127 | 19 | 21 | 34 | 4 |
+| A-both-frame-H4w | 9 | 15 | 65 | 17 | 129 | 6 | 62 | 32 | 17 | 37 | 4 |
+| B-s07-full-faraldo | 15 | 18 | 59 | 22 | 72 | 8 | 85 | 22 | 16 | 28 | 5 |
+
++7 is naming the dominant (the fifth above) as home, +5 the subdominant (the fifth below), +3 the relative major of a
+minor key, +9 the relative minor of a major key.
+
+**Every Part A row** (balanced = mean of the major and minor halves; held-out = even ids, confidence 2; "differs" and
+"gained / lost" are exact answers against 3f over all 1,275):
+
+| Row | Sel. balanced home | Sel. balanced exact | Held-out balanced home | Held-out balanced exact | All home | All exact | All MIREX | Differs | Gained / lost |
+|---|---|---|---|---|---|---|---|---|---|
+| 3f (baseline) | 72.0 | 54.6 | 71.9 | 51.8 | 68.8 | 47.4 | 58.5 | 0 | |
+| H1w (baseline) | 68.9 | 51.1 | 64.9 | 45.0 | 65.2 | 43.5 | 56.4 | 167 | 30 / 80 |
+| both, per frame, H4w | 73.8 | 58.6 | 72.6 | 56.2 | 68.9 | 55.4 | 65.1 | 430 | 210 / 108 |
+| fifth, per frame, H4w | 73.3 | 59.5 | 72.4 | 57.5 | 69.0 | 54.7 | 64.6 | 210 | 131 / 37 |
+| both, summed, H1w | 73.0 | 56.6 | 73.2 | 55.7 | 69.1 | 55.1 | 64.7 | 401 | 199 / 100 |
+| fifth, summed, H4w | 72.9 | 59.1 | 72.4 | 56.7 | 68.9 | 54.4 | 64.3 | 213 | 130 / 41 |
+| third, per frame, H4w | 72.8 | 58.0 | 72.9 | 57.6 | 68.6 | 52.8 | 62.7 | 320 | 148 / 79 |
+| both, per frame, H1w | 72.2 | 58.0 | 73.4 | 58.0 | 68.9 | 55.8 | 65.2 | 332 | 179 / 71 |
+| third, summed, H1w | 72.1 | 56.2 | 74.1 | 57.7 | 69.3 | 52.9 | 62.6 | 269 | 132 / 61 |
+| third, summed, H4w | 72.0 | 57.8 | 72.0 | 56.2 | 68.0 | 52.8 | 62.9 | 356 | 159 / 90 |
+| third, per frame, H1w | 72.0 | 56.1 | 73.4 | 56.6 | 68.8 | 51.6 | 61.6 | 222 | 108 / 54 |
+| both, summed, H4w | 71.4 | 56.1 | 72.3 | 54.5 | 67.4 | 53.9 | 64.2 | 495 | 222 / 139 |
+| fifth, summed, H1w | 70.9 | 57.6 | 66.7 | 50.9 | 66.4 | 52.0 | 63.0 | 241 | 120 / 61 |
+| fifth, per frame, H1w | 70.3 | 56.7 | 66.9 | 51.3 | 66.3 | 51.5 | 62.7 | 234 | 114 / 61 |
+
+**Part B by family** (balanced home note; the Faraldo-average row of each s and range, and the single profile that did
+best on the selection half). The chosen row, B-s07-full-faraldo, differs from 3f on 367 clips, exact gained 183 and
+lost 81. All 84 rows are in the sheet.
+
+| s | Range | Faraldo average: selection | held-out | Best single profile (selection) | its selection | its held-out |
+|---|---|---|---|---|---|---|
+| 0.6 | full | 77.2 | 73.4 | braw | 77.5 | 73.2 |
+| 0.6 | treble | 74.8 | 74.1 | braw | 75.2 | 74.5 |
+| 0.6 | bass | 64.6 | 65.0 | edma | 65.5 | 65.8 |
+| 0.7 | full | 78.1 | 74.4 | braw | 77.8 | 74.7 |
+| 0.7 | treble | 75.8 | 73.3 | braw | 75.2 | 74.4 |
+| 0.7 | bass | 65.9 | 65.9 | edma | 67.0 | 66.8 |
+| 0.9 | full | 75.7 | 77.4 | krumhansl | 77.3 | 75.4 |
+| 0.9 | treble | 74.2 | 73.6 | bgate | 74.9 | 72.2 |
+| 0.9 | bass | 66.7 | 68.1 | krumhansl | 70.9 | 69.3 |
+| LS | full | 76.9 | 75.3 | shaath | 77.5 | 73.6 |
+| LS | treble | 75.5 | 74.2 | braw | 75.4 | 74.1 |
+| LS | bass | 66.2 | 66.2 | edma | 68.9 | 67.8 |
+| (3f) | | 72.0 | 71.9 | | | |
+
+### Held-out
+
+| Row (held-out half, paired against 3f) | Home note gained | lost | sign test p | Exact gained | lost | sign test p |
+|---|---|---|---|---|---|---|
+| A-both-frame-H4w | 33 | 41 | 0.42 | 89 | 47 | <0.001 |
+| B-s07-full-faraldo | 34 | 29 | 0.62 | 72 | 36 | 0.001 |
+
+Home-note gain over 3f by half, in points (selection / held-out / all 1,275): A-both-frame-H4w major +3.2 / +6.6 /
++4.4, minor +0.5 / −5.1 / −1.8; B-s07-full-faraldo major +7.0 / +6.6 / +7.0, minor +5.3 / −1.6 / +1.9.
+
+The selection half's home-note gain does not hold on the held-out half for either chosen row: Part A goes from +1.8
+balanced points to +0.7 and B from +6.1 to +2.5, and the paired counts on the held-out home note are within chance
+(p 0.42 and 0.62). The exact gain does hold: +7.7 and +6.6 points on the held-out half (sign test p < 0.001 and p = 0.001). The
+B row's home-note gain that remains sits in the major half (+6.6 held out); in the minor half it reverses (+5.3
+selected, −1.6 held out), which by this letter's rule for the mode test is noise.
+
+### What it says
+
+- **The overtones were the mode lean.** Taking them out moves 3f's exact rate from 47.4 to 55.4 percent on all 1,275
+  clips in both parts, and the gain holds on the clips the choice never saw. It comes from the parallel errors (right
+  home note, wrong mode), which fall from 21.4 to 13.5 (A) and 16.9 (B) percent, and it is concentrated in the minor
+  half (held-out minor exact 42.6 to 55.6 and 51.6). Part A trades some of it back in the major half (held-out major
+  exact 61.1 to 56.9: it now calls some major keys minor); Part B does not (62.3).
+- **The home note did not move beyond chance.** Balanced home note on the held-out half: 3f 71.9, A 72.6, B 74.4, and
+  the paired counts are level. Part A removes half of the dominant errors (+7: 127 to 62) and adds the same number as
+  subdominant errors (+5: 65 to 129): the discount takes the fifth's energy down so far that the note below the home
+  note wins instead. Part B cuts the dominant errors to 85 without that swap (+5: 72), the nearest any of our readers
+  has come to Apple's interval shape (67 and 59) [measured counts; whether this is a real gain in the home note is
+  what the sign test does not support at this size].
+- **Every full-range and treble NNLS row with the Faraldo average beats 3f on the held-out balanced home note** (73.3
+  to 77.4 against 71.9), and every bass-range row with the Faraldo average is worse (65.0 to 68.1). The rows share most of their arithmetic, so
+  this is one finding seen eight times, not eight findings [inf]. The best held-out row (s = 0.9, full, 77.4) is not
+  the one the selection half chose, which is what noise among near-equal rows looks like [inf].
+- **Against Apple** on the 1,270: the gap in exact narrows from 17.6 points to 9.6 for both parts. On the home note, B
+  is 4.0 behind Apple (72.4 against 76.4; 3f is 7.3 behind). By half, B beats Apple on major keys on both measures
+  (exact 63.2 against 41.5, home note 77.2 against 70.7) and still trails on minor keys (exact 52.3 against 75.6, home
+  note 70.4 against 78.8). D16's bar (exact within five points on each half) is still not met: the minor half is 23
+  points short.
+- **Per frame against summed.** On the held-out balanced home note, for H4w per frame is ahead of summed for both
+  shares (72.6 against 72.3) and the third (72.9 against 72.0) and level for the fifth (72.4 each); for H1w summed is
+  as good or better (third 74.1 against 73.4). Differences under a point: no firm order [measured, mixed].
+- **Cost.** NNLS took 2.29 s a clip per worker (decode included), 24 minutes for the 1,275 clips at two workers and
+  nice 19; Part A runs from the cache in seconds and would add a few multiplications a frame to the engine [inf].
+
+Nothing here is decided; the decision note says what follows.
