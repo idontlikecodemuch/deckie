@@ -46,9 +46,19 @@ struct CrateLibrary {
             let deckName = (t.file.name as NSString).deletingPathExtension
             // The folder as the DJ's software shows it: the crate's own label, else the file's parent folder.
             let folder = t.ident.folder ?? ((t.file.rel ?? "") as NSString).deletingLastPathComponent.components(separatedBy: "/").last ?? ""
+            // One value per bar on the 0...63 scale, as the bundled overviews measure it: the bar's amplitude
+            // (10^(dB/20)) next to the song's loudest bar, so the loudest bar is 63 and a bar without a value is 0.
+            let barVals: [Int]? = t.bars?[BarSeries.lufs].flatMap { lufs in
+                guard !lufs.isEmpty else { return nil }
+                let amp = lufs.map { $0.isFinite ? pow(10, $0 / 20) : 0 }
+                let mx = amp.max().flatMap { $0 > 0 ? $0 : nil } ?? 1
+                return amp.map { max(0, min(63, Int(($0 / mx * 63).rounded()))) }
+            }
             let waves: (out: Wave, in: Wave, head: Wave)? = {
-                guard let grid, let mi = t.mixIn, let mo = t.mixOut, let lufs = t.bars?[BarSeries.lufs], !lufs.isEmpty else { return nil }
-                return CrateLibrary.joinWaves(lufs: lufs, bpm: grid.bpm, firstDownbeat: grid.firstDownbeatS, dur: t.file.durationS,
+                guard let grid, let mi = t.mixIn, let mo = t.mixOut, let barVals else { return nil }
+                // The whole-song wave's heights (its floor and curve), so a lane is that wave zoomed in to the join.
+                let heights = Overview.shape(barVals.map { Double($0) / 63 })
+                return CrateLibrary.joinWaves(heights: heights, bpm: grid.bpm, firstDownbeat: grid.firstDownbeatS, dur: t.file.durationS,
                                               mixIn: [barStart(mi.startBar), barStart(mi.endBar)],
                                               mixOut: [barStart(mo.startBar), barStart(mo.endBar)])
             }()
@@ -66,9 +76,7 @@ struct CrateLibrary {
                 fade: t.ends?.fadeOut, firstBeat: grid?.firstDownbeatS, wOut: waves?.out, wIn: waves?.in, wHead: waves?.head,
                 spb: waves == nil ? nil : CrateLibrary.waveSPB,
                 steadyIn: t.ends?.steadyInBar.map { barStart($0) }, bpmGrid: grid?.bpm))
-            if let lufs = t.bars?[BarSeries.lufs], !lufs.isEmpty {
-                // One value per bar, loudness -40 to 0 dB on the 0...63 scale the bundled overviews use.
-                let vals = lufs.map { v -> Int in v.isFinite ? max(0, min(63, Int(((v + 40) / 40 * 63).rounded()))) : 0 }
+            if let vals = barVals {
                 overview[t.id] = Overview(n: vals.count, dur: t.file.durationS, s: String(vals.map { Overview.alphabet[$0] }))
             }
             if t.signatures["o"] != nil {
@@ -104,25 +112,24 @@ struct CrateLibrary {
     /// Samples per beat of the join lanes built from a crate: a quarter beat per sample, 16 per bar.
     static let waveSPB = 4
 
-    /// The join view's three snippets (the end of the song, its mix-in, its first 64 bars) from the per-bar
-    /// loudness, over the same windows tools/mixwaves_all.py cuts from the audio. Each bar's value fills its 16
-    /// samples, so a lane is a flat step per bar, cut by the beat and bar lines the join view draws. The height is
-    /// the bar's loudness as an amplitude (10^(dB/20)) next to the snippet's loudest bar, 0...63; a bar without a
-    /// value, and anything before bar 1 or after the last bar, is 0.
-    static func joinWaves(lufs: [Double], bpm: Double, firstDownbeat fd: Double, dur: Double,
+    /// The join view's three snippets (the end of the song, its mix-in, its first 64 bars) from per-bar heights,
+    /// over the same windows tools/mixwaves_all.py cuts from the audio. `heights` are the song's whole-song wave
+    /// values (0...1, from `Overview.shape`, so the floor is the whole song's), one per bar. Each bar's height fills
+    /// its 16 samples as round(height * 63), so a lane is a flat step per bar, cut by the beat and bar lines the
+    /// join view draws, and is the whole-song wave zoomed in to the join; there is no per-snippet scaling. Anything
+    /// before bar 1 or after the last bar is 0.
+    static func joinWaves(heights amp: [Double], bpm: Double, firstDownbeat fd: Double, dur: Double,
                           mixIn mi: [Double], mixOut mo: [Double]) -> (out: Wave, in: Wave, head: Wave) {
         let spb = waveSPB, perBar = 4 * spb
         let P = 60 / bpm / Double(spb), bar = 240 / bpm
-        let amp = lufs.map { $0.isFinite ? pow(10, $0 / 20) : 0 }
         func snippet(_ ta: Double, _ tb: Double, _ win: [Double]) -> Wave {
             let k0 = Int(((ta - fd) / P).rounded(.down)), k1 = Int(((tb - fd) / P).rounded(.up))
             let vals = (k0..<max(k0, k1)).map { k -> Double in
                 let b = k >= 0 ? k / perBar : -1
                 return b >= 0 && b < amp.count ? amp[b] : 0
             }
-            let mx = vals.max().flatMap { $0 > 0 ? $0 : nil } ?? 1
             let t0 = fd + Double(k0) * P
-            let s = String(vals.map { Overview.alphabet[min(63, Int(($0 / mx * 63).rounded()))] })
+            let s = String(vals.map { Overview.alphabet[max(0, min(63, Int(($0 * 63).rounded())))] })
             let beat0 = Int((Double(k0) / Double(spb)).rounded(.down))
             return Wave(t0: (t0 * 1000).rounded() / 1000, n: s.count, s: s,
                         win: win.map { Int((($0 - t0) / P).rounded()) }, beat0: beat0, k0: k0)

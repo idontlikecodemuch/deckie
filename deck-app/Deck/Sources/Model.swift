@@ -28,8 +28,11 @@ struct Overview: Codable {
     let s: String
     var values: [Int] { Wave(t0: 0, n: n, s: s, win: [0, 0], beat0: 0).values }
     /// 0...1 heights with the quiet floor removed and a curve, so loud masters still show their shape
-    var display: [Double] {
-        let v = values.map { Double($0) / 63 }
+    var display: [Double] { Overview.shape(values.map { Double($0) / 63 }) }
+    /// The whole-song wave's treatment of 0...1 values: the quiet floor (the 10th percentile of the values given)
+    /// is removed and a curve applied, giving 0...1 heights. The crate join lanes use it too, with the song's floor.
+    static func shape(_ v: [Double]) -> [Double] {
+        guard !v.isEmpty else { return [] }
         let lo = v.sorted()[max(0, v.count / 10)]
         return v.map { x in 0.08 + 0.92 * pow(max(0, (x - lo) / max(0.05, 1 - lo)), 1.8) }
     }
