@@ -79,9 +79,9 @@ App size about 59 MB (catalog 47 MB, data 9 MB, mix map 1.2 MB).
 
 ## Install on the iPad (Chris's paid developer account)
 
-**Installed Oct 24, evening** (moves menu, 16 % pitch range, sync marker). Earlier note: the hardened build (pause handling, hard cut vs blend, REC indicator moved to the
-top-right corner) is built at `build/dd-dev/Build/Products/Release-iphoneos/Deck.app` but not yet installed: the
-iPad went to the party. Next time it is connected and unlocked, from `Deck app/` run:
+**Installed Oct 31, 2026** (main at b77eb13: crates from the Documents folder, picks scored when a song is recognised,
+the whole-song wave and join lanes from the crate's per-bar loudness). Earlier installs: Oct 24, evening (moves menu,
+16 % pitch range, sync marker). To install again, with the iPad connected and unlocked, from `deck-app/` run:
 
 ```
 xcodebuild -project Deck.xcodeproj -scheme Deck -configuration Release -destination 'id=00008101-001E410921A3001E' -derivedDataPath build/dd-dev -allowProvisioningUpdates -allowProvisioningDeviceRegistration build && xcrun devicectl device install app --device 00008101-001E410921A3001E build/dd-dev/Build/Products/Release-iphoneos/Deck.app && xcrun devicectl device process launch --device 00008101-001E410921A3001E io.christophershannon.deck
@@ -96,12 +96,13 @@ The project already has `DEVELOPMENT_TEAM = 566NNM5HT8` and automatic signing, s
    or from Terminal (one line, replace the name with the iPad's name from `xcrun devicectl list devices`):
 
 ```
-cd "/Users/christophershannon/personal/90s2000 playlist/Deck app" && xcodebuild -project Deck.xcodeproj -scheme Deck -configuration Release -destination 'platform=iOS,name=Chris’s iPad' -derivedDataPath build/dd-dev -allowProvisioningUpdates build && xcrun devicectl device install app --device 'Chris’s iPad' build/dd-dev/Build/Products/Release-iphoneos/Deck.app
+cd /Users/christophershannon/personal/deckie/deck-app && xcodebuild -project Deck.xcodeproj -scheme Deck -configuration Release -destination 'platform=iOS,name=CDS iPad Air' -derivedDataPath build/dd-dev -allowProvisioningUpdates build && xcrun devicectl device install app --device 'CDS iPad Air' build/dd-dev/Build/Products/Release-iphoneos/Deck.app
 ```
 
 3. First launch: allow the microphone. The screen stays on while the app is open (idle timer off).
 
-With the paid account the development profile lasts a year, so the app keeps working through Oct 31, 2026.
+With the paid account the development profile lasts a year: the profile on the iPad expires Oct 24, 2027 (read from the
+built app's embedded.mobileprovision), so the app keeps working until then without a re-install.
 (With a free Apple ID the profile would expire after 7 days and the app would stop opening until re-installed.)
 
 ## Using it
