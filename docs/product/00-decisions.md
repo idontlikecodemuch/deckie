@@ -229,8 +229,8 @@ discs and the best 40 of the rest); lifting that trim is a separate step. With t
 loads in about five seconds and holds about half a gigabyte, where it took two minutes and 4.3 GB before. And the join
 view's two lanes, the end of the playing song over the start of the next, come from the crate's loudness per bar, one
 flat step a bar, cut by the beat and bar lines the view already draws. Since Oct 31 the crate's whole-song wave and the lanes measure each bar against the song's loudest bar, as the bundled waves do, then remove the quiet floor and apply the same curve, so a lane is the whole-song wave zoomed in and loud masters keep their shape; the bundled sprint data's lanes are finer (an
-eighth of a beat, from the audio) and stay as they are. No crate field is added (crate v1 stays frozen). Commits cdeb021
-and 6abc147.
+eighth of a beat, from the audio) and stay as they are. No crate field is added (crate v1 stays frozen). Commits cdeb021,
+6abc147 and fc51030.
 
 ### Note on D3 (Oct 26, from the community research): privacy covers taste, not only audio
 DJs' fear is "I'm not helping train ai for free": that their choices become someone else's product. So D3 extends
