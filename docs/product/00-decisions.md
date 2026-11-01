@@ -247,7 +247,7 @@ under More. A pinned song stays first. The old Easy and Harder sections and thei
 as a small label on the row. The tenth and the floor of 10 are the owner's numbers, and the blend is first principles;
 nothing is fitted to a crate. From the first-night analysis (docs/research/s-first-night.md): with the dial at 0 and
 ten rows, the song the DJ played next would have been on the first screen in 12 of the 43 clean changes (ranks 1 to 10),
-where the sampled screen gave about 5. No crate field is added.
+where the sampled screen gave about 5. No crate field is added. Commit f00e3e1.
 
 ### Note on D3 (Oct 26, from the community research): privacy covers taste, not only audio
 DJs' fear is "I'm not helping train ai for free": that their choices become someone else's product. So D3 extends
