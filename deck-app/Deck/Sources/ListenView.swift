@@ -29,6 +29,7 @@ struct ListenView: View {
                 }
             }
         }
+        .ignoresSafeArea(.keyboard)      // the search keyboard covers the screen's foot; nothing reflows
         .onChange(of: rec.currentId) { if sug.rolledFor != rec.currentId { sug.reroll(rec) } }   // a hook may have rolled already
         .onAppear { if sug.rolledFor != rec.currentId { sug.reroll(rec) } }
         .sheet(isPresented: $showDebug) { DebugSheet() }

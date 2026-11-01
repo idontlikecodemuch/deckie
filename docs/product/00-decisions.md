@@ -248,6 +248,12 @@ as a small label on the row. The tenth and the floor of 10 are the owner's numbe
 nothing is fitted to a crate. From the first-night analysis (docs/research/s-first-night.md): with the dial at 0 and
 ten rows, the song the DJ played next would have been on the first screen in 12 of the 43 clean changes (ranks 1 to 10),
 where the sampled screen gave about 5. No crate field is added. Commit f00e3e1.
+Later the same day, in the owner's words: "Let's have more run past the shortlist. We should also add a search to
+more." So More no longer stops at the shortlist: after the rest of the shortlist (still in the dial's order) comes
+every other song the filters leave, in plain score order, best first, with no dice. A thin line labelled "rest of
+the crate, by score" marks where the shortlist ends. A search field at the top of More narrows its rows to songs
+whose title or artist contains the typed text (ignoring case and accents), keeping their order; the picks above are
+not filtered, and the search is forgotten when the app closes.
 
 ### Note on D3 (Oct 26, from the community research): privacy covers taste, not only audio
 DJs' fear is "I'm not helping train ai for free": that their choices become someone else's product. So D3 extends

@@ -102,7 +102,7 @@ Landscape first; portrait stacks the two halves (ListenView).
    "listening · sure · deck +3.2%"; "also hearing: …" during a blend. No countdown. Stores: a recognised event in
    `history` (time, track, deck pitch, confidence), today's `log.json`. Today: PlayingPanel, SongWave, Recognizer.
 3. **Picks.** Sees: "Simple / Full" and the Shuffle dial top-left, scope chips top-right; one ranked list of
-   Picks (the song's shortlist, ordered by the dial: 10 in Full, 5 in Simple), "More" on scroll; a saved pair for this song first, labelled "Saved" **[inf]**. Each card: folder path, "06 · Title",
+   Picks (the song's shortlist, ordered by the dial: 10 in Full, 5 in Simple), "More" on scroll (the rest of the shortlist, then the rest of the crate in score order after a thin marker line, with a search over title and artist at its top); a saved pair for this song first, labelled "Saved" **[inf]**. Each card: folder path, "06 · Title",
    artist, "128 BPM · pitch +4.0%", one grey line with move and key ("Blend · 16 bars · in key", "Echo out · keys
    clash", "Needs a bridge" for today's "no beat-match · brake"), the join wave with numbered sync points, "0:32 ·
    3 syncs"; corner chips as today. Does: taps the wave to cycle the start point (as today, plus mid-song starts

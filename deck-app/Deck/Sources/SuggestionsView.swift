@@ -1,13 +1,17 @@
 import SwiftUI
+import UIKit
 
 /// The picks for the song now playing: one ranked list, the song's shortlist (the best tenth of the library) in the
-/// order the Shuffle dial gives; Full shows 10, Simple 5, the rest of the shortlist under More. A new song, a move
-/// of the dial or a pin brings a new roll.
+/// order the Shuffle dial gives; Full shows 10, Simple 5. More holds the rest of the shortlist, then (after a quiet
+/// marker) every other candidate in score order, with a search over title and artist. A new song, a move of the dial
+/// or a pin brings a new roll.
 struct UpNextPanel: View {
     @Environment(Recognizer.self) private var rec
     @Environment(SuggestState.self) private var sug
     private let zoom = 8          // bars across the join view: 2 before the join, 6 after
     let landscape: Bool
+    @FocusState private var searchFocused: Bool
+    @State private var keyboardHeight: CGFloat = 0
 
     var body: some View {
         @Bindable var sug = sug
@@ -36,14 +40,43 @@ struct UpNextPanel: View {
                         }
                         if !sug.rest.isEmpty {
                             groupLabel("More").padding(.top, m.groupGap).padding(.bottom, m.cardGap).id("more")
-                            // the rest of the shortlist can be a few hundred rows in a big library: built as they scroll in
+                            MoreSearchField(text: $sug.moreQuery, focused: $searchFocused)
+                                .padding(.bottom, m.cardGap + 4)
+                            // the rest of the crate: a few thousand rows in a big library, built as they scroll in
+                            let q = sug.moreQuery.trimmingCharacters(in: .whitespaces)
                             LazyVStack(alignment: .leading, spacing: m.cardGap) {
-                                ForEach(sug.rest) { o in row(cur, o, m) }
+                                if q.isEmpty {
+                                    let cut = min(sug.restShortlist, sug.rest.count)
+                                    ForEach(sug.rest[..<cut]) { o in row(cur, o, m) }
+                                    if cut < sug.rest.count {
+                                        ShortlistEndMarker().padding(.vertical, m.simple ? 10 : 6).id("crate-rest")
+                                        ForEach(sug.rest[cut...]) { o in row(cur, o, m) }
+                                    }
+                                } else {
+                                    let hits = sug.rest.filter { o in
+                                        guard let t = Library.shared.track(o.id) else { return false }
+                                        return t.song.localizedStandardContains(q) || t.artist.localizedStandardContains(q)
+                                    }
+                                    if hits.isEmpty {
+                                        Text("Nothing in More matches \u{201C}\(q)\u{201D}.").font(.system(size: 17)).foregroundStyle(Theme.dim).padding(.vertical, 20)
+                                    }
+                                    ForEach(hits) { o in row(cur, o, m) }
+                                }
+                                Color.clear.frame(height: 1).id("more-end")   // test hook: scroll?to=more-end
                             }
                         }
                     }
-                    .padding(.bottom, 30)
+                    .padding(.bottom, 30 + keyboardHeight)
                 }
+                .scrollDismissesKeyboard(.interactively)
+                .onChange(of: searchFocused) { _, f in if f { withAnimation { proxy.scrollTo("more", anchor: .top) } } }
+                .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillChangeFrameNotification)) { n in
+                    // the screen ignores the keyboard (the layout keeps its shape); the list gets room to scroll past it
+                    let end = (n.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? CGRect) ?? .zero
+                    let screen = UIScreen.main.bounds
+                    keyboardHeight = end.minY >= screen.maxY ? 0 : max(0, screen.maxY - end.minY)
+                }
+                .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillHideNotification)) { _ in keyboardHeight = 0 }
                 .onChange(of: sug.scrollRequest) { _, r in if let r { withAnimation { proxy.scrollTo(r, anchor: .top) } } }
                 }
             } else {
@@ -64,6 +97,47 @@ struct UpNextPanel: View {
             .frame(height: sug.mode == .simple ? 22 : 17, alignment: .bottomLeading)
     }
 
+}
+
+/// The search at the top of More: filters More's rows by title or artist; an (x) clears it.
+struct MoreSearchField: View {
+    @Binding var text: String
+    var focused: FocusState<Bool>.Binding
+
+    var body: some View {
+        HStack(spacing: 8) {
+            Image(systemName: "magnifyingglass").font(.system(size: 16, weight: .medium)).foregroundStyle(Theme.dim)
+            TextField("", text: $text, prompt: Text("Search More by title or artist").foregroundStyle(Theme.dim))
+                .font(.system(size: 17)).foregroundStyle(Theme.tx).tint(Theme.orange)
+                .textInputAutocapitalization(.never).autocorrectionDisabled().submitLabel(.search)
+                .focused(focused)
+                .onSubmit { focused.wrappedValue = false }
+            if !text.isEmpty {
+                Button { text = "" } label: {
+                    Image(systemName: "xmark.circle.fill").font(.system(size: 18)).foregroundStyle(Theme.mut)
+                        .frame(width: 44, height: 44).contentShape(Rectangle())
+                }
+                .accessibilityLabel("Clear search")
+            }
+        }
+        .padding(.leading, 14).padding(.trailing, text.isEmpty ? 14 : 0)
+        .frame(minHeight: 44)
+        .background(RoundedRectangle(cornerRadius: 12).fill(Color.white.opacity(0.06)))
+        .overlay(RoundedRectangle(cornerRadius: 12).stroke(focused.wrappedValue ? Theme.orange.opacity(0.6) : Theme.line, lineWidth: 1))
+        .frame(maxWidth: 520, alignment: .leading)
+    }
+}
+
+/// Where the shortlist ends in More: a thin line with a small dim label.
+struct ShortlistEndMarker: View {
+    var body: some View {
+        HStack(spacing: 10) {
+            Rectangle().fill(Theme.line).frame(width: 24, height: 1)
+            Text("rest of the crate, by score").font(.system(size: 12, weight: .medium)).foregroundStyle(Theme.dim).fixedSize()
+            Rectangle().fill(Theme.line).frame(height: 1)
+        }
+        .accessibilityElement(children: .combine)
+    }
 }
 
 /// "128 BPM · pitch +3.2%" ("128→140 BPM" when the song changes tempo; no pitch when it can't be beat-matched)
