@@ -255,6 +255,12 @@ the crate, by score" marks where the shortlist ends. A search field at the top o
 whose title or artist contains the typed text (ignoring case and accents), keeping their order; the picks above are
 not filtered, and the search is forgotten when the app closes. Commit ba1bdfd.
 
+### Note on D19 (Nov 1): versions of a song stay separate rows
+Christopher, on two remixes of one song both showing in the picks: "we shouldn't merge them unless they are the same
+songs. DJs often have a bunch of versions of the same song". So the booth folds together only copies of the same
+recording (the crate's cut), and a remix, an edit or another version of a song is its own row with its own score and
+join. Nothing changes in the code; this records that the behaviour is meant.
+
 ### Note on D3 (Oct 26, from the community research): privacy covers taste, not only audio
 DJs' fear is "I'm not helping train ai for free": that their choices become someone else's product. So D3 extends
 to history, cues, saved pairs and learned preferences: all of it stays with the DJ, Deckie says who benefits from
