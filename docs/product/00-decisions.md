@@ -267,7 +267,7 @@ folder of one disc. The crate carries the labels in its existing fields (`ident.
 `ident.track`); crate v1 stays frozen and no field is added. The booth reads them for its CDs tab (discs, folders
 and songs in order), its filter chips (one chip per disc, named after it, every disc on by default) and its picks
 (songs on a disc are favoured, and a pick on another disc says "to <disc>"). The bundled sprint data still reads
-CD1 and CD2.
+CD1 and CD2. Commit 4eac5da.
 
 ### Note on D19 (Nov 1): versions of a song stay separate rows
 Christopher, on two remixes of one song both showing in the picks: "we shouldn't merge them unless they are the same
