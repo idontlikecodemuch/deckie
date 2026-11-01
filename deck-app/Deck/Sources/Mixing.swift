@@ -1,6 +1,7 @@
 import Foundation
+import DeckieCore
 
-/// Port of the web player's joinInfo / keyVerdict, plus the suggestion sampler.
+/// Port of the web player's joinInfo / keyVerdict, plus the picks list (the shortlist, ordered by the Shuffle dial).
 
 let MNUM: [String: Double] = ["1": 1, "1/2": 0.5, "2": 2, "3/4": 0.75, "4/3": 4.0 / 3, "2/3": 2.0 / 3, "3/2": 1.5]
 
@@ -75,11 +76,11 @@ struct LibraryFilter: Equatable {
 }
 
 struct Option: Identifiable, Hashable {
-    enum Kind: Hashable { case pinned, best, hard, more }
+    enum Kind: Hashable { case pinned, pick }
     let id: String          // target track id
-    let pair: Pair
+    let pair: Pair?         // nil only for a pinned song the scoring has no pair for (a computed join)
     let kind: Kind
-    let tags: [String]      // why it is "hard / unexpected"
+    let tags: [String]      // what is unexpected about it (half time, tempo change, to CD2, deep cut, ...)
 }
 
 struct Suggester {
@@ -103,7 +104,7 @@ struct Suggester {
         return order.compactMap { bestPerCut[$0] }.sorted { $0.s > $1.s }
     }
 
-    func surpriseTags(_ cur: Track, _ p: Pair, belowBand: Bool) -> [String] {
+    func surpriseTags(_ cur: Track, _ p: Pair, deepCut: Bool) -> [String] {
         guard let t = lib.byId[p.b] else { return [] }
         var tags: [String] = []
         if p.m == "1/2" { tags.append("half time") }
@@ -113,58 +114,30 @@ struct Suggester {
         if p.st >= 4 || (ao > 0 && abs(bi / ao - 1) >= 0.04) { tags.append("tempo change") }
         if t.hal && !cur.hal { tags.append("Halloween") }
         if let d = t.disc, let cd = cur.disc, d != cd { tags.append(d == "S" ? "to CD1" : "to CD2") }
-        else if !t.on { tags.append("off the discs") }
+        else if !t.on && !lib.data.discs.isEmpty { tags.append("off the discs") }   // a crate without discs has no "off"
         if !t.era.isEmpty && !cur.era.isEmpty && t.era != cur.era { tags.append(t.era) }
-        if belowBand { tags.append("deep cut") }
+        if deepCut { tags.append("deep cut") }
         return tags
     }
 
-    /// Sets for the swipeable grid: each set = nBest from the top band of what is left + nHard surprising ones.
-    /// `rest` = what remains afterwards, best first (compact rows).
-    func rollSets<R: RandomNumberGenerator>(cur: Track, mode: SuggestMode, target: LibraryFilter, exclude: Set<String>, pinned: String?, nSets: Int, rng: inout R) -> (sets: [[Option]], rest: [Option]) {
-        var pool = candidates(for: cur, target: target, exclude: exclude.union(pinned.map { [$0] } ?? []))
-        let nBest = mode == .full ? 3 : 2, nHard = mode == .full ? 2 : 1
-        var sets: [[Option]] = []
-        for _ in 0..<nSets {
-            guard !pool.isEmpty else { break }
-            let top = pool[0].s
-            let bandN = min(pool.count, max(6, min(12, pool.filter { $0.s >= top - 0.10 }.count)))
-            var band = Array(pool.prefix(bandN))
-            var set: [Option] = []
-            for _ in 0..<min(nBest, band.count) {
-                let i = weightedIndex(band.map { exp(($0.s - top) / 0.05) }, &rng)
-                set.append(Option(id: band[i].b, pair: band[i], kind: .best, tags: []))
-                band.remove(at: i)
-            }
-            var taken = Set(set.map(\.id))
-            pool.removeAll { taken.contains($0.b) }
-            let bandSet = Set(pool.prefix(max(0, bandN - set.count)).map(\.b))
-            var hardPool = pool.map { p in (p, surpriseTags(cur, p, belowBand: !bandSet.contains(p.b))) }.filter { !$0.1.isEmpty }
-            var usedPrimary = Set<String>()
-            for _ in 0..<nHard {
-                guard !hardPool.isEmpty else { break }
-                let w = hardPool.map { (p, tags) -> Double in
-                    max(0.05, p.s) * (0.4 + Double(tags.filter { $0 != "deep cut" }.count)) * (usedPrimary.contains(tags[0]) ? 0.3 : 1)
-                }
-                let (p, tags) = hardPool.remove(at: weightedIndex(w, &rng))
-                usedPrimary.insert(tags[0])
-                set.append(Option(id: p.b, pair: p, kind: .hard, tags: Array(tags.prefix(2))))
-            }
-            taken = Set(set.map(\.id))
-            pool.removeAll { taken.contains($0.b) }
-            sets.append(set)
+    /// The picks for `cur`, one ranked list: the shortlist (the best tenth of the library, never fewer than 10, of
+    /// what the filter leaves) in the order the Shuffle dial gives (0 = pure rank by score, 1 = a fair shuffle),
+    /// with a pinned song first. "deep cut" marks the lower half of the shortlist by score.
+    func shortlist<R: RandomNumberGenerator>(cur: Track, target: LibraryFilter, exclude: Set<String>, pinned: String?, shuffle: Double, rng: inout R) -> [Option] {
+        let best = candidates(for: cur, target: target, exclude: exclude.union(pinned.map { [$0] } ?? []))
+        let n = min(best.count, Shortlist.size(libraryCount: lib.data.tracks.count))
+        let kept = Array(best.prefix(n))
+        let order = Shortlist.order(scores: kept.map(\.s), shuffle: shuffle, rng: &rng)
+        var out: [Option] = []
+        if let pid = pinned, lib.byId[pid] != nil { out.append(Option(id: pid, pair: pair(from: cur.id, to: pid), kind: .pinned, tags: [])) }
+        for i in order {
+            let p = kept[i]
+            out.append(Option(id: p.b, pair: p, kind: .pick, tags: surpriseTags(cur, p, deepCut: i >= (n + 1) / 2)))
         }
-        return (sets, pool.prefix(12).map { Option(id: $0.b, pair: $0, kind: .more, tags: []) })
+        return out
     }
 
-    /// The pair for a pinned target (may be absent from the trimmed list: then a nil pair -> computed join).
+    /// The pair for a pinned target: every scored song is in the list; a song the scoring gave no pair (outside the
+    /// crate, or failing its gates) gets nil, and the join is computed from the two tracks.
     func pair(from a: String, to b: String) -> Pair? { lib.pairs(from: a).first { $0.b == b } }
-}
-
-func weightedIndex<R: RandomNumberGenerator>(_ w: [Double], _ rng: inout R) -> Int {
-    let total = w.reduce(0, +)
-    guard total > 0 else { return Int.random(in: 0..<w.count, using: &rng) }
-    var x = Double.random(in: 0..<total, using: &rng)
-    for (i, v) in w.enumerated() { x -= v; if x < 0 { return i } }
-    return w.count - 1
 }

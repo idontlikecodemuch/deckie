@@ -29,7 +29,7 @@ struct ListenView: View {
                 }
             }
         }
-        .onChange(of: rec.currentId) { sug.reroll(rec) }
+        .onChange(of: rec.currentId) { if sug.rolledFor != rec.currentId { sug.reroll(rec) } }   // a hook may have rolled already
         .onAppear { if sug.rolledFor != rec.currentId { sug.reroll(rec) } }
         .sheet(isPresented: $showDebug) { DebugSheet() }
     }

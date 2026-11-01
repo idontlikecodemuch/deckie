@@ -1,7 +1,8 @@
 import SwiftUI
 
-/// The picks for the song now playing: "Easy" (best matches) and "Harder" (unexpected), randomised per song.
-/// Swipe sideways for another set, scroll down (Full) for the rest. A new song brings new picks.
+/// The picks for the song now playing: one ranked list, the song's shortlist (the best tenth of the library) in the
+/// order the Shuffle dial gives; Full shows 10, Simple 5, the rest of the shortlist under More. A new song, a move
+/// of the dial or a pin brings a new roll.
 struct UpNextPanel: View {
     @Environment(Recognizer.self) private var rec
     @Environment(SuggestState.self) private var sug
@@ -17,21 +18,26 @@ struct UpNextPanel: View {
                 ScrollViewReader { proxy in
                 ScrollView {
                     VStack(alignment: .leading, spacing: 0) {
-                        if let pid = sug.pinned, let t = Library.shared.track(pid) {
+                        let picks = sug.options.filter { $0.kind == .pick }
+                        if let pinned = sug.options.first(where: { $0.kind == .pinned }), let t = Library.shared.track(pinned.id) {
                             groupLabel("Next")
-                            if sug.minimal { PlainPick(cur: cur, target: t, pair: Suggester().pair(from: cur.id, to: pid), kind: .pinned, tags: [], big: m.simple).padding(.top, 6) }
-                            else { NextRow(cur: cur, target: t, pair: Suggester().pair(from: cur.id, to: pid), kind: .pinned, tags: [], zoom: zoom, m: m) }
+                            if sug.minimal { PlainPick(cur: cur, target: t, pair: pinned.pair, kind: .pinned, tags: [], big: m.simple).padding(.top, 6) }
+                            else { NextRow(cur: cur, target: t, pair: pinned.pair, kind: .pinned, tags: [], zoom: zoom, m: m) }
                             Color.clear.frame(height: m.groupGap)
                         }
-                        if sug.sets.isEmpty {
+                        if picks.isEmpty {
                             Text(sug.target.label.isEmpty ? "Switch on CD1, CD2 or All above." : "No good matches in \(sug.target.label).")
                                 .font(.system(size: 20)).foregroundStyle(Theme.dim).padding(.vertical, 40)
                         } else {
-                            setView(cur, sug.sets[0], m)
+                            VStack(alignment: .leading, spacing: m.cardGap) {
+                                groupLabel("Picks")
+                                ForEach(picks) { o in row(cur, o, m) }
+                            }
                         }
                         if !sug.rest.isEmpty {
                             groupLabel("More").padding(.top, m.groupGap).padding(.bottom, m.cardGap).id("more")
-                            VStack(alignment: .leading, spacing: m.cardGap) {
+                            // the rest of the shortlist can be a few hundred rows in a big library: built as they scroll in
+                            LazyVStack(alignment: .leading, spacing: m.cardGap) {
                                 ForEach(sug.rest) { o in row(cur, o, m) }
                             }
                         }
@@ -42,18 +48,6 @@ struct UpNextPanel: View {
                 }
             } else {
                 Spacer()
-            }
-        }
-    }
-
-    private func setView(_ cur: Track, _ set: [Option], _ m: RowMetrics) -> some View {
-        let easy = set.filter { $0.kind == .best }, hard = set.filter { $0.kind == .hard }
-        return VStack(alignment: .leading, spacing: m.cardGap) {
-            groupLabel("Easy")
-            ForEach(easy) { o in row(cur, o, m) }
-            if !hard.isEmpty {
-                groupLabel("Harder").padding(.top, m.groupGap)
-                ForEach(hard) { o in row(cur, o, m) }
             }
         }
     }
@@ -96,18 +90,44 @@ struct PickControls: View {
     @Environment(Recognizer.self) private var rec
     @Environment(SuggestState.self) private var sug
 
-    /// Simple / Full on the left; library chips (CD1, CD2, All, each on/off) on the right.
+    @State private var dragging = false
+
+    /// Simple / Full and the Shuffle dial on the left; library chips (CD1, CD2, All, each on/off) on the right.
     var body: some View {
         @Bindable var sug = sug
-        return HStack(spacing: 14) {
+        return HStack(spacing: 12) {
             toggle(["Simple", "Full"], sug.mode == .simple ? 0 : 1) { i in sug.mode = i == 0 ? .simple : .full; sug.reroll(rec) }
-            Spacer()
+                .fixedSize()
+            shuffleDial($sug.shuffle)
+            Spacer(minLength: 0)
             if !Library.shared.data.discs.isEmpty {   // a crate without discs has one pool: nothing to narrow
                 libChip("CD1", on: sug.target.cd1, color: Theme.sing) { sug.target.cd1.toggle(); sug.reroll(rec) }
                 libChip("CD2", on: sug.target.cd2, color: Theme.mix) { sug.target.cd2.toggle(); sug.reroll(rec) }
                 libChip("All", on: sug.target.other, color: Theme.acc) { sug.target.other.toggle(); sug.reroll(rec) }
             }
         }
+    }
+
+    /// The Shuffle dial: 0% = the shortlist in score order, 100% = a fair shuffle of it. Letting go re-rolls the
+    /// picks (and so does each step from VoiceOver's adjust gesture).
+    private func shuffleDial(_ value: Binding<Double>) -> some View {
+        HStack(spacing: 10) {
+            HStack(spacing: 5) {
+                Text("Shuffle").font(.system(size: 15)).foregroundStyle(Theme.dim)
+                Text("\(Int((value.wrappedValue * 100).rounded()))%").font(.system(size: 15, weight: .semibold).monospacedDigit())
+                    .foregroundStyle(Theme.tx).frame(width: 44, alignment: .leading)
+            }
+            .lineLimit(1).fixedSize()
+            Slider(value: value, in: 0...1, step: 0.05) { editing in
+                dragging = editing
+                if !editing { sug.reroll(rec) }
+            }
+            .frame(minWidth: 90, maxWidth: 190)
+        }
+        .frame(minHeight: 44)
+        .onChange(of: value.wrappedValue) { _, v in if !dragging && v != sug.rolledShuffle { sug.reroll(rec) } }
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel("Shuffle")
     }
 
     private func libChip(_ t: String, on: Bool, color: Color, _ act: @escaping () -> Void) -> some View {
@@ -119,6 +139,7 @@ struct PickControls: View {
                 .overlay(Capsule().stroke(on ? Color.clear : Theme.dim.opacity(0.4), lineWidth: 1))
         }
         .frame(minHeight: 40)
+        .fixedSize()
         .accessibilityAddTraits(on ? .isSelected : [])
     }
 
@@ -152,10 +173,6 @@ struct RowMetrics {
     var cardGap: CGFloat { simple ? 10 : 6 }
     var groupGap: CGFloat { minimal ? 40 : simple ? 30 : 12 }
     var labelHeight: CGFloat { simple ? 22 : 17 }
-    func setHeight(_ set: [Option]) -> CGFloat {
-        let rows = CGFloat(set.count), groups: CGFloat = set.contains { $0.kind == .hard } ? 2 : 1
-        return rows * (cardHeight + cardGap) + groups * (labelHeight + cardGap) + (groups - 1) * groupGap
-    }
 }
 
 /// One pick in a soft card: folder path, "06 · Title", artist, BPM · pitch, one small info line; the join wave right after.
@@ -221,10 +238,10 @@ struct NextRow: View {
     private func bpmLine(_ ji: JoinInfo) -> String { pickBPMLine(target, pair, ji) }
     private func smallLine(_ ji: JoinInfo) -> String { pickMoveLine(pair, ji) }
 
-    /// tiny chips in the card's upper-right corner: harder-pick reason, Halloween, remix
+    /// tiny chips in the card's upper-right corner: what is unexpected about the pick (its first tag), Halloween, remix
     private var cornerChips: some View {
         HStack(spacing: 4) {
-            if kind == .hard, let t = tags.first { TinyChip(text: t) }
+            if kind == .pick, let t = tags.first(where: { $0 != "Halloween" }) { TinyChip(text: t) }
             if target.hal { TinyChip(text: "🎃") }
             if target.isRemix { TinyChip(text: "RMX") }
         }
@@ -282,7 +299,7 @@ struct StartPoint: Hashable {
     }
 }
 
-/// Small quiet chip (corner marks: 🎃, RMX, harder-pick reason).
+/// Small quiet chip (corner marks: 🎃, RMX, a pick's tag).
 struct TinyChip: View {
     let text: String
     var body: some View {

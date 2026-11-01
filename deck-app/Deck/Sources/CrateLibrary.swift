@@ -18,7 +18,6 @@ struct CrateLibrary {
     /// The scoring tracks and the sorted cosine list, for scoring one song's picks at a time.
     let pool: PairPool
     let coreById: [String: DeckieCore.Track]
-    let onDisc: Set<String>
     /// How long building the sorted cosine list took when the crate loaded, in seconds.
     let poolSecs: Double
 
@@ -102,11 +101,10 @@ struct CrateLibrary {
         let t0 = Date()
         let pool = PairPool(core)
         let poolSecs = Date().timeIntervalSince(t0)
-        let onDisc = Set(tracks.filter(\.on).map(\.id))
 
         let data = DeckData(generated: crate.manifest.createdAt, tracks: tracks, discs: discs, pairs: [:], catalogVariants: ["o"])
         return CrateLibrary(url: url, name: crate.manifest.name, data: data, overview: overview, signatures: sigs,
-                            pool: pool, coreById: coreById, onDisc: onDisc, poolSecs: poolSecs)
+                            pool: pool, coreById: coreById, poolSecs: poolSecs)
     }
 
     /// Samples per beat of the join lanes built from a crate: a quarter beat per sample, 16 per bar.
@@ -141,17 +139,12 @@ struct CrateLibrary {
         return (out, inn, head)
     }
 
-    /// The picks for one song: every other track scored from it, then the best 40 on-disc targets and the best 40
-    /// of the rest, best first, as tools/prep_data.py trims the lab's table (so a song gets the same picks the
-    /// whole-crate table gave it).
+    /// The picks for one song: every other track that passes the scoring's gates, scored from it, best first.
+    /// Nothing is cut here; the booth keeps the shortlist (the best tenth) from this list after its filters.
     func picks(from a: String) -> [Pair] {
         guard let A = coreById[a] else { return [] }
         let sorted = pool.scores(from: A).sorted { $0.scoreBase > $1.scoreBase }
-        var keep = sorted.filter { onDisc.contains($0.b) }.prefix(40).map { $0 }
-        let have = Set(keep.map(\.b))
-        keep += sorted.filter { !have.contains($0.b) }.prefix(40)
-        keep.sort { $0.scoreBase > $1.scoreBase }
-        return keep.map { p in
+        return sorted.map { p in
             let B = coreById[p.b]
             let km = MNUM[p.multiplier] ?? 1
             let pitch = B.map { ((A.bpmOut / ($0.bpmIn * km)) - 1) * 100 }.map { ($0 * 10).rounded() / 10 }
