@@ -1,7 +1,7 @@
 import Foundation
 import DeckieCore
 
-/// Port of the web player's joinInfo / keyVerdict, plus the picks list (the shortlist, ordered by the Shuffle dial).
+/// Port of the web player's joinInfo / keyVerdict, plus the picks list (the shortlist, ordered by the Shuffle dial, then the rest of the crate by score).
 
 let MNUM: [String: Double] = ["1": 1, "1/2": 0.5, "2": 2, "3/4": 0.75, "4/3": 4.0 / 3, "2/3": 2.0 / 3, "3/2": 1.5]
 
@@ -122,19 +122,21 @@ struct Suggester {
 
     /// The picks for `cur`, one ranked list: the shortlist (the best tenth of the library, never fewer than 10, of
     /// what the filter leaves) in the order the Shuffle dial gives (0 = pure rank by score, 1 = a fair shuffle),
-    /// with a pinned song first. "deep cut" marks the lower half of the shortlist by score.
-    func shortlist<R: RandomNumberGenerator>(cur: Track, target: LibraryFilter, exclude: Set<String>, pinned: String?, shuffle: Double, rng: inout R) -> [Option] {
+    /// with a pinned song first, then every other candidate in plain score order, best first (no dice).
+    /// `shortlist` is how many shortlist picks the list holds; "deep cut" marks the lower half of the shortlist by score.
+    func ranked<R: RandomNumberGenerator>(cur: Track, target: LibraryFilter, exclude: Set<String>, pinned: String?, shuffle: Double, rng: inout R) -> (list: [Option], shortlist: Int) {
         let best = candidates(for: cur, target: target, exclude: exclude.union(pinned.map { [$0] } ?? []))
         let n = min(best.count, Shortlist.size(libraryCount: lib.data.tracks.count))
-        let kept = Array(best.prefix(n))
-        let order = Shortlist.order(scores: kept.map(\.s), shuffle: shuffle, rng: &rng)
+        let order = Shortlist.order(scores: best.prefix(n).map(\.s), shuffle: shuffle, rng: &rng)
         var out: [Option] = []
+        out.reserveCapacity(best.count + 1)
         if let pid = pinned, lib.byId[pid] != nil { out.append(Option(id: pid, pair: pair(from: cur.id, to: pid), kind: .pinned, tags: [])) }
         for i in order {
-            let p = kept[i]
+            let p = best[i]
             out.append(Option(id: p.b, pair: p, kind: .pick, tags: surpriseTags(cur, p, deepCut: i >= (n + 1) / 2)))
         }
-        return out
+        for p in best.dropFirst(n) { out.append(Option(id: p.b, pair: p, kind: .pick, tags: surpriseTags(cur, p, deepCut: false))) }
+        return (out, n)
     }
 
     /// The pair for a pinned target: every scored song is in the list; a song the scoring gave no pair (outside the
