@@ -225,12 +225,29 @@ on both." So: the booth keeps no table of every pair. When a song is recognised 
 then, from the crate's own analysis with the shared scoring, and the last few songs' lists are kept. The one thing that
 needs the whole crate, the timbre rank (where a pair's sound similarity sits among every pair of the crate), is a sorted
 list built once when the crate loads. The picks are the ones the whole table gave, with the same trim (the best 40 on the
-discs and the best 40 of the rest); lifting that trim is a separate step. With the 2,327-track library crate the booth
+discs and the best 40 of the rest); D19 (Nov 1) lifted that cut. With the 2,327-track library crate the booth
 loads in about five seconds and holds about half a gigabyte, where it took two minutes and 4.3 GB before. And the join
 view's two lanes, the end of the playing song over the start of the next, come from the crate's loudness per bar, one
 flat step a bar, cut by the beat and bar lines the view already draws. Since Oct 31 the crate's whole-song wave and the lanes measure each bar against the song's loudest bar, as the bundled waves do, then remove the quiet floor and apply the same curve, so a lane is the whole-song wave zoomed in and loud masters keep their shape; the bundled sprint data's lanes are finer (an
 eighth of a beat, from the audio) and stay as they are. No crate field is added (crate v1 stays frozen). Commits cdeb021,
 6abc147 and fc51030.
+
+### D19. One ranked list with a Shuffle dial; the shortlist is the top tenth of the library (Nov 1)
+The decision, in the owner's words: "Let's have the top 10 be top 10% of the songs BUT I want a good amount of
+randomization - this should be customizable (slider?) and really there should just be a rank and the order of which
+should be based on the settings the DJ chooses." So the booth's picks are one ranked list. Every song in the crate is
+scored from the playing song; the 40-song cut on a song's pick list is gone. The word "trim" is retired for it, since
+trim is a mixer's gain knob: the songs kept for the screen are the song's **shortlist**, the best tenth of the library
+by score after the filters (one cut per song, nothing played in the last 12, the disc chips), never fewer than 10. The
+**Shuffle** dial (a slider from 0 to 100 percent, next to Simple / Full) sets the order: each song's place blends its
+score with a dice roll, so at 0 the shortlist is in pure score order, at 100 it is a fair shuffle, and in between the
+better songs tend to stay near the top. Full shows the first 10, Simple the first 5, the rest of the shortlist sits
+under More. A pinned song stays first. The old Easy and Harder sections and their sampler are gone; what made a pick
+"harder" (half time, a tempo change, another disc, another era, a deep cut, now the lower half of the shortlist) stays
+as a small label on the row. The tenth and the floor of 10 are the owner's numbers, and the blend is first principles;
+nothing is fitted to a crate. From the first-night analysis (docs/research/s-first-night.md): with the dial at 0 and
+ten rows, the song the DJ played next would have been on the first screen in 12 of the 43 clean changes (ranks 1 to 10),
+where the sampled screen gave about 5. No crate field is added.
 
 ### Note on D3 (Oct 26, from the community research): privacy covers taste, not only audio
 DJs' fear is "I'm not helping train ai for free": that their choices become someone else's product. So D3 extends

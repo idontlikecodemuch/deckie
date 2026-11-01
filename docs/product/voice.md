@@ -47,7 +47,7 @@ your crate." "Everything your crate can tell you." The descriptive subtitle "DJ 
 ## Examples
 
 - A pick's line: "pitch +3.5 · in key · clean 16-bar intro · blend or echo out".
-- A harder pick: "pitch −9 · keys clash · cut on the one".
+- A hard join: "pitch −9 · keys clash · cut on the one".
 - Onboarding: "Pick three songs you'd play in a row. For each change, tap how you'd do it."
 - Empty crate on the iPad: "No crate yet. Build one on your Mac, or add files here."
 - Nothing recognised for a while: "Listening. Tap a track in your crate if it's too loud in here."

@@ -19,7 +19,7 @@ Deck app/
       Recognizer.swift        microphone + file-test matching, position / pitch / confidence logic
       ListenView.swift        Listen page: playing panel, whole-song wave, chips
       DebugSheet.swift        test-with-file sheet, mic level meter
-      SuggestionsView.swift   Up next: swipeable sets of rows, compact rows, JoinView (Canvas port of drawJoin)
+      SuggestionsView.swift   Up next: Simple / Full and the Shuffle dial, the ranked picks, More, JoinView (Canvas port of drawJoin)
       OtherViews.swift        CD listings, Mix map (WKWebView)
     Resources/
       deck_data.json          built by tools/prep_data.py
@@ -164,7 +164,8 @@ built app's embedded.mobileprovision), so the app keeps working until then witho
 `xcrun simctl launch <device> io.christophershannon.deck -deckURL '<url> ; <url>'` runs these at launch
 (the deck:// scheme also works from Safari, with a confirmation prompt):
 `deck://test?path=/abs/file.mp3&start=60&render=r%2B4&loop=1`, `deck://mic`, `deck://stop`, `deck://set?id=<track id>`,
-`deck://mode?m=simple|full`, `deck://all?on=1`, `deck://shuffle`, `deck://pin?i=0`, `deck://tab?i=0|1|2`,
+`deck://mode?m=simple|full`, `deck://all?on=1`, `deck://shuffle` (re-roll), `deck://shuffle?amt=0.3` (set the Shuffle
+dial, 0 to 1, then re-roll), `deck://pin?i=0`, `deck://tab?i=0|1|2`,
 `deck://orient?o=landscape|portrait`.
 
 ## Limitations
@@ -200,11 +201,16 @@ one with `deck://crate?path=/abs/x.deckiecrate`. The crate gives the tracks and 
 (from the per-bar loudness), the recognition catalogue (one plain signature per track, made on the Mac) and the picks:
 the pair scores are computed on the iPad with the shared scoring in `core` (DeckieCore's PairScoring, the port of
 mixer/score.py), so any DJ's crate works and the crate stays exactly as Desk wrote it. The picks are scored for one
-song at a time: when a song is recognised (or set by hand) the app scores it into every other track, keeps its picks
-and remembers the last 8 songs' lists, and keeps no table of all pairs. The one thing that needs the whole crate is
+song at a time: when a song is recognised (or set by hand) the app scores it into every other track, keeps every
+scored pair as that song's list, best first, and remembers the last 8 songs' lists, and keeps no table of all pairs. The one thing that needs the whole crate is
 the timbre rank (how a pair's sound similarity compares with every other pair's), so the load builds the sorted list
-of all track-to-track similarities once. A song gets the same picks as before: its best 40 on-disc targets plus the
-best 40 of the rest (lifting that trim is a separate step). The full library (Oct 30, 2026: 2,327 tracks, 141 MB with
+of all track-to-track similarities once. From that list the screen keeps the song's shortlist: the best tenth of the
+library by score, never fewer than 10, after the filters (one cut per song, nothing played in the last 12, the disc
+chips). The Shuffle dial next to Simple / Full orders it: at 0 percent the shortlist is in score order, at 100 percent
+it is shuffled fairly, and in between each song's place blends its score with a dice roll, so the better songs tend to
+stay near the top. Full shows the first 10, Simple the first 5, the rest sit under More; a pinned song stays first,
+and a row's small label says what is unexpected about it (half time, tempo change, another disc, deep cut for the
+lower half of the shortlist). The full library (Oct 30, 2026: 2,327 tracks, 141 MB with
 signatures; the Release build on the iPad A16 iOS 27 simulator) loads in about 5 s, 2.8 s of it the similarity
 list, and holds about 0.5 GB afterwards (it held 4.3 GB and took 2 min 7 s when every pair was scored at load); one
 song's picks take 55 to 80 ms, and a streamed track is matched within a few seconds, each 4 s segment in 1 to 4 ms.

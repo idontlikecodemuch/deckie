@@ -82,11 +82,11 @@ Only steps 1 and 2 are required; the rest have Skip. Nothing asks the DJ for a n
    tempo tolerance, key, style spread, energy arc, blend length and mix-in points in `prefs.json`, marked "from
    your set". Today: none; the Booth's own recordings make this routine after the first gig.
 4. **Your sliders** (30 s, shown once, Skip at the top). Sees: eight sliders pre-set from the answers, each
-   marked "from your chain" or "from your set": Picks (Easy ↔ Harder); Picks shown (3 · 5 · 10); On screen
+   marked "from your chain" or "from your set": Shuffle (score order ↔ shuffled); Picks shown (3 · 5 · 10); On screen
    (Minimal · Simple · Full); Pitch range; Key (Off · Flag clashes · In key first); Style (Stay in lane ↔ Open
    format); First choice (Blends first ↔ Cuts first); Vocals (No clashes ↔ Overlap OK). Stores: positions in
-   `prefs.json`; a moved slider is "set by you" and learning never moves it. Today: Simple / Full and Minimal
-   exist; the rest are constants.
+   `prefs.json`; a moved slider is "set by you" and learning never moves it. Today: Simple / Full, Minimal and
+   the Shuffle dial exist; the rest are constants.
 5. **How you mix** (flow 7), then "Go to the booth".
 
 Listen and pick (A/B rendered joins) stays out: it needs the Mac renderer.
@@ -101,8 +101,8 @@ Landscape first; portrait stacks the two halves (ListenView).
    pitch in amber, the whole-song wave with IN and SYNC, elapsed and remaining, "sync area in 0:37"; status
    "listening · sure · deck +3.2%"; "also hearing: …" during a blend. No countdown. Stores: a recognised event in
    `history` (time, track, deck pitch, confidence), today's `log.json`. Today: PlayingPanel, SongWave, Recognizer.
-3. **Picks.** Sees: "Simple / Full" top-left, scope chips top-right; Easy and Harder, randomised, "More" on
-   scroll; a saved pair for this song first, labelled "Saved" **[inf]**. Each card: folder path, "06 · Title",
+3. **Picks.** Sees: "Simple / Full" and the Shuffle dial top-left, scope chips top-right; one ranked list of
+   Picks (the song's shortlist, ordered by the dial: 10 in Full, 5 in Simple), "More" on scroll; a saved pair for this song first, labelled "Saved" **[inf]**. Each card: folder path, "06 · Title",
    artist, "128 BPM · pitch +4.0%", one grey line with move and key ("Blend · 16 bars · in key", "Echo out · keys
    clash", "Needs a bridge" for today's "no beat-match · brake"), the join wave with numbered sync points, "0:32 ·
    3 syncs"; corner chips as today. Does: taps the wave to cycle the start point (as today, plus mid-song starts
@@ -183,7 +183,7 @@ Every sprint round that removed something was welcomed; these stay out.
   internal names; no "brake" alone, no "filter out"; no "safe / left-field" (they describe the record, not the
   join); no numbers asked of the DJ; no lookups that run on their own; no notifications.
 - **Welcome:** no tour, no permissions wall; the mic is asked for when listening starts.
-- **Booth:** no headings beyond Easy, Harder, Next; no shuffle; no countdown; no chips the DJ cannot read; no
+- **Booth:** no headings beyond Next, Picks, More; no countdown; no chips the DJ cannot read; no
   orange fills; no confidence numbers or match scores competing with the deck's display **[inf: the score
   leaves the why popover]**; no verdicts ("not mixable" becomes the option "Needs a bridge"); no "was that
   good?" prompt after a join; nothing that moves without a reason; no settings page.

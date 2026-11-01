@@ -176,3 +176,35 @@ public struct PairPool: Sendable {
         return out
     }
 }
+
+/// A song's shortlist: the best-scored songs kept for the picks screen, and the order they are shown in.
+/// The size is a tenth of the library, never fewer than 10. The order blends the score with a dice roll by the
+/// Shuffle dial: at 0 it is the pure rank, at 1 a fair shuffle of the shortlist, in between the better songs
+/// tend to stay near the top.
+public enum Shortlist {
+    /// max(10, ceil(libraryCount x 0.10)).
+    public static func size(libraryCount: Int) -> Int {
+        max(10, Int((Double(max(0, libraryCount)) * 0.10).rounded(.up)))
+    }
+
+    /// The display order of a shortlist, as indices into `scores` (which may come in any order).
+    /// Each entry's key is (1 - shuffle) x scaled score + shuffle x u, the score scaled to 0...1 within the list
+    /// (1 for all when every score is equal) and u uniform in 0...1 from `rng`; highest key first, exact ties by
+    /// score then by index, so shuffle 0 is a stable rank. `shuffle` is clamped to 0...1.
+    public static func order<R: RandomNumberGenerator>(scores: [Double], shuffle: Double, rng: inout R) -> [Int] {
+        guard !scores.isEmpty else { return [] }
+        let w = shuffle.isFinite ? min(1, max(0, shuffle)) : 0
+        let lo = scores.min()!, hi = scores.max()!
+        let span = hi - lo
+        let keys = scores.map { s -> Double in
+            let scaled = span > 0 && span.isFinite ? (s - lo) / span : 1
+            let u = Double.random(in: 0...1, using: &rng)
+            return (1 - w) * scaled + w * u
+        }
+        return scores.indices.sorted { i, j in
+            if keys[i] != keys[j] { return keys[i] > keys[j] }
+            if scores[i] != scores[j] { return scores[i] > scores[j] }
+            return i < j
+        }
+    }
+}

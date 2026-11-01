@@ -37,7 +37,8 @@ struct DeckApp: App {
     }
 
     /// Test hooks: deck://test?path=/abs/file.mp3&start=60&render=r%2B4&loop=1 · deck://mic · deck://stop ·
-    /// deck://tab?i=1 · deck://set?id=<track id> · deck://mode?m=simple|full · deck://all?on=1 · deck://shuffle · deck://pin?i=0
+    /// deck://tab?i=1 · deck://set?id=<track id> · deck://mode?m=simple|full · deck://all?on=1 · deck://shuffle (re-roll) ·
+    /// deck://shuffle?amt=0.3 (set the Shuffle dial, 0...1, then re-roll) · deck://pin?i=0
     private func handle(_ url: URL) {
         let q = URLComponents(url: url, resolvingAgainstBaseURL: false)?.queryItems ?? []
         func v(_ k: String) -> String? { q.first { $0.name == k }?.value }
@@ -76,8 +77,9 @@ struct DeckApp: App {
             if let s = Double(v("s") ?? ""), let u = v("u"), let next = URL(string: u) {
                 DispatchQueue.main.asyncAfter(deadline: .now() + s) { handle(next) }
             }
-        case "shuffle": sug.reroll(rec)
-        case "page": let p = Int(v("i") ?? "0") ?? 0; DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { withAnimation { sug.page = p } }
+        case "shuffle":
+            if let a = v("amt").flatMap(Double.init) { sug.shuffle = a }
+            sug.reroll(rec)
         case "pin": if let i = Int(v("i") ?? ""), i < sug.options.count { sug.pin(sug.options[i].id, rec) }
         case "orient":
             let o: UIInterfaceOrientationMask = v("o") == "landscape" ? .landscapeRight : .portrait
@@ -91,32 +93,50 @@ struct DeckApp: App {
     var mode: SuggestMode = .simple
     /// text-only display (no waveforms), remembered between launches
     var minimal: Bool = UserDefaults.standard.bool(forKey: "minimal") { didSet { UserDefaults.standard.set(minimal, forKey: "minimal") } }
+    /// The Shuffle dial, 0...1: 0 shows the shortlist in pure score order, 1 shuffles it fairly; remembered.
+    var shuffle: Double = SuggestState.savedShuffle() {
+        didSet {
+            let c = min(1, max(0, shuffle.isFinite ? shuffle : 0.5))
+            if c != shuffle { shuffle = c; return }
+            UserDefaults.standard.set(shuffle, forKey: "shuffle")
+        }
+    }
+    private static func savedShuffle() -> Double {
+        guard UserDefaults.standard.object(forKey: "shuffle") != nil else { return 0.5 }
+        return min(1, max(0, UserDefaults.standard.double(forKey: "shuffle")))
+    }
     var target = LibraryFilter()
     var startIdx: [String: Int] = [:]   // chosen start point of each pick's lane (kept when pinned)
     var pinned: String?
-    var options: [Option] = []      // first set (test hooks)
-    var sets: [[Option]] = []
-    var rest: [Option] = []
-    var page = 0
+    var options: [Option] = []      // the picks on the screen, a pinned song first (test hooks: pin?i=)
+    var rest: [Option] = []         // the rest of the shortlist (More)
+    var shortlistSize = 0
     var scrollRequest: String?     // test hook: scroll the picks to an anchor
     var rolledFor: String?
+    var rolledShuffle: Double?     // the dial setting the current picks were rolled with
     private var rng = SystemRandomNumberGenerator()
 
     func reroll(_ rec: Recognizer) {
-        guard let cur = rec.current else { options = []; sets = []; rest = []; rolledFor = nil; return }
+        guard let cur = rec.current else { options = []; rest = []; shortlistSize = 0; rolledFor = nil; rolledShuffle = shuffle; return }
         if pinned == cur.id { pinned = nil }
         let exclude = Set(rec.history.suffix(12))
         if rolledFor != cur.id { startIdx = [:] }
-        let r = Suggester().rollSets(cur: cur, mode: mode, target: target, exclude: exclude, pinned: pinned, nSets: 1, rng: &rng)
-        sets = r.sets; rest = r.rest; page = 0
-        options = sets.first ?? []
-        rolledFor = cur.id
+        let list = Suggester().shortlist(cur: cur, target: target, exclude: exclude, pinned: pinned, shuffle: shuffle, rng: &rng)
+        let n = (mode == .full ? 10 : 5) + (list.first?.kind == .pinned ? 1 : 0)
+        options = Array(list.prefix(n)); rest = Array(list.dropFirst(n))
+        shortlistSize = list.filter { $0.kind == .pick }.count
+        rolledFor = cur.id; rolledShuffle = shuffle
         let scored = Library.shared.takePickSecs().map { String(format: " (scored in %.0f ms)", $0 * 1000) } ?? ""
-        rec.note("suggestions for \(cur.song)\(scored) [\(mode.rawValue)\(", " + target.label)]: " + sets.flatMap { $0 }.map { o in
+        var rank = 0
+        let rows = options.map { o -> String in
             let t = Library.shared.track(o.id)
-            let k = o.kind == .best ? "B" : o.kind == .hard ? "H" : "m"
-            return "\(k) \(t?.song ?? o.id) \(String(format: "%.2f", o.pair.s))\(o.tags.isEmpty ? "" : " <" + o.tags.joined(separator: ",") + ">")"
-        }.joined(separator: " | "))
+            let r: String
+            if o.kind == .pinned { r = "pinned" } else { rank += 1; r = "\(rank)." }
+            let sc = o.pair.map { String(format: "%.3f", $0.s) } ?? "-"
+            return "\(r) \(t?.song ?? o.id) \(sc)\(o.tags.isEmpty ? "" : " <" + o.tags.joined(separator: ",") + ">")"
+        }
+        rec.note("suggestions for \(cur.song)\(scored) [\(mode.rawValue)\(", " + target.label)]: shuffle \(Int((shuffle * 100).rounded()))%, shortlist \(shortlistSize): "
+                 + rows.joined(separator: " | ") + " | more \(rest.count)")
     }
     func pin(_ id: String, _ rec: Recognizer) {
         pinned = (pinned == id) ? nil : id

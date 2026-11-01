@@ -185,8 +185,8 @@ final class Library {
 
     func track(_ id: String?) -> Track? { id.flatMap { byId[$0] } }
 
-    /// The picks for a song, the one place the views get them: the bundled data's trimmed list, or for a crate the
-    /// list scored when the song is first asked for. The last few songs' lists are kept so going back and forth
+    /// The picks for a song, the one place the views get them: the bundled data's list (its 80 best, made by
+    /// tools/prep_data.py), or for a crate every scored song, scored when the song is first asked for. The last few songs' lists are kept so going back and forth
     /// between songs does not score them again.
     func pairs(from id: String) -> [Pair] {
         guard let crate else { return data.pairs[id] ?? [] }
