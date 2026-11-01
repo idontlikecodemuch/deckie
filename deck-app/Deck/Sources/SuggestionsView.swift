@@ -30,7 +30,7 @@ struct UpNextPanel: View {
                             Color.clear.frame(height: m.groupGap)
                         }
                         if picks.isEmpty {
-                            Text(sug.target.label.isEmpty ? "Switch on CD1, CD2 or All above." : "No good matches in \(sug.target.label).")
+                            Text(sug.target.label.isEmpty ? "Switch on \((Library.shared.data.discs.map(\.short) + ["All"]).joinedWithOr) above." : "No good matches in \(sug.target.label).")
                                 .font(.system(size: 20)).foregroundStyle(Theme.dim).padding(.vertical, 40)
                         } else {
                             VStack(alignment: .leading, spacing: m.cardGap) {
@@ -166,7 +166,8 @@ struct PickControls: View {
 
     @State private var dragging = false
 
-    /// Simple / Full and the Shuffle dial on the left; library chips (CD1, CD2, All, each on/off) on the right.
+    /// Simple / Full and the Shuffle dial on the left; library chips (one per disc of the crate, then All, each on/off)
+    /// on the right.
     var body: some View {
         @Bindable var sug = sug
         return HStack(spacing: 12) {
@@ -175,8 +176,9 @@ struct PickControls: View {
             shuffleDial($sug.shuffle)
             Spacer(minLength: 0)
             if !Library.shared.data.discs.isEmpty {   // a crate without discs has one pool: nothing to narrow
-                libChip("CD1", on: sug.target.cd1, color: Theme.sing) { sug.target.cd1.toggle(); sug.reroll(rec) }
-                libChip("CD2", on: sug.target.cd2, color: Theme.mix) { sug.target.cd2.toggle(); sug.reroll(rec) }
+                ForEach(Library.shared.data.discs, id: \.disc) { d in
+                    libChip(d.short, on: sug.target.isOn(d.disc), color: d.color) { sug.target.toggle(d.disc); sug.reroll(rec) }
+                }
                 libChip("All", on: sug.target.other, color: Theme.acc) { sug.target.other.toggle(); sug.reroll(rec) }
             }
         }

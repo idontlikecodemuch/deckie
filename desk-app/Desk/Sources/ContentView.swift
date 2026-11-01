@@ -20,6 +20,7 @@ struct ContentView: View {
                     Button { model.save() } label: { Label("Save", systemImage: "square.and.arrow.down") }.disabled(!model.dirty)
                     Button { model.makeSignatures() } label: { Label("Make signatures", systemImage: "waveform.badge.magnifyingglass") }
                         .disabled(model.signing)
+                    Button { model.showDiscs.toggle() } label: { Label(model.showDiscs ? "Hide Discs" : "Discs", systemImage: "opticaldisc") }
                     Button { model.showImportLog = true } label: { Label("Import log", systemImage: "list.bullet.rectangle") }
                     Button { model.revealInFinder() } label: { Label("Show in Finder", systemImage: "arrow.up.forward.app") }
                 }
@@ -74,6 +75,7 @@ struct CrateView: View {
     var body: some View {
         HSplitView {
             TrackTable().frame(minWidth: 560)
+            if model.showDiscs { DiscsPanel().frame(minWidth: 260, idealWidth: 300, maxWidth: 420) }
             Inspector().frame(minWidth: 260, idealWidth: 300, maxWidth: 380)
         }
         .safeAreaInset(edge: .bottom) { StatusBar() }

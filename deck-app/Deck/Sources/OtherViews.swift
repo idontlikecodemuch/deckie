@@ -6,7 +6,7 @@ import WebKit
 struct CDsView: View {
     @Environment(Recognizer.self) private var rec
     @Binding var tab: Int
-    @State private var disc = "S"
+    @State private var disc: String?
     @AppStorage("cdsDetails") private var details = false
 
     var body: some View {
@@ -21,14 +21,17 @@ struct CDsView: View {
                         Text("tap a song to set it as playing").font(.system(size: 13)).foregroundStyle(Theme.dim)
                         Spacer()
                         if !landscape {
-                            Picker("Disc", selection: $disc) { ForEach(lib.data.discs, id: \.disc) { Text($0.name).tag($0.disc) } }
+                            Picker("Disc", selection: Binding(get: { disc ?? lib.data.discs.first?.disc }, set: { disc = $0 })) {
+                                ForEach(lib.data.discs, id: \.disc) { Text($0.name).tag(Optional($0.disc)) }
+                            }
                                 .pickerStyle(.segmented).frame(maxWidth: 320)
                         }
                         Button { details.toggle() } label: {
                             Text(details ? "Compact" : "Details").font(.system(size: 15)).foregroundStyle(Theme.mut).frame(minHeight: 36)
                         }
                     }
-                    let shown = landscape ? lib.data.discs : lib.data.discs.filter { $0.disc == disc }
+                    let pick = disc ?? lib.data.discs.first?.disc
+                    let shown = landscape ? lib.data.discs : lib.data.discs.filter { $0.disc == pick }
                     if details {
                         HStack(alignment: .top, spacing: 28) { ForEach(shown, id: \.disc) { d in discList(d, showName: landscape) } }
                     } else {
@@ -44,7 +47,7 @@ struct CDsView: View {
 
     /// Dense: a whole disc in two columns, one line per song ("06 · Title  artist   BPM"), folder headers.
     private func denseDisc(_ d: Disc) -> some View {
-        let col = d.disc == "S" ? Theme.sing : Theme.mix
+        let col = d.color
         // flatten, then split into two equal columns (a folder may continue at the top of the right column)
         var flat: [(String, Int, String)] = []          // (folder, track number, id)
         for f in d.folders { for (i, id) in f.ids.enumerated() { flat.append((f.name, i + 1, id)) } }
@@ -103,7 +106,7 @@ struct CDsView: View {
         let lib = Library.shared
         return VStack(alignment: .leading, spacing: 6) {
             if showName {
-                Text(d.name + "  ·  \(d.folders.reduce(0) { $0 + $1.ids.count }) tracks").font(.system(size: 17, weight: .bold)).foregroundStyle(d.disc == "S" ? Theme.sing : Theme.mix)
+                Text(d.name + "  ·  \(d.folders.reduce(0) { $0 + $1.ids.count }) tracks").font(.system(size: 17, weight: .bold)).foregroundStyle(d.color)
             }
             ScrollView {
                 LazyVStack(alignment: .leading, spacing: 2, pinnedViews: [.sectionHeaders]) {
@@ -114,7 +117,7 @@ struct CDsView: View {
                             }
                         } header: {
                             Text("CD\(d.cd) / " + f.name + " /")
-                                .font(.system(size: 13, weight: .bold, design: .rounded)).foregroundStyle((d.disc == "S" ? Theme.sing : Theme.mix).opacity(0.85))
+                                .font(.system(size: 13, weight: .bold, design: .rounded)).foregroundStyle(d.color.opacity(0.85))
                                 .frame(maxWidth: .infinity, alignment: .leading).padding(.top, 12).padding(.bottom, 4).background(Theme.bg)
                         }
                     }

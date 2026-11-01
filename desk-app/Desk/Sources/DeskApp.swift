@@ -30,6 +30,10 @@ struct DeskApp: App {
                 Button("Open Crate…") { model.askOpenCrate() }.keyboardShortcut("o")
                 Button("Save") { model.save() }.keyboardShortcut("s").disabled(model.crate == nil)
             }
+            CommandGroup(after: .sidebar) {
+                Button(model.showDiscs ? "Hide Discs" : "Show Discs") { model.showDiscs.toggle() }
+                    .keyboardShortcut("d", modifiers: [.command, .shift]).disabled(model.crate == nil)
+            }
         }
     }
 }

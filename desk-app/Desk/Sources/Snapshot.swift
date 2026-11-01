@@ -2,7 +2,7 @@ import AppKit
 import SwiftUI
 
 /// "Deckie Desk" --snapshot <crate.deckiecrate> <out folder>: open the crate in the window, step through it the way a
-/// DJ would (arrow down the list, look at a track, open the import log) and write a PNG of the window at each step,
+/// DJ would (arrow down the list, look at a track, the Discs panel when the crate has discs, open the import log) and write a PNG of the window at each step,
 /// plus an ffmpeg concat list with how long each frame holds. The app draws its own windows, so no screen-recording
 /// permission is involved; then it quits. Made for showing the app when nobody is at the Mac. The Mac must be unlocked
 /// for whole-window frames; DECKIE_SNAP_ROWS=<n> changes how many rows the walk goes down (12 by default).
@@ -33,6 +33,15 @@ enum Snapshot {
                 if let id = model.crate?.tracks[i].id { model.selection = [id] }
             }
             step(after: 0.35) { capture("row\(i)", hold: i == n - 1 ? 2.2 : 0.4) }
+        }
+        // The Discs panel, when the crate has discs: the first disc's first folder selected, then its first song.
+        if let d = model.crate?.discPlan.first, let f = d.folders.first {
+            step(after: 0.3) { model.selection = []; model.showDiscs = true; model.discSelection = .folder(disc: d.name, folder: f.name) }
+            step(after: 0.9) { capture("discs", hold: 2.4) }
+            if let id = f.trackIds.first {
+                step(after: 0.3) { model.selection = [id]; model.discSelection = .track(id) }
+                step(after: 0.6) { capture("discs_track", hold: 2.0) }
+            }
         }
         step(after: 0.2) { model.showImportLog = true }
         step(after: 1.0) { capture("log", hold: 2.6, withSheet: true) }
