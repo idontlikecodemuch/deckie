@@ -164,7 +164,9 @@ built app's embedded.mobileprovision), so the app keeps working until then witho
 `xcrun simctl launch <device> io.christophershannon.deck -deckURL '<url> ; <url>'` runs these at launch
 (the deck:// scheme also works from Safari, with a confirmation prompt):
 `deck://test?path=/abs/file.mp3&start=60&render=r%2B4&loop=1`, `deck://mic`, `deck://stop`, `deck://set?id=<track id>`,
-`deck://mode?m=simple|full`, `deck://all?on=1`, `deck://shuffle` (re-roll), `deck://shuffle?amt=0.3` (set the Shuffle
+`deck://mode?m=simple|full`, `deck://all?on=1`,
+`deck://lib?cd1=1&cd2=0&all=0` (the whole filter, the first and second disc by position),
+`deck://lib?disc=<name>&on=0|1` (one disc on or off), `deck://shuffle` (re-roll), `deck://shuffle?amt=0.3` (set the Shuffle
 dial, 0 to 1, then re-roll), `deck://pin?i=0`, `deck://tab?i=0|1|2`,
 `deck://scroll?to=more|crate-rest|more-end` (scroll the picks to More, to where the shortlist ends, or to the end),
 `deck://search?q=love` (search More; an empty q clears),
@@ -222,5 +224,8 @@ A 238-track crate loads at once and scores a song in about 7 ms. From a crate, t
 lanes come from the per-bar loudness: each bar is measured against the song's loudest bar, as the bundled waves are,
 then the quiet floor (the quietest tenth of the song's bars) is removed and the same curve applied, so a lane is the
 whole-song wave zoomed in to the join, one flat step per bar cut by the beat and bar lines (the bundled data's lanes
-are finer, an eighth of a beat per sample from the audio). Not yet from a crate: pitch-variant signatures, disc and folder labels
-beyond the file's own folder.
+are finer, an eighth of a beat per sample from the audio). The crate's disc and folder labels (organised in Deckie Desk's Discs panel)
+give the CDs tab its discs, folders and numbered songs, give the picks one filter chip per disc (named after it,
+shortened to about 10 characters, the two disc colours alternating, every disc on by default) and mark songs on a
+disc as favoured; a song with no folder label shows the file's own folder. Not yet from a crate: pitch-variant
+signatures.

@@ -37,7 +37,7 @@ struct DeckApp: App {
     }
 
     /// Test hooks: deck://test?path=/abs/file.mp3&start=60&render=r%2B4&loop=1 · deck://mic · deck://stop ·
-    /// deck://tab?i=1 · deck://set?id=<track id> · deck://mode?m=simple|full · deck://all?on=1 · deck://shuffle (re-roll) ·
+    /// deck://lib?cd1=1&cd2=0&all=0 · deck://lib?disc=<name>&on=0|1 · deck://tab?i=1 · deck://set?id=<track id> · deck://mode?m=simple|full · deck://all?on=1 · deck://shuffle (re-roll) ·
     /// deck://shuffle?amt=0.3 (set the Shuffle dial, 0...1, then re-roll) · deck://pin?i=0 ·
     /// deck://search?q=love (search More's titles and artists; empty q clears)
     private func handle(_ url: URL) {
@@ -62,7 +62,18 @@ struct DeckApp: App {
         case "all": sug.target.other = v("on") == "1"; sug.reroll(rec)
         case "search": sug.moreQuery = v("q") ?? ""
         case "scroll": let t = v("to"); DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { sug.scrollRequest = t }
-        case "lib": sug.target = LibraryFilter(cd1: v("cd1") != "0", cd2: v("cd2") != "0", other: v("all") == "1"); sug.reroll(rec)
+        case "lib":
+            // deck://lib?cd1=&cd2=&all=: the whole filter, discs by position (first, second); deck://lib?disc=<name>&on=0|1:
+            // one disc, by its label or its name
+            let discs = Library.shared.data.discs
+            if let name = v("disc") {
+                if let d = discs.first(where: { $0.disc == name || $0.name == name || $0.short == name }) { sug.target.set(d.disc, on: v("on") != "0") }
+            } else {
+                var f = LibraryFilter(); f.other = v("all") == "1"
+                for (i, key) in ["cd1", "cd2"].enumerated() where i < discs.count { f.set(discs[i].disc, on: v(key) != "0") }
+                sug.target = f
+            }
+            sug.reroll(rec)
         case "startpt": let n = Int(v("i") ?? "1") ?? 1; let want = v("id"); DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { if let id = want ?? sug.pinned ?? sug.options.first?.id { sug.startIdx[id] = n } }
         case "crate":
             // deck://crate?path=/abs/x.deckiecrate: use that crate (tracks, picks, signatures) instead of the bundled data

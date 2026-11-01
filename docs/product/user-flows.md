@@ -47,7 +47,8 @@ the Mac, Import, Names, Editor, Discs. Internal names never appear; every label 
 6. **Discs.** Sees: disc name, folders, tracks numbered as on the CDJ ("CD1 / 6 - 125-129 / 06"); "Build a disc
    folder" writes the files in order plus a manifest; "Read a disc folder" matches a burned folder back by manifest
    or content hash. Stores: disc, folder and track location in `crate.json` (the primary identifier where discs
-   exist); the manifest on the disc is a copy **[inf]**. Today: the `discs/` tooling; the CDs tab shows the result.
+   exist); the manifest on the disc is a copy **[inf]**. Today: Desk's Discs panel makes discs and folders and puts
+   songs in order (the shared core's operations, so every desk version has them); the CDs tab shows the result.
 7. **Done.** Sees: "`<name>.deckiecrate` · 373 tracks · 3.6 MB" and "Send to iPad".
 
 ## 3. Moving the crate to the iPad
@@ -128,7 +129,7 @@ Landscape first; portrait stacks the two halves (ListenView).
    title, artist, folder, "BPM · pitch", move. Stores: `prefs.json` (today UserDefaults). Today: MinimalToggle,
    PickControls, PlainPick.
 9. **Scope chips.** Sees: a chip per disc or event in the crate, each on or off, plus "All" (today's CD1 / CD2 /
-   All in the discs' colours). Stores: the scope with the gig in `history` **[inf]**. Today: PickControls.
+   All in the discs' colours; from a crate, one chip per disc named after it). Stores: the scope with the gig in `history` **[inf]**. Today: PickControls.
 10. **Room too loud.** Sees: "listening · unsure", or nothing; the Crate tab, a dense list by folder and number
     ("tap a song to set it as playing"). Does: taps the song; the Booth reads "set by hand", BPM at 0 percent, the
     picks roll. Stores: a set-by-hand event, flagged so no pitch is learned from it. Today: CDsView, `rec.setManual`.

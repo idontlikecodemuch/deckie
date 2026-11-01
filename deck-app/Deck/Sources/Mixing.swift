@@ -65,14 +65,23 @@ func joinInfo(_ a: Track, _ b: Track, _ p: Pair?, deckAPitch: Double) -> JoinInf
 // MARK: - suggestions
 
 enum SuggestMode: String, CaseIterable { case simple = "SIMPLE", full = "FULL" }
-/// Which tracks the picks may come from: both discs (default), one disc, or the whole catalogue.
+/// Which tracks the picks may come from: the crate's discs, each on or off (every disc on by default), and the rest
+/// of the catalogue (off by default). Keyed by the disc's own label (`Disc.disc`), so it follows whatever discs the
+/// crate has.
 struct LibraryFilter: Equatable {
-    var cd1 = true      // CD1 Singalongs
-    var cd2 = true      // CD2 Mix-ins
-    var other = false   // everything else in the catalogue (alternates, benched tracks)
+    var offDiscs: Set<String> = []   // discs switched off
+    var other = false                // everything else in the catalogue (alternates, benched tracks)
+    func isOn(_ disc: String) -> Bool { !offDiscs.contains(disc) }
+    mutating func set(_ disc: String, on: Bool) { if on { offDiscs.remove(disc) } else { offDiscs.insert(disc) } }
+    mutating func toggle(_ disc: String) { set(disc, on: !isOn(disc)) }
     /// A crate with no discs has nothing "on the discs", so every track is allowed there.
-    func allows(_ t: Track) -> Bool { Library.shared.data.discs.isEmpty || (t.on ? (t.disc == "S" ? cd1 : cd2) : other) }
-    var label: String { [cd1 ? "CD1" : nil, cd2 ? "CD2" : nil, other ? "all" : nil].compactMap { $0 }.joined(separator: "+") }
+    func allows(_ t: Track) -> Bool {
+        Library.shared.data.discs.isEmpty || (t.on ? t.disc.map(isOn) ?? other : other)
+    }
+    /// "CD1+CD2", "Singalongs+all": the discs that are on, by their short names, then "all" when the rest is on.
+    var label: String {
+        (Library.shared.data.discs.filter { isOn($0.disc) }.map(\.short) + (other ? ["all"] : [])).joined(separator: "+")
+    }
 }
 
 struct Option: Identifiable, Hashable {
@@ -113,7 +122,7 @@ struct Suggester {
         let ao = cur.bpmOut ?? cur.bpmShown, bi = (t.bpmIn ?? t.bpmShown) * (MNUM[p.m] ?? 1)
         if p.st >= 4 || (ao > 0 && abs(bi / ao - 1) >= 0.04) { tags.append("tempo change") }
         if t.hal && !cur.hal { tags.append("Halloween") }
-        if let d = t.disc, let cd = cur.disc, d != cd { tags.append(d == "S" ? "to CD1" : "to CD2") }
+        if let d = t.disc, let cd = cur.disc, d != cd { tags.append("to " + (lib.data.discs.first { $0.disc == d }?.short ?? d)) }
         else if !t.on && !lib.data.discs.isEmpty { tags.append("off the discs") }   // a crate without discs has no "off"
         if !t.era.isEmpty && !cur.era.isEmpty && t.era != cur.era { tags.append(t.era) }
         if deepCut { tags.append("deep cut") }
@@ -142,4 +151,9 @@ struct Suggester {
     /// The pair for a pinned target: every scored song is in the list; a song the scoring gave no pair (outside the
     /// crate, or failing its gates) gets nil, and the join is computed from the two tracks.
     func pair(from a: String, to b: String) -> Pair? { lib.pairs(from: a).first { $0.b == b } }
+}
+
+extension Array where Element == String {
+    /// "CD1, CD2 or All": the words joined for a sentence.
+    var joinedWithOr: String { count < 2 ? joined() : dropLast().joined(separator: ", ") + " or " + last! }
 }

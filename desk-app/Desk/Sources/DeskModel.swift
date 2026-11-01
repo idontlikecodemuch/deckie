@@ -27,6 +27,12 @@ final class DeskModel: ObservableObject {
     @Published var errorText: String?
     @Published var showImportLog = false
 
+    // Discs (DiscsPanel.swift): whether the panel shows, what is selected in it, and discs or folders made but not yet
+    // holding a song (the crate keeps a disc or a folder only through its songs' labels).
+    @Published var showDiscs = false
+    @Published var discSelection: DiscItem?
+    @Published var draftFolders: [DraftFolder] = []
+
     // MARK: open and new
 
     func askOpenCrate() {
@@ -44,6 +50,7 @@ final class DeskModel: ObservableObject {
         do {
             let c = try CrateReader.read(from: url)
             crate = c; crateURL = url; dirty = false; selection = []
+            discSelection = nil; draftFolders = []
             sourceFolder = Remembered.sourceFolder(for: c.manifest.crateId)
             buildSummary = nil
         } catch { errorText = "Could not open the crate: \(error)" }
@@ -141,6 +148,14 @@ final class DeskModel: ObservableObject {
     func update(_ id: String, _ change: (inout CrateTrack) -> Void) {
         guard var c = crate, let i = c.tracks.firstIndex(where: { $0.id == id }) else { return }
         change(&c.tracks[i]); crate = c; dirty = true
+    }
+
+    /// A change to the whole crate (the disc and folder operations in DeckieCrate), marked as unsaved.
+    func updateCrate(_ change: (inout Crate) -> Void) {
+        guard var c = crate else { return }
+        let before = c
+        change(&c)
+        if c != before { crate = c; dirty = true }
     }
 
     func save() {

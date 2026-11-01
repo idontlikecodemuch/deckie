@@ -104,9 +104,10 @@ struct Track: Codable, Identifiable, Hashable {
     var folderPath: String { cd.map { "CD\($0) / \(folder) /" } ?? folder }
     /// "06 Lady (Hear Me Tonight)": track number as in the file name on the deck
     var numberedSong: String { num.map { String(format: "%02d · ", $0) + song } ?? song }
-    /// the disc's colour (CD1 lavender, CD2 teal; off the discs: the accent)
-    var discColor: Color { disc == "S" ? Theme.sing : disc == "M" ? Theme.mix : Theme.acc }
-    var functionColor: Color { hal ? Theme.hal : (disc == "S" ? Theme.sing : disc == "M" ? Theme.mix : Theme.mut) }
+    /// the disc's colour, the two disc colours alternating by disc number (CD1 lavender, CD2 blue, CD3 lavender, ...;
+    /// off the discs: the accent)
+    var discColor: Color { cd.map(Theme.disc) ?? Theme.acc }
+    var functionColor: Color { hal ? Theme.hal : (cd.map(Theme.disc) ?? Theme.mut) }
 }
 
 struct Pair: Codable, Hashable {
@@ -125,7 +126,17 @@ struct Pair: Codable, Hashable {
 }
 
 struct DiscFolder: Codable, Hashable { let name: String; let ids: [String] }
-struct Disc: Codable, Hashable { let disc: String; let cd: Int; let name: String; let folders: [DiscFolder] }
+struct Disc: Codable, Hashable {
+    let disc: String; let cd: Int; let name: String; let folders: [DiscFolder]
+    /// The disc's name as a chip and a tag show it: the whole name up to 10 characters, else its first word when that
+    /// fits ("CD1 Singalongs" reads "CD1"), else the name cut to 9 characters and an ellipsis.
+    var short: String {
+        if name.count <= 10 { return name }
+        if let w = name.split(separator: " ").first, w.count <= 10 { return String(w) }
+        return String(name.prefix(9)) + "…"
+    }
+    var color: Color { Theme.disc(cd) }
+}
 
 struct DeckData: Codable {
     let generated: String
@@ -228,6 +239,8 @@ enum Theme {
     static let ok = Color(hex: 0x72dca0)
     static let sing = Color(hex: 0x8f7bc8)     // CD1: muted lavender
     static let mix = Color(hex: 0x5a6cc0)      // CD2: dark, spooky blue
+    /// A disc's colour by its number: the two disc colours alternating (odd discs lavender, even discs blue).
+    static func disc(_ cd: Int) -> Color { cd % 2 == 1 ? sing : mix }
     static let hal = Color(hex: 0xff8a1f)
     static let rsn = Color(hex: 0xa99bd0)
     static let chipTx = Color(hex: 0xe3d6ff)

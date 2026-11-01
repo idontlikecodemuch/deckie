@@ -255,6 +255,20 @@ the crate, by score" marks where the shortlist ends. A search field at the top o
 whose title or artist contains the typed text (ignoring case and accents), keeping their order; the picks above are
 not filtered, and the search is forgotten when the app closes. Commit ba1bdfd.
 
+### D20. Discs and folders are organised in Desk, on every desk version (Nov 1)
+The decision, in the owner's words, asked about disc and folder labels in Desk: "yes we will need to be able to
+organize in all three versions". The three versions are Deckie Desk on the Mac now and on Windows and Linux later
+(D14: Swift everywhere for Deckie's own code). So the organising operations live in the shared core (DeckieCrate's
+`Discs.swift`: the plan of discs, folders and tracks; place, remove, move; rename and delete a disc or a folder), and
+every desk gets the same behaviour; Desk on the Mac has the window for it now (the Discs panel, a third column). A
+disc is the set of songs a DJ takes to a night; its folders are the groups inside it, in the order the DJ's player
+shows them; each folder's songs are numbered 1 to n with no gaps after every change. A track sits in at most one
+folder of one disc. The crate carries the labels in its existing fields (`ident.disc`, `ident.folder`,
+`ident.track`); crate v1 stays frozen and no field is added. The booth reads them for its CDs tab (discs, folders
+and songs in order), its filter chips (one chip per disc, named after it, every disc on by default) and its picks
+(songs on a disc are favoured, and a pick on another disc says "to <disc>"). The bundled sprint data still reads
+CD1 and CD2.
+
 ### Note on D19 (Nov 1): versions of a song stay separate rows
 Christopher, on two remixes of one song both showing in the picks: "we shouldn't merge them unless they are the same
 songs. DJs often have a bunch of versions of the same song". So the booth folds together only copies of the same
