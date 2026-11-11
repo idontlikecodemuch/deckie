@@ -63,7 +63,7 @@ your crate, reads your pitch, or shows you how to bring the next one in. Not sol
   it found; splitting the track into tempo segments where the speed changes and key segments where the key changes;
   the 8-bar phrase ruler DJs count in; the mix-in and mix-out windows, the best stretches to bring a track in and
   to hand over; and the Camelot code for each key, the DJ convention that numbers the 24 keys around a clock so
-  neighbours mix smoothly. Older devices get a reduced engine or read a crate analysed elsewhere. The Python
+  neighbours mix smoothly. Older devices get a reduced engine or read a crate file analysed elsewhere. The Python
   research code stays as our reference and never ships (licences).
 - Key: Apple's detector on the whole track and again on 30-second windows, with a rule that opens a new key segment
   only when the key moves outside the current key's family and stays there. Measured: every tested key change found;
@@ -92,12 +92,12 @@ your crate, reads your pitch, or shows you how to bring the next one in. Not sol
   dozen things, to be gut-checked with DJs and not a fixed number: how far you push the tempo; your fader range and
   key lock; how much key matters to you; genre and era spread; energy arc; blend length; cut styles; effects; how
   you handle vocals; phrase alignment; loops; where you mix in and the tempo you feel.
-- Apps: one iOS app (iPad booth view, iPhone pocket view) and a Mac app for building the crate. The iPad can also
-  build a crate from the USB stick a DJ already exports for the CDJ, overnight on power, with no new engine code (no
-  discs, and a real iPad's speed is unmeasured). Windows and Linux get a crate-builder after the trials, with a second
+- Apps: one iOS app (iPad booth view, iPhone pocket view) and a Mac app that reads the crate and writes the crate file. The iPad can also
+  build a crate file from the USB stick a DJ already exports for the CDJ, overnight on power, with no new engine code (no
+  discs, and a real iPad's speed is unmeasured). Windows and Linux get a crate-file builder after the trials, with a second
   analysis engine; recognition signatures still come from an Apple device. Updated Oct 28 (P16, P17).
 
-## Ways to build a crate
+## Ways to build a crate file
 
 1. From files and folders on the Mac, or files on the iPad.
 2. From discs with a USB drive on the Mac: commercial audio CDs, burned audio CDs, burned MP3 CDs, continuous mix
@@ -111,7 +111,7 @@ your crate, reads your pitch, or shows you how to bring the next one in. Not sol
 
 ## v1 features
 
-Hear and identify; build the crate any of the ways above; picks with the transition and a one-line reason in DJ
+Hear and identify; build the crate file any of the ways above; picks with the transition and a one-line reason in DJ
 words, limited to the crate or folder you choose, including transitions that start mid-song; saved pairs with a
 note; a naming editor; onboarding under five minutes from a short song chain with move tiles; sliders in DJ words,
 with a one-tap "widen the beat range" during a set; set recording with CUE and Mixcloud export; rekordbox export and
@@ -132,7 +132,7 @@ import buttons; a "How you mix" page with undo.
 - P2. YouTube. Deckie analyses any file you own and never asks where it came from. It cannot pull audio or titles
   from YouTube itself: the terms and the App Store rules forbid it. A per-track link to check a version is all.
 - P5. Withdrawn: the audience is any DJ.
-- P6. Fingerprint lookups happen while you build the crate, started by you, never during a set.
+- P6. Fingerprint lookups happen while you build the crate file, started by you, never during a set.
 - P7. Claim discipline: other apps hear the room; ours knows your crate, your pitch and the transition.
 - P8. Store name and subtitle. "DJ Booth Companion" is the descriptive subtitle search engines want; candidates for
   the line that sells: "Deckie: Know Your Crate", "Deckie: Your Crate, Mixed", "Deckie: Next Record, Your Crate",
@@ -143,7 +143,7 @@ import buttons; a "How you mix" page with undo.
   track; nine signatures per track as the stand-in for the next gig.
 - P12. Tempo segments stored in the shape DJ software uses for grid markers, so export and import are clean.
 - P13. Vocals: Apple's reading, calibrated by DJs' ears across styles; a separation pass later; define "vocal".
-- P14. The six ways to build a crate above, with the disc flow as a draft.
+- P14. The six ways to build a crate file above, with the disc flow as a draft.
 - P15. The voice framework in `voice.md`.
 - Also yours: the bundle id under App Hold Media; the attorney review of DECKEE; a registrar check of deckie.dj; the
   commit email; pricing (lean: one-time, $39 to $59); and one vocabulary call, "filter out" (DJs say it; Mike did not

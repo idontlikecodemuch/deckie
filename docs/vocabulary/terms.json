@@ -1,6 +1,6 @@
 {
  "title": "Deckie vocabulary",
- "updated": "2026-10-28",
+ "updated": "2026-11-11",
  "sources": [
   "docs/research/e-dj-vocabulary.md",
   "docs/product/spec-condensed.md",
@@ -1134,7 +1134,7 @@
    ],
    "plain": "The list of songs the app can recognise.",
    "expert": "The library the matcher knows. In most apps it is everything; in Deckie it is your bag.",
-   "deckie": "Built with Apple's ShazamKit on the device from the DJ's own signatures, per crate, fully offline. No bundled catalogue of commercial music in any public build.",
+   "deckie": "Built with Apple's ShazamKit on the device from the DJ's own signatures, per crate file, fully offline. No bundled catalogue of commercial music in any public build.",
    "related": [
     "signature",
     "crate",
@@ -1561,18 +1561,36 @@
    ]
   },
   {
+   "id": "library",
+   "term": "Library",
+   "group": "product",
+   "aliases": [
+    "collection",
+    "my music"
+   ],
+   "plain": "All the music a DJ owns.",
+   "expert": "Your whole collection, at home. A crate is what you pull from it.",
+   "deckie": "The music itself: audio files on the DJ's own disks. Deckie reads it at home and never moves or changes it. A crate is any group of songs from the library, and can be all of it.",
+   "related": [
+    "crate",
+    "crate-file",
+    "privacy-promise"
+   ]
+  },
+  {
    "id": "crate",
    "term": "Crate",
    "group": "product",
    "aliases": [
     "bag",
-    "library",
-    "record box"
+    "record box",
+    "playlist (in some software)"
    ],
-   "plain": "The DJ's collection of songs for a gig or for life.",
+   "plain": "A group of songs a DJ pulls together, for a gig or for life. It can be the whole library.",
    "expert": "Your bag. The records you brought.",
-   "deckie": "The DJ's crate is the catalogue: recognition, picks and names all come from it. Edits, bootlegs, live sets and burned CDs are first-class.",
+   "deckie": "The crate is the songs; the crate file is what Deckie knows about them. Desk reads your crate and writes a crate file. Recognition, picks and names all come from the DJ's own crate. Edits, bootlegs, live sets and burned CDs are first-class.",
    "related": [
+    "library",
     "crate-file",
     "catalogue",
     "scope-chips"
@@ -1585,11 +1603,12 @@
    "aliases": [
     ".deckiecrate"
    ],
-   "plain": "One file that carries everything the app knows about your songs, but not the songs themselves.",
+   "plain": "What Deckie Desk writes from a crate: one file that carries everything the app knows about your songs, but not the songs themselves.",
    "expert": "Like rekordbox's USB export without the music.",
-   "deckie": "A package folder of about 10 KB per track: analysis, names, preferences and history, never audio. It moves by iCloud Drive, AirDrop or Files. No server.",
+   "deckie": "A package folder of about 10 KB per track: analysis, names, preferences and history, never audio. It moves by iCloud Drive, AirDrop or Files. No server. Never called just \"the crate\": the crate is the songs.",
    "related": [
     "crate",
+    "library",
     "desk",
     "privacy-promise",
     "signature"

@@ -269,6 +269,17 @@ and songs in order), its filter chips (one chip per disc, named after it, every 
 (songs on a disc are favoured, and a pick on another disc says "to <disc>"). The bundled sprint data still reads
 CD1 and CD2. Commit 4eac5da.
 
+### D21. Crate is the songs, crate file is what Desk writes from them (Nov 11)
+The decision, in the owner's words: "we have been using crate to mean both the music and the crate file and we
+should separate them", and "Why don't we just call it the crate and the crate file". Three words, each with one
+meaning. The **library** is all the music a DJ owns. A **crate** is a group of songs from it, the way DJs already
+say it, and can be the whole library. A **crate file** is the `.deckiecrate` that Deckie Desk writes from a crate
+and the booth carries: tempo, key, bars, style and the fingerprints for recognition, never audio. The sentence that
+teaches it: "Desk reads your crate and writes a crate file." "Crate index" was weighed and passed over: an index only
+points at things, and it is our word, not a DJ's. Nothing in the format or the code is renamed; "crate v1" stays the
+name of the file format. The vocabulary, the voice notes and the living product docs follow from today; research
+letters and the history folder keep the words they were written with, where "crate" often means the file.
+
 ### Note on D19 (Nov 1): versions of a song stay separate rows
 Christopher, on two remixes of one song both showing in the picks: "we shouldn't merge them unless they are the same
 songs. DJs often have a bunch of versions of the same song". So the booth folds together only copies of the same

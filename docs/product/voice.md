@@ -32,6 +32,11 @@ Avoid: "join" as the name of the thing between two tracks (it is understandable 
 exists; internal names (bass_swap_8, quick_blend_echo) anywhere a DJ can see; "track ID" for our own crate (we
 "name" tracks); "AI", "smart", "intelligent", "magic".
 
+Three words for the music, kept apart (D21): the **library** is all the music a DJ owns; a **crate** is a group of
+songs from it, for a gig or for life, and can be the whole library; a **crate file** is what Deckie Desk writes from
+a crate and what the booth carries: everything Deckie knows about the songs, never the songs. "Desk reads your crate
+and writes a crate file." Never say "crate" alone for the file.
+
 Three registers, kept apart: plain English for anyone, the DJ's word in the booth, and how Deckie understands it.
 The vocabulary page holds all three for every term. Product copy uses the DJ register; help and onboarding may
 add the plain one; the Deckie register stays in our documents.
@@ -49,7 +54,7 @@ your crate." "Everything your crate can tell you." The descriptive subtitle "DJ 
 - A pick's line: "pitch +3.5 · in key · clean 16-bar intro · blend or echo out".
 - A hard join: "pitch −9 · keys clash · cut on the one".
 - Onboarding: "Pick three songs you'd play in a row. For each change, tap how you'd do it."
-- Empty crate on the iPad: "No crate yet. Build one on your Mac, or add files here."
+- Empty crate on the iPad: "No crate file yet. Make one on your Mac, or add files here."
 - Nothing recognised for a while: "Listening. Tap a track in your crate if it's too loud in here."
 - Privacy, everywhere it is said: "Your music stays on your iPad. No account. No upload. Works with no signal."
 - A learned change, on the How you mix page: "You've been pushing tempo to about 6 percent. Picks now reach that far.

@@ -10,13 +10,13 @@ append-only; `signatures/`) and **Today** (where the Deck app already does it). 
 **[inf]**: Welcome, Booth (today's Listen tab), Crate (today's CDs tab), Set, How you mix, Tune (a popover); on
 the Mac, Import, Names, Editor, Discs. Internal names never appear; every label has a plain gloss on long-press.
 
-## 1. First run on the iPad, no crate
+## 1. First run on the iPad, no crate file
 
 1. **Welcome.** Sees: "Deckie"; "Your music stays on your iPad. No account. No upload. Works with no signal.";
-   two buttons, "Open a crate" and "Build a crate from files on this iPad"; one line naming the engine level (D11),
-   such as "This iPad reads crates analysed on a Mac". Today: none; Mike's data is compiled in, so the first
+   two buttons, "Open a crate file" and "Build a crate file from files on this iPad"; one line naming the engine level (D11),
+   such as "This iPad reads crate files analysed on a Mac". Today: none; Mike's data is compiled in, so the first
    screen is the Booth's "Listening…".
-2. **Open a crate.** Sees: the Files picker filtered to `.deckiecrate`, iCloud Drive's Deckie folder first; or
+2. **Open a crate file.** Sees: the Files picker filtered to `.deckiecrate`, iCloud Drive's Deckie folder first; or
    AirDrop's "Open in Deckie". Continues at flow 3, step 3.
 3. **Build from files.** Sees: the Files picker for a folder or files; "Analysing 12 of 373"; "Plug in to
    continue" on battery (spec 5.3); progress survives leaving the app. Stores: `crate.json` (analysis, names from
@@ -27,7 +27,7 @@ the Mac, Import, Names, Editor, Discs. Internal names never appear; every label 
    tracks keep their file name and still get picks. Stores: `crate.json`. Today: none.
 5. Onboarding (flow 4), then the Booth.
 
-## 2. Crate import on the Mac
+## 2. Crate import on the Mac (the crate in, a crate file out)
 
 1. **Import.** Sees: "Drop a folder or choose files"; a crate name, defaulting to the folder name **[inf]**.
    Today: `mixer/analyze.py` and `prep_data.py` from the terminal.
@@ -51,14 +51,14 @@ the Mac, Import, Names, Editor, Discs. Internal names never appear; every label 
    songs in order (the shared core's operations, so every desk version has them); the CDs tab shows the result.
 7. **Done.** Sees: "`<name>.deckiecrate` · 373 tracks · 3.6 MB" and "Send to iPad".
 
-## 3. Moving the crate to the iPad
+## 3. Moving the crate file to the iPad
 
 1. **Send (Mac).** Sees: iCloud Drive ("appears on your iPad in Deckie"), AirDrop, Files. Today: none; data is
    compiled into the app and reinstalled (README, "Install on the iPad").
-2. **Arrival (iPad).** Sees: AirDrop's "Open in Deckie"; or the crate listed on Welcome or Crate; or "Open a
-   crate" from Files.
+2. **Arrival (iPad).** Sees: AirDrop's "Open in Deckie"; or the crate file listed on Welcome or Crate; or "Open a
+   crate file" from Files.
 3. **Open (iPad).** Sees: "Opening <name> · 373 tracks · analysed on a Mac · recognition ready" (signatures
-   travel; the iPad has no audio to regenerate from) and the engine line; if the crate already exists here,
+   travel; the iPad has no audio to regenerate from) and the engine line; if the crate file already exists here,
    "Keeping your saved pairs, history and settings". Stores: `crate.json` replaced per key by the newer;
    `prefs.json` and `history` merged by timestamp, history a union, never overwritten. Today: none.
 4. Onboarding if no profile exists; otherwise the Booth.
@@ -129,7 +129,7 @@ Landscape first; portrait stacks the two halves (ListenView).
    title, artist, folder, "BPM · pitch", move. Stores: `prefs.json` (today UserDefaults). Today: MinimalToggle,
    PickControls, PlainPick.
 9. **Scope chips.** Sees: a chip per disc or event in the crate, each on or off, plus "All" (today's CD1 / CD2 /
-   All in the discs' colours; from a crate, one chip per disc named after it). Stores: the scope with the gig in `history` **[inf]**. Today: PickControls.
+   All in the discs' colours; from a crate file, one chip per disc named after it). Stores: the scope with the gig in `history` **[inf]**. Today: PickControls.
 10. **Room too loud.** Sees: "listening · unsure", or nothing; the Crate tab, a dense list by folder and number
     ("tap a song to set it as playing"). Does: taps the song; the Booth reads "set by hand", BPM at 0 percent, the
     picks roll. Stores: a set-by-hand event, flagged so no pitch is learned from it. Today: CDsView, `rec.setManual`.
@@ -139,7 +139,7 @@ Landscape first; portrait stacks the two halves (ListenView).
 1. **Recording.** Sees: "REC 0:12:34" on the status line (tap pauses and resumes); "Record while listening" and
    "Line in" in the "…" sheet. One engine feeds both. Stores: the set log in `history`
    (time in, seconds into the recording, track, location, pitch, confidence); the audio is the DJ's own file in
-   Files (On My iPad > Deckie > Sets), never in the crate. Today: SetRecorder, `log.json`, `tracklist.txt`;
+   Files (On My iPad > Deckie > Sets), never in the crate file. Today: SetRecorder, `log.json`, `tracklist.txt`;
    line-in is new.
 2. **Set.** Sees: the list of sets (also the Pocket role on the iPhone); a set's songs with time in, title,
    artist, location, pitch, and the recording's length; replace a wrong song from the crate, remove a false hit,
@@ -163,7 +163,7 @@ Nothing in flows 7 and 8 exists today.
    row stays so it can be redone. Stores: the previous value restored in `prefs.json` from a short per-dimension
    change list **[inf]**; the picks re-roll.
 4. **Delete.** Sees: "Delete what Deckie learned" asks once and names what goes (preferences, saved pairs,
-   history); names and analysis stay. Stores: those parts of the crate emptied.
+   history); names and analysis stay. Stores: those parts of the crate file emptied.
 
 ## 8. Profiles (P9, proposed)
 
@@ -200,7 +200,7 @@ Every sprint round that removed something was welcomed; these stay out.
 2. Where does "Save pair" live: the line after a change, the long-press popover, or both? Attention is the cost.
 3. Fold Minimal and Simple / Full into one "On screen" control as the spec says, or keep Mike's two controls?
 4. Scope chips for a crate with no discs: folders, events, or playlists?
-5. The set log: in the crate, beside the recording, or both (today both)?
+5. The set log: in the crate file, beside the recording, or both (today both)?
 6. The iPad import: single-track rename only, or the whole editor?
 7. Tune: which tiles, and where on the Booth?
 8. The why line: one grey line always visible, as today, or long-press only?

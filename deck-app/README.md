@@ -79,8 +79,8 @@ App size about 59 MB (catalog 47 MB, data 9 MB, mix map 1.2 MB).
 
 ## Install on the iPad (Chris's paid developer account)
 
-**Installed Oct 31, 2026** (main at b77eb13: crates from the Documents folder, picks scored when a song is recognised,
-the whole-song wave and join lanes from the crate's per-bar loudness). Earlier installs: Oct 24, evening (moves menu,
+**Installed Oct 31, 2026** (main at b77eb13: crate files from the Documents folder, picks scored when a song is recognised,
+the whole-song wave and join lanes from the crate file's per-bar loudness). Earlier installs: Oct 24, evening (moves menu,
 16 % pitch range, sync marker). To install again, with the iPad connected and unlocked, from `deck-app/` run:
 
 ```
@@ -96,7 +96,7 @@ The project already has `DEVELOPMENT_TEAM = 566NNM5HT8` and automatic signing, s
    or from Terminal (one line, replace the name with the iPad's name from `xcrun devicectl list devices`):
 
 ```
-cd /Users/christophershannon/personal/deckie/deck-app && xcodebuild -project Deck.xcodeproj -scheme Deck -configuration Release -destination 'platform=iOS,name=CDS iPad Air' -derivedDataPath build/dd-dev -allowProvisioningUpdates build && xcrun devicectl device install app --device 'CDS iPad Air' build/dd-dev/Build/Products/Release-iphoneos/Deck.app
+cd /Users/christophershannon/code/deckie/deck-app && xcodebuild -project Deck.xcodeproj -scheme Deck -configuration Release -destination 'platform=iOS,name=CDS iPad Air' -derivedDataPath build/dd-dev -allowProvisioningUpdates build && xcrun devicectl device install app --device 'CDS iPad Air' build/dd-dev/Build/Products/Release-iphoneos/Deck.app
 ```
 
 3. First launch: allow the microphone. The screen stays on while the app is open (idle timer off).
@@ -197,14 +197,14 @@ team 566NNM5HT8 added in Xcode > Settings > Accounts, or an App Store Connect AP
 -authenticationKeyIssuerID <ISSUER>` to the export command). The App Store Connect app record for
 `io.christophershannon.deck` must exist (Apps > + > New App).
 
-## Crates (Oct 29, 2026)
+## Crate files (Oct 29, 2026)
 
-The app can run from a crate made by Deckie Desk instead of the bundled data: put a `.deckiecrate` package in the
+The app can run from a crate file made by Deckie Desk instead of the bundled data: put a `.deckiecrate` package in the
 app's Documents folder (Files app > On My iPad > Deck, or Finder > iPad > Files) and relaunch, or point a test launch at
-one with `deck://crate?path=/abs/x.deckiecrate`. The crate gives the tracks and their analysis, the whole-song wave
+one with `deck://crate?path=/abs/x.deckiecrate`. The crate file gives the tracks and their analysis, the whole-song wave
 (from the per-bar loudness), the recognition catalogue (one plain signature per track, made on the Mac) and the picks:
 the pair scores are computed on the iPad with the shared scoring in `core` (DeckieCore's PairScoring, the port of
-mixer/score.py), so any DJ's crate works and the crate stays exactly as Desk wrote it. The picks are scored for one
+mixer/score.py), so any DJ's crate file works and stays exactly as Desk wrote it. The picks are scored for one
 song at a time: when a song is recognised (or set by hand) the app scores it into every other track, keeps every
 scored pair as that song's list, best first, and remembers the last 8 songs' lists, and keeps no table of all pairs. The one thing that needs the whole crate is
 the timbre rank (how a pair's sound similarity compares with every other pair's), so the load builds the sorted list
@@ -220,12 +220,12 @@ lower half of the shortlist). The full library (Oct 30, 2026: 2,327 tracks, 141 
 signatures; the Release build on the iPad A16 iOS 27 simulator) loads in about 5 s, 2.8 s of it the similarity
 list, and holds about 0.5 GB afterwards (it held 4.3 GB and took 2 min 7 s when every pair was scored at load); one
 song's picks take 55 to 80 ms, and a streamed track is matched within a few seconds, each 4 s segment in 1 to 4 ms.
-A 238-track crate loads at once and scores a song in about 7 ms. From a crate, the whole-song wave and the join view's two
+A 238-track crate file loads at once and scores a song in about 7 ms. From a crate file, the whole-song wave and the join view's two
 lanes come from the per-bar loudness: each bar is measured against the song's loudest bar, as the bundled waves are,
 then the quiet floor (the quietest tenth of the song's bars) is removed and the same curve applied, so a lane is the
 whole-song wave zoomed in to the join, one flat step per bar cut by the beat and bar lines (the bundled data's lanes
-are finer, an eighth of a beat per sample from the audio). The crate's disc and folder labels (organised in Deckie Desk's Discs panel)
+are finer, an eighth of a beat per sample from the audio). The crate file's disc and folder labels (organised in Deckie Desk's Discs panel)
 give the CDs tab its discs, folders and numbered songs, give the picks one filter chip per disc (named after it,
 shortened to about 10 characters, the two disc colours alternating, every disc on by default) and mark songs on a
-disc as favoured; a song with no folder label shows the file's own folder. Not yet from a crate: pitch-variant
+disc as favoured; a song with no folder label shows the file's own folder. Not yet from a crate file: pitch-variant
 signatures.
