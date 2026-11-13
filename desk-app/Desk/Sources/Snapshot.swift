@@ -39,7 +39,7 @@ enum Snapshot {
             step(after: 0.3) { model.selection = []; model.showSources = true; model.sourceSelection = .folder(source: d.name, folder: f.name) }
             step(after: 0.9) { capture("sources", hold: 2.4) }
             if let id = f.trackIds.first {
-                step(after: 0.3) { model.selection = [id]; model.sourceSelection = .track(id) }
+                step(after: 0.3) { model.selection = [id]; model.sourceSelection = .track(id, source: d.name, folder: f.name) }
                 step(after: 0.6) { capture("sources_track", hold: 2.0) }
             }
         }

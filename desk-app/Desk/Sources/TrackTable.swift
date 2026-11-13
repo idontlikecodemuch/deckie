@@ -21,14 +21,24 @@ struct TrackTable: View {
             TableColumn("Bars") { t in Text(t.grid.map { "\($0.nBars)" } ?? "–") }.width(50)
             TableColumn("Length") { t in Text(Self.mmss(t.file.durationS)) }.width(60)
             TableColumn("Vocals") { t in Text(t.vocal.map { String(format: "%.0f%%", $0.mean * 100) } ?? "–") }.width(56)
-            TableColumn("Where") { t in Text(Self.place(t)).lineLimit(1) }.width(min: 80, ideal: 150)
+            TableColumn("Where") { t in Text(Self.places(t).joined(separator: " · ")).lineLimit(1).help(Self.places(t).joined(separator: "\n")) }
+                .width(min: 80, ideal: 180)
             TableColumn("Notes") { t in Text(Self.notes(t)).foregroundStyle(.secondary).lineLimit(1) }
         }
     }
 
-    /// Where a song is: "Stick 3 / House 4" on a source, else its folder on the Mac ("House"), or "" at the top.
+    /// Where a song's own place is: "Stick 3 / House 4" on a source, else its folder on the Mac ("House"), or "" at
+    /// the top.
     static func place(_ t: CrateTrack) -> String {
         Crate.discLine(t) ?? ((t.file.rel ?? "") as NSString).deletingLastPathComponent
+    }
+
+    /// Every place a song is (D27), the one that leads first: "Friday / Set 1", "Stick 3 / House 1", then its folders
+    /// on the Mac ("Burned", or "the top of the music folder").
+    static func places(_ t: CrateTrack) -> [String] {
+        t.placesInOrder.map { p in
+            Crate.placeLine(p) ?? ((p.folder ?? "").isEmpty ? "the top of the music folder" : p.folder!)
+        }
     }
 
     static func mmss(_ s: Double) -> String { String(format: "%d:%02d", Int(s) / 60, Int(s) % 60) }
@@ -77,9 +87,11 @@ struct Inspector: View {
                         model.update(id) { $0.ident.tags = v.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty } }
                     }
                     VStack(alignment: .leading, spacing: 2) {
-                        Text("Where").font(.caption).foregroundStyle(.secondary)
-                        let place = TrackTable.place(t)
-                        Text(place.isEmpty ? "the top of the music folder" : place)
+                        let places = TrackTable.places(t)
+                        Text(places.count > 1 ? "Where (\(places.count) places)" : "Where").font(.caption).foregroundStyle(.secondary)
+                        ForEach(places.indices, id: \.self) { i in
+                            Text(places[i]).foregroundStyle(i == 0 ? .primary : .secondary)
+                        }
                     }
                     let copies = model.copies(of: t)
                     if !copies.isEmpty {

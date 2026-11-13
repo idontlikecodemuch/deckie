@@ -276,9 +276,21 @@ extension CrateTrack {
     }
 
     /// The place that leads among `places` by `SameSong.ordered`, with no playing source and sources in name order.
-    public static func leadingPlace(_ places: [Place]) -> Place? {
+    public static func leadingPlace(_ places: [Place]) -> Place? { orderedPlaces(places).first }
+
+    /// `places` in the order of `SameSong.ordered`, with no playing source and sources in name order: the first
+    /// source by name, then by folder and number; places with no source last.
+    public static func orderedPlaces(_ places: [Place]) -> [Place] {
         let items = places.enumerated().map { SameSong.Place(id: String($0.offset), disc: $0.element.disc,
                                                              folder: $0.element.folder, track: $0.element.track) }
-        return SameSong.ordered(items, playingDisc: nil, discOrder: []).first.map { places[Int($0.id)!] }
+        return SameSong.ordered(items, playingDisc: nil, discOrder: []).map { places[Int($0.id)!] }
+    }
+
+    /// Every place of this entry, the one that leads first (`orderedPlaces`). The own place of an entry only in a
+    /// folder on the Mac, which has no labels, is given as `file.rel`'s folder.
+    public var placesInOrder: [Place] {
+        var own = ident.ownPlace
+        if own.disc == nil && own.folder == nil { own.folder = SourceReading.group(of: file.rel ?? "") }
+        return CrateTrack.orderedPlaces([own] + ident.otherPlaces)
     }
 }

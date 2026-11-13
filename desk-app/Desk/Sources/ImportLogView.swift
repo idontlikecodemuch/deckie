@@ -36,6 +36,7 @@ struct ImportLogView: View {
         case "unsupported": return "File type not supported"
         case "protected": return "Protected, cannot be read"
         case "damaged_frames": return "Damaged frames, played as silence"
+        case "duplicate": return "The same file as another"
         case "decode_failed", "decode": return "Could not be decoded"
         case "analysis_failed", "analysis": return "Analysis failed"
         default: return reason.replacingOccurrences(of: "_", with: " ").capitalized

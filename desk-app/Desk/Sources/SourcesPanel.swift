@@ -7,11 +7,12 @@ import DeckieCrate
 // "source" is ours, in documents and code. The operations are the shared core's (DeckieCrate's Discs.swift, where the
 // field is still called disc); building a source by hand is not offered in the window.
 
-/// One row of the Sources panel: a source, a folder of a source, or a song in its folder.
+/// One row of the Sources panel: a source, a folder of a source, or a song in its folder. A song with more than one
+/// place (D27) has a row in each folder it is in, so a song row says which folder it is.
 enum SourceItem: Hashable {
     case source(String)
     case folder(source: String, folder: String)
-    case track(String)
+    case track(String, source: String, folder: String)
 }
 
 // MARK: - the corrections, through the shared core
@@ -25,17 +26,16 @@ extension DeskModel {
     var selectedSourceFolder: (source: String, folder: String)? {
         switch sourceSelection {
         case let .folder(s, f)?: return (s, f)
-        case let .track(id)?:
-            guard let t = binding(for: id), let s = t.ident.disc else { return nil }
-            return (s, t.ident.folder ?? "")
+        case let .track(_, s, f)?: return (s, f)
         default: return nil
         }
     }
 
-    /// Moves a song up (-1) or down (+1) within its folder; the folder is numbered again from 1.
+    /// Moves a song up (-1) or down (+1) within the folder its selected row is in (any of its places); the folder is
+    /// numbered again from 1.
     func nudge(_ id: String, by step: Int) {
         guard let sf = selectedSourceFolder, let i = crate?.trackIds(disc: sf.source, folder: sf.folder).firstIndex(of: id) else { return }
-        updateCrate { $0.move(id, to: i + step) }
+        updateCrate { $0.move(id, inDisc: sf.source, folder: sf.folder, to: i + step) }
     }
 
     /// The panel's drag within a folder: SwiftUI's `onMove` offsets turned into the core's `place`.
@@ -116,8 +116,10 @@ struct SourcesPanel: View {
                         ForEach(s.folders, id: \.name) { f in
                             Label(f.name.isEmpty ? "(top)" : f.name, systemImage: "folder")
                                 .padding(.leading, 14).tag(SourceItem.folder(source: s.name, folder: f.name))
-                            ForEach(f.trackIds, id: \.self) { id in
-                                trackRow(id).tag(SourceItem.track(id))
+                            let rows = model.crate?.folderPlaces(disc: s.name, folder: f.name) ?? []
+                            ForEach(rows.indices, id: \.self) { i in
+                                trackRow(rows[i].id, number: rows[i].number, source: s.name)
+                                    .tag(SourceItem.track(rows[i].id, source: s.name, folder: f.name))
                             }
                             .onMove { from, to in model.moveInFolder(source: s.name, folder: f.name, from: from, to: to) }
                         }
@@ -135,13 +137,19 @@ struct SourcesPanel: View {
         }
     }
 
-    /// A song by the number it has in its folder (the player's, as read; numbered again after a move).
-    private func trackRow(_ id: String) -> some View {
+    /// A song by the number it has in this folder (the player's, as read; numbered again after a move). A song that
+    /// is in other places too says how many, and where on hover.
+    private func trackRow(_ id: String, number: Int?, source: String) -> some View {
         let t = model.binding(for: id)
+        let elsewhere = t.map { TrackTable.places($0).count - 1 } ?? 0
         return HStack(spacing: 6) {
-            Text(t?.ident.track.map { String(format: "%02d", $0) } ?? "–").font(.callout.monospacedDigit()).foregroundStyle(.secondary)
+            Text(number.map { String(format: "%02d", $0) } ?? "–").font(.callout.monospacedDigit()).foregroundStyle(.secondary)
             Text(t?.ident.title ?? id).foregroundStyle(.primary).lineLimit(1)
             if let a = t?.ident.artist { Text(a).foregroundStyle(.secondary).lineLimit(1) }
+            if elsewhere > 0 {
+                Text("+\(elsewhere)").font(.caption.monospacedDigit()).foregroundStyle(.secondary)
+                    .help("Also in " + (t.map { TrackTable.places($0).joined(separator: ", ") } ?? ""))
+            }
         }
         .padding(.leading, 30)
     }
@@ -151,7 +159,7 @@ struct SourcesPanel: View {
             Text("Desk shows what it read. Fix a name, or an order it read wrongly.").font(.caption).foregroundStyle(.secondary)
             HStack {
                 switch model.sourceSelection {
-                case let .track(id)?:
+                case let .track(id, _, _)?:
                     Button("Move up") { model.nudge(id, by: -1) }
                     Button("Move down") { model.nudge(id, by: 1) }
                 case let .folder(s, f)?:
