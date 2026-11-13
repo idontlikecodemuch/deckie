@@ -65,7 +65,18 @@ for d in "${dirs[@]}"; do
 done
 [ ${#closure[@]} -gt 0 ] || die "Swift's runtime libraries (swiftCore.dll) are not on PATH"
 "$py" "$here/pe_imports.py" "${closure[@]}" "$app/deckie-make.exe" "$app/onnxruntime.dll" | tr -d '\r' > "$out/imports.txt"
+# DECKIE_SHIP_VC_RUNTIME=1 keeps the toolchain's copy of Microsoft's Visual C++ runtime in the zip instead: for the day
+# the owner says yes to its licence (DEPENDENCIES.md, section 3). Not set anywhere today.
+if [ "${DECKIE_SHIP_VC_RUNTIME:-0}" != 1 ]; then
+# Microsoft's Visual C++ runtime is left out even where the Swift toolchain's own runtime folder holds a copy of it
+# (it does: found by the first packaging run, Nov 13, 2026): those lines become "system" lines, expected from Windows.
+sed -i -E 's/^copy .*[\\/]((msvcp140|vcruntime140|concrt140)[^\\/]*\.dll)$/system \1/I' "$out/imports.txt"
+sort -u -o "$out/imports.txt" "$out/imports.txt"
+fi
 grep '^copy ' "$out/imports.txt" | sed 's/^copy //' | while IFS= read -r dll; do cp "$dll" "$app/"; done
+if [ "${DECKIE_SHIP_VC_RUNTIME:-0}" != 1 ] && ls "$app" | grep -q -i -E '^(msvcp140|vcruntime140|concrt140)'; then
+    die "Microsoft's Visual C++ runtime got into the zip"
+fi
 ls "$app"/swiftCore.dll >/dev/null 2>&1 || die "swiftCore.dll was not found among the program's imports; see $out/imports.txt"
 
 # The starter: Windows' kernel32 only, no C runtime (launcher.c says why). The linker options are spelled with a
@@ -127,7 +138,7 @@ PY
     echo "Library files the program expects from Windows itself (not in this folder):"
     grep '^system ' "$out/imports.txt" | sed 's/^system /  /'
     echo
-    echo "Of those, MSVCP140.dll, MSVCP140_1.dll, VCRUNTIME140.dll and VCRUNTIME140_1.dll are Microsoft's Visual C++"
+    echo "Of those, msvcp140.dll, msvcp140_1.dll, vcruntime140.dll and vcruntime140_1.dll are Microsoft's Visual C++"
     echo "runtime, which is not part of every Windows; names that start with api-ms-win-crt are Windows 10 and 11's own"
     echo "C runtime; the rest are parts of every Windows."
 } > "$lic/FILES.txt"
