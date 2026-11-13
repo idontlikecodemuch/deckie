@@ -77,21 +77,30 @@ crate from folder) has no source; its place is its folder. Building from a Mac f
 sources keeps them.
 
 A song on the Mac and on a stick is two files: when the files differ (another format, other tags) they are two
-entries and Find copies links them, so the iPad says "also on Stick 3 / House / 04". When the bytes are identical the
-crate file can hold only one entry (crate v1 takes an entry's id from the file's bytes): the place on a source wins
-over a folder on the Mac, between two sources the one read first stays, and the other file is in the import log as a
-duplicate.
+entries and Find copies links them, so the iPad says "also on Stick 3 / House / 04". When the bytes are identical
+(the same file burned onto two CDs, or copied unchanged from the Mac onto a stick) they are one entry, since an entry's
+id is the file's hash, and since D27 that entry carries every place: its own (`disc`, `folder`, `track`) and the others
+in `ident.other_places`, the first addition to crate v1 (`docs/architecture/crate-format.md`). Reading a source or the
+Mac folder adds the places it finds and is not logged as a duplicate; reading it again replaces that source's places
+with what is on it now. The own place is the one whose file gave the record: a source already in the crate file keeps
+it; otherwise the place read that leads (the first source by name, then folder and number; the Mac's folder last). If
+a source no longer holds an entry's own place, its leading other place becomes its own, and the file's path is unknown
+until that source is read again (Make signatures and Find copies skip it till then). Only a second copy with the same
+bytes in the same folder on the Mac, which has no numbers to tell them apart, is still in the import log, as "The same
+file as another".
 
 The **Sources** panel (toolbar, or View > Show Sources, Shift-Command-D) shows what was read: each source by name, its
-folders in the order the player walks them, each song by its number there. It is for corrections: rename a source or a
+folders in the order the player walks them, each song by its number there; a song on two sources (or twice on one) has
+a row in each folder it is in, with that place's number and a "+1" that names its other places on hover. It is for corrections: rename a source or a
 folder, move a song up or down or drag it within its folder (that folder is then numbered 1, 2, 3 again; other
-folders keep the player's numbers). Making, filling or deleting a source by hand is not in the window any more; the
+folders keep the player's numbers); each works on the place selected, so a song's other places move and rename too. Making, filling or deleting a source by hand is not in the window any more; the
 shared operations stay in the core (`core/Sources/DeckieCrate/Discs.swift`, D20) for later desks. The table's Where
-column and the inspector show a song's place ("Stick 3 / House 4", or its folder on the Mac). Save writes the
+column and the inspector show every place of a song, the one that leads first ("Friday / Set 1 · Stick 3 / House 1 ·
+Burned"; a folder on the Mac by its path, or "the top of the music folder"). Save writes the
 corrections. In the crate file the fields keep their names: `disc`, `folder`, `track`.
 
-Not here: audio CDs (no files to read; ripping is a later step), organising or planning sources in Desk, one file on
-several sources, records (nothing to read), icons for the kind of source (the format has no field for it).
+Not here: audio CDs (no files to read; ripping is a later step), organising or planning sources in Desk, records
+(nothing to read), icons for the kind of source (the format has no field for it).
 
 ## What is here
 

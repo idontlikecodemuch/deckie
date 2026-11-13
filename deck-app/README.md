@@ -249,6 +249,14 @@ index of copies is `Library.copiesByCut`.
   shortlist's tenth counts songs, not entries.
 - **Places**: the playing panel and each pick show the leading place, then "also on Stick 3 / Peak / 04" for the
   other copies on sources and "also in <folder>" for copies on no source. The Crate tab lists each copy in its own place.
+- **One file in several places** (Nov 13, 2026, D27): the same file burned onto two CDs or copied unchanged onto a
+  stick is one entry in the crate file with its own place and other places (`ident.other_places`). The booth treats
+  them like copies: one row; the place that leads by the same rule (the playing song's source, else the first source
+  in the crate's order, a place with no source last), taken among the places the filter allows; "also on" for the
+  rest; allowed when any place is on a source switched on. The Crate tab lists the song under each place with that
+  place's number, and choosing it there sets the same song, playing from that place (so the next picks lead with
+  that source). Recognition is unchanged: one entry, one set of signatures, one song. `Library.places(of:)` gives
+  every place of a song, copies and other places together; `Library.placed` the entry at the place a row shows.
 - **Recognition**: a match on any copy of the playing song is the playing song (same audio, same position); a match
   on another song is taken as its leading copy, so its copies count as one challenger.
 - The bundled sprint data keeps the lab's own `cut` values.
