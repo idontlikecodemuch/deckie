@@ -82,6 +82,9 @@ public struct RunReport: Codable, Equatable, Sendable {
     public var engine: String
     /// Whether the run carried on one that had stopped.
     public var carriedOn: Bool
+    /// The keys and names taken from what is already on the computer (D30): where each key came from, the songs still
+    /// with no key or no name, the DJ libraries read. Nil in a line written before it.
+    public var local: LocalFactsSummary? = nil
 
     enum CodingKeys: String, CodingKey {
         case crate, read, seconds, analysed, reused, copies, jobs, device, engine, damaged
@@ -90,6 +93,7 @@ public struct RunReport: Codable, Equatable, Sendable {
         case signaturesMade = "signatures_made", signaturesKept = "signatures_kept", signaturesFailed = "signatures_failed"
         case printsMade = "prints_made", printsKept = "prints_kept", printsFailed = "prints_failed"
         case songsInCrate = "songs_in_crate", songsPerMinute = "songs_per_minute", carriedOn = "carried_on"
+        case local
     }
 
     /// Songs that did not go in.
@@ -98,8 +102,8 @@ public struct RunReport: Codable, Equatable, Sendable {
 
 /// The one run (D28, desk.md section 2): everything a crate needs from what was added, in one go. The builder reads
 /// and analyses (keeping its records in the shared file store); as each song is read, its recognition signature and
-/// its print are made, or taken from the store; then copies of one recording are linked, the DJ's name fixes are put
-/// back, every place's path is remembered, and the crate file is written. Stopping at any point loses nothing
+/// its print are made, or taken from the store; then copies of one recording are linked, the keys and names already on
+/// the computer are gathered (`DeskLocalFacts`, D30), the DJ's name fixes are put back, every place's path is remembered, and the crate file is written. Stopping at any point loses nothing
 /// already done; running again carries on.
 public final class DeskRun: @unchecked Sendable {
     /// Makes a recognition signature from a song's file (ShazamKit on Apple's systems); nil where there is none.
@@ -300,6 +304,8 @@ public final class DeskRun: @unchecked Sendable {
             if let p = store.print(id) { prints[id] = p }
         }
         let copies = crate.setCutKeys(prints: prints)
+        // Keys and names already on the computer: the files' tags, the DJ programs' libraries, tracklists, copies.
+        let local = DeskLocalFacts.gather(&crate, home: home, info: info, paths: newPaths)
         let corrections = NameCorrections.load(from: shelf.file(Self.correctionsFile, of: crateId))
         corrections.apply(to: &crate)
         crate.manifest.name = info.name
@@ -330,7 +336,7 @@ public final class DeskRun: @unchecked Sendable {
             printsMade: state.printMade, printsKept: state.printKept, printsFailed: state.printFailed,
             copies: copies, songsInCrate: crate.tracks.count,
             songsPerMinute: seconds > 0 ? Double(result.filesSeen) / seconds * 60 : 0,
-            jobs: jobs, device: device, engine: Builder.engineLabel, carriedOn: carriedOn)
+            jobs: jobs, device: device, engine: Builder.engineLabel, carriedOn: carriedOn, local: local)
         state.lock.unlock()
         try Self.appendRun(report, to: shelf.file(Self.runsFile, of: crateId))
         try? fm.removeItem(at: pendingURL)
