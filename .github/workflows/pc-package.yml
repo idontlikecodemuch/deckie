@@ -176,6 +176,7 @@ jobs:
           & $exe $music --no-wait
           if ($LASTEXITCODE -ne 0) { exit 1 }
           $log = Get-Content (Join-Path $env:RUNNER_TEMP "timing\Four Songs Deckie log.txt")
+          $log
           $cpu = (Get-CimInstance Win32_Processor | Select-Object -First 1).Name
           "## Time per song on this runner" >> $env:GITHUB_STEP_SUMMARY
           "Four synthesised four-minute songs (44.1 kHz stereo; two WAV, two FLAC), release build, from the zip. Processor: $cpu." >> $env:GITHUB_STEP_SUMMARY

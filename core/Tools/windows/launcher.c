@@ -124,7 +124,15 @@ void entry(void) {
     CloseHandle(process.hThread);
     CloseHandle(process.hProcess);
     // 0 to 3 are the real program's own endings, each already said in its own words (and it waited for Enter).
-    if (code > 3) {
+    // Windows' own codes for "a library file was not found" and "a library file is too old to have what the program
+    // needs": Microsoft's runtime is there but older than the one Swift was built with.
+    if (code == 0xC0000135u || code == 0xC0000139u) {
+        say(L"\r\nDeckie could not start: a free part from Microsoft on this PC is missing or too old\r\n"
+            L"(the \"Visual C++ Redistributable\").\r\n\r\n"
+            L"Get the current one from Microsoft, install it, then start Deckie again:\r\n"
+            L"  https://aka.ms/vs/17/release/vc_redist.x64.exe\r\n");
+        waitForEnter();
+    } else if (code > 3) {
         say(L"\r\nDeckie stopped unexpectedly, and that is our fault, not yours.\r\n"
             L"Please tell the person who gave you Deckie, and send the log file if there is one\r\n"
             L"next to your music folder (its name ends with \"Deckie log.txt\").\r\n");
