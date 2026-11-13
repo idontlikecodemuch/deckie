@@ -43,11 +43,13 @@ public enum AudioFiles {
         return (files, skipped)
     }
 
+    /// How many audio files (by extension) are anywhere below `folder`, hidden ones included: what a left-out
+    /// folder holds, for the import log.
     static func countAudioFiles(in folder: URL) -> Int {
-        guard let walker = FileManager.default.enumerator(atPath: folder.path) else { return 0 }
         var n = 0
-        while let rel = walker.nextObject() as? String {
-            if extensions.contains(((rel as NSString).pathExtension).lowercased()) { n += 1 }
+        walk(folder, below: "") { _, name, _, type in
+            if type != .typeDirectory, extensions.contains(CratePath.fileExtension(of: name).lowercased()) { n += 1 }
+            return true
         }
         return n
     }
@@ -60,40 +62,52 @@ public enum AudioFiles {
         guard fm.fileExists(atPath: root.path, isDirectory: &isFolder), isFolder.boolValue else {
             throw BuildError("\(folder.path) is not a folder")
         }
-        guard let walker = fm.enumerator(atPath: root.path) else { throw BuildError("cannot list \(folder.path)") }
+        guard (try? fm.contentsOfDirectory(atPath: root.path)) != nil else { throw BuildError("cannot list \(folder.path)") }
         var found: [SourceFile] = []
-        while let rel = walker.nextObject() as? String {
-            let name = (rel as NSString).lastPathComponent
-            let url = root.appendingPathComponent(rel)
-            // `skipDescendants()` is only for a folder: called after a file (a `.DS_Store`, say) it skips the rest
-            // of the folder that file is in, and the music after it is never seen.
-            let isFolder = (walker.fileAttributes?[.type] as? FileAttributeType) == .typeDirectory
-            if name.hasPrefix(".") {
-                if isFolder { walker.skipDescendants() }
-                continue
-            }
-            let ext = (name as NSString).pathExtension.lowercased()
-            if ext == CrateFormat.packageExtension || ext == Builder.workExtension {
-                if isFolder { walker.skipDescendants() }
-                continue
-            }
-            if isFolder, skipFolder(rel, name) {
-                walker.skipDescendants()
-                continue
-            }
-            guard extensions.contains(ext) else { continue }
-            guard var attrs = try? fm.attributesOfItem(atPath: url.path) else { continue }
-            if attrs[.type] as? FileAttributeType == .typeSymbolicLink {
-                guard let target = try? fm.attributesOfItem(atPath: url.resolvingSymlinksInPath().path) else { continue }
+        walk(root, below: "") { rel, name, url, type in
+            let isFolder = type == .typeDirectory
+            if name.hasPrefix(".") { return false }
+            let ext = CratePath.fileExtension(of: name).lowercased()
+            if ext == CrateFormat.packageExtension || ext == Builder.workExtension { return false }
+            if isFolder { return !skipFolder(rel, name) }
+            guard extensions.contains(ext) else { return false }
+            var attrs: [FileAttributeKey: Any]
+            if type == .typeSymbolicLink {
+                // A link to a file counts as the file; a link to a folder is not followed (as before).
+                guard let target = try? fm.attributesOfItem(atPath: url.resolvingSymlinksInPath().path) else { return false }
                 attrs = target
+            } else {
+                guard let own = try? fm.attributesOfItem(atPath: url.path) else { return false }
+                attrs = own
             }
-            guard attrs[.type] as? FileAttributeType == .typeRegular else { continue }
+            guard attrs[.type] as? FileAttributeType == .typeRegular else { return false }
             let size = (attrs[.size] as? NSNumber)?.intValue ?? 0
             let modified = (attrs[.modificationDate] as? Date)?.timeIntervalSince1970 ?? 0
-            found.append(SourceFile(url: url, rel: rel.split(separator: "/").joined(separator: "/"), ext: ext, size: size,
-                                    modified: modified))
+            found.append(SourceFile(url: url, rel: rel, ext: ext, size: size, modified: modified))
+            return false
         }
         return found.sorted { $0.rel.utf8.lexicographicallyPrecedes($1.rel.utf8) }
+    }
+
+    /// Visits everything below `folder` (whose path below the walk's top is `rel`), one folder listing at a time.
+    /// `visit(rel, name, url, type)` gets each entry's crate path (`CratePath.join`, "/" between names on every
+    /// platform), its name, its URL and its own type (a link is `.typeSymbolicLink`, not what it points to); for a
+    /// folder, it returns whether to go into it. A folder that cannot be listed is passed over.
+    ///
+    /// Not `FileManager.enumerator(atPath:)`: on Windows it hands back paths with a backslash, which a crate file
+    /// must never hold, and there its `skipDescendants()` drops more than the folder just returned: after skipping
+    /// `Out.deckiecrate` and `Out.deckiebuild` it still returned `Album` but never anything inside it (60 test files
+    /// found as 20, all in `Singles`, CI run 43505610701; the enumerator's own walk printed in run 43513060260). Listing each folder with `contentsOfDirectory` and joining the names here gives
+    /// the same files and the same paths on every platform.
+    static func walk(_ folder: URL, below rel: String, visit: (String, String, URL, FileAttributeType?) -> Bool) {
+        let fm = FileManager.default
+        guard let names = try? fm.contentsOfDirectory(atPath: folder.path) else { return }
+        for name in names.sorted() {
+            let url = folder.appendingPathComponent(name)
+            let path = CratePath.join(rel, name)
+            let type = (try? fm.attributesOfItem(atPath: url.path))?[.type] as? FileAttributeType
+            if visit(path, name, url, type), type == .typeDirectory { walk(url, below: path, visit: visit) }
+        }
     }
 }
 
