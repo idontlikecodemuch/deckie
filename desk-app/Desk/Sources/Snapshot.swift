@@ -17,9 +17,15 @@ enum Snapshot {
     private static var frames: [(name: String, hold: Double)] = []
     private static var outDir = URL(fileURLWithPath: ".")
 
-    static func run(model: DeskModel, out: String) {
+    static func prepare(out: String) {
         outDir = URL(fileURLWithPath: out)
         try? FileManager.default.createDirectory(at: outDir, withIntermediateDirectories: true)
+    }
+
+    static func sizeWindow() { if let w = window { w.setContentSize(NSSize(width: 1280, height: 800)); w.center() } }
+
+    static func run(model: DeskModel, out: String) {
+        prepare(out: out)
         var steps: [(delay: Double, action: () -> Void)] = []
         var t = 1.2
         func step(after d: Double, _ f: @escaping () -> Void) { t += d; steps.append((t, f)) }
@@ -55,7 +61,7 @@ enum Snapshot {
 
     private static var window: NSWindow? { NSApp.windows.first { $0.isVisible && $0.contentView != nil && !$0.isSheet } }
 
-    private static func capture(_ name: String, hold: Double, withSheet: Bool = false) {
+    static func capture(_ name: String, hold: Double, withSheet: Bool = false) {
         guard let w = window else { print("no window"); return }
         var ids: [CGWindowID] = [CGWindowID(w.windowNumber)]
         if withSheet, let s = w.attachedSheet { ids.append(CGWindowID(s.windowNumber)) }
@@ -87,7 +93,7 @@ enum Snapshot {
         }
     }
 
-    private static func finish() {
+    static func finish() {
         var list = ""
         for f in frames { list += "file '\(f.name)'\nduration \(f.hold)\n" }
         if let last = frames.last { list += "file '\(last.name)'\n" }
