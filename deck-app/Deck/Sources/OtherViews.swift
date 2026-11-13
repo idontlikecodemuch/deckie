@@ -17,6 +17,8 @@ struct CrateTabView: View {
     /// One section of the tab: a source, or the folders of songs with no source.
     struct Shelf: Identifiable {
         let id: String
+        /// The source's label (nil for the folders of songs with no source).
+        var disc: String? = nil
         let name: String
         let color: Color
         /// Whether the songs carry a player's number (on a source) or not (in a folder).
@@ -31,7 +33,7 @@ struct CrateTabView: View {
     /// The sources by name, then one section for the folders of songs with no source (when there are any).
     static var shelves: [Shelf] {
         let lib = Library.shared
-        var out = lib.data.discs.map { Shelf(id: "s:" + $0.disc, name: $0.name, color: $0.color, numbered: true, groups: $0.folders) }
+        var out = lib.data.discs.map { Shelf(id: "s:" + $0.disc, disc: $0.disc, name: $0.name, color: $0.color, numbered: true, groups: $0.folders) }
         let folders = lib.folders
         if !folders.isEmpty { out.append(Shelf(id: "folders", name: "Folders", color: Theme.acc, numbered: false, groups: folders)) }
         return out
@@ -75,10 +77,21 @@ struct CrateTabView: View {
         }
     }
 
-    /// A song's number in its folder: the player's (as read from the source), else its position; none in a folder
-    /// with no source.
-    private func number(_ s: Shelf, _ id: String, _ i: Int) -> Int? {
-        s.numbered ? (Library.shared.track(id)?.num ?? i + 1) : nil
+    /// A song's number in its folder: the player's (as read from the source), at the place of it in that folder (a
+    /// song can be in several, D27), else its position; none in a folder with no source.
+    private func number(_ s: Shelf, _ folder: String, _ id: String, _ i: Int) -> Int? {
+        guard s.numbered else { return nil }
+        let here = (Library.shared.track(id)?.places ?? []).filter { $0.disc == s.disc && $0.folder == folder }
+        // The same file twice in one folder: the k-th listing is the k-th place there.
+        let k = Library.shared.data.discs.first { $0.disc == s.disc }?.folders.first { $0.name == folder }?
+            .ids.prefix(i).filter { $0 == id }.count ?? 0
+        let byNumber = here.sorted { ($0.num ?? 0) < ($1.num ?? 0) }
+        return (k < byNumber.count ? byNumber[k].num : byNumber.first?.num) ?? i + 1
+    }
+
+    /// The place a song was chosen from in this shelf, so setting it plays it from there.
+    private func place(_ s: Shelf, _ folder: String, _ n: Int?) -> TrackPlace {
+        TrackPlace(disc: s.disc, folder: folder, num: s.numbered ? n : nil)
     }
 
     /// Dense: a whole section in two columns, one line per song ("06 · Title  artist   BPM"), folder headers.
@@ -86,7 +99,7 @@ struct CrateTabView: View {
         let col = s.color
         // flatten, then split into two equal columns (a folder may continue at the top of the right column)
         var flat: [Row] = []
-        for f in s.groups { for (i, id) in f.ids.enumerated() { flat.append(Row(folder: f.name, index: i, n: number(s, id, i), id: id)) } }
+        for f in s.groups { for (i, id) in f.ids.enumerated() { flat.append(Row(folder: f.name, index: i, n: number(s, f.name, id, i), id: id)) } }
         let half = (flat.count + 1) / 2
         func segments(_ rows: ArraySlice<Row>) -> [Segment] {
             var out: [Segment] = []
@@ -115,17 +128,18 @@ struct CrateTabView: View {
                 let f = segs[si]
                 Text(s.heading(f.folder) + ((f.rows.first?.index ?? 0) > 0 ? "  (cont.)" : "")).font(.system(size: 11, weight: .bold, design: .rounded)).foregroundStyle(col.opacity(0.9))
                     .padding(.top, 6).frame(height: 22, alignment: .bottomLeading)
-                ForEach(f.rows, id: \.id) { r in
-                    if let t = Library.shared.track(r.id) { denseRow(t, r.n) }
+                ForEach(f.rows.indices, id: \.self) { k in
+                    let r = f.rows[k]
+                    if let t = Library.shared.track(r.id) { denseRow(t, r.n, at: place(s, r.folder, r.n)) }
                 }
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
     }
 
-    private func denseRow(_ t: Track, _ n: Int?) -> some View {
+    private func denseRow(_ t: Track, _ n: Int?, at p: TrackPlace) -> some View {
         let playing = t.id == rec.currentId
-        return Button { rec.setManual(t.id); tab = 0 } label: {
+        return Button { rec.setManual(t.id, place: p); tab = 0 } label: {
             HStack(spacing: 6) {
                 Text((n.map { String(format: "%02d · ", $0) } ?? "") + t.song).font(.system(size: 13.5, weight: .medium)).foregroundStyle(playing ? Theme.orange : Theme.tx).lineLimit(1).layoutPriority(1)
                 Text(t.artist).font(.system(size: 10)).foregroundStyle(Theme.dim).lineLimit(1)
@@ -149,8 +163,8 @@ struct CrateTabView: View {
                 LazyVStack(alignment: .leading, spacing: 2, pinnedViews: [.sectionHeaders]) {
                     ForEach(s.groups, id: \.name) { f in
                         Section {
-                            ForEach(Array(f.ids.enumerated()), id: \.element) { i, id in
-                                if let t = lib.track(id) { row(t, number(s, id, i)) }
+                            ForEach(Array(f.ids.enumerated()), id: \.offset) { i, id in
+                                if let t = lib.track(id) { let n = number(s, f.name, id, i); row(t, n, at: place(s, f.name, n)) }
                             }
                         } header: {
                             Text(s.heading(f.name))
@@ -164,9 +178,9 @@ struct CrateTabView: View {
         }
     }
 
-    private func row(_ t: Track, _ n: Int?) -> some View {
+    private func row(_ t: Track, _ n: Int?, at p: TrackPlace) -> some View {
         let playing = t.id == rec.currentId
-        return Button { rec.setManual(t.id); tab = 0 } label: {
+        return Button { rec.setManual(t.id, place: p); tab = 0 } label: {
             HStack(spacing: 12) {
                 Text(n.map { String(format: "%02d", $0) } ?? "").font(.system(size: 16, weight: .semibold, design: .monospaced)).foregroundStyle(Theme.dim).frame(width: 26)
                 VStack(alignment: .leading, spacing: 1) {

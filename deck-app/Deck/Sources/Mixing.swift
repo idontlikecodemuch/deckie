@@ -97,29 +97,31 @@ struct Suggester {
 
     /// Candidate pairs for `cur`, limited to the target discs; one row per song; nothing recently played.
     /// One song is one recording (D24): copies of it (the same `cut`) make one row, never versions with a similar
-    /// title. The row is the copy whose place leads among the copies the filter allows: on the playing song's disc,
-    /// else on the first disc in the crate's order. A song is allowed when any copy is; copies on discs switched off
-    /// still show on the row as "also on". A song played recently, by any copy, is left out, as is the playing song.
+    /// title, and so do the other places of one file (D27). The row is the copy whose place leads among the places the
+    /// filter allows: on the playing song's disc, else on the first disc in the crate's order. A song is allowed when
+    /// any of its places is; places on discs switched off still show on the row as "also on". A song played recently,
+    /// by any copy, is left out, as is the playing song.
     func candidates(for cur: Track, target: LibraryFilter, exclude: Set<String>) -> [Pair] {
         let pairs = lib.pairs(from: cur.id)
         let excluded = Set(exclude.compactMap { lib.byId[$0]?.cut })
         var byCut: [String: [Pair]] = [:]
         var order: [String] = []
         for p in pairs {
-            guard let t = lib.byId[p.b], t.cut != cur.cut, !excluded.contains(t.cut), target.allows(t) else { continue }
+            guard let t = lib.byId[p.b], t.cut != cur.cut, !excluded.contains(t.cut), lib.allows(t, target) else { continue }
             if byCut[t.cut] == nil { order.append(t.cut) }
             byCut[t.cut, default: []].append(p)
         }
         return order.compactMap { cut -> Pair? in
             guard let ps = byCut[cut], let first = ps.first else { return nil }
             if ps.count == 1 { return first }
-            let lead = lib.copies(of: first.b, playingDisc: cur.disc, among: target.allows).first?.id
+            let lead = lib.places(of: first.b, playingDisc: cur.disc, among: target.allows).first?.id
             return ps.first { $0.b == lead } ?? ps.max { $0.s < $1.s }
         }.sorted { $0.s > $1.s }
     }
 
-    func surpriseTags(_ cur: Track, _ p: Pair, deepCut: Bool) -> [String] {
-        guard let t = lib.byId[p.b] else { return [] }
+    func surpriseTags(_ cur: Track, _ p: Pair, target: LibraryFilter, deepCut: Bool) -> [String] {
+        // The place the row shows (D27): the one that leads among those the filter allows.
+        guard let t = lib.placed(p.b, playingDisc: cur.disc, among: target.allows) else { return [] }
         var tags: [String] = []
         if p.m == "1/2" { tags.append("half time") }
         else if p.m == "2" { tags.append("double time") }
@@ -148,9 +150,9 @@ struct Suggester {
         if let pid = pinned, lib.byId[pid] != nil { out.append(Option(id: pid, pair: pair(from: cur.id, to: pid), kind: .pinned, tags: [])) }
         for i in order {
             let p = best[i]
-            out.append(Option(id: p.b, pair: p, kind: .pick, tags: surpriseTags(cur, p, deepCut: i >= (n + 1) / 2)))
+            out.append(Option(id: p.b, pair: p, kind: .pick, tags: surpriseTags(cur, p, target: target, deepCut: i >= (n + 1) / 2)))
         }
-        for p in best.dropFirst(n) { out.append(Option(id: p.b, pair: p, kind: .pick, tags: surpriseTags(cur, p, deepCut: false))) }
+        for p in best.dropFirst(n) { out.append(Option(id: p.b, pair: p, kind: .pick, tags: surpriseTags(cur, p, target: target, deepCut: false))) }
         return (out, n)
     }
 

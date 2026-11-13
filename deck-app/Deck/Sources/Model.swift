@@ -46,9 +46,10 @@ struct Track: Codable, Identifiable, Hashable {
     let song: String
     let ver: String
     let deck: String
-    let on: Bool
-    let disc: String?
-    let folder: String
+    // The place this copy is shown at: its own place, or one of its other places (`at`).
+    var on: Bool
+    var disc: String?
+    var folder: String
     let hal: Bool
     let kind: String
     let era: String
@@ -56,8 +57,8 @@ struct Track: Codable, Identifiable, Hashable {
     let cut: String
     let longest: Bool
     let secs: Double?
-    let cd: Int?
-    let num: Int?
+    var cd: Int?
+    var num: Int?
     let bpm: Double?
     let bpmIn: Double?
     let bpmOut: Double?
@@ -76,6 +77,21 @@ struct Track: Codable, Identifiable, Hashable {
     let spb: Int?             // samples per beat of the snippets
     let steadyIn: Double?     // first steady-beat bar, seconds
     let bpmGrid: Double?
+    /// The entry's other places (D27): the same file found somewhere else. Nil in the bundled data.
+    var others: [TrackPlace]? = nil
+
+    /// Where this track is shown: its source, folder and number.
+    var place: TrackPlace { TrackPlace(disc: disc, folder: folder, num: num) }
+    /// Every place of the entry: its own first, then its other places.
+    var places: [TrackPlace] { [TrackPlace(disc: disc, folder: folder, num: num)] + (others ?? []) }
+    /// The same track shown at another of its places: the source, folder and number (and the source's colour) of `p`.
+    func at(_ p: TrackPlace) -> Track {
+        guard p != place else { return self }
+        var c = self
+        c.disc = p.disc; c.folder = p.folder; c.num = p.num; c.on = p.disc != nil
+        c.cd = p.disc.flatMap { d in Library.shared.data.discs.first { $0.disc == d }?.cd }
+        return c
+    }
 
     var samplesPerBeat: Int { spb ?? 4 }
     var gridBPM: Double { bpmGrid ?? bpm ?? bpmTag ?? 120 }
@@ -104,6 +120,14 @@ struct Track: Codable, Identifiable, Hashable {
     /// lavender, ...; no source: the accent)
     var discColor: Color { cd.map(Theme.disc) ?? Theme.acc }
     var functionColor: Color { hal ? Theme.hal : (cd.map(Theme.disc) ?? Theme.mut) }
+}
+
+/// One place of a track (D26, D27): the source by its own label (nil when it has none), the folder, and the number
+/// there (nil in a folder with no source).
+struct TrackPlace: Codable, Hashable {
+    let disc: String?
+    let folder: String
+    let num: Int?
 }
 
 struct Pair: Codable, Hashable {
@@ -197,22 +221,33 @@ final class Library {
         guard let a, let b, let x = byId[a], let y = byId[b] else { return false }
         return x.cut == y.cut
     }
-    /// Every copy of the song `id` is, `id` included, in the order the booth shows their places: the one that leads
-    /// first (on `playingDisc`, else on the first disc in the crate's disc order; `SameSong.ordered`), then the rest.
-    /// `among` keeps only those copies (for a filter); empty when none is left.
-    func copies(of id: String, playingDisc: String?, among: ((Track) -> Bool)? = nil) -> [Track] {
+    /// Every place of the song `id` is, as tracks shown at each place: each copy's own place and its other places
+    /// (D27; a copy of the same recording, D24, and the same file found twice are treated alike), in the order the
+    /// booth shows them: the one that leads first (on `playingDisc`, else on the first disc in the crate's disc order;
+    /// `SameSong.ordered`), then the rest. `among` keeps only those places (for a filter); empty when none is left.
+    func places(of id: String, playingDisc: String?, among: ((Track) -> Bool)? = nil) -> [Track] {
         guard let t = byId[id] else { return [] }
-        let all = (copiesByCut[t.cut] ?? [id]).compactMap { byId[$0] }.filter { among?($0) ?? true }
-        let places = all.map { SameSong.Place(id: $0.id, disc: $0.disc, folder: $0.folder, track: $0.num) }
-        return SameSong.ordered(places, playingDisc: playingDisc, discOrder: data.discs.map(\.disc)).compactMap { byId[$0.id] }
+        let all = (copiesByCut[t.cut] ?? [id]).compactMap { byId[$0] }.flatMap { c in c.places.map { c.at($0) } }
+            .filter { among?($0) ?? true }
+        let places = all.enumerated().map { SameSong.Place(id: String($0.offset), disc: $0.element.disc, folder: $0.element.folder, track: $0.element.num) }
+        return SameSong.ordered(places, playingDisc: playingDisc, discOrder: data.discs.map(\.disc)).map { all[Int($0.id)!] }
     }
-    /// The copy of the song `id` is whose place leads (see `copies(of:playingDisc:among:)`).
+    /// The copy of the song `id` is whose place leads (see `places(of:playingDisc:among:)`).
     func leadingCopy(of id: String, playingDisc: String?) -> String {
-        copies(of: id, playingDisc: playingDisc).first?.id ?? id
+        places(of: id, playingDisc: playingDisc).first?.id ?? id
     }
-    /// "also on Stick 3 / Peak / 04 · also in Album": the places of `t`'s other copies, in order; nil when it has none.
+    /// The entry `id` shown at the place of its own that leads: among the places `among` allows when there is one,
+    /// else among all of them. This is the place a row shows; the rest are its "also on".
+    func placed(_ id: String, playingDisc: String?, among: ((Track) -> Bool)? = nil) -> Track? {
+        let mine = { (ts: [Track]) in ts.first { $0.id == id } }
+        return mine(places(of: id, playingDisc: playingDisc, among: among)) ?? mine(places(of: id, playingDisc: playingDisc)) ?? byId[id]
+    }
+    /// Whether the filter allows the entry: when it allows any of its places (D27).
+    func allows(_ t: Track, _ filter: LibraryFilter) -> Bool { t.places.contains { filter.allows(t.at($0)) } }
+    /// "also on Stick 3 / Peak / 04 · also in Album": every other place of the song `t` is shown at (its copies'
+    /// and its own other places), in order; nil when it has none.
     func alsoOn(_ t: Track, playingDisc: String?) -> String? {
-        let others = copies(of: t.id, playingDisc: playingDisc).filter { $0.id != t.id }
+        let others = places(of: t.id, playingDisc: playingDisc).filter { !($0.id == t.id && $0.place == t.place) }
         guard !others.isEmpty else { return nil }
         let onDiscs = others.filter { $0.cd != nil }.map(\.placeText)
         let inFolders = others.filter { $0.cd == nil }.map(\.placeText)
@@ -237,10 +272,11 @@ final class Library {
     func sourceName(_ disc: String) -> String { data.discs.first { $0.disc == disc }?.name ?? disc }
 
     /// The songs with no source, by folder: the folders in the order a player walks them, each folder's songs by file
-    /// name in the same order (`SourceReading`). The Crate tab shows them after the sources.
+    /// name in the same order (`SourceReading`). The Crate tab shows them after the sources. A song in a folder on the
+    /// Mac as well as on a source (D27) is listed here too.
     var folders: [DiscFolder] {
         var by: [String: [Track]] = [:]
-        for t in data.tracks where t.disc == nil { by[t.folder, default: []].append(t) }
+        for t in data.tracks { for p in Set(t.places) where p.disc == nil { by[p.folder, default: []].append(t) } }
         return by.keys.sorted(by: SourceReading.groupComesBefore).map { f in
             DiscFolder(name: f, ids: by[f]!.sorted { SourceReading.comesBefore($0.deck, $1.deck, isFile: false) }.map(\.id))
         }
