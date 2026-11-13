@@ -14,30 +14,38 @@ struct DeskApp: App {
     init() {
         Bundled.pointEngineAtBundle()
         Headless.runIfAsked()
+        HeadlessDesk.runIfAsked()
     }
 
     var body: some Scene {
-        WindowGroup("Deckie Desk") {
+        WindowGroup(Words.appName) {
             ContentView().environmentObject(model).frame(minWidth: 900, minHeight: 560)
                 .onAppear {
-                    if let p = Headless.openOnLaunch { model.open(URL(fileURLWithPath: p)) }
-                    if let s = Snapshot.request { model.open(URL(fileURLWithPath: s.crate)); Snapshot.run(model: model, out: s.out) }
+                    if let n = Headless.openOnLaunch { model.show(named: n) }
+                    if let s = Snapshot.request {
+                        if let n = s.crate { model.show(named: n) }
+                        Snapshot.run(model: model, out: s.out)
+                    }
                 }
         }
         .commands {
             CommandGroup(replacing: .newItem) {
-                Button("New Crate from Folder…") { model.askNewCrate() }.keyboardShortcut("n")
-                Button("New Crate from Folder with rekordbox Collection…") { model.askNewCrate(withRekordbox: true) }
-                Menu("Add Music from a CD or Drive") {
+                Button(Words.newCrate) { model.newCrate() }.keyboardShortcut("n").disabled(model.running)
+                Menu(model.current.map { Words.addMusicTo($0.name) } ?? Words.addMusic) {
                     ForEach(model.mountedSources, id: \.url) { m in Button(m.name) { model.addSource(m.url, name: m.name) } }
                     Divider()
-                    Button("Choose a Folder…") { model.askSourceFolder() }
-                }.disabled(model.building)
-                Button("Open Crate…") { model.askOpenCrate() }.keyboardShortcut("o")
-                Button("Save") { model.save() }.keyboardShortcut("s").disabled(model.crate == nil)
+                    Button(Words.chooseFolder) { model.askSourceFolder() }
+                }.disabled(model.running)
+                Button(Words.withRekordboxMenu) { model.askRekordbox() }.disabled(model.running)
+                Divider()
+                Button(Words.importCrateFile) { model.askImport() }.keyboardShortcut("o").disabled(model.running)
+                Button(Words.exportCrateFile) { model.askExport() }.keyboardShortcut("e", modifiers: [.command, .shift])
+                    .disabled(model.crate == nil || model.running)
+                Button(Words.sendToIPad) { model.sendToIPad() }.disabled(model.crate == nil || model.running)
             }
+            CommandGroup(replacing: .saveItem) {}
             CommandGroup(after: .sidebar) {
-                Button(model.showSources ? "Hide Sources" : "Show Sources") { model.showSources.toggle() }
+                Button(model.showSources ? Words.hideSources : Words.showSourcesMenu) { model.showSources.toggle() }
                     .keyboardShortcut("d", modifiers: [.command, .shift]).disabled(model.crate == nil)
             }
         }
@@ -67,21 +75,20 @@ enum Bundled {
 ///   "Deckie Desk" --build <folder> <out.deckiecrate> [jobs]   builds a crate with the bundled engine, printing progress
 ///   "Deckie Desk" --add-source <crate> <CD, drive or folder> [jobs]   reads it as a source into that crate file (Add music)
 ///   "Deckie Desk" --find-copies <crate> <folder>      prints every track's audio and sets cut_key on copies of one recording
-///   "Deckie Desk" --open <crate>                      opens that crate in the window
-///   "Deckie Desk" --snapshot <crate> <folder>         opens it, steps through it and writes PNGs of the window (Snapshot.swift)
+///   "Deckie Desk" --sign <crate> <folder>             makes one plain signature per track of a crate file, into it
+///   "Deckie Desk" --open <crate name>                 opens that crate of Desk's own in the window
+///   "Deckie Desk" --snapshot <folder> [crate name]    opens it, steps through it and writes PNGs of the window (Snapshot.swift)
+/// These work on crate files anywhere and are tools for the developer; Desk's own crates (D28) have their own modes in
+/// HeadlessDesk.swift. A source's songs are looked for below the music folder given, by the path below the source.
 enum Headless {
-    /// "Deckie Desk" --open <crate.deckiecrate>: open that crate in the window on launch.
+    /// "Deckie Desk" --open <crate name>: show that crate of Desk's own in the window on launch.
     static var openOnLaunch: String? {
         let a = CommandLine.arguments
         return a.count >= 3 && a[1] == "--open" ? a[2] : nil
     }
 
-    /// Where a song's file is: below the place its source was read from (remembered by Add music), else below the
-    /// music folder given.
-    static func audio(_ t: CrateTrack, folder: URL, sources: [String: URL]) -> URL {
-        let root = t.ident.disc.flatMap { sources[$0] } ?? folder
-        return root.appendingPathComponent(t.file.rel ?? t.file.name)
-    }
+    /// Where a song's file is: below the music folder given.
+    static func audio(_ t: CrateTrack, folder: URL) -> URL { folder.appendingPathComponent(t.file.rel ?? t.file.name) }
 
     static func runIfAsked() {
         let a = CommandLine.arguments
@@ -113,7 +120,6 @@ enum Headless {
                     }
                 }
                 print(result.summary)
-                Remembered.setSourceFolder(folder, for: result.crate.manifest.crateId)
                 exit(0)
             } catch { print("build failed:", error); exit(1) }
         }
@@ -131,7 +137,6 @@ enum Headless {
                     if case let .file(p) = event { print("[\(p.done)/\(p.total)] \(p.rel)") }
                 }
                 print(result.summary)
-                Remembered.setSourceRoot(root, name: name, for: result.crate.manifest.crateId)
                 for d in result.crate.discPlan {
                     for f in d.folders {
                         for (id, n) in result.crate.folderPlaces(disc: d.name, folder: f.name) {
@@ -183,10 +188,9 @@ enum Headless {
             let crateURL = URL(fileURLWithPath: a[2]); let folder = URL(fileURLWithPath: a[3])
             do {
                 var crate = try CrateReader.read(from: crateURL)
-                let roots = Remembered.sourceRoots(for: crate.manifest.crateId)
                 var prints: [String: RecordingPrint] = [:]
                 for t in crate.tracks where t.file.rel != nil {
-                    do { prints[t.id] = try Signatures.recordingPrint(of: Headless.audio(t, folder: folder, sources: roots)) }
+                    do { prints[t.id] = try Signatures.recordingPrint(of: Headless.audio(t, folder: folder)) }
                     catch { print("could not read: \(t.file.rel!): \(error)") }
                 }
                 let grouped = crate.setCutKeys(prints: prints)
@@ -203,14 +207,13 @@ enum Headless {
             let crateURL = URL(fileURLWithPath: a[2]); let folder = URL(fileURLWithPath: a[3])
             do {
                 var crate = try CrateReader.read(from: crateURL)
-                let roots = Remembered.sourceRoots(for: crate.manifest.crateId)
                 let sigFolder = crateURL.appendingPathComponent("signatures")
                 try FileManager.default.createDirectory(at: sigFolder, withIntermediateDirectories: true)
                 let madeBy = Device.modelLabel(); var made = 0, failed = 0
                 for i in crate.tracks.indices where crate.tracks[i].signatures["o"] == nil && crate.tracks[i].file.rel != nil {
                     let t = crate.tracks[i]
                     do {
-                        let data = try Signatures.signature(of: Headless.audio(t, folder: folder, sources: roots))
+                        let data = try Signatures.signature(of: Headless.audio(t, folder: folder))
                         try data.write(to: sigFolder.appendingPathComponent("\(t.id)_o.shazamsignature"), options: .atomic)
                         crate.tracks[i].signatures["o"] = CrateTrack.Signature(madeBy: madeBy, madeAt: Signatures.utcNow())
                         made += 1; print("[\(made)] \(t.ident.title) \(data.count / 1024) KB")

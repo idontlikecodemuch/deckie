@@ -5,172 +5,296 @@ import DeckieCrate
 import DeckieBuild
 import DeckieEngine
 import DeckieCore
+import DeckieDesk
 
-/// What the window shows: one crate at a time, a build in progress, or nothing yet.
+/// What the window shows: the crate that is showing (one of the crates Desk keeps, D28), a run in progress, the
+/// finished screen after one, or the first screen when there is no crate yet. Desk saves as it goes: every change is
+/// written at once and can be undone with the standard commands.
 @MainActor
 final class DeskModel: ObservableObject {
+    let home = DeskHome.standard()
+
+    /// Every crate, the most recent first, and the one showing (nil: the first screen, for a new crate).
+    @Published var crates: [CrateInfo] = []
+    @Published var current: CrateInfo?
     @Published var crate: Crate?
-    @Published var crateURL: URL?
-    @Published var sourceFolder: URL?
     @Published var selection: Set<String> = []
-    @Published var dirty = false
+    private(set) var corrections = NameCorrections()
+    private(set) var placePaths = PlacePaths()
+    /// A run of the crate showing that stopped before it finished.
+    @Published var pending: RunRequest?
 
-    @Published var building = false
-    @Published var buildLines: [String] = []
-    @Published var buildDone = 0
-    @Published var buildTotal = 0
-    @Published var buildRemaining: Double?
-    @Published var buildSummary: String?
-
-    @Published var signing = false
-    @Published var signProgress = ""
-    @Published var findingCopies = false
+    // The run.
+    @Published var running = false
+    @Published var runRead = ""
+    @Published var runStage: RunStage = .reading
+    @Published var runDone = 0
+    @Published var runTotal = 0
+    @Published var runRemaining: Double?
+    @Published var runLines: [String] = []
+    /// The finished screen's report, until the DJ moves on.
+    @Published var finished: RunReport?
 
     @Published var errorText: String?
     @Published var showImportLog = false
+    @Published var renaming: CrateInfo?
+    @Published var deleting: CrateInfo?
+    @Published var removing: String??
 
-    // Sources (SourcesPanel.swift): whether the panel shows and what is selected in it; where this crate's sources
-    // were read from on this Mac (by the source's name); the CDs and drives mounted now, for Add music.
+    // Sources (SourcesPanel.swift): whether the panel shows and what is selected in it; the CDs and drives mounted now.
     @Published var showSources = false
     @Published var sourceSelection: SourceItem?
-    @Published var sourceRoots: [String: URL] = [:]
     @Published var mountedSources: [MountedSource] = []
-    private var mountWatchers: [NSObjectProtocol] = []
+    private var watchers: [NSObjectProtocol] = []
+
+    /// The window's undo manager, given by the window (ContentView).
+    weak var undoManager: UndoManager?
+    private var saveTask: Task<Void, Never>?
+    private var needsSave = false
 
     init() {
         mountedSources = MountedSource.all()
         let center = NSWorkspace.shared.notificationCenter
         for name in [NSWorkspace.didMountNotification, NSWorkspace.didUnmountNotification, NSWorkspace.didRenameVolumeNotification] {
-            mountWatchers.append(center.addObserver(forName: name, object: nil, queue: .main) { [weak self] _ in
+            watchers.append(center.addObserver(forName: name, object: nil, queue: .main) { [weak self] _ in
                 MainActor.assumeIsolated { self?.mountedSources = MountedSource.all() }
             })
         }
+        watchers.append(NotificationCenter.default.addObserver(forName: NSApplication.willTerminateNotification, object: nil,
+                                                               queue: .main) { [weak self] _ in
+            MainActor.assumeIsolated { self?.saveNow() }
+        })
+        reloadCrates()
+        if let first = crates.first { show(first) }
     }
 
-    // MARK: open and new
+    // MARK: the crates
 
-    func askOpenCrate() {
+    var shelf: CrateShelf { home.shelf }
+    var roots: [String: URL] { current?.roots ?? [:] }
+    var musicFolder: URL? { current?.musicFolderURL }
+
+    func reloadCrates() { crates = shelf.list() }
+
+    /// Shows a crate: its crate file, its fixes and its remembered paths. Undo starts afresh for it.
+    func show(_ info: CrateInfo) {
+        saveNow()
+        undoManager?.removeAllActions()
+        current = (try? shelf.touch(info.id)) ?? info
+        let pkg = shelf.package(info.id)
+        crate = FileManager.default.fileExists(atPath: pkg.appendingPathComponent(CrateFormat.manifestFile).path)
+            ? (try? CrateReader.read(from: pkg)) : nil
+        corrections = NameCorrections.load(from: shelf.file(DeskRun.correctionsFile, of: info.id))
+        placePaths = PlacePaths.load(from: shelf.file(DeskRun.placesFile, of: info.id))
+        pending = DeskRun.pending(home: home, crateId: info.id)
+        selection = []; sourceSelection = nil; finished = nil
+        reloadCrates()
+    }
+
+    func show(named name: String) { if let i = crates.first(where: { $0.name == name }) { show(i) } }
+
+    /// "New crate": the first screen; the crate is made, named after what is read, when music is added.
+    func newCrate() {
+        saveNow()
+        undoManager?.removeAllActions()
+        current = nil; crate = nil; pending = nil; finished = nil; selection = []; sourceSelection = nil
+    }
+
+    func rename(_ info: CrateInfo, to name: String) {
+        saveNow()
+        do {
+            let i = try shelf.rename(info.id, to: name)
+            if current?.id == i.id {
+                current = i
+                if crate != nil { crate?.manifest.name = i.name }
+            }
+            reloadCrates()
+        } catch { errorText = Words.couldntRename(error.localizedDescription) }
+    }
+
+    /// Deletes a crate (after the window asked): to the Trash, or for good when Desk's storage is a test folder
+    /// (`DECKIE_DESK_HOME`). Shows the next most recent crate, or the first screen.
+    func delete(_ info: CrateInfo) {
+        do {
+            if current?.id == info.id { saveTask?.cancel(); saveTask = nil; needsSave = false; current = nil; crate = nil }
+            if ProcessInfo.processInfo.environment[DeskHome.environmentVariable] == nil {
+                try FileManager.default.trashItem(at: shelf.folder(info.id), resultingItemURL: nil)
+            } else {
+                try shelf.delete(info.id)
+            }
+            reloadCrates()
+            if current == nil { if let next = crates.first { show(next) } else { newCrate() } }
+        } catch { errorText = Words.couldntDelete(error.localizedDescription) }
+    }
+
+    // MARK: out and in (D28)
+
+    /// The share sheet with the crate file, so AirDrop to the iPad is one click.
+    func sendToIPad() {
+        guard let info = current, crate != nil else { errorText = Words.nothingToSendYet; return }
+        saveNow()
+        do { Share.show(try shelf.outboxCopy(info.id)) }
+        catch { errorText = Words.couldntExport(error.localizedDescription) }
+    }
+
+    func askExport() {
+        guard let info = current, crate != nil else { errorText = Words.nothingToSendYet; return }
+        saveNow()
+        let s = NSSavePanel()
+        s.nameFieldStringValue = info.name + "." + CrateFormat.packageExtension
+        s.message = Words.exportMessage
+        s.begin { [weak self] r in
+            guard r == .OK, let url = s.url, let self else { return }
+            do { try self.shelf.exportCopy(info.id, to: url) }
+            catch { self.errorText = Words.couldntExport(error.localizedDescription) }
+        }
+    }
+
+    func askImport() {
         let p = NSOpenPanel()
         p.canChooseDirectories = true; p.canChooseFiles = true; p.allowsMultipleSelection = false
         p.treatsFilePackagesAsDirectories = false
-        p.message = "Choose a crate (a .deckiecrate package)."
+        p.message = Words.importMessage
         p.begin { [weak self] r in
             guard r == .OK, let url = p.url, let self else { return }
-            self.open(url)
+            self.importCrate(url)
         }
     }
 
-    func open(_ url: URL) {
+    func importCrate(_ url: URL) {
         do {
-            let c = try CrateReader.read(from: url)
-            crate = c; crateURL = url; dirty = false; selection = []
-            sourceSelection = nil
-            sourceFolder = Remembered.sourceFolder(for: c.manifest.crateId)
-            sourceRoots = Remembered.sourceRoots(for: c.manifest.crateId)
-            buildSummary = nil
-        } catch { errorText = "Could not open the crate: \(error)" }
+            let info = try shelf.importCopy(of: url)
+            reloadCrates(); show(info)
+        } catch { errorText = Words.couldntOpen(error.localizedDescription) }
     }
 
-    func askNewCrate(withRekordbox: Bool = false) {
-        if withRekordbox {
-            let x = NSOpenPanel()
-            x.canChooseDirectories = false; x.canChooseFiles = true; x.allowsMultipleSelection = false
-            x.allowedContentTypes = [.xml]
-            x.message = "Choose the collection you exported from rekordbox (File > Export Collection in xml format). Deckie takes names, tempos, keys, cues and playlists from it; nothing is sent anywhere."
-            x.begin { [weak self] r in
-                guard r == .OK, let xml = x.url, let self else { return }
-                self.askFolder(rekordbox: xml)
-            }
-        } else { askFolder(rekordbox: nil) }
+    // MARK: Add music: the one run
+
+    /// Reads a CD, a drive or a folder as a source into the crate showing, or into a new crate named after it.
+    func addSource(_ url: URL, name: String) {
+        let unique = SourceNaming.unique(name, root: url, roots: roots)
+        start(RunRequest(folder: url, source: unique))
     }
 
-    private func askFolder(rekordbox: URL?) {
+    /// The fallback: any folder, read as a source named after its volume (when it is the top of one) or itself.
+    func askSourceFolder() {
         let p = NSOpenPanel()
         p.canChooseDirectories = true; p.canChooseFiles = false; p.allowsMultipleSelection = false
-        p.prompt = "Build"
-        p.message = "Choose the folder of music. Deckie analyses every audio file below it and writes a crate; the music stays where it is."
+        p.prompt = Words.chooseSourcePrompt
+        p.message = Words.chooseSourceMessage
         p.begin { [weak self] r in
-            guard r == .OK, let folder = p.url, let self else { return }
-            self.askWhereToSave(folder: folder, rekordbox: rekordbox)
+            guard r == .OK, let url = p.url, let self else { return }
+            self.addSource(url, name: MountedSource.name(of: url))
         }
     }
 
-    private func askWhereToSave(folder: URL, rekordbox: URL?) {
-        let s = NSSavePanel()
-        s.nameFieldStringValue = folder.lastPathComponent + ".deckiecrate"
-        s.directoryURL = Remembered.cratesFolder()
-        s.message = "Where the crate goes. A work folder beside it keeps finished tracks, so a second build only looks at what changed."
-        s.begin { [weak self] r in
-            guard r == .OK, let out = s.url, let self else { return }
-            Remembered.setCratesFolder(out.deletingLastPathComponent())
-            self.build(folder: folder, output: out, rekordbox: rekordbox)
+    /// The rekordbox route, where it was: a collection export, then the folder of music, read as the music folder
+    /// (no source) with the names, tempos, keys and cues from rekordbox.
+    func askRekordbox() {
+        let x = NSOpenPanel()
+        x.canChooseDirectories = false; x.canChooseFiles = true; x.allowsMultipleSelection = false
+        x.allowedContentTypes = [.xml]
+        x.message = Words.rekordboxMessage
+        x.begin { [weak self] r in
+            guard r == .OK, let xml = x.url, let self else { return }
+            let p = NSOpenPanel()
+            p.canChooseDirectories = true; p.canChooseFiles = false; p.allowsMultipleSelection = false
+            p.prompt = Words.start
+            p.message = Words.rekordboxFolderMessage
+            p.begin { [weak self] r in
+                guard r == .OK, let folder = p.url, let self else { return }
+                self.start(RunRequest(folder: folder, source: nil, rekordbox: xml))
+            }
         }
     }
 
-    /// Builds the crate file at `output` from `folder`: an ordinary folder of music (`source` nil), whose songs have no
-    /// source and keep the sources read into that crate file before; or a source read as it is, added to the crate
-    /// file there (or making one), which keeps everything that is not from that source.
-    func build(folder: URL, output: URL, rekordbox: URL? = nil, fileBPMTags: Bool = true, source: String? = nil) {
-        // The sources an existing crate file at `output` was given before, so a build from a folder keeps them.
-        let existingId = (try? CrateReader.read(from: output))?.manifest.crateId
-        let keep = Set(existingId.map { Remembered.sourceRoots(for: $0).keys.map { $0 } } ?? [])
-        building = true; buildLines = []; buildDone = 0; buildTotal = 0; buildRemaining = nil; buildSummary = nil
-        crate = nil; crateURL = nil; selection = []; sourceSelection = nil
-        let options = BuildOptions(folder: folder, output: output, rekordbox: rekordbox, jobs: max(1, min(ProcessInfo.processInfo.activeProcessorCount / 2, 4)),
-                                   fileBPMTags: fileBPMTags, fresh: false, name: nil, device: Device.modelLabel(),
-                                   source: source, keepSources: keep)
-        if let note = Builder.vocalTaggerNote { buildLines.append(note) }
+    /// Carries on the run that stopped.
+    func carryOn() { if let p = pending { start(p) } }
+
+    var jobs: Int { max(1, min(ProcessInfo.processInfo.activeProcessorCount / 2, 4)) }
+
+    /// The one run: into the crate showing, or a new crate named after what is read.
+    func start(_ request: RunRequest) {
+        guard !running else { return }
+        saveNow()
+        let info: CrateInfo
+        do {
+            if let c = current { info = c } else { info = try shelf.make(name: request.name); current = info }
+        } catch { errorText = Words.runStopped(error.localizedDescription); return }
+        running = true; finished = nil; runRead = request.name; runStage = .reading
+        runDone = 0; runTotal = 0; runRemaining = nil; runLines = []
+        if let note = Builder.vocalTaggerNote { runLines.append(note) }
+        undoManager?.removeAllActions()
+        let run = DeskRun(home: home, crateId: info.id, request: request, jobs: jobs, device: Device.modelLabel(),
+                          signer: { try Signatures.signature(of: $0) }, printer: { try Signatures.recordingPrint(of: $0) })
         let model = self
         Task.detached(priority: .userInitiated) {
             do {
-                let builder = try Builder(options: options)
-                let result = try builder.run { event in
-                    Task { @MainActor in model.handle(event) }
-                }
+                let (crate, report) = try run.run { p in Task { @MainActor in model.handle(p) } }
                 await MainActor.run {
-                    model.building = false
-                    model.buildSummary = result.summary
-                    model.crate = result.crate; model.crateURL = result.output; model.dirty = false
-                    let id = result.crate.manifest.crateId
-                    if let source {
-                        Remembered.setSourceRoot(folder, name: source, for: id)
-                        model.showSources = true
-                    } else {
-                        Remembered.setSourceFolder(folder, for: id)
-                    }
-                    model.sourceFolder = Remembered.sourceFolder(for: id)
-                    model.sourceRoots = Remembered.sourceRoots(for: id)
+                    model.running = false
+                    model.reloadCrates()
+                    if let i = model.crates.first(where: { $0.id == info.id }) { model.show(i) }
+                    model.crate = crate
+                    model.finished = report
                 }
             } catch {
                 await MainActor.run {
-                    model.building = false
-                    model.errorText = "The build stopped: \(error)"
+                    model.running = false
+                    model.reloadCrates()
+                    if let i = model.crates.first(where: { $0.id == info.id }) { model.show(i) }
+                    model.errorText = Words.runStopped(error.localizedDescription)
                 }
             }
         }
     }
 
-    private func handle(_ event: BuildEvent) {
-        switch event {
-        case let .started(files, unchanged, queued, jobs, rekordbox):
-            buildTotal = queued
-            var line = "\(files) audio files found; \(unchanged) unchanged since last time; \(queued) to analyse, \(jobs) at a time."
-            if let r = rekordbox { line += " rekordbox: \(r.matched) of \(r.tracks) tracks matched." }
-            buildLines.append(line)
-        case let .file(p):
-            buildDone = p.done; buildTotal = p.total; buildRemaining = p.remaining
-            switch p.outcome {
-            case let .analysed(seconds): buildLines.append(String(format: "%@  (%.1f s)", p.rel, seconds))
-            case .reused: buildLines.append("\(p.rel)  (kept from last time)")
-            case let .failed(f): buildLines.append("\(p.rel)  not analysed: \(f)")
+    private func handle(_ p: RunProgress) {
+        guard running else { return }
+        runStage = p.stage; runDone = p.done; runTotal = p.total; runRemaining = p.remaining
+        switch p.line {
+        case let .started(files, unchanged, queued)?:
+            runLines.append(Words.lineStarted(files: files, unchanged: unchanged, queued: queued))
+        case let .file(rel, outcome)?:
+            switch outcome {
+            case let .analysed(s): runLines.append(Words.lineRead(rel, seconds: s))
+            case .reused: runLines.append(Words.lineReadBefore(rel))
+            case let .failed(f): runLines.append(Words.lineNotRead(rel, reason: f.reason))
             }
-            if buildLines.count > 400 { buildLines.removeFirst(buildLines.count - 400) }
-        case let .writing(tracks):
-            buildLines.append("Writing the crate: \(tracks) tracks.")
+        case nil: break
         }
+        if runLines.count > 400 { runLines.removeFirst(runLines.count - 400) }
     }
 
-    // MARK: edit and save
+    // MARK: edits, saved as they go, with undo
+
+    /// What one undo step puts back.
+    private struct State {
+        var crate: Crate?
+        var corrections: NameCorrections
+        var placePaths: PlacePaths
+        var info: CrateInfo?
+    }
+    private var state: State { State(crate: crate, corrections: corrections, placePaths: placePaths, info: current) }
+
+    private func restore(_ s: State, name: String) {
+        let now = state
+        crate = s.crate; corrections = s.corrections; placePaths = s.placePaths
+        if let i = s.info, i.id == current?.id { current = i }
+        scheduleSave()
+        undoManager?.registerUndo(withTarget: self) { m in MainActor.assumeIsolated { m.restore(now, name: name) } }
+        undoManager?.setActionName(name)
+    }
+
+    /// Makes a change as one undo step, and saves it.
+    private func change(_ name: String, _ body: () -> Void) {
+        let before = state
+        body()
+        guard crate != before.crate || current != before.info else { return }
+        undoManager?.registerUndo(withTarget: self) { m in MainActor.assumeIsolated { m.restore(before, name: name) } }
+        undoManager?.setActionName(name)
+        scheduleSave()
+    }
 
     func binding(for id: String) -> CrateTrack? { crate?.tracks.first { $0.id == id } }
 
@@ -180,181 +304,88 @@ final class DeskModel: ObservableObject {
         return crate?.tracks.filter { $0.id != t.id && $0.recordingKey == k } ?? []
     }
 
-    func update(_ id: String, _ change: (inout CrateTrack) -> Void) {
-        guard var c = crate, let i = c.tracks.firstIndex(where: { $0.id == id }) else { return }
-        change(&c.tracks[i]); crate = c; dirty = true
-    }
-
-    /// A change to the whole crate (the source and folder corrections in DeckieCrate), marked as unsaved.
-    func updateCrate(_ change: (inout Crate) -> Void) {
-        guard var c = crate else { return }
-        let before = c
-        change(&c)
-        if c != before { crate = c; dirty = true }
-    }
-
-    func save() {
-        guard let c = crate, let url = crateURL else { return }
-        do { try CrateWriter.write(c, to: url); dirty = false }
-        catch { errorText = "Could not save the crate: \(error)" }
-    }
-
-    func revealInFinder() {
-        guard let url = crateURL else { return }
-        NSWorkspace.shared.activateFileViewerSelecting([url])
-    }
-
-    // MARK: add music from a source
-
-    /// Reads a CD or a drive (or a folder the DJ says is one) as it is, into the open crate file, or into a new crate
-    /// file named after it when none is open. Unsaved changes are saved first, since the build reads the crate file.
-    func addSource(_ url: URL, name: String) {
-        guard !building else { return }
-        if let out = crateURL {
-            if dirty { save() }
-            build(folder: url, output: out, source: name)
-        } else {
-            let s = NSSavePanel()
-            s.nameFieldStringValue = name + ".deckiecrate"
-            s.directoryURL = Remembered.cratesFolder()
-            s.message = "Where the crate file goes. Deckie reads \(name) where it is and copies nothing."
-            s.begin { [weak self] r in
-                guard r == .OK, let out = s.url, let self else { return }
-                Remembered.setCratesFolder(out.deletingLastPathComponent())
-                self.build(folder: url, output: out, source: name)
-            }
+    /// A name fix: kept as a correction, so reading the song again keeps it.
+    func update(_ id: String, _ edit: (inout CrateTrack) -> Void) {
+        guard let i = crate?.tracks.firstIndex(where: { $0.id == id }) else { return }
+        change(Words.undoNameFix) {
+            let before = crate!.tracks[i]
+            var t = before
+            edit(&t)
+            guard t != before else { return }
+            t.ident.source = "user"
+            crate!.tracks[i] = t
+            corrections.note(before: before, after: t)
         }
     }
 
-    /// The fallback: any folder, read as a source named after its volume (when it is the top of one) or itself.
-    func askSourceFolder() {
-        let p = NSOpenPanel()
-        p.canChooseDirectories = true; p.canChooseFiles = false; p.allowsMultipleSelection = false
-        p.prompt = "Add"
-        p.message = "Choose a CD, a drive or a folder. Deckie reads its name, its folders and the order of its songs as they are."
-        p.begin { [weak self] r in
-            guard r == .OK, let url = p.url, let self else { return }
-            self.addSource(url, name: MountedSource.name(of: url))
+    /// A change to the whole crate (the source and folder corrections in DeckieCrate).
+    func updateCrate(_ name: String, _ edit: (inout Crate) -> Void) {
+        guard crate != nil else { return }
+        change(name) { edit(&crate!) }
+    }
+
+    /// Takes a source (or the music folder, nil) out of the crate after the window asked; undo puts it back.
+    func removeSource(_ source: String?) {
+        guard crate != nil else { return }
+        change(Words.undoRemove) {
+            crate!.removeSource(source)
+            placePaths.forget(source: source)
+            placePaths.fillMissingPaths(&crate!)
+            if let s = source { current?.sourceRoots[s] = nil } else { current?.musicFolder = nil }
+        }
+        sourceSelection = nil
+    }
+
+    /// Corrects a source's name (D26), everywhere Desk keeps it: the crate, where it was read from, its paths.
+    func renameSource(_ name: String, to new: String) {
+        let n = new.trimmingCharacters(in: .whitespaces)
+        guard !n.isEmpty, n != name, crate != nil else { return }
+        change(Words.undoRename) {
+            crate!.renameDisc(name, to: n)
+            if let p = current?.sourceRoots.removeValue(forKey: name) { current?.sourceRoots[n] = p }
+            placePaths.renameSource(name, to: n)
+        }
+        sourceSelection = .source(n)
+    }
+
+    private func scheduleSave() {
+        needsSave = true
+        saveTask?.cancel()
+        saveTask = Task { @MainActor [weak self] in
+            try? await Task.sleep(nanoseconds: 300_000_000)
+            guard !Task.isCancelled else { return }
+            self?.saveNow()
         }
     }
 
-    /// Where a song's file is on this Mac: below the place its source was read from, or below the crate's music folder
-    /// for a song with no source. Nil when Desk does not know.
-    func audioURL(for t: CrateTrack) -> URL? {
-        guard let rel = t.file.rel else { return nil }
-        if let s = t.ident.disc, let root = sourceRoots[s] { return root.appendingPathComponent(rel) }
-        return sourceFolder?.appendingPathComponent(rel)
+    /// Writes what changed: the crate file, the fixes, the paths, the crate's details.
+    func saveNow() {
+        saveTask?.cancel(); saveTask = nil
+        guard needsSave, let info = current else { return }
+        needsSave = false
+        do {
+            if let c = crate { try CrateWriter.write(c, to: shelf.package(info.id)) }
+            try corrections.save(to: shelf.file(DeskRun.correctionsFile, of: info.id))
+            try placePaths.save(to: shelf.file(DeskRun.placesFile, of: info.id))
+            try shelf.save(info)
+        } catch { errorText = Words.couldntSave(error.localizedDescription) }
     }
 
-    func chooseSourceFolder() {
+    // MARK: the music on this Mac
+
+    /// Where a song's file is on this Mac: each place it was read at, in turn, the first whose source is plugged in.
+    func audioURL(for t: CrateTrack) -> URL? { placePaths.locate(t, roots: roots, musicFolder: musicFolder) }
+
+    func chooseMusicFolder() {
         let p = NSOpenPanel()
         p.canChooseDirectories = true; p.canChooseFiles = false
-        p.message = "Where the music for this crate is on this Mac (needed to make recognition signatures)."
+        p.message = Words.musicFolderMessage
         p.begin { [weak self] r in
-            guard r == .OK, let url = p.url, let self, let c = self.crate else { return }
-            self.sourceFolder = url; Remembered.setSourceFolder(url, for: c.manifest.crateId)
+            guard r == .OK, let url = p.url, let self, self.current != nil else { return }
+            self.current?.musicFolder = url.path
+            self.needsSave = true
+            self.saveNow()
         }
-    }
-
-    // MARK: signatures
-
-    /// One recognition signature per track (the plain `o` variant), made with Apple's ShazamKit on this Mac and
-    /// kept inside the crate. The iPad builds its catalogue from these. Pitch variants come later.
-    func makeSignatures() {
-        guard let c = crate, let url = crateURL else { return }
-        guard sourceFolder != nil || !sourceRoots.isEmpty else { chooseSourceFolder(); return }
-        signing = true; signProgress = "Starting…"
-        let todo = c.tracks.filter { $0.signatures["o"] == nil }.compactMap { t in audioURL(for: t).map { (t, $0) } }
-        let madeBy = Device.modelLabel()
-        let model = self
-        Task.detached(priority: .userInitiated) {
-            var made: [String: CrateTrack.Signature] = [:]
-            var failed: [String] = []
-            let sigFolder = url.appendingPathComponent("signatures")
-            try? FileManager.default.createDirectory(at: sigFolder, withIntermediateDirectories: true)
-            for (n, (t, audio)) in todo.enumerated() {
-                await MainActor.run { model.signProgress = "\(n + 1) of \(todo.count): \(t.ident.title)" }
-                do {
-                    let data = try Signatures.signature(of: audio)
-                    try data.write(to: sigFolder.appendingPathComponent("\(t.id)_o.shazamsignature"), options: .atomic)
-                    made[t.id] = CrateTrack.Signature(madeBy: madeBy, madeAt: Signatures.utcNow())
-                } catch { failed.append("\(t.ident.title): \(error.localizedDescription)") }
-            }
-            await MainActor.run {
-                for (id, sig) in made { model.update(id) { $0.signatures["o"] = sig } }
-                model.save()
-                model.signing = false
-                model.signProgress = "\(made.count) signatures made" + (failed.isEmpty ? "." : "; \(failed.count) failed: " + failed.prefix(3).joined(separator: "; "))
-            }
-        }
-    }
-}
-
-extension DeskModel {
-    /// Finds copies of the same recording (D24): every track's audio is read from the music folder and printed
-    /// (`RecordingPrint`), the prints are compared, and copies get the same `cut_key`, so the booth shows them as
-    /// one song with every place it lives. A remix, an edit or a live version does not match. Tracks whose file
-    /// cannot be read keep the key they had. The crate is saved afterwards, as with signatures.
-    func findCopies() {
-        guard let c = crate, crateURL != nil else { return }
-        guard sourceFolder != nil || !sourceRoots.isEmpty else { chooseSourceFolder(); return }
-        findingCopies = true; signProgress = "Reading the music…"
-        let todo = c.tracks.compactMap { t in audioURL(for: t).map { (t, $0) } }
-        let model = self
-        Task.detached(priority: .userInitiated) {
-            var prints: [String: RecordingPrint] = [:]
-            var failed = 0
-            for (n, (t, audio)) in todo.enumerated() {
-                await MainActor.run { model.signProgress = "Finding copies: \(n + 1) of \(todo.count)" }
-                do { prints[t.id] = try Signatures.recordingPrint(of: audio) }
-                catch { failed += 1 }
-            }
-            await MainActor.run {
-                var grouped = 0
-                model.updateCrate { grouped = $0.setCutKeys(prints: prints) }
-                if model.dirty { model.save() }
-                let songs = Set(model.crate?.tracks.compactMap { prints[$0.id] == nil ? nil : $0.ident.cutKey } ?? []).count
-                model.findingCopies = false
-                model.signProgress = grouped == 0 ? "No copies of the same recording found." :
-                    "\(grouped) tracks are copies of \(songs) recording\(songs == 1 ? "" : "s")." +
-                    (failed == 0 ? "" : " \(failed) could not be read.")
-            }
-        }
-    }
-}
-
-/// Small things the app remembers between launches: where crates go, and where each crate's music is on this Mac.
-/// The crate itself never holds an absolute path.
-enum Remembered {
-    static func cratesFolder() -> URL {
-        if let p = UserDefaults.standard.string(forKey: "cratesFolder") { return URL(fileURLWithPath: p) }
-        let music = FileManager.default.urls(for: .musicDirectory, in: .userDomainMask).first ?? FileManager.default.homeDirectoryForCurrentUser
-        let u = music.appendingPathComponent("Deckie")
-        try? FileManager.default.createDirectory(at: u, withIntermediateDirectories: true)
-        return u
-    }
-    static func setCratesFolder(_ u: URL) { UserDefaults.standard.set(u.path, forKey: "cratesFolder") }
-    static func sourceFolder(for crateId: String) -> URL? {
-        UserDefaults.standard.string(forKey: "source." + crateId).map { URL(fileURLWithPath: $0) }
-    }
-    static func setSourceFolder(_ u: URL, for crateId: String) { UserDefaults.standard.set(u.path, forKey: "source." + crateId) }
-
-    /// Where each source of a crate was last read from on this Mac, by the source's name (a mounted volume's path, or
-    /// the folder chosen). The crate file holds only the name and the paths below it.
-    static func sourceRoots(for crateId: String) -> [String: URL] {
-        let d = UserDefaults.standard.dictionary(forKey: "sources." + crateId) as? [String: String] ?? [:]
-        return d.mapValues { URL(fileURLWithPath: $0) }
-    }
-    static func setSourceRoot(_ u: URL, name: String, for crateId: String) {
-        var d = UserDefaults.standard.dictionary(forKey: "sources." + crateId) as? [String: String] ?? [:]
-        d[name] = u.path
-        UserDefaults.standard.set(d, forKey: "sources." + crateId)
-    }
-    static func renameSourceRoot(_ name: String, to new: String, for crateId: String) {
-        var d = UserDefaults.standard.dictionary(forKey: "sources." + crateId) as? [String: String] ?? [:]
-        guard let p = d.removeValue(forKey: name) else { return }
-        d[new] = p
-        UserDefaults.standard.set(d, forKey: "sources." + crateId)
     }
 }
 
@@ -393,5 +424,15 @@ enum Device {
         var chars = [CChar](repeating: 0, count: size)
         sysctlbyname("hw.model", &chars, &size, nil, 0)
         return String(cString: chars)
+    }
+}
+
+/// The Mac's share sheet, shown at the top right of the window.
+enum Share {
+    @MainActor static func show(_ url: URL) {
+        guard let w = NSApp.keyWindow ?? NSApp.windows.first(where: { $0.isVisible }), let v = w.contentView else { return }
+        let picker = NSSharingServicePicker(items: [url])
+        let y = v.isFlipped ? 1 : v.bounds.maxY - 1
+        picker.show(relativeTo: NSRect(x: v.bounds.maxX - 140, y: y, width: 1, height: 1), of: v, preferredEdge: .minY)
     }
 }

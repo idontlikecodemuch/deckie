@@ -3,9 +3,9 @@ import DeckieCrate
 
 // The Sources panel (D25, D26). A source is the thing a DJ holds that the songs were read from: a burned CD, a USB
 // stick, an SD card. Desk reads one as it is (Add music, DeskModel.addSource), so the panel shows what was read and is
-// for corrections only: a name, or an order Desk read wrongly. On screen a source is shown by its own name; the word
-// "source" is ours, in documents and code. The operations are the shared core's (DeckieCrate's Discs.swift, where the
-// field is still called disc); building a source by hand is not offered in the window.
+// for corrections: a name, or an order Desk read wrongly; and for taking a source back out of the crate. On screen a
+// source is shown by its own name; the word "source" is ours, in documents and code. The operations are the shared
+// core's (DeckieCrate's Discs.swift, where the field is still called disc; DeckieDesk's removeSource).
 
 /// One row of the Sources panel: a source, a folder of a source, or a song in its folder. A song with more than one
 /// place (D27) has a row in each folder it is in, so a song row says which folder it is.
@@ -22,6 +22,9 @@ extension DeskModel {
     /// walks them, songs by their number.
     var sourceOutline: [DiscPlan] { crate?.discPlan ?? [] }
 
+    /// Whether some songs are in the music folder (no source): the rekordbox route, or a crate made before sources.
+    var hasMusicFolderSongs: Bool { crate?.tracks.contains { $0.ident.allPlaces.contains { $0.disc == nil } } ?? false }
+
     /// The folder of what is selected in the panel (a folder, or a song's folder).
     var selectedSourceFolder: (source: String, folder: String)? {
         switch sourceSelection {
@@ -35,7 +38,7 @@ extension DeskModel {
     /// numbered again from 1.
     func nudge(_ id: String, by step: Int) {
         guard let sf = selectedSourceFolder, let i = crate?.trackIds(disc: sf.source, folder: sf.folder).firstIndex(of: id) else { return }
-        updateCrate { $0.move(id, inDisc: sf.source, folder: sf.folder, to: i + step) }
+        updateCrate(Words.undoMove) { $0.move(id, inDisc: sf.source, folder: sf.folder, to: i + step) }
     }
 
     /// The panel's drag within a folder: SwiftUI's `onMove` offsets turned into the core's `place`.
@@ -44,23 +47,13 @@ extension DeskModel {
         let ids = c.trackIds(disc: source, folder: folder)
         let moving = from.map { ids[$0] }
         let target = to - from.filter { $0 < to }.count
-        updateCrate { $0.place(moving, disc: source, folder: folder, at: target) }
-    }
-
-    /// Corrects a source's name. Desk remembers where that source was read from under the new name too.
-    func renameSource(_ name: String, to new: String) {
-        let n = new.trimmingCharacters(in: .whitespaces)
-        guard !n.isEmpty, n != name, let id = crate?.manifest.crateId else { return }
-        updateCrate { $0.renameDisc(name, to: n) }
-        Remembered.renameSourceRoot(name, to: n, for: id)
-        sourceRoots = Remembered.sourceRoots(for: id)
-        sourceSelection = .source(n)
+        updateCrate(Words.undoMove) { $0.place(moving, disc: source, folder: folder, at: target) }
     }
 
     func renameFolder(_ folder: String, inSource source: String, to new: String) {
         let n = new.trimmingCharacters(in: .whitespaces)
         guard !n.isEmpty, n != folder else { return }
-        updateCrate { $0.renameFolder(folder, inDisc: source, to: n) }
+        updateCrate(Words.undoRename) { $0.renameFolder(folder, inDisc: source, to: n) }
         sourceSelection = .folder(source: source, folder: n)
     }
 }
@@ -68,7 +61,7 @@ extension DeskModel {
 // MARK: - the panel
 
 /// The Sources panel: each source read, by its own name, its folders in the order the player shows them, and each
-/// folder's songs by their number there. Rename and reorder correct what was read.
+/// folder's songs by their number there. Rename and reorder correct what was read; Remove takes a source back out.
 struct SourcesPanel: View {
     @EnvironmentObject var model: DeskModel
     @State private var prompt: NamePrompt?
@@ -84,8 +77,8 @@ struct SourcesPanel: View {
         }
         var title: String {
             switch self {
-            case let .renameSource(s): return "Rename \(s)"
-            case let .renameFolder(_, f): return "Rename the folder \(f)"
+            case let .renameSource(s): return Words.renameTitle(s)
+            case let .renameFolder(_, f): return Words.renameFolderTitle(f)
             }
         }
     }
@@ -94,27 +87,27 @@ struct SourcesPanel: View {
         let outline = model.sourceOutline
         VStack(spacing: 0) {
             HStack {
-                Text("Sources").font(.headline)
+                Text(Words.sourcesTitle).font(.headline)
                 Spacer()
             }
             .padding(.horizontal, 12).padding(.vertical, 8)
             Divider()
             if outline.isEmpty {
                 VStack(spacing: 8) {
-                    Text("Nothing read from a CD or a drive yet.").foregroundStyle(.secondary)
-                    Text("Add music from a CD, a USB stick or an SD card, and its name, its folders and the order of its songs show here, as your player shows them.")
+                    Text(Words.nothingReadYet).foregroundStyle(.secondary)
+                    Text(Words.sourcesEmptyBody)
                         .font(.callout).foregroundStyle(.secondary).multilineTextAlignment(.center)
-                    AddMusicMenu(label: "Add music…")
+                    AddMusicMenu(label: Words.addMusicMore)
                 }
                 .padding(16).frame(maxHeight: .infinity)
             } else {
                 List(selection: $model.sourceSelection) {
                     ForEach(outline, id: \.name) { s in
                         let count = s.folders.reduce(0) { $0 + $1.trackIds.count }
-                        Label("\(s.name)  ·  \(count) song\(count == 1 ? "" : "s")", systemImage: "externaldrive")
+                        Label(Words.sourceLine(s.name, songs: count), systemImage: "externaldrive")
                             .font(.body.bold()).tag(SourceItem.source(s.name))
                         ForEach(s.folders, id: \.name) { f in
-                            Label(f.name.isEmpty ? "(top)" : f.name, systemImage: "folder")
+                            Label(f.name.isEmpty ? Words.topFolder : f.name, systemImage: "folder")
                                 .padding(.leading, 14).tag(SourceItem.folder(source: s.name, folder: f.name))
                             let rows = model.crate?.folderPlaces(disc: s.name, folder: f.name) ?? []
                             ForEach(rows.indices, id: \.self) { i in
@@ -131,9 +124,9 @@ struct SourcesPanel: View {
             actions.padding(10)
         }
         .alert(prompt?.title ?? "", isPresented: Binding(get: { prompt != nil }, set: { if !$0 { prompt = nil } })) {
-            TextField("Name", text: $promptText)
-            Button("OK") { commit() }
-            Button("Cancel", role: .cancel) { prompt = nil }
+            TextField(Words.nameField, text: $promptText)
+            Button(Words.ok) { commit() }
+            Button(Words.cancel, role: .cancel) { prompt = nil }
         }
     }
 
@@ -143,12 +136,12 @@ struct SourcesPanel: View {
         let t = model.binding(for: id)
         let elsewhere = t.map { TrackTable.places($0).count - 1 } ?? 0
         return HStack(spacing: 6) {
-            Text(number.map { String(format: "%02d", $0) } ?? "–").font(.callout.monospacedDigit()).foregroundStyle(.secondary)
+            Text(number.map(Words.twoDigits) ?? Words.none).font(.callout.monospacedDigit()).foregroundStyle(.secondary)
             Text(t?.ident.title ?? id).foregroundStyle(.primary).lineLimit(1)
             if let a = t?.ident.artist { Text(a).foregroundStyle(.secondary).lineLimit(1) }
             if elsewhere > 0 {
-                Text("+\(elsewhere)").font(.caption.monospacedDigit()).foregroundStyle(.secondary)
-                    .help("Also in " + (t.map { TrackTable.places($0).joined(separator: ", ") } ?? ""))
+                Text(Words.plusMore(elsewhere)).font(.caption.monospacedDigit()).foregroundStyle(.secondary)
+                    .help(Words.alsoIn(t.map { TrackTable.places($0).joined(separator: ", ") } ?? ""))
             }
         }
         .padding(.leading, 30)
@@ -156,18 +149,21 @@ struct SourcesPanel: View {
 
     @ViewBuilder private var actions: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("Desk shows what it read. Fix a name, or an order it read wrongly.").font(.caption).foregroundStyle(.secondary)
+            Text(Words.fixHint).font(.caption).foregroundStyle(.secondary)
             HStack {
                 switch model.sourceSelection {
                 case let .track(id, _, _)?:
-                    Button("Move up") { model.nudge(id, by: -1) }
-                    Button("Move down") { model.nudge(id, by: 1) }
+                    Button(Words.moveUp) { model.nudge(id, by: -1) }
+                    Button(Words.moveDown) { model.nudge(id, by: 1) }
                 case let .folder(s, f)?:
-                    Button("Rename…") { ask(.renameFolder(s, f), f) }.disabled(f.isEmpty)
+                    Button(Words.rename) { ask(.renameFolder(s, f), f) }.disabled(f.isEmpty)
                 case let .source(s)?:
-                    Button("Rename…") { ask(.renameSource(s), s) }
+                    Button(Words.rename) { ask(.renameSource(s), s) }
+                    Button(Words.removeFromCrate) { model.removing = .some(s) }
                 case nil:
-                    EmptyView()
+                    if model.hasMusicFolderSongs {
+                        Button(Words.removeMusicFolder) { model.removing = .some(nil) }
+                    }
                 }
             }
             .controlSize(.small)
@@ -188,23 +184,23 @@ struct SourcesPanel: View {
 }
 
 /// Add music: the CDs and drives mounted on this Mac, by their own names, then a folder chooser for anything else.
-/// Each is read as it is (DeskModel.addSource).
+/// Each is read as it is, into the crate showing (DeskModel.addSource).
 struct AddMusicMenu: View {
     @EnvironmentObject var model: DeskModel
-    var label: String = "Add music"
+    var label: String? = nil
     var body: some View {
         Menu {
             let mounted = model.mountedSources
-            if mounted.isEmpty { Text("No CD or drive found. Put one in, or choose a folder.") }
+            if mounted.isEmpty { Text(Words.noDriveFound) }
             ForEach(mounted, id: \.url) { m in
                 Button(m.name) { model.addSource(m.url, name: m.name) }
             }
             Divider()
-            Button("Choose a folder…") { model.askSourceFolder() }
+            Button(Words.chooseFolder) { model.askSourceFolder() }
         } label: {
-            Label(label, systemImage: "externaldrive.badge.plus")
+            Label(label ?? model.current.map { Words.addMusicTo($0.name) } ?? Words.addMusic, systemImage: "externaldrive.badge.plus")
         }
-        .help("Read a CD, a USB stick or an SD card as it is: its name, its folders and the order of its songs")
-        .disabled(model.building)
+        .help(Words.addMusicHelp)
+        .disabled(model.running)
     }
 }

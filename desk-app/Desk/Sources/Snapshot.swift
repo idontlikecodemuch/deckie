@@ -1,16 +1,17 @@
 import AppKit
 import SwiftUI
 
-/// "Deckie Desk" --snapshot <crate.deckiecrate> <out folder>: open the crate in the window, step through it the way a
+/// "Deckie Desk" --snapshot <out folder> [crate name]: show that crate of Desk's own (the most recent by default) in the window, step through it the way a
 /// DJ would (arrow down the list, look at a track, the Sources panel when the crate has sources, open the import log) and write a PNG of the window at each step,
 /// plus an ffmpeg concat list with how long each frame holds. The app draws its own windows, so no screen-recording
 /// permission is involved; then it quits. Made for showing the app when nobody is at the Mac. The Mac must be unlocked
 /// for whole-window frames; DECKIE_SNAP_ROWS=<n> changes how many rows the walk goes down (12 by default).
 @MainActor
 enum Snapshot {
-    static var request: (crate: String, out: String)? {
+    static var request: (crate: String?, out: String)? {
         let a = CommandLine.arguments
-        return a.count >= 4 && a[1] == "--snapshot" ? (a[2], a[3]) : nil
+        guard a.count >= 3, a[1] == "--snapshot" else { return nil }
+        return (a.count >= 4 ? a[3] : nil, a[2])
     }
 
     private static var frames: [(name: String, hold: Double)] = []
