@@ -330,9 +330,7 @@ agree with this".
   that leads is on the disc the playing song is on; failing that, the first disc in the DJ's order.
 - **Recognition names the song once**, whichever copy it hears, and never treats a move between two copies as a
   song change.
-- **One file can go on several discs.** D20 said a song sits in at most one folder of one disc. That now holds for
-  an entry, not for a file: Desk can place one file on more than one disc, and writes one entry for each place, all
-  with the same key. The booth treats them exactly like copies.
+- **One file on several discs** was part of this decision in the morning and was withdrawn the same day: see D25.
 
 ### Note on D24 (Nov 13): built, except one file on several discs
 Built the same day (commits 623e039 to 4778ed9): the shared rule (`SameSong` in the core), Desk's "Find copies",
@@ -341,10 +339,25 @@ published audio fingerprint (Haitsma and Kalker, 2002) and two conditions: the s
 second, and every three-second block of the whole song matches. Tested on generated songs only: a copy in another
 format matched, and an edit, a remix, a live take and an extended mix did not.
 
-Not built: one file on several discs. Crate v1 does not allow two entries for one file, because an entry's id is
-taken from the file itself and ids must be unique. Doing it needs a change to the crate file format, which is
-frozen, so it waits for the owner. Until then, two files of the same recording on two discs work, and one file can
-sit on one disc.
+Not built, and no longer wanted in this version: one file on several discs. Crate v1 does not allow two entries
+for one file, because an entry's id is taken from the file itself and ids must be unique. D25 removes the need.
+
+### D25. Desk reads discs; it does not manage them, in this version (Nov 13)
+The decision, in the owner's words, on the hand-built discs of D20: "What you are talking about makes it sound more
+like Deckie Desk is library management", and on reading in place of managing: "I agree with it for now. I could see
+a world where a CDJ (like Mike) would use this to organize their crate. And I think it will eventually have to work
+like that. but in this version we should keep it as read only."
+
+- **Desk reads a disc, a drive or a folder as it is.** Its name, its folders and the order of its songs come from
+  the thing itself. The DJ does not rebuild in Desk what already exists in their hands.
+- **A song on two discs is two files**, one on each, so D24 already shows both places. Nothing in the crate file
+  format has to change, and "one file on several discs" is dropped.
+- **The Discs panel stays for corrections**: a name, or an order Desk read wrongly. It is no longer how discs are
+  made. This rewords D20: the shared operations stay in the core for every desk, but reading is the main route.
+- **Organising in Desk is expected later.** When it comes it will be an addition to the crate file format, not a
+  change to what is there: readers already ignore fields they do not know, so files written today will still open.
+  Its shape is not designed now, because it depends on things not yet seen (playlists on a stick, one song in
+  several of them, whether order belongs to the disc or to a list).
 
 ### Note on D19 (Nov 1): versions of a song stay separate rows
 Christopher, on two remixes of one song both showing in the picks: "we shouldn't merge them unless they are the same
