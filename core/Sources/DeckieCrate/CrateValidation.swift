@@ -190,6 +190,17 @@ extension CrateTrack {
             if !(f.startS >= 0) { add("file.damaged_frames[\(i)].start_s", "\(f.startS) must be 0 or more") }
             if !(f.seconds > 0) { add("file.damaged_frames[\(i)].seconds", "\(f.seconds) must be above 0") }
         }
+        // Other places (D27): each says where (a source, or a folder when it has none), numbers count from 1, no
+        // absolute paths, and no place is listed twice or repeats the entry's own.
+        var placesSeen: Set<Place> = [ident.ownPlace]
+        for (k, q) in ident.otherPlaces.enumerated() {
+            let path = "ident.other_places[\(k)]"
+            if q.disc == nil && q.folder == nil { add(path, "has neither a disc nor a folder, so it says no place") }
+            if let d = q.disc, d.isEmpty { add("\(path).disc", "is empty") }
+            if let f = q.folder, isAbsolute(f) { add("\(path).folder", "\"\(f)\" is an absolute path; the crate keeps paths relative") }
+            if let n = q.track, n < 1 { add("\(path).track", "\(n) must be 1 or more") }
+            if !placesSeen.insert(q).inserted { add(path, "repeats a place the entry already has") }
+        }
         if !(1...3).contains(analysis.level) { add("analysis.level", "\(analysis.level) must be 1, 2 or 3") }
         if engine.fidelity < 0 { add("engine.fidelity", "\(engine.fidelity) must be 0 or more") }
         if let s = analysis.secs, s < 0 { add("analysis.secs", "\(s) must be 0 or more") }

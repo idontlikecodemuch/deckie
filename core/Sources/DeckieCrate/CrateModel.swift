@@ -222,17 +222,79 @@ public struct CrateTrack: Codable, Equatable, Sendable {
         public var era: String?
         public var kind: String?
         public var tags: [String]
+        /// The entry's other places (D27, `ident.other_places`): the same file found somewhere else, each with the
+        /// same three parts as the entry's own place (`disc`, `folder`, `track`). Empty for most entries, and then
+        /// left out of the file, so a record without other places keeps its bytes.
+        public var otherPlaces: [Place]
         public init(title: String, artist: String? = nil, version: String? = nil, source: String? = nil,
                     mbid: String? = nil, disc: String? = nil, folder: String? = nil, track: Int? = nil,
                     cutKey: String? = nil, isLongest: Bool? = nil, era: String? = nil, kind: String? = nil,
-                    tags: [String] = []) {
+                    tags: [String] = [], otherPlaces: [Place] = []) {
             self.title = title; self.artist = artist; self.version = version; self.source = source
             self.mbid = mbid; self.disc = disc; self.folder = folder; self.track = track; self.cutKey = cutKey
             self.isLongest = isLongest; self.era = era; self.kind = kind; self.tags = tags
+            self.otherPlaces = otherPlaces
         }
         enum CodingKeys: String, CodingKey {
             case title, artist, version, source, mbid, disc, folder, track, era, kind, tags
-            case cutKey = "cut_key", isLongest = "is_longest"
+            case cutKey = "cut_key", isLongest = "is_longest", otherPlaces = "other_places"
+        }
+        public init(from decoder: Decoder) throws {
+            let c = try decoder.container(keyedBy: CodingKeys.self)
+            title = try c.decode(String.self, forKey: .title)
+            artist = try c.decodeIfPresent(String.self, forKey: .artist)
+            version = try c.decodeIfPresent(String.self, forKey: .version)
+            source = try c.decodeIfPresent(String.self, forKey: .source)
+            mbid = try c.decodeIfPresent(String.self, forKey: .mbid)
+            disc = try c.decodeIfPresent(String.self, forKey: .disc)
+            folder = try c.decodeIfPresent(String.self, forKey: .folder)
+            track = try c.decodeIfPresent(Int.self, forKey: .track)
+            cutKey = try c.decodeIfPresent(String.self, forKey: .cutKey)
+            isLongest = try c.decodeIfPresent(Bool.self, forKey: .isLongest)
+            era = try c.decodeIfPresent(String.self, forKey: .era)
+            kind = try c.decodeIfPresent(String.self, forKey: .kind)
+            tags = try c.decode([String].self, forKey: .tags)
+            // A crate file written before D27 has no other places.
+            otherPlaces = try c.decodeIfPresent([Place].self, forKey: .otherPlaces) ?? []
+        }
+        public func encode(to encoder: Encoder) throws {
+            var c = encoder.container(keyedBy: CodingKeys.self)
+            try c.encode(title, forKey: .title)
+            try c.encodeIfPresent(artist, forKey: .artist)
+            try c.encodeIfPresent(version, forKey: .version)
+            try c.encodeIfPresent(source, forKey: .source)
+            try c.encodeIfPresent(mbid, forKey: .mbid)
+            try c.encodeIfPresent(disc, forKey: .disc)
+            try c.encodeIfPresent(folder, forKey: .folder)
+            try c.encodeIfPresent(track, forKey: .track)
+            try c.encodeIfPresent(cutKey, forKey: .cutKey)
+            try c.encodeIfPresent(isLongest, forKey: .isLongest)
+            try c.encodeIfPresent(era, forKey: .era)
+            try c.encodeIfPresent(kind, forKey: .kind)
+            try c.encode(tags, forKey: .tags)
+            // Left out when empty (crate-format.md, "Addition with D27"), as `vocal_structure` and `hooks` are.
+            if !otherPlaces.isEmpty { try c.encode(otherPlaces, forKey: .otherPlaces) }
+        }
+
+        /// The entry's own place: its `disc`, `folder` and `track`.
+        public var ownPlace: Place {
+            get { Place(disc: disc, folder: folder, track: track) }
+            set { disc = newValue.disc; folder = newValue.folder; track = newValue.track }
+        }
+        /// Every place of the entry: its own first, then its other places in the order the file lists them.
+        public var allPlaces: [Place] { [ownPlace] + otherPlaces }
+    }
+
+    /// One place of a file (D25, D26, D27): the source it was read from by the source's own name (`disc`, null for a
+    /// file only in a folder on the Mac), the group inside it (`folder`, the folder's path below the source's top,
+    /// "" at its top; for a place with no source, the folder's path below the music folder), and the song's number
+    /// there (`track`, counted from 1 in the order a player shows; null for a place with no source).
+    public struct Place: Codable, Hashable, Sendable {
+        public var disc: String?
+        public var folder: String?
+        public var track: Int?
+        public init(disc: String?, folder: String?, track: Int?) {
+            self.disc = disc; self.folder = folder; self.track = track
         }
     }
 

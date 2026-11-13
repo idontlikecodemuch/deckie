@@ -18,10 +18,12 @@ extension CrateTrack {
         for v in emb { norm += v * v }
         norm = norm.squareRoot() + 1e-9
         let title = ident.artist.map { "\($0) - \(ident.title)" } ?? ident.title
+        // On a source when any of its places is (D27): its own place, else the first other place on one.
+        let disc = ident.disc ?? ident.otherPlaces.first { $0.disc != nil }?.disc
         return DeckieCore.Track(
             id: id, title: title, ver: ident.version ?? "", secs: file.durationS,
             cutKey: recordingKey,
-            isLongest: ident.isLongest ?? true, onDisc: ident.disc != nil, disc: ident.disc,
+            isLongest: ident.isLongest ?? true, onDisc: disc != nil, disc: disc,
             folder: ident.folder ?? "", hal: ident.tags.contains("halloween"), bpm: grid.bpm, bpmTag: file.tagBpm,
             gridConf: grid.confidence, bpmIn: grid.bpmIn, bpmOut: grid.bpmOut,
             tempoChange: (tempoSegments?.count ?? 1) > 1, driftPct: 0.0,
