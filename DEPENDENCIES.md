@@ -30,7 +30,7 @@ alters a row goes into the JSON in the same commit.
 
 | Entry | Version | Licence | Training sets and their terms (models) | Replacement path (models) |
 |---|---|---|---|---|
-| Swift runtime and Foundation (with ICU) | 6.4.1 | Apache 2.0 with the Runtime Library Exception (section 1); listed in full before the first PC or Linux build ships (section 3) | | |
+| Swift runtime and Foundation (with ICU) | 6.4.1 | Apache 2.0 with the Runtime Library Exception (section 1); ICU 76.1 inside Foundation is under the Unicode License V3 (section 3) | | |
 | dr_mp3 | 0.7.4 | public domain (the Unlicense) or MIT No Attribution, taken as public domain (section 4) | | |
 | dr_flac | 0.13.4 | the same choice, taken as public domain (section 5) | | |
 | ONNX Runtime | 1.31.1 | MIT; carries Eigen under MPL 2.0, unmodified by Deckie; carries ONNX Runtime's two published patches (IBM Z builds; nothing compiled on Linux, Windows or macOS differs), shipped beside Eigen's notice (section 6); the shipped library is Deckie's own build without Microsoft's usage-reporting client | | |
@@ -92,12 +92,12 @@ just because parts of Swift's runtime (the support code every Swift program runs
 
 | Action | Version | What it does | Used in |
 |---|---|---|---|
-| `actions/checkout` | `v4` | copies this repository onto the build machine, and ONNX Runtime's source at its pinned commit for its build (section 6) | all three workflows |
-| `compnerd/gha-setup-swift` | `main` (its documented reference; its `v3` tag does not exist) | installs the Swift toolchain on Windows | `core-windows.yml` |
-| `actions/cache` | `v4` | keeps ONNX Runtime's library and the exported Beat This! and YAMNet models between runs (sections 6 to 8), keyed on the hashes of the scripts that make them | `core-linux.yml` |
+| `actions/checkout` | `v4` | copies this repository onto the build machine, and ONNX Runtime's source at its pinned commit for its build (section 6) | all four workflows |
+| `compnerd/gha-setup-swift` | `main` (its documented reference; its `v3` tag does not exist) | installs the Swift toolchain on Windows | `core-windows.yml`, `pc-package.yml` |
+| `actions/cache` | `v4` | keeps ONNX Runtime's library and the exported Beat This! and YAMNet models between runs (sections 6 to 8), keyed on the hashes of the scripts that make them | `core-linux.yml`, `core-windows.yml`, `pc-package.yml` |
 | `actions/setup-python` | `v5` | installs Python 3.12, which runs ONNX Runtime's build scripts and Deckie's helper for that build | `onnxruntime-build.yml` |
-| `actions/upload-artifact` | `v4` | keeps each built ONNX Runtime archive, and the two pinned model files, with the run that made them | `onnxruntime-build.yml`, `core-linux.yml` |
-| `actions/download-artifact` | `v4` | gathers those archives for the job that publishes them | `onnxruntime-build.yml` |
+| `actions/upload-artifact` | `v4` | keeps each built ONNX Runtime archive, the two pinned model files, the end-to-end crate files and test MP3, and the Windows zip, with the run that made them | `onnxruntime-build.yml`, `core-linux.yml`, `core-windows.yml`, `pc-package.yml` |
+| `actions/download-artifact` | `v4` | gathers those archives for the job that publishes them; hands the test MP3 and the crate files from one job to the next | `onnxruntime-build.yml`, `core-windows.yml`, `pc-package.yml` |
 
 All six are recorded by version tag only, which, like an image tag, the publisher can move. Pinning each to a commit
 hash (the fingerprint of one exact version of its code) is pending, and so is quoting their licences: this session
@@ -115,6 +115,37 @@ decision (section 6),
 and the Beat This! weights ship under D15 with their training sets recorded (section 7) and shown in the
 acknowledgements. A build that tags vocals carries the YAMNet model file (section 8), Apache 2.0,
 with AudioSet's attribution in the acknowledgements.
+
+**The first Windows build exists, as a workflow artifact only** (Nov 13, 2026, D29; not a release, not handed to
+anyone yet). The workflow `.github/workflows/pc-package.yml` builds the zip "Deckie for PC (first test)" with
+`core/Tools/windows/package.sh`, which downloads nothing: the release build of `deckie-make`, exactly the Swift
+runtime libraries that program's own import tables name (read by `core/Tools/windows/pe_imports.py` and copied
+from the toolchain the runner installed, section 1), Deckie's own `onnxruntime.dll` (section 6; the script refuses
+Microsoft's), the two pinned models (sections 7 and 8), and a folder of licences: this file whole, the table above
+as `ACKNOWLEDGEMENTS.txt`, ONNX Runtime's `LICENSE` and `ThirdPartyNotices.txt` (Eigen's MPL notice is in it), the
+two Eigen patches (`core/notices/eigen/`), and the Swift runtime's licence texts (`core/notices/swift/`, with their
+sources and hashes), and `FILES.txt`, every file in the zip with its size and SHA-256.
+
+What the Swift runtime brings, listed as this section promised: the standard library and its companions, Foundation
+(swift-foundation and swift-corelibs-foundation) and the dispatch library, all **Apache 2.0 with the Runtime Library
+Exception**, on the allowlist; and inside Foundation, **ICU 76.1** (the Unicode Consortium's text library) under the
+**Unicode License V3**, a short permissive licence of the MIT kind that is **not on the allowlist word for word**.
+ICU cannot be left out (Foundation's dates and text need it). **Open for the main session: add the Unicode License
+V3 to the allowlist, or say what replaces Foundation**; until then the zip stays a workflow artifact.
+
+**Not in the zip: Microsoft's Visual C++ runtime** (`MSVCP140.dll`, `MSVCP140_1.dll`, `VCRUNTIME140.dll`,
+`VCRUNTIME140_1.dll`). Swift's runtime libraries and `onnxruntime.dll` all load it, and it is not part of every
+Windows: a PC has it when Windows Update or another program installed it, which is most PCs, not all. Its licence is
+Microsoft's own redistribution terms for Visual Studio, not an open-source licence and not on the allowlist, so it
+is not shipped; the zip's starter (`core/Tools/windows/launcher.c`) looks for the four files before anything else
+and, when one is missing, says so in plain words with Microsoft's own download address. **Open for the main session:
+ship the four files beside the program (Microsoft permits it for programs built with Visual Studio; the licence
+would be added to this file), or keep the message.** The starter itself is built with the toolchain's clang against
+Windows' `kernel32.dll` alone, with no C runtime inside it, so it adds no dependency.
+
+**A test tool, not a dependency:** the workflows encode one MP3 of the synthesised test track with Ubuntu's `ffmpeg`
+program (installed with apt in the Linux job, unpinned, as `curl` and `python3` already are there), because no audio
+is committed and the Windows runner has no MP3 encoder. Nothing of ffmpeg is linked, shipped or used by the builder.
 
 ## 4. dr_mp3, the MP3 decoder (vendored)
 
@@ -355,7 +386,7 @@ Christopher approved downloading the release archives on Oct 28, 2026, and the l
 | Version | 1.31.1: release tag `v1.31.1`, built Oct 23, 2026 from commit `41d4d61f14b9c1dd0b2ccda1e9b85dd415fd0496` (the archives' `GIT_COMMIT_ID`); C API version 31. The tag itself points at `6af1a932e2286d5c58166085d24c68783033edee`, not at that commit (a lightweight tag; found by the first run of Deckie's own build, Oct 29, 2026): Microsoft packaged 1.31.1 from a later point of the release branch than it tagged. Deckie's own build uses the archives' commit, the source of the binaries developed against, and the workflow pins both and stops if either moves |
 | Source | `https://github.com/microsoft/onnxruntime/releases/download/v1.31.1/<archive>`, downloaded Oct 28, 2026, when it was the latest release. GitHub's API refused this session (`releases/latest` answered that the repository is not enabled for it), so "latest" was read from the repository's tags (`git ls-remote --tags`, the highest `vX.Y.Z`), not from GitHub's own "latest" label |
 | Linux x86_64 archive | `onnxruntime-linux-x64-1.31.1.tgz`, 11,413,655 bytes, SHA-256 `c849e36a1ef3e22d4ff217b9d1ce4a3cf5b9467b975610913ae959ad5b16bdc9`, pinned in `fetch-onnxruntime.sh` |
-| Windows x64 archive | `onnxruntime-win-x64-1.31.1.zip`, 82,929,944 bytes, SHA-256 `5869e26bb25314375f2d5ef1877e3ea06b1543d6c710e6e4a1ec2f7177ab4b2c`; no script fetches it yet (the note at the top of `fetch-onnxruntime.sh` says how to use it); most of it is debug symbols (`.pdb`, 429 MB unpacked), which are not needed |
+| Windows x64 archive | `onnxruntime-win-x64-1.31.1.zip`, 82,929,944 bytes, SHA-256 `5869e26bb25314375f2d5ef1877e3ea06b1543d6c710e6e4a1ec2f7177ab4b2c`, pinned in `fetch-onnxruntime.sh` since Nov 13, 2026 (run in Git Bash on Windows it fetches this archive, or with `--deckie` Deckie's own, below, which is what the Windows workflows use); most of it is debug symbols (`.pdb`, 429 MB unpacked), which the script does not unpack |
 | macOS arm64 archive | `onnxruntime-osx-arm64-1.31.1.tgz`, 36,936,435 bytes, SHA-256 `2e1344a1926ee50eb25b38153cb6992c3567515aef0e677a1a520a1798896d6f`, downloaded Oct 29, 2026 to record these facts for the Mac bench (its `GIT_COMMIT_ID` is the same commit); about half of it is debug symbols (`.dSYM`), not needed. The Mac fetches it by the same pinned pattern once Christopher says yes in the main session |
 | The libraries in them | `lib/libonnxruntime.so.1.31.1`, 29,345,384 bytes, SHA-256 `a96f132e5eb5ca04e23a7d2fc1078fb95aa591e8d71d0f237702ece3a1e0f4ea`; `lib/onnxruntime.dll`, 17,253,728 bytes, SHA-256 `cb2fa518b18356617f6f9f460c012501da2819ec7e5c1d80bd8f5de20492db0c`; `lib/libonnxruntime.1.31.1.dylib`, 44,797,256 bytes, SHA-256 `17500d6b1e37e70f43a2c57d94233a1bc29fbcb297be0a5f8c7c13184f3307ba`. The macOS library carries the 1DS reporting client too (its address, namespace and source-file names are in it) but none of curl, mbedTLS or SQLite: on macOS the client uses the system's own HTTP, TLS and database libraries. `ORT_DISABLE_TELEMETRY` is honoured there as on Linux |
 | Vendored headers | `onnxruntime_c_api.h`, 422,790 bytes, SHA-256 `43d584f596ef66820421317df32a79a95fc1d39ee46cb3971a870c08d8ba4baa`; `onnxruntime_ep_c_api.h`, 165,249 bytes, `b64036772115dbc6f06a900487ce22d34e862100db03e2ad62210758e27a19b2`; `onnxruntime_error_code.h`, 2,775 bytes, `5ce3b054e798eced8d14f5b86e98692fd33470463f96194ce0700a2d53dd8721` |
@@ -386,7 +417,7 @@ Each job then uploads an archive named like Microsoft's with `-deckie-no-telemet
 the library's and the archive's sizes and SHA-256 values and the build time into its job summary. Started with
 `publish` ticked, the workflow puts them on this repository's release `onnxruntime-1.31.1-deckie-no-telemetry`
 (`https://github.com/idontlikecodemuch/deckie/releases/tag/onnxruntime-1.31.1-deckie-no-telemetry`), from which
-`fetch-onnxruntime.sh --deckie` fetches the Linux archive once its hash is recorded here and in the script.
+`fetch-onnxruntime.sh --deckie` fetches the Linux archive, or on Windows (Git Bash) the Windows x64 one, each checked against the hash recorded here and in the script. There is no archive for Windows on Arm: none is built or pinned, and GitHub's Arm Windows machines have not been tried with this build; a PC with an Arm processor runs the x64 program through Windows' own emulation, untested.
 
 | Platform | File | Bytes | SHA-256 |
 |---|---|---|---|

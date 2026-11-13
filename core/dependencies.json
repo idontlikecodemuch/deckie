@@ -5,7 +5,7 @@
       "id": "swift-runtime",
       "name": "Swift runtime and Foundation (with ICU)",
       "version": "6.4.1",
-      "licence": "Apache 2.0 with the Runtime Library Exception (section 1); listed in full before the first PC or Linux build ships (section 3)",
+      "licence": "Apache 2.0 with the Runtime Library Exception (section 1); ICU 76.1 inside Foundation is under the Unicode License V3 (section 3)",
       "training_sets": null,
       "replacement_path": null
     },

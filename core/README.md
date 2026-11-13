@@ -58,6 +58,11 @@ and Linux crate builder share them. Charter: `docs/architecture/pc-linux-track.m
 - `Sources/DeckieEngine`: the Windows and Linux analyser, the lab's pipeline on the pieces above (below).
 - `Sources/DeckieBuild` and `Sources/deckie-build`: the crate builder and its yardstick bench, as a library (so the
   tests can drive it) and a command line; see "Building a crate" below.
+- `Sources/DeckiePC` and `Sources/deckie-make`: the PC program a DJ drags a music folder onto (D29, first step), as a
+  library (`PCBuild`: where things go, the plain words in `PCWords`, the log, the crate file as one file) and its
+  console; see "The PC program" below. `Tools/windows/` holds its starter, the packaging script and the READ ME.
+- `Sources/deckie-e2e`: the end-to-end check both workflows run (a small music folder, the crate file checked);
+  a development tool. `Tools/compare_crates.py` compares two crate files field by field, with its tolerance explained.
 - `Sources/deckie-memprobe`: measures the analyser's peak memory under chosen ONNX Runtime settings; see "Measuring
   memory" below.
 - `Tests/DeckieCoreTests`: parity tests against the lab. `Fixtures/` holds the reference numbers, written by
@@ -273,7 +278,8 @@ Four minutes at 44.1 kHz take about 6.3 s in a release build on a four-core 2.1 
 and the spectrogram and the rest the network (about 9.7 s in a debug build). On a fresh machine:
 
 ```
-bash core/Tools/fetch-onnxruntime.sh                   # ONNX Runtime 1.31.1 into core/.deps (11 MB, hash-checked)
+bash core/Tools/fetch-onnxruntime.sh                   # ONNX Runtime 1.31.1 into core/.deps (11 MB, hash-checked);
+                                                       # in Git Bash on Windows, the Windows x64 archive (--deckie: 6.6 MB)
 bash core/Tools/fetch-models.sh                        # both models into core/.models (97 MB, hash-checked)
 ```
 
@@ -454,6 +460,68 @@ WAV and 320 kbps MP3: one at a time, 8.3 s a file when nothing else ran (6.3 s o
 after it take under 2 s), and 8 to 21 s while another session shared the machine; four at a time, 49 to 73 s for
 eight files, so 6 to 9 s a file of wall-clock time (each file 20 to 40 s on its own). The tests' build of two
 one-minute files takes about 10 s in a debug build.
+
+## The crate file as one file: `CrateArchive`
+
+On Windows a `.deckiecrate` package is only a folder, so the PC builder writes the single-file form
+(`docs/architecture/crate-format.md`, "the single-file form"): the same files, with the same names and bytes, in one
+uncompressed zip, written and read by `Sources/DeckieCrate/CrateArchive.swift` with no library. `CrateReader.read(from:)`
+takes either form; `CrateArchive.pack(package:to:)` and `unpack(_:to:)` go between them. The archive is canonical
+(the same contents give the same bytes on every platform; `fixtures/example-single.deckiecrate`, made on Linux, is
+rebuilt byte for byte by the tests on Linux and Windows), and damage is found (a CRC-32 of every file, the tables
+checked against each other, a cut file refused). `Tools/make_crate_fixture.sh` rebuilds the fixture.
+
+## The PC program: `deckie-make`
+
+```
+deckie-make [<music folder> ...] [--no-wait] [--jobs N] [--work <folder>]
+```
+
+What a non-technical DJ runs on Windows (as "Make Crate File.exe" in the zip, which starts it). Given a folder (what
+Windows passes when a folder is dropped on the program) it reads every audio file below it, hidden ones left out,
+and writes `<folder name>.deckiecrate`, the single-file form, next to the folder, never inside it, with
+`<folder name> Deckie log.txt` beside it. With no folder (a double click) it asks for one in the console. It prints
+a line per song (songs done of songs found, time left), ends with how many songs went in, how many did not and why,
+by reason and file type, in plain words, and waits for Enter. It is `Builder` with nothing changed inside. What it
+adds: the crate as a package and the builder's work folder are kept out of sight in the program's own storage
+(`%LOCALAPPDATA%\Deckie\builds\<name>-<hash of the folder's path>`), so a second run reads only what changed; when
+that storage is gone the crate file itself is unpacked first, so the crate keeps its id; something else under the
+crate file's name is never overwritten; no folder is left out by its name; the default for songs read at once is
+research P's (one for every two processors, 3 GB or a quarter of memory left over). The log holds the program's and
+the machine's facts, counts, timings and the files not added with their reasons, and no path above the music folder.
+`Tests/DeckiePCTests` covers the plan, the words and, with the engine, a whole run, a second run, a new song and
+lost storage.
+
+The zip is assembled by `Tools/windows/package.sh` (run in Git Bash on Windows after a release build; it downloads
+nothing): the program, exactly the Swift runtime libraries its import tables name (`Tools/windows/pe_imports.py`),
+Deckie's own `onnxruntime.dll`, the two models, the licences, `READ ME FIRST.txt`, and the starter
+(`Tools/windows/launcher.c`: built against Windows' kernel32 alone, it says in plain words when the folder was not
+unzipped or Microsoft's Visual C++ runtime is missing, and keeps the window open if the program stops). The workflow
+`pc-package.yml` builds it and tries it as a DJ would; `DEPENDENCIES.md` section 3 says what it carries and the two
+open licence questions.
+
+## End to end on both platforms: `deckie-e2e`
+
+```
+deckie-e2e mp3 <file>                      the synthesised test track as an MP3 (needs the ffmpeg program)
+deckie-e2e make <folder> --mp3 <file>      the small music folder
+deckie-e2e check <crate file>              the core's validator, then what the folder should have given
+deckie-e2e pack <package> <file>           a package folder as one file
+deckie-e2e songs <folder> [--count 4] [--seconds 240]   full-length songs, to time a build
+```
+
+Both workflows make the same folder (a WAV, a FLAC written with no encoder, an MP3; a nested folder; a name with a
+space and one that is not ASCII; a file too short to analyse; a protected file; hidden files, by a dot and, on
+Windows, by Windows' own hidden mark; a `_old` folder), build a crate file from it with `deckie-build`, check it with
+`CrateReader` in both forms, and run the build again, which must find nothing to do. `core-windows.yml` also builds
+the folder on Linux in the same run and compares the two crate files with `Tools/compare_crates.py`, whose header
+says what must be identical and what tolerance the rest gets, and why. No audio is committed: the MP3 is encoded once
+per run on Linux and handed to the Windows job.
+
+On Windows today the builder reads WAV (16-, 24- and 32-bit integer, 32-bit float, plain and "extensible"), AIFF and
+AIFF-C, MP3 and FLAC (native and Ogg-FLAC, to 24 bits), as on Linux. It does not read AAC or Apple Lossless (`.m4a`,
+`.mp4`, `.aac`), WMA, Ogg Vorbis or Opus (each counted as `unsupported` by type), nor copy-protected files
+(`protected`). `docs/research/y-windows-builder.md` says what reading `.m4a` through Windows' Media Foundation takes.
 
 ## Measuring memory: `deckie-memprobe`
 
