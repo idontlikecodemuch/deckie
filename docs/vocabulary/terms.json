@@ -1,6 +1,6 @@
 {
  "title": "Deckie vocabulary",
- "updated": "2026-11-11",
+ "updated": "2026-11-12",
  "sources": [
   "docs/research/e-dj-vocabulary.md",
   "docs/product/spec-condensed.md",
@@ -37,11 +37,11 @@
   },
   {
    "id": "analysis",
-   "label": "Analysis"
+   "label": "Sound and analysis"
   },
   {
    "id": "product",
-   "label": "The product"
+   "label": "Deckie's own words"
   },
   {
    "id": "scoring",
@@ -59,20 +59,21 @@
    "group": "moves",
    "aliases": [
     "long mix (house, techno, drum and bass)",
-    "long and smooth (Reddit)",
+    "long and smooth (forums)",
     "seamless blend (tutorials)",
     "progressive mix",
     "32-bar"
    ],
    "plain": "Both songs play together for a long stretch, a minute or more, so the change is hard to hear.",
-   "expert": "[heard in the wild] Forum DJs say \"long blends\" and \"long mixes\" and set them against short ones; a Reddit DJ's version is \"long and smooth, perfectly in phrase\". 16 to 32 bars, the house and techno default.",
-   "deckie": "Shown as \"Long blend · 32 bars\". Suggested only when both songs have long vocal-free ends and the tempos sit close.",
+   "expert": "Forum DJs say \"long blends\" or \"long mixes\", and one puts the aim as \"long and smooth, perfectly in phrase\". 16 to 32 bars is the house and techno default.",
+   "deckie": "Shown as \"Long blend · 32 bars\", and only when both songs have long ends without singing and their tempos are close.",
    "related": [
     "blend",
     "short-blend",
     "bass-swap",
     "vocal-free-bars"
-   ]
+   ],
+   "source": "heard"
   },
   {
    "id": "blend",
@@ -86,38 +87,40 @@
     "blend (hip-hop: acapella over a beat)"
    ],
    "plain": "The two songs overlap for a while, and the low end moves from one to the other halfway through.",
-   "expert": "[heard in the wild] \"Blend\" is the everyday verb: posters \"blend tunes\" with filters and EQ, around 16 bars in house. In hip-hop mixtapes a blend is an acapella laid over another record's beat.",
-   "deckie": "Shown as \"Blend · 16 bars\"; the bar count is there so a hip-hop DJ reads it the house way. It is the app's middle blend length.",
+   "expert": "\"Blend\" is the everyday verb: DJs \"blend tunes\" with filters and EQ, around 16 bars in house. In hip-hop mixtapes a blend is an acapella laid over another record's beat.",
+   "deckie": "Shown as \"Blend · 16 bars\", the middle length. The bar count is there so a hip-hop DJ, for whom a blend means something else, reads it the house way.",
    "related": [
     "long-blend",
     "short-blend",
     "bass-swap"
-   ]
+   ],
+   "source": "heard"
   },
   {
    "id": "short-blend",
    "term": "Short blend",
    "group": "moves",
    "aliases": [
-    "fast bass swap (Reddit)",
+    "fast bass swap (forums)",
     "short overlap (forums)",
     "8-bar mix",
     "EQ mix"
    ],
-   "plain": "A quick overlap of a few seconds where the next song slides in and takes over.",
-   "expert": "[ours] No DJ name found. Forum DJs talk about \"short overlaps\", \"quick mixes\" or a \"fast bass swap\"; \"short blend\" is Deckie's plain English for an 8-bar blend.",
-   "deckie": "Shown as \"Short blend · 8 bars\". Not \"quick blend\": a hip-hop DJ would hear quick mix, playing 30 to 90 seconds a record.",
+   "plain": "A quick overlap, a few bars long, where the next song slides in and takes over.",
+   "expert": "There is no single DJ word: forum DJs say \"short overlap\", \"quick mix\" or \"fast bass swap\". \"Short blend\" is Deckie's plain name for an 8-bar blend.",
+   "deckie": "Shown as \"Short blend · 8 bars\". Not \"quick blend\": to a hip-hop DJ a quick mix means playing 30 to 90 seconds of each record.",
    "related": [
     "blend",
     "bass-swap"
-   ]
+   ],
+   "source": "ours"
   },
   {
    "id": "bass-swap",
    "term": "Bass swap",
    "group": "moves",
    "aliases": [
-    "switch lows (Reddit)",
+    "switch lows (forums)",
     "bass switch (forums)",
     "kill the bass (all, the incoming side)",
     "swap the basslines (house forums)",
@@ -126,12 +129,13 @@
     "hard swap (slang)"
    ],
    "plain": "Only one song carries the deep bass at a time, so at some point the bass jumps from the old song to the new one.",
-   "expert": "[heard in the wild] Said as \"bass swap\", \"switch lows\", \"bass switch\" or \"swap the basslines\": kill the incoming bass, then trade it at the phrase. Forum rule of thumb: never two basslines at once.",
-   "deckie": "Every blend the app suggests contains a bass swap; the label says how long the blend is rather than naming the swap.",
+   "expert": "Kill the bass of the incoming song, then trade the two at the start of a phrase. DJs say \"swap the basslines\" or \"switch the lows\", and the forum rule of thumb is never two basslines at once.",
+   "deckie": "Every blend Deckie suggests includes a bass swap; the label names the length of the blend, not the swap.",
    "related": [
     "blend",
     "phrase"
-   ]
+   ],
+   "source": "heard"
   },
   {
    "id": "fade",
@@ -146,12 +150,14 @@
     "fade mix"
    ],
    "plain": "One song gets quieter while the next gets louder. The first thing anyone learns.",
-   "expert": "[heard in the wild] Forum DJs say \"fade out\", \"crossfading\" and \"feather out\"; mobile and wedding DJs ask for a \"radio-style fade\" or a \"segue\". No beatmatching needed.",
-   "deckie": "Popups say \"Fade\", the taught name, rather than \"fade mix\". The onboarding maps Christopher's \"fade mix\" to Blend.",
+   "expert": "DJs say \"fade out\", \"crossfade\" or \"feather out\"; mobile and wedding DJs ask for a \"radio-style fade\". No beatmatching needed.",
+   "deckie": "Planned: a move tile in setup called \"Fade\", the name DJs are taught, rather than \"fade mix\", which some DJs use for a blend.",
    "related": [
     "blend",
-    "onboarding-chain"
-   ]
+    "song-chain"
+   ],
+   "source": "heard",
+   "status": "planned"
   },
   {
    "id": "tempo-ramp",
@@ -163,19 +169,20 @@
     "ramped blend"
    ],
    "plain": "While both songs play, the speed is slowly slid from the old song's pace to the new one's.",
-   "expert": "[tutorial term] Tutorials name it; forum DJs describe it instead: \"build up or drop down the tempo\", or riding the pitch through a break. Crossfader's example goes 104 to 126 over 16 bars.",
-   "deckie": "Shown as \"Ramp the tempo\". Suggested when the gap is too big to set and forget but small enough to drift across.",
+   "expert": "Tutorials name it; DJs describe it: \"build up the tempo\", or ride the pitch through a break. One tutorial goes from 104 to 126 BPM over 16 bars.",
+   "deckie": "Shown as \"Ramp the tempo\", when the tempos are too far apart to set once but close enough to drift across.",
    "related": [
     "stretch",
     "pitch-fader"
-   ]
+   ],
+   "source": "tutorial"
   },
   {
    "id": "filter-fade",
    "term": "Filter sweep",
    "group": "moves",
    "aliases": [
-    "filter fade (tutorials: NI, Digital DJ Pool)",
+    "filter fade (tutorials)",
     "sweep the filter (forums)",
     "lo-cut (Pioneer DJs)",
     "HPF out",
@@ -183,12 +190,13 @@
     "filter mix"
    ],
    "plain": "The playing song gets thinner and thinner, as if heard through a wall, while the next one rises underneath.",
-   "expert": "[heard in the wild] In the wild it is a \"filter sweep\" or \"sweep the filter to high pass\"; \"filter fade\" is the tutorial name (NI, Digital DJ Pool). Nobody says \"filter out\".",
-   "deckie": "Shown as \"Filter sweep\", the word DJs say; \"filter fade\" is the tutorial name. The app never says \"filter out\", which no source uses and which Mike did not understand.",
+   "expert": "DJs say \"filter sweep\" or \"sweep the filter to high pass\": cut the lows until only the thin top is left. \"Filter fade\" is the tutorial name.",
+   "deckie": "Shown as \"Filter sweep\", the word DJs say. Deckie avoids \"filter out\", which a DJ trying an early version did not understand.",
    "related": [
     "blend",
     "echo-out"
-   ]
+   ],
+   "source": "heard"
   },
   {
    "id": "echo-out",
@@ -199,18 +207,19 @@
     "echo freeze (Traktor, rekordbox users)",
     "delay out",
     "freeze (Traktor)",
-    "wash-out (Thomann)",
+    "wash-out (tutorials)",
     "FX out"
    ],
    "plain": "The old song stops on a beat and its echo keeps ringing while the new song starts.",
-   "expert": "[heard in the wild] Said as \"echo out\" and \"echoed out\" on the Serato forum and in YouTube titles; \"echo freeze\" is the held-tail version. Cut A on the one and let the echo ring under B.",
-   "deckie": "Shown as \"Echo out\". The app suggests it when the vocals would clash or the end of the song has no steady beat.",
+   "expert": "Said as \"echo out\" or \"echoed out\" on forums and in video titles; \"echo freeze\" holds the tail. Stop the old song on the one and let its echo ring under the new one.",
+   "deckie": "Shown as \"Echo out\", when the singing would clash or the song ends without a steady beat.",
    "related": [
     "reverb-wash",
     "loop-roll",
     "vocal-term",
     "echo-in"
-   ]
+   ],
+   "source": "heard"
   },
   {
    "id": "reverb-wash",
@@ -224,12 +233,14 @@
     "FX out"
    ],
    "plain": "The last moment of the old song is thrown into a big hall sound and left to fade under the new song.",
-   "expert": "[tutorial term] \"Wash-out\" is Thomann's tutorial word. Forum DJs describe it without a name: crank the reverb until the mix \"turns into mush\", then drop the next track into the tail.",
-   "deckie": "Shown as \"Reverb wash\", one of the effect exits in the onboarding tiles.",
+   "expert": "\"Wash-out\" is the tutorial word. DJs describe it without a name: turn the reverb up until the mix \"turns into mush\", then drop the next song into the tail.",
+   "deckie": "Planned: \"Reverb wash\", one of the effect exits among the move tiles in setup.",
    "related": [
     "echo-out",
     "loop-roll"
-   ]
+   ],
+   "source": "tutorial",
+   "status": "planned"
   },
   {
    "id": "loop-roll",
@@ -243,12 +254,14 @@
     "stutter"
    ],
    "plain": "The last beat repeats faster and faster, like a drum roll, and the next song lands on the hit.",
-   "expert": "[heard in the wild] \"Loop roll\" is said as is, from the Serato and Pioneer pad names; Traktor users say Beatmasher. Not the same as Serato's old \"Roll Out\", a brake-style effect.",
-   "deckie": "Shown as \"Loop roll\", grouped with the effect exits.",
+   "expert": "Said as is, from the pad names in Serato and on Pioneer gear; Traktor users say Beatmasher. Not Serato's old \"Roll Out\", which is a brake-style effect.",
+   "deckie": "Planned: \"Loop roll\", with the effect exits among the move tiles in setup.",
    "related": [
     "echo-out",
     "reverb-wash"
-   ]
+   ],
+   "source": "heard",
+   "status": "planned"
   },
   {
    "id": "hard-cut",
@@ -259,17 +272,18 @@
     "quick cut (hip-hop, open format)",
     "drop (US hip-hop: drop the next record)",
     "slam",
-    "stop/start (Digital DJ Tips)"
+    "stop/start (tutorials)"
    ],
    "plain": "One song stops and the next starts at once, with no overlap.",
-   "expert": "[heard in the wild] DJs just say \"cut\": \"quick cuts\", \"abrupt cuts to a significant 1\", \"scratch and cut to the next track\". \"Hard cut\" is the plain-English version; nobody says \"hard cut crossfade\".",
-   "deckie": "Shown as \"Hard cut\", never \"hard break\". It is the fallback when tempos or grids cannot be matched.",
+   "expert": "DJs just say \"cut\": \"quick cuts\", or \"scratch and cut to the next track\". \"Hard cut\" is the plain-English name.",
+   "deckie": "Shown as \"Hard cut\", never \"hard break\". It is the fallback when the tempos or the beats cannot be matched.",
    "related": [
     "cut-on-the-one",
     "slam",
     "vinyl-brake",
     "hard-cut-switch"
-   ]
+   ],
+   "source": "heard"
   },
   {
    "id": "cut-on-the-one",
@@ -279,16 +293,18 @@
     "drop it on the one (hip-hop, open format)",
     "on the one",
     "dropmix",
-    "drop mixing (Point Blank)"
+    "drop mixing (DJ schools)"
    ],
    "plain": "The new song starts exactly on the first beat of a musical section, so the switch lands where it feels natural.",
-   "expert": "[heard in the wild] \"Drop it on the one\" is how DJs say it on the Serato forum: start B on the first downbeat of the phrase. \"Drop on the four\" is when B's vocal starts a beat early.",
-   "deckie": "A flavour of the hard cut. The app uses \"drop\" only in this phrase, because alone it also means the big moment in a dance track.",
+   "expert": "\"Drop it on the one\", DJs say: start the new song on the first beat of a phrase. \"Drop on the four\" is when its singing starts a beat early.",
+   "deckie": "Planned, as a kind of hard cut. Deckie uses \"drop\" only in this phrase, because alone it also means the big moment in a dance track.",
    "related": [
     "hard-cut",
     "downbeat",
     "drop"
-   ]
+   ],
+   "source": "heard",
+   "status": "planned"
   },
   {
    "id": "slam",
@@ -298,56 +314,62 @@
     "hip hop slam (US hip-hop)",
     "slam it in",
     "drop on the one",
-    "end-to-end (Digital DJ Tips)"
+    "end-to-end (tutorials)"
    ],
    "plain": "A sudden switch at the end of a section with no fade at all.",
-   "expert": "[heard in the wild] Heard as \"slam it over to B\" and \"slam the next song in\"; hip-hop DJs say \"hip hop slam\". Not \"slamming the faders\", which forum DJs use for whacking a fader to max for show.",
-   "deckie": "Shown as \"Slam it in\", the open-format flavour of the cut.",
+   "expert": "Heard as \"slam it in\" or \"slam the next song in\"; hip-hop DJs say \"hip hop slam\". Not \"slamming the faders\", which means pushing a fader to the top for show.",
+   "deckie": "Planned: \"Slam it in\", the open-format flavour of the cut.",
    "related": [
     "hard-cut",
     "cut-on-the-one"
-   ]
+   ],
+   "source": "heard",
+   "status": "planned"
   },
   {
    "id": "chop",
    "term": "Chop",
    "group": "moves",
    "aliases": [
-    "cutting back and forth (Mike, forums)",
+    "cutting back and forth (forums)",
     "chop mix",
     "fader cuts",
     "switching back and forth (forums)"
    ],
    "plain": "Flicking between the two songs a bar or two at a time before letting the new one take over.",
-   "expert": "[heard in the wild] Forum DJs \"cut and chop\" with the crossfader, \"switching back and forth between two songs\". Mike says \"cut back and forth\". Not \"chopped and screwed\", a Houston style of slowed mixes.",
-   "deckie": "Shown as \"Chop · back and forth\". The recogniser cannot see chops yet: its switching delay hides them.",
+   "expert": "DJs \"cut and chop\" with the crossfader, switching back and forth between two songs. Not \"chopped and screwed\", a slowed-down style from Houston.",
+   "deckie": "Planned: \"Chop · back and forth\" among the move tiles. Deckie cannot follow chops yet: it waits until one song clearly takes over before it changes the screen.",
    "related": [
     "hard-cut",
     "hysteresis"
-   ]
+   ],
+   "source": "heard",
+   "status": "planned"
   },
   {
    "id": "backspin",
    "term": "Backspin",
    "group": "moves",
    "aliases": [
-    "spinback (UK, trance forums, YouTube)",
+    "spinback (UK, trance forums, video tutorials)",
     "spin back (Serato effect)",
     "rewind (ambiguous)"
    ],
    "plain": "The record is spun backwards for a beat with a whoosh, and the next song lands on the hit.",
-   "expert": "[heard in the wild] Both words are live: YouTube tutorials title it \"Spinback\" and \"Backspin\"; trance and UK forums say spinback, US and turntablists backspin. Forum verdict: fun, but cheesy if overused.",
-   "deckie": "Shown as \"Backspin\" in the cut row of the onboarding tiles; it marks a stop-style exit.",
+   "expert": "Both words are used. Video tutorials say \"spinback\" and \"backspin\"; UK and trance DJs tend to say spinback, US DJs and turntablists backspin. Fun, DJs agree, but cheesy if overused.",
+   "deckie": "Planned: \"Backspin\", among the cut moves in setup.",
    "related": [
     "vinyl-brake"
-   ]
+   ],
+   "source": "heard",
+   "status": "planned"
   },
   {
    "id": "vinyl-brake",
    "term": "Vinyl brake",
    "group": "moves",
    "aliases": [
-    "brake (Serato forum: hit the brake)",
+    "brake (hit the brake)",
     "brake effect",
     "power down",
     "tape stop (Traktor users)",
@@ -355,12 +377,13 @@
     "Vinyl Break (common misspelling)"
    ],
    "plain": "The song slows to a stop like a record player switched off, then the next song cuts in.",
-   "expert": "[heard in the wild] DJs say \"hit the brake\" or \"the brake effect\"; Pioneer prints VINYL BRAKE, and Pioneer forum posters often misspell it \"Vinyl Break\", proof the two words get confused.",
-   "deckie": "Shown as \"Vinyl brake\", and never \"brake\" alone, which looks like a typo for \"break\". Splitting today's single brake-or-cut code in the scorer is still open.",
+   "expert": "DJs say \"hit the brake\" or \"the brake effect\". Pioneer prints VINYL BRAKE, and forum posts often spell it \"Vinyl Break\".",
+   "deckie": "Shown as \"Vinyl brake\", never \"brake\" alone, which looks like a typo for \"break\".",
    "related": [
     "hard-cut",
     "backspin"
-   ]
+   ],
+   "source": "heard"
   },
   {
    "id": "tease",
@@ -373,13 +396,15 @@
     "stab (forums)"
    ],
    "plain": "A few seconds of the next song's hook are dropped in and pulled away again, so the crowd knows what is coming.",
-   "expert": "[heard in the wild] Heard as \"teasing it for a bit, then finally dropped the track\". Hip-hop DJs do a version they call the \"sample stab drop\": stab a sample of the next record on the downbeat, then drop it.",
-   "deckie": "Shown as \"Tease it\", offered as a second-tap flavour on the cut tiles.",
+   "expert": "Heard as \"teasing it for a bit, then finally dropped the track\". Hip-hop DJs have a version, the \"sample stab drop\": hit a sample of the next record on the downbeat, then drop it.",
+   "deckie": "Planned: \"Tease it\", a second-tap flavour on the cut tiles in setup.",
    "related": [
     "hard-cut",
     "echo-in",
     "scratch-in"
-   ]
+   ],
+   "source": "heard",
+   "status": "planned"
   },
   {
    "id": "half-time",
@@ -391,13 +416,15 @@
     "doubling (forums)",
     "2x"
    ],
-   "plain": "The next song is played as if it were half (or twice) the speed, because its beat feels that way.",
-   "expert": "[heard in the wild] Forum DJs mixing hip-hop into dance music talk about \"doubling\" the slow track; drum and bass and trap DJs say \"halftime\". 87 against 174, 95 against 190.",
-   "deckie": "Shown as \"Half time\" when one song's tempo is half or double the other's. Such joins score a little lower than straight ones.",
+   "plain": "Two songs can match even when one is twice as fast as the other, because every second beat lines up.",
+   "expert": "Drum and bass and trap DJs say \"halftime\"; DJs mixing hip-hop into dance music talk about \"doubling\" the slow song. 87 BPM against 174, 95 against 190.",
+   "deckie": "A pick says \"half time\" or \"double time\" when one tempo is half or double the other. Such pairs rank a little lower than straight ones.",
    "related": [
     "half-double-time",
     "felt-tempo"
-   ]
+   ],
+   "source": "heard",
+   "gloss": "and double time"
   },
   {
    "id": "key-shift",
@@ -409,13 +436,14 @@
     "pitch shift"
    ],
    "plain": "Moving a song up or down one note so it sits in tune with the other.",
-   "expert": "[tutorial term] A hardware word, CDJ-3000 KEY SHIFT and Serato's Pitch 'n Time; not seen in DJ talk. DJs rarely transpose, and when they do it is by one semitone.",
-   "deckie": "Shown as \"Key shift +1\" (or −1, ±2). Offered when a small shift turns a clash into a match.",
+   "expert": "A word from the gear: KEY SHIFT on Pioneer's CDJ-3000, Pitch 'n Time in Serato. DJs rarely change a song's key, and when they do it is by one semitone.",
+   "deckie": "Shown as \"Key shift +1\" (or −1, ±2), when a small shift turns a clash into a match.",
    "related": [
     "key",
     "clash",
-    "semitone-six-percent"
-   ]
+    "semitone"
+   ],
+   "source": "tutorial"
   },
   {
    "id": "needs-a-bridge",
@@ -428,13 +456,14 @@
     "no beat-match"
    ],
    "plain": "The two songs' speeds are too far apart to match, so getting from one to the other needs a special edit or a clean cut.",
-   "expert": "[ours] Deckie's own phrase. DJs say they reach for a \"transition track\" (\"starts at 92 BPM and somehow transitions to 126\") or just cut, which forum DJs call the easiest way.",
-   "deckie": "Shown as \"Needs a bridge\" in place of the old \"no beat-match · brake\". Such pairs score low on tempo by design.",
+   "expert": "There is no single DJ word. DJs reach for a \"transition track\" (\"starts at 92 BPM and somehow transitions to 126\"), or just cut, which forum DJs call the easiest way.",
+   "deckie": "Deckie's label for two songs whose tempos are too far apart to match. Such pairs rank low by design.",
    "related": [
     "transition-track",
     "hard-cut",
     "half-time"
-   ]
+   ],
+   "source": "ours"
   },
   {
    "id": "scratch-in",
@@ -447,13 +476,15 @@
     "cutting (turntablists)"
    ],
    "plain": "A quick scratch noise as punctuation before the next song starts.",
-   "expert": "[heard in the wild] Said as \"scratch in\" a song (DJ TechTools thread title) and \"scratch and cut to the next track\" in hip-hop threads. A short baby, chirp or transform before B lands.",
-   "deckie": "A second-tap flavour on the cut tiles in onboarding. Christopher's \"scratch\" maps here.",
+   "expert": "Said as \"scratch in\" a song, or \"scratch and cut to the next track\" in hip-hop threads: a short baby, chirp or transform scratch before the new song lands.",
+   "deckie": "Planned: a second-tap flavour on the cut tiles in setup, for DJs who would answer \"scratch\".",
    "related": [
     "hard-cut",
-    "onboarding-chain",
+    "song-chain",
     "tease"
-   ]
+   ],
+   "source": "heard",
+   "status": "planned"
   },
   {
    "id": "echo-in",
@@ -465,13 +496,15 @@
     "echo entry"
    ],
    "plain": "The next song arrives through an echo: its first hits ring in over the playing song before it lands clean on the beat.",
-   "expert": "[ours] The mirror of echo out. Feed the incoming track's first stabs or hook through a beat-synced delay, dry it up on the one. Christopher's own name for it; tutorials teach the pieces under echo freeze, spin-in and teasing, but not this word.",
-   "deckie": "Shown as \"Echo in\", an entry flavour on the onboarding tiles and in the move options, paired with Echo out. Suggested when the playing song has a steady beat and the next one has a sparse start to echo over.",
+   "expert": "The mirror of echo out: send the next song's first hits through an echo timed to the beat, then turn the echo off as it lands on the one. Tutorials teach the pieces but give it no name; \"echo in\" is Deckie's.",
+   "deckie": "Planned: \"Echo in\", a move tile paired with Echo out, suggested when the playing song has a steady beat and the next one starts sparse.",
    "related": [
     "echo-out",
     "tease",
     "scratch-in"
-   ]
+   ],
+   "source": "ours",
+   "status": "planned"
   },
   {
    "id": "bpm",
@@ -481,8 +514,8 @@
     "beats per minute"
    ],
    "plain": "How many beats a song has in a minute; a number for how fast it feels.",
-   "expert": "The tempo as a number. DJs talk tempo gaps in BPM when they are small: within 3 BPM is easy.",
-   "deckie": "Shown on the playing panel and on each pick in amber, at the deck's current pitch, not at the song's original speed.",
+   "expert": "The tempo as a number. DJs talk about gaps in BPM when they are small: within 3 BPM is easy.",
+   "deckie": "Shown for the playing song at the deck's current pitch, not at the song's original speed, and on each pick beside the pitch to set.",
    "related": [
     "tempo",
     "pitch-fader"
@@ -498,7 +531,7 @@
    ],
    "plain": "How fast the music goes.",
    "expert": "Pioneer labels the CDJ fader TEMPO; vinyl and Serato DJs call the same fader pitch.",
-   "deckie": "The app says \"pitch\" for the fader, Mike's word, and \"tempo\" for the speed of the music.",
+   "deckie": "Deckie says \"pitch\" for the fader, the word most DJs use, and \"tempo\" for the speed of the music.",
    "related": [
     "bpm",
     "pitch-fader",
@@ -515,11 +548,11 @@
     "TEMPO"
    ],
    "plain": "The slider on a turntable or CDJ that makes the song play faster or slower.",
-   "expert": "The fader you set and ride to match tempos. It reads in percent, plus or minus.",
-   "deckie": "Deckie reads it from the room: each pick says where to set the incoming deck (\"pitch +4.0%\") and the status line shows the playing deck's pitch.",
+   "expert": "The fader you set, and ride, to match tempos. It reads in percent, plus or minus.",
+   "deckie": "Deckie reads it by listening: each pick says where to set the next deck (\"pitch +4.0%\"), and the status line shows the playing deck's pitch.",
    "related": [
     "pitch-range",
-    "master-tempo",
+    "key-lock",
     "frequency-skew",
     "drift"
    ]
@@ -533,35 +566,42 @@
     "±6",
     "±10",
     "±16",
-    "WIDE"
+    "WIDE",
+    "more beat range"
    ],
    "plain": "How far the pitch fader can push the speed up or down.",
    "expert": "The fader's reach. Pioneer steps are ±6, ±10 (the CDJ default), ±16 and WIDE (±100); Serato and Rane say ±8, ±16, ±50.",
-   "deckie": "Asked in the first onboarding step. It caps which picks count as beatmatchable; Mike plays at ±16, which is not typical.",
+   "deckie": "Planned: asked in setup, so the picks Deckie calls matchable are ones your fader can reach, with a one-tap \"Widen the beat range\" during a set. Today Deckie works to ±16.",
    "related": [
     "pitch-range-cap",
     "pitch-fader",
     "widen-the-range"
-   ]
+   ],
+   "status": "planned"
   },
   {
-   "id": "master-tempo",
-   "term": "Master tempo and key lock",
+   "id": "key-lock",
+   "term": "Key lock",
    "group": "tempo",
    "aliases": [
-    "key lock",
+    "master tempo",
     "keylock",
     "pitch lock",
-    "MT"
+    "MT",
+    "time stretch"
    ],
    "plain": "A switch that lets you speed a song up without making the singer sound higher.",
-   "expert": "Keep the key while the tempo changes. Pioneer says MASTER TEMPO, Serato and Traktor say Keylock or Key Lock.",
-   "deckie": "Asked at onboarding (on, off or don't know). The app can also tell from the room: with it on, the pitch is read from drift instead of skew.",
+   "expert": "Keeps the key while the tempo changes. Pioneer calls it MASTER TEMPO; Serato and Traktor say Keylock. With it off, a faster record also sounds higher, the old vinyl way.",
+   "deckie": "Deckie reads the pitch either way: with key lock off, from how much higher or lower the song sounds; with it on, from how fast the song runs ahead of the clock. Today a key-locked change past about 4 or 5 percent may not be recognised. A setup question about key lock is planned.",
    "related": [
     "vinyl-vs-tempo-only",
     "drift",
     "frequency-skew"
-   ]
+   ],
+   "old_ids": [
+    "master-tempo"
+   ],
+   "gloss": "or master tempo"
   },
   {
    "id": "vinyl-vs-tempo-only",
@@ -574,13 +614,16 @@
    ],
    "plain": "Speeding a record up the old way makes it higher too; the modern way changes only the speed.",
    "expert": "Vinyl-style: tempo and key move together. Tempo-only: master tempo on, key kept.",
-   "deckie": "The two look different to recognition. A tempo-only change past about 4 or 5 percent fails to match today, an open design question for the catalogue.",
+   "deckie": "The two sound different to recognition. Today a tempo-only change past about 4 or 5 percent may not match; covering the whole fader range is the next step for recognition.",
    "related": [
-    "master-tempo",
+    "key-lock",
     "variant",
     "frequency-skew",
     "drift"
-   ]
+   ],
+   "public": false,
+   "merged_into": "key-lock",
+   "internal_note": "Hidden from the public dictionary Nov 12 2026: Explained inside Key lock; its recognition limit moved to that note."
   },
   {
    "id": "stretch",
@@ -592,11 +635,14 @@
    ],
    "plain": "How much one song has to be sped up or slowed down to match the other.",
    "expert": "DJs do not say stretch; they say \"pitch up 3 percent\".",
-   "deckie": "Inside the scorer the gap is a stretch in percent. On screen it becomes \"pitch +3.0%\", and the why line will drop the word.",
+   "deckie": "Inside the scoring, the gap between two tempos is a stretch in percent. On screen it becomes \"pitch +3.0%\".",
    "related": [
     "tempo-term",
     "why-line"
-   ]
+   ],
+   "public": false,
+   "merged_into": "pitch-fader",
+   "internal_note": "Hidden from the public dictionary Nov 12 2026: Internal scoring word; DJs say pitch up."
   },
   {
    "id": "beatmatching",
@@ -606,8 +652,8 @@
     "beatmixing"
    ],
    "plain": "Lining up two songs so their beats hit at the same time.",
-   "expert": "Matching tempo and phase by ear with the pitch fader and nudges. Software sync replaces it.",
-   "deckie": "The app does not beatmatch; it tells the DJ where to set the pitch so beatmatching is quick.",
+   "expert": "Matching tempo and timing by ear, with the pitch fader and small nudges. A sync button does it for you on gear that has one.",
+   "deckie": "Deckie does not beatmatch; it tells you where to set the pitch, so beatmatching is quick.",
    "related": [
     "nudge",
     "pitch-fader"
@@ -624,8 +670,8 @@
     "tempo bend"
    ],
    "plain": "A small push on the record to fix beats that are slightly out of step.",
-   "expert": "Push the platter or jog to fix phase. Riding the pitch means correcting with the fader alone, which is not for beginners.",
-   "deckie": "Not shown. Small wobbles from nudging are why the tempo-only pitch reading is rounded to half a percent.",
+   "expert": "Push the platter or jog wheel to fix the timing. Riding the pitch means correcting with the fader alone, which is not for beginners.",
+   "deckie": "Not shown. Small wobbles from nudging are why the pitch Deckie reads with key lock on is rounded to half a percent.",
    "related": [
     "beatmatching",
     "drift"
@@ -637,13 +683,14 @@
    "group": "tempo",
    "aliases": [],
    "plain": "The speed you would clap along to, which can be half or double what a machine counts.",
-   "expert": "[ours] Mike keeps \"I Put A Spell On You\" at 140: double time, by feel. The number on the file is not always the tempo you play. DJs say half time and double time; \"felt tempo\" is Deckie's word for the idea.",
-   "deckie": "The app aligns its tempo to the file's tag when a detector lands at exactly half or double. Learning how a DJ treats felt tempo is one of the dimensions.",
+   "expert": "DJs say half time and double time: a slow song tagged 70 BPM may be played at 140 by feel. \"Felt tempo\" is Deckie's name for the idea.",
+   "deckie": "When Deckie's own reading is exactly half or double the tempo written in the file, it takes the file's. Learning how each DJ hears tempo is planned.",
    "related": [
     "half-double-time",
     "half-time",
     "dimension"
-   ]
+   ],
+   "source": "ours"
   },
   {
    "id": "half-double-time",
@@ -654,13 +701,17 @@
     "2x"
    ],
    "plain": "Two songs can match even when one is twice as fast as the other, because every second beat lines up.",
-   "expert": "[heard in the wild] Running a track at half or twice the felt tempo. 87 and 174 are the same pulse.",
-   "deckie": "The scorer tries half and double before calling two tempos far apart. A half or double match gets a small penalty and the \"Half time\" label.",
+   "expert": "Running a track at half or twice the felt tempo. 87 and 174 BPM are the same pulse.",
+   "deckie": "The scoring tries half and double before calling two tempos far apart. A half or double match gets a small penalty and the \"half time\" label.",
    "related": [
     "half-time",
     "felt-tempo",
     "tempo-term"
-   ]
+   ],
+   "source": "heard",
+   "public": false,
+   "merged_into": "half-time",
+   "internal_note": "Hidden from the public dictionary Nov 12 2026: Duplicate of Half time; merged into it."
   },
   {
    "id": "transition-track",
@@ -671,28 +722,35 @@
     "tempo-change track"
    ],
    "plain": "A special version of a song made to speed up or slow down inside itself, so the DJ can get from one tempo to another.",
-   "expert": "[heard in the wild] Forum DJs reach for a \"pre-made transition track\" to get from 92 to 126 BPM. A DJ-pool edit that moves from one tempo to another, for example 70 to 90.",
-   "deckie": "The app's word for the record, never for the join. The analysis can see the tempo change inside one, which its tempo profile records.",
+   "expert": "DJs reach for a \"pre-made transition track\" to get from 92 to 126 BPM: an edit, often from a DJ pool, that changes tempo inside itself.",
+   "deckie": "Deckie's word for the record, never for the change between two songs. Its analysis measures each song's start and end tempo, so it sees the change.",
    "related": [
     "needs-a-bridge",
     "tempo-profile"
-   ]
+   ],
+   "source": "heard"
   },
   {
-   "id": "semitone-six-percent",
-   "term": "About 6 percent is a semitone",
+   "id": "semitone",
+   "term": "Semitone",
    "group": "tempo",
    "aliases": [
-    "one semitone"
+    "one semitone",
+    "half step"
    ],
-   "plain": "Speed a record up by about 6 percent and every note goes up by one step.",
-   "expert": "Why DJs with key lock off stay within 5 or 6 percent: past that, the key has moved a semitone.",
-   "deckie": "Without key lock, a pitch change moves the key too, so the app counts a 6 percent change as a key move when it checks whether two songs agree.",
+   "plain": "The smallest step between two notes. Speed a record up by about 6 percent and every note goes up one semitone.",
+   "expert": "Why DJs with key lock off keep within 5 or 6 percent: past that, the key has moved a semitone.",
+   "deckie": "Planned: without key lock a pitch change moves the key too, so Deckie will count a 6 percent change as a key move when it checks whether two songs agree.",
    "related": [
-    "master-tempo",
+    "key-lock",
     "key-shift",
     "key"
-   ]
+   ],
+   "status": "planned",
+   "old_ids": [
+    "semitone-six-percent"
+   ],
+   "gloss": "about a 6% pitch change"
   },
   {
    "id": "widen-the-range",
@@ -702,14 +760,18 @@
     "more beat range",
     "more range"
    ],
-   "plain": "A one-tap popup during a set that lets the app offer songs that need a bigger speed change to match.",
-   "expert": "The DJ's ask when the fader can reach further than the picks assume: \"give me more beat range\".",
-   "deckie": "An in-set popup, \"Widen the beat range (±16)\", that lifts the pitch range cap for this gig. Christopher's \"more beat range\"; it maps straight to the pitch range cap slider.",
+   "plain": "A one-tap choice during a set that lets Deckie offer songs that need a bigger speed change to match.",
+   "expert": "What a DJ wants when the fader can reach further than the picks assume: more beat range.",
+   "deckie": "Planned: a one-tap popup during a set, \"Widen the beat range (±16)\", that lifts the pitch range cap for this gig.",
    "related": [
     "pitch-range-cap",
     "pitch-range",
     "tempo-term"
-   ]
+   ],
+   "status": "planned",
+   "public": false,
+   "merged_into": "pitch-range",
+   "internal_note": "Hidden from the public dictionary Nov 12 2026: Planned popup; folded into Pitch range."
   },
   {
    "id": "key",
@@ -720,8 +782,8 @@
     "key code"
    ],
    "plain": "The home note a song is built around, which makes some songs sound good together and others sour.",
-   "expert": "Tonic plus major or minor. DJs say \"key\" for the note and \"pitch\" for the fader.",
-   "deckie": "The analysis gives each song one key, mapped to the Camelot wheel. Key is a warning when it clashes, not a score to chase.",
+   "expert": "The home note, plus major or minor. DJs say \"key\" for the music and \"pitch\" for the fader.",
+   "deckie": "Each song gets a key, shown as a Camelot code, with any key change marked. No key reader is right every time, most often mixing up major and minor, so Deckie marks a key it is unsure of. A clash is a warning, not a score to chase.",
    "related": [
     "camelot",
     "in-key",
@@ -740,8 +802,8 @@
     "8A"
    ],
    "plain": "A clock face of keys numbered 1 to 12, so you can see at a glance which songs fit.",
-   "expert": "Mixed In Key's codes, 1A to 12B (A minor, B major); +2 is its advanced \"energy boost\". Traktor's Open Key is the same wheel numbered differently.",
-   "deckie": "The app shows keys as Camelot codes and judges each join by how far apart the codes sit on the wheel.",
+   "expert": "Codes 1A to 12B from Mixed In Key (A for minor, B for major); a step of +2 is what it calls an \"energy boost\". Traktor's Open Key is the same wheel, numbered differently.",
+   "deckie": "Deckie shows keys as Camelot codes and judges two songs by how far apart they sit on the wheel.",
    "related": [
     "neighbour",
     "relative"
@@ -756,8 +818,8 @@
     "harmonically compatible"
    ],
    "plain": "Two songs that sound good played together.",
-   "expert": "Same Camelot code, one step round the wheel, or the A to B swap. Anything else risks a clash.",
-   "deckie": "The pick's grey line says \"in key\" when it is. The key slider can put in-key picks first.",
+   "expert": "Same Camelot code, one step round the wheel, or the swap between A and B. Anything else risks a clash.",
+   "deckie": "A pick's line warns when the keys clash and stays quiet when they fit. A key setting that can put in-key picks first is planned.",
    "related": [
     "clash",
     "neighbour",
@@ -774,16 +836,17 @@
     "plus or minus one"
    ],
    "plain": "A key right next to this one on the wheel; it usually sounds smooth.",
-   "expert": "Camelot same letter, number plus or minus one. One of the three \"smooth\" moves.",
-   "deckie": "Scored nearly as well as the same key.",
+   "expert": "Same letter, number one up or down: 8A to 7A or 9A. One of the three smooth moves.",
+   "deckie": "Ranked nearly as well as the same key.",
    "related": [
     "camelot",
     "in-key"
-   ]
+   ],
+   "gloss": "on the Camelot wheel"
   },
   {
    "id": "relative",
-   "term": "Relative",
+   "term": "Relative key",
    "group": "key",
    "aliases": [
     "A to B",
@@ -792,7 +855,7 @@
    ],
    "plain": "The major and minor versions of a key that share all their notes.",
    "expert": "Same Camelot number, A to B or back. Smooth, with a change of mood.",
-   "deckie": "Scored a little below a neighbour. It is also the commonest disagreement between two key detectors.",
+   "deckie": "Ranked a little below a neighbour. It is also the mistake key readers make most: the right home note, the wrong mode.",
    "related": [
     "camelot",
     "in-key",
@@ -801,15 +864,15 @@
   },
   {
    "id": "clash",
-   "term": "Clash",
+   "term": "Key clash",
    "group": "key",
    "aliases": [
-    "key clash",
+    "clash",
     "keys clash"
    ],
    "plain": "Two songs in keys that sound sour together.",
-   "expert": "The DJ word for incompatible keys. The risky vocabulary: dramatic, tension, forced.",
-   "deckie": "The pick's line says \"keys clash\". Depending on the key slider the app ignores clashes, flags them, or puts in-key picks first.",
+   "expert": "The DJ word for keys that do not fit. On purpose it can add tension; by accident it sounds forced.",
+   "deckie": "A pick's line says \"key clash\". Planned: a key setting with three choices, Off, Flag clashes and In key first; In key first also stops the longest blends on a clash.",
    "related": [
     "in-key",
     "key-shift",
@@ -825,13 +888,14 @@
     "truck driver's gear change"
    ],
    "plain": "When a song changes key partway through, often a lift for the last chorus.",
-   "expert": "A key change inside the track: Love On Top steps up four times at the end.",
-   "deckie": "Measured in stage 1: Apple's framework reported one key for songs that clearly modulate. A small windowed key estimator, with hysteresis so it does not flicker, is planned for the few that do.",
+   "expert": "A key change inside the track; in pop, often a step up for the last chorus.",
+   "deckie": "Deckie reads the key through the song and starts a new one only when the music moves and stays there. It also reads the key at each end of the song, where the mixing happens: a song that steps up for its last chorus ends in another key.",
    "related": [
     "window-key",
     "music-understanding",
     "hysteresis"
-   ]
+   ],
+   "gloss": "a key change"
   },
   {
    "id": "window-key",
@@ -839,16 +903,19 @@
    "group": "key",
    "aliases": [
     "window key",
-    "join key"
+    "handover key"
    ],
    "plain": "The key that matters for a mix is the key at the moment of the handover, not the song's overall key.",
-   "expert": "What you hear at the join: the outgoing track's ending and the incoming track's opening.",
-   "deckie": "Planned, not built: the scorer would read the key of the mix-out and mix-in windows. For Love On Top that is E major, two steps from the C major every whole-song analysis reports.",
+   "expert": "What you hear at the handover: the outgoing track's ending and the incoming track's opening.",
+   "deckie": "Deckie's analysis reads the key of the mix-in and mix-out windows and flags a window far from the song's key: in a song that steps up for its last chorus, the end is not in the key the whole-song reading reports. Using it in the scoring is planned.",
    "related": [
     "modulation",
     "mix-out-window",
     "key-term"
-   ]
+   ],
+   "public": false,
+   "merged_into": "modulation",
+   "internal_note": "Hidden from the public dictionary Nov 12 2026: Analysis idea with no DJ word; folded into Modulation."
   },
   {
    "id": "beat",
@@ -874,8 +941,8 @@
     "measure"
    ],
    "plain": "A group of beats, usually four, that repeats.",
-   "expert": "DJs count joins in bars: 8-bar, 16-bar, 32-bar.",
-   "deckie": "Blend lengths are labelled in bars. Most songs are four beats to the bar, but the app now records the real number per track, since some are in three.",
+   "expert": "DJs count blends in bars: 8-bar, 16-bar, 32-bar.",
+   "deckie": "Blend lengths are labelled in bars. Most songs are four beats to the bar, but Deckie records the real number for each song, since some are in three.",
    "related": [
     "beat",
     "phrase"
@@ -891,7 +958,7 @@
    ],
    "plain": "The first and strongest beat of each group.",
    "expert": "Beat one of a bar. \"On the one\" means the first beat of a phrase, not just any bar.",
-   "deckie": "Cuts land on the downbeat. How well the analysis agrees on downbeats is one of the stage 1 measures.",
+   "deckie": "Cuts land on the downbeat, so the analysis finds the first beat of every bar.",
    "related": [
     "cut-on-the-one",
     "phrase",
@@ -905,11 +972,13 @@
    "aliases": [
     "phrasing",
     "phrase mixing",
-    "phrase matching"
+    "phrase matching",
+    "phrase grid",
+    "8 bars"
    ],
    "plain": "A musical paragraph, usually 8, 16 or 32 bars, after which something changes.",
-   "expert": "8, 16 or 32 bar blocks. Phrasing is aligning joins to them so changes land where the music expects.",
-   "deckie": "The app aims joins at phrase boundaries and scores whether both songs have enough room for a phrase-length blend.",
+   "expert": "Blocks of 8, 16 or 32 bars. Phrasing, or phrase mixing, is lining transitions up with them so changes land where the music expects.",
+   "deckie": "Deckie lines a ruler of 8-bar steps up with where the music actually changes, aims each transition at the start of a phrase, and checks that both songs have room for a phrase-length blend.",
    "related": [
     "eight-bar-lattice",
     "phrase-term",
@@ -930,7 +999,10 @@
     "phrase",
     "mix-in-window",
     "structure-sections"
-   ]
+   ],
+   "public": false,
+   "merged_into": "phrase",
+   "internal_note": "Hidden from the public dictionary Nov 12 2026: Internal name; DJs say phrase. Folded into Phrase."
   },
   {
    "id": "intro",
@@ -941,8 +1013,8 @@
     "intro edit"
    ],
    "plain": "The opening of a song, before the main part.",
-   "expert": "A DJ intro is beat-only bars at the start, made for mixing in. Pop originals often have none.",
-   "deckie": "\"Clean 16-bar intro\" is one of the reasons the app gives. A short intro gets a flag and narrows the moves.",
+   "expert": "A DJ intro is bars of beat only at the start, made for mixing in. Pop originals often have none.",
+   "deckie": "\"Clean 16-bar intro\" is one of the reasons Deckie gives. A short intro gets a flag and narrows the moves.",
    "related": [
     "mix-in-window",
     "vocal-free-bars"
@@ -957,8 +1029,8 @@
     "outro edit"
    ],
    "plain": "The closing part of a song as it winds down.",
-   "expert": "Beat-only bars at the end of a DJ edit, made for mixing out.",
-   "deckie": "The mix-out window lives here. A short or vocal outro pushes the app toward an echo out or a cut.",
+   "expert": "Bars of beat only at the end of a DJ edit, made for mixing out.",
+   "deckie": "Where Deckie looks for the best place to hand over, measured from where the music really ends, not from silence. A short or sung outro points toward an echo out or a cut.",
    "related": [
     "mix-out-window",
     "fade-out"
@@ -973,8 +1045,8 @@
     "the down"
    ],
    "plain": "The quiet part in a dance track where the drums drop away.",
-   "expert": "The stripped section before a drop.",
-   "deckie": "The structure analysis finds sections and marks their energy high or low; low-energy middle sections are labelled breaks.",
+   "expert": "The stripped-back section before a drop.",
+   "deckie": "Deckie's analysis finds the sections of a song and marks quiet ones in the middle as breaks.",
    "related": [
     "build",
     "drop",
@@ -1003,8 +1075,8 @@
    "group": "structure",
    "aliases": [],
    "plain": "The big moment when everything comes back in.",
-   "expert": "Where everything lands. Also the verb in \"drop it on the one\", and a radio jingle.",
-   "deckie": "The app uses \"drop\" only with \"on the one\" to avoid the confusion.",
+   "expert": "Where everything lands. Also a verb, as in \"drop it on the one\", and a radio jingle.",
+   "deckie": "Deckie uses \"drop\" only in \"drop it on the one\", to avoid the confusion.",
    "related": [
     "build",
     "cut-on-the-one"
@@ -1019,8 +1091,8 @@
     "intro window"
    ],
    "plain": "The stretch at the start of a song that is best for bringing it in.",
-   "expert": "Where you would start the incoming track: a clean intro, ideally without vocals.",
-   "deckie": "Marked IN on the whole-song wave. The analysis sizes it at 8, 16 or 32 bars by how much vocal-free intro there is. Tapping a join wave cycles other start points.",
+   "expert": "Where you would start the next song: a clean intro, ideally without singing.",
+   "deckie": "Marked IN on the song's wave, 8, 16 or 32 bars long depending on how much intro there is without singing. Tapping a pick's wave tries other start points.",
    "related": [
     "mix-out-window",
     "vocal-free-bars",
@@ -1036,8 +1108,8 @@
     "outro window"
    ],
    "plain": "The stretch near the end of a song that is best for handing over.",
-   "expert": "Where you would start bringing the next one in: a clean outro before the record ends or fades.",
-   "deckie": "Marked SYNC on the wave (the analysed window, not software sync). It is sized like the mix-in window and ends before any fade-out.",
+   "expert": "Where you would start bringing the next song in: a clean outro, before the record ends or fades.",
+   "deckie": "Marked SYNC on the wave (the place, not the sync button), sized like the mix-in window and ending before any fade-out.",
    "related": [
     "sync-area",
     "mix-in-window",
@@ -1049,9 +1121,9 @@
    "term": "Sync area",
    "group": "structure",
    "aliases": [],
-   "plain": "The app's note telling you when the best handover point is coming.",
-   "expert": "The window to start the next record in.",
-   "deckie": "A small note under the wave: \"sync area in 0:37\", then \"sync area · 16 bars left\". It replaced a countdown, because the app recommends rather than prescribes.",
+   "plain": "Deckie's note telling you when the best place to hand over is coming.",
+   "expert": "DJs call it the window to start the next record in.",
+   "deckie": "A small note under the wave: \"sync area in 0:37\", then \"sync area · 16 bars left\". It replaced a countdown, because Deckie recommends rather than prescribes.",
    "related": [
     "mix-out-window",
     "recommend-not-prescribe"
@@ -1063,11 +1135,12 @@
    "group": "structure",
    "aliases": [
     "instrumental bars",
-    "beat-only bars"
+    "beat-only bars",
+    "vocal activity"
    ],
    "plain": "The bars at the edge of a song with no singing.",
    "expert": "Room to blend without two voices fighting.",
-   "deckie": "Counted for each mix window. Long blends need at least 16 vocal-free bars; too few flags a short intro or outro. Also recorded with what the free bars hold: beat only, ambient (a riser or a pad), fade, or sung from bar 1.",
+   "deckie": "Counted at each end of the song. Blends of 16 bars or more need that many; too few flags a short intro or outro. The crate file also says what those bars hold: beat only, a riser or pad, a fade, or singing from bar 1.",
    "related": [
     "long-blend",
     "pickup",
@@ -1089,7 +1162,10 @@
    "related": [
     "fade-out",
     "bar"
-   ]
+   ],
+   "public": false,
+   "merged_into": "outro",
+   "internal_note": "Hidden from the public dictionary Nov 12 2026: Analysis detail, not a word people look up."
   },
   {
    "id": "fade-out",
@@ -1108,20 +1184,23 @@
    ]
   },
   {
-   "id": "signature",
-   "term": "Signature",
+   "id": "fingerprint",
+   "term": "Fingerprint",
    "group": "recognition",
    "aliases": [
-    "fingerprint",
-    "audio fingerprint"
+    "audio fingerprint",
+    "signature"
    ],
-   "plain": "A compact sound print of a song that a phone can match against, without holding the song.",
-   "expert": "A fingerprint. It cannot be turned back into audio.",
-   "deckie": "Made from each of the DJ's files, about 45 KB each. Because they are not audio, signatures may travel in the crate file to a device that has no music.",
+   "plain": "A compact sound print of a song that a device can match what it hears against, without holding the song.",
+   "expert": "How song-finder apps recognise music. A fingerprint cannot be turned back into audio.",
+   "deckie": "Deckie Desk makes one from each of your songs, a few tens of kilobytes each, and they travel in the crate file. On the iPad, Apple's ShazamKit matches against those alone, offline: Deckie carries no catalogue of other music. Today each matches within about 4 percent of the song's own speed; covering the whole pitch fader is planned.",
    "related": [
     "catalogue",
     "variant",
     "crate-file"
+   ],
+   "old_ids": [
+    "signature"
    ]
   },
   {
@@ -1132,33 +1211,37 @@
     "catalog",
     "custom catalogue"
    ],
-   "plain": "The list of songs the app can recognise.",
-   "expert": "The library the matcher knows. In most apps it is everything; in Deckie it is your bag.",
-   "deckie": "Built with Apple's ShazamKit on the device from the DJ's own signatures, per crate file, fully offline. No bundled catalogue of commercial music in any public build.",
+   "plain": "The list of songs Deckie can recognise.",
+   "expert": "The library the matcher knows. In most apps it is everything; in Deckie it is your crate.",
+   "deckie": "Built with Apple's ShazamKit on the iPad from the signatures in the crate file, fully offline. Deckie bundles no catalogue of other people's music.",
    "related": [
-    "signature",
+    "fingerprint",
     "crate",
     "privacy-promise"
-   ]
+   ],
+   "public": false,
+   "merged_into": "fingerprint",
+   "internal_note": "Hidden from the public dictionary Nov 12 2026: Folded into Fingerprint."
   },
   {
    "id": "variant",
    "term": "Variant",
    "group": "recognition",
    "aliases": [
-    "pitch variant",
-    "o",
-    "r+4",
-    "t-4"
+    "pitch variant"
    ],
    "plain": "Extra copies of a song's sound print made at different speeds, so it still matches when the DJ changes the pitch.",
    "expert": "Like having the record at several pitch settings in your head.",
-   "deckie": "Today: the original plus vinyl-style −4 and +4 percent. Stage 1 found each covers about 4 to 5 percent, so ±8 and ±16 variants would reach a 16 percent range. Tempo-only variants are an open question.",
+   "deckie": "Planned: extra signatures at other speeds, or listening at several speeds at once, to cover a fader at ±16. Today each song has one signature, which matches within about 4 percent of its own speed.",
    "related": [
     "vinyl-vs-tempo-only",
     "frequency-skew",
     "pitch-range"
-   ]
+   ],
+   "status": "planned",
+   "public": false,
+   "merged_into": "fingerprint",
+   "internal_note": "Hidden from the public dictionary Nov 12 2026: Planned recognition detail; folded into Fingerprint."
   },
   {
    "id": "frequency-skew",
@@ -1169,12 +1252,15 @@
    ],
    "plain": "How much higher or lower the song sounds than the original, which tells you how far the record is sped up.",
    "expert": "Vinyl-style pitch: speed and key move together.",
-   "deckie": "Reported by the matcher. With key lock off, the deck's pitch is read straight from it.",
+   "deckie": "Reported by the matcher. With key lock off, Deckie reads the deck's pitch straight from it.",
    "related": [
     "drift",
     "pitch-fader",
-    "master-tempo"
-   ]
+    "key-lock"
+   ],
+   "public": false,
+   "merged_into": "key-lock",
+   "internal_note": "Hidden from the public dictionary Nov 12 2026: Recognition detail; how pitch is read is in Key lock."
   },
   {
    "id": "position",
@@ -1186,10 +1272,13 @@
    ],
    "plain": "Where in the song the music currently is.",
    "expert": "Elapsed and remaining, as the deck shows.",
-   "deckie": "The match says where in the song it heard; the app then runs a clock at the detected speed. It shows the song time and never competes with the deck's own display.",
+   "deckie": "The match says where in the song it heard; Deckie then runs a clock at the detected speed. It shows the song time and never competes with the deck's own display.",
    "related": [
     "drift"
-   ]
+   ],
+   "public": false,
+   "merged_into": "recognition",
+   "internal_note": "Hidden from the public dictionary Nov 12 2026: Recognition detail, not a word people look up."
   },
   {
    "id": "drift",
@@ -1203,9 +1292,12 @@
    "deckie": "With key lock on, pitch is read from how fast the matched position runs ahead, over at least 20 seconds, rounded to 0.5 percent. Until then it shows ±0%.",
    "related": [
     "frequency-skew",
-    "master-tempo",
+    "key-lock",
     "position"
-   ]
+   ],
+   "public": false,
+   "merged_into": "key-lock",
+   "internal_note": "Hidden from the public dictionary Nov 12 2026: Recognition detail; how pitch is read is in Key lock."
   },
   {
    "id": "confidence",
@@ -1216,13 +1308,14 @@
     "likely",
     "unsure"
    ],
-   "plain": "How sure the app is that it has the right song.",
+   "plain": "How sure Deckie is that it has the right song.",
    "expert": "Whether to trust the readout.",
-   "deckie": "The status line says sure, likely or unsure. It comes from how many recent matches agree, how well their timings line up, and fades after 20 seconds with no match.",
+   "deckie": "The status line says sure, likely or unsure, from how many recent matches agree and how well their timing lines up. A new song replaces the old one on screen only once it clearly wins: a few seconds after a cut, about 10 seconds into a blend.",
    "related": [
     "hysteresis",
     "loud-room"
-   ]
+   ],
+   "no_dj_line": true
   },
   {
    "id": "hysteresis",
@@ -1233,11 +1326,14 @@
    ],
    "plain": "Waiting until a change is clear before reacting, so the screen does not flicker back and forth.",
    "expert": "Not a DJ word. What a DJ would call not jumping the gun.",
-   "deckie": "The panel switches only once the new song clearly wins. It is also why the app cannot see chops yet, and why a windowed key reading would need it.",
+   "deckie": "The playing song changes on screen only once the new song clearly wins. It is also why Deckie cannot see chops yet.",
    "related": [
     "hard-cut-switch",
     "chop"
-   ]
+   ],
+   "public": false,
+   "merged_into": "confidence",
+   "internal_note": "Hidden from the public dictionary Nov 12 2026: Not a DJ word; folded into Confidence."
   },
   {
    "id": "hard-cut-switch",
@@ -1246,13 +1342,16 @@
    "aliases": [
     "song change"
    ],
-   "plain": "The app changes the song on screen quickly after a cut, and more slowly during a long mix.",
+   "plain": "Deckie changes the song on screen quickly after a cut, and more slowly during a long mix.",
    "expert": "Two very different handovers to listen through.",
    "deckie": "A cut (old song stops matching, new one matches 3 times in 6 seconds) switches in about 4 to 5 seconds. In a blend the panel shows \"also hearing: …\" and switches after the new song has out-matched the old for about 10 seconds.",
    "related": [
     "hysteresis",
     "hard-cut"
-   ]
+   ],
+   "public": false,
+   "merged_into": "confidence",
+   "internal_note": "Hidden from the public dictionary Nov 12 2026: Recognition detail; folded into Confidence."
   },
   {
    "id": "paused",
@@ -1261,13 +1360,16 @@
    "aliases": [
     "listening…"
    ],
-   "plain": "When the music stops, the app holds the song on screen instead of forgetting it.",
+   "plain": "When the music stops, Deckie holds the song on screen instead of forgetting it.",
    "expert": "The deck is stopped or the room went quiet.",
    "deckie": "Position freezes and the status shows \"paused\"; it resumes from the new place when matches return. After 2 minutes with no match it goes back to \"listening…\".",
    "related": [
     "position",
     "confidence"
-   ]
+   ],
+   "public": false,
+   "merged_into": "confidence",
+   "internal_note": "Hidden from the public dictionary Nov 12 2026: Screen state, not a word people look up."
   },
   {
    "id": "loud-room",
@@ -1276,45 +1378,58 @@
    "aliases": [
     "crowd noise"
    ],
-   "plain": "A noisy club makes it harder for the app to hear the music.",
+   "plain": "A noisy club makes it harder for Deckie to hear the music.",
    "expert": "Booth monitors versus a shouting floor.",
-   "deckie": "Not measured yet. A level meter helps place the device, and the crate list lets the DJ set the song by hand, which the app marks so no pitch is learned from it.",
+   "deckie": "Not yet measured in a real room. A level meter helps place the iPad, and the DJ can tap the song in the crate to set it by hand.",
    "related": [
     "confidence",
-    "time-to-id"
-   ]
+    "recognition"
+   ],
+   "public": false,
+   "merged_into": "recognition",
+   "internal_note": "Hidden from the public dictionary Nov 12 2026: Folded into Recognition."
   },
   {
-   "id": "time-to-id",
-   "term": "Time to identification",
+   "id": "recognition",
+   "term": "Recognition",
    "group": "recognition",
    "aliases": [
-    "recognition delay"
+    "track ID",
+    "song recognition",
+    "time to identification"
    ],
-   "plain": "How long after a song starts the app names it.",
+   "plain": "Working out which song is playing from the sound alone.",
    "expert": "How long a DJ will wait before looking away.",
-   "deckie": "Today a song shows up after 5 to 10 seconds of music. The trial's pass mark is within 15 seconds on at least 85 percent of songs; not yet measured in a real room.",
+   "deckie": "Deckie Booth names the song from your crate after a few seconds of music; the aim is within 15 seconds for most songs. Not yet measured in a loud room: a level meter helps place the iPad, and you can tap a song to set it by hand.",
    "related": [
     "loud-room",
     "testflight"
-   ]
+   ],
+   "no_dj_line": true,
+   "old_ids": [
+    "time-to-id"
+   ],
+   "gloss": "naming the song by its sound"
   },
   {
    "id": "music-understanding",
    "term": "Music Understanding",
    "group": "analysis",
    "aliases": [
-    "MU",
-    "Apple's framework"
+    "Apple's music analysis"
    ],
-   "plain": "Apple's built-in music analysis on iPhone, iPad and Mac, which works offline.",
-   "expert": "What rekordbox's analysis does, but built into the phone.",
-   "deckie": "The engine's base since decision D11: beats, bars, tempo, key, sections, instrument activity and loudness. In stage 1 it matched the lab on beats, tempo, key and loudness.",
+   "plain": "Apple's built-in music analysis on iPhone, iPad and Mac (iOS and macOS 27), which works offline.",
+   "expert": "What DJ software's track analysis does, built into the device.",
+   "deckie": "Planned: Deckie will use it where the device has it, for beats, bars, tempo, key, sections, instrument activity and loudness. Elsewhere Deckie uses its own analysis, which runs today.",
    "related": [
     "the-lab",
     "fallback-levels",
     "f-measure"
-   ]
+   ],
+   "status": "planned",
+   "public": false,
+   "merged_into": "structure-sections",
+   "internal_note": "Hidden from the public dictionary Nov 12 2026: Apple framework name, planned; not a DJ word."
   },
   {
    "id": "beat-grid",
@@ -1325,8 +1440,8 @@
     "grid"
    ],
    "plain": "A ruler of evenly spaced beats laid over the song.",
-   "expert": "The beat map sync and quantize rely on. \"Shaky beat grid\" is a fine DJ phrase.",
-   "deckie": "The engine fits one steady grid to the beats it hears. Joins, bars and windows are all measured against it.",
+   "expert": "\"Shaky beat grid\" is a common DJ complaint: sync and quantize rely on the grid.",
+   "deckie": "Deckie fits one steady grid to the beats it hears and scores how well it fits. Bars and mix windows are measured against it; a poor fit makes Deckie prefer cuts and echo outs over blends.",
    "related": [
     "grid-confidence",
     "beat",
@@ -1342,12 +1457,15 @@
    ],
    "plain": "How well the steady ruler fits a song that may have a live drummer or a wobbly tempo.",
    "expert": "Whether you can trust sync on this track.",
-   "deckie": "A score per track. A low one makes the app prefer cuts and echo outs over blends, and asks for a second opinion.",
+   "deckie": "A score for each song. A low one makes Deckie prefer cuts and echo outs over blends.",
    "related": [
     "beat-grid",
     "second-opinion",
     "phrase-term"
-   ]
+   ],
+   "public": false,
+   "merged_into": "beat-grid",
+   "internal_note": "Hidden from the public dictionary Nov 12 2026: Folded into Beat grid."
   },
   {
    "id": "tempo-profile",
@@ -1361,28 +1479,32 @@
    ],
    "plain": "A song's speed at its start, at its end, and along the way.",
    "expert": "Records that drift, and transition edits that change tempo on purpose.",
-   "deckie": "The app measures the start and end tempo and only trusts them where the beat is steady. Pairs compare the end of one with the start of the next.",
+   "deckie": "Deckie measures the start and end tempo and trusts them only where the beat is steady. A pair compares the end of one song with the start of the next.",
    "related": [
     "transition-track",
     "beat-grid"
-   ]
+   ],
+   "public": false,
+   "merged_into": "transition-track",
+   "internal_note": "Hidden from the public dictionary Nov 12 2026: Analysis detail; folded into Transition track."
   },
   {
    "id": "loudness-lufs",
-   "term": "Loudness and LUFS",
+   "term": "LUFS",
    "group": "analysis",
    "aliases": [
-    "LUFS",
+    "loudness",
     "LU",
     "integrated loudness"
    ],
    "plain": "A measure of how loud a song feels, not just how high its peaks go.",
-   "expert": "The broadcast loudness standard. \"Normalise the volume\" was the first thing Mike asked for.",
-   "deckie": "Measured per track and per bar. Per-bar loudness feeds the energy term and section energy.",
+   "expert": "The broadcast loudness standard.",
+   "deckie": "Measured for each song and each bar. It draws the waves, and compares how hard two songs hit at the handover.",
    "related": [
     "true-peak",
     "energy-term"
-   ]
+   ],
+   "gloss": "loudness units"
   },
   {
    "id": "true-peak",
@@ -1392,8 +1514,8 @@
     "dBTP"
    ],
    "plain": "The loudest instant of a song, measured carefully enough to catch clipping.",
-   "expert": "The real top of the waveform, in dB.",
-   "deckie": "Measured and stored for each track. The lab's renderer uses it to master mixes; the booth app does not show it.",
+   "expert": "The real top of the waveform, in decibels.",
+   "deckie": "Measured and stored for each song. Deckie Booth does not show it.",
    "related": [
     "loudness-lufs"
    ]
@@ -1408,12 +1530,15 @@
    ],
    "plain": "Which parts of a song have singing.",
    "expert": "Where the vocal is, so two voices do not fight.",
-   "deckie": "Read per bar. The lab's detector heard voice in 87 percent of bars, too many; Apple's reads about half. Thresholds will be retuned after a listening check.",
+   "deckie": "Read for each bar, as a level from 0 to 1. Checking it against songs labelled by DJs' ears is the next step; sampled and chopped vocals are the hard case.",
    "related": [
     "instrument-activity",
     "vocal-term",
     "vocal-free-bars"
-   ]
+   ],
+   "public": false,
+   "merged_into": "vocal-free-bars",
+   "internal_note": "Hidden from the public dictionary Nov 12 2026: Analysis detail; folded into Vocal-free bars."
   },
   {
    "id": "instrument-activity",
@@ -1424,23 +1549,27 @@
    ],
    "plain": "For each moment, how much vocal, drums, bass and other parts are playing.",
    "expert": "Like seeing the stems without separating them.",
-   "deckie": "Apple's framework gives a 0 to 1 level over time for vocal, drum, bass and other. Stored per bar in the crate file.",
+   "deckie": "Planned: from Apple's music analysis where the device has it, a level from 0 to 1 over time for vocal, drums, bass and the rest, stored per bar in the crate file.",
    "related": [
     "vocal-activity",
     "music-understanding"
-   ]
+   ],
+   "status": "planned",
+   "public": false,
+   "merged_into": "structure-sections",
+   "internal_note": "Hidden from the public dictionary Nov 12 2026: Planned analysis detail, not a word people look up."
   },
   {
    "id": "structure-sections",
-   "term": "Structure sections",
+   "term": "Song structure",
    "group": "analysis",
    "aliases": [
     "sections",
     "segments"
    ],
    "plain": "The parts a song is made of: intro, main part, break, outro.",
-   "expert": "rekordbox labels phrases Intro, Up, Down, Chorus, Outro for dance music.",
-   "deckie": "Apple's framework finds every boundary the lab found plus finer ones. The 8-bar lattice and mix windows are built on top of them.",
+   "expert": "rekordbox labels phrases Intro, Up, Down, Chorus and Outro for dance music.",
+   "deckie": "Deckie's analysis finds where the music changes; the phrases and the mix windows are built on top.",
    "related": [
     "eight-bar-lattice",
     "breakdown"
@@ -1456,13 +1585,14 @@
     "kind"
    ],
    "plain": "What kind of music a song is: dance remix or pop original, which decade.",
-   "expert": "Music style matters, as Mike said live. A disco edit and a country original do not sit together.",
-   "deckie": "A track's family (dance or pop), era and kind come from the crate and a style vector. They feed the style term.",
+   "expert": "Style and era matter as much as key. A disco edit and a country original do not sit together.",
+   "deckie": "A song's family (dance or pop) and era, where the crate file has them, count toward a pick. How songs sound is compared separately.",
    "related": [
     "style-term",
     "embedding",
-    "style-slider"
-   ]
+    "open-format"
+   ],
+   "gloss": "genre and era"
   },
   {
    "id": "timbre",
@@ -1474,7 +1604,7 @@
    ],
    "plain": "What a song sounds like overall, its colour and texture.",
    "expert": "Whether two records sit in the same sonic world.",
-   "deckie": "Compared between two songs as a similarity of their overall sound, ranked against the rest of the crate.",
+   "deckie": "Deckie compares how two songs sound overall, ranked against the rest of the crate.",
    "related": [
     "timbre-term",
     "embedding"
@@ -1489,12 +1619,15 @@
    ],
    "plain": "A list of numbers that sums up how a song sounds, so similar songs end up close together.",
    "expert": "No DJ word. It is the machine's sense of \"sounds like\".",
-   "deckie": "The lab uses a large one; the crate file carries only a small style vector of a few dozen numbers.",
+   "deckie": "The crate file carries a compact style vector for each song, used to compare how songs sound.",
    "related": [
     "timbre",
     "style",
     "crate-file"
-   ]
+   ],
+   "public": false,
+   "merged_into": "timbre",
+   "internal_note": "Hidden from the public dictionary Nov 12 2026: Not a DJ word; folded into Timbre."
   },
   {
    "id": "second-opinion",
@@ -1511,7 +1644,9 @@
     "grid-confidence",
     "key",
     "relative"
-   ]
+   ],
+   "public": false,
+   "internal_note": "Described the Apple-based design; Deckie's own engine no longer works this way. Needs rewriting before it is public."
   },
   {
    "id": "fallback-levels",
@@ -1526,7 +1661,9 @@
    "related": [
     "music-understanding",
     "crate-file"
-   ]
+   ],
+   "public": false,
+   "internal_note": "Design for devices without Apple's framework; not built, and tied to OS versions not yet public."
   },
   {
    "id": "the-lab",
@@ -1542,7 +1679,9 @@
    "related": [
     "music-understanding",
     "f-measure"
-   ]
+   ],
+   "public": false,
+   "internal_note": "Internal: the research code."
   },
   {
    "id": "f-measure",
@@ -1558,7 +1697,9 @@
    "related": [
     "music-understanding",
     "downbeat"
-   ]
+   ],
+   "public": false,
+   "internal_note": "Internal: a test measure."
   },
   {
    "id": "library",
@@ -1570,7 +1711,7 @@
    ],
    "plain": "All the music a DJ owns.",
    "expert": "Your whole collection, at home. A crate is what you pull from it.",
-   "deckie": "The music itself: audio files on the DJ's own disks. Deckie reads it at home and never moves or changes it. A crate is any group of songs from the library, and can be all of it.",
+   "deckie": "The music itself: audio files on your own disks. Deckie reads it at home and never moves or changes it.",
    "related": [
     "crate",
     "crate-file",
@@ -1587,13 +1728,13 @@
     "playlist (in some software)"
    ],
    "plain": "A group of songs a DJ pulls together, for a gig or for life. It can be the whole library.",
-   "expert": "Your bag. The records you brought.",
-   "deckie": "The crate is the songs; the crate file is what Deckie knows about them. Desk reads your crate and writes a crate file. Recognition, picks and names all come from the DJ's own crate. Edits, bootlegs, live sets and burned CDs are first-class.",
+   "expert": "Your bag: the records you brought.",
+   "deckie": "The crate is the songs; the crate file is what Deckie knows about them. Deckie Desk reads your crate and writes a crate file. Edits, bootlegs, live sets and burned CDs count the same as releases.",
    "related": [
     "library",
     "crate-file",
     "catalogue",
-    "scope-chips"
+    "disc-chips"
    ]
   },
   {
@@ -1603,15 +1744,15 @@
    "aliases": [
     ".deckiecrate"
    ],
-   "plain": "What Deckie Desk writes from a crate: one file that carries everything the app knows about your songs, but not the songs themselves.",
+   "plain": "What Deckie Desk writes from a crate: one file that carries everything Deckie knows about your songs, but not the songs themselves.",
    "expert": "Like rekordbox's USB export without the music.",
-   "deckie": "A package folder of about 10 KB per track: analysis, names, preferences and history, never audio. It moves by iCloud Drive, AirDrop or Files. No server. Never called just \"the crate\": the crate is the songs.",
+   "deckie": "Analysis, names and fingerprints, never audio. It moves by AirDrop, iCloud Drive or Files, with no server in between. Never called just \"the crate\": the crate is the songs.",
    "related": [
     "crate",
     "library",
     "desk",
     "privacy-promise",
-    "signature"
+    "fingerprint"
    ]
   },
   {
@@ -1628,18 +1769,21 @@
     "dimension",
     "how-you-mix",
     "sliders"
-   ]
+   ],
+   "public": false,
+   "internal_note": "Proposed (P9), not decided."
   },
   {
    "id": "booth",
-   "term": "Booth",
+   "term": "Deckie Booth",
    "group": "product",
    "aliases": [
-    "iPad mode"
+    "the iPad app",
+    "booth view"
    ],
-   "plain": "The iPad beside the decks during a set.",
-   "expert": "The booth.",
-   "deckie": "The main mode: listen, picks, join, pin, save a pair, one-tap tuning. Today's Deck app is Booth.",
+   "plain": "The iPad app, beside the decks during a set.",
+   "expert": "The booth is where the DJ stands.",
+   "deckie": "Listens to the room, names the playing song, reads the pitch and ranks what could come next. Pin a pick, turn the Shuffle dial, or search the rest of the crate.",
    "related": [
     "pocket",
     "desk",
@@ -1660,18 +1804,20 @@
     "booth",
     "set-log",
     "tracklist"
-   ]
+   ],
+   "public": false,
+   "internal_note": "The iPhone view is in the spec but not built, and the site names only the iPad and the Mac."
   },
   {
    "id": "desk",
-   "term": "Desk",
+   "term": "Deckie Desk",
    "group": "product",
    "aliases": [
-    "Mac app"
+    "the Mac app"
    ],
-   "plain": "The Mac app where you prepare the crate at home.",
-   "expert": "Prep: analysing, naming, sorting.",
-   "deckie": "Import a folder, analyse in bulk, fix names, make signatures, export. It writes the crate file the iPad reads.",
+   "plain": "The Mac app where you prepare your music at home.",
+   "expert": "DJs call this prep: analysing, naming, sorting.",
+   "deckie": "Point it at a folder: it analyses the songs, makes their fingerprints, lets you fix names and sort songs into discs and folders, and writes the crate file. Name changes live in the crate file, never in your music files. A list of songs it could not name is planned.",
    "related": [
     "crate-file"
    ]
@@ -1684,14 +1830,84 @@
     "up next",
     "suggestions"
    ],
-   "plain": "The songs the app thinks could come next, with how to bring them in.",
-   "expert": "What could go next from your bag.",
-   "deckie": "New picks with every song: title, disc location, BPM and pitch, the join wave, one grey line. Options, never a verdict.",
+   "plain": "The songs Deckie thinks could come next, with how to bring them in.",
+   "expert": "\"Up next\", in the booth: what could go next from your bag.",
+   "deckie": "New picks with every song, best first: title, disc and folder, tempo and pitch, a wave of the transition and a line with the move. Each is ranked on tempo, key, energy, singing, phrase, sound, rhythm and style, tempo most; the number is never shown. Long-press a pick for the reasons. Options, never a verdict.",
    "related": [
-    "easy-harder",
+    "shortlist",
     "why-line",
     "join-view",
     "pin"
+   ]
+  },
+  {
+   "id": "shortlist",
+   "term": "Shortlist",
+   "group": "product",
+   "aliases": [
+    "More",
+    "rest of the crate"
+   ],
+   "plain": "The songs Deckie keeps ready for the playing song: the best tenth of the crate.",
+   "expert": "The records you would pull from the bag for what is playing.",
+   "deckie": "Never fewer than 10, leaving out anything played in the last 12 and any disc switched off. Simple shows the first 5, Full the first 10; the rest wait under More, which runs on through the whole crate and has a search.",
+   "related": [
+    "picks",
+    "shuffle",
+    "simple-full",
+    "disc-chips"
+   ]
+  },
+  {
+   "id": "shuffle",
+   "term": "Shuffle",
+   "group": "product",
+   "aliases": [
+    "Shuffle dial"
+   ],
+   "plain": "A dial that mixes some chance into the order of the picks.",
+   "expert": "Less obvious picks, without losing the good ones.",
+   "deckie": "From 0 to 100 percent. At 0 the shortlist is in score order; at 100 it is a fair shuffle; in between, the better songs tend to stay near the top. A pinned song stays first.",
+   "related": [
+    "shortlist",
+    "picks",
+    "sliders"
+   ],
+   "no_dj_line": true
+  },
+  {
+   "id": "simple-full",
+   "term": "Simple and Full",
+   "group": "product",
+   "aliases": [
+    "picks shown"
+   ],
+   "plain": "How many picks the first screen shows.",
+   "expert": "Fewer on screen in a dark booth; more when there is time to read.",
+   "deckie": "Simple shows 5 picks, Full shows 10. The rest of the shortlist waits under More.",
+   "related": [
+    "shortlist",
+    "minimal",
+    "sliders"
+   ]
+  },
+  {
+   "id": "disc-and-folder",
+   "term": "Disc and folder",
+   "group": "product",
+   "aliases": [
+    "CD",
+    "USB folder",
+    "track number",
+    "disc chips"
+   ],
+   "plain": "How the songs are laid out for a night: discs, each with numbered folders, the way your player shows them.",
+   "expert": "Where the record lives: disc 2, folder 6, track 4.",
+   "deckie": "Sorted in Deckie Desk, in the order your player shows them. Deckie Booth names the playing song with its disc, folder and track, lists the discs on its CDs tab, and gives each disc a chip to switch it on or off in the picks; All adds songs on no disc.",
+   "related": [
+    "disc-chips",
+    "crate",
+    "desk"
    ]
   },
   {
@@ -1708,7 +1924,9 @@
    "related": [
     "picks",
     "pick-difficulty"
-   ]
+   ],
+   "public": false,
+   "internal_note": "Retired Nov 1 (D19): one ranked list with a Shuffle dial replaced the Easy and Harder sections."
   },
   {
    "id": "pin",
@@ -1719,7 +1937,7 @@
    ],
    "plain": "Tap a pick to mark it as the one you are going to play.",
    "expert": "Cueing it up in your head.",
-   "deckie": "The card moves to \"Next\" at the top; tap again to unpin. A pinned pick keeps its chosen start point and counts as a signal for learning.",
+   "deckie": "The card moves to \"Next\" at the top; tap again to unpin. A pinned pick keeps its chosen start point. Counting pins as a signal for learning is planned.",
    "related": [
     "picks",
     "event-weights"
@@ -1735,12 +1953,13 @@
    ],
    "plain": "Two songs you know sound great together, saved with a note.",
    "expert": "The pair you write down on the night so you remember it.",
-   "deckie": "New in v1. Shown first when its first song is playing, and the strongest learning signal: it moves defaults at once.",
+   "deckie": "Planned: shown first when its first song is playing, and the strongest learning signal: it moves defaults at once.",
    "related": [
     "event-weights",
     "picks",
     "learned-default"
-   ]
+   ],
+   "status": "planned"
   },
   {
    "id": "why-line",
@@ -1750,14 +1969,17 @@
     "reasons",
     "why this pick"
    ],
-   "plain": "One short grey line saying why the app suggests a song.",
+   "plain": "One short grey line saying why Deckie suggests a song.",
    "expert": "The reason in DJ words: \"pitch up 3 percent\", \"no vocal clash\", \"clean 16-bar intro\".",
-   "deckie": "Under each pick, with the long version on long-press. Open: always visible or long-press only.",
+   "deckie": "Under each pick, with the full reasons on a long press.",
    "related": [
     "picks",
     "stretch",
-    "move-options"
-   ]
+    "move"
+   ],
+   "public": false,
+   "merged_into": "picks",
+   "internal_note": "Hidden from the public dictionary Nov 12 2026: Internal label; folded into Picks."
   },
   {
    "id": "join-view",
@@ -1768,8 +1990,8 @@
     "join waveform"
    ],
    "plain": "A picture of the end of this song over the start of the next, lined up where they would meet.",
-   "expert": "Seeing the two waveforms stacked like on a CDJ.",
-   "deckie": "Drawn per pick with numbered sync points. Tapping it cycles the next song's start: mix-in, track start, steady beat, then every 8 bars.",
+   "expert": "Like seeing the two waveforms stacked on a CDJ screen.",
+   "deckie": "Drawn for each pick, with the beat and bar lines. Tapping it cycles the next song's start: mix-in, track start, steady beat, then every 8 bars.",
    "related": [
     "picks",
     "mix-in-window",
@@ -1784,14 +2006,17 @@
     "tuning",
     "settings"
    ],
-   "plain": "Simple controls that change how the app suggests, in DJ words.",
+   "plain": "Simple controls that change how Deckie suggests, in DJ words.",
    "expert": "Not a settings page. Things a DJ can name and would change between gigs.",
-   "deckie": "Three on the booth screen (picks, picks shown, on screen) and five in the How you mix sheet. Each has a learned-default marker. Presets per gig come later.",
+   "deckie": "Today: the Shuffle dial, Simple and Full, the Minimal switch and the disc chips. Planned: more in DJ words, for key, style, vocals, blends against cuts and pitch range, each with a mark for what Deckie has learned.",
    "related": [
-    "pick-difficulty",
+    "shuffle",
     "how-you-mix",
     "learned-default"
-   ]
+   ],
+   "public": false,
+   "merged_into": "how-you-mix",
+   "internal_note": "Hidden from the public dictionary Nov 12 2026: Folded into How you mix."
   },
   {
    "id": "pick-difficulty",
@@ -1806,7 +2031,9 @@
    "related": [
     "easy-harder",
     "sliders"
-   ]
+   ],
+   "public": false,
+   "internal_note": "Retired Nov 1 (D19): the Shuffle dial replaced the Easy to Harder slider."
   },
   {
    "id": "options-slider",
@@ -1822,7 +2049,9 @@
    "related": [
     "sliders",
     "density"
-   ]
+   ],
+   "public": false,
+   "internal_note": "Retired Nov 1 (D19): Simple and Full replaced 3 · 5 · 10."
   },
   {
    "id": "density",
@@ -1838,7 +2067,9 @@
    "related": [
     "minimal",
     "sliders"
-   ]
+   ],
+   "public": false,
+   "internal_note": "Retired Nov 1 (D19): Simple and Full (5 or 10 picks) and the separate Minimal switch replaced it."
   },
   {
    "id": "minimal",
@@ -1846,10 +2077,10 @@
    "group": "product",
    "aliases": [],
    "plain": "A switch that hides the small waveforms so the screen is calmer.",
-   "expert": "Mike's toggle.",
+   "expert": "A calmer screen for a dark booth.",
    "deckie": "Same screen, same picks: the playing song keeps its wave and each pick becomes a compact pill with title, artist, folder, BPM and pitch, and the move.",
    "related": [
-    "density",
+    "simple-full",
     "join-view"
    ]
   },
@@ -1860,14 +2091,18 @@
    "aliases": [
     "Pitch range"
    ],
-   "plain": "The furthest the app will assume you push your pitch fader.",
+   "plain": "The furthest Deckie will assume you push your pitch fader.",
    "expert": "Your fader's steps, as printed on the gear.",
-   "deckie": "Slider in How you mix: ±6 · ±10 · ±16 · wide for Pioneer, ±8 · ±16 · ±50 for Serato and Rane, chosen from the gear answer. Learning works inside it.",
+   "deckie": "Planned: a slider in How you mix, ±6 · ±10 · ±16 · wide for Pioneer and ±8 · ±16 · ±50 for Serato and Rane, chosen from the gear question in setup. Today Deckie works to ±16.",
    "related": [
     "pitch-range",
     "widen-the-range",
     "tempo-term"
-   ]
+   ],
+   "status": "planned",
+   "public": false,
+   "merged_into": "pitch-range",
+   "internal_note": "Hidden from the public dictionary Nov 12 2026: Planned setting; folded into Pitch range."
   },
   {
    "id": "key-slider",
@@ -1876,27 +2111,37 @@
    "aliases": [
     "Key: Off · Flag clashes · In key first"
    ],
-   "plain": "How much the app cares about songs being in key.",
+   "plain": "How much Deckie cares about songs being in key.",
    "expert": "Some DJs live by the wheel; most treat key as a tool.",
-   "deckie": "Off, Flag clashes, or In key first. In key first also stops the longest blends on a clash.",
+   "deckie": "Planned: Off, Flag clashes, or In key first. In key first also stops the longest blends on a clash.",
    "related": [
     "clash",
     "in-key",
     "key-term"
-   ]
+   ],
+   "status": "planned",
+   "public": false,
+   "merged_into": "clash",
+   "internal_note": "Hidden from the public dictionary Nov 12 2026: Planned setting; folded into Key clash."
   },
   {
-   "id": "style-slider",
-   "term": "Style spread",
-   "group": "product",
+   "id": "open-format",
+   "term": "Open format",
+   "group": "analysis",
    "aliases": [
-    "Style: Stay in lane ↔ Open format"
+    "open-format DJ",
+    "multi-genre"
    ],
-   "plain": "Whether suggestions stay in one kind of music or roam across genres.",
-   "expert": "[heard in the wild] \"Open format\" is the scene's own name, all over the Serato and DJ TechTools forums, for the DJ and the set that roam genres. \"Stay in lane\" is Deckie's own phrase.",
-   "deckie": "Stay in lane to Open format. It moves how much style and timbre count.",
+   "plain": "A DJ, or a set, that moves across genres instead of staying in one.",
+   "expert": "\"Open format\" is the scene's own name, all over DJ forums.",
+   "deckie": "Planned: a setting from \"Stay in lane\" to \"Open format\", which changes how much style and sound count in the picks.",
    "related": [
     "style-term"
+   ],
+   "source": "heard",
+   "status": "planned",
+   "old_ids": [
+    "style-slider"
    ]
   },
   {
@@ -1906,14 +2151,18 @@
    "aliases": [
     "First choice: Blends first ↔ Cuts first"
    ],
-   "plain": "Whether the app suggests smooth overlaps or quick switches first.",
-   "expert": "Mike: \"blends first\".",
-   "deckie": "Labelled \"First choice\". It sets the order of the move options on each pick.",
+   "plain": "Whether Deckie suggests smooth overlaps or quick switches first.",
+   "expert": "Some DJs reach for a blend first, some for a cut.",
+   "deckie": "Planned: labelled \"First choice\". It sets the order of the move options on each pick.",
    "related": [
-    "move-options",
+    "move",
     "blend",
     "hard-cut"
-   ]
+   ],
+   "status": "planned",
+   "public": false,
+   "merged_into": "how-you-mix",
+   "internal_note": "Hidden from the public dictionary Nov 12 2026: Planned setting; folded into How you mix."
   },
   {
    "id": "vocals-slider",
@@ -1924,56 +2173,68 @@
    ],
    "plain": "Whether two songs with singing may overlap.",
    "expert": "Avoiding a clash of vocals, the classic beginner mistake. \"No vocal clash\" is already the DJ's phrase.",
-   "deckie": "No clashes to Overlap OK. It moves the vocal gate and weight.",
+   "deckie": "Planned: No clashes to Overlap OK. It moves how strictly Deckie keeps two voices apart.",
    "related": [
     "vocal-term",
     "gate"
-   ]
+   ],
+   "status": "planned",
+   "public": false,
+   "merged_into": "how-you-mix",
+   "internal_note": "Hidden from the public dictionary Nov 12 2026: Planned setting; the headword Vocals misled. Folded into How you mix."
   },
   {
-   "id": "scope-chips",
-   "term": "Scope chips",
+   "id": "disc-chips",
+   "term": "Disc chips",
    "group": "product",
    "aliases": [
-    "CD1 · CD2 · All"
+    "disc filter",
+    "All"
    ],
-   "plain": "Little switches that pick which discs or folders the suggestions come from.",
+   "plain": "Little switches that choose which discs the picks come from.",
    "expert": "Only suggest what is in the booth tonight.",
-   "deckie": "Today CD1, CD2 and All, each on or off. Open: what the chips are for a crate with no discs (folders, events or playlists).",
+   "deckie": "One chip per disc, named after it, each on or off; every disc is on to start. All adds the songs that are on no disc.",
    "related": [
     "crate"
-   ]
+   ],
+   "public": false,
+   "merged_into": "disc-and-folder",
+   "internal_note": "Hidden from the public dictionary Nov 12 2026: Folded into Disc and folder."
   },
   {
-   "id": "onboarding-chain",
-   "term": "Onboarding chain",
+   "id": "song-chain",
+   "term": "Song chain",
    "group": "product",
    "aliases": [
-    "song chain",
+    "onboarding chain",
     "move tiles"
    ],
    "plain": "Setup by example: pick a few songs in order and tap how you would mix each one.",
    "expert": "Like a rhythm-game prompt for how you mix.",
-   "deckie": "Three to five songs from the DJ's crate, then tiles per join: blends, effect exits, cuts, and \"Not sure\" or \"Something else\" so no one has to guess. Under five minutes with the gear step.",
+   "deckie": "Planned: three to five songs from the DJ's crate, then tiles for each change: blends, effect exits, cuts, and \"Not sure\" or \"Something else\" so no one has to guess. Under five minutes with the gear questions.",
    "related": [
     "how-you-mix",
     "dimension",
     "sliders"
-   ]
+   ],
+   "status": "planned",
+   "no_dj_line": true
   },
   {
    "id": "how-you-mix",
    "term": "How you mix",
    "group": "product",
    "aliases": [],
-   "plain": "A page that shows what the app has learned about your style, with undo.",
+   "plain": "A page that shows what Deckie has learned about how you mix, with undo.",
    "expert": "Your habits, written down.",
-   "deckie": "Lists each learned change and lets the DJ undo it; also holds the five deeper sliders.",
+   "deckie": "Planned: about a dozen habits learned on the device, such as how far you push the pitch, how strict you are about key and how long you blend, and settings in DJ words, such as blends or cuts first, and whether two vocals may overlap. Learning moves only a small mark beside each setting, never one you set, and says what it changed. A saved pair teaches it most.",
    "related": [
     "learned-default",
     "sliders",
-    "onboarding-chain"
-   ]
+    "song-chain"
+   ],
+   "status": "planned",
+   "no_dj_line": true
   },
   {
    "id": "set-log",
@@ -1985,10 +2246,10 @@
    ],
    "plain": "A record of the set: the audio and a timeline of what played when.",
    "expert": "Your recording, with the tracklist done for you.",
-   "deckie": "Recorded from the same microphone feed as recognition, with a log of time, track, location, pitch and confidence. \"REC 0:12:34\" pauses or resumes. The file is the DJ's own.",
+   "deckie": "Deckie Booth records the set from the same microphone it listens with, beside a log of time, song, disc location, pitch and confidence. A small REC timer pauses or resumes it. The files are the DJ's own.",
    "related": [
     "tracklist",
-    "cue-file",
+    "cue-sheet",
     "pocket"
    ]
   },
@@ -1999,26 +2260,30 @@
    "aliases": [],
    "plain": "The list of songs played in a set, in order, with times.",
    "expert": "What people ask for after every mix.",
-   "deckie": "Written as it goes, one line per song. A finished tracklist is one of the claims with DJs' own accounts behind it.",
+   "deckie": "Written as the set goes, one line per song, beside the recording. A cue sheet and a tracklist ready to paste into Mixcloud are planned exports.",
    "related": [
     "set-log",
     "mixcloud-export"
    ]
   },
   {
-   "id": "cue-file",
-   "term": "CUE",
+   "id": "cue-sheet",
+   "term": "Cue sheet",
    "group": "product",
    "aliases": [
-    "cue sheet",
+    "CUE",
     ".cue"
    ],
    "plain": "A small text file that marks where each song starts in a recording.",
    "expert": "The cue sheet that splits a mix into tracks in a player.",
-   "deckie": "Planned export from the set log. Not to be confused with a cue point on a deck.",
+   "deckie": "Planned: an export from the set log. Not to be confused with a cue point on a deck.",
    "related": [
     "set-log",
     "mixcloud-export"
+   ],
+   "status": "planned",
+   "old_ids": [
+    "cue-file"
    ]
   },
   {
@@ -2028,23 +2293,31 @@
    "aliases": [],
    "plain": "A tracklist formatted to paste into Mixcloud when you upload a mix.",
    "expert": "Mixcloud is where many DJs post sets.",
-   "deckie": "Planned text export from the set log. Deckie never uploads anything itself.",
+   "deckie": "Planned: a text export from the set log. Deckie never uploads anything itself.",
    "related": [
     "tracklist",
-    "cue-file"
-   ]
+    "cue-sheet"
+   ],
+   "status": "planned",
+   "public": false,
+   "merged_into": "tracklist",
+   "internal_note": "Hidden from the public dictionary Nov 12 2026: Planned export; folded into Tracklist."
   },
   {
    "id": "name-these",
    "term": "Name these",
    "group": "product",
    "aliases": [],
-   "plain": "A list of songs the app could not name, waiting for you.",
+   "plain": "A list of songs Deckie could not name, waiting for you.",
    "expert": "The unlabelled white labels.",
-   "deckie": "Unidentified tracks keep the DJ's own name and get full analysis; they wait in this list. The naming editor (bulk edit, undo) keeps every edit in the crate file, never in the music files.",
+   "deckie": "Planned: songs Deckie cannot name keep the DJ's own name, get full analysis and wait in this list. Today names are fixed in Deckie Desk, and every edit is kept in the crate file, never written into the music files.",
    "related": [
     "suggest-correction"
-   ]
+   ],
+   "status": "planned",
+   "public": false,
+   "merged_into": "desk",
+   "internal_note": "Hidden from the public dictionary Nov 12 2026: Planned list; folded into Deckie Desk."
   },
   {
    "id": "suggest-correction",
@@ -2052,11 +2325,15 @@
    "group": "product",
    "aliases": [],
    "plain": "An optional helper that looks a song up in public music databases and offers a better name.",
-   "expert": "Asking Discogs, but only when you want to.",
-   "deckie": "Off by default, one switch. MusicBrainz and Discogs titles only, never audio. It suggests and never applies; a fingerprint lookup is per batch and opt-in.",
+   "expert": "Asking a public music database, but only when you want to.",
+   "deckie": "Planned: off by default. It looks names up only while you build your crate file and only when you ask; it suggests and never applies, and sends no audio. Nothing is looked up during a set.",
    "related": [
     "privacy-promise"
-   ]
+   ],
+   "status": "planned",
+   "public": false,
+   "merged_into": "privacy-promise",
+   "internal_note": "Hidden from the public dictionary Nov 12 2026: Planned helper; folded into Privacy promise."
   },
   {
    "id": "open-in-youtube",
@@ -2071,19 +2348,21 @@
    "related": [
     "suggest-correction",
     "privacy-promise"
-   ]
+   ],
+   "public": false,
+   "internal_note": "Proposed (P2), not decided."
   },
   {
    "id": "privacy-promise",
-   "term": "The privacy promise",
+   "term": "Privacy promise",
    "group": "product",
    "aliases": [
     "no account",
     "no upload"
    ],
    "plain": "Your music, and your taste, stay on your own devices.",
-   "expert": "\"I'm not helping train AI for free.\"",
-   "deckie": "\"Your music stays on your iPad. No account. No upload. Works with no signal.\" History, cues, saved pairs and learning are the DJ's too: visible, exportable, deletable.",
+   "expert": "DJs worry that their choices become someone else's product.",
+   "deckie": "\"Your music stays on your iPad. No account. No upload. Works with no signal.\" What Deckie learns about your taste is planned to be yours to see, export and delete. A planned helper that suggests song names from public music databases will be off unless you ask, and sends no audio.",
    "related": [
     "crate-file",
     "data-not-collected",
@@ -2099,12 +2378,15 @@
    ],
    "plain": "A number for how well one song flows into another.",
    "expert": "Whether the mix will work, before you try it.",
-   "deckie": "Computed for every ordered pair (A into B is not B into A) from eight terms. The number itself is never shown.",
+   "deckie": "Worked out for the playing song into every other song in the crate (A into B is not B into A), from eight terms. The number itself is never shown.",
    "related": [
     "score-terms",
     "gate",
-    "move-options"
-   ]
+    "move"
+   ],
+   "public": false,
+   "merged_into": "picks",
+   "internal_note": "Hidden from the public dictionary Nov 12 2026: Scoring internal; folded into Picks."
   },
   {
    "id": "score-terms",
@@ -2113,9 +2395,9 @@
    "aliases": [
     "score terms"
    ],
-   "plain": "The separate things the app checks when it compares two songs.",
+   "plain": "The separate things Deckie checks when it compares two songs.",
    "expert": "The things a DJ weighs without thinking.",
-   "deckie": "Tempo, key, energy, vocal, phrase, timbre, rhythm and style. Tempo counts most, rhythm least. The why line names the strongest and weakest.",
+   "deckie": "Tempo, key, energy, vocal, phrase, timbre, rhythm and style. Tempo counts most, rhythm least. The reasons on a pick name the strongest and the weakest.",
    "related": [
     "tempo-term",
     "key-term",
@@ -2125,7 +2407,10 @@
     "timbre-term",
     "rhythm-term",
     "style-term"
-   ]
+   ],
+   "public": false,
+   "merged_into": "picks",
+   "internal_note": "Hidden from the public dictionary Nov 12 2026: Scoring internal; folded into Picks."
   },
   {
    "id": "tempo-term",
@@ -2134,10 +2419,13 @@
    "aliases": [],
    "plain": "How close the two songs' speeds are.",
    "expert": "1 to 2 BPM goes unnoticed, 3 to 5 needs the pitch, past 10 is a gear change. Most planned transitions sit within 3 BPM.",
-   "deckie": "The biggest single part of a pair's score. Small gaps are free, the score falls as the gap nears the DJ's range, and half and double time are tried first.",
+   "deckie": "The biggest single part of a pair's score. Gaps up to 3 percent cost nothing; the score falls gently to 10 percent and faster to 16; past 18 percent the pair is off the list. Half and double time are tried first.",
    "related": [
     "pitch-range-cap"
-   ]
+   ],
+   "public": false,
+   "merged_into": "picks",
+   "internal_note": "Hidden from the public dictionary Nov 12 2026: Scoring internal."
   },
   {
    "id": "key-term",
@@ -2151,7 +2439,10 @@
     "key",
     "key-shift",
     "window-key"
-   ]
+   ],
+   "public": false,
+   "merged_into": "picks",
+   "internal_note": "Hidden from the public dictionary Nov 12 2026: Scoring internal."
   },
   {
    "id": "energy-term",
@@ -2160,11 +2451,14 @@
    "aliases": [],
    "plain": "Whether the next song keeps the energy level or drops it suddenly.",
    "expert": "Not killing the floor.",
-   "deckie": "Compares how loud each song is at the join against its own average. Big jumps cost points.",
+   "deckie": "Compares how loud each song is at the handover against its own average. Big jumps cost points.",
    "related": [
     "loudness-lufs",
     "dimension"
-   ]
+   ],
+   "public": false,
+   "merged_into": "picks",
+   "internal_note": "Hidden from the public dictionary Nov 12 2026: Scoring internal."
   },
   {
    "id": "vocal-term",
@@ -2177,7 +2471,10 @@
    "related": [
     "vocal-activity",
     "vocals-slider"
-   ]
+   ],
+   "public": false,
+   "merged_into": "picks",
+   "internal_note": "Hidden from the public dictionary Nov 12 2026: Scoring internal."
   },
   {
    "id": "phrase-term",
@@ -2190,7 +2487,10 @@
    "related": [
     "phrase",
     "grid-confidence"
-   ]
+   ],
+   "public": false,
+   "merged_into": "picks",
+   "internal_note": "Hidden from the public dictionary Nov 12 2026: Scoring internal."
   },
   {
    "id": "timbre-term",
@@ -2199,11 +2499,14 @@
    "aliases": [],
    "plain": "Whether the two songs sound alike in texture.",
    "expert": "Same sonic world.",
-   "deckie": "From the overall-sound similarity, ranked against the rest of the crate.",
+   "deckie": "From the overall-sound similarity, ranked against every other pair in the crate.",
    "related": [
     "timbre",
-    "style-slider"
-   ]
+    "open-format"
+   ],
+   "public": false,
+   "merged_into": "picks",
+   "internal_note": "Hidden from the public dictionary Nov 12 2026: Scoring internal."
   },
   {
    "id": "rhythm-term",
@@ -2216,7 +2519,10 @@
    "related": [
     "score-terms",
     "timbre-term"
-   ]
+   ],
+   "public": false,
+   "merged_into": "picks",
+   "internal_note": "Hidden from the public dictionary Nov 12 2026: Scoring internal."
   },
   {
    "id": "style-term",
@@ -2224,12 +2530,15 @@
    "group": "scoring",
    "aliases": [],
    "plain": "Whether the songs are the same kind of music and from a similar time.",
-   "expert": "Music style matters.",
-   "deckie": "Same family (dance or pop) scores highest; a different era costs a little. Added after Mike's live note.",
+   "expert": "Style matters: the songs have to belong together.",
+   "deckie": "Same family (dance or pop) scores highest; a different era costs a little.",
    "related": [
     "style",
-    "style-slider"
-   ]
+    "open-format"
+   ],
+   "public": false,
+   "merged_into": "picks",
+   "internal_note": "Hidden from the public dictionary Nov 12 2026: Scoring internal."
   },
   {
    "id": "gate",
@@ -2245,23 +2554,31 @@
     "pair-score",
     "vocals-slider",
     "pitch-range-cap"
-   ]
+   ],
+   "public": false,
+   "merged_into": "picks",
+   "internal_note": "Hidden from the public dictionary Nov 12 2026: Scoring internal."
   },
   {
-   "id": "move-options",
-   "term": "Move options",
-   "group": "scoring",
+   "id": "move",
+   "term": "Move",
+   "group": "moves",
    "aliases": [
-    "moves",
-    "move menu"
+    "transition",
+    "move menu",
+    "move options"
    ],
-   "plain": "Up to three ways to do a join, best first.",
-   "expert": "You pick the move; the app only suggests.",
-   "deckie": "Each pick offers up to three moves, such as Blend, Echo out and Hard cut. The order follows the blend-to-cut slider.",
+   "plain": "A way of getting from one song to the next, such as a blend, an echo out or a cut.",
+   "expert": "You pick the move; Deckie only suggests.",
+   "deckie": "Each pick carries up to three moves, best first; the booth shows the first two. A setting to put blends or cuts first is planned.",
    "related": [
     "blend-to-cut",
     "recommend-not-prescribe"
-   ]
+   ],
+   "old_ids": [
+    "move-options"
+   ],
+   "no_dj_line": true
   },
   {
    "id": "dimension",
@@ -2272,12 +2589,16 @@
    ],
    "plain": "One measurable part of how a DJ mixes, like how far they push the pitch.",
    "expert": "Your habits, one at a time.",
-   "deckie": "Twelve, learned on device: tempo tolerance, pitch range and key lock, key strictness, genre and era spread, energy arc, blend length, cut styles, effects, vocals, phrase alignment, loops, and mix-in point and felt tempo.",
+   "deckie": "Planned: about a dozen, learned on the device: tempo tolerance, pitch range and key lock, key strictness, genre and era spread, energy arc, blend length, cut styles, effects, vocals, phrase alignment, loops, and mix-in point and felt tempo.",
    "related": [
     "learned-default",
     "event-weights",
     "profile"
-   ]
+   ],
+   "status": "planned",
+   "public": false,
+   "merged_into": "how-you-mix",
+   "internal_note": "Hidden from the public dictionary Nov 12 2026: Planned learning internal; folded into How you mix."
   },
   {
    "id": "learned-default",
@@ -2286,28 +2607,36 @@
    "aliases": [
     "learned marker"
    ],
-   "plain": "The setting the app thinks suits you, shown as a small mark next to your own choice.",
+   "plain": "The setting Deckie thinks suits you, shown as a small mark next to your own choice.",
    "expert": "What it has noticed about you.",
-   "deckie": "A marker on each slider. Learning moves only the marker, never a slider the DJ touched, and says what it changed.",
+   "deckie": "Planned: a marker on each slider. Learning moves only the marker, never a slider the DJ touched, and says what it changed.",
    "related": [
     "sliders",
     "how-you-mix",
     "dimension"
-   ]
+   ],
+   "status": "planned",
+   "public": false,
+   "merged_into": "how-you-mix",
+   "internal_note": "Hidden from the public dictionary Nov 12 2026: Planned learning internal; folded into How you mix."
   },
   {
    "id": "event-weights",
    "term": "Event weights",
    "group": "scoring",
    "aliases": [],
-   "plain": "Some of your actions teach the app more than others.",
-   "expert": "A played join is not always an endorsement: it may be an experiment or a rescue.",
-   "deckie": "Saved pair counts most, then played next, pinned then played, pinned not played, chose another, skip, ignored. Plays move defaults slowly; saved pairs at once.",
+   "plain": "Some of your actions teach Deckie more than others.",
+   "expert": "A played transition is not always an endorsement: it may be an experiment or a rescue.",
+   "deckie": "Planned: a saved pair counts most, then played next, pinned then played, pinned and not played, chose another, skipped, ignored. Plays move defaults slowly; saved pairs at once.",
    "related": [
     "saved-pair",
     "pin",
     "learned-default"
-   ]
+   ],
+   "status": "planned",
+   "public": false,
+   "merged_into": "how-you-mix",
+   "internal_note": "Hidden from the public dictionary Nov 12 2026: Planned learning internal; folded into How you mix."
   },
   {
    "id": "recommend-not-prescribe",
@@ -2316,14 +2645,17 @@
    "aliases": [
     "options, not verdicts"
    ],
-   "plain": "The app suggests; the DJ decides.",
+   "plain": "Deckie suggests; the DJ decides.",
    "expert": "Nobody tells a DJ what to play.",
-   "deckie": "The founding rule: options in the DJ's words, never one correct move, no countdowns, everything dismissible.",
+   "deckie": "The founding rule: options in the DJ's words, never one correct move, no countdowns.",
    "related": [
-    "move-options",
+    "move",
     "sync-area",
-    "easy-harder"
-   ]
+    "shortlist"
+   ],
+   "public": false,
+   "merged_into": "picks",
+   "internal_note": "Hidden from the public dictionary Nov 12 2026: A design rule, not a word; its point is in Picks."
   },
   {
    "id": "app-hold-media",
@@ -2333,27 +2665,29 @@
     "App Hold Media LLC"
    ],
    "plain": "The company that makes Deckie.",
-   "expert": "The label behind the app.",
-   "deckie": "Deckie is an App Hold Media LLC product (D1); the Apple developer team is registered to it. Its privacy stance is the stance of every App Hold Media app.",
+   "expert": "The company behind the app.",
+   "deckie": "Deckie is an App Hold Media product, and its privacy stance is the stance of every App Hold Media app.",
    "related": [
     "bundle-id",
     "privacy-promise"
-   ]
+   ],
+   "public": false,
+   "merged_into": "deckie-name",
+   "internal_note": "Hidden from the public dictionary Nov 12 2026: A company entry with a DJ line made no sense; the maker is named under Deckie."
   },
   {
    "id": "deckie-name",
    "term": "Deckie",
-   "group": "business",
-   "aliases": [
-    "Deck (code name)"
-   ],
-   "plain": "The app's name.",
-   "expert": "A booth companion.",
-   "deckie": "Decided Oct 26 (D9). Folders, the Xcode target and the bundle id keep \"deck\" until Christopher says to rename.",
+   "group": "product",
+   "aliases": [],
+   "plain": "A DJ booth companion: Deckie Desk on a Mac and Deckie Booth on an iPad. Deckie, as in deckhand.",
+   "expert": "A booth companion. Deckie, as in deckhand.",
+   "deckie": "Made by App Hold Media. Deckie alone is the whole product.",
    "related": [
     "deckee-mark",
     "bundle-id"
-   ]
+   ],
+   "no_dj_line": true
   },
   {
    "id": "deckee-mark",
@@ -2367,7 +2701,9 @@
    "deckie": "DECKEE belongs to a boating-safety app, registered for software in several countries. Open: deckie.com, any filing and any public launch wait for an attorney's review; cheap domains are fine now.",
    "related": [
     "deckie-name"
-   ]
+   ],
+   "public": false,
+   "internal_note": "Legal matter awaiting an attorney's review; not for the public page."
   },
   {
    "id": "bundle-id",
@@ -2382,7 +2718,9 @@
    "related": [
     "testflight",
     "app-hold-media"
-   ]
+   ],
+   "public": false,
+   "internal_note": "Internal, and its current value names the owner."
   },
   {
    "id": "testflight",
@@ -2393,11 +2731,15 @@
    ],
    "plain": "Apple's way to give test versions of an app to a small group.",
    "expert": "Getting a beta into DJs' hands.",
-   "deckie": "Stage 4: five to ten DJs, three observed situations. The pass mark is bringing it to a second gig. Christopher's crate is regenerated with the shipped engine first.",
+   "deckie": "Planned: the beta goes to a small group of working DJs through TestFlight. The test that matters is whether they bring it to a second gig.",
    "related": [
     "bundle-id",
-    "time-to-id"
-   ]
+    "recognition"
+   ],
+   "status": "planned",
+   "public": false,
+   "merged_into": "deckie-name",
+   "internal_note": "Hidden from the public dictionary Nov 12 2026: Apple's beta tool, not a DJ word."
   },
   {
    "id": "app-store-category",
@@ -2412,7 +2754,9 @@
    "related": [
     "data-not-collected",
     "deckie-name"
-   ]
+   ],
+   "public": false,
+   "internal_note": "Proposed (P8), not decided."
   },
   {
    "id": "data-not-collected",
@@ -2423,11 +2767,15 @@
    ],
    "plain": "The App Store label saying an app gathers nothing about you.",
    "expert": "Proof of the privacy promise.",
-   "deckie": "Claimed only if true: the privacy policy must match and crash reporting must be off or opt-in. Proposed in P8.",
+   "deckie": "Planned: Deckie will claim it only if it is true: the privacy policy must match, and crash reporting must be off or opt-in.",
    "related": [
     "privacy-promise",
     "app-store-category"
-   ]
+   ],
+   "status": "planned",
+   "public": false,
+   "merged_into": "privacy-promise",
+   "internal_note": "Hidden from the public dictionary Nov 12 2026: Planned App Store label; folded into Privacy promise."
   },
   {
    "id": "pickup",
@@ -2439,14 +2787,15 @@
     "anacrusis (music)"
    ],
    "plain": "A sung note or two that start just before the first beat of a bar and lead into it.",
-   "expert": "[tutorial term] The music-school word is anacrusis; DJs say the vocal \"comes in on the four\" or \"before the one\". It matters when you drop a vocal on the one: the drop has to land a beat early or the first word is lost.",
-   "deckie": "Written into the crate as the first sung beat with a pickup flag when it falls on beat 4 before a downbeat. Shown as \"Vocal starts a beat before bar 9\".",
+   "expert": "Music schools say anacrusis; DJs say the vocal \"comes in on the four\". It matters when you drop a vocal on the one: the drop has to land a beat early or the first word is lost.",
+   "deckie": "Written into the crate file as the first sung beat, with a pickup flag when it falls on beat 4 just before a downbeat. A line on screen such as \"Vocal starts a beat before bar 9\" is planned.",
    "related": [
     "drop",
     "vocal-activity",
     "vocal-free-bars",
     "vocal-hand-off"
-   ]
+   ],
+   "source": "tutorial"
   },
   {
    "id": "hook",
@@ -2458,14 +2807,15 @@
     "drop (EDM)"
    ],
    "plain": "The most recognisable few bars of a song, the part the crowd sings back.",
-   "expert": "[heard in the wild] Everyday DJ and producer word; in EDM the drop plays the same role. Teasing the hook of the next song is a classic move.",
-   "deckie": "The app proposes up to three hook candidates per song from repetition, loudness and singing and asks the DJ to confirm one with a tap. It never claims to know which line people recognise; that is not in the audio.",
+   "expert": "Everyday DJ and producer word; in EDM the drop plays the same role. Teasing the hook of the next song is a classic move.",
+   "deckie": "Deckie's analysis proposes up to three likely hooks per song, from repetition, loudness and singing; confirming one with a tap is planned. It cannot know which line people know by heart: that is not in the audio.",
    "related": [
     "drop",
     "tease",
     "phrase",
     "eight-bar-lattice"
-   ]
+   ],
+   "source": "heard"
   },
   {
    "id": "acapella",
@@ -2477,13 +2827,14 @@
     "vocal (as a file type in pools)"
    ],
    "plain": "A singing part with no beat under it, played on its own or laid over another song's beat.",
-   "expert": "[heard in the wild] Spelled \"acapella\" in DJ pools and on the Serato forum (\"a cappella\" in music). DJs lay an acapella over an instrumental or ride it into a vocal-free gap of the playing song.",
-   "deckie": "Proposed: the crate records vocal-free gaps of 8 bars or more where an acapella fits. The live screen does not make acapellas; it points at the gap.",
+   "expert": "Spelled \"acapella\" in DJ pools and on forums. DJs lay one over an instrumental, or ride it into a stretch of the playing song where nobody sings.",
+   "deckie": "The crate file records vocal-free gaps of 8 bars or more, where an acapella could fit. Deckie makes no acapellas; pointing at the gap on screen is planned.",
    "related": [
     "vocal-free-gap",
     "vocal-free-bars",
     "long-blend"
-   ]
+   ],
+   "source": "heard"
   },
   {
    "id": "vocal-hand-off",
@@ -2495,14 +2846,16 @@
     "clean vocal swap"
    ],
    "plain": "The old song's singing stops and the new song's singing starts, on the beat, so two voices never overlap.",
-   "expert": "[ours] DJs describe it as \"let the vocal finish, then bring the next one in\" or mixing \"vocal to vocal\" without a clash; there is no single word for it in the wild.",
-   "deckie": "Uses the beat of the last word of the playing song and the first sung beat of the next. Proposed join line: \"Last word at bar 93, beat 3; next vocal starts at bar 9\".",
+   "expert": "DJs say \"let the vocal finish, then bring the next one in\", or mix \"vocal to vocal\" without a clash. There is no single word for it.",
+   "deckie": "Planned: a line such as \"Last word at bar 93, beat 3; next vocal starts at bar 9\", from what the crate file already holds.",
    "related": [
     "pickup",
     "echo-out",
     "vocal-activity",
     "vocal-term"
-   ]
+   ],
+   "source": "ours",
+   "status": "planned"
   },
   {
    "id": "exposed-vocal",
@@ -2514,13 +2867,14 @@
     "the vocal on its own"
    ],
    "plain": "A stretch where the voice carries on while the drums and bass drop away.",
-   "expert": "[ours] Producers say \"the vocal is exposed\" or \"dry vocal\"; DJs call the same bars a breakdown with vocals. Loud and clear, so it clashes with any other voice and sits well over a beat-only intro.",
-   "deckie": "On iPad and Mac, read from Apple's drum and bass activity. On PC and Linux, a stand-in from the low band and the onset density, named as a proxy in the crate so the two are never confused.",
+   "expert": "Producers say \"the vocal is exposed\" or \"dry vocal\"; DJs call the same bars a breakdown with vocals. Loud and clear, so it clashes with any other voice and sits well over a beat-only intro.",
+   "deckie": "The crate file marks bars where the voice is left on its own, estimated from the low end and how busy the drums are, and labelled as an estimate.",
    "related": [
     "vocal-activity",
     "vocal-free-gap",
     "intro"
-   ]
+   ],
+   "source": "ours"
   },
   {
    "id": "vocal-free-gap",
@@ -2531,15 +2885,16 @@
     "the instrumental section",
     "where the vocal drops out"
    ],
-   "plain": "Eight bars or more in the middle of a song with no singing, lined up with the 8-bar grid.",
-   "expert": "[ours] DJs say \"the breakdown\", \"the instrumental bit\" or \"where the vocal drops out\". Room to bring a second song in mid-track, to loop, or to lay an acapella.",
-   "deckie": "Recorded in the crate with its start moved forward to the next 8-bar point. Different from vocal-free bars, which are the edges of the song.",
+   "plain": "Eight bars or more in the middle of a song with no singing.",
+   "expert": "DJs say \"the breakdown\", \"the instrumental bit\" or \"where the vocal drops out\". Room to bring a second song in mid-track, to loop, or to lay an acapella.",
+   "deckie": "Recorded in the crate file, starting at the next 8-bar step. Not the same as vocal-free bars, which sit at the ends of a song.",
    "related": [
     "vocal-free-bars",
     "eight-bar-lattice",
     "acapella",
     "exposed-vocal"
-   ]
+   ],
+   "source": "ours"
   }
  ]
 }

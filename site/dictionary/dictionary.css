@@ -1,0 +1,176 @@
+/* The dictionary. Loaded after the shared site.css and uses its tokens (--surface, --control, --tx, --mut, --dim,
+   --acc, --hair, --field, the radii); every class here starts "dx-", so nothing in site.css is overridden by accident
+   and the two files can be edited apart.
+
+   The cards copy Deckie Booth's pick card (deck-app/Deck/Sources/SuggestionsView.swift, NextRow, Simple view):
+     the card       white at 4.5 percent over the page (--surface), radius 16, no outline; 20 by 14 inside; 10 apart
+     top line       the pick's disc / folder line, semibold, in the disc's colour  -> the topic, in its colour
+     corner chip    TinyChip, small, dim, on white at 6 percent                     -> where the word comes from
+     title line     the song, semibold, the largest text on the card               -> the headword (and its gloss)
+     artist line    dim, under the title                                           -> "Also": up to three other names
+     main lines     tempo and pitch in amber, then the move in grey                -> the meaning, then "On the decks"
+     join wave      on the right, the end of this song over the start of the next  -> on a move, a drawing of the move
+     pinned card    an orange capsule, 4 wide, on its left edge; "NEXT" above it   -> the word of the day
+     section labels "PICKS", "MORE": 13, bold, capitals, spaced 1.2, dim           -> "Start here", the letters, "Topics"
+     chips          capsules; off has a hairline in the dim colour at 40 percent, on is filled at 28 percent
+     search         radius 12, white at 6 percent, a 1 px hairline, a magnifier, a clear button */
+
+.dx {
+  --dx-bar: 61px;        /* the shared top bar's height; dictionary.js measures it */
+  --dx-tools: 104px;     /* the sticky search's height; measured too */
+  --dx-amber: #ecb74e;   /* the pick's tempo line, amber at 85 percent over the card */
+  --t-moves: #c2b0ff; --t-tempo: #f0c062; --t-key: #8fd3c7; --t-structure: #a7b8ff;
+  --t-recognition: #e7aad6; --t-analysis: #b3d995; --t-product: #b7accb;
+  --dx-note: #98989d;    /* "In Deckie": a light neutral grey, no tint; 6.3 to 1 on the card */
+}
+
+/* labels in the app's own idiom: small capitals, spaced, dim */
+.dx-label { margin: 0; font-size: 0.8125rem; font-weight: 700; letter-spacing: 0.09em; text-transform: uppercase; color: var(--dim); line-height: 1.4; }
+.dx-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap; }
+
+/* ---------------------------------------------------------------- the top: hello on the left, the word of the day right */
+.dx-intro { display: grid; gap: 36px; grid-template-columns: minmax(0, 1fr); padding-block: clamp(28px, 5vw, 64px) clamp(28px, 4vw, 44px); align-items: start; }
+@media (min-width: 1100px) { .dx-intro { grid-template-columns: minmax(0, 0.88fr) minmax(0, 1.12fr); gap: 52px; } }
+.dx-hello h1 { margin-top: 14px; font-size: clamp(1.7rem, 8.6vw, 3rem); font-weight: 800; letter-spacing: -0.03em; line-height: 1.05; white-space: normal; text-wrap: balance; }
+.dx-hello .lede { margin-top: 18px; max-width: 30rem; }
+.dx-start { margin-top: 28px; }
+.dx-start .dx-chips { margin-top: 10px; }
+.dx-feature { padding: 0; }
+.dx-feature > .dx-label { margin-bottom: 10px; }
+
+/* ---------------------------------------------------------------- chips */
+.dx-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.dx-chip { display: inline-flex; align-items: center; min-height: 34px; padding: 0 13px; border-radius: var(--r-pill); font: inherit; font-size: 0.875rem; font-weight: 500; line-height: 1; white-space: nowrap; cursor: pointer; text-decoration: none;
+  color: var(--mut); background: transparent; border: 1px solid rgba(139, 127, 166, 0.45); }
+.dx-chip:hover { color: var(--tx); border-color: rgba(171, 159, 194, 0.7); }
+.dx-chip[aria-pressed="true"] { color: var(--tx); font-weight: 600; background: rgba(180, 144, 255, 0.28); border-color: transparent; }
+a.dx-chip { color: var(--tx); background: var(--control); border-color: transparent; }
+a.dx-chip:hover { background: var(--control-hi); }
+
+/* ---------------------------------------------------------------- the search, sticky under the top bar */
+.dx-tools { position: sticky; top: var(--dx-bar); z-index: 3; background: rgba(15, 10, 23, 0.9); padding-block: 10px 6px; }
+@supports (backdrop-filter: blur(8px)) { .dx-tools { backdrop-filter: blur(8px); } }
+.dx-search { position: relative; max-width: 46rem; margin: 0; }
+.dx-glass { position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: var(--dim); pointer-events: none; }
+.dx-search input { width: 100%; height: 50px; font: inherit; font-size: 1.0625rem; color: var(--tx); background: var(--field); border: 1px solid var(--hair); border-radius: var(--r-field); padding: 0 108px 0 44px; -webkit-appearance: none; appearance: none; }
+.dx-search input::placeholder { color: var(--dim); }
+.dx-search input:focus { border-color: rgba(180, 144, 255, 0.7); outline: none; }
+.dx-search input:focus-visible { outline: 2px solid var(--acc); outline-offset: 2px; }
+.dx-search input::-webkit-search-cancel-button { display: none; }
+.dx-count { position: absolute; right: 16px; top: 50%; transform: translateY(-50%); font-size: 0.875rem; color: var(--dim); white-space: nowrap; pointer-events: none; }
+.dx-searching .dx-count { right: 50px; }
+.dx-searching .dx-search input { padding-right: 140px; }
+.dx-clear { position: absolute; right: 3px; top: 50%; transform: translateY(-50%); width: 44px; height: 44px; display: grid; place-items: center; background: none; border: 0; padding: 0; color: var(--mut); cursor: pointer; border-radius: 10px; }
+.dx-clear:hover { color: var(--tx); }
+.dx-az { display: flex; gap: 2px; margin-top: 8px; overflow-x: auto; scrollbar-width: none; max-width: 100%; }
+.dx-az::-webkit-scrollbar { display: none; }
+.dx-az a, .dx-az span { flex: none; min-width: 30px; height: 32px; display: grid; place-items: center; font-weight: 600; font-size: 0.9375rem; color: var(--mut); text-decoration: none; border-radius: 8px; }
+.dx-az a:hover { color: var(--tx); background: var(--control); }
+.dx-az .off, .dx-az a.off { color: rgba(139, 127, 166, 0.38); pointer-events: none; }
+
+/* ---------------------------------------------------------------- the list */
+.dx-list { padding-bottom: var(--gap-section); }
+.dx-topics { margin-top: 20px; }
+.dx-topics .dx-chips { margin-top: 10px; }
+.dx-grid { margin-top: 8px; }
+/* two columns that each card fills from the top, like a printed dictionary: a short card never stretches to match its
+   neighbour, and each letter starts across both columns */
+@media (min-width: 780px) { .dx-grid { columns: 2; column-gap: 12px; } }
+.dx-grid > .dx-card { break-inside: avoid; margin-bottom: 10px; }
+.dx-letter { column-span: all; margin: 20px 0 10px; padding-left: 4px; font-size: 0.9375rem; font-weight: 700; letter-spacing: 0.09em; color: var(--dim); line-height: 22px; scroll-margin-top: calc(var(--dx-bar) + var(--dx-tools) + 8px); }
+.dx-searching .dx-letter, .dx-filtered .dx-letter { display: none; }
+
+/* a card */
+.dx-card { position: relative; background: var(--surface); border-radius: var(--r-card); padding: 14px 20px 14px; min-width: 0;
+  display: grid; grid-template-columns: minmax(0, 1fr) auto; column-gap: 16px;
+  grid-template-areas: "top wave" "word wave" "rest rest";
+  scroll-margin-top: calc(var(--dx-bar) + var(--dx-tools) + 12px); }
+.dx-card > * { grid-column: 1 / -1; }
+.dx-card > .dx-top { grid-area: top; }
+.dx-card > .dx-word { grid-area: word; }
+.dx-card > .dx-wave { grid-area: wave; grid-column: auto; align-self: start; margin-top: 2px; width: 116px; height: auto; }
+.dx-anchor { position: absolute; top: 0; left: 0; width: 1px; height: 1px; scroll-margin-top: calc(var(--dx-bar) + var(--dx-tools) + 12px); }
+
+.dx-top { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; font-size: 0.875rem; font-weight: 600; line-height: 1.35; }
+.dx-topic { color: var(--t-product); }
+.dx-card[data-group="moves"] .dx-topic { color: var(--t-moves); }
+.dx-card[data-group="tempo"] .dx-topic { color: var(--t-tempo); }
+.dx-card[data-group="key"] .dx-topic { color: var(--t-key); }
+.dx-card[data-group="structure"] .dx-topic { color: var(--t-structure); }
+.dx-card[data-group="recognition"] .dx-topic { color: var(--t-recognition); }
+.dx-card[data-group="analysis"] .dx-topic { color: var(--t-analysis); }
+.dx-src { display: inline-block; font-size: 0.75rem; font-weight: 600; color: var(--mut); background: rgba(255, 255, 255, 0.06); padding: 1px 7px; border-radius: var(--r-pill); line-height: 1.4; white-space: nowrap; }
+
+.dx-word { margin: 3px 0 0; font-size: 1.375rem; font-weight: 650; letter-spacing: -0.012em; line-height: 1.25; text-wrap: balance; }
+.dx-word a { color: var(--tx); text-decoration: none; }
+.dx-word a:hover { text-decoration: underline; text-decoration-color: var(--dim); text-underline-offset: 4px; text-decoration-thickness: 1px; }
+.dx-gloss { font-weight: 450; color: var(--mut); font-size: 0.8em; letter-spacing: 0; }
+.dx-word .you { font-size: 1.12em; }
+
+.dx-aka { margin-top: 3px; font-size: 0.9375rem; color: var(--dim); line-height: 1.45; }
+.dx-def { margin-top: 7px; font-size: 1.0625rem; line-height: 1.5; color: var(--tx); }
+.dx-dj { margin-top: 6px; margin-bottom: 17px; font-size: 0.9375rem; line-height: 1.5; color: var(--mut); }
+.dx-k { font-weight: 600; }
+.dx-aka .dx-k { color: var(--dim); }
+.dx-dj .dx-k { color: var(--dx-amber); }
+
+/* the smaller parts, always shown, on compact lines */
+.dx-names, .dx-see { margin-top: 7px; font-size: 0.875rem; line-height: 1.5; color: var(--mut); }
+.dx-names .dx-k, .dx-see .dx-k { color: var(--dim); margin-right: 2px; }
+.dx-in .dx-k { color: var(--dx-note); margin-right: 2px; }
+.dx-note-src { color: var(--dim); }
+.dx-alias.nw, .dx-k { white-space: nowrap; }
+.dx-see { display: flex; flex-wrap: wrap; align-items: center; gap: 5px 6px; }
+.dx-see a { display: inline-flex; align-items: center; min-height: 26px; padding: 0 10px; border-radius: var(--r-pill); background: var(--control); color: var(--tx); text-decoration: none; font-size: 0.8125rem; font-weight: 500; white-space: nowrap; }
+.dx-see a:hover { background: var(--control-hi); }
+.dx-in { margin-top: 8px; font-size: 0.8125rem; line-height: 1.5; color: var(--dx-note); }
+.dx-planned { display: inline-block; font-size: 0.6875rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: #d1d1d6; background: rgba(255, 255, 255, 0.09); padding: 1px 7px; border-radius: var(--r-pill); margin-right: 3px; line-height: 1.5; vertical-align: 1px; }
+
+/* the move's drawing: lanes and bars as the pick's join wave draws them */
+.dx-wave .ln { fill: rgba(255, 255, 255, 0.035); }
+.dx-wave .a { fill: #8f80b4; }
+.dx-wave .b { fill: #b49aff; }
+.dx-wave .j { fill: var(--dx-amber); opacity: 0.85; }
+
+/* a card reached by its link */
+.dx-card:target, .dx-card.dx-hit, .dx-card:has(> .dx-anchor:target) { box-shadow: inset 0 0 0 1.5px var(--acc); }
+
+/* the word of the day: the pick card in its pinned state */
+.dx-pinned { padding: 22px 26px 20px 30px; }
+.dx-pinned::before { content: ""; position: absolute; left: 0; top: 18px; bottom: 18px; width: 4px; border-radius: 4px; background: var(--acc); }
+.dx-pinned .dx-word { font-size: clamp(1.6rem, 3vw, 2rem); letter-spacing: -0.02em; margin-top: 4px; }
+.dx-pinned > .dx-wave { width: 150px; }
+.dx-pinned .dx-def { font-size: 1.1875rem; margin-top: 12px; }
+.dx-pinned .dx-dj { font-size: 1rem; margin-top: 10px; }
+
+/* nothing matches */
+.dx-empty { margin-top: 24px; padding: 22px 24px; background: var(--surface); border-radius: var(--r-card); max-width: 40rem; color: var(--mut); }
+.dx-empty-h { color: var(--tx); font-weight: 600; font-size: 1.0625rem; margin-bottom: 6px; }
+.dx-empty button { font: inherit; color: var(--acc); background: none; border: 0; padding: 0; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+
+.dx-foot { max-width: var(--max); }
+.dx-foot p { max-width: 48rem; }
+
+/* entrance, as the app's list settles: a short fade and lift, once per card; only with script and motion allowed */
+@media (prefers-reduced-motion: no-preference) {
+  .dx-anim .dx-card { transition: opacity 0.34s ease, transform 0.34s cubic-bezier(.2, .7, .2, 1); }
+  .dx-anim .dx-card:not(.in) { opacity: 0; transform: translateY(10px); }
+}
+
+/* phones */
+@media (max-width: 640px) {
+  .dx-card { padding: 13px 16px 13px; column-gap: 12px; }
+  .dx-card > .dx-wave { width: 92px; }
+  .dx-pinned { padding: 18px 18px 14px 22px; }
+  .dx-pinned > .dx-wave { width: 104px; }
+  .dx-word { font-size: 1.25rem; }
+  .dx-tools { padding-block: 8px 4px; }
+  .dx-search input { height: 46px; }
+  .dx-topics .dx-chips { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; margin-inline: calc(-1 * var(--gutter)); padding-inline: var(--gutter); }
+  .dx-topics .dx-chips::-webkit-scrollbar { display: none; }
+  .dx-az { -webkit-mask-image: linear-gradient(to right, #000 85%, transparent); mask-image: linear-gradient(to right, #000 85%, transparent); padding-right: 56px; }
+}
+@media (max-width: 360px) {
+  .dx-count { display: none; }
+  .dx-search input, .dx-searching .dx-search input { padding-right: 48px; }
+}

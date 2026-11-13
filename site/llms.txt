@@ -1,0 +1,17 @@
+# Deckie
+
+> Deckie is a booth companion for DJs who play on gear that does not know their music: turntables, older CDJs, a venue's own decks. Deckie Desk (Mac) reads a crate, a group of the DJ's own songs, and writes a crate file with no audio in it. Deckie Booth (iPad) sits beside the decks, listens, names the playing song from that crate, reads the pitch fader, and shows what could come next and how it could be brought in. The music never leaves the DJ's devices. Deckie is in development and has not been released; the site is a coming-soon page. Made by Christopher Shannon and App Hold Media (https://apphold.media).
+
+Words used on the site, as the project defines them: a library is all the music a DJ owns; a crate is a group of songs and can be the whole library; a crate file is what Deckie Desk writes from a crate (tempo, key, bars, style and fingerprints, never audio) and what Deckie Booth carries. Deckie is the whole product; Deckie Desk is the Mac app; Deckie Booth is the iPad app. The tagline is "Know Your Crate".
+
+Status, stated exactly: Deckie Desk builds crate files on a Mac and Deckie Booth runs on an iPad; it has been used for one night behind real decks and tested with a crate of 2,327 songs. There is no public beta yet and nothing in an app store; DJs who want to help test can write to info@apphold.media. Planned and not built: Deckie Desk for Windows and Linux (the shared Swift core already builds and passes its tests there), learning how a particular DJ mixes, and recognition across the whole range of the pitch fader. Deckie suggests and never instructs: it plays nothing, mixes nothing and does not touch the decks. It does not beatmatch. Nothing is uploaded, and what a DJ plays is not sent anywhere or used to train anything; there is no account, and it works with no signal.
+
+## Pages
+
+- [Home](https://deckie.io/): what Deckie Booth does in the booth, what Deckie is not, how Deckie Desk prepares a crate file, a short about with a list of facts, and a film with a written description of what it shows
+- [Dictionary](https://deckie.io/dictionary/): DJ speak, in plain words. A dictionary for anyone, A to Z: each word in plain words, then how DJs use it, with a short note on what Deckie does with it
+
+## Optional
+
+- [The film](https://deckie.io/assets/deckie-explainer.mp4): 76 seconds, words on screen, no voice; the home page has its content as text
+- [The first fifteen seconds](https://deckie.io/assets/deckie-15s.mp4): the same film's opening, cut to stand alone
