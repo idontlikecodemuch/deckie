@@ -415,6 +415,24 @@ The decisions, in the owner's words, on the open questions of `docs/product/desk
 This fits D21: the DJ works with crates, and the crate file is what Desk writes from one. It also fits D25: several
 crates are groups of songs that were read, not a library being managed.
 
+### D29. A PC version is wanted, and the fix is in the core, not on the iPad (Nov 13)
+The decision, in the owner's words: "Mike has a PC and the DJ community is pretty split. Most DJs who would be
+interested in this might have lower budgets and use a PC so I would like to see a PC version working." Offered the
+route where a PC writes the crate file without key and fingerprints and the iPad adds them: "The ipad can be an
+option but shouldn't be the fix. We are now asking them to provide the music twice when the ipad could just do all
+of it - but that would take a while. The better solution is to just fix the deckie desk core."
+
+- **A crate file made on a PC must be complete**: song recognition and key included, with no second pass on
+  another device.
+- **So Deckie's own core has to do the two things it borrows from Apple today**: recognise a song from the room
+  (ShazamKit now) and read its key well enough to show (Apple's framework now; D16's bar still holds).
+- **The iPad finishing a crate file may exist as an option**, never as the answer.
+- What is already the same on every platform: tempo, bars, style and vocals (the engine of D11 and D14).
+
+The evidence to start from: letter H (recognition across the pitch fader, and its section on a fingerprint of our
+own), letter L (what does and does not carry off Apple's platforms), letters R and T (the key reader and the ways
+to a better one).
+
 ### Note on D19 (Nov 1): versions of a song stay separate rows
 Christopher, on two remixes of one song both showing in the picks: "we shouldn't merge them unless they are the same
 songs. DJs often have a bunch of versions of the same song". So the booth folds together only copies of the same
