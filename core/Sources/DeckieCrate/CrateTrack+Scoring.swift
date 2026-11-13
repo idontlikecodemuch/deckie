@@ -20,7 +20,7 @@ extension CrateTrack {
         let title = ident.artist.map { "\($0) - \(ident.title)" } ?? ident.title
         return DeckieCore.Track(
             id: id, title: title, ver: ident.version ?? "", secs: file.durationS,
-            cutKey: ident.cutKey.flatMap { $0.isEmpty ? nil : $0 } ?? id,
+            cutKey: recordingKey,
             isLongest: ident.isLongest ?? true, onDisc: ident.disc != nil, disc: ident.disc,
             folder: ident.folder ?? "", hal: ident.tags.contains("halloween"), bpm: grid.bpm, bpmTag: file.tagBpm,
             gridConf: grid.confidence, bpmIn: grid.bpmIn, bpmOut: grid.bpmOut,
