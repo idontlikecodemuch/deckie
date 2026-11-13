@@ -4,6 +4,7 @@ import UniformTypeIdentifiers
 import DeckieCrate
 import DeckieBuild
 import DeckieEngine
+import DeckieCore
 
 /// What the window shows: one crate at a time, a build in progress, or nothing yet.
 @MainActor
@@ -23,6 +24,7 @@ final class DeskModel: ObservableObject {
 
     @Published var signing = false
     @Published var signProgress = ""
+    @Published var findingCopies = false
 
     @Published var errorText: String?
     @Published var showImportLog = false
@@ -145,6 +147,12 @@ final class DeskModel: ObservableObject {
 
     func binding(for id: String) -> CrateTrack? { crate?.tracks.first { $0.id == id } }
 
+    /// The other entries of the same recording as `t` (the same `cut_key`), in crate order.
+    func copies(of t: CrateTrack) -> [CrateTrack] {
+        let k = t.recordingKey
+        return crate?.tracks.filter { $0.id != t.id && $0.recordingKey == k } ?? []
+    }
+
     func update(_ id: String, _ change: (inout CrateTrack) -> Void) {
         guard var c = crate, let i = c.tracks.firstIndex(where: { $0.id == id }) else { return }
         change(&c.tracks[i]); crate = c; dirty = true
@@ -209,6 +217,39 @@ final class DeskModel: ObservableObject {
                 model.save()
                 model.signing = false
                 model.signProgress = "\(made.count) signatures made" + (failed.isEmpty ? "." : "; \(failed.count) failed: " + failed.prefix(3).joined(separator: "; "))
+            }
+        }
+    }
+}
+
+extension DeskModel {
+    /// Finds copies of the same recording (D24): every track's audio is read from the music folder and printed
+    /// (`RecordingPrint`), the prints are compared, and copies get the same `cut_key`, so the booth shows them as
+    /// one song with every place it lives. A remix, an edit or a live version does not match. Tracks whose file
+    /// cannot be read keep the key they had. The crate is saved afterwards, as with signatures.
+    func findCopies() {
+        guard let c = crate, crateURL != nil else { return }
+        guard let folder = sourceFolder else { chooseSourceFolder(); return }
+        findingCopies = true; signProgress = "Reading the music…"
+        let todo = c.tracks.filter { $0.file.rel != nil }
+        let model = self
+        Task.detached(priority: .userInitiated) {
+            var prints: [String: RecordingPrint] = [:]
+            var failed = 0
+            for (n, t) in todo.enumerated() {
+                await MainActor.run { model.signProgress = "Finding copies: \(n + 1) of \(todo.count)" }
+                do { prints[t.id] = try Signatures.recordingPrint(of: folder.appendingPathComponent(t.file.rel!)) }
+                catch { failed += 1 }
+            }
+            await MainActor.run {
+                var grouped = 0
+                model.updateCrate { grouped = $0.setCutKeys(prints: prints) }
+                if model.dirty { model.save() }
+                let songs = Set(model.crate?.tracks.compactMap { prints[$0.id] == nil ? nil : $0.ident.cutKey } ?? []).count
+                model.findingCopies = false
+                model.signProgress = grouped == 0 ? "No copies of the same recording found." :
+                    "\(grouped) tracks are copies of \(songs) recording\(songs == 1 ? "" : "s")." +
+                    (failed == 0 ? "" : " \(failed) could not be read.")
             }
         }
     }

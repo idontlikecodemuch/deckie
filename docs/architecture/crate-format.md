@@ -96,6 +96,12 @@ memo Q's vocal fields, `vocal_structure` and `hooks`, are instead left out when 
 - `ident`: `title`, and each or null: `artist`, `version`, `source`, `mbid`, `disc`, `folder`, `track`, `cut_key`,
   `is_longest`, `era`, `kind`; plus `tags` (list). **proposed**: `tags` (the lab's Halloween mark becomes the tag
   `halloween`, as the port plan suggests), and `folder` and `era` as text, as the lab has them (track A showed numbers).
+  `cut_key` (D24, Nov 13, 2026; meaning only, the field is unchanged): entries with the same `cut_key` are copies of
+  one recording, the same song; an entry whose `cut_key` is null or empty is a song on its own, keyed by its `id`.
+  Nothing is folded by title, so a remix, an edit or a live version is its own song. Deckie Desk fills it with Find
+  copies from a print of each file's audio (`RecordingPrint` in DeckieCore, the rule written there), choosing the
+  smallest `id` of the copies as the key; readers take it through `SameSong` (DeckieCrate). Lab records keep the lab's
+  own `cut_key`.
 - `analysis`: `engine` (label), `analysed_at`, `device` (a model label such as `Mac15,6`, never a user's device
   name), `secs` or null, `level`.
 - `engine` **proposed** (where track L's record sits: a block beside `analysis`, which keeps its text label): `family`

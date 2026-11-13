@@ -31,10 +31,22 @@ the app points the engine at them on launch (environment variables set in-proces
     "Deckie Desk.app/Contents/MacOS/Deckie Desk" --check-engine
     "Deckie Desk.app/Contents/MacOS/Deckie Desk" --build <music folder> <out.deckiecrate> [jobs]
     "Deckie Desk.app/Contents/MacOS/Deckie Desk" --sign <crate.deckiecrate> <music folder>
+    "Deckie Desk.app/Contents/MacOS/Deckie Desk" --find-copies <crate.deckiecrate> <music folder>
 
 `--build` is the same build as the window's, with progress on stdout; a `.deckiebuild` work folder beside the crate file
 keeps finished tracks so a second run only looks at what changed. `--sign` makes one plain (`o`) signature per track
-and writes it into the crate file's `signatures/` folder; pitch variants come later.
+and writes it into the crate file's `signatures/` folder; pitch variants come later. `--find-copies` is the Find
+copies button.
+
+## Copies of the same recording
+
+Find copies (toolbar) reads every track's audio from the music folder, makes a print of it (`RecordingPrint`,
+core/Sources/DeckieCore/DSP: Haitsma and Kalker's published fingerprint) and gives files that are the same recording
+the same `cut_key`, so the booth shows them as one song and says every place it lives (D24). Same recording means the
+sound lasts as long within 1 s and every 3 s block of it matches (fewer than 35 % of the print's bits differ); a remix,
+an edit, an extended mix or a live version does not match. The print stays on this Mac; the crate file carries only
+the key. The inspector lists a song's other copies under "Same recording as". Nothing is cached yet, so each run
+reads all the music again.
 
 ## Discs
 
@@ -53,14 +65,14 @@ goes in. The labels are the crate file's own `disc`, `folder` and `track` fields
 ## What is here
 
 - `Desk/Sources/DeskApp.swift`: the app, the bundle wiring, the headless modes.
-- `DeskModel.swift`: open, build, edit, save, signatures; what the app remembers (where crate files go, where each
+- `DeskModel.swift`: open, build, edit, save, signatures, find copies; what the app remembers (where crate files go, where each
   one's music is; the crate file itself never holds an absolute path).
 - `ContentView.swift`, `TrackTable.swift`, `ImportLogView.swift`: the window, the table with an inspector for names
   and what the analysis found, the import log.
 - `DiscsPanel.swift`: the Discs panel and the table's Add to disc menu, on DeckieCrate's disc operations.
 - `Snapshot.swift`: `--snapshot <crate> <folder>` steps through the window (and the Discs panel when the crate file has
   discs) and writes PNGs.
-- `Signatures.swift`: AVFoundation into ShazamKit's signature generator.
+- `Signatures.swift`: AVFoundation into ShazamKit's signature generator, and into the print that finds copies.
 
 Not yet: rekordbox import and export buttons (the builder already imports a collection; the window does not ask for
 it), picks and pairs on the desk, set planning.
