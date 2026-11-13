@@ -67,7 +67,8 @@ Example.deckiecrate/
 Numbers carry their unit in the name (`_s` seconds, `_ms`, `_db`, `_lufs`, `bpm`); `lra` is in LU. Every field below
 is written in every record; `null` means "no value" and is allowed only where marked "or null". A block marked
 *(feature X)* is present exactly when `features_present` lists X, and is `null` otherwise; the two blocks proposed with
-memo Q's vocal fields, `vocal_structure` and `hooks`, are instead left out when absent (below).
+memo Q's vocal fields, `vocal_structure` and `hooks`, are instead left out when absent (below), as is
+`ident.other_places` (D27, below) when the entry has no other place.
 
 - `id`: letters, digits, `-` and `_` only, as it names the sidecar files. **How a shipped engine makes it**
   (main session, Oct 28): the first 16 hexadecimal characters, lower case, of the SHA-256 hash of the audio file's
@@ -95,7 +96,7 @@ memo Q's vocal fields, `vocal_structure` and `hooks`, are instead left out when 
   yet, so this format does not define it further: every record this track writes has it null, and the reader does not
   check it.
 - `ident`: `title`, and each or null: `artist`, `version`, `source`, `mbid`, `disc`, `folder`, `track`, `cut_key`,
-  `is_longest`, `era`, `kind`; plus `tags` (list). **proposed**: `tags` (the lab's Halloween mark becomes the tag
+  `is_longest`, `era`, `kind`; plus `tags` (list); and `other_places` (list, D27, Nov 13, 2026; left out when empty). **proposed**: `tags` (the lab's Halloween mark becomes the tag
   `halloween`, as the port plan suggests), and `folder` and `era` as text, as the lab has them (track A showed numbers).
   `disc`, `folder` and `track` (D25 and D26, Nov 13, 2026; meaning only, the fields are unchanged) are a song's
   place. `disc` is the **source** the song was read from, by the source's own name as the DJ sees it ("Stick 3"): a
@@ -105,8 +106,8 @@ memo Q's vocal fields, `vocal_structure` and `hooks`, are instead left out when 
   the one rule); a file on the source that is not in the crate still holds its number, so a folder may have gaps. An
   entry with no `disc` has no source: it is only in a folder on the Mac, and its place is that folder (`rel`'s). Readers
   show a source by `disc` itself, never by a word of their own. A source reads as it is, so the same file content on
-  two sources is one entry, with the place read first (ids are unique). Earlier crate files may hold discs made by hand
-  in Desk (D20); they read the same way.
+  two sources is one entry (ids are unique): its own place is one of them, and the others are listed in
+  `other_places` (D27, below). Earlier crate files may hold discs made by hand in Desk (D20); they read the same way.
   `cut_key` (D24, Nov 13, 2026; meaning only, the field is unchanged): entries with the same `cut_key` are copies of
   one recording, the same song; an entry whose `cut_key` is null or empty is a song on its own, keyed by its `id`.
   Nothing is folded by title, so a remix, an edit or a live version is its own song. Deckie Desk fills it with Find
@@ -180,7 +181,7 @@ parity tests, which stay on the lab's files.
 
 Canonical, so two writes of the same crate are identical byte for byte, in any language: UTF-8; keys sorted by byte;
 no spaces; strings escaped only where JSON requires; `null` written, never left out (except a record's absent
-`vocal_structure` and `hooks`, which are left out); whole numbers plain; other
+`vocal_structure` and `hooks`, and an empty `ident.other_places`, which are left out); whole numbers plain; other
 numbers rounded to a fixed number of decimals by field name, trailing zeros dropped, one digit kept after the point
 (3: `bpm`, `bpm_in`, `bpm_out`, `confidence`, `duration_s`, `first_sound_s`, `last_sound_s`, `lra`, `tag_bpm`; 4:
 `first_downbeat_s`, `start_s`, `end_s`, `mean`, `onset_pattern_16`, `seconds`; 2: `fit_mad_ms`, `integrated_lufs`,
@@ -196,7 +197,8 @@ The version (`schema` at least 1, `min_reader` at most this reader's 1, each rec
 manifest's), required fields and their types, unique and file-safe ids, a `file.sha256` when present (64 lower-case
 hexadecimal characters, with the record's `id` its first 16), `features_present` against the blocks, every bar number
 in range, starts before ends, `onset_pattern_16` of 16, Camelot codes, confidences between 0 and 1, each sidecar's
-header, size and bar count against `n_bars`, and that each listed signature file exists. A problem
+header, size and bar count against `n_bars`, that each listed signature file exists, and each of
+`ident.other_places` (D27, below). A problem
 names the file, the field path and the track, for example `crate.json: tracks[2].mix_in.end_bar (track 0327cf1c94):
 177 is past the end of the grid (175 bars, so at most 176)`. The writer runs the same checks before writing.
 
@@ -249,7 +251,8 @@ renames, applied here: `import_log.built_by` is a device label, the block is `im
   and WMA on Linux, Ogg, Opus), `protected` (copy protection: no decoder will ever read it), `damaged` (cut short or
   corrupted), `decode_error` (could not be read, or failed otherwise while decoding), `analysis_error` (decoded, but no
   beat grid, too few bars, or the model failed) and `duplicate` (the same bytes as another file, which has the record:
-  the id is the file's hash). The log describes the last build; an app that later adds tracks leaves it as it is.
+  the id is the file's hash; since D27 only a second file in a place the entry already has, that is two copies in one
+  folder on the Mac, which has no numbers: a file anywhere else adds a place, below). The log describes the last build; an app that later adds tracks leaves it as it is.
 - **`file.tag_bpm`**, a number or null: the tag tempo, the tempo written down for the file before it was analysed (the
   collection's `AverageBpm` from a rekordbox export, else, with `--bpm-tags`, the file's own tag such as ID3 `TBPM`),
   which the octave alignment was steered by. The main session's reason: the tag tempo is a fact about the file, not an
@@ -411,6 +414,47 @@ exactly), not on it every time. The listening set (memo Q section 4, "Next") sho
 the hook and the exposed line, and tune the threshold fraction and floor, the bridge, the kind rule, the proxy and the
 hook weights. Size: about 1.5 KB a record on the test track (two spans, three hooks), most of it the two rules.
 
+## Addition with D27 (Nov 13, 2026): other places of one file
+
+D27, the first addition to crate v1, decided by the owner on Nov 13, 2026: an entry's id is made from the file's
+bytes, so the same file burned onto two discs, or copied unchanged from the Mac onto a stick, is one entry, and until
+now the second place was dropped and the file logged as a duplicate. An entry now keeps its own place and may list
+others. Additive like every field above it: no field changes name or meaning, `schema` and `min_reader` stay 1, a
+crate file written before it reads with no other places, and a reader that does not know it (it ignores keys it does
+not know) opens a crate file that has it and shows the entry's own place. Code: `CrateTrack.Ident.otherPlaces` and
+`CrateTrack.Place` (`CrateModel.swift`), the operations in `Discs.swift`, the order in `SameSong.swift`, the builder's
+reading in `Builder.swift`.
+
+- **`ident.other_places`**, a list, inside `ident` beside the own place it extends: the entry's other places, each
+  `disc`, `folder` and `track`, the same three parts with the same meaning as the entry's own (above): the source by
+  its own name, or null for a place with no source; the group inside it, or for a place with no source the folder's
+  path below the music folder ("" at its top); the song's number there, or null for a place with no source. **Left
+  out when empty, never written as null or `[]`**, as `vocal_structure` and `hooks` are, so every record without
+  other places keeps its bytes and the example crate is unchanged. Within a place, `null` is written as everywhere
+  else. The list is in the order of the rule below; a reader does not rely on it.
+- **Which place is the entry's own.** The own place is the one whose file gave the record: `file.name` and `file.rel`
+  name that file, and an other place has no path of its own. When a source or folder is read, a place on a source
+  already in the crate file and not read now stays the own place; otherwise the place read now that leads by the rule
+  of D24 (with no song playing and the sources in name order: the first source by name, then by folder and number; a
+  place with no source last) is the own place. An entry only in a folder on the Mac keeps its own place as before
+  (`disc`, `folder` and `track` null, the place being `file.rel`'s folder).
+- **Reading again.** Reading a source again replaces that source's places, own and other, with what is on it now;
+  reading the music folder again does the same for the places with no source. An entry whose own place was on a
+  source that no longer holds it takes its leading other place as its own, and its `file.rel` is then null (the crate
+  file does not hold the path at the other place) until that source is read again, which writes it. An entry left
+  with no place is removed, as before.
+- **Duplicates.** A file whose bytes match an entry already in the crate file adds its place to that entry and is no
+  longer logged. `import_log` keeps `duplicate` only for a second file in a place the entry already has: two copies
+  with the same bytes in one folder on the Mac, which has no numbers to tell them apart. Files seen
+  (`import_log.files_seen`) count every place kept from earlier reads, own and other, as one file each.
+- **Readers show the places like copies** (D24): one row for the song, one place leading by the same rule (the
+  source the playing song is on, else the first source in the DJ's order, a place with no source last; `SameSong`
+  takes every place of every copy together), the others as "also on"; a song is allowed by a filter of sources when
+  any of its places is. Recognition is unchanged: one entry, one set of signatures.
+
+**What the reader checks** for it: each place has a `disc` or a `folder` (it says some place); a `disc` is not empty; a
+`folder` is not an absolute path; a `track` is 1 or more; no place is listed twice or repeats the entry's own.
+
 ## The proposals in one list, for the main session
 
 1. Track L's additions: the `engine` block beside `analysis` (which keeps its label); the `features_present` names;
@@ -434,3 +478,5 @@ hook weights. Size: about 1.5 KB a record on the test track (two spans, three ho
     left out when absent rather than written as null (the one exception to the canonical form's nulls, so existing
     records keep their bytes); `exposed_proxy` named apart from the Apple family's `exposed`, which a reader prefers;
     their decimals.
+11. Accepted Nov 13, 2026 (D27, the owner's yes). `ident.other_places`: the entry's other places, each `disc`, `folder`
+    and `track`, left out when empty; no version raised.
