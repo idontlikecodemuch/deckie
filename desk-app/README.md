@@ -37,6 +37,7 @@ folder named by `DECKIE_DESK_HOME` when that is set (every test and manual run u
 real storage is never touched). The layout (`DeskHome`, `core/Sources/DeckieDesk/DeskHome.swift`):
 
     desk.json                      the layout's format number (1)
+    libraries.json                 DJ libraries the DJ chose by hand (File > Choose a DJ library…), read on every run
     Crates/<id>/                   one folder per crate; <id> is a lowercase UUID made with the crate
       crate.json                   its name, when it was made and last opened, where each source and the music folder were read from
       crate.deckiecrate/           the crate file itself (crate v1, unchanged), written as the DJ works
@@ -73,7 +74,8 @@ folder (no source) with names, tempos, keys and cues from rekordbox.
 **One run** (`DeskRun`, `core/Sources/DeckieDesk/DeskRun.swift`). The builder reads and analyses with its jobs; as each
 song is read, its signature (ShazamKit) and its print (`RecordingPrint`) are made on one more thread, or taken from
 `Files/` when they were made before; songs taken from the work folder are finished after the builder. Then copies of
-one recording are linked (`cut_key`, D24), the DJ's name fixes are put back, each place's path is remembered, the
+one recording are linked (`cut_key`, D24), the keys and names already on this Mac are gathered (below, D30), the DJ's
+name fixes are put back, each place's path is remembered, the
 crate's name is written into the crate file and it is saved. One progress view: songs done of songs found (a song is
 done when it is read, signed and printed), the stage, and an estimate of the time left (the builder's estimate, or the
 finishing queue's at its measured rate, whichever is longer). Make signatures and Find copies are no longer buttons.
@@ -88,6 +90,36 @@ folders left out, how long the run took and the rate in songs a minute, then the
 songs". The same numbers, with the parts of the run (build, finishing), what was analysed or reused, the signatures
 and prints made, kept or failed, the jobs, device and engine, are one line of `runs.jsonl` per run, so real timings
 can be collected. Nothing is tuned from them.
+
+**Keys and names already on this Mac (D30).** Part of every run, with no button: `DeskLocalFacts` and `LocalFacts`
+(`core/Sources/DeckieDesk/DeskLocalFacts.swift`, `core/Sources/DeckieBuild/LocalFacts.swift`). Nothing leaves the Mac,
+and every DJ library is read from a copy, never written or locked.
+
+- *What is read.* Each song's own tags (the key tag, TKEY or INITIALKEY; a key Mixed In Key wrote into the comment or
+  the title; title, artist, album, track number), and the libraries of the DJ's programs: Traktor's `collection.nml`,
+  Engine DJ's `Engine Library/Database2/m.db`, Serato's `_Serato_/database V2`, VirtualDJ's `database.xml`, found in
+  the home folder where each program keeps it (on a Mac and on Windows) and at the top of each source read; a
+  rekordbox collection export (XML) from the rekordbox route or chosen by hand. rekordbox's own library is encrypted
+  and is not opened; when it is there and no export was given, the finished screen says how to export one. Any of
+  these files can also be chosen by hand: File > Choose a DJ library… (kept in `libraries.json`).
+- *Which key.* On this engine (no Apple framework) the key is the DJ's own and Deckie's own reading stays out of the
+  crate file (D16): a song no program or tag has a key for has none, and the window says "Key not read on this
+  computer yet". Where programs disagree, the program whose library was written most recently wins, then the file's
+  key tag, its comment, its title; every key found stays in `key.votes`, and the table's Key from column and its help
+  show where each came from ("8A from Traktor; rekordbox says 9A"). A record read by Apple's framework keeps that
+  reading as its key.
+- *Names.* A song with no usable title or no artist gets each missing part from, in turn: its tags, its file name
+  read by pattern ("Artist - Title"; a leading number taken off when it is the song's place, "02 Song A" at place 2
+  is "Song A"; underscores as spaces), its folder as the artist ("Artist - Album" holding numbered files), a `.cue`,
+  `.m3u`/`.m3u8` or numbered `.txt`/`.nfo` list beside it, the DJ programs' libraries, a named copy of the same
+  recording. `ident.source` says where; the inspector's Name from row says it in words. A DJ's fix always wins.
+- *The finished screen* says how many keys came from where, how many songs have none, and how many still need a name
+  ("Show them" shows only those). The status bar's "n need a name" does the same at any time; naming one is the usual
+  name fix in the inspector. There is no listen button and no lookup that uses the network.
+- *Again.* File > Look again for keys and names reads the tags and libraries again for the crate showing, without
+  reading its music again (one undo step).
+- *Tests and manual runs* never look in a real home folder: a desk whose storage is not the standard one (a scratch
+  `DECKIE_DESK_HOME`) looks only in the folder named by `DECKIE_DJ_HOME`, when that is set.
 
 **Out and in.** Send to iPad copies the crate file to `Outbox/` under the crate's name and opens the Mac's share
 sheet with it. File > Export crate file… writes a copy where the DJ chooses. File > Import crate file… checks a crate
@@ -133,11 +165,16 @@ Desk's own crates, in the storage the window uses (`DECKIE_DESK_HOME` moves it),
     "Deckie Desk.app/Contents/MacOS/Deckie Desk" --delete-crate <crate>
     "Deckie Desk.app/Contents/MacOS/Deckie Desk" --export <crate> <out.deckiecrate>
     "Deckie Desk.app/Contents/MacOS/Deckie Desk" --import <file.deckiecrate>
+    "Deckie Desk.app/Contents/MacOS/Deckie Desk" --libraries [crate]
+    "Deckie Desk.app/Contents/MacOS/Deckie Desk" --choose-library <file>
+    "Deckie Desk.app/Contents/MacOS/Deckie Desk" --look-again [crate]
     "Deckie Desk.app/Contents/MacOS/Deckie Desk" --open <crate>
     "Deckie Desk.app/Contents/MacOS/Deckie Desk" --snapshot <out folder> [crate]
 
 `--add-music` is the window's one run, into that crate (made if missing), else the most recent, else a new crate named
-after what is read; it prints each file, the progress about once a second, and the run's report. `--snapshot` steps
+after what is read; it prints each file, the progress about once a second, and the run's report, with the keys and names taken from this
+Mac. `--libraries` lists the DJ libraries a run would read, `--choose-library` adds one, `--look-again` is the menu's
+Look again; `--show` prints each song's key, where it came from, and where its name came from. `--snapshot` steps
 through the window and writes PNGs (`Snapshot.swift`).
 
 Tools on crate files anywhere, for the developer (`DeskApp.swift`):
