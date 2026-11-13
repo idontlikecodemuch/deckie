@@ -258,7 +258,10 @@ public struct DJLibrary: Sendable {
         let bytes = [UInt8](data)
         let seratoFolder = url.deletingLastPathComponent()
         let driveTop = PathKey.slashes(seratoFolder.deletingLastPathComponent().path)
-        let home = PathKey.slashes(FileManager.default.homeDirectoryForCurrentUser.path)
+        // The computer's own top: "" on a Mac or Linux ("/" follows), the home folder's drive ("C:") on Windows, whose
+        // URL paths may start "/C:".
+        var home = PathKey.slashes(FileManager.default.homeDirectoryForCurrentUser.path)
+        if home.count >= 3, home.hasPrefix("/"), Array(home)[2] == ":" { home.removeFirst() }
         let systemTop = home.count >= 2 && Array(home)[1] == ":" ? String(home.prefix(2)) : ""
         var out: [DJLibraryEntry] = []
         var sawVersion = false

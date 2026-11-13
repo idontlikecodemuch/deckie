@@ -263,7 +263,9 @@ import DeckieCrate
         let at = URL(fileURLWithPath: "/Users/dj/Music/Engine Library/Database2/m.db")
         let e = try DJLibrary.parse(.engineDJ, data, at: at)
         #expect(e.count == 62)
-        #expect(e[0].paths == ["/Users/dj/Music/Music/House/01 Song A.mp3"] && e[0].camelot == "8A" && e[0].size == 123456)
+        // "../Music/..." is below the Engine Library folder's parent (on Windows the URL's path starts with a drive).
+        let music = PathKey.slashes(URL(fileURLWithPath: "/Users/dj/Music").path)
+        #expect(e[0].paths == [music + "/Music/House/01 Song A.mp3"] && e[0].camelot == "8A" && e[0].size == 123456)
         #expect(e[1].camelot == "8B")
         #expect(e[2].paths == ["/Volumes/Stick/Set/Song C.flac"] && e[2].camelot == "7A" && e[2].title == nil)
     }
@@ -286,9 +288,10 @@ import DeckieCrate
         let db = Self.serato([("vrsn", Self.u16("2.0/Serato Scratch LIVE Database")), ("otrk", track), ("otrk", other)])
         let e = try DJLibrary.parse(.serato, Data(db), at: URL(fileURLWithPath: "/Volumes/USB/_Serato_/database V2"))
         #expect(e.count == 2)
-        #expect(e[0].paths.first == "/Volumes/USB/Users/dj/Music/s.mp3" && e[0].paths.contains("/Users/dj/Music/s.mp3"))
+        let usb = PathKey.slashes(URL(fileURLWithPath: "/Volumes/USB").path)
+        #expect(e[0].paths.first == usb + "/Users/dj/Music/s.mp3" && e[0].paths.contains { $0.hasSuffix(":/Users/dj/Music/s.mp3") || $0 == "/Users/dj/Music/s.mp3" })
         #expect(e[0].camelot == "3A" && e[0].title == "Song S" && e[0].artist == "Artist S")
-        #expect(e[1].camelot == nil && e[1].paths.first == "/Volumes/USB/Set/t.mp3")
+        #expect(e[1].camelot == nil && e[1].paths.first == usb + "/Set/t.mp3")
     }
 
     @Test func rekordboxExportAsALibrary() throws {
