@@ -82,7 +82,8 @@ memo Q's vocal fields, `vocal_structure` and `hooks`, are instead left out when 
   `sections`, `mix_windows`, `ends`, `loudness`, `vocal`, `onset_pattern`, `style`, `vocal_structure`, `hooks` and
   `bars.<series>`. Readers ignore names they do not know, but keep a per-bar series they do not know. **proposed** (the
   names; `vocal_structure` and `hooks` with memo Q's vocal fields).
-- `file`: `name`, `rel` (path below the folder the crate was built from, or null; never absolute), `bytes` or null,
+- `file`: `name`, `rel` (path below the folder the crate was built from, or, for an entry read from a source, below
+  that source's top, the source being named by `ident.disc` (D25, Nov 13, 2026; meaning only); or null; never absolute), `bytes` or null,
   `sha1_head` or null, `sha256` or null, `duration_s`, `tag_bpm` or null (with step 5, below), `damaged_frames` or
   null (accepted Oct 29, 2026, with the damaged-frame concealment, below). `sha256` is the whole
   file's SHA-256 hash as 64 lower-case hexadecimal characters, the spec's "content hash of the file for exact identity"
@@ -96,6 +97,16 @@ memo Q's vocal fields, `vocal_structure` and `hooks`, are instead left out when 
 - `ident`: `title`, and each or null: `artist`, `version`, `source`, `mbid`, `disc`, `folder`, `track`, `cut_key`,
   `is_longest`, `era`, `kind`; plus `tags` (list). **proposed**: `tags` (the lab's Halloween mark becomes the tag
   `halloween`, as the port plan suggests), and `folder` and `era` as text, as the lab has them (track A showed numbers).
+  `disc`, `folder` and `track` (D25 and D26, Nov 13, 2026; meaning only, the fields are unchanged) are a song's
+  place. `disc` is the **source** the song was read from, by the source's own name as the DJ sees it ("Stick 3"): a
+  burned data CD, a USB stick or an SD card that Deckie Desk read as it is. `folder` is the group inside it, the
+  folder's path below the source's top with names joined by "/" ("House", "House/Peak"; "" at its top). `track` is the
+  song's number in that group, counted from 1 in the order a player shows (`SourceReading` in DeckieCrate, which holds
+  the one rule); a file on the source that is not in the crate still holds its number, so a folder may have gaps. An
+  entry with no `disc` has no source: it is only in a folder on the Mac, and its place is that folder (`rel`'s). Readers
+  show a source by `disc` itself, never by a word of their own. A source reads as it is, so the same file content on
+  two sources is one entry, with the place read first (ids are unique). Earlier crate files may hold discs made by hand
+  in Desk (D20); they read the same way.
   `cut_key` (D24, Nov 13, 2026; meaning only, the field is unchanged): entries with the same `cut_key` are copies of
   one recording, the same song; an entry whose `cut_key` is null or empty is a song on its own, keyed by its `id`.
   Nothing is folded by title, so a remix, an edit or a live version is its own song. Deckie Desk fills it with Find
@@ -225,8 +236,10 @@ renames, applied here: `import_log.built_by` is a device label, the block is `im
 
 - **`manifest.import_log`**, so no file of the folder is left out silently (decision P18): `built_by`, `built_at`
   (UTC), `files_seen` (audio files found, by extension: mp3, flac, wav, aif, aiff, aifc, m4a, mp4, aac, wma, ogg, opus,
-  m4p), `tracks` (records written), `entries` (one per file with no record of its own, sorted by path: `rel`, the path
-  below the folder, never absolute; `ext`, lower case; `reason`; `message`, the decoder's or the analyser's own words),
+  m4p), `tracks` (records written; when a source is added to a crate file, `files_seen` and `entries` cover every part read
+  into it, the entries kept from earlier reads included), `entries` (one per file with no record of its own, sorted by path: `rel`, the path
+  below the folder, never absolute, or for a file on a source the source's name, a "/" and the path below its top
+  (D25; meaning only); `ext`, lower case; `reason`; `message`, the decoder's or the analyser's own words),
   `counts` (reason, then extension, to a number; written from the entries for a quick look and recomputed by readers,
   as `engines_used` is) and `rekordbox` (`tracks` in the collection export and how many `matched` a file) or null.
   `built_by` is the device that built the crate: a model label such as `Mac15,6` or `linux-x86_64`, never the user's

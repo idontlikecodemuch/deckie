@@ -20,7 +20,7 @@ Deck app/
       ListenView.swift        Listen page: playing panel, whole-song wave, chips
       DebugSheet.swift        test-with-file sheet, mic level meter
       SuggestionsView.swift   Up next: Simple / Full and the Shuffle dial, the ranked picks, More, JoinView (Canvas port of drawJoin)
-      OtherViews.swift        CD listings, Mix map (WKWebView)
+      OtherViews.swift        the Crate tab (sources and folders), Mix map (WKWebView)
     Resources/
       deck_data.json          built by tools/prep_data.py
       overview.json           whole-song waveforms (tools/overview_waves.py, also run by prep_data.py)
@@ -108,17 +108,17 @@ built app's embedded.mobileprovision), so the app keeps working until then witho
 ## Using it
 
 * **Listen** (designed for landscape; portrait stacks the two halves).
-  Left panel: song title, artist, disc location (CD · folder-track, as on the CDJ), BPM (at the detected deck
+  Left panel: song title, artist, where it is (the source's own name, the folder and the number, as on the player), BPM (at the detected deck
   pitch), the whole-song waveform with IN and SYNC (the analysed mix-out window, toned down), the song time (elapsed and remaining) and a small note "sync area in 0:37" / "sync area · 16 bars left".
   Tiny in the corners: listening status (sure / likely / unsure, deck pitch), the mic on/off and "…" (test with
   file, details).
 * **Picks** (right): "Easy" = best matches, "Harder" = unexpected ones; Simple (default) shows 2 + 1, Full 3 + 2 (all five fit on one landscape screen);
-  the rest of the matches follow as the same cards when you scroll. New picks come with every new song. Each row: title, disc location, BPM, the join waveform (end of this song over the start of that one,
+  the rest of the matches follow as the same cards when you scroll. New picks come with every new song. Each row: title, where it is, BPM, the join waveform (end of this song over the start of that one,
   aligned at the join) and one grey line: "pitch +4.0%" = where to set the incoming deck's pitch fader,
   key relation, transition type (and why it is a harder pick). Tap to pin as NEXT (tap again to unpin),
   long-press for the reasons. "Simple / Full" sits top left of the picks; the "Minimal" switch in the app's top-left corner (remembered) switches the waveforms off: same screen and same picks, the playing panel keeps its whole-song wave and each pick becomes a compact pill without the join wave (title, artist, folder, BPM · pitch, move); the CD1 / CD2 / All chips (top right, each on/off; CD1+CD2 on by default, All = the
   other catalogue cuts) choose where picks come from. Colours: muted lavender = CD1, dark blue = CD2 (folder paths, waves,
-  CDs tab), grey wave = no beat-match. 🎃 = Halloween, RMX = remix / edit. Tap a join wave to cycle the next song's
+  Crate tab), grey wave = no beat-match. 🎃 = Halloween, RMX = remix / edit. Tap a join wave to cycle the next song's
   start point (mix-in start, track start, steady beat, then every 8 bars); "start 0:32" under the wave shows it,
   and a pinned pick keeps it. Join snippets are 8 samples per beat (tools/mixwaves_all.py --spb 8; refresh only
   them with `prep_data.py --snippets-only`).
@@ -134,13 +134,17 @@ built app's embedded.mobileprovision), so the app keeps working until then witho
 * **Set recording**: every listening session is recorded from the same microphone tap that feeds recognition
   (one engine) to `Documents/Sets/Deck set <date time>.aac` (AAC, 128 kbps, ADTS so the file stays playable
   even if the app quits), with `<name> log.json` (timestamp, seconds into the recording, track id, title,
-  artist, CD / folder / track, detected pitch, confidence; rewritten after every change) and
+  artist, place (source / folder / number, or "in <folder>"), detected pitch, confidence; rewritten after every change) and
   `<name> tracklist.txt` (one line per song, appended as it goes). The tiny "REC 0:12:34" on the status line
   pauses / resumes it; the "…" sheet can switch recording off. Get the files with the Files app (On My iPad >
   Deck > Sets) or Finder (iPad > Files > Deck). The app declares background audio, so capture should continue
   if the screen locks (the screen is kept on while the app is open anyway); not yet verified on the iPad.
-* **CDs**: a dense list of both discs on one screen ("Details" switches to the larger rows); both discs side by side in landscape (one at a time in portrait), by folder, numbered as on the discs. Tap a song to set it as playing by hand
-  (fallback if the room is too loud or the iPad cannot hear).
+* **Crate** (the tab's name is provisional and is one constant, `CrateTabView.title`): first each source (the CD, stick
+  or card the songs were read from) by its own name, by folder, numbered as the player numbers them; then a section
+  "Folders" with the songs that have no source, by their folder, unnumbered. A dense list ("Details" switches to the
+  larger rows); the sections side by side in landscape, one at a time in portrait. Tap a song to set it as playing by
+  hand (fallback if the room is too loud or the iPad cannot hear). The bundled data's sources are named "CD1
+  Singalongs" and "CD2 Mix-ins": those are the discs' own names, data, not our word.
 * **Mix map**: the bundled interactive map.
 * The ladybug button opens the debug sheet: "Test with file" (pick an audio file, a start time and a
   pitch rendering; "keep going" simulates playing), match counts, latency and the log.
@@ -165,8 +169,8 @@ built app's embedded.mobileprovision), so the app keeps working until then witho
 (the deck:// scheme also works from Safari, with a confirmation prompt):
 `deck://test?path=/abs/file.mp3&start=60&render=r%2B4&loop=1`, `deck://mic`, `deck://stop`, `deck://set?id=<track id>`,
 `deck://mode?m=simple|full`, `deck://all?on=1`,
-`deck://lib?cd1=1&cd2=0&all=0` (the whole filter, the first and second disc by position),
-`deck://lib?disc=<name>&on=0|1` (one disc on or off), `deck://shuffle` (re-roll), `deck://shuffle?amt=0.3` (set the Shuffle
+`deck://lib?cd1=1&cd2=0&all=0` (the whole filter, the first and second source by position; test hooks keep their old names),
+`deck://lib?disc=<name>&on=0|1` (one source on or off, by its label or name), `deck://shuffle` (re-roll), `deck://shuffle?amt=0.3` (set the Shuffle
 dial, 0 to 1, then re-roll), `deck://pin?i=0`, `deck://tab?i=0|1|2`,
 `deck://scroll?to=more|crate-rest|more-end` (scroll the picks to More, to where the shortlist ends, or to the end),
 `deck://search?q=love` (search More; an empty q clears),
@@ -178,7 +182,7 @@ dial, 0 to 1, then re-roll), `deck://pin?i=0`, `deck://tab?i=0|1|2`,
   tested only through file rendering and the same SHSession code; test it once on the iPad before the party
   (play a CD track near it).
 * Tempo-only pitch needs about 20 s of steady matches before it shows; until then it shows "±0%".
-* Very loud rooms reduce matching; the level meter helps place the iPad. Setting the song by hand on the CDs tab always works.
+* Very loud rooms reduce matching; the level meter helps place the iPad. Setting the song by hand on the Crate tab always works.
 * `UIRequiresFullScreen` is on (no Split View), so the app owns the screen and can rotate freely.
 
 ## TestFlight (remote updates)
@@ -209,14 +213,14 @@ song at a time: when a song is recognised (or set by hand) the app scores it int
 scored pair as that song's list, best first, and remembers the last 8 songs' lists, and keeps no table of all pairs. The one thing that needs the whole crate is
 the timbre rank (how a pair's sound similarity compares with every other pair's), so the load builds the sorted list
 of all track-to-track similarities once. From that list the screen keeps the song's shortlist: the best tenth of the
-library by score, never fewer than 10, after the filters (one row per recording, nothing played in the last 12, the disc
+library by score, never fewer than 10, after the filters (one row per recording, nothing played in the last 12, the source
 chips). The Shuffle dial next to Simple / Full orders it: at 0 percent the shortlist is in score order, at 100 percent
 it is shuffled fairly, and in between each song's place blends its score with a dice roll, so the better songs tend to
 stay near the top. Full shows the first 10, Simple the first 5, the rest of the shortlist sits under More; a pinned song stays first.
 More then runs on past the shortlist with every other song the filters leave, in score order, after a thin line
 ("rest of the crate, by score"), and has a search at its top over title and artist (the picks above are not filtered).
-A row's small label says what is unexpected about it (half time, tempo change, another disc, deep cut for the
-lower half of the shortlist). The full library (Oct 30, 2026: 2,327 tracks, 141 MB with
+A row's small label says what is unexpected about it (half time, tempo change, "to" another source by its name, "in"
+its folder when it is on no source, deep cut for the lower half of the shortlist). The full library (Oct 30, 2026: 2,327 tracks, 141 MB with
 signatures; the Release build on the iPad A16 iOS 27 simulator) loads in about 5 s, 2.8 s of it the similarity
 list, and holds about 0.5 GB afterwards (it held 4.3 GB and took 2 min 7 s when every pair was scored at load); one
 song's picks take 55 to 80 ms, and a streamed track is matched within a few seconds, each 4 s segment in 1 to 4 ms.
@@ -224,10 +228,12 @@ A 238-track crate file loads at once and scores a song in about 7 ms. From a cra
 lanes come from the per-bar loudness: each bar is measured against the song's loudest bar, as the bundled waves are,
 then the quiet floor (the quietest tenth of the song's bars) is removed and the same curve applied, so a lane is the
 whole-song wave zoomed in to the join, one flat step per bar cut by the beat and bar lines (the bundled data's lanes
-are finer, an eighth of a beat per sample from the audio). The crate file's disc and folder labels (organised in Deckie Desk's Discs panel)
-give the CDs tab its discs, folders and numbered songs, give the picks one filter chip per disc (named after it,
-shortened to about 10 characters, the two disc colours alternating, every disc on by default) and mark songs on a
-disc as favoured; a song with no folder label shows the file's own folder. Not yet from a crate file: pitch-variant
+are finer, an eighth of a beat per sample from the audio). The crate file's places (D25, D26: Deckie Desk
+reads each CD, stick or card as it is and writes its own name, the folder on it and the player's number into the
+format's `disc`, `folder` and `track` fields) give the Crate tab its sources, folders and numbered songs, give the
+picks one filter chip per source (named after it, shortened to about 10 characters, the two colours alternating, every
+source on by default) and mark songs on a source as favoured; a song with no source shows the file's own folder. On
+screen a source is always its own name; "disc", "CD" and "CDs" as our word are gone. Not yet from a crate file: pitch-variant
 signatures.
 
 ## The same song (Nov 13, 2026, D24)
@@ -238,11 +244,11 @@ for recognition. The rule is the shared core's (`SameSong`, `core/Sources/Deckie
 index of copies is `Library.copiesByCut`.
 
 - **Picks**: one row per recording. The row is the copy whose place leads among the copies the filter allows: on the
-  playing song's disc, else on the first disc in the crate's order. A song is allowed when any copy is; copies on a disc
-  switched off still show on the row as "also on". A song played in the last 12, by any copy, is left out. The
+  playing song's source, else on the first source in the crate's order. A song is allowed when any copy is; copies on
+  a source switched off still show on the row as "also on". A song played in the last 12, by any copy, is left out. The
   shortlist's tenth counts songs, not entries.
-- **Places**: the playing panel and each pick show the leading place, then "also on CD2 / Peak / 04" for the other
-  copies on discs and "also in <folder>" for copies on no disc. The CDs tab lists each copy in its own place.
+- **Places**: the playing panel and each pick show the leading place, then "also on Stick 3 / Peak / 04" for the
+  other copies on sources and "also in <folder>" for copies on no source. The Crate tab lists each copy in its own place.
 - **Recognition**: a match on any copy of the playing song is the playing song (same audio, same position); a match
   on another song is taken as its leading copy, so its copies count as one challenger.
 - The bundled sprint data keeps the lab's own `cut` values.
