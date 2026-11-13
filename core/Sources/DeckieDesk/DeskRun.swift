@@ -32,8 +32,16 @@ public struct RunProgress: Sendable {
     public var done: Int
     public var total: Int
     public var remaining: Double?
-    /// A line for the run's list (a file read, or a step), or nil.
-    public var line: String?
+    /// What just happened, for the run's list, or nil.
+    public var line: RunLine?
+}
+
+/// One line of a run's list, as data; a desk says it in its own words.
+public enum RunLine: Sendable, Equatable {
+    /// The folder is listed: audio files found, unchanged since the last run, and to read now.
+    case started(files: Int, unchanged: Int, queued: Int)
+    /// A file was read: its path (the source's name first) and what happened.
+    case file(rel: String, outcome: FileProgress.Outcome)
 }
 
 /// What a run did, measured as it ran (no tuning: these are for collecting real timings). Shown on the finished
@@ -181,7 +189,7 @@ public final class DeskRun: @unchecked Sendable {
             default: return nil
             }
         }
-        @Sendable func emit(_ stage: RunStage, _ line: String?) {
+        @Sendable func emit(_ stage: RunStage, _ line: RunLine?) {
             state.lock.lock()
             let p = RunProgress(stage: stage, done: min(state.done, state.total), total: state.total, remaining: estimate(),
                                 line: line)
@@ -225,18 +233,12 @@ public final class DeskRun: @unchecked Sendable {
             switch event {
             case let .started(files, unchanged, queued, _, _):
                 state.lock.lock(); state.total = files; state.lock.unlock()
-                emit(.reading, "\(files) files, \(unchanged) unchanged, \(queued) to read")
+                emit(.reading, .started(files: files, unchanged: unchanged, queued: queued))
             case let .file(p):
                 state.lock.lock()
                 state.builderRemaining = p.remaining; state.builderStamp = Date()
                 if p.id == nil { state.done += 1 } else { state.waiting += 1 }
                 state.lock.unlock()
-                let line: String
-                switch p.outcome {
-                case let .analysed(s): line = p.rel + String(format: "  %.1f s", s)
-                case .reused: line = p.rel + "  (read before)"
-                case let .failed(f): line = p.rel + "  not read: \(f)"
-                }
                 if let id = p.id {
                     let url = folder.appendingPathComponent(String(p.rel.dropFirst(prefix.count)))
                     queue.async {
@@ -245,7 +247,7 @@ public final class DeskRun: @unchecked Sendable {
                         emit(.reading, nil)
                     }
                 }
-                emit(.reading, line)
+                emit(.reading, .file(rel: p.rel, outcome: p.outcome))
             case .writing:
                 break
             }
