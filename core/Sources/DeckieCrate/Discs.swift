@@ -1,8 +1,15 @@
-// Discs and folders: how a DJ organises the crate for a night. A disc is the set of songs taken to a night; its
-// folders are the groups inside it, in the order the DJ's player shows them; each folder's songs are numbered 1..n.
-// The labels are the crate's own `ident.disc`, `ident.folder` and `ident.track` (crate v1, no new field), so a track
-// sits in at most one folder of one disc. These operations are plain Swift, shared by every desk (Mac, Windows,
-// Linux); the booth reads the same labels. Every operation leaves each folder numbered 1..n in order, no gaps.
+// Sources and their folders, and the corrections a DJ may make to them. A source (D26) is the thing a DJ holds that
+// the songs were read from: a burned CD, a USB stick, an SD card; in the code and the format it is still called a
+// disc. Its folders are the groups inside it, in the order the DJ's player shows them; each folder's songs are
+// numbered from 1. The labels are the crate's own `ident.disc`, `ident.folder` and `ident.track` (crate v1, no new
+// field), so a track sits in at most one folder of one source. Since D25, Desk reads a source as it is
+// (SourcePlaces.swift) and these operations are for corrections (a name, an order read wrongly); building a source by
+// hand stays possible here for later desks (D20). Plain Swift, shared by every desk (Mac, Windows, Linux); the booth
+// reads the same labels.
+//
+// Numbers: a folder that an operation changes is numbered 1..n in order, no gaps. A folder an operation does not touch
+// keeps its numbers, so a source read with a gap (a file on the stick that is not in the crate, where the player still
+// counts it) keeps the player's numbers until the DJ changes that folder.
 
 /// One disc as the crate holds it: its folders in name order.
 public struct DiscPlan: Equatable, Sendable {
@@ -19,13 +26,15 @@ public struct FolderPlan: Equatable, Sendable {
 }
 
 extension Crate {
-    /// The discs in name order, each with its folders in name order, each with its track ids in `track` order (the
-    /// order the booth's CDs tab shows). A track with a disc and no folder is in the folder named "".
+    /// The discs in name order, each with its folders in the order a player walks them
+    /// (`SourceReading.groupComesBefore`), each with its track ids in `track` order (the order the booth's Crate tab
+    /// shows). A track with a disc and no folder is in the folder named "".
     public var discPlan: [DiscPlan] {
         let groups = folderGroups()
         let discs = Set(groups.keys.map(\.disc)).sorted()
         return discs.map { d in
-            DiscPlan(name: d, folders: groups.keys.filter { $0.disc == d }.map(\.folder).sorted().map { f in
+            DiscPlan(name: d, folders: groups.keys.filter { $0.disc == d }.map(\.folder)
+                .sorted(by: SourceReading.groupComesBefore).map { f in
                 FolderPlan(name: f, trackIds: groups[FolderKey(disc: d, folder: f)]!.map { tracks[$0].id })
             })
         }
@@ -56,18 +65,22 @@ extension Crate {
         let at = min(max(index ?? order.count, 0), order.count)
         order.insert(contentsOf: moving, at: at)
         let pos = positions()
+        var left = Set<FolderKey>()
         for id in moving {
+            if let k = key(of: pos[id]!) { left.insert(k) }
             tracks[pos[id]!].ident.disc = disc; tracks[pos[id]!].ident.folder = folder
         }
         for (n, id) in order.enumerated() { tracks[pos[id]!].ident.track = n + 1 }
-        renumber()
+        left.remove(FolderKey(disc: disc, folder: folder))
+        renumber(left)
     }
 
     /// Takes those tracks off their discs: clears disc, folder and track. Unknown ids are ignored.
     public mutating func remove(_ ids: [String]) {
         let pos = positions()
-        for id in ids { if let i = pos[id] { clearLabels(i) } }
-        renumber()
+        var left = Set<FolderKey>()
+        for id in ids { if let i = pos[id] { if let k = key(of: i) { left.insert(k) }; clearLabels(i) } }
+        renumber(left)
     }
 
     /// Moves a track to `index` (0 is the top; clamped) within its own folder. Nothing happens for a track on no disc.
@@ -77,44 +90,53 @@ extension Crate {
     }
 
     /// Renames a disc. Renaming onto a disc that exists joins the two; a folder of the same name on both keeps the
-    /// other disc's songs first and these after them.
+    /// other disc's songs first and these after them, numbered again. A folder that does not join keeps its numbers.
     public mutating func renameDisc(_ name: String, to new: String) {
         guard name != new else { return }
         let groups = folderGroups()
+        var joined = Set<FolderKey>()
         for key in groups.keys.sorted(by: { $0.folder < $1.folder }) where key.disc == name {
             let after = trackIds(disc: new, folder: key.folder).count
+            if after > 0 { joined.insert(FolderKey(disc: new, folder: key.folder)) }
             for i in groups[key]! {
                 tracks[i].ident.disc = new
-                tracks[i].ident.track = after + (tracks[i].ident.track ?? 0)
+                if after > 0 { tracks[i].ident.track = after + (tracks[i].ident.track ?? 0) }
             }
         }
-        renumber()
+        renumber(joined)
     }
 
-    /// Renames a folder of a disc. Renaming onto a folder that exists joins them, that folder's songs first.
+    /// Renames a folder of a disc; its songs keep their numbers. Renaming onto a folder that exists joins them, that
+    /// folder's songs first, numbered again.
     public mutating func renameFolder(_ folder: String, inDisc disc: String, to new: String) {
         guard folder != new, let members = folderGroups()[FolderKey(disc: disc, folder: folder)] else { return }
         let after = trackIds(disc: disc, folder: new).count
-        for (n, i) in members.enumerated() { tracks[i].ident.folder = new; tracks[i].ident.track = after + n + 1 }
-        renumber()
+        for (n, i) in members.enumerated() {
+            tracks[i].ident.folder = new
+            if after > 0 { tracks[i].ident.track = after + n + 1 }
+        }
+        if after > 0 { renumber([FolderKey(disc: disc, folder: new)]) }
     }
 
     /// Deletes a disc: its tracks lose their disc, folder and track labels (the tracks stay in the crate).
     public mutating func deleteDisc(_ name: String) {
         for i in tracks.indices where tracks[i].ident.disc == name { clearLabels(i) }
-        renumber()
     }
 
     /// Deletes a folder of a disc: its tracks lose their labels (the tracks stay in the crate).
     public mutating func deleteFolder(_ folder: String, inDisc disc: String) {
         for i in folderGroups()[FolderKey(disc: disc, folder: folder)] ?? [] { clearLabels(i) }
-        renumber()
     }
 
     /// Numbers each folder's tracks 1..n in their present order (track number, then crate order for ties and for
-    /// tracks with no number). Every operation ends with it; a desk may also call it on a crate made elsewhere.
-    public mutating func renumber() {
-        for (_, members) in folderGroups() {
+    /// tracks with no number). The operations number only the folders they change; a desk may call this on a crate
+    /// made elsewhere, which also closes the gaps a source was read with.
+    public mutating func renumber() { renumber(nil) }
+
+    /// `renumber` for those folders only (every folder when nil).
+    private mutating func renumber(_ only: Set<FolderKey>?) {
+        if let only, only.isEmpty { return }
+        for (k, members) in folderGroups() where only?.contains(k) ?? true {
             for (n, i) in members.enumerated() where tracks[i].ident.track != n + 1 { tracks[i].ident.track = n + 1 }
         }
     }
@@ -137,6 +159,10 @@ extension Crate {
             }
         }
         return g
+    }
+
+    private func key(of i: Int) -> FolderKey? {
+        tracks[i].ident.disc.map { FolderKey(disc: $0, folder: tracks[i].ident.folder ?? "") }
     }
 
     private func positions() -> [String: Int] {
