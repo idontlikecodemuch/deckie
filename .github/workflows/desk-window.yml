@@ -1,0 +1,63 @@
+# Deckie Desk's window on Windows and Linux (D32): the Swift shell in desk-shell/ (the vendored `webview` library
+# over WebView2 or WebKitGTK) built, then started for a few seconds: it must make its window, pass one message each
+# way with a page and exit cleanly (`deckie-desk --self-test`). Runs on the working branch only for now.
+name: desk-window
+
+on:
+  push:
+    branches: [pc/desk-window]
+    paths: [desk-shell/**, desk-web/**, core/**, .github/workflows/desk-window.yml]
+  workflow_dispatch:
+
+jobs:
+  linux:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    container:
+      # The same pinned Swift 6.4.1 image as core-linux.yml (Ubuntu 24.04; DEPENDENCIES.md, section 1).
+      image: swift@sha256:6304481cf2717966b7ba175162e397ea2f2cc3161909f2b2a5cf40036079a0f7 # swift:6.4.1-noble
+    steps:
+      - uses: actions/checkout@v4
+      # WebKitGTK and GTK 3 come from Ubuntu's own archive, as they would on a DJ's Linux computer (LGPL, loaded from
+      # the system; DEPENDENCIES.md section 10). Xvfb is a screen with no monitor, for starting the window here.
+      - name: Install WebKitGTK, GTK 3 and a virtual display
+        run: |
+          apt-get update
+          apt-get install -y --no-install-recommends libwebkit2gtk-4.1-dev pkg-config xvfb xauth dbus-x11
+          pkg-config --modversion webkit2gtk-4.1 gtk+-3.0
+      - name: Build the shell
+        working-directory: desk-shell
+        run: swift build -v
+      # WebKitGTK's own sandbox needs user namespaces, which a CI container does not give; this switch, for this
+      # check only, runs its web process without it. A DJ's computer keeps the sandbox.
+      - name: Start the window under a virtual display and exchange a message with the page
+        working-directory: desk-shell
+        env:
+          WEBKIT_DISABLE_SANDBOX_THIS_IS_DANGEROUS: "1"
+          DECKIE_SELF_TEST_SECONDS: "60"
+        run: xvfb-run -a dbus-run-session -- .build/debug/deckie-desk --self-test
+
+  windows:
+    runs-on: windows-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      # As core-windows.yml (DEPENDENCIES.md, sections 1 and 2).
+      - uses: compnerd/gha-setup-swift@main
+        with:
+          swift-version: swift-6.4.1-release
+          swift-build: 6.4.1-RELEASE
+      - name: Is the WebView2 runtime here?
+        shell: pwsh
+        run: |
+          $keys = @('HKLM:\SOFTWARE\WOW6432Node\Microsoft\EdgeUpdate\Clients\{F3017226-FE2A-4295-8BDF-00C3A9A7E4C5}',
+                    'HKLM:\SOFTWARE\Microsoft\EdgeUpdate\Clients\{F3017226-FE2A-4295-8BDF-00C3A9A7E4C5}')
+          foreach ($k in $keys) { if (Test-Path $k) { "$k : " + (Get-ItemProperty $k).pv } else { "$k : not present" } }
+      - name: Build the shell
+        working-directory: desk-shell
+        run: swift build -v
+      - name: Start the window and exchange a message with the page
+        working-directory: desk-shell
+        env:
+          DECKIE_SELF_TEST_SECONDS: "60"
+        run: .build\debug\deckie-desk.exe --self-test
