@@ -53,6 +53,9 @@ struct PlayingPanel: View {
                 VStack(alignment: .leading, spacing: 22) {
                     VStack(alignment: .leading, spacing: 4) {
                         Text(t.folderPath).font(.system(size: 18, weight: .semibold, design: .rounded)).foregroundStyle(t.on ? t.discColor : Theme.dim).lineLimit(1)
+                        if let also = Library.shared.alsoOn(t, playingDisc: t.disc) {
+                            Text(also).font(.system(size: 14, weight: .medium, design: .rounded)).foregroundStyle(Theme.mut).lineLimit(1).minimumScaleFactor(0.7)
+                        }
                         Text(t.numberedSong).font(.system(size: 44, weight: .heavy)).foregroundStyle(Theme.tx).lineLimit(2).minimumScaleFactor(0.6)
                         Text(t.artist).font(.system(size: 24, weight: .medium)).foregroundStyle(Theme.mut).lineLimit(1).minimumScaleFactor(0.7)
                     }
@@ -367,6 +370,9 @@ struct PlainPick: View {
                 HStack(spacing: 14) {
                     Text(target.artist).font(.system(size: big ? 14 : 13)).foregroundStyle(Theme.dim).lineLimit(1)
                     Text(target.folderPath).font(.system(size: big ? 14 : 13, weight: .semibold, design: .rounded)).foregroundStyle(target.on ? target.discColor : Theme.dim).lineLimit(1)
+                }
+                if let also = Library.shared.alsoOn(target, playingDisc: cur.disc) {
+                    Text(also).font(.system(size: big ? 13 : 12, design: .rounded)).foregroundStyle(Theme.dim).lineLimit(1).minimumScaleFactor(0.8)
                 }
             }
             Spacer(minLength: 10)

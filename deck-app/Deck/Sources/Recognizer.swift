@@ -298,9 +298,15 @@ import SwiftUI
                 let f = it[Self.kFlav] as? String ?? "o", p = it[Self.kPct] as? Int ?? 0
                 return (fileEnd.map { it.matchOffset + $0 } ?? it.predictedCurrentMatchOffset) * (f == "o" ? 1 : 1 + Double(p) / 100)
             }
-            let sameSong = m.mediaItems.filter { ($0[Self.kID] as? String) == currentId }
+            // the playing song is any copy of its recording (D24): the same audio, so the same place in it
+            let lib = Library.shared
+            let sameSong = m.mediaItems.filter { lib.sameSong($0[Self.kID] as? String, currentId) }
             let preferred = predicted.flatMap { pr in sameSong.min { abs(origOffset($0) - pr) < abs(origOffset($1) - pr) } }
-            guard let item = preferred ?? m.mediaItems.first, let id = item[Self.kID] as? String else { return }
+            guard let item = preferred ?? m.mediaItems.first, let matched = item[Self.kID] as? String else { return }
+            // Whichever copy was heard, the song is named once: a copy of the playing song is the playing song (never a
+            // song change), and another song is the copy whose place leads (on the playing song's disc, else the first
+            // disc in order), so every copy of it counts as one challenger.
+            let id = lib.sameSong(matched, currentId) ? currentId! : lib.leadingCopy(of: matched, playingDisc: current?.disc)
             // ShazamKit keeps re-reporting the last match while the input is silent (same raw match offset, only the
             // prediction moves on). Those repeats are not new evidence: skip them, so pauses and cuts are seen.
             let raw = item.matchOffset
@@ -310,12 +316,6 @@ import SwiftUI
                 return
             }
             lastRaw[id] = raw
-            // another cut of the song now playing (an alternate version in the catalogue): same song, not a challenger
-            if let c = current, id != c.id, let t = Library.shared.track(id), t.songKey == c.songKey {
-                hits.append((now, c.id)); lastMatch = now; lastAnyMatch = now; lastCurrentMatch = now
-                if paused { paused = false; frozenAt = nil }
-                return
-            }
             let flav = item[Self.kFlav] as? String ?? "o"
             let pct = item[Self.kPct] as? Int ?? 0
             let vr = 1 + Double(pct) / 100

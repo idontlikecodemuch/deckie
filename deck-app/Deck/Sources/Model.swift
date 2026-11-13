@@ -1,5 +1,6 @@
 import Foundation
 import SwiftUI
+import DeckieCrate
 
 // MARK: - bundled data (Deck/Resources/deck_data.json, built by tools/prep_data.py)
 
@@ -81,12 +82,6 @@ struct Track: Codable, Identifiable, Hashable {
     var isRemix: Bool { !ver.isEmpty || kind == "pool edit" || kind == "official remix" }
 
     var bpmShown: Double { bpm ?? bpmTag ?? 0 }
-    /// one entry per song in suggestions: the title without bracketed version info, letters and digits only
-    var songKey: String {
-        var t = song.lowercased()
-        while let a = t.firstIndex(where: { $0 == "(" || $0 == "[" }), let b = t[a...].firstIndex(where: { $0 == ")" || $0 == "]" }) { t.removeSubrange(a...b) }
-        return String(t.filter { $0.isLetter || $0.isNumber })
-    }
     var duration: Double { dur ?? secs ?? 240 }
     /// "CD2 · 6-04": folder number and track number as the CDJ shows them
     var discLabel: String? {
@@ -102,6 +97,11 @@ struct Track: Codable, Identifiable, Hashable {
     /// "CD1 / 6 - 125-129 /": the folder path on the disc
     /// Off the discs (or in a crate without discs): the file's own folder, which is how the DJ's software shows it.
     var folderPath: String { cd.map { "CD\($0) / \(folder) /" } ?? folder }
+    /// "CD2 / Peak / 04": where this copy is, as an "also on" line says it; off the discs, the file's own folder.
+    var placeText: String {
+        guard let cd else { return folder }
+        return "CD\(cd) / \(folder)" + (num.map { String(format: " / %02d", $0) } ?? "")
+    }
     /// "06 Lady (Hear Me Tonight)": track number as in the file name on the deck
     var numberedSong: String { num.map { String(format: "%02d · ", $0) + song } ?? song }
     /// the disc's colour, the two disc colours alternating by disc number (CD1 lavender, CD2 blue, CD3 lavender, ...;
@@ -165,6 +165,7 @@ final class Library {
                   let d = try? Data(contentsOf: url), let dd = try? JSONDecoder().decode(DeckData.self, from: d) {
             data = dd
             byId = Dictionary(uniqueKeysWithValues: dd.tracks.map { ($0.id, $0) })
+            indexCopies()
             if let u = Bundle.main.url(forResource: "overview", withExtension: "json"), let d2 = try? Data(contentsOf: u),
                let ov = try? JSONDecoder().decode([String: Overview].self, from: d2) { overview = ov }
         }
@@ -181,6 +182,46 @@ final class Library {
         data = c.data
         byId = Dictionary(uniqueKeysWithValues: c.data.tracks.map { ($0.id, $0) })
         overview = c.overview
+        indexCopies()
+    }
+
+    // MARK: the same song (D24)
+
+    /// The copies of each recording (`Track.cut`, the crate's cut_key, else the entry's id), in crate order. Two
+    /// entries are the same song only when they are the same recording; nothing is folded by title.
+    private(set) var copiesByCut: [String: [String]] = [:]
+    private func indexCopies() {
+        copiesByCut = [:]
+        for t in data.tracks { copiesByCut[t.cut, default: []].append(t.id) }
+    }
+    /// How many songs the library holds, counting copies of one recording once.
+    var songCount: Int { copiesByCut.count }
+    /// Whether two entries are the same song (the same recording).
+    func sameSong(_ a: String?, _ b: String?) -> Bool {
+        guard let a, let b, let x = byId[a], let y = byId[b] else { return false }
+        return x.cut == y.cut
+    }
+    /// Every copy of the song `id` is, `id` included, in the order the booth shows their places: the one that leads
+    /// first (on `playingDisc`, else on the first disc in the crate's disc order; `SameSong.ordered`), then the rest.
+    /// `among` keeps only those copies (for a filter); empty when none is left.
+    func copies(of id: String, playingDisc: String?, among: ((Track) -> Bool)? = nil) -> [Track] {
+        guard let t = byId[id] else { return [] }
+        let all = (copiesByCut[t.cut] ?? [id]).compactMap { byId[$0] }.filter { among?($0) ?? true }
+        let places = all.map { SameSong.Place(id: $0.id, disc: $0.disc, folder: $0.folder, track: $0.num) }
+        return SameSong.ordered(places, playingDisc: playingDisc, discOrder: data.discs.map(\.disc)).compactMap { byId[$0.id] }
+    }
+    /// The copy of the song `id` is whose place leads (see `copies(of:playingDisc:among:)`).
+    func leadingCopy(of id: String, playingDisc: String?) -> String {
+        copies(of: id, playingDisc: playingDisc).first?.id ?? id
+    }
+    /// "also on CD2 / Peak / 04 · also in Album": the places of `t`'s other copies, in order; nil when it has none.
+    func alsoOn(_ t: Track, playingDisc: String?) -> String? {
+        let others = copies(of: t.id, playingDisc: playingDisc).filter { $0.id != t.id }
+        guard !others.isEmpty else { return nil }
+        let onDiscs = others.filter { $0.cd != nil }.map(\.placeText)
+        let inFolders = others.filter { $0.cd == nil }.map(\.placeText)
+        return ((onDiscs.isEmpty ? [] : ["also on " + onDiscs.joined(separator: ", ")])
+                + (inFolders.isEmpty ? [] : ["also in " + inFolders.joined(separator: ", ")])).joined(separator: " · ")
     }
 
     static var rememberedCrate: URL? {

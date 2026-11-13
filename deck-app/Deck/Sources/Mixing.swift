@@ -95,22 +95,27 @@ struct Option: Identifiable, Hashable {
 struct Suggester {
     let lib = Library.shared
 
-    /// Candidate pairs for `cur`, limited to the target discs; one cut per song; nothing recently played.
+    /// Candidate pairs for `cur`, limited to the target discs; one row per song; nothing recently played.
+    /// One song is one recording (D24): copies of it (the same `cut`) make one row, never versions with a similar
+    /// title. The row is the copy whose place leads among the copies the filter allows: on the playing song's disc,
+    /// else on the first disc in the crate's order. A song is allowed when any copy is; copies on discs switched off
+    /// still show on the row as "also on". A song played recently, by any copy, is left out, as is the playing song.
     func candidates(for cur: Track, target: LibraryFilter, exclude: Set<String>) -> [Pair] {
         let pairs = lib.pairs(from: cur.id)
-        var bestPerCut: [String: Pair] = [:]
+        let excluded = Set(exclude.compactMap { lib.byId[$0]?.cut })
+        var byCut: [String: [Pair]] = [:]
         var order: [String] = []
         for p in pairs {
-            guard let t = lib.byId[p.b], t.id != cur.id, t.cut != cur.cut, t.songKey != cur.songKey, !exclude.contains(t.id) else { continue }
-            if !target.allows(t) { continue }
-            if let old = bestPerCut[t.songKey] {
-                // prefer the on-disc cut, then the longest cut, then the better score
-                let ot = lib.byId[old.b]!
-                let better = (t.on && !ot.on) || (t.on == ot.on && ((t.longest && !ot.longest) || (t.longest == ot.longest && p.s > old.s)))
-                if better { bestPerCut[t.songKey] = p }
-            } else { bestPerCut[t.songKey] = p; order.append(t.songKey) }
+            guard let t = lib.byId[p.b], t.cut != cur.cut, !excluded.contains(t.cut), target.allows(t) else { continue }
+            if byCut[t.cut] == nil { order.append(t.cut) }
+            byCut[t.cut, default: []].append(p)
         }
-        return order.compactMap { bestPerCut[$0] }.sorted { $0.s > $1.s }
+        return order.compactMap { cut -> Pair? in
+            guard let ps = byCut[cut], let first = ps.first else { return nil }
+            if ps.count == 1 { return first }
+            let lead = lib.copies(of: first.b, playingDisc: cur.disc, among: target.allows).first?.id
+            return ps.first { $0.b == lead } ?? ps.max { $0.s < $1.s }
+        }.sorted { $0.s > $1.s }
     }
 
     func surpriseTags(_ cur: Track, _ p: Pair, deepCut: Bool) -> [String] {
@@ -135,7 +140,7 @@ struct Suggester {
     /// `shortlist` is how many shortlist picks the list holds; "deep cut" marks the lower half of the shortlist by score.
     func ranked<R: RandomNumberGenerator>(cur: Track, target: LibraryFilter, exclude: Set<String>, pinned: String?, shuffle: Double, rng: inout R) -> (list: [Option], shortlist: Int) {
         let best = candidates(for: cur, target: target, exclude: exclude.union(pinned.map { [$0] } ?? []))
-        let n = min(best.count, Shortlist.size(libraryCount: lib.data.tracks.count))
+        let n = min(best.count, Shortlist.size(libraryCount: lib.songCount))
         let order = Shortlist.order(scores: best.prefix(n).map(\.s), shuffle: shuffle, rng: &rng)
         var out: [Option] = []
         out.reserveCapacity(best.count + 1)

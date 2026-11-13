@@ -65,7 +65,7 @@ struct CrateLibrary {
                 id: t.id, title: artist.isEmpty ? song : "\(artist) - \(song)", artist: artist, song: song,
                 ver: t.ident.version ?? "", deck: deckName, on: t.ident.disc != nil, disc: t.ident.disc,
                 folder: folder, hal: t.ident.tags.contains("halloween"), kind: t.ident.kind ?? "",
-                era: t.ident.era ?? "", bpmTag: t.file.tagBpm, cut: t.ident.cutKey ?? t.id,
+                era: t.ident.era ?? "", bpmTag: t.file.tagBpm, cut: t.recordingKey,
                 longest: t.ident.isLongest ?? true, secs: t.file.durationS, cd: t.ident.disc.flatMap { cdOf[$0] },
                 num: t.ident.track, bpm: bpm, bpmIn: grid?.bpmIn, bpmOut: grid?.bpmOut,
                 key: t.key?.camelot, keyConf: t.key?.confidence, dur: t.file.durationS,

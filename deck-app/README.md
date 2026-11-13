@@ -124,7 +124,7 @@ built app's embedded.mobileprovision), so the app keeps working until then witho
   them with `prep_data.py --snippets-only`).
 * **Song changes**: a blend (both songs heard) switches only after the new song has out-matched the current one for
   about 10 s ("also hearing: …" shows the other song meanwhile); a hard cut (the old song stops matching, the new
-  one matches 3 times within 6 s) switches in about 4–5 s; another cut of the same song never counts as a change.
+  one matches 3 times within 6 s) switches in about 4–5 s; another copy of the same recording never counts as a change, while a remix, an edit or a live version of a song is a song of its own (D24).
 * **Pauses**: when the song stops matching and the room is quiet the song stays on screen, its position freezes and
   the status shows "paused"; it resumes from the new offset when matches come back. ShazamKit keeps repeating the
   last match during silence; those repeats are ignored. Only after 2 minutes with no match at all does the panel
@@ -209,7 +209,7 @@ song at a time: when a song is recognised (or set by hand) the app scores it int
 scored pair as that song's list, best first, and remembers the last 8 songs' lists, and keeps no table of all pairs. The one thing that needs the whole crate is
 the timbre rank (how a pair's sound similarity compares with every other pair's), so the load builds the sorted list
 of all track-to-track similarities once. From that list the screen keeps the song's shortlist: the best tenth of the
-library by score, never fewer than 10, after the filters (one cut per song, nothing played in the last 12, the disc
+library by score, never fewer than 10, after the filters (one row per recording, nothing played in the last 12, the disc
 chips). The Shuffle dial next to Simple / Full orders it: at 0 percent the shortlist is in score order, at 100 percent
 it is shuffled fairly, and in between each song's place blends its score with a dice roll, so the better songs tend to
 stay near the top. Full shows the first 10, Simple the first 5, the rest of the shortlist sits under More; a pinned song stays first.
@@ -229,3 +229,20 @@ give the CDs tab its discs, folders and numbered songs, give the picks one filte
 shortened to about 10 characters, the two disc colours alternating, every disc on by default) and mark songs on a
 disc as favoured; a song with no folder label shows the file's own folder. Not yet from a crate file: pitch-variant
 signatures.
+
+## The same song (Nov 13, 2026, D24)
+
+Two crate entries are the same song only when they are the same recording: the same `cut_key` in the crate file,
+which Deckie Desk's Find copies fills. Nothing is folded by title, so every version is its own row and its own song
+for recognition. The rule is the shared core's (`SameSong`, `core/Sources/DeckieCrate/SameSong.swift`); the booth's
+index of copies is `Library.copiesByCut`.
+
+- **Picks**: one row per recording. The row is the copy whose place leads among the copies the filter allows: on the
+  playing song's disc, else on the first disc in the crate's order. A song is allowed when any copy is; copies on a disc
+  switched off still show on the row as "also on". A song played in the last 12, by any copy, is left out. The
+  shortlist's tenth counts songs, not entries.
+- **Places**: the playing panel and each pick show the leading place, then "also on CD2 / Peak / 04" for the other
+  copies on discs and "also in <folder>" for copies on no disc. The CDs tab lists each copy in its own place.
+- **Recognition**: a match on any copy of the playing song is the playing song (same audio, same position); a match
+  on another song is taken as its leading copy, so its copies count as one challenger.
+- The bundled sprint data keeps the lab's own `cut` values.
