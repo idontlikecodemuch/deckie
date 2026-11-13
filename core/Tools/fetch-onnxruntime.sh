@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# fetch-onnxruntime.sh: put ONNX Runtime's Linux x86_64 release where Deckie looks for it, checked by its hash.
+# fetch-onnxruntime.sh: put ONNX Runtime's release for this machine (Linux x86_64 or Windows x64) where Deckie looks
+# for it, checked by its hash.
 #
 #   core/Tools/fetch-onnxruntime.sh [--deckie] [DEST]
 #
@@ -28,13 +29,14 @@
 # end, in one rename, once the hash has matched. DEST/.fetched-archive records which archive is there: run again with
 # the same archive installed, the script only reports it; asked for the other archive, it replaces DEST.
 #
-# Windows. The same release has onnxruntime-win-x64-1.31.1.zip (82,929,944 bytes, SHA-256
-# 5869e26bb25314375f2d5ef1877e3ea06b1543d6c710e6e4a1ec2f7177ab4b2c). This script does not fetch it. To use it:
-# download it from the same release page, check the hash (PowerShell: Get-FileHash <zip> -Algorithm SHA256),
-# unzip it, and set DECKIE_ONNXRUNTIME_LIB to the full path of its lib\onnxruntime.dll (or unzip it so that the
-# DLL sits at core\.deps\onnxruntime\lib\onnxruntime.dll). Its .pdb files (debug symbols, 429 MB) are not needed.
+# Windows. Run from Git Bash (which GitHub's Windows machines and Git for Windows both have) on a 64-bit Intel or AMD
+# machine, the script fetches the Windows x64 archive instead, a .zip, pinned the same way: Microsoft's
+# onnxruntime-win-x64-1.31.1.zip (82,929,944 bytes, unpacked without its 429 MB of .pdb debug symbols), or with
+# --deckie Deckie's own onnxruntime-win-x64-1.31.1-deckie-no-telemetry.zip (6,632,634 bytes), the one a shipped
+# Windows build carries and the one the Windows workflows fetch. DEST/lib/onnxruntime.dll is then the library. Windows
+# on Arm has no archive yet.
 #
-# Needs: bash, curl, tar with gzip, sha256sum.
+# Needs: bash, curl, sha256sum, and tar with gzip (Linux) or unzip (Windows).
 
 if [ -z "${BASH_VERSION:-}" ]; then echo "fetch-onnxruntime: run this with bash" >&2; exit 1; fi
 set -euo pipefail
@@ -55,33 +57,40 @@ done
 [ ${#args[@]} -le 1 ] || usage
 
 VERSION="1.31.1"
+# Which platform's archive: Linux x86_64, or Windows x64 when run from Git Bash or MSYS2 there (uname says MINGW or
+# MSYS). Windows on Arm is not fetched: no archive for it is built or pinned yet (DEPENDENCIES.md, section 6).
+case "$(uname -s)/$(uname -m)" in
+    Linux/x86_64) platform=linux-x64; ext=tgz; libname=libonnxruntime.so ;;
+    MINGW*/x86_64|MSYS*/x86_64|CYGWIN*/x86_64) platform=win-x64; ext=zip; libname=onnxruntime.dll ;;
+    *) die "this fetches the Linux x86_64 and the Windows x64 builds; this machine is $(uname -s) $(uname -m)" ;;
+esac
 if [ "$deckie" = 1 ]; then
-    ARCHIVE="onnxruntime-linux-x64-${VERSION}-deckie-no-telemetry.tgz"
+    ARCHIVE="onnxruntime-${platform}-${VERSION}-deckie-no-telemetry.${ext}"
     URL="https://github.com/idontlikecodemuch/deckie/releases/download/onnxruntime-${VERSION}-deckie-no-telemetry/${ARCHIVE}"
-    # TODO-after-first-build: the first run of .github/workflows/onnxruntime-build.yml gives this archive's SHA-256
-    # and size in its Linux job's summary (and in the .sha256 file beside the archive on the release). Put them here
-    # and in DEPENDENCIES.md, section 6; then --deckie works, and can become the default.
-    SHA256="aa2ea7283836606d6a7eda70b0e67d7a35a801ef99268d275c62c7b9374b9ecf"
-    SIZE=10183126
+    # Deckie's own builds, published Oct 29, 2026 (DEPENDENCIES.md, section 6, the table of Deckie's own build).
+    case "$platform" in
+        linux-x64) SHA256="aa2ea7283836606d6a7eda70b0e67d7a35a801ef99268d275c62c7b9374b9ecf"; SIZE=10183126 ;;
+        win-x64)   SHA256="6a5b551f3b446f1d38f3b55cfb058e8ae8e9a6632834ada83a26da624a79a48f"; SIZE=6632634 ;;
+    esac
 else
-    ARCHIVE="onnxruntime-linux-x64-${VERSION}.tgz"
+    ARCHIVE="onnxruntime-${platform}-${VERSION}.${ext}"
     URL="https://github.com/microsoft/onnxruntime/releases/download/v${VERSION}/${ARCHIVE}"
-    SHA256="c849e36a1ef3e22d4ff217b9d1ce4a3cf5b9467b975610913ae959ad5b16bdc9"
-    SIZE=11413655
+    case "$platform" in
+        linux-x64) SHA256="c849e36a1ef3e22d4ff217b9d1ce4a3cf5b9467b975610913ae959ad5b16bdc9"; SIZE=11413655 ;;
+        win-x64)   SHA256="5869e26bb25314375f2d5ef1877e3ea06b1543d6c710e6e4a1ec2f7177ab4b2c"; SIZE=82929944 ;;
+    esac
 fi
-[[ "$SHA256" =~ ^[0-9a-f]{64}$ ]] || die "the SHA-256 of $ARCHIVE is not recorded yet: the first run of .github/workflows/onnxruntime-build.yml gives it in its job summary (see SHA256 in this script); nothing was downloaded"
+[[ "$SHA256" =~ ^[0-9a-f]{64}$ ]] || die "the SHA-256 of $ARCHIVE is not recorded; nothing was downloaded"
 
 here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 core="$(dirname "$here")"
 dest="${args[0]:-$core/.deps/onnxruntime}"
 
-case "$(uname -s)/$(uname -m)" in
-    Linux/x86_64) ;;
-    *) die "this fetches the Linux x86_64 build; this machine is $(uname -s) $(uname -m) (see the Windows note at the top)" ;;
-esac
-for tool in curl tar sha256sum; do command -v "$tool" >/dev/null || die "needs $tool"; done
+tools="curl sha256sum"
+if [ "$ext" = zip ]; then tools="$tools unzip"; else tools="$tools tar"; fi
+for tool in $tools; do command -v "$tool" >/dev/null || die "needs $tool"; done
 
-if [ -f "$dest/.fetched-archive" ] && [ "$(cat "$dest/.fetched-archive")" = "$ARCHIVE $SHA256" ] && [ -e "$dest/lib/libonnxruntime.so" ]; then
+if [ -f "$dest/.fetched-archive" ] && [ "$(cat "$dest/.fetched-archive")" = "$ARCHIVE $SHA256" ] && [ -e "$dest/lib/$libname" ]; then
     say "ONNX Runtime $VERSION ($ARCHIVE) is already in $dest"
     exit 0
 fi
@@ -98,13 +107,25 @@ got="$(sha256sum "$work/$ARCHIVE" | cut -d' ' -f1)"
 say "SHA-256 matches: $SHA256"
 
 mkdir "$work/unpacked"
-tar -xzf "$work/$ARCHIVE" -C "$work/unpacked" --strip-components=1 --no-same-owner
-[ -e "$work/unpacked/lib/libonnxruntime.so" ] || die "the archive has no lib/libonnxruntime.so"
-[ "$(cat "$work/unpacked/VERSION_NUMBER")" = "$VERSION" ] || die "the archive says version $(cat "$work/unpacked/VERSION_NUMBER"), expected $VERSION"
+if [ "$ext" = zip ]; then
+    # The zip holds one folder, like the .tgz; its contents become DEST. Debug symbols (.pdb, in Microsoft's archive
+    # only) are left out: they are 429 MB and nothing needs them.
+    mkdir "$work/zip"
+    unzip -q "$work/$ARCHIVE" -x '*.pdb' -d "$work/zip"
+    top="$(ls -1 "$work/zip")"
+    [ "$(printf '%s\n' "$top" | wc -l)" = 1 ] && [ -d "$work/zip/$top" ] || die "the archive does not hold one folder"
+    rmdir "$work/unpacked"
+    mv "$work/zip/$top" "$work/unpacked"
+else
+    tar -xzf "$work/$ARCHIVE" -C "$work/unpacked" --strip-components=1 --no-same-owner
+fi
+[ -e "$work/unpacked/lib/$libname" ] || die "the archive has no lib/$libname"
+[ "$(tr -d '\r\n' < "$work/unpacked/VERSION_NUMBER")" = "$VERSION" ] || die "the archive says version $(cat "$work/unpacked/VERSION_NUMBER"), expected $VERSION"
 
 vendored="$core/Sources/COnnxRuntime/include"
 for h in onnxruntime_c_api.h onnxruntime_ep_c_api.h onnxruntime_error_code.h; do
-    if ! cmp -s "$work/unpacked/include/$h" "$vendored/$h"; then
+    # Compared without carriage returns: Microsoft's Windows archive has the same headers with Windows line endings.
+    if ! cmp -s <(tr -d '\r' < "$work/unpacked/include/$h") <(tr -d '\r' < "$vendored/$h"); then
         say "warning: $h in the release differs from the vendored copy in $vendored"
     fi
 done
@@ -113,4 +134,4 @@ printf '%s %s\n' "$ARCHIVE" "$SHA256" > "$work/unpacked/.fetched-archive"
 rm -rf "$dest"
 mv "$work/unpacked" "$dest"
 say "ONNX Runtime $VERSION ($ARCHIVE) is in $dest"
-say "library: $dest/lib/libonnxruntime.so"
+say "library: $dest/lib/$libname"

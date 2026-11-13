@@ -1,10 +1,12 @@
-# The Windows probe: build and run the same DeckieCore tests on a Windows runner with the official Swift
-# toolchain. A failure here is evidence for the Swift-on-Windows decision, not a broken build to hide.
+# DeckieCore on Windows: build and run the same tests on a Windows runner with the official Swift toolchain, with
+# ONNX Runtime and the two models fetched by their pinned hashes so the engine's suites run here rather than skip,
+# then build a whole crate file from a small music folder with the command-line builder, check it with the core's
+# validator, and compare its analysis with the same build made on Linux in this same run.
 name: core-windows
 
 on:
   push:
-    branches: [main, pc-linux]
+    branches: [main, pc-linux, pc/windows-builder]
     paths: [core/**, mixer/features/**, mixer/candidates.json, mixer/recs.json, .github/workflows/core-windows.yml]
   pull_request:
     paths: [core/**, mixer/features/**, mixer/candidates.json, mixer/recs.json, .github/workflows/core-windows.yml]
@@ -13,8 +15,10 @@ on:
 jobs:
   probe:
     runs-on: windows-latest
+    # A guard, not a target.
+    timeout-minutes: 60
     env:
-      # As in core-linux.yml: ONNX Runtime's usage reporting off, should a later step ever run it here.
+      # As in core-linux.yml: ONNX Runtime's usage reporting off (Deckie's own build has no reporting client at all).
       ORT_DISABLE_TELEMETRY: "1"
     steps:
       - uses: actions/checkout@v4
@@ -28,14 +32,133 @@ jobs:
           swift-build: 6.4.1-RELEASE
       - name: Swift version
         run: swift --version
+      # ONNX Runtime and the two models, as DEPENDENCIES.md sections 6 to 8 describe, so the engine's suites run:
+      # Deckie's own Windows x64 build of ONNX Runtime 1.31.1 (the one a shipped build carries, without Microsoft's
+      # usage-reporting client; 6.6 MB) and the two pinned models from the release models-1, each kept only if its
+      # SHA-256 is the pinned one. Both scripts run in Git Bash, which the runner has. Cached between runs by the
+      # hashes of the scripts that pin them. No export fallback here: a model the release cannot give fails the run.
+      - name: Cache ONNX Runtime
+        id: onnxruntime
+        uses: actions/cache@v4
+        with:
+          path: core/.deps/onnxruntime
+          key: onnxruntime-win-x64-deckie-${{ hashFiles('core/Tools/fetch-onnxruntime.sh') }}
+      - name: Cache the models
+        id: models
+        uses: actions/cache@v4
+        with:
+          path: core/.models
+          key: models-win-models-1-${{ hashFiles('core/Tools/fetch-models.sh', 'core/Tools/export_beat_this.py', 'core/Tools/export_yamnet.py') }}
+      - name: Fetch ONNX Runtime (Deckie's own build, checked by hash)
+        if: steps.onnxruntime.outputs.cache-hit != 'true'
+        shell: bash
+        run: bash core/Tools/fetch-onnxruntime.sh --deckie
+      - name: Fetch the models from the release models-1 (checked by hash)
+        shell: bash
+        run: bash core/Tools/fetch-models.sh --no-export
       - name: Build
         working-directory: core
         run: swift build -v
-      # The tests that run ONNX Runtime and the Beat This! model skip here, saying so: neither is on this runner.
-      # A Windows run of them would need onnxruntime-win-x64-1.31.1.zip (SHA-256 in DEPENDENCIES.md section 6)
-      # downloaded, checked and unzipped, with DECKIE_ONNXRUNTIME_LIB set to its lib\onnxruntime.dll, and the
-      # exported model (the core-linux cache, passed over as an artifact, or the export run here with Windows'
-      # Python) with DECKIE_BEAT_THIS_MODEL set to it. COnnxRuntime and DeckieInference still build here.
+      # The library is found at core\.deps\onnxruntime\lib\onnxruntime.dll and the models in core\.models, the
+      # defaults of the checkout, so nothing needs to be set. DECKIE_SHIPPED_ONNXRUNTIME makes the release test scan
+      # this library for the reporting client's traces (DEPENDENCIES.md, section 6).
       - name: Test
         working-directory: core
+        env:
+          DECKIE_SHIPPED_ONNXRUNTIME: ${{ github.workspace }}\core\.deps\onnxruntime\lib\onnxruntime.dll
         run: swift test
+      # The whole build, end to end, with the command-line builder: a small music folder (WAV, FLAC and MP3, a nested
+      # folder, a name with a space, a name that is not ASCII, hidden files; core/Sources/deckie-e2e), the crate
+      # file, the core's validator on both of its forms, and a second run that must find nothing to do.
+      - name: "End to end: make the music folder"
+        working-directory: core
+        run: swift run deckie-e2e make "${{ runner.temp }}\e2e\Music"
+      - name: "End to end: build the crate file"
+        working-directory: core
+        run: swift run deckie-build "${{ runner.temp }}\e2e\Music" --out "${{ runner.temp }}\e2e\E2E.deckiecrate" --jobs 2
+      - name: "End to end: validate it, as a folder and as one file"
+        working-directory: core
+        run: |
+          swift run deckie-e2e check "${{ runner.temp }}\e2e\E2E.deckiecrate"
+          swift run deckie-e2e pack "${{ runner.temp }}\e2e\E2E.deckiecrate" "${{ runner.temp }}\e2e\e2e-windows.deckiecrate"
+          swift run deckie-e2e check "${{ runner.temp }}\e2e\e2e-windows.deckiecrate"
+      - name: "End to end: a second run reads nothing again"
+        working-directory: core
+        shell: bash
+        run: |
+          swift run deckie-build "$RUNNER_TEMP/e2e/Music" --out "$RUNNER_TEMP/e2e/E2E.deckiecrate" --jobs 2 | tee second.txt
+          grep -q "5 unchanged since the last run; nothing to analyse" second.txt
+          rm second.txt
+      - name: Keep the crate file for the comparison
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-crate-windows
+          path: ${{ runner.temp }}\e2e\e2e-windows.deckiecrate
+          retention-days: 30
+          compression-level: 0
+          if-no-files-found: error
+
+  # The same folder built on Linux, in the same run, to compare with: the official Swift image and the caches
+  # core-linux.yml fills (the same keys, so normally nothing is fetched here).
+  linux-crate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      ORT_DISABLE_TELEMETRY: "1"
+    container:
+      image: swift@sha256:6304481cf2717966b7ba175162e397ea2f2cc3161909f2b2a5cf40036079a0f7 # swift:6.4.1-noble
+    steps:
+      - uses: actions/checkout@v4
+      - name: Cache ONNX Runtime
+        id: onnxruntime
+        uses: actions/cache@v4
+        with:
+          path: core/.deps/onnxruntime
+          key: onnxruntime-linux-x64-${{ hashFiles('core/Tools/fetch-onnxruntime.sh') }}
+      - name: Cache the models
+        id: models
+        uses: actions/cache@v4
+        with:
+          path: core/.models
+          key: models-linux-models-1-${{ hashFiles('core/Tools/fetch-models.sh', 'core/Tools/export_beat_this.py', 'core/Tools/export_yamnet.py') }}
+      - name: Install curl
+        run: |
+          apt-get update
+          apt-get install -y --no-install-recommends ca-certificates curl
+      - name: Fetch ONNX Runtime (checked by hash)
+        if: steps.onnxruntime.outputs.cache-hit != 'true'
+        run: bash core/Tools/fetch-onnxruntime.sh
+      - name: Fetch the models from the release models-1 (checked by hash)
+        run: bash core/Tools/fetch-models.sh --no-export
+      - name: Build the crate file from the same folder
+        working-directory: core
+        run: |
+          swift run deckie-e2e make /tmp/e2e/Music
+          swift run deckie-build /tmp/e2e/Music --out /tmp/e2e/E2E.deckiecrate --jobs 2
+          swift run deckie-e2e check /tmp/e2e/E2E.deckiecrate
+          swift run deckie-e2e pack /tmp/e2e/E2E.deckiecrate /tmp/e2e/e2e-linux.deckiecrate
+      - name: Keep the crate file for the comparison
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-crate-linux
+          path: /tmp/e2e/e2e-linux.deckiecrate
+          retention-days: 30
+          compression-level: 0
+          if-no-files-found: error
+
+  # Windows against Linux, field by field, with the tolerance core/Tools/compare_crates.py explains. The table of
+  # the largest difference per field goes into the run's summary.
+  compare:
+    needs: [probe, linux-crate]
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          path: crates
+      - name: Compare the Windows crate file with the Linux one
+        run: |
+          echo "## The crate file built on Windows against the one built on Linux" >> "$GITHUB_STEP_SUMMARY"
+          python3 core/Tools/compare_crates.py crates/e2e-crate-linux/e2e-linux.deckiecrate \
+              crates/e2e-crate-windows/e2e-windows.deckiecrate --summary "$GITHUB_STEP_SUMMARY"

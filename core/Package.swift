@@ -24,6 +24,8 @@
 // DeckieDesk: what a desk does that is not about windows (D28): where its crates are kept and the list of them, the
 // store of what was worked out for each file (shared by every crate), the DJ's name fixes, where each place's file is,
 // taking a source out of a crate, and the one run that reads, fingerprints, links copies and saves.
+// deckie-e2e: the end-to-end check both workflows run: makes a small music folder (WAV, FLAC, MP3, a nested folder,
+// awkward names, hidden files) and checks the crate file the builder makes from it. A development tool, not a product.
 // deckie-memprobe: measures the analyser's peak memory on audio files (and synthesises a test track), for tuning.
 // DeckieTestSupport: synthesised test audio (drums, chords, the engine's test track), the beat fixture and an MP3 frame
 // damaged on purpose (`MP3Damage`), shared by the test targets (not a product).
@@ -63,6 +65,7 @@ let package = Package(
         .target(name: "DeckieDesk", dependencies: ["DeckieBuild", "DeckieEngine", "DeckieCrate", "DeckieCore", "DeckieDecode"]),
         .target(name: "DeckieTestSupport", dependencies: ["DeckieAudio", "DeckieCore", "DeckieDecode"],
                 path: "Tests/DeckieTestSupport"),
+        .executableTarget(name: "deckie-e2e", dependencies: ["DeckieCrate", "DeckieAudio", "DeckieTestSupport"]),
         .testTarget(name: "DeckieCoreTests", dependencies: ["DeckieCore", "DeckieLab", "DeckieAudio", "DeckieTestSupport"],
                     exclude: ["Fixtures"]),
         .testTarget(name: "DeckieDecodeTests", dependencies: ["DeckieDecode", "DeckieCore", "DeckieTestSupport"],
