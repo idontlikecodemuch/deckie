@@ -76,6 +76,13 @@ enum Headless {
         return a.count >= 3 && a[1] == "--open" ? a[2] : nil
     }
 
+    /// Where a song's file is: below the place its source was read from (remembered by Add music), else below the
+    /// music folder given.
+    static func audio(_ t: CrateTrack, folder: URL, sources: [String: URL]) -> URL {
+        let root = t.ident.disc.flatMap { sources[$0] } ?? folder
+        return root.appendingPathComponent(t.file.rel ?? t.file.name)
+    }
+
     static func runIfAsked() {
         let a = CommandLine.arguments
         guard a.count >= 2 else { return }
@@ -173,9 +180,10 @@ enum Headless {
             let crateURL = URL(fileURLWithPath: a[2]); let folder = URL(fileURLWithPath: a[3])
             do {
                 var crate = try CrateReader.read(from: crateURL)
+                let roots = Remembered.sourceRoots(for: crate.manifest.crateId)
                 var prints: [String: RecordingPrint] = [:]
                 for t in crate.tracks where t.file.rel != nil {
-                    do { prints[t.id] = try Signatures.recordingPrint(of: folder.appendingPathComponent(t.file.rel!)) }
+                    do { prints[t.id] = try Signatures.recordingPrint(of: Headless.audio(t, folder: folder, sources: roots)) }
                     catch { print("could not read: \(t.file.rel!): \(error)") }
                 }
                 let grouped = crate.setCutKeys(prints: prints)
@@ -192,13 +200,14 @@ enum Headless {
             let crateURL = URL(fileURLWithPath: a[2]); let folder = URL(fileURLWithPath: a[3])
             do {
                 var crate = try CrateReader.read(from: crateURL)
+                let roots = Remembered.sourceRoots(for: crate.manifest.crateId)
                 let sigFolder = crateURL.appendingPathComponent("signatures")
                 try FileManager.default.createDirectory(at: sigFolder, withIntermediateDirectories: true)
                 let madeBy = Device.modelLabel(); var made = 0, failed = 0
                 for i in crate.tracks.indices where crate.tracks[i].signatures["o"] == nil && crate.tracks[i].file.rel != nil {
                     let t = crate.tracks[i]
                     do {
-                        let data = try Signatures.signature(of: folder.appendingPathComponent(t.file.rel!))
+                        let data = try Signatures.signature(of: Headless.audio(t, folder: folder, sources: roots))
                         try data.write(to: sigFolder.appendingPathComponent("\(t.id)_o.shazamsignature"), options: .atomic)
                         crate.tracks[i].signatures["o"] = CrateTrack.Signature(madeBy: madeBy, madeAt: Signatures.utcNow())
                         made += 1; print("[\(made)] \(t.ident.title) \(data.count / 1024) KB")
