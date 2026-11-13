@@ -21,10 +21,14 @@ struct TrackTable: View {
             TableColumn("Bars") { t in Text(t.grid.map { "\($0.nBars)" } ?? "–") }.width(50)
             TableColumn("Length") { t in Text(Self.mmss(t.file.durationS)) }.width(60)
             TableColumn("Vocals") { t in Text(t.vocal.map { String(format: "%.0f%%", $0.mean * 100) } ?? "–") }.width(56)
-            TableColumn("Disc") { t in Text(Crate.discLine(t) ?? "").lineLimit(1) }.width(min: 80, ideal: 150)
+            TableColumn("Where") { t in Text(Self.place(t)).lineLimit(1) }.width(min: 80, ideal: 150)
             TableColumn("Notes") { t in Text(Self.notes(t)).foregroundStyle(.secondary).lineLimit(1) }
         }
-        .contextMenu(forSelectionType: String.self) { ids in DiscsMenu(ids: ids) }
+    }
+
+    /// Where a song is: "Stick 3 / House 4" on a source, else its folder on the Mac ("House"), or "" at the top.
+    static func place(_ t: CrateTrack) -> String {
+        Crate.discLine(t) ?? ((t.file.rel ?? "") as NSString).deletingLastPathComponent
     }
 
     static func mmss(_ s: Double) -> String { String(format: "%d:%02d", Int(s) / 60, Int(s) % 60) }
@@ -73,8 +77,9 @@ struct Inspector: View {
                         model.update(id) { $0.ident.tags = v.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty } }
                     }
                     VStack(alignment: .leading, spacing: 2) {
-                        Text("Disc").font(.caption).foregroundStyle(.secondary)
-                        Text(Crate.discLine(t) ?? "on no disc").foregroundStyle(t.ident.disc == nil ? .secondary : .primary)
+                        Text("Where").font(.caption).foregroundStyle(.secondary)
+                        let place = TrackTable.place(t)
+                        Text(place.isEmpty ? "the top of the music folder" : place)
                     }
                     let copies = model.copies(of: t)
                     if !copies.isEmpty {
@@ -82,7 +87,7 @@ struct Inspector: View {
                             Text("Same recording as").font(.caption).foregroundStyle(.secondary)
                             ForEach(copies, id: \.id) { c in
                                 (Text(c.file.rel ?? c.file.name)
-                                    + Text(Crate.discLine(c).map { "  (\($0))" } ?? "").foregroundColor(.secondary))
+                                    + Text(c.ident.disc == nil ? "" : "  (\(TrackTable.place(c)))").foregroundColor(.secondary))
                                     .lineLimit(1).truncationMode(.middle)
                             }
                         }

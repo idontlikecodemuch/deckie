@@ -12,6 +12,7 @@ struct ContentView: View {
         }
         .toolbar {
             ToolbarItemGroup(placement: .primaryAction) {
+                AddMusicMenu()
                 Button { model.askNewCrate() } label: { Label("New crate from folder", systemImage: "folder.badge.plus") }
                     .disabled(model.building)
                 Button { model.askOpenCrate() } label: { Label("Open crate", systemImage: "shippingbox") }
@@ -23,7 +24,8 @@ struct ContentView: View {
                     Button { model.findCopies() } label: { Label("Find copies", systemImage: "square.on.square") }
                         .help("Find files that are the same recording, so the iPad shows them as one song")
                         .disabled(model.signing || model.findingCopies)
-                    Button { model.showDiscs.toggle() } label: { Label(model.showDiscs ? "Hide Discs" : "Discs", systemImage: "opticaldisc") }
+                    Button { model.showSources.toggle() } label: { Label(model.showSources ? "Hide sources" : "Sources", systemImage: "externaldrive") }
+                        .help("What was read from each CD or drive, by its own name")
                     Button { model.showImportLog = true } label: { Label("Import log", systemImage: "list.bullet.rectangle") }
                     Button { model.revealInFinder() } label: { Label("Show in Finder", systemImage: "arrow.up.forward.app") }
                 }
@@ -42,10 +44,11 @@ struct EmptyCrateView: View {
         VStack(spacing: 14) {
             Image(systemName: "shippingbox").font(.system(size: 56)).foregroundStyle(.secondary)
             Text("Your crate starts here.").font(.title2)
-            Text("Point Deckie at a folder of music. It reads the beat, the key, the structure and the loudness of every track and writes a crate, a small file you move to the iPad. The music never leaves this Mac.")
+            Text("Point Deckie at a folder of music, or at a CD or a USB stick as it is. It reads the beat, the key, the structure and the loudness of every track and writes a crate file, a small file you move to the iPad. The music never leaves this Mac.")
                 .multilineTextAlignment(.center).foregroundStyle(.secondary).frame(maxWidth: 520)
             HStack {
                 Button("New crate from folder…") { model.askNewCrate() }.buttonStyle(.borderedProminent)
+                AddMusicMenu(label: "From a CD or drive…").fixedSize()
                 Button("With a rekordbox collection…") { model.askNewCrate(withRekordbox: true) }
                 Button("Open a crate…") { model.askOpenCrate() }
             }
@@ -78,7 +81,7 @@ struct CrateView: View {
     var body: some View {
         HSplitView {
             TrackTable().frame(minWidth: 560)
-            if model.showDiscs { DiscsPanel().frame(minWidth: 260, idealWidth: 300, maxWidth: 420) }
+            if model.showSources { SourcesPanel().frame(minWidth: 260, idealWidth: 300, maxWidth: 420) }
             Inspector().frame(minWidth: 260, idealWidth: 300, maxWidth: 380)
         }
         .safeAreaInset(edge: .bottom) { StatusBar() }
