@@ -334,6 +334,18 @@ agree with this".
   an entry, not for a file: Desk can place one file on more than one disc, and writes one entry for each place, all
   with the same key. The booth treats them exactly like copies.
 
+### Note on D24 (Nov 13): built, except one file on several discs
+Built the same day (commits 623e039 to 4778ed9): the shared rule (`SameSong` in the core), Desk's "Find copies",
+and the booth's single row with "also on" for every other place. Desk tells copies apart from versions with a
+published audio fingerprint (Haitsma and Kalker, 2002) and two conditions: the sound lasts the same within one
+second, and every three-second block of the whole song matches. Tested on generated songs only: a copy in another
+format matched, and an edit, a remix, a live take and an extended mix did not.
+
+Not built: one file on several discs. Crate v1 does not allow two entries for one file, because an entry's id is
+taken from the file itself and ids must be unique. Doing it needs a change to the crate file format, which is
+frozen, so it waits for the owner. Until then, two files of the same recording on two discs work, and one file can
+sit on one disc.
+
 ### Note on D19 (Nov 1): versions of a song stay separate rows
 Christopher, on two remixes of one song both showing in the picks: "we shouldn't merge them unless they are the same
 songs. DJs often have a bunch of versions of the same song". So the booth folds together only copies of the same

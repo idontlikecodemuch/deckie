@@ -1505,7 +1505,10 @@ beta address; the film stays in its own look and is not re-rendered in the site'
 
 Known and left: a stale lede line inside the film's dictionary shot, too small to read at film size; a few "See
 also" rows that end on one chip at phone width; the dictionary's footer still says "Deckie, as in deckhand", which
-the home page dropped; "Works with no signal" has not been tested with the iPad in airplane mode.
+the home page dropped.
+
+"Works with no signal" was tested on Nov 13 on the real iPad in airplane mode: one song, played from a speaker
+beside it, named correctly after a short wait [measured, one song].
 
 ## 8. Other choices, unchanged from the first cut
 

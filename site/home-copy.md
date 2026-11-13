@@ -194,7 +194,7 @@ may look for. It could go in `llms.txt` only, as three lines, without lengthenin
 
 **To verify before the page goes live**
 
-- "Works with no signal" is designed in and documented, but nobody has run the booth in airplane mode.
+- "Works with no signal": tested Nov 13 on the real iPad in airplane mode. One song, named correctly.
 - The app's own screen says a song shows up after 5 to 10 seconds. "A few seconds in" is fair for that and should
   not get shorter.
 
