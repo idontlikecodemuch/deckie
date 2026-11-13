@@ -6,6 +6,7 @@ the training sets are CC BY-SA 4.0 and the audio is Beatport's and the labels'. 
                                            model that never saw it or its artist  -> $CACHE/cnn_cv_mtg.npz
   python kt_cnn.py cross  [--threads 3]    train on MTG, score GiantSteps Key / GiantSteps+; train on GiantSteps Key,
                                            score MTG                              -> $CACHE/cnn_cross_*.npz
+  python kt_cnn.py sections                each clip read in three parts by the model that never saw it (confidence signal)
   python kt_cnn.py cost                    parameters, operations, CPU time for a five-minute song (ONNX Runtime)
 
 Design, after Korzeniowski and Widmer (EUSIPCO 2017: five 5x5 convolution layers, a dense projection per frame,
@@ -147,6 +148,27 @@ def main_cross():
     np.savez_compressed(os.path.join(kt.CACHE, "cnn_cross_gs_to_mtg.npz"), ids=np.array([c["id"] for c in mtg]), lp=predict(model, mtg), lp12=predict(model, mtg, TTA),
                         info=np.array([len(tr), len(va), ep, secs]))
 
+def main_sections():
+    """Each clip cut in three equal parts, each read alone (12 shifts averaged) by the model that never saw the clip:
+    the stability signal for the confidence tables."""
+    def thirds(model, clips):
+        out = np.zeros((len(clips), 3, 24), np.float32)
+        for i, c in enumerate(clips):
+            T = c["L"].shape[0]
+            out[i] = predict(model, [{"L": c["L"][s * T // 3:(s + 1) * T // 3]} for s in range(3)], TTA)
+        return out
+    mtg = load_L([c for c in get("mtg") if c["key"] is not None]); sec = np.zeros((len(mtg), 3, 24), np.float32)
+    for f in range(kt.NFOLD):
+        model = Net(); model.load_state_dict(torch.load(os.path.join(kt.CACHE, f"cnn_fold{f}.pt"))); model.eval()
+        te = [i for i, c in enumerate(mtg) if c["fold"] == f]; sec[te] = thirds(model, [mtg[i] for i in te])
+    res = {"mtg_ids": np.array([c["id"] for c in mtg]), "mtg_sec": sec}
+    p = os.path.join(kt.CACHE, "cnn_mtg.pt")
+    if os.path.exists(p):
+        model = Net(); model.load_state_dict(torch.load(p)); model.eval()
+        for pre, name in (("gs", "gs"), ("gsp", "gsplus")):
+            cl = load_L(get(name)); res[pre + "_ids"] = np.array([c["id"] for c in cl]); res[pre + "_sec"] = thirds(model, cl)
+    np.savez_compressed(os.path.join(kt.CACHE, "cnn_sections.npz"), **res)
+
 def main_cost():
     import onnxruntime as ort
     model = Net().eval(); n = sum(p.numel() for p in model.parameters())
@@ -169,4 +191,4 @@ def main_cost():
 if __name__ == "__main__":
     a = sys.argv
     torch.set_num_threads(int(a[a.index("--threads") + 1]) if "--threads" in a else 3)
-    {"cv": main_cv, "cross": main_cross, "cost": main_cost}[a[1]]()
+    {"cv": main_cv, "cross": main_cross, "cost": main_cost, "sections": main_sections}[a[1]]()

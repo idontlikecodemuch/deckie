@@ -11,6 +11,8 @@ live in), middle C3..B3 (48-59), melody C4..B5 (60-83: the octaves a lead or a v
 
   c_3f, c_A, c_B     12 values: H summed; H with the third and fifth harmonic shares taken off per frame (row A),
                      summed; N summed and folded to pitch classes (row B)
+  c_hp               row 3f's chroma from the peaks above 200 Hz only (the published multi-profile method high-passes
+                     at 200 Hz; dropping the peaks below it is this trial's stand-in for that filter)
   r_bass, r_mid, r_mel   N summed inside one register, folded
   bassline           time, not loudness: per frame the strongest bass-register note (frames with none skipped), counted
   topline            per frame the strongest melody-register note, counted
@@ -29,6 +31,7 @@ live in), middle C3..B3 (48-59), melody C4..B5 (60-83: the octaves a lead or a v
 import os, sys
 import numpy as np
 import kt
+import key_parity as KP
 import key_overtones as KO
 from kt_bench import frames
 
@@ -64,6 +67,8 @@ def one(cid):
     H, N = frames(cid); H = H.astype(np.float64); N = N.astype(np.float64)
     Hd = KO.discount(H, "both"); CB = fold(N)
     out = {"c_3f": H.sum(0), "c_A": Hd.sum(0), "c_B": CB.sum(0)}
+    z = np.load(os.path.join(kt.CACHE, "feat", cid + ".npz"))
+    out["c_hp"] = KP.hpcp(z["F"], z["M"], z["E"], n_harm=4, whiten=True, frame_norm=False, fmin=200.0).sum(0)
     for k, (lo, hi) in REG.items(): out["r_" + k] = fold(N.sum(0), lo, hi)
     for name, (lo, hi) in (("bassline", REG["bass"]), ("topline", REG["mel"])):
         sel = (MIDI >= lo) & (MIDI < hi); X = N[:, sel]; top = X.argmax(1); ok = X.max(1) > 0
@@ -87,7 +92,7 @@ def one(cid):
 def main():
     a = sys.argv; jobs = int(a[a.index("--jobs") + 1]) if "--jobs" in a else 4
     from multiprocessing import Pool
-    for name in ("mtg", "gs"):
+    for name in ("mtg", "gs", "gsplus"):
         ids = [c["id"] for c in kt.load(name) if os.path.exists(os.path.join(kt.CACHE, "feat", c["id"] + ".npz"))]
         with Pool(jobs) as pool: res = dict(pool.imap_unordered(one, ids, chunksize=8))
         keys = list(res[ids[0]])
