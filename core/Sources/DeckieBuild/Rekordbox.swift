@@ -179,31 +179,7 @@ public struct RekordboxCollection: Sendable {
 
     /// The Camelot code of a `Tonality`, written in whichever notation the DJ's rekordbox shows: classic (`Am`,
     /// `F#m`, `Db`, `Ebmin`), Camelot (`8A`, `08A`) or Open Key (`1m`, `1d`); nil for anything else.
-    public static func camelot(fromTonality tonality: String) -> String? {
-        let t = tonality.trimmingCharacters(in: .whitespaces)
-        guard let first = t.first else { return nil }
-        if first.isNumber {
-            let digits = t.prefix { $0.isNumber }, rest = t.dropFirst(digits.count).lowercased()
-            guard let n = Int(digits), (1...12).contains(n) else { return nil }
-            switch rest {
-            case "a": return "\(n)A"
-            case "b": return "\(n)B"
-            case "m", "d": return "\((n + 6) % 12 + 1)\(rest == "m" ? "A" : "B")"
-            default: return nil
-            }
-        }
-        var rest = Substring(t.replacingOccurrences(of: "♯", with: "#").replacingOccurrences(of: "♭", with: "b"))
-        var note = String(rest.removeFirst()).uppercased()
-        if let a = rest.first, a == "#" || a == "b" { note.append(a); rest.removeFirst() }
-        let mode = rest.trimmingCharacters(in: .whitespaces)
-        let minor: Bool
-        switch mode {
-        case "m", "min", "minor", "Min", "Minor", "-": minor = true
-        case "", "M", "maj", "major", "Maj", "Major": minor = false
-        default: return nil
-        }
-        return Camelot.code(key: note, scale: minor ? "minor" : "major")
-    }
+    public static func camelot(fromTonality tonality: String) -> String? { KeyNotation.camelot(tonality) }
 
     static func number(_ s: String?) -> Double? {
         guard let s, let v = Double(s.trimmingCharacters(in: .whitespaces)), v.isFinite else { return nil }

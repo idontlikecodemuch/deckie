@@ -1,20 +1,34 @@
 import Foundation
 
-/// The few tags of an audio file the builder reads: its tempo tag (for `--bpm-tags`), title and artist. Read from an
-/// ID3v2 tag (versions 2.2 to 2.4: TBPM, TIT2, TPE1 and their 2.2 names) at the start of the file (MP3, FLAC or AAC
-/// with ID3 in front) or in a WAV or AIFF file's `id3 ` chunk, and from a FLAC file's Vorbis comment (BPM, TITLE,
-/// ARTIST). MP4 tags are not read: those files cannot be decoded on Linux yet. Nothing is read but the tags, and a tag
-/// that does not hold together gives nothing rather than an error.
+/// The few tags of an audio file the builder reads: its tempo tag (for `--bpm-tags`), title, artist, album, track
+/// number, the key a DJ's program wrote, and the comment (where Mixed In Key may write the key). Read from an ID3v2 tag
+/// (versions 2.2 to 2.4: TBPM, TIT2, TPE1, TALB, TRCK, TKEY, COMM, and TXXX frames named INITIALKEY or KEY, with their
+/// 2.2 names) at the start of the file (MP3, FLAC or AAC with ID3 in front) or in a WAV or AIFF file's `id3 ` chunk;
+/// from a FLAC file's Vorbis comment (BPM, TITLE, ARTIST, ALBUM, TRACKNUMBER, INITIALKEY or KEY, COMMENT or
+/// DESCRIPTION); from a WAV file's LIST INFO chunk (INAM, IART, IPRD, ITRK, ICMT; its IKEY is "keywords", not a
+/// musical key, and is not read); and from an MP3's ID3v1 tag at its end, for what the ID3v2 tag does not have. The key
+/// is kept as written (`key`): `KeyNotation` reads it. MP4 tags are not read: those files cannot be decoded yet. Nothing
+/// is read but the tags, and a tag that does not hold together gives nothing rather than an error.
 public struct FileTags: Codable, Equatable, Sendable {
     public var bpm: Double?
     public var title: String?
     public var artist: String?
+    public var album: String?
+    /// The track number tag's number ("2", "02" or "2/12" give 2).
+    public var trackNumber: Int?
+    /// The key tag as written (TKEY, INITIALKEY): `Am`, `8A`, `1m`, ...
+    public var key: String?
+    public var comment: String?
 
-    public init(bpm: Double? = nil, title: String? = nil, artist: String? = nil) {
-        self.bpm = bpm; self.title = title; self.artist = artist
+    public init(bpm: Double? = nil, title: String? = nil, artist: String? = nil, album: String? = nil,
+                trackNumber: Int? = nil, key: String? = nil, comment: String? = nil) {
+        self.bpm = bpm; self.title = title; self.artist = artist; self.album = album; self.trackNumber = trackNumber
+        self.key = key; self.comment = comment
     }
 
-    public var isEmpty: Bool { bpm == nil && title == nil && artist == nil }
+    public var isEmpty: Bool {
+        bpm == nil && title == nil && artist == nil && album == nil && trackNumber == nil && key == nil && comment == nil
+    }
 
     /// The tags of the file at `url`; empty when it has none the builder reads or cannot be read.
     public static func read(_ url: URL) -> FileTags {
@@ -24,8 +38,8 @@ public struct FileTags: Codable, Equatable, Sendable {
         guard let head = file.read(at: 0, count: 12), head.count >= 12 else { return FileTags() }
         let b = [UInt8](head)
         func ascii(_ at: Int, _ s: String) -> Bool { Array(b[at..<(at + s.utf8.count)]) == Array(s.utf8) }
-        if ascii(0, "RIFF") && ascii(8, "WAVE") { return riffID3(file, bigEndian: false) }
-        if ascii(0, "FORM") && (ascii(8, "AIFF") || ascii(8, "AIFC")) { return riffID3(file, bigEndian: true) }
+        if ascii(0, "RIFF") && ascii(8, "WAVE") { return riffTags(file, bigEndian: false) }
+        if ascii(0, "FORM") && (ascii(8, "AIFF") || ascii(8, "AIFC")) { return riffTags(file, bigEndian: true) }
         var offset = 0
         var tags = FileTags()
         if ascii(0, "ID3") {
@@ -35,13 +49,41 @@ public struct FileTags: Codable, Equatable, Sendable {
         }
         if let marker = file.read(at: offset, count: 4), marker.elementsEqual("fLaC".utf8) {
             tags = tags.filled(from: flacComment(file, at: offset + 4))
+        } else if let v1 = id3v1(file) {
+            tags = tags.filled(from: v1)
         }
         return tags
     }
 
     /// These tags, with the missing ones taken from `other`.
     func filled(from other: FileTags) -> FileTags {
-        FileTags(bpm: bpm ?? other.bpm, title: title ?? other.title, artist: artist ?? other.artist)
+        FileTags(bpm: bpm ?? other.bpm, title: title ?? other.title, artist: artist ?? other.artist,
+                 album: album ?? other.album, trackNumber: trackNumber ?? other.trackNumber, key: key ?? other.key,
+                 comment: comment ?? other.comment)
+    }
+
+    /// A track number tag's number: "2", "02", "2/12"; nil for none or zero.
+    static func number(_ text: String?) -> Int? {
+        guard let text else { return nil }
+        let digits = text.trimmingCharacters(in: .whitespaces).prefix { $0.isASCII && $0.isNumber }
+        guard let n = Int(digits), n > 0 else { return nil }
+        return n
+    }
+
+    /// The ID3v1 tag in a file's last 128 bytes ("TAG", then title, artist and album of 30 bytes each, the year, a
+    /// comment of 30 bytes whose last byte is the track number when the one before it is zero, and the genre), read as
+    /// Latin-1; nil when there is none.
+    static func id3v1(_ file: TagFile) -> FileTags? {
+        guard let size = file.size, size >= 128, let d = file.read(at: size - 128, count: 128) else { return nil }
+        let b = [UInt8](d)
+        guard b[0] == 0x54, b[1] == 0x41, b[2] == 0x47 else { return nil }
+        func text(_ r: Range<Int>) -> String? {
+            let bytes = b[r].prefix { $0 != 0 }
+            return nonEmpty(String(bytes.map { Character(Unicode.Scalar($0)) }))
+        }
+        let track = b[125] == 0 && b[126] != 0 ? Int(b[126]) : nil
+        return FileTags(title: text(3..<33), artist: text(33..<63), album: text(63..<93), trackNumber: track,
+                        comment: text(97..<(track == nil ? 127 : 125)))
     }
 
     /// A tempo tag's text as a number: the digits and point only, as the lab's add_tracks.py reads TBPM; nil for none
@@ -53,9 +95,12 @@ public struct FileTags: Codable, Equatable, Sendable {
         return v
     }
 
-    /// The ID3v2 tag inside a WAV (`id3 ` or `ID3 ` chunk, little-endian sizes) or AIFF (`ID3 `, big-endian) file.
-    private static func riffID3(_ file: TagFile, bigEndian: Bool) -> FileTags {
+    /// The ID3v2 tag inside a WAV (`id3 ` or `ID3 ` chunk, little-endian sizes) or AIFF (`ID3 `, big-endian) file,
+    /// with what it lacks taken from a WAV file's LIST INFO chunk.
+    private static func riffTags(_ file: TagFile, bigEndian: Bool) -> FileTags {
         var at = 12
+        var id3: FileTags? = nil
+        var info = FileTags()
         for _ in 0..<64 {
             guard let h = file.read(at: at, count: 8), h.count == 8 else { break }
             let b = [UInt8](h)
@@ -65,11 +110,38 @@ public struct FileTags: Codable, Equatable, Sendable {
                 : Int(b[7]) << 24 | Int(b[6]) << 16 | Int(b[5]) << 8 | Int(b[4])
             if id == "id3 " || id == "ID3 " {
                 guard size <= ID3.maxTagBytes, let tag = file.read(at: at + 8, count: size) else { break }
-                return ID3.parse(tag)
+                id3 = ID3.parse(tag)
+            } else if id == "LIST", !bigEndian, size >= 4, size <= 1 << 20, let list = file.read(at: at + 8, count: size),
+                      list.prefix(4).elementsEqual("INFO".utf8) {
+                info = listInfo([UInt8](list.dropFirst(4)))
             }
             at += 8 + size + (size & 1)
         }
-        return FileTags()
+        return (id3 ?? FileTags()).filled(from: info)
+    }
+
+    /// A RIFF LIST INFO chunk's items: four letters, a 32-bit little-endian size, the text (NUL-terminated, padded to
+    /// an even length). Read as UTF-8, or Latin-1 when it is not valid UTF-8.
+    static func listInfo(_ b: [UInt8]) -> FileTags {
+        var tags = FileTags()
+        var at = 0
+        while at + 8 <= b.count {
+            let id = String(decoding: b[at..<(at + 4)], as: UTF8.self)
+            let n = Int(b[at + 4]) | Int(b[at + 5]) << 8 | Int(b[at + 6]) << 16 | Int(b[at + 7]) << 24
+            guard n >= 0, at + 8 + n <= b.count else { break }
+            let bytes = Array(b[(at + 8)..<(at + 8 + n)].prefix { $0 != 0 })
+            let text = nonEmpty(String(bytes: bytes, encoding: .utf8) ?? String(bytes.map { Character(Unicode.Scalar($0)) }))
+            switch id {
+            case "INAM": tags.title = tags.title ?? text
+            case "IART": tags.artist = tags.artist ?? text
+            case "IPRD": tags.album = tags.album ?? text
+            case "ITRK", "IPRT": tags.trackNumber = tags.trackNumber ?? number(text)
+            case "ICMT": tags.comment = tags.comment ?? text
+            default: break
+            }
+            at += 8 + n + (n & 1)
+        }
+        return tags
     }
 
     /// The Vorbis comment of a FLAC file whose metadata blocks start at `at`.
@@ -104,6 +176,10 @@ public struct FileTags: Codable, Equatable, Sendable {
             case "BPM", "TEMPO": tags.bpm = tags.bpm ?? bpm(value)
             case "TITLE": tags.title = tags.title ?? nonEmpty(value)
             case "ARTIST": tags.artist = tags.artist ?? nonEmpty(value)
+            case "ALBUM": tags.album = tags.album ?? nonEmpty(value)
+            case "TRACKNUMBER": tags.trackNumber = tags.trackNumber ?? number(value)
+            case "INITIALKEY", "KEY", "INITIAL KEY": tags.key = tags.key ?? nonEmpty(value)
+            case "COMMENT", "DESCRIPTION": tags.comment = tags.comment ?? nonEmpty(value)
             default: break
             }
         }
@@ -176,7 +252,8 @@ enum ID3 {
             default: size = synchsafe(head[4], head[5], head[6], head[7])
             }
             guard size >= 0, var data = r.take(size) else { break }
-            guard ["TBPM", "TBP", "TIT2", "TT2", "TPE1", "TP1"].contains(id) else { continue }
+            guard ["TBPM", "TBP", "TIT2", "TT2", "TPE1", "TP1", "TALB", "TAL", "TRCK", "TRK", "TKEY", "TKE", "COMM", "COM",
+                   "TXXX", "TXX"].contains(id) else { continue }
             if version >= 3 {
                 let format = head[9]
                 if version == 3 {
@@ -189,14 +266,64 @@ enum ID3 {
                     if format & 0x01 != 0 { data = Array(data.dropFirst(4)) }  // data length indicator
                 }
             }
+            switch id {
+            case "COMM", "COM":
+                // Comments the players and taggers keep for themselves are not the DJ's comment.
+                if let f = describedFrame(data, skippingLanguage: true),
+                   !f.0.lowercased().hasPrefix("itun"), !f.0.lowercased().hasPrefix("songs-db") {
+                    tags.comment = tags.comment ?? nonEmpty(f.1)
+                }
+                continue
+            case "TXXX", "TXX":
+                if let f = describedFrame(data, skippingLanguage: false),
+                   ["initialkey", "key", "initial key"].contains(f.0.lowercased()) {
+                    tags.key = tags.key ?? nonEmpty(f.1)
+                }
+                continue
+            default: break
+            }
             let text = textFrame(data)
             switch id {
             case "TBPM", "TBP": tags.bpm = tags.bpm ?? FileTags.bpm(text)
             case "TIT2", "TT2": tags.title = tags.title ?? nonEmpty(text)
+            case "TALB", "TAL": tags.album = tags.album ?? nonEmpty(text)
+            case "TRCK", "TRK": tags.trackNumber = tags.trackNumber ?? FileTags.number(text)
+            case "TKEY", "TKE": tags.key = tags.key ?? nonEmpty(text)
             default: tags.artist = tags.artist ?? nonEmpty(text)
             }
         }
         return tags
+    }
+
+    /// A frame with a description before its text (COMM, after a three-letter language; TXXX): the description and the
+    /// text, each in the frame's encoding. Nil when the frame does not hold together.
+    static func describedFrame(_ data: [UInt8], skippingLanguage: Bool) -> (String, String)? {
+        guard let encoding = data.first else { return nil }
+        var body = Array(data.dropFirst())
+        if skippingLanguage { guard body.count >= 3 else { return nil }; body.removeFirst(3) }
+        // The description ends at a NUL: one byte in Latin-1 and UTF-8, two (on an even offset) in UTF-16.
+        let wide = encoding == 1 || encoding == 2
+        var end: Int? = nil
+        var i = 0
+        while i < body.count {
+            if wide {
+                if i + 1 < body.count && body[i] == 0 && body[i + 1] == 0 { end = i; break }
+                i += 2
+            } else {
+                if body[i] == 0 { end = i; break }
+                i += 1
+            }
+        }
+        guard let end else { return nil }
+        let description = textFrame([encoding] + body[..<end]) ?? ""
+        let rest = Array(body[(end + (wide ? 2 : 1))...])
+        // A UTF-16 text after a description carries its own byte-order mark, or follows the description's.
+        var textBytes = rest
+        if encoding == 1, rest.count >= 2, !(rest[0] == 0xFF && rest[1] == 0xFE) && !(rest[0] == 0xFE && rest[1] == 0xFF),
+           body.count >= 2 {
+            textBytes = Array(body[0..<2]) + rest
+        }
+        return (description, textFrame([encoding] + textBytes) ?? "")
     }
 
     /// A text frame's first value: an encoding byte (0 Latin-1, 1 UTF-16 with a byte-order mark, 2 UTF-16 big-endian,
@@ -232,6 +359,11 @@ enum ID3 {
 /// Reads byte ranges of an open file; nil past the end or on an error.
 struct TagFile {
     let handle: FileHandle
+    /// The file's length in bytes, or nil when it cannot be told.
+    var size: Int? {
+        guard let end = try? handle.seekToEnd() else { return nil }
+        return Int(end)
+    }
     func read(at offset: Int, count: Int) -> Data? {
         guard offset >= 0, count >= 0, count <= ID3.maxTagBytes else { return nil }
         do {
