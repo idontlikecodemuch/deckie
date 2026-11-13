@@ -95,8 +95,9 @@ public enum AudioFiles {
     /// folder, it returns whether to go into it. A folder that cannot be listed is passed over.
     ///
     /// Not `FileManager.enumerator(atPath:)`: on Windows it hands back paths with a backslash, which a crate file
-    /// must never hold, and the walk built on it lost whole folders there (60 test files found as 20, all in one
-    /// folder, CI run 43505610701). Listing each folder with `contentsOfDirectory` and joining the names here gives
+    /// must never hold, and there its `skipDescendants()` drops more than the folder just returned: after skipping
+    /// `Out.deckiecrate` and `Out.deckiebuild` it still returned `Album` but never anything inside it (60 test files
+    /// found as 20, all in `Singles`, CI run 43505610701; the enumerator's own walk printed in run 43513060260). Listing each folder with `contentsOfDirectory` and joining the names here gives
     /// the same files and the same paths on every platform.
     static func walk(_ folder: URL, below rel: String, visit: (String, String, URL, FileAttributeType?) -> Bool) {
         let fm = FileManager.default
