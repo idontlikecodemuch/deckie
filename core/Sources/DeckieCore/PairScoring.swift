@@ -136,10 +136,19 @@ public enum PairScoring {
         return max(0.0, st)
     }
 
+    /// Whether a track's key was read: its Camelot code is one (a crate record with no key block has "" here).
+    public static func keyRead(_ t: Track) -> Bool { Camelot.tonic(t.camelot) != nil }
+
+    /// Why the key term says nothing: one of the two keys was not read.
+    public static let keyNotRead = "key not read"
+
     /// Key term: the B.9 table, or a pitch shift of B by up to two semitones when that lands on a neighbour,
-    /// scaled by the lower of the two key confidences.
+    /// scaled by the lower of the two key confidences. When either key was not read there is nothing to compare: 0,
+    /// with the reason `keyNotRead`, and `scorePair` leaves the key out of the pair's score (D16: nothing is scored
+    /// on a key not read).
     public static func keyTerm(_ A: Track, _ B: Track)
         -> (value: Double, raw: Double, shift: Int, why: String, confidence: Double) {
+        guard keyRead(A) && keyRead(B) else { return (0, 0, 0, keyNotRead, 0) }
         let (raw, why) = Camelot.rawCompatibility(A.camelot, B.camelot)
         var best = raw, shift = 0
         for s in [1, -1, 2, -2] {
@@ -276,8 +285,16 @@ public enum PairScoring {
         let timbre = timbrePct
         let rhythm = rhythmTerm(A, B, k: k)
         let style = styleTerm(A, B)
-        let terms = ScoreTerms(tempo: tempo, key: key, energy: energy, vocal: vocal, phrase: phrase,
+        var terms = ScoreTerms(tempo: tempo, key: key, energy: energy, vocal: vocal, phrase: phrase,
                                timbre: timbre, rhythm: rhythm, style: style)
+        let keysRead = keyRead(A) && keyRead(B)
+        if !keysRead {
+            // A key not read neither helps nor hurts the pair: the key term takes the weighted mean of the other
+            // terms, so the score is the weighted mean of the terms that are known.
+            var sum = 0.0, weight = 0.0
+            for (name, w) in weights where name != "key" { sum += w * terms[name]; weight += w }
+            terms.key = sum / weight
+        }
         var base = 0.0
         for (name, w) in weights { base += w * terms[name] }
         let tr = transition(A, B, s: s, k: k, v: v, rhythm: rhythm, L: max(L, 1), steady: steady)
@@ -297,12 +314,14 @@ public enum PairScoring {
                 + "(\(Py.fixed(A.bpmOut, 1)) end -> \(Py.fixed(B.bpmIn, 1)) start)"
         }
         var ktxt = "\(A.camelot) -> \(B.camelot)"
-        if shift != 0 {
+        if !keysRead {
+            ktxt = keyNotRead
+        } else if shift != 0 {
             ktxt += " (pitch-shift B by \(shift >= 0 ? "+" : "")\(shift) st)"
         } else if kwhy != "same key" {
             ktxt += " (\(kwhy))"
         }
-        if kc < 0.5 { ktxt += ", key unsure" }
+        if keysRead && kc < 0.5 { ktxt += ", key unsure" }
         txt["key"] = ktxt
         txt["energy"] = abs(dE) <= 2
             ? "energy steady (\(Py.signedFixed(dE, 1)) LU)"
