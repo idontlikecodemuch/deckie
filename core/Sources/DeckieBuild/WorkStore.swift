@@ -66,12 +66,14 @@ final class WorkStore: @unchecked Sendable {
     private var lines: [String: FileLine] = [:]
     private var log: FileHandle?
 
-    var recordsFolder: URL { folder.appendingPathComponent("records") }
+    /// `records/` in the work folder, or a shared folder given (`BuildOptions.sharedRecords`).
+    let recordsFolder: URL
     var linesFile: URL { folder.appendingPathComponent("files.jsonl") }
 
-    /// Opens (or makes) the work folder; `fresh` empties it first.
-    init(folder: URL, fresh: Bool) throws {
+    /// Opens (or makes) the work folder; `fresh` empties it first (never a shared `records` folder).
+    init(folder: URL, fresh: Bool, records: URL? = nil) throws {
         self.folder = folder
+        self.recordsFolder = records ?? folder.appendingPathComponent("records")
         let fm = FileManager.default
         let marker = folder.appendingPathComponent("work.json")
         if fresh { try? fm.removeItem(at: folder) }
@@ -84,6 +86,7 @@ final class WorkStore: @unchecked Sendable {
                 throw BuildError("\(folder.path) is not a work folder of this deckie-build; remove it or use --fresh")
             }
         }
+        try fm.createDirectory(at: folder, withIntermediateDirectories: true)
         try fm.createDirectory(at: recordsFolder, withIntermediateDirectories: true)
         try Data("{\"format\":\(Self.format)}\n".utf8).write(to: marker, options: .atomic)
         if let text = try? String(contentsOf: linesFile, encoding: .utf8) {
