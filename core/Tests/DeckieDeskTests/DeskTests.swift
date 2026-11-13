@@ -36,7 +36,10 @@ func crate(_ tracks: [CrateTrack], name: String = "Night") -> Crate {
         #expect(h.store.records.path == "/tmp/somewhere/Desk/Files/records")
         let real = DeskHome.standard(environment: [:])
         #expect(real.root.lastPathComponent == "Deckie Desk")
+        // the system's own folder for an app's data: "Application Support" on a Mac; Linux and Windows have their own
+        #if os(macOS)
         #expect(real.root.path.contains("Application Support"))
+        #endif
     }
 }
 
