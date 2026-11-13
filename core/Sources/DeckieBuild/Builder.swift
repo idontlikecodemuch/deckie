@@ -40,14 +40,19 @@ public struct BuildOptions: Sendable {
     /// folder, as before; a file in the folder whose bytes are on a kept source is a place with no source (its
     /// folder) of that entry.
     public var keepSources: Set<String>
+    /// Where finished records are kept, when not in the work folder's own `records/`: a folder shared by several
+    /// crates (Deckie Desk's store of what it worked out for each file), so a file read for one crate is not analysed
+    /// again for another. Records are keyed by the file's id, so sharing them is safe; `fresh` does not empty it.
+    public var sharedRecords: URL?
 
     public init(folder: URL, output: URL, rekordbox: URL? = nil, jobs: Int = defaultJobs, fileBPMTags: Bool = false,
                 fresh: Bool = false, name: String? = nil, device: String = Analysis.platform,
-                skipFolderPrefixes: [String] = ["_"], source: String? = nil, keepSources: Set<String> = []) {
+                skipFolderPrefixes: [String] = ["_"], source: String? = nil, keepSources: Set<String> = [],
+                sharedRecords: URL? = nil) {
         self.folder = folder; self.output = output; self.rekordbox = rekordbox; self.jobs = max(1, jobs)
         self.fileBPMTags = fileBPMTags; self.fresh = fresh; self.name = name; self.device = device
         self.skipFolderPrefixes = source == nil ? skipFolderPrefixes : []
-        self.source = source; self.keepSources = keepSources
+        self.source = source; self.keepSources = keepSources; self.sharedRecords = sharedRecords
     }
 
     /// What the import log and the progress put before a path below the folder: the source's name and a "/", or
@@ -79,6 +84,8 @@ public struct FileProgress: Sendable {
     /// Seconds since the queue started, and the estimate of the seconds left (nil until a file has been analysed).
     public var elapsed: Double
     public var remaining: Double?
+    /// The file's id (its content's hash) when it has a record, so a caller can do more with it as it finishes.
+    public var id: String? = nil
 }
 
 /// The build's progress, as it goes.
@@ -108,6 +115,9 @@ public struct BuildResult: Sendable {
     public var rekordbox: CrateManifest.ImportLog.Rekordbox?
     /// Wall-clock seconds of the whole build.
     public var seconds: Double
+    /// Every file read in this run that is in the crate, by entry id: its place and its path below the folder read
+    /// (below the source's top for a source), so a caller can remember where each place's file is.
+    public var placesRead: [String: [ReadPlace]] = [:]
 
     /// The summary printed at the end: the counts, the files not in the crate by reason and extension, the files in
     /// it with damaged frames, and where the import log is.
@@ -264,7 +274,7 @@ public final class Builder: Sendable {
             matcher = RekordboxMatcher(c)
         }
         let existing = try existingCrate()
-        let work = try WorkStore(folder: options.workFolder, fresh: options.fresh)
+        let work = try WorkStore(folder: options.workFolder, fresh: options.fresh, records: options.sharedRecords)
         let label = Builder.engineKey(vocalModel: vocalModel)
         let rekordboxOf = files.map { f in matcher?.match(absolutePath: f.url.path, rel: f.rel, size: f.size) }
         let rbSummary = collection.map {
@@ -311,9 +321,11 @@ public final class Builder: Sendable {
             results.done[f.rel] = outcome
             results.finished += 1
             let reported: FileProgress.Outcome
+            var doneId: String? = nil
             switch outcome {
             case .failed(let failure): reported = .failed(failure)
             case .ok(let id, _):
+                doneId = id
                 if let seconds {
                     results.analysedSeconds.append(seconds)
                     results.analysedIDs.insert(id)
@@ -327,7 +339,7 @@ public final class Builder: Sendable {
             let remaining: Double? = results.analysedSeconds.isEmpty ? nil
                 : elapsed / Double(results.finished) * Double(total - results.finished)
             progress(.file(FileProgress(done: results.finished, total: total, rel: f.rel, outcome: reported,
-                                        elapsed: elapsed, remaining: remaining)))
+                                        elapsed: elapsed, remaining: remaining, id: doneId)))
         }
         done.merge(results.done) { _, new in new }
 
@@ -482,10 +494,15 @@ public final class Builder: Sendable {
         let crate = Crate(manifest: manifest, tracks: tracks.sorted { $0.id.utf8.lexicographicallyPrecedes($1.id.utf8) })
         progress(.writing(tracks: tracks.count))
         try CrateWriter.write(crate, to: options.output)
-        return BuildResult(crate: crate, output: options.output, filesSeen: files.count,
-                           analysed: results.analysedSeconds.count, analysisSeconds: results.analysedSeconds,
-                           reused: readOrder.filter { !results.analysedIDs.contains($0) }.count,
-                           entries: entries, rekordbox: rbSummary, seconds: Date().timeIntervalSince(t0))
+        var result = BuildResult(crate: crate, output: options.output, filesSeen: files.count,
+                                 analysed: results.analysedSeconds.count, analysisSeconds: results.analysedSeconds,
+                                 reused: readOrder.filter { !results.analysedIDs.contains($0) }.count,
+                                 entries: entries, rekordbox: rbSummary, seconds: Date().timeIntervalSince(t0))
+        let inCrate = Set(crate.tracks.map(\.id))
+        for (id, list) in read where inCrate.contains(id) {
+            result.placesRead[id] = list.map { ReadPlace(place: $0.place, rel: String(files[$0.file].rel.dropFirst(prefix.count))) }
+        }
+        return result
     }
 
     /// The crate already at the output, read so its id, name, creation date and devices are kept and its signatures
