@@ -3,6 +3,7 @@ import DeckieInference
 import DeckieBuild
 import DeckieEngine
 import DeckieCrate
+import DeckieCore
 
 /// Deckie Desk: the crate is built and looked after here. Folder in, crate out; names fixed; recognition
 /// signatures made on this Mac; the crate then moves to the iPad by AirDrop, iCloud Drive or Files.
@@ -59,6 +60,7 @@ enum Bundled {
 /// A way to drive the app without its window, for checks and for long builds from a terminal:
 ///   "Deckie Desk" --check-engine                      says where the runtime and the models were found, and exits
 ///   "Deckie Desk" --build <folder> <out.deckiecrate> [jobs]   builds a crate with the bundled engine, printing progress
+///   "Deckie Desk" --find-copies <crate> <folder>      prints every track's audio and sets cut_key on copies of one recording
 ///   "Deckie Desk" --open <crate>                      opens that crate in the window
 ///   "Deckie Desk" --snapshot <crate> <folder>         opens it, steps through it and writes PNGs of the window (Snapshot.swift)
 enum Headless {
@@ -134,6 +136,25 @@ enum Headless {
                 print("\(changed) tracks changed, \(missed) rows matched no track; crate saved")
                 exit(0)
             } catch { print("apply failed:", error); exit(1) }
+        }
+        if a[1] == "--find-copies", a.count >= 4 {
+            // "Deckie Desk" --find-copies <crate.deckiecrate> <music folder>: the same as the Find copies button.
+            let crateURL = URL(fileURLWithPath: a[2]); let folder = URL(fileURLWithPath: a[3])
+            do {
+                var crate = try CrateReader.read(from: crateURL)
+                var prints: [String: RecordingPrint] = [:]
+                for t in crate.tracks where t.file.rel != nil {
+                    do { prints[t.id] = try Signatures.recordingPrint(of: folder.appendingPathComponent(t.file.rel!)) }
+                    catch { print("could not read: \(t.file.rel!): \(error)") }
+                }
+                let grouped = crate.setCutKeys(prints: prints)
+                try CrateWriter.write(crate, to: crateURL)
+                for g in crate.sameSongGroups where g.count > 1 {
+                    print("same recording: " + g.compactMap { id in crate.tracks.first { $0.id == id }?.file.rel }.joined(separator: " | "))
+                }
+                print("\(prints.count) tracks printed, \(grouped) are copies; crate saved")
+                exit(0)
+            } catch { print("finding copies failed:", error); exit(1) }
         }
         if a[1] == "--sign", a.count >= 4 {
             // "Deckie Desk" --sign <crate.deckiecrate> <music folder>: one plain signature per track, into the crate.

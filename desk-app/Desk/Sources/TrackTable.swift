@@ -76,6 +76,17 @@ struct Inspector: View {
                         Text("Disc").font(.caption).foregroundStyle(.secondary)
                         Text(Crate.discLine(t) ?? "on no disc").foregroundStyle(t.ident.disc == nil ? .secondary : .primary)
                     }
+                    let copies = model.copies(of: t)
+                    if !copies.isEmpty {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("Same recording as").font(.caption).foregroundStyle(.secondary)
+                            ForEach(copies, id: \.id) { c in
+                                (Text(c.file.rel ?? c.file.name)
+                                    + Text(Crate.discLine(c).map { "  (\($0))" } ?? "").foregroundColor(.secondary))
+                                    .lineLimit(1).truncationMode(.middle)
+                            }
+                        }
+                    }
                     Divider()
                     Text("What Deckie found").font(.headline)
                     Grid(alignment: .leading, verticalSpacing: 4) {

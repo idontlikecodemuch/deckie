@@ -19,7 +19,10 @@ struct ContentView: View {
                 if model.crate != nil {
                     Button { model.save() } label: { Label("Save", systemImage: "square.and.arrow.down") }.disabled(!model.dirty)
                     Button { model.makeSignatures() } label: { Label("Make signatures", systemImage: "waveform.badge.magnifyingglass") }
-                        .disabled(model.signing)
+                        .disabled(model.signing || model.findingCopies)
+                    Button { model.findCopies() } label: { Label("Find copies", systemImage: "square.on.square") }
+                        .help("Find files that are the same recording, so the iPad shows them as one song")
+                        .disabled(model.signing || model.findingCopies)
                     Button { model.showDiscs.toggle() } label: { Label(model.showDiscs ? "Hide Discs" : "Discs", systemImage: "opticaldisc") }
                     Button { model.showImportLog = true } label: { Label("Import log", systemImage: "list.bullet.rectangle") }
                     Button { model.revealInFinder() } label: { Label("Show in Finder", systemImage: "arrow.up.forward.app") }
@@ -96,7 +99,7 @@ struct StatusBar: View {
                 }
             }
             Spacer()
-            if model.signing { ProgressView().controlSize(.small); Text(model.signProgress).foregroundStyle(.secondary) }
+            if model.signing || model.findingCopies { ProgressView().controlSize(.small); Text(model.signProgress).foregroundStyle(.secondary) }
             else if !model.signProgress.isEmpty { Text(model.signProgress).foregroundStyle(.secondary) }
             if let s = model.buildSummary { Text(s).lineLimit(1).truncationMode(.middle).foregroundStyle(.secondary) }
             if model.dirty { Text("Unsaved changes").foregroundStyle(.orange) }

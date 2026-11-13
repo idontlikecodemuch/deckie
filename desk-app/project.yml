@@ -26,6 +26,8 @@ targets:
       - package: DeckieCore
         product: DeckieBuild
       - package: DeckieCore
+        product: DeckieCore
+      - package: DeckieCore
         product: DeckieCrate
       - package: DeckieCore
         product: DeckieEngine
