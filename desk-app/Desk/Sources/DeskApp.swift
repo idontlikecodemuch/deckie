@@ -134,8 +134,11 @@ enum Headless {
                 Remembered.setSourceRoot(root, name: name, for: result.crate.manifest.crateId)
                 for d in result.crate.discPlan {
                     for f in d.folders {
-                        for id in f.trackIds {
-                            if let t = result.crate.tracks.first(where: { $0.id == id }) { print("  \(Crate.discLine(t) ?? "")  \(t.file.rel ?? "")") }
+                        for (id, n) in result.crate.folderPlaces(disc: d.name, folder: f.name) {
+                            guard let t = result.crate.tracks.first(where: { $0.id == id }) else { continue }
+                            let here = Crate.placeLine(.init(disc: d.name, folder: f.name, track: n)) ?? ""
+                            let more = t.ident.otherPlaces.isEmpty ? "" : "  (\(TrackTable.places(t).count) places)"
+                            print("  \(here)  \(t.ident.title)\(more)")
                         }
                     }
                 }
