@@ -71,6 +71,9 @@ import DeckieCrate
         #expect(tags.key == "8A")
         #expect(tags.comment == "1A - Energy 6")
         #expect(LocalNames.key(inComment: tags.comment!) == "1A")
+        // ffmpeg writes a comment as TXXX "comment".
+        let ff = Self.frame("TXXX", [0] + Array("comment".utf8) + [0] + Array("4A - Energy 6".utf8))
+        #expect(FileTags.read(try T.write(Self.tag([ff]) + T.mpegFrame, "ff.mp3")).comment == "4A - Energy 6")
     }
 
     @Test func utf16CommentWithItsOwnByteOrderMark() throws {
