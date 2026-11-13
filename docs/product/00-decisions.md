@@ -433,6 +433,26 @@ The evidence to start from: letter H (recognition across the pitch fader, and it
 own), letter L (what does and does not carry off Apple's platforms), letters R and T (the key reader and the ways
 to a better one).
 
+### D30. Take what is already on the computer; look up names and facts only when asked (Nov 13)
+From research letters W and X, with the owner's "I agree with all this" on letter X's recommendations and, on
+lookups: "For 6 I meant getting song names from lookup. Or general song DNA data."
+
+- **Desk reads the keys a DJ's own software already wrote** on the same computer (rekordbox, Serato, Traktor,
+  Engine DJ, VirtualDJ, Mixed In Key), and shows where each key came from. Nothing leaves the computer. This is
+  what makes a crate file made on a PC complete for most DJs now (D29), and it widens D16's "the DJ's own key from
+  tags or a rekordbox import" to every DJ program.
+- **A mode can be open.** Where the music does not say major or minor, Deckie's own reader may answer with the home
+  note and an open mode instead of guessing. To be measured by the key trial before it ships.
+- **Key and tempo are not looked up by a song's name.** The keys on those services are machine readings no better
+  than Deckie's own, they miss edits and bootlegs, and a lookup would send a list of what a DJ owns.
+- **Names and facts about a song may be looked up, when the DJ asks.** A song that arrives with no name, or facts
+  such as artist, release and year, can come from a lookup that the DJ starts in Desk. It is never automatic. Before
+  it is built: the services' terms for a paid app, exactly what each sends, and the public privacy line reworded so
+  it stays true. Names found on the computer come first (tags, file names, folders, tracklist files, a DJ program's
+  library, a named copy of the same recording).
+- **What D16's bar measures** is the owner's to rule on once the key trial reports all four measures: exact on each
+  half as now, the mean of the halves, within one step on the wheel, or how often a shown key is right.
+
 ### Note on D19 (Nov 1): versions of a song stay separate rows
 Christopher, on two remixes of one song both showing in the picks: "we shouldn't merge them unless they are the same
 songs. DJs often have a bunch of versions of the same song". So the booth folds together only copies of the same
