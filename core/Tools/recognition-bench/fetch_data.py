@@ -33,12 +33,13 @@ def get(url, tries=4):
             time.sleep(2 * (i + 1))
 
 
-def download(url, path, tries=4):
+def download(url, path, tries=12):
     if os.path.exists(path) and os.path.getsize(path) > 0:
         return
     tmp = path + ".part"
     for i in range(tries):
-        r = subprocess.run(["curl", "-sSL", "--fail", "-m", "3600", "-A", UA["User-Agent"], "-o", tmp, url])
+        # -C -: carry on from where a broken transfer stopped.
+        r = subprocess.run(["curl", "-sSL", "--fail", "-m", "3600", "-C", "-", "-A", UA["User-Agent"], "-o", tmp, url])
         if r.returncode == 0:
             os.replace(tmp, path)
             return
@@ -129,11 +130,27 @@ def main():
     ap.add_argument("--dance", type=int, default=320)
     ap.add_argument("--other", type=int, default=160)
     ap.add_argument("--skip-gsplus", action="store_true")
+    ap.add_argument("--part", choices=["small", "songs", "gsplus"], help="fetch one part only (the parts can run side by side)")
     a = ap.parse_args()
     data = a.data
     os.makedirs(data, exist_ok=True)
 
-    # Small things first, so the benchmark can start while songs arrive.
+    if a.part in (None, "small"):
+        fetch_small(data)
+    if a.part in (None, "songs"):
+        fetch_songs(data, "dance", DANCE, a.dance, 1)
+        fetch_songs(data, "other", f"{OTHER} AND NOT subject:{DANCE}", a.other, 2)
+    if a.part in (None, "gsplus") and not a.skip_gsplus:
+        os.makedirs(os.path.join(data, "gsplus"), exist_ok=True)
+        z = os.path.join(data, "gsplus", "audio.zip")
+        if not os.path.isdir(os.path.join(data, "gsplus", "audio")):
+            download("https://zenodo.org/records/1095691/files/audio.zip?download=1", z)
+            zipfile.ZipFile(z).extractall(os.path.join(data, "gsplus"))
+            os.remove(z)
+    print("fetched", a.part or "all", flush=True)
+
+
+def fetch_small(data):
     os.makedirs(os.path.join(data, "noise"), exist_ok=True)
     for name in ["PCAFETER_16k", "PRESTO_16k", "PSTATION_16k"]:
         z = os.path.join(data, "noise", name + ".zip")
@@ -148,18 +165,6 @@ def main():
             zf.extractall(os.path.join(data, "rir"), [n for n in zf.namelist() if "real_rirs_isotropic_noises" in n and n.endswith((".wav", ".txt", "rir_list"))])
         os.remove(z)
     print("rir and noise ready", flush=True)
-
-    fetch_songs(data, "dance", DANCE, a.dance, 1)
-    fetch_songs(data, "other", f"{OTHER} AND NOT subject:{DANCE}", a.other, 2)
-
-    if not a.skip_gsplus:
-        os.makedirs(os.path.join(data, "gsplus"), exist_ok=True)
-        z = os.path.join(data, "gsplus", "audio.zip")
-        if not os.path.isdir(os.path.join(data, "gsplus", "audio")):
-            download("https://zenodo.org/records/1095691/files/audio.zip?download=1", z)
-            zipfile.ZipFile(z).extractall(os.path.join(data, "gsplus"))
-            os.remove(z)
-    print("all fetched", flush=True)
 
 
 if __name__ == "__main__":
