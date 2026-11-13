@@ -1,0 +1,272 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Deckie: DJ booth companion for iPad and Mac. Know Your Crate</title>
+<meta name="description" content="Deckie sits on an iPad beside your decks, names the song that is playing from your own crate, reads the pitch fader and shows what could come next. For CDJs, turntables and house decks. Coming soon.">
+<meta name="theme-color" content="#0f0a17">
+<link rel="canonical" href="https://deckie.io/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Deckie">
+<meta property="og:url" content="https://deckie.io/">
+<meta property="og:title" content="Deckie: Know Your Crate">
+<meta property="og:description" content="An iPad beside the decks that knows your crate. Deckie names the song, reads the pitch fader and shows what could come next. For CDJs, turntables and house decks. Coming soon.">
+<meta property="og:image" content="https://deckie.io/assets/share-home.jpg">
+<meta property="og:image:type" content="image/jpeg">
+<meta property="og:locale" content="en_US">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Deckie: Know Your Crate">
+<meta name="twitter:description" content="An iPad beside the decks that knows your crate. Deckie names the song, reads the pitch fader and shows what could come next. For CDJs, turntables and house decks. Coming soon.">
+<meta name="twitter:image" content="https://deckie.io/assets/share-home.jpg">
+<meta name="twitter:image:alt" content="Deckie. Know Your Crate. The Deckie Booth screen on an iPad: the playing song on the left, picks for the next song on the right.">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Deckie. Know Your Crate. The Deckie Booth screen on an iPad: the playing song on the left, picks for the next song on the right.">
+<link rel="icon" href="favicon.ico" sizes="32x32">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<script type="application/ld+json">
+{
+ "@context": "https://schema.org",
+ "@type": "SoftwareApplication",
+ "name": "Deckie",
+ "alternateName": "Deckie: DJ booth companion",
+ "url": "https://deckie.io/",
+ "image": "https://deckie.io/assets/share-home.jpg",
+ "applicationCategory": "MusicApplication",
+ "operatingSystem": "iPadOS, macOS",
+ "description": "Deckie is a second screen for DJs on decks that do not know their music: turntables, older CDJs, a venue's own gear. Deckie Desk, on a Mac, reads a crate (a group of the DJ's own songs) and writes a crate file with no audio in it. Deckie Booth, on an iPad beside the decks, names the playing song from that crate, reads the pitch fader and shows what could come next and how it could be brought in. It plays nothing and does not mix or beatmatch. Everything runs on the DJ's own devices. In development; coming soon.",
+ "softwareHelp": {
+  "@type": "CreativeWork",
+  "name": "The Deckie dictionary",
+  "url": "https://deckie.io/dictionary/"
+ },
+ "hasPart": [
+  {
+   "@type": "SoftwareApplication",
+   "name": "Deckie Desk",
+   "operatingSystem": "macOS",
+   "applicationCategory": "MusicApplication"
+  },
+  {
+   "@type": "SoftwareApplication",
+   "name": "Deckie Booth",
+   "operatingSystem": "iPadOS",
+   "applicationCategory": "MusicApplication"
+  }
+ ],
+ "author": {
+  "@type": "Person",
+  "name": "Christopher Shannon"
+ },
+ "publisher": {
+  "@type": "Organization",
+  "name": "App Hold Media",
+  "url": "https://apphold.media"
+ }
+}
+</script>
+<!--
+  Deckie, the coming-soon page. Static: no analytics, no cookies, no requests to anyone else.
+  The screens show a demo crate file: real analysis, invented song and artist names.
+  Look: one stylesheet, site.css, shared with the dictionary; its values come from Deckie Booth's Simple view.
+  Type: headings in Inter; Pacifico for "you", "your" and "Deckie" in headings, and for the app names.
+-->
+<link rel="stylesheet" href="site.css">
+</head>
+<body class="home">
+
+<div class="bar">
+<header class="wrap top">
+  <a class="mark" href="./" aria-label="Deckie, home"><img class="ico" src="icon.svg" alt="" width="28" height="28"><span class="you name">Deckie</span></a>
+  <nav class="tabs" aria-label="Pages">
+    <a href="./" aria-current="page">Home</a>
+    <a href="dictionary/">Dictionary</a>
+  </nav>
+  <a class="btn quiet" href="#beta">Help us beta test</a>
+</header>
+</div>
+
+<main id="top">
+
+<div class="wrap hero">
+  <div class="playing">
+    <p class="wordmark" aria-hidden="true"><img class="ico" src="icon.svg" alt="" width="96" height="96"><span class="you name">Deckie</span></p>
+    <h1>Know <span class="you">Your</span> Crate</h1>
+    <p class="for">Nail the mix.</p>
+    <p class="lede">An iPad beside the decks. It names the song, reads the pitch and shows what could come next.</p>
+    <div class="cta">
+      <a class="btn" href="#beta">Help us beta test</a>
+      <span class="soon">Coming soon</span>
+    </div>
+  </div>
+  <div id="film">
+    <div class="film">
+      <video controls playsinline preload="metadata" poster="assets/poster.jpg" aria-label="How Deckie works: a short film with the words on screen">
+        <source src="assets/deckie-explainer.mp4" type="video/mp4">
+      </video>
+    </div>
+    <details class="script">
+      <summary>What the film shows, in words</summary>
+      <ol>
+        <li>CDJs. Turntables. The house decks. None of them know your music.</li>
+        <li>Deckie knows your crate. It hears what’s playing. It names the song, reads the pitch, and shows what could come next.</li>
+        <li>Know the beat. Nail the mix. Then the name, Deckie, and the line Know Your Crate.</li>
+        <li>Deckie Desk, on your Mac. Desk reads your crate and writes a crate file: tempo, key, bars, style and fingerprints. Edits, bootlegs and burned CDs too. No audio goes in the file.</li>
+        <li>Sort your crate into discs and folders, in the order your player shows them. Send the file to your iPad by AirDrop, iCloud Drive or Files. No server.</li>
+        <li>Deckie Booth, on your iPad. Put the iPad by the decks and press play. A song shows up after a few seconds of music.</li>
+        <li>It names the song from your crate, with its disc, folder and track, as on your player.</li>
+        <li>It reads the pitch fader. The deck on screen runs 3 percent fast, so the tempo reads 128 BPM.</li>
+        <li>What could come next, best first. Each pick says where to set the pitch and how you could bring it in, and a wave shows the transition: the end of this song over the start of that one.</li>
+        <li>Turn up Shuffle for less obvious picks. Pin the one you want. Or search the rest of your crate.</li>
+        <li>The dictionary. Every DJ starts somewhere. DJ speak, in plain words. Then how it’s used on the decks.</li>
+        <li>Your music, your mix. It never leaves your devices. No account. No upload. Works with no signal.</li>
+        <li>Deckie. Know Your Crate. Coming soon. Help us beta test. deckie.io</li>
+      </ol>
+      <p style="margin-top:10px">The screens in the film are the real apps showing a demo crate file with invented song and artist names. The music was made for the film.</p>
+    </details>
+  </div>
+</div>
+
+<section id="booth" aria-labelledby="booth-h">
+  <div class="wrap">
+    <h2 id="booth-h">In the booth</h2>
+    <p class="lede">Other apps can name a released song. Deckie names yours.</p>
+    <div class="tiles">
+      <article class="pick tile">
+        <div class="detail"><img src="assets/tile-song.jpg" alt="Deckie Booth showing the playing song: 13, First Light, by Meridian Works." loading="lazy" width="600" height="150"></div>
+        <p class="top">Hears the room</p>
+        <h3>It names the song</h3>
+        <p>From your crate, a few seconds in, with its disc, folder and track, as on your player.</p>
+      </article>
+      <article class="pick tile" id="t-pitch">
+        <div class="detail num" aria-hidden="true"><span class="bpm" data-from="124.3" data-to="128">128</span> BPM · deck <span class="pct" data-from="0" data-to="3">+3.0</span>%</div>
+        <p class="top">Tempo and pitch</p>
+        <h3>It reads the pitch fader</h3>
+        <p>It hears how fast the deck is running and shows the tempo the song is really playing at.</p>
+      </article>
+      <article class="pick tile">
+        <div class="detail"><img src="assets/tile-pick.jpg" alt="A pick in Deckie Booth: 31, Late Bus Home, 126 BPM, pitch plus 1.4 percent, long blend or blend." loading="lazy" width="800" height="160"></div>
+        <p class="top">Picks</p>
+        <h3>It shows what could come next</h3>
+        <p>Picks from your crate, best first. Each says where to set the pitch and how you could bring it in.</p>
+      </article>
+      <article class="pick tile" id="t-wave">
+        <div class="detail"><svg class="lanes" viewBox="0 0 300 96" preserveAspectRatio="none" aria-hidden="true"><rect x="0" y="12" width="9" height="30" rx="1.5" class="a"/><rect x="10" y="12" width="9" height="26" rx="1.5" class="a"/><rect x="20" y="12" width="9" height="26" rx="1.5" class="a"/><rect x="30" y="12" width="9" height="26" rx="1.5" class="a"/><rect x="40" y="12" width="9" height="30" rx="1.5" class="a"/><rect x="50" y="12" width="9" height="26" rx="1.5" class="a"/><rect x="60" y="12" width="9" height="26" rx="1.5" class="a"/><rect x="70" y="12" width="9" height="26" rx="1.5" class="a"/><rect x="80" y="12" width="9" height="30" rx="1.5" class="a"/><rect x="90" y="12" width="9" height="26" rx="1.5" class="a"/><rect x="100" y="12" width="9" height="26" rx="1.5" class="a"/><rect x="110" y="12" width="9" height="26" rx="1.5" class="a"/><rect x="120" y="12" width="9" height="30" rx="1.5" class="a"/><rect x="130" y="12" width="9" height="26" rx="1.5" class="a"/><rect x="140" y="12" width="9" height="26" rx="1.5" class="a"/><rect x="150" y="16" width="9" height="26" rx="1.5" class="a q"/><rect x="160" y="16" width="9" height="30" rx="1.5" class="a q"/><rect x="170" y="16" width="9" height="26" rx="1.5" class="a q"/><rect x="180" y="16" width="9" height="26" rx="1.5" class="a q"/><rect x="190" y="16" width="9" height="26" rx="1.5" class="a q"/><rect x="200" y="16" width="9" height="30" rx="1.5" class="a q"/><rect x="210" y="16" width="9" height="26" rx="1.5" class="a q"/><rect x="220" y="16" width="9" height="26" rx="1.5" class="a q"/><rect x="230" y="16" width="9" height="26" rx="1.5" class="a q"/><rect x="240" y="16" width="9" height="30" rx="1.5" class="a q"/><rect x="250" y="16" width="9" height="26" rx="1.5" class="a q"/><rect x="260" y="16" width="9" height="26" rx="1.5" class="a q"/><rect x="270" y="16" width="9" height="26" rx="1.5" class="a q"/><rect x="280" y="16" width="9" height="30" rx="1.5" class="a q"/><rect x="290" y="16" width="9" height="26" rx="1.5" class="a q"/><rect x="110" y="56" width="9" height="24" rx="1.5" class="b"/><rect x="120" y="56" width="9" height="30" rx="1.5" class="b"/><rect x="130" y="56" width="9" height="24" rx="1.5" class="b"/><rect x="140" y="56" width="9" height="24" rx="1.5" class="b"/><rect x="150" y="56" width="9" height="24" rx="1.5" class="b"/><rect x="160" y="56" width="9" height="30" rx="1.5" class="b"/><rect x="170" y="56" width="9" height="24" rx="1.5" class="b"/><rect x="180" y="56" width="9" height="24" rx="1.5" class="b"/><rect x="190" y="56" width="9" height="24" rx="1.5" class="b"/><rect x="200" y="56" width="9" height="30" rx="1.5" class="b"/><rect x="210" y="56" width="9" height="24" rx="1.5" class="b"/><rect x="220" y="56" width="9" height="24" rx="1.5" class="b"/><rect x="230" y="56" width="9" height="24" rx="1.5" class="b"/><rect x="240" y="56" width="9" height="30" rx="1.5" class="b"/><rect x="250" y="56" width="9" height="24" rx="1.5" class="b"/><rect x="260" y="56" width="9" height="24" rx="1.5" class="b"/><rect x="270" y="56" width="9" height="24" rx="1.5" class="b"/><rect x="280" y="56" width="9" height="30" rx="1.5" class="b"/><rect x="290" y="56" width="9" height="24" rx="1.5" class="b"/><rect x="109" y="4" width="2" height="88" class="cut"/></svg></div>
+        <p class="top">The wave</p>
+        <h3>It draws the transition</h3>
+        <p>A wave of the end of this song over the start of the next, so you can see where they meet.</p>
+      </article>
+      <article class="pick tile" id="t-shuffle">
+        <div class="detail dial" aria-hidden="true"><span class="lab">Shuffle</span><span class="track"><i></i></span><span class="rows"><b></b><b></b><b></b></span></div>
+        <p class="top">The dial</p>
+        <h3>Shuffle</h3>
+        <p>Turn it up for less obvious picks. At zero they stay in score order.</p>
+      </article>
+      <article class="pick tile pinned">
+        <div class="detail"><img src="assets/tile-pin.jpg" alt="A pick pinned as next in Deckie Booth: 09, Night Hearts, 128 BPM, long blend or blend." loading="lazy" width="800" height="132"></div>
+        <p class="top">Next</p>
+        <h3>You pick</h3>
+        <p>Pin the one you want. Or search the rest of your crate.</p>
+      </article>
+    </div>
+  </div>
+</section>
+
+<section id="isnt" aria-labelledby="isnt-h">
+  <div class="wrap">
+    <h2 id="isnt-h">What it isn’t</h2>
+    <ul class="plain">
+      <li><b>It doesn’t mix for you.</b>It plays nothing and touches nothing. It suggests. You mix.</li>
+      <li><b>It doesn’t beatmatch for you.</b>It shows where the pitch fader could go. Your hands do the rest.</li>
+      <li><b>It doesn’t take your music.</b>Nothing is uploaded. What you play isn’t sent anywhere or used to train anything. No account. Works with no signal.</li>
+      <li><b>It doesn’t replace your DJ software.</b>Keep what you use. Deckie sits beside it.</li>
+    </ul>
+    <p class="big"><span class="you">Your</span> music. <span class="you">Your</span>&nbsp;mix.</p>
+  </div>
+</section>
+
+<section id="desk" aria-labelledby="desk-h">
+  <div class="wrap">
+    <p class="where">Deckie Desk, on your Mac</p>
+    <h2 id="desk-h">Desk reads <span class="you">your</span> crate</h2>
+    <div class="split">
+      <div class="screen"><img src="assets/desk.jpg" alt="Deckie Desk on a Mac: a table of songs with tempo and key, and a panel of discs and folders." loading="lazy" width="1600" height="1000"></div>
+      <ol class="steps">
+        <li class="pick"><p class="top">Step 1</p><h3>Point it at your music.</h3><p>Your own files: releases, edits, bootlegs, the songs on your burned CDs.</p></li>
+        <li class="pick"><p class="top">Step 2</p><h3>It writes a crate file.</h3><p>Tempo, key, bars and style for every song, and a fingerprint to recognise it by. No audio goes in it.</p></li>
+        <li class="pick"><p class="top">Step 3</p><h3>Sort it into discs and folders.</h3><p>In the order your player shows them, so the booth can say disc and track.</p></li>
+        <li class="pick"><p class="top">Step 4</p><h3>Send it to your iPad.</h3><p>AirDrop, iCloud Drive or Files. No server.</p></li>
+      </ol>
+    </div>
+    <p class="aside">A crate is a group of your songs. It can be your whole library.</p>
+  </div>
+</section>
+
+<section id="dictionary" aria-labelledby="dict-h">
+  <div class="wrap">
+    <div class="playing dict">
+      <div>
+        <p class="top">The dictionary</p>
+        <h2 id="dict-h">Every DJ starts somewhere</h2>
+        <p class="words"><a href="dictionary/#bass-swap">Bass swap.</a> <a href="dictionary/#echo-out">Echo out.</a> <a href="dictionary/#cut-on-the-one">Cut on the one.</a></p>
+        <p class="lede">DJ speak, in plain words.</p>
+        <div class="cta"><a class="btn" href="dictionary/">Open the dictionary</a></div>
+      </div>
+      <div class="deck" id="terms" aria-label="Some words from the dictionary">
+      <!-- TERMS -->
+      <a class="pick term-card" href="dictionary/#bass-swap"><svg class="move" viewBox="0 0 116 56" width="116" height="56" aria-hidden="true" focusable="false"><rect x="2" y="2" width="112" height="22" rx="5" class="ln"/><rect x="4.0" y="4.6" width="2.4" height="16.8" rx="1.2" class="a"/><rect x="8.5" y="8.0" width="2.4" height="10.0" rx="1.2" class="a"/><rect x="13.0" y="6.0" width="2.4" height="14.0" rx="1.2" class="a"/><rect x="17.5" y="6.5" width="2.4" height="13.0" rx="1.2" class="a"/><rect x="22.0" y="4.8" width="2.4" height="16.5" rx="1.2" class="a"/><rect x="26.5" y="6.7" width="2.4" height="12.6" rx="1.2" class="a"/><rect x="31.0" y="5.5" width="2.4" height="15.0" rx="1.2" class="a"/><rect x="35.5" y="5.7" width="2.4" height="14.6" rx="1.2" class="a"/><rect x="40.0" y="4.6" width="2.4" height="16.8" rx="1.2" class="a"/><rect x="44.5" y="5.6" width="2.4" height="14.8" rx="1.2" class="a"/><rect x="49.0" y="6.2" width="2.4" height="13.7" rx="1.2" class="a"/><rect x="53.5" y="6.4" width="2.4" height="13.1" rx="1.2" class="a"/><rect x="58.0" y="11.0" width="2.4" height="4.0" rx="1.2" class="a"/><rect x="62.5" y="10.6" width="2.4" height="4.7" rx="1.2" class="a"/><rect x="67.0" y="11.4" width="2.4" height="3.2" rx="1.2" class="a"/><rect x="71.5" y="10.7" width="2.4" height="4.5" rx="1.2" class="a"/><rect x="2" y="32" width="112" height="22" rx="5" class="ln"/><rect x="31.0" y="40.6" width="2.4" height="4.8" rx="1.2" class="b"/><rect x="35.5" y="40.7" width="2.4" height="4.7" rx="1.2" class="b"/><rect x="40.0" y="40.3" width="2.4" height="5.4" rx="1.2" class="b"/><rect x="44.5" y="40.6" width="2.4" height="4.7" rx="1.2" class="b"/><rect x="49.0" y="40.8" width="2.4" height="4.4" rx="1.2" class="b"/><rect x="53.5" y="40.9" width="2.4" height="4.2" rx="1.2" class="b"/><rect x="58.0" y="36.7" width="2.4" height="12.6" rx="1.2" class="b"/><rect x="62.5" y="35.6" width="2.4" height="14.8" rx="1.2" class="b"/><rect x="67.0" y="38.0" width="2.4" height="10.1" rx="1.2" class="b"/><rect x="71.5" y="35.9" width="2.4" height="14.1" rx="1.2" class="b"/><rect x="76.0" y="36.8" width="2.4" height="12.3" rx="1.2" class="b"/><rect x="80.5" y="38.1" width="2.4" height="9.8" rx="1.2" class="b"/><rect x="85.0" y="35.6" width="2.4" height="14.8" rx="1.2" class="b"/><rect x="89.5" y="37.7" width="2.4" height="10.5" rx="1.2" class="b"/><rect x="94.0" y="34.9" width="2.4" height="16.1" rx="1.2" class="b"/><rect x="98.5" y="38.0" width="2.4" height="10.0" rx="1.2" class="b"/><rect x="103.0" y="37.2" width="2.4" height="11.6" rx="1.2" class="b"/><rect x="107.5" y="35.9" width="2.4" height="14.3" rx="1.2" class="b"/><rect x="56.8" y="0" width="1" height="56" class="j"/><path d="M54.3 56l3 -4l3 4z" class="j"/></svg><span class="top">Moves</span><b>Bass swap</b><span class="def">Only one song carries the deep bass at a time, so at some point the bass jumps from the old song to the new one.</span></a>
+      <a class="pick term-card" href="dictionary/#echo-out"><svg class="move" viewBox="0 0 116 56" width="116" height="56" aria-hidden="true" focusable="false"><rect x="2" y="2" width="112" height="22" rx="5" class="ln"/><rect x="4.0" y="4.6" width="2.4" height="16.8" rx="1.2" class="a"/><rect x="8.5" y="8.0" width="2.4" height="10.0" rx="1.2" class="a"/><rect x="13.0" y="6.0" width="2.4" height="14.0" rx="1.2" class="a"/><rect x="17.5" y="6.5" width="2.4" height="13.0" rx="1.2" class="a"/><rect x="22.0" y="4.8" width="2.4" height="16.5" rx="1.2" class="a"/><rect x="26.5" y="6.7" width="2.4" height="12.6" rx="1.2" class="a"/><rect x="31.0" y="5.5" width="2.4" height="15.0" rx="1.2" class="a"/><rect x="35.5" y="5.7" width="2.4" height="14.6" rx="1.2" class="a"/><rect x="40.0" y="4.6" width="2.4" height="16.8" rx="1.2" class="a"/><rect x="44.5" y="5.6" width="2.4" height="14.8" rx="1.2" class="a"/><rect x="49.0" y="6.2" width="2.4" height="13.7" rx="1.2" class="a"/><rect x="53.5" y="6.4" width="2.4" height="13.1" rx="1.2" class="a"/><rect x="62.5" y="8.4" width="2.4" height="9.1" rx="1.2" class="a"/><rect x="71.5" y="10.0" width="2.4" height="5.9" rx="1.2" class="a"/><rect x="80.5" y="11.7" width="2.4" height="2.5" rx="1.2" class="a"/><rect x="89.5" y="12.3" width="2.4" height="1.5" rx="1.2" class="a"/><rect x="2" y="32" width="112" height="22" rx="5" class="ln"/><rect x="58.0" y="36.7" width="2.4" height="12.6" rx="1.2" class="b"/><rect x="62.5" y="35.6" width="2.4" height="14.8" rx="1.2" class="b"/><rect x="67.0" y="38.0" width="2.4" height="10.1" rx="1.2" class="b"/><rect x="71.5" y="35.9" width="2.4" height="14.1" rx="1.2" class="b"/><rect x="76.0" y="36.8" width="2.4" height="12.3" rx="1.2" class="b"/><rect x="80.5" y="38.1" width="2.4" height="9.8" rx="1.2" class="b"/><rect x="85.0" y="35.6" width="2.4" height="14.8" rx="1.2" class="b"/><rect x="89.5" y="37.7" width="2.4" height="10.5" rx="1.2" class="b"/><rect x="94.0" y="34.9" width="2.4" height="16.1" rx="1.2" class="b"/><rect x="98.5" y="38.0" width="2.4" height="10.0" rx="1.2" class="b"/><rect x="103.0" y="37.2" width="2.4" height="11.6" rx="1.2" class="b"/><rect x="107.5" y="35.9" width="2.4" height="14.3" rx="1.2" class="b"/><rect x="56.8" y="0" width="1" height="56" class="j"/><path d="M54.3 56l3 -4l3 4z" class="j"/></svg><span class="top">Moves</span><b>Echo out</b><span class="def">The old song stops on a beat and its echo keeps ringing while the new song starts.</span></a>
+      <a class="pick term-card" href="dictionary/#cut-on-the-one"><svg class="move" viewBox="0 0 116 56" width="116" height="56" aria-hidden="true" focusable="false"><rect x="2" y="2" width="112" height="22" rx="5" class="ln"/><rect x="4.0" y="4.6" width="2.4" height="16.8" rx="1.2" class="a"/><rect x="8.5" y="8.0" width="2.4" height="10.0" rx="1.2" class="a"/><rect x="13.0" y="6.0" width="2.4" height="14.0" rx="1.2" class="a"/><rect x="17.5" y="6.5" width="2.4" height="13.0" rx="1.2" class="a"/><rect x="22.0" y="4.8" width="2.4" height="16.5" rx="1.2" class="a"/><rect x="26.5" y="6.7" width="2.4" height="12.6" rx="1.2" class="a"/><rect x="31.0" y="5.5" width="2.4" height="15.0" rx="1.2" class="a"/><rect x="35.5" y="5.7" width="2.4" height="14.6" rx="1.2" class="a"/><rect x="40.0" y="4.6" width="2.4" height="16.8" rx="1.2" class="a"/><rect x="44.5" y="5.6" width="2.4" height="14.8" rx="1.2" class="a"/><rect x="49.0" y="6.2" width="2.4" height="13.7" rx="1.2" class="a"/><rect x="53.5" y="6.4" width="2.4" height="13.1" rx="1.2" class="a"/><rect x="2" y="32" width="112" height="22" rx="5" class="ln"/><rect x="58.0" y="36.7" width="2.4" height="12.6" rx="1.2" class="b"/><rect x="62.5" y="35.6" width="2.4" height="14.8" rx="1.2" class="b"/><rect x="67.0" y="38.0" width="2.4" height="10.1" rx="1.2" class="b"/><rect x="71.5" y="35.9" width="2.4" height="14.1" rx="1.2" class="b"/><rect x="76.0" y="36.8" width="2.4" height="12.3" rx="1.2" class="b"/><rect x="80.5" y="38.1" width="2.4" height="9.8" rx="1.2" class="b"/><rect x="85.0" y="35.6" width="2.4" height="14.8" rx="1.2" class="b"/><rect x="89.5" y="37.7" width="2.4" height="10.5" rx="1.2" class="b"/><rect x="94.0" y="34.9" width="2.4" height="16.1" rx="1.2" class="b"/><rect x="98.5" y="38.0" width="2.4" height="10.0" rx="1.2" class="b"/><rect x="103.0" y="37.2" width="2.4" height="11.6" rx="1.2" class="b"/><rect x="107.5" y="35.9" width="2.4" height="14.3" rx="1.2" class="b"/><circle cx="59.2" cy="35.0" r="1.6" class="j"/><rect x="56.8" y="0" width="1" height="56" class="j"/><path d="M54.3 56l3 -4l3 4z" class="j"/></svg><span class="top">Moves</span><b>Cut on the one</b><span class="def">The new song starts exactly on the first beat of a musical section, so the switch lands where it feels natural.</span></a>
+      <a class="pick term-card" href="dictionary/#blend"><svg class="move" viewBox="0 0 116 56" width="116" height="56" aria-hidden="true" focusable="false"><rect x="2" y="2" width="112" height="22" rx="5" class="ln"/><rect x="4.0" y="4.6" width="2.4" height="16.8" rx="1.2" class="a"/><rect x="8.5" y="8.0" width="2.4" height="10.0" rx="1.2" class="a"/><rect x="13.0" y="6.0" width="2.4" height="14.0" rx="1.2" class="a"/><rect x="17.5" y="6.5" width="2.4" height="13.0" rx="1.2" class="a"/><rect x="22.0" y="4.8" width="2.4" height="16.5" rx="1.2" class="a"/><rect x="26.5" y="6.7" width="2.4" height="12.6" rx="1.2" class="a"/><rect x="31.0" y="5.5" width="2.4" height="15.0" rx="1.2" class="a"/><rect x="35.5" y="5.7" width="2.4" height="14.6" rx="1.2" class="a"/><rect x="40.0" y="4.6" width="2.4" height="16.8" rx="1.2" class="a"/><rect x="44.5" y="6.4" width="2.4" height="13.2" rx="1.2" class="a"/><rect x="49.0" y="7.7" width="2.4" height="10.6" rx="1.2" class="a"/><rect x="53.5" y="8.6" width="2.4" height="8.7" rx="1.2" class="a"/><rect x="58.0" y="9.5" width="2.4" height="7.0" rx="1.2" class="a"/><rect x="62.5" y="9.7" width="2.4" height="6.6" rx="1.2" class="a"/><rect x="67.0" y="11.3" width="2.4" height="3.4" rx="1.2" class="a"/><rect x="71.5" y="11.4" width="2.4" height="3.1" rx="1.2" class="a"/><rect x="76.0" y="12.3" width="2.4" height="1.4" rx="1.2" class="a"/><rect x="2" y="32" width="112" height="22" rx="5" class="ln"/><rect x="40.0" y="42.1" width="2.4" height="1.9" rx="1.2" class="b"/><rect x="44.5" y="41.4" width="2.4" height="3.3" rx="1.2" class="b"/><rect x="49.0" y="40.7" width="2.4" height="4.6" rx="1.2" class="b"/><rect x="53.5" y="40.1" width="2.4" height="5.8" rx="1.2" class="b"/><rect x="58.0" y="39.5" width="2.4" height="7.0" rx="1.2" class="b"/><rect x="62.5" y="38.1" width="2.4" height="9.8" rx="1.2" class="b"/><rect x="67.0" y="39.1" width="2.4" height="7.8" rx="1.2" class="b"/><rect x="71.5" y="36.7" width="2.4" height="12.6" rx="1.2" class="b"/><rect x="76.0" y="36.8" width="2.4" height="12.3" rx="1.2" class="b"/><rect x="80.5" y="38.1" width="2.4" height="9.8" rx="1.2" class="b"/><rect x="85.0" y="35.6" width="2.4" height="14.8" rx="1.2" class="b"/><rect x="89.5" y="37.7" width="2.4" height="10.5" rx="1.2" class="b"/><rect x="94.0" y="34.9" width="2.4" height="16.1" rx="1.2" class="b"/><rect x="98.5" y="38.0" width="2.4" height="10.0" rx="1.2" class="b"/><rect x="103.0" y="37.2" width="2.4" height="11.6" rx="1.2" class="b"/><rect x="107.5" y="35.9" width="2.4" height="14.3" rx="1.2" class="b"/><rect x="56.8" y="0" width="1" height="56" class="j"/><path d="M54.3 56l3 -4l3 4z" class="j"/></svg><span class="top">Moves</span><b>Blend</b><span class="def">The two songs overlap for a while, and the low end moves from one to the other halfway through.</span></a>
+      <a class="pick term-card" href="dictionary/#key-lock"><span class="top">Tempo and pitch</span><b>Key lock (or master tempo)</b><span class="def">A switch that lets you speed a song up without making the singer sound higher.</span></a>
+      <!-- /TERMS -->
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="about" aria-labelledby="about-h">
+  <div class="wrap">
+    <h2 id="about-h">About <span class="you name">Deckie</span></h2>
+    <div class="cols">
+      <div>
+    <p class="lede">Most decks don’t know your music: turntables, older CDJs, the venue’s own gear. So you mix from memory. Deckie is a second screen that knows your crate and puts what you know in front of you, when you need it.</p>
+    <p class="lede">It is two apps on one shared core. Everything runs on your own devices.</p>
+      </div>
+    <dl class="facts">
+      <div><dt>Deckie Booth</dt><dd>iPad. Listens beside the decks during a set</dd></div>
+      <div><dt>Deckie Desk</dt><dd>Mac. Prepares your crate before the gig</dd></div>
+      <div><dt>Works beside</dt><dd>CDJs, turntables, house decks</dd></div>
+      <div><dt>Your music</dt><dd>Stays on your devices</dd></div>
+      <div><dt>Status</dt><dd>In development. Coming soon</dd></div>
+      <div><dt>Made by</dt><dd>Christopher Shannon and <a href="https://apphold.media">App Hold Media</a></dd></div>
+    </dl>
+    </div>
+  </div>
+</section>
+
+<section class="beta" id="beta" aria-labelledby="beta-h">
+  <div class="wrap">
+    <div class="box">
+      <h2 id="beta-h">Help us beta test</h2>
+      <p class="lede">We want working DJs to try Deckie on their own music and tell us what is wrong. You need your own music files, a Mac and an iPad.</p>
+      <div class="cta">
+        <a class="btn" id="betabtn" href="mailto:info@apphold.media?subject=Deckie%20beta&amp;body=Hello%2C%0A%0AI%20would%20like%20to%20help%20beta%20test%20Deckie.%0A%0AThe%20decks%20I%20play%20on%3A%0AMy%20Mac%20and%20my%20iPad%3A%0A%0AI%20have%20my%20own%20music%20files%2C%20a%20Mac%20for%20Deckie%20Desk%20and%20an%20iPad%20for%20Deckie%20Booth.">Help us beta test</a>
+        <span id="betanote">Opens an email to <a href="mailto:info@apphold.media">info@apphold.media</a>.</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer class="wrap">
+  <p><a href="https://deckie.io/">deckie.io</a> · Deckie. Know Your Crate · Made by Christopher Shannon and <a href="https://apphold.media">App Hold Media</a>.</p>
+  <p>The screens show a demo crate file with invented song and artist names. The film’s music was made for the film.</p>
+</footer>
+
+<script src="site.js" defer></script>
+</body>
+</html>

@@ -1,0 +1,21 @@
+@font-face{font-family:Inter;src:url(../fonts/inter.woff2) format("woff2");font-weight:100 900}
+@font-face{font-family:Pacifico;src:url(../fonts/pacifico.woff2) format("woff2")}
+*{box-sizing:border-box;margin:0}
+html,body{width:1200px;height:630px;background:#0f0a17;color:#f2edf9;font-family:Inter,sans-serif;overflow:hidden}
+.wave{position:absolute;inset:0;display:flex;align-items:center;gap:7px;padding:0 0 0 4px;opacity:.9}
+.wave i{flex:none;width:5px;border-radius:3px;background:rgba(180,144,255,.085)}
+.card{position:absolute;left:56px;top:56px;bottom:56px;width:520px;border-radius:36px;padding:52px 48px;
+ background:linear-gradient(180deg,#2c2450 0%,#231b40 100%);display:flex;flex-direction:column;justify-content:center}
+.name{display:flex;align-items:center;gap:18px;font-family:Pacifico;font-size:112px;line-height:1.05}
+.name img{width:88px;height:88px;margin-top:10px}
+h1{font-weight:800;font-size:52px;letter-spacing:-.025em;line-height:1.1;margin-top:18px}
+h1 em{font-family:Pacifico;font-style:normal;font-weight:400;color:#b490ff;font-size:1.08em}
+p{font-size:27px;line-height:1.35;color:#c9bfdc;margin-top:18px}
+.url{margin-top:26px;font-weight:700;font-size:26px;color:#f2edf9}
+.shot{position:absolute;right:56px;top:50%;transform:translateY(-50%);width:512px;border-radius:24px;overflow:hidden;background:#1a1420;box-shadow:0 20px 60px rgba(0,0,0,.45)}
+.shot img{display:block;width:100%}
+.words{position:absolute;right:56px;top:56px;bottom:56px;width:512px;display:flex;flex-direction:column;justify-content:center;gap:14px}
+.w{background:#1a1420;border-radius:20px;padding:20px 24px}
+.w small{display:block;font-size:17px;font-weight:600;color:#b9a7ee}
+.w b{display:block;font-size:31px;font-weight:650;letter-spacing:-.01em;margin-top:2px}
+.w span{display:block;font-size:20px;line-height:1.35;color:#d9d2e6;margin-top:6px}
