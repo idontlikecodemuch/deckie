@@ -1,22 +1,23 @@
 import SwiftUI
 import DeckieCrate
 
-/// Files that are not in the crate, and tracks with a note (a damaged frame, a protected file): never skipped silently.
+/// What didn't go in: files that are not in the crate, and songs with a note (a damaged frame, a protected file),
+/// never skipped silently.
 struct ImportLogView: View {
     @EnvironmentObject var model: DeskModel
     @Environment(\.dismiss) var dismiss
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
-            Text("Import log").font(.title2)
+            Text(Words.whatDidntGoIn).font(.title2)
             if let log = model.crate?.manifest.importLog {
-                Text("Built on \(log.builtBy) at \(log.builtAt): \(log.filesSeen) files seen, \(log.tracks) tracks in the crate.")
+                Text(Words.readOn(log.builtBy, log.builtAt, seen: log.filesSeen, songs: log.tracks))
                     .foregroundStyle(.secondary)
                 let groups = Dictionary(grouping: log.entries, by: \.reason).sorted { $0.key < $1.key }
-                if groups.isEmpty { Text("Every file went in cleanly.").padding(.top) }
+                if groups.isEmpty { Text(Words.everySongWentIn).padding(.top) }
                 List {
                     ForEach(groups, id: \.key) { reason, entries in
-                        Section("\(Self.plain(reason)) (\(entries.count))") {
+                        Section(Words.reasonCount(reason, entries.count)) {
                             ForEach(entries.indices, id: \.self) { i in
                                 VStack(alignment: .leading) {
                                     Text(entries[i].rel).font(.system(.body, design: .monospaced)).lineLimit(1)
@@ -26,20 +27,8 @@ struct ImportLogView: View {
                         }
                     }
                 }
-            } else { Text("This crate carries no import log.").foregroundStyle(.secondary) }
-            HStack { Spacer(); Button("Done") { dismiss() }.keyboardShortcut(.defaultAction) }
+            } else { Text(Words.noRecord).foregroundStyle(.secondary) }
+            HStack { Spacer(); Button(Words.done) { dismiss() }.keyboardShortcut(.defaultAction) }
         }.padding(20).frame(minWidth: 640, minHeight: 420)
-    }
-
-    static func plain(_ reason: String) -> String {
-        switch reason {
-        case "unsupported": return "File type not supported"
-        case "protected": return "Protected, cannot be read"
-        case "damaged_frames": return "Damaged frames, played as silence"
-        case "duplicate": return "The same file as another"
-        case "decode_failed", "decode": return "Could not be decoded"
-        case "analysis_failed", "analysis": return "Analysis failed"
-        default: return reason.replacingOccurrences(of: "_", with: " ").capitalized
-        }
     }
 }
