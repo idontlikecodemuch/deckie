@@ -2,7 +2,7 @@ import Foundation
 
 /// The few tags of an audio file the builder reads: its tempo tag (for `--bpm-tags`), title, artist, album, track
 /// number, the key a DJ's program wrote, and the comment (where Mixed In Key may write the key). Read from an ID3v2 tag
-/// (versions 2.2 to 2.4: TBPM, TIT2, TPE1, TALB, TRCK, TKEY, COMM, and TXXX frames named INITIALKEY or KEY, with their
+/// (versions 2.2 to 2.4: TBPM, TIT2, TPE1, TALB, TRCK, TKEY, COMM, and TXXX frames named INITIALKEY, KEY or COMMENT, with their
 /// 2.2 names) at the start of the file (MP3, FLAC or AAC with ID3 in front) or in a WAV or AIFF file's `id3 ` chunk;
 /// from a FLAC file's Vorbis comment (BPM, TITLE, ARTIST, ALBUM, TRACKNUMBER, INITIALKEY or KEY, COMMENT or
 /// DESCRIPTION); from a WAV file's LIST INFO chunk (INAM, IART, IPRD, ITRK, ICMT; its IKEY is "keywords", not a
@@ -275,9 +275,13 @@ enum ID3 {
                 }
                 continue
             case "TXXX", "TXX":
-                if let f = describedFrame(data, skippingLanguage: false),
-                   ["initialkey", "key", "initial key"].contains(f.0.lowercased()) {
-                    tags.key = tags.key ?? nonEmpty(f.1)
+                if let f = describedFrame(data, skippingLanguage: false) {
+                    switch f.0.lowercased() {
+                    case "initialkey", "key", "initial key": tags.key = tags.key ?? nonEmpty(f.1)
+                    // ffmpeg writes a comment this way, not as COMM.
+                    case "comment": tags.comment = tags.comment ?? nonEmpty(f.1)
+                    default: break
+                    }
                 }
                 continue
             default: break
