@@ -190,8 +190,8 @@ final class DeskModel: ObservableObject {
         }
     }
 
-    /// The rekordbox route, where it was: a collection export, then the folder of music, read as the music folder
-    /// (no source) with the names, tempos, keys and cues from rekordbox.
+    /// The rekordbox route, where it was: a collection export, then the folder of music, read as a source named after
+    /// that folder like any folder added (D31), with the names, tempos, keys and cues from rekordbox.
     func askRekordbox() {
         let x = NSOpenPanel()
         x.canChooseDirectories = false; x.canChooseFiles = true; x.allowsMultipleSelection = false
@@ -205,7 +205,8 @@ final class DeskModel: ObservableObject {
             p.message = Words.rekordboxFolderMessage
             p.begin { [weak self] r in
                 guard r == .OK, let folder = p.url, let self else { return }
-                self.start(RunRequest(folder: folder, source: nil, rekordbox: xml))
+                let source = SourceNaming.unique(MountedSource.name(of: folder), root: folder, roots: self.roots)
+                self.start(RunRequest(folder: folder, source: source, rekordbox: xml))
             }
         }
     }

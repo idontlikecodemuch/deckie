@@ -32,10 +32,11 @@ enum Words {
     static let noDriveFound = "No CD or drive found. Put one in, or choose a folder."
     static let chooseFolder = "Choose a folder…"
     static let addMusicHelp = "Read a CD, a USB stick or an SD card as it is: its name, its folders and the order of its songs"
-    static let chooseSourceMessage = "Choose a CD, a drive or a folder. Deckie reads its name, its folders and the order of its songs as they are."
+    /// new (D31): the folder chooser's message, for Add music and for the rekordbox route alike.
+    static let chooseSourceMessage = "Choose the folder your music is in. It becomes a source, named after the folder."
     static let chooseSourcePrompt = "Add"
     static let rekordboxMessage = "Choose the collection you exported from rekordbox (File > Export Collection in xml format). Deckie takes names, tempos, keys, cues and playlists from it; nothing is sent anywhere."
-    static let rekordboxFolderMessage = "Choose the folder of music. Deckie reads every song below it and writes a crate file; the music stays where it is."
+    static let rekordboxFolderMessage = chooseSourceMessage   // new (D31)
     static let start = "Start"
 
     // MARK: while it works
@@ -244,6 +245,8 @@ enum Words {
 
     // MARK: the Sources panel
     static let sourcesTitle = "Sources"
+    /// new (D31): the caption under the panel's title.
+    static let sourcesCaption = "A source is a CD, a drive or a folder you added. Each keeps its own name."
     static let nothingReadYet = "Nothing read from a CD or a drive yet."
     static let sourcesEmptyBody = "Add music from a CD, a USB stick or an SD card, and its name, its folders and the order of its songs show here, as your player shows them."
     static func sourceLine(_ name: String, songs n: Int) -> String { "\(name)  ·  \(n) \(n == 1 ? "song" : "songs")" }
@@ -263,6 +266,7 @@ enum Words {
                : "\(n) songs go from the crate. Songs that are somewhere else too stay.")
     }
     static let remove = "Remove"
+    /// Only for crate files made before D31, whose songs from the Mac have no source.
     static let musicFolderName = "The music folder"
     static let removeMusicFolder = "Remove the music folder…"
 
