@@ -50,7 +50,7 @@ struct TrackTable: View {
     /// 9A"), or D16's words when there is no key.
     static func keyHelp(_ t: CrateTrack) -> String {
         guard let k = t.key else { return Words.keyNotRead }
-        let others = k.votes.filter { LocalFacts.djOrigins.contains($0.key) && $0.key != k.source }.sorted { $0.key < $1.key }
+        let others = k.votes.filter { (LocalFacts.djOrigins.contains($0.key) || $0.key == LocalFacts.ownVote) && $0.key != k.source }.sorted { $0.key < $1.key }
             .map { Words.keySays($0.key, $0.value) }
         return ([k.camelot + " " + Words.keyFrom(k.source)] + others).joined(separator: "; ")
     }

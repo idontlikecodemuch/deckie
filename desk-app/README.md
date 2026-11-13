@@ -102,9 +102,11 @@ and every DJ library is read from a copy, never written or locked.
   rekordbox collection export (XML) from the rekordbox route or chosen by hand. rekordbox's own library is encrypted
   and is not opened; when it is there and no export was given, the finished screen says how to export one. Any of
   these files can also be chosen by hand: File > Choose a DJ library… (kept in `libraries.json`).
-- *Which key.* On this engine (no Apple framework) the key is the DJ's own and Deckie's own reading stays out of the
-  crate file (D16): a song no program or tag has a key for has none, and the window says "Key not read on this
-  computer yet". Where programs disagree, the program whose library was written most recently wins, then the file's
+- *Which key.* The DJ's own key wins, with Deckie's own reading kept beside it as a vote ("Deckie says 4A"). A song
+  no program or tag has a key for keeps Deckie's own reading exactly as before, shown as "read by Deckie" (the note on
+  D30 and D16: a key is preferred; the per-song "when sure" rule waits for the key trial and goes in
+  `LocalFacts.decideKey`). A song with no key at all says "Key not read on this computer yet", and the booth's
+  scoring leaves its key out of a pair's score. Where programs disagree, the program whose library was written most recently wins, then the file's
   key tag, its comment, its title; every key found stays in `key.votes`, and the table's Key from column and its help
   show where each came from ("8A from Traktor; rekordbox says 9A"). A record read by Apple's framework keeps that
   reading as its key.

@@ -206,17 +206,7 @@ enum HeadlessDesk {
         }
     }
 
-    static func printLocal(_ l: LocalFactsSummary) {
-        let r = l.report
-        print("keys from: \(r.keysFrom.sorted { $0.key < $1.key }.map { "\($0.key) \($0.value)" }.joined(separator: ", ")); "
-              + "no key: \(r.keysNotRead); programs disagree: \(r.keysDisagree)")
-        print("names from: \(r.namesFrom.sorted { $0.key < $1.key }.map { "\($0.key) \($0.value)" }.joined(separator: ", ")); "
-              + "still need a name: \(r.needName)")
-        for lib in l.libraries { print("  read \(lib.program.rawValue): \(lib.path) (\(lib.songs) songs)") }
-        for f in l.failed { print("  could not read \(f)") }
-        if l.rekordboxLocked { print("  rekordbox's own library is on this computer (encrypted, not read)") }
-        if l.rekordboxExport { print("  a rekordbox USB export is on a source (not read)") }
-    }
+    static func printLocal(_ l: LocalFactsSummary) { print(l.text, terminator: "") }
 }
 
 /// A value shared with the run's progress callback.

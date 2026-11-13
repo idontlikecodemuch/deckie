@@ -150,9 +150,11 @@ memo Q's vocal fields, `vocal_structure` and `hooks`, are instead left out when 
   the same names, so the ones not chosen stay visible; `key.confidence` is then the share of those that agree with
   `key.camelot` (1 when there is one, or all agree), on that scale; `key.key` and `key.scale` spell the code; and
   `key.changes` is null. Which wins: the program whose library file was written most recently, then the file's tag,
-  comment, title (`LocalFacts` in DeckieBuild). A record from Deckie's own engine carries no reading of its own beside
-  the DJ's (D16): with no key from the DJ it has no `key` block. A record read by Apple's framework (`engine.family`
-  `apple-mu`) keeps that reading as `key.camelot`, with the DJ's keys added to `key.votes` under these names.
+  comment, title (`LocalFacts` in DeckieBuild). A record from Deckie's own engine keeps the engine's reading beside the
+  DJ's key as the vote `deckie`; with no key from the DJ its `key` block is the engine's own, exactly as the engine
+  wrote it (the note on D30 and D16 prefers a key; whether it is shown song by song waits for the key trial). A
+  record read by Apple's framework (`engine.family` `apple-mu`) keeps that reading as `key.camelot`, with the DJ's
+  keys added to `key.votes` under these names.
 - `phrase` *(phrase)*: `source`, `confidence`, `lattice_phase_bar` (1 to 8), `boundaries_bars`. Its `source` is track
   L's `structure.source` and covers `sections` too.
 - `sections` *(sections)*: a list of `start_bar`, `end_bar`, `label` (`intro`, `main`, `break`, `outro`), `energy`.
