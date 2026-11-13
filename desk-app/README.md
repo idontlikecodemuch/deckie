@@ -68,8 +68,10 @@ to Friday night"). It lists the CDs and drives mounted on this Mac by their own 
 anything else; whatever is chosen is read as a source, named after its volume or its folder (see below). A folder
 whose name is already a source of this crate, read from somewhere else that is still there, is named "Music 2"
 (`SourceNaming`), so two folders that share a name do not become one source. The rekordbox route stays where it was
-(the first screen, and File > Add music with a rekordbox collection…): an export, then a folder read as the music
-folder (no source) with names, tempos, keys and cues from rekordbox.
+(the first screen, and File > Add music with a rekordbox collection…): an export, then a folder read as a source named
+after it like any other (D31), with names, tempos, keys and cues from rekordbox (matched by the path below the folder,
+so a source named "Music 2" still finds its entries). The folder chooser says so: "Choose the folder your music is in.
+It becomes a source, named after the folder."
 
 **One run** (`DeskRun`, `core/Sources/DeckieDesk/DeskRun.swift`). The builder reads and analyses with its jobs; as each
 song is read, its signature (ShazamKit) and its print (`RecordingPrint`) are made on one more thread, or taken from
@@ -206,7 +208,7 @@ prints are kept in `Files/prints/`, so a song is printed once.
 ## Add music from a CD or a drive (sources)
 
 Desk reads, it does not manage (D25). A **source** is our word, in documents and code, for the thing a DJ holds that
-the songs were read from: a burned data CD, a USB stick, an SD card. On screen it is never "source", "disc" or "CD"
+the songs were read from: a burned data CD, a USB stick, an SD card, or a folder the DJ chose (D31). On screen it is never "source", "disc" or "CD"
 of ours: it is shown by its own name ("Stick 3", "FRIDAY"), D26.
 
 **Add music** lists the CDs and drives mounted on
@@ -222,10 +224,11 @@ CDJ plays a data CD in (letter K); a stick gets the same rule. So capitals come 
 on a source is left out by folder name (the `_` rule is for Mac folders), hidden files excepted.
 
 The source is added to the crate showing: everything not from that source stays as it is, and that source's songs are
-replaced by what is on it now (read it again after changing the stick). A folder chosen in Add music is read as a
-source named after it, as Desk already did, so several folders can sit in one crate. Music from the ordinary music
-folder (the rekordbox route, or a crate made before sources) has no source; its place is its folder; reading it keeps
-the crate's sources.
+replaced by what is on it now (read it again after changing the stick). A folder is a source too (D31): whatever way
+the music is added, the top folder chosen is a source named after it and the folders inside it are its groups, so
+several folders can sit in one crate. Only a crate file made before D31 (the rekordbox route then, or a crate made
+before sources) has songs with no source; their place is their folder, they still open and show as before, and the
+Sources panel offers "Remove the music folder…" only for such a crate.
 
 A song on the Mac and on a stick is two files: when the files differ (another format, other tags) they are two
 entries and the one run links them as copies, so the iPad says "also on Stick 3 / House / 04". When the bytes are identical
@@ -240,7 +243,8 @@ until that source is read again; Desk fills it from the path it remembered there
 bytes in the same folder on the Mac, which has no numbers to tell them apart, is still in the import log, as "The same
 file as another".
 
-The **Sources** panel (toolbar, or View > Show Sources, Shift-Command-D) shows what was read: each source by name, its
+The **Sources** panel (toolbar, or View > Show Sources, Shift-Command-D) says under its title "A source is a CD, a
+drive or a folder you added. Each keeps its own name." (D31), and shows what was read: each source by name, its
 folders in the order the player walks them, each song by its number there; a song on two sources (or twice on one) has
 a row in each folder it is in, with that place's number and a "+1" that names its other places on hover. It is for corrections: rename a source or a
 folder, move a song up or down or drag it within its folder (that folder is then numbered 1, 2, 3 again; other
