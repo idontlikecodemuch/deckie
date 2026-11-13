@@ -79,8 +79,8 @@ when they agree on the home note only; "not sure" otherwise):
 | Multi-profile steps on row B's chroma (nothing trained) | 59.3 | 41.7 | 67.0 | 72.3 | 77.2 | 70.1 | 54.0 | 95.5 |
 | B's home note + trained 12-number mode rule (evaluation only) | 60.2 | 46.9 | 66.0 | 72.4 | 77.2 | 70.4 | 60.7 | 93.7 |
 
-**Doing next.** The trained model (phase 3) is mid-training: fold 1 of 5 finished training at about 64 percent exact
-on its validation artists; the cross-set model (train on MTG, score both GiantSteps sets) runs beside it. About two
+**Doing next.** The trained model (phase 3) is mid-training: the first of five folds is at epoch 108 of 120, with 64 percent exact
+on its validation artists at best; the cross-set model (train on MTG, score both GiantSteps sets) runs beside it. About two
 hours of CPU remain. When it lands: the same precision-against-coverage tables for it, its calibration, agreement
 with the untrained readers as a confidence, then phase 4 and the letter.
 

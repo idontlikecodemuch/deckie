@@ -70,7 +70,7 @@ def curve(name, method, signal, order, pred, true, part, fh, apple=None, targets
 
 def main():
     fh = open(os.path.join(kt.HERE, "pc_curves.tsv"), "w"); fh.write("set\tpart\tmethod\tsignal\tshown_percent\texact\texact_lo\texact_hi\twithin_one_step\thome\n")
-    M = kt_x.load_set("mtg"); apple = kt.apple_keys()
+    M = kt_x.load_set("mtg"); M["GS"] = kt_x.load_set("gs"); apple = kt.apple_keys()
     for name, label, title in (("mtg", "key", "GiantSteps-MTG-key (the 1,270 clips Apple read)"), ("gsplus", "key_modal", "GiantSteps+ (single-key clips, modal labels by their third)"), ("gs", "key", "GiantSteps Key (604, original labels)")):
         D = M if name == "mtg" else kt_x.load_set(name, label)
         P = kt_x.readers(D, M); true = D["key"]; n = len(true); ar = np.arange(n); sel = np.ones(n, bool); ap = None
@@ -83,6 +83,12 @@ def main():
         methods = [("row B", kB, {"margin": (margin(R["B"]),), "agreement": ((k3 == kB).astype(int) + (kA == kB), margin(R["B"])), "sections": ((sec_key[:, 2] == kB[:, None]).sum(1), margin(R["B"])),
                                   "combined": ((k3 == kB).astype(int) + (kA == kB) + (sec_key[:, 2] == kB[:, None]).sum(1), margin(R["B"]))}),
                    ("row B's home note + row A's mode", kBA, {"combined": ((k3 == kBA).astype(int) + (kA == kBA) + (kB == kBA) + secBA.sum(1), margin(R["B"]) + np.abs(D["sA"]))})]
+        kM = P["multi-profile steps (gate, minor2) on row B's chroma"]
+        methods.append(("published multi-profile steps (gate, second minor template) on row B's chroma", kM, {"combined": ((k3 == kM).astype(int) + (kA == kM) + (kB == kM) + (kBA == kM) + (sec_key[:, 2] % 12 == (kM % 12)[:, None]).sum(1), margin(R["B"]))}))
+        lpp = D["prof_AB"]; prp = np.exp(lpp); kP = prp.argmax(1)
+        lpe = D["prof_AB_eq"]; pre_ = np.exp(lpe); kE = pre_.argmax(1)
+        methods.append(("learned profiles on rows A and B, modes weighed equally (EVALUATION ONLY)", kE, {"agreement with rows 3f, A and B, then probability": ((kE == kB).astype(int) + (kE == kA) + (kE == k3), pre_.max(1))}))
+        methods.append(("learned profiles on rows A and B, 49 numbers (EVALUATION ONLY)", kP, {"its top probability": (prp.max(1),), "agreement with rows 3f, A and B, then probability": ((kP == kB).astype(int) + (kP == kA) + (kP == k3), prp.max(1))}))
         if "cnn_lp12" in D:
             lp = D["cnn_lp12"]; pr = np.exp(lp); pr /= pr.sum(1, keepdims=True); kC = pr.argmax(1); top = pr.max(1)
             methods.append(("trained model (EVALUATION ONLY)", kC, {"its top probability": (top,), "agreement with row B, then probability": ((kC == kB).astype(int), top),
@@ -109,14 +115,18 @@ def main():
         levels("row B: sections (of three) that name the same key", (sec_key[:, 2] == kB[:, None]).sum(1), kB)
         mg = margin(R["B"]); q = np.quantile(mg[sel], [0.25, 0.5, 0.75]); levels("row B: margin, quarter of the clips (0 lowest)", np.searchsorted(q, mg), kB)
         levels("B's home + A's mode: combined (0 to 6)", (k3 == kBA).astype(int) + (kA == kBA) + (kB == kBA) + secBA.sum(1), kBA)
-        if "cnn_top" in D:
-            top = D["cnn_top"]; kC = D["kC"]; b = np.minimum((top * 10).astype(int), 9)
-            print(f"\n**The trained model's stated probability against how often it is right** ({name}; a calibrated confidence has the two columns equal)\n\n| stated probability | clips | mean stated | key right |\n|---|---:|---:|---:|")
+        def calib(label, top, kC):
+            b = np.minimum((top * 10).astype(int), 9)
+            print(f"\n**{label}: stated probability against how often it is right** ({name}; a calibrated confidence has the two columns equal)\n\n| stated probability | clips | mean stated | key right |\n|---|---:|---:|---:|")
             ece = 0.0
             for v in range(10):
                 s = sel & (b == v)
                 if s.sum(): print(f"| {v / 10:.1f} to {(v + 1) / 10:.1f} | {int(s.sum())} | {100 * top[s].mean():.1f} | {100 * (kC[s] == true[s]).mean():.1f} |"); ece += s.sum() / sel.sum() * abs(top[s].mean() - (kC[s] == true[s]).mean())
             print(f"\nMean gap between stated and observed: {100 * ece:.1f} points.")
+        calib("Learned profiles on rows A and B", prp.max(1), kP)
+        levels("learned profiles (A and B): untrained readers (3f, A, B) that agree with it", (kP == kB).astype(int) + (kP == kA) + (kP == k3), kP)
+        if "cnn_top" in D:
+            top = D["cnn_top"]; kC = D["kC"]; calib("The trained model", top, kC)
             levels("trained model: untrained readers (3f, A, B) that agree with it", (kC == kB).astype(int) + (kC == kA) + (kC == k3), kC)
             if "secC" in D: levels("trained model: sections (of three) that name the same key", D["secC"], kC)
         # three answers: key, home note with the mode open, not sure

@@ -56,7 +56,7 @@ def load_set(name, label="key"):
     keep = [(c, f, g) for c, f, g in zip(clips, fold, grp) if c.get(label) is not None and c["id"] in pos]
     ids = [c["id"] for c, _, _ in keep]; ix = np.array([pos[i] for i in ids]); rx = np.array([rpos[i] for i in ids])
     D = {"name": name, "ids": ids, "key": np.array([c[label] for c, _, _ in keep]), "fold": np.array([f for _, f, _ in keep]),
-         "names": [c["names"] for c, _, _ in keep], "conf": np.array([c["conf"] for c, _, _ in keep]),
+         "names": [c["names"] for c, _, _ in keep], "genre": [str(c.get("genre") or "").split(",")[0].strip() for c, _, _ in keep], "conf": np.array([c["conf"] for c, _, _ in keep]),
          "F": {k: Z[k][ix].astype(np.float64) for k in Z.files if k != "ids"}, "R": {k: RZ[k][rx].astype(np.float64) for k in ("3f", "A", "B")}}
     return D
 
@@ -91,6 +91,24 @@ def readers(D, M):
         s, _ = KM.fit_predict("lr", KM.design(KM.sub(M["F"], clean), M["key"][clean] % 12, "B12"), (M["key"][clean] >= 12).astype(int), KM.design(F, tB, "B12"))
     out["B's home note + trained 12-number mode rule (EVALUATION ONLY)"] = tB + 12 * (s > 0)
     D["sA"] = sA; D["sLR"] = s; D["tB"] = tB
+    # learned profiles (kt_prof): out-of-fold on MTG; fitted on MTG's clips with no shared artist for the other sets
+    import kt_prof as KPF
+    for which, eq, nm in (("B", False, "learned profiles on row B's chroma, 25 numbers (EVALUATION ONLY)"), ("AB", False, "learned profiles on rows A and B, 49 numbers (EVALUATION ONLY)"),
+                          ("AB", True, "  the same (rows A and B), major and minor weighed equally in the fit"),
+                          ("all", False, "learned profiles on seven chromas, 169 numbers (EVALUATION ONLY)"), ("all", True, "  the same (seven chromas), major and minor weighed equally in the fit")):
+        if D["name"] == "mtg":
+            lp = np.zeros((n, 24))
+            for f in range(kt.NFOLD):
+                te = D["fold"] == f; lp[te] = KPF.predict(KM.sub(F, te), KPF.fit(KM.sub(F, ~te), D["key"][~te], which, eq), which)
+        else:
+            lp = KPF.predict(F, KPF.fit(KM.sub(M["F"], clean), M["key"][clean], which, eq), which)
+        out[nm] = lp.argmax(1); D["prof_" + which + ("_eq" if eq else "")] = lp
+    if D["name"] == "mtg" and "GS" in D:
+        G = D["GS"]; gn2 = set().union(*D["names"]); gclean = np.array([not (x & gn2) for x in G["names"]])
+        out["learned profiles on rows A and B, fitted on GiantSteps Key only (EVALUATION ONLY)"] = KPF.predict(F, KPF.fit(KM.sub(G["F"], gclean), G["key"][gclean], "AB"), "AB").argmax(1)
+        out["  the same (rows A and B, GiantSteps Key only), major and minor weighed equally"] = KPF.predict(F, KPF.fit(KM.sub(G["F"], gclean), G["key"][gclean], "AB", True), "AB").argmax(1)
+        out["learned profiles on seven chromas, fitted on GiantSteps Key only (EVALUATION ONLY)"] = KPF.predict(F, KPF.fit(KM.sub(G["F"], gclean), G["key"][gclean], "all"), "all").argmax(1)
+        out["  the same (seven chromas, GiantSteps Key only), major and minor weighed equally"] = KPF.predict(F, KPF.fit(KM.sub(G["F"], gclean), G["key"][gclean], "all", True), "all").argmax(1)
     if D["name"] == "mtg":
         for col, nm in (("lp", "trained model, 5 artist-grouped folds (EVALUATION ONLY)"), ("lp12", "  the same, 12 pitch shifts averaged")):
             lp = cnn_lp(os.path.join(kt.CACHE, "cnn_cv_mtg.npz"), "ids", col, D["ids"])
@@ -129,7 +147,7 @@ def shown_table(title, true, rules, apple=None):
               (f" {100 * (apple[shown] == true[shown]).mean():.1f} |" if apple is not None else ""))
 
 def main():
-    M = load_set("mtg"); fh = open(os.path.join(kt.HERE, "x_results.tsv"), "w"); fh.write("set\treader\t" + "\t".join(COLS) + "\n")
+    M = load_set("mtg"); M["GS"] = load_set("gs"); fh = open(os.path.join(kt.HERE, "x_results.tsv"), "w"); fh.write("set\treader\t" + "\t".join(COLS) + "\n")
     apple = kt.apple_keys()
     sets = [("mtg", "key", "GiantSteps-MTG-key, the 1,270 plain-key clips Apple read (the set D16's bar is defined on; Faraldo's profiles were made from it)"),
             ("gsplus", "key_modal", "GiantSteps+, single-key clips, a modal label counted by its third (the clean set for the untrained readers)"),
@@ -154,6 +172,16 @@ def main():
                 if nm == "Apple": continue
                 yn = lambda b: "passes" if b else "fails"
                 print(f"| {nm} | {yn(r['ex_maj'] >= a['ex_maj'] - 5 and r['ex_min'] >= a['ex_min'] - 5)} (minor {r['ex_min'] - a['ex_min']:+.1f}) | {yn(r['mean'] >= a['mean'] - 5)} ({r['mean'] - a['mean']:+.1f}) | {yn(r['w1'] >= a['w1'] - 5)} ({r['w1'] - a['w1']:+.1f}) |")
+            # by style (D5: a gain that lives in one bucket is a flag)
+            main = [nm for nm in P if nm in ("Apple", "B (note transcription)", "B's home note + A's mode", "learned profiles on rows A and B, 49 numbers (EVALUATION ONLY)",
+                                              "  the same (rows A and B), major and minor weighed equally in the fit", "  the same, 12 pitch shifts averaged")]
+            gen = np.array(D["genre"]); print("\nBy Beatport style, exact percent (clips, minor share)\n\n| style | clips | minor, percent | " + " | ".join(m.strip() for m in main) + " |\n|---|---:|---:|" + "---:|" * len(main))
+            for g in sorted(set(gen[sel]), key=lambda g: -(sel & (gen == g)).sum()):
+                m_ = sel & (gen == g)
+                if m_.sum() >= 20: print(f"| {g} | {int(m_.sum())} | {100 * (true[m_] >= 12).mean():.0f} | " + " | ".join(f"{100 * (P[nm][m_] == true[m_]).mean():.0f}" for nm in main) + " |")
+            print("\nBy the data set's confidence in its own label, exact percent\n\n| confidence | clips | " + " | ".join(m.strip() for m in main) + " |\n|---|---:|" + "---:|" * len(main))
+            for cf in (2, 1, 0):
+                m_ = sel & (D["conf"] == cf); print(f"| {cf} | {int(m_.sum())} | " + " | ".join(f"{100 * (P[nm][m_] == true[m_]).mean():.1f}" for nm in main) + " |")
             # letter X's arithmetic, re-derived from the per-clip results
             print("\nMinor half: where each reader's exact rate falls short of Apple's, by kind of error (points of the minor clips)\n\n| reader | exact gap | parallel | relative | fifth | other |\n|---|---:|---:|---:|---:|---:|")
             mi = sel & (true >= 12); sa = kt.stats(ap[mi], true[mi])

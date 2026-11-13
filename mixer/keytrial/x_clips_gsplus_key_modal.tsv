@@ -1,469 +1,469 @@
-id	key	fold	3f (letter R's first reader)	A (harmonic discount)	B (note transcription)	B's home note + A's mode	multi-profile, as published (200 Hz, gate, minor2)	the same without the 200 Hz cut	the same without minor2	the same without the gate	bgate's two profiles alone on row 3f's chroma	multi-profile steps (gate, minor2) on row A's chroma	multi-profile steps (gate, minor2) on row B's chroma	B's home note + trained 12-number mode rule (EVALUATION ONLY)
-10089	D major	1	D major	G major	D major	D major	D major	D major	D major	D major	D major	G major	G major	D major
-61415	F minor	4	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor
-74982	C minor	2	G# minor	G# minor	G# major	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# major	G# major
-101069	E minor	0	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor
-140603	C minor	4	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor
-190477	D minor	0	D minor	D minor	D minor	D minor	D minor	D minor	D minor	D minor	D minor	D minor	D minor	D minor
-191347	D# minor	3	D# minor	D# minor	D# minor	D# minor	C# major	D# minor	C# major	C# major	D# minor	D# minor	D# minor	D# minor
-205597	G minor	4	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor
-208158	E minor	2	D major	G major	D major	D major	G major	G major	G major	G major	G major	G major	D major	D major
-209206	A minor	2	A minor	C major	A minor	A minor	A minor	A minor	A minor	A minor	A minor	C major	A minor	A minor
-305771	C minor	0	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor
-376240	F minor	2	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor
-423054	D minor	1	D minor	D minor	D minor	D minor	A minor	D minor	A minor	A minor	D minor	D minor	D minor	D minor
-435443	E major	1	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor
-472626	D minor	2	D minor	G minor	D minor	D minor	A minor	D minor	A minor	A minor	D minor	G minor	D minor	D minor
-495905	A# minor	4	A# minor	A# minor	A# minor	A# minor	F minor	A# minor	F minor	F minor	A# minor	A# minor	A# minor	A# minor
-511348	E minor	4	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor
-571009	F minor	1	C minor	F minor	F minor	F minor	C minor	C minor	C minor	C minor	C minor	F minor	F minor	F minor
-582991	C minor	1	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor
-631240	G minor	1	G minor	G minor	G minor	G minor	F minor	G minor	F minor	F minor	G minor	F minor	G minor	G minor
-631883	C minor	1	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	F minor	C minor	C minor
-634032	E minor	3	G minor	G# minor	C minor	C minor	G minor	G minor	G# major	G minor	G minor	G# minor	C minor	C minor
-667508	D minor	3	D minor	D minor	D minor	D minor	D minor	D minor	D minor	D minor	D minor	G minor	D minor	D minor
-671546	A minor	3	A minor	A minor	A minor	A minor	A minor	A minor	A major	A minor	A minor	A minor	A minor	A minor
-677299	F# major	0	F# major	F# major	F# major	F# major	F# major	F# minor	F# major	F# major	F# major	F# minor	F# minor	F# major
-774871	B major	0	G minor	G minor	A major	A minor	C# minor	G minor	C# minor	C# minor	G minor	G minor	A minor	A minor
-774875	F# minor	0	F# minor	G major	G major	G major	F# minor	G major	F# minor	F# minor	G major	G major	G major	G minor
-781995	C major	1	C major	C major	C major	C major	C major	C major	C major	C major	C major	C major	C major	C major
-796860	C# minor	2	C# major	C# minor	C# minor	C# minor	C# minor	C# minor	C# major	C# minor	C# major	C# minor	C# minor	C# minor
-814505	A major	3	A major	A major	A major	A major	A major	A major	A major	A major	A major	A major	A minor	A major
-822664	A# minor	2	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	D# minor	A# minor	A# minor
-835903	D minor	0	A minor	D minor	D minor	D minor	A minor	A minor	A minor	A minor	A minor	D minor	D minor	D minor
-847422	A minor	4	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor
-853834	E minor	1	E major	E minor	E minor	E minor	E minor	E minor	E major	E minor	E major	E minor	E minor	E minor
-873455	E minor	4	E minor	G major	A minor	A minor	D major	E minor	D major	D major	E minor	G major	A minor	A minor
-877345	D# major	2	D# major	D# major	D# major	D# major	A# major	D# major	A# major	A# major	D# major	D# major	D# major	D# major
-883724	F minor	4	D# major	D# major	A# minor	A# minor	D# major	D# major	D# major	D# major	D# major	D# major	A# minor	A# minor
-890568	E minor	3	G major	G major	E minor	E minor	G major	G major	G major	G major	G major	G major	E minor	E minor
-891993	D major	2	D major	D major	D major	D major	D major	D major	D major	D minor	D major	D minor	D minor	D major
-896478	B minor	0	B minor	B minor	B minor	B minor	B minor	B minor	B minor	B minor	B minor	B minor	B minor	B minor
-907837	G minor	0	G minor	D# major	A# major	A# major	A# major	G minor	A# major	A# major	G minor	D# minor	A# major	A# major
-923397	A# minor	3	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	D# major	A# minor
-945256	D# minor	2	D# minor	D# minor	D# minor	D# minor	D# minor	D# minor	D# minor	D# minor	D# minor	D# minor	D# minor	D# minor
-973819	F minor	2	C minor	F minor	F minor	F minor	C minor	C minor	C minor	C minor	C minor	F minor	F minor	F minor
-1004923	C minor	4	C major	C major	F minor	F minor	C minor	C minor	C minor	C minor	C major	F minor	F minor	F minor
-1007941	F minor	3	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor
-1009960	E minor	1	C# minor	C# minor	E major	E major	C# minor	C# minor	C# major	C# minor	C# minor	C# minor	E minor	E major
-1033148	F minor	1	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor
-1034795	F# minor	2	C# minor	F# minor	C# minor	C# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	C# minor
-1037507	G major	3	G major	G major	D major	D minor	G major	G major	G major	D major	G major	G major	G major	D major
-1041574	G# major	3	G# major	C# major	G# major	G# major	C# major	G# major	C# major	C# major	G# major	G# major	G# major	G# major
-1052744	G minor	0	G# major	G# major	G# minor	G# major	G# major	G minor	G# major	G# major	G# major	G# major	G# minor	G# minor
-1056896	A minor	1	A minor	A minor	A minor	A minor	A minor	A minor	A major	A minor	A minor	A minor	A minor	A minor
-1074548	A minor	4	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor
-1075123	F minor	3	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor
-1103512	A# minor	1	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor
-1105632	C minor	4	C major	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor
-1140027	G minor	1	G# major	G# major	C# minor	C# minor	G# minor	G# minor	G# major	G# minor	G# major	G# major	C# minor	C# minor
-1149778	F# minor	0	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# major	F# minor	F# minor	F# minor	F# minor	F# minor
-1161234	C major	4	C minor	C minor	C minor	C minor	G minor	C minor	G minor	G minor	C minor	C minor	C minor	C minor
-1161249	G minor	2	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor
-1164898	C major	0	C major	C major	C major	C major	C major	C major	C major	C major	C major	C major	C major	C major
-1178656	G minor	4	C minor	C minor	G minor	G minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	G minor
-1194720	D minor	2	D minor	G minor	D minor	D minor	D minor	D minor	D minor	D minor	D minor	D minor	D minor	D minor
-1198688	D minor	3	D major	D minor	D minor	D minor	D minor	D minor	D major	D minor	D minor	D minor	D minor	D minor
-1209745	A# major	0	A# major	A# major	A# major	A# major	A# major	A# major	A# major	A# major	A# major	A# major	A# major	A# major
-1224698	G major	4	G major	G minor	G major	G minor	G major	G minor	G major	G major	G major	G minor	G minor	G major
-1234668	G minor	0	G minor	G minor	G# minor	G# major	G# minor	G minor	G# major	G# minor	G minor	G minor	G# minor	G# minor
-1234669	G minor	0	F# minor	F# minor	G# minor	G# minor	F# minor	F# minor	F# major	F# minor	F# minor	F# minor	G# minor	G# minor
-1234670	F minor	0	F major	F minor	F major	F minor	A major	F minor	A major	A major	F major	F minor	F minor	F minor
-1234748	A# major	4	A# major	A# major	A# major	A# major	A# major	A# major	A# major	A# major	A# major	A# major	A# major	A# major
-1234750	F major	4	A minor	F major	A minor	A minor	A minor	A minor	A minor	A minor	A minor	F major	F major	A minor
-1234751	A# major	4	F minor	F minor	F minor	F minor	C minor	F minor	C minor	C minor	F minor	F minor	A# major	F minor
-1234752	B minor	4	D major	D major	D major	D major	D major	D major	D major	D major	D major	D major	D major	D major
-1298595	F minor	3	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor
-1316308	F minor	3	C minor	C minor	F minor	F minor	C minor	C minor	C minor	C minor	C minor	C minor	F minor	F minor
-1353830	D minor	0	A minor	D minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	D minor	A minor	A minor
-1356281	D# minor	2	D# minor	D# minor	D# minor	D# minor	D# minor	D# minor	D# minor	D# minor	D# minor	D# minor	D# minor	D# minor
-1389887	F major	0	C major	D# major	D# major	D# major	F major	F major	F major	F major	F major	F major	D# major	D# major
-1406309	B minor	1	B major	B minor	B minor	B minor	B minor	B minor	B major	B minor	B major	B minor	B minor	B minor
-1415239	C minor	1	C major	C minor	C major	C minor	C minor	C minor	C major	C minor	C major	C minor	C minor	C minor
-1442809	E major	3	E major	E major	E major	E major	E major	E major	E major	E major	E major	E major	E major	E major
-1468437	B minor	3	B major	B minor	B major	B minor	F# minor	B minor	F# minor	F# minor	B major	B minor	B minor	B minor
-1474122	G# major	1	G# major	G# major	G# major	G# major	G# major	G# major	G# major	G# major	G# major	G# major	G# major	G# major
-1486770	A minor	4	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor
-1494159	D# minor	4	D# minor	D# minor	D# minor	D# minor	G# major	G# major	G# major	D# major	D# minor	D# minor	D# minor	D# minor
-1549964	C# minor	0	C# minor	C# minor	C# minor	C# minor	G# minor	C# minor	G# minor	G# minor	C# minor	C# minor	C# minor	C# minor
-1568217	F major	1	F major	F major	F major	F major	C major	F major	C major	C major	F major	F major	F major	F major
-1575015	A minor	3	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor
-1611446	G# minor	2	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor
-1614715	F# minor	3	F# minor	F# minor	F# minor	F# minor	A major	F# minor	A major	A major	F# minor	F# minor	F# minor	F# minor
-1626779	C minor	1	C major	C major	C minor	C major	C minor	C minor	C major	C minor	C major	C minor	C minor	C minor
-1669939	E major	1	E major	E minor	B major	B minor	E major	E minor	E major	E major	E major	E minor	E major	B minor
-1673811	D major	1	G minor	G minor	C major	C minor	G minor	G minor	G minor	G minor	G minor	G minor	C major	C major
-1678455	F# minor	1	C major	C major	B major	B major	C minor	E minor	A minor	C minor	E minor	F minor	B minor	B minor
-1681077	C major	3	C# major	C# major	F minor	F minor	C# minor	C# minor	G# major	C# minor	C# major	C# minor	F minor	F minor
-1682815	C minor	2	G minor	C minor	C minor	C minor	G minor	G minor	G minor	G minor	G minor	C minor	C minor	C minor
-1690921	D minor	0	D minor	D minor	D minor	D minor	A minor	A minor	A minor	A minor	A minor	D minor	D minor	D minor
-1695408	A minor	3	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor
-1757071	E minor	3	E major	E minor	E minor	E minor	E minor	E minor	E major	E minor	E major	E minor	E minor	E minor
-1763782	F# minor	1	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor
-1771576	C minor	2	C minor	C minor	G minor	G minor	C minor	C minor	C minor	C minor	C minor	C minor	G minor	G minor
-1771577	G minor	2	G minor	G minor	G minor	G minor	G minor	G minor	D major	G minor	G major	G minor	G minor	G minor
-1781139	C minor	3	C minor	C minor	C minor	C minor	G minor	C minor	G minor	G minor	C minor	C minor	C minor	C minor
-1792026	B minor	2	G major	G major	G major	G major	G minor	G major	G major	G minor	G major	G major	G major	G major
-1792100	C minor	0	C minor	C minor	C minor	C minor	G minor	C minor	G minor	G minor	C minor	C minor	C minor	C minor
-1792506	G major	3	G major	G minor	G minor	G minor	G major	G major	G major	G major	G major	G minor	G major	G minor
-1795653	D# minor	2	D# minor	D# minor	D# minor	D# minor	D# minor	D# minor	D# minor	D# minor	D# minor	D# minor	D# minor	D# minor
-1796518	C minor	3	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor
-1803909	B minor	0	B minor	B minor	B minor	B minor	B minor	B minor	B minor	B minor	B minor	B minor	B minor	B minor
-1809174	A major	2	A major	A major	A major	A major	C# minor	A major	C# minor	C# minor	A major	A major	A major	A major
-1814469	F minor	2	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor
-1822087	A# minor	3	C# major	C# major	A# minor	A# minor	C# minor	C# major	C# major	C# minor	C# major	C# major	A# minor	A# minor
-1822502	D minor	3	G minor	G minor	G minor	G minor	D minor	G minor	G minor	D minor	G minor	G minor	G minor	G minor
-1837440	B minor	2	B minor	B minor	B minor	B minor	B minor	B minor	B minor	B minor	B minor	B minor	B minor	B minor
-1850984	A minor	4	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	A minor	E minor	E minor
-1856889	A# minor	0	A# minor	A# minor	A# major	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor
-1864037	C# minor	3	C# minor	C# minor	C# minor	C# minor	C# minor	C# minor	C# minor	C# minor	C# minor	C# minor	C# minor	C# minor
-1904501	A minor	1	G major	G minor	D minor	D minor	G major	G major	G major	D minor	G major	C major	D minor	D minor
-1922470	D# minor	0	D# minor	D# minor	D# minor	D# minor	D# minor	D# minor	D# minor	D# minor	D# minor	D# minor	D# minor	D# minor
-1939732	D# minor	0	D# minor	D# minor	D# minor	D# minor	D# minor	D# minor	D# minor	D# minor	D# minor	G# minor	D# minor	D# minor
-1944125	C major	1	C major	C major	C major	C major	C major	C major	C major	C major	C major	C minor	C minor	C major
-1949099	E minor	2	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor
-1950170	A# minor	2	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor
-1960032	C minor	2	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor
-1964905	A# minor	4	F minor	C# major	A# minor	A# minor	G# major	F minor	G# major	G# major	F minor	F minor	A# minor	A# minor
-1978917	D minor	3	D major	D major	C# minor	C# minor	D major	D major	D major	D major	D major	D major	C# minor	C# minor
-1981501	A minor	2	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor
-1983975	F# minor	0	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	C# minor	F# minor	F# minor	F# minor	F# minor
-1984204	F minor	4	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor
-1990297	A minor	2	G major	G major	F major	F major	A minor	A minor	A minor	A minor	A minor	G major	F minor	F minor
-1991458	B minor	2	B minor	B minor	B minor	B minor	B minor	B minor	B minor	B minor	B minor	B minor	B minor	B minor
-2007977	G# minor	4	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor
-2014445	D# minor	0	D# minor	D# minor	D# minor	D# minor	G# major	D# minor	G# major	G# major	D# minor	D# minor	D# minor	D# minor
-2018991	C minor	2	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor
-2024026	G major	0	G major	G major	G major	G major	D major	G major	D major	D major	G major	G major	G major	G major
-2025670	C minor	1	G# major	C# major	C# major	C# major	C# minor	G# major	G# minor	C# minor	G# major	C# minor	C# minor	C# minor
-2026524	D# minor	4	C# major	F# major	F# major	F# major	C# major	C# major	C# major	C# major	C# major	F# major	F# major	F# major
-2029598	E minor	2	A major	A minor	A major	A minor	E minor	A major	E minor	E minor	A major	A minor	A major	A minor
-2031094	A minor	3	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor
-2031096	A minor	3	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor
-2046342	A# minor	2	A# minor	A# minor	A# minor	A# minor	G# major	A# minor	G# major	G# major	A# minor	A# minor	A# minor	A# minor
-2047796	D minor	1	C major	C major	C major	C major	C major	C major	C major	C major	C major	F major	C major	C major
-2048054	C minor	2	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor
-2048940	G minor	2	G major	G minor	G minor	G minor	G minor	G minor	G major	G minor	G major	G minor	G minor	G minor
-2049680	F minor	2	F minor	F minor	G# major	G# major	G# major	F minor	G# major	G# major	F minor	G# major	G# major	G# major
-2051166	E minor	4	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor
-2053495	B minor	3	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor
-2054968	C major	2	C major	C major	C major	C major	G major	C minor	G major	G major	C major	C minor	C minor	C major
-2059625	F minor	0	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor
-2069519	F minor	1	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor
-2070773	A minor	1	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor
-2075331	G minor	3	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor
-2435861	C minor	2	G minor	C minor	G minor	G minor	C minor	G minor	C minor	C minor	G minor	C minor	G minor	G minor
-2436276	A minor	3	A major	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A major	A minor	A minor	A minor
-2438899	A# minor	0	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor
-2440193	A minor	2	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor
-2448121	F minor	1	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor
-2666528	C# minor	4	C# minor	C# minor	C# minor	C# minor	C# minor	C# minor	C# minor	C# minor	C# minor	F# minor	C# minor	C# minor
-2667501	B minor	2	F# minor	E major	F# minor	F# minor	C# minor	F# minor	F minor	C# minor	F# minor	E minor	F# minor	F# minor
-2673157	A# minor	1	B major	B minor	B minor	B minor	B major	B minor	B major	B major	B major	B minor	B minor	B minor
-2673251	D# minor	3	D# minor	D# minor	D# minor	D# minor	D# minor	D# minor	D# minor	D# minor	D# minor	D# minor	D# minor	D# minor
-2673252	C minor	1	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor
-2673254	D minor	3	C major	F minor	F major	F minor	G minor	C minor	G major	G minor	C major	F minor	F minor	F minor
-2676506	C minor	2	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor
-2680040	A minor	2	A major	A minor	A minor	A minor	A major	A minor	A major	A minor	A major	A minor	A minor	A minor
-2725290	G minor	0	G major	G major	G major	G major	F# minor	G minor	F# minor	F# minor	G major	G minor	G minor	G minor
-2741219	A minor	4	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor
-2996293	E minor	0	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor
-3014118	E minor	2	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor
-3015217	F minor	1	F major	F minor	F minor	F minor	F minor	F minor	F major	F minor	F major	F minor	F minor	F minor
-3024384	E minor	4	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor
-3033991	C minor	2	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor
-3069201	C major	4	C major	C major	C major	C major	G major	G major	G major	G major	G major	C major	C major	C major
-3070298	D minor	0	G minor	G minor	D minor	D minor	D minor	G minor	D minor	D minor	G minor	G minor	D minor	D minor
-3076768	A minor	3	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor
-3095708	G minor	2	G minor	G minor	G minor	G minor	C# minor	G minor	G# major	C# minor	G minor	G minor	G minor	G minor
-3116329	G minor	4	G minor	G minor	A major	A minor	D minor	D minor	D minor	D minor	D minor	G minor	A minor	A minor
-3133794	G# minor	0	G# major	G# major	G# major	G# major	G# minor	G# minor	G# major	G# minor	G# major	G# minor	G# minor	G# minor
-3137686	A minor	3	A major	A minor	A minor	A minor	A minor	A minor	A major	A minor	A major	A minor	A minor	A minor
-3151513	F minor	3	F minor	F minor	F minor	F minor	G# major	F minor	G# major	G# major	F minor	F minor	F minor	F minor
-3165770	E minor	2	B minor	E minor	E minor	E minor	B minor	B minor	B minor	B minor	B minor	E minor	B minor	E minor
-3172588	B minor	2	C# minor	F# minor	C# minor	C# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	C# minor
-3178155	F minor	0	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor
-3186615	F minor	0	F minor	F minor	F minor	F minor	G# major	F minor	G# major	G# major	F minor	F minor	F minor	F minor
-3211603	C minor	3	G minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor
-3211733	F minor	0	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor
-3228297	B minor	0	D major	D major	D major	D major	A major	A major	A major	A major	A major	D major	D major	D major
-3228649	G# minor	3	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor
-3233653	G minor	1	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor
-3246151	A# minor	1	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor
-3249708	F minor	1	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor
-3250632	F minor	1	F minor	A# minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	A# minor	F minor	F minor
-3260121	G# minor	2	G# major	G# minor	G# minor	G# minor	G# major	G# minor	G# major	G# major	G# major	G# minor	G# minor	G# minor
-3262951	C minor	2	D# major	G# major	D# major	D# major	D# major	D# major	D# major	D# major	D# major	G# major	D# major	D# major
-3270413	G major	4	G major	G major	G major	G major	G major	G major	G major	G major	G major	G major	G major	G major
-3271514	A minor	0	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor
-3272873	B minor	2	B major	B minor	B minor	B minor	B minor	B minor	B major	B minor	B minor	B minor	B minor	B minor
-3274260	D minor	2	D minor	D minor	F major	F major	A minor	D minor	A minor	A minor	D minor	F major	F major	F major
-3275147	F minor	0	F minor	F minor	F minor	F minor	C minor	F minor	C minor	C minor	F minor	F minor	A# major	F minor
-3288636	A minor	0	A major	A minor	A minor	A minor	A minor	A minor	A major	A minor	A major	A minor	A minor	A minor
-3298344	F minor	0	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor
-3302298	C minor	3	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor
-3302451	B minor	1	F# minor	D major	D major	D major	F# minor	F# minor	F# minor	F# minor	F# minor	D major	D major	D major
-3313070	B minor	0	D major	D major	D major	D major	D major	D major	D major	D major	D major	D major	D major	D major
-3313145	C# minor	1	C# minor	C# minor	C# minor	C# minor	C# minor	C# minor	C# minor	C# minor	C# minor	F# minor	C# minor	C# minor
-3317417	G minor	0	A# major	A# major	A# major	A# major	A# major	A# major	A# major	A# major	A# major	A# major	A# major	A# major
-3319589	E minor	2	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor
-3324024	G# minor	3	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor
-3334471	C# minor	2	G# minor	C# minor	C# minor	C# minor	G# minor	G# minor	G# minor	G# minor	G# minor	C# minor	C# minor	C# minor
-3338963	G minor	3	G minor	G minor	G minor	G minor	D minor	G minor	D minor	D minor	G minor	G minor	G minor	G minor
-3339291	G major	2	G major	G major	G major	G major	G major	G major	G major	G major	G major	G major	G minor	G major
-3345479	D minor	0	F major	F major	F major	F major	F major	F major	F major	F major	F major	F major	F major	F major
-3349486	F minor	0	F minor	F minor	F minor	F minor	F minor	F minor	F major	F minor	F minor	F minor	F minor	F minor
-3354212	A# minor	0	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	F# major	A# minor	A# minor
-3356535	A minor	1	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	C major	A minor	A minor
-3361547	G minor	4	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor
-3363196	E minor	2	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor
-3363602	D minor	0	D minor	D minor	D minor	D minor	D minor	D minor	D minor	D minor	D minor	D minor	D minor	D minor
-3368117	E minor	2	E major	E major	E major	E major	E major	E major	E major	E major	E major	E major	E minor	E minor
-3372108	A# minor	4	C# major	F# major	D# minor	D# minor	C# major	C# major	C# major	C# major	C# major	C# major	G# major	D# minor
-3379400	A# major	1	D# major	D# major	D# major	D# major	A# major	D# major	A# major	A# major	D# major	D# major	D# major	D# major
-3383171	A major	4	A major	D major	A major	A minor	A major	A major	A major	A major	A major	D major	A minor	A major
-3387619	A minor	4	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor
-3390952	C minor	4	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor
-3395666	F# minor	3	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor
-3397932	D minor	2	A minor	F major	D minor	D minor	A minor	A minor	A minor	A minor	A minor	F major	D minor	D minor
-3402886	F# major	4	F# major	F# major	F# minor	F# major	C# major	F# minor	C# major	C# major	F# major	F# minor	F# minor	F# minor
-3402887	F minor	0	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor
-3402888	D minor	0	D minor	G minor	D minor	D minor	D minor	D minor	D major	D minor	D minor	G minor	D minor	D minor
-3415063	G minor	2	G minor	A# major	G minor	G minor	F major	G minor	F major	F major	G minor	A# major	G minor	G minor
-3415421	E minor	0	E minor	E minor	E minor	E minor	D major	E minor	D major	D major	E minor	E minor	E minor	E minor
-3426022	D minor	2	D minor	D minor	D minor	D minor	D minor	D minor	D minor	D minor	D minor	D minor	D minor	D minor
-3426285	D# minor	3	A# minor	D# minor	D# minor	D# minor	A# minor	A# minor	A# minor	A# minor	A# minor	D# minor	A# minor	D# minor
-3428673	C minor	4	C minor	F minor	C minor	C minor	F minor	F minor	F minor	F minor	F minor	F minor	C minor	C minor
-3434746	A minor	1	F major	F major	F major	F major	F major	F major	F major	F major	F major	F major	F major	F major
-3443052	A# minor	0	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor
-3450181	C minor	2	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor
-3467773	A# minor	2	C# major	C# major	C# major	C# major	C# major	C# major	C# major	C# major	C# major	C# major	C# major	C# major
-3478184	D# minor	4	D# minor	G# minor	D# minor	D# minor	D# minor	D# minor	D# minor	D# minor	D# minor	G# minor	D# minor	D# minor
-3479363	D# minor	1	D# major	D# minor	D# minor	D# minor	D# major	D# major	D# major	D# major	D# major	D# minor	D# minor	D# minor
-3480108	F# minor	4	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor
-3482733	G minor	3	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor
-3518768	D# major	2	D# major	G# major	G# major	G# major	D# major	D# major	D# major	C minor	D# major	G# major	D# major	G# major
-3518921	B minor	3	B minor	B minor	B minor	B minor	B minor	B minor	B minor	B minor	B minor	B minor	B minor	B minor
-3519499	G# minor	0	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor
-3523229	A minor	3	A minor	A minor	C major	C major	A minor	A minor	A minor	A minor	A minor	A minor	F major	C major
-3524408	F# minor	1	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor
-3526370	D minor	4	A# major	A# major	A# major	A# major	A# major	A# major	A# major	A# major	A# major	A# major	A# major	A# major
-3533310	B major	2	B major	B major	B major	B major	B major	B major	B major	B major	B major	B major	B major	B major
-3533740	B minor	0	F# minor	B minor	A major	A major	F# minor	F# minor	F# minor	F# minor	F# minor	B minor	A major	A major
-3533956	G minor	3	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor
-3535112	A# minor	1	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	F# major	A# minor	A# minor
-3542099	F minor	1	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor
-3545728	F minor	2	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor
-3561744	G minor	3	F# minor	F# minor	F# minor	F# minor	C# minor	F# minor	C# minor	C# minor	F# minor	F# minor	F# minor	F# minor
-3568438	G# major	3	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	G# major	C minor
-3568459	B minor	3	B major	B minor	B minor	B minor	B minor	B minor	B major	B minor	B major	B minor	B minor	B minor
-3568465	A minor	3	F# minor	D major	D major	D major	F# minor	D major	F# minor	F# minor	D major	D major	D major	D major
-3571314	C# minor	2	C# minor	C# minor	C# minor	C# minor	C# minor	C# minor	C# minor	C# minor	C# minor	C# minor	C# minor	C# minor
-3572701	F minor	2	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor
-3572702	E minor	2	E major	E major	E major	E major	F# minor	E major	F# minor	F# minor	E major	E minor	E minor	E minor
-3574815	E minor	1	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor
-3589347	C minor	4	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor
-3590070	F# minor	4	E major	A major	A major	A major	E major	E major	E major	E major	E major	A major	A major	A major
-3596904	G# minor	1	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor
-3602280	G minor	1	G minor	G# major	G# major	G# major	G minor	C minor	C minor	G minor	C minor	G# major	G# major	G# major
-3602282	E minor	1	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor
-3625299	G minor	2	G minor	A# major	G minor	G minor	A# major	G minor	A# major	A# major	G minor	A# major	A# major	G minor
-3625787	G minor	4	C minor	F minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	F minor	C minor	C minor
-3625788	G minor	4	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor
-3628628	E minor	1	E minor	E minor	E minor	E minor	B minor	E minor	B minor	B minor	E minor	E minor	E minor	E minor
-3629467	C# minor	3	C# minor	C# minor	C# minor	C# minor	C# minor	C# minor	C# minor	C# minor	C# minor	C# minor	C# minor	C# minor
-3641166	E minor	4	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor
-3642384	D# minor	2	D# minor	D# minor	D# minor	D# minor	A# minor	D# minor	A# minor	A# minor	D# minor	D# minor	D# minor	D# minor
-3642409	G# minor	4	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor
-3648814	B minor	1	B minor	B minor	B minor	B minor	B minor	B minor	B minor	B minor	B minor	B minor	B minor	B minor
-3661550	A minor	2	A major	A minor	A minor	A minor	A minor	A minor	A major	A minor	A major	A minor	A minor	A minor
-3667215	G# minor	0	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor
-3667683	G minor	2	G minor	D# major	D# major	D# major	G minor	G minor	G minor	G minor	G minor	D# major	D# major	D# major
-3668409	E minor	2	B minor	E minor	B minor	B minor	B minor	B minor	B minor	B minor	B minor	G major	B minor	B minor
-3681890	C major	1	C major	C major	C major	C major	G major	G major	G major	G major	G major	C major	C minor	C major
-3686302	D minor	0	D minor	D minor	D minor	D minor	D minor	D minor	D minor	D minor	D minor	D minor	D minor	D minor
-3687442	G# minor	3	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor
-3696226	G# minor	4	G# major	G# minor	G# major	G# minor	G# minor	G# minor	G# major	G# minor	G# major	G# minor	G# minor	G# minor
-3703893	E major	3	E major	A major	E major	E major	E major	E major	E major	E major	E major	A major	E major	E major
-3706570	D# minor	4	D# minor	G# minor	D# minor	D# minor	C# major	D# minor	C# major	C# major	D# minor	G# minor	D# minor	D# minor
-3713557	A# minor	1	D# minor	D# minor	A# minor	A# minor	A# minor	D# minor	A# minor	A# minor	D# minor	D# minor	A# minor	A# minor
-3753635	F major	3	C major	F major	C major	C minor	C major	C major	C major	C major	C major	F major	C major	C major
-3759800	B minor	1	B minor	G major	B minor	B minor	B minor	B minor	B minor	B minor	B minor	G major	B minor	B minor
-3767408	G minor	0	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor
-3772753	D minor	1	D minor	D minor	D minor	D minor	D minor	D minor	D minor	D minor	D minor	D minor	D minor	D minor
-3773561	D minor	4	G minor	G minor	G minor	G minor	D minor	G minor	D minor	D minor	G minor	G minor	D minor	G minor
-3789116	B minor	3	E major	E major	B minor	B minor	E major	E major	E major	E major	E major	A major	B minor	B minor
-3789117	A# minor	3	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	D# minor	A# minor	A# minor
-3792959	E minor	3	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor
-3794008	C# minor	1	C# major	C# minor	C# major	C# minor	C# minor	C# minor	C# minor	C# minor	C# minor	C# minor	C# minor	C# minor
-3813682	G minor	4	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor
-3822226	G# minor	4	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor
-3829561	A# minor	4	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor
-3833050	C# major	2	C# major	C# major	C# major	C# major	C# major	C# minor	C# major	C# major	C# major	C# minor	C# minor	C# major
-3836490	F minor	3	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor
-3841927	C minor	1	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	D# major	C minor	C minor
-3858289	A minor	0	A minor	D minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor
-3858324	B minor	0	B minor	B minor	B minor	B minor	B minor	B minor	B minor	B minor	B minor	B minor	B minor	B minor
-3858331	C minor	0	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor
-3892740	D major	2	D major	D major	D major	D major	D major	D major	D major	D major	D major	G major	D major	D major
-3930672	D minor	3	D minor	G minor	D minor	D minor	D minor	D minor	D minor	D minor	D minor	G minor	D minor	D minor
-3935095	E minor	1	E minor	A minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	A minor	E minor	E minor
-3938837	E minor	4	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	G major	E minor	E minor
-3939148	G minor	3	G major	G minor	G major	G minor	G major	G minor	G major	G major	G major	G minor	G minor	G minor
-3949799	A minor	3	C major	F major	F major	F major	C major	C major	C major	C major	C major	F major	F major	F major
-3954078	A minor	2	G major	G major	A minor	A minor	G major	G major	G major	G major	G major	C major	A minor	A minor
-3958396	C major	4	C major	C major	C major	C major	C major	C major	C major	C major	C major	C major	C major	C major
-3958398	G minor	4	A# major	A# major	A# major	A# major	A# major	A# major	A# major	A# major	A# major	A# major	A# major	A# major
-3958755	D# major	2	D# major	D# major	D# major	D# major	D# major	D# major	D# major	D# major	D# major	G# major	D# minor	D# minor
-3958861	E minor	3	G major	G major	G major	G major	G major	G major	G major	G major	G major	G major	G major	G major
-3963180	F# minor	0	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor
-3967462	E minor	1	G major	G major	D major	D major	A minor	G major	A minor	A minor	G major	G major	D minor	D minor
-3969868	F minor	3	D# major	G# major	F minor	F minor	G# major	D# major	G# major	G# major	D# major	G# major	F minor	F minor
-3971416	D minor	3	D minor	D minor	D minor	D minor	D minor	D minor	D minor	D minor	D minor	D minor	D minor	D minor
-3979989	D# minor	3	D# minor	G# minor	D# minor	D# minor	A# minor	D# minor	A# minor	A# minor	D# minor	G# minor	D# minor	D# minor
-3980001	F minor	0	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor
-3986537	A major	0	A major	A major	A major	A major	A major	A major	A major	A major	A major	A major	A major	A major
-3995054	C minor	3	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor
-3997722	F minor	4	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor
-4014747	C minor	1	G minor	C minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	C minor	C minor	G minor
-4014749	C minor	1	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	C minor	G minor	G minor
-4018247	G minor	4	G minor	G minor	G minor	G minor	D minor	G minor	D minor	D minor	G minor	G minor	G minor	G minor
-4021075	F minor	3	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor
-4045225	C# minor	4	C# minor	C# minor	C# minor	C# minor	C# minor	C# minor	C# minor	C# minor	C# minor	C# minor	C# minor	C# minor
-4060751	D# minor	4	D# minor	D# minor	D# minor	D# minor	A# minor	D# minor	A# minor	A# minor	D# minor	D# minor	D# minor	D# minor
-4086909	G minor	3	G major	G minor	G minor	G minor	D minor	G minor	D major	D minor	G major	G minor	G minor	G minor
-4088665	C major	4	C major	F major	C major	C major	C major	C major	C major	C major	C major	F major	C major	C major
-4091478	A minor	0	A major	A major	A minor	A major	A major	A major	A major	A major	A major	A minor	A minor	A minor
-4093657	D# minor	0	D# minor	G# minor	D# minor	D# minor	G# major	D# minor	G# major	G# major	D# minor	G# minor	D# minor	D# minor
-4093908	C minor	1	G minor	C minor	C minor	C minor	G minor	G minor	G minor	G minor	G minor	C minor	C minor	C minor
-4104235	F minor	3	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor
-4107957	C# minor	1	G# minor	G# minor	A minor	A major	G# minor	G# minor	G# major	G# minor	G# minor	G# minor	A minor	A minor
-4125044	F minor	4	G# major	G# major	G# major	G# major	G# major	G# major	G# major	G# major	G# major	G# major	G# major	G# major
-4153238	A minor	3	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor
-4162405	A minor	4	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor
-4166222	E minor	0	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor
-4167325	F minor	0	F minor	F minor	F major	F minor	F minor	F minor	C minor	F minor	F minor	F minor	F minor	F minor
-4173942	C major	0	E minor	C major	C major	C major	E minor	E minor	E minor	E minor	E minor	C major	C major	C major
-4191993	E minor	1	E minor	E minor	E minor	E minor	B minor	E minor	B minor	B minor	E minor	E minor	E minor	E minor
-4200490	F# minor	4	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor
-4202763	A minor	3	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor
-4206954	D minor	2	D minor	D minor	D minor	D minor	D minor	D minor	D minor	D minor	D minor	D minor	D minor	D minor
-4207145	D# minor	4	D# minor	F# major	D# minor	D# minor	A# minor	D# minor	A# minor	A# minor	D# minor	F# major	F# major	D# minor
-4234612	C minor	1	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor
-4254573	C minor	0	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor
-4262569	D# minor	4	F# major	F# major	F# major	F# major	F# major	F# major	F# major	F# major	F# major	F# major	F# major	F# major
-4275052	D major	0	F# minor	D major	D major	D major	F# minor	F# minor	F# minor	F# minor	F# minor	D major	D major	D major
-4277742	F minor	1	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor
-4284574	A minor	2	D major	G major	G major	G major	D major	D major	D major	D major	D major	G major	G major	G major
-4293025	A minor	2	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor
-4297635	E minor	0	E minor	E minor	E minor	E minor	A major	E minor	A major	E minor	E minor	E minor	E minor	E minor
-4302974	E minor	2	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor
-4315749	F minor	3	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor
-4325645	C minor	3	F minor	F minor	A# major	A# major	C minor	F minor	C minor	C minor	F minor	F minor	A# major	A# major
-4325646	D major	3	F# minor	A major	F# minor	F# minor	E major	F# minor	E major	E major	F# minor	A major	F# minor	F# minor
-4327665	E minor	3	E minor	E minor	E minor	E minor	G major	E minor	G major	G major	E minor	E minor	E minor	E minor
-4359736	F minor	1	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor
-4360488	F minor	4	F# major	F# major	F# major	F# major	C# major	F# major	C# major	C# major	F# major	F# major	F# minor	F# major
-4361260	C minor	1	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor
-4364668	D# minor	1	G# minor	G# minor	D# minor	D# minor	E major	G# minor	E major	E major	G# minor	G# minor	G# minor	D# minor
-4366506	D# minor	3	D# major	D# major	D# major	D# major	D# minor	D# minor	D# minor	D# minor	D# major	D# minor	D# minor	D# minor
-4371042	D minor	0	D major	D minor	D major	D minor	D minor	D minor	D minor	D minor	D major	D minor	D minor	D minor
-4424988	G# minor	0	G# minor	F# major	C# minor	C# minor	G# minor	G# minor	G# minor	G# minor	G# minor	C# minor	C# minor	C# minor
-4433083	A# minor	1	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor
-4440292	G# minor	2	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor
-4450726	E minor	0	E minor	E minor	E minor	E minor	B minor	E minor	B minor	B minor	E minor	E minor	E minor	E minor
-4453556	G minor	4	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor
-4476610	D# minor	2	D# minor	D# minor	D# minor	D# minor	C# major	D# minor	C# major	C# major	D# minor	D# minor	D# minor	D# minor
-4483817	G# minor	4	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor
-4485436	F minor	4	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor
-4498388	D minor	4	D minor	F major	D minor	D minor	D minor	D minor	D minor	D minor	D minor	G minor	D minor	D minor
-4505122	F# major	0	F# major	F# major	F# major	F# major	F# major	F# major	F# major	F# major	F# major	F# major	F# major	F# major
-4508323	B minor	1	B minor	B minor	B minor	B minor	B minor	B minor	B minor	B minor	B minor	B minor	B minor	B minor
-4540971	A# minor	3	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	F# major	A# minor	A# minor
-4566667	F# minor	3	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor
-4573655	E minor	4	E minor	E minor	E minor	E minor	B minor	E minor	B minor	B minor	E minor	E minor	E minor	E minor
-4596347	F minor	4	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor
-4609349	A minor	1	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor
-4615188	G# minor	1	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# major	G# minor	G# minor	G# minor	G# minor	G# minor
-4657878	F# minor	4	F# minor	F# minor	F# minor	F# minor	C# minor	F# minor	C# minor	C# minor	F# minor	F# minor	F# minor	F# minor
-4661735	G minor	0	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor
-4666231	F minor	2	F minor	F minor	F major	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor
-4688833	A minor	1	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor
-4693198	G# major	1	G# major	G# minor	G# major	G# minor	G# major	G# minor	G# major	G# major	G# major	G# minor	G# minor	G# minor
-4702235	D major	4	D major	D major	D major	D major	D major	D major	D major	D major	D major	D major	D major	D major
-4723905	F minor	4	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor
-4735775	D# minor	2	D# minor	D# minor	D# minor	D# minor	D# minor	D# minor	D# minor	D# minor	D# minor	D# minor	D# minor	D# minor
-4755348	G minor	3	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor
-4758620	F minor	0	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor
-4786362	C minor	1	C minor	G# major	C minor	C minor	G# major	C minor	G# major	G# major	C minor	G# major	C minor	C minor
-4802314	E minor	0	B minor	E minor	B major	B minor	B minor	B minor	B minor	B minor	B minor	E minor	B minor	B minor
-4815758	C minor	3	C minor	C minor	C minor	C minor	G minor	C minor	G minor	G minor	C minor	C minor	C minor	C minor
-4823611	F minor	1	F minor	C# major	F minor	F minor	F minor	F minor	F minor	F minor	F minor	C# major	F minor	F minor
-4834156	D minor	0	D minor	D minor	D minor	D minor	D minor	D minor	D minor	D minor	D minor	D minor	D minor	D minor
-4842349	G minor	0	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor
-4846004	B minor	0	B minor	B minor	B minor	B minor	E major	B minor	E major	E major	B minor	A major	B minor	B minor
-4846007	G# minor	1	G# minor	G# minor	G# minor	G# minor	C# major	G# minor	C# major	G# minor	G# minor	G# minor	G# minor	G# minor
-4857650	A# minor	0	A# minor	A# minor	A# minor	A# minor	G# major	A# minor	G# major	G# major	A# minor	A# minor	A# minor	A# minor
-4863806	F minor	0	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor
-4868146	F minor	4	G# major	C# major	F minor	F minor	G# major	G# major	G# major	G# major	G# major	G# major	G# major	F minor
-4873286	F# minor	0	F# minor	F# minor	F# minor	F# minor	E major	F# minor	E major	E major	F# minor	F# minor	F# minor	F# minor
-4877006	F minor	4	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor
-4900482	F# minor	4	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor
-4917941	F minor	2	F minor	F minor	F minor	F minor	C major	F minor	C major	C major	F minor	F minor	F minor	F minor
-4920936	C# minor	1	C# major	C# major	C# minor	C# major	C# minor	C# minor	C# major	C# minor	C# major	C# minor	C# minor	C# minor
-4926785	G minor	3	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor
-4927548	F minor	2	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor
-4927725	D# minor	4	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor
-4934196	A minor	2	C major	F major	F major	F major	F major	F major	F major	F major	F major	F major	F major	F major
-4935536	F minor	4	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor
-4939812	A# minor	4	A# minor	C# major	A# minor	A# minor	C# major	A# minor	C# major	C# major	A# minor	C# major	A# minor	A# minor
-4941208	F minor	2	G# major	G# major	G# major	G# major	G# major	G# major	G# major	G# major	G# major	G# major	G# major	G# major
-4945105	F minor	0	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor
-4950604	F minor	2	F minor	F minor	F minor	F minor	F minor	F minor	F major	F minor	F minor	F minor	F minor	F minor
-4950614	E minor	2	F minor	E major	F major	F minor	A# minor	E minor	A# major	A# minor	F minor	E minor	E minor	F minor
-4953926	C minor	4	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor
-4955428	A# minor	2	A# minor	D# minor	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	D# minor	A# minor	A# minor
-4956417	D# minor	1	D# minor	B major	D# minor	D# minor	D# minor	D# minor	D# minor	D# minor	D# minor	G# minor	D# minor	D# minor
-4957129	D minor	4	D minor	D minor	D minor	D minor	D minor	D minor	D minor	D minor	D minor	D minor	D minor	D minor
-4960012	G major	4	G# minor	G minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G minor	G# major	G# minor
-4965571	G minor	4	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor
-4969568	B minor	4	B minor	D major	B minor	B minor	D major	B minor	D major	D major	B minor	D major	B minor	B minor
-4970082	F minor	0	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor
-4981539	F# minor	4	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor
-4981541	A# minor	4	F minor	F minor	A# minor	A# minor	F minor	F minor	F minor	F minor	F minor	A# minor	A# minor	A# minor
-4983645	D minor	0	D minor	D minor	D minor	D minor	D minor	D minor	D minor	D minor	D minor	D minor	D minor	D minor
-4983728	G minor	4	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor
-4995394	F# minor	1	F# minor	F# minor	F# minor	F# minor	C# minor	F# minor	C# minor	C# minor	F# minor	F# minor	F# minor	F# minor
-4995597	C major	3	C major	C major	C major	C major	C major	C major	C major	C major	C major	C minor	C minor	C minor
-4996031	F minor	4	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor
-4996389	A minor	0	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor
-4997194	G# minor	2	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor
-4997222	C# minor	2	C# minor	C# minor	C# minor	C# minor	C# minor	C# minor	C# minor	C# minor	C# minor	C# minor	C# minor	C# minor
-5005412	G minor	1	G minor	G minor	G minor	G minor	A minor	G minor	A minor	A minor	G minor	G minor	G minor	G minor
-5009084	A# minor	0	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	A# major	A# minor	A# minor	A# minor	A# minor	A# minor
-5013063	E minor	3	E major	E major	E minor	E major	E minor	E major	E major	E minor	E major	E minor	E minor	E minor
-5013910	G minor	1	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor
-5026646	F minor	0	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor
-5030517	F# minor	2	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor
-5035524	E minor	3	E major	E minor	E major	E minor	E major	E minor	E major	E major	E major	E minor	E minor	E minor
-5036476	D major	0	F# minor	D major	D major	D major	F# minor	F# minor	F# minor	F# minor	F# minor	D major	D major	D major
-5039015	C# minor	2	C# minor	C# minor	C# minor	C# minor	C# minor	C# minor	C# minor	C# minor	C# minor	F# minor	C# minor	C# minor
-5039016	G minor	3	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor
-5048249	A minor	1	A minor	C major	A minor	A minor	A minor	A minor	A minor	A minor	A minor	C major	A minor	A minor
-5048263	G minor	4	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor
-5049808	G# minor	2	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# major	G# minor	G# minor	G# minor	G# minor	G# minor
-5070608	F minor	0	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor
-5073839	B major	3	F# major	B major	B major	B major	F# major	F# major	F# major	F# major	F# major	B major	B major	B major
-5079918	G# minor	0	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor
-5120298	F minor	2	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor
-5159593	A minor	0	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor
-5171396	G# major	3	G# major	G# major	G# major	G# major	G# major	G# major	G# major	G# major	G# major	G# major	G# major	G# major
-5263098	G minor	4	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor
-5264038	E minor	2	C# major	F# major	F# major	F# major	C# major	C# major	C# major	C# major	C# major	F# minor	F# major	F# minor
-5276059	C minor	0	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor
-5302340	C minor	2	C minor	F minor	C minor	C minor	F major	C minor	F major	F major	C minor	F minor	C minor	C minor
-5304804	F minor	0	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor
-5362946	A minor	3	A major	A minor	A minor	A minor	A major	A minor	A major	A major	A major	A minor	A minor	A minor
-5417860	G# minor	0	G# minor	G# minor	G# minor	G# minor	G# major	G# minor	G# major	G# major	G# minor	G# minor	G# minor	G# minor
-5431709	C minor	4	D# major	G# major	G# major	G# major	D# major	D# major	D# major	D# major	D# major	D# major	C minor	G# major
-5450838	E minor	2	B minor	E minor	E minor	E minor	B minor	E minor	B minor	B minor	E minor	E minor	E minor	E minor
+id	key	fold	3f (letter R's first reader)	A (harmonic discount)	B (note transcription)	B's home note + A's mode	multi-profile, as published (200 Hz, gate, minor2)	the same without the 200 Hz cut	the same without minor2	the same without the gate	bgate's two profiles alone on row 3f's chroma	multi-profile steps (gate, minor2) on row A's chroma	multi-profile steps (gate, minor2) on row B's chroma	B's home note + trained 12-number mode rule (EVALUATION ONLY)	learned profiles on row B's chroma, 25 numbers (EVALUATION ONLY)	learned profiles on rows A and B, 49 numbers (EVALUATION ONLY)	the same (rows A and B), major and minor weighed equally in the fit	learned profiles on seven chromas, 169 numbers (EVALUATION ONLY)	the same (seven chromas), major and minor weighed equally in the fit
+10089	D major	1	D major	G major	D major	D major	D major	D major	D major	D major	D major	G major	G major	D major	G major	G major	G major	D major	D major
+61415	F minor	4	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor
+74982	C minor	2	G# minor	G# minor	G# major	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# major	G# major	G# major	G# major	G# major	G# major	G# major
+101069	E minor	0	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor
+140603	C minor	4	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor
+190477	D minor	0	D minor	D minor	D minor	D minor	D minor	D minor	D minor	D minor	D minor	D minor	D minor	D minor	D minor	D minor	D minor	D minor	D minor
+191347	D# minor	3	D# minor	D# minor	D# minor	D# minor	C# major	D# minor	C# major	C# major	D# minor	D# minor	D# minor	D# minor	D# minor	D# minor	D# minor	D# minor	D# minor
+205597	G minor	4	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor
+208158	E minor	2	D major	G major	D major	D major	G major	G major	G major	G major	G major	G major	D major	D major	G major	G major	G major	G major	G major
+209206	A minor	2	A minor	C major	A minor	A minor	A minor	A minor	A minor	A minor	A minor	C major	A minor	A minor	A minor	A minor	A minor	A minor	A minor
+305771	C minor	0	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor
+376240	F minor	2	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor
+423054	D minor	1	D minor	D minor	D minor	D minor	A minor	D minor	A minor	A minor	D minor	D minor	D minor	D minor	D minor	D minor	D minor	D minor	D minor
+435443	E major	1	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E major
+472626	D minor	2	D minor	G minor	D minor	D minor	A minor	D minor	A minor	A minor	D minor	G minor	D minor	D minor	D minor	D minor	D minor	D minor	D minor
+495905	A# minor	4	A# minor	A# minor	A# minor	A# minor	F minor	A# minor	F minor	F minor	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	C# major	A# minor	A# minor
+511348	E minor	4	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor
+571009	F minor	1	C minor	F minor	F minor	F minor	C minor	C minor	C minor	C minor	C minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor
+582991	C minor	1	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor
+631240	G minor	1	G minor	G minor	G minor	G minor	F minor	G minor	F minor	F minor	G minor	F minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor
+631883	C minor	1	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	F minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor
+634032	E minor	3	G minor	G# minor	C minor	C minor	G minor	G minor	G# major	G minor	G minor	G# minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor
+667508	D minor	3	D minor	D minor	D minor	D minor	D minor	D minor	D minor	D minor	D minor	G minor	D minor	D minor	D minor	D minor	D minor	D minor	D minor
+671546	A minor	3	A minor	A minor	A minor	A minor	A minor	A minor	A major	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor
+677299	F# major	0	F# major	F# major	F# major	F# major	F# major	F# minor	F# major	F# major	F# major	F# minor	F# minor	F# major	F# major	F# major	F# major	F# major	F# major
+774871	B major	0	G minor	G minor	A major	A minor	C# minor	G minor	C# minor	C# minor	G minor	G minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor
+774875	F# minor	0	F# minor	G major	G major	G major	F# minor	G major	F# minor	F# minor	G major	G major	G major	G minor	G minor	D minor	G major	D minor	C major
+781995	C major	1	C major	C major	C major	C major	C major	C major	C major	C major	C major	C major	C major	C major	C major	C major	C major	C major	C major
+796860	C# minor	2	C# major	C# minor	C# minor	C# minor	C# minor	C# minor	C# major	C# minor	C# major	C# minor	C# minor	C# minor	C# minor	C# minor	C# minor	C# minor	C# minor
+814505	A major	3	A major	A major	A major	A major	A major	A major	A major	A major	A major	A major	A minor	A major	A major	A major	A major	A major	A major
+822664	A# minor	2	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	D# minor	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor
+835903	D minor	0	A minor	D minor	D minor	D minor	A minor	A minor	A minor	A minor	A minor	D minor	D minor	D minor	D minor	D minor	D minor	D minor	D minor
+847422	A minor	4	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor
+853834	E minor	1	E major	E minor	E minor	E minor	E minor	E minor	E major	E minor	E major	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor
+873455	E minor	4	E minor	G major	A minor	A minor	D major	E minor	D major	D major	E minor	G major	A minor	A minor	E minor	E minor	G major	E minor	G major
+877345	D# major	2	D# major	D# major	D# major	D# major	A# major	D# major	A# major	A# major	D# major	D# major	D# major	D# major	D# major	D# major	D# major	D# major	D# major
+883724	F minor	4	D# major	D# major	A# minor	A# minor	D# major	D# major	D# major	D# major	D# major	D# major	A# minor	A# minor	A# minor	F minor	D# major	F minor	F minor
+890568	E minor	3	G major	G major	E minor	E minor	G major	G major	G major	G major	G major	G major	E minor	E minor	E minor	E minor	E minor	E minor	E minor
+891993	D major	2	D major	D major	D major	D major	D major	D major	D major	D minor	D major	D minor	D minor	D major	D minor	D major	D major	D major	D major
+896478	B minor	0	B minor	B minor	B minor	B minor	B minor	B minor	B minor	B minor	B minor	B minor	B minor	B minor	B minor	B minor	B minor	B minor	B minor
+907837	G minor	0	G minor	D# major	A# major	A# major	A# major	G minor	A# major	A# major	G minor	D# minor	A# major	A# major	G minor	G minor	D# major	D# minor	A# major
+923397	A# minor	3	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	D# major	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor
+945256	D# minor	2	D# minor	D# minor	D# minor	D# minor	D# minor	D# minor	D# minor	D# minor	D# minor	D# minor	D# minor	D# minor	D# minor	D# minor	D# minor	D# minor	D# minor
+973819	F minor	2	C minor	F minor	F minor	F minor	C minor	C minor	C minor	C minor	C minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor
+1004923	C minor	4	C major	C major	F minor	F minor	C minor	C minor	C minor	C minor	C major	F minor	F minor	F minor	F minor	F minor	C major	F minor	C major
+1007941	F minor	3	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor
+1009960	E minor	1	C# minor	C# minor	E major	E major	C# minor	C# minor	C# major	C# minor	C# minor	C# minor	E minor	E major	E major	E minor	E major	E minor	E minor
+1033148	F minor	1	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor
+1034795	F# minor	2	C# minor	F# minor	C# minor	C# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	C# minor	C# minor	C# minor	C# minor	B minor	B minor
+1037507	G major	3	G major	G major	D major	D minor	G major	G major	G major	D major	G major	G major	G major	D major	G major	G major	G major	G major	G major
+1041574	G# major	3	G# major	C# major	G# major	G# major	C# major	G# major	C# major	C# major	G# major	G# major	G# major	G# major	G# major	G# major	G# major	C minor	G# major
+1052744	G minor	0	G# major	G# major	G# minor	G# major	G# major	G minor	G# major	G# major	G# major	G# major	G# minor	G# minor	G# minor	E minor	E minor	E minor	E minor
+1056896	A minor	1	A minor	A minor	A minor	A minor	A minor	A minor	A major	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor
+1074548	A minor	4	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor
+1075123	F minor	3	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor
+1103512	A# minor	1	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor
+1105632	C minor	4	C major	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor
+1140027	G minor	1	G# major	G# major	C# minor	C# minor	G# minor	G# minor	G# major	G# minor	G# major	G# major	C# minor	C# minor	C# minor	C# minor	C# minor	C# minor	C# minor
+1149778	F# minor	0	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# major	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor
+1161234	C major	4	C minor	C minor	C minor	C minor	G minor	C minor	G minor	G minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor
+1161249	G minor	2	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor
+1164898	C major	0	C major	C major	C major	C major	C major	C major	C major	C major	C major	C major	C major	C major	C major	C major	C major	C major	C major
+1178656	G minor	4	C minor	C minor	G minor	G minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	G minor	G minor	C minor	C minor	C minor	C minor
+1194720	D minor	2	D minor	G minor	D minor	D minor	D minor	D minor	D minor	D minor	D minor	D minor	D minor	D minor	D minor	D minor	D minor	D minor	D minor
+1198688	D minor	3	D major	D minor	D minor	D minor	D minor	D minor	D major	D minor	D minor	D minor	D minor	D minor	D minor	D minor	D minor	D minor	D minor
+1209745	A# major	0	A# major	A# major	A# major	A# major	A# major	A# major	A# major	A# major	A# major	A# major	A# major	A# major	A# major	A# major	A# major	A# major	A# major
+1224698	G major	4	G major	G minor	G major	G minor	G major	G minor	G major	G major	G major	G minor	G minor	G major	G minor	G minor	G major	G major	G major
+1234668	G minor	0	G minor	G minor	G# minor	G# major	G# minor	G minor	G# major	G# minor	G minor	G minor	G# minor	G# minor	G# minor	G minor	G# minor	G minor	G minor
+1234669	G minor	0	F# minor	F# minor	G# minor	G# minor	F# minor	F# minor	F# major	F# minor	F# minor	F# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor
+1234670	F minor	0	F major	F minor	F major	F minor	A major	F minor	A major	A major	F major	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor
+1234748	A# major	4	A# major	A# major	A# major	A# major	A# major	A# major	A# major	A# major	A# major	A# major	A# major	A# major	A# major	A# major	A# major	A# major	A# major
+1234750	F major	4	A minor	F major	A minor	A minor	A minor	A minor	A minor	A minor	A minor	F major	F major	A minor	F major	F major	F major	F major	F major
+1234751	A# major	4	F minor	F minor	F minor	F minor	C minor	F minor	C minor	C minor	F minor	F minor	A# major	F minor	F minor	F minor	F minor	F minor	A# major
+1234752	B minor	4	D major	D major	D major	D major	D major	D major	D major	D major	D major	D major	D major	D major	D major	D major	D major	D major	D major
+1298595	F minor	3	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor
+1316308	F minor	3	C minor	C minor	F minor	F minor	C minor	C minor	C minor	C minor	C minor	C minor	F minor	F minor	F minor	F minor	F minor	C minor	C minor
+1353830	D minor	0	A minor	D minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	D minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor
+1356281	D# minor	2	D# minor	D# minor	D# minor	D# minor	D# minor	D# minor	D# minor	D# minor	D# minor	D# minor	D# minor	D# minor	D# minor	D# minor	D# minor	D# minor	D# minor
+1389887	F major	0	C major	D# major	D# major	D# major	F major	F major	F major	F major	F major	F major	D# major	D# major	A minor	A minor	A minor	A minor	D# major
+1406309	B minor	1	B major	B minor	B minor	B minor	B minor	B minor	B major	B minor	B major	B minor	B minor	B minor	B minor	B minor	B minor	B minor	B minor
+1415239	C minor	1	C major	C minor	C major	C minor	C minor	C minor	C major	C minor	C major	C minor	C minor	C minor	C minor	C minor	C major	C minor	C minor
+1442809	E major	3	E major	E major	E major	E major	E major	E major	E major	E major	E major	E major	E major	E major	C# minor	C# minor	C# minor	C# minor	C# minor
+1468437	B minor	3	B major	B minor	B major	B minor	F# minor	B minor	F# minor	F# minor	B major	B minor	B minor	B minor	B minor	B minor	B minor	B minor	B minor
+1474122	G# major	1	G# major	G# major	G# major	G# major	G# major	G# major	G# major	G# major	G# major	G# major	G# major	G# major	G# major	G# major	G# major	G# major	G# major
+1486770	A minor	4	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor
+1494159	D# minor	4	D# minor	D# minor	D# minor	D# minor	G# major	G# major	G# major	D# major	D# minor	D# minor	D# minor	D# minor	D# minor	D# minor	D# minor	D# minor	D# minor
+1549964	C# minor	0	C# minor	C# minor	C# minor	C# minor	G# minor	C# minor	G# minor	G# minor	C# minor	C# minor	C# minor	C# minor	C# minor	C# minor	C# minor	C# minor	C# minor
+1568217	F major	1	F major	F major	F major	F major	C major	F major	C major	C major	F major	F major	F major	F major	F major	F major	F major	F major	F major
+1575015	A minor	3	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor
+1611446	G# minor	2	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor
+1614715	F# minor	3	F# minor	F# minor	F# minor	F# minor	A major	F# minor	A major	A major	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor
+1626779	C minor	1	C major	C major	C minor	C major	C minor	C minor	C major	C minor	C major	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor
+1669939	E major	1	E major	E minor	B major	B minor	E major	E minor	E major	E major	E major	E minor	E major	B minor	F# minor	F# minor	E major	F# minor	E major
+1673811	D major	1	G minor	G minor	C major	C minor	G minor	G minor	G minor	G minor	G minor	G minor	C major	C major	D minor	C minor	C major	D minor	C major
+1678455	F# minor	1	C major	C major	B major	B major	C minor	E minor	A minor	C minor	E minor	F minor	B minor	B minor	B minor	B minor	B minor	B minor	B major
+1681077	C major	3	C# major	C# major	F minor	F minor	C# minor	C# minor	G# major	C# minor	C# major	C# minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor
+1682815	C minor	2	G minor	C minor	C minor	C minor	G minor	G minor	G minor	G minor	G minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor
+1690921	D minor	0	D minor	D minor	D minor	D minor	A minor	A minor	A minor	A minor	A minor	D minor	D minor	D minor	D minor	D minor	D minor	D minor	D minor
+1695408	A minor	3	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor
+1757071	E minor	3	E major	E minor	E minor	E minor	E minor	E minor	E major	E minor	E major	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor
+1763782	F# minor	1	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor
+1771576	C minor	2	C minor	C minor	G minor	G minor	C minor	C minor	C minor	C minor	C minor	C minor	G minor	G minor	G minor	C minor	C minor	C minor	C minor
+1771577	G minor	2	G minor	G minor	G minor	G minor	G minor	G minor	D major	G minor	G major	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor
+1781139	C minor	3	C minor	C minor	C minor	C minor	G minor	C minor	G minor	G minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor
+1792026	B minor	2	G major	G major	G major	G major	G minor	G major	G major	G minor	G major	G major	G major	G major	E minor	G major	G major	B minor	B minor
+1792100	C minor	0	C minor	C minor	C minor	C minor	G minor	C minor	G minor	G minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor
+1792506	G major	3	G major	G minor	G minor	G minor	G major	G major	G major	G major	G major	G minor	G major	G minor	G minor	G minor	G minor	D minor	G major
+1795653	D# minor	2	D# minor	D# minor	D# minor	D# minor	D# minor	D# minor	D# minor	D# minor	D# minor	D# minor	D# minor	D# minor	D# minor	D# minor	D# minor	D# minor	D# minor
+1796518	C minor	3	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor
+1803909	B minor	0	B minor	B minor	B minor	B minor	B minor	B minor	B minor	B minor	B minor	B minor	B minor	B minor	B minor	B minor	B minor	B minor	B minor
+1809174	A major	2	A major	A major	A major	A major	C# minor	A major	C# minor	C# minor	A major	A major	A major	A major	A major	A major	A major	A major	A major
+1814469	F minor	2	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor
+1822087	A# minor	3	C# major	C# major	A# minor	A# minor	C# minor	C# major	C# major	C# minor	C# major	C# major	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor
+1822502	D minor	3	G minor	G minor	G minor	G minor	D minor	G minor	G minor	D minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor
+1837440	B minor	2	B minor	B minor	B minor	B minor	B minor	B minor	B minor	B minor	B minor	B minor	B minor	B minor	B minor	B minor	B minor	B minor	B minor
+1850984	A minor	4	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	A minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor
+1856889	A# minor	0	A# minor	A# minor	A# major	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor
+1864037	C# minor	3	C# minor	C# minor	C# minor	C# minor	C# minor	C# minor	C# minor	C# minor	C# minor	C# minor	C# minor	C# minor	C# minor	C# minor	C# minor	C# minor	C# minor
+1904501	A minor	1	G major	G minor	D minor	D minor	G major	G major	G major	D minor	G major	C major	D minor	D minor	D minor	D minor	C major	C major	C major
+1922470	D# minor	0	D# minor	D# minor	D# minor	D# minor	D# minor	D# minor	D# minor	D# minor	D# minor	D# minor	D# minor	D# minor	D# minor	D# minor	D# minor	D# minor	D# minor
+1939732	D# minor	0	D# minor	D# minor	D# minor	D# minor	D# minor	D# minor	D# minor	D# minor	D# minor	G# minor	D# minor	D# minor	D# minor	D# minor	D# minor	D# minor	D# minor
+1944125	C major	1	C major	C major	C major	C major	C major	C major	C major	C major	C major	C minor	C minor	C major	C minor	C major	C major	C major	C major
+1949099	E minor	2	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor
+1950170	A# minor	2	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor
+1960032	C minor	2	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor
+1964905	A# minor	4	F minor	C# major	A# minor	A# minor	G# major	F minor	G# major	G# major	F minor	F minor	A# minor	A# minor	G minor	A# minor	A# minor	A# minor	A# minor
+1978917	D minor	3	D major	D major	C# minor	C# minor	D major	D major	D major	D major	D major	D major	C# minor	C# minor	C# minor	C# minor	C# minor	C# minor	C# minor
+1981501	A minor	2	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor
+1983975	F# minor	0	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	C# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor
+1984204	F minor	4	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor
+1990297	A minor	2	G major	G major	F major	F major	A minor	A minor	A minor	A minor	A minor	G major	F minor	F minor	F minor	D minor	F major	E minor	C major
+1991458	B minor	2	B minor	B minor	B minor	B minor	B minor	B minor	B minor	B minor	B minor	B minor	B minor	B minor	B minor	B minor	B minor	B minor	B minor
+2007977	G# minor	4	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor
+2014445	D# minor	0	D# minor	D# minor	D# minor	D# minor	G# major	D# minor	G# major	G# major	D# minor	D# minor	D# minor	D# minor	D# minor	D# minor	D# minor	D# minor	D# minor
+2018991	C minor	2	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	G# major
+2024026	G major	0	G major	G major	G major	G major	D major	G major	D major	D major	G major	G major	G major	G major	G major	G major	G major	G major	G major
+2025670	C minor	1	G# major	C# major	C# major	C# major	C# minor	G# major	G# minor	C# minor	G# major	C# minor	C# minor	C# minor	C# minor	C# minor	C# major	C# minor	C# minor
+2026524	D# minor	4	C# major	F# major	F# major	F# major	C# major	C# major	C# major	C# major	C# major	F# major	F# major	F# major	F# major	F# major	F# major	F# major	F# major
+2029598	E minor	2	A major	A minor	A major	A minor	E minor	A major	E minor	E minor	A major	A minor	A major	A minor	A minor	A minor	A minor	A minor	A minor
+2031094	A minor	3	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor
+2031096	A minor	3	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor
+2046342	A# minor	2	A# minor	A# minor	A# minor	A# minor	G# major	A# minor	G# major	G# major	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	C# major	A# minor	A# minor
+2047796	D minor	1	C major	C major	C major	C major	C major	C major	C major	C major	C major	F major	C major	C major	C major	C major	C major	C major	C major
+2048054	C minor	2	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor
+2048940	G minor	2	G major	G minor	G minor	G minor	G minor	G minor	G major	G minor	G major	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor
+2049680	F minor	2	F minor	F minor	G# major	G# major	G# major	F minor	G# major	G# major	F minor	G# major	G# major	G# major	F minor	F minor	G# major	F minor	G# major
+2051166	E minor	4	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor
+2053495	B minor	3	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	B minor	B minor
+2054968	C major	2	C major	C major	C major	C major	G major	C minor	G major	G major	C major	C minor	C minor	C major	C minor	C minor	C major	C major	C major
+2059625	F minor	0	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor
+2069519	F minor	1	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor
+2070773	A minor	1	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor
+2075331	G minor	3	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor
+2435861	C minor	2	G minor	C minor	G minor	G minor	C minor	G minor	C minor	C minor	G minor	C minor	G minor	G minor	D minor	C minor	C minor	C minor	C minor
+2436276	A minor	3	A major	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A major	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor
+2438899	A# minor	0	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor
+2440193	A minor	2	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor
+2448121	F minor	1	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor
+2666528	C# minor	4	C# minor	C# minor	C# minor	C# minor	C# minor	C# minor	C# minor	C# minor	C# minor	F# minor	C# minor	C# minor	C# minor	C# minor	C# minor	C# minor	C# minor
+2667501	B minor	2	F# minor	E major	F# minor	F# minor	C# minor	F# minor	F minor	C# minor	F# minor	E minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor
+2673157	A# minor	1	B major	B minor	B minor	B minor	B major	B minor	B major	B major	B major	B minor	B minor	B minor	B minor	B minor	B minor	B minor	B minor
+2673251	D# minor	3	D# minor	D# minor	D# minor	D# minor	D# minor	D# minor	D# minor	D# minor	D# minor	D# minor	D# minor	D# minor	D# minor	D# minor	D# minor	D# minor	D# minor
+2673252	C minor	1	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor
+2673254	D minor	3	C major	F minor	F major	F minor	G minor	C minor	G major	G minor	C major	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor
+2676506	C minor	2	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor
+2680040	A minor	2	A major	A minor	A minor	A minor	A major	A minor	A major	A minor	A major	A minor	A minor	A minor	A minor	A minor	A major	A minor	A minor
+2725290	G minor	0	G major	G major	G major	G major	F# minor	G minor	F# minor	F# minor	G major	G minor	G minor	G minor	G minor	G minor	G major	G minor	G major
+2741219	A minor	4	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor
+2996293	E minor	0	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor
+3014118	E minor	2	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor
+3015217	F minor	1	F major	F minor	F minor	F minor	F minor	F minor	F major	F minor	F major	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor
+3024384	E minor	4	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor
+3033991	C minor	2	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor
+3069201	C major	4	C major	C major	C major	C major	G major	G major	G major	G major	G major	C major	C major	C major	C major	C major	C major	C major	C major
+3070298	D minor	0	G minor	G minor	D minor	D minor	D minor	G minor	D minor	D minor	G minor	G minor	D minor	D minor	D minor	D minor	D minor	D minor	D minor
+3076768	A minor	3	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor
+3095708	G minor	2	G minor	G minor	G minor	G minor	C# minor	G minor	G# major	C# minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor
+3116329	G minor	4	G minor	G minor	A major	A minor	D minor	D minor	D minor	D minor	D minor	G minor	A minor	A minor	A minor	A minor	G minor	A minor	A minor
+3133794	G# minor	0	G# major	G# major	G# major	G# major	G# minor	G# minor	G# major	G# minor	G# major	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor
+3137686	A minor	3	A major	A minor	A minor	A minor	A minor	A minor	A major	A minor	A major	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor
+3151513	F minor	3	F minor	F minor	F minor	F minor	G# major	F minor	G# major	G# major	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor
+3165770	E minor	2	B minor	E minor	E minor	E minor	B minor	B minor	B minor	B minor	B minor	E minor	B minor	E minor	E minor	E minor	E minor	E minor	E minor
+3172588	B minor	2	C# minor	F# minor	C# minor	C# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	C# minor	C# minor	C# minor	C# minor	B minor	B minor
+3178155	F minor	0	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor
+3186615	F minor	0	F minor	F minor	F minor	F minor	G# major	F minor	G# major	G# major	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor
+3211603	C minor	3	G minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	G minor	C minor	C minor	C minor	C minor
+3211733	F minor	0	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor
+3228297	B minor	0	D major	D major	D major	D major	A major	A major	A major	A major	A major	D major	D major	D major	D major	D major	D major	B minor	D major
+3228649	G# minor	3	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor
+3233653	G minor	1	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor
+3246151	A# minor	1	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor
+3249708	F minor	1	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor
+3250632	F minor	1	F minor	A# minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	A# minor	F minor	F minor	A# minor	F minor	F minor	F minor	A# minor
+3260121	G# minor	2	G# major	G# minor	G# minor	G# minor	G# major	G# minor	G# major	G# major	G# major	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor
+3262951	C minor	2	D# major	G# major	D# major	D# major	D# major	D# major	D# major	D# major	D# major	G# major	D# major	D# major	D# major	D# major	D# major	D# major	D# major
+3270413	G major	4	G major	G major	G major	G major	G major	G major	G major	G major	G major	G major	G major	G major	C major	C major	C major	C major	C major
+3271514	A minor	0	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor
+3272873	B minor	2	B major	B minor	B minor	B minor	B minor	B minor	B major	B minor	B minor	B minor	B minor	B minor	B minor	B minor	B minor	B minor	B minor
+3274260	D minor	2	D minor	D minor	F major	F major	A minor	D minor	A minor	A minor	D minor	F major	F major	F major	D minor	D minor	F major	D minor	D minor
+3275147	F minor	0	F minor	F minor	F minor	F minor	C minor	F minor	C minor	C minor	F minor	F minor	A# major	F minor	F minor	F minor	F minor	F minor	F minor
+3288636	A minor	0	A major	A minor	A minor	A minor	A minor	A minor	A major	A minor	A major	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor
+3298344	F minor	0	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor
+3302298	C minor	3	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor
+3302451	B minor	1	F# minor	D major	D major	D major	F# minor	F# minor	F# minor	F# minor	F# minor	D major	D major	D major	D major	D major	D major	D major	D major
+3313070	B minor	0	D major	D major	D major	D major	D major	D major	D major	D major	D major	D major	D major	D major	D major	D major	D major	D major	D major
+3313145	C# minor	1	C# minor	C# minor	C# minor	C# minor	C# minor	C# minor	C# minor	C# minor	C# minor	F# minor	C# minor	C# minor	C# minor	C# minor	C# minor	C# minor	C# minor
+3317417	G minor	0	A# major	A# major	A# major	A# major	A# major	A# major	A# major	A# major	A# major	A# major	A# major	A# major	C minor	C minor	A# major	C minor	A# major
+3319589	E minor	2	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor
+3324024	G# minor	3	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor
+3334471	C# minor	2	G# minor	C# minor	C# minor	C# minor	G# minor	G# minor	G# minor	G# minor	G# minor	C# minor	C# minor	C# minor	C# minor	C# minor	C# minor	C# minor	C# minor
+3338963	G minor	3	G minor	G minor	G minor	G minor	D minor	G minor	D minor	D minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor
+3339291	G major	2	G major	G major	G major	G major	G major	G major	G major	G major	G major	G major	G minor	G major	G minor	G major	G major	G major	G major
+3345479	D minor	0	F major	F major	F major	F major	F major	F major	F major	F major	F major	F major	F major	F major	F major	F major	F major	F major	F major
+3349486	F minor	0	F minor	F minor	F minor	F minor	F minor	F minor	F major	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor
+3354212	A# minor	0	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	F# major	A# minor	A# minor	A# minor	A# minor	F# major	A# minor	F# major
+3356535	A minor	1	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	C major	A minor	A minor	A minor	A minor	A minor	A minor	A minor
+3361547	G minor	4	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor
+3363196	E minor	2	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor
+3363602	D minor	0	D minor	D minor	D minor	D minor	D minor	D minor	D minor	D minor	D minor	D minor	D minor	D minor	D minor	D minor	D minor	D minor	D minor
+3368117	E minor	2	E major	E major	E major	E major	E major	E major	E major	E major	E major	E major	E minor	E minor	E minor	E minor	E major	E minor	E major
+3372108	A# minor	4	C# major	F# major	D# minor	D# minor	C# major	C# major	C# major	C# major	C# major	C# major	G# major	D# minor	D# minor	D# minor	F# major	D# minor	F# major
+3379400	A# major	1	D# major	D# major	D# major	D# major	A# major	D# major	A# major	A# major	D# major	D# major	D# major	D# major	D# major	D# major	D# major	D# major	D# major
+3383171	A major	4	A major	D major	A major	A minor	A major	A major	A major	A major	A major	D major	A minor	A major	A minor	A major	A major	A major	A major
+3387619	A minor	4	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor
+3390952	C minor	4	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor
+3395666	F# minor	3	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor
+3397932	D minor	2	A minor	F major	D minor	D minor	A minor	A minor	A minor	A minor	A minor	F major	D minor	D minor	D minor	D minor	D minor	D minor	D minor
+3402886	F# major	4	F# major	F# major	F# minor	F# major	C# major	F# minor	C# major	C# major	F# major	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor
+3402887	F minor	0	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor
+3402888	D minor	0	D minor	G minor	D minor	D minor	D minor	D minor	D major	D minor	D minor	G minor	D minor	D minor	D minor	D minor	D minor	D minor	D minor
+3415063	G minor	2	G minor	A# major	G minor	G minor	F major	G minor	F major	F major	G minor	A# major	G minor	G minor	G minor	G minor	A# major	G minor	A# major
+3415421	E minor	0	E minor	E minor	E minor	E minor	D major	E minor	D major	D major	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor
+3426022	D minor	2	D minor	D minor	D minor	D minor	D minor	D minor	D minor	D minor	D minor	D minor	D minor	D minor	D minor	D minor	D minor	D minor	D minor
+3426285	D# minor	3	A# minor	D# minor	D# minor	D# minor	A# minor	A# minor	A# minor	A# minor	A# minor	D# minor	A# minor	D# minor	D# minor	D# minor	D# minor	D# minor	D# minor
+3428673	C minor	4	C minor	F minor	C minor	C minor	F minor	F minor	F minor	F minor	F minor	F minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor
+3434746	A minor	1	F major	F major	F major	F major	F major	F major	F major	F major	F major	F major	F major	F major	F major	F major	F major	F major	F major
+3443052	A# minor	0	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor
+3450181	C minor	2	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor
+3467773	A# minor	2	C# major	C# major	C# major	C# major	C# major	C# major	C# major	C# major	C# major	C# major	C# major	C# major	C# major	C# major	C# major	C# major	C# major
+3478184	D# minor	4	D# minor	G# minor	D# minor	D# minor	D# minor	D# minor	D# minor	D# minor	D# minor	G# minor	D# minor	D# minor	D# minor	D# minor	D# minor	D# minor	D# minor
+3479363	D# minor	1	D# major	D# minor	D# minor	D# minor	D# major	D# major	D# major	D# major	D# major	D# minor	D# minor	D# minor	D# minor	D# minor	D# minor	D# minor	D# minor
+3480108	F# minor	4	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor
+3482733	G minor	3	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor
+3518768	D# major	2	D# major	G# major	G# major	G# major	D# major	D# major	D# major	C minor	D# major	G# major	D# major	G# major	G# major	C minor	G# major	G# major	G# major
+3518921	B minor	3	B minor	B minor	B minor	B minor	B minor	B minor	B minor	B minor	B minor	B minor	B minor	B minor	B minor	B minor	B minor	B minor	B minor
+3519499	G# minor	0	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor
+3523229	A minor	3	A minor	A minor	C major	C major	A minor	A minor	A minor	A minor	A minor	A minor	F major	C major	A minor	A minor	C major	A minor	C major
+3524408	F# minor	1	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor
+3526370	D minor	4	A# major	A# major	A# major	A# major	A# major	A# major	A# major	A# major	A# major	A# major	A# major	A# major	A# major	A# major	A# major	A# major	A# major
+3533310	B major	2	B major	B major	B major	B major	B major	B major	B major	B major	B major	B major	B major	B major	B major	B major	B major	B major	B major
+3533740	B minor	0	F# minor	B minor	A major	A major	F# minor	F# minor	F# minor	F# minor	F# minor	B minor	A major	A major	F# minor	B minor	B minor	B minor	B minor
+3533956	G minor	3	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor
+3535112	A# minor	1	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	F# major	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor
+3542099	F minor	1	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor
+3545728	F minor	2	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor
+3561744	G minor	3	F# minor	F# minor	F# minor	F# minor	C# minor	F# minor	C# minor	C# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor
+3568438	G# major	3	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	G# major	C minor	C minor	C minor	C minor	G# major	G# major
+3568459	B minor	3	B major	B minor	B minor	B minor	B minor	B minor	B major	B minor	B major	B minor	B minor	B minor	B minor	B minor	B minor	B minor	B minor
+3568465	A minor	3	F# minor	D major	D major	D major	F# minor	D major	F# minor	F# minor	D major	D major	D major	D major	B minor	B minor	D major	B minor	B minor
+3571314	C# minor	2	C# minor	C# minor	C# minor	C# minor	C# minor	C# minor	C# minor	C# minor	C# minor	C# minor	C# minor	C# minor	C# minor	C# minor	C# minor	C# minor	C# minor
+3572701	F minor	2	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor
+3572702	E minor	2	E major	E major	E major	E major	F# minor	E major	F# minor	F# minor	E major	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor
+3574815	E minor	1	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor
+3589347	C minor	4	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor
+3590070	F# minor	4	E major	A major	A major	A major	E major	E major	E major	E major	E major	A major	A major	A major	A major	A major	A major	A major	A major
+3596904	G# minor	1	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor
+3602280	G minor	1	G minor	G# major	G# major	G# major	G minor	C minor	C minor	G minor	C minor	G# major	G# major	G# major	F minor	F minor	F minor	F minor	G# major
+3602282	E minor	1	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor
+3625299	G minor	2	G minor	A# major	G minor	G minor	A# major	G minor	A# major	A# major	G minor	A# major	A# major	G minor	G minor	G minor	G minor	G minor	G minor
+3625787	G minor	4	C minor	F minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	F minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor
+3625788	G minor	4	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor
+3628628	E minor	1	E minor	E minor	E minor	E minor	B minor	E minor	B minor	B minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor
+3629467	C# minor	3	C# minor	C# minor	C# minor	C# minor	C# minor	C# minor	C# minor	C# minor	C# minor	C# minor	C# minor	C# minor	C# minor	C# minor	C# minor	C# minor	C# minor
+3641166	E minor	4	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor
+3642384	D# minor	2	D# minor	D# minor	D# minor	D# minor	A# minor	D# minor	A# minor	A# minor	D# minor	D# minor	D# minor	D# minor	D# minor	D# minor	D# minor	D# minor	D# minor
+3642409	G# minor	4	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor
+3648814	B minor	1	B minor	B minor	B minor	B minor	B minor	B minor	B minor	B minor	B minor	B minor	B minor	B minor	B minor	B minor	B minor	B minor	B minor
+3661550	A minor	2	A major	A minor	A minor	A minor	A minor	A minor	A major	A minor	A major	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A major
+3667215	G# minor	0	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor
+3667683	G minor	2	G minor	D# major	D# major	D# major	G minor	G minor	G minor	G minor	G minor	D# major	D# major	D# major	D# major	D# major	D# major	D# major	D# major
+3668409	E minor	2	B minor	E minor	B minor	B minor	B minor	B minor	B minor	B minor	B minor	G major	B minor	B minor	B minor	B minor	B minor	B minor	B minor
+3681890	C major	1	C major	C major	C major	C major	G major	G major	G major	G major	G major	C major	C minor	C major	C major	C major	C major	C major	C major
+3686302	D minor	0	D minor	D minor	D minor	D minor	D minor	D minor	D minor	D minor	D minor	D minor	D minor	D minor	D minor	D minor	D minor	D minor	D minor
+3687442	G# minor	3	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor
+3696226	G# minor	4	G# major	G# minor	G# major	G# minor	G# minor	G# minor	G# major	G# minor	G# major	G# minor	G# minor	G# minor	G# minor	G# minor	G# major	G# minor	G# major
+3703893	E major	3	E major	A major	E major	E major	E major	E major	E major	E major	E major	A major	E major	E major	E major	E major	E major	E major	E major
+3706570	D# minor	4	D# minor	G# minor	D# minor	D# minor	C# major	D# minor	C# major	C# major	D# minor	G# minor	D# minor	D# minor	D# minor	D# minor	D# minor	D# minor	D# minor
+3713557	A# minor	1	D# minor	D# minor	A# minor	A# minor	A# minor	D# minor	A# minor	A# minor	D# minor	D# minor	A# minor	A# minor	D# minor	D# minor	D# minor	A# minor	A# minor
+3753635	F major	3	C major	F major	C major	C minor	C major	C major	C major	C major	C major	F major	C major	C major	C minor	C minor	C major	C minor	F major
+3759800	B minor	1	B minor	G major	B minor	B minor	B minor	B minor	B minor	B minor	B minor	G major	B minor	B minor	B minor	B minor	B minor	B minor	B minor
+3767408	G minor	0	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor
+3772753	D minor	1	D minor	D minor	D minor	D minor	D minor	D minor	D minor	D minor	D minor	D minor	D minor	D minor	D minor	D minor	D minor	D minor	D minor
+3773561	D minor	4	G minor	G minor	G minor	G minor	D minor	G minor	D minor	D minor	G minor	G minor	D minor	G minor	D minor	G minor	G minor	D minor	D minor
+3789116	B minor	3	E major	E major	B minor	B minor	E major	E major	E major	E major	E major	A major	B minor	B minor	B minor	B minor	B minor	B minor	B minor
+3789117	A# minor	3	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	D# minor	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor
+3792959	E minor	3	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor
+3794008	C# minor	1	C# major	C# minor	C# major	C# minor	C# minor	C# minor	C# minor	C# minor	C# minor	C# minor	C# minor	C# minor	C# minor	C# minor	C# major	C# minor	C# major
+3813682	G minor	4	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor
+3822226	G# minor	4	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor
+3829561	A# minor	4	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor
+3833050	C# major	2	C# major	C# major	C# major	C# major	C# major	C# minor	C# major	C# major	C# major	C# minor	C# minor	C# major	C# minor	C# minor	C# major	C# major	C# major
+3836490	F minor	3	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor
+3841927	C minor	1	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	D# major	C minor	C minor	C minor	C minor	C minor	C minor	C minor
+3858289	A minor	0	A minor	D minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor
+3858324	B minor	0	B minor	B minor	B minor	B minor	B minor	B minor	B minor	B minor	B minor	B minor	B minor	B minor	B minor	B minor	B minor	B minor	B minor
+3858331	C minor	0	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor
+3892740	D major	2	D major	D major	D major	D major	D major	D major	D major	D major	D major	G major	D major	D major	D major	D major	D major	D major	D major
+3930672	D minor	3	D minor	G minor	D minor	D minor	D minor	D minor	D minor	D minor	D minor	G minor	D minor	D minor	D minor	D minor	D minor	D minor	D minor
+3935095	E minor	1	E minor	A minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	A minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor
+3938837	E minor	4	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	G major	E minor	E minor	E minor	E minor	E minor	E minor	E minor
+3939148	G minor	3	G major	G minor	G major	G minor	G major	G minor	G major	G major	G major	G minor	G minor	G minor	G minor	G minor	G major	G minor	G minor
+3949799	A minor	3	C major	F major	F major	F major	C major	C major	C major	C major	C major	F major	F major	F major	F major	F major	F major	F major	F major
+3954078	A minor	2	G major	G major	A minor	A minor	G major	G major	G major	G major	G major	C major	A minor	A minor	A minor	A minor	G major	A minor	C major
+3958396	C major	4	C major	C major	C major	C major	C major	C major	C major	C major	C major	C major	C major	C major	C major	C major	C major	C major	C major
+3958398	G minor	4	A# major	A# major	A# major	A# major	A# major	A# major	A# major	A# major	A# major	A# major	A# major	A# major	A# major	A# major	A# major	A# major	A# major
+3958755	D# major	2	D# major	D# major	D# major	D# major	D# major	D# major	D# major	D# major	D# major	G# major	D# minor	D# minor	D# minor	D# minor	D# major	D# minor	D# minor
+3958861	E minor	3	G major	G major	G major	G major	G major	G major	G major	G major	G major	G major	G major	G major	E minor	E minor	G major	E minor	G major
+3963180	F# minor	0	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor
+3967462	E minor	1	G major	G major	D major	D major	A minor	G major	A minor	A minor	G major	G major	D minor	D minor	D minor	D minor	D minor	D minor	D minor
+3969868	F minor	3	D# major	G# major	F minor	F minor	G# major	D# major	G# major	G# major	D# major	G# major	F minor	F minor	F minor	F minor	F minor	F minor	G# major
+3971416	D minor	3	D minor	D minor	D minor	D minor	D minor	D minor	D minor	D minor	D minor	D minor	D minor	D minor	D minor	D minor	D minor	D minor	D minor
+3979989	D# minor	3	D# minor	G# minor	D# minor	D# minor	A# minor	D# minor	A# minor	A# minor	D# minor	G# minor	D# minor	D# minor	D# minor	D# minor	D# minor	D# minor	D# minor
+3980001	F minor	0	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor
+3986537	A major	0	A major	A major	A major	A major	A major	A major	A major	A major	A major	A major	A major	A major	A major	A major	A major	A major	A major
+3995054	C minor	3	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor
+3997722	F minor	4	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor
+4014747	C minor	1	G minor	C minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	C minor	C minor	G minor	G minor	C minor	C minor	C minor	C minor
+4014749	C minor	1	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	C minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor
+4018247	G minor	4	G minor	G minor	G minor	G minor	D minor	G minor	D minor	D minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor
+4021075	F minor	3	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor
+4045225	C# minor	4	C# minor	C# minor	C# minor	C# minor	C# minor	C# minor	C# minor	C# minor	C# minor	C# minor	C# minor	C# minor	C# minor	C# minor	C# minor	C# minor	C# minor
+4060751	D# minor	4	D# minor	D# minor	D# minor	D# minor	A# minor	D# minor	A# minor	A# minor	D# minor	D# minor	D# minor	D# minor	D# minor	D# minor	D# minor	D# minor	D# minor
+4086909	G minor	3	G major	G minor	G minor	G minor	D minor	G minor	D major	D minor	G major	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor
+4088665	C major	4	C major	F major	C major	C major	C major	C major	C major	C major	C major	F major	C major	C major	C major	C major	C major	C major	C major
+4091478	A minor	0	A major	A major	A minor	A major	A major	A major	A major	A major	A major	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor
+4093657	D# minor	0	D# minor	G# minor	D# minor	D# minor	G# major	D# minor	G# major	G# major	D# minor	G# minor	D# minor	D# minor	D# minor	D# minor	D# minor	D# minor	D# minor
+4093908	C minor	1	G minor	C minor	C minor	C minor	G minor	G minor	G minor	G minor	G minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor
+4104235	F minor	3	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor
+4107957	C# minor	1	G# minor	G# minor	A minor	A major	G# minor	G# minor	G# major	G# minor	G# minor	G# minor	A minor	A minor	G# minor	C# minor	C# minor	E minor	E minor
+4125044	F minor	4	G# major	G# major	G# major	G# major	G# major	G# major	G# major	G# major	G# major	G# major	G# major	G# major	G# major	G# major	G# major	F minor	G# major
+4153238	A minor	3	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor
+4162405	A minor	4	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor
+4166222	E minor	0	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor
+4167325	F minor	0	F minor	F minor	F major	F minor	F minor	F minor	C minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor
+4173942	C major	0	E minor	C major	C major	C major	E minor	E minor	E minor	E minor	E minor	C major	C major	C major	C major	C major	C major	C major	C major
+4191993	E minor	1	E minor	E minor	E minor	E minor	B minor	E minor	B minor	B minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor
+4200490	F# minor	4	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor
+4202763	A minor	3	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor
+4206954	D minor	2	D minor	D minor	D minor	D minor	D minor	D minor	D minor	D minor	D minor	D minor	D minor	D minor	D minor	D minor	D minor	D minor	D minor
+4207145	D# minor	4	D# minor	F# major	D# minor	D# minor	A# minor	D# minor	A# minor	A# minor	D# minor	F# major	F# major	D# minor	D# minor	D# minor	F# major	D# minor	F# major
+4234612	C minor	1	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor
+4254573	C minor	0	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor
+4262569	D# minor	4	F# major	F# major	F# major	F# major	F# major	F# major	F# major	F# major	F# major	F# major	F# major	F# major	D# minor	D# minor	F# major	D# minor	F# major
+4275052	D major	0	F# minor	D major	D major	D major	F# minor	F# minor	F# minor	F# minor	F# minor	D major	D major	D major	D major	D major	D major	D major	D major
+4277742	F minor	1	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor
+4284574	A minor	2	D major	G major	G major	G major	D major	D major	D major	D major	D major	G major	G major	G major	E minor	G major	G major	E minor	G major
+4293025	A minor	2	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor
+4297635	E minor	0	E minor	E minor	E minor	E minor	A major	E minor	A major	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor
+4302974	E minor	2	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor
+4315749	F minor	3	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor
+4325645	C minor	3	F minor	F minor	A# major	A# major	C minor	F minor	C minor	C minor	F minor	F minor	A# major	A# major	D# major	C minor	D# major	C minor	C minor
+4325646	D major	3	F# minor	A major	F# minor	F# minor	E major	F# minor	E major	E major	F# minor	A major	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor
+4327665	E minor	3	E minor	E minor	E minor	E minor	G major	E minor	G major	G major	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor
+4359736	F minor	1	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor
+4360488	F minor	4	F# major	F# major	F# major	F# major	C# major	F# major	C# major	C# major	F# major	F# major	F# minor	F# major	F# minor	F# minor	F# major	F# major	F# major
+4361260	C minor	1	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor
+4364668	D# minor	1	G# minor	G# minor	D# minor	D# minor	E major	G# minor	E major	E major	G# minor	G# minor	G# minor	D# minor	D# minor	D# minor	D# minor	D# minor	D# minor
+4366506	D# minor	3	D# major	D# major	D# major	D# major	D# minor	D# minor	D# minor	D# minor	D# major	D# minor	D# minor	D# minor	D# minor	D# minor	D# minor	D# minor	D# minor
+4371042	D minor	0	D major	D minor	D major	D minor	D minor	D minor	D minor	D minor	D major	D minor	D minor	D minor	D minor	D minor	D minor	D minor	D minor
+4424988	G# minor	0	G# minor	F# major	C# minor	C# minor	G# minor	G# minor	G# minor	G# minor	G# minor	C# minor	C# minor	C# minor	G# minor	G# minor	B major	G# minor	B major
+4433083	A# minor	1	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor
+4440292	G# minor	2	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor
+4450726	E minor	0	E minor	E minor	E minor	E minor	B minor	E minor	B minor	B minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor
+4453556	G minor	4	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor
+4476610	D# minor	2	D# minor	D# minor	D# minor	D# minor	C# major	D# minor	C# major	C# major	D# minor	D# minor	D# minor	D# minor	D# minor	D# minor	D# minor	D# minor	D# minor
+4483817	G# minor	4	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor
+4485436	F minor	4	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor
+4498388	D minor	4	D minor	F major	D minor	D minor	D minor	D minor	D minor	D minor	D minor	G minor	D minor	D minor	D minor	D minor	D minor	D minor	D minor
+4505122	F# major	0	F# major	F# major	F# major	F# major	F# major	F# major	F# major	F# major	F# major	F# major	F# major	F# major	F# major	F# major	F# major	F# major	F# major
+4508323	B minor	1	B minor	B minor	B minor	B minor	B minor	B minor	B minor	B minor	B minor	B minor	B minor	B minor	B minor	B minor	B minor	B minor	B minor
+4540971	A# minor	3	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	F# major	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor
+4566667	F# minor	3	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor
+4573655	E minor	4	E minor	E minor	E minor	E minor	B minor	E minor	B minor	B minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor
+4596347	F minor	4	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor
+4609349	A minor	1	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor
+4615188	G# minor	1	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# major	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor
+4657878	F# minor	4	F# minor	F# minor	F# minor	F# minor	C# minor	F# minor	C# minor	C# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor
+4661735	G minor	0	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor
+4666231	F minor	2	F minor	F minor	F major	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor
+4688833	A minor	1	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor
+4693198	G# major	1	G# major	G# minor	G# major	G# minor	G# major	G# minor	G# major	G# major	G# major	G# minor	G# minor	G# minor	G# minor	G# minor	G# major	G# minor	G# minor
+4702235	D major	4	D major	D major	D major	D major	D major	D major	D major	D major	D major	D major	D major	D major	D major	D major	D major	D major	D major
+4723905	F minor	4	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor
+4735775	D# minor	2	D# minor	D# minor	D# minor	D# minor	D# minor	D# minor	D# minor	D# minor	D# minor	D# minor	D# minor	D# minor	D# minor	D# minor	D# minor	D# minor	D# minor
+4755348	G minor	3	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor
+4758620	F minor	0	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor
+4786362	C minor	1	C minor	G# major	C minor	C minor	G# major	C minor	G# major	G# major	C minor	G# major	C minor	C minor	C minor	C minor	C minor	C minor	C minor
+4802314	E minor	0	B minor	E minor	B major	B minor	B minor	B minor	B minor	B minor	B minor	E minor	B minor	B minor	G# minor	B minor	B minor	C# minor	C# minor
+4815758	C minor	3	C minor	C minor	C minor	C minor	G minor	C minor	G minor	G minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor
+4823611	F minor	1	F minor	C# major	F minor	F minor	F minor	F minor	F minor	F minor	F minor	C# major	F minor	F minor	F minor	F minor	F minor	F minor	F minor
+4834156	D minor	0	D minor	D minor	D minor	D minor	D minor	D minor	D minor	D minor	D minor	D minor	D minor	D minor	D minor	D minor	D minor	D minor	D minor
+4842349	G minor	0	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor
+4846004	B minor	0	B minor	B minor	B minor	B minor	E major	B minor	E major	E major	B minor	A major	B minor	B minor	B minor	B minor	B minor	B minor	B minor
+4846007	G# minor	1	G# minor	G# minor	G# minor	G# minor	C# major	G# minor	C# major	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor
+4857650	A# minor	0	A# minor	A# minor	A# minor	A# minor	G# major	A# minor	G# major	G# major	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor
+4863806	F minor	0	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor
+4868146	F minor	4	G# major	C# major	F minor	F minor	G# major	G# major	G# major	G# major	G# major	G# major	G# major	F minor	F minor	F minor	F minor	F minor	F minor
+4873286	F# minor	0	F# minor	F# minor	F# minor	F# minor	E major	F# minor	E major	E major	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor
+4877006	F minor	4	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor
+4900482	F# minor	4	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor
+4917941	F minor	2	F minor	F minor	F minor	F minor	C major	F minor	C major	C major	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor
+4920936	C# minor	1	C# major	C# major	C# minor	C# major	C# minor	C# minor	C# major	C# minor	C# major	C# minor	C# minor	C# minor	C# minor	C# minor	C# minor	C# minor	C# minor
+4926785	G minor	3	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor
+4927548	F minor	2	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor
+4927725	D# minor	4	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor
+4934196	A minor	2	C major	F major	F major	F major	F major	F major	F major	F major	F major	F major	F major	F major	F major	A minor	F major	A minor	F major
+4935536	F minor	4	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor
+4939812	A# minor	4	A# minor	C# major	A# minor	A# minor	C# major	A# minor	C# major	C# major	A# minor	C# major	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor
+4941208	F minor	2	G# major	G# major	G# major	G# major	G# major	G# major	G# major	G# major	G# major	G# major	G# major	G# major	G# major	G# major	G# major	G# major	G# major
+4945105	F minor	0	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor
+4950604	F minor	2	F minor	F minor	F minor	F minor	F minor	F minor	F major	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor
+4950614	E minor	2	F minor	E major	F major	F minor	A# minor	E minor	A# major	A# minor	F minor	E minor	E minor	F minor	E minor	E minor	E minor	E minor	E minor
+4953926	C minor	4	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor
+4955428	A# minor	2	A# minor	D# minor	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	D# minor	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor
+4956417	D# minor	1	D# minor	B major	D# minor	D# minor	D# minor	D# minor	D# minor	D# minor	D# minor	G# minor	D# minor	D# minor	D# minor	D# minor	B major	D# minor	D# minor
+4957129	D minor	4	D minor	D minor	D minor	D minor	D minor	D minor	D minor	D minor	D minor	D minor	D minor	D minor	D minor	D minor	D minor	D minor	D minor
+4960012	G major	4	G# minor	G minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G minor	G# major	G# minor	G# minor	G# minor	G# minor	G minor	G minor
+4965571	G minor	4	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor
+4969568	B minor	4	B minor	D major	B minor	B minor	D major	B minor	D major	D major	B minor	D major	B minor	B minor	B minor	B minor	B minor	B minor	B minor
+4970082	F minor	0	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor
+4981539	F# minor	4	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor
+4981541	A# minor	4	F minor	F minor	A# minor	A# minor	F minor	F minor	F minor	F minor	F minor	A# minor	A# minor	A# minor	A# minor	F minor	F minor	A# minor	A# minor
+4983645	D minor	0	D minor	D minor	D minor	D minor	D minor	D minor	D minor	D minor	D minor	D minor	D minor	D minor	D minor	D minor	D minor	D minor	D minor
+4983728	G minor	4	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor
+4995394	F# minor	1	F# minor	F# minor	F# minor	F# minor	C# minor	F# minor	C# minor	C# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor
+4995597	C major	3	C major	C major	C major	C major	C major	C major	C major	C major	C major	C minor	C minor	C minor	F minor	C major	C major	C major	C major
+4996031	F minor	4	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor
+4996389	A minor	0	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor
+4997194	G# minor	2	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor
+4997222	C# minor	2	C# minor	C# minor	C# minor	C# minor	C# minor	C# minor	C# minor	C# minor	C# minor	C# minor	C# minor	C# minor	C# minor	C# minor	C# minor	C# minor	C# minor
+5005412	G minor	1	G minor	G minor	G minor	G minor	A minor	G minor	A minor	A minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor
+5009084	A# minor	0	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	A# major	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor	A# minor
+5013063	E minor	3	E major	E major	E minor	E major	E minor	E major	E major	E minor	E major	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E minor
+5013910	G minor	1	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor
+5026646	F minor	0	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor
+5030517	F# minor	2	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor	F# minor
+5035524	E minor	3	E major	E minor	E major	E minor	E major	E minor	E major	E major	E major	E minor	E minor	E minor	E minor	E minor	E minor	E minor	E major
+5036476	D major	0	F# minor	D major	D major	D major	F# minor	F# minor	F# minor	F# minor	F# minor	D major	D major	D major	D major	D major	D major	D major	D major
+5039015	C# minor	2	C# minor	C# minor	C# minor	C# minor	C# minor	C# minor	C# minor	C# minor	C# minor	F# minor	C# minor	C# minor	C# minor	C# minor	C# minor	C# minor	C# minor
+5039016	G minor	3	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor
+5048249	A minor	1	A minor	C major	A minor	A minor	A minor	A minor	A minor	A minor	A minor	C major	A minor	A minor	A minor	A minor	C major	A minor	A minor
+5048263	G minor	4	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor
+5049808	G# minor	2	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# major	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor
+5070608	F minor	0	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor
+5073839	B major	3	F# major	B major	B major	B major	F# major	F# major	F# major	F# major	F# major	B major	B major	B major	B major	B major	B major	B major	B major
+5079918	G# minor	0	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor
+5120298	F minor	2	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor
+5159593	A minor	0	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor
+5171396	G# major	3	G# major	G# major	G# major	G# major	G# major	G# major	G# major	G# major	G# major	G# major	G# major	G# major	G# major	G# major	G# major	G# major	G# major
+5263098	G minor	4	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor	G minor
+5264038	E minor	2	C# major	F# major	F# major	F# major	C# major	C# major	C# major	C# major	C# major	F# minor	F# major	F# minor	D# minor	D# minor	F# major	D# minor	D# minor
+5276059	C minor	0	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor
+5302340	C minor	2	C minor	F minor	C minor	C minor	F major	C minor	F major	F major	C minor	F minor	C minor	C minor	C minor	C minor	C minor	C minor	C minor
+5304804	F minor	0	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor	F minor
+5362946	A minor	3	A major	A minor	A minor	A minor	A major	A minor	A major	A major	A major	A minor	A minor	A minor	A minor	A minor	A minor	A minor	A minor
+5417860	G# minor	0	G# minor	G# minor	G# minor	G# minor	G# major	G# minor	G# major	G# major	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor	G# minor
+5431709	C minor	4	D# major	G# major	G# major	G# major	D# major	D# major	D# major	D# major	D# major	D# major	C minor	G# major	G# major	G# major	G# major	G# major	G# major
+5450838	E minor	2	B minor	E minor	E minor	E minor	B minor	E minor	B minor	B minor	E minor	E minor	E minor	E minor	E minor	E minor	D major	E minor	E minor
