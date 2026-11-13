@@ -114,6 +114,11 @@ memo Q's vocal fields, `vocal_structure` and `hooks`, are instead left out when 
   copies from a print of each file's audio (`RecordingPrint` in DeckieCore, the rule written there), choosing the
   smallest `id` of the copies as the key; readers take it through `SameSong` (DeckieCrate). Lab records keep the lab's
   own `cut_key`.
+  `ident.source` (D30, Nov 13, 2026; meaning only) names where the name came from: `tag`, `filename` (the file name
+  read by pattern), `folder` (the folder as the artist), `cue`, `m3u`, `tracklist` (a list beside the music), a DJ
+  program's name as in `key.source` (`rekordbox-xml`, `traktor`, `engine-dj`, `serato`, `virtualdj`), `copy` (a named
+  copy of the same recording), `user` (the DJ's own fix), `lab`. When the title and the artist came from different
+  places the two are joined by "+", the title's first (`filename+folder`).
 - `analysis`: `engine` (label), `analysed_at`, `device` (a model label such as `Mac15,6`, never a user's device
   name), `secs` or null, `level`.
 - `engine` **proposed** (where track L's record sits: a block beside `analysis`, which keeps its text label): `family`
@@ -138,6 +143,16 @@ memo Q's vocal fields, `vocal_structure` and `hooks`, are instead left out when 
   before), `confidence`, `camelot`, `key` or null, `scale` or null, `votes` (source name to Camelot
   code), `changes` *(key_changes)*: a list of `start_bar`, `end_bar`, `camelot`, or null. **proposed**: objects
   rather than track A's three-element lists.
+  **The DJ's own key** (D30, Nov 13, 2026; meaning only, no field added or changed): a record whose key is the DJ's
+  has `key.source` naming where it came from: `rekordbox-xml`, `traktor`, `engine-dj`, `serato`, `virtualdj` (that
+  program's library), `tag` (the file's key tag), `tag-comment` (a key written into the comment, as Mixed In Key
+  does), `tag-title` (one written into the title). `key.votes` holds every key the DJ's programs and tags gave, under
+  the same names, so the ones not chosen stay visible; `key.confidence` is then the share of those that agree with
+  `key.camelot` (1 when there is one, or all agree), on that scale; `key.key` and `key.scale` spell the code; and
+  `key.changes` is null. Which wins: the program whose library file was written most recently, then the file's tag,
+  comment, title (`LocalFacts` in DeckieBuild). A record from Deckie's own engine carries no reading of its own beside
+  the DJ's (D16): with no key from the DJ it has no `key` block. A record read by Apple's framework (`engine.family`
+  `apple-mu`) keeps that reading as `key.camelot`, with the DJ's keys added to `key.votes` under these names.
 - `phrase` *(phrase)*: `source`, `confidence`, `lattice_phase_bar` (1 to 8), `boundaries_bars`. Its `source` is track
   L's `structure.source` and covers `sections` too.
 - `sections` *(sections)*: a list of `start_bar`, `end_bar`, `label` (`intro`, `main`, `break`, `outro`), `energy`.
@@ -279,7 +294,8 @@ renames, applied here: `import_log.built_by` is a device label, the block is `im
 What a rekordbox export puts in fields the format already has: the track's `Name`, `Artist` and `Mix` become
 `ident.title`, `ident.artist` and `ident.version` with `ident.source` `rekordbox-xml` (else the file's own title and
 artist tags, source `tag`, else the file name, source `filename`); the DJ's key becomes the vote `rekordbox-xml` in
-`key.votes`, as a Camelot code, while `key.camelot` stays the engine's decision; the DJ's tempo steers the analysis
+`key.votes`, as a Camelot code, while `key.camelot` stays the engine's decision (as the builder writes it; since
+D30, Nov 13, 2026, Deckie Desk's run then makes the DJ's key the record's key, `key.source` `rekordbox-xml`, as above); the DJ's tempo steers the analysis
 (the lab's octave alignment to a tag) and is recorded in `file.tag_bpm`. The engine's own grid stays in `grid` and
 `tempo_segments`; the DJ's grid markers, cues and loops stay in `imported.rekordbox`, untouched, so the Apple apps can
 show or compare them without either side overwriting the other.
