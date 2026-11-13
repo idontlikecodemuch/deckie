@@ -30,12 +30,15 @@ public struct BuildOptions: Sendable {
     /// Read the folder as a source of this name (D25, D26): a burned CD, a USB stick or an SD card, read as it is. Its
     /// files are labelled with their places (`SourceReading`: the source's name, the folder below its top, the number
     /// a player shows) and their `file.rel` is the path below the source's top. The crate at `output`, if there is
-    /// one, keeps every entry that is not from this source as it is; this source's entries are replaced by what is
-    /// read now. Nothing is left out by folder name, since the player shows every folder. In the import log and the
-    /// progress, a source's files are named by the source's name, then the path below it.
+    /// one, keeps every place that is not on this source as it is; this source's places, an entry's own and its other
+    /// places alike (D27), are replaced by what is read now. A file whose bytes are already in the crate adds its
+    /// place to that entry. Nothing is left out by folder name, since the player shows every folder. In the import
+    /// log and the progress, a source's files are named by the source's name, then the path below it.
     public var source: String?
     /// For a build from an ordinary folder (`source` nil) into an existing crate: the sources read into it before,
-    /// whose entries are kept as they are. Entries with any other disc label are rebuilt from the folder, as before.
+    /// whose places are kept as they are. Places with no source, or any other disc label, are read again from the
+    /// folder, as before; a file in the folder whose bytes are on a kept source is a place with no source (its
+    /// folder) of that entry.
     public var keepSources: Set<String>
 
     public init(folder: URL, output: URL, rekordbox: URL? = nil, jobs: Int = defaultJobs, fileBPMTags: Bool = false,
@@ -327,101 +330,146 @@ public final class Builder: Sendable {
         }
         done.merge(results.done) { _, new in new }
 
-        // What the crate keeps as it is: for a source, every entry from elsewhere; for an ordinary folder, the entries
-        // of the sources read before. Their import-log entries stay too.
-        var kept: [String: CrateTrack] = [:]
+        // Places (D27): every file read now is a place of the entry for its bytes. A place belongs to this read when it
+        // is on the source being read, or, for an ordinary folder, has no source or one not kept (`belongsToRead`);
+        // those places are replaced by what is read now, own and other alike, and every other place stays.
+        typealias Place = CrateTrack.Place
+        typealias Reason = CrateManifest.ImportLog.Reason
+        func belongsToRead(_ p: Place) -> Bool {
+            if let s = options.source { return p.disc == s }
+            return p.disc.map { !options.keepSources.contains($0) } ?? true
+        }
+        /// Where a file read now is: on a source, its place there; in an ordinary folder, no source and its folder.
+        func placeRead(_ f: SourceFile) -> Place {
+            let rel = String(f.rel.dropFirst(prefix.count))
+            if let p = places[rel] { return Place(disc: p.source, folder: p.group, track: p.number) }
+            return Place(disc: nil, folder: SourceReading.group(of: rel), track: nil)
+        }
+
+        // What the crate keeps from before: each entry with the places that do not belong to this read. Their
+        // import-log entries stay too.
+        var kept: [String: (entry: CrateTrack, own: Place?, others: [Place])] = [:]
         var keptEntries: [CrateManifest.ImportLog.Entry] = []
         if let existing {
-            func keeps(_ t: CrateTrack) -> Bool {
-                if let s = options.source { return t.ident.disc != s }
-                return t.ident.disc.map { options.keepSources.contains($0) } ?? false
+            for t in existing.tracks {
+                // An entry only in a folder on the Mac keeps no folder label; as a place, it is `file.rel`'s folder.
+                var mine = t.ident.ownPlace
+                if mine.disc == nil && mine.folder == nil { mine.folder = SourceReading.group(of: t.file.rel ?? "") }
+                let own = belongsToRead(mine) ? nil : mine
+                let others = t.ident.otherPlaces.filter { !belongsToRead($0) }
+                if own != nil || !others.isEmpty { kept[t.id] = (t, own, others) }
             }
-            for t in existing.tracks where keeps(t) { kept[t.id] = t }
             for e in existing.manifest.importLog?.entries ?? [] {
                 let fromSource = { (s: String) in e.rel.hasPrefix(s + "/") }
                 let keep = options.source.map { !fromSource($0) } ?? options.keepSources.contains(where: fromSource)
                 if keep { keptEntries.append(e) }
             }
         }
+        let keptPlaces = kept.values.reduce(0) { $0 + ($1.own == nil ? 0 : 1) + $1.others.count }
 
-        // The crate: files in path order; the first file with given bytes has the record, a copy is logged.
-        var tracks: [CrateTrack] = []
+        // The files read now, by their bytes: each file is a place of its entry. A second file with the same bytes
+        // in a place already listed (two copies in one folder on the Mac, which has no numbers) is logged.
         var entries: [CrateManifest.ImportLog.Entry] = []
         for sf in skippedFolders {
-            entries.append(.init(rel: sf.rel, ext: "", reason: CrateManifest.ImportLog.Reason.skipped,
+            entries.append(.init(rel: sf.rel, ext: "", reason: Reason.skipped,
                                  message: "folder left out by the build's rule (its name starts with \"\(options.skipFolderPrefixes.first ?? "_")\"); "
                                  + "\(sf.audioFiles) audio file\(sf.audioFiles == 1 ? "" : "s") not looked at"))
         }
-        var firstWithID: [String: String] = [:]
-        var displaced = 0
+        var read: [String: [(file: Int, place: Place)]] = [:]
+        var readOrder: [String] = []
         for (i, f) in files.enumerated() {
             switch done[f.rel] {
             case .failed(let failure)?:
                 entries.append(.init(rel: f.rel, ext: f.ext, reason: failure.reason, message: failure.message))
-            case .ok(let id, let tags)?:
-                if let first = firstWithID[id] {
-                    entries.append(.init(rel: f.rel, ext: f.ext, reason: CrateManifest.ImportLog.Reason.duplicate,
-                                         message: "the same bytes as \(first), which has the record"))
+            case .ok(let id, _)?:
+                let p = placeRead(f)
+                if let same = read[id]?.first(where: { $0.place == p }) {
+                    entries.append(.init(rel: f.rel, ext: f.ext, reason: Reason.duplicate,
+                                         message: "the same bytes as \(files[same.file].rel), which has the record"))
                     continue
                 }
-                guard let record = work.record(id) else {
-                    entries.append(.init(rel: f.rel, ext: f.ext, reason: CrateManifest.ImportLog.Reason.analysisError,
-                                         message: "its finished record could not be read back from the work folder"))
-                    continue
-                }
-                // The same bytes are already in the crate from elsewhere: crate v1 holds one entry per file content.
-                // An entry on a source beats one that is only in a folder; between two sources, the one already in
-                // the crate stays.
-                if let other = kept[id] {
-                    if options.source != nil && other.ident.disc == nil {
-                        kept[id] = nil
-                        displaced += 1
-                        entries.append(.init(rel: other.file.rel ?? other.file.name,
-                                             ext: (other.file.name as NSString).pathExtension.lowercased(),
-                                             reason: CrateManifest.ImportLog.Reason.duplicate,
-                                             message: "the same bytes as \(f.rel), which has the record"))
-                    } else {
-                        entries.append(.init(rel: f.rel, ext: f.ext, reason: CrateManifest.ImportLog.Reason.duplicate,
-                                             message: "the same bytes as \(Crate.discLine(other) ?? other.file.rel ?? other.file.name), which has the record"))
+                if read[id] == nil {
+                    guard work.record(id) != nil else {
+                        entries.append(.init(rel: f.rel, ext: f.ext, reason: Reason.analysisError,
+                                             message: "its finished record could not be read back from the work folder"))
                         continue
                     }
+                    readOrder.append(id)
                 }
-                firstWithID[id] = f.rel
-                var t = dressed(record, file: f, tags: tags, rekordbox: rekordboxOf[i], collection: collection,
-                                importedAt: importedAt)
-                if let p = places[String(f.rel.dropFirst(prefix.count))] {
-                    t.ident.disc = p.source; t.ident.folder = p.group; t.ident.track = p.number
-                }
-                if let old = existing?.tracks.first(where: { $0.id == id }) {
-                    t.signatures = old.signatures
-                    // An entry imported again unchanged keeps the time it was first imported, so a rebuild from the
-                    // same export leaves the record as it was.
-                    if var now = t.imported?.rekordbox, let was = old.imported?.rekordbox {
-                        now.importedAt = was.importedAt
-                        if now == was { t.imported?.rekordbox = was }
-                    }
-                }
-                tracks.append(t)
-                // Analysed and in the crate, but faulty: the DJ is told where.
-                if let frames = t.file.damagedFrames, !frames.isEmpty {
-                    entries.append(.init(rel: f.rel, ext: f.ext, reason: CrateManifest.ImportLog.Reason.damagedFrames,
-                                         message: Builder.damagedFramesMessage(frames)))
-                }
+                read[id, default: []].append((i, p))
             case nil:
-                entries.append(.init(rel: f.rel, ext: f.ext, reason: CrateManifest.ImportLog.Reason.analysisError,
-                                     message: "not finished"))
+                entries.append(.init(rel: f.rel, ext: f.ext, reason: Reason.analysisError, message: "not finished"))
             }
         }
 
-        let fresh = tracks
-        tracks += kept.values
-        // Files seen: this read's, plus those behind what is kept (an entry each, and each logged file but a damaged
-        // one, which has an entry too, or a left-out folder, which is not a file).
-        typealias Reason = CrateManifest.ImportLog.Reason
-        let keptFiles = kept.count + displaced + keptEntries.filter { $0.reason != Reason.damagedFrames && $0.reason != Reason.skipped }.count
-        if !keptEntries.isEmpty {
-            entries = (keptEntries + entries).sorted { $0.rel.utf8.lexicographicallyPrecedes($1.rel.utf8) }
+        // One entry per file content, with every place it has. An entry whose own place stays (it is on a source not
+        // read now) keeps its record and gains the places read now. Otherwise the place read now that leads by the
+        // booth's rule (`CrateTrack.leadingPlace`: sources by name, then folder and number; no source last) is the
+        // own place and its file gives the record (its name and path); the rest are other places. An entry not read
+        // now whose own place was read away takes its leading other place as its own (`promoteOtherPlace`).
+        func ordered(_ ps: [Place], without own: Place) -> [Place] {
+            var seen: Set<Place> = [own]
+            let unique = ps.filter { seen.insert($0).inserted }
+            let items = unique.enumerated().map { SameSong.Place(id: String($0.offset), disc: $0.element.disc,
+                                                                 folder: $0.element.folder, track: $0.element.track) }
+            return SameSong.ordered(items, playingDisc: nil, discOrder: []).map { unique[Int($0.id)!] }
         }
+        var tracks: [CrateTrack] = []
+        var fresh: [CrateTrack] = []
+        for id in readOrder {
+            let here = read[id]!
+            let before = kept.removeValue(forKey: id)
+            if let before, let own = before.own, own.disc != nil {
+                var t = before.entry
+                t.ident.otherPlaces = ordered(before.others + here.map(\.place), without: own)
+                tracks.append(t)
+                continue
+            }
+            let lead = CrateTrack.leadingPlace(here.map(\.place))!
+            let from = here.first { $0.place == lead }!
+            let f = files[from.file]
+            guard case .ok(_, let tags)? = done[f.rel], let record = work.record(id) else { continue }
+            var t = dressed(record, file: f, tags: tags, rekordbox: rekordboxOf[from.file], collection: collection,
+                            importedAt: importedAt)
+            // An ordinary folder's entry keeps no folder label of its own, as before: its place is `file.rel`'s.
+            t.ident.ownPlace = options.source == nil ? Place(disc: nil, folder: nil, track: nil) : lead
+            let rest = (before?.own.map { [$0] } ?? []) + (before?.others ?? []) + here.map(\.place).filter { $0 != lead }
+            t.ident.otherPlaces = ordered(rest, without: t.ident.ownPlace)
+            if let old = existing?.tracks.first(where: { $0.id == id }) {
+                t.signatures = old.signatures
+                // The same bytes are the same recording, so copies found before (D24) stay found.
+                if t.ident.cutKey == nil { t.ident.cutKey = old.ident.cutKey }
+                // An entry imported again unchanged keeps the time it was first imported, so a rebuild from the
+                // same export leaves the record as it was.
+                if var now = t.imported?.rekordbox, let was = old.imported?.rekordbox {
+                    now.importedAt = was.importedAt
+                    if now == was { t.imported?.rekordbox = was }
+                }
+            }
+            tracks.append(t)
+            fresh.append(t)
+            // Analysed and in the crate, but faulty: the DJ is told where.
+            if let frames = t.file.damagedFrames, !frames.isEmpty {
+                entries.append(.init(rel: f.rel, ext: f.ext, reason: Reason.damagedFrames,
+                                     message: Builder.damagedFramesMessage(frames)))
+            }
+        }
+        for (_, k) in kept {
+            var t = k.entry
+            if let own = k.own {
+                t.ident.otherPlaces = ordered(k.others, without: own)
+            } else {
+                t.ident.otherPlaces = k.others
+                t.promoteOtherPlace()
+                t.ident.otherPlaces = ordered(t.ident.otherPlaces, without: t.ident.ownPlace)
+            }
+            tracks.append(t)
+        }
+
+        // Files seen: this read's, plus those behind what is kept (a place each, and each logged file but a damaged
+        // one, which has an entry too, or a left-out folder, which is not a file).
+        let keptFiles = keptPlaces + keptEntries.filter { $0.reason != Reason.damagedFrames && $0.reason != Reason.skipped }.count
+        entries = (keptEntries + entries).sorted { $0.rel.utf8.lexicographicallyPrecedes($1.rel.utf8) }
 
         let builtAt = utcNow()
         // built_by is the device label the records' analysis.device carries, never the machine's own name.
