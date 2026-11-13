@@ -453,6 +453,23 @@ lookups: "For 6 I meant getting song names from lookup. Or general song DNA data
 - **What D16's bar measures** is the owner's to rule on once the key trial reports all four measures: exact on each
   half as now, the mean of the halves, within one step on the wheel, or how often a shown key is right.
 
+### Note on D30 and D16 (Nov 13): Deckie's own key reader has to stand on its own
+The owner, the same day, on reading keys from DJ programs: "Most starting DJs don't have these programs. Mike for
+example doesn't. Our method will still need to work as well as competitors or better and fail gracefully. It is
+just a tag for the song and the waveform. Just info for the DJ. If we can get it reliably we use it and add it if
+not we skip it. I would refer we have it."
+
+- **Keys from a DJ's own software are a help, not the answer.** Many DJs have none of those programs. Deckie's own
+  reader is the main route on a computer without Apple's framework.
+- **The target is the tools DJs already use**: as good as them or better, on music it has not seen.
+- **It fails quietly.** A key is shown when the reader is sure and left off when it is not. A missing key is
+  acceptable; a wrong one shown with confidence is not. This is D16's "no key is better than a wrong key", applied
+  song by song instead of to the whole reader.
+- **A key is information for the DJ**: a tag on the song and its wave. Having it is preferred.
+
+This points the bar toward "how often a shown key is right, and how many songs get one", against the competitors'
+figures. The owner confirms the measure and the numbers when the key trial reports.
+
 ### Note on D19 (Nov 1): versions of a song stay separate rows
 Christopher, on two remixes of one song both showing in the picks: "we shouldn't merge them unless they are the same
 songs. DJs often have a bunch of versions of the same song". So the booth folds together only copies of the same
