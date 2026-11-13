@@ -162,6 +162,7 @@ jobs:
           $said
           if ($LASTEXITCODE -ne 3) { Write-Error "expected the starter to end with 3, got $LASTEXITCODE"; exit 1 }
           if ($said -notmatch "Unzip first") { Write-Error "the starter did not say to unzip"; exit 1 }
+          exit 0  # the starter's 3 is the expected ending here, not this step's
       # Time per song on this runner, on songs of a real length: four synthesised four-minute songs (two WAV, two
       # FLAC), read with the program's own default for songs at once. The log's numbers go into the summary.
       - name: "Measure: four four-minute songs"
