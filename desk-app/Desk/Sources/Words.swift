@@ -80,8 +80,7 @@ enum Words {
         "Keys: " + counts.map { "\($0.n) \(keyFrom($0.origin))" }.joined(separator: ", ") + "."
     }
     static func keysNone(_ n: Int) -> String {
-        n == 1 ? "1 song has no key yet: no DJ program or tag on this Mac had one."
-            : "\(n) songs have no key yet: no DJ program or tag on this Mac had one."
+        n == 1 ? "1 song has no key yet." : "\(n) songs have no key yet."
     }
     static func keysDisagree(_ n: Int) -> String {
         n == 1 ? "On 1 song your programs give different keys; the newest program's is shown."
@@ -183,7 +182,7 @@ enum Words {
         case "tag-comment": return "from the file's comment"
         case "tag-title": return "from the file's title"
         case "apple-mu": return "read by Apple's Music Understanding"
-        case "votes", "hpcp-whitened", "stft-edma": return "read by Deckie"
+        case "deckie", "votes", "hpcp-whitened", "stft-edma": return "read by Deckie"
         default: return "from \(source)"
         }
     }
@@ -199,7 +198,7 @@ enum Words {
         case "tag-comment": return "the file's comment"
         case "tag-title": return "the file's title"
         case "apple-mu": return "Apple"
-        case "votes", "hpcp-whitened", "stft-edma": return "Deckie"
+        case "deckie", "votes", "hpcp-whitened", "stft-edma": return "Deckie"
         default: return source
         }
     }
