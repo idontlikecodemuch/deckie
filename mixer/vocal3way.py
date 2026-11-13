@@ -21,7 +21,7 @@ def main(records, out):
     rows = []; no_apple = 0; lenmis = 0
     for rf in sorted(glob.glob(os.path.join(records, "*.json"))):
         tid = os.path.basename(rf)[:-5]; e = json.load(open(rf))
-        lf = os.path.join(here, "features", f"{tid}.json"); mf = os.path.join(here, "mu_raw", f"{tid}.mu.json")
+        lf = os.path.join(here, "features", f"{tid}.json"); mf = os.path.join(os.environ.get("DECKIE_MU_RAW", os.path.join(here, "mu_raw")), f"{tid}.mu.json")
         if not (os.path.exists(lf) and os.path.exists(mf)): continue
         f = json.load(open(lf)); r = json.load(open(mf))
         labv = f["per_bar"]["vocal_prob"]; engv = e["per_bar"]["vocal_prob"]

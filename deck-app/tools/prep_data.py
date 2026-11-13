@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Builds everything the Deck app bundles, from the mixer's analysis. Rerun when tracks change.
 
-  PY="../../_pool build/mixer/.venv/bin/python"
+  PY="../../mixer/.venv/bin/python"
   $PY -I prep_data.py                      # JSON + mix map + catalog (variants from VARIANTS below)
   $PY -I prep_data.py --no-catalog         # JSON + mix map only
   $PY -I prep_data.py --variants o,r-4,r+4 # choose the catalog's pitch variants
@@ -16,7 +16,7 @@ APP = os.path.dirname(HERE)
 ROOT = os.path.dirname(APP)  # the repo
 MIXER = os.path.join(ROOT, "mixer")
 RES = os.path.join(APP, "Deck", "Resources")
-BUILD = os.path.join(HERE, "build")
+BUILD = os.environ.get("DECKIE_SIGS_DIR", os.path.join(HERE, "build"))
 VARIANTS = "o,r-8,r+8,r-16,r+16,t-8,t+8,t-16,t+16"   # nine signatures per track: the interim fix for the full fader range (track H, P11); was o,r-4,r+4
 for i, a in enumerate(sys.argv):
     if a == "--variants": VARIANTS = sys.argv[i + 1]

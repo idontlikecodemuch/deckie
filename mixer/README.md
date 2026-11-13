@@ -26,7 +26,7 @@ The Essentia models live in `models/` (Discogs-EffNet + voice_instrumental head)
 Always call the venv's python by path (from this folder):
 
 ```
-M="/Users/christophershannon/personal/90s2000 playlist/_pool build/mixer"
+M="/Users/christophershannon/code/deckie/mixer"
 cd "$M"
 # analysis (resumable: skips ids whose features/<id>.json exists)
 nohup .venv/bin/python analyze.py > analyze_full.log 2>&1 &
@@ -218,7 +218,7 @@ sections C and E.4-E.5.
 ## Running
 
 ```
-M="/Users/christophershannon/personal/90s2000 playlist/_pool build/mixer"; cd "$M"
+M="/Users/christophershannon/code/deckie/mixer"; cd "$M"
 .venv/bin/python -I plan.py                       # -> plan_mix1.json, plan_mix2.json, mixes/mix_<n>_tracklist.txt (~15 s)
 .venv/bin/python -I render.py plan_mix1.json      # -> mixes/1 - Haunted Disco.mp3 (+ .cue, .txt, .render.json), ~5 min
 .venv/bin/python -I render.py plan_mix2.json      # -> mixes/2 - Witching Hour Warehouse.mp3 ...

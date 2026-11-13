@@ -566,7 +566,7 @@ The engine is plain Swift and C, so the bench builds and runs on the Mac as it d
 export DECKIE_ONNXRUNTIME_LIB="$PWD/.deps/onnxruntime/lib/libonnxruntime.dylib"   # if not in the default place
 export DECKIE_BEAT_THIS_MODEL="$PWD/.models/beat_this_final0.onnx"                 # likewise
 export DECKIE_YAMNET_MODEL="$PWD/.models/yamnet.onnx"                              # likewise, for the vocal tagger
-.build/release/deckie-build bench "/Users/christophershannon/personal/90s2000 playlist" \
+.build/release/deckie-build bench "/Volumes/Extreme/Projects/personal/90s2000 playlist" \
     --features ../mixer/features --candidates ../mixer/candidates.json --out ~/deckie-bench/bench.json
 ```
 
@@ -585,7 +585,7 @@ there.
 ### Checking the MP3 concealment: `deckie-build mp3-check`
 
 ```
-.build/release/deckie-build mp3-check "/Users/christophershannon/personal/90s2000 playlist"
+.build/release/deckie-build mp3-check "/Volumes/Extreme/Projects/personal/90s2000 playlist"
 ```
 
 decodes every MP3 below the folder twice, as the engine decodes it (a damaged frame played as silence) and by dr_mp3's

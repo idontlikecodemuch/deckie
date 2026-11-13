@@ -7,7 +7,7 @@ correlation, section boundary precision/recall within one bar, loudness deltas, 
 import json, os, sys, bisect, math, statistics as st
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-RAW = os.path.join(HERE, "mu_raw"); FEAT = os.path.join(HERE, "features")
+RAW = os.environ.get("DECKIE_MU_RAW", os.path.join(HERE, "mu_raw")); FEAT = os.path.join(HERE, "features")
 TOL = 0.07
 CAMELOT = {("major", k): v for k, v in zip(["c", "dFlat", "d", "eFlat", "e", "f", "gFlat", "g", "aFlat", "a", "bFlat", "b"], ["8B", "3B", "10B", "5B", "12B", "7B", "2B", "9B", "4B", "11B", "6B", "1B"])}
 CAMELOT.update({("minor", k): v for k, v in zip(["c", "dFlat", "d", "eFlat", "e", "f", "gFlat", "g", "aFlat", "a", "bFlat", "b"], ["5A", "12A", "7A", "2A", "9A", "4A", "11A", "6A", "1A", "8A", "3A", "10A"])})

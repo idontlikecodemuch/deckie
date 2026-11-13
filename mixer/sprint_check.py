@@ -15,7 +15,7 @@ and <out>.md (the summary, per bucket).
 import argparse, collections, csv, json, os, re, sys, unicodedata
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-DEFAULT_POOL = "/Users/christophershannon/personal/90s2000 playlist/_pool build"
+DEFAULT_POOL = os.path.join(os.environ.get("DECKIE_MUSIC_ROOT", "/Users/christophershannon/personal/90s2000 playlist"), "_pool build")
 
 
 def norm(s):

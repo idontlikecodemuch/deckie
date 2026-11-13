@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Whole-song overview waveforms for the Listen page: 480 RMS bins per track over the whole file,
 normalised to the track's loudest bin, base64 (64 levels). Every catalogue track; cached by id.
-  "../../_pool build/mixer/.venv/bin/python" -I overview_waves.py [--force]
+  "../../mixer/.venv/bin/python" -I overview_waves.py [--force]
 Writes Deck/Resources/overview.json {id: {"n", "dur", "s"}}. Only reads the MP3s."""
 import json, os, sys
 import numpy as np, soundfile as sf

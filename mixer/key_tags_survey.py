@@ -125,7 +125,7 @@ def pc_mode(v):
 
 def main():
     a = sys.argv; t0 = time.time()
-    lib = a[a.index("--library") + 1] if "--library" in a else os.path.expanduser("~/personal/90s2000 playlist")
+    lib = a[a.index("--library") + 1] if "--library" in a else os.environ.get("DECKIE_MUSIC_ROOT", os.path.expanduser("~/personal/90s2000 playlist"))
     outside = a[a.index("--outside") + 1] if "--outside" in a else None
     per = defaultdict(Counter); fmt = defaultdict(Counter); found = {}
     files = list(walk(lib))

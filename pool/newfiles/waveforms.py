@@ -2,7 +2,7 @@
 """Precompute a 180-bin peak waveform per track in Mike page/data.json -> newfiles/waves.json (cached by track id).
 Each waveform is a 180-char string, one base64 char (0-63) per bin."""
 import json, os, shutil, subprocess, sys, tempfile, array
-SP = os.path.dirname(os.path.dirname(os.path.abspath(__file__))); ROOT = "/Users/christophershannon/personal/90s2000 playlist"
+SP = os.path.dirname(os.path.dirname(os.path.abspath(__file__))); ROOT = os.environ.get("DECKIE_MUSIC_ROOT", "/Users/christophershannon/personal/90s2000 playlist")
 D = json.load(open(os.path.join(ROOT, "Mike page", "data.json"))); cache_p = os.path.join(SP, "newfiles", "waves.json")
 cache = json.load(open(cache_p)) if os.path.exists(cache_p) else {}
 B64 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"; BINS = 180; SR = 8000

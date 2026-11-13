@@ -2,7 +2,7 @@
 """Beat-synchronous waveform snippets (mix-out and mix-in windows) for EVERY catalogue track.
 Copy of _pool build/mixer/mixwaves.py (same algorithm and output layout), but driven by candidates.json
 instead of the 198 page tracks, and writing into the app folder. Cached by id.
-  "../../_pool build/mixer/.venv/bin/python" -I mixwaves_all.py [--force] [--seed]
+  "../../mixer/.venv/bin/python" -I mixwaves_all.py [--force] [--seed]
 --seed copies already-computed entries from _pool build/mixer/mixwaves.json (read only) to save time."""
 import json, os, sys, math
 import numpy as np, soundfile as sf
@@ -15,7 +15,7 @@ SPB = 8 if "--spb" not in sys.argv else int(sys.argv[sys.argv.index("--spb") + 1
 # 4 samples per beat = the original web-player format (build/mixwaves_all.json, seeded from the mixer);
 # 8 samples per beat (default since Oct 24) for the iPad join view, plus a "head" snippet (track start .. 64 bars)
 # so the next song can be shown from any start point; every snippet carries k0 = grid index of its first sample.
-OUT = os.path.join(HERE, "build", "mixwaves_all.json" if SPB == 4 else f"mixwaves_spb{SPB}.json")
+OUT = os.path.join(os.environ.get("DECKIE_SIGS_DIR", os.path.join(HERE, "build")), "mixwaves_all.json" if SPB == 4 else f"mixwaves_spb{SPB}.json")
 os.makedirs(os.path.dirname(OUT), exist_ok=True)
 cache = json.load(open(OUT)) if os.path.exists(OUT) and "--force" not in sys.argv else {}
 cands = json.load(open(os.path.join(MIXER, "candidates.json")))

@@ -43,7 +43,7 @@ import key_light as KL
 import key_parity as KP
 import key_outside as KO
 
-SCRATCH = "/private/tmp/claude-501/-Users-christophershannon-personal-deckie/ef174277-de81-4c73-b21f-f857b905220e/scratchpad"
+SCRATCH = os.environ.get("DECKIE_SCRATCH", "/private/tmp/claude-501/-Users-christophershannon-personal-deckie/ef174277-de81-4c73-b21f-f857b905220e/scratchpad")
 CACHE = os.environ.get("DECKIE_KEYMODE_CACHE", os.path.join(SCRATCH, "keymode_cache"))
 MIN_FREE = 4 * 1024 ** 3
 

@@ -366,7 +366,7 @@ details>p{color:var(--muted);margin:4px 0 10px;max-width:72ch}
 })();
 </script>
 '''
-out = "/Users/christophershannon/personal/90s2000 playlist/Two-Disc Pool.html" if LOCAL else "twodisc/two-disc-pool.html"
+out = os.path.join(os.environ.get("DECKIE_MUSIC_ROOT", "/Users/christophershannon/personal/90s2000 playlist"), "Two-Disc Pool.html") if LOCAL else "twodisc/two-disc-pool.html"
 if LOCAL:   # a standalone file needs its own document skeleton; the published copy gets one from the platform
     head, body = page.split('<div class="wrap">', 1)
     page = '<!doctype html>\n<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">\n' + head + '</head><body>\n<div class="wrap">' + body + '\n</body></html>\n'

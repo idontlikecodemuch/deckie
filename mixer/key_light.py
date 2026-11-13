@@ -153,7 +153,7 @@ def main():
             pc, mode, r, m = best_key(C.mean(axis=1), prof); whole = camelot(pc, mode)
             # the song key the product will use is Apple's; the lightweight whole estimate is kept for comparison
             mu_key = ""
-            for mp in (os.path.join(HERE, "mu_raw", x["id"] + ".mu.json"), os.path.join(MU_TEST_DIR, x["id"] + ".mu.json")):
+            for mp in (os.path.join(os.environ.get("DECKIE_MU_RAW", os.path.join(HERE, "mu_raw")), x["id"] + ".mu.json"), os.path.join(MU_TEST_DIR, x["id"] + ".mu.json")):
                 if os.path.exists(mp):
                     k = json.load(open(mp)).get("key")
                     if k and k["ranges"]:
@@ -192,7 +192,7 @@ def main():
     rows = []
     for i, x in enumerate(cands[:limit]):
         f = json.load(open(os.path.join(HERE, "features", x["id"] + ".json")))
-        mup = os.path.join(HERE, "mu_raw", x["id"] + ".mu.json"); mu_key = ""
+        mup = os.path.join(os.environ.get("DECKIE_MU_RAW", os.path.join(HERE, "mu_raw")), x["id"] + ".mu.json"); mu_key = ""
         if os.path.exists(mup):
             k = json.load(open(mup)).get("key")
             if k and k["ranges"]:

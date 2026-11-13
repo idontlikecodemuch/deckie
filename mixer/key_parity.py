@@ -211,7 +211,7 @@ def semichroma(P, lo=MIDI_LO, hi=MIDI_HI, log=False, frame_norm=True):
 
 # ----------------------------------------------------------------------------------------------- references and buckets
 def mu_key(tid):
-    p = os.path.join(HERE, "mu_raw", tid + ".mu.json")
+    p = os.path.join(os.environ.get("DECKIE_MU_RAW", os.path.join(HERE, "mu_raw")), tid + ".mu.json")
     if not os.path.exists(p): return ""
     k = json.load(open(p)).get("key")
     if not k or not k["ranges"]: return ""
