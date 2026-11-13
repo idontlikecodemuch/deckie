@@ -23,7 +23,8 @@ public enum AudioFiles {
     public static let extensions: Set<String> = ["mp3", "flac", "wav", "aif", "aiff", "aifc", "m4a", "mp4", "aac",
                                                  "wma", "ogg", "opus", "m4p"]
 
-    /// The audio files below `folder`, sorted by path. Hidden files and folders (a name starting with a dot) are left
+    /// The audio files below `folder`, sorted by path. Hidden files and folders (a name starting with a dot, and on
+    /// Windows also anything Windows marks hidden) are left
     /// out, and so are crate packages and builder work folders (`.deckiecrate`, `.deckiebuild`), so an output inside
     /// the folder is never read as music. A link to a file counts as the file.
     public static func find(in folder: URL) throws -> [SourceFile] { try find(in: folder, skippingFolderPrefixes: []).files }
@@ -66,7 +67,7 @@ public enum AudioFiles {
         var found: [SourceFile] = []
         walk(root, below: "") { rel, name, url, type in
             let isFolder = type == .typeDirectory
-            if name.hasPrefix(".") { return false }
+            if name.hasPrefix(".") || hiddenByWindows(url) { return false }
             let ext = CratePath.fileExtension(of: name).lowercased()
             if ext == CrateFormat.packageExtension || ext == Builder.workExtension { return false }
             if isFolder { return !skipFolder(rel, name) }
@@ -87,6 +88,17 @@ public enum AudioFiles {
             return false
         }
         return found.sorted { $0.rel.utf8.lexicographicallyPrecedes($1.rel.utf8) }
+    }
+
+    /// Whether Windows marks the file or folder hidden (its "hidden" attribute, what Explorer's "Hidden items" switch
+    /// shows and hides): on Windows a dot in front of a name hides nothing, so this is that platform's hidden file.
+    /// Always false elsewhere.
+    static func hiddenByWindows(_ url: URL) -> Bool {
+        #if os(Windows)
+        return (try? url.resourceValues(forKeys: [.isHiddenKey]))?.isHidden ?? false
+        #else
+        return false
+        #endif
     }
 
     /// Visits everything below `folder` (whose path below the walk's top is `rel`), one folder listing at a time.

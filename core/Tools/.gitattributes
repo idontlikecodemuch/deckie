@@ -1,0 +1,5 @@
+# Scripts keep Unix line endings on every machine: Git for Windows would otherwise check them out with Windows line
+# endings, which bash refuses, and fetch-models.sh reads the pinned hashes out of the .py files.
+*.sh text eol=lf
+*.py text eol=lf
+*.txt text eol=lf
