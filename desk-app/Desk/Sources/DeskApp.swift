@@ -28,11 +28,16 @@ struct DeskApp: App {
             CommandGroup(replacing: .newItem) {
                 Button("New Crate from Folder…") { model.askNewCrate() }.keyboardShortcut("n")
                 Button("New Crate from Folder with rekordbox Collection…") { model.askNewCrate(withRekordbox: true) }
+                Menu("Add Music from a CD or Drive") {
+                    ForEach(model.mountedSources, id: \.url) { m in Button(m.name) { model.addSource(m.url, name: m.name) } }
+                    Divider()
+                    Button("Choose a Folder…") { model.askSourceFolder() }
+                }.disabled(model.building)
                 Button("Open Crate…") { model.askOpenCrate() }.keyboardShortcut("o")
                 Button("Save") { model.save() }.keyboardShortcut("s").disabled(model.crate == nil)
             }
             CommandGroup(after: .sidebar) {
-                Button(model.showDiscs ? "Hide Discs" : "Show Discs") { model.showDiscs.toggle() }
+                Button(model.showSources ? "Hide Sources" : "Show Sources") { model.showSources.toggle() }
                     .keyboardShortcut("d", modifiers: [.command, .shift]).disabled(model.crate == nil)
             }
         }
@@ -60,6 +65,7 @@ enum Bundled {
 /// A way to drive the app without its window, for checks and for long builds from a terminal:
 ///   "Deckie Desk" --check-engine                      says where the runtime and the models were found, and exits
 ///   "Deckie Desk" --build <folder> <out.deckiecrate> [jobs]   builds a crate with the bundled engine, printing progress
+///   "Deckie Desk" --add-source <crate> <CD, drive or folder> [jobs]   reads it as a source into that crate file (Add music)
 ///   "Deckie Desk" --find-copies <crate> <folder>      prints every track's audio and sets cut_key on copies of one recording
 ///   "Deckie Desk" --open <crate>                      opens that crate in the window
 ///   "Deckie Desk" --snapshot <crate> <folder>         opens it, steps through it and writes PNGs of the window (Snapshot.swift)
@@ -103,6 +109,31 @@ enum Headless {
                 Remembered.setSourceFolder(folder, for: result.crate.manifest.crateId)
                 exit(0)
             } catch { print("build failed:", error); exit(1) }
+        }
+        if a[1] == "--add-source", a.count >= 4 {
+            // "Deckie Desk" --add-source <crate.deckiecrate> <CD, drive or folder> [jobs]: the window's Add music, read as
+            // it is into that crate file (made if missing), the source named after its volume or folder.
+            let out = URL(fileURLWithPath: a[2]); let root = URL(fileURLWithPath: a[3])
+            let name = MountedSource.name(of: root)
+            let jobs = a.count >= 5 ? Int(a[4]) ?? 2 : 2
+            let options = BuildOptions(folder: root, output: out, jobs: jobs, fileBPMTags: true, device: Device.modelLabel(),
+                                       source: name)
+            do {
+                print("reading \(name) as a source")
+                let result = try Builder(options: options).run { event in
+                    if case let .file(p) = event { print("[\(p.done)/\(p.total)] \(p.rel)") }
+                }
+                print(result.summary)
+                Remembered.setSourceRoot(root, name: name, for: result.crate.manifest.crateId)
+                for d in result.crate.discPlan {
+                    for f in d.folders {
+                        for id in f.trackIds {
+                            if let t = result.crate.tracks.first(where: { $0.id == id }) { print("  \(Crate.discLine(t) ?? "")  \(t.file.rel ?? "")") }
+                        }
+                    }
+                }
+                exit(0)
+            } catch { print("reading the source failed:", error); exit(1) }
         }
         if a[1] == "--apply", a.count >= 4 {
             // "Deckie Desk" --apply <crate.deckiecrate> <names.tsv>: names and facts from a table, by track id or rel path.

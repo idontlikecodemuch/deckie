@@ -29,11 +29,23 @@ final class DeskModel: ObservableObject {
     @Published var errorText: String?
     @Published var showImportLog = false
 
-    // Discs (DiscsPanel.swift): whether the panel shows, what is selected in it, and discs or folders made but not yet
-    // holding a song (the crate keeps a disc or a folder only through its songs' labels).
-    @Published var showDiscs = false
-    @Published var discSelection: DiscItem?
-    @Published var draftFolders: [DraftFolder] = []
+    // Sources (SourcesPanel.swift): whether the panel shows and what is selected in it; where this crate's sources
+    // were read from on this Mac (by the source's name); the CDs and drives mounted now, for Add music.
+    @Published var showSources = false
+    @Published var sourceSelection: SourceItem?
+    @Published var sourceRoots: [String: URL] = [:]
+    @Published var mountedSources: [MountedSource] = []
+    private var mountWatchers: [NSObjectProtocol] = []
+
+    init() {
+        mountedSources = MountedSource.all()
+        let center = NSWorkspace.shared.notificationCenter
+        for name in [NSWorkspace.didMountNotification, NSWorkspace.didUnmountNotification, NSWorkspace.didRenameVolumeNotification] {
+            mountWatchers.append(center.addObserver(forName: name, object: nil, queue: .main) { [weak self] _ in
+                MainActor.assumeIsolated { self?.mountedSources = MountedSource.all() }
+            })
+        }
+    }
 
     // MARK: open and new
 
@@ -52,8 +64,9 @@ final class DeskModel: ObservableObject {
         do {
             let c = try CrateReader.read(from: url)
             crate = c; crateURL = url; dirty = false; selection = []
-            discSelection = nil; draftFolders = []
+            sourceSelection = nil
             sourceFolder = Remembered.sourceFolder(for: c.manifest.crateId)
+            sourceRoots = Remembered.sourceRoots(for: c.manifest.crateId)
             buildSummary = nil
         } catch { errorText = "Could not open the crate: \(error)" }
     }
@@ -94,11 +107,18 @@ final class DeskModel: ObservableObject {
         }
     }
 
-    func build(folder: URL, output: URL, rekordbox: URL? = nil, fileBPMTags: Bool = true) {
+    /// Builds the crate file at `output` from `folder`: an ordinary folder of music (`source` nil), whose songs have no
+    /// source and keep the sources read into that crate file before; or a source read as it is, added to the crate
+    /// file there (or making one), which keeps everything that is not from that source.
+    func build(folder: URL, output: URL, rekordbox: URL? = nil, fileBPMTags: Bool = true, source: String? = nil) {
+        // The sources an existing crate file at `output` was given before, so a build from a folder keeps them.
+        let existingId = (try? CrateReader.read(from: output))?.manifest.crateId
+        let keep = Set(existingId.map { Remembered.sourceRoots(for: $0).keys.map { $0 } } ?? [])
         building = true; buildLines = []; buildDone = 0; buildTotal = 0; buildRemaining = nil; buildSummary = nil
-        crate = nil; crateURL = nil; selection = []
+        crate = nil; crateURL = nil; selection = []; sourceSelection = nil
         let options = BuildOptions(folder: folder, output: output, rekordbox: rekordbox, jobs: max(1, min(ProcessInfo.processInfo.activeProcessorCount / 2, 4)),
-                                   fileBPMTags: fileBPMTags, fresh: false, name: nil, device: Device.modelLabel())
+                                   fileBPMTags: fileBPMTags, fresh: false, name: nil, device: Device.modelLabel(),
+                                   source: source, keepSources: keep)
         if let note = Builder.vocalTaggerNote { buildLines.append(note) }
         let model = self
         Task.detached(priority: .userInitiated) {
@@ -111,8 +131,15 @@ final class DeskModel: ObservableObject {
                     model.building = false
                     model.buildSummary = result.summary
                     model.crate = result.crate; model.crateURL = result.output; model.dirty = false
-                    model.sourceFolder = folder
-                    Remembered.setSourceFolder(folder, for: result.crate.manifest.crateId)
+                    let id = result.crate.manifest.crateId
+                    if let source {
+                        Remembered.setSourceRoot(folder, name: source, for: id)
+                        model.showSources = true
+                    } else {
+                        Remembered.setSourceFolder(folder, for: id)
+                    }
+                    model.sourceFolder = Remembered.sourceFolder(for: id)
+                    model.sourceRoots = Remembered.sourceRoots(for: id)
                 }
             } catch {
                 await MainActor.run {
@@ -158,7 +185,7 @@ final class DeskModel: ObservableObject {
         change(&c.tracks[i]); crate = c; dirty = true
     }
 
-    /// A change to the whole crate (the disc and folder operations in DeckieCrate), marked as unsaved.
+    /// A change to the whole crate (the source and folder corrections in DeckieCrate), marked as unsaved.
     func updateCrate(_ change: (inout Crate) -> Void) {
         guard var c = crate else { return }
         let before = c
@@ -177,6 +204,48 @@ final class DeskModel: ObservableObject {
         NSWorkspace.shared.activateFileViewerSelecting([url])
     }
 
+    // MARK: add music from a source
+
+    /// Reads a CD or a drive (or a folder the DJ says is one) as it is, into the open crate file, or into a new crate
+    /// file named after it when none is open. Unsaved changes are saved first, since the build reads the crate file.
+    func addSource(_ url: URL, name: String) {
+        guard !building else { return }
+        if let out = crateURL {
+            if dirty { save() }
+            build(folder: url, output: out, source: name)
+        } else {
+            let s = NSSavePanel()
+            s.nameFieldStringValue = name + ".deckiecrate"
+            s.directoryURL = Remembered.cratesFolder()
+            s.message = "Where the crate file goes. Deckie reads \(name) where it is and copies nothing."
+            s.begin { [weak self] r in
+                guard r == .OK, let out = s.url, let self else { return }
+                Remembered.setCratesFolder(out.deletingLastPathComponent())
+                self.build(folder: url, output: out, source: name)
+            }
+        }
+    }
+
+    /// The fallback: any folder, read as a source named after its volume (when it is the top of one) or itself.
+    func askSourceFolder() {
+        let p = NSOpenPanel()
+        p.canChooseDirectories = true; p.canChooseFiles = false; p.allowsMultipleSelection = false
+        p.prompt = "Add"
+        p.message = "Choose a CD, a drive or a folder. Deckie reads its name, its folders and the order of its songs as they are."
+        p.begin { [weak self] r in
+            guard r == .OK, let url = p.url, let self else { return }
+            self.addSource(url, name: MountedSource.name(of: url))
+        }
+    }
+
+    /// Where a song's file is on this Mac: below the place its source was read from, or below the crate's music folder
+    /// for a song with no source. Nil when Desk does not know.
+    func audioURL(for t: CrateTrack) -> URL? {
+        guard let rel = t.file.rel else { return nil }
+        if let s = t.ident.disc, let root = sourceRoots[s] { return root.appendingPathComponent(rel) }
+        return sourceFolder?.appendingPathComponent(rel)
+    }
+
     func chooseSourceFolder() {
         let p = NSOpenPanel()
         p.canChooseDirectories = true; p.canChooseFiles = false
@@ -193,9 +262,9 @@ final class DeskModel: ObservableObject {
     /// kept inside the crate. The iPad builds its catalogue from these. Pitch variants come later.
     func makeSignatures() {
         guard let c = crate, let url = crateURL else { return }
-        guard let folder = sourceFolder else { chooseSourceFolder(); return }
+        guard sourceFolder != nil || !sourceRoots.isEmpty else { chooseSourceFolder(); return }
         signing = true; signProgress = "Starting…"
-        let todo = c.tracks.filter { $0.signatures["o"] == nil && $0.file.rel != nil }
+        let todo = c.tracks.filter { $0.signatures["o"] == nil }.compactMap { t in audioURL(for: t).map { (t, $0) } }
         let madeBy = Device.modelLabel()
         let model = self
         Task.detached(priority: .userInitiated) {
@@ -203,8 +272,7 @@ final class DeskModel: ObservableObject {
             var failed: [String] = []
             let sigFolder = url.appendingPathComponent("signatures")
             try? FileManager.default.createDirectory(at: sigFolder, withIntermediateDirectories: true)
-            for (n, t) in todo.enumerated() {
-                let audio = folder.appendingPathComponent(t.file.rel!)
+            for (n, (t, audio)) in todo.enumerated() {
                 await MainActor.run { model.signProgress = "\(n + 1) of \(todo.count): \(t.ident.title)" }
                 do {
                     let data = try Signatures.signature(of: audio)
@@ -229,16 +297,16 @@ extension DeskModel {
     /// cannot be read keep the key they had. The crate is saved afterwards, as with signatures.
     func findCopies() {
         guard let c = crate, crateURL != nil else { return }
-        guard let folder = sourceFolder else { chooseSourceFolder(); return }
+        guard sourceFolder != nil || !sourceRoots.isEmpty else { chooseSourceFolder(); return }
         findingCopies = true; signProgress = "Reading the music…"
-        let todo = c.tracks.filter { $0.file.rel != nil }
+        let todo = c.tracks.compactMap { t in audioURL(for: t).map { (t, $0) } }
         let model = self
         Task.detached(priority: .userInitiated) {
             var prints: [String: RecordingPrint] = [:]
             var failed = 0
-            for (n, t) in todo.enumerated() {
+            for (n, (t, audio)) in todo.enumerated() {
                 await MainActor.run { model.signProgress = "Finding copies: \(n + 1) of \(todo.count)" }
-                do { prints[t.id] = try Signatures.recordingPrint(of: folder.appendingPathComponent(t.file.rel!)) }
+                do { prints[t.id] = try Signatures.recordingPrint(of: audio) }
                 catch { failed += 1 }
             }
             await MainActor.run {
@@ -270,6 +338,51 @@ enum Remembered {
         UserDefaults.standard.string(forKey: "source." + crateId).map { URL(fileURLWithPath: $0) }
     }
     static func setSourceFolder(_ u: URL, for crateId: String) { UserDefaults.standard.set(u.path, forKey: "source." + crateId) }
+
+    /// Where each source of a crate was last read from on this Mac, by the source's name (a mounted volume's path, or
+    /// the folder chosen). The crate file holds only the name and the paths below it.
+    static func sourceRoots(for crateId: String) -> [String: URL] {
+        let d = UserDefaults.standard.dictionary(forKey: "sources." + crateId) as? [String: String] ?? [:]
+        return d.mapValues { URL(fileURLWithPath: $0) }
+    }
+    static func setSourceRoot(_ u: URL, name: String, for crateId: String) {
+        var d = UserDefaults.standard.dictionary(forKey: "sources." + crateId) as? [String: String] ?? [:]
+        d[name] = u.path
+        UserDefaults.standard.set(d, forKey: "sources." + crateId)
+    }
+    static func renameSourceRoot(_ name: String, to new: String, for crateId: String) {
+        var d = UserDefaults.standard.dictionary(forKey: "sources." + crateId) as? [String: String] ?? [:]
+        guard let p = d.removeValue(forKey: name) else { return }
+        d[new] = p
+        UserDefaults.standard.set(d, forKey: "sources." + crateId)
+    }
+}
+
+/// A CD or a drive mounted on this Mac that Add music offers: removable, ejectable or external, never the Mac's own
+/// disk; shown by its own name.
+struct MountedSource: Hashable {
+    let name: String
+    let url: URL
+
+    static func all() -> [MountedSource] {
+        let keys: [URLResourceKey] = [.volumeNameKey, .volumeIsRemovableKey, .volumeIsEjectableKey, .volumeIsInternalKey,
+                                      .volumeIsRootFileSystemKey, .volumeIsBrowsableKey]
+        let urls = FileManager.default.mountedVolumeURLs(includingResourceValuesForKeys: keys, options: [.skipHiddenVolumes]) ?? []
+        return urls.compactMap { u in
+            guard let v = try? u.resourceValues(forKeys: Set(keys)), v.volumeIsRootFileSystem != true,
+                  v.volumeIsBrowsable != false,
+                  v.volumeIsRemovable == true || v.volumeIsEjectable == true || v.volumeIsInternal == false else { return nil }
+            return MountedSource(name: SourceReading.name(volumeName: v.volumeName, folderName: u.lastPathComponent), url: u)
+        }
+        .sorted { $0.name.localizedStandardCompare($1.name) == .orderedAscending }
+    }
+
+    /// A chosen folder's source name: its volume's name when it is the top of a volume, else its own name.
+    static func name(of url: URL) -> String {
+        let v = try? url.resourceValues(forKeys: [.volumeNameKey, .volumeURLKey])
+        let isTop = v?.volume?.standardizedFileURL.path == url.standardizedFileURL.path
+        return SourceReading.name(volumeName: isTop ? v?.volumeName : nil, folderName: url.lastPathComponent)
+    }
 }
 
 enum Device {

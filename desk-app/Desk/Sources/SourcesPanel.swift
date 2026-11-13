@@ -1,201 +1,125 @@
 import SwiftUI
 import DeckieCrate
 
-/// One row of the Discs panel: a disc, a folder of a disc, or a track in its folder.
-enum DiscItem: Hashable {
-    case disc(String)
-    case folder(disc: String, folder: String)
+// The Sources panel (D25, D26). A source is the thing a DJ holds that the songs were read from: a burned CD, a USB
+// stick, an SD card. Desk reads one as it is (Add music, DeskModel.addSource), so the panel shows what was read and is
+// for corrections only: a name, or an order Desk read wrongly. On screen a source is shown by its own name; the word
+// "source" is ours, in documents and code. The operations are the shared core's (DeckieCrate's Discs.swift, where the
+// field is still called disc); building a source by hand is not offered in the window.
+
+/// One row of the Sources panel: a source, a folder of a source, or a song in its folder.
+enum SourceItem: Hashable {
+    case source(String)
+    case folder(source: String, folder: String)
     case track(String)
 }
 
-/// A disc (folder nil) or a folder made in the panel that holds no song yet. The crate itself has no place for an
-/// empty disc or folder, so these live in the window until a song goes in, and are not saved.
-struct DraftFolder: Hashable { var disc: String; var folder: String? }
-
-// MARK: - the operations, through the shared core
+// MARK: - the corrections, through the shared core
 
 extension DeskModel {
-    /// The discs as the crate holds them (DeckieCrate's `discPlan`), plus the empty ones made here, in name order.
-    var discOutline: [DiscPlan] {
-        var plan = crate?.discPlan ?? []
-        for d in draftFolders {
-            if let i = plan.firstIndex(where: { $0.name == d.disc }) {
-                if let f = d.folder, !plan[i].folders.contains(where: { $0.name == f }) {
-                    plan[i].folders.append(FolderPlan(name: f, trackIds: []))
-                }
-            } else {
-                plan.append(DiscPlan(name: d.disc, folders: d.folder.map { [FolderPlan(name: $0, trackIds: [])] } ?? []))
-            }
-        }
-        for i in plan.indices { plan[i].folders.sort { $0.name < $1.name } }
-        return plan.sorted { $0.name < $1.name }
-    }
+    /// The sources as the crate holds them (DeckieCrate's `discPlan`): sources by name, folders in the order a player
+    /// walks them, songs by their number.
+    var sourceOutline: [DiscPlan] { crate?.discPlan ?? [] }
 
-    /// The disc of what is selected in the panel.
-    var selectedDisc: String? {
-        switch discSelection {
-        case let .disc(d)?: return d
-        case let .folder(d, _)?: return d
-        case let .track(id)?: return binding(for: id)?.ident.disc
-        case nil: return nil
-        }
-    }
-
-    /// The folder of what is selected in the panel (a folder, or a track's folder).
-    var selectedFolder: (disc: String, folder: String)? {
-        switch discSelection {
-        case let .folder(d, f)?: return (d, f)
+    /// The folder of what is selected in the panel (a folder, or a song's folder).
+    var selectedSourceFolder: (source: String, folder: String)? {
+        switch sourceSelection {
+        case let .folder(s, f)?: return (s, f)
         case let .track(id)?:
-            guard let t = binding(for: id), let d = t.ident.disc else { return nil }
-            return (d, t.ident.folder ?? "")
+            guard let t = binding(for: id), let s = t.ident.disc else { return nil }
+            return (s, t.ident.folder ?? "")
         default: return nil
         }
     }
 
-    /// The table's selected tracks, in crate order.
-    var selectedTrackIds: [String] { (crate?.tracks ?? []).map(\.id).filter { selection.contains($0) } }
-
-    func newDisc(_ name: String) {
-        let n = name.trimmingCharacters(in: .whitespaces)
-        guard !n.isEmpty else { return }
-        if !discOutline.contains(where: { $0.name == n }) { draftFolders.append(DraftFolder(disc: n, folder: nil)) }
-        discSelection = .disc(n)
-    }
-
-    func newFolder(_ name: String, inDisc disc: String) {
-        let n = name.trimmingCharacters(in: .whitespaces)
-        guard !n.isEmpty else { return }
-        let exists = discOutline.first { $0.name == disc }?.folders.contains { $0.name == n } ?? false
-        if !exists { draftFolders.append(DraftFolder(disc: disc, folder: n)) }
-        discSelection = .folder(disc: disc, folder: n)
-    }
-
-    /// Puts tracks into a folder (appending, or at `index`), out of wherever they were.
-    func place(_ ids: [String], disc: String, folder: String, at index: Int? = nil) {
-        updateCrate { $0.place(ids, disc: disc, folder: folder, at: index) }
-        dropFilledDrafts()
-    }
-
-    func removeFromDiscs(_ ids: [String]) {
-        if case let .track(id)? = discSelection, ids.contains(id) { discSelection = nil }
-        updateCrate { $0.remove(ids) }
-    }
-
-    /// Moves a track up (-1) or down (+1) within its folder.
+    /// Moves a song up (-1) or down (+1) within its folder; the folder is numbered again from 1.
     func nudge(_ id: String, by step: Int) {
-        guard let sf = selectedFolder, let i = crate?.trackIds(disc: sf.disc, folder: sf.folder).firstIndex(of: id) else { return }
+        guard let sf = selectedSourceFolder, let i = crate?.trackIds(disc: sf.source, folder: sf.folder).firstIndex(of: id) else { return }
         updateCrate { $0.move(id, to: i + step) }
     }
 
-    /// The panel's drag within a folder: SwiftUI's `onMove` offsets turned into the core's `move`.
-    func moveInFolder(disc: String, folder: String, from: IndexSet, to: Int) {
+    /// The panel's drag within a folder: SwiftUI's `onMove` offsets turned into the core's `place`.
+    func moveInFolder(source: String, folder: String, from: IndexSet, to: Int) {
         guard let c = crate else { return }
-        let ids = c.trackIds(disc: disc, folder: folder)
+        let ids = c.trackIds(disc: source, folder: folder)
         let moving = from.map { ids[$0] }
         let target = to - from.filter { $0 < to }.count
-        updateCrate { $0.place(moving, disc: disc, folder: folder, at: target) }
+        updateCrate { $0.place(moving, disc: source, folder: folder, at: target) }
     }
 
-    func renameDisc(_ name: String, to new: String) {
+    /// Corrects a source's name. Desk remembers where that source was read from under the new name too.
+    func renameSource(_ name: String, to new: String) {
         let n = new.trimmingCharacters(in: .whitespaces)
-        guard !n.isEmpty, n != name else { return }
+        guard !n.isEmpty, n != name, let id = crate?.manifest.crateId else { return }
         updateCrate { $0.renameDisc(name, to: n) }
-        for i in draftFolders.indices where draftFolders[i].disc == name { draftFolders[i].disc = n }
-        discSelection = .disc(n)
+        Remembered.renameSourceRoot(name, to: n, for: id)
+        sourceRoots = Remembered.sourceRoots(for: id)
+        sourceSelection = .source(n)
     }
 
-    func renameFolder(_ folder: String, inDisc disc: String, to new: String) {
+    func renameFolder(_ folder: String, inSource source: String, to new: String) {
         let n = new.trimmingCharacters(in: .whitespaces)
         guard !n.isEmpty, n != folder else { return }
-        updateCrate { $0.renameFolder(folder, inDisc: disc, to: n) }
-        for i in draftFolders.indices where draftFolders[i] == DraftFolder(disc: disc, folder: folder) { draftFolders[i].folder = n }
-        discSelection = .folder(disc: disc, folder: n)
-    }
-
-    /// Deletes a disc; its songs lose their disc and folder labels and stay in the crate.
-    func deleteDisc(_ name: String) {
-        updateCrate { $0.deleteDisc(name) }
-        draftFolders.removeAll { $0.disc == name }
-        discSelection = nil
-    }
-
-    func deleteFolder(_ folder: String, inDisc disc: String) {
-        updateCrate { $0.deleteFolder(folder, inDisc: disc) }
-        draftFolders.removeAll { $0 == DraftFolder(disc: disc, folder: folder) }
-        discSelection = .disc(disc)
-    }
-
-    private func dropFilledDrafts() {
-        let plan = crate?.discPlan ?? []
-        draftFolders.removeAll { d in
-            guard let disc = plan.first(where: { $0.name == d.disc }) else { return false }
-            return d.folder.map { f in disc.folders.contains { $0.name == f } } ?? true
-        }
+        updateCrate { $0.renameFolder(folder, inDisc: source, to: n) }
+        sourceSelection = .folder(source: source, folder: n)
     }
 }
 
 // MARK: - the panel
 
-/// The Discs panel: the crate's discs, their folders in the order the DJ's player shows them, and each folder's songs
-/// numbered in order. Songs come in from the table (the button below, or the table's context menu).
-struct DiscsPanel: View {
+/// The Sources panel: each source read, by its own name, its folders in the order the player shows them, and each
+/// folder's songs by their number there. Rename and reorder correct what was read.
+struct SourcesPanel: View {
     @EnvironmentObject var model: DeskModel
     @State private var prompt: NamePrompt?
     @State private var promptText = ""
 
     enum NamePrompt: Identifiable {
-        case newDisc, newFolder(String), renameDisc(String), renameFolder(String, String)
+        case renameSource(String), renameFolder(String, String)
         var id: String {
             switch self {
-            case .newDisc: return "nd"
-            case let .newFolder(d): return "nf" + d
-            case let .renameDisc(d): return "rd" + d
-            case let .renameFolder(d, f): return "rf" + d + "/" + f
+            case let .renameSource(s): return "rs" + s
+            case let .renameFolder(s, f): return "rf" + s + "/" + f
             }
         }
         var title: String {
             switch self {
-            case .newDisc: return "New disc"
-            case let .newFolder(d): return "New folder in \(d)"
-            case let .renameDisc(d): return "Rename the disc \(d)"
+            case let .renameSource(s): return "Rename \(s)"
             case let .renameFolder(_, f): return "Rename the folder \(f)"
             }
         }
     }
 
     var body: some View {
-        let outline = model.discOutline
+        let outline = model.sourceOutline
         VStack(spacing: 0) {
             HStack {
-                Text("Discs").font(.headline)
+                Text("Sources").font(.headline)
                 Spacer()
-                Button { ask(.newDisc, "") } label: { Label("New disc", systemImage: "opticaldisc") }
-                Button { if let d = model.selectedDisc { ask(.newFolder(d), "") } } label: { Label("New folder", systemImage: "folder.badge.plus") }
-                    .disabled(model.selectedDisc == nil)
             }
-            .labelStyle(.iconOnly).padding(.horizontal, 12).padding(.vertical, 8)
+            .padding(.horizontal, 12).padding(.vertical, 8)
             Divider()
             if outline.isEmpty {
                 VStack(spacing: 8) {
-                    Text("No discs yet.").foregroundStyle(.secondary)
-                    Text("A disc is the set of songs you take to a night; its folders are the groups inside it, in the order your player shows them. Make a disc, a folder in it, then add songs from the table.")
+                    Text("Nothing read from a CD or a drive yet.").foregroundStyle(.secondary)
+                    Text("Add music from a CD, a USB stick or an SD card, and its name, its folders and the order of its songs show here, as your player shows them.")
                         .font(.callout).foregroundStyle(.secondary).multilineTextAlignment(.center)
-                    Button("New disc…") { ask(.newDisc, "") }
+                    AddMusicMenu(label: "Add music…")
                 }
                 .padding(16).frame(maxHeight: .infinity)
             } else {
-                List(selection: $model.discSelection) {
-                    ForEach(outline, id: \.name) { d in
-                        let count = d.folders.reduce(0) { $0 + $1.trackIds.count }
-                        Label("\(d.name)  ·  \(count) song\(count == 1 ? "" : "s")", systemImage: "opticaldisc")
-                            .font(.body.bold()).tag(DiscItem.disc(d.name))
-                        ForEach(d.folders, id: \.name) { f in
-                            Label(f.name.isEmpty ? "(no folder)" : f.name, systemImage: "folder")
-                                .padding(.leading, 14).tag(DiscItem.folder(disc: d.name, folder: f.name))
-                            ForEach(Array(f.trackIds.enumerated()), id: \.element) { n, id in
-                                trackRow(n + 1, id).tag(DiscItem.track(id))
+                List(selection: $model.sourceSelection) {
+                    ForEach(outline, id: \.name) { s in
+                        let count = s.folders.reduce(0) { $0 + $1.trackIds.count }
+                        Label("\(s.name)  ·  \(count) song\(count == 1 ? "" : "s")", systemImage: "externaldrive")
+                            .font(.body.bold()).tag(SourceItem.source(s.name))
+                        ForEach(s.folders, id: \.name) { f in
+                            Label(f.name.isEmpty ? "(top)" : f.name, systemImage: "folder")
+                                .padding(.leading, 14).tag(SourceItem.folder(source: s.name, folder: f.name))
+                            ForEach(f.trackIds, id: \.self) { id in
+                                trackRow(id).tag(SourceItem.track(id))
                             }
-                            .onMove { from, to in model.moveInFolder(disc: d.name, folder: f.name, from: from, to: to) }
+                            .onMove { from, to in model.moveInFolder(source: s.name, folder: f.name, from: from, to: to) }
                         }
                     }
                 }
@@ -211,10 +135,11 @@ struct DiscsPanel: View {
         }
     }
 
-    private func trackRow(_ n: Int, _ id: String) -> some View {
+    /// A song by the number it has in its folder (the player's, as read; numbered again after a move).
+    private func trackRow(_ id: String) -> some View {
         let t = model.binding(for: id)
         return HStack(spacing: 6) {
-            Text(String(format: "%02d", n)).font(.callout.monospacedDigit()).foregroundStyle(.secondary)
+            Text(t?.ident.track.map { String(format: "%02d", $0) } ?? "–").font(.callout.monospacedDigit()).foregroundStyle(.secondary)
             Text(t?.ident.title ?? id).foregroundStyle(.primary).lineLimit(1)
             if let a = t?.ident.artist { Text(a).foregroundStyle(.secondary).lineLimit(1) }
         }
@@ -223,27 +148,16 @@ struct DiscsPanel: View {
 
     @ViewBuilder private var actions: some View {
         VStack(alignment: .leading, spacing: 8) {
-            let picked = model.selectedTrackIds
-            if let sf = model.selectedFolder {
-                Button("Add \(picked.count) selected to \(sf.folder.isEmpty ? sf.disc : sf.folder)") { model.place(picked, disc: sf.disc, folder: sf.folder) }
-                    .buttonStyle(.borderedProminent).disabled(picked.isEmpty)
-            } else {
-                Text("Select a folder to add the table's selected songs to it.").font(.caption).foregroundStyle(.secondary)
-            }
+            Text("Desk shows what it read. Fix a name, or an order it read wrongly.").font(.caption).foregroundStyle(.secondary)
             HStack {
-                switch model.discSelection {
+                switch model.sourceSelection {
                 case let .track(id)?:
                     Button("Move up") { model.nudge(id, by: -1) }
                     Button("Move down") { model.nudge(id, by: 1) }
-                    Button("Remove from folder") { model.removeFromDiscs([id]) }
-                case let .folder(d, f)?:
-                    Button("Rename…") { ask(.renameFolder(d, f), f) }
-                    Button("Delete folder") { model.deleteFolder(f, inDisc: d) }
-                        .help("The folder's songs lose their disc and folder; they stay in the crate.")
-                case let .disc(d)?:
-                    Button("Rename…") { ask(.renameDisc(d), d) }
-                    Button("Delete disc") { model.deleteDisc(d) }
-                        .help("The disc's songs lose their disc and folder; they stay in the crate.")
+                case let .folder(s, f)?:
+                    Button("Rename…") { ask(.renameFolder(s, f), f) }.disabled(f.isEmpty)
+                case let .source(s)?:
+                    Button("Rename…") { ask(.renameSource(s), s) }
                 case nil:
                     EmptyView()
                 }
@@ -259,37 +173,30 @@ struct DiscsPanel: View {
         guard let p = prompt else { return }
         prompt = nil
         switch p {
-        case .newDisc: model.newDisc(promptText)
-        case let .newFolder(d): model.newFolder(promptText, inDisc: d)
-        case let .renameDisc(d): model.renameDisc(d, to: promptText)
-        case let .renameFolder(d, f): model.renameFolder(f, inDisc: d, to: promptText)
+        case let .renameSource(s): model.renameSource(s, to: promptText)
+        case let .renameFolder(s, f): model.renameFolder(f, inSource: s, to: promptText)
         }
     }
 }
 
-/// The table's context menu: Add to disc ▸ folder, and off the discs.
-struct DiscsMenu: View {
+/// Add music: the CDs and drives mounted on this Mac, by their own names, then a folder chooser for anything else.
+/// Each is read as it is (DeskModel.addSource).
+struct AddMusicMenu: View {
     @EnvironmentObject var model: DeskModel
-    let ids: Set<String>
+    var label: String = "Add music"
     var body: some View {
-        let ordered = (model.crate?.tracks ?? []).map(\.id).filter { ids.contains($0) }
-        let outline = model.discOutline
-        Menu("Add to disc") {
-            if outline.isEmpty { Text("No discs yet: make one in the Discs panel") }
-            ForEach(outline, id: \.name) { d in
-                Menu(d.name) {
-                    if d.folders.isEmpty { Text("No folders yet") }
-                    ForEach(d.folders, id: \.name) { f in
-                        Button(f.name.isEmpty ? "(no folder)" : f.name) { model.place(ordered, disc: d.name, folder: f.name) }
-                    }
-                }
+        Menu {
+            let mounted = model.mountedSources
+            if mounted.isEmpty { Text("No CD or drive found. Put one in, or choose a folder.") }
+            ForEach(mounted, id: \.url) { m in
+                Button(m.name) { model.addSource(m.url, name: m.name) }
             }
+            Divider()
+            Button("Choose a folder…") { model.askSourceFolder() }
+        } label: {
+            Label(label, systemImage: "externaldrive.badge.plus")
         }
-        .disabled(ordered.isEmpty)
-        if ordered.contains(where: { model.binding(for: $0)?.ident.disc != nil }) {
-            Button("Remove from disc") { model.removeFromDiscs(ordered) }
-        }
-        Divider()
-        Button(model.showDiscs ? "Hide Discs" : "Show Discs") { model.showDiscs.toggle() }
+        .help("Read a CD, a USB stick or an SD card as it is: its name, its folders and the order of its songs")
+        .disabled(model.building)
     }
 }
