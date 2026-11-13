@@ -77,27 +77,4 @@ import Testing
         #expect(files.map(\.rel) == expected)
         #expect(skipped == [.init(rel: "A/_old", audioFiles: 1)])
     }
-
-    /// TEMPORARY probe for CI: what `FileManager.enumerator(atPath:)` gives on this platform (removed once read).
-    @Test func enumeratorProbe() throws {
-        let root = try temporaryFolder("audio-files-probe")
-        let fm = FileManager.default
-        for rel in [".git/objects/x.mp3", "Album/.Trash/c.mp3", "Album/.DS_Store", "Album/01.mp3", "Album/Disc 2/01.mp3",
-                    "Singles/01.mp3", "Out.deckiecrate/signatures/a.mp3", "Out.deckiebuild/records/b.mp3"] {
-            let url = root.appendingPathComponent(rel)
-            try fm.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
-            try Data([0x49]).write(to: url)
-        }
-        guard let w = fm.enumerator(atPath: root.path) else { print("PROBE no enumerator"); return }
-        while let rel = w.nextObject() as? String {
-            let type = (w.fileAttributes?[.type] as? FileAttributeType).map { "\($0.rawValue)" } ?? "nil"
-            let name = (rel as NSString).lastPathComponent
-            print("PROBE rel=\(rel) name=\(name) ext=\((name as NSString).pathExtension) type=\(type)")
-            if name.hasPrefix(".") || name.hasSuffix(".deckiecrate") || name.hasSuffix(".deckiebuild"),
-               type == FileAttributeType.typeDirectory.rawValue {
-                w.skipDescendants()
-                print("PROBE skipDescendants")
-            }
-        }
-    }
 }
