@@ -34,10 +34,7 @@ public enum SourceReading {
 
     /// The group of a file: its folder's path below the source's top, "" at the top. `path` is the file's path below
     /// the top with "/" between names (as the builder's `rel` has it).
-    public static func group(of path: String) -> String {
-        let parts = path.split(separator: "/", omittingEmptySubsequences: true)
-        return parts.dropLast().joined(separator: "/")
-    }
+    public static func group(of path: String) -> String { CratePath.folder(of: path) }
 
     /// The places of a source's audio files, keyed by `paths` (each below the source's top, "/" between names). Each
     /// group's files are numbered 1..n in the order a player shows them (`comesBefore`). Number every audio file the
@@ -56,7 +53,7 @@ public enum SourceReading {
     /// Groups (folder paths below a source's top) in the order a player's browser walks them: the top first, then
     /// each folder before what is inside it, folders of one level in `comesBefore` order.
     public static func groupComesBefore(_ a: String, _ b: String) -> Bool {
-        let x = a.split(separator: "/").map(String.init), y = b.split(separator: "/").map(String.init)
+        let x = CratePath.names(a), y = CratePath.names(b)
         for (p, q) in zip(x, y) where p != q { return comesBefore(p, q, isFile: false) }
         return x.count < y.count
     }
@@ -86,9 +83,7 @@ public enum SourceReading {
 
     // MARK: helpers
 
-    static func fileName(_ path: String) -> String {
-        path.split(separator: "/", omittingEmptySubsequences: true).last.map(String.init) ?? path
-    }
+    static func fileName(_ path: String) -> String { CratePath.lastName(path) }
 
     /// Name and extension, split at the last dot (a name with no dot, or only a leading one, has no extension).
     static func split(_ name: String) -> (String, String) {

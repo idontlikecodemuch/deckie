@@ -48,4 +48,33 @@ import Testing
         #expect(files.map(\.rel) == ["Music/c.mp3", "Music/d.mp3"])
         #expect(skipped == [.init(rel: "_pool build", audioFiles: 2)])
     }
+
+    /// Every path the scan gives is a crate path: the names below the folder joined by "/" on every platform (a crate
+    /// made on a PC must read on an iPad), and it leads back to the file. The paths are made by the scan itself, so on
+    /// Windows this checks that no backslash gets in; nested folders and dots in folder names are in the same folder.
+    @Test func pathsHaveSlashesOnEveryPlatform() throws {
+        let root = try temporaryFolder("audio-files-paths")
+        let fm = FileManager.default
+        let made = [["top.wav"], ["A", "one.flac"], ["A", "B.v2", "two.mp3"], ["A", "B.v2", "C", "three.m4a"],
+                    ["Vol. 2", "01. Four.aiff"], ["Vol. 2", "Disc 1", "05 Five.MP3"]]
+        for names in made {
+            let url = names.reduce(root) { $0.appendingPathComponent($1) }
+            try fm.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
+            try Data([0x49]).write(to: url)
+        }
+        let found = try AudioFiles.find(in: root)
+        let expected = made.map { $0.joined(separator: "/") }.sorted { $0.utf8.lexicographicallyPrecedes($1.utf8) }
+        #expect(found.map(\.rel) == expected)
+        for f in found {
+            #expect(!f.rel.contains("\\"), "\(f.rel) holds a backslash")
+            #expect(fm.fileExists(atPath: f.url.path), "\(f.rel) does not lead to its file")
+        }
+        #expect(found.first { $0.rel == "Vol. 2/Disc 1/05 Five.MP3" }?.ext == "mp3")
+        // a left-out folder deep down is named by its crate path too
+        try fm.createDirectory(at: root.appendingPathComponent("A/_old"), withIntermediateDirectories: true)
+        try Data([0x49]).write(to: root.appendingPathComponent("A/_old/x.mp3"))
+        let (files, skipped) = try AudioFiles.find(in: root, skippingFolderPrefixes: ["_"])
+        #expect(files.map(\.rel) == expected)
+        #expect(skipped == [.init(rel: "A/_old", audioFiles: 1)])
+    }
 }

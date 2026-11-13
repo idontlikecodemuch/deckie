@@ -595,9 +595,9 @@ public final class Builder: Sendable {
     func dressed(_ record: WorkStore.Record, file f: SourceFile, tags: FileTags?, rekordbox rb: RekordboxCollection.Track?,
                  collection: RekordboxCollection?, importedAt: String) -> CrateTrack {
         var t = record.crateTrack
-        t.file.name = (f.rel as NSString).lastPathComponent
+        t.file.name = CratePath.lastName(f.rel)  // split on "/" only, on every platform (CratePath)
         t.file.rel = String(f.rel.dropFirst(options.logPrefix.count))
-        let fileName = ((f.rel as NSString).lastPathComponent as NSString).deletingPathExtension
+        let fileName = (t.file.name as NSString).deletingPathExtension
         if let name = rb?.name {
             t.ident.title = name
             t.ident.artist = rb?.artist
