@@ -83,29 +83,25 @@ struct Track: Codable, Identifiable, Hashable {
 
     var bpmShown: Double { bpm ?? bpmTag ?? 0 }
     var duration: Double { dur ?? secs ?? 240 }
-    /// "CD2 · 6-04": folder number and track number as the CDJ shows them
-    var discLabel: String? {
-        guard let cd, let num else { return nil }
-        let f = folder.split(separator: " ").first.map(String.init) ?? "?"
-        return "CD\(cd) · \(f)-\(String(format: "%02d", num))"
+    // Places (D26): a source (the CD, stick or card the song was read from) is shown by its own name, never by a
+    // word of ours; a song with no source is shown by its folder.
+    /// The name of the source this song is on (its own name: "Stick 3", or the bundled data's "CD1 Singalongs").
+    var sourceName: String? { disc.map { Library.shared.sourceName($0) } }
+    /// "Stick 3 / House /": the source's name and the folder on it ("Stick 3 /" at its top). With no source: the
+    /// file's own folder, which is how the DJ's software shows it.
+    var folderPath: String {
+        guard let s = sourceName else { return folder }
+        return folder.isEmpty ? "\(s) /" : "\(s) / \(folder) /"
     }
-    /// "CD1 · 8 - 135 plus · 02": disc, folder as named on the disc, track number (the CDJ browser's view)
-    var discLocation: String {
-        guard let cd, let num else { return folder }
-        return "CD\(cd) · \(folder) · \(String(format: "%02d", num))"
-    }
-    /// "CD1 / 6 - 125-129 /": the folder path on the disc
-    /// Off the discs (or in a crate without discs): the file's own folder, which is how the DJ's software shows it.
-    var folderPath: String { cd.map { "CD\($0) / \(folder) /" } ?? folder }
-    /// "CD2 / Peak / 04": where this copy is, as an "also on" line says it; off the discs, the file's own folder.
+    /// "Stick 3 / House / 04": where this copy is, as an "also on" line says it; with no source, the file's own folder.
     var placeText: String {
-        guard let cd else { return folder }
-        return "CD\(cd) / \(folder)" + (num.map { String(format: " / %02d", $0) } ?? "")
+        guard let s = sourceName else { return folder }
+        return s + (folder.isEmpty ? "" : " / \(folder)") + (num.map { String(format: " / %02d", $0) } ?? "")
     }
     /// "06 Lady (Hear Me Tonight)": track number as in the file name on the deck
     var numberedSong: String { num.map { String(format: "%02d · ", $0) + song } ?? song }
-    /// the disc's colour, the two disc colours alternating by disc number (CD1 lavender, CD2 blue, CD3 lavender, ...;
-    /// off the discs: the accent)
+    /// the source's colour, the two colours alternating by the source's position (first lavender, second blue, third
+    /// lavender, ...; no source: the accent)
     var discColor: Color { cd.map(Theme.disc) ?? Theme.acc }
     var functionColor: Color { hal ? Theme.hal : (cd.map(Theme.disc) ?? Theme.mut) }
 }
@@ -214,7 +210,7 @@ final class Library {
     func leadingCopy(of id: String, playingDisc: String?) -> String {
         copies(of: id, playingDisc: playingDisc).first?.id ?? id
     }
-    /// "also on CD2 / Peak / 04 · also in Album": the places of `t`'s other copies, in order; nil when it has none.
+    /// "also on Stick 3 / Peak / 04 · also in Album": the places of `t`'s other copies, in order; nil when it has none.
     func alsoOn(_ t: Track, playingDisc: String?) -> String? {
         let others = copies(of: t.id, playingDisc: playingDisc).filter { $0.id != t.id }
         guard !others.isEmpty else { return nil }
@@ -236,6 +232,19 @@ final class Library {
     }
 
     func track(_ id: String?) -> Track? { id.flatMap { byId[$0] } }
+
+    /// A source's own name, from its label (the crate file's `disc`; the bundled data's labels are "S" and "M").
+    func sourceName(_ disc: String) -> String { data.discs.first { $0.disc == disc }?.name ?? disc }
+
+    /// The songs with no source, by folder: the folders in the order a player walks them, each folder's songs by file
+    /// name in the same order (`SourceReading`). The Crate tab shows them after the sources.
+    var folders: [DiscFolder] {
+        var by: [String: [Track]] = [:]
+        for t in data.tracks where t.disc == nil { by[t.folder, default: []].append(t) }
+        return by.keys.sorted(by: SourceReading.groupComesBefore).map { f in
+            DiscFolder(name: f, ids: by[f]!.sorted { SourceReading.comesBefore($0.deck, $1.deck, isFile: false) }.map(\.id))
+        }
+    }
 
     /// The picks for a song, the one place the views get them: the bundled data's list (its 80 best, made by
     /// tools/prep_data.py), or for a crate every scored song, scored when the song is first asked for. The last few songs' lists are kept so going back and forth
