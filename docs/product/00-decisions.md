@@ -313,6 +313,27 @@ published is `site/README.md`; the reasons are letter V.
 - **What the site never shows**: a real song, artist or playlist, any DJ's music, or anyone but the credit. Screens
   show a demo crate file with invented names.
 
+### D24. The same song is the same recording; every copy keeps its place (Nov 13)
+This settles the open step in the note on D19 below. The decision, in the owner's words, on the three ways letter U
+laid out: "I think 2 is the best option but what if a song is on multiple disks or albums. Even in multiple file
+folders. The idea is that deckie will tell you where the song is too." And on the answer that follows: "Great I
+agree with this".
+
+- **Two entries are the same song only when they are the same recording.** Nothing is folded by title. A remix, an
+  edit or a live version is its own song, with its own row and its own score.
+- **Desk finds the copies.** It already makes a fingerprint for every song; entries whose audio is the same
+  recording get the same key in the crate file's existing field (`cut_key`). Crate v1 stays frozen; no field is
+  added.
+- **Folding changes what is shown, never what is kept.** Every copy stays its own entry in the crate file with its
+  own disc, folder and track. The booth shows one row for the song and reads the places from every copy behind it.
+- **The booth says every place the song lives.** One place leads and the others follow as "also on". The place
+  that leads is on the disc the playing song is on; failing that, the first disc in the DJ's order.
+- **Recognition names the song once**, whichever copy it hears, and never treats a move between two copies as a
+  song change.
+- **One file can go on several discs.** D20 said a song sits in at most one folder of one disc. That now holds for
+  an entry, not for a file: Desk can place one file on more than one disc, and writes one entry for each place, all
+  with the same key. The booth treats them exactly like copies.
+
 ### Note on D19 (Nov 1): versions of a song stay separate rows
 Christopher, on two remixes of one song both showing in the picks: "we shouldn't merge them unless they are the same
 songs. DJs often have a bunch of versions of the same song". So the booth folds together only copies of the same
