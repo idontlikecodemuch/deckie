@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Makes the benchmark's queries from the fetched songs. Nothing it writes belongs in the repository.
 
-  make_queries.py prepare DATA WORK        decode every song to WORK/pcm (mono, 22.05 kHz), write WORK/songs.tsv
+  make_queries.py prepare DATA WORK        decode every song to WORK/pcm (mono, 16 kHz), write WORK/songs.tsv
   make_queries.py queries DATA WORK [--n 100] [--dev-n 40] [--jobs 4] [--only grid|booth|absent]
 
 Each query is a 12 s clip, and the manifest asks for its first 3, 5, 8 and 12 seconds separately, so "how long until
@@ -25,7 +25,7 @@ import numpy as np
 from scipy import signal
 import soundfile as sf
 
-SR = 22050       # working rate
+SR = 16000       # working rate (the fingerprint uses nothing above 4 kHz)
 OUT_SR = 16000   # rate of the query files
 CLIP = 12.0
 LENGTHS = [3, 5, 8, 12]
