@@ -99,7 +99,8 @@ public struct BuildResult: Sendable {
     /// Files analysed in this run, and the seconds each took.
     public var analysed: Int
     public var analysisSeconds: [Double]
-    /// Files taken from the work folder: unchanged since the last run, or the same bytes found by their hash.
+    /// Files' contents taken from the work folder (unchanged since the last run, or the same bytes found by their
+    /// hash): the entries read now that were not analysed in this run.
     public var reused: Int
     /// The import log's entries: the files without a record of their own, and the files whose record is in the crate
     /// but whose decoder silenced damaged frames (reason `damaged_frames`).
@@ -415,7 +416,6 @@ public final class Builder: Sendable {
             return SameSong.ordered(items, playingDisc: nil, discOrder: []).map { unique[Int($0.id)!] }
         }
         var tracks: [CrateTrack] = []
-        var fresh: [CrateTrack] = []
         for id in readOrder {
             let here = read[id]!
             let before = kept.removeValue(forKey: id)
@@ -447,7 +447,6 @@ public final class Builder: Sendable {
                 }
             }
             tracks.append(t)
-            fresh.append(t)
             // Analysed and in the crate, but faulty: the DJ is told where.
             if let frames = t.file.damagedFrames, !frames.isEmpty {
                 entries.append(.init(rel: f.rel, ext: f.ext, reason: Reason.damagedFrames,
@@ -485,7 +484,7 @@ public final class Builder: Sendable {
         try CrateWriter.write(crate, to: options.output)
         return BuildResult(crate: crate, output: options.output, filesSeen: files.count,
                            analysed: results.analysedSeconds.count, analysisSeconds: results.analysedSeconds,
-                           reused: fresh.filter { !results.analysedIDs.contains($0.id) }.count,
+                           reused: readOrder.filter { !results.analysedIDs.contains($0) }.count,
                            entries: entries, rekordbox: rbSummary, seconds: Date().timeIntervalSince(t0))
     }
 
