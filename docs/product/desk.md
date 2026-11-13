@@ -53,18 +53,32 @@ After step 2 a finished screen says: how many songs went in, how many did not an
 
 Adding more music later is the same step 1. Songs already done are not done again.
 
+### Settled Nov 13 (D28)
+
+- **Desk keeps its crates itself.** They live in the app's own storage, not among the DJ's music, where a crate
+  file could be mistaken for a music file and moved or deleted. Desk never asks where to save.
+- **A crate file appears only when the DJ sends or exports one.** "Send to iPad" and "Export crate file…" make it.
+  A crate file made elsewhere comes in with "Import crate file…", as a copy.
+- **A DJ can have several crates.** Desk opens on the most recent one. The window always says which crate is
+  showing, with a menu to switch and "New crate" at the end of it.
+- **Add music adds to the crate that is showing**, and says so: "Add music to Friday night". There is no separate
+  question about which crate.
+- **Desk saves as it goes, and every change can be undone.** A name fix, a rename or a reorder undoes with
+  Command-Z. Music that was added is undone by removing that source or folder from the crate, after a confirmation.
+- **A song read for one crate is not read again for another.** Desk keeps what it worked out for each file, so
+  adding the same stick to a second crate is quick.
+
 **Open**
 
-- Where the crate file is kept. Proposal: Desk keeps it in one place of its own (`~/Music/Deckie/`) and never asks.
-  The DJ only meets the file when sending it.
-- One crate file or several. Today a DJ can make many. Proposal for this version: one, called after the DJ's choice,
-  with "New crate file" kept in the File menu for those who want a second.
-- Whether "With a rekordbox collection…" stays on the first screen. It is useful to some DJs and a puzzle to the
-  rest. Proposal: move it to the File menu.
+- Whether "With a rekordbox collection…" stays on the first screen. Proposal: move it to the File menu.
 
 ---
 
 ## 3. Every word on screen
+
+**These words are placeholders (D28).** A separate audit will set every word across the site, the film, Desk and
+the booth together, in one copy and design reference. Until then the tables below are proposals, and the apps keep
+every word in one list each, by name, so the audit changes one file.
 
 The rule (voice.md): the DJ's own words, plain, sentence case. A crate is the songs; a crate file is the file. No
 word of ours where a plain one exists.

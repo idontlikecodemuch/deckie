@@ -395,6 +395,26 @@ several discs.
   "also on", and a song is allowed by the filter when any of its places is.
 - **Organising in Desk is still not in this version** (D25). This is reading only.
 
+### D28. Desk keeps its crates; a crate file is made on the way out (Nov 13)
+The decisions, in the owner's words, on the open questions of `docs/product/desk.md`:
+
+- Where the crate file lives: "shouldn't it live in the application or library and be exportable? Not everyon's
+  music set up is going to be the same... what if someone messes with it thinking its a music file?" So Desk keeps
+  its crates in the app's own storage and never asks where to save. A crate file appears when the DJ sends or
+  exports one, and one made elsewhere is imported as a copy.
+- One crate or several: "it should default to the most recent one but that should be like a "add new crate" and or
+  drop down when adding sources? We will need to resolve which crate you are adding to at some point. Why not now."
+  So a DJ can have several crates, Desk opens on the most recent, the window says which crate is showing with a menu
+  to switch and "New crate", and Add music adds to the crate that is showing.
+- Saving: "Save as it goes with the ability to undo". No Save button and no "Unsaved changes".
+- The words: "Words we need to do a whole audit of separately and they will need to match all touchpoints so lets
+  have those be placeholders. We can build out a copy and design reference file with each variable later." So the
+  words on screen are placeholders until that audit, and each app keeps its words in one list, by name, so the audit
+  changes one file.
+
+This fits D21: the DJ works with crates, and the crate file is what Desk writes from one. It also fits D25: several
+crates are groups of songs that were read, not a library being managed.
+
 ### Note on D19 (Nov 1): versions of a song stay separate rows
 Christopher, on two remixes of one song both showing in the picks: "we shouldn't merge them unless they are the same
 songs. DJs often have a bunch of versions of the same song". So the booth folds together only copies of the same
