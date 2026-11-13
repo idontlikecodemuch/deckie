@@ -1,0 +1,184 @@
+# The Windows zip a DJ downloads: "Deckie for PC (first test)". Built on a Windows runner from the release build of
+# the PC program, with Swift's runtime libraries, Deckie's own ONNX Runtime, the two models, the licences and the
+# READ ME (core/Tools/windows/package.sh), then tried as a DJ would use it: unzipped into a fresh folder, started
+# through "Make Crate File.exe" with a music folder, with nothing on the path but Windows itself. The zip is kept
+# as a run artifact only: no release, no tag, nothing public beyond the artifact.
+name: pc-package
+
+on:
+  push:
+    branches: [pc/windows-builder]
+    paths: [core/**, .github/workflows/pc-package.yml]
+  workflow_dispatch:
+
+jobs:
+  # The MP3 of the synthesised test track, as in core-windows.yml: encoded on Linux, since no audio is committed
+  # and the Windows runner has no MP3 encoder.
+  test-mp3:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    container:
+      image: swift@sha256:6304481cf2717966b7ba175162e397ea2f2cc3161909f2b2a5cf40036079a0f7 # swift:6.4.1-noble
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install ffmpeg
+        run: |
+          apt-get update
+          apt-get install -y --no-install-recommends ffmpeg
+      - name: Encode the test track
+        working-directory: core
+        run: swift run deckie-e2e mp3 /tmp/test_track.mp3
+      - uses: actions/upload-artifact@v4
+        with:
+          name: package-test-mp3
+          path: /tmp/test_track.mp3
+          retention-days: 7
+          compression-level: 0
+          if-no-files-found: error
+
+  package:
+    needs: test-mp3
+    runs-on: windows-latest
+    timeout-minutes: 60
+    env:
+      ORT_DISABLE_TELEMETRY: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: compnerd/gha-setup-swift@main
+        with:
+          swift-version: swift-6.4.1-release
+          swift-build: 6.4.1-RELEASE
+      - name: Cache ONNX Runtime
+        id: onnxruntime
+        uses: actions/cache@v4
+        with:
+          path: core/.deps/onnxruntime
+          key: onnxruntime-win-x64-deckie-${{ hashFiles('core/Tools/fetch-onnxruntime.sh') }}
+      - name: Cache the models
+        uses: actions/cache@v4
+        with:
+          path: core/.models
+          key: models-win-models-1-${{ hashFiles('core/Tools/fetch-models.sh', 'core/Tools/export_beat_this.py', 'core/Tools/export_yamnet.py') }}
+      - name: Fetch ONNX Runtime (Deckie's own build, checked by hash)
+        if: steps.onnxruntime.outputs.cache-hit != 'true'
+        shell: bash
+        run: bash core/Tools/fetch-onnxruntime.sh --deckie
+      - name: Fetch the models from the release models-1 (checked by hash)
+        shell: bash
+        run: bash core/Tools/fetch-models.sh --no-export
+      - name: Build the program and the test tool (release)
+        working-directory: core
+        run: |
+          swift build -c release --product deckie-make
+          swift build -c release --product deckie-e2e
+      # The shipped library must carry no usage-reporting client: the same scan the ONNX Runtime build's gate uses.
+      - name: Scan the ONNX Runtime library that ships
+        shell: pwsh
+        run: ./core/Tools/scan-onnxruntime.ps1 core\.deps\onnxruntime\lib\onnxruntime.dll
+      - name: Assemble the zip
+        shell: bash
+        run: |
+          bash core/Tools/windows/package.sh "$RUNNER_TEMP/package"
+          {
+            echo "## The zip"
+            cat "$RUNNER_TEMP/package/package-report.md"
+          } >> "$GITHUB_STEP_SUMMARY"
+      - name: Keep the zip
+        uses: actions/upload-artifact@v4
+        with:
+          name: Deckie-for-PC-first-test
+          path: ${{ runner.temp }}\package\Deckie-for-PC-first-test.zip
+          retention-days: 30
+          compression-level: 0
+          if-no-files-found: error
+
+      # From here on: the zip used as a DJ would use it. Unzipped by Windows' own tool into a fresh folder whose
+      # name has a space; PATH cut down to Windows itself, so a library missing from the zip cannot be found in the
+      # Swift toolchain this runner has. (The runner does have Microsoft's Visual C++ runtime in System32, as most
+      # PCs do; a PC without it cannot be tried here.)
+      - name: "Try it: unzip into a fresh folder"
+        shell: pwsh
+        run: |
+          $dest = Join-Path $env:RUNNER_TEMP "A DJ's PC"
+          Expand-Archive -Path (Join-Path $env:RUNNER_TEMP "package\Deckie-for-PC-first-test.zip") -DestinationPath $dest
+          Get-ChildItem -Recurse $dest | Select-Object -First 60 FullName, Length | Format-Table -AutoSize | Out-String -Width 200
+      - name: "Try it: the test MP3 made on Linux in this run"
+        uses: actions/download-artifact@v4
+        with:
+          name: package-test-mp3
+          path: ${{ runner.temp }}\package-mp3
+      - name: "Try it: a folder dropped on Make Crate File (awkward names, three file types, hidden files)"
+        shell: pwsh
+        run: |
+          $tool = "core\.build\release\deckie-e2e.exe"
+          $music = Join-Path $env:RUNNER_TEMP "tester\My Müsic"
+          & $tool make $music --mp3 (Join-Path $env:RUNNER_TEMP "package-mp3\test_track.mp3")
+          if ($LASTEXITCODE -ne 0) { exit 1 }
+          $saved = $env:PATH
+          $env:PATH = "$env:SystemRoot\System32;$env:SystemRoot"
+          $exe = Join-Path $env:RUNNER_TEMP "A DJ's PC\Deckie for PC (first test)\Make Crate File.exe"
+          & $exe $music --no-wait
+          $code = $LASTEXITCODE
+          $env:PATH = $saved
+          if ($code -ne 0) { Write-Error "Make Crate File ended with code $code"; exit 1 }
+          $crate = Join-Path $env:RUNNER_TEMP "tester\My Müsic.deckiecrate"
+          $log = Join-Path $env:RUNNER_TEMP "tester\My Müsic Deckie log.txt"
+          if (-not (Test-Path $crate -PathType Leaf)) { Write-Error "no crate file next to the music folder"; exit 1 }
+          if (-not (Test-Path $log -PathType Leaf)) { Write-Error "no log next to the music folder"; exit 1 }
+          "Next to the music folder:"; Get-ChildItem (Join-Path $env:RUNNER_TEMP "tester") | Format-Table Name, Length
+          Get-Content $log
+          # The PC program reads every folder (it has no "_" rule), so the parked song goes in: 4 songs.
+          & $tool check-pc $crate
+          if ($LASTEXITCODE -ne 0) { exit 1 }
+      - name: "Try it: a second run reads nothing again"
+        shell: pwsh
+        run: |
+          $env:PATH = "$env:SystemRoot\System32;$env:SystemRoot"
+          $exe = Join-Path $env:RUNNER_TEMP "A DJ's PC\Deckie for PC (first test)\Make Crate File.exe"
+          $said = & $exe (Join-Path $env:RUNNER_TEMP "tester\My Müsic") --no-wait | Out-String
+          $said
+          if ($LASTEXITCODE -ne 0) { exit 1 }
+          if ($said -notmatch "Nothing has changed since last time") { Write-Error "the second run read songs again"; exit 1 }
+      - name: "Try it: a double click (no folder given; the path is typed at the prompt)"
+        shell: pwsh
+        run: |
+          $env:PATH = "$env:SystemRoot\System32;$env:SystemRoot"
+          $exe = Join-Path $env:RUNNER_TEMP "A DJ's PC\Deckie for PC (first test)\Make Crate File.exe"
+          $music = Join-Path $env:RUNNER_TEMP "tester\My Müsic"
+          # A wrong path first, then the right one in quotes, as Windows pastes a dropped folder.
+          $said = "C:\no such folder", "`"$music`"" | & $exe --no-wait | Out-String
+          $said
+          if ($LASTEXITCODE -ne 0) { exit 1 }
+          if ($said -notmatch "Which folder is your music in") { Write-Error "it did not ask for the folder"; exit 1 }
+          if ($said -notmatch "There is no folder at") { Write-Error "the wrong path was not said plainly"; exit 1 }
+          if ($said -notmatch "Done\. 4 songs are in the crate file") { Write-Error "it did not finish"; exit 1 }
+      - name: "Try it: started without unzipping the rest (the starter alone)"
+        shell: pwsh
+        run: |
+          $alone = Join-Path $env:RUNNER_TEMP "alone"
+          New-Item -ItemType Directory -Force $alone | Out-Null
+          Copy-Item (Join-Path $env:RUNNER_TEMP "A DJ's PC\Deckie for PC (first test)\Make Crate File.exe") $alone
+          $said = "" | & (Join-Path $alone "Make Crate File.exe") | Out-String
+          $said
+          if ($LASTEXITCODE -ne 3) { Write-Error "expected the starter to end with 3, got $LASTEXITCODE"; exit 1 }
+          if ($said -notmatch "Unzip first") { Write-Error "the starter did not say to unzip"; exit 1 }
+      # Time per song on this runner, on songs of a real length: four synthesised four-minute songs (two WAV, two
+      # FLAC), read with the program's own default for songs at once. The log's numbers go into the summary.
+      - name: "Measure: four four-minute songs"
+        shell: pwsh
+        run: |
+          $tool = "core\.build\release\deckie-e2e.exe"
+          $music = Join-Path $env:RUNNER_TEMP "timing\Four Songs"
+          & $tool songs $music --count 4 --seconds 240
+          $env:PATH = "$env:SystemRoot\System32;$env:SystemRoot"
+          $exe = Join-Path $env:RUNNER_TEMP "A DJ's PC\Deckie for PC (first test)\Make Crate File.exe"
+          & $exe $music --no-wait
+          if ($LASTEXITCODE -ne 0) { exit 1 }
+          $log = Get-Content (Join-Path $env:RUNNER_TEMP "timing\Four Songs Deckie log.txt")
+          $cpu = (Get-CimInstance Win32_Processor | Select-Object -First 1).Name
+          "## Time per song on this runner" >> $env:GITHUB_STEP_SUMMARY
+          "Four synthesised four-minute songs (44.1 kHz stereo; two WAV, two FLAC), release build, from the zip. Processor: $cpu." >> $env:GITHUB_STEP_SUMMARY
+          "" >> $env:GITHUB_STEP_SUMMARY
+          '```' >> $env:GITHUB_STEP_SUMMARY
+          $log | Where-Object { $_ -match "^(system|processors|seconds per song|whole run|songs in)" } >> $env:GITHUB_STEP_SUMMARY
+          '```' >> $env:GITHUB_STEP_SUMMARY
