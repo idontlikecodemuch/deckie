@@ -470,6 +470,33 @@ not we skip it. I would refer we have it."
 This points the bar toward "how often a shown key is right, and how many songs get one", against the competitors'
 figures. The owner confirms the measure and the numbers when the key trial reports.
 
+### D31. A folder is a source too (Nov 13)
+The decision, in the owner's words: "I think a folder counts as a source. Whatever the top level folder that was
+selected. We should say that in the UI." This replaces D26's line that music only on the Mac has no source.
+
+- **Whatever the DJ adds is a source**: a CD, a drive, or a folder. A folder's source is the top folder the DJ chose,
+  named after it, and the folders inside it are its groups.
+- **Desk says so** where the DJ chooses the folder and where sources are listed.
+- Every song therefore has a place with a source. The booth's "Folders" section for songs with no source remains
+  only for crate files made before this.
+
+### D32. Desk on Windows and Linux: web pages in a window of Desk's own, with a Swift shell (Nov 13)
+From research letter Z. The decision, in the owner's words: "I agree with approach 2 with swift. We already built in
+Swift. If we have to build in rust we should rebuild the whole thing on it. Not swift to rust to web."
+
+- **The window's contents are web pages** in the look the site and the booth already share. No Deckie logic lives
+  in them: they show what the engine says and send what the DJ does.
+- **The window itself is a small shell written in Swift** around the system's own web view (WebView2 on Windows,
+  WebKitGTK on Linux). It gives Desk its own window and icon, real folder choosers and drag and drop.
+- **The engine is a separate Swift program** the shell talks to in a written, versioned set of messages, so it can
+  be tested with no window on all three systems.
+- **No Rust.** If the Swift shell cannot be made to work, that is reported and the owner decides; a mixed stack is
+  not the fallback.
+- **The Mac keeps its own window** for now (letter Z, question 5).
+- **Native later is an open door, not a plan.** What makes it cheap is decided now: the messages, no logic in the
+  interface, and one list of words for Desk on every computer.
+- The same flow as the Mac: open Deckie Desk, add music, watch it build, send the crate file to the iPad.
+
 ### Note on D19 (Nov 1): versions of a song stay separate rows
 Christopher, on two remixes of one song both showing in the picks: "we shouldn't merge them unless they are the same
 songs. DJs often have a bunch of versions of the same song". So the booth folds together only copies of the same
