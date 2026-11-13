@@ -6,6 +6,10 @@ import DeckieCore
 // so a remix, an edit or a live version is its own song. Folding changes what an app shows, never what the crate keeps:
 // every copy stays its own entry with its own disc, folder and track.
 //
+// One entry can also have more than one place (D27, `ident.other_places`): the same file, byte for byte, read from two
+// sources or found in a folder on the Mac as well. Those places are treated like the places of copies: a song's places
+// are every place of every entry behind it, own and other, ordered together by one rule (`ordered`).
+//
 // Desk fills the key (`Crate.setCutKeys(prints:)`) from a print of each file's audio (`RecordingPrint`), so copies of
 // one recording under two names, in two folders or in two formats are found as one song.
 
@@ -27,7 +31,8 @@ public enum SameSong {
         return out
     }
 
-    /// Where one copy of a song lives: the entry's id and its disc, folder and track (each nil when it has none).
+    /// Where one copy of a song lives: the entry's id and its disc, folder and track (each nil when it has none). An
+    /// entry with other places (D27) gives one of these for each of its places, all with its id.
     public struct Place: Hashable, Sendable {
         public var id: String
         public var disc: String?
@@ -42,7 +47,8 @@ public enum SameSong {
     /// "also on". The place that leads is on `playingDisc` (the disc the playing song is on); failing that, on the
     /// first disc in `discOrder` (the DJ's order of discs) that holds a copy. After the leading place come the other
     /// discs in the DJ's order, then discs not in that order by name, then copies on no disc; within one disc, by
-    /// folder, then track number, then the order given.
+    /// folder, then track number, then the order given. Give it every place of the song: each copy's own place and
+    /// its other places alike (`CrateTrack.places`, `Crate.songPlaces`).
     public static func ordered(_ places: [Place], playingDisc: String?, discOrder: [String]) -> [Place] {
         let rank = Dictionary(discOrder.enumerated().map { ($1, $0) }, uniquingKeysWith: { a, _ in a })
         func discRank(_ p: Place) -> (Int, String) {
@@ -101,11 +107,25 @@ public enum SameSong {
 extension CrateTrack {
     /// Which recording this entry is (`SameSong.key`): entries with the same value are copies of one song.
     public var recordingKey: String { SameSong.key(id: id, cutKey: ident.cutKey) }
+
+    /// Every place of this entry, for `SameSong.ordered`: its own place first, then its other places (D27).
+    public var places: [SameSong.Place] {
+        ident.allPlaces.map { SameSong.Place(id: id, disc: $0.disc, folder: $0.folder, track: $0.track) }
+    }
 }
 
 extension Crate {
     /// The crate's songs: entry ids grouped by recording, in crate order.
     public var sameSongGroups: [[String]] { SameSong.groups(tracks, key: \.recordingKey).map { $0.map(\.id) } }
+
+    /// Every place of the song the entry `id` is, in the order an app shows them (`SameSong.ordered`): the places of
+    /// every copy of the recording, each copy's own and other places together. Empty for an unknown id.
+    public func songPlaces(of id: String, playingDisc: String?, discOrder: [String]) -> [SameSong.Place] {
+        guard let t = tracks.first(where: { $0.id == id }) else { return [] }
+        let k = t.recordingKey
+        return SameSong.ordered(tracks.filter { $0.recordingKey == k }.flatMap(\.places),
+                                playingDisc: playingDisc, discOrder: discOrder)
+    }
 
     /// Sets `cut_key` from prints of the entries' audio: copies of one recording get the same key (the smallest id
     /// among them) and an entry printed with no copy gets none. Entries with no print (their audio was not read) keep

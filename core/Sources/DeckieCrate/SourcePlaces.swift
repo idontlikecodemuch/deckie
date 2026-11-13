@@ -4,7 +4,8 @@ import Foundation
 // data CD, a USB stick, an SD card. Its name, its folders and the order of its songs come from the thing itself;
 // nothing here builds or organises one (the corrections a DJ may make afterwards are in Discs.swift).
 //
-// A place has three levels, written in the crate's existing fields (crate v1, no new field):
+// A place has three levels, written in the crate's existing fields for an entry's own place, and in the same three
+// parts for each of its other places (`ident.other_places`, D27: the same file found somewhere else):
 //   ident.disc    the source's own name, as the Mac shows it ("Stick 3", "FRIDAY")
 //   ident.folder  the group inside it: the folder's path below the source's top, names joined by "/"
 //                 ("House", "House/Peak"); "" for songs at the top
@@ -110,7 +111,7 @@ public enum SourceReading {
 
 extension Crate {
     /// Labels the tracks of one source with their places: each track whose `file.rel` is a key of `places` gets the
-    /// place's source, group and number. Other tracks are left as they are.
+    /// place's source, group and number as its own place. Other tracks, and other places, are left as they are.
     public mutating func label(with places: [String: SourceReading.Place]) {
         for i in tracks.indices {
             guard let rel = tracks[i].file.rel, let p = places[rel] else { continue }
