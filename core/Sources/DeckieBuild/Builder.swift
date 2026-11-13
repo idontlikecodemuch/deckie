@@ -27,14 +27,29 @@ public struct BuildOptions: Sendable {
     /// Folders whose name starts with one of these are left out of the build, with an import-log entry each; the
     /// default leaves out `_` folders (`_old`, `_stale - safe to delete`), the usual way a DJ parks files.
     public var skipFolderPrefixes: [String]
+    /// Read the folder as a source of this name (D25, D26): a burned CD, a USB stick or an SD card, read as it is. Its
+    /// files are labelled with their places (`SourceReading`: the source's name, the folder below its top, the number
+    /// a player shows) and their `file.rel` is the path below the source's top. The crate at `output`, if there is
+    /// one, keeps every entry that is not from this source as it is; this source's entries are replaced by what is
+    /// read now. Nothing is left out by folder name, since the player shows every folder. In the import log and the
+    /// progress, a source's files are named by the source's name, then the path below it.
+    public var source: String?
+    /// For a build from an ordinary folder (`source` nil) into an existing crate: the sources read into it before,
+    /// whose entries are kept as they are. Entries with any other disc label are rebuilt from the folder, as before.
+    public var keepSources: Set<String>
 
     public init(folder: URL, output: URL, rekordbox: URL? = nil, jobs: Int = defaultJobs, fileBPMTags: Bool = false,
                 fresh: Bool = false, name: String? = nil, device: String = Analysis.platform,
-                skipFolderPrefixes: [String] = ["_"]) {
+                skipFolderPrefixes: [String] = ["_"], source: String? = nil, keepSources: Set<String> = []) {
         self.folder = folder; self.output = output; self.rekordbox = rekordbox; self.jobs = max(1, jobs)
         self.fileBPMTags = fileBPMTags; self.fresh = fresh; self.name = name; self.device = device
-        self.skipFolderPrefixes = skipFolderPrefixes
+        self.skipFolderPrefixes = source == nil ? skipFolderPrefixes : []
+        self.source = source; self.keepSources = keepSources
     }
+
+    /// What the import log and the progress put before a path below the folder: the source's name and a "/", or
+    /// nothing for an ordinary folder.
+    var logPrefix: String { source.map { $0 + "/" } ?? "" }
 
     /// The work folder: `<name>.deckiebuild` beside the crate.
     public var workFolder: URL {
@@ -227,7 +242,15 @@ public final class Builder: Sendable {
     /// Runs the build, reporting through `progress` (called from the jobs' threads, one call at a time).
     public func run(progress: @escaping @Sendable (BuildEvent) -> Void = { _ in }) throws -> BuildResult {
         let t0 = Date()
-        let (files, skippedFolders) = try AudioFiles.find(in: options.folder, skippingFolderPrefixes: options.skipFolderPrefixes)
+        var (found, skippedFolders) = try AudioFiles.find(in: options.folder, skippingFolderPrefixes: options.skipFolderPrefixes)
+        // A source's places come from every audio file on it, analysable or not, so the numbers are the player's.
+        let places = options.source.map { SourceReading.places(source: $0, paths: found.map(\.rel)) } ?? [:]
+        let prefix = options.logPrefix
+        if !prefix.isEmpty {
+            for i in found.indices { found[i].rel = prefix + found[i].rel }
+            for i in skippedFolders.indices { skippedFolders[i].rel = prefix + skippedFolders[i].rel }
+        }
+        let files = found
         var collection: RekordboxCollection? = nil
         var matcher: RekordboxMatcher? = nil
         let importedAt = utcNow()
@@ -304,6 +327,23 @@ public final class Builder: Sendable {
         }
         done.merge(results.done) { _, new in new }
 
+        // What the crate keeps as it is: for a source, every entry from elsewhere; for an ordinary folder, the entries
+        // of the sources read before. Their import-log entries stay too.
+        var kept: [String: CrateTrack] = [:]
+        var keptEntries: [CrateManifest.ImportLog.Entry] = []
+        if let existing {
+            func keeps(_ t: CrateTrack) -> Bool {
+                if let s = options.source { return t.ident.disc != s }
+                return t.ident.disc.map { options.keepSources.contains($0) } ?? false
+            }
+            for t in existing.tracks where keeps(t) { kept[t.id] = t }
+            for e in existing.manifest.importLog?.entries ?? [] {
+                let fromSource = { (s: String) in e.rel.hasPrefix(s + "/") }
+                let keep = options.source.map { !fromSource($0) } ?? options.keepSources.contains(where: fromSource)
+                if keep { keptEntries.append(e) }
+            }
+        }
+
         // The crate: files in path order; the first file with given bytes has the record, a copy is logged.
         var tracks: [CrateTrack] = []
         var entries: [CrateManifest.ImportLog.Entry] = []
@@ -313,6 +353,7 @@ public final class Builder: Sendable {
                                  + "\(sf.audioFiles) audio file\(sf.audioFiles == 1 ? "" : "s") not looked at"))
         }
         var firstWithID: [String: String] = [:]
+        var displaced = 0
         for (i, f) in files.enumerated() {
             switch done[f.rel] {
             case .failed(let failure)?:
@@ -328,9 +369,29 @@ public final class Builder: Sendable {
                                          message: "its finished record could not be read back from the work folder"))
                     continue
                 }
+                // The same bytes are already in the crate from elsewhere: crate v1 holds one entry per file content.
+                // An entry on a source beats one that is only in a folder; between two sources, the one already in
+                // the crate stays.
+                if let other = kept[id] {
+                    if options.source != nil && other.ident.disc == nil {
+                        kept[id] = nil
+                        displaced += 1
+                        entries.append(.init(rel: other.file.rel ?? other.file.name,
+                                             ext: (other.file.name as NSString).pathExtension.lowercased(),
+                                             reason: CrateManifest.ImportLog.Reason.duplicate,
+                                             message: "the same bytes as \(f.rel), which has the record"))
+                    } else {
+                        entries.append(.init(rel: f.rel, ext: f.ext, reason: CrateManifest.ImportLog.Reason.duplicate,
+                                             message: "the same bytes as \(Crate.discLine(other) ?? other.file.rel ?? other.file.name), which has the record"))
+                        continue
+                    }
+                }
                 firstWithID[id] = f.rel
                 var t = dressed(record, file: f, tags: tags, rekordbox: rekordboxOf[i], collection: collection,
                                 importedAt: importedAt)
+                if let p = places[String(f.rel.dropFirst(prefix.count))] {
+                    t.ident.disc = p.source; t.ident.folder = p.group; t.ident.track = p.number
+                }
                 if let old = existing?.tracks.first(where: { $0.id == id }) {
                     t.signatures = old.signatures
                     // An entry imported again unchanged keeps the time it was first imported, so a rebuild from the
@@ -352,9 +413,19 @@ public final class Builder: Sendable {
             }
         }
 
+        let fresh = tracks
+        tracks += kept.values
+        // Files seen: this read's, plus those behind what is kept (an entry each, and each logged file but a damaged
+        // one, which has an entry too, or a left-out folder, which is not a file).
+        typealias Reason = CrateManifest.ImportLog.Reason
+        let keptFiles = kept.count + displaced + keptEntries.filter { $0.reason != Reason.damagedFrames && $0.reason != Reason.skipped }.count
+        if !keptEntries.isEmpty {
+            entries = (keptEntries + entries).sorted { $0.rel.utf8.lexicographicallyPrecedes($1.rel.utf8) }
+        }
+
         let builtAt = utcNow()
         // built_by is the device label the records' analysis.device carries, never the machine's own name.
-        let log = CrateManifest.ImportLog(builtBy: options.device, builtAt: builtAt, filesSeen: files.count,
+        let log = CrateManifest.ImportLog(builtBy: options.device, builtAt: builtAt, filesSeen: files.count + keptFiles,
                                           tracks: tracks.count, entries: entries, rekordbox: rbSummary)
         let devices = Set((existing?.manifest.devicesSeen ?? []) + [options.device]).sorted()
         let manifest = CrateManifest(
@@ -366,7 +437,7 @@ public final class Builder: Sendable {
         try CrateWriter.write(crate, to: options.output)
         return BuildResult(crate: crate, output: options.output, filesSeen: files.count,
                            analysed: results.analysedSeconds.count, analysisSeconds: results.analysedSeconds,
-                           reused: tracks.filter { !results.analysedIDs.contains($0.id) }.count,
+                           reused: fresh.filter { !results.analysedIDs.contains($0.id) }.count,
                            entries: entries, rekordbox: rbSummary, seconds: Date().timeIntervalSince(t0))
     }
 
@@ -461,7 +532,7 @@ public final class Builder: Sendable {
                  collection: RekordboxCollection?, importedAt: String) -> CrateTrack {
         var t = record.crateTrack
         t.file.name = (f.rel as NSString).lastPathComponent
-        t.file.rel = f.rel
+        t.file.rel = String(f.rel.dropFirst(options.logPrefix.count))
         let fileName = ((f.rel as NSString).lastPathComponent as NSString).deletingPathExtension
         if let name = rb?.name {
             t.ident.title = name
