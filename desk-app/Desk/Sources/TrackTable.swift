@@ -161,5 +161,6 @@ struct CommitField: View {
             .onChange(of: value) { _, v in if !focused { text = v } }
             .onChange(of: focused) { _, f in if !f, text != value { commit(text) } }
             .onSubmit { if text != value { commit(text) } }
+            .onDisappear { if text != value { commit(text) } }
     }
 }

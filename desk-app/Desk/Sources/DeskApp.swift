@@ -26,6 +26,7 @@ struct DeskApp: App {
                         if let n = s.crate { model.show(named: n) }
                         Snapshot.run(model: model, out: s.out)
                     }
+                    if let c = WindowCheck.request { WindowCheck.run(model: model, out: c.out, add: c.add) }
                 }
         }
         .commands {
