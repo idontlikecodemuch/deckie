@@ -70,7 +70,7 @@ let package = Package(
         .executableTarget(name: "deckie-make", dependencies: ["DeckiePC"]),
         .target(name: "DeckieTestSupport", dependencies: ["DeckieAudio", "DeckieCore", "DeckieDecode"],
                 path: "Tests/DeckieTestSupport"),
-        .executableTarget(name: "deckie-e2e", dependencies: ["DeckieCrate", "DeckieAudio", "DeckieTestSupport"]),
+        .executableTarget(name: "deckie-e2e", dependencies: ["DeckieCrate", "DeckieCore", "DeckieAudio", "DeckieTestSupport"]),
         .testTarget(name: "DeckieCoreTests", dependencies: ["DeckieCore", "DeckieLab", "DeckieAudio", "DeckieTestSupport"],
                     exclude: ["Fixtures"]),
         .testTarget(name: "DeckieDecodeTests", dependencies: ["DeckieDecode", "DeckieCore", "DeckieTestSupport"],
