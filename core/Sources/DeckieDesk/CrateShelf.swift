@@ -155,6 +155,14 @@ public struct CrateShelf: Sendable {
         if fm.fileExists(atPath: destination.path) { try fm.removeItem(at: destination) }
         try fm.createDirectory(at: destination.deletingLastPathComponent(), withIntermediateDirectories: true)
         try fm.copyItem(at: pkg, to: destination)
+        // Signatures of songs taken out of the crate stay in Desk's own copy (an undo puts the songs back); the copy
+        // that leaves carries only the crate's own.
+        let c = try CrateReader.read(from: destination)
+        let listed = Set(c.tracks.flatMap { t in t.signatures.keys.map { "\(t.id)_\($0).shazamsignature" } })
+        let sigs = destination.appendingPathComponent(CrateFormat.signaturesFolder)
+        for name in (try? fm.contentsOfDirectory(atPath: sigs.path)) ?? [] where name.hasSuffix(".shazamsignature") && !listed.contains(name) {
+            try fm.removeItem(at: sigs.appendingPathComponent(name))
+        }
     }
 
     /// The crate file copied to the outbox under the crate's name (`Friday night.deckiecrate`), ready for the share
