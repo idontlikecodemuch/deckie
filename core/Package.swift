@@ -24,6 +24,8 @@
 // DeckieDesk: what a desk does that is not about windows (D28): where its crates are kept and the list of them, the
 // store of what was worked out for each file (shared by every crate), the DJ's name fixes, where each place's file is,
 // taking a source out of a crate, and the one run that reads, fingerprints, links copies and saves.
+// DeckiePC: the run behind the PC program a DJ drags a music folder onto (D29): the builder with nothing changed
+// inside, plus where things go, the plain words, the log and the crate file as one file. deckie-make: its console.
 // deckie-e2e: the end-to-end check both workflows run: makes a small music folder (WAV, FLAC, MP3, a nested folder,
 // awkward names, hidden files) and checks the crate file the builder makes from it. A development tool, not a product.
 // deckie-memprobe: measures the analyser's peak memory on audio files (and synthesises a test track), for tuning.
@@ -44,6 +46,7 @@ let package = Package(
         .library(name: "DeckieBuild", targets: ["DeckieBuild"]),
         .library(name: "DeckieDesk", targets: ["DeckieDesk"]),
         .executable(name: "deckie-build", targets: ["deckie-build"]),
+        .executable(name: "deckie-make", targets: ["deckie-make"]),
     ],
     targets: [
         .target(name: "DeckieAudio"),
@@ -63,6 +66,8 @@ let package = Package(
                                "DeckieAudio"]),
         .executableTarget(name: "deckie-build", dependencies: ["DeckieBuild"]),
         .target(name: "DeckieDesk", dependencies: ["DeckieBuild", "DeckieEngine", "DeckieCrate", "DeckieCore", "DeckieDecode"]),
+        .target(name: "DeckiePC", dependencies: ["DeckieBuild", "DeckieEngine", "DeckieCrate", "DeckieCore", "DeckieInference"]),
+        .executableTarget(name: "deckie-make", dependencies: ["DeckiePC"]),
         .target(name: "DeckieTestSupport", dependencies: ["DeckieAudio", "DeckieCore", "DeckieDecode"],
                 path: "Tests/DeckieTestSupport"),
         .executableTarget(name: "deckie-e2e", dependencies: ["DeckieCrate", "DeckieAudio", "DeckieTestSupport"]),
@@ -80,6 +85,8 @@ let package = Package(
                     dependencies: ["DeckieBuild", "DeckieEngine", "DeckieCrate", "DeckieLab", "DeckieCore", "DeckieInference",
                                    "DeckieDecode", "DeckieAudio", "DeckieTestSupport"],
                     exclude: ["Fixtures"]),
+        .testTarget(name: "DeckiePCTests",
+                    dependencies: ["DeckiePC", "DeckieBuild", "DeckieCrate", "DeckieAudio", "DeckieTestSupport"]),
         .testTarget(name: "DeckieDeskTests",
                     dependencies: ["DeckieDesk", "DeckieBuild", "DeckieEngine", "DeckieCrate", "DeckieCore", "DeckieAudio",
                                    "DeckieDecode", "DeckieInference", "DeckieTestSupport"]),

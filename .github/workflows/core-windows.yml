@@ -13,7 +13,33 @@ on:
   workflow_dispatch:
 
 jobs:
+  # The MP3 of the synthesised test track, for the end-to-end folder. No audio is committed, and the Windows runner
+  # has no MP3 encoder, so it is encoded here once per run, with Ubuntu's ffmpeg program, and the same bytes go to
+  # both platforms. (ffmpeg is a test tool here; nothing of it is linked or shipped.)
+  test-mp3:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    container:
+      image: swift@sha256:6304481cf2717966b7ba175162e397ea2f2cc3161909f2b2a5cf40036079a0f7 # swift:6.4.1-noble
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install ffmpeg
+        run: |
+          apt-get update
+          apt-get install -y --no-install-recommends ffmpeg
+      - name: Encode the test track
+        working-directory: core
+        run: swift run deckie-e2e mp3 /tmp/test_track.mp3
+      - uses: actions/upload-artifact@v4
+        with:
+          name: e2e-test-mp3
+          path: /tmp/test_track.mp3
+          retention-days: 7
+          compression-level: 0
+          if-no-files-found: error
+
   probe:
+    needs: test-mp3
     runs-on: windows-latest
     # A guard, not a target.
     timeout-minutes: 60
@@ -70,9 +96,14 @@ jobs:
       # The whole build, end to end, with the command-line builder: a small music folder (WAV, FLAC and MP3, a nested
       # folder, a name with a space, a name that is not ASCII, hidden files; core/Sources/deckie-e2e), the crate
       # file, the core's validator on both of its forms, and a second run that must find nothing to do.
+      - name: "End to end: the test MP3 made on Linux in this run"
+        uses: actions/download-artifact@v4
+        with:
+          name: e2e-test-mp3
+          path: ${{ runner.temp }}\e2e-mp3
       - name: "End to end: make the music folder"
         working-directory: core
-        run: swift run deckie-e2e make "${{ runner.temp }}\e2e\Music"
+        run: swift run deckie-e2e make "${{ runner.temp }}\e2e\Music" --mp3 "${{ runner.temp }}\e2e-mp3\test_track.mp3"
       - name: "End to end: build the crate file"
         working-directory: core
         run: swift run deckie-build "${{ runner.temp }}\e2e\Music" --out "${{ runner.temp }}\e2e\E2E.deckiecrate" --jobs 2
@@ -101,6 +132,7 @@ jobs:
   # The same folder built on Linux, in the same run, to compare with: the official Swift image and the caches
   # core-linux.yml fills (the same keys, so normally nothing is fetched here).
   linux-crate:
+    needs: test-mp3
     runs-on: ubuntu-latest
     timeout-minutes: 25
     env:
@@ -130,10 +162,15 @@ jobs:
         run: bash core/Tools/fetch-onnxruntime.sh
       - name: Fetch the models from the release models-1 (checked by hash)
         run: bash core/Tools/fetch-models.sh --no-export
+      - name: The test MP3 made in this run
+        uses: actions/download-artifact@v4
+        with:
+          name: e2e-test-mp3
+          path: /tmp/e2e-mp3
       - name: Build the crate file from the same folder
         working-directory: core
         run: |
-          swift run deckie-e2e make /tmp/e2e/Music
+          swift run deckie-e2e make /tmp/e2e/Music --mp3 /tmp/e2e-mp3/test_track.mp3
           swift run deckie-build /tmp/e2e/Music --out /tmp/e2e/E2E.deckiecrate --jobs 2
           swift run deckie-e2e check /tmp/e2e/E2E.deckiecrate
           swift run deckie-e2e pack /tmp/e2e/E2E.deckiecrate /tmp/e2e/e2e-linux.deckiecrate

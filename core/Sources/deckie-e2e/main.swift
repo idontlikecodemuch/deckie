@@ -1,18 +1,21 @@
 // deckie-e2e: the end-to-end check of the crate builder that both workflows run (core-linux.yml, core-windows.yml),
 // the same on Linux and Windows. A development tool, never shipped.
 //
-//   deckie-e2e make <folder>           writes the small music folder below
+//   deckie-e2e make <folder> --mp3 <file>   writes the small music folder below; <file> is the MP3 of the test track
+//                                      (made by `deckie-e2e mp3`, on a machine that has the ffmpeg program)
 //   deckie-e2e check <crate file>      reads the crate file with the core's validator (CrateReader, either form) and
 //                                      checks it holds what the folder should give; exits with 1 and says why if not
 //   deckie-e2e pack <package> <file>   the package folder as one file (CrateArchive), for the workflow to keep
-//   deckie-e2e wav <file>              the synthesised test track alone, as a WAV (to make the MP3 fixture from)
+//   deckie-e2e mp3 <file>              the synthesised test track as a 64 kbps mono MP3, encoded by the ffmpeg
+//                                      program (Linux and macOS). No audio is committed: the workflows make this file
+//                                      once per run, on Linux, and hand the same bytes to both platforms.
 //
 // The folder (songs are the engine's synthesised test track, `TestTrack`: 63 s of drums at 124 BPM in A minor):
 //
 //   Singles/Track One.wav                 32-bit float WAV; a space in the name
 //   Singles/Deep Cuts/Träck Zwei.flac     16-bit FLAC, written here with no encoder; a nested folder, a name that is
 //                                         not ASCII (ä as one character, U+00E4)
-//   Album/03 Track Three.mp3              the committed MP3 of the test track (Tests/DeckieBuildTests/Fixtures)
+//   Album/03 Track Three.mp3              the MP3 of the test track given with --mp3
 //   Album/short tone.mp3                  DeckieDecode's 4-second test tone: too short to analyse, so not in the crate
 //   Album/locked.m4p                      the stand-in for a copy-protected file: not in the crate, "protected"
 //   Album/cover.jpg                       not audio: not counted
@@ -39,7 +42,6 @@ func fail(_ message: String) -> Never {
 let repository = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent()
     .deletingLastPathComponent().deletingLastPathComponent()
 let decodeFixtures = repository.appendingPathComponent("core/Tests/DeckieDecodeTests/Fixtures")
-let buildFixtures = repository.appendingPathComponent("core/Tests/DeckieBuildTests/Fixtures")
 
 let wavRel = "Singles/Track One.wav"
 let flacRel = "Singles/Deep Cuts/Tr\u{e4}ck Zwei.flac"
@@ -57,7 +59,7 @@ func hide(_ file: URL) {
     #endif
 }
 
-func make(_ root: URL) throws {
+func make(_ root: URL, mp3: URL) throws {
     let fm = FileManager.default
     try? fm.removeItem(at: root)
     func write(_ data: Data, _ rel: String) throws {
@@ -69,7 +71,7 @@ func make(_ root: URL) throws {
     let wav = TestTrack.wav(track)
     try write(wav, wavRel)
     try write(FLACWriter.flac16(track), flacRel)
-    try write(try Data(contentsOf: buildFixtures.appendingPathComponent("test_track.mp3")), mp3Rel)
+    try write(try Data(contentsOf: mp3), mp3Rel)
     try write(try Data(contentsOf: decodeFixtures.appendingPathComponent("tone.mp3")), toneRel)
     try write(try Data(contentsOf: decodeFixtures.appendingPathComponent("protected.m4p")), lockedRel)
     try write(Data([0xFF, 0xD8, 0xFF, 0xE0]), "Album/cover.jpg")
@@ -133,13 +135,28 @@ func check(_ file: URL) {
 let args = Array(CommandLine.arguments.dropFirst())
 do {
     switch (args.first, args.count) {
-    case ("make", 2): try make(URL(fileURLWithPath: args[1]))
+    case ("make", 4) where args[2] == "--mp3":
+        try make(URL(fileURLWithPath: args[1]), mp3: URL(fileURLWithPath: args[3]))
     case ("check", 2): check(URL(fileURLWithPath: args[1]))
     case ("pack", 3):
         try CrateArchive.pack(package: URL(fileURLWithPath: args[1]), to: URL(fileURLWithPath: args[2]))
         print("wrote \(args[2])")
-    case ("wav", 2): try TestTrack.wav(TestTrack.render()).write(to: URL(fileURLWithPath: args[1]))
-    default: fail("usage: deckie-e2e make <folder> | check <crate file> | pack <package> <file> | wav <file>")
+    case ("mp3", 2):
+        guard let ffmpeg = TestTrack.findFFmpeg() else { fail("the ffmpeg program was not found; it encodes the test MP3") }
+        let out = URL(fileURLWithPath: args[1])
+        let wav = out.deletingPathExtension().appendingPathExtension("wav")
+        try TestTrack.wav(TestTrack.render()).write(to: wav)
+        defer { try? FileManager.default.removeItem(at: wav) }
+        let p = Process()
+        p.executableURL = URL(fileURLWithPath: ffmpeg)
+        p.arguments = ["-y", "-hide_banner", "-loglevel", "error", "-i", wav.path, "-ac", "1", "-codec:a", "libmp3lame",
+                       "-b:a", "64k", "-id3v2_version", "3", "-metadata", "title=Track Three",
+                       "-metadata", "artist=Test Artist", out.path]
+        try p.run()
+        p.waitUntilExit()
+        if p.terminationStatus != 0 { fail("ffmpeg could not encode the test MP3") }
+        print("wrote \(out.path)")
+    default: fail("usage: deckie-e2e make <folder> --mp3 <file> | check <crate file> | pack <package> <file> | mp3 <file>")
     }
 } catch {
     fail("\(error)")
