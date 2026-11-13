@@ -1,6 +1,7 @@
 # How Deckie talks
 
-v0.1, Oct 27, 2026. A first framework for how we talk about the product and the words we use, asked for by
+v0.2, Nov 13, 2026 (v0.1 was Oct 27; the changes are the tagline, the public dictionary and the section on
+public copy, from decisions D22 and D23). A first framework for how we talk about the product and the words we use, asked for by
 Christopher in his review of spec v0.6. Sources: the vocabulary research (`docs/research/e-dj-vocabulary.md`), the
 two community passes (`codex-community.md`, `codex-vocabulary.md`, which quote DJs directly), and the feedback log
 from the party. This is for approval and argument, not yet a style guide.
@@ -39,15 +40,37 @@ and writes a crate file." Never say "crate" alone for the file.
 
 Three registers, kept apart: plain English for anyone, the DJ's word in the booth, and how Deckie understands it.
 The vocabulary page holds all three for every term. Product copy uses the DJ register; help and onboarding may
-add the plain one; the Deckie register stays in our documents.
+add the plain one. The public dictionary shows all three, in that order of weight: the plain meaning first, then
+"On the decks", then a quiet "In Deckie" line last (D23). Our own working words stay off the public page.
 
 Lengths are choices, not definitions: a blend can run minutes, a bass swap can be gradual, a chop can be a beat.
 Labels say the move; bar counts are a suggestion shown beside it, never part of the name.
 
 ## The promise, in one line
 
-Candidates for the tagline and the store line, to pick from: "Know your crate." "Your crate, mixed." "Next record,
-your crate." "Everything your crate can tell you." The descriptive subtitle "DJ booth companion" stays for search.
+"Know Your Crate". Chosen Nov 12 (D22), to be tested with DJs. The descriptive subtitle "DJ booth companion" stays
+for search and is not a headline.
+
+The lines that go with it, used as written:
+
+- "Know the beat. Nail the mix."
+- "Nail the mix." on its own, under the tagline.
+- "Your music. Your mix." where privacy is said.
+- "Every DJ starts somewhere" and "DJ speak, in plain words." for the dictionary.
+- "Other apps can name a released song. Deckie names yours." for what makes it different.
+
+## Public copy: the site and the film
+
+- **The names.** Deckie is the whole product. Deckie Desk is the Mac app. Deckie Booth is the iPad app.
+- **Say what it isn't, plainly.** It doesn't mix for you, doesn't beatmatch for you, doesn't take your music,
+  doesn't replace your DJ software. Never say "AI", not even to deny it: a denial raises the question.
+- **Headlines are short and in sentence case.** The tagline is the one exception, in title case.
+- **The script face** (Pacifico) is for three words only: "you", "your" and "Deckie". In the film's section headers
+  the app names "Deckie Desk" and "Deckie Booth" are in it whole. Everything else is Inter.
+- **Line breaks are set by phrase.** A few words to a line. No line of one word. A new sentence never leaves its
+  first word alone at the end of the line before.
+- **Status is said once**, as "Coming soon", with "Help us beta test" beside it. No boxed stamps.
+- **No person is named** but the credit, and no real song or artist is shown.
 
 ## Examples
 

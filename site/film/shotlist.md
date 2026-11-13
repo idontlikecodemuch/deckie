@@ -1,4 +1,6 @@
-# Deckie explainer, fifth cut: shot list
+# Deckie explainer: shot list
+
+The film as published on deckie.io, Nov 12, 2026.
 
 76 s · 120 BPM (one beat is half a second, one bar is two) · 152 beats · 16:9, 1920 x 1080, 60 frames a second.
 Sound: soundtrack D, "in between" (letter V, section 7g): a swung house groove with organ stabs, heard through a

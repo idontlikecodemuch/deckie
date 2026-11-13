@@ -280,6 +280,39 @@ points at things, and it is our word, not a DJ's. Nothing in the format or the c
 name of the file format. The vocabulary, the voice notes and the living product docs follow from today; research
 letters and the history folder keep the words they were written with, where "crate" often means the file.
 
+### D22. The tagline is "Know Your Crate", and the three names are public (Nov 12)
+The decision, in the owner's words: "I like "Know Your Crate" as the final tagline. We can test this with DJs but
+for now." So it is the tagline on the site, in the film and in the page's title, until DJs have been asked. The
+names a DJ sees: **Deckie** is the whole product, **Deckie Desk** is the Mac app, **Deckie Booth** is the iPad app.
+Three more lines were chosen the same day and are used as written: "Know the beat. Nail the mix." (the owner's:
+"Lets simplify it to - Know the beat. Nail the mix."), "Nail the mix." alone as the home page's hero line, and "Your
+music. Your mix." where privacy is said. Public copy does not say "AI", not even to deny it; the owner on an early
+caption: ""not an AI DJ" begs the question if it is". The name itself is "fine for now": it is not registered and
+not in an app store, so D9 (the name and the DECKEE mark) stays open and does not hold up the coming-soon site.
+
+### D23. A public site: a home page, a dictionary and a film (Nov 12)
+Deckie has a public face at https://deckie.io, published Nov 12, 2026. Its source is `site/`; how it is built and
+published is `site/README.md`; the reasons are letter V.
+
+- **The home page** is short, after a product page: what the booth does, what Deckie isn't, how Desk prepares a
+  crate file, the dictionary, a short about with a list of facts, and the ask. "What it isn't" stays because it
+  answers a DJ's worries directly: it doesn't mix for you, doesn't beatmatch for you, doesn't take your music,
+  doesn't replace your DJ software.
+- **The dictionary is public**, for anyone and for DJs: "Every DJ starts somewhere", "DJ speak, in plain words."
+  Each word leads with its plain meaning, then how it is used on the decks. What Deckie does with the word is shown
+  last and quietest; the owner: ""what deckie does with it" is important for us and maybe for the user but is much
+  less important than the first two". This replaces the earlier rule that the Deckie register stays in our
+  documents. Of the vocabulary's 155 terms, 91 are public; the rest are our own working words and stay on the
+  internal page. Which 91, and the topics they are filed under, were chosen in the build and have not been reviewed
+  word by word by the owner; they stand as published until he changes them.
+- **The film** is 76 seconds, words on screen, no voice, with music made for it. It keeps its own look and is not
+  re-rendered when the site's look changes.
+- **The look** of the site comes from Deckie Booth's Simple view, so the site and the app read as one thing.
+- **The credit** is "Made by Christopher Shannon and App Hold Media", linked to apphold.media. It is the one place
+  public material names a person. "Help us beta test" opens an email to info@apphold.media.
+- **What the site never shows**: a real song, artist or playlist, any DJ's music, or anyone but the credit. Screens
+  show a demo crate file with invented names.
+
 ### Note on D19 (Nov 1): versions of a song stay separate rows
 Christopher, on two remixes of one song both showing in the picks: "we shouldn't merge them unless they are the same
 songs. DJs often have a bunch of versions of the same song". So the booth folds together only copies of the same

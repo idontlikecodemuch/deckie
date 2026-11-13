@@ -6,8 +6,8 @@ every word, the claims made and their source, and how every screen was captured.
 choices that belong to the owner are listed near the end. Tags: [measured] = run on this Mac for this work; [inf] =
 my inference; [unverified] = could not be checked here.
 
-The deliverables: `site/index.html` (the page, for deckie.io, not deployed), `site/assets/deckie-explainer.mp4` (the
-film, fifth cut, 76 seconds),
+The deliverables: `site/index.html` (the page, live at deckie.io since Nov 12; section 7n), `site/assets/deckie-explainer.mp4` (the
+film, 76 seconds),
 `site/assets/deckie-15s.mp4` (its first fifteen seconds as a clip of their own) and `site/film/` (the film's source:
 `film.js`, `shotlist.md`, capture scripts, the stroke plans in `words/`; the earlier cuts' sources are kept in
 `site/film/v1/` and `v2/`).
@@ -1481,6 +1481,31 @@ motion or script off. The build is 26 files, 13,063,553 bytes.
 
 Left alone, because the dictionary page's layout is the other session's: at 390 and 320 px some "See also" rows
 end on one chip, and at 320 px the label "Moves" sits on a line by itself above "Heard from DJs".
+
+## 7n. Published (Nov 12), and what was settled on the way
+
+The site went live at https://deckie.io on Nov 12, 2026. What is live is `site/dist/` as `site/build.sh` makes it:
+28 files, 13,282,076 bytes, each checked against the build by size and by hash after the upload [measured]. Checked
+on the live address: both pages, the film playing from the hero, the fonts, the site's own 404 page, www to the bare
+address and http to https [measured].
+
+Added for publishing:
+
+- **Share cards.** Two pictures, 1200 by 630, one for each page, made from small pages in `site/share/`. The home
+  card carries the name, "Know Your Crate" and the booth; the dictionary card carries "Every DJ starts somewhere"
+  and "DJ speak, in plain words." Their line breaks are set by hand. The tags in each page's head name the picture,
+  its size and its alt text. The film is no longer offered as the share preview, since most services ignore it.
+- **One address.** `www.deckie.io` goes to `deckie.io`.
+- **Dictionary cards.** Every card is fully open, with no "more". The space under "On the decks" is on that line,
+  not above "See also", because not every card has a "See also".
+
+Settled in the owner's words during these rounds, and recorded as decisions D22 and D23: the tagline "Know Your
+Crate"; "Nail the mix." as the hero line; "DJ speak, in plain words." as the dictionary's line; the credit and the
+beta address; the film stays in its own look and is not re-rendered in the site's.
+
+Known and left: a stale lede line inside the film's dictionary shot, too small to read at film size; a few "See
+also" rows that end on one chip at phone width; the dictionary's footer still says "Deckie, as in deckhand", which
+the home page dropped; "Works with no signal" has not been tested with the iPad in airplane mode.
 
 ## 8. Other choices, unchanged from the first cut
 

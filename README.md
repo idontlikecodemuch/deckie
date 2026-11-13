@@ -12,11 +12,15 @@ Start with `BRIEF.md` (the hand-over from the Oct 2026 sprint that built the fir
 ## Layout
 
 ```
-deck-app/     the iPad app (SwiftUI, xcodegen; see deck-app/README.md)
+core/         the shared Swift core: decoding, analysis, scoring, the crate file (see core/README.md)
+desk-app/     Deckie Desk, the Mac app that reads a crate and writes a crate file
+deck-app/     Deckie Booth, the iPad app (SwiftUI, xcodegen; see deck-app/README.md)
+site/         the public site at deckie.io: home page, dictionary and the explainer film (see site/README.md)
 mixer/        the analysis, scoring, planning and rendering lab in Python (see mixer/README.md)
 pool/         the disc-curation pipeline and the phone page's data builder (see pool/README.md)
 web-player/   the phone page Mike used to audition the discs
-docs/         product spec and decisions, research reports, architecture, naming, sprint history, disc printouts
+tools/        the benchmark harness for Apple's Music Understanding framework
+docs/         the vocabulary (docs/vocabulary/terms.json, the source of the public dictionary), product spec and decisions, research reports, architecture, naming, sprint history, disc printouts
 ```
 
 ## Running the sprint pipeline from this folder
