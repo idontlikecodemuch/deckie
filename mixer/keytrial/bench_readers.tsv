@@ -1,0 +1,2691 @@
+set	id	label	key	key_modal	confidence	fold	group	apple	3f	A	B
+mtg	5061	D# minor	D# minor		2	1	982	D# minor	D# minor	D# minor	D# minor
+mtg	5881	A major	A major		2	3	201	A minor	A major	A major	A major
+mtg	7217	F minor	F minor		2	1	526	C minor	C minor	F minor	C minor
+mtg	10359	D minor	D minor		2	3	632	D minor	A minor	A minor	A minor
+mtg	10981	X			0	3	957		G# minor	G# minor	D major
+mtg	11077	G minor	G minor		2	4	178	G minor	D minor	G minor	D minor
+mtg	11194	D minor	D minor		2	1	44	D minor	F major	F major	F major
+mtg	14344	D minor	D minor		2	4	942	D minor	D major	D minor	D minor
+mtg	14720	D minor	D minor		2	2	689	D minor	D major	D minor	D minor
+mtg	16484	A minor	A minor		1	4	745	A minor	A minor	A minor	A minor
+mtg	17025	D# minor	D# minor		2	1	532	A# minor	A# minor	D# minor	A# minor
+mtg	18975	C minor	C minor		2	2	309	C minor	C major	C minor	C major
+mtg	19613	D minor	D minor		2	3	448	D minor	D major	D major	D major
+mtg	19805	A minor	A minor		2	4	542	A minor	A major	A minor	A minor
+mtg	19936	A minor	A minor		2	1	380	A minor	A minor	A minor	A minor
+mtg	23309	B minor	B minor		2	4	761	B minor	B minor	B minor	B minor
+mtg	25185	F minor	F minor		2	1	1209	F minor	F major	F minor	F major
+mtg	25702	C# minor	C# minor		2	1	184	C# minor	C# minor	C# minor	C# minor
+mtg	25703	C# minor	C# minor		2	1	184	C# minor	C# major	C# minor	C# minor
+mtg	26737	C minor	C minor		2	0	842	C minor	G minor	C minor	C major
+mtg	29912	D# minor	D# minor		2	2	1101	D# minor	G# minor	G# minor	G# minor
+mtg	30278	D major	D major		2	1	43	B minor	B minor	B minor	B minor
+mtg	32715	B minor	B minor		2	3	1004	B minor	F# minor	F# minor	F# minor
+mtg	33583	E minor	E minor		2	0	444	E minor	E minor	E minor	E minor
+mtg	33846	C minor	C minor		2	3	994	C minor	C minor	C minor	C minor
+mtg	33961	G minor	G minor		2	3	969	G minor	G major	G minor	G major
+mtg	35645	F minor	F minor		2	4	19	F minor	C minor	F minor	F minor
+mtg	37745	E minor	E minor		1	0	906	C major	E major	E minor	E major
+mtg	37779	A# major	A# major		2	3	1112	A# minor	A# minor	A# minor	A# minor
+mtg	40030	E minor	E minor		2	0	1027	E minor	G major	G major	G major
+mtg	40643	A minor	A minor		2	1	584	A minor	A minor	A minor	A minor
+mtg	40875	G# minor	G# minor		2	2	1007	D# minor	G# minor	G# minor	G# minor
+mtg	41267	C# minor	C# minor		1	2	696	C# minor	C major	C major	G major
+mtg	41907	C minor	C minor		2	0	6	C minor	C minor	C minor	C minor
+mtg	42234	X			0	0	1017		G# minor	G# minor	G# minor
+mtg	45212	B minor	B minor		1	4	531	G# minor	C# minor	C# minor	C# minor
+mtg	49242	F minor	F minor		1	3	0	B minor	F# minor	F# minor	F# major
+mtg	49721	C major	C major		2	1	746	C minor	C major	C major	C major
+mtg	50823	B minor	B minor		2	3	1188	B minor	B minor	B minor	B minor
+mtg	51220	D# minor	D# minor		1	2	1119	F# major	D# minor	G# minor	D# minor
+mtg	51936	C minor	C minor		2	0	203	G minor	G minor	G minor	G minor
+mtg	54925	C minor	C minor		0	0	237	B minor	G major	G major	G major
+mtg	55659	C minor	C minor		1	2	1107	C minor	C minor	C minor	C minor
+mtg	58167	D# minor	D# minor		2	4	731	D# minor	D# minor	D# minor	D# minor
+mtg	58226	C# major	C# major		2	1	207	G# major	G# major	G# major	G# major
+mtg	58581	C# major	C# major		2	1	261	C# minor	C# major	C# major	C# major
+mtg	60661	C# major	C# major		2	1	661	C# major	C# major	C# minor	C# major
+mtg	61578	C other			2	0	469		C major	F minor	C major
+mtg	61846	D# minor	D# minor		2	4	677	G# major	D# major	G# major	D# major
+mtg	62141	X			0	1	86		D# major	D# major	E major
+mtg	63014	G# major	G# major		2	4	298	G# minor	G# major	G# minor	G# minor
+mtg	63618	G# major	G# major		2	1	988	G# minor	G# major	G# minor	G# minor
+mtg	65102	A minor | C major			1	4	571		A minor	A minor	G major
+mtg	65778	F minor	F minor		2	4	318	F minor	F minor	G# major	F minor
+mtg	66070	D minor	D minor		2	2	1065	D minor	D major	D minor	D minor
+mtg	68370	D minor	D minor		2	1	187	D minor	D minor	D minor	D minor
+mtg	69040	C# minor	C# minor		2	3	829	C# minor	C# major	C# minor	C# minor
+mtg	74680	A minor	A minor		2	0	36	A minor	A major	A minor	A minor
+mtg	76914	G minor	G minor		2	1	52	G minor	G minor	G minor	G minor
+mtg	77806	F minor	F minor		2	0	702	A# minor	F minor	F minor	G# major
+mtg	80643	G minor | G major			1	1	355		G minor	G minor	G minor
+mtg	84098	C minor	C minor		2	3	172	C minor	C minor	G# major	C minor
+mtg	84522	F minor	F minor		2	0	450	F minor	F minor	F minor	F minor
+mtg	90839	D minor	D minor		2	0	75	D minor	D minor	D minor	D minor
+mtg	95799	C# minor	C# minor		2	0	350	C# minor	C# minor	C# minor	C# minor
+mtg	99805	G# minor	G# minor		2	1	528	G# minor	G# minor	G# minor	G# minor
+mtg	99806	G# minor	G# minor		2	1	528	G# minor	G# major	G# minor	G# minor
+mtg	100066	D minor	D minor		2	1	793	D minor	D minor	D minor	D minor
+mtg	103857	E major	E major		2	3	453	E minor	E major	E major	E major
+mtg	108844	X			0	4	666		B major	G# minor	G minor
+mtg	110504	D# minor	D# minor		2	1	907	D# minor	D# major	G# minor	D# major
+mtg	119077	C# minor | E major			2	4	425		C# minor	E major	C# minor
+mtg	119467	D# minor	D# minor		2	1	1210	D# minor	D# major	D# major	D# major
+mtg	125918	G major	G major		2	0	783	G major	D major	G major	G major
+mtg	131427	A minor	A minor		2	4	387	A minor	D major	D major	D major
+mtg	132143	C# minor	C# minor		2	0	464	C# minor	C# minor	C# minor	C# minor
+mtg	134948	C minor	C minor		2	3	636	C minor	C major	C minor	C major
+mtg	135302	C minor	C minor		2	2	1106	G minor	G minor	F major	F major
+mtg	138819	B major | B minor			1	4	82		E major	E major	B minor
+mtg	139755	G major	G major		2	0	552	G major	E minor	E minor	G major
+mtg	144851	B major	B major		2	1	676	B major	B major	B minor	B major
+mtg	150864	F minor	F minor		2	2	755	F minor	F minor	F minor	F# minor
+mtg	155879	D minor	D minor		2	0	607	D minor	D major	D major	D major
+mtg	159301	B minor	B minor		2	2	545	B minor	B minor	B minor	B minor
+mtg	167955	E major	E major		2	0	604	E major	E major	E major	E major
+mtg	168304	F minor	F minor		1	3	1053	F minor	F minor	F minor	F minor
+mtg	168450	F# minor	F# minor		2	1	904	F# minor	F# minor	F# minor	F# minor
+mtg	174074	C# major	C# major		2	2	192	C# major	F# minor	F# minor	D major
+mtg	175197	E major	E major		1	3	1241	C# minor	G# minor	G# minor	G# minor
+mtg	178137	E minor	E minor		2	0	979	E minor	E minor	E minor	E minor
+mtg	1389267	E major	E major		1	0	245	G# minor	G# minor	G# minor	G# minor
+mtg	180779	X			0	4	417		D# major	D# major	A# minor
+mtg	180831	E major	E major		2	3	839	E major	F# minor	F# minor	F# minor
+mtg	181659	F# major	F# major		2	4	781	C# major	C# major	C# major	C# major
+mtg	188000	E minor	E minor		2	3	173	E minor	E major	E minor	E major
+mtg	188616	C minor	C minor		2	0	1080	C minor	C minor	C minor	D# major
+mtg	189045	G major	G major		1	1	506	G minor	G major	G major	D major
+mtg	189424	D major	D major		2	0	1012	B minor	F# minor	F# minor	F# minor
+mtg	190162	D major	D major		2	1	1164	D major	D major	D major	D major
+mtg	190288	A# minor	A# minor		2	3	248	A# minor	A# minor	A# minor	C# major
+mtg	193072	C minor	C minor		2	4	747	C minor	G# major	G# major	C minor
+mtg	196477	C# minor	C# minor		2	3	1213	C# minor	C# minor	C# minor	C# minor
+mtg	197434	D major	D major		2	4	894	D minor	D minor	D minor	D minor
+mtg	200573	C# minor	C# minor		2	3	824	C# minor	C# major	C# minor	C# minor
+mtg	200766	D minor	D minor		1	4	1268	D minor	C major	C major	D minor
+mtg	203541	C# major	C# major		1	0	440	F minor	C# major	C# major	C# major
+mtg	206180	G minor	G minor		2	0	1043	G minor	D major	G minor	G minor
+mtg	206648	A major	A major		2	4	280	A major	A major	A major	A major
+mtg	209357	F# minor	F# minor		0	0	419	D minor	D major	D major	D major
+mtg	209475	D minor	D minor		2	3	219	D minor	D minor	D minor	D minor
+mtg	217855	D minor	D minor		2	2	381	A minor	A minor	A minor	A minor
+mtg	218890	D major	D major		2	4	304	D major	D major	D major	D major
+mtg	218955	D major	D major		2	1	778	D major	D major	D major	D major
+mtg	219078	D major	D major		2	0	427	D major	D major	G major	D major
+mtg	221206	G major	G major		2	0	921	E minor	D major	G major	D major
+mtg	224078	C minor	C minor		2	2	743	C minor	C minor	C minor	C minor
+mtg	224256	G# major	G# major		2	2	535	G# minor	G# major	G# minor	G# major
+mtg	225388	G major	G major		2	2	724	D major	D major	G major	D major
+mtg	226990	D major	D major		2	4	909	D major	D major	D major	D major
+mtg	239698	B minor	B minor		2	3	242	B minor	G major	G major	G major
+mtg	239972	A# major	A# major		2	3	985	A# major	A# major	A# major	A# major
+mtg	245736	D major	D major		2	3	325	D minor	D major	D major	D major
+mtg	246613	E major	E major		1	0	349	E minor	E major	E major	E major
+mtg	251655	G minor	G minor		2	2	1093	G minor	G minor	G minor	G major
+mtg	255261	E minor	E minor		2	2	974	B minor	F# minor	B minor	E major
+mtg	255895	D# minor	D# minor		2	4	591	D# minor	C# major	F# major	D# minor
+mtg	257025	E minor	E minor		2	0	459	E minor	E major	E major	E major
+mtg	269382	F# minor	F# minor		2	4	1230	F# minor	F# major	F# minor	F# major
+mtg	273439	F minor	F minor		2	2	1122	F minor	F minor	F minor	F minor
+mtg	273553	F minor	F minor		2	1	14	F minor	G# major	G# major	F minor
+mtg	277229	A# minor	A# minor		2	4	950	C# major	G# major	C# major	C# major
+mtg	277874	C major	C major		1	2	664		F# minor	F# minor	E minor
+mtg	282105	G minor	G minor		2	2	392	E minor	G major	G major	G major
+mtg	283467	A minor	A minor		2	1	109	A minor	D major	A minor	A minor
+mtg	287952	A minor	A minor		2	4	1100	A major	A major	A major	A major
+mtg	289631	G major	G major		2	2	144	G major	G major	G major	G major
+mtg	290580	A# minor	A# minor		2	4	992	A# minor	A# minor	A# minor	A# minor
+mtg	291094	D major	D major		2	4	235	D major	D major	D minor	D minor
+mtg	292281	C# minor	C# minor		2	3	66	C# minor	C# minor	C# minor	C# minor
+mtg	292564	D major	D major		2	4	1111	D minor	D major	D minor	D minor
+mtg	292730	B minor	B minor		2	0	795	D major	F# minor	G major	D major
+mtg	293203	D major	D major		2	1	188	D major	D major	D major	D major
+mtg	297002	F minor	F minor		2	4	289	F minor	F minor	F minor	F minor
+mtg	297010	C minor	C minor		2	2	1181	C minor	C minor	G# major	A# major
+mtg	4265141	B minor	B minor		1	3	353	E major	B major	B minor	B minor
+mtg	297012	A# minor	A# minor		2	2	1181	G# minor	D# minor	D# minor	D# minor
+mtg	297013	G minor	G minor		2	4	322	G minor	G minor	G minor	G minor
+mtg	297025	D minor	D minor		2	4	973	D major	D major	D major	D major
+mtg	297030	B minor	B minor		2	4	973	E minor	E minor	E minor	E minor
+mtg	297057	C# minor	C# minor		2	2	1101	C# minor	C# minor	F# minor	C# minor
+mtg	297059	D minor | F major			1	2	1101		F major	F major	F major
+mtg	297065	D minor | F major			1	2	1101		F minor	F minor	F minor
+mtg	297067	E minor	E minor		2	2	1101	E minor	G major	G major	E minor
+mtg	297071	G# major mixolydian-b6			2	0	50		G# minor	C# minor	C# minor
+mtg	297113	F major	F major		2	3	700	C major	A minor	D minor	A minor
+mtg	297114	F minor	F minor		1	3	700	F minor	F minor	F minor	F minor
+mtg	297115	X			0	3	700		E minor	A minor	A minor
+mtg	297116	F minor	F minor		1	3	700	F minor	F minor	F minor	F minor
+mtg	297125	G minor	G minor		2	3	264	G minor	G minor	G minor	G minor
+mtg	297129	D major	D major		2	0	1254	D major	B minor	B minor	D major
+mtg	297131	B major	B major		2	0	825	B major	B major	B major	B major
+mtg	297150	A other | Bb other			0	4	46		G# major	C# major	A minor
+mtg	297161	G minor	G minor		2	0	129	G minor	G major	G minor	G major
+mtg	297162	A minor	A minor		2	0	129	A minor	A minor	A minor	A minor
+mtg	297188	B minor	B minor		2	1	614	E major	E major	E major	E major
+mtg	297191	D# minor	D# minor		2	1	614	D# minor	D# minor	G# minor	D# minor
+mtg	297193	A minor	A minor		2	1	614	E minor	E minor	A minor	A major
+mtg	297204	A minor	A minor		2	3	1228	A minor	A major	A minor	A minor
+mtg	297206	F minor	F minor		2	3	83	F minor	F minor	F minor	F minor
+mtg	297218	F# minor	F# minor		2	0	1054	F# minor	F# minor	F# minor	F# minor
+mtg	297252	E major | E minor			1	0	718		E major	E major	E major
+mtg	297253	A major	A major		2	0	718	A major	C# minor	A major	A major
+mtg	297261	D minor	D minor		2	0	102	D minor	D minor	D minor	D minor
+mtg	297264	D minor	D minor		2	0	102	D minor	D major	D major	D major
+mtg	297266	F minor	F minor		2	4	729	F minor	F major	F minor	F major
+mtg	297268	G minor	G minor		2	4	729	G minor	G major	G minor	G minor
+mtg	297269	F minor	F minor		2	4	729	F minor	F minor	F minor	F minor
+mtg	4328336	A# minor	A# minor		2	0	741	E major	G# minor	G# minor	G# major
+mtg	297272	B minor	B minor		1	4	729	B minor	B major	B minor	B minor
+mtg	297273	G minor	G minor		1	4	729	G minor	G major	G major	G major
+mtg	297278	C minor	C minor		0	3	1113	C minor	C minor	C minor	C minor
+mtg	297280	X			0	3	1113		A major	D major	A major
+mtg	297281	F# minor	F# minor		2	3	1113	F# minor	F# major	F# minor	F# minor
+mtg	297286	G minor	G minor		2	3	1113	G minor	G minor	G minor	G minor
+mtg	297287	G minor	G minor		2	3	1113	G minor	F minor	F minor	G minor
+mtg	297319	B minor	B minor		1	0	189	B minor	E major	E major	E major
+mtg	297320	C# minor	C# minor		1	0	189	B minor	G# minor	A major	A major
+mtg	297330	X			0	2	689		A minor	A minor	A minor
+mtg	297332	X			0	2	689		A minor	A minor	A minor
+mtg	297334	F# major	F# major		2	4	531	F# major	F# major	F# major	F# major
+mtg	297335	F# major	F# major		2	4	531	F# major	F# major	F# major	F# major
+mtg	297336	F# major	F# major		2	4	531	F# major	F# major	F# major	F# major
+mtg	297346	G major	G major		2	1	1057	G major	B minor	B minor	B minor
+mtg	297347	G major	G major		2	1	1057	G major	B minor	B minor	B minor
+mtg	297349	E minor	E minor		2	0	260	E minor	E minor	E minor	E minor
+mtg	297355	B minor	B minor		2	3	670	B minor	F# minor	B minor	B minor
+mtg	297356	F major	F major		2	0	213	C major	F major	F major	F major
+mtg	297360	F minor	F minor		2	4	49	F minor	F minor	F minor	F minor
+mtg	297378	G major | G minor			1	4	747		G minor	G minor	G minor
+mtg	297379	A# minor	A# minor		2	3	524	A# minor	F minor	A# minor	F minor
+mtg	297409	G minor	G minor		2	1	727	G minor	G minor	G minor	G minor
+mtg	297410	G major	G major		2	4	968	G major	D major	G major	G major
+mtg	297411	F# minor	F# minor		2	2	1219	C# minor	B major	B major	B major
+mtg	297413	D# major mixolydian			2	4	642		D# major	D# minor	D# minor
+mtg	297415	C major	C major		2	0	925	C major	C major	C major	C major
+mtg	297417	E minor	E minor		1	3	467	E minor	A minor	D minor	A minor
+mtg	297418	C major	C major		2	3	238	C major	C major	C major	C major
+mtg	297422	F major	F major		2	4	495	F major	F major	F major	F major
+mtg	297424	C major	C major		2	1	830	C major	C major	C major	C major
+mtg	297473	G# minor	G# minor		1	2	582	G# minor	B major	B major	B major
+mtg	297474	B major	B major		2	4	1147	B major	G# minor	B major	G# minor
+mtg	297485	C minor	C minor		1	3	837	C minor	C minor	F minor	C minor
+mtg	297488	F major	F major		2	3	683	D minor	F major	F major	D minor
+mtg	297491	F minor	F minor		2	3	561	F minor	F minor	F minor	F minor
+mtg	297494	E minor	E minor		2	1	555	E minor	E minor	E minor	E minor
+mtg	297501	F minor	F minor		2	4	679	F minor	F minor	F minor	F minor
+mtg	297506	B minor	B minor		2	3	530	B minor	B minor	B minor	B minor
+mtg	297513	C major mixolydian			2	0	388		C major	C major	C minor
+mtg	297517	D# minor	D# minor		1	4	1198	D# minor	D# major	D# minor	D# major
+mtg	297521	F minor	F minor		2	4	368	F minor	F minor	F minor	F minor
+mtg	4572120	B major	B major		2	3	1266	B minor	E major	E major	A minor
+mtg	297535	D# minor	D# minor		2	2	328	D# minor	D# major	D# major	D# minor
+mtg	297536	C minor	C minor		2	2	321	C minor	C major	C minor	C major
+mtg	297538	C minor	C minor		2	0	788	C minor	C minor	C minor	C minor
+mtg	297541	X			1	3	863		F# minor	F# minor	D major
+mtg	297542	F minor	F minor		2	3	863	F minor	F minor	F minor	F minor
+mtg	297575	F other | E other			0	1	688		F minor	F minor	F minor
+mtg	297579	A minor	A minor		2	3	730	A minor	A minor	A minor	A minor
+mtg	297580	D minor	D minor		2	3	730	D minor	D minor	D minor	D minor
+mtg	297598	G# minor	G# minor		1	0	551	C# minor	G# minor	G# minor	G# minor
+mtg	297600	E minor	E minor		2	0	551	E minor	G major	G major	G major
+mtg	297604	G minor	G minor		1	0	492	A major	A minor	A minor	A minor
+mtg	297608	A major	A major		2	3	146	A major	C# minor	A major	A major
+mtg	297615	A minor	A minor		2	1	845	A minor	A minor	A minor	A minor
+mtg	297616	A minor	A minor		2	1	845	A minor	A minor	A minor	A minor
+mtg	297617	A minor	A minor		2	1	845	A minor	A minor	A minor	A minor
+mtg	297620	D minor | F major			2	2	487		D minor	D minor	D minor
+mtg	297627	F minor	F minor		2	2	487	F minor	F minor	G# major	F minor
+mtg	297637	X			0	2	314		A major	F# minor	D minor
+mtg	297641	D minor	D minor		1	4	762	D minor	D major	D major	D major
+mtg	297652	E minor	E minor		2	1	520	E major	E major	E major	E major
+mtg	297654	E minor	E minor		2	1	812	E minor	E major	E minor	E major
+mtg	297656	E minor	E minor		2	1	812	E minor	E major	E major	E major
+mtg	297657	F major	F major		2	2	8	F minor	F minor	F minor	F minor
+mtg	297658	F major	F major		2	2	8	F minor	F minor	F minor	F minor
+mtg	297659	F minor	F minor		2	2	190	F minor	F minor	G# major	F minor
+mtg	297660	C minor	C minor		2	2	190	C minor	D# major	D# major	D# major
+mtg	297666	Bb other | A minor			2	2	1109		E minor	F# minor	F# minor
+mtg	297667	X			0	2	1109		F# major	F# major	F# major
+mtg	297675	A minor | A major			1	0	347		A major	A major	A major
+mtg	297677	A minor | A major			1	0	347		A minor	A minor	A minor
+mtg	297680	X			0	3	1253		A# minor	A# minor	A# minor
+mtg	297681	X			0	3	1253		C major	F minor	C major
+mtg	297686	A# major mixolydian			2	2	1193		G minor	D# major	D# major
+mtg	297692	C# minor	C# minor		2	2	1193	C# minor	C# minor	C# minor	C# minor
+mtg	297695	C# minor	C# minor		2	2	1193	C# minor	C# minor	C# minor	C# minor
+mtg	297696	A minor	A minor		2	4	714	A minor	A major	A major	A major
+mtg	297697	F# minor	F# minor		2	4	246	F# minor	F# minor	F# minor	F# minor
+mtg	297698	F minor	F minor		2	3	586	F minor	F minor	F minor	F minor
+mtg	297699	F minor	F minor		2	3	586	F minor	F minor	F minor	F minor
+mtg	297704	F minor	F minor		1	2	336	A# minor	A# minor	A# minor	A# major
+mtg	297705	A# minor	A# minor		2	2	336	A# minor	A# minor	A# minor	A# minor
+mtg	297709	X			0	4	859		F# minor	F# minor	A major
+mtg	297717	C minor	C minor		2	2	312	C minor	C major	C minor	C minor
+mtg	297718	C minor	C minor		2	2	312	C major	C major	C major	C major
+mtg	297721	G minor	G minor		2	0	536	D minor	D major	D major	D major
+mtg	178770	E minor	E minor		2	3	752	E minor	G major	G major	G major
+mtg	297735	E minor dorian			1	0	660		A major	A major	E major
+mtg	297748	A major mixolydian			2	4	685		G major	G minor	A minor
+mtg	297751	A minor | A major			1	4	685		A major	A minor	A minor
+mtg	297756	G# minor	G# minor		2	3	808	G# minor	G# major	G# minor	G# minor
+mtg	297757	G# minor	G# minor		2	3	808	G# minor	G# major	G# minor	G# minor
+mtg	297766	A minor | A major			1	4	313		E minor	A minor	A minor
+mtg	297767	F minor	F minor		2	4	1031	F minor	F minor	F minor	F minor
+mtg	297768	F minor	F minor		2	4	1150	F minor	F minor	F minor	F minor
+mtg	297769	D minor	D minor		2	4	1150	D minor	D minor	D minor	D minor
+mtg	297804	E minor dorian			2	0	996		E minor	E minor	A major
+mtg	297806	A# major	A# major		2	0	996	A# major	A# major	A# major	A# major
+mtg	297807	F minor	F minor		2	0	996	F minor	F minor	F minor	F minor
+mtg	297811	E minor	E minor		2	0	996	E minor	E major	E minor	E minor
+mtg	297816	A minor	A minor		1	2	103	D minor	D major	D minor	D major
+mtg	297818	G# major	G# major		2	2	103	D# minor	G# major	G# minor	G# minor
+mtg	297849	G minor	G minor		2	2	416	F major	C minor	F minor	F major
+mtg	297853	C# minor	C# minor		2	3	1248	A major	C# minor	F# minor	C# minor
+mtg	297879	D# minor	D# minor		2	2	336	D# minor	D# major	D# major	D# major
+mtg	297882	D# minor	D# minor		2	2	336	D# minor	D# minor	D# minor	D# minor
+mtg	297886	F major	F major		0	4	570	A minor	C# minor	C# minor	A minor
+mtg	297889	F major | D minor			2	1	391		F major	F major	F major
+mtg	297890	F major | D minor			2	1	391		F major	F major	F major
+mtg	297895	C minor	C minor		2	1	768	C minor	D# major	D# major	D# major
+mtg	297967	G minor	G minor		2	1	1118	G minor	G minor	G minor	G minor
+mtg	297969	C minor	C minor		1	1	1118	C minor	C major	C major	C major
+mtg	297993	A minor	A minor		1	1	247	A minor	C# minor	F# minor	F# minor
+mtg	297994	F# minor	F# minor		2	1	247	F# minor	F# minor	F# minor	A major
+mtg	297995	A# minor	A# minor		2	1	673	A# minor	F minor	A# minor	A# minor
+mtg	297996	F# minor	F# minor		2	1	247	F# minor	F# minor	F# minor	G minor
+mtg	298006	C minor	C minor		2	0	828	C minor	C major	C minor	C major
+mtg	298007	E minor | B minor			1	0	828		E major	E minor	E minor
+mtg	298011	G# major	G# major		2	1	247	G# minor	G# minor	G# minor	G# minor
+mtg	298012	G# major | G# minor			1	1	247		G# major	G# minor	G# major
+mtg	298015	G# major | G# minor			1	1	247		G# major	C# minor	A major
+mtg	298017	A# minor | A# major			1	2	1124		A# minor	A# minor	A# minor
+mtg	298020	F major lydian			2	3	339		F minor	F minor	F minor
+mtg	298024	A# major | A# minor			1	3	339		A# major	A# minor	A# major
+mtg	298029	F minor	F minor		1	4	204	F minor	F minor	F minor	F major
+mtg	298042	C major	C major		1	3	537	C minor	C major	C minor	C major
+mtg	298054	B minor	B minor		2	3	1139	B minor	B major	B minor	B minor
+mtg	298055	A major	A major		1	1	247	A major	C# minor	C# minor	A major
+mtg	298058	A minor	A minor		1	4	9	D# minor	D# minor	G# minor	D# minor
+mtg	298061	A major	A major		1	1	247	A major	A major	A minor	A minor
+mtg	298076	F# minor	F# minor		1	3	428	G minor	G minor	G minor	G minor
+mtg	298078	G# minor	G# minor		0	2	1124	C minor	G# major	G# major	G# minor
+mtg	298080	D# major	D# major		2	3	131	D# major	D# major	D# major	D# major
+mtg	298082	F major	F major		2	3	131	F major	F major	F major	F major
+mtg	298084	G# minor	G# minor		0	1	247	G# minor	G# minor	G# minor	G# minor
+mtg	298088	G major | G minor			1	3	428		G major	G minor	G major
+mtg	298104	C minor	C minor		2	1	138	C minor	C minor	C minor	C minor
+mtg	298109	A# major | A# minor			1	2	488		F minor	A# minor	A# minor
+mtg	298110	C# minor	C# minor		2	1	247	C# minor	E major	E major	E major
+mtg	298111	B minor	B minor		2	1	247	B minor	B minor	B minor	B minor
+mtg	298115	C minor | C major			1	1	247		C major	C minor	C minor
+mtg	298129	C# minor	C# minor		2	1	247	C# minor	C# minor	C# minor	C# minor
+mtg	298134	A major	A major		2	3	428	A minor	A major	A major	A major
+mtg	298169	F minor	F minor		2	0	726	F major	F major	F major	F major
+mtg	298170	C minor	C minor		2	0	726	C minor	C minor	C minor	C minor
+mtg	298172	D minor	D minor		2	0	726	D minor	D major	D major	D# major
+mtg	298173	C minor	C minor		2	0	726	G# major	C minor	F minor	C minor
+mtg	298193	G minor	G minor		2	0	726	G minor	G minor	G minor	G minor
+mtg	298211	A# minor	A# minor		2	3	1155	A# minor	C# major	C# major	C# major
+mtg	298215	A major	A major		2	3	1155	A major	E major	A major	A major
+mtg	298216	F major	F major		2	3	1155	F major	F minor	A# minor	F minor
+mtg	298226	F minor	F minor		2	4	1105	F minor	F minor	F minor	F minor
+mtg	298236	E minor	E minor		1	2	383	E minor	E major	E major	E minor
+mtg	298319	A# major	A# major		2	0	726	A# major	F major	F minor	F major
+mtg	298320	A minor	A minor		1	0	726	E minor	A major	A major	E minor
+mtg	298327	D minor	D minor		2	0	726	D minor	D major	D major	D major
+mtg	298332	D minor	D minor		2	0	1010	D minor	D minor	D minor	D minor
+mtg	298334	F minor	F minor		2	1	896	F minor	C minor	C minor	C minor
+mtg	298397	D# major | D# minor			1	4	767		A# minor	A# minor	A# minor
+mtg	298398	F# major	F# major		2	4	767	E minor	A# minor	A# minor	A# minor
+mtg	298399	F minor	F minor		2	4	767	F minor	F minor	F minor	F major
+mtg	298429	F minor	F minor		2	0	726	F minor	F minor	F minor	F minor
+mtg	298430	F minor	F minor		2	0	726	F minor	F minor	F minor	F minor
+mtg	298431	C minor	C minor		2	0	726	C minor	C minor	C minor	C major
+mtg	298474	G minor	G minor		2	0	726	G minor	G minor	G minor	G minor
+mtg	298525	C minor	C minor		2	0	726	C major	C major	C major	C minor
+mtg	298530	A minor	A minor		2	0	726	A minor	A minor	G major	G major
+mtg	298532	C minor	C minor		2	0	726	C minor	C minor	C minor	C major
+mtg	298535	F minor	F minor		2	0	726	F minor	F minor	F minor	F minor
+mtg	298536	B minor	B minor		2	0	726	B minor	B minor	B minor	B minor
+mtg	298763	A minor	A minor		2	3	815	A minor	A minor	A minor	A minor
+mtg	298764	A minor	A minor		2	3	815	A minor	A minor	D minor	A minor
+mtg	298791	D minor	D minor		2	3	30	D minor	D minor	D minor	D minor
+mtg	298795	F major | F minor			2	4	215		F major	F minor	F minor
+mtg	298805	F minor	F minor		2	3	1130	F minor	C minor	C minor	C minor
+mtg	298813	D minor	D minor		1	2	1025	D minor	E major	E major	A major
+mtg	298817	C minor	C minor		2	2	1011	C minor	C major	C minor	C minor
+mtg	298824	F minor phrygian			2	1	1082		F minor	F minor	F minor
+mtg	298846	F minor	F minor		2	4	712	F minor	F major	F minor	F minor
+mtg	298847	Bb major | F minor			1	4	712		F major	F minor	F major
+mtg	298850	F minor	F minor		2	3	1040	F minor	F minor	F minor	F minor
+mtg	298857	D# minor	D# minor		1	2	328	F# major	A# minor	A# minor	A# minor
+mtg	298860	G minor	G minor		2	1	1117	G minor	G minor	G minor	G minor
+mtg	298863	G# major | D# major			2	3	507		G# major	G# minor	G# minor
+mtg	298865	F minor	F minor		1	3	722	F minor	F minor	F minor	C minor
+mtg	298866	F major	F major		2	3	722	F major	C major	F minor	C major
+mtg	298867	D# other			0	3	722		G# major	G# major	A# major
+mtg	298880	D# minor	D# minor		2	1	145	A# minor	A# minor	A# minor	A# minor
+mtg	298914	D major	D major		2	1	278	F# minor	F# minor	D major	D major
+mtg	298915	D major	D major		2	1	278	F# minor	F# minor	D major	D major
+mtg	298938	A minor	A minor		2	2	966	A minor	A major	A minor	A major
+mtg	298940	G# minor	G# minor		2	4	723	D# minor	D# major	D# major	D# major
+mtg	298944	G# major	G# major		2	4	723	G# minor	G# major	G# minor	G# major
+mtg	298951	C minor	C minor		2	1	998	C minor	C minor	C minor	C minor
+mtg	298984	D# major	D# major		2	0	126	C minor	D# major	G# major	G# major
+mtg	298985	D# major	D# major		2	0	126	C minor	D# major	G# major	D# major
+mtg	298986	D# major	D# major		2	0	126	C minor	D# major	G# major	D# major
+mtg	298987	D# major	D# major		2	0	126	G# major	D# major	G# major	G# major
+mtg	298989	X			0	1	616		F# minor	F# minor	A major
+mtg	298990	C major | G major			1	1	616		G major	G major	G major
+mtg	298992	G major	G major		2	1	616	D major	D major	D major	D major
+mtg	298998	D# minor	D# minor		2	3	224	D# minor	D# minor	D# minor	D# minor
+mtg	299003	A minor	A minor		2	4	1183	A minor	A minor	A minor	A minor
+mtg	299008	B major	B major		1	3	286	B major	B major	E major	B major
+mtg	299025	A minor	A minor		2	4	258	A minor	A major	A minor	A major
+mtg	299031	G major	G major		2	4	91	G minor	G major	G minor	G major
+mtg	299032	G major	G major		2	4	91	G minor	G major	G minor	G minor
+mtg	299040	A minor	A minor		2	1	860		E major	A major	A major
+mtg	299041	F minor	F minor		2	0	646	F minor	F major	F minor	F minor
+mtg	299050	A major | A minor			2	1	86		C# minor	C# minor	A major
+mtg	299059	G minor	G minor		2	3	1188	G minor	G major	G minor	G major
+mtg	299063	A major	A major		2	1	897	A minor	A major	A major	A major
+mtg	299064	E minor	E minor		2	2	568	E minor	E minor	E minor	E minor
+mtg	299071	A major	A major		2	1	835	C# minor	A major	A major	A minor
+mtg	299073	E major	E major		2	1	835	E minor	E major	E minor	E major
+mtg	299074	C# minor | E major			2	1	835		C# minor	C# minor	C# minor
+mtg	299075	C# minor	C# minor		0	1	835	A minor	G# minor	E major	E major
+mtg	299114	G# major	G# major		2	0	1205	G# minor	G# major	C# major	G# major
+mtg	299157	F minor	F minor		2	3	331	F minor	F minor	F minor	F minor
+mtg	299159	A minor	A minor		2	3	763	A minor	A major	A minor	A major
+mtg	299160	A minor	A minor		2	3	763	A minor	A major	A major	A major
+mtg	299191	A minor	A minor		2	1	590	A minor	A minor	A minor	A minor
+mtg	299298	D minor	D minor		2	1	1020	D minor	D minor	G minor	D minor
+mtg	299300	G minor | G major			1	1	1020		G major	G major	G major
+mtg	299306	F major	F major		2	2	266	F major	F major	F major	F major
+mtg	299310	C minor	C minor		2	1	578	C minor	C major	C minor	C minor
+mtg	299311	C minor	C minor		2	1	578	C minor	C major	C minor	C major
+mtg	299355	G major	G major		2	1	854	G major	B minor	G major	G major
+mtg	299365	F major	F major		2	4	725	F major	F minor	F minor	F major
+mtg	299396	B minor	B minor		2	0	658	B major	A major	G major	G major
+mtg	299401	B major	B major		2	3	48	B minor	F# minor	F# minor	B major
+mtg	299450	A# major	A# major		2	4	519	A# major	A# major	A# major	A# major
+mtg	299451	G major | E minor			1	4	519		D major	G major	G major
+mtg	299452	F minor	F minor		2	3	223	F minor	F major	F minor	F minor
+mtg	299453	F minor	F minor		2	3	223	F minor	F major	F minor	F minor
+mtg	299454	C minor	C minor		2	3	223	C minor	C minor	F minor	C minor
+mtg	299455	C minor	C minor		2	3	223	C minor	C minor	C minor	C minor
+mtg	299456	C minor	C minor		2	3	223	C minor	C major	F minor	C major
+mtg	299457	F minor	F minor		2	3	223	F minor	F major	F minor	F major
+mtg	299459	F minor phrygian			2	3	223		F minor	F minor	F minor
+mtg	299462	E minor	E minor		2	0	658	A minor	A major	A minor	A minor
+mtg	299464	B major	B major		2	0	658	B major	B major	B major	B major
+mtg	299465	E major	E major		2	2	991	E major	E major	E major	E major
+mtg	299466	F major	F major		2	2	991	F major	F major	F major	F major
+mtg	299467	G major	G major		2	2	991	G major	G major	G major	G major
+mtg	299468	A major	A major		2	2	991	A major	A major	A major	A major
+mtg	299469	C major | A minor			1	2	991		C major	C major	C major
+mtg	299470	G major	G major		2	2	991	G major	G major	G major	G major
+mtg	299471	F major	F major		2	2	991	D minor	G minor	G minor	G minor
+mtg	299472	G major	G major		2	2	991	G major	G major	G major	G major
+mtg	299473	F major	F major		2	2	991	F major	C major	F major	F major
+mtg	299474	G major	G major		2	2	991	G major	G major	G major	G major
+mtg	299475	F major	F major		2	2	991	F major	F major	F major	F major
+mtg	299482	A major	A major		2	4	282	A major	A major	A major	A major
+mtg	299483	G major	G major		2	0	759	G major	E minor	C major	G major
+mtg	299486	E major	E major		2	4	1262	E major	C# minor	E major	E major
+mtg	299488	E minor	E minor		2	4	282	E minor	E minor	E minor	E minor
+mtg	299489	D major	D major		2	0	759	D major	D major	D major	D major
+mtg	299490	F# major	F# major		2	0	658	F# major	F# major	F# major	F# major
+mtg	299491	D major mixolydian			2	0	155		D minor	D minor	D minor
+mtg	299492	A major | F# minor			0	4	282		C# minor	F# minor	A major
+mtg	299493	A major	A major		2	4	282	A major	A major	A major	A major
+mtg	3988819	D# minor	D# minor		1	3	629	F# minor	F# major	F# minor	F# major
+mtg	299497	A minor	A minor		1	1	409	E minor	E minor	E minor	A minor
+mtg	299503	C major	C major		2	3	919	C major	C major	C major	C major
+mtg	299507	F minor phrygian			2	0	1067		F minor	F# major	F# major
+mtg	299509	D major mixolydian			2	0	155		D minor	D minor	D minor
+mtg	299511	D major	D major		2	0	155	D major	D major	D major	D major
+mtg	299513	C# major	C# major		2	0	155	C# major	C# major	C# minor	C# major
+mtg	299546	F minor	F minor		2	4	685	F minor	F minor	F minor	F minor
+mtg	299547	F# minor	F# minor		2	4	356	F# minor	F# minor	F# minor	F# minor
+mtg	299616	E minor | E major			1	0	265		E major	E major	E major
+mtg	299624	E minor	E minor		1	0	305	E minor	E major	E minor	E major
+mtg	299625	C major	C major		2	3	413	C minor	C minor	C minor	C minor
+mtg	299654	G minor | G major			1	4	298		G minor	G minor	G minor
+mtg	299657	C minor	C minor		2	4	298	C minor	C minor	C minor	C minor
+mtg	299665	G# major	G# major		2	3	645	G# minor	G# major	G# major	G# major
+mtg	299667	A major	A major		2	1	853	A minor	A major	A major	A minor
+mtg	299668	A minor phrygian			2	1	865		F# minor	F# minor	F# minor
+mtg	299669	C minor phrygian			2	0	910		C minor	C minor	C minor
+mtg	299679	F major	F major		2	3	850	C major	C major	C major	C major
+mtg	299681	C minor	C minor		2	4	1162	C minor	C major	C minor	C minor
+mtg	299687	X			0	2	1055		G# minor	G# minor	F# minor
+mtg	299690	D minor	D minor		0	4	976	C# minor	G# major	G# major	G# major
+mtg	299701	A# minor	A# minor		2	2	334	D# minor	D# minor	D# minor	D# minor
+mtg	299725	A# minor	A# minor		1	2	1167	C minor	F# major	F# major	F# major
+mtg	299729	C minor	C minor		2	3	1233	C minor	C minor	C minor	C minor
+mtg	299739	F minor	F minor		2	3	179	F minor	F major	F major	A major
+mtg	299743	F# major mixolydian			2	3	179		F# minor	F# minor	F# minor
+mtg	299754	G minor	G minor		2	4	91	D minor	D major	D minor	D major
+mtg	299761	F major | G minor			1	4	851		F major	F major	F major
+mtg	299764	G major	G major		1	4	851	C major	E minor	E minor	E minor
+mtg	299767	C minor	C minor		2	4	851	C minor	G minor	C minor	C minor
+mtg	299769	F minor	F minor		2	4	851	F minor	F minor	F minor	F minor
+mtg	299772	C minor	C minor		2	4	851	C minor	C minor	C minor	A# major
+mtg	299773	F minor	F minor		2	4	851	F major	F minor	F minor	F minor
+mtg	299782	C# minor	C# minor		2	3	620	C# minor	C# minor	C# minor	C# minor
+mtg	299786	F minor	F minor		2	1	1125	F minor	F minor	F minor	F minor
+mtg	299789	G# major	G# major		2	1	1166	G# minor	G# major	G# minor	G# major
+mtg	299792	A# minor	A# minor		2	2	1204	A# minor	A# minor	A# minor	A# minor
+mtg	299800	C major	C major		1	3	31	F minor	C minor	F minor	C minor
+mtg	299801	A minor	A minor		2	3	31	A minor	E minor	A minor	A minor
+mtg	299807	D# major	D# major		2	3	997	D# minor	D# major	D# major	D# major
+mtg	299808	D# major	D# major		2	3	997	D# minor	D# major	D# major	D# major
+mtg	299809	C minor	C minor		2	3	997	C minor	C major	C minor	C minor
+mtg	299810	C minor	C minor		2	3	997	G minor	G minor	C minor	D# major
+mtg	299811	D# major	D# major		2	3	997	D# minor	D# major	D# major	D# major
+mtg	299812	E major	E major		2	3	997	E minor	E major	E major	E major
+mtg	299817	F minor	F minor		2	0	4	F minor	F minor	F minor	F major
+mtg	299820	F minor | Ab major			1	0	4		G# major	G# major	G# major
+mtg	299832	C# major	C# major		2	1	1048	C# major	C# major	C# major	C# major
+mtg	299834	C# major	C# major		2	1	1048	C# major	C# major	C# major	C# major
+mtg	299835	C# major	C# major		2	1	1048	C# minor	C# major	C# minor	C# minor
+mtg	299836	C# major	C# major		2	1	1048	C# major	C# major	C# major	C# major
+mtg	299847	D minor	D minor		2	1	768	D minor	D major	D major	D major
+mtg	299849	A minor	A minor		1	1	768	A minor	A minor	G major	G major
+mtg	299861	F other			0	1	585		F minor	F minor	F major
+mtg	299862	B major	B major		1	4	1229	G major	F minor	F minor	E minor
+mtg	6103149	C# major	C# major		2	4	956	F# minor	C# major	C# major	C# major
+mtg	299869	A major	A major		2	0	598	F# minor	A major	D major	D major
+mtg	299870	D major	D major		2	0	598	B minor	B minor	B minor	B minor
+mtg	299879	A# minor | A# major			1	1	113		G# major	G# minor	A# minor
+mtg	299887	F minor	F minor		2	2	398	F minor	F minor	F minor	F minor
+mtg	299890	B other			0	0	120		G minor	G minor	A major
+mtg	299904	C major	C major		2	4	358	C major	C major	C major	C major
+mtg	299905	C# major mixolydian			2	4	999		C# major	C# minor	C# major
+mtg	299932	F major	F major		2	4	903	F minor	F minor	F minor	F major
+mtg	299933	C minor	C minor		2	4	903	C major	C minor	C minor	C minor
+mtg	299943	D# minor	D# minor		2	1	846	F# major	G# minor	G# minor	D# minor
+mtg	299945	B minor	B minor		2	1	846	F# minor	F# minor	F# minor	A major
+mtg	299968	B minor	B minor		2	2	403	B minor	B minor	B minor	B minor
+mtg	3198699	C minor	C minor		2	4	133	F minor	C major	C minor	C major
+mtg	299976	A minor	A minor		2	4	714	A minor	A major	A major	A major
+mtg	299977	F# minor	F# minor		2	4	246	F# minor	F# minor	F# minor	F# minor
+mtg	299978	F minor	F minor		2	0	16	F minor	G# major	G# major	G# major
+mtg	299994	D# minor	D# minor		2	1	710	D# major	D# major	G# major	G# minor
+mtg	299995	A major	A major		2	1	710	B minor	D major	D major	D major
+mtg	307186	E minor	E minor		2	2	301	E minor	E major	E major	E major
+mtg	307425	C minor phrygian			2	4	1062		C minor	C minor	C minor
+mtg	312995	G# minor	G# minor		2	0	1247	G# minor	G# major	G# minor	G# minor
+mtg	315480	B minor	B minor		2	4	540	B minor	B minor	B minor	B minor
+mtg	316031	C# minor	C# minor		2	3	576	C# major	C# major	C# major	C# major
+mtg	323868	X			0	0	74		E major	E minor	E minor
+mtg	326117	F# minor	F# minor		2	1	1225	F# minor	F# minor	F# minor	F# minor
+mtg	328299	C major	C major		1	3	1170	A minor	A minor	A minor	A minor
+mtg	330141	G# minor	G# minor		2	1	1008	G# minor	F# major	F# major	F# major
+mtg	331595	C major	C major		2	1	401	G minor	G minor	G minor	G minor
+mtg	332026	E minor | E major			1	4	216		E major	E major	E major
+mtg	333831	F# minor	F# minor		2	2	1000	F# major	F# minor	F# minor	F# minor
+mtg	335862	C major | A minor			2	0	373		F major	F minor	F major
+mtg	349463	D major	D major		2	0	1154	D minor	D major	D minor	D major
+mtg	350773	F major	F major		2	0	707	F minor	F minor	F minor	F minor
+mtg	356905	G minor	G minor		2	3	852	G minor	G minor	G minor	G minor
+mtg	358893	C minor	C minor		2	0	828	C minor	C minor	C minor	C minor
+mtg	367369	G major	G major		2	3	284	D major	D major	G major	D major
+mtg	371036	G# minor	G# minor		2	1	651	F# minor	C# minor	F# minor	C# minor
+mtg	373434	D minor	D minor		2	4	685	D minor	D minor	D minor	D minor
+mtg	384265	E minor	E minor		2	0	1138	E minor	E major	E minor	E minor
+mtg	384364	F minor	F minor		1	3	338	G minor	A# major	D# major	D# major
+mtg	385707	D minor	D minor		2	2	96	D minor	A minor	A minor	D minor
+mtg	386088	G minor	G minor		2	2	268	G minor	G major	G minor	G major
+mtg	388664	A minor	A minor		2	0	964	A minor	A major	A minor	A major
+mtg	392321	F# minor	F# minor		2	0	841	F# minor	F# minor	F# minor	F# minor
+mtg	396112	E major	E major		2	2	240	A minor	E major	E major	E major
+mtg	400929	A# major	A# major		1	0	482	D minor	C minor	F minor	F minor
+mtg	401815	C# minor	C# minor		2	2	1239	C# minor	C# minor	C# minor	C# minor
+mtg	402978	E minor	E minor		2	3	770	E minor	G major	G major	G major
+mtg	408635	X			0	3	341		G major	G major	G major
+mtg	410637	G# major	G# major		1	0	1224	F minor	F minor	F minor	C# major
+mtg	431138	A minor	A minor		2	3	1022	E minor	E major	E major	E minor
+mtg	431805	F minor	F minor		2	0	1114	G# major	G# major	G# major	G# major
+mtg	432966	D minor	D minor		2	0	199	D minor	D minor	D minor	D minor
+mtg	435271	B minor	B minor		2	1	753	B minor	B major	B minor	B minor
+mtg	441969	E minor	E minor		2	0	161	E minor	E minor	E minor	E minor
+mtg	443912	G# minor	G# minor		2	3	760	G# minor	G# minor	G# minor	G# minor
+mtg	446875	D minor	D minor		2	4	619	D minor	D minor	D minor	D minor
+mtg	450431	E minor	E minor		2	2	433	E minor	E major	E minor	E major
+mtg	451169	C# minor	C# minor		2	4	1033	C# minor	C# minor	C# minor	C# minor
+mtg	457131	E minor	E minor		2	1	1029	E minor	E major	E minor	E major
+mtg	460731	E major	E major		2	0	1084	C# minor	G# minor	C# minor	G# minor
+mtg	461880	X			0	1	1057		G major	G major	G minor
+mtg	466208	G# minor	G# minor		2	3	758	G# minor	G# minor	G# minor	G# minor
+mtg	470136	B minor	B minor		2	0	803	B minor	F# major	B major	F# major
+mtg	471711	G minor	G minor		2	4	297	G minor	G minor	G minor	G minor
+mtg	482720	D major	D major		1	0	634	A major	F# minor	F# minor	D major
+mtg	4772886	C minor	C minor		2	3	1258	C minor	C minor	D# major	A# major
+mtg	486395	F# major	F# major		2	0	521	F# major	F# major	F# major	F# major
+mtg	487971	C major	C major		2	2	24	C major	C major	C major	C major
+mtg	489351	A# major	A# major		2	1	7	A# major	A# major	A# major	A# major
+mtg	489613	X			0	1	889		C# major	C# major	C# major
+mtg	491529	A minor	A minor		2	0	1190	A minor	A minor	A minor	A minor
+mtg	495613	D minor	D minor		2	0	249	D minor	D major	D major	D major
+mtg	497517	E minor	E minor		1	2	1047	C# minor	G# minor	C# minor	C major
+mtg	501476	D major	D major		2	2	931	D major	D major	D major	D major
+mtg	501562	C minor	C minor		2	1	84	C minor	C minor	C minor	C minor
+mtg	503690	D minor	D minor		2	2	856	D minor	D major	D major	D major
+mtg	508703	E major	E major		2	2	412	E major	F# minor	F# minor	E major
+mtg	512956	D minor	D minor		2	3	386	D minor	D major	D minor	D minor
+mtg	515806	F#_ minor | F^ minor			2	0	230		C# major	C# major	F# minor
+mtg	521598	C# minor	C# minor		2	3	468	C# minor	C# major	C# minor	C# major
+mtg	522851	G# minor	G# minor		2	4	883	G minor	G major	C major	G# minor
+mtg	528454	E major	E major		2	3	76	E major	G# minor	E major	G# minor
+mtg	533963	G minor	G minor		2	3	1189	G minor	G minor	G minor	G minor
+mtg	536497	D minor	D minor		2	0	882	D minor	D minor	D minor	D minor
+mtg	542315	B minor	B minor		2	4	371	B minor	B minor	B minor	B minor
+mtg	542876	E minor	E minor		2	0	128	A minor	D major	G major	A minor
+mtg	558054	F# minor	F# minor		2	2	1070	F# minor	F# major	F# minor	F# minor
+mtg	561086	B major	B major		2	3	935	C# minor	B major	B major	B major
+mtg	563669	E minor	E minor		2	4	170	E minor	E major	E minor	E minor
+mtg	574098	A# minor	A# minor		2	4	870	A# minor	A# minor	A# minor	A# minor
+mtg	574896	A minor	A minor		1	4	1085		E major	E major	F major
+mtg	575766	A minor	A minor		2	0	29	A minor	A minor	A minor	A minor
+mtg	578325	X			0	4	46		E minor	E minor	E minor
+mtg	580557	D# major	D# major		2	4	681	D# minor	D# major	D# major	D# major
+mtg	585098	B minor	B minor		2	3	750	B minor	B minor	B minor	B minor
+mtg	6236612	G minor	G minor		2	1	789	F minor	F minor	F minor	G minor
+mtg	588879	F minor	F minor		2	2	674	F minor	F minor	F minor	F minor
+mtg	598701	B minor	B minor		2	4	542	B minor	D major	D major	D major
+mtg	601207	D major	D major		2	0	1206	D minor	G major	G major	D major
+mtg	603802	A minor	A minor		2	3	142	A minor	A minor	D minor	A minor
+mtg	605407	D major	D major		2	0	263	D minor	D major	D major	D major
+mtg	608572	D major	D major		2	2	182	D minor	A major	D minor	D major
+mtg	608703	D minor	D minor		2	2	471	D major	D major	G major	D major
+mtg	611801	A minor	A minor		2	4	544	A minor	A major	A minor	A major
+mtg	611928	E minor	E minor		2	3	393	E minor	E major	E major	E major
+mtg	611933	F minor	F minor		1	0	299	F minor	F# minor	F# minor	F# minor
+mtg	616128	D minor	D minor		2	1	1172	G minor	G major	G major	G major
+mtg	616415	D# major	D# major		2	3	1145	C minor	A# major	D# major	A# major
+mtg	617609	C# major	C# major		2	1	1051	C# major	C# major	C# major	C# major
+mtg	628368	D major	D major		2	4	141	A major	D major	D major	D major
+mtg	628617	C# minor	C# minor		2	3	1108	C# minor	C# minor	C# minor	C# minor
+mtg	633283	E minor	E minor		2	3	1142	E minor	E major	E major	E major
+mtg	635716	A minor	A minor		2	4	1211	A minor	A minor	A minor	A minor
+mtg	638337	D minor	D minor		2	3	1169	D minor	D minor	D minor	D minor
+mtg	638879	A minor	A minor		2	4	405	E minor	E minor	G major	E minor
+mtg	643172	G minor	G minor		2	3	211	G minor	G minor	G minor	G minor
+mtg	645331	G minor	G minor		1	3	738	D minor	G minor	G minor	G minor
+mtg	645959	D minor	D minor		2	4	23	D major	D major	D minor	D major
+mtg	650084	B major	B major		1	4	1026	B minor	F# major	B major	B major
+mtg	650341	D minor	D minor		2	3	984	D minor	D major	D major	D minor
+mtg	650371	A minor	A minor		2	1	560	A minor	C major	C major	C major
+mtg	650505	A minor	A minor		2	0	559	A minor	A minor	A minor	A minor
+mtg	650820	X			0	1	583		F minor	F minor	A# major
+mtg	654335	X			0	0	5		G# major	G# minor	G# major
+mtg	656533	E minor	E minor		2	2	1203	E minor	E minor	E minor	E minor
+mtg	657010	D minor	D minor		2	1	504	D minor	D major	D major	D major
+mtg	673637	A# minor	A# minor		2	4	518	C# major	C# major	F# major	C# major
+mtg	675299	E major	E major		2	2	823	E major	G# minor	G# minor	G# minor
+mtg	680345	E major	E major		2	2	124	E major	E major	E major	E major
+mtg	681908	C# minor	C# minor		2	0	67	C# minor	C# minor	C# minor	C# minor
+mtg	682387	C# minor	C# minor		2	1	174	D minor	G minor	G minor	G# minor
+mtg	685481	A minor	A minor		2	3	770	A minor	A major	A major	A major
+mtg	686686	D minor	D minor		2	0	943	D minor	D major	D minor	D minor
+mtg	687183	C minor	C minor		2	1	881	C minor	G minor	G minor	G minor
+mtg	687544	A minor	A minor		1	1	443	C minor	F minor	F minor	A minor
+mtg	691545	C# minor	C# minor		2	0	457	C# minor	C# minor	C# minor	C# minor
+mtg	691843	C# major	C# major		2	3	357	C# major	C# major	C# major	C# major
+mtg	6273674	C# major	C# major		2	0	1079	F minor	F minor	F minor	F minor
+mtg	694157	D minor	D minor		2	2	276	D minor	D major	D major	D major
+mtg	694280	D minor	D minor		1	0	26	D minor	D minor	D minor	D minor
+mtg	695589	D minor	D minor		2	3	659	D minor	D minor	G minor	D minor
+mtg	696806	C# minor	C# minor		2	2	402	C# minor	C# minor	C# minor	C# minor
+mtg	697443	D# major	D# major		2	2	838	A# major	A# major	D# major	D# major
+mtg	700076	A# minor	A# minor		2	1	261	A# minor	C# major	C# major	A# minor
+mtg	707425	B minor	B minor		2	2	97	B minor	D major	D major	D major
+mtg	707851	F# minor	F# minor		2	0	161	F# minor	F# major	F# minor	F# minor
+mtg	710106	B minor	B minor		1	0	340	D major	D major	D major	D major
+mtg	712848	G minor	G minor		2	2	579	G minor	G minor	G minor	G minor
+mtg	712853	A minor	A minor		2	0	104	A minor	A minor	A minor	A minor
+mtg	715745	C minor	C minor		2	4	1235	C minor	C minor	C minor	C minor
+mtg	718543	F# major	F# major		2	1	1141	G minor	F# minor	F# minor	G# minor
+mtg	722892	C minor	C minor		2	4	900	D# major	D# major	D# major	D# major
+mtg	723438	D# minor	D# minor		2	3	255	D# minor	D# minor	D# minor	D# minor
+mtg	734930	A minor	A minor		2	2	423	A minor	C major	C major	C major
+mtg	737878	D major	D major		1	4	390	D minor	D major	D major	D major
+mtg	738230	E minor	E minor		1	3	959	D major	D major	G major	A major
+mtg	742215	C major	C major		2	2	137	C major	C minor	C minor	C minor
+mtg	753241	D minor	D minor		2	1	424	D minor	D major	G major	D major
+mtg	754389	D minor	D minor		2	4	733	D major	D major	D major	D major
+mtg	755905	B minor	B minor		2	2	222	B minor	E major	E major	B minor
+mtg	760778	C# major	C# major		2	0	400	C# minor	C# minor	C# minor	C# minor
+mtg	760891	Eb major | C minor			2	3	153		D# major	D# major	D# major
+mtg	765583	X			0	0	1255		G minor	G major	G major
+mtg	771181	E minor	E minor		1	0	1264	E minor	E major	E major	E major
+mtg	780216	A# minor	A# minor		2	0	1222	A# minor	A# major	A# minor	A# minor
+mtg	780236	C minor	C minor		2	4	442	C minor	G minor	G minor	G minor
+mtg	787388	F# major	F# major		2	3	929	F# minor	C# minor	C# minor	F# minor
+mtg	793946	D# major	D# major		2	4	166	D# minor	D# major	D# minor	D# minor
+mtg	794309	D# minor	D# minor		2	3	961	D# minor	D# major	D# minor	D# major
+mtg	797707	B minor	B minor		1	2	447		G# minor	G# minor	G# minor
+mtg	798594	F minor	F minor		2	0	960	F major	F major	F major	F major
+mtg	805746	G minor	G minor		2	0	529	G minor	G major	G major	G major
+mtg	808116	C minor	C minor		2	4	698	C minor	F minor	F minor	A# minor
+mtg	808982	G major	G major		2	1	1075	G minor	G minor	G minor	G minor
+mtg	809450	E minor	E minor		1	1	902	F# minor	G major	G major	F# minor
+mtg	818686	F# minor	F# minor		2	3	775	E minor	E major	E major	E major
+mtg	821091	D minor	D minor		2	0	337	G minor	D major	G minor	D major
+mtg	823951	G major	G major		2	1	735	G minor	G major	G major	G major
+mtg	828061	F# major	F# major		2	0	1034	A# minor	A# minor	A# minor	F major
+mtg	830719	F# minor	F# minor		2	1	501	F# minor	F# minor	F# minor	F# minor
+mtg	836000	C# major	C# major		2	3	272	C# major	G# major	C# major	C# major
+mtg	837795	G minor	G minor		2	0	17	G minor	G major	G minor	G minor
+mtg	841676	A# major	A# major		2	0	121	A# major	A# major	A# major	A# major
+mtg	842552	C minor	C minor		2	2	974	C minor	C major	C minor	C minor
+mtg	852917	C minor	C minor		2	2	107	G# major	G# major	G# major	G# major
+mtg	857189	D major	D major		2	1	47	D minor	D major	D minor	D minor
+mtg	861422	C minor	C minor		2	3	953	C minor	C minor	C minor	C minor
+mtg	864300	B minor	B minor		2	1	165	B minor	B minor	B minor	B minor
+mtg	868240	B minor	B minor		2	3	1256	D major	D major	D major	D major
+mtg	870280	E minor	E minor		2	2	1237	E minor	E major	E minor	E minor
+mtg	871246	A minor	A minor		2	3	704	C# minor	C# major	C# major	C# major
+mtg	889391	G minor	G minor		2	0	849	G minor	G minor	G minor	G minor
+mtg	894614	G# minor	G# minor		1	1	394	G# minor	G# minor	G# minor	G# minor
+mtg	897094	D# minor	D# minor		2	2	509	D# minor	D# major	D# minor	D# minor
+mtg	898664	B minor	B minor		2	3	1104	B minor	B major	B minor	B minor
+mtg	905046	B minor	B minor		2	0	1216	B minor	E major	E minor	B minor
+mtg	906851	D minor	D minor		2	3	88	D minor	D minor	D minor	D minor
+mtg	908868	G# major	G# major		2	0	408	G# minor	G# minor	G# minor	G# minor
+mtg	909102	A# minor	A# minor		2	1	122	A# minor	G# major	G# minor	G# major
+mtg	912213	E major	E major		1	4	1003	E minor	B major	E major	E major
+mtg	920509	G# major	G# major		2	0	807	G# major	G# major	G# major	G# major
+mtg	1985174	D major	D major		2	0	101	D major	D major	G major	D major
+mtg	920615	E minor	E minor		2	4	303	E minor	E minor	E minor	E minor
+mtg	923491	E minor	E minor		2	3	946	E minor	E major	E minor	E minor
+mtg	923844	X			0	1	498		G# minor	G# minor	G# minor
+mtg	940966	C# minor	C# minor		2	3	259	D# minor	C# major	C# major	C# major
+mtg	943181	G minor	G minor		2	3	799	D minor	D major	D major	D major
+mtg	944826	C# major	C# major		2	2	370	C# minor	C# minor	C# minor	C# minor
+mtg	950746	G major	G major		2	4	1180	G major	G major	G major	G major
+mtg	953140	E minor	E minor		2	1	1046	E minor	E minor	E minor	E minor
+mtg	958447	A# minor	A# minor		1	1	404	C# major	C# major	C# major	C# major
+mtg	967034	C minor	C minor		2	4	241	C minor	C major	C major	C major
+mtg	3115087	F# minor	F# minor		2	1	454	F# minor	F# minor	B minor	B minor
+mtg	984867	X			0	4	818		G# major	G# major	G# major
+mtg	987207	C# major	C# major		2	0	1006	C# major	C# major	C# major	C# major
+mtg	997069	C minor	C minor		2	3	556	C minor	C minor	C minor	C minor
+mtg	1017875	F# minor	F# minor		2	4	711	B minor	E major	E major	B minor
+mtg	1019315	D minor	D minor		2	0	589	D major	D major	D major	D major
+mtg	1019403	G# minor	G# minor		1	4	972	F# minor	F# minor	F# minor	F# minor
+mtg	1034722	C minor	C minor		2	0	1066	C minor	C minor	C minor	C minor
+mtg	1038248	D# minor	D# minor		2	1	566	D# minor	D# minor	G# minor	D# minor
+mtg	1051007	G# minor	G# minor		2	4	308	G# minor	G# minor	G# minor	G# minor
+mtg	1054705	E minor | E major			2	3	132		E major	E major	E major
+mtg	1056047	F# minor	F# minor		2	4	256	F# minor	C# major	F# minor	F# minor
+mtg	1059355	C# major	C# major		2	0	154	C# major	C# major	C# major	C# major
+mtg	1060028	B minor	B minor		2	4	866	B minor	B minor	B minor	B minor
+mtg	1067950	D major	D major		2	2	967	D minor	D major	D major	D major
+mtg	1072514	D major	D major		2	4	814	D minor	D major	D major	D major
+mtg	1077935	G# major	G# major		2	1	477		G major	G major	C major
+mtg	1093726	C# minor	C# minor		2	0	152	C# minor	C# minor	C# minor	C# minor
+mtg	1096228	D minor	D minor		2	2	1037	G minor	G major	G major	G major
+mtg	1115626	G major	G major		2	3	385	G major	D major	G major	D major
+mtg	1127447	X			0	3	273		G minor	G minor	D major
+mtg	1144674	G minor | Bb major			2	2	689		A# major	A# major	A# major
+mtg	1147737	C minor	C minor		2	0	1157	C minor	C minor	C minor	C minor
+mtg	1152124	G minor	G minor		2	1	562	G minor	G minor	G minor	G minor
+mtg	5799274	F minor	F minor		1	0	648	C major	C major	C major	C major
+mtg	1156133	E minor	E minor		2	4	1036	E minor	E major	E minor	E major
+mtg	1163534	D minor	D minor		2	0	917	D minor	D minor	D minor	D minor
+mtg	1164250	B minor phrygian			2	2	115		B major	B major	B major
+mtg	1164433	C# minor	C# minor		2	3	270	C# major	C# major	C# major	C# major
+mtg	1167965	F minor	F minor		2	0	310	F minor	G# major	G# major	G# major
+mtg	1177887	A# minor	A# minor		2	1	772	A# minor	A# major	A# minor	A# major
+mtg	1179938	X			0	1	505		B major	B major	G# minor
+mtg	1185017	G major	G major		2	3	348	G minor	G major	G major	G major
+mtg	1187324	D minor	D minor		2	0	293	E minor	G major	G major	G major
+mtg	1190182	B minor	B minor		2	1	1148	B minor	D major	D major	D major
+mtg	1190980	E minor	E minor		2	2	94	E minor	E minor	E minor	E minor
+mtg	1194397	C# major	C# major		2	2	668	C# major	C# major	C# major	C# major
+mtg	1194512	A minor	A minor		2	0	1249	A minor	A minor	A minor	A minor
+mtg	1196189	G minor	G minor		2	4	637	G minor	G major	G major	G major
+mtg	1205438	E minor	E minor		2	2	281	F# minor	F# minor	F# minor	F# minor
+mtg	1237554	E minor	E minor		1	1	1214	B minor	F# minor	B minor	F# minor
+mtg	1240548	F# minor	F# minor		2	0	35	F# major	F# major	B major	B major
+mtg	1243107	B minor	B minor		2	3	410	B minor	B minor	B minor	B minor
+mtg	1258142	C# minor	C# minor		2	3	211	C# minor	C# minor	C# minor	C# minor
+mtg	1261783	C# major	C# major		2	2	848	G# minor	C# major	C# minor	C# major
+mtg	1262462	C minor phrygian			1	4	1116		F minor	C# major	C# major
+mtg	1267809	A major	A major		2	3	930	A major	E major	A major	A major
+mtg	1269910	X			0	2	625		E minor	E minor	E minor
+mtg	1270235	G# minor	G# minor		2	3	114	B major	F# major	B major	B major
+mtg	1274431	E minor	E minor		2	0	601	E minor	E major	E minor	E minor
+mtg	1276072	F# major	F# major		2	0	491	F# minor	F# major	F# major	F# major
+mtg	1277819	D minor	D minor		2	3	728	D minor	D major	D minor	D minor
+mtg	1287738	C minor	C minor		2	3	306	F major	C major	F minor	F major
+mtg	1288533	G minor	G minor		2	2	922	G minor	G minor	G minor	G minor
+mtg	1290620	C# minor	C# minor		1	4	571	C# minor	C# major	C# minor	C# minor
+mtg	1290631	E minor	E minor		2	1	511	E minor	E minor	E minor	E minor
+mtg	1290726	B major phrygian-major			2	0	194		B minor	B minor	B minor
+mtg	1298557	C# major	C# major		2	1	1023	C# minor	C# major	C# minor	C# major
+mtg	1298600	D# minor	D# minor		2	1	817	D# minor	D# major	D# minor	D# major
+mtg	1312884	A minor	A minor		2	1	879	G major	D major	G major	D major
+mtg	1320423	E minor	E minor		2	3	699	E minor	A minor	A minor	A minor
+mtg	1320553	D# minor	D# minor		2	0	232	A# minor	A# minor	A# minor	A# minor
+mtg	1321948	X			0	3	473		F minor	F minor	D# major
+mtg	1334754	A# minor	A# minor		2	1	1088	A# minor	A# minor	A# minor	A# minor
+mtg	1336593	A# minor	A# minor		2	1	986	A# minor	D# major	D# major	D# major
+mtg	1338256	D major	D major		2	2	732	G major	D major	D major	D major
+mtg	1340461	C minor	C minor		2	3	140	C minor	C major	C minor	C minor
+mtg	1342043	E major	E major		2	4	754	E major	E major	E major	E major
+mtg	1350891	A# minor	A# minor		2	3	820	A# minor	C# major	C# major	C# major
+mtg	1352419	D# minor	D# minor		2	2	434	D# minor	D# minor	D# minor	D# minor
+mtg	1362355	C# minor	C# minor		2	4	210	F# minor	C# minor	C# minor	C# major
+mtg	297271	G# major	G# major		1	4	729	F# minor	C# minor	F# minor	G# minor
+mtg	1367983	E minor	E minor		2	0	1071	E minor	E minor	E minor	E minor
+mtg	1372384	D minor	D minor		2	1	740	A minor	D major	D major	A minor
+mtg	1388341	A minor	A minor		2	0	1160	B minor	C# minor	C major	C major
+mtg	297534	F minor	F minor		1	2	328	D# minor	D# minor	D# minor	D# minor
+mtg	1389968	D# minor	D# minor		2	3	243	D# minor	F# major	F# major	F# major
+mtg	1393305	D minor	D minor		1	2	1265	G minor	A major	A major	A major
+mtg	1397802	C major	C major		2	4	1152	A minor	C major	C major	C major
+mtg	1398692	C minor	C minor		2	4	980	C minor	C minor	C minor	C minor
+mtg	1402876	A# minor	A# minor		2	0	602	A# minor	A# minor	A# minor	A# minor
+mtg	1410568	C# minor	C# minor		2	4	1013	C# minor	C# minor	C# minor	C# minor
+mtg	1410588	B major	B major		2	4	1013	G# minor	G# minor	G# minor	D# minor
+mtg	1413180	C# minor	C# minor		2	0	1245	C# minor	C# minor	C# minor	C# minor
+mtg	1416128	F# major	F# major		2	4	151	F# minor	F# minor	F# minor	F# minor
+mtg	1426839	A# minor	A# minor		2	1	366	A# minor	A# minor	A# minor	A# minor
+mtg	1428584	F major	F major		2	2	20	F major	F major	F major	F major
+mtg	1429124	D minor	D minor		1	3	547	D minor	D minor	D minor	D minor
+mtg	1435514	X			0	1	843		G# minor	G# minor	D# minor
+mtg	1439221	C# minor	C# minor		2	2	312	F# minor	C# major	F# minor	C# major
+mtg	1439992	X			0	3	680		F major	F major	G minor
+mtg	1441223	F# minor	F# minor		2	4	791	A minor	A major	A major	A minor
+mtg	1446413	D# minor	D# minor		2	3	396	D# major	D# major	D# minor	D# major
+mtg	4251163	G minor	G minor		2	3	613	D minor	D major	G major	D major
+mtg	1453434	E major	E major		2	1	650	E minor	E major	E minor	E major
+mtg	1454669	A# minor	A# minor		2	0	119	A# minor	A# minor	A# minor	A# minor
+mtg	1456345	G# major	G# major		2	2	1014	C minor	C minor	G# major	D# major
+mtg	1460099	D# minor	D# minor		2	1	782	D# minor	D# major	D# minor	D# major
+mtg	1461499	X			0	0	1115		F# minor	F# minor	F# minor
+mtg	1472760	E minor	E minor		2	2	159	E minor	E major	E minor	E minor
+mtg	1474885	D major	D major		2	1	1161	D minor	D major	D major	D major
+mtg	1478848	C minor	C minor		2	2	785	C minor	F major	F minor	F major
+mtg	1492875	C minor	C minor		2	0	1038	C minor	C minor	C minor	C minor
+mtg	1493674	B minor	B minor		2	0	329	B minor	B minor	B minor	B minor
+mtg	1497713	D major	D major		2	3	272	D major	D major	D major	D major
+mtg	1507482	G# minor	G# minor		2	4	993	G# minor	E major	E major	E major
+mtg	1541713	X			0	1	626		D# major	D# major	D# minor
+mtg	1544667	F minor	F minor		2	3	928	F minor	F minor	F minor	F minor
+mtg	1545117	D minor	D minor		2	0	833	D minor	C major	F major	C major
+mtg	1556952	D# minor	D# minor		0	0	90	D# minor	D# major	D# minor	D# major
+mtg	1558123	A major	A major		2	3	708	A minor	A major	A major	A major
+mtg	1569491	F minor	F minor		2	2	522	F minor	F minor	F minor	F minor
+mtg	1579295	C minor	C minor		2	4	977	C minor	G minor	C major	C major
+mtg	1581325	G# major	G# major		2	2	80	G# major	G# major	G# major	G# major
+mtg	1586496	G# minor | B major			2	3	892		G# minor	G# minor	B major
+mtg	1587110	C minor	C minor		1	2	134	C minor	C minor	C minor	C minor
+mtg	1587211	X			0	3	22		F# major	F# minor	F# minor
+mtg	1595063	C major	C major		2	4	110	C major	G minor	G minor	G minor
+mtg	1598083	C# major	C# major		2	2	33	A# minor	C# major	C# major	C# major
+mtg	1599632	C# minor	C# minor		2	4	157	E major	C# minor	C# minor	C# minor
+mtg	1607693	F minor	F minor		2	2	330	F minor	F minor	F minor	F major
+mtg	1609519	D# minor	D# minor		1	3	1019	G# minor	G# major	G# minor	D# minor
+mtg	1612997	E minor	E minor		2	3	653	G minor	G# minor	G# minor	G minor
+mtg	1613669	E minor | E major			1	0	989		E major	E minor	E minor
+mtg	1622037	A major	A major		2	2	1200	A minor	A minor	A minor	A minor
+mtg	3928779	B minor	B minor		2	3	541	B minor	D major	D major	D major
+mtg	1627499	D# minor	D# minor		2	4	941	D# minor	D# major	D# major	D# major
+mtg	1642729	C minor	C minor		2	3	1159	C minor	G minor	C minor	C minor
+mtg	1647165	D major	D major		2	2	436	D major	D major	D major	D major
+mtg	1648142	A# minor	A# minor		2	4	641	A# minor	A# minor	A# minor	A# minor
+mtg	1660225	G minor	G minor		2	1	844	G minor	G major	G minor	G minor
+mtg	1662838	B minor	B minor		2	4	139	B minor	B minor	B minor	B minor
+mtg	1669212	D minor	D minor		2	0	508	D# minor	G minor	G minor	D# major
+mtg	1673356	D major	D major		2	3	51	D major	D major	D major	D major
+mtg	1681314	F minor	F minor		2	1	55	F minor	F minor	F minor	F minor
+mtg	1691194	G# major	G# major		2	2	389	G# minor	G# major	C# major	G# major
+mtg	1693189	A minor	A minor		2	1	1227	A minor	A major	A minor	A major
+mtg	1694550	A# minor	A# minor		2	3	503	F minor	F minor	F minor	F minor
+mtg	1716212	B minor	B minor		2	1	217	B minor	B minor	B minor	B minor
+mtg	1740306	Ab major | F minor			1	3	89		G# major	G# major	G# major
+mtg	1740984	C minor	C minor		2	2	39	C minor	C minor	A# minor	A# minor
+mtg	1743700	F# minor	F# minor		2	1	53	F# minor	F# major	F# minor	F# major
+mtg	1746583	C# minor | E major			2	3	934		C# minor	E major	E major
+mtg	1746628	C# major	C# major		2	1	236	C# minor	G# major	G# minor	G# major
+mtg	1758017	G minor	G minor		2	0	927	F major	C major	C major	C major
+mtg	1758691	D major	D major		2	2	351	B minor	B minor	B minor	B minor
+mtg	1759353	F# minor	F# minor		2	3	939	F# minor	F# minor	F# minor	F# minor
+mtg	1762014	Bb other			1	3	593		D# major	D# major	G# minor
+mtg	1777396	X			0	1	905		F minor	A# minor	F# major
+mtg	1781925	B minor	B minor		2	1	479	B minor	E minor	E minor	E minor
+mtg	1783835	C# major	C# major		2	3	272	C# major	C# major	C# major	C# major
+mtg	1789849	C minor	C minor		2	4	944	C minor	G# major	G# major	G# major
+mtg	1795965	C major	C major		2	0	226	C minor	C major	C major	C major
+mtg	1797450	F# minor	F# minor		2	3	517	F# minor	F# major	F# minor	F# major
+mtg	1807862	X			0	1	452		G# minor	G# minor	D# major
+mtg	1810291	C minor	C minor		2	2	287	C minor	C major	C minor	C minor
+mtg	1848401	C minor	C minor		2	0	1091	C minor	G minor	C minor	C minor
+mtg	1854407	B other			1	1	406		F# minor	F# minor	B major
+mtg	1857841	F# major	F# major		2	3	810	F# minor	F# major	F# minor	F# major
+mtg	1860990	G# minor	G# minor		2	2	945	B major	B major	B major	B major
+mtg	5493430	A minor	A minor		2	3	1226	D major	G major	G major	D minor
+mtg	1879911	G# minor	G# minor		2	2	873	G# minor	G# major	G# major	G# major
+mtg	1881646	D major phrygian-major			2	3	198		D major	D major	D minor
+mtg	1883395	C major	C major		1	2	878	A minor	G minor	G minor	G# minor
+mtg	1893472	C# minor	C# minor		1	0	68	C# minor	G# major	C# major	C# minor
+mtg	1895483	D# minor	D# minor		2	1	77	D# minor	D# minor	D# minor	D# minor
+mtg	1896153	C minor	C minor		2	4	430	C major	C major	F minor	C minor
+mtg	1905079	D# minor	D# minor		2	1	1094	D# minor	D# minor	D# minor	D# minor
+mtg	1918063	G major	G major		2	3	99	G minor	G major	G major	G minor
+mtg	1918338	E major	E major		2	3	474	E minor	E minor	E minor	E minor
+mtg	1926319	C# minor	C# minor		2	2	558	C# minor	C# minor	C# minor	C# major
+mtg	1926377	B minor	B minor		2	2	558	B minor	D major	G major	D major
+mtg	1934576	C# minor	C# minor		2	1	363	A minor	G# minor	F# major	A major
+mtg	1958231	C# minor	C# minor		2	1	1143	F# minor	F# minor	F# minor	F# minor
+mtg	1958760	F# major	F# major		2	0	253	D# minor	D# minor	D# minor	D# minor
+mtg	1971434	A# major	A# major		2	3	274	A# minor	A# minor	A# minor	A# minor
+mtg	1974069	E major	E major		2	1	162	E major	E major	E major	E major
+mtg	1980637	D minor	D minor		2	1	375	D minor	D minor	D minor	D minor
+mtg	1981132	D major	D major		2	0	118	D major	D major	D major	D major
+mtg	1622038	A minor	A minor		2	4	739	A minor	A major	A major	A major
+mtg	1989603	A# minor	A# minor		2	4	1153	A# minor	G# major	G# major	G# major
+mtg	2003951	E minor	E minor		2	2	539	E minor	E minor	E minor	E minor
+mtg	2016942	A# major	A# major		2	2	117	A# major	A# major	A# major	A# major
+mtg	2017315	D major	D major		2	0	1165	D major	D major	G major	G major
+mtg	2019112	G# major	G# major		2	1	1050	D# minor	G# major	G# major	D# minor
+mtg	2022073	C# minor	C# minor		2	2	1073	C# minor	C# major	C# minor	C# minor
+mtg	2022519	F# minor	F# minor		2	4	354	F# minor	F# minor	F# minor	F# minor
+mtg	2024668	X			0	3	1072		G minor	G minor	G minor
+mtg	4262086	E minor	E minor		2	3	697	C# minor	E major	E major	E major
+mtg	2046030	D major	D major		2	4	887	D major	D major	D major	D major
+mtg	2047805	B major	B major		2	0	1174	B major	B major	E major	B major
+mtg	2049030	C# major | A# minor			2	4	1243		C# major	F# major	C# major
+mtg	2061659	F minor | F major			1	4	624		F major	F minor	F major
+mtg	2062542	F minor | F major			1	0	916		F minor	F minor	C minor
+mtg	2068812	F minor	F minor		2	4	952	F minor	F minor	F minor	F minor
+mtg	2076953	C# major	C# major		1	3	426	C# minor	C# major	F# minor	F# minor
+mtg	2090586	E major	E major		2	1	765	B minor	B major	E major	B major
+mtg	1868905	C major	C major		1	3	1156	C minor	C minor	C minor	C minor
+mtg	2422478	G# major	G# major		2	1	954	G# minor	G# major	G# minor	G# minor
+mtg	2423336	F minor	F minor		2	0	622	F minor	F minor	F minor	F minor
+mtg	2425817	F# minor	F# minor		2	3	831	B minor	F# minor	F# minor	F# minor
+mtg	2426699	C minor	C minor		2	2	379	C minor	C minor	F minor	F minor
+mtg	2435069	C# major	C# major		2	2	744	C# major	C# major	C# major	C# major
+mtg	2446138	C# minor | E major			2	1	813		C# minor	E major	E major
+mtg	2664585	G major	G major		2	3	884	G major	G major	G minor	G major
+mtg	2678362	A# major	A# major		2	4	891	A# major	A# major	A# major	A# major
+mtg	2702217	G# major	G# major		2	1	667	G# major	C minor	C minor	C minor
+mtg	2706210	C# major	C# major		2	0	85	C# major	C# major	C# major	C# major
+mtg	2706938	B major	B major		2	1	978	B minor	B major	B major	B major
+mtg	2707024	D# minor	D# minor		2	4	1042	F# minor	F# minor	F# minor	A major
+mtg	2721806	G# major	G# major		2	4	513	G# major	G# major	G# major	G# major
+mtg	2741616	G minor	G minor		2	2	185	G minor	G major	G major	G major
+mtg	2754261	G major	G major		2	1	709	G major	G major	G major	G major
+mtg	2763714	A minor	A minor		2	2	971	A minor	C major	F major	F major
+mtg	2997186	B minor	B minor		2	2	557	B minor	D major	G major	D major
+mtg	3010576	F minor	F minor		2	4	1099	F minor	F minor	G# major	F minor
+mtg	3011454	C minor	C minor		2	3	397	D minor	C major	G minor	G minor
+mtg	3014691	B major	B major		2	3	734	B major	B major	B major	B major
+mtg	3014758	F# major	F# major		2	1	407	F# major	F# major	F# major	F# major
+mtg	3018901	G minor	G minor		2	3	1158	G minor	G minor	G minor	G minor
+mtg	3020003	G# minor	G# minor		2	2	323	G# minor	F# major	F# minor	F# major
+mtg	3023456	unknown			0	0	150		A minor	A minor	A minor
+mtg	3638458	F major | D minor			2	0	200		C major	C major	C major
+mtg	3028271	C# major	C# major		2	4	54	C# minor	C# major	C# major	C# major
+mtg	3028806	G minor	G minor		2	3	933	G minor	G# major	G# major	G minor
+mtg	3034770	C# minor	C# minor		2	2	435	D minor	D major	D major	D major
+mtg	3044568	G minor	G minor		2	1	40	G minor	G minor	G minor	G minor
+mtg	3052009	C# major	C# major		2	1	1016	C# minor	C# minor	C# minor	C# major
+mtg	3062618	C minor	C minor		2	1	461	C major	C major	C major	C major
+mtg	984534	F minor	F minor		2	2	915	F major	F minor	F minor	F major
+mtg	3078576	D minor	D minor		2	1	432	D minor	D major	D minor	D minor
+mtg	3086101	G minor	G minor		2	1	780	G minor	G major	G minor	G minor
+mtg	3093686	C major	C major		2	0	118	C major	C major	C major	C major
+mtg	3095574	D minor	D minor		2	2	374	D minor	D major	G major	D minor
+mtg	3098555	G minor	G minor		2	3	486	G minor	G minor	G minor	G minor
+mtg	5243836	A# minor	A# minor		1	4	612	D# minor	D# minor	D# minor	D# minor
+mtg	3116337	F major | D minor			1	2	1127		D minor	D minor	D minor
+mtg	3122906	C# minor | C# major			2	1	1110		C# major	C# minor	C# major
+mtg	3124420	C minor	C minor		1	2	415	F minor	F minor	F minor	F minor
+mtg	3124687	C minor	C minor		1	4	987	F minor	F minor	F minor	F minor
+mtg	3126447	D# minor	D# minor		2	0	234	F# major	F# major	F# major	F# major
+mtg	3137109	C# minor	C# minor		2	2	449	C# minor	C# minor	C# minor	C# minor
+mtg	3139360	C minor	C minor		2	2	880	C minor	C major	F# minor	C minor
+mtg	3141667	C# minor	C# minor		2	3	382	C# minor	C# minor	C# minor	C# minor
+mtg	3150149	X			0	2	649		G# minor	G# minor	A minor
+mtg	3154894	C# minor	C# minor		2	4	920	C# minor	C# minor	F# minor	F minor
+mtg	3161699	D minor	D minor		2	2	481	D minor	D minor	D minor	D minor
+mtg	3162448	C# minor	C# minor		2	2	573	C# minor	C# minor	C# minor	C# minor
+mtg	3166014	A major	A major		2	4	876	A minor	A minor	A minor	A minor
+mtg	3185928	A minor phrygian-major | A major			1	2	164		F major	F major	F major
+mtg	3198358	G minor	G minor		2	3	550	G minor	G major	G minor	G major
+mtg	5701122	G# minor	G# minor		2	3	885	B major	G# minor	G# minor	G# minor
+mtg	3205441	G minor	G minor		2	2	111	G minor	G major	G minor	G minor
+mtg	3207588	F# major	F# major		2	3	875	F# minor	C# major	F# major	C# major
+mtg	3213612	C minor	C minor		2	1	42	C minor	G# major	G# major	G# major
+mtg	3218510	F minor	F minor		0	1	756	A minor	F# minor	F minor	F# minor
+mtg	3221970	C# major	C# major		1	1	827	G# major	G# major	C# major	G# major
+mtg	3230155	B minor	B minor		2	3	633	B minor	B minor	B minor	B minor
+mtg	3235703	E minor	E minor		2	0	565	E minor	E major	E minor	E major
+mtg	3240761	A# major	A# major		2	2	1092	A# major	G minor	A# major	A# major
+mtg	3250046	F# major	F# major		2	3	421	C# major	G# major	C# major	F minor
+mtg	3250971	X			0	4	1252		C major	F minor	F minor
+mtg	3251296	C# minor	C# minor		1	1	180	C# minor	G# minor	G# minor	G# minor
+mtg	3252056	F minor	F minor		2	1	186	F minor	F minor	F minor	F minor
+mtg	3257500	E minor	E minor		2	3	327	E minor	E minor	E minor	E minor
+mtg	3260611	G minor	G minor		1	4	1149	G minor	G major	G minor	G minor
+mtg	3272193	G major	G major		2	2	911	G minor	G minor	G minor	G minor
+mtg	3286229	E minor	E minor		2	4	694	E minor	E major	E minor	E minor
+mtg	3286310	G# minor	G# minor		2	0	191	G# minor	G# major	G# minor	G# major
+mtg	3292669	A# minor	A# minor		2	1	1171	F minor	C minor	F minor	F minor
+mtg	3296534	C minor	C minor		2	1	1068	C minor	C major	C minor	C minor
+mtg	3298819	C# other			2	0	802		C# minor	C# minor	C# minor
+mtg	3299235	C minor	C minor		2	0	686	C minor	A# major	A# major	C minor
+mtg	3303218	F# major	F# major		2	0	181	F# minor	C# major	C# major	C# major
+mtg	3311376	G major	G major		2	2	962	C major	G major	C major	G major
+mtg	3318291	G# major	G# major		2	1	554	F minor	G# major	G# major	G# major
+mtg	3322505	C# major	C# major		1	1	1187	C# major	C# major	C# major	C# major
+mtg	3327760	C minor	C minor		2	4	1207	C minor	C major	C major	C minor
+mtg	3341440	E minor	E minor		2	1	1227	E minor	E major	E minor	E major
+mtg	3342211	D minor	D minor		1	0	206	E minor	G major	G major	E minor
+mtg	3356780	E minor	E minor		2	0	493	E minor	E major	E major	E major
+mtg	3359168	G minor	G minor		2	0	294	C minor	G minor	C minor	C minor
+mtg	3360682	F# major	F# major		2	2	438	G minor	G minor	G minor	G minor
+mtg	3360996	G minor	G minor		2	1	1044	G minor	A# major	A# major	A# major
+mtg	3363187	X			0	2	787		G major	C major	G major
+mtg	3377570	F minor	F minor		2	1	32	F minor	F major	F minor	F major
+mtg	3378284	G minor	G minor		2	2	267	G minor	G minor	G minor	G minor
+mtg	3390945	D# minor	D# minor		2	4	399	D# minor	A# minor	D# minor	A# minor
+mtg	3391744	C minor	C minor		2	1	225	G minor	C major	C minor	C minor
+mtg	3400910	C minor	C minor		2	2	497	C minor	G# major	G# major	G# major
+mtg	3408131	A# minor	A# minor		2	0	577	A# minor	A# major	D# major	A# major
+mtg	3432838	A major | A minor			1	1	1045		A major	A major	A major
+mtg	3440288	F# major	F# major		2	1	862	F# minor	F# minor	F# minor	F# minor
+mtg	3445831	D# minor	D# minor		2	2	489	G# major	G# major	G# major	G# major
+mtg	3467040	C# minor	C# minor		2	3	112	A major	A major	A major	A major
+mtg	3476908	B minor	B minor		2	4	59	D minor	D major	D major	D major
+mtg	3486594	D# minor	D# minor		2	4	195	D# minor	D# major	D# minor	D# major
+mtg	3489634	A# minor	A# minor		2	4	277	F minor	F minor	F minor	F minor
+mtg	3509627	G# minor	G# minor		2	4	776	G# minor	G# minor	G# minor	G# minor
+mtg	3516171	A# minor	A# minor		2	4	13	A# minor	A# minor	A# minor	A# minor
+mtg	3520807	D# major	D# major		2	2	546	C major	C major	C major	G minor
+mtg	3839060	Ab major phrygian-major			2	4	599		C minor	G# major	G# major
+mtg	3527620	G minor	G minor		2	2	955	G minor	G minor	G minor	G minor
+mtg	3528734	B minor	B minor		2	0	924	B minor	F# minor	E major	B major
+mtg	297011	C minor	C minor		1	2	790	C minor	G minor	C minor	C minor
+mtg	3540106	C minor	C minor		2	4	418	C minor	F minor	F minor	F minor
+mtg	3547619	A# minor	A# minor		2	0	395	A# minor	A# major	A# minor	A# minor
+mtg	3558946	X			0	0	981		E major	D major	C major
+mtg	3569019	E major	E major		2	2	79	E major	E major	E major	E major
+mtg	3574764	G# minor	G# minor		2	1	798	G# minor	G# major	G# minor	G# minor
+mtg	3581368	F minor	F minor		2	4	639	G minor	F minor	F minor	G# major
+mtg	3586934	X			0	4	475		G# minor	C# minor	G# minor
+mtg	3595030	F minor | F major			1	2	834		F minor	F minor	F minor
+mtg	3607700	E minor	E minor		2	0	252	E minor	D# minor	E minor	D# minor
+mtg	3619815	E minor	E minor		2	0	28	E minor	E minor	E minor	E minor
+mtg	3622084	F# major	F# major		2	2	990	D# minor	F# major	F# major	F# major
+mtg	3630680	C minor	C minor		2	1	592	C minor	C major	C major	C major
+mtg	297724	F minor | Ab major			1	4	687		F minor	F minor	F minor
+mtg	3639596	C# major	C# major		2	4	872	A# minor	C# major	C# major	C# major
+mtg	3647184	D minor	D minor		2	4	1031	D minor	D minor	G minor	D minor
+mtg	3655850	G# major	G# major		2	3	608	G# minor	G# minor	G# minor	G# minor
+mtg	3656502	X			0	0	1078		E minor	E minor	E minor
+mtg	3662506	D# major	D# major		2	2	596	A# minor	A# minor	A# minor	A# minor
+mtg	3671250	B major	B major		2	3	1074	D minor	B minor	B minor	B major
+mtg	3676879	G# major	G# major		2	2	603	G# minor	G# minor	G# minor	G# minor
+mtg	3687603	C# major	C# major		2	1	290	C# major	F# major	F# major	G minor
+mtg	3694824	C# major	C# major		2	0	779	A# minor	C# major	C# major	C# major
+mtg	3704248	X			0	0	21		G# minor	G# minor	A major
+mtg	3705941	C major	C major		2	4	130	D minor	G major	C major	G major
+mtg	3715704	A minor | D minor			1	1	62		D minor	D minor	A major
+mtg	3727019	X			0	0	840		G major	G major	G major
+mtg	3728272	C minor	C minor		2	0	176	C minor	G minor	C minor	C minor
+mtg	3731508	C minor	C minor		2	0	279	A minor	G# minor	C major	A minor
+mtg	3733853	B major	B major		2	2	918	C major	C major	F major	F major
+mtg	3737315	F major | D minor			2	1	1240		F major	F major	A minor
+mtg	3743797	G# minor	G# minor		1	3	792	C# minor	F# major	B major	C# minor
+mtg	3762907	G# minor	G# minor		2	1	1002	G# minor	G# minor	G# minor	G# minor
+mtg	3766235	C minor	C minor		2	4	12	C minor	D# major	D# major	D# major
+mtg	3771813	D# minor	D# minor		2	4	619	E major	C# minor	F# minor	C# minor
+mtg	3783446	C# major	C# major		2	4	1056	C# major	C# major	C# major	C# major
+mtg	3791889	X			0	3	867		F minor	F minor	F minor
+mtg	3794333	D minor	D minor		2	2	514	D minor	D major	D minor	D minor
+mtg	3798377	F# minor	F# minor		2	2	564	F# minor	F# minor	F# minor	F# minor
+mtg	3801208	D# minor	D# minor		2	3	205	D# minor	F# major	B major	D# minor
+mtg	3801681	C# minor	C# minor		2	0	135	C# minor	F# major	F# minor	F# major
+mtg	3817388	E minor	E minor		2	2	1179	E minor	E major	E major	E major
+mtg	3830951	G minor	G minor		2	1	1083	G minor	G minor	G minor	G minor
+mtg	3831323	G# major	G# major		2	3	1096	C# major	G# major	C# major	G# major
+mtg	299494	unknown			0	0	658		B major	B major	B major
+mtg	3831965	A# major	A# major		2	4	499	A# major	A# major	A# major	A# major
+mtg	3833751	A# minor	A# minor		2	2	214	A# minor	A# minor	A# minor	A# minor
+mtg	3836467	G# major	G# major		2	2	662	G# minor	G# minor	G# minor	G# minor
+mtg	299868	A# major | D minor			1	0	598		D minor	A# major	A# major
+mtg	3854133	B minor	B minor		2	4	302	B minor	B minor	B minor	B minor
+mtg	3857465	D# major	D# major		2	4	233	D# minor	G# minor	G# minor	D# major
+mtg	3865255	D minor	D minor		2	2	594	D minor	D major	D minor	D minor
+mtg	3868708	F# minor	F# minor		2	4	947	F# minor	F# major	F# minor	F# major
+mtg	3870922	E minor	E minor		2	3	64	E minor	E major	E major	E major
+mtg	3889717	C minor	C minor		2	2	640	C minor	C minor	C minor	C minor
+mtg	3897406	C minor	C minor		2	0	45	G minor	G major	C minor	G major
+mtg	3905287	C minor	C minor		2	0	1223	C minor	C minor	C minor	C minor
+mtg	3906152	G# major	G# major		2	0	736	G# minor	G# major	G# major	G# minor
+mtg	3912606	B major	B major		2	2	63	B major	F# major	B major	B major
+mtg	3915618	C minor	C minor		2	4	414	C minor	G minor	C minor	C minor
+mtg	3916942	C minor	C minor		2	4	87	C minor	G# major	G# major	G# major
+mtg	3923369	D# major	D# major		2	2	962	D# major	D# major	D# minor	D# major
+mtg	299970	E major | A major			1	2	403		G minor	G minor	C# minor
+mtg	3935158	F# major	F# major		2	3	663	C# major	C# major	G# minor	C# major
+mtg	3937649	A# minor	A# minor		2	3	38	A# minor	A# minor	C# major	A# minor
+mtg	3948315	X			0	3	431		C# major	C# major	C# major
+mtg	3949006	E minor	E minor		1	2	1030	E minor	B minor	E minor	B minor
+mtg	3966027	F# minor	F# minor		2	0	377	F# minor	F# minor	F# minor	F# minor
+mtg	3968158	X			0	3	1250		A major	A major	A major
+mtg	3987315	C minor	C minor		1	4	715	C minor	C minor	C minor	D# major
+mtg	486117	B minor	B minor		1	2	37	B minor	B major	B minor	E major
+mtg	3994605	A# minor	A# minor		1	4	1090	G minor	C minor	C minor	G minor
+mtg	3999467	G major	G major		2	2	1244	G major	G major	G major	G major
+mtg	4004366	C# minor | B minor			1	3	804		F# major	F# minor	F# major
+mtg	4020452	F major	F major		2	4	719	F minor	F minor	F minor	F major
+mtg	4026906	E major	E major		2	4	1135	E major	E major	E major	E major
+mtg	4032964	A minor	A minor		2	1	913	A minor	A minor	A minor	A minor
+mtg	4051513	C# minor phrygian			2	0	721		G# major	G# minor	G# minor
+mtg	4052411	D minor	D minor		2	2	937	D minor	D minor	D minor	D major
+mtg	4061369	D# minor	D# minor		2	1	93	D# minor	G# minor	G# minor	D# minor
+mtg	4071302	D minor	D minor		2	0	149	D minor	D major	D minor	D minor
+mtg	4081121	A# major	A# major		2	0	572	G minor	A# major	A# major	A# major
+mtg	4085830	D minor	D minor		2	2	610	D minor	D major	D minor	D minor
+mtg	4089252	C# minor	C# minor		2	3	796	C# minor	C# minor	C# minor	C# minor
+mtg	4090254	D minor	D minor		2	0	480	D minor	D major	D major	D major
+mtg	4096403	E major	E major		2	2	1005	E minor	E major	E minor	E major
+mtg	4104550	E minor	E minor		2	0	167	E minor	E major	E minor	E minor
+mtg	4106262	C# minor	C# minor		2	4	1015	F# minor	F# major	F# minor	F# major
+mtg	4111004	B minor	B minor		2	0	420	B minor	B major	B major	B major
+mtg	4115098	E minor	E minor		2	2	1263	E minor	A major	A minor	A major
+mtg	4123856	F minor	F minor		2	4	899	F minor	F minor	F minor	F minor
+mtg	4132072	G# major	G# major		2	2	1192	F minor	F minor	G# major	G# major
+mtg	4134179	A# major	A# major		2	1	72	G minor	A# major	A# major	C minor
+mtg	4149415	E major	E major		2	3	227	E major	B major	B major	G# minor
+mtg	4151001	E minor	E minor		2	0	533	E minor	E major	E minor	E minor
+mtg	4151005	C minor	C minor		2	3	1267	C minor	G# major	G# major	G# major
+mtg	4164104	D# major	D# major		2	1	315	C minor	F minor	F minor	F minor
+mtg	4164425	F# minor	F# minor		2	2	18	F# minor	F# minor	F# minor	F# minor
+mtg	4180893	F minor	F minor		2	0	98	F major	F major	F minor	F minor
+mtg	4184078	D minor	D minor		2	0	644	D minor	D major	G minor	D minor
+mtg	4184925	G minor	G minor		2	2	1087	G minor	G minor	G minor	G minor
+mtg	4186569	D minor	D minor		1	3	344	D minor	D minor	D minor	D major
+mtg	4188354	C minor	C minor		2	1	456	C minor	C minor	F minor	F major
+mtg	4188360	X			0	1	605		B major	B major	E minor
+mtg	4196452	C# major	C# major		2	0	1069	G# minor	G# minor	G# minor	G# minor
+mtg	4202945	F minor	F minor		2	2	545	F minor	F minor	F minor	F minor
+mtg	4210528	G# minor	G# minor		1	2	766	G# minor	G# major	G# major	G# major
+mtg	4214391	B minor	B minor		2	2	296	A# minor	F# major	F# major	F# major
+mtg	4217672	F# minor	F# minor		2	3	1032	F# minor	F# major	F# minor	F# minor
+mtg	4220180	C# major	C# major		2	4	1212	C# minor	C# major	C# major	C# major
+mtg	4222236	C major	C major		2	0	218	C major	F major	F major	F major
+mtg	4240512	D# minor	D# minor		1	4	1199	A# minor	A# minor	A# minor	A# minor
+mtg	588558	C major	C major		1	1	1186	D major	C major	C minor	C major
+mtg	693512	E major | C# minor			1	3	692		E major	E major	E major
+mtg	4264841	X			0	4	1103		F minor	F minor	B minor
+mtg	920580	F# minor | F# major			1	0	288		F# major	F# minor	F# major
+mtg	4266877	C major	C major		2	2	1097	G major	G major	G major	G major
+mtg	4272275	A minor	A minor		2	2	932	A minor	A minor	A minor	A minor
+mtg	4272853	C minor	C minor		2	0	158	C major	C major	C major	C major
+mtg	4286040	F other			1	2	857		F minor	F minor	F minor
+mtg	4292533	F minor	F minor		2	0	11	F minor	F minor	F minor	F minor
+mtg	4297505	F minor	F minor		2	1	749	F minor	F minor	F minor	F minor
+mtg	4299047	D# major	D# major		2	3	682	C minor	D# major	D# major	D# major
+mtg	4306620	E minor	E minor		2	3	656	F minor	F minor	F minor	F minor
+mtg	4310604	A minor	A minor		2	0	294	A minor	A minor	A minor	A minor
+mtg	4311630	A other			0	2	81		A major	A major	A major
+mtg	4315887	D# major	D# major		2	2	458	C minor	F minor	F minor	F minor
+mtg	4318934	B major	B major		2	3	611	B major	B major	B major	B major
+mtg	4323121	A# minor	A# minor		2	4	940	A# minor	A# minor	A# minor	A# minor
+mtg	1152770	D major	D major		1	3	136	B minor	D major	D major	D major
+mtg	4334231	B minor	B minor		2	1	183	B minor	E major	E minor	B minor
+mtg	4340615	G minor	G minor		1	0	478	G minor	G major	G minor	G minor
+mtg	4340765	A# major	A# major		2	1	1133	A# major	A# major	D# major	A# major
+mtg	4341902	F# minor	F# minor		2	2	196	F minor	C# major	C# major	F# minor
+mtg	4351142	F major	F major		2	0	805	D minor	F major	F major	F major
+mtg	4353404	G# minor	G# minor		1	3	197	E major	C# minor	F# minor	A major
+mtg	4354199	A minor	A minor		2	4	869	A minor	A major	A major	A major
+mtg	4364291	E minor	E minor		2	3	886	E minor	E major	E major	E major
+mtg	4372159	X			0	4	538		A minor	A minor	C major
+mtg	4376323	F major	F major		2	4	729	F minor	F major	F minor	F minor
+mtg	4377128	G# minor	G# minor		2	1	1	G# minor	G# minor	G# minor	G# minor
+mtg	4381031	C# major	C# major		2	0	1131	C# minor	C# major	C# minor	C# minor
+mtg	4398291	A minor	A minor		2	2	569	A minor	A minor	A minor	A minor
+mtg	4408526	C minor	C minor		2	0	69	C minor	C minor	F minor	F major
+mtg	4411864	D# major	D# major		0	1	1261	A# minor	A# major	D# major	A# minor
+mtg	4416284	Ab major | F minor			2	1	116		C# major	C# major	C# minor
+mtg	4418313	G# major	G# major		2	2	1060	A# minor	G# major	G# minor	G# major
+mtg	4421420	C major	C major		2	4	1234	C minor	C minor	C minor	C minor
+mtg	4445523	B major	B major		2	2	871	B major	B major	B major	B major
+mtg	4451522	C minor	C minor		1	2	926	G major	G major	G major	G major
+mtg	4459148	X			0	3	806		B minor	E minor	B minor
+mtg	4464873	C# major	C# major		2	2	630	C# minor	D major	D major	C# major
+mtg	4482723	G minor	G minor		2	4	1081	G minor	G major	G minor	G minor
+mtg	4496670	D# major | D# minor			1	4	797		D# major	D# major	D# major
+mtg	4503715	C minor	C minor		2	1	609	C minor	G minor	G# major	G minor
+mtg	4509681	F# major	F# major		2	2	500	G# minor	G# major	G# minor	G# minor
+mtg	4510650	B major	B major		2	0	352	G# minor	G# minor	G# minor	B major
+mtg	4514491	A# major	A# major		2	4	378	G minor	A# major	A# major	A# major
+mtg	4523424	E major	E major		2	2	949	E major	E major	E major	E major
+mtg	4528744	D major	D major		2	1	283	A minor	D major	D minor	D minor
+mtg	4562821	G minor	G minor		2	1	836	G minor	G major	G minor	G major
+mtg	4568358	A# major	A# major		2	3	1134	A# minor	A# minor	A# minor	A# minor
+mtg	4571164	F minor | C minor			1	0	621		D# major	G# major	G# major
+mtg	1367862	C# minor | C# major			2	4	297		C# minor	C# minor	C# minor
+mtg	4586995	C# minor	C# minor		1	3	832	G major	C# minor	C# minor	C# minor
+mtg	4587092	E major | C minor			1	2	1197		G# minor	B major	B major
+mtg	4587945	E minor	E minor		2	1	819	B minor	B major	E major	B major
+mtg	4590651	B minor	B minor		2	0	1251	G major	D major	G major	D major
+mtg	4590691	C# major	C# major		2	1	695	C# major	C# major	C# major	C# major
+mtg	4596386	C# minor	C# minor		2	0	970	C# minor	C# minor	C# minor	C# minor
+mtg	4615998	X			0	3	748		A major	A major	E minor
+mtg	4616741	A# major | A# minor			2	2	811		A# major	A# major	A# major
+mtg	4623197	D# major	D# major		2	2	801	D# major	A# major	A# major	A# major
+mtg	4630401	B major | G# minor			2	2	343		G# minor	B major	G# minor
+mtg	4631771	A# major	A# major		2	0	1178	A# major	G minor	A# major	A# major
+mtg	4660390	F# major	F# major		2	3	316	F# major	F# major	F# major	F# major
+mtg	4660409	F minor	F minor		2	2	1257	F minor	F minor	F minor	F minor
+mtg	4661608	F# minor	F# minor		2	4	1163	F# minor	F# minor	F# minor	F# minor
+mtg	4664095	F# major	F# major		2	2	890	B minor	F# minor	F# minor	F# minor
+mtg	4665597	F minor	F minor		2	1	307	F minor	F minor	F minor	F minor
+mtg	4690755	E major	E major		2	0	1194	E minor	E major	E minor	E major
+mtg	4692133	G minor	G minor		2	4	123	C minor	C minor	F minor	C minor
+mtg	4704294	F minor	F minor		2	0	78	A# minor	F minor	F minor	A# minor
+mtg	4710435	A# major	A# major		2	2	61	A# major	A# major	A# major	A# major
+mtg	4726263	E minor	E minor		2	2	847	E minor	E minor	E minor	E minor
+mtg	4733800	A# minor	A# minor		2	1	701	A# minor	A# minor	A# minor	A# minor
+mtg	4741346	C# minor	C# minor		2	2	901	C# minor	C# major	C# major	C# major
+mtg	4750550	X			0	1	34		C# major	C# major	C# major
+mtg	4753283	C minor	C minor		2	4	705	C minor	C minor	C minor	C minor
+mtg	4756702	E minor	E minor		2	1	311	E minor	E major	E major	E minor
+mtg	4759312	C minor	C minor		2	1	483	C minor	D# major	D# major	D# major
+mtg	4763543	A major | A minor			1	3	295		A major	A minor	A minor
+mtg	4765342	A major	A major		2	4	618	A minor	A major	A minor	A minor
+mtg	4767556	A minor	A minor		2	4	635	A minor	A minor	A minor	A minor
+mtg	4770235	X			0	2	27		C major	C major	A minor
+mtg	4771754	F# minor | F# major			2	3	460		F# minor	F# minor	F# minor
+mtg	1446566	F major	F major		1	4	655	F minor	F major	F minor	F minor
+mtg	4784473	F# major	F# major		2	1	1095	F# minor	F# major	F# major	F# major
+mtg	4792796	B major	B major		2	0	669	G# minor	B major	E major	B major
+mtg	4793409	F# minor	F# minor		2	3	455	F# minor	F# major	F# minor	F# minor
+mtg	4805277	G# minor | B major			1	2	105		B major	E major	B major
+mtg	2028917	C major	C major		2	4	1218	C minor	C major	C major	C major
+mtg	4811158	F# major	F# major		2	2	908	F# major	C# major	F# major	F# major
+mtg	4820720	C minor	C minor		2	2	895	C major	C major	C major	C major
+mtg	4824309	D major	D major		2	3	484	D major	D major	G major	D major
+mtg	4829270	D# major	D# major		1	2	816	G minor	D# major	D# major	D# major
+mtg	4834661	F minor	F minor		1	1	360	F minor	C major	F minor	B minor
+mtg	4838183	F minor	F minor		2	4	1238	F minor	F minor	F minor	F minor
+mtg	4848629	E minor	E minor		2	1	800	E minor	D major	D major	D major
+mtg	4855328	C# minor	C# minor		2	0	3	C# minor	G# minor	C# minor	C# minor
+mtg	4857871	A# major	A# major		2	3	411	A# major	A# major	D# major	D# major
+mtg	4870279	D# major	D# major		2	0	257	D# minor	D# major	G# major	D# major
+mtg	4873800	G# minor	G# minor		2	4	437	G# minor	G# minor	G# minor	G# minor
+mtg	4878879	E major	E major		2	3	95	E major	E major	E major	C# minor
+mtg	4885376	C# minor	C# minor		2	1	109	C# minor	C# minor	C# minor	C# minor
+mtg	4887623	E major | E minor			2	2	575		E major	E major	E major
+mtg	4887778	G minor	G minor		2	2	951	G minor	G minor	G minor	G minor
+mtg	4906181	D minor	D minor		2	0	523	D minor	C major	C major	C major
+mtg	4906900	F minor	F minor		2	2	300	F minor	F minor	F minor	F minor
+mtg	4907717	B minor	B minor		2	1	898	B minor	B major	B major	B major
+mtg	4912830	C minor dorian			2	4	1201		C major	F major	F major
+mtg	4917696	G# minor	G# minor		2	1	995	G# minor	G# minor	C# minor	G# minor
+mtg	4918269	D minor	D minor		1	2	720	D minor	G major	G minor	D major
+mtg	4920129	F minor	F minor		2	1	638	F minor	C# major	C# major	C# major
+mtg	4937843	G# minor | B major			1	1	963		B major	B major	B major
+mtg	4938098	D minor	D minor		1	0	71	D major	D major	D minor	D minor
+mtg	4943671	G# major	G# major		2	2	665	F minor	G# major	C# major	F minor
+mtg	4944953	G minor	G minor		2	1	510	G minor	G minor	G minor	G minor
+mtg	4946269	F minor	F minor		2	2	861	F minor	F minor	F minor	F minor
+mtg	4970565	B major	B major		2	4	10	G# minor	B major	B major	B major
+mtg	4974176	F minor	F minor		2	0	784	F minor	F minor	F minor	F minor
+mtg	4975002	C# major	C# major		2	4	617	A# minor	C# major	C# major	C# major
+mtg	4992440	C# major	C# major		2	2	690	G# minor	C# major	C# minor	C# major
+mtg	4998705	B minor	B minor		2	1	183	B minor	E major	E minor	B minor
+mtg	5011176	X			0	3	335		G minor	G minor	A# major
+mtg	5031142	C# major	C# major		2	0	462	A# minor	C# major	C# major	C# major
+mtg	5038642	G# minor	G# minor		1	2	1259	G# minor	G# minor	C# minor	C# major
+mtg	5048299	E minor	E minor		2	3	615	E minor	E major	E major	E minor
+mtg	5054157	F major	F major		2	4	490	D minor	F major	F major	F major
+mtg	2104436	F minor	F minor		1	1	983	F minor	C minor	F minor	F major
+mtg	5057312	G# minor	G# minor		2	0	376	G# minor	G# minor	G# minor	G# minor
+mtg	5059176	C# minor	C# minor		2	1	595	F# minor	C# minor	F# minor	F# minor
+mtg	5060362	X			0	2	1175		C# minor	F# minor	E major
+mtg	5066211	C minor	C minor		2	3	855	C minor	G minor	C minor	G minor
+mtg	5076754	D major	D major		1	4	177	G major	D major	D major	D major
+mtg	5092947	E minor	E minor		2	2	148	G major	G major	G major	G major
+mtg	5095717	F# major	F# major		2	1	1123	F# major	C# major	F# major	F# major
+mtg	5106232	F# minor	F# minor		2	2	1191	A major	A major	D major	D major
+mtg	5120148	C minor	C minor		2	4	1001	C minor	F minor	F minor	C minor
+mtg	5123514	A# major	A# major		2	0	65	C minor	F minor	F minor	A# major
+mtg	5124113	X			0	2	446		G minor	G minor	G minor
+mtg	5124850	G# minor	G# minor		2	0	376	G# minor	G# minor	G# minor	G# minor
+mtg	5133242	G minor	G minor		2	2	874	G minor	G major	G major	G major
+mtg	5135485	F# minor	F# minor		2	1	654	F# minor	E major	E major	F# minor
+mtg	5138597	G minor	G minor		2	1	502	G minor	G minor	G minor	G minor
+mtg	5144599	D# major	D# major		2	1	269	D# major	A# major	D# major	A# major
+mtg	5148970	G# major	G# major		2	3	1173	G# minor	G# major	G# minor	G# major
+mtg	5152629	E minor	E minor		2	1	193	E minor	E minor	E minor	E minor
+mtg	5157102	F# minor | A major			2	4	628		F# minor	F# minor	F# minor
+mtg	5159908	C# minor	C# minor		2	3	1170	C# minor	C# minor	C# minor	C# minor
+mtg	5175064	E minor	E minor		0	2	627	E major	E major	A minor	E minor
+mtg	5186642	C minor	C minor		2	3	794	C minor	G minor	C minor	G minor
+mtg	5187049	A# minor	A# minor		2	2	168	D# major	A# minor	D# minor	D# major
+mtg	5188713	A# minor | A# major			1	3	285		A# minor	A# minor	A# minor
+mtg	5192554	E minor	E minor		2	2	864	G major	G major	G major	G major
+mtg	5202489	A# minor	A# minor		1	3	365	G minor	F minor	G# major	G minor
+mtg	5207006	A minor	A minor		2	2	212	A minor	A minor	A minor	A minor
+mtg	5207351	C minor	C minor		1	2	92	B minor	G# minor	G# minor	E minor
+mtg	5211090	F minor	F minor		2	3	1242	F minor	F major	F minor	F major
+mtg	5215470	G# minor	G# minor		2	0	472	G# minor	G# minor	G# minor	G# minor
+mtg	5234073	C# minor	C# minor		2	0	1195	F# minor	C# minor	A major	A major
+mtg	5234318	G major	G major		2	1	672	C major	G major	G major	G major
+mtg	3027735	F minor	F minor		2	0	623	C minor	C minor	F minor	C minor
+mtg	5245862	D# minor	D# minor		2	1	324	C# major	C# major	C# major	C# major
+mtg	3074103	G major	G major		2	3	143	E minor	G major	G major	G major
+mtg	5263861	C# minor	C# minor		2	2	888	C# minor	C# major	C# major	C# major
+mtg	5272649	B minor	B minor		2	1	1151	B minor	F# minor	B minor	B minor
+mtg	5279212	F# minor	F# minor		2	1	57	F# minor	F# minor	F# minor	F# minor
+mtg	5287841	A# major	A# major		2	0	73	A# major	D minor	A# major	A# major
+mtg	5296203	G# minor	G# minor		2	2	1259	G# minor	G# minor	C# minor	C# major
+mtg	5299867	B major	B major		2	1	773	B minor	B major	B major	B major
+mtg	5299981	G minor	G minor		1	0	221	G minor	G minor	G minor	G minor
+mtg	5309154	F minor	F minor		2	3	202	A# major	A# major	A# major	A# minor
+mtg	5315287	G# minor	G# minor		1	4	15	C minor	C minor	C minor	G# major
+mtg	5315479	E minor	E minor		2	1	1184	E minor	E major	E minor	E minor
+mtg	5317673	D# minor	D# minor		1	0	362	D# minor	D# major	D# major	D# major
+mtg	5323380	C# minor	C# minor		1	1	1129	G major	F# minor	F# minor	F# minor
+mtg	5324261	G minor	G minor		2	1	1177	G minor	G major	G major	G minor
+mtg	5329278	F minor	F minor		2	4	774	F minor	F minor	F minor	F minor
+mtg	5330075	X			0	1	587		F# minor	F# minor	F# minor
+mtg	5338500	C# minor	C# minor		2	3	1041	C# minor	C# minor	C# minor	C# minor
+mtg	5344837	C# minor	C# minor		2	1	1126	B major	B major	B major	B major
+mtg	5351971	G minor	G minor		2	0	372	G minor	G minor	G minor	G minor
+mtg	5359592	A# major	A# major		2	4	580	A# major	A# major	A# major	A# major
+mtg	5371595	F# minor	F# minor		2	4	445	F# minor	F# minor	F# minor	F# minor
+mtg	5374180	X			0	1	332		A# minor	A# minor	A# minor
+mtg	5380961	C minor	C minor		2	3	965	C minor	C minor	C minor	C minor
+mtg	5381987	X			0	0	751		G minor	G minor	A# major
+mtg	5382659	A# major	A# major		0	0	292	A# minor	A# major	A# major	A# major
+mtg	5392168	D# minor | D# major			1	4	1052		D# major	D# major	D# major
+mtg	5393783	G# minor	G# minor		2	0	742	G# minor	G# major	G# minor	G# major
+mtg	5403134	F minor | Ab major			2	4	868		G# major	G# major	G# major
+mtg	5404020	F minor	F minor		2	2	1097	F minor	F major	F minor	F minor
+mtg	5404068	A# minor	A# minor		2	2	250	A# minor	F minor	F minor	F minor
+mtg	5404644	X			0	2	716		C# minor	F# minor	F# minor
+mtg	5411517	E minor	E minor		2	0	1035	E minor	E minor	E minor	E minor
+mtg	5415462	F minor	F minor		2	4	384	G minor	G minor	G minor	G minor
+mtg	5419394	F other			2	2	834		F minor	F minor	G# major
+mtg	5420676	G# major	G# major		2	1	275	A# minor	F minor	G# major	A# minor
+mtg	5427061	A major	A major		2	1	543	A major	A major	A major	A major
+mtg	5428785	C minor	C minor		2	4	1207	C minor	C minor	F minor	C minor
+mtg	5429242	C# minor	C# minor		2	1	320	C# minor	C# minor	C# minor	C# minor
+mtg	5441797	F minor	F minor		2	4	209	F minor	F minor	F minor	F minor
+mtg	5443161	F minor	F minor		2	1	1121	F minor	G# major	G# major	G# major
+mtg	5456553	C minor	C minor		2	3	1136	C minor	C minor	C minor	C minor
+mtg	5458695	F minor	F minor		2	1	1089	F minor	F minor	F minor	F minor
+mtg	5466977	E minor	E minor		2	4	346	E minor	E minor	E minor	E minor
+mtg	5467340	D# minor	D# minor		2	3	515	F minor	A# minor	D# minor	A minor
+mtg	5476058	A minor	A minor		1	0	127	A minor	A major	A major	A major
+mtg	5478004	A# minor	A# minor		2	3	271	A# minor	A# major	A# minor	A# minor
+mtg	5492171	F minor	F minor		2	3	441	F minor	F minor	F minor	F major
+mtg	5492384	B major	B major		2	3	1140	B minor	B major	B major	B major
+mtg	3526880	C# minor	C# minor		2	2	229	C# minor	C# minor	C# minor	C# minor
+mtg	5495991	D# minor	D# minor		2	1	171	D# minor	D# minor	D# minor	D# minor
+mtg	5497183	B major | G# minor			1	0	200		E major	E major	E major
+mtg	5497219	D# minor	D# minor		2	0	567	A# minor	F minor	A# major	A# major
+mtg	5498352	F minor	F minor		2	4	1260	F minor	G minor	A# major	F major
+mtg	5536316	C# other			1	3	722		F# minor	F# minor	G minor
+mtg	5545112	C major	C major		2	1	228	C major	C major	C minor	C major
+mtg	5547982	D# major	D# major		2	1	769	D# major	D# major	D# major	D# major
+mtg	5554987	F minor | Ab major			1	2	1128		G# major	G# major	G# major
+mtg	5558264	C minor	C minor		2	2	914	C minor	C minor	C minor	C minor
+mtg	5561072	G# minor	G# minor		2	1	1232	G# minor	F# major	F# major	G# minor
+mtg	5568606	C# minor	C# minor		2	4	231	G# minor	G# minor	G# minor	G# minor
+mtg	5575647	A# minor	A# minor		2	3	822	F minor	E minor	A minor	A minor
+mtg	5580807	G minor	G minor		2	2	1102	G minor	G minor	G minor	G minor
+mtg	5594806	A# major	A# major		2	1	208	A# major	F major	F minor	F major
+mtg	5611816	Eb major | C minor			2	3	364		C minor	D# major	C minor
+mtg	5612854	C# minor	C# minor		2	4	25	F# minor	C# major	C# minor	C# minor
+mtg	5618695	C minor	C minor		2	4	361	C minor	C major	C minor	C major
+mtg	5622199	X			0	1	647		D minor	G minor	G major
+mtg	5630800	B minor	B minor		2	4	251	B minor	B minor	A major	B minor
+mtg	5635782	G# minor	G# minor		0	3	717	F major	G# minor	G# minor	A# minor
+mtg	5653983	D major	D major		2	4	465	D minor	D minor	D minor	D minor
+mtg	5654170	F# minor	F# minor		2	0	786	F# minor	G minor	G minor	F# major
+mtg	5667823	A major | A minor			1	2	1236		A major	A major	A minor
+mtg	5669262	F major | F minor			1	1	1024		F major	F major	F major
+mtg	5672671	B minor	B minor		2	2	485	G major	B minor	B minor	C minor
+mtg	5687266	C# minor	C# minor		2	1	1076	C# minor	E major	E major	E major
+mtg	5693285	F# minor	F# minor		1	3	317	F minor	G# major	C# major	F minor
+mtg	5697805	A major	A major		2	0	169	A major	A major	A major	A major
+mtg	3537560	A minor	A minor		2	2	877	A minor	A major	A minor	A minor
+mtg	5723120	F minor	F minor		1	4	548	D minor	F minor	F minor	D minor
+mtg	5728532	E minor	E minor		2	2	106	A minor	E minor	E minor	A major
+mtg	5733037	G major	G major		1	4	737	G minor	G minor	F minor	G minor
+mtg	5734184	C minor	C minor		2	4	494	C minor	C minor	C minor	C minor
+mtg	5736132	E major	E major		2	4	1077	E minor	E major	E major	E major
+mtg	5739130	B minor	B minor		2	4	631	B minor	B minor	B minor	B minor
+mtg	5742777	G# minor	G# minor		2	0	463	G# minor	G# minor	G# minor	G# minor
+mtg	5769455	G# major	G# major		2	1	125	G# major	G# major	G# major	G# major
+mtg	5795173	F minor	F minor		2	2	912	F minor	F major	F major	F major
+mtg	3831852	F major	F major		2	2	1146	F minor	F minor	F minor	F minor
+mtg	5813087	E minor	E minor		2	1	439	E minor	E major	E major	E major
+mtg	5816285	A minor	A minor		1	4	147	G minor	G# major	G# major	A major
+mtg	5821511	B minor	B minor		2	4	652	B minor	B minor	B minor	B minor
+mtg	5831818	G# major	G# major		2	4	1021	F minor	F minor	A# minor	A# minor
+mtg	5841117	X			0	3	1137		F minor	F minor	G minor
+mtg	5855468	D# minor	D# minor		2	4	764	A# minor	A# minor	A# minor	A# major
+mtg	5866030	C# minor	C# minor		2	2	1231	C# minor	C# major	C# major	C# major
+mtg	5874377	F# minor	F# minor		2	4	606	F# minor	C# minor	F# minor	F# minor
+mtg	5876668	C minor	C minor		2	2	41	C minor	C minor	C minor	C minor
+mtg	5886473	A# major mixolydian			2	2	1028		D# major	G# major	G# major
+mtg	5888808	A# minor	A# minor		2	2	516	A# minor	D# major	D# minor	D# minor
+mtg	5903646	F minor	F minor		1	2	70	C minor	C major	F major	F major
+mtg	5905170	D# minor | C# major			1	1	1196		C# major	F# major	F# major
+mtg	5922285	G minor	G minor		1	3	1221	D minor	G major	G major	G major
+mtg	5922688	C# minor	C# minor		1	1	367	C# minor	C# minor	C# minor	C# minor
+mtg	5925664	C minor	C minor		2	2	496	C minor	G minor	G minor	G minor
+mtg	5943904	G major	G major		1	0	657	G major	G major	G major	G major
+mtg	5948622	D minor	D minor		2	4	1063	D minor	D major	D minor	D minor
+mtg	5955816	F minor	F minor		2	3	342	F minor	F minor	F minor	F minor
+mtg	5956160	C minor	C minor		2	4	1246	C minor	C minor	F minor	C minor
+mtg	5971086	D# major	D# major		2	1	703	D# major	D# major	D# minor	D# major
+mtg	5980898	X			0	2	923		F# major	F# major	A# major
+mtg	5980991	D minor	D minor		2	2	600	D minor	C major	G minor	C major
+mtg	5986917	G# major	G# major		2	0	975	G# minor	G# major	G# minor	G# minor
+mtg	5996975	G minor	G minor		2	4	345	G minor	G minor	G minor	G minor
+mtg	5998113	F# minor	F# minor		2	3	1182	F# minor	F# minor	F# minor	F# minor
+mtg	6002570	F# minor	F# minor		1	1	319	D major	D major	D major	D major
+mtg	6003575	G major	G major		2	3	549	G major	G major	G minor	G major
+mtg	6011574	G minor	G minor		2	0	1059	G minor	G minor	G minor	G minor
+mtg	6027087	F# major	F# major		2	4	809	F# major	F# major	F# major	F# major
+mtg	6039665	F# major	F# major		2	0	826	C# major	C# major	C# minor	C# major
+mtg	6042784	F minor	F minor		2	2	1208	F minor	F minor	F minor	F minor
+mtg	6051774	F minor	F minor		2	1	1061	F minor	F major	F major	F major
+mtg	6062914	C# minor	C# minor		2	2	333	C# minor	A major	A major	A major
+mtg	6065388	G# major	G# major		2	2	1185	G# major	G# major	G# major	G# major
+mtg	6067929	D minor	D minor		2	4	163	D minor	D major	D minor	D minor
+mtg	6086331	G# major	G# major		2	4	1220	G# major	G# major	G# minor	G# major
+mtg	6087559	A# major	A# major		2	1	581	A# minor	A# major	A# minor	A# major
+mtg	4809086	A# minor	A# minor		2	4	466	A# minor	G# minor	G# minor	A# minor
+mtg	6105589	C# major	C# major		2	3	771	C# major	F minor	C# major	C# major
+mtg	6107169	B minor	B minor		2	1	470	B minor	B major	B major	B major
+mtg	6115356	X			0	0	1132		E major	E major	E major
+mtg	6131590	F minor phrygian			2	3	369		F minor	F minor	F minor
+mtg	6141900	X			0	1	553		F minor	F minor	F major
+mtg	6144221	E minor	E minor		2	4	958	E minor	E minor	E minor	E minor
+mtg	6147973	A# major	A# major		2	4	671	C minor	A# major	D# major	A# major
+mtg	6150686	D major	D major		2	3	563	D minor	D major	D major	D major
+mtg	6160319	A# major	A# major		2	3	1144	A# major	A# major	A# major	A# major
+mtg	6161061	X			0	4	1217		G minor	G# major	F minor
+mtg	6165907	F# major	F# major		2	2	512	D# minor	F# major	F# major	F# major
+mtg	6168356	B minor	B minor		2	0	948	B minor	B major	B minor	B minor
+mtg	6180590	F minor phrygian			1	2	2		F major	F minor	F major
+mtg	6199830	D# minor	D# minor		2	4	858	G# minor	G# minor	G# minor	G# minor
+mtg	6204461	B other			1	4	160		B major	B minor	B minor
+mtg	6217931	Bb major	A# major		2	3	691	D minor	D minor	D minor	D minor
+mtg	6218674	F minor	F minor		2	2	56	F minor	F minor	F minor	F minor
+mtg	6220367	D major	D major		2	4	108	D major	G major	G major	G major
+mtg	6220395	A# major	A# major		2	0	525	G minor	G minor	A# major	A# major
+mtg	6221323	F# major	F# major		2	3	693	F# major	G# minor	G# minor	G# minor
+mtg	6222804	E minor	E minor		2	2	821	E minor	E major	E minor	E major
+mtg	6227783	G# major	G# major		2	4	58	F minor	G# major	G# major	G# major
+mtg	6230588	C minor	C minor		2	1	326	C minor	C major	C major	C major
+mtg	6235742	G other | C# other			2	2	1168		C# major	C# major	C# major
+mtg	5056508	G other | B other			1	4	291		G major	G major	G major
+mtg	6243629	F minor	F minor		2	1	476	F minor	F minor	F minor	F major
+mtg	6247002	G# minor	G# minor		2	2	534	G# minor	G# major	G# minor	G# major
+mtg	6258107	X			0	2	777		F minor	F minor	F minor
+mtg	5254640	G minor	G minor		0	2	1098	E minor	B minor	E minor	E minor
+mtg	6275472	F minor	F minor		2	1	527	F minor	C major	C major	A minor
+mtg	6275984	E minor	E minor		2	2	1009	A minor	A minor	A minor	A minor
+mtg	6276803	F minor	F minor		2	4	220	F minor	F minor	F minor	F minor
+mtg	6280855	C minor	C minor		1	4	1120	C minor	C minor	F minor	F major
+mtg	6282277	F minor	F minor		2	3	156	F minor	F minor	F minor	F minor
+mtg	6282761	F# major	F# major		2	4	422	D# minor	F# major	F# major	F# major
+mtg	6283681	C# minor	C# minor		2	1	678	C# major	C# minor	E major	C# minor
+mtg	6289424	B minor	B minor		2	4	100	B minor	F minor	F minor	B major
+mtg	6290068	F# minor	F# minor		2	0	1176	F# minor	F# minor	F# minor	F# minor
+mtg	6294281	F# minor	F# minor		2	0	936	B minor	E major	A major	A major
+mtg	6308736	C# minor	C# minor		2	3	1202	F# minor	C# minor	F# minor	F# minor
+mtg	6313807	G minor	G minor		2	3	597	C minor	G major	G major	G major
+mtg	6316062	E minor	E minor		2	0	643	E minor	E major	E major	E major
+mtg	6317186	C# minor	C# minor		2	1	359	E minor	E major	E minor	E major
+mtg	6320574	F minor	F minor		2	1	1086	F minor	F minor	F minor	F minor
+mtg	6325840	F minor	F minor		1	1	1018	A# minor	G# major	G# major	G# major
+mtg	6327674	A# minor	A# minor		2	0	1049	A# minor	A# major	A# minor	A# major
+mtg	6332784	A# minor	A# minor		2	3	938	A# minor	A# major	A# minor	A# major
+mtg	6346876	G# minor	G# minor		2	2	212	G# minor	G# minor	G# minor	G# minor
+mtg	6359688	C minor	C minor		2	2	489	F minor	C minor	C minor	C minor
+mtg	6379893	A# major	A# major		2	2	757	A# minor	A# major	A# major	A# major
+mtg	6380702	D minor	D minor		1	1	60	G minor	G minor	G major	D# minor
+mtg	6390202	G#_ minor | A^ minor			2	4	244		C# minor	C# minor	A minor
+mtg	6394765	A minor	A minor		2	4	1058	A minor	G major	C major	G major
+mtg	6420899	E minor	E minor		2	3	254	E minor	E major	E minor	E minor
+mtg	6431045	X			0	2	1064		D minor	D minor	D minor
+mtg	6435742	D minor	D minor		2	4	429	D minor	A minor	D minor	D minor
+mtg	6439567	D minor	D minor		2	3	175	D minor	G major	G minor	D minor
+mtg	6448769	X			0	0	675		G# minor	G# minor	G# minor
+mtg	6461913	C# minor	C# minor		2	3	684	C# minor	C# minor	C# minor	C# minor
+mtg	6462754	G minor	G minor		2	0	451	C major	A# major	A# major	A# major
+mtg	6469727	E minor	E minor		2	1	574	E minor	E major	E minor	E major
+mtg	6476511	F minor	F minor		2	4	588	F minor	F minor	F minor	C minor
+mtg	6487073	B minor	B minor		2	2	893	B minor	D major	D major	D major
+mtg	6529435	C minor	C minor		2	4	1039	A# minor	A# major	A# minor	A# major
+mtg	6532021	C# minor | E major			1	3	706		E major	E major	E major
+mtg	6535130	E minor	E minor		2	0	1215	E minor	E minor	E minor	E minor
+mtg	6537998	E major	E major		2	0	239	E minor	E major	E major	E major
+mtg	6563157	B minor	B minor		2	0	713	B minor	E minor	E minor	E minor
+mtg	6574410	A major	A major		2	1	262	A major	C# minor	A major	A major
+gs	10089	D major	D major		-1	3	266		D major	G major	D major
+gs	61415	F minor	F minor		-1	2	393		F minor	F minor	F minor
+gs	74982	C minor	C minor		-1	0	213		G# minor	G# minor	G# major
+gs	101069	E minor	E minor		-1	1	426		E minor	E minor	E minor
+gs	190477	D minor	D minor		-1	4	388		D minor	D minor	D minor
+gs	191347	Eb minor	D# minor		-1	4	399		D# minor	D# minor	D# minor
+gs	203493	G minor	G minor		-1	1	164		D minor	G minor	D minor
+gs	205597	G minor	G minor		-1	1	392		G minor	G minor	G minor
+gs	208158	E minor	E minor		-1	2	46		D major	G major	D major
+gs	209206	G major	G major		-1	4	325		A minor	C major	A minor
+gs	272788	Bb major	A# major		-1	4	1		A# major	A# minor	A# minor
+gs	305771	C minor	C minor		-1	3	94		C minor	C minor	C minor
+gs	341832	G major	G major		-1	2	69		G major	G major	G major
+gs	376240	F minor	F minor		-1	2	33		F minor	F minor	F minor
+gs	398124	D major	D major		-1	1	164		A major	D major	D major
+gs	400259	G minor	G minor		-1	0	167		G major	G minor	G minor
+gs	423054	D minor	D minor		-1	1	164		D minor	D minor	D minor
+gs	435443	E minor	E minor		-1	4	179		E minor	E minor	E minor
+gs	472626	G minor	G minor		-1	3	425		D minor	G minor	D minor
+gs	495905	Bb minor	A# minor		-1	2	337		A# minor	A# minor	A# minor
+gs	511348	E minor	E minor		-1	4	404		E minor	E minor	E minor
+gs	571009	F minor	F minor		-1	1	164		C minor	F minor	F minor
+gs	582991	G minor	G minor		-1	3	311		C minor	C minor	C minor
+gs	611797	A major	A major		-1	4	406		A major	A major	A major
+gs	631240	G minor	G minor		-1	1	216		G minor	G minor	G minor
+gs	631883	C minor	C minor		-1	3	372		C minor	C minor	C minor
+gs	634032	E minor	E minor		-1	2	215		G minor	G# minor	C minor
+gs	667508	D minor	D minor		-1	4	188		D minor	D minor	D minor
+gs	671546	A minor	A minor		-1	0	186		A minor	A minor	A minor
+gs	677299	Gb major	F# major		-1	0	58		F# major	F# major	F# major
+gs	678406	E minor	E minor		-1	1	164		E minor	E minor	E minor
+gs	682724	C major	C major		-1	3	441		G major	G minor	G minor
+gs	774871	B major	B major		-1	2	23		G minor	G minor	A major
+gs	774874	B minor	B minor		-1	0	24		F# minor	F# minor	F# minor
+gs	774875	Gb minor	F# minor		-1	4	25		F# minor	G major	G major
+gs	781373	E major	E major		-1	2	33		A major	A major	A major
+gs	781995	C major	C major		-1	2	78		C major	C major	C major
+gs	796860	Ab minor	G# minor		-1	1	85		C# major	C# minor	C# minor
+gs	814290	E major	E major		-1	1	278		E major	E major	E major
+gs	814505	A major	A major		-1	3	222		A major	A major	A major
+gs	822664	Bb minor	A# minor		-1	0	120		A# minor	A# minor	A# minor
+gs	835903	D major	D major		-1	0	75		A minor	D minor	D minor
+gs	839886	D minor	D minor		-1	3	335		G major	G major	G major
+gs	846900	E major	E major		-1	3	40		E major	A major	A major
+gs	847422	A minor	A minor		-1	0	54		A minor	A minor	A minor
+gs	853834	E major	E major		-1	0	343		E major	E minor	E minor
+gs	873455	E minor	E minor		-1	0	414		E minor	G major	A minor
+gs	877345	Eb major	D# major		-1	2	180		D# major	D# major	D# major
+gs	883724	F minor	F minor		-1	4	131		D# major	D# major	A# minor
+gs	890568	E minor	E minor		-1	0	452		G major	G major	E minor
+gs	891993	D major	D major		-1	3	429		D major	D major	D major
+gs	896478	B minor	B minor		-1	4	26		B minor	B minor	B minor
+gs	903963	F major	F major		-1	0	32		F major	F minor	F major
+gs	907837	G minor	G minor		-1	0	167		G minor	D# major	A# major
+gs	923397	Bb minor	A# minor		-1	3	313		A# minor	A# minor	A# minor
+gs	945256	Eb minor	D# minor		-1	2	46		D# minor	D# minor	D# minor
+gs	973819	F minor	F minor		-1	2	33		C minor	F minor	F minor
+gs	975137	C minor	C minor		-1	3	228		F# minor	F# minor	F# major
+gs	975138	D minor	D minor		-1	3	228		D# major	G# minor	B major
+gs	981591	Bb minor	A# minor		-1	3	42		G# minor	G# minor	G# minor
+gs	992081	E major	E major		-1	4	332		E major	E major	B minor
+gs	997308	C major	C major		-1	3	119		C minor	C minor	C minor
+gs	1004923	C minor	C minor		-1	1	287		C major	C major	F minor
+gs	1007941	F minor	F minor		-1	4	160		F minor	F minor	F minor
+gs	1009960	Eb minor	D# minor		-1	3	228		C# minor	C# minor	E major
+gs	1017921	B major	B major		-1	0	169		B major	E major	B major
+gs	1026478	F minor	F minor		-1	3	42		G minor	G minor	G minor
+gs	1033148	F minor	F minor		-1	1	112		F minor	F minor	F minor
+gs	1034795	B minor	B minor		-1	0	53		C# minor	F# minor	C# minor
+gs	1037507	G major	G major		-1	4	395		G major	G major	D major
+gs	1041574	Ab major	G# major		-1	3	231		G# major	C# major	G# major
+gs	1043194	Db minor	C# minor		-1	2	166		E minor	A minor	E minor
+gs	1052744	G minor	G minor		-1	0	167		G# major	G# major	G# minor
+gs	1056896	A minor	A minor		-1	1	268		A minor	A minor	A minor
+gs	1074548	A minor	A minor		-1	2	251		A minor	A minor	A minor
+gs	1075123	F minor	F minor		-1	0	4		F minor	F minor	F minor
+gs	1092676	F minor	F minor		-1	2	357		G# major	G# major	G# major
+gs	1103512	Bb minor	A# minor		-1	0	5		A# minor	A# minor	A# minor
+gs	1105632	C minor	C minor		-1	2	107		C major	C minor	C minor
+gs	1140027	Db minor	C# minor		-1	1	334		G# major	G# major	C# minor
+gs	1149778	Gb minor	F# minor		-1	1	196		F# minor	F# minor	F# minor
+gs	1161234	C major	C major		-1	3	310		C minor	C minor	C minor
+gs	1161249	G minor	G minor		-1	2	303		G minor	G minor	G minor
+gs	1164898	C major	C major		-1	4	447		C major	C major	C major
+gs	1178656	C minor	C minor		-1	0	351		C minor	C minor	G minor
+gs	1193612	Gb minor	F# minor		-1	2	100		F# minor	F# minor	F# minor
+gs	1194720	D minor	D minor		-1	1	369		D minor	G minor	D minor
+gs	1198688	D minor	D minor		-1	4	34		D major	D minor	D minor
+gs	1206025	A minor	A minor		-1	1	359		E minor	E minor	C major
+gs	1209745	Bb major	A# major		-1	4	223		A# major	A# major	A# major
+gs	1224698	G major	G major		-1	2	263		G major	G minor	G major
+gs	1234668	G minor	G minor		-1	0	167		G minor	G minor	G# minor
+gs	1234669	G minor	G minor		-1	0	167		F# minor	F# minor	G# minor
+gs	1234670	F minor	F minor		-1	0	167		F major	F minor	F major
+gs	1234748	G minor	G minor		-1	4	47		A# major	A# major	A# major
+gs	1234749	Bb major	A# major		-1	4	47		F major	F major	F major
+gs	1234750	D minor	D minor		-1	4	47		A minor	F major	A minor
+gs	1234751	Bb major	A# major		-1	4	47		F minor	F minor	F minor
+gs	1234752	B minor	B minor		-1	4	47		D major	D major	D major
+gs	1257593	B minor	B minor		-1	4	198		F# minor	F# minor	F# minor
+gs	1298595	F minor	F minor		-1	3	326		F minor	F minor	F minor
+gs	1316308	G major	G major		-1	0	145		C minor	C minor	F minor
+gs	1353830	D minor	D minor		-1	1	274		A minor	D minor	A minor
+gs	1356281	Eb major	D# major		-1	2	246		D# minor	D# minor	D# minor
+gs	1389887	Ab minor	G# minor		-1	3	42		C major	D# major	D# major
+gs	1406309	B minor	B minor		-1	0	358		B major	B minor	B minor
+gs	1415239	C minor	C minor		-1	1	270		C major	C minor	C major
+gs	1442809	Db minor	C# minor		-1	0	377		E major	E major	E major
+gs	1468437	B minor	B minor		-1	3	158		B major	B minor	B major
+gs	1474122	Ab major	G# major		-1	0	114		G# major	G# major	G# major
+gs	1486770	A minor	A minor		-1	1	287		A minor	A minor	A minor
+gs	1494159	Eb minor	D# minor		-1	4	345		D# minor	D# minor	D# minor
+gs	1549964	Db minor	C# minor		-1	3	422		C# minor	C# minor	C# minor
+gs	1568217	F major	F major		-1	1	205		F major	F major	F major
+gs	1574723	D minor	D minor		-1	3	380		F major	A# major	F major
+gs	1575015	A minor	A minor		-1	4	188		A minor	A minor	A minor
+gs	1611446	Ab minor	G# minor		-1	0	353		G# minor	G# minor	G# minor
+gs	1614715	Gb minor	F# minor		-1	2	277		F# minor	F# minor	F# minor
+gs	1626779	Bb minor	A# minor		-1	1	162		C major	C major	C minor
+gs	1650933	Eb minor	D# minor		-1	3	222		D# minor	G# minor	D# minor
+gs	1650934	F minor	F minor		-1	3	222		G# major	G# major	G# major
+gs	1652412	D minor	D minor		-1	0	318		D# major	D# minor	D# major
+gs	1669939	E major	E major		-1	3	362		E major	E minor	B major
+gs	1673811	D major	D major		-1	1	445		G minor	G minor	C major
+gs	1678455	Gb minor	F# minor		-1	3	226		C major	C major	B major
+gs	1681074	F minor	F minor		-1	0	318		G# major	G# major	G# major
+gs	1681077	Ab minor	G# minor		-1	0	318		C# major	C# major	F minor
+gs	1681085	F major	F major		-1	0	318		E minor	E minor	F# major
+gs	1682815	C minor	C minor		-1	1	369		G minor	C minor	C minor
+gs	1690921	D minor	D minor		-1	4	147		D minor	D minor	D minor
+gs	1695408	A minor	A minor		-1	0	219		A minor	A minor	A minor
+gs	1706844	Eb major	D# major		-1	3	424		D# major	G# major	D# major
+gs	1725800	G minor	G minor		-1	3	29		E minor	E minor	E minor
+gs	1757071	E minor	E minor		-1	3	222		E major	E minor	E minor
+gs	1763782	Gb minor	F# minor		-1	4	346		F# minor	F# minor	F# minor
+gs	1771576	C minor	C minor		-1	2	303		C minor	C minor	G minor
+gs	1771577	G minor	G minor		-1	2	303		G minor	G minor	G minor
+gs	1776378	Ab minor	G# minor		-1	1	341		G# minor	G# minor	G# minor
+gs	1781139	C minor	C minor		-1	1	410		C minor	C minor	C minor
+gs	1785226	Gb minor	F# minor		-1	1	112		F# minor	F# minor	F# minor
+gs	1787061	Gb minor	F# minor		-1	2	202		G# minor	G# minor	F# minor
+gs	1792026	D minor	D minor		-1	0	244		G major	G major	G major
+gs	1792100	C minor	C minor		-1	0	281		C minor	C minor	C minor
+gs	1792506	D minor	D minor		-1	4	34		G major	G minor	G minor
+gs	1795653	Eb minor	D# minor		-1	0	437		D# minor	D# minor	D# minor
+gs	1796518	Db minor	C# minor		-1	1	308		C minor	C minor	C minor
+gs	1803909	B minor	B minor		-1	4	356		B minor	B minor	B minor
+gs	1808022	Bb minor	A# minor		-1	0	244		F# major	F# major	A# minor
+gs	1809174	A major	A major		-1	0	53		A major	A major	A major
+gs	1814469	F minor	F minor		-1	0	254		F minor	F minor	F minor
+gs	1822087	B minor	B minor		-1	4	264		C# major	C# major	A# minor
+gs	1822502	D minor	D minor		-1	3	231		G minor	G minor	G minor
+gs	1837440	B minor	B minor		-1	3	134		B minor	B minor	B minor
+gs	1850984	A minor	A minor		-1	4	348		E minor	E minor	E minor
+gs	1856889	Gb minor	F# minor		-1	3	42		A# minor	A# minor	A# major
+gs	1864037	Db minor	C# minor		-1	2	140		C# minor	C# minor	C# minor
+gs	1880732	Eb minor	D# minor		-1	1	59		G# major	G# minor	D# minor
+gs	1904501	C minor	C minor		-1	4	446		G major	G minor	D minor
+gs	1922470	Eb minor	D# minor		-1	0	221		D# minor	D# minor	D# minor
+gs	1927655	G minor	G minor		-1	3	245		G minor	G minor	G minor
+gs	1939732	Eb minor	D# minor		-1	0	189		D# minor	D# minor	D# minor
+gs	1944125	C minor	C minor		-1	2	252		C major	C major	C major
+gs	1948785	E minor	E minor		-1	3	373		C major	C major	C major
+gs	1949099	E minor	E minor		-1	0	260		E minor	E minor	E minor
+gs	1950170	Bb minor	A# minor		-1	0	244		A# minor	A# minor	A# minor
+gs	1960032	C minor	C minor		-1	2	409		G minor	G minor	G minor
+gs	1964905	A minor	A minor		-1	1	330		F minor	C# major	A# minor
+gs	1970992	Ab minor	G# minor		-1	4	43		G# minor	G# minor	G# minor
+gs	1978917	D minor	D minor		-1	2	106		D major	D major	C# minor
+gs	1981501	A minor	A minor		-1	2	302		A minor	A minor	A minor
+gs	1982269	A minor	A minor		-1	1	105		G major	G major	D minor
+gs	1983975	Gb minor	F# minor		-1	2	376		F# minor	F# minor	F# minor
+gs	1984204	F minor	F minor		-1	2	282		F minor	F minor	F minor
+gs	1986370	Eb minor	D# minor		-1	1	105		G# major	G# major	D# major
+gs	1990297	A minor	A minor		-1	1	369		G major	G major	F major
+gs	1991458	B minor	B minor		-1	3	253		B minor	B minor	B minor
+gs	2006103	Db minor	C# minor		-1	0	165		G# minor	G# minor	G# minor
+gs	2007977	Db minor	C# minor		-1	3	243		G# minor	G# minor	G# minor
+gs	2014445	Eb minor	D# minor		-1	0	181		D# minor	D# minor	D# minor
+gs	2018991	C minor	C minor		-1	2	154		C minor	C minor	C minor
+gs	2024026	G major	G major		-1	2	86		G major	G major	G major
+gs	2025670	C minor	C minor		-1	2	306		G# major	C# major	C# major
+gs	2026524	Eb minor	D# minor		-1	1	37		C# major	F# major	F# major
+gs	2029598	E minor	E minor		-1	0	212		A major	A minor	A major
+gs	2031094	A minor	A minor		-1	3	222		A minor	A minor	A minor
+gs	2031096	A minor	A minor		-1	3	222		A minor	A minor	A minor
+gs	2046342	E minor	E minor		-1	4	237		A# minor	A# minor	A# minor
+gs	2047796	D minor	D minor		-1	4	209		C major	C major	C major
+gs	2048054	C minor	C minor		-1	2	267		C minor	C minor	C minor
+gs	2048940	G minor	G minor		-1	4	203		G major	G minor	G minor
+gs	2049680	F minor	F minor		-1	0	244		F minor	F minor	G# major
+gs	2051166	E minor	E minor		-1	3	320		E minor	E minor	E minor
+gs	2052966	Bb minor	A# minor		-1	4	138		G# major	G# major	G minor
+gs	2053495	B minor	B minor		-1	3	225		F# minor	F# minor	F# minor
+gs	2054968	C major	C major		-1	3	319		C major	C major	C major
+gs	2059625	Gb minor	F# minor		-1	0	290		F minor	F minor	F minor
+gs	2069519	F minor	F minor		-1	1	407		F minor	F minor	F minor
+gs	2070773	A minor	A minor		-1	3	109		A minor	A minor	A minor
+gs	2075331	G minor	G minor		-1	0	211		G minor	G minor	G minor
+gs	2081732	E minor	E minor		-1	3	228		F minor	F minor	F major
+gs	2434664	C major	C major		-1	3	66		G major	C major	C major
+gs	2435861	C minor	C minor		-1	2	103		G minor	C minor	G minor
+gs	2436276	A minor	A minor		-1	2	352		A major	A minor	A minor
+gs	2436729	C minor	C minor		-1	2	370		C minor	C minor	C minor
+gs	2438899	Bb minor	A# minor		-1	0	82		A# minor	A# minor	A# minor
+gs	2440193	A minor	A minor		-1	0	361		A minor	A minor	A minor
+gs	2447748	Ab minor	G# minor		-1	3	141		G# major	G# major	G# minor
+gs	2448121	F minor	F minor		-1	1	164		F minor	F minor	F minor
+gs	2666332	A major	A major		-1	4	271		E major	E minor	E minor
+gs	2666528	Db minor	C# minor		-1	1	199		C# minor	C# minor	C# minor
+gs	2667501	B minor	B minor		-1	4	301		F# minor	E major	F# minor
+gs	2673157	B minor	B minor		-1	0	358		B major	B minor	B minor
+gs	2673251	Eb minor	D# minor		-1	3	222		D# minor	D# minor	D# minor
+gs	2673252	C minor	C minor		-1	3	314		C minor	C minor	C minor
+gs	2673254	D minor	D minor		-1	0	249		C major	F minor	F major
+gs	2676506	C minor	C minor		-1	4	271		F minor	F minor	F minor
+gs	2680040	A minor	A minor		-1	3	61		A major	A minor	A minor
+gs	2725284	G minor	G minor		-1	0	167		G# minor	G# minor	G# minor
+gs	2725286	G minor	G minor		-1	0	167		G minor	G minor	G minor
+gs	2725289	E minor	E minor		-1	0	167		E major	E major	E major
+gs	2725290	G minor	G minor		-1	0	167		G major	G major	G major
+gs	2741219	A minor	A minor		-1	1	287		A minor	A minor	A minor
+gs	2760321	C major	C major		-1	1	113		G# major	G# major	C minor
+gs	2996293	D major	D major		-1	0	81		E minor	E minor	E minor
+gs	3003894	C minor	C minor		-1	4	63		C major	C minor	C minor
+gs	3005030	E minor	E minor		-1	2	118		E minor	E minor	E minor
+gs	3014118	E minor	E minor		-1	1	449		E minor	E minor	E minor
+gs	3015217	F minor	F minor		-1	0	89		F major	F minor	F minor
+gs	3024384	A minor	A minor		-1	3	171		E minor	E minor	E minor
+gs	3033991	C minor	C minor		-1	1	349		C minor	C minor	C minor
+gs	3069201	C major	C major		-1	4	198		C major	C major	C major
+gs	3070298	D minor	D minor		-1	4	418		G minor	G minor	D minor
+gs	3076768	A major	A major		-1	3	222		A minor	A minor	A minor
+gs	3093661	G minor	G minor		-1	4	436		G minor	G minor	G minor
+gs	3095708	G minor	G minor		-1	2	307		G minor	G minor	G minor
+gs	3114501	Bb minor	A# minor		-1	3	375		F minor	F minor	F major
+gs	3116329	G minor	G minor		-1	1	204		G minor	G minor	A major
+gs	3129757	Db minor	C# minor		-1	0	294		F# major	F# major	F# major
+gs	3133794	Ab minor	G# minor		-1	0	155		G# major	G# major	G# major
+gs	3137686	A minor	A minor		-1	3	439		A major	A minor	A minor
+gs	3150078	D major	D major		-1	2	277		F# minor	F# minor	F# minor
+gs	3151513	D minor	D minor		-1	1	183		F minor	F minor	F minor
+gs	3165770	E minor	E minor		-1	3	214		B minor	E minor	E minor
+gs	3172588	B minor	B minor		-1	0	53		C# minor	F# minor	C# minor
+gs	3178147	A minor	A minor		-1	3	342		C# minor	C# minor	C# minor
+gs	3178155	A minor	A minor		-1	3	129		F minor	F minor	F minor
+gs	3186615	F minor	F minor		-1	0	181		F minor	F minor	F minor
+gs	3211603	C minor	C minor		-1	4	293		G minor	C minor	C minor
+gs	3211733	D minor	D minor		-1	4	331		F minor	F minor	F minor
+gs	3228297	B minor	B minor		-1	1	255		D major	D major	D major
+gs	3228649	Ab minor	G# minor		-1	4	55		G# minor	G# minor	G# minor
+gs	3228698	E minor	E minor		-1	4	39		E minor	E minor	E major
+gs	3229038	Eb major	D# major		-1	4	35		C minor	C minor	C minor
+gs	3232851	A minor	A minor		-1	3	231		A major	A minor	A minor
+gs	3233653	F major	F major		-1	4	365		G minor	G minor	G minor
+gs	3246151	Bb minor	A# minor		-1	1	163		A# minor	A# minor	A# minor
+gs	3249708	F minor	F minor		-1	0	146		F minor	F minor	F minor
+gs	3250632	F minor	F minor		-1	2	357		F minor	A# minor	F minor
+gs	3257231	E minor	E minor		-1	2	121		G major	C major	G major
+gs	3260121	Ab minor	G# minor		-1	1	442		G# major	G# minor	G# minor
+gs	3262951	C minor	C minor		-1	0	431		D# major	G# major	D# major
+gs	3270413	A minor	A minor		-1	4	184		G major	G major	G major
+gs	3271514	A minor	A minor		-1	0	321		A minor	A minor	A minor
+gs	3272873	B minor	B minor		-1	2	246		B major	B minor	B minor
+gs	3274260	D minor	D minor		-1	4	133		D minor	D minor	F major
+gs	3275147	F minor	F minor		-1	4	39		F minor	F minor	F minor
+gs	3284384	A minor	A minor		-1	1	6		B major	B major	B major
+gs	3288636	A minor	A minor		-1	2	192		A major	A minor	A minor
+gs	3298344	F minor	F minor		-1	0	339		F minor	F minor	F minor
+gs	3302298	C minor	C minor		-1	4	91		C minor	C minor	C minor
+gs	3302451	B minor	B minor		-1	4	329		F# minor	D major	D major
+gs	3313070	B minor	B minor		-1	1	193		D major	D major	D major
+gs	3313145	E major	E major		-1	0	316		C# minor	C# minor	C# minor
+gs	3317232	C minor	C minor		-1	1	143		G minor	C minor	G minor
+gs	3317417	G minor	G minor		-1	4	250		A# major	A# major	A# major
+gs	3319290	F major	F major		-1	3	210		F minor	F minor	F minor
+gs	3319589	Gb minor	F# minor		-1	2	46		E minor	E minor	E minor
+gs	3324024	Ab minor	G# minor		-1	4	381		G# minor	G# minor	G# minor
+gs	3334441	G minor	G minor		-1	2	49		A# major	A# major	A# major
+gs	3334471	Gb minor	F# minor		-1	2	46		G# minor	C# minor	C# minor
+gs	3338963	G minor	G minor		-1	0	186		G minor	G minor	G minor
+gs	3339291	G minor	G minor		-1	1	322		G major	G major	G major
+gs	3344291	D minor	D minor		-1	3	248		C major	C major	A minor
+gs	3345479	D minor	D minor		-1	0	434		F major	F major	F major
+gs	3349486	F minor	F minor		-1	1	423		F minor	F minor	F minor
+gs	3349967	Eb minor	D# minor		-1	0	324		D# minor	D# minor	D# minor
+gs	3354212	Gb major	F# major		-1	2	220		A# minor	A# minor	A# minor
+gs	3356535	F minor	F minor		-1	4	455		A minor	A minor	A minor
+gs	3361547	G minor	G minor		-1	3	243		G minor	G minor	G minor
+gs	3361909	Eb major	D# major		-1	1	238		D# major	D# minor	D# minor
+gs	3363196	E minor	E minor		-1	3	84		E minor	E minor	E minor
+gs	3363602	B minor	B minor		-1	4	39		D minor	D minor	D minor
+gs	3364661	A major	A major		-1	0	317		C# minor	A major	A major
+gs	3367551	Db minor	C# minor		-1	3	285		E major	A major	E major
+gs	3367553	Db minor	C# minor		-1	3	285		E major	A major	E major
+gs	3367555	Eb minor	D# minor		-1	4	403		D# major	D# major	D# major
+gs	3368117	E minor	E minor		-1	2	307		E major	E major	E major
+gs	3372108	Eb minor	D# minor		-1	4	28		C# major	F# major	D# minor
+gs	3377323	F minor	F minor		-1	1	30		F minor	F minor	F minor
+gs	3379400	C minor	C minor		-1	2	177		D# major	D# major	D# major
+gs	3383171	A minor	A minor		-1	2	272		A major	D major	A major
+gs	3387619	A minor	A minor		-1	4	50		A minor	A minor	A minor
+gs	3389317	A minor	A minor		-1	0	431		E major	E minor	E minor
+gs	3390952	C minor	C minor		-1	2	283		C minor	C minor	C minor
+gs	3395666	Gb minor	F# minor		-1	3	245		F# minor	F# minor	F# minor
+gs	3397932	B minor	B minor		-1	4	312		A minor	F major	D minor
+gs	3400782	F minor	F minor		-1	2	149		C# major	F# major	F# major
+gs	3402886	Gb major	F# major		-1	2	176		F# major	F# major	F# minor
+gs	3402887	F minor	F minor		-1	4	73		F minor	F minor	F minor
+gs	3402888	D minor	D minor		-1	4	73		D minor	G minor	D minor
+gs	3409548	Eb minor	D# minor		-1	1	288		D# major	D# major	D# minor
+gs	3415063	G minor	G minor		-1	3	419		G minor	A# major	G minor
+gs	3415421	E minor	E minor		-1	3	273		E minor	E minor	E minor
+gs	3424038	Db minor	C# minor		-1	4	31		C# major	F# minor	C# minor
+gs	3426022	D minor	D minor		-1	2	150		D minor	D minor	D minor
+gs	3426285	Eb minor	D# minor		-1	4	289		A# minor	D# minor	D# minor
+gs	3428673	C minor	C minor		-1	2	174		C minor	F minor	C minor
+gs	3432247	E minor	E minor		-1	1	164		G major	G major	G major
+gs	3434746	A minor	A minor		-1	4	83		F major	F major	F major
+gs	3443052	Bb minor	A# minor		-1	2	151		A# minor	A# minor	A# minor
+gs	3450181	C minor	C minor		-1	3	136		C minor	C minor	C minor
+gs	3467773	Bb minor	A# minor		-1	3	451		C# major	C# major	C# major
+gs	3478184	Eb minor	D# minor		-1	2	142		D# minor	G# minor	D# minor
+gs	3479363	Eb minor	D# minor		-1	1	296		D# major	D# minor	D# minor
+gs	3480108	Gb minor	F# minor		-1	3	101		F# minor	F# minor	F# minor
+gs	3482733	G minor	G minor		-1	1	128		G minor	G minor	G minor
+gs	3516363	G minor	G minor		-1	1	60		C minor	F minor	F major
+gs	3517044	F minor	F minor		-1	3	408		G# major	G# major	G# major
+gs	3518768	Eb major	D# major		-1	4	194		D# major	G# major	G# major
+gs	3518921	B minor	B minor		-1	0	280		B minor	B minor	B minor
+gs	3519499	G minor	G minor		-1	0	81		G# minor	G# minor	G# minor
+gs	3523229	A minor	A minor		-1	2	298		A minor	A minor	C major
+gs	3524408	Gb minor	F# minor		-1	1	344		F# minor	F# minor	F# minor
+gs	3526370	G minor	G minor		-1	2	443		A# major	A# major	A# major
+gs	3533310	B major	B major		-1	1	349		B major	B major	B major
+gs	3533740	B minor	B minor		-1	1	238		F# minor	B minor	A major
+gs	3533956	G minor	G minor		-1	2	218		G minor	G minor	G minor
+gs	3535112	Bb minor	A# minor		-1	2	139		A# minor	A# minor	A# minor
+gs	3542099	F minor	F minor		-1	0	89		F minor	F minor	F minor
+gs	3545728	F minor	F minor		-1	3	201		F minor	F minor	F minor
+gs	3561744	G minor	G minor		-1	1	7		F# minor	F# minor	F# minor
+gs	3568438	Ab major	G# major		-1	4	93		C minor	C minor	C minor
+gs	3568459	G major	G major		-1	2	137		B major	B minor	B minor
+gs	3568465	A minor	A minor		-1	2	132		F# minor	D major	D major
+gs	3571314	Db minor	C# minor		-1	3	125		C# minor	C# minor	C# minor
+gs	3572701	F minor	F minor		-1	4	0		F minor	F minor	F minor
+gs	3572702	E minor	E minor		-1	4	0		E major	E major	E major
+gs	3574815	A minor	A minor		-1	4	436		E minor	E minor	E minor
+gs	3589347	C minor	C minor		-1	2	74		C minor	C minor	C minor
+gs	3590070	Gb minor	F# minor		-1	0	130		E major	A major	A major
+gs	3596904	A major	A major		-1	1	378		G# minor	G# minor	G# minor
+gs	3602280	G minor	G minor		-1	4	386		G minor	G# major	G# major
+gs	3602282	E minor	E minor		-1	4	386		E minor	E minor	E minor
+gs	3625299	G minor	G minor		-1	1	411		G minor	A# major	G minor
+gs	3625787	C minor	C minor		-1	3	48		C minor	F minor	C minor
+gs	3625788	G minor	G minor		-1	3	48		G minor	G minor	G minor
+gs	3628628	B major	B major		-1	2	44		E minor	E minor	E minor
+gs	3629467	Db minor	C# minor		-1	2	235		C# minor	C# minor	C# minor
+gs	3629920	G minor	G minor		-1	3	122		G major	G minor	G minor
+gs	3633852	B minor	B minor		-1	2	156		E minor	E minor	B minor
+gs	3638836	F major	F major		-1	2	218		F major	F major	F major
+gs	3641166	E minor	E minor		-1	1	232		E minor	E minor	E minor
+gs	3642384	Eb minor	D# minor		-1	1	3		D# minor	D# minor	D# minor
+gs	3642409	Ab minor	G# minor		-1	3	323		G# minor	G# minor	G# minor
+gs	3648814	B minor	B minor		-1	0	416		B minor	B minor	B minor
+gs	3661550	A minor	A minor		-1	3	397		A major	A minor	A minor
+gs	3667215	Ab minor	G# minor		-1	0	415		G# minor	G# minor	G# minor
+gs	3667683	G minor	G minor		-1	3	125		G minor	D# major	D# major
+gs	3668409	E minor	E minor		-1	0	27		B minor	E minor	B minor
+gs	3681890	C major	C major		-1	1	163		C major	C major	C major
+gs	3686302	D minor	D minor		-1	2	70		D minor	D minor	D minor
+gs	3687442	Ab minor	G# minor		-1	3	371		G# minor	G# minor	G# minor
+gs	3695262	F minor	F minor		-1	0	364		F minor	F minor	F minor
+gs	3696226	Ab minor	G# minor		-1	3	157		G# major	G# minor	G# major
+gs	3701975	F major	F major		-1	4	379		D minor	F major	D minor
+gs	3703893	E major	E major		-1	4	195		E major	A major	E major
+gs	3706570	Eb minor	D# minor		-1	0	54		D# minor	G# minor	D# minor
+gs	3713557	Bb minor	A# minor		-1	0	256		D# minor	D# minor	A# minor
+gs	3725440	F minor	F minor		-1	4	292		F minor	F minor	F minor
+gs	3740062	F minor	F minor		-1	2	394		G# major	G# major	G# major
+gs	3753635	F major	F major		-1	1	259		C major	F major	C major
+gs	3757006	Eb major	D# major		-1	3	354		C minor	G# major	F minor
+gs	3759800	B minor	B minor		-1	1	164		B minor	G major	B minor
+gs	3767408	G minor	G minor		-1	4	338		G minor	G minor	G minor
+gs	3772753	D minor	D minor		-1	1	389		D minor	D minor	D minor
+gs	3773561	D minor	D minor		-1	2	174		G minor	G minor	G minor
+gs	3776015	Ab minor	G# minor		-1	3	153		F# minor	F# minor	G# minor
+gs	3789116	E minor	E minor		-1	2	277		E major	E major	B minor
+gs	3789117	Bb minor	A# minor		-1	2	277		A# minor	A# minor	A# minor
+gs	3792959	E minor	E minor		-1	3	258		E minor	E minor	E minor
+gs	3794008	Db minor	C# minor		-1	2	384		C# major	C# minor	C# major
+gs	3813682	G minor	G minor		-1	0	315		G minor	G minor	G minor
+gs	3822226	Ab minor	G# minor		-1	4	50		G# minor	G# minor	G# minor
+gs	3826491	D minor	D minor		-1	1	95		D major	D major	C# major
+gs	3829561	Bb minor	A# minor		-1	1	144		A# minor	A# minor	A# minor
+gs	3833050	Db major	C# major		-1	0	244		C# major	C# major	C# major
+gs	3836490	F minor	F minor		-1	3	245		F minor	F minor	F minor
+gs	3841927	C minor	C minor		-1	2	265		C minor	C minor	C minor
+gs	3858289	A minor	A minor		-1	4	257		A minor	D minor	A minor
+gs	3858324	B minor	B minor		-1	4	338		B minor	B minor	B minor
+gs	3858331	C minor	C minor		-1	4	338		C minor	C minor	C minor
+gs	3873733	Eb minor	D# minor		-1	0	309		D# minor	G# minor	D# minor
+gs	3892740	D major	D major		-1	2	8		D major	D major	D major
+gs	3914630	Gb major	F# major		-1	1	9		F# minor	F# minor	F# minor
+gs	3930672	D minor	D minor		-1	4	289		D minor	G minor	D minor
+gs	3935095	E minor	E minor		-1	4	182		E minor	A minor	E minor
+gs	3938837	E minor	E minor		-1	4	50		E minor	E minor	E minor
+gs	3939148	G minor	G minor		-1	2	92		G major	G minor	G major
+gs	3949799	A major	A major		-1	0	427		C major	F major	F major
+gs	3954078	A minor	A minor		-1	4	10		G major	G major	A minor
+gs	3954191	F minor	F minor		-1	4	50		F minor	F minor	F minor
+gs	3958396	A major	A major		-1	4	76		C major	C major	C major
+gs	3958397	A minor	A minor		-1	4	76		C major	C major	C major
+gs	3958398	G minor	G minor		-1	4	76		A# major	A# major	A# major
+gs	3958755	Eb minor	D# minor		-1	1	269		D# major	D# major	D# major
+gs	3958861	E minor	E minor		-1	3	400		G major	G major	G major
+gs	3963180	Gb minor	F# minor		-1	4	87		F# minor	F# minor	F# minor
+gs	3967462	E minor	E minor		-1	2	385		G major	G major	D major
+gs	3969868	F minor	F minor		-1	0	440		D# major	G# major	F minor
+gs	3971416	D minor	D minor		-1	3	258		D minor	D minor	D minor
+gs	3979989	Eb minor	D# minor		-1	3	371		D# minor	G# minor	D# minor
+gs	3980001	D minor	D minor		-1	2	328		F minor	F minor	F minor
+gs	3986537	Gb minor	F# minor		-1	0	279		A major	A major	A major
+gs	3992511	Eb minor	D# minor		-1	2	277		D# major	G# major	D# major
+gs	3995054	C major	C major		-1	1	433		C minor	C minor	C minor
+gs	3997722	F minor	F minor		-1	3	227		F minor	F minor	F minor
+gs	4002242	A minor	A minor		-1	2	444		A minor	A minor	A minor
+gs	4014747	C minor	C minor		-1	2	233		G minor	C minor	G minor
+gs	4014749	C minor	C minor		-1	2	233		G minor	G minor	G minor
+gs	4018247	G minor	G minor		-1	4	234		G minor	G minor	G minor
+gs	4021075	F minor	F minor		-1	0	355		F minor	F minor	F minor
+gs	4045225	Db minor	C# minor		-1	2	107		C# minor	C# minor	C# minor
+gs	4048367	B minor	B minor		-1	3	98		D major	D major	D major
+gs	4049579	G minor	G minor		-1	1	207		G minor	G minor	G minor
+gs	4060751	Eb minor	D# minor		-1	0	191		D# minor	D# minor	D# minor
+gs	4062807	E minor	E minor		-1	0	161		E major	E minor	E minor
+gs	4066359	Eb major	D# major		-1	2	97		C minor	C minor	C minor
+gs	4066435	Bb minor	A# minor		-1	0	181		A# minor	A# minor	A# minor
+gs	4086909	G minor	G minor		-1	3	421		G major	G minor	G minor
+gs	4088665	D minor	D minor		-1	3	116		C major	F major	C major
+gs	4091478	A minor	A minor		-1	4	454		A major	A major	A minor
+gs	4093657	Db minor	C# minor		-1	0	82		D# minor	G# minor	D# minor
+gs	4093908	C minor	C minor		-1	4	420		G minor	C minor	C minor
+gs	4098993	G minor	G minor		-1	1	187		A# major	A# major	A# major
+gs	4104235	F minor	F minor		-1	2	200		F minor	F minor	F minor
+gs	4107957	Db minor	C# minor		-1	4	62		G# minor	G# minor	A minor
+gs	4125044	F minor	F minor		-1	3	52		G# major	G# major	G# major
+gs	4153238	A minor	A minor		-1	0	123		A minor	A minor	A minor
+gs	4162405	A minor	A minor		-1	4	45		A minor	A minor	A minor
+gs	4166222	E minor	E minor		-1	1	217		E minor	E minor	E minor
+gs	4167325	F minor	F minor		-1	3	295		F minor	F minor	F major
+gs	4173942	C major	C major		-1	0	64		E minor	C major	C major
+gs	4186982	G minor	G minor		-1	2	390		G major	G minor	G minor
+gs	4188100	Bb minor	A# minor		-1	1	205		F minor	A# minor	A# minor
+gs	4191993	E minor	E minor		-1	1	163		E minor	E minor	E minor
+gs	4200490	Gb minor	F# minor		-1	4	230		F# minor	F# minor	F# minor
+gs	4202763	A minor	A minor		-1	0	148		A minor	A minor	A minor
+gs	4206954	D minor	D minor		-1	3	108		D minor	D minor	D minor
+gs	4207145	Eb minor	D# minor		-1	1	366		D# minor	F# major	D# minor
+gs	4231980	C minor	C minor		-1	3	124		G# major	G# major	C minor
+gs	4234612	C minor	C minor		-1	4	182		C minor	C minor	C minor
+gs	4254573	C minor	C minor		-1	0	72		C minor	C minor	C minor
+gs	4262569	Eb minor	D# minor		-1	3	11		F# major	F# major	F# major
+gs	4275052	D major	D major		-1	0	12		F# minor	D major	D major
+gs	4277742	F minor	F minor		-1	3	382		F minor	F minor	F minor
+gs	4284574	G major	G major		-1	1	159		D major	G major	G major
+gs	4293025	A minor	A minor		-1	4	208		A minor	A minor	A minor
+gs	4297635	B minor	B minor		-1	2	444		E minor	E minor	E minor
+gs	4302974	E minor	E minor		-1	0	13		E minor	E minor	E minor
+gs	4315749	F minor	F minor		-1	0	355		F minor	F minor	F minor
+gs	4320199	Eb minor	D# minor		-1	3	14		D# minor	D# minor	D# minor
+gs	4325645	C minor	C minor		-1	1	305		F minor	F minor	A# major
+gs	4325646	Gb minor	F# minor		-1	1	305		F# minor	A major	F# minor
+gs	4327665	E minor	E minor		-1	4	34		E minor	E minor	E minor
+gs	4328155	C minor	C minor		-1	2	387		C minor	C minor	C minor
+gs	4328388	F minor	F minor		-1	4	77		F minor	F minor	F minor
+gs	4359736	F minor	F minor		-1	2	297		F minor	F minor	F minor
+gs	4360488	F minor	F minor		-1	4	333		F# major	F# major	F# major
+gs	4361260	C minor	C minor		-1	1	65		C minor	C minor	C minor
+gs	4364668	Ab minor	G# minor		-1	3	382		G# minor	G# minor	D# minor
+gs	4366506	Eb minor	D# minor		-1	4	67		D# major	D# major	D# major
+gs	4371042	D minor	D minor		-1	3	111		D major	D minor	D major
+gs	4399289	C major	C major		-1	0	127		G major	C major	G major
+gs	4424988	Ab minor	G# minor		-1	2	444		G# minor	F# major	C# minor
+gs	4433083	Bb minor	A# minor		-1	2	374		A# minor	A# minor	A# minor
+gs	4440292	Ab minor	G# minor		-1	1	340		G# minor	G# minor	G# minor
+gs	4450726	E major	E major		-1	1	229		E minor	E minor	E minor
+gs	4452003	Gb minor	F# minor		-1	2	456		D major	G minor	B minor
+gs	4452122	Bb minor	A# minor		-1	4	47		A# minor	A# minor	A# minor
+gs	4453556	G minor	G minor		-1	1	413		G minor	G minor	G minor
+gs	4476610	Eb minor	D# minor		-1	1	327		D# minor	D# minor	D# minor
+gs	4483817	Ab minor	G# minor		-1	0	363		G# minor	G# minor	G# minor
+gs	4485436	F minor	F minor		-1	3	241		F minor	F minor	F minor
+gs	4498388	D minor	D minor		-1	1	80		D minor	F major	D minor
+gs	4505122	Eb major	D# major		-1	0	41		F# major	F# major	F# major
+gs	4508323	B minor	B minor		-1	1	96		B minor	B minor	B minor
+gs	4540971	Bb minor	A# minor		-1	0	172		A# minor	A# minor	A# minor
+gs	4566667	Gb minor	F# minor		-1	4	88		F# minor	F# minor	F# minor
+gs	4573655	E minor	E minor		-1	1	391		E minor	E minor	E minor
+gs	4596347	F minor	F minor		-1	3	101		F minor	F minor	F minor
+gs	4609349	A minor	A minor		-1	4	83		A minor	A minor	A minor
+gs	4615188	Ab minor	G# minor		-1	0	286		G# minor	G# minor	G# minor
+gs	4657878	Gb minor	F# minor		-1	3	101		F# minor	F# minor	F# minor
+gs	4661735	G minor	G minor		-1	3	295		G minor	G minor	G minor
+gs	4666231	F minor	F minor		-1	2	15		F minor	F minor	F major
+gs	4666417	A major	A major		-1	3	178		E major	E major	E major
+gs	4688833	A minor	A minor		-1	4	79		A minor	A minor	A minor
+gs	4693198	E major	E major		-1	3	57		G# major	G# minor	G# major
+gs	4702235	D major	D major		-1	2	74		D major	D major	D major
+gs	4723905	F minor	F minor		-1	2	104		F minor	F minor	F minor
+gs	4735775	Eb minor	D# minor		-1	1	369		D# minor	D# minor	D# minor
+gs	4755348	G minor	G minor		-1	0	135		G minor	G minor	G minor
+gs	4758620	F minor	F minor		-1	2	262		F minor	F minor	F minor
+gs	4779657	Bb major	A# major		-1	3	382		F major	A# major	A# major
+gs	4786362	C minor	C minor		-1	2	247		C minor	G# major	C minor
+gs	4802314	E minor	E minor		-1	2	117		B minor	E minor	B major
+gs	4815758	C minor	C minor		-1	0	347		C minor	C minor	C minor
+gs	4817706	Db minor	C# minor		-1	2	417		C# minor	C# minor	C# minor
+gs	4823611	A minor	A minor		-1	3	453		F minor	C# major	F minor
+gs	4824580	C minor	C minor		-1	0	115		G minor	G minor	G minor
+gs	4827420	Gb minor	F# minor		-1	1	65		F# minor	F# minor	F# minor
+gs	4834156	D minor	D minor		-1	1	217		D minor	D minor	D minor
+gs	4840289	E minor	E minor		-1	4	236		E major	E major	E major
+gs	4842349	G minor	G minor		-1	1	126		G minor	G minor	G minor
+gs	4846004	B minor	B minor		-1	1	291		B minor	B minor	B minor
+gs	4846007	Ab minor	G# minor		-1	1	65		G# minor	G# minor	G# minor
+gs	4857650	Bb minor	A# minor		-1	3	450		A# minor	A# minor	A# minor
+gs	4863806	F minor	F minor		-1	3	110		F minor	F minor	F minor
+gs	4868146	F minor	F minor		-1	2	104		G# major	C# major	F minor
+gs	4873286	Gb major	F# major		-1	0	398		F# minor	F# minor	F# minor
+gs	4877006	F minor	F minor		-1	4	448		F minor	F minor	F minor
+gs	4898445	Ab minor	G# minor		-1	2	46		G# minor	G# minor	D# minor
+gs	4898455	F minor	F minor		-1	2	46		F minor	A# minor	A# minor
+gs	4900482	Gb minor	F# minor		-1	2	394		F# minor	F# minor	F# minor
+gs	4917941	F minor	F minor		-1	1	405		F minor	F minor	F minor
+gs	4920936	Db minor	C# minor		-1	1	216		C# major	C# major	C# minor
+gs	4926785	G minor	G minor		-1	1	51		G minor	G minor	G minor
+gs	4927548	F minor	F minor		-1	2	56		F minor	F minor	F minor
+gs	4927724	Ab major	G# major		-1	4	367		G# major	G# major	G# major
+gs	4927725	Eb minor	D# minor		-1	4	47		G# minor	G# minor	G# minor
+gs	4928111	F minor	F minor		-1	1	428		F minor	F minor	F minor
+gs	4934196	A minor	A minor		-1	2	368		C major	F major	F major
+gs	4934251	C minor	C minor		-1	3	168		C major	C minor	C minor
+gs	4935536	F minor	F minor		-1	3	261		F minor	F minor	F minor
+gs	4939812	Bb minor	A# minor		-1	0	185		A# minor	C# major	A# minor
+gs	4941208	F minor	F minor		-1	3	401		G# major	G# major	G# major
+gs	4945105	F minor	F minor		-1	4	350		F minor	F minor	F minor
+gs	4950604	F minor	F minor		-1	3	430		F minor	F minor	F minor
+gs	4950614	E minor	E minor		-1	0	102		F minor	E major	F major
+gs	4953926	C minor	C minor		-1	0	240		C minor	C minor	C minor
+gs	4955428	Bb minor	A# minor		-1	4	284		A# minor	D# minor	A# minor
+gs	4955940	Ab minor	G# minor		-1	2	197		G# minor	G# minor	G# minor
+gs	4956417	Eb minor	D# minor		-1	1	164		D# minor	B major	D# minor
+gs	4957129	D minor	D minor		-1	4	50		D minor	D minor	D minor
+gs	4960012	G minor	G minor		-1	3	99		G# minor	G minor	G# minor
+gs	4965571	G minor	G minor		-1	2	74		G minor	G minor	G minor
+gs	4969568	B minor	B minor		-1	2	74		B minor	D major	B minor
+gs	4970082	F minor	F minor		-1	1	175		F minor	F minor	F minor
+gs	4981539	Gb minor	F# minor		-1	1	38		F# minor	F# minor	F# minor
+gs	4981541	Bb minor	A# minor		-1	1	38		F minor	F minor	A# minor
+gs	4983645	D minor	D minor		-1	4	435		D minor	D minor	D minor
+gs	4983728	G minor	G minor		-1	4	50		G minor	G minor	G minor
+gs	4992190	Db minor	C# minor		-1	1	304		C# major	C# minor	C# major
+gs	4995394	Gb minor	F# minor		-1	1	205		F# minor	F# minor	F# minor
+gs	4995597	C major	C major		-1	2	299		C major	C major	C major
+gs	4996031	F minor	F minor		-1	0	173		F minor	F minor	F minor
+gs	4996389	A minor	A minor		-1	1	90		A minor	A minor	A minor
+gs	4997194	Ab minor	G# minor		-1	2	46		G# minor	G# minor	G# minor
+gs	4997222	Db minor	C# minor		-1	2	46		C# minor	C# minor	C# minor
+gs	5005412	G minor	G minor		-1	2	360		G minor	G minor	G minor
+gs	5009084	Bb minor	A# minor		-1	0	336		A# minor	A# minor	A# minor
+gs	5013063	E minor	E minor		-1	0	355		E major	E major	E minor
+gs	5013910	G minor	G minor		-1	1	163		G minor	G minor	G minor
+gs	5015793	C major	C major		-1	1	16		G major	G major	G major
+gs	5026646	F minor	F minor		-1	3	111		F minor	F minor	F minor
+gs	5030517	Gb minor	F# minor		-1	0	412		F# minor	F# minor	F# minor
+gs	5035524	E minor	E minor		-1	1	170		E major	E minor	E major
+gs	5036476	Gb minor	F# minor		-1	4	36		F# minor	D major	D major
+gs	5039015	Db minor	C# minor		-1	2	276		C# minor	C# minor	C# minor
+gs	5039016	G minor	G minor		-1	2	352		G minor	G minor	G minor
+gs	5048249	A minor	A minor		-1	2	383		A minor	C major	A minor
+gs	5048263	G minor	G minor		-1	1	438		G minor	G minor	G minor
+gs	5049808	Ab minor	G# minor		-1	0	206		G# minor	G# minor	G# minor
+gs	5070608	F minor	F minor		-1	0	224		F minor	F minor	F minor
+gs	5073839	B major	B major		-1	3	68		F# major	B major	B major
+gs	5078640	F minor	F minor		-1	0	402		D# major	D# major	D# minor
+gs	5079918	Ab minor	G# minor		-1	3	275		G# minor	G# minor	G# minor
+gs	5081990	Gb minor	F# minor		-1	1	71		F# minor	F# minor	F# minor
+gs	5085261	A major	A major		-1	1	17		E major	E minor	E minor
+gs	5103693	F major	F major		-1	1	190		F minor	F minor	F minor
+gs	5120298	F minor	F minor		-1	1	152		F minor	F minor	F minor
+gs	5159593	A minor	A minor		-1	0	75		A minor	A minor	A minor
+gs	5171396	Ab major	G# major		-1	1	18		G# major	G# major	G# major
+gs	5263098	G minor	G minor		-1	3	19		G minor	G minor	G minor
+gs	5264038	E minor	E minor		-1	1	411		C# major	F# major	F# major
+gs	5276059	C minor	C minor		-1	4	242		C minor	C minor	C minor
+gs	5302340	C minor	C minor		-1	2	20		C minor	F minor	C minor
+gs	5304804	F minor	F minor		-1	0	21		F minor	F minor	F minor
+gs	5308082	Db minor	C# minor		-1	1	239		E major	E major	E major
+gs	5362946	A minor	A minor		-1	4	432		A major	A minor	A minor
+gs	5417860	Ab minor	G# minor		-1	4	396		G# minor	G# minor	G# minor
+gs	5431709	C minor	C minor		-1	2	300		D# major	G# major	G# major
+gs	5450838	E minor	E minor		-1	3	2		B minor	E minor	E minor
+gs	5740146	Eb minor	D# minor		-1	0	22		G# major	G# major	D# major
+gsplus	10089	D major	D major	D major	2	1	261		D major	G major	D major
+gsplus	61415	F minor aeolian		F minor	2	4	389		F minor	F minor	F minor
+gsplus	74982	C minor aeolian		C minor	2	2	208		G# minor	G# minor	G# major
+gsplus	101069	E minor	E minor	E minor	2	0	422		E minor	E minor	E minor
+gsplus	140603	C minor	C minor	C minor	2	4	349		C minor	C minor	C minor
+gsplus	190477	D minor aeolian		D minor	2	0	384		D minor	D minor	D minor
+gsplus	191347	Eb minor dorian		D# minor	2	3	395		D# minor	D# minor	D# minor
+gsplus	203493	G minor | D minor			2	1	159		D minor	G minor	D minor
+gsplus	205597	G minor aeolian		G minor	2	4	388		G minor	G minor	G minor
+gsplus	208158	E minor aeolian		E minor	2	2	41		D major	G major	D major
+gsplus	209206	A minor aeolian		A minor	2	2	320		A minor	C major	A minor
+gsplus	272788	Bb other			2	3	1		A# major	A# minor	A# minor
+gsplus	305771	C minor	C minor	C minor	2	0	89		C minor	C minor	C minor
+gsplus	341832	G major ionian | E minor aeolian			2	3	64		G major	G major	G major
+gsplus	376240	F minor aeolian		F minor	2	2	28		F minor	F minor	F minor
+gsplus	398124	D major | B minor aeolian			2	1	159		A major	D major	D major
+gsplus	400259	G minor | G major			2	0	162		G major	G minor	G minor
+gsplus	423054	D minor	D minor	D minor	2	1	159		D minor	D minor	D minor
+gsplus	435443	E major phrygian-major		E major	2	1	174		E minor	E minor	E minor
+gsplus	472626	D minor aeolian		D minor	2	2	421		D minor	G minor	D minor
+gsplus	495905	Bb minor aeolian		A# minor	2	4	332		A# minor	A# minor	A# minor
+gsplus	511348	E minor phrygian		E minor	2	4	400		E minor	E minor	E minor
+gsplus	571009	F minor phryrgian		F minor	1	1	159		C minor	F minor	F minor
+gsplus	582991	C minor dorian		C minor	0	1	306		C minor	C minor	C minor
+gsplus	611797	A major | Db minor phrygian			2	3	402		A major	A major	A major
+gsplus	631240	G minor phrygian		G minor	2	1	211		G minor	G minor	G minor
+gsplus	631883	C minor	C minor	C minor	2	1	368		C minor	C minor	C minor
+gsplus	634032	E minor harmonic		E minor	2	3	210		G minor	G# minor	C minor
+gsplus	667508	D minor	D minor	D minor	2	3	183		D minor	D minor	D minor
+gsplus	671546	A minor aeolian		A minor	2	3	181		A minor	A minor	A minor
+gsplus	677299	Gb major	F# major	F# major	2	0	53		F# major	F# major	F# major
+gsplus	678406	E minor phrygian | E major			2	1	159		E minor	E minor	E minor
+gsplus	682724	G major | G minor			2	2	437		G major	G minor	G minor
+gsplus	774871	B major	B major	B major	-1	0	18		G minor	G minor	A major
+gsplus	774874	B minor | Gb minor			-1	1	19		F# minor	F# minor	F# minor
+gsplus	774875	Gb minor	F# minor	F# minor	-1	0	20		F# minor	G major	G major
+gsplus	781373	E major | E minor			2	2	28		A major	A major	A major
+gsplus	781995	C major ionian		C major	2	1	73		C major	C major	C major
+gsplus	796860	Db minor aeolian		C# minor	2	2	80		C# major	C# minor	C# minor
+gsplus	814290	E_ major ionian			2	1	273		E major	E major	E major
+gsplus	814505	A major ionian		A major	2	3	217		A major	A major	A major
+gsplus	822664	Bb minor	A# minor	A# minor	2	2	115		A# minor	A# minor	A# minor
+gsplus	835903	D minor aeolian		D minor	2	0	70		A minor	D minor	D minor
+gsplus	839886	G major | G minor aeolian			2	3	330		G major	G major	G major
+gsplus	846900	E major mixolydian | E minor			2	4	35		E major	A major	A major
+gsplus	847422	A minor aeolian		A minor	2	4	49		A minor	A minor	A minor
+gsplus	853834	E minor	E minor	E minor	2	1	338		E major	E minor	E minor
+gsplus	873455	E minor phrygian		E minor	1	4	410		E minor	G major	A minor
+gsplus	877345	Eb major ionian		D# major	2	2	175		D# major	D# major	D# major
+gsplus	883724	F minor aeolian		F minor	2	4	126		D# major	D# major	A# minor
+gsplus	890568	E minor harmonic		E minor	2	3	448		G major	G major	E minor
+gsplus	891993	D major	D major	D major	-1	2	425		D major	D major	D major
+gsplus	896478	B minor	B minor	B minor	-1	0	21		B minor	B minor	B minor
+gsplus	903963	F major | F minor			2	4	27		F major	F minor	F major
+gsplus	907837	G minor	G minor	G minor	2	0	162		G minor	D# major	A# major
+gsplus	923397	Bb minor dorian		A# minor	2	3	308		A# minor	A# minor	A# minor
+gsplus	945256	Eb minor harmonic		D# minor	2	2	41		D# minor	D# minor	D# minor
+gsplus	973819	F minor aeolian		F minor	2	2	28		C minor	F minor	F minor
+gsplus	975137	Db other			2	1	223		F# minor	F# minor	F# major
+gsplus	975138	Eb^ minor			2	1	223		D# major	G# minor	B major
+gsplus	981591	B_ other			2	0	37		G# minor	G# minor	G# minor
+gsplus	992081	E major | E other			2	4	327		E major	E major	B minor
+gsplus	997308	C major | C minor aeolian			2	4	114		C minor	C minor	C minor
+gsplus	1004923	C minor	C minor	C minor	1	4	282		C major	C major	F minor
+gsplus	1007941	F minor dorian		F minor	1	3	155		F minor	F minor	F minor
+gsplus	1009960	E minor phrygian		E minor	1	1	223		C# minor	C# minor	E major
+gsplus	1017921	E major ionian | B major			2	4	164		B major	E major	B major
+gsplus	1026478	Eb other			0	0	37		G minor	G minor	G minor
+gsplus	1033148	F minor	F minor	F minor	2	1	107		F minor	F minor	F minor
+gsplus	1034795	Gb minor harmonic		F# minor	2	2	48		C# minor	F# minor	C# minor
+gsplus	1037507	G major phrygian-major		G major	2	3	391		G major	G major	D major
+gsplus	1041574	Ab major	G# major	G# major	2	3	226		G# major	C# major	G# major
+gsplus	1043194	E minor | A other			2	3	161		E minor	A minor	E minor
+gsplus	1052744	G minor harmonic		G minor	1	0	162		G# major	G# major	G# minor
+gsplus	1056896	A minor	A minor	A minor	2	1	263		A minor	A minor	A minor
+gsplus	1074548	A minor	A minor	A minor	-1	4	246		A minor	A minor	A minor
+gsplus	1075123	F minor	F minor	F minor	-1	3	4		F minor	F minor	F minor
+gsplus	1092676	F minor | Ab major ionian			2	1	353		G# major	G# major	G# major
+gsplus	1103512	Bb minor	A# minor	A# minor	-1	1	5		A# minor	A# minor	A# minor
+gsplus	1105632	C minor	C minor	C minor	2	4	102		C major	C minor	C minor
+gsplus	1140027	G minor	G minor	G minor	2	1	329		G# major	G# major	C# minor
+gsplus	1149778	Gb minor aeolian		F# minor	2	0	191		F# minor	F# minor	F# minor
+gsplus	1161234	C major mixolydian		C major	2	4	305		C minor	C minor	C minor
+gsplus	1161249	G minor aeolian		G minor	2	2	298		G minor	G minor	G minor
+gsplus	1164898	C major	C major	C major	-1	0	443		C major	C major	C major
+gsplus	1178656	G minor aeolian		G minor	2	4	346		C minor	C minor	G minor
+gsplus	1193612	Gb minor | Gb major			2	3	95		F# minor	F# minor	F# minor
+gsplus	1194720	D minor	D minor	D minor	2	2	365		D minor	G minor	D minor
+gsplus	1198688	D minor phrygian		D minor	2	3	29		D major	D minor	D minor
+gsplus	1206025	E minor | A minor			2	3	355		E minor	E minor	C major
+gsplus	1209745	Bb major ionian		A# major	2	0	218		A# major	A# major	A# major
+gsplus	1224698	G major	G major	G major	-1	4	258		G major	G minor	G major
+gsplus	1234668	G minor phrygian		G minor	1	0	162		G minor	G minor	G# minor
+gsplus	1234669	G minor phrygian		G minor	0	0	162		F# minor	F# minor	G# minor
+gsplus	1234670	F minor	F minor	F minor	0	0	162		F major	F minor	F major
+gsplus	1234748	Bb major ionian		A# major	2	4	42		A# major	A# major	A# major
+gsplus	1234749	Bb major | F major			2	4	42		F major	F major	F major
+gsplus	1234750	F major ionian		F major	2	4	42		A minor	F major	A minor
+gsplus	1234751	Bb major mixolydian		A# major	1	4	42		F minor	F minor	F minor
+gsplus	1234752	B minor aeolian		B minor	2	4	42		D major	D major	D major
+gsplus	1257593	B minor phrygian | Gb minor			1	4	193		F# minor	F# minor	F# minor
+gsplus	1298595	F minor harmonic		F minor	2	3	321		F minor	F minor	F minor
+gsplus	1316308	F minor	F minor	F minor	1	3	140		C minor	C minor	F minor
+gsplus	1353830	D minor	D minor	D minor	2	0	269		A minor	D minor	A minor
+gsplus	1356281	Eb minor aeolian		D# minor	2	2	241		D# minor	D# minor	D# minor
+gsplus	1389887	F major	F major	F major	2	0	37		C major	D# major	D# major
+gsplus	1406309	B minor dorian		B minor	2	1	354		B major	B minor	B minor
+gsplus	1415239	C minor aeolian		C minor	2	1	265		C major	C minor	C major
+gsplus	1442809	E major	E major	E major	1	3	373		E major	E major	E major
+gsplus	1468437	B minor	B minor	B minor	2	3	153		B major	B minor	B major
+gsplus	1474122	Ab major	G# major	G# major	-1	1	109		G# major	G# major	G# major
+gsplus	1486770	A minor aeolian		A minor	2	4	282		A minor	A minor	A minor
+gsplus	1494159	Eb minor	D# minor	D# minor	1	4	340		D# minor	D# minor	D# minor
+gsplus	1549964	Db minor	C# minor	C# minor	2	0	418		C# minor	C# minor	C# minor
+gsplus	1568217	F major	F major	F major	-1	1	200		F major	F major	F major
+gsplus	1574723	D minor | G minor			2	3	376		F major	A# major	F major
+gsplus	1575015	A minor aeolian		A minor	2	3	183		A minor	A minor	A minor
+gsplus	1611446	Ab minor aeolian		G# minor	2	2	348		G# minor	G# minor	G# minor
+gsplus	1614715	Gb minor phrygian		F# minor	2	3	272		F# minor	F# minor	F# minor
+gsplus	1626779	C minor	C minor	C minor	2	1	157		C major	C major	C minor
+gsplus	1650933	Eb major | Eb minor			2	3	217		D# minor	G# minor	D# minor
+gsplus	1650934	Ab major mixolydian | F minor			1	3	217		G# major	G# major	G# major
+gsplus	1652412	Eb other			2	3	313		D# major	D# minor	D# major
+gsplus	1669939	E major	E major	E major	0	1	358		E major	E minor	B major
+gsplus	1673811	D major	D major	D major	-1	1	441		G minor	G minor	C major
+gsplus	1678455	Gb minor	F# minor	F# minor	-1	1	221		C major	C major	B major
+gsplus	1681074	C other			1	3	313		G# major	G# major	G# major
+gsplus	1681077	C major	C major	C major	2	3	313		C# major	C# major	F minor
+gsplus	1681085	Gb other | Bb other			2	3	313		E minor	E minor	F# major
+gsplus	1682815	C minor aeolian		C minor	2	2	365		G minor	C minor	C minor
+gsplus	1690921	D minor phygian		D minor	2	0	142		D minor	D minor	D minor
+gsplus	1695408	A minor	A minor	A minor	2	3	214		A minor	A minor	A minor
+gsplus	1706844	Eb major mixolydian | Eb minor phrygian			1	3	420		D# major	G# major	D# major
+gsplus	1725800	B minor | E minor			1	1	24		E minor	E minor	E minor
+gsplus	1757071	E minor dorian		E minor	2	3	217		E major	E minor	E minor
+gsplus	1763782	Gb minor	F# minor	F# minor	1	1	341		F# minor	F# minor	F# minor
+gsplus	1771576	C minor	C minor	C minor	2	2	298		C minor	C minor	G minor
+gsplus	1771577	G minor	G minor	G minor	2	2	298		G minor	G minor	G minor
+gsplus	1776378	Ab other			2	4	336		G# minor	G# minor	G# minor
+gsplus	1781139	C minor aeolian		C minor	2	3	406		C minor	C minor	C minor
+gsplus	1785226	Gb other			1	1	107		F# minor	F# minor	F# minor
+gsplus	1787061	Gb minor | Gb other			1	1	197		G# minor	G# minor	F# minor
+gsplus	1792026	B minor	B minor	B minor	2	2	239		G major	G major	G major
+gsplus	1792100	C minor harmonic		C minor	2	0	276		C minor	C minor	C minor
+gsplus	1792506	G major mixolydian		G major	2	3	29		G major	G minor	G minor
+gsplus	1795653	Eb minor harmonic		D# minor	2	2	433		D# minor	D# minor	D# minor
+gsplus	1796518	C minor aeolian		C minor	2	3	303		C minor	C minor	C minor
+gsplus	1803909	B minor	B minor	B minor	2	0	352		B minor	B minor	B minor
+gsplus	1808022	Bb other			2	2	239		F# major	F# major	A# minor
+gsplus	1809174	A major	A major	A major	2	2	48		A major	A major	A major
+gsplus	1814469	F minor	F minor	F minor	1	2	249		F minor	F minor	F minor
+gsplus	1822087	Bb minor dorian		A# minor	1	3	259		C# major	C# major	A# minor
+gsplus	1822502	D minor	D minor	D minor	2	3	226		G minor	G minor	G minor
+gsplus	1837440	B minor	B minor	B minor	2	2	129		B minor	B minor	B minor
+gsplus	1850984	A minor phrygian		A minor	2	4	343		E minor	E minor	E minor
+gsplus	1856889	Bb minor	A# minor	A# minor	2	0	37		A# minor	A# minor	A# major
+gsplus	1864037	Db minor harmonic		C# minor	1	3	135		C# minor	C# minor	C# minor
+gsplus	1880732	Eb other			2	3	54		G# major	G# minor	D# minor
+gsplus	1904501	A minor	A minor	A minor	2	1	442		G major	G minor	D minor
+gsplus	1922470	Eb minor dorian		D# minor	2	0	216		D# minor	D# minor	D# minor
+gsplus	1927655	G minor aeolian | G major mixolydian			2	3	240		G minor	G minor	G minor
+gsplus	1939732	Eb minor	D# minor	D# minor	1	0	184		D# minor	D# minor	D# minor
+gsplus	1944125	C major	C major	C major	2	1	247		C major	C major	C major
+gsplus	1948785	E minor | F other			2	3	369		C major	C major	C major
+gsplus	1949099	E minor	E minor	E minor	1	2	255		E minor	E minor	E minor
+gsplus	1950170	Bb minor aeolian		A# minor	2	2	239		A# minor	A# minor	A# minor
+gsplus	1960032	C minor	C minor	C minor	-1	2	405		G minor	G minor	G minor
+gsplus	1964905	Bb minor phrygian		A# minor	2	4	325		F minor	C# major	A# minor
+gsplus	1970992	Ab other			2	4	38		G# minor	G# minor	G# minor
+gsplus	1978917	D minor dorian		D minor	1	3	101		D major	D major	C# minor
+gsplus	1981501	A minor	A minor	A minor	-1	2	297		A minor	A minor	A minor
+gsplus	1982269	D minor | A minor			2	2	100		G major	G major	D minor
+gsplus	1983975	Gb minor	F# minor	F# minor	-1	0	372		F# minor	F# minor	F# minor
+gsplus	1984204	F minor dorian		F minor	1	4	277		F minor	F minor	F minor
+gsplus	1986370	Eb other monotonic			1	2	100		G# major	G# major	D# major
+gsplus	1990297	A minor	A minor	A minor	1	2	365		G major	G major	F major
+gsplus	1991458	B minor	B minor	B minor	2	2	248		B minor	B minor	B minor
+gsplus	2006103	Db minor | Ab other			2	0	160		G# minor	G# minor	G# minor
+gsplus	2007977	Ab minor phrygian		G# minor	2	4	238		G# minor	G# minor	G# minor
+gsplus	2014445	Eb minor	D# minor	D# minor	2	0	176		D# minor	D# minor	D# minor
+gsplus	2018991	C minor aeolian		C minor	2	2	149		C minor	C minor	C minor
+gsplus	2024026	G major	G major	G major	-1	0	81		G major	G major	G major
+gsplus	2025670	C minor	C minor	C minor	2	1	301		G# major	C# major	C# major
+gsplus	2026524	Eb minor	D# minor	D# minor	-1	4	32		C# major	F# major	F# major
+gsplus	2029598	E minor aeolian		E minor	2	2	207		A major	A minor	A major
+gsplus	2031094	A minor	A minor	A minor	2	3	217		A minor	A minor	A minor
+gsplus	2031096	A minor aeolian		A minor	2	3	217		A minor	A minor	A minor
+gsplus	2046342	Bb minor phrygian		A# minor	2	2	232		A# minor	A# minor	A# minor
+gsplus	2047796	D minor aeolian		D minor	2	1	204		C major	C major	C major
+gsplus	2048054	C minor	C minor	C minor	-1	2	262		C minor	C minor	C minor
+gsplus	2048940	G minor	G minor	G minor	2	2	198		G major	G minor	G minor
+gsplus	2049680	F minor phryrgian		F minor	2	2	239		F minor	F minor	G# major
+gsplus	2051166	E minor	E minor	E minor	2	4	315		E minor	E minor	E minor
+gsplus	2052966	Bb other			2	0	133		G# major	G# major	G minor
+gsplus	2053495	B minor dorian		B minor	1	3	220		F# minor	F# minor	F# minor
+gsplus	2054968	C major	C major	C major	2	2	314		C major	C major	C major
+gsplus	2059625	F minor aeolian		F minor	2	0	285		F minor	F minor	F minor
+gsplus	2069519	F minor	F minor	F minor	2	1	403		F minor	F minor	F minor
+gsplus	2070773	A minor phrygian		A minor	1	1	104		A minor	A minor	A minor
+gsplus	2075331	G minor aeolian		G minor	2	3	206		G minor	G minor	G minor
+gsplus	2081732	F major | F minor phrygian			0	1	223		F minor	F minor	F major
+gsplus	2434664	C major | G major ionian			2	4	61		G major	C major	C major
+gsplus	2435861	C minor dorian		C minor	2	2	98		G minor	C minor	G minor
+gsplus	2436276	A minor aeolian		A minor	2	3	347		A major	A minor	A minor
+gsplus	2436729	C minor phrygian | C major			2	4	366		C minor	C minor	C minor
+gsplus	2438899	Bb minor	A# minor	A# minor	2	0	77		A# minor	A# minor	A# minor
+gsplus	2440193	A minor aeolian		A minor	2	2	357		A minor	A minor	A minor
+gsplus	2447748	Ab other			0	1	136		G# major	G# major	G# minor
+gsplus	2448121	F minor phryrgian		F minor	2	1	159		F minor	F minor	F minor
+gsplus	2666332	A major | A minor phrygian			1	2	266		E major	E minor	E minor
+gsplus	2666528	Db minor	C# minor	C# minor	2	4	194		C# minor	C# minor	C# minor
+gsplus	2667501	B minor phrygian		B minor	1	2	296		F# minor	E major	F# minor
+gsplus	2673157	Bb minor	A# minor	A# minor	2	1	354		B major	B minor	B minor
+gsplus	2673251	Eb minor	D# minor	D# minor	2	3	217		D# minor	D# minor	D# minor
+gsplus	2673252	C minor aeolian		C minor	2	1	309		C minor	C minor	C minor
+gsplus	2673254	D minor	D minor	D minor	2	3	244		C major	F minor	F major
+gsplus	2676506	C minor	C minor	C minor	-1	2	266		F minor	F minor	F minor
+gsplus	2680040	A minor aeolian		A minor	2	2	56		A major	A minor	A minor
+gsplus	2725284	Ab minor | Ab major			1	0	162		G# minor	G# minor	G# minor
+gsplus	2725286	G minor | Bb major			1	0	162		G minor	G minor	G minor
+gsplus	2725289	E minor phrygian | E major			1	0	162		E major	E major	E major
+gsplus	2725290	G minor	G minor	G minor	2	0	162		G major	G major	G major
+gsplus	2741219	A minor	A minor	A minor	2	4	282		A minor	A minor	A minor
+gsplus	2760321	C major mixolydian | C minor			1	0	108		G# major	G# major	C minor
+gsplus	2996293	E minor aeolian		E minor	2	0	76		E minor	E minor	E minor
+gsplus	3003894	C other monotonic			1	4	58		C major	C minor	C minor
+gsplus	3005030	E other			2	1	113		E minor	E minor	E minor
+gsplus	3014118	E minor	E minor	E minor	2	2	445		E minor	E minor	E minor
+gsplus	3015217	F minor phryrgian		F minor	2	1	84		F major	F minor	F minor
+gsplus	3024384	E minor	E minor	E minor	-1	4	166		E minor	E minor	E minor
+gsplus	3033991	C minor aeolian		C minor	2	2	344		C minor	C minor	C minor
+gsplus	3069201	C major	C major	C major	-1	4	193		C major	C major	C major
+gsplus	3070298	D minor	D minor	D minor	2	0	414		G minor	G minor	D minor
+gsplus	3076768	A minor	A minor	A minor	2	3	217		A minor	A minor	A minor
+gsplus	3093661	G minor | C minor dorian			2	1	432		G minor	G minor	G minor
+gsplus	3095708	G minor	G minor	G minor	-1	2	302		G minor	G minor	G minor
+gsplus	3114501	Bb other			1	1	371		F minor	F minor	F major
+gsplus	3116329	G minor	G minor	G minor	2	4	199		G minor	G minor	A major
+gsplus	3129757	Db minor dorian | Db major			2	1	289		F# major	F# major	F# major
+gsplus	3133794	Ab minor phrygian		G# minor	2	0	150		G# major	G# major	G# major
+gsplus	3137686	A minor dorian		A minor	2	3	435		A major	A minor	A minor
+gsplus	3150078	D major | Gb minor aeolian			2	3	272		F# minor	F# minor	F# minor
+gsplus	3151513	F minor	F minor	F minor	2	3	178		F minor	F minor	F minor
+gsplus	3165770	E minor dorian		E minor	1	2	209		B minor	E minor	E minor
+gsplus	3172588	B minor	B minor	B minor	1	2	48		C# minor	F# minor	C# minor
+gsplus	3178147	A other | Eb other			2	0	337		C# minor	C# minor	C# minor
+gsplus	3178155	F minor dorian		F minor	2	0	124		F minor	F minor	F minor
+gsplus	3186615	F minor	F minor	F minor	2	0	176		F minor	F minor	F minor
+gsplus	3211603	C minor phrygian		C minor	2	3	288		G minor	C minor	C minor
+gsplus	3211733	F minor phryrgian		F minor	2	0	326		F minor	F minor	F minor
+gsplus	3228297	B minor aeolian		B minor	2	0	250		D major	D major	D major
+gsplus	3228649	Ab minor	G# minor	G# minor	2	3	50		G# minor	G# minor	G# minor
+gsplus	3228698	E other			2	0	34		E minor	E minor	E major
+gsplus	3229038	Eb major | C minor aeolian			2	4	30		C minor	C minor	C minor
+gsplus	3232851	A other			1	3	226		A major	A minor	A minor
+gsplus	3233653	G minor aeolian		G minor	2	1	361		G minor	G minor	G minor
+gsplus	3246151	Bb minor	A# minor	A# minor	2	1	158		A# minor	A# minor	A# minor
+gsplus	3249708	F minor	F minor	F minor	-1	1	141		F minor	F minor	F minor
+gsplus	3250632	F minor aeolian		F minor	2	1	353		F minor	A# minor	F minor
+gsplus	3257231	E minor aeolian | G major			2	2	116		G major	C major	G major
+gsplus	3260121	Ab minor	G# minor	G# minor	-1	2	438		G# major	G# minor	G# minor
+gsplus	3262951	C minor aeolian		C minor	2	2	427		D# major	G# major	D# major
+gsplus	3270413	G major	G major	G major	2	4	179		G major	G major	G major
+gsplus	3271514	A minor aeolian		A minor	2	0	316		A minor	A minor	A minor
+gsplus	3272873	B minor phrygian		B minor	2	2	241		B major	B minor	B minor
+gsplus	3274260	D minor aeolian		D minor	2	2	128		D minor	D minor	F major
+gsplus	3275147	F minor dorian		F minor	2	0	34		F minor	F minor	F minor
+gsplus	3288636	A minor	A minor	A minor	2	0	187		A major	A minor	A minor
+gsplus	3298344	F minor aeolian		F minor	2	0	334		F minor	F minor	F minor
+gsplus	3302298	C minor	C minor	C minor	-1	3	86		C minor	C minor	C minor
+gsplus	3302451	B minor dorian		B minor	2	1	324		F# minor	D major	D major
+gsplus	3313070	B minor	B minor	B minor	-1	0	188		D major	D major	D major
+gsplus	3313145	Db minor aeolian		C# minor	2	1	311		C# minor	C# minor	C# minor
+gsplus	3317232	C minor | C major			2	2	138		G minor	C minor	G minor
+gsplus	3317417	G minor aeolian		G minor	2	0	245		A# major	A# major	A# major
+gsplus	3319290	C minor | F minor			2	1	205		F minor	F minor	F minor
+gsplus	3319589	E minor aeolian		E minor	2	2	41		E minor	E minor	E minor
+gsplus	3324024	Ab minor	G# minor	G# minor	2	3	377		G# minor	G# minor	G# minor
+gsplus	3334441	G minor aeolian | Bb major			2	3	44		A# major	A# major	A# major
+gsplus	3334471	Db minor harmonic		C# minor	2	2	41		G# minor	C# minor	C# minor
+gsplus	3338963	G minor	G minor	G minor	-1	3	181		G minor	G minor	G minor
+gsplus	3339291	G major phrygian-major		G major	2	2	317		G major	G major	G major
+gsplus	3344291	A other			2	2	243		C major	C major	A minor
+gsplus	3345479	D minor	D minor	D minor	2	0	430		F major	F major	F major
+gsplus	3349486	F minor	F minor	F minor	2	0	419		F minor	F minor	F minor
+gsplus	3349967	Eb^ minor			2	1	319		D# minor	D# minor	D# minor
+gsplus	3354212	Bb minor aeolian		A# minor	2	0	215		A# minor	A# minor	A# minor
+gsplus	3356535	A minor aeolian		A minor	2	1	451		A minor	A minor	A minor
+gsplus	3361547	G minor	G minor	G minor	1	4	238		G minor	G minor	G minor
+gsplus	3361909	Eb major | C minor			-1	0	233		D# major	D# minor	D# minor
+gsplus	3363196	E minor aeolian		E minor	2	2	79		E minor	E minor	E minor
+gsplus	3363602	D minor aeolian		D minor	2	0	34		D minor	D minor	D minor
+gsplus	3364661	A major | Db minor aeolian			2	1	312		C# minor	A major	A major
+gsplus	3367551	Db minor | E major			2	2	280		E major	A major	E major
+gsplus	3367553	E major | Db minor			2	2	280		E major	A major	E major
+gsplus	3367555	Eb^ major			2	1	399		D# major	D# major	D# major
+gsplus	3368117	E minor	E minor	E minor	-1	2	302		E major	E major	E major
+gsplus	3372108	Bb minor	A# minor	A# minor	1	4	23		C# major	F# major	D# minor
+gsplus	3377323	F minor | F major			2	1	25		F minor	F minor	F minor
+gsplus	3379400	Bb major ionian		A# major	2	1	172		D# major	D# major	D# major
+gsplus	3383171	A major	A major	A major	2	4	267		A major	D major	A major
+gsplus	3387619	A minor	A minor	A minor	2	4	45		A minor	A minor	A minor
+gsplus	3389317	E major | E minor phrygian			2	2	427		E major	E minor	E minor
+gsplus	3390952	C minor aeolian		C minor	2	4	278		C minor	C minor	C minor
+gsplus	3395666	Gb minor	F# minor	F# minor	2	3	240		F# minor	F# minor	F# minor
+gsplus	3397932	D minor	D minor	D minor	1	2	307		A minor	F major	D minor
+gsplus	3400782	X			2	1	144		C# major	F# major	F# major
+gsplus	3402886	Gb major phrygian-major		F# major	2	4	171		F# major	F# major	F# minor
+gsplus	3402887	F minor aeolian		F minor	2	0	68		F minor	F minor	F minor
+gsplus	3402888	D minor	D minor	D minor	2	0	68		D minor	G minor	D minor
+gsplus	3409548	Eb other			0	3	283		D# major	D# major	D# minor
+gsplus	3415063	G minor aeolian		G minor	2	2	415		G minor	A# major	G minor
+gsplus	3415421	E minor aeolian		E minor	2	0	268		E minor	E minor	E minor
+gsplus	3424038	Db minor | Db major			2	1	26		C# major	F# minor	C# minor
+gsplus	3426022	D minor	D minor	D minor	-1	2	145		D minor	D minor	D minor
+gsplus	3426285	Eb minor	D# minor	D# minor	2	3	284		A# minor	D# minor	D# minor
+gsplus	3428673	C minor aeolian		C minor	2	4	169		C minor	F minor	C minor
+gsplus	3432247	E minor aeolian | G major			2	1	159		G major	G major	G major
+gsplus	3434746	A minor aeolian		A minor	2	1	78		F major	F major	F major
+gsplus	3443052	Bb minor phrygian		A# minor	1	0	146		A# minor	A# minor	A# minor
+gsplus	3450181	C minor aeolian		C minor	2	2	131		C minor	C minor	C minor
+gsplus	3467773	Bb minor aeolian		A# minor	2	2	447		C# major	C# major	C# major
+gsplus	3478184	Eb minor	D# minor	D# minor	-1	4	137		D# minor	G# minor	D# minor
+gsplus	3479363	Eb minor	D# minor	D# minor	-1	1	291		D# major	D# minor	D# minor
+gsplus	3480108	Gb minor	F# minor	F# minor	-1	4	96		F# minor	F# minor	F# minor
+gsplus	3482733	G minor phrygian		G minor	2	3	123		G minor	G minor	G minor
+gsplus	3516363	F other			2	2	55		C minor	F minor	F major
+gsplus	3517044	F minor aeolian | Ab major			2	0	404		G# major	G# major	G# major
+gsplus	3518768	Eb major	D# major	D# major	-1	2	189		D# major	G# major	G# major
+gsplus	3518921	B minor	B minor	B minor	1	3	275		B minor	B minor	B minor
+gsplus	3519499	Ab minor aeolian		G# minor	2	0	76		G# minor	G# minor	G# minor
+gsplus	3523229	A minor	A minor	A minor	-1	3	293		A minor	A minor	C major
+gsplus	3524408	Gb minor dorian		F# minor	2	1	339		F# minor	F# minor	F# minor
+gsplus	3526370	D minor phrygian		D minor	2	4	439		A# major	A# major	A# major
+gsplus	3533310	B major	B major	B major	1	2	344		B major	B major	B major
+gsplus	3533740	B minor aeolian		B minor	2	0	233		F# minor	B minor	A major
+gsplus	3533956	G minor aeolian		G minor	2	3	213		G minor	G minor	G minor
+gsplus	3535112	Bb minor	A# minor	A# minor	-1	1	134		A# minor	A# minor	A# minor
+gsplus	3542099	F minor phryrgian		F minor	1	1	84		F minor	F minor	F minor
+gsplus	3545728	F minor aeolian		F minor	2	2	196		F minor	F minor	F minor
+gsplus	3561744	G minor	G minor	G minor	-1	3	6		F# minor	F# minor	F# minor
+gsplus	3568438	Ab major	G# major	G# major	-1	3	88		C minor	C minor	C minor
+gsplus	3568459	B minor	B minor	B minor	2	3	132		B major	B minor	B minor
+gsplus	3568465	A minor	A minor	A minor	-1	3	127		F# minor	D major	D major
+gsplus	3571314	Db minor phrygian		C# minor	2	2	120		C# minor	C# minor	C# minor
+gsplus	3572701	F minor	F minor	F minor	-1	2	0		F minor	F minor	F minor
+gsplus	3572702	E minor	E minor	E minor	-1	2	0		E major	E major	E major
+gsplus	3574815	E minor aeolian		E minor	2	1	432		E minor	E minor	E minor
+gsplus	3589347	C minor	C minor	C minor	-1	4	69		C minor	C minor	C minor
+gsplus	3590070	Gb minor aeolian		F# minor	2	4	125		E major	A major	A major
+gsplus	3596904	Ab minor dorian		G# minor	1	1	374		G# minor	G# minor	G# minor
+gsplus	3602280	G minor	G minor	G minor	-1	1	382		G minor	G# major	G# major
+gsplus	3602282	E minor	E minor	E minor	-1	1	382		E minor	E minor	E minor
+gsplus	3625299	G minor aeolian		G minor	2	2	407		G minor	A# major	G minor
+gsplus	3625787	G minor aeolian		G minor	2	4	43		C minor	F minor	C minor
+gsplus	3625788	G minor	G minor	G minor	2	4	43		G minor	G minor	G minor
+gsplus	3628628	E minor melodic		E minor	2	1	39		E minor	E minor	E minor
+gsplus	3629467	Db minor	C# minor	C# minor	-1	3	230		C# minor	C# minor	C# minor
+gsplus	3629920	G minor dorian | G major mixolydian			2	0	117		G major	G minor	G minor
+gsplus	3633852	B minor | B major			2	0	151		E minor	E minor	B minor
+gsplus	3638836	F major | F minor			2	3	213		F major	F major	F major
+gsplus	3641166	E minor aeolian		E minor	2	4	227		E minor	E minor	E minor
+gsplus	3642384	Eb minor dorian		D# minor	2	2	3		D# minor	D# minor	D# minor
+gsplus	3642409	Ab minor	G# minor	G# minor	1	4	318		G# minor	G# minor	G# minor
+gsplus	3648814	B minor aeolian		B minor	2	1	412		B minor	B minor	B minor
+gsplus	3661550	A minor aeolian		A minor	2	2	393		A major	A minor	A minor
+gsplus	3667215	Ab minor aeolian		G# minor	2	0	411		G# minor	G# minor	G# minor
+gsplus	3667683	G minor	G minor	G minor	2	2	120		G minor	D# major	D# major
+gsplus	3668409	E minor aeolian		E minor	2	2	22		B minor	E minor	B minor
+gsplus	3681890	C major	C major	C major	-1	1	158		C major	C major	C major
+gsplus	3686302	D minor aeolian		D minor	2	0	65		D minor	D minor	D minor
+gsplus	3687442	Ab minor phrygian		G# minor	2	3	367		G# minor	G# minor	G# minor
+gsplus	3695262	F minor | Db major			2	4	360		F minor	F minor	F minor
+gsplus	3696226	Ab minor	G# minor	G# minor	1	4	152		G# major	G# minor	G# major
+gsplus	3701975	F major | D minor aeolian			2	1	375		D minor	F major	D minor
+gsplus	3703893	E major ionian		E major	2	3	190		E major	A major	E major
+gsplus	3706570	Eb minor	D# minor	D# minor	2	4	49		D# minor	G# minor	D# minor
+gsplus	3713557	Bb minor	A# minor	A# minor	-1	1	251		D# minor	D# minor	A# minor
+gsplus	3725440	F minor | C minor			2	0	287		F minor	F minor	F minor
+gsplus	3740062	Ab major mixolydian | F minor			2	4	390		G# major	G# major	G# major
+gsplus	3753635	F major	F major	F major	-1	3	254		C major	F major	C major
+gsplus	3757006	Eb major | C minor aeolian			2	0	350		C minor	G# major	F minor
+gsplus	3759800	B minor aeolian		B minor	1	1	159		B minor	G major	B minor
+gsplus	3767408	G minor	G minor	G minor	2	0	333		G minor	G minor	G minor
+gsplus	3772753	D minor	D minor	D minor	-1	1	385		D minor	D minor	D minor
+gsplus	3773561	D minor aeolian		D minor	2	4	169		G minor	G minor	G minor
+gsplus	3776015	X atonical			1	4	148		F# minor	F# minor	G# minor
+gsplus	3789116	B minor aeolian		B minor	1	3	272		E major	E major	B minor
+gsplus	3789117	Bb minor	A# minor	A# minor	1	3	272		A# minor	A# minor	A# minor
+gsplus	3792959	E minor	E minor	E minor	1	3	253		E minor	E minor	E minor
+gsplus	3794008	Db minor	C# minor	C# minor	-1	1	380		C# major	C# minor	C# major
+gsplus	3813682	G minor	G minor	G minor	-1	4	310		G minor	G minor	G minor
+gsplus	3822226	Ab minor aeolian		G# minor	2	4	45		G# minor	G# minor	G# minor
+gsplus	3826491	D minor | D major			1	1	90		D major	D major	C# major
+gsplus	3829561	Bb minor harmonic		A# minor	2	4	139		A# minor	A# minor	A# minor
+gsplus	3833050	Db major mixolydian		C# major	2	2	239		C# major	C# major	C# major
+gsplus	3836490	F minor aeolian		F minor	2	3	240		F minor	F minor	F minor
+gsplus	3841927	C minor aeolian		C minor	2	1	260		C minor	C minor	C minor
+gsplus	3858289	A minor	A minor	A minor	-1	0	252		A minor	D minor	A minor
+gsplus	3858324	B minor aeolian		B minor	2	0	333		B minor	B minor	B minor
+gsplus	3858331	C minor aeolian		C minor	2	0	333		C minor	C minor	C minor
+gsplus	3873733	Eb minor | Eb major			2	4	304		D# minor	G# minor	D# minor
+gsplus	3892740	D major	D major	D major	-1	2	7		D major	D major	D major
+gsplus	3914630	Gb major | Gb minor			-1	3	8		F# minor	F# minor	F# minor
+gsplus	3930672	D minor aeolian		D minor	2	3	284		D minor	G minor	D minor
+gsplus	3935095	E minor phrygian		E minor	2	1	177		E minor	A minor	E minor
+gsplus	3938837	E minor aeolian		E minor	2	4	45		E minor	E minor	E minor
+gsplus	3939148	G minor phrygian		G minor	2	3	87		G major	G minor	G major
+gsplus	3949799	A minor aeolian		A minor	2	3	423		C major	F major	F major
+gsplus	3954078	A minor	A minor	A minor	-1	2	9		G major	G major	A minor
+gsplus	3954191	F minor aeolian | F major			2	4	45		F minor	F minor	F minor
+gsplus	3958396	C major mixolydian		C major	2	4	71		C major	C major	C major
+gsplus	3958397	C major ionian | A minor			2	4	71		C major	C major	C major
+gsplus	3958398	G minor mixolydian		G minor	2	4	71		A# major	A# major	A# major
+gsplus	3958755	Eb major	D# major	D# major	2	2	264		D# major	D# major	D# major
+gsplus	3958861	E minor aeolian		E minor	2	3	396		G major	G major	G major
+gsplus	3963180	Gb minor harmonic		F# minor	2	0	82		F# minor	F# minor	F# minor
+gsplus	3967462	E minor phrygian		E minor	2	1	381		G major	G major	D major
+gsplus	3969868	F minor aeolian		F minor	2	3	436		D# major	G# major	F minor
+gsplus	3971416	D minor	D minor	D minor	2	3	253		D minor	D minor	D minor
+gsplus	3979989	Eb minor	D# minor	D# minor	2	3	367		D# minor	G# minor	D# minor
+gsplus	3980001	F minor aeolian		F minor	2	0	323		F minor	F minor	F minor
+gsplus	3986537	A major	A major	A major	2	0	274		A major	A major	A major
+gsplus	3992511	F minor | Eb minor			2	3	272		D# major	G# major	D# major
+gsplus	3995054	C minor phrygian		C minor	2	3	429		C minor	C minor	C minor
+gsplus	3997722	F minor aeolian		F minor	2	4	222		F minor	F minor	F minor
+gsplus	4002242	A minor | C major			2	0	440		A minor	A minor	A minor
+gsplus	4014747	C minor	C minor	C minor	2	1	228		G minor	C minor	G minor
+gsplus	4014749	C minor	C minor	C minor	2	1	228		G minor	G minor	G minor
+gsplus	4018247	G minor	G minor	G minor	2	4	229		G minor	G minor	G minor
+gsplus	4021075	F minor aeolian		F minor	2	3	351		F minor	F minor	F minor
+gsplus	4045225	Db minor	C# minor	C# minor	2	4	102		C# minor	C# minor	C# minor
+gsplus	4048367	B minor aeolian | D major			2	3	93		D major	D major	D major
+gsplus	4049579	G minor phrygian | G major			2	4	202		G minor	G minor	G minor
+gsplus	4060751	Eb minor aeolian		D# minor	2	4	186		D# minor	D# minor	D# minor
+gsplus	4062807	E minor dorian | E major mixolydian			1	1	156		E major	E minor	E minor
+gsplus	4066359	C minor aeolian | Eb major			2	0	92		C minor	C minor	C minor
+gsplus	4066435	Bb minor | Eb minor			2	0	176		A# minor	A# minor	A# minor
+gsplus	4086909	G minor	G minor	G minor	1	3	417		G major	G minor	G minor
+gsplus	4088665	C major ionian		C major	2	4	111		C major	F major	C major
+gsplus	4091478	A minor phrygian		A minor	1	0	450		A major	A major	A minor
+gsplus	4093657	Eb minor phrygian		D# minor	2	0	77		D# minor	G# minor	D# minor
+gsplus	4093908	C minor aeolian		C minor	2	1	416		G minor	C minor	C minor
+gsplus	4098993	G minor aeolian | Bb major			2	1	182		A# major	A# major	A# major
+gsplus	4104235	F minor	F minor	F minor	2	3	195		F minor	F minor	F minor
+gsplus	4107957	Db minor	C# minor	C# minor	-1	1	57		G# minor	G# minor	A minor
+gsplus	4125044	F minor aeolian		F minor	1	4	47		G# major	G# major	G# major
+gsplus	4153238	A minor harmonic		A minor	2	3	118		A minor	A minor	A minor
+gsplus	4162405	A minor aeolian		A minor	2	4	40		A minor	A minor	A minor
+gsplus	4166222	E minor aeolian		E minor	2	0	212		E minor	E minor	E minor
+gsplus	4167325	F minor dorian		F minor	2	0	290		F minor	F minor	F major
+gsplus	4173942	C major ionian		C major	2	0	59		E minor	C major	C major
+gsplus	4186982	G minor | G major			0	4	386		G major	G minor	G minor
+gsplus	4188100	Bb minor phrygian | Bb major			2	1	200		F minor	A# minor	A# minor
+gsplus	4191993	E minor	E minor	E minor	2	1	158		E minor	E minor	E minor
+gsplus	4200490	Gb minor harmonic		F# minor	2	4	225		F# minor	F# minor	F# minor
+gsplus	4202763	A minor	A minor	A minor	-1	3	143		A minor	A minor	A minor
+gsplus	4206954	D minor aeolian		D minor	2	2	103		D minor	D minor	D minor
+gsplus	4207145	Eb minor aeolian		D# minor	2	4	362		D# minor	F# major	D# minor
+gsplus	4231980	Eb minor dorian | Eb major mixolydian			2	2	119		G# major	G# major	C minor
+gsplus	4234612	C minor dorian		C minor	2	1	177		C minor	C minor	C minor
+gsplus	4254573	C minor	C minor	C minor	2	0	67		C minor	C minor	C minor
+gsplus	4262569	Eb minor	D# minor	D# minor	-1	4	10		F# major	F# major	F# major
+gsplus	4275052	D major	D major	D major	-1	0	11		F# minor	D major	D major
+gsplus	4277742	F minor	F minor	F minor	2	1	378		F minor	F minor	F minor
+gsplus	4284574	A minor dorian		A minor	2	2	154		D major	G major	G major
+gsplus	4293025	A minor phrygian		A minor	2	2	203		A minor	A minor	A minor
+gsplus	4297635	E minor	E minor	E minor	2	0	440		E minor	E minor	E minor
+gsplus	4302974	E minor	E minor	E minor	-1	2	12		E minor	E minor	E minor
+gsplus	4315749	F minor aeolian		F minor	2	3	351		F minor	F minor	F minor
+gsplus	4325645	C minor aeolian		C minor	2	3	300		F minor	F minor	A# major
+gsplus	4325646	D major ionian		D major	2	3	300		F# minor	A major	F# minor
+gsplus	4327665	E minor	E minor	E minor	-1	3	29		E minor	E minor	E minor
+gsplus	4328155	C minor phrygian | C major			2	2	383		C minor	C minor	C minor
+gsplus	4328388	F major | F minor			2	3	72		F minor	F minor	F minor
+gsplus	4359736	F minor phryrgian		F minor	2	1	292		F minor	F minor	F minor
+gsplus	4360488	F minor	F minor	F minor	2	4	328		F# major	F# major	F# major
+gsplus	4361260	C minor	C minor	C minor	2	1	60		C minor	C minor	C minor
+gsplus	4364668	Eb minor	D# minor	D# minor	2	1	378		G# minor	G# minor	D# minor
+gsplus	4366506	Eb minor	D# minor	D# minor	2	3	62		D# major	D# major	D# major
+gsplus	4371042	D minor	D minor	D minor	-1	0	106		D major	D minor	D major
+gsplus	4399289	C major | A minor			2	1	122		G major	C major	G major
+gsplus	4424988	Ab minor	G# minor	G# minor	1	0	440		G# minor	F# major	C# minor
+gsplus	4433083	Bb minor aeolian		A# minor	2	1	370		A# minor	A# minor	A# minor
+gsplus	4440292	Ab minor aeolian		G# minor	2	2	335		G# minor	G# minor	G# minor
+gsplus	4450726	E minor	E minor	E minor	2	0	224		E minor	E minor	E minor
+gsplus	4452003	D_ major | B_ minor aeonian			2	4	452		D major	G minor	B minor
+gsplus	4452122	Bb minor phrygian | Bb major			2	4	42		A# minor	A# minor	A# minor
+gsplus	4453556	G minor	G minor	G minor	2	4	409		G minor	G minor	G minor
+gsplus	4476610	Eb minor	D# minor	D# minor	2	2	322		D# minor	D# minor	D# minor
+gsplus	4483817	Ab minor aeolian		G# minor	2	4	359		G# minor	G# minor	G# minor
+gsplus	4485436	F minor	F minor	F minor	2	4	236		F minor	F minor	F minor
+gsplus	4498388	D minor	D minor	D minor	-1	4	75		D minor	F major	D minor
+gsplus	4505122	Gb major ionian		F# major	2	0	36		F# major	F# major	F# major
+gsplus	4508323	B minor	B minor	B minor	-1	1	91		B minor	B minor	B minor
+gsplus	4540971	Bb minor	A# minor	A# minor	2	3	167		A# minor	A# minor	A# minor
+gsplus	4566667	Gb minor aeolian		F# minor	2	3	83		F# minor	F# minor	F# minor
+gsplus	4573655	E minor	E minor	E minor	-1	4	387		E minor	E minor	E minor
+gsplus	4596347	F minor phrygian		F minor	2	4	96		F minor	F minor	F minor
+gsplus	4609349	A minor aeolian		A minor	2	1	78		A minor	A minor	A minor
+gsplus	4615188	Ab minor	G# minor	G# minor	-1	1	281		G# minor	G# minor	G# minor
+gsplus	4657878	Gb minor	F# minor	F# minor	-1	4	96		F# minor	F# minor	F# minor
+gsplus	4661735	G minor	G minor	G minor	-1	0	290		G minor	G minor	G minor
+gsplus	4666231	F minor	F minor	F minor	-1	2	13		F minor	F minor	F major
+gsplus	4666417	E major | F# minor			2	2	173		E major	E major	E major
+gsplus	4688833	A minor	A minor	A minor	-1	1	74		A minor	A minor	A minor
+gsplus	4693198	Ab major mixolydian		G# major	2	1	52		G# major	G# minor	G# major
+gsplus	4702235	D major	D major	D major	-1	4	69		D major	D major	D major
+gsplus	4723905	F minor aeolian		F minor	2	4	99		F minor	F minor	F minor
+gsplus	4735775	Eb minor	D# minor	D# minor	-1	2	365		D# minor	D# minor	D# minor
+gsplus	4755348	G minor	G minor	G minor	-1	3	130		G minor	G minor	G minor
+gsplus	4758620	F minor	F minor	F minor	-1	0	257		F minor	F minor	F minor
+gsplus	4779657	Bb major | D minor			2	1	378		F major	A# major	A# major
+gsplus	4786362	C minor	C minor	C minor	2	1	242		C minor	G# major	C minor
+gsplus	4802314	E minor	E minor	E minor	-1	0	112		B minor	E minor	B major
+gsplus	4815758	C minor	C minor	C minor	2	3	342		C minor	C minor	C minor
+gsplus	4817706	Db minor phrygian | Db major			2	1	413		C# minor	C# minor	C# minor
+gsplus	4823611	F minor	F minor	F minor	2	1	449		F minor	C# major	F minor
+gsplus	4824580	C minor phrygian | C major			2	2	110		G minor	G minor	G minor
+gsplus	4827420	Gb minor | Gb major			2	1	60		F# minor	F# minor	F# minor
+gsplus	4834156	D minor aeolian		D minor	2	0	212		D minor	D minor	D minor
+gsplus	4840289	E other monotonic			2	0	231		E major	E major	E major
+gsplus	4842349	G minor phrygian		G minor	2	0	121		G minor	G minor	G minor
+gsplus	4846004	B minor dorian		B minor	2	0	286		B minor	B minor	B minor
+gsplus	4846007	Ab minor	G# minor	G# minor	2	1	60		G# minor	G# minor	G# minor
+gsplus	4857650	Bb minor dorian		A# minor	2	0	446		A# minor	A# minor	A# minor
+gsplus	4863806	F minor	F minor	F minor	-1	0	105		F minor	F minor	F minor
+gsplus	4868146	F minor aeolian		F minor	2	4	99		G# major	C# major	F minor
+gsplus	4873286	Gb minor dorian		F# minor	2	0	394		F# minor	F# minor	F# minor
+gsplus	4877006	F minor aeolian		F minor	2	4	444		F minor	F minor	F minor
+gsplus	4898445	Ab minor harmonic | Eb minor			2	2	41		G# minor	G# minor	D# minor
+gsplus	4898455	Bb minor harmonic | F minor			2	2	41		F minor	A# minor	A# minor
+gsplus	4900482	Gb minor aeolian		F# minor	2	4	390		F# minor	F# minor	F# minor
+gsplus	4917941	F minor	F minor	F minor	2	2	401		F minor	F minor	F minor
+gsplus	4920936	Db minor	C# minor	C# minor	2	1	211		C# major	C# major	C# minor
+gsplus	4926785	G minor	G minor	G minor	-1	3	46		G minor	G minor	G minor
+gsplus	4927548	F minor aeolian		F minor	2	2	51		F minor	F minor	F minor
+gsplus	4927724	Ab major | F minor			2	4	363		G# major	G# major	G# major
+gsplus	4927725	Eb minor aeolian		D# minor	2	4	42		G# minor	G# minor	G# minor
+gsplus	4928111	F minor phrygian | F major			2	1	424		F minor	F minor	F minor
+gsplus	4934196	A minor	A minor	A minor	2	2	364		C major	F major	F major
+gsplus	4934251	C major | C minor			2	3	163		C major	C minor	C minor
+gsplus	4935536	F minor	F minor	F minor	2	4	256		F minor	F minor	F minor
+gsplus	4939812	Bb minor	A# minor	A# minor	-1	4	180		A# minor	C# major	A# minor
+gsplus	4941208	F minor	F minor	F minor	-1	2	397		G# major	G# major	G# major
+gsplus	4945105	F minor	F minor	F minor	-1	0	345		F minor	F minor	F minor
+gsplus	4950604	F minor	F minor	F minor	2	2	426		F minor	F minor	F minor
+gsplus	4950614	E minor	E minor	E minor	-1	2	97		F minor	E major	F major
+gsplus	4953926	C minor aeolian		C minor	2	4	235		C minor	C minor	C minor
+gsplus	4955428	Bb minor aeolian		A# minor	2	2	279		A# minor	D# minor	A# minor
+gsplus	4955940	Ab minor mixolydian | Ab major dorian			2	4	192		G# minor	G# minor	G# minor
+gsplus	4956417	Eb minor aeolian		D# minor	2	1	159		D# minor	B major	D# minor
+gsplus	4957129	D minor aeolian		D minor	2	4	45		D minor	D minor	D minor
+gsplus	4960012	G major	G major	G major	2	4	94		G# minor	G minor	G# minor
+gsplus	4965571	G minor	G minor	G minor	-1	4	69		G minor	G minor	G minor
+gsplus	4969568	B minor	B minor	B minor	-1	4	69		B minor	D major	B minor
+gsplus	4970082	F minor	F minor	F minor	-1	0	170		F minor	F minor	F minor
+gsplus	4981539	Gb minor	F# minor	F# minor	2	4	33		F# minor	F# minor	F# minor
+gsplus	4981541	Bb minor	A# minor	A# minor	2	4	33		F minor	F minor	A# minor
+gsplus	4983645	D minor	D minor	D minor	-1	0	431		D minor	D minor	D minor
+gsplus	4983728	G minor aeolian		G minor	2	4	45		G minor	G minor	G minor
+gsplus	4992190	Db minor | Db major			-1	2	299		C# major	C# minor	C# major
+gsplus	4995394	Gb minor aeolian		F# minor	2	1	200		F# minor	F# minor	F# minor
+gsplus	4995597	C major	C major	C major	-1	3	294		C major	C major	C major
+gsplus	4996031	F minor	F minor	F minor	2	4	168		F minor	F minor	F minor
+gsplus	4996389	A minor harmonic		A minor	2	0	85		A minor	A minor	A minor
+gsplus	4997194	Ab minor	G# minor	G# minor	-1	2	41		G# minor	G# minor	G# minor
+gsplus	4997222	Db minor harmonic		C# minor	2	2	41		C# minor	C# minor	C# minor
+gsplus	5005412	G minor	G minor	G minor	-1	1	356		G minor	G minor	G minor
+gsplus	5009084	Bb minor	A# minor	A# minor	-1	0	331		A# minor	A# minor	A# minor
+gsplus	5013063	E minor	E minor	E minor	2	3	351		E major	E major	E minor
+gsplus	5013910	G minor	G minor	G minor	-1	1	158		G minor	G minor	G minor
+gsplus	5026646	F minor	F minor	F minor	-1	0	106		F minor	F minor	F minor
+gsplus	5030517	Gb minor harmonic		F# minor	2	2	408		F# minor	F# minor	F# minor
+gsplus	5035524	E minor	E minor	E minor	-1	3	165		E major	E minor	E major
+gsplus	5036476	D major ionian		D major	2	0	31		F# minor	D major	D major
+gsplus	5039015	Db minor harmonic		C# minor	2	2	271		C# minor	C# minor	C# minor
+gsplus	5039016	G minor aeolian		G minor	2	3	347		G minor	G minor	G minor
+gsplus	5048249	A minor aeolian		A minor	2	1	379		A minor	C major	A minor
+gsplus	5048263	G minor	G minor	G minor	-1	4	434		G minor	G minor	G minor
+gsplus	5049808	Ab minor	G# minor	G# minor	2	2	201		G# minor	G# minor	G# minor
+gsplus	5070608	F minor aeolian		F minor	2	0	219		F minor	F minor	F minor
+gsplus	5073839	B major aeolian		B major	2	3	63		F# major	B major	B major
+gsplus	5078640	X			2	3	398		D# major	D# major	D# minor
+gsplus	5079918	Ab minor aeolian		G# minor	2	0	270		G# minor	G# minor	G# minor
+gsplus	5081990	Gb minor | B minor			2	0	66		F# minor	F# minor	F# minor
+gsplus	5103693	F major | F minor			2	3	185		F minor	F minor	F minor
+gsplus	5120298	F minor aeolian		F minor	2	2	147		F minor	F minor	F minor
+gsplus	5159593	A minor aeolian		A minor	2	0	70		A minor	A minor	A minor
+gsplus	5171396	Ab major	G# major	G# major	-1	3	14		G# major	G# major	G# major
+gsplus	5263098	G minor	G minor	G minor	-1	4	15		G minor	G minor	G minor
+gsplus	5264038	E minor	E minor	E minor	2	2	407		C# major	F# major	F# major
+gsplus	5276059	C minor dorian		C minor	2	0	237		C minor	C minor	C minor
+gsplus	5302340	C minor	C minor	C minor	-1	2	16		C minor	F minor	C minor
+gsplus	5304804	F minor	F minor	F minor	-1	0	17		F minor	F minor	F minor
+gsplus	5308082	Db minor aeolian | E major			2	0	234		E major	E major	E major
+gsplus	5362946	A minor	A minor	A minor	2	3	428		A major	A minor	A minor
+gsplus	5417860	Ab minor aeolian		G# minor	1	0	392		G# minor	G# minor	G# minor
+gsplus	5431709	C minor aeolian		C minor	2	4	295		D# major	G# major	G# major
+gsplus	5450838	E minor phrygian		E minor	2	2	2		B minor	E minor	E minor
