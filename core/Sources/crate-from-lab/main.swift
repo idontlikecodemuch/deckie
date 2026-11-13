@@ -1,11 +1,12 @@
 // crate-from-lab: writes a crate (docs/architecture/crate-format.md) from the lab's committed feature files.
 //
 //   swift run crate-from-lab --out <folder>.deckiecrate [--ids id,id,...] [--name N] [--crate-id X]
-//                            [--created-at T] [--analysed-at T] [--repo <repository root>]
+//                            [--created-at T] [--analysed-at T] [--repo <repository root>] [--single <file>]
 //
 // Without --ids it takes every file in mixer/features. The repository root is found from the current folder
 // upwards unless --repo gives it. Times are UTC, as 2026-10-26T00:00:00Z; --created-at defaults to now and
 // --analysed-at to the day the feature files were committed, as they carry no date of their own.
+// --single also writes the crate file's single-file form (CrateArchive: the same files in one uncompressed zip).
 // core/Tools/make_crate_fixture.sh uses it to rebuild core/fixtures/example.deckiecrate.
 
 import Foundation
@@ -23,7 +24,7 @@ while let arg = args.popFirst() {
     guard arg.hasPrefix("--"), let value = args.popFirst() else { fail("expected --option value, got \(arg)") }
     options[String(arg.dropFirst(2))] = value
 }
-let known: Set = ["out", "ids", "name", "crate-id", "created-at", "analysed-at", "repo"]
+let known: Set = ["out", "ids", "name", "crate-id", "created-at", "analysed-at", "repo", "single"]
 if let unknown = options.keys.first(where: { !known.contains($0) }) { fail("unknown option --\(unknown)") }
 guard let out = options["out"] else { fail("--out <folder>.deckiecrate is required") }
 
@@ -60,6 +61,10 @@ do {
     let total = files.values.reduce(0) { $0 + $1.count }
     print("wrote \(crate.tracks.count) tracks to \(out): \(files.count) files, \(total) bytes " +
           "(crate.json \(files["crate.json"]!.count), manifest.json \(files["manifest.json"]!.count))")
+    if let single = options["single"] {
+        try CrateArchive.pack(package: outURL, to: URL(fileURLWithPath: single))
+        print("wrote the single-file form to \(single)")
+    }
 } catch {
     fail("\(error)")
 }
