@@ -1,5 +1,8 @@
 # environments and caches
 mixer/.venv/
+.scratch/
+.cache/
+.envrc
 **/__pycache__/
 *.pyc
 .DS_Store
@@ -46,3 +49,16 @@ desk-app/*.xcodeproj
 # device drop folder: nothing but its README is committed
 ref/*
 !ref/README.md
+
+# Claude Code's local settings for this machine
+.claude/settings.local.json
+# site: build output, working renders and soundtrack trials (regenerate with site/build.sh and site/film/README.md)
+site/dist/
+site/dist-old-*/
+site/assets/variations/
+site/film/round*/
+site/film/*.png
+site/film/type-trials/*.png
+site/film/sound/*.png
+site/film/words/*.png
+site/share/*.png
