@@ -376,6 +376,25 @@ an album alike.
 
 Still to ask working DJs: whether "source" is said out loud or is only the word on the player's button.
 
+### D27. A song can carry more than one place: the first addition to crate v1 (Nov 13)
+The decision, in the owner's words: "Yes lets update the file format."
+
+What made it necessary. D25 said a song on two discs is two files, so both places show. That holds only when the
+two files differ. The same file burned onto two discs, or copied unchanged from the Mac onto a stick, is the same
+bytes, and an entry's id is made from the file's bytes, so the crate file holds one entry and the second place was
+dropped. That is likely the common case, and it made "Deckie tells you where the song is" wrong for a DJ with
+several discs.
+
+- **An entry keeps its own place and may list others.** Each other place is a source, a folder and a number, the
+  same three parts as the entry's own.
+- **It is an addition.** No existing field changes name or meaning. A crate file written before today reads as it
+  did, and a booth that does not know the new field still opens a new crate file and shows the entry's own place.
+- **Desk fills it when it reads.** A file it has already read, found again somewhere else, adds a place and is no
+  longer listed as a duplicate.
+- **The booth treats these places like copies** (D24): one row, one place leading by the same rule, the others as
+  "also on", and a song is allowed by the filter when any of its places is.
+- **Organising in Desk is still not in this version** (D25). This is reading only.
+
 ### Note on D19 (Nov 1): versions of a song stay separate rows
 Christopher, on two remixes of one song both showing in the picks: "we shouldn't merge them unless they are the same
 songs. DJs often have a bunch of versions of the same song". So the booth folds together only copies of the same
