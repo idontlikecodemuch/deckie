@@ -2,7 +2,7 @@ import Foundation
 import DeckieCore
 import DeckieCrate
 
-/// A crate made by Deckie Desk, as the booth sees it: the tracks and discs, the picks (scored here on the iPad with
+/// A crate file made by Deckie Desk, as the booth sees it: the tracks and their sources, the picks (scored here on the iPad with
 /// the shared scoring, one song at a time as it plays, so any DJ's crate works and the crate itself stays as Desk
 /// wrote it), the whole-song waves and the join lanes from the per-bar loudness, and where the recognition
 /// signatures are. The bundled deck_data.json is the other source of the same `DeckData`; a crate's `DeckData` has
@@ -84,11 +84,12 @@ struct CrateLibrary {
             }
         }
 
-        // Discs and their folders, in the order the DJ's disc software shows them (folder name, then track number).
+        // Sources and their folders, in the order the DJ's player shows them (`SourceReading`: folders as the player
+        // walks them, then the song's number). A source's name is its label: Desk writes the source's own name.
         var discs: [Disc] = []
         for d in discNames {
             let on = tracks.filter { $0.disc == d }
-            let folders = Array(Set(on.map(\.folder))).sorted()
+            let folders = Array(Set(on.map(\.folder))).sorted(by: SourceReading.groupComesBefore)
             discs.append(Disc(disc: d, cd: cdOf[d]!, name: d, folders: folders.map { f in
                 DiscFolder(name: f, ids: on.filter { $0.folder == f }.sorted { ($0.num ?? 0) < ($1.num ?? 0) }.map(\.id))
             }))

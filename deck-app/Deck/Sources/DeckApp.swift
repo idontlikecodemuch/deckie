@@ -12,7 +12,7 @@ struct DeckApp: App {
         WindowGroup {
             TabView(selection: $tab) {
                 ListenView().tabItem { Label("Listen", systemImage: "waveform") }.tag(0)
-                CDsView(tab: $tab).tabItem { Label("CDs", systemImage: "opticaldisc") }.tag(1)
+                CrateTabView(tab: $tab).tabItem { Label(CrateTabView.title, systemImage: "square.stack") }.tag(1)
                 MixMapView().tabItem { Label("Mix map", systemImage: "point.3.connected.trianglepath.dotted") }.tag(2)
             }
             .overlay(alignment: .topLeading) { MinimalToggle().padding(.leading, 20).padding(.top, 2) }

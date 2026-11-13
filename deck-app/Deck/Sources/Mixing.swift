@@ -128,7 +128,8 @@ struct Suggester {
         if p.st >= 4 || (ao > 0 && abs(bi / ao - 1) >= 0.04) { tags.append("tempo change") }
         if t.hal && !cur.hal { tags.append("Halloween") }
         if let d = t.disc, let cd = cur.disc, d != cd { tags.append("to " + (lib.data.discs.first { $0.disc == d }?.short ?? d)) }
-        else if !t.on && !lib.data.discs.isEmpty { tags.append("off the discs") }   // a crate without discs has no "off"
+        // not on any source the booth has: say which folder it is in (a crate file with no sources has no "off")
+        else if !t.on && !lib.data.discs.isEmpty { tags.append(t.folder.isEmpty ? "in the crate" : "in " + t.folder) }
         if !t.era.isEmpty && !cur.era.isEmpty && t.era != cur.era { tags.append(t.era) }
         if deepCut { tags.append("deep cut") }
         return tags

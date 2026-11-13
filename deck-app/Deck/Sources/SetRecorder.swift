@@ -13,7 +13,7 @@ final class SetRecorder: @unchecked Sendable {
         var id: String
         var title: String
         var artist: String
-        var location: String      // "CD1 / 6 - 125-129 / 08"
+        var location: String      // "CD1 Singalongs / 6 - 125-129 / 08", or "in House" for a song with no source
         var pitch: Double         // detected deck pitch %
         var pitchKind: String     // "", "vinyl", "master tempo"
         var confidence: Double
@@ -77,7 +77,7 @@ final class SetRecorder: @unchecked Sendable {
 
     /// A new song: add an entry and a tracklist line. Same song again: refresh its pitch and confidence.
     func record(track: Track, pitch: Double, pitchKind: String, confidence: Double, newSong: Bool) {
-        let loc = track.cd.map { "CD\($0) / \(track.folder) / " + String(format: "%02d", track.num ?? 0) } ?? "not on the CDs"
+        let loc = track.disc == nil ? "in " + (track.folder.isEmpty ? "the crate" : track.folder) : track.placeText
         q.async { [self] in
             guard var lg = log, let base = baseName else { return }
             let at = Double(frames) / sampleRate
