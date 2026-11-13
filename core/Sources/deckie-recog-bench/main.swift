@@ -1,4 +1,5 @@
 import Foundation
+import DeckieCore
 import DeckieDecode
 import DeckieRecognition
 
@@ -9,7 +10,9 @@ import DeckieRecognition
 //       songs.tsv: id <tab> audio file. Writes DIR/<id>.dkl (the constellation) and prints, per song:
 //       id, seconds of audio, points, bytes, milliseconds to decode, milliseconds to fingerprint.
 //   deckie-recog-bench match --prints DIR --queries queries.tsv --out results.tsv [--jobs N] [--leave-out ids.txt]
-//                            [--step 1] [--no-speed] [--fan-out 6] [--query-fan-out 12] [--time-reach 6] [--frequency-reach 0.12]
+//                            [--step 1] [--no-speed] [--fan-out 6] [--query-per-slice 2] [--time-reach 6] [--frequency-reach 0.12]
+//       --audio-copies S: instead of moving the query's points, resample the query's audio at every S percent from
+//       -17 to +17 and match each copy as it is (the comparison the research letter W asks for; vinyl-style only).
 //       queries.tsv: query id <tab> raw file (16-bit little-endian mono) <tab> first sample <tab> samples <tab> rate.
 //       Writes per query: id, points, milliseconds to fingerprint the query, milliseconds to match, then for the best
 //       and the second-best song: id, score, matched points, offset in seconds, tempo ratio, pitch ratio.
@@ -118,14 +121,21 @@ case "match":
     let config = landmarkConfig(o)
     var pairing = PairingConfig()
     pairing.fanOut = o.int("--fan-out", pairing.fanOut)
-    pairing.queryFanOut = o.int("--query-fan-out", pairing.queryFanOut)
+    pairing.queryPerSlice = o.int("--query-per-slice", pairing.queryPerSlice)
     let t0 = now()
     let index = RecognitionIndex(songs: songs, landmark: config, pairing: pairing)
     FileHandle.standardError.write(Data(String(format: "index: %d songs, %d points, %d hashes, %.0f ms\n", index.songCount,
                                                 index.pointCount, index.hashCount, now() - t0).utf8))
+    if o.flags.contains("--stats") {
+        for k in [50, 100, 200, 400, 800, 1600] {
+            FileHandle.standardError.write(Data(String(format: "hashes in buckets over %d: %.1f %%\n", k, 100 * index.shareInBuckets(largerThan: k)).utf8))
+        }
+    }
     var grid = SpeedGrid()
     grid.stepPercent = o.double("--step", grid.stepPercent)
     if o.flags.contains("--no-speed") { grid.maxPercent = 0 }
+    let audioStep = o.double("--audio-copies", 0)
+    if audioStep > 0 { grid.maxPercent = 0 }
     let queries = lines(o.string("--queries"))
     let rows = Collector()
     let recognisers = (0..<jobs).map { _ in Recogniser(index: index, grid: grid) }
@@ -145,9 +155,28 @@ case "match":
             }
         }
         let t0 = now()
-        let marks = Landmarks(mono: samples, sampleRate: rate, config: config)
-        let t1 = now()
-        let found = pool[w].match(marks)
+        var marks = Landmarks(mono: samples, sampleRate: rate, config: config)
+        var t1 = now()
+        var found: [RecognitionMatch] = []
+        if audioStep > 0 {
+            // The comparison arm: undo each candidate speed on the audio (resample the query, vinyl-style only), make
+            // a constellation of each copy and match it with no speed candidates; the best copy answers. Its tempo
+            // and pitch ratios are put back in terms of the query as heard.
+            var k = -17.0
+            while k <= 17.0 {
+                let copy = k == 0 ? samples : Resampler.resample(samples, from: 1000, to: Int((1000 + 10 * k).rounded()))
+                let m = Landmarks(mono: copy, sampleRate: rate, config: config)
+                if k == 0 { marks = m }
+                if var best = pool[w].match(m).first, best.score > (found.first?.score ?? -1) {
+                    best.tempoRatio *= 1 + k / 100; best.pitchRatio *= 1 + k / 100
+                    found = [best]
+                }
+                k += audioStep
+            }
+            t1 = t0
+        } else {
+            found = pool[w].match(marks)
+        }
         let t2 = now()
         var row = String(format: "%@\t%d\t%.2f\t%.2f", q[0], marks.count, t1 - t0, t2 - t1)
         for k in 0..<2 {

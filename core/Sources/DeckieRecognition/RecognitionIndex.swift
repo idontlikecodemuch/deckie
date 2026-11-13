@@ -14,10 +14,14 @@ public struct PairingConfig: Sendable, Equatable {
     public var maxPitchBins = 32
     /// Frames to one step of the time difference in a hash (32 ms).
     public var gapStep = 2
-    /// Targets taken per anchor in a song (the paper's fan-out; it multiplies the index's size), and in a query, where
-    /// more are taken so that a pair survives extra points from noise or a second song landing between its two points.
+    /// The target zone is cut into this many equal slices of time, and an anchor is paired with the first point in
+    /// each (the paper's fan-out: it multiplies the index's size). Taking the nearest points instead would put nearly
+    /// every pair at the shortest gaps (there are some 30 points a second), so the time difference would tell songs
+    /// apart far less than its 7 bits allow and every lookup would return hundreds of unrelated anchors.
     public var fanOut = 6
-    public var queryFanOut = 12
+    /// Points taken per slice in a query: more than one, so that a pair survives an extra point (noise, a second
+    /// song) landing in the slice before the song's own.
+    public var queryPerSlice = 2
 
     public init() {}
 
@@ -25,6 +29,7 @@ public struct PairingConfig: Sendable, Equatable {
     func pitchBins(octaves: Double) -> Int { Int((octaves * Double(pitchBinsPerOctave)).rounded(.up)) }
     /// 7 bits of anchor pitch, 7 of pitch difference, 7 of time difference.
     static let hashBits = 21
+    @inline(__always) func slice(gap: Int) -> Int { (gap - minGap) * fanOut / (maxGap - minGap + 1) }
     @inline(__always) func hash(anchorBin a: Int, targetBin b: Int, gap: Int) -> Int {
         (a << 14) | ((b - a + maxPitchBins) << 7) | (gap / gapStep)
     }
@@ -49,7 +54,7 @@ public struct RecognitionIndex: Sendable {
     /// Every song's points: frame on the timeline, and pitch.
     let pointFrame: [Int32]
     let pointPitch: [UInt16]
-    /// The hash table: the anchors (indices into the point arrays) of hash h are entries[offsets[h]..<offsets[h + 1]].
+    /// The hash table: the anchors (their frames on the timeline) of hash h are entries[offsets[h]..<offsets[h + 1]].
     let offsets: [UInt32]
     let entries: [UInt32]
 
@@ -87,15 +92,18 @@ public struct RecognitionIndex: Sendable {
                 let lo = pointStart[s], hi = pointStart[s + 1]
                 for i in lo..<hi {
                     let a = Int(pointPitch[i]) / unit, ta = Int(pointFrame[i])
-                    var taken = 0
+                    var filled = 0   // bit k set once slice k has its point
                     var j = i + 1
-                    while j < hi && taken < p.fanOut {
+                    while j < hi {
                         let gap = Int(pointFrame[j]) - ta
                         if gap > p.maxGap { break }
                         let b = Int(pointPitch[j]) / unit
                         if gap >= p.minGap && abs(b - a) <= p.maxPitchBins {
-                            body(p.hash(anchorBin: a, targetBin: b, gap: gap), i)
-                            taken += 1
+                            let k = p.slice(gap: gap)
+                            if filled & (1 << k) == 0 {
+                                filled |= 1 << k
+                                body(p.hash(anchorBin: a, targetBin: b, gap: gap), ta)
+                            }
                         }
                         j += 1
                     }
@@ -106,10 +114,18 @@ public struct RecognitionIndex: Sendable {
         for h in 0..<size { counts[h + 1] += counts[h] }
         var entries = [UInt32](repeating: 0, count: Int(counts[size]))
         var next = counts
-        forEachPair { h, i in entries[Int(next[h])] = UInt32(i); next[h] += 1 }
+        forEachPair { h, frame in entries[Int(next[h])] = UInt32(frame); next[h] += 1 }
         self.songStart = songStart; self.pointStart = pointStart
         self.pointFrame = pointFrame; self.pointPitch = pointPitch
         offsets = counts; self.entries = entries
+    }
+
+    /// The share of all hashes that sit in buckets (one bucket per hash value) larger than `size`: how lopsided the
+    /// table is.
+    public func shareInBuckets(largerThan size: Int) -> Double {
+        var n = 0
+        for h in 0..<(offsets.count - 1) where Int(offsets[h + 1] - offsets[h]) > size { n += Int(offsets[h + 1] - offsets[h]) }
+        return Double(n) / Double(max(1, entries.count))
     }
 
     /// The song whose stretch of the timeline (its padding, then its frames) holds `frame`.

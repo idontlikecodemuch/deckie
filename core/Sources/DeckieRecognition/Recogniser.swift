@@ -99,6 +99,7 @@ public final class Recogniser {
 
         var best: [Vote] = []
         var qbin = [Int](repeating: -1, count: n)
+        var taken = [Int](repeating: 0, count: p.fanOut)
         for cand in grid.candidates {
             let v = cand.speed
             let shift = cand.vinyl ? log2(v) * Landmarks.pitchUnitsPerOctave : 0
@@ -108,29 +109,32 @@ public final class Recogniser {
             }
             index.offsets.withUnsafeBufferPointer { offsets in
                 index.entries.withUnsafeBufferPointer { entries in
-                    index.pointFrame.withUnsafeBufferPointer { pointFrame in
+                    do {
                         votes.withUnsafeMutableBufferPointer { votes in
                             for i in 0..<n where qbin[i] >= 0 {
                                 let a = qbin[i]
-                                var taken = 0
                                 var j = i + 1
-                                while j < n && taken < p.queryFanOut {
+                                for k in 0..<p.fanOut { taken[k] = 0 }
+                                let shiftT = v * qt[i]
+                                while j < n {
                                     let gap = Int((qt[j] - qt[i]) * v + 0.5)
                                     if gap > p.maxGap { break }
                                     let b = qbin[j]
                                     if gap >= p.minGap && b >= 0 && abs(b - a) <= p.maxPitchBins {
-                                        taken += 1
-                                        let h = p.hash(anchorBin: a, targetBin: b, gap: gap)
-                                        let shiftT = v * qt[i]
-                                        var e = Int(offsets[h])
-                                        let end = Int(offsets[h + 1])
-                                        while e < end {
-                                            let bin = Int(Double(pointFrame[Int(entries[e])]) - shiftT) / Self.binFrames
-                                            if bin >= 0 {
-                                                if votes[bin] == 0 { touched.append(Int32(bin)) }
-                                                if votes[bin] < .max { votes[bin] += 1 }
+                                        let k = p.slice(gap: gap)
+                                        if taken[k] < p.queryPerSlice {
+                                            taken[k] += 1
+                                            let h = p.hash(anchorBin: a, targetBin: b, gap: gap)
+                                            var e = Int(offsets[h])
+                                            let end = Int(offsets[h + 1])
+                                            while e < end {
+                                                let bin = Int(Double(entries[e]) - shiftT) / Self.binFrames
+                                                if bin >= 0 {
+                                                    if votes[bin] == 0 { touched.append(Int32(bin)) }
+                                                    if votes[bin] < .max { votes[bin] += 1 }
+                                                }
+                                                e += 1
                                             }
-                                            e += 1
                                         }
                                     }
                                     j += 1

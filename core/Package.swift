@@ -65,7 +65,7 @@ let package = Package(
         .executableTarget(name: "deckie-build", dependencies: ["DeckieBuild"]),
         .target(name: "DeckieDesk", dependencies: ["DeckieBuild", "DeckieEngine", "DeckieCrate", "DeckieCore", "DeckieDecode"]),
         .target(name: "DeckieRecognition", dependencies: ["DeckieCore"]),
-        .executableTarget(name: "deckie-recog-bench", dependencies: ["DeckieRecognition", "DeckieDecode"]),
+        .executableTarget(name: "deckie-recog-bench", dependencies: ["DeckieRecognition", "DeckieDecode", "DeckieCore"]),
         .testTarget(name: "DeckieRecognitionTests", dependencies: ["DeckieRecognition", "DeckieCore"]),
         .target(name: "DeckieTestSupport", dependencies: ["DeckieAudio", "DeckieCore", "DeckieDecode"],
                 path: "Tests/DeckieTestSupport"),
