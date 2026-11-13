@@ -27,7 +27,8 @@ struct CrateLibrary {
 
     static func load(_ url: URL) throws -> CrateLibrary {
         let crate = try CrateReader.read(from: url)
-        let discNames = Array(Set(crate.tracks.compactMap { $0.ident.disc })).sorted()
+        // Every source a place names, own or other (D27).
+        let discNames = Array(Set(crate.tracks.flatMap { $0.ident.allPlaces.compactMap(\.disc) })).sorted()
         let cdOf = Dictionary(uniqueKeysWithValues: discNames.enumerated().map { ($1, $0 + 1) })
 
         var tracks: [Track] = []
@@ -74,7 +75,12 @@ struct CrateLibrary {
                 mixInBars: t.mixIn.map { $0.endBar - $0.startBar }, mixOutBars: t.mixOut.map { $0.endBar - $0.startBar },
                 fade: t.ends?.fadeOut, firstBeat: grid?.firstDownbeatS, wOut: waves?.out, wIn: waves?.in, wHead: waves?.head,
                 spb: waves == nil ? nil : CrateLibrary.waveSPB,
-                steadyIn: t.ends?.steadyInBar.map { barStart($0) }, bpmGrid: grid?.bpm))
+                steadyIn: t.ends?.steadyInBar.map { barStart($0) }, bpmGrid: grid?.bpm,
+                // Other places (D27): on a source, its folder there; with no source, the folder's own name, as above.
+                others: t.ident.otherPlaces.isEmpty ? nil : t.ident.otherPlaces.map { p in
+                    TrackPlace(disc: p.disc, folder: p.disc != nil ? p.folder ?? ""
+                               : (p.folder ?? "").components(separatedBy: "/").last ?? "", num: p.track)
+                }))
             if let vals = barVals {
                 overview[t.id] = Overview(n: vals.count, dur: t.file.durationS, s: String(vals.map { Overview.alphabet[$0] }))
             }
@@ -86,12 +92,13 @@ struct CrateLibrary {
 
         // Sources and their folders, in the order the DJ's player shows them (`SourceReading`: folders as the player
         // walks them, then the song's number). A source's name is its label: Desk writes the source's own name.
+        // A song is listed under every place it has (D27).
         var discs: [Disc] = []
         for d in discNames {
-            let on = tracks.filter { $0.disc == d }
-            let folders = Array(Set(on.map(\.folder))).sorted(by: SourceReading.groupComesBefore)
+            let on = tracks.flatMap { t in t.places.filter { $0.disc == d }.map { (id: t.id, place: $0) } }
+            let folders = Array(Set(on.map(\.place.folder))).sorted(by: SourceReading.groupComesBefore)
             discs.append(Disc(disc: d, cd: cdOf[d]!, name: d, folders: folders.map { f in
-                DiscFolder(name: f, ids: on.filter { $0.folder == f }.sorted { ($0.num ?? 0) < ($1.num ?? 0) }.map(\.id))
+                DiscFolder(name: f, ids: on.filter { $0.place.folder == f }.sorted { ($0.place.num ?? 0) < ($1.place.num ?? 0) }.map(\.id))
             }))
         }
 

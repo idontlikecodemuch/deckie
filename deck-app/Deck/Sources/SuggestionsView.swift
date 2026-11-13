@@ -23,7 +23,7 @@ struct UpNextPanel: View {
                 ScrollView {
                     VStack(alignment: .leading, spacing: 0) {
                         let picks = sug.options.filter { $0.kind == .pick }
-                        if let pinned = sug.options.first(where: { $0.kind == .pinned }), let t = Library.shared.track(pinned.id) {
+                        if let pinned = sug.options.first(where: { $0.kind == .pinned }), let t = Library.shared.placed(pinned.id, playingDisc: cur.disc, among: sug.target.allows) {
                             groupLabel("Next")
                             if sug.minimal { PlainPick(cur: cur, target: t, pair: pinned.pair, kind: .pinned, tags: [], big: m.simple).padding(.top, 6) }
                             else { NextRow(cur: cur, target: t, pair: pinned.pair, kind: .pinned, tags: [], zoom: zoom, m: m) }
@@ -85,8 +85,10 @@ struct UpNextPanel: View {
         }
     }
 
+    /// A pick's row, shown at the place of it that leads among those the filter allows (D27); its other places are
+    /// its "also on".
     @ViewBuilder private func row(_ cur: Track, _ o: Option, _ m: RowMetrics) -> some View {
-        if let t = Library.shared.track(o.id) {
+        if let t = Library.shared.placed(o.id, playingDisc: cur.disc, among: sug.target.allows) {
             if sug.minimal { PlainPick(cur: cur, target: t, pair: o.pair, kind: o.kind, tags: o.tags, big: m.simple).padding(.top, sug.minimal ? 14 : 0) }
             else { NextRow(cur: cur, target: t, pair: o.pair, kind: o.kind, tags: o.tags, zoom: zoom, m: m) }
         }

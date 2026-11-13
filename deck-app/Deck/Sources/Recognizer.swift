@@ -90,7 +90,15 @@ import SwiftUI
         if log.count > 60 { log.removeFirst(log.count - 60) }
     }
 
-    var current: Track? { Library.shared.track(currentId) }
+    /// The place the playing song is at (D27): set when the song is set, the place that leads given the place playing
+    /// before, or the place it was chosen from in the Crate tab.
+    private(set) var currentPlace: TrackPlace?
+    /// The playing song, shown at the place it is playing from.
+    var current: Track? {
+        guard let t = Library.shared.track(currentId) else { return nil }
+        if let p = currentPlace, t.places.contains(p) { return t.at(p) }
+        return t
+    }
 
     /// position frozen while the deck is paused (no matches of the song and a quiet input)
     func position(at d: Date) -> Double { anchorOffset + max(0, min(frozenAt ?? d, d).timeIntervalSince(anchorDate)) * rate }
@@ -115,7 +123,7 @@ import SwiftUI
         }
         if now.timeIntervalSince(lastAnyMatch) > Self.silenceClear {
             note("nothing recognised for 2 min: back to listening")
-            currentId = nil; paused = false; frozenAt = nil; positionKnown = false; alsoHearing = nil
+            currentId = nil; currentPlace = nil; paused = false; frozenAt = nil; positionKnown = false; alsoHearing = nil
             events.removeAll(); hits.removeAll()
             status = "listening…"
         }
@@ -244,9 +252,10 @@ import SwiftUI
         status = "stopped"
     }
 
-    func setManual(_ id: String) {
+    /// Sets the playing song by hand; `place` is where it was chosen (the Crate tab), else the place that leads.
+    func setManual(_ id: String, place: TrackPlace? = nil) {
         stop()
-        switchTo(id)
+        switchTo(id, place: place)
         source = .manual; positionKnown = false; status = "set by hand"
         events.removeAll()
     }
@@ -426,8 +435,11 @@ import SwiftUI
         }
     }
 
-    private func switchTo(_ id: String) {
+    private func switchTo(_ id: String, place: TrackPlace? = nil) {
         justSwitched = true
+        if id != currentId || place != nil {
+            currentPlace = place ?? Library.shared.placed(id, playingDisc: current?.disc)?.place
+        }
         if let c = currentId, c != id {
             history.removeAll { $0 == c }
             history.append(c)
