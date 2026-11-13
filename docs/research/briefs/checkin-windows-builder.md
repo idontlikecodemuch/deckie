@@ -22,10 +22,9 @@ Newest entry first. Each entry: when, what is done, what failed and why, what is
 
 **Two things the main session should know:**
 
-- One generated audio file is committed: `core/Tests/DeckieBuildTests/Fixtures/test_track.mp3` (508 KB), the
-  engine's synthesised test track (drums and chords made by code, no music) encoded once with ffmpeg. The Windows
-  runner has no MP3 encoder, and an MP3 that analyses is needed there. It follows the existing test tones in
-  `core/Tests/DeckieDecodeTests/Fixtures`. Say if it should go.
+- No audio is committed. (I first meant to commit a generated MP3 of the synthesised test track; that was stopped,
+  rightly, by the rule. The MP3 is now encoded once per workflow run on Linux with ffmpeg and handed to the Windows
+  job as a run artifact, so both platforms read the same bytes.)
 - The Windows ONNX Runtime library needs four Microsoft files that are not part of every Windows:
   `MSVCP140.dll`, `MSVCP140_1.dll`, `VCRUNTIME140.dll`, `VCRUNTIME140_1.dll` (the Visual C++ runtime; Swift's own
   runtime needs it too). Shipping them in the zip means a Microsoft licence that is not on the allowlist, so I have

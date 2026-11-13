@@ -151,7 +151,12 @@ jobs:
       - name: "End to end: build a crate file from a music folder and validate it"
         working-directory: core
         run: |
-          swift run deckie-e2e make /tmp/e2e/Music
+          # The MP3 of the synthesised test track is encoded here with Ubuntu's ffmpeg program (a test tool only;
+          # no audio is committed).
+          apt-get update
+          apt-get install -y --no-install-recommends ffmpeg
+          swift run deckie-e2e mp3 /tmp/e2e-test_track.mp3
+          swift run deckie-e2e make /tmp/e2e/Music --mp3 /tmp/e2e-test_track.mp3
           swift run deckie-build /tmp/e2e/Music --out /tmp/e2e/E2E.deckiecrate --jobs 2
           swift run deckie-e2e check /tmp/e2e/E2E.deckiecrate
           swift run deckie-e2e pack /tmp/e2e/E2E.deckiecrate /tmp/e2e/e2e-linux.deckiecrate
