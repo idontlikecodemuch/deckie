@@ -359,6 +359,23 @@ like that. but in this version we should keep it as read only."
   Its shape is not designed now, because it depends on things not yet seen (playlists on a stick, one song in
   several of them, whether order belongs to the disc or to a list).
 
+### D26. A source is shown by its own name (Nov 13)
+The decision, in the owner's words: "Yah lets say its own name where it read from. it is kind of "source: stick 3"
+we just use the name of the source right?" Asked first whether "disc" was the right word for a CD, a jump drive and
+an album alike.
+
+- **A source is the thing a DJ holds that the songs were read from**: a burned CD, a USB stick, an SD card, a
+  record. "Source" is our word for it, in documents and in the dictionary.
+- **On screen a source is shown by its own name**, the one it already has ("Friday night", "Stick 3"). A DJ does
+  not have to learn a word of ours, and "disc" and "CDs" leave the screen.
+- **A place has three levels**: the source, the group inside it (a folder, a playlist, a record's side), and the
+  song's number there. An album is not another kind: it is a source when it is a record or a CD, and a folder
+  otherwise.
+- **Music that is only on the Mac has no source.** Its place is its folder.
+- **In the crate file the field keeps its name**, `disc`. Crate v1 stays frozen and no DJ sees it.
+
+Still to ask working DJs: whether "source" is said out loud or is only the word on the player's button.
+
 ### Note on D19 (Nov 1): versions of a song stay separate rows
 Christopher, on two remixes of one song both showing in the picks: "we shouldn't merge them unless they are the same
 songs. DJs often have a bunch of versions of the same song". So the booth folds together only copies of the same
