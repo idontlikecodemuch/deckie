@@ -421,17 +421,58 @@ import DeckieCrate
         // a: Traktor (written last) wins over Serato and the tag; all three stay as votes; one of three agrees.
         let a = try #require(c.tracks[0].key)
         #expect(a.source == "traktor" && a.camelot == "9A" && a.key == "E" && a.scale == "minor")
-        #expect(a.votes == ["traktor": "9A", "serato": "9A", "tag": "8A"])
+        #expect(a.votes == ["traktor": "9A", "serato": "9A", "tag": "8A", "deckie": "4A"])
         #expect(a.confidence == 0.667 && !c.tracks[0].flags.contains("key_uncertain"))
         // b: Mixed In Key's comment.
         #expect(c.tracks[1].key?.source == "tag-comment" && c.tracks[1].key?.camelot == "6A" && c.tracks[1].key?.confidence == 1)
-        // c: nothing from the DJ, so Deckie's own reading stays out (D16): no key block, no key flag.
-        #expect(c.tracks[2].key == nil && c.tracks[2].flags.isEmpty && !c.tracks[2].featuresPresent.contains("key"))
+        // c: nothing from the DJ, so Deckie's own reading stays exactly as it was, flag and all.
+        #expect(c.tracks[2].key == Self.engineKey && c.tracks[2].flags == ["key_uncertain"])
         // d: Apple's reading stays the key; the DJ's tag sits beside it.
         #expect(c.tracks[3].key?.camelot == "4A" && c.tracks[3].key?.source == "hpcp-whitened" && c.tracks[3].key?.votes["tag"] == "8B")
-        #expect(report.keysFrom == ["traktor": 1, "tag-comment": 1, "apple-mu": 1] && report.keysNotRead == 1 && report.keysDisagree == 1)
+        #expect(report.keysFrom == ["traktor": 1, "tag-comment": 1, "apple-mu": 1, "deckie": 1] && report.keysNotRead == 0
+                && report.keysDisagree == 1)
         // The crate still holds together.
         _ = try CrateWriter.encode(c)
+    }
+
+    /// Each branch of `LocalFacts.decideKey`, on its own.
+    @Test func everyBranchOfTheKeyDecision() {
+        func decide(_ t: CrateTrack, _ readings: [(String, String)], own: CrateTrack.Key?) -> (CrateTrack, LocalFacts.Report) {
+            var t = t, r = LocalFacts.Report()
+            LocalFacts.decideKey(&t, readings.enumerated().map { .init(origin: $0.element.0, camelot: $0.element.1, written: nil, order: $0.offset) },
+                                 own: own, &r)
+            return (t, r)
+        }
+        let deckie = Self.track("x", title: "x", rel: "a.mp3", key: Self.engineKey)
+        // 1. Apple's reading: kept, the DJ's key beside it.
+        let (apple, r1) = decide(Self.track("x", title: "x", family: "apple-mu", rel: "a.mp3", key: Self.engineKey), [("tag", "8A")], own: nil)
+        #expect(apple.key?.camelot == "4A" && apple.key?.votes["tag"] == "8A" && r1.keysFrom == ["apple-mu": 1])
+        // 2. A DJ's key wins; Deckie's own stays as the vote "deckie".
+        let (dj, r2) = decide(deckie, [("tag", "8A")], own: Self.engineKey)
+        #expect(dj.key?.source == "tag" && dj.key?.camelot == "8A" && dj.key?.votes == ["tag": "8A", "deckie": "4A"])
+        #expect(dj.key?.confidence == 1 && dj.flags.isEmpty && r2.keysFrom == ["tag": 1])
+        // 3. No DJ key: Deckie's own reading, untouched.
+        let (own, r3) = decide(deckie, [], own: Self.engineKey)
+        #expect(own == deckie && r3.keysFrom == ["deckie": 1])
+        // 4. No DJ key any more, the block a DJ's: Deckie's own reading comes back, with the engine's flag.
+        let (back, _) = decide(dj, [], own: Self.engineKey)
+        #expect(back.key == Self.engineKey && back.flags == ["key_uncertain"])
+        // 5. Neither: no key.
+        let (none, r5) = decide(Self.track("x", title: "x", rel: "a.mp3"), [], own: nil)
+        #expect(none.key == nil && r5.keysNotRead == 1)
+        // Deckie's own reading as the record has it, never a DJ's block.
+        #expect(LocalFacts.ownReading(deckie) == Self.engineKey && LocalFacts.ownReading(dj) == nil)
+    }
+
+    @Test func deckiesOwnReadingComesBackFromTheRecords() throws {
+        let records = try temporaryFolder("records")
+        let t = Self.track("r1", title: "x", rel: "a.mp3", key: Self.engineKey)
+        let rec = WorkStore.Record(engine: "deckie-0.4.0 vocal:none", bpmTag: nil, track: t, bars: nil, style: nil)
+        try JSONEncoder().encode(rec).write(to: records.appendingPathComponent("r1.json"))
+        var dj = t
+        dj.key = CrateTrack.Key(source: "traktor", confidence: 1, camelot: "8A", key: "A", scale: "minor", votes: ["traktor": "8A"], changes: nil)
+        #expect(LocalFacts.ownReading(records: records)(dj) == Self.engineKey)
+        #expect(LocalFacts.ownReading(records: nil)(dj) == nil)
     }
 
     @Test func theNamingLadder() throws {

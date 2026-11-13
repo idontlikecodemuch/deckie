@@ -31,29 +31,6 @@ public struct DJLibraryChoices: Codable, Equatable, Sendable {
     }
 }
 
-/// What gathering keys and names found, with the libraries it read: shown on the finished screen and kept in the
-/// run's line.
-public struct LocalFactsSummary: Codable, Equatable, Sendable {
-    public var report: LocalFacts.Report
-    /// Each library read: the program, the file, its songs.
-    public var libraries: [Library]
-    /// Libraries that could not be read, each in a sentence.
-    public var failed: [String]
-    /// rekordbox's own library is on this computer (it is encrypted and not read): an XML export would bring its keys.
-    public var rekordboxLocked: Bool
-    /// A source read holds a rekordbox USB export, which is not read in this version.
-    public var rekordboxExport: Bool
-
-    public struct Library: Codable, Equatable, Sendable {
-        public var program: DJProgram
-        public var path: String
-        public var songs: Int
-    }
-    enum CodingKeys: String, CodingKey {
-        case report, libraries, failed, rekordboxLocked = "rekordbox_locked", rekordboxExport = "rekordbox_export"
-    }
-}
-
 public enum DeskLocalFacts {
     /// Names the home folder whose DJ libraries are looked for. A desk whose storage is anywhere but its standard
     /// place (moved by `DECKIE_DESK_HOME` for a test or a manual run, or made in a scratch folder by a test) looks in
@@ -71,17 +48,9 @@ public enum DeskLocalFacts {
     public static func find(home: DeskHome, info: CrateInfo,
                             environment: [String: String] = ProcessInfo.processInfo.environment)
         -> (found: [DJLibraryLocations.Found], rekordboxLocked: Bool, rekordboxExport: Bool) {
-        var found: [DJLibraryLocations.Found] = []
-        let djHome = djHome(for: home, environment: environment)
-        if let djHome { found += DJLibraryLocations.inHome(djHome) }
         let tops = Array(info.roots.values) + (info.musicFolderURL.map { [$0] } ?? [])
-        for top in tops { found += DJLibraryLocations.onDrive(top) }
-        for c in DJLibraryChoices.load(home).chosen { found.append(.init(program: c.program, url: URL(fileURLWithPath: c.path))) }
-        var seen = Set<String>()
-        found = found.filter { seen.insert($0.url.standardizedFileURL.path).inserted }
-        let locked = djHome.map { DJLibraryLocations.rekordboxDatabase(inHome: $0) } ?? false
-        let export = tops.contains { DJLibraryLocations.rekordboxExport(onDrive: $0) }
-        return (found, locked, export)
+        let chosen = DJLibraryChoices.load(home).chosen.map { DJLibraryLocations.Found(program: $0.program, url: URL(fileURLWithPath: $0.path)) }
+        return LocalFacts.find(djHome: djHome(for: home, environment: environment), tops: tops, chosen: chosen)
     }
 
     /// Each entry's files on this computer, from the paths the desk remembers: the own place's first.
@@ -105,23 +74,15 @@ public enum DeskLocalFacts {
         return out
     }
 
-    /// Reads the libraries found and puts their keys and names, and the files' own, into `crate`.
+    /// Reads the libraries found and puts their keys and names, and the files' own, into `crate`. Deckie's own reading
+    /// of each song comes from the desk's store of records.
     public static func gather(_ crate: inout Crate, home: DeskHome, info: CrateInfo, paths: PlacePaths,
                               environment: [String: String] = ProcessInfo.processInfo.environment) -> LocalFactsSummary {
-        let (found, locked, export) = find(home: home, info: info, environment: environment)
-        var libs: [DJLibrary] = []
-        var failed: [String] = []
-        for f in found {
-            do { libs.append(try DJLibrary.read(f.program, at: f.url)) }
-            catch { failed.append("\(f.program.rawValue): \(error)") }
-        }
+        let tops = Array(info.roots.values) + (info.musicFolderURL.map { [$0] } ?? [])
+        let chosen = DJLibraryChoices.load(home).chosen.map { DJLibraryLocations.Found(program: $0.program, url: URL(fileURLWithPath: $0.path)) }
         let refs = files(for: crate, paths: paths, roots: info.roots, musicFolder: info.musicFolderURL)
-        let report = LocalFacts.apply(to: &crate, files: refs, libraries: libs)
-        return LocalFactsSummary(report: report,
-                                 libraries: libs.map { .init(program: $0.program, path: $0.file, songs: $0.entries.count) },
-                                 failed: failed, rekordboxLocked: locked && !crate.tracks.contains { $0.imported?.rekordbox != nil }
-                                     && !libs.contains { $0.program == .rekordbox },
-                                 rekordboxExport: export)
+        return LocalFacts.gather(&crate, files: refs, djHome: djHome(for: home, environment: environment), tops: tops,
+                                 chosen: chosen, records: home.store.records)
     }
 
     /// "Look again for keys and names" on a crate the desk keeps, without reading its music again: gathers, puts the

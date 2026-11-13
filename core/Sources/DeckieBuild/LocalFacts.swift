@@ -6,11 +6,13 @@ import DeckieCrate
 /// files' tags and in the programs' libraries), and names for songs that arrived without one. Nothing leaves the
 /// computer, and nothing outside the crate is written: every file is only read.
 ///
-/// **Which key.** Under D16 and D17. A record read by Apple's framework (engine family `apple-mu`) keeps its reading
-/// as its key; the DJ's keys are added beside it as votes. Any other record (Deckie's own engine, on any computer)
-/// takes the DJ's key, and Deckie's own reading stays out of the crate file: with no key from the DJ, the record has
-/// no key block ("key not read on this computer yet"). When several of the DJ's programs have a key for the song, the
-/// rule is: **the program whose library was written most recently** (the program in use now), the libraries before
+/// **Which key.** Under D16 and D17, and the owner's note on D30 and D16 (a key is preferred, shown when the reader is
+/// sure). A record read by Apple's framework (engine family `apple-mu`) keeps its reading as its key; the DJ's keys
+/// are added beside it as votes. Any other record (Deckie's own engine, on any computer) takes the DJ's key when
+/// there is one, with Deckie's own reading kept beside it as the vote `deckie`; with no key from the DJ, it keeps
+/// Deckie's own reading exactly as the engine wrote it (its block, its confidence, its `key_uncertain` flag). Whether
+/// that reading is shown at all, song by song, is the "when sure" rule the key trial will give; it goes in
+/// `decideKey`, where it is marked. When several of the DJ's programs have a key for the song, the rule is: **the program whose library was written most recently** (the program in use now), the libraries before
 /// the file's own tags; then the file's key tag, then a key in its comment, then one in its title. The chosen key is
 /// `key.source`; every key found is in `key.votes` under its origin, so the others stay visible; `key.confidence` is
 /// the share of the keys found that agree with the chosen one (1 when there is one, or all agree), and the record is
@@ -52,6 +54,27 @@ public enum LocalFacts {
         }
     }
 
+    /// The vote under which Deckie's own reading is kept beside a DJ's key, and the name a report counts it under.
+    public static let ownVote = "deckie"
+
+    /// Deckie's own reading of a record's key: its key block when that is not a DJ's (as the builder writes a record).
+    public static func ownReading(_ t: CrateTrack) -> CrateTrack.Key? {
+        guard let k = t.key, !djOrigins.contains(k.source) else { return nil }
+        return k
+    }
+
+    /// Deckie's own reading from the builder's records (`<records>/<id>.json`), for a record whose key block is now a
+    /// DJ's; else `ownReading`.
+    public static func ownReading(records: URL?) -> @Sendable (CrateTrack) -> CrateTrack.Key? {
+        { t in
+            if let records, let data = try? Data(contentsOf: records.appendingPathComponent("\(t.id).json")),
+               let r = try? JSONDecoder().decode(WorkStore.Record.self, from: data) {
+                return r.track.key
+            }
+            return ownReading(t)
+        }
+    }
+
     /// The origins of a DJ's key that are the file's own tags, in the order they are taken.
     public static let tagOrigins = ["tag", "tag-comment", "tag-title"]
     /// Every origin a DJ's key can have.
@@ -82,6 +105,7 @@ public enum LocalFacts {
     /// is matched in the libraries by its path but its tags are not read) and the DJ program libraries read.
     @discardableResult
     public static func apply(to crate: inout Crate, files: [String: [FileRef]], libraries: [DJLibrary],
+                             own: (CrateTrack) -> CrateTrack.Key? = LocalFacts.ownReading,
                              fileExists: (URL) -> Bool = { FileManager.default.fileExists(atPath: $0.path) }) -> Report {
         var report = Report()
         // One library per program: the most recently written.
@@ -129,7 +153,7 @@ public enum LocalFacts {
                 // The file is not here to read: the keys its tags gave last time stay.
                 for o in tagOrigins { if let c = old.votes[o] { readings.append(.init(origin: o, camelot: c, written: nil, order: 100 + tagOrigins.firstIndex(of: o)!)) } }
             }
-            decideKey(&t, readings, &report)
+            decideKey(&t, readings, own: own(t), &report)
 
             // Names, part one: everything but a copy's.
             if t.ident.source != "user" && t.ident.source != DJProgram.rekordbox.rawValue {
@@ -174,8 +198,8 @@ public enum LocalFacts {
         return report
     }
 
-    /// The key block from the readings, by the rule above.
-    static func decideKey(_ t: inout CrateTrack, _ readings: [Reading], _ report: inout Report) {
+    /// The key block from the readings, by the rule above. `own` is Deckie's own reading of the song, if any.
+    static func decideKey(_ t: inout CrateTrack, _ readings: [Reading], own: CrateTrack.Key?, _ report: inout Report) {
         var votes: [String: String] = [:]
         for r in readings where votes[r.origin] == nil { votes[r.origin] = r.camelot }
         if Set(readings.map(\.camelot)).count > 1 { report.keysDisagree += 1 }
@@ -187,12 +211,30 @@ public enum LocalFacts {
             report.keysFrom[CrateFormat.EngineFamily.appleMU, default: 0] += 1
             return
         }
-        t.flags.removeAll { $0 == "key_uncertain" }
+
+        // THE "WHEN SURE" RULE GOES HERE. Whether Deckie's own reading of this song is shown at all: for now always
+        // (the owner's note on D30 and D16 prefers a key), until the key trial gives the per-song rule.
+        let shown: CrateTrack.Key? = own
+
         guard let first = readings.first else {
-            t.key = nil
-            report.keysNotRead += 1
+            // No key from the DJ: Deckie's own reading, exactly as the engine wrote it, or none.
+            if let shown {
+                if t.key != shown {
+                    t.key = shown
+                    t.flags.removeAll { $0 == "key_uncertain" }
+                    if shown.confidence < 0.5 { t.flags.append("key_uncertain") }  // the engine's rule (Flags)
+                }
+                report.keysFrom[ownVote, default: 0] += 1
+            } else {
+                t.key = nil
+                t.flags.removeAll { $0 == "key_uncertain" }
+                report.keysNotRead += 1
+            }
             return
         }
+        // The DJ's key wins; Deckie's own reading stays beside it as a vote.
+        t.flags.removeAll { $0 == "key_uncertain" }
+        if let shown { votes[ownVote] = shown.camelot }
         let agree = readings.filter { $0.camelot == first.camelot }.count
         let confidence = (Double(agree) / Double(readings.count) * 1000).rounded() / 1000
         let spelled = Camelot.tonic(first.camelot)
@@ -266,5 +308,86 @@ public enum LocalFacts {
         let f = ISO8601DateFormatter()
         f.formatOptions = [.withInternetDateTime]
         return f.date(from: s)
+    }
+}
+
+/// What gathering keys and names found, with the libraries it read: shown on a desk's finished screen, kept in the
+/// run's line, and printed by `deckie-build`.
+public struct LocalFactsSummary: Codable, Equatable, Sendable {
+    public var report: LocalFacts.Report
+    /// Each library read: the program, the file, its songs.
+    public var libraries: [Library]
+    /// Libraries that could not be read, each in a sentence.
+    public var failed: [String]
+    /// rekordbox's own library is on this computer (it is encrypted and not read): an XML export would bring its keys.
+    public var rekordboxLocked: Bool
+    /// A folder read holds a rekordbox USB export, which is not read in this version.
+    public var rekordboxExport: Bool
+
+    public struct Library: Codable, Equatable, Sendable {
+        public var program: DJProgram
+        public var path: String
+        public var songs: Int
+    }
+    enum CodingKeys: String, CodingKey {
+        case report, libraries, failed, rekordboxLocked = "rekordbox_locked", rekordboxExport = "rekordbox_export"
+    }
+
+    /// The summary as lines for a terminal.
+    public var text: String {
+        let r = report
+        var s = "keys from: " + (r.keysFrom.isEmpty ? "none" : r.keysFrom.sorted { $0.key < $1.key }.map { "\($0.key) \($0.value)" }.joined(separator: ", "))
+            + "; no key: \(r.keysNotRead); programs disagree: \(r.keysDisagree)\n"
+        s += "names from: " + (r.namesFrom.isEmpty ? "tags only" : r.namesFrom.sorted { $0.key < $1.key }.map { "\($0.key) \($0.value)" }.joined(separator: ", "))
+            + "; still need a name: \(r.needName)\n"
+        for lib in libraries { s += "  read \(lib.program.rawValue): \(lib.path) (\(lib.songs) songs)\n" }
+        for f in failed { s += "  could not read \(f)\n" }
+        if rekordboxLocked { s += "  rekordbox's own library is on this computer (encrypted, not read): export the collection as XML\n" }
+        if rekordboxExport { s += "  a rekordbox USB export is here (not read)\n" }
+        return s
+    }
+}
+
+extension LocalFacts {
+    /// Every DJ library to read: in the DJ's home folder (none when nil), at the top of each folder or drive read,
+    /// and the ones chosen by hand; each file once. Also whether rekordbox's own library is in the home folder, and
+    /// whether a rekordbox USB export is on a folder read.
+    public static func find(djHome: URL?, tops: [URL], chosen: [DJLibraryLocations.Found] = [])
+        -> (found: [DJLibraryLocations.Found], rekordboxLocked: Bool, rekordboxExport: Bool) {
+        var found: [DJLibraryLocations.Found] = []
+        if let djHome { found += DJLibraryLocations.inHome(djHome) }
+        for top in tops { found += DJLibraryLocations.onDrive(top) }
+        found += chosen
+        var seen = Set<String>()
+        found = found.filter { seen.insert($0.url.standardizedFileURL.path).inserted }
+        let locked = djHome.map { DJLibraryLocations.rekordboxDatabase(inHome: $0) } ?? false
+        let export = tops.contains { DJLibraryLocations.rekordboxExport(onDrive: $0) }
+        return (found, locked, export)
+    }
+
+    /// The whole step, as a desk's run and `deckie-build` do it: finds and reads the libraries (each from a copy),
+    /// gathers into `crate`, and says what it found. `records` is the builder's records folder, where Deckie's own
+    /// reading of each song is kept.
+    public static func gather(_ crate: inout Crate, files: [String: [FileRef]], djHome: URL?, tops: [URL],
+                              chosen: [DJLibraryLocations.Found] = [], records: URL?) -> LocalFactsSummary {
+        let (found, locked, export) = find(djHome: djHome, tops: tops, chosen: chosen)
+        var libs: [DJLibrary] = []
+        var failed: [String] = []
+        for f in found {
+            do { libs.append(try DJLibrary.read(f.program, at: f.url)) }
+            catch { failed.append("\(f.program.rawValue): \(error)") }
+        }
+        let report = apply(to: &crate, files: files, libraries: libs, own: ownReading(records: records))
+        return LocalFactsSummary(report: report,
+                                 libraries: libs.map { .init(program: $0.program, path: $0.file, songs: $0.entries.count) },
+                                 failed: failed,
+                                 rekordboxLocked: locked && !crate.tracks.contains { $0.imported?.rekordbox != nil }
+                                     && !libs.contains { $0.program == .rekordbox },
+                                 rekordboxExport: export)
+    }
+
+    /// Each entry's files from a build of the folder `top` (its `placesRead`), for `gather`.
+    public static func files(read: [String: [ReadPlace]], top: URL) -> [String: [FileRef]] {
+        read.mapValues { list in list.map { FileRef(url: top.appendingPathComponent($0.rel), rel: $0.rel, place: $0.place) } }
     }
 }
