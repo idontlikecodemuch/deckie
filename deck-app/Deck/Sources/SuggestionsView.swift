@@ -269,6 +269,9 @@ struct NextRow: View {
         HStack(alignment: .center, spacing: 18) {
             VStack(alignment: .leading, spacing: m.simple ? 3 : 1) {
                 Text(target.folderPath).font(.system(size: m.lineSize, weight: .semibold, design: .rounded)).foregroundStyle(target.on ? target.discColor : Theme.mut).lineLimit(1)
+                if let also = Library.shared.alsoOn(target, playingDisc: cur.disc) {
+                    Text(also).font(.system(size: m.smallSize, design: .rounded)).foregroundStyle(Theme.dim).lineLimit(1).minimumScaleFactor(0.8)
+                }
                 Text(target.numberedSong).font(.system(size: m.titleSize, weight: .semibold)).foregroundStyle(Theme.tx).lineLimit(1).minimumScaleFactor(0.75)
                 Text(target.artist).font(.system(size: m.lineSize)).foregroundStyle(Theme.dim).lineLimit(1)
                 Text(bpmLine(ji)).font(.system(size: m.bpmSize, weight: .regular, design: .rounded)).foregroundStyle(Theme.amber.opacity(0.85)).lineLimit(1).padding(.top, m.simple ? 3 : 1)
