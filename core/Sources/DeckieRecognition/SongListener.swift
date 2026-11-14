@@ -55,11 +55,15 @@ public struct ListenSettings: Sendable, Equatable {
     /// The most sound a search looks at, and the least it will try.
     public var window = 8.0
     public var leastWindow = 3.0
+    /// When a search of the last `window` seconds names nothing and more has been heard, the last `longWindow`
+    /// seconds are searched as well: more sound is worth more in noise (12 s names about ten in a hundred more than
+    /// 8 s at equal-level crowd noise), and it costs time only while nothing is named.
+    public var longWindow = 12.0
     /// A search's answer is taken at once at this confidence.
     public var sure = 3.0
     /// Two searches in a row that put the same song on the same line (place and speed agreeing to `agreeSeconds`)
     /// are taken together when each reaches this.
-    public var fair = 2.2
+    public var fair = 2.3
     public var agreeSeconds = 0.5
     /// A song being followed is still there when its points agree this far above chance...
     public var holdScore = 6.0
@@ -121,7 +125,7 @@ public final class SongListener {
     /// Takes more sound (interleaved if more than one channel) and returns a reading for each second completed.
     public func hear(_ samples: [Float], channels: Int = 1, sampleRate: Int) -> [ListenReading] {
         if sampleRate != rate { reset(); rate = sampleRate }
-        let keep = Int(settings.window * Double(rate))
+        let keep = Int(max(settings.window, settings.longWindow) * Double(rate))
         var out: [ListenReading] = []
         let ch = max(1, channels)
         var i = 0
@@ -169,10 +173,25 @@ public final class SongListener {
                 else { state = .held; confidence = 0 }       // carried over a gap: still shown, on its last line
             }
         }
-        // Search the whole crate: always when nothing is followed, and every few readings when something is.
+        // Search the whole crate: always when nothing is followed, and every few readings when something is. Then,
+        // if nothing is named and there is more sound to go on, once more over the longer window.
         sinceSearch += 1
+        var tries: [(Landmarks, Double)] = []
         if following == nil || misses > 0 || sinceSearch >= settings.searchEvery {
             sinceSearch = 0
+            tries.append((marks, start))
+        }
+        var tried = 0
+        while tried < tries.count {
+            let (marks, start) = tries[tried]
+            tried += 1
+            if tried == 1, following == nil, settings.longWindow > settings.window {
+                let longer = min(Double(sound.count) / Double(rate), settings.longWindow)
+                if longer >= have + 1 {
+                    tries.append((Landmarks(mono: Array(sound.suffix(Int(longer * Double(rate)))), sampleRate: rate, config: queryConfig), now - longer))
+                }
+            }
+            if tried == 2, state == .named { break }
             if let best = recogniser.match(marks).first {
                 let line = (song: best.songIndex, intercept: best.offsetSeconds - best.tempoRatio * start, tempo: best.tempoRatio)
                 let agrees = pending.map { $0.song == line.song && abs(($0.intercept + $0.tempo * now) - (line.intercept + line.tempo * now)) <= settings.agreeSeconds } ?? false
