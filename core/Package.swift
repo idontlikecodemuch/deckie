@@ -35,6 +35,9 @@
 // inside, plus where things go, the plain words, the log and the crate file as one file. deckie-make: its console.
 // deckie-e2e: the end-to-end check both workflows run: makes a small music folder (WAV, FLAC, MP3, a nested folder,
 // awkward names, hidden files) and checks the crate file the builder makes from it. A development tool, not a product.
+// DeckieRecognition: a TRIAL of song recognition that Deckie owns (docs/research/w2-own-recognition-trial.md): a
+// landmark fingerprint after Wang 2003, an index and a matcher that reads the deck's speed. Nothing else depends on it.
+// deckie-recog-bench: the trial's measuring tool (core/Tools/recognition-bench).
 // deckie-memprobe: measures the analyser's peak memory on audio files (and synthesises a test track), for tuning.
 // DeckieTestSupport: synthesised test audio (drums, chords, the engine's test track), the beat fixture and an MP3 frame
 // damaged on purpose (`MP3Damage`), shared by the test targets (not a product).
@@ -87,6 +90,9 @@ let package = Package(
         .executableTarget(name: "deckie-desk-engine", dependencies: ["DeckieDesk", "DeckieEngine"]),
         .target(name: "DeckiePC", dependencies: ["DeckieBuild", "DeckieEngine", "DeckieCrate", "DeckieCore", "DeckieInference"]),
         .executableTarget(name: "deckie-make", dependencies: ["DeckiePC"]),
+        .target(name: "DeckieRecognition", dependencies: ["DeckieCore"]),
+        .executableTarget(name: "deckie-recog-bench", dependencies: ["DeckieRecognition", "DeckieDecode", "DeckieCore"]),
+        .testTarget(name: "DeckieRecognitionTests", dependencies: ["DeckieRecognition", "DeckieCore"]),
         .target(name: "DeckieTestSupport", dependencies: ["DeckieAudio", "DeckieCore", "DeckieDecode"],
                 path: "Tests/DeckieTestSupport"),
         .executableTarget(name: "deckie-e2e", dependencies: ["DeckieCrate", "DeckieCore", "DeckieAudio", "DeckieTestSupport"]),
