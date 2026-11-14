@@ -42,6 +42,28 @@ def fsl_usable():
             k, mo = next(iter(ks)); out[sid] = {"key": PC[k] + (12 if mo == "min" else 0), "licence": "CC0 1.0" if "zero" in lic else "CC BY 3.0", "uploader": meta[sid]["username"]}
     return out
 
+def fmak_usable():
+    """FMA track id -> key, licence, artist, for the FMAK songs whose own audio licence allows commercial use: written
+    by fetch (see README): $DECKIE_KT_DATA/fmak/usable.json, from FMAK's labels (Zenodo 10719860, CC BY 4.0) joined
+    with the Free Music Archive's per-track licence (tracks.csv): CC BY, CC0 or public domain only."""
+    p = os.path.join(kt.DATA, "fmak", "usable.json")
+    if not os.path.exists(p): return {}
+    out = {}
+    for tid, v in json.load(open(p)).items():
+        k = kt.key_of(v["label"].replace("Major", "major"))
+        if k is not None: out["fmak" + tid] = {"key": k, "licence": v["licence"], "uploader": "fmak:" + v["artist"], "path": os.path.join(kt.DATA, "fmak", "audio", tid + ".mp3"), "genre": v["genre"]}
+    return out
+
+def wtc_usable():
+    """The Open Well-Tempered Clavier, Book 1 (CC0): 48 recordings, the key from each title."""
+    p = os.path.join(kt.DATA, "wtc", "tracks.json")
+    if not os.path.exists(p): return {}
+    out = {}
+    for i, (name, title, g) in enumerate(json.load(open(p))):
+        pc = kt.PC[g[2]] + (1 if g[3] and "sharp" in g[3] else -1 if g[3] and "flat" in g[3] else 0)
+        out[f"wtc{i:02d}"] = {"key": pc % 12 + (12 if g[4] == "minor" else 0), "licence": "CC0 1.0", "uploader": "wtc", "path": os.path.join(kt.DATA, "wtc", "audio", f"{i:02d}.mp3")}
+    return out
+
 def feat_one(item):
     sid, path = item
     import soundfile as sf, librosa, kt_three as T, kt_extract as KE
@@ -62,6 +84,7 @@ def feat_one(item):
 def main_feats(jobs):
     os.makedirs(os.path.join(kt.CACHE, "fsl"), exist_ok=True)
     use = fsl_usable(); todo = [(s, os.path.join(FSL, "audio", s + ".wav")) for s in use if os.path.exists(os.path.join(FSL, "audio", s + ".wav"))]
+    more = {**fmak_usable(), **wtc_usable()}; todo += [(s, v["path"]) for s, v in more.items() if os.path.exists(v["path"])]; use = {**use, **more}
     from multiprocessing import Pool
     bad = []
     with Pool(jobs) as pool:
@@ -69,14 +92,19 @@ def main_feats(jobs):
             if err: bad.append((sid, err))
     print(f"loops usable {len(use)}, with audio {len(todo)}, not read {len(bad)} {bad[:5]}")
 
-def load_real():
-    use = fsl_usable(); rows = []
+def load_real(sources=("fsl", "fmak", "wtc")):
+    use = {}
+    if "fsl" in sources: use.update(fsl_usable())
+    if "fmak" in sources: use.update(fmak_usable())
+    if "wtc" in sources: use.update(wtc_usable())
+    rows = []
     ups = sorted({v["uploader"] for v in use.values()})
     for sid, v in use.items():
         p = os.path.join(kt.CACHE, "fsl", sid + ".npz")
         if os.path.exists(p):
             z = np.load(p); t = np.zeros(24, np.float32); t[v["key"]] = 1
-            rows.append({"id": sid, "pa": z["pa"], "pb": z["pb"], "target": t, "group": ups.index(v["uploader"]), "licence": v["licence"], "dur": float(z["dur"]), "kind": "real"})
+            rows.append({"id": sid, "pa": z["pa"], "pb": z["pb"], "target": t, "group": ups.index(v["uploader"]), "licence": v["licence"], "dur": float(z["dur"]), "kind": "real",
+                         "source": "fmak" if sid.startswith("fmak") else "wtc" if sid.startswith("wtc") else "fsl"})
     return rows
 
 def load_made(n=10 ** 9):
@@ -86,6 +114,14 @@ def load_made(n=10 ** 9):
         p = os.path.join(d, f"{i}.npz")
         if not os.path.exists(p): break
         z = np.load(p); rows.append({"id": f"made{i}", "pa": z["pa"], "pb": z["pb"], "target": z["target"], "kind": str(z["kind"]), "group": -1})
+    return rows
+
+def load_scores():
+    """the rendered public-domain chorales (kt_scores.py)."""
+    rows = []; d = os.path.join(kt.CACHE, "made")
+    for f in sorted(os.listdir(d)):
+        if f.startswith("s"):
+            z = np.load(os.path.join(d, f)); rows.append({"id": "made" + f[:-4], "pa": z["pa"], "pb": z["pb"], "target": z["target"], "kind": "score", "group": -1})
     return rows
 
 def with_L(rows):
@@ -132,42 +168,54 @@ def row_of(pred, true):
 HEAD = "| exact: all | major | minor | mean of halves | within one step | home note | mode given home: major | minor |"
 
 def main_profiles():
-    real, made = load_real(), load_made(); sets = test_sets(); out = []
+    allreal, made = load_real(), load_made(); sets = test_sets(); out = []; preds = {}
+    by = lambda *src: [r for r in allreal if r["source"] in src]
     kinds = collections.Counter(r["kind"] for r in made)
-    print(f"real loops {len(real)} ({sum(r['target'][12:].sum() > 0.5 for r in real)} minor; {collections.Counter(r['licence'] for r in real)}; uploaders {len({r['group'] for r in real})}; median length {np.median([r['dur'] for r in real]):.1f} s); made-up clips {len(made)} {dict(kinds)}")
-    preds = {}
-    for eq in (False, True):
-        for share in SHARES:
+    for src, nm in (("fsl", "Freesound loops"), ("fmak", "FMAK songs"), ("wtc", "Well-Tempered Clavier")):
+        rs = by(src)
+        print(f"{nm}: {len(rs)} clips, {sum(r['target'][12:].sum() > 0.5 for r in rs)} minor, licences {dict(collections.Counter(r['licence'] for r in rs))}, groups {len({r['group'] for r in rs})}, median length {np.median([r['dur'] for r in rs]):.0f} s")
+    print(f"made-up clips {len(made)} {dict(kinds)}")
+    def run(tag, share_label, rows_of, reps, eqs=(False, True), keep=None):
+        for eq in eqs:
             acc = collections.defaultdict(list)
-            for rep in range(1 if share == 0 else 3):
-                rng = np.random.default_rng(100 * share + rep); model = fit_profiles(mix(real, made, share, rng), "AB", eq)
+            for rep in range(reps):
+                model = fit_profiles(rows_of(rep), "AB", eq)
                 for D in sets:
                     p = KPF.predict(D["F"], model, "AB").argmax(1); acc[D["name"]].append(row_of(p, D["key"]))
-                    if rep == 0: preds[(eq, share, D["name"])] = p
-            for D in sets: out.append(("learned profiles, 49 numbers", "modes equal" if eq else "as the mix is", f"{share}", D["name"], np.mean(acc[D["name"]], axis=0)))
-    # which made-up kinds earn their place: at 25 percent, one kind left out at a time, and one kind alone
+                    if rep == 0 and keep is not None: preds[(eq, keep, D["name"])] = p
+            for D in sets: out.append((tag, "modes equal" if eq else "as the mix is", share_label, D["name"], np.mean(acc[D["name"]], axis=0)))
+    # 1. each real source, and together
+    for src, nm in ((("fsl",), "Freesound loops (710)"), (("fmak",), "FMAK songs, CC BY / CC0 / public domain (371)"), (("wtc",), "Well-Tempered Clavier, CC0 (48)"),
+                    (("fsl", "fmak"), "loops + FMAK songs (1,081)"), (("fsl", "fmak", "wtc"), "loops + FMAK songs + Clavier (1,129)")):
+        run("real only: " + nm, "0", lambda rep, src=src: by(*src), 1)
+    # 2. the made-up share, on the real base (loops + FMAK songs)
+    base = by("fsl", "fmak")
+    for share in SHARES:
+        run("real base (loops + FMAK songs) + made-up", str(share), lambda rep, share=share: mix(base, made, share, np.random.default_rng(100 * share + rep)), 1 if share == 0 else 3, keep=share)
+    # 2b. the same with public-domain chorales rendered by our synthesiser in place of program-written music
+    scores = load_scores(); print(f"rendered chorales {len(scores)}, {sum(r['target'][12:].sum() > 0.5 for r in scores)} minor")
+    for share in SHARES[1:]:
+        run("real base + rendered public-domain chorales", str(share), lambda rep, share=share: mix(base, scores, share, np.random.default_rng(100 * share + rep)), 3)
+    # 3. which made-up kinds earn their place: at 25 percent, one kind left out at a time, and one kind alone
     for label, keep in [("without " + k, lambda r, k=k: r["kind"] != k) for k in kinds] + [("only " + k, lambda r, k=k: r["kind"] == k) for k in kinds]:
-        sub = [r for r in made if keep(r)]; acc = collections.defaultdict(list)
-        for rep in range(3):
-            model = fit_profiles(mix(real, sub, 25, np.random.default_rng(900 + rep)), "AB", True)
-            for D in sets: acc[D["name"]].append(row_of(KPF.predict(D["F"], model, "AB").argmax(1), D["key"]))
-        for D in sets: out.append(("learned profiles, 49 numbers", "modes equal", f"25, made-up {label}", D["name"], np.mean(acc[D["name"]], axis=0)))
+        sub = [r for r in made if keep(r)]
+        run("real base + made-up, " + label, "25", lambda rep, sub=sub: mix(base, sub, 25, np.random.default_rng(900 + rep)), 3, eqs=(True,))
     with open(os.path.join(kt.HERE, "ship_results.tsv"), "w") as fh:
-        fh.write("reader\tfit\tmade_up_share_percent\tset\texact\tmajor\tminor\tmean_of_halves\twithin_one_step\thome\tmode_home_major\tmode_home_minor\n")
+        fh.write("training_data\tfit\tmade_up_share_percent\tset\texact\tmajor\tminor\tmean_of_halves\twithin_one_step\thome\tmode_home_major\tmode_home_minor\n")
         for a, b, c, d, v in out: fh.write(f"{a}\t{b}\t{c}\t{d}\t" + "\t".join(f"{x:.2f}" for x in v) + "\n")
     np.savez_compressed(os.path.join(kt.CACHE, "ship_profile_preds.npz"), **{f"{int(e)}|{s}|{n}": p for (e, s, n), p in preds.items()})
     for D in sets:
-        print(f"\n**{D['name']}**: learned profiles (49 numbers) fitted on shippable data only\n\n| fit | made-up share of the mix | " + HEAD[2:] + "\n|---|---|" + "---:|" * 8)
+        print(f"\n**{D['name']}**: learned profiles (49 numbers) fitted on shippable data only\n\n| training data | fit | made-up share | " + HEAD[2:] + "\n|---|---|---|" + "---:|" * 8)
         for a, b, c, d, v in out:
-            if d == D["name"]: print(f"| {b} | {c} % | " + " | ".join(f"{x:.1f}" for x in v) + " |")
-    # drift: what the reader had right with no made-up music and gets wrong with it, by kind of error (MTG)
-    M = sets[0]
-    print("\n**Drift on MTG** (modes equal): clips right with no made-up music and wrong with it, by the kind of the new error; and clips gained\n\n| made-up share | lost: fifth | relative | parallel | other | lost in all | gained | net |\n|---|---:|---:|---:|---:|---:|---:|---:|")
-    base = preds[(True, 0, M["name"])]
-    for share in SHARES[1:]:
-        p = preds[(True, share, M["name"])]; lost = (base == M["key"]) & (p != M["key"]); gained = (base != M["key"]) & (p == M["key"])
-        c = collections.Counter(kt.relation(int(a), int(b)) for a, b in zip(p[lost], M["key"][lost]))
-        print(f"| {share} % | {c['fifth']} | {c['relative']} | {c['parallel']} | {c['other']} | {int(lost.sum())} | {int(gained.sum())} | {int(gained.sum()) - int(lost.sum()):+d} |")
+            if d == D["name"]: print(f"| {a} | {b} | {c} % | " + " | ".join(f"{x:.1f}" for x in v) + " |")
+    # drift: what the reader had right with no made-up music and gets wrong with it, by kind of error
+    for D in sets:
+        print(f"\n**Drift on {D['name']}** (learned profiles, modes equal): clips right with no made-up music and wrong with it, by the kind of the new error; and clips gained\n\n| made-up share | lost: fifth | relative | parallel | other | lost in all | gained | net |\n|---|---:|---:|---:|---:|---:|---:|---:|")
+        b0 = preds[(True, 0, D["name"])]
+        for share in SHARES[1:]:
+            p = preds[(True, share, D["name"])]; lost = (b0 == D["key"]) & (p != D["key"]); gained = (b0 != D["key"]) & (p == D["key"])
+            c = collections.Counter(kt.relation(int(a), int(b)) for a, b in zip(p[lost], D["key"][lost]))
+            print(f"| {share} % | {c['fifth']} | {c['relative']} | {c['parallel']} | {c['other']} | {int(lost.sum())} | {int(gained.sum())} | {int(gained.sum()) - int(lost.sum()):+d} |")
 
 # ---- the convolutional model on shippable mixes
 def main_cnn(threads):
