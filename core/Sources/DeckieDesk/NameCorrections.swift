@@ -12,9 +12,14 @@ public struct NameCorrection: Codable, Equatable, Sendable {
     public var artist: Text?
     public var version: Text?
     public var tags: [String]?
+    /// How the DJ gave each field fixed (letter AA): `user` (typed; also when this is missing), `pasted` (a list),
+    /// `pattern` (the file names read by a pattern the DJ set), `playlist` (a playlist the DJ chose), `checked`
+    /// (Desk's guess, which the DJ looked at and kept). By field name.
+    public var from: [String: String]?
 
-    public init(title: String? = nil, artist: Text? = nil, version: Text? = nil, tags: [String]? = nil) {
-        self.title = title; self.artist = artist; self.version = version; self.tags = tags
+    public init(title: String? = nil, artist: Text? = nil, version: Text? = nil, tags: [String]? = nil,
+                from: [String: String]? = nil) {
+        self.title = title; self.artist = artist; self.version = version; self.tags = tags; self.from = from
     }
 
     public var isEmpty: Bool { title == nil && artist == nil && version == nil && tags == nil }
@@ -36,10 +41,12 @@ public struct NameCorrections: Codable, Equatable, Sendable {
         guard before.id == after.id else { return }
         var c = byId[after.id] ?? NameCorrection()
         let b = before.ident, a = after.ident
-        if a.title != b.title { c.title = a.title }
-        if a.artist != b.artist { c.artist = .init(a.artist) }
-        if a.version != b.version { c.version = .init(a.version) }
+        var how = c.from ?? [:]
+        if a.title != b.title { c.title = a.title; how["title"] = "user" }
+        if a.artist != b.artist { c.artist = .init(a.artist); how["artist"] = "user" }
+        if a.version != b.version { c.version = .init(a.version); how["version"] = "user" }
         if a.tags != b.tags { c.tags = a.tags }
+        c.from = how.isEmpty ? nil : how
         byId[after.id] = c.isEmpty ? nil : c
     }
 

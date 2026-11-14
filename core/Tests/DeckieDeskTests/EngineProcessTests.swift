@@ -2,6 +2,7 @@ import Foundation
 import Testing
 import DeckieAudio
 import DeckieCrate
+import DeckieDisc
 import DeckieTestSupport
 @testable import DeckieDesk
 
@@ -242,6 +243,118 @@ final class EngineProcess: @unchecked Sendable {
         #expect((songs["notIn"] as? NSNumber)?.intValue == 1)
         #expect((e.last("state")?["running"] as? Bool) == false)
 
+        _ = try e.request("quit")
+        #expect(e.exitCode() == 0)
+    }
+}
+
+/// The naming messages (research AA, route A) through the engine program: the rows' names and reasons, a tool's
+/// preview and its apply as one step, "Looks right", splitting typed names, and Listen's sound handed over in chunks
+/// on standard output with no path and no port.
+@Suite(.serialized) struct EngineNamingTests {
+    @Test func namesAndListenThroughTheProtocol() throws {
+        let root = try scratch("engine-naming")
+        let home = DeskHome(root: root.appendingPathComponent("home"))
+        try home.prepare()
+        var info = try home.shelf.make(name: "Friday")
+        let stick = root.appendingPathComponent("Stick 3")
+        info.sourceRoots["Stick 3"] = stick.path
+        try home.shelf.save(info)
+        try FileManager.default.createDirectory(at: stick.appendingPathComponent("House"), withIntermediateDirectories: true)
+        // Not music: Listen hands the file over as it is, and these bytes are easy to check end to end.
+        var sound = Data()
+        for i in 0..<(2_000_000) { sound.append(UInt8(truncatingIfNeeded: i &* 31)) }
+        try sound.write(to: stick.appendingPathComponent("House/01 Track 01.mp3"))
+        var a = entry("aaaa", "Track 01", disc: "Stick 3", folder: "House", track: 1, rel: "House/01 Track 01.mp3")
+        a.ident.source = "filename"
+        var b = entry("bbbb", "Night drive", disc: "Stick 3", folder: "House", track: 2, rel: "House/02 Night drive.mp3")
+        b.ident.artist = "Artist A"; b.ident.source = "filename"
+        try CrateWriter.write(crate([a, b], name: "Friday"), to: home.shelf.package(info.id))
+
+        let e = try EngineProcess(home: home.root)
+        defer { if e.process.isRunning { e.process.terminate() } }
+        let songs = try #require(e.wait { $0["event"] as? String == "songs" })
+        let rows = try #require(songs["songs"] as? [[String: Any]])
+        #expect(rows.first { $0["id"] as? String == "aaaa" }?["nameReason"] as? String == "noTitle")
+        let bRow = try #require(rows.first { $0["id"] as? String == "bbbb" })
+        #expect(bRow["nameReason"] as? String == "guess")
+        #expect(((bRow["names"] as? [String: Any])?["title"] as? [String: Any])?["from"] as? String == "filename")
+
+        // Splitting what the DJ typed.
+        let split = try e.request("name.split", ["text": "Zed - Sunrise (Dub)"])
+        #expect(split["split"] as? Bool == true && split["artist"] as? String == "Zed" && split["version"] as? String == "Dub")
+        #expect(try e.request("name.split", ["text": "Sunrise"])["split"] as? Bool == false)
+
+        // A pasted list whose count is off is refused until fixed; then applied as one step.
+        let short = try e.request("names.preview", ["tool": "paste", "source": "Stick 3", "text": "Zed - Sunrise"])
+        #expect((short["preview"] as? [String: Any])?["problem"] as? String == "counts")
+        #expect((try e.request("names.apply", [:])["error"] as? [String: Any])?["code"] as? String == "failed")
+        let ok = try e.request("names.preview", ["tool": "paste", "source": "Stick 3", "text": "Zed - Sunrise\nArtist A - Night drive"])
+        let changes = try #require((ok["preview"] as? [String: Any])?["changes"] as? [[String: Any]])
+        #expect(changes.contains { $0["song"] as? String == "aaaa" && $0["after"] as? String == "Sunrise" && $0["tick"] as? Bool == true })
+        var mark = e.received.count
+        let applied = try e.request("names.apply", ["ticks": Array(changes.indices)])
+        #expect((applied["songs"] as? NSNumber)?.intValue == 1)
+        #expect(e.wait(from: mark) { $0["event"] as? String == "state" }?["undo"] as? String == "undoNames")
+        mark = e.received.count
+        let checked = try e.request("song.check", ["songs": ["bbbb"]])
+        #expect((checked["songs"] as? NSNumber)?.intValue == 1)
+        let after = try #require(e.wait(from: mark) { $0["event"] as? String == "songs" })
+        #expect((after["songs"] as? [[String: Any]])?.allSatisfy { $0["needsName"] as? Bool == false } == true)
+
+        // Listen: the reply, then the chunks, which put back together are the file.
+        mark = e.received.count
+        let audio = try e.request("song.audio", ["song": "aaaa"])
+        #expect(audio["type"] as? String == "audio/mpeg")
+        #expect((audio["bytes"] as? NSNumber)?.intValue == sound.count)
+        let token = try #require(audio["token"] as? String)
+        let count = try #require((audio["chunks"] as? NSNumber)?.intValue)
+        #expect(count == 3)
+        _ = e.wait(from: mark) { $0["event"] as? String == "audio.chunk" && ($0["index"] as? NSNumber)?.intValue == count - 1 }
+        let parts = e.received[mark...].filter { $0["event"] as? String == "audio.chunk" && $0["token"] as? String == token }
+            .sorted { (($0["index"] as? NSNumber)?.intValue ?? 0) < (($1["index"] as? NSNumber)?.intValue ?? 0) }
+        var back = Data()
+        for p in parts { back.append(Data(base64Encoded: p["data"] as? String ?? "") ?? Data()) }
+        #expect(back == sound)
+        #expect(audio["path"] == nil)
+        // A song whose source is not here says which source to put back.
+        let gone = try e.request("song.audio", ["song": "bbbb"])
+        let err = try #require(gone["error"] as? [String: Any])
+        #expect(err["code"] as? String == "not_here" && err["detail"] as? String == "Stick 3")
+
+        e.close()
+        #expect(e.exitCode() == 0)
+    }
+
+    /// A music CD through the engine program, with the stand-in drive (`DECKIE_DESK_MUSIC_CD`): listed by
+    /// drives.list, added with run.addMusicCD, named by the DJ while it is read.
+    @Test(.enabled(if: Engine.available, "needs ONNX Runtime and the Beat This! model"))
+    func aMusicCDWithNoNamesThroughTheEngine() async throws {
+        let root = try scratch("engine-music-cd")
+        let drives = root.appendingPathComponent("drives")
+        try MusicCDRunTests.makeDisc(drives.appendingPathComponent("E"), names: false)
+        let e = try EngineProcess(home: root.appendingPathComponent("home"),
+                                  environment: [MusicCDs.standInVariable: drives.path])
+        defer { if e.process.isRunning { e.process.terminate() } }
+        _ = e.wait { $0["event"] as? String == "state" }
+        let list = try e.request("drives.list")
+        let cds = try #require(list["musicCDs"] as? [[String: Any]])
+        #expect(cds.count == 1 && (cds.first?["songs"] as? NSNumber)?.intValue == 2)
+        let location = try #require(cds.first?["location"] as? String)
+        let finished: [String: Any]? = try await CPUTurns.exclusive {
+            let added = try e.request("run.addMusicCD", ["location": location])
+            let ask = try #require(added["askName"] as? String)
+            #expect(ask.hasPrefix("Music CD, 2 songs, "))
+            #expect(try e.request("run.nameDisc", ["name": "Friday night"])["ok"] as? Bool == true)
+            return e.wait(seconds: 600) { ["run.finished", "run.failed"].contains($0["event"] as? String ?? "") }
+        }
+        let done = try #require(finished)
+        #expect(done["event"] as? String == "run.finished", "\(done)")
+        let disc = try #require((done["report"] as? [String: Any])?["disc"] as? [String: Any])
+        #expect(disc["text"] as? String == "none")
+        #expect(e.received.contains { ($0["line"] as? [String: Any])?["kind"] as? String == "copied" })
+        let state = try #require(e.wait { $0["event"] as? String == "state" && ($0["current"] as? [String: Any])?["sources"] as? [String] == ["Friday night"] })
+        #expect(state["undo"] as? String == "undoRename")
         _ = try e.request("quit")
         #expect(e.exitCode() == 0)
     }

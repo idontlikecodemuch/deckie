@@ -1,6 +1,7 @@
 import Foundation
 import DeckieCrate
 import DeckieBuild
+import DeckieDisc
 
 /// What a desk's window works on, with no window (D32): the crate showing (one of the crates the desk keeps, D28), its
 /// name fixes and remembered paths, a run that stopped, and the edits the DJ makes, each one step of undo and saved at
@@ -18,6 +19,8 @@ public final class DeskSession {
     public private(set) var crate: Crate?
     public private(set) var corrections = NameCorrections()
     public private(set) var placePaths = PlacePaths()
+    /// Where each name was read from, field by field, and each song's release (research AA; `names.json`).
+    public private(set) var book = NameBook()
     /// A run of the crate showing that stopped before it finished.
     public private(set) var pending: RunRequest?
 
@@ -27,6 +30,7 @@ public final class DeskSession {
         var corrections: NameCorrections
         var placePaths: PlacePaths
         var info: CrateInfo?
+        var book: NameBook
     }
     private var undoSteps: [(name: String, state: Snapshot)] = []
     private var redoSteps: [(name: String, state: Snapshot)] = []
@@ -54,6 +58,7 @@ public final class DeskSession {
             ? (try? CrateReader.read(from: pkg)) : nil
         corrections = NameCorrections.load(from: shelf.file(DeskRun.correctionsFile, of: id))
         placePaths = PlacePaths.load(from: shelf.file(DeskRun.placesFile, of: id))
+        book = NameBook.load(from: shelf.file(DeskRun.namesFile, of: id))
         pending = DeskRun.pending(home: home, crateId: id)
         undoSteps = []; redoSteps = []
         return true
@@ -62,7 +67,7 @@ public final class DeskSession {
     /// The first screen: the crate is made, named after what is read, when music is added.
     public func newCrate() {
         current = nil; crate = nil; pending = nil
-        corrections = NameCorrections(); placePaths = PlacePaths()
+        corrections = NameCorrections(); placePaths = PlacePaths(); book = NameBook()
         undoSteps = []; redoSteps = []
     }
 
@@ -78,6 +83,7 @@ public final class DeskSession {
     /// touched), then shows the next most recent crate, or the first screen.
     public func delete(_ id: String) throws {
         try shelf.delete(id)
+        DiscCopies.prune(home)
         if current?.id == id {
             if let next = shelf.list().first { show(next.id) } else { newCrate() }
         }
@@ -108,17 +114,57 @@ public final class DeskSession {
         return info
     }
 
-    /// After a run of crate `id` (finished or stopped): shows it again as saved.
+    /// After a run of crate `id` (finished or stopped): shows it again as saved, then gives a music CD the name the DJ
+    /// typed for it while it was read (one step of undo).
     public func runEnded(_ id: String) {
         _ = show(id)
+        if let (source, name) = discName, current?.id == id {
+            discName = nil
+            try? renameSource(source, to: name)
+        }
+    }
+
+    // MARK: Add music: a music CD (research AA)
+
+    /// The name the DJ gave a music CD while its run went on: the source it was added as, and the new name.
+    public private(set) var discName: (source: String, name: String)?
+
+    /// What Add music reads for the music CD at `location` (as `MusicCDs.list` gave it): the table and CD-Text are read
+    /// now (both quick) and noted in the disc's copy folder; the songs are copied in the run. The source is named after
+    /// the disc's own title when CD-Text has one; otherwise `askName` is the placeholder ("Music CD, 14 songs, 71:12")
+    /// the window offers when it asks, once, for the name written on the disc.
+    public func addMusicCDRequest(_ location: String, open: (String) throws -> MusicCD = { try MusicCDs.open($0) }) throws
+        -> (request: RunRequest, askName: String?) {
+        let cd = try open(location)
+        let (folder, record) = try DiscCopies.prepare(cd, home: home)
+        let placeholder = Self.placeholderName(record.toc)
+        let base = record.discTitle ?? placeholder
+        // The same disc already a source of this crate keeps its name.
+        let existing = current?.sourceRoots.first { URL(fileURLWithPath: $0.value).standardizedFileURL == folder.standardizedFileURL }?.key
+        let unique = existing ?? SourceNaming.unique(base, root: folder, roots: current?.roots ?? [:])
+        let request = RunRequest(folder: folder, source: unique, musicCD: cd.location, discId: record.toc.id)
+        return (request, record.discTitle == nil && existing == nil ? unique : nil)
+    }
+
+    /// "Music CD, 14 songs, 71:12": a disc's name until the DJ gives one (letter AA, 2.6).
+    public static func placeholderName(_ toc: DiscTOC) -> String {
+        let secs = Int(toc.audioSeconds.rounded())
+        return DeskWords.count("musicCDPlaceholder", toc.songs.count, ["length": "\(secs / 60):" + String(format: "%02d", secs % 60)])
+    }
+
+    /// The name written on the disc, given while its run goes on (or after: then it is a rename now).
+    public func nameDisc(source: String, to name: String, running: Bool) throws {
+        let n = name.trimmingCharacters(in: .whitespaces)
+        guard !n.isEmpty, n != source else { return }
+        if running { discName = (source, n) } else { try renameSource(source, to: n) }
     }
 
     // MARK: edits, each one step of undo, saved at once
 
-    private var snapshot: Snapshot { Snapshot(crate: crate, corrections: corrections, placePaths: placePaths, info: current) }
+    private var snapshot: Snapshot { Snapshot(crate: crate, corrections: corrections, placePaths: placePaths, info: current, book: book) }
 
     private func restore(_ s: Snapshot) throws {
-        crate = s.crate; corrections = s.corrections; placePaths = s.placePaths
+        crate = s.crate; corrections = s.corrections; placePaths = s.placePaths; book = s.book
         if let i = s.info, i.id == current?.id { current = i }
         try save()
     }
@@ -127,7 +173,7 @@ public final class DeskSession {
     private func change(_ name: String, _ body: () -> Void) throws {
         let before = snapshot
         body()
-        guard crate != before.crate || current != before.info else { return }
+        guard crate != before.crate || current != before.info || corrections != before.corrections else { return }
         undoSteps.append((name, before))
         redoSteps = []
         try save()
@@ -152,6 +198,7 @@ public final class DeskSession {
         guard let i = crate?.tracks.firstIndex(where: { $0.id == id }) else { throw DeskError("no song \(id)") }
         try change("undoNameFix") {
             let before = crate!.tracks[i]
+            book.keep(before)
             var t = before
             if let title, !title.trimmingCharacters(in: .whitespaces).isEmpty { t.ident.title = title }
             if let artist { t.ident.artist = artist.isEmpty ? nil : artist }
@@ -199,6 +246,7 @@ public final class DeskSession {
             placePaths.fillMissingPaths(&crate!)
             if let s = source { current?.sourceRoots[s] = nil } else { current?.musicFolder = nil }
         }
+        DiscCopies.prune(home)
     }
 
     /// "Look again for keys and names" (D30) for the crate showing, without reading its music again. One step of
@@ -207,7 +255,8 @@ public final class DeskSession {
         guard let info = current, crate != nil else { throw DeskError("no crate with songs is showing") }
         try save()
         let (c, summary) = try DeskLocalFacts.lookAgain(home: home, crateId: info.id, environment: environment)
-        try change("undoLookAgain") { crate = c }
+        let read = NameBook.load(from: shelf.file(DeskRun.namesFile, of: info.id))
+        try change("undoLookAgain") { crate = c; book = read }
         return summary
     }
 
@@ -225,8 +274,93 @@ public final class DeskSession {
         if let c = crate { try CrateWriter.write(c, to: shelf.package(info.id)) }
         try corrections.save(to: shelf.file(DeskRun.correctionsFile, of: info.id))
         try placePaths.save(to: shelf.file(DeskRun.placesFile, of: info.id))
+        try book.save(to: shelf.file(DeskRun.namesFile, of: info.id))
         try shelf.save(info)
     }
+
+    // MARK: naming (research AA, route A)
+
+    public func facts(_ t: CrateTrack) -> DeskNaming.Facts { DeskNaming.facts(t, book: book, corrections: corrections) }
+
+    /// The table's rows, with each song's names and why it needs one.
+    public var rows: [DeskSongRow] { crate?.tracks.map { DeskSongRow($0, facts: facts($0)) } ?? [] }
+
+    /// The songs a batch tool works on: a source's songs in the order the player shows them, or the songs given.
+    public func toolSongs(source: String?, ids: [String]?) -> [DeskNaming.Song] {
+        guard let c = crate else { return [] }
+        let byId = Dictionary(c.tracks.map { ($0.id, $0) }, uniquingKeysWith: { a, _ in a })
+        var order: [String] = []
+        if let source, let row = DeskSourceRow.outline(c).first(where: { $0.name == source }) {
+            var seen = Set<String>()
+            for f in row.folders { for s in f.songs where seen.insert(s.id).inserted { order.append(s.id) } }
+        } else if let ids { order = ids }
+        return order.compactMap { byId[$0] }.map { DeskNaming.Song(track: $0, facts: facts($0)) }
+    }
+
+    /// The last preview a tool made, until it is applied or another is made.
+    public private(set) var preview: DeskNaming.Preview?
+
+    /// A batch tool's preview (letter AA, 3.6): `tool` is `paste` (text), `pattern` (pattern), `playlist` (path of an
+    /// .m3u or .m3u8 file, read only) or `check` (Looks right); it works on a source's songs or the songs given.
+    public func makePreview(tool: String, source: String?, ids: [String]?, text: String? = nil, pattern: String? = nil,
+                            playlist: URL? = nil, onlyEmpty: Bool = true) throws -> DeskNaming.Preview {
+        let songs = toolSongs(source: source, ids: ids)
+        let p: DeskNaming.Preview
+        switch tool {
+        case "paste": p = DeskNaming.pasteList(text ?? "", songs: songs, onlyEmpty: onlyEmpty)
+        case "pattern": p = DeskNaming.fromFileNames(pattern: pattern ?? DeskNaming.patterns[0], songs: songs, onlyEmpty: onlyEmpty)
+        case "playlist":
+            guard let playlist else { throw DeskError("no playlist given") }
+            let data = try Data(contentsOf: playlist)
+            let text = String(data: data, encoding: .utf8) ?? String(decoding: data, as: UTF8.self)
+            p = DeskNaming.fromPlaylist(DeskNaming.readPlaylist(text), songs: songs, onlyEmpty: onlyEmpty)
+        case "check": p = DeskNaming.looksRight(songs: songs)
+        default: throw DeskError("no tool \(tool)")
+        }
+        preview = p
+        return p
+    }
+
+    /// Applies the last preview with the ticks given (indexes into its changes; nil: its own ticks), as one step of
+    /// undo. Returns how many songs changed.
+    @discardableResult
+    public func applyPreview(ticks: Set<Int>?) throws -> Int {
+        guard let p = preview, crate != nil else { throw DeskError("there is nothing to apply") }
+        guard p.problem == nil else { throw DeskError("the list does not match the songs yet") }
+        var n = 0
+        try change(p.tool == "check" ? "undoCheck" : "undoNames") {
+            for t in crate!.tracks where p.changes.contains(where: { $0.song == t.id }) { book.keep(t) }
+            n = DeskNaming.apply(p, ticks: ticks, to: &crate!, corrections: &corrections)
+        }
+        preview = nil
+        return n
+    }
+
+    /// "Looks right" on songs, or Return on one guessed field (`field`): Desk's guesses become the DJ's, unchanged.
+    @discardableResult
+    public func check(_ ids: [String], field: String? = nil) throws -> Int {
+        var p = DeskNaming.looksRight(songs: toolSongs(source: nil, ids: ids))
+        if let field { p.changes = p.changes.filter { $0.field == field } }
+        guard !p.changes.isEmpty, crate != nil else { return 0 }
+        var n = 0
+        try change("undoCheck") {
+            for t in crate!.tracks where ids.contains(t.id) { book.keep(t) }
+            n = DeskNaming.apply(p, to: &crate!, corrections: &corrections)
+        }
+        return n
+    }
+
+    // MARK: Listen (D33)
+
+    /// A song's file to play: the first of its places whose source is here. Throws `NotHere` with the source's name
+    /// when none is (so the window can say "Put Friday night back in to listen").
+    public func audioFile(_ id: String) throws -> URL {
+        guard let t = crate?.tracks.first(where: { $0.id == id }) else { throw DeskError("no song \(id)") }
+        if let u = placePaths.locate(t, roots: current?.roots ?? [:], musicFolder: current?.musicFolderURL) { return u }
+        throw NotHere(source: t.ident.disc ?? current?.musicFolderURL?.lastPathComponent ?? "")
+    }
+
+    public struct NotHere: Error { public let source: String }
 
     // MARK: out
 

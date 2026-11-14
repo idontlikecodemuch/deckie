@@ -94,6 +94,9 @@ public enum DeskLocalFacts {
         var crate = try CrateReader.read(from: shelf.package(crateId))
         let paths = PlacePaths.load(from: shelf.file(DeskRun.placesFile, of: crateId))
         let summary = gather(&crate, home: home, info: info, paths: paths, environment: environment)
+        let (book, _) = DeskNamesStep.run(&crate, home: home, info: info, paths: paths,
+                                          book: NameBook.load(from: shelf.file(DeskRun.namesFile, of: crateId)))
+        try book.save(to: shelf.file(DeskRun.namesFile, of: crateId))
         NameCorrections.load(from: shelf.file(DeskRun.correctionsFile, of: crateId)).apply(to: &crate)
         try CrateWriter.write(crate, to: shelf.package(crateId))
         return (crate, summary)

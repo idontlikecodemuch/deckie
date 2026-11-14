@@ -1,5 +1,6 @@
 import Foundation
 import DeckieCrate
+import DeckieDisc
 #if os(Windows)
 import WinSDK
 #endif
@@ -36,7 +37,8 @@ public enum DeskDrives {
         let drives = urls.compactMap { u -> Drive? in
             guard let v = try? u.resourceValues(forKeys: Set(keys)), v.volumeIsRootFileSystem != true,
                   v.volumeIsBrowsable != false,
-                  v.volumeIsRemovable == true || v.volumeIsEjectable == true || v.volumeIsInternal == false else { return nil }
+                  v.volumeIsRemovable == true || v.volumeIsEjectable == true || v.volumeIsInternal == false,
+                  !MusicCDs.isMacMusicCD(u) else { return nil }   // a music CD is offered as one (MusicCDs)
             return Drive(name: SourceReading.name(volumeName: v.volumeName, folderName: u.lastPathComponent), path: u.path)
         }
         #elseif os(Windows)
@@ -48,6 +50,8 @@ public enum DeskDrives {
             let type = root.withCString(encodedAs: UTF16.self) { GetDriveTypeW($0) }
             guard type == UINT(DRIVE_REMOVABLE) || type == UINT(DRIVE_CDROM) else { continue }
             guard let label = volumeLabel(root) else { continue }   // no medium in the drive
+            // A music CD shows its songs as Track01.cda stubs; it is offered as a music CD instead (MusicCDs).
+            if type == UINT(DRIVE_CDROM) && MusicCDs.isCDAudioRoot(URL(fileURLWithPath: root, isDirectory: true)) { continue }
             drives.append(Drive(name: SourceReading.name(volumeName: label, folderName: letter + ":"), path: root))
         }
         #else
