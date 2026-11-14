@@ -378,6 +378,23 @@ jobs:
           if (Test-Path $again) { Get-Content $again } else { "no log was written" }
           if ($r.Code -ne 0) { Write-Error "after the runtime was put back the check ended with code $(Format-Code $r.Code)"; exit 1 }
           if (-not ((Get-Content $again | Out-String) -match "storage .*Deckie Desk")) { Write-Error "the engine did not say where it keeps its crates"; exit 1 }
+      # What the READ ME tells a DJ about what Desk leaves on the PC, held to: its crates under the account's local
+      # app data, and the web view's own storage under the roaming app data. Nothing else, nowhere else it names.
+      - name: "Try Desk: what it left on this PC is where the READ ME says"
+        shell: pwsh
+        run: |
+          $crates = Join-Path $env:LOCALAPPDATA "Deckie Desk"
+          $view = Join-Path $env:APPDATA "deckie-desk.exe"
+          foreach ($f in $crates, $view) {
+            if (-not (Test-Path $f -PathType Container)) { Write-Error "not there: $f"; exit 1 }
+            $files = Get-ChildItem $f -Recurse -File -ErrorAction SilentlyContinue
+            "$f : $($files.Count) files, $(($files | Measure-Object Length -Sum).Sum) bytes"
+          }
+          $os = (Get-CimInstance Win32_OperatingSystem)
+          $webview = (Get-ItemProperty -LiteralPath "HKLM:\SOFTWARE\WOW6432Node\Microsoft\EdgeUpdate\Clients\{F3017226-FE2A-4295-8BDF-00C3A9A7E4C5}").pv
+          "This runner: $($os.Caption), version $($os.Version); WebView2 Runtime $webview"
+          "## Where this was tried" >> $env:GITHUB_STEP_SUMMARY
+          "$($os.Caption), version $($os.Version); WebView2 Runtime $webview. Not a DJ's Windows 10 or 11, and no person saw the window." >> $env:GITHUB_STEP_SUMMARY
       # Time per song on this runner, on songs of a real length: four synthesised four-minute songs (two WAV, two
       # FLAC), read with the program's own default for songs at once. The log's numbers go into the summary.
       - name: "Measure: four four-minute songs"
