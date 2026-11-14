@@ -16,6 +16,9 @@ enum Look {
         static let guess = Color.orange
         /// A song's notes when it needs a name.
         static let needsName = Color.orange
+        /// new (D36): the empty square of a song with no cover (or whose cover is still being read) in the names
+        /// panel, as the pages' --cover-empty. A placeholder until the design pass.
+        static let coverEmpty = Color.primary.opacity(0.07)
     }
 
     /// Type: each the font of one kind of text.
@@ -150,6 +153,11 @@ enum Look {
         static let colArtistMin: CGFloat = 100, colArtistIdeal: CGFloat = 160
         static let colTempo: CGFloat = 60
         static let colKey: CGFloat = 60
+        /// new (D36): the Key column's ideal width, so "Home note A" fits where a code is short. A placeholder.
+        static let colKeyIdeal: CGFloat = 96
+        /// new (D36): a song's cover in the names panel, as the pages' --cover-size (a crate file's covers are at most
+        /// 128 pixels, so this is sharp). A placeholder until the design pass.
+        static let cover: CGFloat = 80
         static let colKeyFromMin: CGFloat = 60, colKeyFromIdeal: CGFloat = 90
         static let colBars: CGFloat = 50
         static let colLength: CGFloat = 60
@@ -173,6 +181,8 @@ enum Look {
         static let discAsk: CGFloat = 8
         static let splitOffer: CGFloat = 6
         static let toolPaste: CGFloat = 4
+        /// new (D36): a song's cover's corners, as the pages' --r-cover. A placeholder until the design pass.
+        static let cover: CGFloat = 10
     }
 }
 

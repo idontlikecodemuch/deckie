@@ -68,6 +68,12 @@ enum Look {
         static let portraitSides: CGFloat = 24, portraitTop: CGFloat = 4
         // the playing panel
         static let playingGap: CGFloat = 22
+        /// new (D36): the song's cover beside its names, small and quiet; nothing when it has none. Placeholders
+        /// until the design pass (a crate file's covers are at most 128 pixels a side).
+        static let coverSize: CGFloat = 64
+        static let coverRadius: CGFloat = 8
+        static let coverGap: CGFloat = 14
+        static let coverOpacity = 0.9
         static let playingTitleGap: CGFloat = 4
         static let placeFont = Font.system(size: 18, weight: .semibold, design: .rounded)
         static let alsoFont = Font.system(size: 14, weight: .medium, design: .rounded)
@@ -155,6 +161,12 @@ enum Look {
         static let bpmSimple: CGFloat = 18, bpm: CGFloat = 15
         static let smallSimple: CGFloat = 16, small: CGFloat = 13
         static let textWidthSimple: CGFloat = 275, textWidth: CGFloat = 235
+        /// new (D36): a pick's cover, inside the text column (which keeps its width, so the join wave never moves);
+        /// nothing when the song has none. Placeholders until the design pass.
+        static let coverSimple: CGFloat = 44, cover: CGFloat = 34
+        static let coverRadius: CGFloat = 6
+        static let coverGap: CGFloat = 10
+        static let coverOpacity = 0.85
         static let waveHeightSimple: CGFloat = 96, waveHeight: CGFloat = 68
         static let cardHeightSimple: CGFloat = 152, cardHeight: CGFloat = 106
         static let sidesSimple: CGFloat = 20, sides: CGFloat = 16
@@ -352,6 +364,8 @@ enum Look {
         static let rowSpacer: CGFloat = 8
         static let rowKeyFont = Font.system(size: 15, weight: .semibold, design: .monospaced)
         static let rowKeyWidth: CGFloat = 40
+        /// new (D36): a row's key when it is words ("Home note A", "not sure"). A placeholder until the design pass.
+        static let rowKeyWordsFont = Font.system(size: 13, weight: .medium)
         static let rowBpmFont = Font.system(size: 18, weight: .bold, design: .monospaced)
         static let rowBpmWidth: CGFloat = 42
         static let rowTopBottom: CGFloat = 7, rowSides: CGFloat = 10

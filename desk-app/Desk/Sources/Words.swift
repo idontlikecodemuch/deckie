@@ -92,6 +92,9 @@ enum Words {
         w("keysLine", ["counts": join("join.keysCounts", counts.map { w("keysCount", ["n": "\($0.n)", "from": keyFrom($0.origin)]) })])
     }
     static func keysNone(_ count: Int) -> String { n("keysNone", count) }
+    /// new (D36): of the songs with no key, those Deckie read and is not sure of; and the songs with a home note.
+    static func keysNotSure(_ count: Int) -> String { n("keysNotSure", count) }
+    static func keysHomeNote(_ count: Int) -> String { n("keysHomeNote", count) }
     static func keysDisagree(_ count: Int) -> String { n("keysDisagree", count) }
     static func needName(_ count: Int) -> String { n("needName", count) }
     static let everySongHasAName = w("everySongHasAName")
@@ -172,6 +175,14 @@ enum Words {
     static let keyNotSure = w("keyNotSure")
     static let rowNameFrom = w("rowNameFrom")
     static let keyNotRead = w("keyNotRead")
+    /// new (D36): the home note where a key shows ("Home note A"), what it means, and a song Deckie read and is not
+    /// sure of, as distinct from one whose key was not read.
+    static func homeNote(_ note: String) -> String { w("homeNote", ["note": note]) }
+    static func homeNoteHelp(minor: String, major: String) -> String { w("homeNoteHelp", ["minor": minor, "major": major]) }
+    static let keyDeckieNotSure = w("keyDeckieNotSure")
+    /// new (D36): a song's cover in the names panel, read out: the picture, and the empty square of a song without one.
+    static let cover = w("cover")
+    static let noCover = w("noCover")
     static func keySays(_ origin: String, _ camelot: String) -> String {
         w("keySays", ["program": programName(origin), "camelot": camelot])
     }

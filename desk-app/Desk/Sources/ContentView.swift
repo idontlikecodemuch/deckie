@@ -372,6 +372,10 @@ enum LocalLines {
             .map { (origin: $0.key, n: $0.value) }
         if !counts.isEmpty { out.append(Words.keysLine(counts)) }
         if s.report.keysNotRead > 0 { out.append(Words.keysNone(s.report.keysNotRead)) }
+        // Deckie's own reader (D33, D36), as the pages say it: of the songs with no key, those it is not sure of; and
+        // the songs with a home note, which are not counted in the line above.
+        if s.report.keysNotSure > 0 { out.append(Words.keysNotSure(s.report.keysNotSure)) }
+        if s.report.keysHomeNote > 0 { out.append(Words.keysHomeNote(s.report.keysHomeNote)) }
         if s.report.keysDisagree > 0 { out.append(Words.keysDisagree(s.report.keysDisagree)) }
         return out
     }
