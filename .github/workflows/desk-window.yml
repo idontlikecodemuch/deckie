@@ -52,7 +52,7 @@ jobs:
         run: swift build --build-tests
       - name: The engine's tests (a child program, generated songs)
         working-directory: core
-        run: swift test --skip-build --filter "DeskWordsTests|DeskSessionTests|EngineProcessTests|EngineNamingTests|DeskNamingTests|DeskSessionNamingTests|MusicCDRunTests|DeckieDiscTests"
+        run: swift test --skip-build --filter "DeskWordsTests|DeskSessionTests|EngineProcessTests|EngineNamingTests|DeskNamingTests|DeskSessionNamingTests|MusicCDRunTests|DeckieDiscTests|EngineStartsTests"
       # Desk's storage in a scratch folder, and no DJ libraries looked for in the runner's home folder.
       - name: The whole window, the engine and the pages together
         working-directory: desk-shell
@@ -111,7 +111,16 @@ jobs:
         run: swift build --build-tests
       - name: The engine's tests (a child program, generated songs)
         working-directory: core
-        run: swift test --skip-build --filter "DeskWordsTests|DeskSessionTests|EngineProcessTests|EngineNamingTests|DeskNamingTests|DeskSessionNamingTests|MusicCDRunTests|DeckieDiscTests"
+        run: swift test --skip-build --filter "DeskWordsTests|DeskSessionTests|EngineProcessTests|EngineNamingTests|DeskNamingTests|DeskSessionNamingTests|MusicCDRunTests|DeckieDiscTests|EngineStartsTests"
+      # Report only: the same check with the pipes left as Foundation makes them, which shows the fault the tests'
+      # engine helper guards against (Foundation in Swift 6.4.1 on Windows; EngineProcessTests.swift says how).
+      - name: "Engines started together with their pipes left as Foundation makes them (report only)"
+        working-directory: core
+        if: ${{ !cancelled() }}
+        continue-on-error: true
+        env:
+          DECKIE_TEST_UNGUARDED_STARTS: 1
+        run: swift test --skip-build --filter "EngineStartsTests"
       - name: The whole window, the engine and the pages together
         working-directory: desk-shell
         shell: pwsh

@@ -1,4 +1,7 @@
 import Foundation
+#if os(Windows)
+import WinSDK
+#endif
 
 /// The engine program (`deckie-desk-engine`) as a child of the window: requests written to its standard input, one
 /// line each; each line it writes handed to `onLine` (on a thread of its own); its standard error passed through to
@@ -10,6 +13,14 @@ final class EngineProcess: @unchecked Sendable {
 
     init(executable: URL, environment: [String: String] = [:], onLine: @escaping @Sendable (String) -> Void,
          onExit: @escaping @Sendable (Int32) -> Void) throws {
+        // On Windows, Foundation in Swift 6.4.1 makes a pipe's handles ones every child program inherits. The ends
+        // the window keeps are marked as its own, so that nothing started later (the web view's own programs) holds
+        // the engine's input open after the window has closed it: the engine leaves when its input closes.
+        #if os(Windows)
+        for handle in [input.fileHandleForWriting, output.fileHandleForReading, errors.fileHandleForReading] {
+            SetHandleInformation(handle._handle, DWORD(HANDLE_FLAG_INHERIT), 0)
+        }
+        #endif
         process.executableURL = executable
         var env = ProcessInfo.processInfo.environment
         for (k, v) in environment { env[k] = v }

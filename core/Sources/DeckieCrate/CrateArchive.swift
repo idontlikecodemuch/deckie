@@ -23,10 +23,11 @@ public enum CrateArchive {
     /// single-file form.
     public static func isArchive(_ url: URL) -> Bool {
         var isFolder: ObjCBool = false
+        // Read through a mapping, not a FileHandle: on Windows a FileHandle (Foundation, Swift 6.4.1) is one a child
+        // program started at that moment inherits, and a child holding the crate file open stops it being replaced.
         guard FileManager.default.fileExists(atPath: url.path, isDirectory: &isFolder), !isFolder.boolValue,
-              let handle = try? FileHandle(forReadingFrom: url) else { return false }
-        defer { try? handle.close() }
-        let head = [UInt8]((try? handle.read(upToCount: 4)) ?? Data())
+              let data = try? Data(contentsOf: url, options: .mappedIfSafe) else { return false }
+        let head = [UInt8](data.prefix(4))
         return head == [0x50, 0x4B, 0x03, 0x04] || head == [0x50, 0x4B, 0x05, 0x06]
     }
 
@@ -113,7 +114,13 @@ public enum CrateArchive {
         guard files[CrateFormat.manifestFile] != nil else {
             throw CrateError([CrateProblem(file: CrateFormat.manifestFile, path: "", message: "is missing")])
         }
-        try encode(files).write(to: file, options: .atomic)
+        // Whole or not at all, and again for a few seconds if another program holds the name: on Windows a crate
+        // file just deleted or just read (an export over an earlier one) can still be held for a moment, and the
+        // write that replaces it is then refused (seen on the Windows runner, Nov 14, 2026, error 32).
+        let data = try encode(files)
+        try DeckieFiles.retrying("write", file.path, pauses: DeckieFiles.removePauses) {
+            try data.write(to: file, options: .atomic)
+        }
     }
 
     // MARK: Reading

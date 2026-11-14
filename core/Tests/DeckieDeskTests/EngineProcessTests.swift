@@ -5,12 +5,23 @@ import DeckieCrate
 import DeckieDisc
 import DeckieTestSupport
 @testable import DeckieDesk
+#if os(Windows)
+import WinSDK
+#endif
 
 /// `deckie-desk-engine` run as a child program, as Desk's window runs it, on every system the core builds on: one JSON
 /// message a line in and out (docs/architecture/desk-protocol.md), with a scratch storage folder and generated songs.
 final class EngineProcess: @unchecked Sendable {
+    static let starting = NSLock()
+
+    /// Marks a handle as one no child program is given (Windows; elsewhere Foundation already keeps them apart).
+    static func keepToThisProgram(_ handle: FileHandle) {
+        #if os(Windows)
+        SetHandleInformation(handle._handle, DWORD(HANDLE_FLAG_INHERIT), 0)
+        #endif
+    }
     let process = Process()
-    private let input = Pipe(), output = Pipe(), errors = Pipe()
+    private let input: Pipe, output: Pipe, errors: Pipe
     private let lock = NSLock()
     private var lines: [[String: Any]] = []
     private var buffer = Data()
@@ -36,6 +47,23 @@ final class EngineProcess: @unchecked Sendable {
     }
 
     init(home: URL, environment extra: [String: String] = [:]) throws {
+        // On Windows, Foundation in Swift 6.4.1 makes every pipe's handles ones a child inherits, and a child is
+        // given every such handle the program holds at that moment. So an engine started while another was alive
+        // held a copy of the writing end of the other's input, and closing that input here did not end it for the
+        // other engine: it went on waiting for a line until the later engine left too (seen on the Windows runner
+        // as "did not exit in 20 seconds", in whichever test ran beside a long one). The ends this program keeps
+        // are therefore marked as its own before anything is started, and pipes are made and engines started one
+        // at a time, so no start falls between another's pipes being made and marked. Foundation's later versions
+        // do both themselves. (`DECKIE_TEST_UNGUARDED_STARTS` leaves both out, for the check that shows the fault.)
+        let guarded = ProcessInfo.processInfo.environment["DECKIE_TEST_UNGUARDED_STARTS"] == nil
+        if guarded { Self.starting.lock() }
+        defer { if guarded { Self.starting.unlock() } }
+        input = Pipe(); output = Pipe(); errors = Pipe()
+        if guarded {
+            Self.keepToThisProgram(input.fileHandleForWriting)
+            Self.keepToThisProgram(output.fileHandleForReading)
+            Self.keepToThisProgram(errors.fileHandleForReading)
+        }
         guard let exe = Self.executable else { throw DeskError("deckie-desk-engine not built") }
         process.executableURL = exe
         var env = ProcessInfo.processInfo.environment
@@ -557,5 +585,38 @@ final class EngineProcess: @unchecked Sendable {
         #expect((gone["error"] as? [String: Any])?["detail"] as? String == "Friday night")
         _ = try e.request("quit")
         #expect(e.exitCode() == 0)
+    }
+}
+
+/// Engines started side by side each leave when their own input closes, and are seen to (the fault described in
+/// `EngineProcess.init`). With `DECKIE_TEST_UNGUARDED_STARTS` set the pipes are left as Foundation makes them, which on Windows
+/// with Swift 6.4.1 shows the fault; the workflow runs it that way once, report only.
+@Suite struct EngineStartsTests {
+    @Test func enginesStartedTogetherAreEachSeenToLeave() throws {
+        let root = try scratch("engine-starts")
+        let lock = NSLock()
+        nonisolated(unsafe) var late = 0, started = 0
+        let group = DispatchGroup()
+        for worker in 0..<6 {
+            group.enter()
+            Thread.detachNewThread {
+                defer { group.leave() }
+                for round in 0..<8 {
+                    let home = DeskHome(root: root.appendingPathComponent("home-\(worker)-\(round)"))
+                    guard (try? home.prepare()) != nil, let e = try? EngineProcess(home: home.root) else { continue }
+                    // Its first message says it is up and reading (on a busy runner that alone can take seconds).
+                    guard e.wait(seconds: 60, { $0["event"] as? String == "hello" }) != nil else { e.process.terminate(); continue }
+                    lock.lock(); started += 1; lock.unlock()
+                    // Odd rounds stay a while, so another worker's engine is started while this one is alive.
+                    if round % 2 == 1 { Thread.sleep(forTimeInterval: 0.4) }
+                    e.close()
+                    if e.exitCode(seconds: 20) != 0 { lock.lock(); late += 1; lock.unlock() }
+                }
+            }
+        }
+        group.wait()
+        print("EngineStartsTests: \(started) engines started, \(late) not seen to leave within 20 seconds")
+        #expect(started == 48)
+        #expect(late == 0)
     }
 }
