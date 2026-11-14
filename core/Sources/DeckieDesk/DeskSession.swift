@@ -23,6 +23,12 @@ public final class DeskSession {
     public private(set) var book = NameBook()
     /// A run of the crate showing that stopped before it finished.
     public private(set) var pending: RunRequest?
+    /// On the first screen: the name the new crate will have when music is added ("My crate", numbered if taken;
+    /// research AE, finding 2). The DJ can change it before adding anything.
+    public private(set) var newCrateName: String = ""
+    /// A name the DJ gave the crate while a run was reading it: shown at once, applied (one step of undo) when the
+    /// run ends, so nothing writes the crate's files while the run does.
+    public private(set) var nameDuringRun: String?
 
     /// One step of undo: what it puts back, and its name (a word's name in `DeskWords`, as "undoNameFix").
     struct Snapshot {
@@ -42,6 +48,7 @@ public final class DeskSession {
     public init(home: DeskHome) {
         self.home = home
         DiscReading.clearLeftovers(home)
+        newCrateName = DeskAddMusic.newCrateName(shelf: shelf)
         if let first = shelf.list().first { show(first.id) }
     }
 
@@ -65,19 +72,41 @@ public final class DeskSession {
         return true
     }
 
-    /// The first screen: the crate is made, named after what is read, when music is added.
+    /// The first screen: the crate is made, with the name on that screen, when music is added.
     public func newCrate() {
+        newCrateName = DeskAddMusic.newCrateName(shelf: shelf)
         current = nil; crate = nil; pending = nil
         corrections = NameCorrections(); placePaths = PlacePaths(); book = NameBook()
         undoSteps = []; redoSteps = []
     }
 
+    /// Renames a crate. The crate showing is renamed as one step of undo (its crate file carries the name too);
+    /// another is renamed as it is kept. While a run reads the crate, use `renameDuringRun`.
     public func rename(_ id: String, to name: String) throws {
-        let i = try shelf.rename(id, to: name)
-        if current?.id == i.id {
-            current = i
-            crate?.manifest.name = i.name
+        let n = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard current?.id == id, let c = current else { try shelf.rename(id, to: name); return }
+        guard !n.isEmpty, n != c.name else { return }
+        let unique = shelf.unusedName(n, except: id)
+        try change("undoRename") {
+            current?.name = unique
+            crate?.manifest.name = unique
         }
+    }
+
+    /// The name of the crate showing as the window shows it: the one given during a run, until the run ends.
+    public var shownName: String? { nameDuringRun ?? current?.name }
+
+    /// The DJ renamed the crate while a run reads it: held until the run ends (`runEnded`).
+    public func renameDuringRun(_ name: String) {
+        let n = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !n.isEmpty else { return }
+        nameDuringRun = n == current?.name ? nil : n
+    }
+
+    /// The first screen's name for the new crate; an empty name keeps the one there was.
+    public func setNewCrateName(_ name: String) {
+        let n = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        if !n.isEmpty { newCrateName = n }
     }
 
     /// Deletes a crate for good (its folder in the desk's storage; the music and any crate file sent are not
@@ -105,10 +134,11 @@ public final class DeskSession {
         return RunRequest(folder: url, source: current?.sourceName(base, root: url) ?? base)
     }
 
-    /// The crate a run goes into: the one showing, else a new one named after what is read (made now).
+    /// The crate a run goes into: the one showing, else a new one with the first screen's name (made now; never the
+    /// name of what is read, research AE finding 2).
     public func crateForRun(_ request: RunRequest) throws -> CrateInfo {
         if let c = current { return c }
-        let info = try shelf.make(name: request.name)
+        let info = try shelf.make(name: newCrateName.isEmpty ? DeskAddMusic.defaultCrateName : newCrateName)
         current = info
         return info
     }
@@ -116,7 +146,10 @@ public final class DeskSession {
     /// After a run of crate `id` (finished or stopped): shows it again as saved, then gives a music CD the name the DJ
     /// typed for it while it was read (one step of undo).
     public func runEnded(_ id: String) {
+        let renamed = nameDuringRun
+        nameDuringRun = nil
         _ = show(id)
+        if let renamed, current?.id == id { try? rename(id, to: renamed) }
         if let (source, name) = discName, current?.id == id {
             discName = nil
             try? renameSource(source, to: name)

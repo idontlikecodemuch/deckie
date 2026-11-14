@@ -9,7 +9,9 @@
 //                                       of each into <folder> (Tour.swift); `--naming` walks the naming screens
 //                                       instead (a music CD from DECKIE_DESK_MUSIC_CD, `--playlist <file.m3u>`);
 //                                       `--run-screen` the run screen (D37) at a few song counts and finished, and
-//                                       with `--record`, a picture every half second while it runs
+//                                       with `--record`, a picture every half second while it runs; `--add-music`
+//                                       the ways in, a big drive, the count and question, Stop and Carry on
+//                                       (research AE; Tour.addMusicSteps says what it needs)
 //   deckie-desk --check --music <folder> --export-to <folder>
 //                                       the check carried on as a DJ would: Add music with that folder (the page's
 //                                       own button; the folder chooser answers with it), the run to its end, Export

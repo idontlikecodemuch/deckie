@@ -206,7 +206,8 @@ drive gave none; the disc may have some"), `songs`, `named` (songs named from th
 ## Requests to the engine
 
 Every request gets a reply. While a run goes, only `state`, `drives.list`, `crate.songs`, `source.removeCount`,
-`run.nameDisc`, `name.split`, `song.audio` and `song.cover` are answered; the rest are refused with `busy`.
+`run.nameDisc`, `name.split`, `song.audio`, `song.cover`, `run.stop`, `crate.rename` (the crate being read) and
+`add.countStop` are answered; the rest are refused with `busy`.
 
 | `type` | Fields | Reply carries | Then |
 |---|---|---|---|
@@ -366,11 +367,46 @@ failure codes (words `sentAnswer.<code>`). Kept in Desk's storage (`lookups.json
 
 What was applied has the origin `lookup:musicbrainz` (`factFrom.lookup:musicbrainz`), in `names` as in the crate file.
 
+### Adding music: the three ways, the crate's name, a big drive, counting first, Stop (research AE; added Nov 14, 2026; no new protocol number: only fields, events and requests were added)
+
+- `hello` carries `addWays`: `[{"id": "drive", "word": "addDrive", "help": "addDriveHelp", "icon": "drive"}, {"id":
+  "cd", …}, {"id": "folder", …}]`, DeckieDesk's `DeskAddMusic.ways`, the list the Mac's window uses too, so the three
+  choices, their words (by name) and their icons (`icon-<icon>` in index.html) are the same everywhere music is
+  added. An engine from before sends none; a page then shows no ways.
+- `drives.list`'s drives also carry `kind` (`drive`, or `cd` for a data CD or DVD), `bytes` (the drive's size, when
+  the system says), `size` (the same in words, "16 GB") and `big` (bigger than `DeskAddMusic.bigDriveBytes`, 256 GB;
+  `DECKIE_DESK_BIG_DRIVE_BYTES` overrides it for tests). Size is the one signal, the same on every system (research
+  AE); on Windows a fixed drive other than the one Windows is on is now listed too. `DECKIE_DESK_DRIVES`' stand-in
+  folders take their volume's size, and one whose name ends in " (CD)" stands in for a data CD.
+- `state` also carries `newName`, the name the new crate will have on the first screen ("My crate", numbered when
+  taken; never the first source's name), and `stopping` (Stop was asked; the run ends once the songs being read are
+  done). While a run goes, `current.name` is the name the DJ gave during it, applied when it ends.
+
+| `type` | Fields | Reply carries | Then |
+|---|---|---|---|
+| `crate.newName` | `name` | `name` | `state` (`newName`) |
+| `crate.rename` | as before; now one step of undo (`undoRename`) for the crate showing. Answered while a run goes, for the crate being read: the name shows at once and is applied when the run ends | `name` | `state` |
+| `add.count` | `path`; `name` (a drive's name, optional) | `path` | `add.counting`…, `add.counted` |
+| `add.countStop` | | | `add.counted` with `stopped` |
+| `run.add` | as before, and `crateName`: on the first screen, the new crate's name | as before | as before |
+| `run.stop` | | | the run starts no further song, finishes the ones being read, saves; `run.finished` with `report.stopped` |
+
+`add.count` counts the audio files below `path` the way a run finds them (nothing is decoded):
+`{"event": "add.counting", "path", "songs"}` at most five times a second as the count rises, then
+`{"event": "add.counted", "path", "name", "songs", "bytes", "seconds", "about", "ask", "stopped"}`: `seconds` is about
+how long reading them takes on this computer (from the runs timed here, else 6 songs a minute), `about` the same in
+words ("2 hours"), `ask` true above `DeskAddMusic.askAboveSongs` (1,000; `DECKIE_DESK_ASK_ABOVE_SONGS` overrides it).
+The page then asks before `run.add` ("Read 4,812 songs from Big Drive?", Start or Cancel), or adds at once.
+
+A stopped run's report has `stopped: true`; the songs read are in the crate, nothing it did not reach is in the
+import log, and `pending` stays, so `run.carryOn` reads the rest (the songs read are not read again). `run.stop`,
+`crate.rename` and `add.countStop` are answered while a run goes.
+
 ## Requests the shell answers
 
 | `type` | Fields | Reply carries |
 |---|---|---|
-| `shell.chooseFolder` | `purpose`: `addMusic` or `export` | `path`, or `cancelled: true` |
+| `shell.chooseFolder` | `purpose`: `addMusic` or `export`; `start` (optional, added Nov 14: the folder it opens at, a big drive's top) | `path`, or `cancelled: true` |
 | `shell.chooseFile` | `purpose`: `import`, `library` or `playlist` | `path`, or `cancelled: true` |
 | `shell.openFolder` | `path` | |
 

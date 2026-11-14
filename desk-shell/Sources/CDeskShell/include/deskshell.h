@@ -54,6 +54,10 @@ void deskshell_destroy(deskshell_t s);
 /// shell.*, from the pages; GTK draws them, Windows keeps its own). Not on the Mac: the Swift shell uses NSOpenPanel.
 char *deskshell_choose_folder(deskshell_t s, const char *title, const char *accept, const char *cancel);
 
+/// As deskshell_choose_folder, opening at the folder `start` (a big drive's top, so the DJ chooses a folder inside it;
+/// research AE). NULL or "" starts where the system likes.
+char *deskshell_choose_folder_in(deskshell_t s, const char *title, const char *accept, const char *cancel, const char *start);
+
 /// The system's own file chooser, for one file. As deskshell_choose_folder.
 char *deskshell_choose_file(deskshell_t s, const char *title, const char *accept, const char *cancel);
 

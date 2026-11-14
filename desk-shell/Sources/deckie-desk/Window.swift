@@ -77,14 +77,16 @@ final class Window: @unchecked Sendable {
     func close() { deskshell_terminate(handle) }
 
     /// The system's folder chooser; the path, or nil when the DJ cancelled.
-    func chooseFolder(message: String, accept: String, cancel: String) -> String? {
+    /// `start`: the folder it opens at (a big drive's top, research AE), or nil.
+    func chooseFolder(message: String, accept: String, cancel: String, start: String? = nil) -> String? {
         #if os(macOS)
         let p = NSOpenPanel()
         p.canChooseDirectories = true; p.canChooseFiles = false; p.allowsMultipleSelection = false
         p.message = message
+        if let start { p.directoryURL = URL(fileURLWithPath: start, isDirectory: true) }
         return p.runModal() == .OK ? p.url?.path : nil
         #else
-        guard let c = deskshell_choose_folder(handle, message, accept, cancel) else { return nil }
+        guard let c = deskshell_choose_folder_in(handle, message, accept, cancel, start ?? "") else { return nil }
         defer { deskshell_free(c) }
         return String(cString: c)
         #endif

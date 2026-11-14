@@ -388,7 +388,7 @@ struct MusicCDRunTests {
         #expect(report.disc?.text == "none" && report.disc?.titled == false)
         s.runEnded(info.id)
         #expect(s.crate?.discPlan.map(\.name) == ["Friday night"])
-        #expect(s.current?.name == "Friday night")   // the crate made from the disc follows its name
+        #expect(s.current?.name == "My crate")   // a new crate has its own name, not the disc's (research AE)
         #expect(s.current?.discs["Friday night"] == request.discId)   // the disc's id follows the name too
         #expect(s.undoName == "undoRename")
         #expect(s.rows.allSatisfy { $0.nameReason == "noTitle" })
