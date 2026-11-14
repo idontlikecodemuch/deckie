@@ -130,10 +130,31 @@ struct Inspector: View {
                     }
                     field(Words.artist, t.ident.artist ?? "", id: id, fact: f.artist, field: "artist") { v in model.update(id) { $0.ident.artist = v.isEmpty ? nil : v } }
                     field(Words.version, t.ident.version ?? "", id: id, fact: f.version, field: "version") { v in model.update(id) { $0.ident.version = v.isEmpty ? nil : v } }
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(Words.t("release")).font(.caption).foregroundStyle(.secondary)
-                        Text(f.release.value ?? Words.none)
-                        Text(f.release.value == nil ? Words.t("factNotFound") : DeskWords.coded("factFrom", f.release.from ?? "")).font(.caption2).foregroundStyle(.secondary)
+                    // A song's facts (D34): release, year, label and genre as fields like the names, with where each
+                    // came from; the rest listed. Everything here goes to the iPad.
+                    ForEach(DeskNaming.factFields, id: \.self) { name in
+                        factField(name, f.fact(name), id: id)
+                    }
+                    if !f.others.isEmpty {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(Words.t("moreFacts")).font(.caption).foregroundStyle(.secondary)
+                            ForEach(f.others, id: \.name) { o in
+                                Text(DeskWords.coded("factName", o.name) + ": " + o.value).textSelection(.enabled)
+                                    .help(o.from.map { DeskWords.coded("factFrom", $0) } ?? "")
+                            }
+                        }
+                    }
+                    if !f.fileTags.isEmpty || !f.leftOut.isEmpty {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(Words.t("fileTagsHeading")).font(.caption).foregroundStyle(.secondary)
+                            ForEach(f.fileTags, id: \.name) { o in
+                                Text(o.name + ": " + o.value).font(.callout).foregroundStyle(.secondary).textSelection(.enabled)
+                            }
+                            if !f.leftOut.isEmpty {
+                                Text(Words.t("leftOutLine", ["what": f.leftOut.keys.sorted().map { DeskWords.coded("leftOut", $0) }.joined(separator: ", ")]))
+                                    .font(.caption2).foregroundStyle(.secondary)
+                            }
+                        }
                     }
                     HStack {
                         Button(model.listener.song == id ? Words.t("stopListening") : Words.t("listen")) {
@@ -203,6 +224,18 @@ struct Inspector: View {
             CommitField(label: label, value: value, commit: set, guess: fact?.guess ?? false,
                         same: { if fact?.guess == true { model.check([id], field: name) } }).id(id + label)
             if let fact { Text(Words.fromLine(fact)).font(.caption2).foregroundStyle(fact.guess ? .orange : .secondary) }
+        }
+    }
+
+    /// One of a song's facts (D34), edited like a name: Return or leaving the field keeps it as the DJ's; empty clears it.
+    @ViewBuilder func factField(_ name: String, _ fact: DeskNaming.Fact, id: String) -> some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text(Words.t(name)).font(.caption).foregroundStyle(.secondary)
+            CommitField(label: Words.t(name), value: fact.value ?? "", commit: { v in
+                if v != (fact.value ?? "") { model.setFacts(id, [name: v]) }
+            }, guess: false, same: {}).id(id + name)
+            Text(fact.value == nil ? Words.t("factNotFound") : DeskWords.coded("factFrom", fact.from ?? ""))
+                .font(.caption2).foregroundStyle(.secondary)
         }
     }
 

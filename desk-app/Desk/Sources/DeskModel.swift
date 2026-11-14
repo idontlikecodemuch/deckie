@@ -351,6 +351,16 @@ final class DeskModel: ObservableObject {
         }
     }
 
+    /// A song's facts as the DJ gives them (D34): kept beside the name fixes, so reading the song again keeps them; the
+    /// name stays where it came from.
+    func setFacts(_ id: String, _ given: [String: String]) {
+        guard let i = crate?.tracks.firstIndex(where: { $0.id == id }) else { return }
+        change(Words.undoNameFix) {
+            var t = crate!.tracks[i]
+            if DeskNaming.fixFacts(&t, given, corrections: &corrections) { crate!.tracks[i] = t }
+        }
+    }
+
     /// A change to the whole crate (the source and folder corrections in DeckieCrate).
     func updateCrate(_ name: String, _ edit: (inout Crate) -> Void) {
         guard crate != nil else { return }

@@ -201,6 +201,43 @@ extension CrateTrack {
             if let n = q.track, n < 1 { add("\(path).track", "\(n) must be 1 or more") }
             if !placesSeen.insert(q).inserted { add(path, "repeats a place the entry already has") }
         }
+        // Facts (D34): well-formed names and origins, 1 to 16 values each, every value plain text within the bounds.
+        func values(_ path: String, _ vs: [String]) {
+            if vs.isEmpty { add(path, "is empty; a fact or tag with no value is left out") }
+            if vs.count > SongFacts.maxValues { add(path, "has \(vs.count) values, more than \(SongFacts.maxValues)") }
+            for (k, v) in vs.enumerated() {
+                if SongFacts.clean(v) != v { add("\(path)[\(k)]", "must be plain text, trimmed and not empty") }
+                if v.utf8.count > SongFacts.maxValueBytes {
+                    add("\(path)[\(k)]", "is \(v.utf8.count) bytes, more than \(SongFacts.maxValueBytes)")
+                }
+            }
+        }
+        for name in ident.facts.keys.sorted(by: byteOrder) {
+            let f = ident.facts[name]!
+            let path = "ident.facts.\(name)"
+            if !SongFacts.isName(name) { add(path, "\"\(name)\" must be lower-case letters, digits and _, starting with a letter") }
+            if !SongFacts.isOrigin(f.from) { add("\(path).from", "\"\(f.from)\" is not an origin") }
+            values("\(path).values", f.values)
+        }
+        let factBytes = SongFacts.bytes(ident.facts.mapValues(\.values))
+        if factBytes > SongFacts.maxFactBytes { add("ident.facts", "holds \(factBytes) bytes, more than \(SongFacts.maxFactBytes)") }
+        if let o = file.otherTags {
+            var total = 0
+            for name in o.tags.keys.sorted(by: byteOrder) {
+                let path = "file.other_tags.tags.\(name)"
+                if SongFacts.clean(name) != name || name.utf8.count > SongFacts.maxNameBytes {
+                    add(path, "the name must be plain text of 1 to \(SongFacts.maxNameBytes) bytes")
+                }
+                values(path, o.tags[name]!)
+                total += name.utf8.count + o.tags[name]!.reduce(0) { $0 + $1.utf8.count }
+            }
+            if total > SongFacts.maxOtherBytes {
+                add("file.other_tags.tags", "holds \(total) bytes, more than \(SongFacts.maxOtherBytes)")
+            }
+            for (k, f) in o.formats.enumerated() where SongFacts.clean(f) != f { add("file.other_tags.formats[\(k)]", "is empty") }
+            for (reason, n) in o.leftOut where n < 1 { add("file.other_tags.left_out.\(reason)", "\(n) must be 1 or more") }
+            if o.isEmpty { add("file.other_tags", "is empty; it is left out when there is nothing in it") }
+        }
         if !(1...3).contains(analysis.level) { add("analysis.level", "\(analysis.level) must be 1, 2 or 3") }
         if engine.fidelity < 0 { add("engine.fidelity", "\(engine.fidelity) must be 0 or more") }
         if let s = analysis.secs, s < 0 { add("analysis.secs", "\(s) must be 0 or more") }

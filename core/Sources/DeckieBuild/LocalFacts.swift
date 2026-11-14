@@ -47,10 +47,12 @@ public enum LocalFacts {
         public var namesFrom: [String: Int] = [:]
         /// Songs that still need a name: no usable title, or no artist.
         public var needName = 0
+        /// Songs with facts (D34) from each origin (`tag`, a DJ program, ...); nil in a report written before them.
+        public var factsFrom: [String: Int]?
         public init() {}
         enum CodingKeys: String, CodingKey {
             case keysFrom = "keys_from", keysNotRead = "keys_not_read", keysDisagree = "keys_disagree"
-            case namesFrom = "names_from", needName = "need_name"
+            case namesFrom = "names_from", needName = "need_name", factsFrom = "facts_from"
         }
     }
 
@@ -340,6 +342,9 @@ public struct LocalFactsSummary: Codable, Equatable, Sendable {
             + "; no key: \(r.keysNotRead); programs disagree: \(r.keysDisagree)\n"
         s += "names from: " + (r.namesFrom.isEmpty ? "tags only" : r.namesFrom.sorted { $0.key < $1.key }.map { "\($0.key) \($0.value)" }.joined(separator: ", "))
             + "; still need a name: \(r.needName)\n"
+        if let f = r.factsFrom {
+            s += "songs with facts from: " + (f.isEmpty ? "none" : f.sorted { $0.key < $1.key }.map { "\($0.key) \($0.value)" }.joined(separator: ", ")) + "\n"
+        }
         for lib in libraries { s += "  read \(lib.program.rawValue): \(lib.path) (\(lib.songs) songs)\n" }
         for f in failed { s += "  could not read \(f)\n" }
         if rekordboxLocked { s += "  rekordbox's own library is on this computer (encrypted, not read): export the collection as XML\n" }
@@ -377,7 +382,8 @@ extension LocalFacts {
             do { libs.append(try DJLibrary.read(f.program, at: f.url)) }
             catch { failed.append("\(f.program.rawValue): \(error)") }
         }
-        let report = apply(to: &crate, files: files, libraries: libs, own: ownReading(records: records))
+        var report = apply(to: &crate, files: files, libraries: libs, own: ownReading(records: records))
+        report.factsFrom = gatherFacts(&crate, files: files, libraries: libs)
         return LocalFactsSummary(report: report,
                                  libraries: libs.map { .init(program: $0.program, path: $0.file, songs: $0.entries.count) },
                                  failed: failed,

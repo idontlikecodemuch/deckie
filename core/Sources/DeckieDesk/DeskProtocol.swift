@@ -234,8 +234,19 @@ public final class DeskProtocol: @unchecked Sendable {
             try startRun(p, id)
         case "song.fix":
             try needCrate()
-            try s.fixName(try Self.string(obj, "song"), title: obj["title"] as? String, artist: obj["artist"] as? String,
-                          version: obj["version"] as? String, tags: obj["tags"] as? [String])
+            let song = try Self.string(obj, "song")
+            let names = obj["title"] != nil || obj["artist"] != nil || obj["version"] != nil || obj["tags"] != nil
+            if names {
+                try s.fixName(song, title: obj["title"] as? String, artist: obj["artist"] as? String,
+                              version: obj["version"] as? String, tags: obj["tags"] as? [String])
+            }
+            // A song's facts (D34): `facts` is an object of fact name to text, "" to clear one.
+            if let given = obj["facts"] {
+                guard let facts = given as? [String: String] else {
+                    throw RequestError(code: "bad_request", detail: "facts must be an object of names to text")
+                }
+                try s.fixFacts(song, facts)
+            }
             changed()
         case "source.rename":
             try needCrate()

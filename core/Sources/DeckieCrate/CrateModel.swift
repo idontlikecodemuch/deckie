@@ -185,6 +185,9 @@ public struct CrateTrack: Codable, Equatable, Sendable {
         /// runs past its own end, as on a damaged or badly spliced file), in order; nil when there were none. The file
         /// is faulty but playable, and the analysis was made on the audio with those frames silent.
         public var damagedFrames: [DamagedFrame]?
+        /// The rest of the file's text tags, by their own names (D34, `file.other_tags`); nil when there were none
+        /// beyond the facts, and then left out of the file, so a record without it keeps its bytes.
+        public var otherTags: OtherTags?
 
         /// One damaged frame: where its decoded audio starts, in seconds from the start of the decoded audio, and how
         /// long it is (one MP3 frame, 26.1 ms at 44.1 kHz).
@@ -202,7 +205,20 @@ public struct CrateTrack: Codable, Equatable, Sendable {
         }
         enum CodingKeys: String, CodingKey {
             case name, rel, bytes, sha256, sha1Head = "sha1_head", durationS = "duration_s", tagBpm = "tag_bpm"
-            case damagedFrames = "damaged_frames"
+            case damagedFrames = "damaged_frames", otherTags = "other_tags"
+        }
+        public func encode(to encoder: Encoder) throws {
+            var c = encoder.container(keyedBy: CodingKeys.self)
+            try c.encode(name, forKey: .name)
+            try c.encodeIfPresent(rel, forKey: .rel)
+            try c.encodeIfPresent(bytes, forKey: .bytes)
+            try c.encodeIfPresent(sha1Head, forKey: .sha1Head)
+            try c.encodeIfPresent(sha256, forKey: .sha256)
+            try c.encode(durationS, forKey: .durationS)
+            try c.encodeIfPresent(tagBpm, forKey: .tagBpm)
+            try c.encodeIfPresent(damagedFrames, forKey: .damagedFrames)
+            // Left out when nil (crate-format.md, "Addition with D34").
+            if let otherTags { try c.encode(otherTags, forKey: .otherTags) }
         }
     }
 
@@ -226,17 +242,20 @@ public struct CrateTrack: Codable, Equatable, Sendable {
         /// same three parts as the entry's own place (`disc`, `folder`, `track`). Empty for most entries, and then
         /// left out of the file, so a record without other places keeps its bytes.
         public var otherPlaces: [Place]
+        /// The song's facts beyond its title, artist and version (D34, `ident.facts`), by name (`SongFacts`), each
+        /// with where it came from. Empty for a record with none, and then left out of the file.
+        public var facts: [String: Fact]
         public init(title: String, artist: String? = nil, version: String? = nil, source: String? = nil,
                     mbid: String? = nil, disc: String? = nil, folder: String? = nil, track: Int? = nil,
                     cutKey: String? = nil, isLongest: Bool? = nil, era: String? = nil, kind: String? = nil,
-                    tags: [String] = [], otherPlaces: [Place] = []) {
+                    tags: [String] = [], otherPlaces: [Place] = [], facts: [String: Fact] = [:]) {
             self.title = title; self.artist = artist; self.version = version; self.source = source
             self.mbid = mbid; self.disc = disc; self.folder = folder; self.track = track; self.cutKey = cutKey
             self.isLongest = isLongest; self.era = era; self.kind = kind; self.tags = tags
-            self.otherPlaces = otherPlaces
+            self.otherPlaces = otherPlaces; self.facts = facts
         }
         enum CodingKeys: String, CodingKey {
-            case title, artist, version, source, mbid, disc, folder, track, era, kind, tags
+            case title, artist, version, source, mbid, disc, folder, track, era, kind, tags, facts
             case cutKey = "cut_key", isLongest = "is_longest", otherPlaces = "other_places"
         }
         public init(from decoder: Decoder) throws {
@@ -256,6 +275,8 @@ public struct CrateTrack: Codable, Equatable, Sendable {
             tags = try c.decode([String].self, forKey: .tags)
             // A crate file written before D27 has no other places.
             otherPlaces = try c.decodeIfPresent([Place].self, forKey: .otherPlaces) ?? []
+            // A crate file written before D34 has no facts.
+            facts = try c.decodeIfPresent([String: Fact].self, forKey: .facts) ?? [:]
         }
         public func encode(to encoder: Encoder) throws {
             var c = encoder.container(keyedBy: CodingKeys.self)
@@ -274,6 +295,8 @@ public struct CrateTrack: Codable, Equatable, Sendable {
             try c.encode(tags, forKey: .tags)
             // Left out when empty (crate-format.md, "Addition with D27"), as `vocal_structure` and `hooks` are.
             if !otherPlaces.isEmpty { try c.encode(otherPlaces, forKey: .otherPlaces) }
+            // Left out when empty (crate-format.md, "Addition with D34").
+            if !facts.isEmpty { try c.encode(facts, forKey: .facts) }
         }
 
         /// The entry's own place: its `disc`, `folder` and `track`.
