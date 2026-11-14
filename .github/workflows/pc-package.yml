@@ -278,12 +278,14 @@ jobs:
           New-Item -ItemType Directory -Force $out | Out-Null
           & $tool make $music --mp3 (Join-Path $env:RUNNER_TEMP "package-mp3\test_track.mp3")
           if ($LASTEXITCODE -ne 0) { exit 1 }
-          $env:DECKIE_DESK_HOME = Join-Path $work "desk"
+          # Nothing is set for where Desk keeps its crates: this run uses the place it uses on a DJ's PC.
+          $env:DECKIE_DESK_HOME = $null
           $env:DECKIE_DJ_HOME = Join-Path $work "dj"
           $log = Join-Path $work "run.log"
           $r = Start-FromZip -Program "Deckie Desk.exe" -Arguments "--check --check-log `"$log`" --music `"$music`" --export-to `"$out`"" -Seconds 1200
           if (Test-Path $log) { Get-Content $log } else { "no log was written" }
           if ($r.Code -ne 0) { Show-WhatWindowsSaw -Since $r.Since; Write-Error "Deckie Desk's run ended with code $(Format-Code $r.Code)"; exit 1 }
+          if (-not ((Get-Content $log | Out-String) -match "storage .*AppData.Local.Deckie Desk")) { Write-Error "Desk did not keep its crates under the account's local app data"; exit 1 }
           $crate = Join-Path $out "My Müsic.deckiecrate"
           if (-not (Test-Path $crate -PathType Leaf)) { Write-Error "the exported crate file is not one file at $crate"; exit 1 }
           "Exported:"; Get-ChildItem $out | Format-Table Name, Length
@@ -368,27 +370,25 @@ jobs:
           '```' >> $env:GITHUB_STEP_SUMMARY
           $said >> $env:GITHUB_STEP_SUMMARY
           '```' >> $env:GITHUB_STEP_SUMMARY
-          # And with the values back, the window opens again. This start is also the one with nothing set for it:
-          # Desk keeps its crates where it would on a DJ's PC, and the log says where that is.
+          # And with the values back, the window opens again.
           $env:DECKIE_DESK_NO_WEBVIEW2 = $null
-          $env:DECKIE_DESK_HOME = $null
-          $env:DECKIE_DJ_HOME = $null
           $again = Join-Path $work "after.log"
           $r = Start-FromZip -Program "Deckie Desk.exe" -Arguments "--check --check-log `"$again`"" -Seconds 180
           if (Test-Path $again) { Get-Content $again } else { "no log was written" }
           if ($r.Code -ne 0) { Write-Error "after the runtime was put back the check ended with code $(Format-Code $r.Code)"; exit 1 }
-          if (-not ((Get-Content $again | Out-String) -match "storage .*Deckie Desk")) { Write-Error "the engine did not say where it keeps its crates"; exit 1 }
-      # What the READ ME tells a DJ about what Desk leaves on the PC, held to: its crates under the account's local
-      # app data, and the web view's own storage under the roaming app data. Nothing else, nowhere else it names.
-      - name: "Try Desk: what it left on this PC is where the READ ME says"
+      # What Desk left on this PC, to hold the READ ME to: its crates under the account's local app data (the run
+      # above used that place), and whatever the web view keeps for itself.
+      - name: "Try Desk: what it left on this PC"
         shell: pwsh
         run: |
           $crates = Join-Path $env:LOCALAPPDATA "Deckie Desk"
-          $view = Join-Path $env:APPDATA "deckie-desk.exe"
-          foreach ($f in $crates, $view) {
-            if (-not (Test-Path $f -PathType Container)) { Write-Error "not there: $f"; exit 1 }
-            $files = Get-ChildItem $f -Recurse -File -ErrorAction SilentlyContinue
-            "$f : $($files.Count) files, $(($files | Measure-Object Length -Sum).Sum) bytes"
+          if (-not (Test-Path (Join-Path $crates "Crates") -PathType Container)) { Write-Error "Desk's crates are not in $crates"; exit 1 }
+          "Folders named after Deckie under this account's app data:"
+          foreach ($base in $env:LOCALAPPDATA, $env:APPDATA) {
+            Get-ChildItem $base -Directory -ErrorAction SilentlyContinue | Where-Object { $_.Name -match "deckie" } | ForEach-Object {
+              $files = @(Get-ChildItem $_.FullName -Recurse -File -ErrorAction SilentlyContinue)
+              "  $($_.FullName): $($files.Count) files, $(($files | Measure-Object Length -Sum).Sum) bytes"
+            }
           }
           $os = (Get-CimInstance Win32_OperatingSystem)
           $webview = (Get-ItemProperty -LiteralPath "HKLM:\SOFTWARE\WOW6432Node\Microsoft\EdgeUpdate\Clients\{F3017226-FE2A-4295-8BDF-00C3A9A7E4C5}").pv

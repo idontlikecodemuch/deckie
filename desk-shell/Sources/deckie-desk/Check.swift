@@ -95,13 +95,14 @@ enum Check {
                 // The page has loaded and listens. As soon as it has drawn a screen in the engine's words (they
                 // arrive in the engine's first message), it says what it shows.
                 say("page loaded")
+                // (The first screen, a run and its end have a heading; a crate's own screen has none.)
                 evalWhen("""
-                    (function () { var s = document.querySelector('main > section:not([hidden])'); var h = s && s.querySelector('h1');
-                      return h && h.textContent && document.getElementById('add-label').textContent; })()
+                    document.querySelector('main > section:not([hidden])') && document.getElementById('add-label').textContent
                     """, """
                     var shown = document.querySelector('main > section:not([hidden])');
+                    var h1 = shown.querySelector('h1');
                     deckieShell.send(JSON.stringify({ type: 'shell.drawn', screen: shown.id,
-                      heading: shown.querySelector('h1').textContent, button: document.getElementById('add-label').textContent,
+                      heading: h1 ? h1.textContent : '', button: document.getElementById('add-label').textContent,
                       engine: deckieShell.engine }));
                     desk.request('drives.list', {}, { quiet: true }).then(function (r) {
                       deckieShell.send(JSON.stringify({ type: 'shell.checked', drives: r.ok ? r.drives.length : -1 }));
