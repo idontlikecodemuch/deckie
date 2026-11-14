@@ -7,7 +7,7 @@ import WebKit
 /// Landscape: the sections side by side. Portrait: one at a time.
 struct CrateTabView: View {
     /// The tab's name. Provisional: the owner has been asked (D26); change it here.
-    static let title = "Crate"
+    static let title = Words.tabCrate
 
     @Environment(Recognizer.self) private var rec
     @Environment(SuggestState.self) private var sug
@@ -27,7 +27,7 @@ struct CrateTabView: View {
         let groups: [DiscFolder]
         /// A folder's heading: "Stick 3 / House /", or for a folder with no source, "House /".
         func heading(_ folder: String) -> String {
-            numbered ? (folder.isEmpty ? "\(name) /" : "\(name) / \(folder) /") : (folder.isEmpty ? "/" : "\(folder) /")
+            numbered ? (folder.isEmpty ? Words.sourceTop(name) : Words.sourceFolder(name, folder)) : (folder.isEmpty ? Words.folderTop : Words.folderOnly(folder))
         }
     }
 
@@ -36,7 +36,7 @@ struct CrateTabView: View {
         let lib = Library.shared
         var out = lib.data.discs.map { Shelf(id: "s:" + $0.disc, disc: $0.disc, name: $0.name, color: $0.color, numbered: true, groups: $0.folders) }
         let folders = lib.folders
-        if !folders.isEmpty { out.append(Shelf(id: "folders", name: "Folders", color: Theme.acc, numbered: false, groups: folders)) }
+        if !folders.isEmpty { out.append(Shelf(id: "folders", name: Words.foldersShelf, color: Theme.acc, numbered: false, groups: folders)) }
         return out
     }
 
@@ -46,39 +46,39 @@ struct CrateTabView: View {
             let landscape = geo.size.width > geo.size.height
             ZStack {
                 Theme.bg.ignoresSafeArea()
-                VStack(alignment: .leading, spacing: 8) {
-                    HStack(alignment: .lastTextBaseline, spacing: 14) {
-                        Text(Self.title).font(.system(size: 26, weight: .heavy)).foregroundStyle(Theme.tx)
-                        if let name = Library.shared.crate?.name { Text(name).font(.system(size: 17, weight: .semibold)).foregroundStyle(Theme.mut).lineLimit(1) }
-                        Text("tap a song to set it as playing").font(.system(size: 13)).foregroundStyle(Theme.dim)
+                VStack(alignment: .leading, spacing: Look.Crate.gap) {
+                    HStack(alignment: .lastTextBaseline, spacing: Look.Crate.headGap) {
+                        Text(Self.title).font(Look.Crate.titleFont).foregroundStyle(Theme.tx)
+                        if let name = Library.shared.crate?.name { Text(name).font(Look.Crate.crateNameFont).foregroundStyle(Theme.mut).lineLimit(1) }
+                        Text(Words.crateHelp).font(Look.Crate.helpFont).foregroundStyle(Theme.dim)
                         Spacer()
                         if !landscape && all.count > 1 {
-                            Picker("Show", selection: Binding(get: { shelf ?? all.first?.id }, set: { shelf = $0 })) {
+                            Picker(Words.show, selection: Binding(get: { shelf ?? all.first?.id }, set: { shelf = $0 })) {
                                 ForEach(all) { Text($0.name).tag(Optional($0.id)) }
                             }
-                                .pickerStyle(.segmented).frame(maxWidth: 320)
+                                .pickerStyle(.segmented).frame(maxWidth: Look.Crate.pickerWidth)
                         }
                         Button { details.toggle() } label: {
-                            Text(details ? "Compact" : "Details").font(.system(size: 15)).foregroundStyle(Theme.mut).frame(minHeight: 36)
+                            Text(details ? Words.compact : Words.details).font(Look.Crate.buttonFont).foregroundStyle(Theme.mut).frame(minHeight: Look.Crate.buttonMinHeight)
                         }
                         // Either form: a Mac's package or a PC's single file, from Files, iCloud Drive or a drive.
                         Button { sug.chooseCrateFile = true } label: {
-                            Label(Words.openCrateFile, systemImage: "folder").font(.system(size: 15)).foregroundStyle(Theme.mut).frame(minHeight: 36)
+                            Label(Words.openCrateFile, systemImage: "folder").font(Look.Crate.buttonFont).foregroundStyle(Theme.mut).frame(minHeight: Look.Crate.buttonMinHeight)
                         }
                     }
                     let pick = shelf ?? all.first?.id
                     let shown = landscape ? all : all.filter { $0.id == pick }
                     if all.isEmpty {
-                        Text("No songs yet.").font(.system(size: 15)).foregroundStyle(Theme.dim).padding(.top, 20)
+                        Text(Words.noSongsYet).font(Look.Crate.emptyFont).foregroundStyle(Theme.dim).padding(.top, Look.Crate.emptyTop)
                     } else if details {
-                        HStack(alignment: .top, spacing: 28) { ForEach(shown) { s in shelfList(s, showName: landscape) } }
+                        HStack(alignment: .top, spacing: Look.Crate.detailsGap) { ForEach(shown) { s in shelfList(s, showName: landscape) } }
                     } else {
-                        HStack(alignment: .top, spacing: 22) {
+                        HStack(alignment: .top, spacing: Look.Crate.denseGap) {
                             ForEach(shown) { s in denseShelf(s) }
                         }
                     }
                 }
-                .padding(.horizontal, 24).padding(.top, 6)
+                .padding(.horizontal, Look.Crate.sides).padding(.top, Look.Crate.top)
             }
         }
     }
@@ -113,14 +113,14 @@ struct CrateTabView: View {
             return out
         }
         let left = segments(flat.prefix(half)), right = segments(flat.dropFirst(half))
-        return VStack(alignment: .leading, spacing: 4) {
-            Text(s.name + "  ·  \(flat.count)").font(.system(size: 15, weight: .bold)).foregroundStyle(col)
+        return VStack(alignment: .leading, spacing: Look.Crate.denseHeadGap) {
+            Text(Words.shelfCount(s.name, flat.count)).font(Look.Crate.denseNameFont).foregroundStyle(col)
             ScrollView {
-                HStack(alignment: .top, spacing: 14) {
+                HStack(alignment: .top, spacing: Look.Crate.denseColumnsGap) {
                     denseColumn(s, left, col)
                     denseColumn(s, right, col)
                 }
-                .padding(.bottom, 20)
+                .padding(.bottom, Look.Crate.denseFoot)
             }
         }
     }
@@ -132,8 +132,8 @@ struct CrateTabView: View {
         VStack(alignment: .leading, spacing: 0) {
             ForEach(segs.indices, id: \.self) { si in
                 let f = segs[si]
-                Text(s.heading(f.folder) + ((f.rows.first?.index ?? 0) > 0 ? "  (cont.)" : "")).font(.system(size: 11, weight: .bold, design: .rounded)).foregroundStyle(col.opacity(0.9))
-                    .padding(.top, 6).frame(height: 22, alignment: .bottomLeading)
+                Text(s.heading(f.folder) + ((f.rows.first?.index ?? 0) > 0 ? Words.continued : "")).font(Look.Crate.denseFolderFont).foregroundStyle(col.opacity(Look.Crate.denseFolderOpacity))
+                    .padding(.top, Look.Crate.denseFolderTop).frame(height: Look.Crate.denseFolderHeight, alignment: .bottomLeading)
                 ForEach(f.rows.indices, id: \.self) { k in
                     let r = f.rows[k]
                     if let t = Library.shared.track(r.id) { denseRow(t, r.n, at: place(s, r.folder, r.n)) }
@@ -146,14 +146,14 @@ struct CrateTabView: View {
     private func denseRow(_ t: Track, _ n: Int?, at p: TrackPlace) -> some View {
         let playing = t.id == rec.currentId
         return Button { rec.setManual(t.id, place: p); tab = 0 } label: {
-            HStack(spacing: 6) {
-                Text((n.map { String(format: "%02d · ", $0) } ?? "") + t.songShown).font(.system(size: 13.5, weight: t.hasName ? .medium : .regular)).foregroundStyle(playing ? Theme.orange : (t.hasName ? Theme.tx : Theme.mut)).lineLimit(1).layoutPriority(1)
-                Text(t.secondLine).font(.system(size: 10)).foregroundStyle(Theme.dim).lineLimit(1)
-                Spacer(minLength: 2)
-                if t.hal { Text("🎃").font(.system(size: 9)).fixedSize() }
-                Text(String(format: "%.0f", t.bpmTag ?? t.bpmShown)).font(.system(size: 12, weight: .semibold, design: .monospaced)).foregroundStyle(Theme.mut).fixedSize()
+            HStack(spacing: Look.Crate.denseRowGap) {
+                Text(n.map { Words.numbered($0, t.songShown) } ?? t.songShown).font(Look.Crate.denseSongFont(t.hasName)).foregroundStyle(playing ? Theme.orange : (t.hasName ? Theme.tx : Theme.mut)).lineLimit(1).layoutPriority(1)
+                Text(t.secondLine).font(Look.Crate.denseArtistFont).foregroundStyle(Theme.dim).lineLimit(1)
+                Spacer(minLength: Look.Crate.denseSpacer)
+                if t.hal { Text(Words.pumpkin).font(Look.Crate.densePumpkinFont).fixedSize() }
+                Text(Words.bpmNumber(t.bpmTag ?? t.bpmShown)).font(Look.Crate.denseBpmFont).foregroundStyle(Theme.mut).fixedSize()
             }
-            .frame(height: 21)
+            .frame(height: Look.Crate.denseRowHeight)
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
@@ -161,12 +161,12 @@ struct CrateTabView: View {
 
     private func shelfList(_ s: Shelf, showName: Bool) -> some View {
         let lib = Library.shared
-        return VStack(alignment: .leading, spacing: 6) {
+        return VStack(alignment: .leading, spacing: Look.Crate.listGap) {
             if showName {
-                Text(s.name + "  ·  \(s.groups.reduce(0) { $0 + $1.ids.count }) songs").font(.system(size: 17, weight: .bold)).foregroundStyle(s.color)
+                Text(Words.shelfSongs(s.name, s.groups.reduce(0) { $0 + $1.ids.count })).font(Look.Crate.listNameFont).foregroundStyle(s.color)
             }
             ScrollView {
-                LazyVStack(alignment: .leading, spacing: 2, pinnedViews: [.sectionHeaders]) {
+                LazyVStack(alignment: .leading, spacing: Look.Crate.listRowsGap, pinnedViews: [.sectionHeaders]) {
                     ForEach(s.groups, id: \.name) { f in
                         Section {
                             ForEach(Array(f.ids.enumerated()), id: \.offset) { i, id in
@@ -174,12 +174,12 @@ struct CrateTabView: View {
                             }
                         } header: {
                             Text(s.heading(f.name))
-                                .font(.system(size: 13, weight: .bold, design: .rounded)).foregroundStyle(s.color.opacity(0.85))
-                                .frame(maxWidth: .infinity, alignment: .leading).padding(.top, 12).padding(.bottom, 4).background(Theme.bg)
+                                .font(Look.Crate.listFolderFont).foregroundStyle(s.color.opacity(Look.Crate.listFolderOpacity))
+                                .frame(maxWidth: .infinity, alignment: .leading).padding(.top, Look.Crate.listFolderTop).padding(.bottom, Look.Crate.listFolderBottom).background(Theme.bg)
                         }
                     }
                 }
-                .padding(.bottom, 30)
+                .padding(.bottom, Look.Crate.listFoot)
             }
         }
     }
@@ -187,21 +187,21 @@ struct CrateTabView: View {
     private func row(_ t: Track, _ n: Int?, at p: TrackPlace) -> some View {
         let playing = t.id == rec.currentId
         return Button { rec.setManual(t.id, place: p); tab = 0 } label: {
-            HStack(spacing: 12) {
-                Text(n.map { String(format: "%02d", $0) } ?? "").font(.system(size: 16, weight: .semibold, design: .monospaced)).foregroundStyle(Theme.dim).frame(width: 26)
-                VStack(alignment: .leading, spacing: 1) {
-                    HStack(spacing: 6) {
-                        Text(t.songShown).font(.system(size: 18, weight: t.hasName ? .semibold : .regular)).foregroundStyle(playing ? Theme.orange : (t.hasName ? Theme.tx : Theme.mut)).lineLimit(1)
-                        Marks(track: t, size: 12)
+            HStack(spacing: Look.Crate.rowGap) {
+                Text(n.map { Words.number($0) } ?? "").font(Look.Crate.rowNumberFont).foregroundStyle(Theme.dim).frame(width: Look.Crate.rowNumberWidth)
+                VStack(alignment: .leading, spacing: Look.Crate.rowTextGap) {
+                    HStack(spacing: Look.Crate.rowTitleGap) {
+                        Text(t.songShown).font(Look.Crate.rowSongFont(t.hasName)).foregroundStyle(playing ? Theme.orange : (t.hasName ? Theme.tx : Theme.mut)).lineLimit(1)
+                        Marks(track: t, size: Look.Crate.rowMarks)
                     }
-                    Text(t.hasName ? t.artist + (t.ver.isEmpty ? "" : " · " + t.ver) : t.secondLine).font(.system(size: 14)).foregroundStyle(Theme.dim).lineLimit(1)
+                    Text(t.hasName ? Words.artistVersion(t.artist, t.ver) : t.secondLine).font(Look.Crate.rowArtistFont).foregroundStyle(Theme.dim).lineLimit(1)
                 }
-                Spacer(minLength: 8)
-                Text(t.key ?? "?").font(.system(size: 15, weight: .semibold, design: .monospaced)).foregroundStyle(Theme.mut).frame(width: 40, alignment: .trailing)
-                Text(String(format: "%.0f", t.bpmTag ?? t.bpmShown)).font(.system(size: 18, weight: .bold, design: .monospaced)).foregroundStyle(Theme.tx).frame(width: 42, alignment: .trailing)
+                Spacer(minLength: Look.Crate.rowSpacer)
+                Text(t.key ?? Words.unknownKey).font(Look.Crate.rowKeyFont).foregroundStyle(Theme.mut).frame(width: Look.Crate.rowKeyWidth, alignment: .trailing)
+                Text(Words.bpmNumber(t.bpmTag ?? t.bpmShown)).font(Look.Crate.rowBpmFont).foregroundStyle(Theme.tx).frame(width: Look.Crate.rowBpmWidth, alignment: .trailing)
             }
-            .padding(.vertical, 7).padding(.horizontal, 10)
-            .background(RoundedRectangle(cornerRadius: 10).fill(playing ? Theme.orange.opacity(0.12) : Color.white.opacity(0.03)))
+            .padding(.vertical, Look.Crate.rowTopBottom).padding(.horizontal, Look.Crate.rowSides)
+            .background(RoundedRectangle(cornerRadius: Look.Crate.rowRadius).fill(playing ? Theme.orange.opacity(Look.Crate.rowPlayingOpacity) : Look.Crate.rowFill))
         }
         .buttonStyle(.plain)
     }
@@ -218,7 +218,7 @@ struct MixMapView: View {
             cfg.defaultWebpagePreferences.allowsContentJavaScript = true
             let v = WKWebView(frame: .zero, configuration: cfg)
             v.isOpaque = false
-            v.backgroundColor = UIColor(red: 0.06, green: 0.04, blue: 0.09, alpha: 1)
+            v.backgroundColor = Look.MixMap.background
             if let url = Bundle.main.url(forResource: "mixmap", withExtension: "html") {
                 // the page has no charset declaration: load it as UTF-8 explicitly (file:// would guess Latin-1)
                 if let d = try? Data(contentsOf: url) {
