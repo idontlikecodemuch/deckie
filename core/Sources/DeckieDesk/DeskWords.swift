@@ -372,6 +372,7 @@ public enum DeskWords {
         // new: Listen (D33; letter AA, 3.7).
         "listen": "Listen",
         "listenTo": "Listen to {title}",
+        "pauseSong": "Pause {title}",
         "pause": "Pause",
         "play": "Play",
         "back30": "Back 30 seconds",

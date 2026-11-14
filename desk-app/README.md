@@ -51,11 +51,15 @@ real storage is never touched). The layout (`DeskHome`, `core/Sources/DeckieDesk
       records/<id>.json            the analysis (the builder's records, shared by every crate's work folder)
       signatures/<id>_o.*          a recognition signature, and who made it when
       prints/<id>.print            the print that finds copies of one recording
+      discs/<disc id>.json         what was learned from a music CD (its table, its CD-Text, each song's id); no sound
     Outbox/<name>.deckiecrate      the last crate file handed to the share sheet
-    Discs/<disc id>/               a music CD's songs copied off it (disc.json, Track 01.aiff ...): see below
+    Reading/                       Windows and Linux only: the one song being read off a music CD, while it is worked
+                                   out; removed when it is done, and at the next start after a stop (see below)
 
 Absolute paths (where a stick was mounted, the music folder) are only in `crate.json` and `places.json`, never in the
-crate file. Deleting a crate in the window moves its folder to the Trash (with `DECKIE_DESK_HOME` set, it is deleted);
+crate file. Desk keeps no song's sound, from any source: `Files/` holds what was worked out (analysis, fingerprints,
+prints), and every song is read where it is (the note on D33, Nov 14: "The crate file shouldn't rip the music. Its
+just the crate file."). Deleting a crate in the window moves its folder to the Trash (with `DECKIE_DESK_HOME` set, it is deleted);
 `Files/` stays, so adding the same music again is quick.
 
 ## The flow
@@ -261,7 +265,7 @@ Not here: organising or planning sources in Desk, records
 
 ## Naming a song (research AA, route A: nothing leaves the Mac)
 
-The logic is the core's (`DeskNaming`, `DiscCopies`, `DeskNamesStep` in `core/Sources/DeckieDesk`; CD-Text and the
+The logic is the core's (`DeskNaming`, `DiscSongs.swift`, `DeskNamesStep` in `core/Sources/DeckieDesk`; CD-Text and the
 drives in `core/Sources/DeckieDisc`), shared with the Windows and Linux window; this window only draws it.
 
 - **The list.** "n need a name" in the status bar (and "Show them" or "Name them" on the finished screen) shows the
@@ -278,21 +282,33 @@ drives in `core/Sources/DeckieDisc`), shared with the Windows and Linux window; 
   anything changes: only empty fields and Desk's guesses are ticked at first, the DJ's own names are shown and never
   changed, a version is never taken away, and a list whose count differs from the songs' is refused until fixed.
   "Use n names" is one undo step; the status bar then says "Names added to n songs. Undo".
-- **Listen** (D33): the inspector's Listen, the table's context menu, or the space bar on a selected song. AVPlayer
-  plays from a third of the way in; the bar under the table has play and pause, back and forward 30 seconds, a scrub
-  bar, the position and the length. It stops when another song is chosen, a run starts, or the crate changes. A song
-  whose source is not plugged in says which to put back.
+- **Listen** (D33): the play button at the start of each row (inside the Title cell, before the title: a column of
+  its own passed the table builder's limit), the inspector's Listen, the table's context menu, or the space bar on a
+  selected song. The row's button shows play, and pause for the song playing; pressed again it plays on from where it
+  paused. It selects its row and never starts an edit (titles are edited in the inspector); a screen reader reads it
+  as "Listen to <title>" or "Pause <title>". AVPlayer plays from a third of the way in, from where the song is: its
+  file on the drive or folder, or on a music CD the system's own file on the disc (nothing is copied); the bar under
+  the table has play and pause, back and forward 30 seconds, a scrub bar, the position and the length. It stops when
+  another song is chosen, a run starts, or the crate changes. A song whose source is not plugged in, or whose disc is
+  not in the drive, says which to put back ("Put Friday night back in to listen").
 - **A music CD.** Add music lists a music CD in the drive ("Music CD, 14 songs, 71:12 · music CD in Audio CD") beside
-  drives and folders; a music CD's volume (the system's `cddafs`) is no longer offered as a drive. The run first
-  copies its songs off: the system already shows them as `1 Audio Track.aiff` files, which Desk copies into
-  `Discs/<disc id>/Track 01.aiff` (the id is a hash of the table of contents, so the same disc is copied once). The
+  drives and folders; a music CD's volume (the system's `cddafs`) is no longer offered as a drive. Desk reads the
+  disc's music to work it out and keeps none of it: the system already shows the songs as `1 Audio Track.aiff` files,
+  and the run reads each where it is, one at a time (the crate names it `Track 01.aiff`). What Desk keeps is what it
+  learned, in `Files/discs/<disc id>.json` (the id is a hash of the table of contents, so the same disc put in again
+  is known and only what is new on it is read, in any crate), and the disc's id with its source in `crate.json`. The
   table and CD-Text are asked of the disc's raw device (DKIOCCDREADTOC, formats 2 and 5); if this Mac does not let
   Desk open it, the table is made from the files' lengths and the names are unknown. Names from CD-Text are kept as
   "from the disc" (a guess to glance at); the source takes the disc's own title, or "Music CD, n songs, m:ss" and the
   run screen asks once, in passing, for the name written on the disc (the crate follows when it was made from the
-  disc). Each song's place is the source and its number. Room: 10.1 MB a minute of music (a full disc about 750 MB);
-  the copy is deleted when no crate has the disc as a source (Remove from crate, or deleting the crate).
-  `DECKIE_DESK_MUSIC_CD=<folder>` lists stand-in drives made from generated bytes instead of the real ones.
+  disc). Each song's place is the source and its number. A run stopped part way (the disc taken out) asks for the
+  disc again and carries on with what is left. Disc space for the music: none on the Mac. On Windows and Linux,
+  where the sound is read by sector, one song at a time is written to `Reading/` while it is analysed, fingerprinted
+  and printed, and removed as soon as it is done, whether it worked or not; so the most at any moment is one song as
+  CD audio, 10.1 MB a minute (about 50 MB for a five-minute song; at most the disc's longest song, about 800 MB for
+  a disc burned as one 80-minute track). Listen there reads the song off the disc when asked and hands it to the
+  page in memory, writing nothing. A `Discs/` folder left by the first build of this (which copied each disc, about
+  750 MB) is removed when Desk starts; what it learned moves to `Files/discs/`. `DECKIE_DESK_MUSIC_CD=<folder>` lists stand-in drives made from generated bytes instead of the real ones.
 - **Trying it with no one at the keyboard:** `"Deckie Desk" --naming-walk <out folder> <music folder>` (with
   `DECKIE_DESK_MUSIC_CD` and `DECKIE_DESK_PLAYLIST`) walks the flow and writes a picture at each step.
 

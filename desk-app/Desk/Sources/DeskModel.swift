@@ -561,6 +561,11 @@ final class DeskModel: ObservableObject {
         }
     }
 
+    /// Plays the song, or pauses or plays again the one playing: the play button on each row of the table.
+    func playOrPause(_ t: CrateTrack) {
+        if listener.song == t.id { listener.toggle() } else { listen(t) }
+    }
+
     // MARK: the music on this Mac
 
     func chooseMusicFolder() {
@@ -629,13 +634,15 @@ enum Share {
 /// stops when another song starts, when the panel closes, and when a run starts.
 @MainActor
 final class Listener: ObservableObject {
-    /// The song playing; a change tells the window (the position's ticks do not, so the table is not redrawn for them).
+    /// The song playing (or paused); a change tells the window (the position's ticks do not, so the table is not
+    /// redrawn for them).
     @Published private(set) var song: String? { didSet { if song != oldValue { onSong?() } } }
     var onSong: (() -> Void)?
     @Published private(set) var title = ""
     @Published private(set) var position: Double = 0
     @Published private(set) var length: Double = 0
-    @Published private(set) var playing = false
+    /// Whether it is playing now; a change tells the window too (the row's play button shows pause).
+    @Published private(set) var playing = false { didSet { if playing != oldValue { onSong?() } } }
     private var player: AVPlayer?
     private var observer: Any?
 
