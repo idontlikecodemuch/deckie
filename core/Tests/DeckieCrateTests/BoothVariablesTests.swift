@@ -19,7 +19,7 @@ import Testing
         return u
     }()
     static let views = ["CrateLibrary", "DebugSheet", "DeckApp", "ListenView", "Mixing", "Model", "OtherViews",
-                        "SuggestionsView"]   // SetRecorder writes files, not the screen.map { "deck-app/Deck/Sources/\($0).swift" }
+                        "SuggestionsView"].map { "deck-app/Deck/Sources/\($0).swift" }   // SetRecorder writes files, not the screen
     static func lines(_ path: String) -> [(Int, String)] {
         let s = (try? String(contentsOf: repo.appendingPathComponent(path), encoding: .utf8)) ?? ""
         let text = s.replacingOccurrences(of: "\r\n", with: "\n")   // a Windows checkout's line ends
@@ -33,8 +33,10 @@ import Testing
         }
     }
     /// A letter outside a format's specifiers ("%.1f" has none).
+    /// A letter inside an interpolation ("\(n + 1)") is code, not a word.
     static func hasLetter(_ s: String) -> Bool {
         s.replacingOccurrences(of: #"%[-+ #0-9.]*(?:ll|l)?[a-zA-Z@]"#, with: "", options: .regularExpression)
+            .replacingOccurrences(of: #"\\\((?:[^()]|\([^()]*\))*\)"#, with: "", options: .regularExpression)
             .range(of: #"\p{L}"#, options: .regularExpression) != nil
     }
     /// The line before a // comment (outside a string).
