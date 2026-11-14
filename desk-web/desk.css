@@ -656,7 +656,7 @@ dialog.wide.lookup { max-width: min(var(--lookup-wide-max-w), var(--lookup-wide-
 /* Adding music (research AE): the three ways, the pickers, the count, and the crate's name with its icon. */
 .defs { position: absolute; width: 0; height: 0; overflow: hidden; }
 .crate-head { display: inline-flex; align-items: center; gap: var(--crate-head-gap); }
-.crate-icon { width: var(--crate-icon); height: var(--crate-icon); color: var(--acc); flex: none; }
+.crate-icon { width: var(--crate-icon); height: var(--crate-icon); color: var(--acc); stroke-width: var(--icon-line); flex: none; }
 .crate-name { font-weight: var(--fw-crate-button); font-size: var(--fs-crate-button); background: none; padding: var(--space-crate-button); }
 .crate-name:hover:not(:disabled) { background: var(--control); }
 .icon.crate-big { width: var(--crate-icon-big); height: var(--crate-icon-big); }
