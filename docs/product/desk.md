@@ -19,7 +19,8 @@ One job: read a DJ's crate and write a crate file that the booth can use.
 
 | Desk does | Desk does not |
 |---|---|
-| Read songs from a folder, a drive or a data CD | Play, mix or edit music |
+| Read songs from a folder, a drive or a data CD | Mix or edit music |
+| Play a song so the DJ can name it by ear, with a scrub bar (D33) | |
 | Work out tempo, key, bars, style and vocals for each song | Organise a library (D25) |
 | Make the fingerprints the booth recognises songs by | Burn discs or write to a drive |
 | Find copies of the same recording (D24) | Send anything to a server |

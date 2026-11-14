@@ -511,6 +511,25 @@ with no labels. Even if it only gets some of them right. I have Picard music bra
 - **Which service, and how it is offered** (inside Desk, or by sending the DJ to another tool with a batch), is
   not decided. The services' terms and prices are in letter AA.
 
+### D33. The key reader: the bar stays, the three-answer reader ships now, and Desk can play a song to name it (Nov 13)
+From the key trial (letter X2, merged Nov 13) and the naming research (letter AA). The owner's answers:
+
+- **The bar stays as written** (D16: exact within five points of Apple on the major and the minor half). "I'd like
+  to keep the bar going. It sounds like we can meet it." The trial's trained model met it on artists it had never
+  heard, for evaluation only; it cannot ship because of what it learned from.
+- **The reader with nothing trained ships now**, giving three answers: a key when its two readings agree, the home
+  note with the mode left open when only the home note agrees, and "not sure" otherwise. "Yes let's ship." This is
+  the "shown when sure, left off when not" of the note on D30 and D16. On music it had not seen it shows a key on
+  about seven songs in ten and is right on about two in three of those, the level of the tools DJs pay for on the
+  songs it shows.
+- **Training data for a model that can ship**: the owner asked whether a public set can be used before anything
+  is commissioned. To be answered with evidence: sets whose licences allow shipped weights under D15.
+- **Apple Lossless and AAC files on Windows whose lead-in is stated nowhere are accepted**, with the song's start
+  marked uncertain, not refused.
+- **Desk gets a Listen control with a scrub bar**, to name a song by ear: "Yes listen. Let's add a scrub". This
+  changes one line of `docs/product/desk.md`: Desk plays a song so the DJ can name it; it still does not mix or
+  edit.
+
 ### Note on D19 (Nov 1): versions of a song stay separate rows
 Christopher, on two remixes of one song both showing in the picks: "we shouldn't merge them unless they are the same
 songs. DJs often have a bunch of versions of the same song". So the booth folds together only copies of the same
