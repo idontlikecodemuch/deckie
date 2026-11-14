@@ -116,6 +116,7 @@ jobs:
       # engine helper is there for (Foundation in Swift 6.4.1 on Windows; EngineProcessTests.swift says how).
       - name: "Engines started together with the starts not kept apart (report only)"
         working-directory: core
+        if: ${{ !cancelled() }}
         continue-on-error: true
         env:
           DECKIE_TEST_UNLOCKED_STARTS: 1

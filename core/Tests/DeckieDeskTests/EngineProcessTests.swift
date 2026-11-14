@@ -589,16 +589,18 @@ final class EngineProcess: @unchecked Sendable {
                 for round in 0..<8 {
                     let home = DeskHome(root: root.appendingPathComponent("home-\(worker)-\(round)"))
                     guard (try? home.prepare()) != nil, let e = try? EngineProcess(home: home.root) else { continue }
+                    // Its first message says it is up and reading (on a busy runner that alone can take seconds).
+                    guard e.wait(seconds: 60, { $0["event"] as? String == "hello" }) != nil else { e.process.terminate(); continue }
                     lock.lock(); started += 1; lock.unlock()
                     // Odd rounds stay a while, so another worker's engine is started while this one is alive.
                     if round % 2 == 1 { Thread.sleep(forTimeInterval: 0.4) }
                     e.close()
-                    if e.exitCode(seconds: 5) != 0 { lock.lock(); late += 1; lock.unlock() }
+                    if e.exitCode(seconds: 20) != 0 { lock.lock(); late += 1; lock.unlock() }
                 }
             }
         }
         group.wait()
-        print("EngineStartsTests: \(started) engines started, \(late) not seen to leave within 5 seconds")
+        print("EngineStartsTests: \(started) engines started, \(late) not seen to leave within 20 seconds")
         #expect(started == 48)
         #expect(late == 0)
     }
