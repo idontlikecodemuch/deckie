@@ -66,6 +66,97 @@ public enum LocalNames {
         return isUsableArtist(artist) && !artist.allSatisfy({ $0.isNumber }) ? artist : nil
     }
 
+    // MARK: what a folder says (D39; research AC, 3.1)
+
+    /// The four kinds of folder a DJ has (AC 3.1): an artist's album (it names the artist and the release), a
+    /// compilation (it names the release only, never the artist), a dated or source folder and the DJ's own category
+    /// (both name only the place).
+    public enum FolderKind: String, Codable, Sendable { case artistAlbum, compilation, dated, category }
+
+    /// What one file in the folder says about itself, for reading the folder: its file name's stem, and from its tags
+    /// (when it has them) its artist, the compilation mark and the release's own artist.
+    public struct Sibling: Sendable, Equatable {
+        public var stem: String
+        public var tagArtist: String?
+        public var compilationMark: Bool
+        public var releaseArtist: String?
+        public init(stem: String, tagArtist: String? = nil, compilationMark: Bool = false, releaseArtist: String? = nil) {
+            self.stem = stem; self.tagArtist = tagArtist; self.compilationMark = compilationMark; self.releaseArtist = releaseArtist
+        }
+    }
+
+    /// A folder, read: its kind, and for an artist's album the artist and the release; for a compilation its
+    /// release, cleaned of the notes a download leaves on it ("VA - ", a year, "[320 kbps]").
+    public struct FolderReading: Sendable, Equatable {
+        public var kind: FolderKind
+        public var artist: String?
+        public var release: String?
+        /// Its files name several artists, with nothing else saying compilation: not one artist's album, but maybe a
+        /// DJ's own category, so not taken for a compilation either.
+        public var severalArtists: Bool = false
+        public init(kind: FolderKind, artist: String? = nil, release: String? = nil, severalArtists: Bool = false) {
+            self.kind = kind; self.artist = artist; self.release = release; self.severalArtists = severalArtists
+        }
+    }
+
+    /// A disc's folder inside a set ("CD1", "Disc 2", "1"): the album is the folder above it.
+    static func isDiscFolder(_ name: String) -> Bool {
+        name.range(of: #"^(?i)(cd|disc|disk|d|vol|volume)?[\s._-]*\d{1,2}$"#, options: .regularExpression) != nil
+    }
+
+    /// Reads the folder a song is in (`folders`: the folder names from the source's top down to the song's own) with
+    /// what every audio file in it says (`siblings`, the song's own among them). The artist comes from the folder only
+    /// when everything agrees that it is one artist's album (AC 5.3, suggestion 1): no file in it has an artist of its
+    /// own, in its tags or its name; every file is numbered; the folder (or the one above a disc's folder) reads
+    /// "Artist - Album"; and nothing says compilation ("VA", "Various", a `Compilations` folder, the tags' compilation
+    /// mark, a release artist who is "Various Artists", or files whose tags name different artists).
+    public static func readFolder(_ folders: [String], siblings: [Sibling]) -> FolderReading {
+        var path = folders.filter { !$0.isEmpty }
+        guard var name = path.last else { return FolderReading(kind: .category) }
+        if isDiscFolder(name), path.count >= 2 { path.removeLast(); name = path.last! }
+        let folded = VersionWords.fold(name)
+        let words = folded.split(separator: " ").map(String.init)
+        // Compilation by its name, or a folder above it named so.
+        let compWords = ["va", "various", "compilation", "compilations", "v a"]
+        let saysCompilation = words.first.map { compWords.contains($0) } == true || folded.contains("various artists")
+            || folded.hasPrefix("v a ") || path.dropLast().contains { ["compilations", "compilation", "various artists", "va"].contains(VersionWords.fold($0)) }
+            || name.range(of: #"^(?i)va[\s._-]"#, options: .regularExpression) != nil
+        // What the files say of themselves.
+        let readings = siblings.map { NameReading.readFileName($0.stem) }
+        let tagArtists = Set(siblings.compactMap { $0.tagArtist.flatMap { isUsableArtist($0) ? NameReading.compareWords(NameReading.firstArtist($0)).joined(separator: " ") : nil } })
+        let nameArtists = Set(readings.compactMap { $0.artist.flatMap { isUsableArtist($0) ? NameReading.compareWords(NameReading.firstArtist($0)).joined(separator: " ") : nil } })
+        let marked = siblings.contains { $0.compilationMark || ($0.releaseArtist.map { !isUsableArtist($0) && !$0.isEmpty } ?? false) }
+        let release = cleanRelease(name)
+        if saysCompilation || marked {
+            return FolderReading(kind: .compilation, artist: nil, release: release)
+        }
+        if tagArtists.count > 1 || nameArtists.count > 1 {
+            return FolderReading(kind: .category, artist: nil, release: nil, severalArtists: true)
+        }
+        if words.allSatisfy({ $0.allSatisfy(\.isNumber) }) || ["new", "inbox", "downloads", "download", "incoming", "to sort", "unsorted"].contains(folded) {
+            return FolderReading(kind: .dated)
+        }
+        let parts = NameReading.dashes(collapse(name.replacingOccurrences(of: " – ", with: " - ")))
+        let filesHaveArtists = !tagArtists.isEmpty || !nameArtists.isEmpty
+        let numbered = !siblings.isEmpty && siblings.allSatisfy { $0.stem.first?.isNumber == true }
+        if parts.count >= 2, !filesHaveArtists, numbered {
+            let artist = parts[0].trimmingCharacters(in: .whitespaces)
+            if isUsableArtist(artist), !artist.allSatisfy({ $0.isNumber }), !NameReading.isYearText(artist) {
+                return FolderReading(kind: .artistAlbum, artist: artist, release: cleanRelease(parts.dropFirst().joined(separator: " - ")))
+            }
+        }
+        return FolderReading(kind: .category)
+    }
+
+    /// A folder's name as a release: "VA - ", a year in brackets, and bracketed notes ("[320 kbps]", "[Hunter]") off.
+    static func cleanRelease(_ name: String) -> String? {
+        var t = name.replacingOccurrences(of: #"^(?i)(va|various artists|various)\s*[-–:]\s*"#, with: "", options: .regularExpression)
+        t = t.replacingOccurrences(of: #"\s*[\[(][^\])]*[\])]"#, with: "", options: .regularExpression)
+        t = t.replacingOccurrences(of: #"(?i)\s+(mp3|flac|320\s*kbps|320kbps|320)\b.*$"#, with: "", options: .regularExpression)
+        t = collapse(t.replacingOccurrences(of: #"\s+(19|20)\d\d$"#, with: "", options: .regularExpression))
+        return t.isEmpty ? nil : t
+    }
+
     static func collapse(_ s: String) -> String {
         var t = s
         while t.contains("  ") { t = t.replacingOccurrences(of: "  ", with: " ") }

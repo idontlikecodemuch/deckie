@@ -70,12 +70,18 @@ public enum SongFacts {
     /// "1" when the file marks the release as a compilation of several artists.
     public static let compilation = "compilation"
     public static let copyright = "copyright", language = "language"
+    /// Clean or dirty (D39): `clean` or `dirty`, from the name and tags (`tag`, `filename`) or the DJ (`user`), never
+    /// from a lookup. Not said is no fact at all, never shown as clean.
+    public static let lyrics = "lyrics"
+    /// The label the song first came out on (D39), beside `original_year`: what a lookup gives for a song on a
+    /// compilation, or the original's for a DJ's edit, while `label` stays the copy's own.
+    public static let originalLabel = "original_label"
 
     /// Every fact name above, in the order a window lists them.
     public static let known = [release, releaseArtist, year, date, originalYear, originalDate, label, catalogNumber,
                                genre, trackNumber, trackCount, discNumber, discCount, composer, lyricist, remixer,
                                producer, originalArtist, isrc, barcode, bpmText, keyText, comment, grouping, mood,
-                               subtitle, compilation, copyright, language]
+                               subtitle, compilation, copyright, language, lyrics, originalLabel]
 
     /// The facts a window shows as their own fields (release, year, label, genre); the rest are listed.
     public static let shown = [release, year, label, genre]
@@ -92,6 +98,10 @@ public enum SongFacts {
         public static let disc = "cdtext"
         /// The DJ, in Desk.
         public static let user = "user"
+        /// The file's name, read (D39: clean or dirty written in a file name).
+        public static let fileName = "filename"
+        /// A lookup's answer for the original of a DJ's edit (D39): `lookup:musicbrainz:original`.
+        public static let originalSuffix = ":original"
         /// A lookup the DJ asked for, by its service: `lookup:musicbrainz`.
         public static let lookupPrefix = "lookup:"
         public static func lookup(_ service: String) -> String { lookupPrefix + service }
@@ -105,7 +115,7 @@ public enum SongFacts {
     public static func rank(_ origin: String) -> Int {
         if origin == Origin.user { return 0 }
         if origin == Origin.tag { return 1 }
-        if Origin.programs.contains(origin) { return 2 }
+        if Origin.programs.contains(origin) || origin == Origin.fileName { return 2 }
         if origin == Origin.disc { return 3 }
         if origin.hasPrefix(Origin.lookupPrefix) { return 4 }
         return 5

@@ -549,6 +549,8 @@ record without them keeps its bytes and the example crate is unchanged:
   | `subtitle` | the tag standards' line under the title (ID3's `TIT3`), kept apart from `ident.version` |
   | `compilation` | `1` when the source marks the release as a compilation |
   | `copyright`, `language` | as written |
+  | `lyrics` | added with D39 (Nov 14, 2026): `clean` or `dirty`, one value; no fact when not said, which is never shown as clean. From the song's name and tags (`tag`: the title, its version, the grouping, the comment, iTunes' advisory), its file name (`filename`) or the DJ (`user`); never from a lookup |
+  | `original_label` | added with D39 (Nov 14, 2026): the label the song first came out on, beside `original_year`, while `label` stays the copy's own (a lookup's answer for a song on a compilation, or the original's for a DJ's edit) |
 
   A name is lower-case letters, digits and `_`, starting with a letter; a reader ignores a name it does not know, so
   a later fact is added without a new version. The title, the artist and the version are never facts: they stay in
@@ -566,11 +568,13 @@ record without them keeps its bytes and the example crate is unchanged:
 names `key.source` already uses (`rekordbox-xml`, `traktor`, `engine-dj`, `serato`, `virtualdj`: that program's
 library on the computer, or for `rekordbox-xml` also the collection export given to the builder), `user` (the DJ, in
 Desk), and **`lookup:<service>`** for a lookup the DJ asks for later (note on D30), naming its service
-(`lookup:musicbrainz`). An origin is letters, digits, `-`, `_`, `.` and `:`, 1 to 64 bytes; a reader shows one it does
+(`lookup:musicbrainz`). With D39: `filename` (the file's name, read: clean or dirty written in it), and
+`lookup:<service>:original` for the original's year and label taken for a DJ's edit no catalogue holds (the one case
+the lookup sets the length check aside), so a reader can say they are the original's. An origin is letters, digits, `-`, `_`, `.` and `:`, 1 to 64 bytes; a reader shows one it does
 not know as it is.
 
 **Which source wins** (`SongFacts.rank`), one value per fact: the DJ, then the file's tags, then a DJ program's
-library (the most recently written first, as for the key), then the disc, then a lookup. So a lookup fills only what
+library or the file's name (the most recently written first, as for the key), then the disc, then a lookup. So a lookup fills only what
 nothing else gives, and nothing but the DJ replaces the DJ's own entry. Reading a source again replaces the facts that
 source gave before (a file's tags: every `tag` fact and `file.other_tags`; a library read now: that program's), and
 keeps the rest; a file that is not there keeps what its tags gave last time. A DJ's entries live in Desk's storage
@@ -886,3 +890,6 @@ An example record's key (the rest of the record as above):
     record's `print` (`format`, `version`, `points`, `made_by`, `made_at`), left out when there is none; a print of
     a later `version` is ignored, not refused; no version of the crate format raised. The file's name and the
     record's key are this format's choices, made with D35.
+17. Added Nov 14, 2026 (D39). Two fact names in `ident.facts`, `lyrics` (clean or dirty) and `original_label`, and
+    the origins `filename` and `lookup:<service>:original`; nothing else changes, no version raised. Readers that do
+    not know them ignore them; the booth shows `lyrics` as a small mark where it is known.
