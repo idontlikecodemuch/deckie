@@ -185,6 +185,12 @@ public struct PortableTransport: LookupTransport {
             deckie_net_get(request.url.absoluteString, buffer.baseAddress, lines.count, Int32(timeout), &answer, &message, message.count)
         }
         defer { deckie_net_free(&answer) }
+        if code != 0 {
+            // The reason, for the log a DJ can send back (the engine's standard error goes there). It is the
+            // system's own code or words for the failure; the address, which holds song titles, is not in it.
+            let reason = String(decoding: message.prefix { $0 != 0 }.map { UInt8(bitPattern: $0) }, as: UTF8.self)
+            FileHandle.standardError.write(Data("deckie lookup: no answer from \(request.url.host ?? "?"): \(reason)\n".utf8))
+        }
         switch code {
         case 0: break
         case 1: throw LookupFailure.notOnThisComputer

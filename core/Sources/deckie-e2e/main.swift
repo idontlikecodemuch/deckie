@@ -62,7 +62,10 @@ func fail(_ message: String) -> Never {
     exit(1)
 }
 
-let repository = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent()
+/// The checkout: where this was built, or DECKIE_E2E_REPOSITORY when the tool runs on another machine than the one
+/// that built it (the Windows for Arm job).
+let repository = ProcessInfo.processInfo.environment["DECKIE_E2E_REPOSITORY"].map { URL(fileURLWithPath: $0, isDirectory: true) }
+    ?? URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent()
     .deletingLastPathComponent().deletingLastPathComponent()
 let decodeFixtures = repository.appendingPathComponent("core/Tests/DeckieDecodeTests/Fixtures")
 

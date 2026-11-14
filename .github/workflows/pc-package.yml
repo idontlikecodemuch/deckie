@@ -468,6 +468,9 @@ jobs:
     runs-on: windows-11-arm
     timeout-minutes: 45
     continue-on-error: true
+    env:
+      # The test tool was built on the other job's machine: its test files are in this job's own checkout.
+      DECKIE_E2E_REPOSITORY: ${{ github.workspace }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4
