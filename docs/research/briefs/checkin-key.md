@@ -5,6 +5,85 @@ minor). Exact = key right. Home note = home note right, whatever the mode. Mode 
 note is right, the share with the right mode. The bar (D16) = exact within five points of Apple on each half:
 36.5 on the major half, 70.6 on the minor half.
 
+## Nov 14, 2026, 17:00 UTC. One page: publishing the reader, open club music, a slight lean, what "right" means, the bar reworded
+
+Branch `key/versus-apple`. Detail: `docs/research/x4-key-complete.md`, sections 2a and 2b.
+
+**Publishing (the owner: "Yes we can publish").** Everything is wired; **the upload itself is not done: this
+session cannot upload a release asset.** Two files go on the release `models-1`, under exactly these names (both
+were handed to the owner in the session, and are in `core/.models/` of the session's checkout):
+
+| File | Bytes | SHA-256 |
+|---|---:|---|
+| `deckie-key-2b4fe8fa.f16` (the model) | 471,196 | `2b4fe8fabf4fc5bd301e04af6c136afe76399f0077984a7f5df78b0ba0b07f7d` |
+| `deckie-key-2b4fe8fa-credits.tsv` (every training recording, its page and licence: the credit CC BY asks for) | 710,133 | `8769b179fc1c09ba39ba9d84fdb03d57f67359be32cbb30771797e43d14c87f5` |
+
+Once they are there, every build fetches them by pinned hash (`core/Tools/fetch-key-model.sh`, run by
+`core-linux`, `core-windows`, `desk-window` and `pc-package`), the PC package carries them in `models/` and
+`licences/`, the Mac desk copies them from `Vendor/models/` into its bundle and points its engine at the model.
+Until then, and whenever the file is absent or not the pinned one, the untrained reader reads the keys. Nothing
+trained and no credit list is in the git tree. The file's name carries its version; a retrain is a new file and a
+new pin. A record says which reader gave its key: `key.source` `learned-key` and the model's name in
+`engine.models`. `DEPENDENCIES.md` section 13 is the shipped record; the acknowledgements row is in. Not done: the
+iPad app does not analyse audio today, so there is nothing to wire there beyond the lines listed in the letter;
+`pc-package` runs only on `pc/**` branches, so it did not run here.
+
+**1. Is there openly licensed club music? Yes, some; most is not usable.** Nine in ten open dance releases are
+non-commercial or no-derivatives. Usable (CC BY, CC0, public domain): **6,175 tracks in 684 club-tagged netlabel
+releases on the Internet Archive**, of which I fetched a minute each of 3,667 for evaluation; about 2,300 Jamendo
+albums mirrored there (not fetched, the next pool); and smaller lots (ccMixter about 750 remixes, one author's
+1,029 techno tracks, 82 psychedelic-trance releases). Whether more of it moves the scores: two retrains are running (the chosen mix plus the club excerpts; the club excerpts alone); the entry above this one will report them.
+
+**2. A slight lean.** Club music is two thirds minor in every style, by the reader's own count on those netlabel
+excerpts: **65.6 percent** (techno 65, house 64, drum and bass 63, dubstep 74). The source was fixed and committed
+before the excerpts were read. On MTG:
+
+| Lean | Major half | Minor half | Every song | Key shown | Shown keys right | Apple, same songs | Shown, within one step |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| (a) as now (55.2) | 59.8 | 61.5 | 61.0 | 73.1 | 69.9 | 71.3 | 81.3 |
+| (b) 65, a published chart count | 54.9 | 65.5 | 62.3 | 73.0 | 71.1 | 72.3 | 82.5 |
+| (b) 85, the count of a sibling of the test set | 42.5 | 72.2 | 63.1 | 74.2 | 71.9 | 72.1 | 82.8 |
+| **(c) 65.6, open club music** | 53.9 | 65.6 | 62.0 | 73.2 | 71.2 | 72.2 | 82.7 |
+| Apple | 41.5 | 75.6 | 65.2 | 100 | 65.2 | | 78.3 |
+
+**I would take (c).** It is slight, its source is Deckie's own measurement on music that is neither the test nor
+its shop, and it lifts every measure on all three sets by about a point; shown keys become as right as Apple's on
+the same songs. 85 passes the old bar but only by Apple's own trade (major falls to 42.5), from a source too close
+to the test. (d), a lean only for dance songs, cannot be built: a crate file records no named style. **It is a
+setting, off today**: `KeyModel.chosenMinorShare = 0.656` is the whole change, and records then carry the name
+`deckie-key-2b4fe8fa-minor66`.
+
+**3. What "right" means.** Exact: home note and mode both. In the DJ's terms, of the keys Deckie shows on MTG:
+
+| | Exact | Right home note, wrong mode (clashes) | A neighbour on the wheel (mixes fine) | Anything else | Mixes correctly (within one step) |
+|---|---:|---:|---:|---:|---:|
+| Ours, the 928 keys it shows | 69.9 | 14.0 | 11.3 | 4.7 | **81.2** |
+| Apple, the same songs | 71.2 | 12.0 | 11.6 | 5.2 | 82.9 |
+
+Four shown keys in five mix correctly, the same as Apple's. One in seven has the wrong mode. The home-note answer
+avoids 32 of the 178 wrong-mode errors the reader would make if forced, and "not sure" another 16.
+
+**4. The bar, reworded.** Three candidates, each with today's number:
+1. "Of the keys Deckie shows, as many mix correctly (within one step on the wheel) as Apple's on the same songs,
+   give or take three points; and Deckie shows a key for at least seven songs in ten." Today 81.2 against 82.9,
+   73.1 percent shown: **passes**.
+2. "A key is shown only when it is right at least two times in three on music the reader has never heard." Today
+   69.9, 89.3 and 73.1 on the three collections: passes.
+3. "With every song given a key, Deckie is no more than five points behind Apple, counting a major song as much as
+   a minor one." Today 60.6 against 58.5: passes.
+The old bar: fails, minor half 9.2 short. **I would choose 1**: it judges what the DJ is given, in mixing terms,
+against Apple on the same songs, and a lean cannot game it.
+
+**"There or very close?"** On wording 1, there. With lean (c), the shown keys are as right as Apple's. Still
+behind: Apple answers every song and is right on 65 percent; Deckie is silent on a quarter.
+
+**Tests.** Locally the whole suite passes with the model file present. On the branch at 88ac927 (no file on the release yet, so the
+fallback is what ran): `desk-window` green (run 43617336208); `core-linux` (43617336063) and `core-windows`
+(43617336057) were still running when this was written.
+
+**Carry on.** Decisions wanted: the lean (I suggest c), the bar's wording (I suggest 1). The upload is the main
+session's.
+
 ## Nov 14, 2026, 16:10 UTC. The owner's two questions: is it more accurate than Apple, and why did it miss the bar
 
 **"More accurate than Apple but decides less often?" No: as accurate as Apple where it decides, and it decides
