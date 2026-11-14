@@ -13,6 +13,9 @@ public final class DeskLookupRun: @unchecked Sendable {
     private var requests = 0
     /// Whether the label of the release that fits is asked for (a second request a song). The trial leaves it out.
     public var fetchLabels = true
+    /// Whether a song whose title and artist found nothing is asked once more with free words (D39). The trial turns
+    /// it off to measure the lookup without it.
+    public var secondAsk = true
 
     /// Progress: songs done, songs in all, songs with a candidate so far.
     public struct Progress: Sendable, Equatable {
@@ -53,17 +56,31 @@ public final class DeskLookupRun: @unchecked Sendable {
                 var recs: [MBRecording] = []
                 if let isrc = ask.isrc { recs = try client.searchRecordings(isrc: isrc) }
                 if recs.isEmpty, let q = ask.query { recs = try client.searchRecordings(q) }
+                // The second ask, with free words, only when title and artist found nothing (D39).
+                var again = 0
+                if recs.isEmpty, secondAsk {
+                    for q in DeskLookup.secondAsks(song, first: ask) where recs.isEmpty {
+                        recs = try client.searchRecordings(q)
+                        again += 1
+                    }
+                }
                 let known = DeskLookup.Known(song, ask: ask)
                 var cands = recs.map { DeskLookup.candidate($0, known: known) }
-                for j in cands.indices { DeskLookup.rate(&cands[j], known: known, isrcs: recs[j].isrcs ?? []) }
-                var (ordered, chosen, several) = DeskLookup.order(cands, known: known)
+                for j in cands.indices {
+                    DeskLookup.rate(&cands[j], known: known, isrcs: recs[j].isrcs ?? [])
+                    if again > 0 { cands[j].notes.append("askedAgain") }
+                    if known.artistFromFolder { cands[j].notes.append("fromFolder") }
+                }
+                var (ordered, chosen, several, mode, rules) = DeskLookup.order(cands, known: known)
+                if chosen != nil, again > 0 { rules.append("askedAgain") }
                 // The label of the release that fits (a recording's search answer has none): one more request.
                 if fetchLabels, let c = chosen, ordered[c].label == nil, let rid = ordered[c].releaseId {
                     if let rel = try? client.release(rid), let label = rel.labels.first { ordered[c].label = label }
                     if isStopped { throw LookupFailure.stopped }
                 }
-                for j in ordered.indices { ordered[j].changes = DeskLookup.changes(ordered[j], song: song) }
+                for j in ordered.indices { ordered[j].changes = DeskLookup.changes(ordered[j], song: song, mode: j == chosen ? mode : nil) }
                 r.candidates = ordered; r.chosen = chosen; r.several = several
+                r.mode = mode; r.rules = chosen == nil ? nil : rules; r.askedAgain = again
                 r.outcome = ordered.isEmpty ? "nothing" : "found"
             } catch let f as LookupFailure {
                 switch f {
@@ -150,10 +167,10 @@ public final class DeskLookupRun: @unchecked Sendable {
                     DeskLookup.rate(&c, known: known)
                     cands.append(c)
                 }
-                var (ordered, chosen, several) = DeskLookup.order(cands, known: known)
+                var (ordered, chosen, several, mode, _) = DeskLookup.order(cands, known: known)
                 // A disc found by its name or a fuzzy match is never filled in by itself: the DJ chooses.
                 if match != "exact" { chosen = nil }
-                for j in ordered.indices { ordered[j].changes = DeskLookup.changes(ordered[j], song: song) }
+                for j in ordered.indices { ordered[j].changes = DeskLookup.changes(ordered[j], song: song, mode: j == chosen ? mode : nil) }
                 r.candidates = ordered; r.chosen = chosen; r.several = several
                 r.outcome = ordered.isEmpty ? "nothing" : "found"
             }
@@ -176,13 +193,16 @@ public final class DeskLookupRun: @unchecked Sendable {
     static func candidate(_ track: MBTrack, release rel: MBRelease, known: DeskLookup.Known) -> DeskLookup.Candidate {
         let rec = track.recording
         let title = track.title ?? rec?.title ?? ""
-        let split = DeskNaming.splitVersion(title)
+        let v = DeskLookup.candidateVersion(title: title, disambiguation: rec?.disambiguation)
         let year = (rec?.firstReleaseDate ?? rel.date).flatMap { $0.count >= 4 ? String($0.prefix(4)) : nil }
         let length = track.length ?? rec?.length
-        return DeskLookup.Candidate(recording: rec?.id, title: split.title, version: split.version,
-                                    artist: (track.artistCredit ?? rec?.artistCredit ?? rel.artistCredit)?.line,
+        let credit = track.artistCredit ?? rec?.artistCredit ?? rel.artistCredit ?? []
+        return DeskLookup.Candidate(recording: rec?.id, title: v.title, version: v.version,
+                                    artist: credit.line,
                                     release: rel.title, releaseId: rel.id, year: year, label: rel.labels.first,
                                     seconds: length.map { Double($0) / 1000 }, fit: "unknown", difference: nil,
-                                    otherVersion: false, notes: [], agree: 0, changes: [], score: 0)
+                                    otherVersion: false, notes: [], agree: 0, changes: [], score: 0,
+                                    credited: credit.compactMap(\.name), featuring: DeskLookup.featuringFlags(credit),
+                                    match: nil, titleAgrees: nil, artistAgrees: nil, lyrics: v.reading?.lyrics?.rawValue, disagree: nil)
     }
 }

@@ -48,6 +48,10 @@ public enum DeskNaming {
         public var year: Fact = Fact(value: nil, from: nil)
         public var label: Fact = Fact(value: nil, from: nil)
         public var genre: Fact = Fact(value: nil, from: nil)
+        /// Clean or dirty (D39): `clean`, `dirty`, or no value (not said); where it came from.
+        public var lyrics: Fact = Fact(value: nil, from: nil)
+        /// The title as shown: with its version, as DJs write it (D39).
+        public var shown: String? = nil
         /// The song's other facts, in `SongFacts.known`'s order: each its name (words `factName.<name>`), its values
         /// as one line, and where it came from.
         public var others: [Listed] = []
@@ -70,6 +74,7 @@ public enum DeskNaming {
             case "year": return year
             case "label": return label
             case "genre": return genre
+            case "lyrics": return lyrics
             default: return title
             }
         }
@@ -80,9 +85,15 @@ public enum DeskNaming {
 
     /// A fact as the DJ typed it, as values: a genre may be several, split at "," or ";"; anything else is one value.
     public static func factValues(_ name: String, _ text: String) -> [String] {
+        // Clean or dirty is one of two words, or nothing (D39).
+        if name == SongFacts.lyrics { return Lyrics(rawValue: text.trimmingCharacters(in: .whitespaces).lowercased()).map { [$0.rawValue] } ?? [] }
         let parts = name == SongFacts.genre ? text.split(whereSeparator: { $0 == "," || $0 == ";" }).map(String.init) : [text]
         return SongFacts.bounded(parts)
     }
+
+    /// The choices of the clean-or-dirty control, in order: `clean`, `dirty`, and "" for not said (words `lyrics.<code>`,
+    /// `lyrics.none`).
+    public static let lyricsChoices = [Lyrics.clean.rawValue, Lyrics.dirty.rawValue, ""]
 
     /// Why a song is in the "Needs a name" list (letter AA, 3.3): `noTitle` (nothing usable, or a placeholder such as
     /// "Track 01"), `noArtist` (a title and nothing else), `guess` (named by Desk from a file name, a folder, a list
@@ -129,7 +140,9 @@ public enum DeskNaming {
         out.year = song(SongFacts.year)
         out.label = song(SongFacts.label)
         out.genre = song(SongFacts.genre)
-        let shown = Set(factFields)
+        out.lyrics = song(SongFacts.lyrics)
+        out.shown = NameReading.shown(title: t.ident.title, version: t.ident.version)
+        let shown = Set(factFields + [SongFacts.lyrics])
         let names = SongFacts.known + t.ident.facts.keys.filter { !SongFacts.known.contains($0) }.sorted()
         out.others = names.compactMap { n in
             guard !shown.contains(n), let f = t.ident.facts[n] else { return nil }
@@ -243,7 +256,12 @@ public enum DeskNaming {
     public struct Song {
         public var track: CrateTrack
         public var facts: Facts
-        public init(track: CrateTrack, facts: Facts) { self.track = track; self.facts = facts }
+        /// What the song's folder is (D39; research AC, 3.1), when it was read: a compilation's songs keep their copy's
+        /// release, and the lookup gives when each first came out.
+        public var folder: LocalNames.FolderReading?
+        public init(track: CrateTrack, facts: Facts, folder: LocalNames.FolderReading? = nil) {
+            self.track = track; self.facts = facts; self.folder = folder
+        }
     }
 
     /// The songs a batch tool works on: a source's songs in the order the player shows them (a song in two folders
