@@ -36,6 +36,15 @@ public struct ListenReading: Sendable, Equatable {
     public var confidence: Double
     /// Milliseconds this reading took to work out.
     public var milliseconds: Double
+    /// For measuring: what this reading's search of the whole crate found, whether or not it was taken as a name
+    /// (nil when no search ran, or it found nothing): the song's id, its confidence, and whether it lies on the
+    /// same line as the search before.
+    public var searched: Searched?
+    public struct Searched: Sendable, Equatable {
+        public var id: String
+        public var confidence: Double
+        public var agrees: Bool
+    }
 }
 
 /// The numbers the listener runs on. Each is from the benchmark's dev half or a first principle named beside it
@@ -60,6 +69,12 @@ public struct ListenSettings: Sendable, Equatable {
     public var searchEvery = 2
     /// Songs whose first proposals are checked point by point in a search.
     public var checkSongs = 50
+    /// Whether the microphone's constellation is made denser than a song's (a point need only be the loudest within
+    /// 64 ms and 8 %, not 96 ms and 12 %) and three points are taken per slice, not two: the index is thin, so
+    /// the listening side carries more (letter AB; the size study's rows).
+    public var denseQuery = true
+    /// Whether a named song is followed (false, for measuring only: every reading is a fresh search and nothing is named).
+    public var follow = true
     public init() {}
 }
 
@@ -68,6 +83,7 @@ public final class SongListener {
     public let index: RecognitionIndex
     public var settings: ListenSettings
     private let recogniser: Recogniser
+    private let queryConfig: LandmarkConfig
     /// The last `settings.window` seconds of sound, mono, at the rate it arrives.
     private var sound: [Float] = []
     private var rate = 0
@@ -86,6 +102,10 @@ public final class SongListener {
         self.index = index; self.settings = settings
         recogniser = Recogniser(index: index)
         recogniser.checkSongs = settings.checkSongs
+        if settings.denseQuery { recogniser.queryPerSlice = 3 }
+        var c = index.landmark
+        if settings.denseQuery { c.timeReach = 4; c.frequencyReach = 0.08 }
+        queryConfig = c
     }
 
     /// Bytes this listener holds in the app's own memory: its vote table (a byte for every 128 ms of every song) and
@@ -131,10 +151,11 @@ public final class SongListener {
         let have = min(Double(sound.count) / Double(rate), settings.window)
         guard have >= settings.leastWindow else { return nil }
         let window = Array(sound.suffix(Int(have * Double(rate))))
-        let marks = Landmarks(mono: window, sampleRate: rate, config: index.landmark)
+        let marks = Landmarks(mono: window, sampleRate: rate, config: queryConfig)
         let start = now - have          // listening time of the window's first sample
         var state = ListenReading.State.nothingYet
         var confidence = 0.0
+        var searched: ListenReading.Searched?
 
         // Follow the song already named: one check, at the place and speed it should be at.
         if let f = following {
@@ -154,12 +175,10 @@ public final class SongListener {
             sinceSearch = 0
             if let best = recogniser.match(marks).first {
                 let line = (song: best.songIndex, intercept: best.offsetSeconds - best.tempoRatio * start, tempo: best.tempoRatio)
-                var take = best.confidence >= settings.sure
-                if !take, best.confidence >= settings.fair, let p = pending, p.song == line.song,
-                   abs((p.intercept + p.tempo * now) - (line.intercept + line.tempo * now)) <= settings.agreeSeconds {
-                    take = true
-                }
-                pending = best.confidence >= settings.fair ? line : nil
+                let agrees = pending.map { $0.song == line.song && abs(($0.intercept + $0.tempo * now) - (line.intercept + line.tempo * now)) <= settings.agreeSeconds } ?? false
+                searched = ListenReading.Searched(id: index.ids[best.songIndex], confidence: best.confidence, agrees: agrees)
+                let take = settings.follow && (best.confidence >= settings.sure || (best.confidence >= settings.fair && agrees))
+                pending = best.confidence >= settings.fair || !settings.follow ? line : nil
                 if take, following?.song != best.songIndex || misses > 0 {
                     following = (best.songIndex, line.intercept, best.tempoRatio, best.pitchRatio)
                     misses = 0; state = .named; confidence = best.confidence
@@ -169,11 +188,11 @@ public final class SongListener {
         let ms = Double(DispatchTime.now().uptimeNanoseconds - t0) / 1e6
         guard let f = following, state != .nothingYet else {
             return ListenReading(time: now, state: .nothingYet, songIndex: nil, id: nil, positionSeconds: nil, speedPercent: nil,
-                                 keyLock: nil, confidence: 0, milliseconds: ms)
+                                 keyLock: nil, confidence: 0, milliseconds: ms, searched: searched)
         }
         let lock: Bool? = abs(f.tempo - 1) < 0.01 ? nil : !(abs(log(f.pitch) - log(f.tempo)) < abs(log(f.pitch)))
         return ListenReading(time: now, state: state, songIndex: f.song, id: index.ids[f.song], positionSeconds: f.intercept + f.tempo * now,
-                             speedPercent: (f.tempo - 1) * 100, keyLock: lock, confidence: confidence, milliseconds: ms)
+                             speedPercent: (f.tempo - 1) * 100, keyLock: lock, confidence: confidence, milliseconds: ms, searched: searched)
     }
 }
 

@@ -53,10 +53,14 @@ func rawSamples(_ path: String, first: Int = 0, count: Int? = nil) -> [Float] {
     return out
 }
 
+// --trace: three more columns on every reading, for measuring: the song the reading's search found, its confidence,
+// and whether it agrees with the search before. --no-follow: every reading is a fresh search (measuring only).
+let trace = flags.contains("--trace")
 func line(_ r: ListenReading) -> String {
     String(format: "%.1f\t%@\t%@\t%@\t%@\t%@\t%.2f\t%.1f", r.time, r.state.rawValue, r.id ?? "-",
            r.positionSeconds.map { String(format: "%.2f", $0) } ?? "-", r.speedPercent.map { String(format: "%+.2f", $0) } ?? "-",
            r.keyLock.map { $0 ? "yes" : "no" } ?? "?", r.confidence, r.milliseconds)
+        + (trace ? "\t" + (r.searched.map { String(format: "%@\t%.3f\t%@", $0.id, $0.confidence, $0.agrees ? "agrees" : "-") } ?? "-\t0\t-") : "")
 }
 
 // The index: opened in place, or built from fingerprints.
@@ -70,7 +74,15 @@ if let path = values["--index"] {
         guard let d = FileManager.default.contents(atPath: dir + "/" + name), let m = Landmarks(encoded: d) else { fail("bad fingerprint \(name)") }
         songs.append((String(name.dropLast(4)), m))
     }
-    index = RecognitionIndex(songs: songs, pairing: PairingConfig.booth)
+    // --leave-out FILE: ids not to index (the benchmark's "not in the crate" songs). --keep-one-in N: another thinning
+    // than the booth's, for the size study.
+    if let path = values["--leave-out"], let text = try? String(contentsOfFile: path, encoding: .utf8) {
+        let out = Set(text.split(separator: "\n").map { String($0.split(separator: "\t").first ?? "") })
+        songs.removeAll { out.contains($0.id) }
+    }
+    var pairing = PairingConfig.booth
+    if let keep = values["--keep-one-in"].flatMap(Int.init) { pairing.keepOneIn = keep }
+    index = RecognitionIndex(songs: songs, pairing: pairing)
     if let save = values["--save-index"] { do { try index.write(to: URL(fileURLWithPath: save)) } catch { fail("\(error)") } }
 } else { fail("give --index FILE or --prints DIR") }
 FileHandle.standardError.write(Data(String(format: "index: %d songs, %.1f MB (%.1f KB a song), ready in %.0f ms\n", index.songCount,
@@ -86,6 +98,8 @@ let settings: ListenSettings = {
     if let v = values["--check-songs"].flatMap(Int.init) { s.checkSongs = v }
     if let v = values["--search-every"].flatMap(Int.init) { s.searchEvery = v }
     if let v = values["--lost-after"].flatMap(Int.init) { s.lostAfter = v }
+    if flags.contains("--plain-query") { s.denseQuery = false }
+    if flags.contains("--no-follow") { s.follow = false }
     return s
 }()
 
