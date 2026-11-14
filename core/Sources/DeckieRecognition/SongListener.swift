@@ -76,9 +76,9 @@ public struct ListenSettings: Sendable, Equatable {
     /// Songs whose first proposals are checked point by point in a search.
     public var checkSongs = 50
     /// Whether the microphone's constellation is made denser than a song's (a point need only be the loudest within
-    /// 64 ms and 8 %, not 96 ms and 12 %) and three points are taken per slice, not two: the index is thin, so
-    /// the listening side carries more (letter AB; the size study's rows).
-    public var denseQuery = true
+    /// 64 ms and 8 %, not 96 ms and 12 %) and three points are taken per slice, not two. It helped a thin index of
+    /// three-point hashes; with the booth's two-point index it gained nothing and tripled the time, so it is off.
+    public var denseQuery = false
     /// Whether a named song is followed (false, for measuring only: every reading is a fresh search and nothing is named).
     public var follow = true
     public init() {}
