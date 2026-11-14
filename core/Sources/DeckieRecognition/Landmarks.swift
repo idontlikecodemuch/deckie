@@ -14,7 +14,7 @@ import DeckieCore
 
 /// The numbers the front end runs on. None is fitted to any library: each is from the paper, a first principle, or is
 /// one of a few stated options chosen on half of an outside set (the research letter says which).
-public struct LandmarkConfig: Sendable, Equatable {
+public struct LandmarkConfig: Sendable, Equatable, Codable {
     /// The analysis rate. 8 kHz keeps what a telephone keeps (to 4 kHz), which is the band a small speaker and a room
     /// pass reliably, and makes the transform cheap.
     public var sampleRate = 8000

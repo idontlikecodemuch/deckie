@@ -211,6 +211,8 @@ case "match":
     for r in recognisers { r.verified = verified; r.fallback = fallback; r.fallbackBelow = o.double("--fallback-below", r.fallbackBelow) }
     // --shortlist K [--detail pairs]: the index only proposes K songs; those are hashed in full (three-point hashes,
     // or two-point with --detail pairs) from their constellations, which here stand in for files on storage.
+    let checkSongs = o.int("--check-songs", 0)
+    for r in recognisers { r.checkSongs = checkSongs }
     let shortlist = o.int("--shortlist", 0)
     if shortlist > 0 {
         nonisolated(unsafe) let all = songs

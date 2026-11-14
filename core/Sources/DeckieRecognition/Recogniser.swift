@@ -71,6 +71,9 @@ public final class Recogniser {
     public var grid: SpeedGrid
     /// How many of the best (candidate speed, offset) votes are checked against the song's points.
     public var verified = 12
+    /// The wide check: when above 0, the songs checked are the first this many the votes propose (two votes each),
+    /// in place of the `verified` fullest votes whatever their songs.
+    public var checkSongs = 0
     /// Points taken per slice of the query (nil: the index's own setting).
     public var queryPerSlice: Int?
     /// A fitted point counts when the song has a point within these distances: frames, and 1/4096 octaves (0.85 %).
@@ -122,6 +125,18 @@ public final class Recogniser {
         return (second.first?.confidence ?? 0) > (first.first?.confidence ?? 0) ? second : first
     }
 
+    /// Checks one song at one place and speed against a query, with no search: where a song already named should be
+    /// now. `offsetSeconds` is where in the song the query's first sample is expected; the fit moves it, the speed
+    /// and the pitch to where the points agree, as in a full match. `score` is how far the count of agreeing points
+    /// stands above chance; `confidence` is left at 0 (there are no other songs to compare with).
+    public func check(_ query: Landmarks, song: Int, offsetSeconds: Double, tempoRatio: Double, pitchRatio: Double) -> RecognitionMatch? {
+        let n = min(query.count, query.frames.firstIndex { $0 >= UInt32(RecognitionIndex.maxQueryFrames) } ?? query.count)
+        guard n >= 4, song >= 0, song < index.songCount else { return nil }
+        let qt = (0..<n).map { Double(query.frames[$0]) }, qp = (0..<n).map { Double(query.pitch($0)) }
+        return verify(in: index, qt: qt, qp: qp, song: song, offset: offsetSeconds / index.landmark.frameSeconds,
+                      speed: tempoRatio, shift: log2(pitchRatio) * Landmarks.pitchUnitsPerOctave)
+    }
+
     /// The songs the index in memory proposes for a query, best first: those whose votes pile highest, before any
     /// check (for measuring how often the right song is among the first so many).
     public func proposals(_ query: Landmarks, count: Int) -> [Int] { run(index, query, shortlist: count).1 }
@@ -139,7 +154,7 @@ public final class Recogniser {
 
         var best: [Vote] = []
         // The fullest bins kept from each candidate speed: three for a direct answer, more when a list is wanted.
-        let keep = shortlist == nil ? 3 : 8
+        let keep = shortlist == nil && checkSongs == 0 ? 3 : 8
         var qbin = [Int](repeating: -1, count: n)
         let per = queryPerSlice ?? p.queryPerSlice
         // Per slice of the current anchor: how many targets it has, and each one's pitch bin and gap.
@@ -278,12 +293,20 @@ public final class Recogniser {
         }
         var bySong: [Int: RecognitionMatch] = [:]
         var checked = 0
+        var perSong: [Int: Int] = [:]
         for vote in best {
-            // At least `verified` votes, and on until four songs have been seen (the third is the yardstick below).
-            if checked >= 5 * verified || (checked >= verified && bySong.count >= 4) { break }
-            checked += 1
             let frame = (vote.bin + 1) * Self.binFrames
             let s = ix.song(atTimelineFrame: frame)
+            if checkSongs > 0 {
+                // The wide check: the two fullest votes of each of the first `checkSongs` songs proposed.
+                if perSong.count >= checkSongs && perSong[s] == nil { continue }
+                if perSong[s, default: 0] >= 2 { continue }
+                perSong[s, default: 0] += 1
+            } else {
+                // At least `verified` votes, and on until four songs have been seen (the third is the yardstick below).
+                if checked >= 5 * verified || (checked >= verified && bySong.count >= 4) { break }
+            }
+            checked += 1
             guard let m = verify(in: ix, qt: qt, qp: qp, song: s, offset: Double(frame - ix.songStart[s]), speed: vote.speed,
                                  shift: vote.vinyl ? log2(vote.speed) * Landmarks.pitchUnitsPerOctave : 0) else { continue }
             if let old = bySong[s], old.score >= m.score { continue }
