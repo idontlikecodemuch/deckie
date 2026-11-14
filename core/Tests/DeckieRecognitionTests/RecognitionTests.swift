@@ -211,7 +211,6 @@ import DeckieRecognition
         final class Box: @unchecked Sendable { let lock = NSLock(); var readings: [ListenReading] = [] }
         let box = Box()
         let booth = BoothRecogniser(index: Self.index) { r in box.lock.lock(); box.readings.append(r); box.lock.unlock() }
-        let t0 = DispatchTime.now().uptimeNanoseconds
         // Stereo at 44.1 kHz, as a microphone might deliver it, a quarter of a second at a time.
         let stereo = Resampler.resample(Array(Self.set.prefix(12 * Self.rate)), from: Self.rate, to: 44100).flatMap { [$0, $0] }
         var at = 0
@@ -220,9 +219,11 @@ import DeckieRecognition
             booth.feed(Array(stereo[at..<end]), channels: 2, sampleRate: 44100)
             at = end
         }
-        let fed = Double(DispatchTime.now().uptimeNanoseconds - t0) / 1e9
+        // Feeding did not wait for the readings: when the last piece has been handed over, readings are still to come.
+        box.lock.lock(); let seenWhenFed = box.readings.count; box.lock.unlock()
         booth.finish()
-        #expect(fed < 1.0)                                          // feeding 12 s of sound did not wait for the readings
+        #expect(seenWhenFed < box.readings.count)
+        #expect(box.readings.count == 10)                           // one a second from the third second of twelve
         #expect(box.readings.map(\.time) == box.readings.map(\.time).sorted())
         #expect(box.readings.last?.id == "song2")
         #expect(booth.latest == box.readings.last)
