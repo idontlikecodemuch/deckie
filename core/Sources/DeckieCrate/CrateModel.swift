@@ -713,6 +713,23 @@ public struct CrateTrack: Codable, Equatable, Sendable {
         self.vocalStructure = vocalStructure; self.hooks = hooks
     }
 
+    /// What a record says about its song's key (D33, D36): a key; the home note alone; nothing because Deckie's
+    /// reader read the song and was not sure; or nothing because no key was read on the computer that made it.
+    public enum KeyState: String, Codable, Sendable {
+        case key, homeNote = "home_note", notSure = "not_sure", notRead = "not_read"
+    }
+
+    /// The record's key state. "Not sure" is a record of Deckie's own engine from 0.5.0 (the first with the
+    /// three-answer reader, which reads every song) that has neither a key nor a home note; any other record with
+    /// neither was not read.
+    public var keyState: KeyState {
+        if key != nil { return .key }
+        if keyHome != nil { return .homeNote }
+        let v = engine.version.split(separator: ".").map { Int($0) ?? 0 }
+        let fromFive = (v.first ?? 0) > 0 || (v.count > 1 && v[1] >= 5)
+        return engine.family == CrateFormat.EngineFamily.deckie && fromFive ? .notSure : .notRead
+    }
+
     /// The record's `features_present`: the optional blocks it holds and its per-bar series, sorted.
     public var featuresPresent: [String] {
         typealias F = CrateFormat.Feature
