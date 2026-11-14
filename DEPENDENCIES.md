@@ -36,6 +36,8 @@ alters a row goes into the JSON in the same commit.
 | ONNX Runtime | 1.31.1 | MIT; carries Eigen under MPL 2.0, unmodified by Deckie; carries ONNX Runtime's two published patches (IBM Z builds; nothing compiled on Linux, Windows or macOS differs), shipped beside Eigen's notice (section 6); the shipped library is Deckie's own build without Microsoft's usage-reporting client | | |
 | Beat This! (beat tracker, checkpoint final0) | ISMIR 2024 release, checkpoint final0 | MIT (section 7) | 15 sets, everything but GTZAN; terms range from MIT and CC BY to CC BY-NC and all rights reserved, each in section 7's table | tempo and bar grid from Deckie's own code at lower confidence (section 7) |
 | YAMNet (vocal tagger) | tensorflow/models commit a6e25e2 weights | Apache 2.0 (section 8) | AudioSet: labels CC BY 4.0, clips are their YouTube uploaders'; trained by Google (section 8) | vocal fields absent, record flagged vocal_unknown (section 8) |
+| webview (Desk's window on Windows and Linux) | 0.12.0 | MIT (section 9) | | |
+| Microsoft WebView2 SDK header (Desk's window on Windows) | 1.0.4191.47 | BSD 3-clause (section 10) | | |
 
 <!-- /dependencies-table -->
 
@@ -869,6 +871,94 @@ the class indices `YAMNetClass` uses against the class list at the new commit; c
 `YAMNet.recordedExportSHA256` and here; regenerate the reference numbers with `make_yamnet_fixtures.py --source
 core/.models/yamnet-source` and run `swift test`; re-quote the licence; publish the new file as section 7 says. CI
 exports again once, since the scripts and the requirements are its cache key.
+
+## 9. webview, the window around Desk's pages on Windows and Linux (vendored)
+
+D32: Desk on Windows and Linux is web pages (`desk-web/`) in a window of its own, made by a small Swift program
+(`desk-shell/`, `deckie-desk`). The window is the system's own web view, reached through the `webview` library
+(github.com/webview/webview), a C and C++ library that puts WebView2 (Windows), WebKitGTK (Linux) and WKWebView
+(macOS) behind one C interface, which Swift calls. It is one header, vendored unmodified at
+`desk-shell/Sources/CDeskShell/vendor/webview/webview.h` with its `LICENSE` beside it, and compiled into the C++
+target `CDeskShell` (`deskshell.cc`, with `WEBVIEW_STATIC`). Nothing is downloaded at build time. Fetched Nov 13,
+2026, by the Desk window session.
+
+| | |
+|---|---|
+| Version | tag `0.12.0`, commit `3ab4b5d722438fc8a13e6ca830c5e2372d19a01d` (the latest tag; `master` has moved since, to Oct 22, 2026) |
+| Source | `https://codeload.github.com/webview/webview/tar.gz/refs/tags/0.12.0`, 165,487 bytes, SHA-256 `e2c8d0bed3fcd13e624074448b7d3b1d0b0d03546a15839f17ee0013f2cba1db` |
+| Vendored file | `core/include/webview/webview.h` from that archive, 4,557 lines, SHA-256 `b1ff6e11431d031e5f7917e5301f4bcdf3910a2763a0720abfd291994eee7f7b` |
+| Its licence file | `LICENSE`, SHA-256 `22c4c38a605ae5362bdbd795b4358f3599c7a7e58d4824c4ed55e3be192386e0` |
+
+**Licence:** MIT, on the allowlist. Quoted from the vendored `LICENSE`:
+
+```text
+MIT License
+
+Copyright (c) 2017 Serge Zaitsev
+Copyright (c) 2022 Steffen André Langnes
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, ...
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+```
+
+It has no file chooser, no drag and drop and no installer; the shell adds the choosers and the Windows drop handler
+itself (`deskshell.cc`, `Window.swift`). It sends nothing anywhere.
+
+## 10. The system's web views, and Microsoft's WebView2 SDK header (vendored)
+
+**The web views themselves are the platform's, not shipped by Deckie** ("use the platform first"):
+
+- **Windows: the Microsoft Edge WebView2 Runtime**, part of Windows 11 and installed on most Windows 10 PCs. The
+  shell loads it at run time with the `webview` library's own loader (`WEBVIEW_MSWEBVIEW2_BUILTIN_IMPL`), so no
+  `WebView2Loader.dll` travels with Desk. The CI runner had version 156.0.4314.58 (Nov 13, 2026). A PC without it
+  gets no window (`deckie-desk` says so and exits); installing it, or bundling Microsoft's bootstrapper, is a packaging
+  question still open. Its terms are Microsoft's for the runtime, which Deckie does not redistribute.
+- **Linux: WebKitGTK 4.1 with GTK 3**, from the distribution (Ubuntu's `libwebkit2gtk-4.1-0`; CI installs
+  `libwebkit2gtk-4.1-dev` from Ubuntu 24.04's archive, 2.52.6 with GTK 3.24.41 on Nov 13, 2026). LGPL 2.1, loaded
+  from the system as separate libraries, which the allowlist allows; nothing of it is copied into Deckie. The apt
+  packages are named, not pinned by hash: they are the build machine's system libraries, as the Swift image's are.
+- **macOS: WKWebView**, part of the system. The Mac's own Desk is the SwiftUI app; the shell builds on the Mac only so
+  the pages can be seen there.
+
+**WebView2's SDK header** is needed to compile the Windows window: `WebView2.h` from Microsoft's NuGet package
+`Microsoft.Web.WebView2`, vendored unmodified at `desk-shell/Sources/CDeskShell/vendor/WebView2/WebView2.h` with the
+package's `LICENSE.txt` beside it. Only the header is used (it declares the interfaces and defines their ids); none of
+the package's libraries or tools are.
+
+| | |
+|---|---|
+| Version | 1.0.4191.47 (a recent release; any version since 1.0.1150.38 serves the `webview` library) |
+| Source | `https://api.nuget.org/v3-flatcontainer/microsoft.web.webview2/1.0.4191.47/microsoft.web.webview2.1.0.4191.47.nupkg`, 9,259,926 bytes, SHA-256 `f492bbf547d0da329553b6727435b677579b1e9f91cc9e4a1ad029366d5f23d0` |
+| Vendored file | `build/native/include/WebView2.h`, 2,939,599 bytes, SHA-256 `dff1e3181ec7ec203a34ef6efa966590e0ef0ba1a5c3fe3b69da6508c2f8a02e` |
+| Its licence file | `LICENSE.txt`, SHA-256 `0af8f1b807512aae39c2ac1aa4d0cae65cabecb6fd554b8439a5162a0d6eca55` |
+
+**Licence:** BSD 3-clause in substance, on the allowlist. Quoted from `LICENSE.txt`:
+
+```text
+Copyright (C) Microsoft Corporation. All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are
+met:
+   * Redistributions of source code must retain the above copyright
+notice, this list of conditions and the following disclaimer.
+   * Redistributions in binary form must reproduce the above
+copyright notice, this list of conditions and the following disclaimer
+in the documentation and/or other materials provided with the
+distribution.
+   * The name of Microsoft Corporation, or the names of its contributors
+may not be used to endorse or promote products derived from this
+software without specific prior written permission.
+```
+
+So the Windows Desk's acknowledgements carry Microsoft's notice (the table above has the row).
+
+**Not adopted: the Inter font.** The pages name Inter first, as the site does, but do not carry it: its licence (SIL
+Open Font Licence 1.1) is not on the allowlist. Where Inter is not installed the system's own interface font shows
+(Segoe UI, Cantarell, Ubuntu). Carrying it is the owner's call.
 
 ## Checked and rejected
 
