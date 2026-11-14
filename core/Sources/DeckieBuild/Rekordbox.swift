@@ -30,6 +30,27 @@ public struct RekordboxCollection: Sendable {
         public var tonality: String?
         public var tempos: [Tempo]
         public var marks: [PositionMark]
+        /// The track's facts beyond its names and key (D34), by `SongFacts` name: `Album`, `Genre`, `Label`, `Year`
+        /// (not "0"), `Comments`, `Composer`, `Remixer`, `Grouping`.
+        public var facts: [String: [String]] = [:]
+    }
+
+    /// rekordbox's attributes with a `SongFacts` meaning.
+    static let factAttributes: [(String, String)] = [
+        ("Album", SongFacts.release), ("Genre", SongFacts.genre), ("Label", SongFacts.label), ("Year", SongFacts.year),
+        ("Comments", SongFacts.comment), ("Composer", SongFacts.composer), ("Remixer", SongFacts.remixer),
+        ("Grouping", SongFacts.grouping),
+    ]
+
+    /// A program's attributes as facts: each named one that is not empty (a year of "0" is none).
+    static func facts(_ a: [String: String], _ names: [(String, String)]) -> [String: [String]] {
+        var out: [String: [String]] = [:]
+        for (attribute, fact) in names {
+            guard let v = nonEmpty(a[attribute]) else { continue }
+            if fact == SongFacts.year, Int(v) == 0 { continue }
+            out[fact] = fact == SongFacts.genre ? FileFacts.genres([v]) : [v]
+        }
+        return out
     }
 
     /// A `TEMPO` element: from `inizio` seconds the grid runs at `bpm` in `metro`, the beat there being beat
@@ -115,7 +136,8 @@ public struct RekordboxCollection: Sendable {
                                     path: a["Location"].flatMap(path(fromLocation:)), size: a["Size"].flatMap { Int($0) },
                                     totalTime: number(a["TotalTime"]),
                                     averageBpm: number(a["AverageBpm"]).flatMap { $0 > 0 ? $0 : nil },
-                                    tonality: nonEmpty(a["Tonality"]), tempos: [], marks: [])
+                                    tonality: nonEmpty(a["Tonality"]), tempos: [], marks: [],
+                                    facts: facts(a, factAttributes))
                 case "TEMPO" where current != nil:
                     if let start = number(a["Inizio"]), let bpm = number(a["Bpm"]), bpm > 0 {
                         current?.tempos.append(Tempo(inizio: start, bpm: bpm, metro: nonEmpty(a["Metro"]),
