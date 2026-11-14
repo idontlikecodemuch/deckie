@@ -152,7 +152,7 @@ public enum DeskWords {
         "figNeedName": "Need a name",
         "figSameFile": "In two places",
         "figCopies": "Copies of one recording",
-        "figCopiesLater": "found while saving",
+        "figCopiesLater": "when saving",
         "figNotIn": "Didn't go in",
         "wallTitle": "The crate so far",
         "wallTitleDone": "{read}, one line a song",
