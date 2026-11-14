@@ -42,6 +42,7 @@ let package = Package(
         .library(name: "DeckieBuild", targets: ["DeckieBuild"]),
         .library(name: "DeckieDesk", targets: ["DeckieDesk"]),
         .executable(name: "deckie-build", targets: ["deckie-build"]),
+        .executable(name: "deckie-desk-engine", targets: ["deckie-desk-engine"]),
     ],
     targets: [
         .target(name: "DeckieAudio"),
@@ -61,6 +62,9 @@ let package = Package(
                                "DeckieAudio"]),
         .executableTarget(name: "deckie-build", dependencies: ["DeckieBuild", "DeckieCrate"]),
         .target(name: "DeckieDesk", dependencies: ["DeckieBuild", "DeckieEngine", "DeckieCrate", "DeckieCore", "DeckieDecode"]),
+        // deckie-desk-engine: Desk's engine for the Windows and Linux window (D32), DeskProtocol over standard input
+        // and output (docs/architecture/desk-protocol.md).
+        .executableTarget(name: "deckie-desk-engine", dependencies: ["DeckieDesk", "DeckieEngine"]),
         .target(name: "DeckieTestSupport", dependencies: ["DeckieAudio", "DeckieCore", "DeckieDecode"],
                 path: "Tests/DeckieTestSupport"),
         .testTarget(name: "DeckieCoreTests", dependencies: ["DeckieCore", "DeckieLab", "DeckieAudio", "DeckieTestSupport"],
@@ -79,7 +83,7 @@ let package = Package(
                     exclude: ["Fixtures"]),
         .testTarget(name: "DeckieDeskTests",
                     dependencies: ["DeckieDesk", "DeckieBuild", "DeckieEngine", "DeckieCrate", "DeckieCore", "DeckieAudio",
-                                   "DeckieDecode", "DeckieInference", "DeckieTestSupport"]),
+                                   "DeckieDecode", "DeckieInference", "DeckieTestSupport", "deckie-desk-engine"]),
     ]
 )
 
