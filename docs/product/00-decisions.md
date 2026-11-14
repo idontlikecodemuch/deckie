@@ -559,6 +559,26 @@ be a free way to find out and fill genre for example."
 - **Filling genre and the like from a song's name** belongs to the lookup that the DJ asks for (note on D30); the
   sources and their terms are in letter AA.
 
+### D35. Recognising what is playing: we go for a fingerprint of our own (Nov 14)
+From the recognition trial (letter W2, merged Nov 14). The trial's fingerprint names the right song across the
+whole pitch fader from clean sound and reads the fader, on any computer, where Apple's tool stops at about 4
+percent; it falls behind Apple's in loud noise, and it holds too much in memory for an iPad. The owner: "We seem
+very close on our own work. I think we try to get there on our fingerprint."
+
+- **The aim is one recogniser of Deckie's own**, in Desk on every computer and in the booth, not Apple's tool with
+  ours beside it.
+- **Noise first, by learning from how other fingerprints work.** The owner: "We are using only loudest which would
+  cause problems in rooms where there is a lot of noise or distortion from the speakers."
+- **Speed is good enough** as long as a song is named within a few seconds of listening: "The speed is fine. as long
+  as we get there in a few seconds. Previously it took almost 8-10 seconds on the ipad."
+- **Size is the large problem** (what the booth must hold in memory to match). Two ways, in this order: make it
+  smaller and see how small it can go while still working; then, if needed, split a crate so the booth holds only
+  part of it at a time.
+- **The real-room test is the recording of the Oct 24 set**, made by the booth's own microphone, with the booth's
+  log of what it named and when. It is run on the owner's Mac only; the recording and his music never leave it and
+  are never public, and nothing is fitted to them.
+- Nothing ships from the trial until it has passed that test and a test on the owner's whole library.
+
 ### Note on D19 (Nov 1): versions of a song stay separate rows
 Christopher, on two remixes of one song both showing in the picks: "we shouldn't merge them unless they are the same
 songs. DJs often have a bunch of versions of the same song". So the booth folds together only copies of the same
