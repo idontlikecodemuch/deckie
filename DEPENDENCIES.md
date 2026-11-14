@@ -1140,7 +1140,34 @@ picture 128 pixels across. **Stated, not hidden: this is a judgement, and the ma
 and the date here, re-quote the licence, then `swift build` and `swift test`: `DeckieCoversTests` pins the bytes of
 two thumbnails, so a change in either library's output shows at once (and is then a new pin, since covers already
 written elsewhere keep their old bytes under the same name, which the format allows).
-## 12. Networking for the lookup (D36): nothing added; Swift's networking on Linux and Windows not adopted
+## 12. Networking for the lookup (D36): each system's own; nothing ships; Swift's networking on Linux and Windows not adopted
+
+**Decided: way (2) below, the owner, Nov 14, 2026.** The lookup now works on Windows and Linux through each
+system's own HTTP client, behind the interface it already had (`LookupTransport`), by a small C layer inside the
+lookup's folder (`core/Sources/DeckieLookup/CLookupNet`, Deckie's own code, about 300 lines):
+
+| | What | Where it comes from | Licence | Ships with Deckie |
+|---|---|---|---|---|
+| Windows | WinHTTP (`winhttp.dll`) | part of Windows; opened at run time from the system folder only | Windows' own | no |
+| Linux | libsoup 3 (`libsoup-3.0.so.0`; 3.4.4 on Ubuntu 24.04), with GLib and GLib's networking (`glib-networking`, for HTTPS and proxy settings) | the system's packages; already on any PC that can show Desk's window, since WebKitGTK 4.1 needs them; opened at run time by name | LGPL 2.1 or later (a few of libsoup's files: LGPL 2 or later) | no |
+| Mac | Foundation's URL loading | part of macOS | Apple's own | no |
+
+- **Used, not shipped, not linked.** Nothing is linked against either library and no header of theirs is needed
+  to build: the few functions are found by name at run time, as ONNX Runtime's are. Where the library cannot be
+  opened the lookup says it is not on this computer. The LGPL's terms for a program that uses a library the user's
+  own system supplies ask nothing of Deckie's code; this is the same standing as WebKitGTK itself (section 10).
+  **The owner's yes of Nov 14, 2026 covers this line.** The allowlist below is unchanged: it lists what ships.
+- **The same behaviour on all three:** HTTPS checked against the system's certificates, the computer's proxy
+  settings followed, no cookies, no cache, no credentials, a 20-second wait, the two headers the lookup gives and
+  no others of ours, one request a second.
+- **In the workflows** `core-linux` installs `libsoup-3.0-0`, `glib-networking`, `python3` and `openssl` from
+  Ubuntu's archive for the transport's tests, which ask a small server on the runner itself
+  (`core/Tools/lookup_test_server.py`, Python's standard library) and never the real service; every workflow sets
+  `DECKIE_LOOKUP_OFF`, which turns the lookup's way out off.
+
+What follows is the record of Nov 14 from before the decision, kept because it says why Swift's own networking was
+not taken.
+
 
 "Look up songs via MusicBrainz" (D36) is the first thing in Deckie that uses the network, all of it in
 `core/Sources/DeckieLookup`. **No dependency was added.** What it uses, checked Nov 14, 2026:

@@ -14,6 +14,7 @@ To do that it needs a crate file: everything Deckie knows about your songs
 Deckie Desk is the program that makes the crate file, from the music on your PC.
 
 Your music stays on this PC. No account. No upload. It works with no internet.
+Nothing is sent anywhere unless you ask Deckie Desk to look songs up (below).
 
 
 How to start it
@@ -135,9 +136,18 @@ What does not work yet
     minor, it shows the home note. Where it is not sure, it shows no key and
     tells you how many songs that is. It does not guess.
 
-  - Looking up names. A song with no name in its file is listed as needing
-    one. You can type it, paste a list, or take names from the file names or a
-    playlist. Nothing is looked up on the internet in this version.
+  - Looking up names is there, and it is the one thing that uses the
+    internet. A song with no name in its file is listed as needing one. You
+    can type it, paste a list, or take names from the file names or a
+    playlist. Or choose "Look up songs via MusicBrainz", a public music
+    encyclopedia. Desk then shows you, before anything goes, exactly what it
+    will send: the titles, artists and releases it already has for those
+    songs (for a music CD, the lengths of its songs). Never the songs
+    themselves, never where your files are, never who you are. Press "Not
+    now" and nothing is sent. Windows itself does not ask about this. If you
+    have a security program of your own, it may ask once whether Deckie Desk
+    may use the internet; say yes if you want lookups. If there is no
+    connection, Desk says so and everything else carries on.
 
   - This test has not been tried on many PCs yet. Reading a music CD, and
     dragging a folder onto the window, are the two things least tried.
@@ -171,13 +181,33 @@ and folders in one crate, names, and listening to a song to name it.
 If something goes wrong
 -----------------------
 
-Please tell the person who gave you Deckie:
+Deckie Desk keeps a short log of what it did. Sending that one file back is
+all that is asked:
 
-  1. What you clicked, and what the window said. A photo or screenshot helps.
-  2. Which Windows you have (Windows 10 or 11).
+  1. Open any folder window, click in the address bar at the top, type
 
-If Deckie Desk does not open at all and says nothing, say that too. It is the
-most useful thing we can learn from this test.
+         %LOCALAPPDATA%\Deckie Desk
+
+     and press Enter.
+  2. Send the file "Deckie Desk log.txt" to the person who gave you Deckie.
+     If Desk has been started again since the trouble, also send "Deckie Desk
+     log (last time).txt" from the same folder.
+
+What is in it: when Desk started, which Windows this is, where Desk's own
+parts are, how each run began and ended with its counts, and the reason for
+anything that failed. A reason can name a file or folder, and folder paths
+include your Windows account's name. What is never in it: any music, and the
+names, artists or keys of your songs.
+
+If you used "Make Crate File", its log is the file ending in "Deckie log.txt"
+next to your crate file.
+
+It also helps to say what you clicked and what the window said (a photo of
+the screen is fine), and which Windows you have (10 or 11).
+
+If Deckie Desk does not open at all and says nothing, say that too, and still
+look for the log: it is usually written even when the window never appears. It
+is the most useful thing we can learn from this test.
 
 To remove Deckie: delete this folder. It installed nothing. It keeps your
 crates, and its notes on what it has already read, in two folders called

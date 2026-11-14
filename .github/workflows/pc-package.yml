@@ -113,6 +113,15 @@ jobs:
           retention-days: 30
           compression-level: 0
           if-no-files-found: error
+      # The test tool, for the job that tries the zip on Windows for Arm (it makes the test music and reads the
+      # crate file back there). A run's artifact for a week; never committed, never in the zip.
+      - name: Keep the test tool for the Arm job
+        uses: actions/upload-artifact@v4
+        with:
+          name: package-test-tool
+          path: core\.build\release\deckie-e2e.exe
+          retention-days: 7
+          if-no-files-found: error
 
       # From here on: the zip used as a DJ would use it. Unzipped by Windows' own tool into a fresh folder whose
       # name has a space; PATH cut down to Windows itself, so a library missing from the zip cannot be found in the
@@ -307,6 +316,31 @@ jobs:
           Get-Content $log | Where-Object { $_ -match "run started|run finished|finished screen|crate file exported|lookup|PASSED" } >> $env:GITHUB_STEP_SUMMARY
           $read >> $env:GITHUB_STEP_SUMMARY
           '```' >> $env:GITHUB_STEP_SUMMARY
+      - name: "Try Desk: the log a DJ can send back is written, and holds no song names"
+        shell: pwsh
+        run: |
+          . core\Tools\windows\try-desk.ps1
+          $env:DECKIE_DESK_HOME = $null
+          $env:DECKIE_DJ_HOME = Join-Path $env:RUNNER_TEMP "desk-check\dj"
+          # Started as the checks start it, but with no log named: Desk writes its own, where the READ ME says.
+          $r = Start-FromZip -Program "Deckie Desk.exe" -Arguments "--check" -Seconds 180
+          if ($r.Code -ne 0) { Show-WhatWindowsSaw -Since $r.Since; Write-Error "Deckie Desk's check ended with code $(Format-Code $r.Code)"; exit 1 }
+          $log = Join-Path $env:LOCALAPPDATA "Deckie Desk\Deckie Desk log.txt"
+          if (-not (Test-Path $log)) { Write-Error "no log at $log"; exit 1 }
+          $said = Get-Content $log | Out-String
+          $said
+          foreach ($want in "Deckie Desk log, started", "system: ", "window made \(WebView2\)", "engine: protocol", "lookup available: 1") {
+            if ($said -notmatch $want) { Write-Error "the log does not have: $want"; exit 1 }
+          }
+          # The crate made by the run before this step is still in Desk's storage: none of its songs' names is here.
+          foreach ($never in "Track One", "Träck Zwei", "parked") {
+            if ($said -match $never) { Write-Error "the log names a song: $never"; exit 1 }
+          }
+          if (-not (Test-Path (Join-Path $env:LOCALAPPDATA "Deckie Desk\Deckie Desk log (last time).txt"))) { "(no earlier log beside it: this was the first start that wrote one)" }
+          "## Deckie Desk: the log a DJ can send back" >> $env:GITHUB_STEP_SUMMARY
+          '```' >> $env:GITHUB_STEP_SUMMARY
+          $said >> $env:GITHUB_STEP_SUMMARY
+          '```' >> $env:GITHUB_STEP_SUMMARY
       - name: "Try Desk: started without unzipping the rest (the starter alone)"
         shell: pwsh
         run: |
@@ -421,6 +455,112 @@ jobs:
           "## Time per song on this runner" >> $env:GITHUB_STEP_SUMMARY
           "Four synthesised four-minute songs (44.1 kHz stereo; two WAV, two FLAC), release build, from the zip. Processor: $cpu." >> $env:GITHUB_STEP_SUMMARY
           "" >> $env:GITHUB_STEP_SUMMARY
+          '```' >> $env:GITHUB_STEP_SUMMARY
+          $log | Where-Object { $_ -match "^(system|processors|seconds per song|whole run|songs in)" } >> $env:GITHUB_STEP_SUMMARY
+          '```' >> $env:GITHUB_STEP_SUMMARY
+
+
+  # The same zip on Windows 11 for Arm, where its x64 programs run through Windows' own emulation: what the owner's
+  # virtual machine on an Apple-silicon Mac will be. Report only: it cannot turn this workflow red, and the check-in
+  # says what it showed. Nothing is built here; the zip and the test tool come from the job above.
+  arm:
+    needs: package
+    runs-on: windows-11-arm
+    timeout-minutes: 45
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: Deckie-Desk-for-Windows-first-test
+          path: ${{ runner.temp }}\package
+      - uses: actions/download-artifact@v4
+        with:
+          name: package-test-mp3
+          path: ${{ runner.temp }}\package-mp3
+      - uses: actions/download-artifact@v4
+        with:
+          name: package-test-tool
+          path: ${{ runner.temp }}\tool
+      - name: "Arm: this machine, and unzip"
+        shell: pwsh
+        run: |
+          $os = Get-CimInstance Win32_OperatingSystem
+          $cpu = (Get-CimInstance Win32_Processor | Select-Object -First 1)
+          $keys = @('HKLM:\SOFTWARE\WOW6432Node\Microsoft\EdgeUpdate\Clients\{F3017226-FE2A-4295-8BDF-00C3A9A7E4C5}',
+                    'HKLM:\SOFTWARE\Microsoft\EdgeUpdate\Clients\{F3017226-FE2A-4295-8BDF-00C3A9A7E4C5}',
+                    'HKCU:\Software\Microsoft\EdgeUpdate\Clients\{F3017226-FE2A-4295-8BDF-00C3A9A7E4C5}')
+          $webview = ($keys | ForEach-Object { (Get-ItemProperty -LiteralPath $_ -ErrorAction SilentlyContinue).pv } | Where-Object { $_ } | Select-Object -First 1)
+          $line = "$($os.Caption), version $($os.Version), $($os.OSArchitecture); processor: $($cpu.Name), $($cpu.NumberOfLogicalProcessors) logical; PROCESSOR_ARCHITECTURE=$env:PROCESSOR_ARCHITECTURE; WebView2 Runtime by the registry: $(if ($webview) { $webview } else { 'not found' })"
+          $line
+          "## Windows for Arm: where this was tried" >> $env:GITHUB_STEP_SUMMARY
+          $line >> $env:GITHUB_STEP_SUMMARY
+          Expand-Archive -Path (Join-Path $env:RUNNER_TEMP "package\Deckie-Desk-for-Windows-first-test.zip") -DestinationPath (Join-Path $env:RUNNER_TEMP "A DJ's PC")
+          # The test tool beside the zip's own libraries, in a folder of its own (the zip's folder is left as it is).
+          $tool = Join-Path $env:RUNNER_TEMP "tool"
+          Copy-Item (Join-Path $env:RUNNER_TEMP "A DJ's PC\Deckie Desk for Windows (first test)\app\*.dll") $tool
+      - name: "Arm: the first start, then twice more (the window, the page, the engine's words; start-up time)"
+        shell: pwsh
+        run: |
+          . core\Tools\windows\try-desk.ps1
+          $work = Join-Path $env:RUNNER_TEMP "desk-check"
+          New-Item -ItemType Directory -Force $work | Out-Null
+          $env:DECKIE_DESK_HOME = Join-Path $work "desk"
+          $env:DECKIE_DJ_HOME = Join-Path $work "dj"
+          $env:DECKIE_CHECK_SECONDS = "600"
+          foreach ($n in 1, 2, 3) {
+            $log = Join-Path $work "start-$n.log"
+            $r = Start-FromZip -Program "Deckie Desk.exe" -Arguments "--check --check-log `"$log`"" -Seconds 700
+            if (Test-Path $log) { Get-Content $log } else { "no log was written" }
+            if ($r.Code -ne 0) { Show-WhatWindowsSaw -Since $r.Since; Write-Error "start $n ended with code $(Format-Code $r.Code)"; exit 1 }
+          }
+          "## Windows for Arm: three starts" >> $env:GITHUB_STEP_SUMMARY
+          '```' >> $env:GITHUB_STEP_SUMMARY
+          Get-ChildItem $work -Filter "start-*.log" | ForEach-Object { Get-Content $_.FullName | Where-Object { $_ -match "start-up:|window made|engine said hello|PASSED|FAILED" } } >> $env:GITHUB_STEP_SUMMARY
+          '```' >> $env:GITHUB_STEP_SUMMARY
+      - name: "Arm: add a music folder through the page, let the run finish, export, read the crate file back"
+        if: ${{ !cancelled() }}
+        shell: pwsh
+        run: |
+          . core\Tools\windows\try-desk.ps1
+          $tool = Join-Path $env:RUNNER_TEMP "tool\deckie-e2e.exe"
+          $work = Join-Path $env:RUNNER_TEMP "desk-check"
+          New-Item -ItemType Directory -Force $work | Out-Null
+          $music = Join-Path $env:RUNNER_TEMP "desk tester\My Müsic"
+          $out = Join-Path $env:RUNNER_TEMP "desk tester\For the iPad"
+          New-Item -ItemType Directory -Force $out | Out-Null
+          & $tool make $music --mp3 (Join-Path $env:RUNNER_TEMP "package-mp3\test_track.mp3")
+          if ($LASTEXITCODE -ne 0) { Write-Error "the test tool did not make the music folder (code $LASTEXITCODE)"; exit 1 }
+          $env:DECKIE_DESK_HOME = $null
+          $env:DECKIE_DJ_HOME = Join-Path $work "dj"
+          $env:DECKIE_CHECK_SECONDS = "1500"
+          $log = Join-Path $work "run.log"
+          $r = Start-FromZip -Program "Deckie Desk.exe" -Arguments "--check --check-log `"$log`" --music `"$music`" --export-to `"$out`"" -Seconds 1600
+          if (Test-Path $log) { Get-Content $log } else { "no log was written" }
+          if ($r.Code -ne 0) { Show-WhatWindowsSaw -Since $r.Since; Write-Error "Deckie Desk's run ended with code $(Format-Code $r.Code)"; exit 1 }
+          $crate = Join-Path $out "My Müsic.deckiecrate"
+          $read = & $tool check-desk $crate "My Müsic" | Out-String
+          $read
+          if ($LASTEXITCODE -ne 0) { exit 1 }
+          "## Windows for Arm: a run from the zip" >> $env:GITHUB_STEP_SUMMARY
+          '```' >> $env:GITHUB_STEP_SUMMARY
+          Get-Content $log | Where-Object { $_ -match "run started|run finished|finished screen|crate file exported|lookup|PASSED" } >> $env:GITHUB_STEP_SUMMARY
+          $read >> $env:GITHUB_STEP_SUMMARY
+          '```' >> $env:GITHUB_STEP_SUMMARY
+      - name: "Arm: time per song (four four-minute songs, Make Crate File)"
+        if: ${{ !cancelled() }}
+        shell: pwsh
+        run: |
+          $tool = Join-Path $env:RUNNER_TEMP "tool\deckie-e2e.exe"
+          $music = Join-Path $env:RUNNER_TEMP "timing\Four Songs"
+          & $tool songs $music --count 4 --seconds 240
+          $env:PATH = "$env:SystemRoot\System32;$env:SystemRoot"
+          $exe = Join-Path $env:RUNNER_TEMP "A DJ's PC\Deckie Desk for Windows (first test)\Make Crate File.exe"
+          & $exe $music --no-wait
+          if ($LASTEXITCODE -ne 0) { exit 1 }
+          $log = Get-Content (Join-Path $env:RUNNER_TEMP "timing\Four Songs Deckie log.txt")
+          $log
+          "## Windows for Arm: time per song" >> $env:GITHUB_STEP_SUMMARY
           '```' >> $env:GITHUB_STEP_SUMMARY
           $log | Where-Object { $_ -match "^(system|processors|seconds per song|whole run|songs in)" } >> $env:GITHUB_STEP_SUMMARY
           '```' >> $env:GITHUB_STEP_SUMMARY

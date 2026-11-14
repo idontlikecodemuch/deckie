@@ -36,7 +36,10 @@ func option(_ name: String) -> String? {
     return args[i + 1]
 }
 let env = ProcessInfo.processInfo.environment
+// What Desk says for a developer goes to a file as well: the one a check names, else the log a DJ can send back
+// (DeskLog), which a tour or a self-test does not write.
 if let log = option("--check-log") { Notice.keepLog(at: log) }
+else if !args.contains("--self-test") && !args.contains("--tour") && env["DECKIE_DESK_NO_LOG"] == nil { DeskLog.start() }
 Notice.quiet = args.contains("--check") || args.contains("--self-test") || args.contains("--tour") || env["DECKIE_NO_BOXES"] != nil
 
 // A check never waits for ever: its time limit starts now, before the window is made.
@@ -98,10 +101,27 @@ guard !pretendNoWebView, let desk = Desk(options: options) else {
     exit(version == nil ? 4 : 5)
 }
 
+// For the log: where the parts are, what the engine says about itself and its runs, and anything the page throws.
+Notice.say("deckie-desk: window made (\(Window.engineName)); engine \(engine.path); pages \(pages.path)")
+desk.watchers.append { line in if let said = DeskLog.line(forEngine: line) { Notice.say("deckie-desk: " + said) } }
+desk.pageWatchers.append { m in
+    switch m["type"] as? String {
+    case "shell.ready":
+        desk.window.eval("""
+            window.addEventListener('error', function (e) { deckieShell.send(JSON.stringify({ type: 'shell.pageError', detail: String(e.message || e) + ' at ' + String(e.filename || '').split('/').pop() + ':' + e.lineno })); });
+            window.addEventListener('unhandledrejection', function (e) { deckieShell.send(JSON.stringify({ type: 'shell.pageError', detail: 'a promise: ' + String(e.reason) })); });
+            """)
+    case "shell.pageError": Notice.say("deckie-desk: the page threw: \(String(String(describing: m["detail"] ?? "?").prefix(400)))")
+    default: break
+    }
+}
+
 if args.contains("--check") {
     let music = option("--music"), exportTo = option("--export-to")
     Check.arm(desk, music: music, exportTo: exportTo)
 }
 if let out = option("--tour") { Tour.arm(desk, out: URL(fileURLWithPath: out, isDirectory: true)) }
 
-exit(desk.run())
+let code = desk.run()
+Notice.say("deckie-desk: ended (\(code))")
+exit(code)
