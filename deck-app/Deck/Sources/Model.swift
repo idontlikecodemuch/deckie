@@ -86,6 +86,24 @@ struct Track: Codable, Identifiable, Hashable {
     /// the DJ's programs or the DJ gave, by name, each with its values. Nil in the bundled data and in a crate file
     /// written before them.
     var facts: [String: [String]]? = nil
+    /// The home note (D36: "A", "C#") of a song whose key reader found the home note and left major or minor open;
+    /// nil when the song has a key, and in the bundled data.
+    var keyHome: String? = nil
+    /// True when Deckie's reader read the song and was not sure of its key (D33), as distinct from a key that was
+    /// never read; nil otherwise and in the bundled data.
+    var keyNotSure: Bool? = nil
+    /// The song's cover (D36): the hash that names `covers/<hash>.jpg` in the crate file; nil when it has none.
+    var cover: String? = nil
+
+    /// The key where a song's key shows (D33, D36): its wheel code; "Home note A" in place of the code; "not sure"
+    /// when Deckie read it and was not sure; "?" when no key was read.
+    var keyShown: String {
+        if let key { return key }
+        if let n = keyHome { return Words.homeNote(n) }
+        return keyNotSure == true ? Words.keyNotSureShort : Words.unknownKey
+    }
+    /// Whether `keyShown` is words rather than a code or "?", so a narrow key column lets it be as wide as it needs.
+    var keyShownIsWords: Bool { key == nil && (keyHome != nil || keyNotSure == true) }
 
     /// The short line of facts where a song's details are shown: "Friday Night · 1999 · Nervous · House, Garage",
     /// with only those present; nil when the crate file gives none. How facts are shown is to be refined (D34).
@@ -193,6 +211,9 @@ struct Pair: Codable, Hashable {
     let reasons: [String]
     let mv: [String]?        // up to three moves, primary first (labels)
     let ks: Int?
+    /// D36: true when either song has only a home note, so `ka` and `kb` are the codes the scoring compared it as
+    /// (the better fit of the two keys on the note), not keys that were read. Nil in the bundled data.
+    var kh: Bool? = nil
 }
 
 struct DiscFolder: Codable, Hashable { let name: String; let ids: [String] }

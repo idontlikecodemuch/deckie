@@ -82,7 +82,11 @@ struct CrateLibrary {
                 // A song with no usable title (the crate file's own rule, `SongName`) leads with its place.
                 named: t.hasUsableTitle ? nil : false,
                 // Its facts (D34), kept with the song; none in a crate file written before them.
-                facts: t.ident.facts.isEmpty ? nil : t.ident.facts.mapValues(\.values)))
+                facts: t.ident.facts.isEmpty ? nil : t.ident.facts.mapValues(\.values),
+                // The key's other two states (D33, D36), read through the core's model, and the cover's name.
+                keyHome: t.key == nil ? t.keyHome?.note : nil,
+                keyNotSure: t.keyState == .notSure ? true : nil,
+                cover: t.file.cover.flatMap { CrateIDs.isSHA256($0) ? $0 : nil }))
             if let vals = barVals {
                 overview[t.id] = Overview(n: vals.count, dur: t.file.durationS, s: String(vals.map { Overview.alphabet[$0] }))
             }
@@ -159,12 +163,17 @@ struct CrateLibrary {
             let km = MNUM[p.multiplier] ?? 1
             let pitch = B.map { ((A.bpmOut / ($0.bpmIn * km)) - 1) * 100 }.map { ($0 * 10).rounded() / 10 }
             let moves = p.moves.isEmpty ? [p.suggestedTransition] : p.moves
+            // A song with only a home note (D36) is scored as the better fit of the two keys on its note; the pair
+            // carries the two codes the scoring compared, and says so, so the key words do not claim a key was read.
+            let homeOnly = B.map { (!PairScoring.keyRead(A) && A.homePitchClass != nil) || (!PairScoring.keyRead($0) && $0.homePitchClass != nil) } ?? false
+            let compared = homeOnly ? B.flatMap { PairScoring.keyTermDetail(A, $0).codes } : nil
             return Pair(b: p.b, s: (p.scoreBase * 1000).rounded() / 1000, st: (p.stretchPct * 10).rounded() / 10,
                         m: p.multiplier, pitch: pitch, tr: p.suggestedTransition,
                         trl: CrateLibrary.moveLabels[p.suggestedTransition] ?? p.suggestedTransition,
-                        ka: A.camelot.isEmpty ? "?" : A.camelot, kb: (B?.camelot).flatMap { $0.isEmpty ? nil : $0 } ?? "?",
+                        ka: compared?.a ?? (A.camelot.isEmpty ? "?" : A.camelot),
+                        kb: compared?.b ?? (B?.camelot).flatMap { $0.isEmpty ? nil : $0 } ?? "?",
                         reasons: Array(p.reasons.prefix(5)), mv: Array(moves.map { CrateLibrary.moveLabels[$0] ?? $0 }.prefix(3)),
-                        ks: p.keyShiftSt)
+                        ks: p.keyShiftSt, kh: compared != nil ? true : nil)
         }
     }
 }

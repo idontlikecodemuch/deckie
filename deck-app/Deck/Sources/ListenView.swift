@@ -51,6 +51,11 @@ struct PlayingPanel: View {
             Spacer(minLength: 0)
             if let t = rec.current {
                 VStack(alignment: .leading, spacing: Look.Listen.playingGap) {
+                    // The song's cover (D36), small, beside its names; a song without one shows nothing extra.
+                    HStack(alignment: .top, spacing: Look.Listen.coverGap) {
+                    if let c = t.cover {
+                        CoverThumb(hash: c, size: Look.Listen.coverSize, radius: Look.Listen.coverRadius, opacity: Look.Listen.coverOpacity)
+                    }
                     VStack(alignment: .leading, spacing: Look.Listen.playingTitleGap) {
                         // A song with no name: its place leads, in the title's size (research AA, 3.13), so the
                         // small place line above is not repeated.
@@ -73,6 +78,7 @@ struct PlayingPanel: View {
                                 Text(t.secondLine).font(Look.Listen.factsFont).foregroundStyle(Theme.dim).lineLimit(1).truncationMode(.middle)
                             }
                         }
+                    }
                     }
                     Text(Words.bpm(t.bpmShown * (rec.source == .manual ? 1 : rec.rate)))
                         .font(Look.Listen.bpmFont).foregroundStyle(Theme.rsn)
