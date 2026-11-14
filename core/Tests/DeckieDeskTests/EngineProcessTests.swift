@@ -375,6 +375,99 @@ final class EngineProcess: @unchecked Sendable {
         #expect(e.exitCode() == 0)
     }
 
+    /// A song's cover (D36) through the protocol: each song says whether it has one, and `song.cover` hands over
+    /// exactly the bytes of `covers/<hash>.jpg` inside its reply, with no path and no hash told. No cover, a cover
+    /// file that is gone or is not a cover, and an id that names no song are all answered plainly, and the engine
+    /// goes on answering.
+    @Test func coversThroughTheProtocol() throws {
+        let root = try scratch("engine-covers")
+        let home = DeskHome(root: root.appendingPathComponent("home"))
+        try home.prepare()
+        let info = try home.shelf.make(name: "Friday")
+        let package = home.shelf.package(info.id)
+        // Not pictures: the crate file's reader asks only that a cover starts as a JPEG does and is small, and bytes
+        // of every value are easy to check end to end.
+        let hashA = String(repeating: "ab", count: 32), hashC = String(repeating: "0c", count: 32)
+        let pictureA = Data([0xFF, 0xD8, 0xFF, 0xE0] + (0..<3000).map { UInt8(truncatingIfNeeded: $0 &* 7) })
+        let pictureC = Data([0xFF, 0xD8, 0xFF, 0xE0, 1, 2, 3])
+        let covers = package.appendingPathComponent(CrateFormat.coversFolder)
+        try FileManager.default.createDirectory(at: covers, withIntermediateDirectories: true)
+        let fileA = package.appendingPathComponent(CrateFormat.coverPath(hashA))
+        let fileC = package.appendingPathComponent(CrateFormat.coverPath(hashC))
+        try pictureA.write(to: fileA)
+        try pictureC.write(to: fileC)
+        var a = entry("aaaa", "Song A", disc: nil, folder: nil, track: nil, rel: "a.mp3")
+        a.file.cover = hashA
+        let b = entry("bbbb", "Song B", disc: nil, folder: nil, track: nil, rel: "b.mp3")
+        var c = entry("cccc", "Song C", disc: nil, folder: nil, track: nil, rel: "c.mp3")
+        c.file.cover = hashC
+        // Two songs of one release share one picture.
+        var d = entry("dddd", "Song D", disc: nil, folder: nil, track: nil, rel: "d.mp3")
+        d.file.cover = hashA
+        try CrateWriter.write(crate([a, b, c, d], name: "Friday"), to: package)
+
+        let e = try EngineProcess(home: home.root)
+        defer { if e.process.isRunning { e.process.terminate() } }
+        let songs = try #require(e.wait { $0["event"] as? String == "songs" })
+        let rows = try #require(songs["songs"] as? [[String: Any]])
+        func says(_ id: String) -> Bool? { rows.first { $0["id"] as? String == id }?["cover"] as? Bool }
+        #expect(says("aaaa") == true && says("bbbb") == false && says("cccc") == true && says("dddd") == true)
+        // The rows tell neither the hash nor where anything is.
+        let rowsText = String(decoding: try JSONSerialization.data(withJSONObject: rows), as: UTF8.self)
+        #expect(!rowsText.contains(hashA) && !rowsText.contains(hashC))
+
+        // A song with a cover: the file's bytes, whole, in the reply.
+        for id in ["aaaa", "dddd"] {
+            let got = try e.request("song.cover", ["song": id])
+            #expect(got["ok"] as? Bool == true && got["cover"] as? Bool == true)
+            #expect(got["type"] as? String == "image/jpeg")
+            #expect((got["bytes"] as? NSNumber)?.intValue == pictureA.count)
+            #expect(Data(base64Encoded: got["data"] as? String ?? "") == pictureA)
+            #expect(got["path"] == nil)
+            let text = String(decoding: try JSONSerialization.data(withJSONObject: got), as: UTF8.self)
+            #expect(!text.contains(hashA) && !text.contains("deckiecrate") && !text.contains(root.lastPathComponent))
+        }
+        #expect(Data(base64Encoded: try e.request("song.cover", ["song": "cccc"])["data"] as? String ?? "") == pictureC)
+
+        /// A plain "no cover": answered, not refused, and nothing sent with it.
+        func none(_ fields: [String: Any], _ why: Comment) throws {
+            let r = try e.request("song.cover", fields)
+            #expect(r["ok"] as? Bool == true && r["cover"] as? Bool == false && r["data"] == nil && r["error"] == nil, why)
+        }
+        try none(["song": "bbbb"], "a song without a cover")
+        // An id that names no song, and ids shaped like paths, reach no file.
+        for id in ["zzzz", "", "../crate.json", "../../crate.json", hashA, "covers/\(hashA).jpg", fileA.path] {
+            try none(["song": id], "no song has the id \(id)")
+        }
+        // The cover file gone, then there but not a cover: not a JPEG, too large, and (where links exist) a link.
+        try FileManager.default.removeItem(at: fileC)
+        try none(["song": "cccc"], "the cover file is missing")
+        try Data("not a picture".utf8).write(to: fileC)
+        try none(["song": "cccc"], "the file is not a JPEG")
+        try (Data([0xFF, 0xD8, 0xFF]) + Data(count: CrateFormat.coverMaxBytes)).write(to: fileC)
+        try none(["song": "cccc"], "the file is larger than a cover may be")
+        #if !os(Windows)
+        try FileManager.default.removeItem(at: fileC)
+        try FileManager.default.createSymbolicLink(at: fileC, withDestinationURL: fileA)
+        try none(["song": "cccc"], "the file is a link")
+        #endif
+        // Put back, it is a cover again: nothing was remembered against it.
+        try? FileManager.default.removeItem(at: fileC)
+        try pictureC.write(to: fileC)
+        #expect(try e.request("song.cover", ["song": "cccc"])["cover"] as? Bool == true)
+
+        // A request with no song, or one that is not text, is refused like any request missing a field.
+        #expect((try e.request("song.cover")["error"] as? [String: Any])?["code"] as? String == "bad_request")
+        #expect((try e.request("song.cover", ["song": 7])["error"] as? [String: Any])?["code"] as? String == "bad_request")
+
+        // With no crate showing there is no cover either, and the engine still answers.
+        _ = try e.request("crate.new")
+        try none(["song": "aaaa"], "no crate is showing")
+        #expect(try e.request("state")["ok"] as? Bool == true)
+        e.close()
+        #expect(e.exitCode() == 0)
+    }
+
     /// A music CD through the engine program, with the stand-in drive (`DECKIE_DESK_MUSIC_CD`): listed by
     /// drives.list, added with run.addMusicCD, named by the DJ while it is read.
     @Test(.enabled(if: Engine.available, "needs ONNX Runtime and the Beat This! model"))

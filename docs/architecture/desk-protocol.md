@@ -10,6 +10,7 @@ A) and Listen (D33). Still protocol 2, later on Nov 14: Desk keeps none of a mus
 `copying` stage, the `copied` line and the report's `bytes` are gone, and the `discDamaged` line is new; a page that
 knows the old ones only stops seeing them. It is a new number because `needsName` changed meaning: it now also holds a song named by Desk's
 guess that the DJ has not checked (`nameReason` says which). Research letter Z, question 2 (way A) and question 4, is the why.
+Still protocol 2 with D36 (Nov 14): a song's `cover` field and the `song.cover` request are additions ("Covers", below).
 
 ## How messages travel
 
@@ -88,7 +89,7 @@ Sent with `state` when the crate showing has songs and after every change to the
             "key": {"camelot": "8A", "key": "A", "scale": "minor", "from": "rekordbox-xml", "uncertain": false,
                     "others": [{"from": "deckie", "camelot": "8A"}]},
             "places": [{"source": "Stick 3", "folder": "House", "number": 4, "line": "Stick 3 / House 4"}],
-            "file": "04 Song X.mp3", "signed": false, "notes": ["gridUnsure"], "damagedFrames": 0}],
+            "file": "04 Song X.mp3", "signed": false, "notes": ["gridUnsure"], "damagedFrames": 0, "cover": true}],
  "sources": [{"name": "Stick 3", "songs": 12,
               "folders": [{"name": "House", "songs": [{"id": "…", "number": 1}]}]}],
  "musicFolderSongs": false,
@@ -112,6 +113,11 @@ joined by ", ". `names.others` lists the song's other facts in the crate file's 
 "from"}` (words `factName.<name>`); `names.fileTags` the rest of the file's tags, each `{"name", "value"}` by the
 tag's own name; `names.leftOut` what was not sent, reason to count (words `leftOut.<reason>`). All read-only except
 through `song.fix` below.
+
+A song's cover (D36, added Nov 14, 2026; no new protocol number, as only a field and a request were added): each
+song carries `cover`, true when its record in the crate file names a cover (`file.cover`), else false. It says only
+that there is one; the picture is asked for with `song.cover` ("Covers", below). An engine from before D36 sends no
+`cover`, which a page reads as false.
 
 Codes, each with its words in the list: a key's `from` (`keyFrom.<code>` and `programName.<code>`), `nameFrom` (codes
 joined by `+`, `nameFromPart.<code>`), `notes` (`needsName`, `damagedFrames`, `gridUnsure`, `vocalsNotRead`, `signed`)
@@ -141,7 +147,7 @@ drive gave none; the disc may have some"), `songs`, `named` (songs named from th
 ## Requests to the engine
 
 Every request gets a reply. While a run goes, only `state`, `drives.list`, `crate.songs`, `source.removeCount`,
-`run.nameDisc`, `name.split` and `song.audio` are answered; the rest are refused with `busy`.
+`run.nameDisc`, `name.split`, `song.audio` and `song.cover` are answered; the rest are refused with `busy`.
 
 | `type` | Fields | Reply carries | Then |
 |---|---|---|---|
@@ -161,6 +167,7 @@ Every request gets a reply. While a run goes, only `state`, `drives.list`, `crat
 | `names.apply` | `ticks` (indexes into the last preview's `changes`; absent: its own ticks) | `songs` (how many changed) | `state`, `songs` |
 | `song.check` | `songs` (ids) or `song`; `field` (optional) | `songs` | `state`, `songs` |
 | `song.audio` | `song`; `decoded` (optional) | `type`, `bytes`, `chunks`, `token`, `seconds`, `start`, `kind` | `audio.chunk` events |
+| `song.cover` | `song` | `cover` (bool); with a cover: `type`, `bytes`, `data` | |
 | `run.add` | `path`; `name` (a drive's name, optional) | `source` (the source's name), `crate` | `run.started`, `run.progress`…, `run.finished` or `run.failed`, `state`, `songs` |
 | `run.carryOn` | | as `run.add` | as `run.add` |
 | `song.fix` | `song` (id); any of `title`, `artist`, `version` (text; "" clears artist or version), `tags` (list); `facts` (D34: an object of fact name to text, any of the crate file's fact names; "" clears one; a genre may be several, split at "," or ";") | | `state`, `songs` |
@@ -216,6 +223,36 @@ On Windows and Linux the engine reads that song's sound off the disc when `song.
 holds it in memory only while the chunks go out, and writes nothing; reading takes as long as the drive needs, and
 the reply comes when it is read. On the Mac the song is the system's own file on the disc, sent like any file. The
 page joins and plays it the same way, so the scrub bar works on it as on any song.
+
+### Covers: how a song's picture reaches the page
+
+D36 put covers in the crate file (`docs/architecture/crate-format.md`, "covers": `covers/<hash>.jpg`, a JPEG of at
+most 128 pixels a side and 24 KB). A cover reaches the page the way a song's sound does: inside a message on the
+engine's standard output, with no path told and no port opened. A song whose `cover` is true has one; the page asks
+only then, and only for the song whose names it is showing:
+
+```json
+{"id": 12, "type": "song.cover", "song": "…"}
+{"re": 12, "ok": true, "cover": true, "type": "image/jpeg", "bytes": 3120, "data": "/9j/4AAQ…"}
+{"re": 12, "ok": true, "cover": false}
+```
+
+- `data` is the whole file in base64, in the reply itself: a cover is small, so there are no chunks and no token.
+  `bytes` is its size before base64. The page shows it from a `data:` address made of those bytes (the pages'
+  content rules already allow `img-src data:`; nothing was added to them).
+- The engine finds the file itself: the song by its id in the crate showing, the hash from that song's record
+  (never from the message), checked to be 64 lower-case hexadecimal characters before it names
+  `covers/<hash>.jpg` in the crate file Desk keeps. The page cannot name any file, and is told neither the hash nor
+  where the crate file is.
+- **No cover is an answer, not an error.** `cover: false` when the song has none, when no song has that id, when no
+  crate with songs is showing, and when the file is missing, is not an ordinary file, is over 24 KB or does not
+  start as a JPEG does. The page then shows its placeholder. Only a request with no `song` (or one that is not
+  text) is refused, with `bad_request`, like any request missing a field.
+- Answered while a run goes: it reads one small file and changes nothing.
+- A page with an engine from before D36 never asks, since no song says it has a cover; if it did, `unknown_type`
+  comes back and the page shows its placeholder.
+- The page keeps the covers it was given only while their crate is showing and no run has changed it; a songs event
+  that says a song has no cover any more drops that one.
 
 ## Requests the shell answers
 
