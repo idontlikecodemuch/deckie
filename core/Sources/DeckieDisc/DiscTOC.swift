@@ -62,7 +62,7 @@ public struct DiscTOC: Codable, Equatable, Sendable {
     public var audioSeconds: Double { songs.reduce(0) { $0 + $1.seconds } }
 
     /// The disc's own id on this computer: the same disc gives the same id, so Desk knows it when it comes back and
-    /// keeps one copy of its songs. A 64-bit FNV-1a hash of the track numbers, kinds and starts and the lead-out.
+    /// reads only what is new on it. A 64-bit FNV-1a hash of the track numbers, kinds and starts and the lead-out.
     public var id: String {
         var h: UInt64 = 0xcbf29ce484222325
         func mix(_ v: Int) {

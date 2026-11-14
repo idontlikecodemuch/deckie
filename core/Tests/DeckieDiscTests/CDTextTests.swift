@@ -204,8 +204,9 @@ import DeckieTestSupport
     }
 }
 
-/// Copying songs off a disc through the stand-in drive: cut where the table says, a second try, silence counted.
-@Suite struct CopyTests {
+/// Reading a song's sound off a disc through the stand-in drive: cut where the table says, handed on as it comes
+/// (nothing written), a second try, silence counted, and a disc taken out part way.
+@Suite struct ReadTests {
     static func scratch(_ name: String) -> URL {
         let u = FileManager.default.temporaryDirectory.appendingPathComponent("deckie-disc-\(name)-\(UUID().uuidString)")
         try? FileManager.default.createDirectory(at: u, withIntermediateDirectories: true)
@@ -214,27 +215,39 @@ import DeckieTestSupport
 
     static func tone(_ sectors: Int, value: Int16) -> [Int16] { [Int16](repeating: value, count: sectors * 588 * 2) }
 
-    @Test func copiesEachSongAsTheTableCutsIt() throws {
-        let dir = Self.scratch("copy")
+    static func read(_ cd: MusicCD, _ song: DiscTOC.Song, pieces: inout Int) throws -> (bytes: [UInt8], damaged: Int) {
+        var out: [UInt8] = []
+        var n = 0
+        let damaged = try cd.read(song, into: { out += [UInt8]($0); n += 1 }, progress: { _, _ in })
+        pieces = n
+        return (out, damaged)
+    }
+
+    @Test func readsEachSongAsTheTableCutsItAndWritesNothing() throws {
+        let dir = Self.scratch("read")
         defer { try? FileManager.default.removeItem(at: dir) }
         let disc = dir.appendingPathComponent("disc")
-        try DiscFixture.writeStandIn(disc, songs: [Self.tone(10, value: 100), Self.tone(7, value: 200)],
+        try DiscFixture.writeStandIn(disc, songs: [Self.tone(10, value: 100), Self.tone(47, value: 200)],
                                      cdText: DiscFixture.response(CDTextTests.friday(titles: ["D", "A", "B"], performers: ["P", "X", "Y"])))
+        let before = try FileManager.default.contentsOfDirectory(atPath: disc.path).sorted()
         let cd = SectorMusicCD(location: disc.path, device: StandInDrive(folder: disc))
         let toc = try cd.tableOfContents()
-        #expect(toc.songs.map(\.sectors) == [10, 7])
+        #expect(toc.songs.map(\.sectors) == [10, 47])
         guard case let .names(text) = cd.readText() else { Issue.record("no names"); return }
         #expect(text.main?.titles[2] == "B")
-        let out = dir.appendingPathComponent("Track 02.wav")
+        #expect(cd.file(of: toc.songs[1]) == nil)
+        var pieces = 0
         var seen = 0
-        let damaged = try cd.copy(toc.songs[1], to: out) { done, _ in seen = done }
+        var wav: [UInt8] = []
+        let damaged = try cd.read(toc.songs[1], into: { wav += [UInt8]($0); pieces += 1 }, progress: { done, _ in seen = done })
         #expect(damaged == 0)
-        #expect(seen == 7)
-        let wav = [UInt8](try Data(contentsOf: out))
-        #expect(wav.count == 44 + 7 * 2352)
+        #expect(seen == 47)
+        #expect(wav.count == 44 + 47 * 2352 && wav.count == cd.wavBytes(toc.songs[1]))
         #expect(String(decoding: wav[0..<4], as: UTF8.self) == "RIFF")
         #expect(wav[44] == 200 && wav[45] == 0)
-        #expect(!FileManager.default.fileExists(atPath: out.path + ".part"))
+        // Handed on in pieces as read (the header, then 20 sectors at a time), and nothing written beside the disc.
+        #expect(pieces == 1 + 3)
+        #expect(try FileManager.default.contentsOfDirectory(atPath: disc.path).sorted() == before)
     }
 
     @Test func aSectorThatFailsOnceIsReadAgain() throws {
@@ -245,13 +258,31 @@ import DeckieTestSupport
         try "5\nalways 25\n".write(to: disc.appendingPathComponent("bad.txt"), atomically: true, encoding: .utf8)
         let cd = SectorMusicCD(location: disc.path, device: StandInDrive(folder: disc))
         #expect(cd.readText() == .none)
-        let out = dir.appendingPathComponent("Track 01.wav")
-        let damaged = try cd.copy(try cd.tableOfContents().songs[0], to: out) { _, _ in }
+        var pieces = 0
+        let (wav, damaged) = try Self.read(cd, try cd.tableOfContents().songs[0], pieces: &pieces)
         #expect(damaged == 1)
-        let wav = [UInt8](try Data(contentsOf: out))
         #expect(wav[44 + 5 * 2352] == 9)        // read on the second try
         #expect(wav[44 + 25 * 2352] == 0)       // silence where the sector never came
         #expect(wav[44 + 26 * 2352] == 9)
+    }
+
+    /// A disc taken out while a song is read: not silence, an error, so the run stops and asks for the disc.
+    @Test func aDiscTakenOutIsNotSilence() throws {
+        let dir = Self.scratch("out")
+        defer { try? FileManager.default.removeItem(at: dir) }
+        let disc = dir.appendingPathComponent("disc")
+        try DiscFixture.writeStandIn(disc, songs: [Self.tone(60, value: 9)], cdText: nil)
+        let drive = StandInDrive(folder: disc)
+        let cd = SectorMusicCD(location: disc.path, device: drive)
+        let song = try cd.tableOfContents().songs[0]
+        var bytes = 0
+        #expect(throws: DiscError.out) {
+            _ = try cd.read(song, into: { d in
+                bytes += d.count
+                // Out after the first part.
+                if bytes > 44 { try FileManager.default.removeItem(at: disc) }
+            }, progress: { _, _ in })
+        }
     }
 
     @Test func aRefusedTextCommandIsNotNoNames() throws {

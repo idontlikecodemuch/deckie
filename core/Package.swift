@@ -30,7 +30,7 @@
 // system: SG_IO on Linux, the CD-ROM class driver's DeviceIoControl requests on Windows, DKIOCCDREADTOC on the Mac.
 // DeckieDisc: a music CD as a source: the CD-Text decoder and the table of contents (the same on every computer), the
 // drives behind one interface (CDiscDrive; the Mac's music CD read as the system's own files), a stand-in drive read
-// from a folder, and copying each song off as the table cuts it.
+// from a folder, and reading each song's sound as the table cuts it (nothing of it is kept).
 // DeckiePC: the run behind the PC program a DJ drags a music folder onto (D29): the builder with nothing changed
 // inside, plus where things go, the plain words, the log and the crate file as one file. deckie-make: its console.
 // deckie-e2e: the end-to-end check both workflows run: makes a small music folder (WAV, FLAC, MP3, a nested folder,

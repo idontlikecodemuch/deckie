@@ -14,6 +14,26 @@ public struct SourceFile: Sendable, Equatable {
     public var size: Int
     /// The modification time, seconds since 1970.
     public var modified: Double
+
+    public init(url: URL, rel: String, ext: String, size: Int, modified: Double) {
+        self.url = url; self.rel = rel; self.ext = ext; self.size = size; self.modified = modified
+    }
+}
+
+/// Songs that are not files in a folder until they are read: a music CD whose sound is read by sector (the note on
+/// D33, Nov 14: Desk keeps none of a disc's music). The builder lists them from here instead of walking the folder,
+/// asks for each one's file just before reading it, and lets it go as soon as it is read and reported, so only the
+/// song being read exists at any moment. A build given these runs one file at a time.
+public protocol BuildFiles: AnyObject, Sendable {
+    /// The songs, `rel` below the top (as `AudioFiles.find` would give them), sizes and times that stay the same
+    /// for the same song; their `url`s need not exist.
+    func list() throws -> [SourceFile]
+    /// The id of a song worked out before, so it is not read at all, or nil.
+    func knownId(_ f: SourceFile) -> String?
+    /// The song's file, made readable now. A throw stops the build before anything is written (the source is gone).
+    func fetch(_ f: SourceFile) throws -> URL
+    /// Done with the song: read, and its progress reported. Called whether reading it worked or not.
+    func release(_ f: SourceFile)
 }
 
 /// Finding the audio files of a folder.
