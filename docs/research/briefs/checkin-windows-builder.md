@@ -1,14 +1,169 @@
-# Check-ins: the Windows builder (branches `pc/windows-builder`, `pc/m4a`, `pc/package-desk`, `pc/package-main`)
+# Check-ins: the Windows builder (branches `pc/windows-builder`, `pc/m4a`, `pc/package-desk`, `pc/package-main`, `pc/lookup-transports`)
 
 Newest entry first. Each entry: when, what is done, what failed and why, what is next, and one plain line.
 
-**Newest zip, Deckie Desk with its window, built from `main` as it is now: `pc-package` run 43593361551**
-(branch `pc/package-main`, commit `7d3e7dd`), artifact `Deckie-Desk-for-Windows-first-test` (id 14113607134, kept
-to Dec 14, 2026). The zip inside is **130,077,006 bytes**, SHA-256
-`1d580d1652058241ea5f8ed609667ae70e8aab8077517cd64fedf28f0714c82e` (what GitHub hands over wraps it once more:
-130,077,196 bytes, SHA-256 `75f8e7e527168e81d6e1794cd74bc9d6f139f8b06273a3c67dba10187c91d251`). It supersedes every
-zip named further down, including run 43581053583, which was built before `main` took covers, the home note, the
-lookup and the run screen.
+**Newest zip, with the lookup working on Windows and the log a DJ can send back: `pc-package` run 43623382846**
+(branch `pc/lookup-transports`, commit `efdaf0b`, cut from `main` at `f42489e`), artifact
+`Deckie-Desk-for-Windows-first-test` (id 14125911007, kept to Dec 14, 2026). The zip inside is **131,127,230
+bytes**, SHA-256 `1cf3e6a69a5edd1cfd2ce4289ba7d5248e88148af0a6fc4e53b154d4c830d930` (what GitHub hands over wraps
+it once more: 131,127,420 bytes, SHA-256 `6568772601c0e54082dec9ba40b14e84db7d7d78cffe2ea67f13216749ff97dc`). The
+zip the owner has from `main` (run 43604860862) is the same but for what this branch adds; this one is the one to
+hand a DJ once the branch is merged, or a run on `main` after the merge.
+
+## Nov 14, 2026, 18:20 UTC: the lookup on Windows (WinHTTP) and Linux (libsoup 3); a log to send back; the zip tried on Windows for Arm; all four workflows green on `efdaf0b`
+
+Branch `pc/lookup-transports`. Green on `efdaf0b`: `pc-package` 43623382846 (its Arm job too), `desk-window`
+43623382840, `core-windows` 43623382818, `core-linux` 43623382824. No release, tag or pull request.
+
+### 1. The lookup on Windows and Linux (the owner's yes, Nov 14)
+
+**Built as described, behind `LookupTransport`.** A small C layer inside the lookup's folder
+(`core/Sources/DeckieLookup/CLookupNet`, about 300 lines) opens the system's own networking at run time: WinHTTP on
+Windows (`winhttp.dll`, from the system folder only), libsoup 3 on Linux (`libsoup-3.0.so.0`, found by name; no
+libsoup header is needed to build). Nothing is linked and nothing ships. `PortableTransport` in
+`LookupTransport.swift` is the Swift side. Where the library cannot be opened, the lookup still says it is not on
+this computer.
+
+**The same behaviour as the Mac's**, and how each point was checked against a small server on the runner itself
+(`core/Tools/lookup_test_server.py`; `PortableTransportTests`), on Windows (`core-windows` 43623382818) and Linux:
+
+| Point | Checked by |
+|---|---|
+| An answer comes back with its status, headers and body (1 MB too) | the server's answers read back |
+| The address goes out as written, percent signs and all | the server echoes what it got |
+| Only the two headers the lookup gives are ours (`User-Agent`, `Accept`) | the echo holds nothing else but the library's own plumbing (`Host`, `Connection`, `Accept-Encoding`) |
+| No cookie is kept or sent | the server hands one out; the next request does not carry it |
+| Any status is an answer (404, 503 with its `Retry-After`); a redirect is followed | read back |
+| No answer is "no connection": nothing listening, a name that does not exist, the time limit | Windows gave its codes 12029, 12007, 12002 for these; all become the same plain words |
+| HTTPS with a certificate the system does not trust is refused | a certificate made on the spot: Windows' code 12175; libsoup's own refusal |
+| One request a second | the gate that was already there; not changed |
+
+**Not checked, and it cannot be from a workflow:** a real request to MusicBrainz from Windows or Linux has never
+been made, so HTTPS to a site the system *does* trust has not been seen to work (only the refusal of one it does
+not). A proxy on Windows was not tried (on Linux one was met by accident on the development machine, and libsoup
+used it). The first real lookup on a PC is for a person: step 7 of the list below.
+
+**Nothing in a workflow reaches MusicBrainz.** Every workflow sets `DECKIE_LOOKUP_OFF`, which turns the lookup's
+way out off; the engines the tests start get it too. The packaging run leaves it unset for Desk itself, and its
+check opens the lookup, reads the sentence ("Desk will send the titles, artists and releases of 3 songs to
+MusicBrainz..."), sees the button "Look it up", presses "Not now", and says nothing was sent.
+
+**`NetworkIsolationTests` still holds** and is stricter: the new names (`winhttp`, `soup_`, `libsoup`,
+`deckie_net`) are forbidden outside the lookup's folder, and inside it only `LookupTransport.swift` calls the C
+layer.
+
+**The words for no connection** now name a firewall: "Desk couldn't reach MusicBrainz. Check the internet
+connection, and that a firewall isn't stopping Deckie Desk. Everything else works without it." The reason the
+system gave (its own code, never the address, which holds song titles) goes into the log.
+
+**What failed on the way.** On Windows every request to the test server first came back "no connection". It was the
+test, not WinHTTP: Python ends a line with a return and a line feed on Windows, my reader did not count that as a
+line, waited ten minutes until the server gave up, and then asked a server that had left. Found only because the
+reason is now logged (12029, cannot connect).
+
+`DEPENDENCIES.md` section 12 records the decision and the table (libsoup 3: LGPL 2.1 or later, used and not
+shipped, as WebKitGTK is).
+
+### 2. The two sentences, and one correction to what was asked
+
+`READ ME FIRST.txt` and `docs/product/windows-first-test.md` now say: nothing is sent anywhere unless the DJ asks
+Desk to look songs up; what is sent then (the titles, artists and releases Desk already has for those songs; for a
+music CD, the lengths of its songs; never the songs, never where the files are, never who the DJ is); "Not now"
+sends nothing. **On "Windows may ask once whether to allow it": it normally does not.** Windows' own firewall asks
+about programs that wait for connections from outside; it lets outgoing connections through without a question. So
+the pages say that Windows itself does not ask, and that a security program the DJ installed may ask once. Whether
+a given PC asks is for a person to see.
+
+### 3. "If something goes wrong": there was no log; now there is
+
+Until now Deckie Desk wrote a log only when a check named one. **It now keeps `Deckie Desk log.txt` in its storage
+folder (`%LOCALAPPDATA%\Deckie Desk`)**, started afresh at each start, with the one before kept beside it as
+`Deckie Desk log (last time).txt` (`desk-shell`, `DeskLog.swift`). In it: when Desk started, which Windows and
+which web view, whether the program is running under emulation, where Desk's parts are, that the window was made,
+what the engine said about itself (analysis ready, lookup available), each run's start and end with its counts, the
+reason for anything refused or failed, anything the page threw, why a lookup got no answer, how Desk ended. A
+reason can name a file or folder, and paths carry the account's name; the READ ME says so. Never in it: audio, or
+the names, artists or keys of songs. The packaging run starts Desk with no log named, reads that file, and fails
+if it names one of the test folder's songs.
+
+**Not covered:** if Windows cannot load the program at all (a missing library), nothing runs and no log is
+written; the READ ME says "usually".
+
+### 4. Windows for Arm (the owner's virtual machine on an Apple-silicon Mac)
+
+**GitHub has a Windows for Arm runner (`windows-11-arm`) and the zip was tried on it**, as a second job of
+`pc-package` that builds nothing and uses the same zip: Windows 11 Enterprise 10.0.26200, ARM 64-bit, a Cobalt 100
+with 4 logical processors, WebView2 Runtime 157.0.4341.46. It is report only (it cannot turn the workflow red). In
+run 43623382846, and in the run before it, everything it tries passed:
+
+| Part of the zip | On Windows for Arm, through Windows' own emulation |
+|---|---|
+| The starter and the window program (x64) | start; no library missing |
+| The x64 Swift runtime, Foundation, Microsoft's runtime files | load and run |
+| The x64 WebView2 loader finding the Arm PC's runtime | finds it; the window is made and the page draws |
+| ONNX Runtime for x64 and the two models | load and give the same crate file contents as on x64 (the core's validator, covers included) |
+| WinHTTP | opens; the lookup reports itself available |
+| Media Foundation (`.m4a`) | **not tried here**: the test folder has no `.m4a` |
+
+| | x64 runner | Arm runner, emulated |
+|---|---|---|
+| First start on the account | 3.3 s | 3.5 s |
+| Later starts | 0.6 to 0.75 s | 0.6 to 0.9 s |
+| The small test folder through the page | 18 s | 41 s |
+| A four-minute song, its own reading time | 6.1 s | 54 s |
+| Four four-minute songs, two at once, whole run | 14 s | 112 s |
+
+**So: it is expected to work, and the reading of songs is the slow part: about nine times slower on that
+runner.** That figure mixes two things, emulation and a different processor, so it is not what the owner's Mac will
+show; an Apple-silicon Mac is faster than a Cobalt 100, and how much of its speed a virtual machine passes on I
+cannot say. A hundred songs at a minute each is over an hour; that is worth knowing before the test. The window,
+the pages and everything but analysis feel the same.
+
+**Not known without the machine:** whether the virtual machine's graphics suit WebView2 (the runner's did); how
+the "Windows protected your PC" box, drag and drop and a USB stick behave inside a virtual machine; whether an
+older Windows 11 for Arm (before the 2024 update, whose emulation lacks some of the processor instructions the
+analysis can use) runs it slower still or at all. The log's second line says "this computer is arm64" when Desk is
+running emulated.
+
+**What an Arm build would need** (not started; only worth it if Arm PCs matter beyond this test): the Swift
+toolchain for Windows on Arm (it exists), Deckie's own no-telemetry build of ONNX Runtime made again for Arm, the
+Arm WebView2 loader, the starter compiled for Arm, and a second packaging job on the Arm runner. About two days,
+most of it the ONNX Runtime build.
+
+### What to try on a real PC, in order (replaces the list of 12:30)
+
+1. Download the zip, "Extract All", note what the browser and antivirus say.
+2. Double-click "Deckie Desk"; "More info", "Run anyway" at the blue box. No black window should appear.
+3. "Add music", "Choose a folder…": 20 to 50 real songs, some `.m4a`, some with covers. Watch the run to its end.
+4. Open the crate's songs: covers, names, keys; Listen to an MP3 and an M4A.
+5. "Export crate file…" to a stick or iCloud Drive; open it on the iPad. Export a second time to the same place.
+6. Close Desk mid-run, start it again, "Carry on".
+7. More menu, "Look up songs via MusicBrainz": read the sentence, press "Look it up" on a few songs. Does Windows
+   or a security program ask anything? Do names come back? Then pull the network cable or turn Wi-Fi off and try
+   again: it should say it couldn't reach MusicBrainz.
+8. Type `%LOCALAPPDATA%\Deckie Desk` in a folder window: is "Deckie Desk log.txt" there, and readable?
+9. On the Arm virtual machine: the same, and how long ten songs take.
+10. Say which of these surprised you.
+
+**Decisions made here, each with its reason**
+
+1. The C layer lives inside the lookup's folder as its own small target, so the rule "only the lookup names a
+   networking API" stays a rule about one folder.
+2. libsoup is found by name with no header at build time: the core then builds on a machine without libsoup's
+   development files, as it did before.
+3. A new session for each request on Linux: nothing can carry over between requests.
+4. `DECKIE_LOOKUP_OFF` exists, and every workflow sets it: with the lookup now real on all three systems, "no test
+   reaches MusicBrainz" should not rest on each test being careful.
+5. The check presses "Not now" where the lookup is available and the dialog's own button where it is not, so one
+   check serves both and never sends.
+6. The log is on by default and holds no song names: a DJ should be able to send it without reading it first.
+7. The Arm job is report only: a runner kind that may come and go should not block a zip.
+8. The READ ME says Windows does not normally ask about outgoing connections, because that is what is true.
+
+**Next:** nothing is running. The branch is ready to merge. Not done: an Arm build; `.m4a` on the Arm runner; a
+real lookup from Windows (a person's step).
+
+**Carry on.**
 
 ## Nov 14, 2026, 12:30 UTC: the zip from `main`, checked on the runner; the engine that "did not leave" explained and fixed; all four workflows green on `7d3e7dd`
 
