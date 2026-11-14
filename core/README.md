@@ -168,15 +168,16 @@ score on the other half) says it clears the mark on this sheet without being a b
 real gain has to come from the key method research on the Mac (research R), measured per folder and held out. `KeyTests.swift` checks the vote against the lab's B.9 block, run from analyze.py's
 own source by `Tools/make_key_fixtures.py`, on the 68 test matrices, on made-up votes and on the lab's 373 tracks.
 
-**The key the record carries** (`Sources/DeckieCore/Key/ThreeAnswerKey.swift`, `NoteChroma.swift`), engine 0.5.0,
-D33: the three-answer reader of research X2 (`docs/research/x2-own-key-trial.md`, section 5.1). Two readings of the
+**The key the record carries** (`Sources/DeckieCore/Key/ThreeAnswerKey.swift`, `NoteChroma.swift`), engine 0.5.0
+(D33) and 0.6.0 (the home note, D36): the three-answer reader of research X2 (`docs/research/x2-own-key-trial.md`, section 5.1). Two readings of the
 song: the HPCP below with the overtones' share taken off each frame (research R's row A), and a note-transcription
 profile (row B: audio at 11,025 Hz, a log-frequency spectrum a third of a semitone fine, one tuning per song, and per
 frame a non-negative least-squares fit of 84 note templates, solved by Lawson and Hanson's method on the normal
 equations, no LAPACK). Each is matched to the 24 keys with the three profiles below. A **key** when both name the
 same home note and the same mode on it; the **home note with the mode open** when only the home note agrees; **not
 sure** otherwise. Nothing is trained, nothing fitted, no new dependency. The record's key block has `source`
-`three-answer` and the answer as its confidence (1.0, 0.45, 0.2); `LocalFacts.decideKey` shows a key only
+`three-answer` at confidence 1.0 for a key and 0.2 for not sure, and the home note alone is the `key_home` block with
+no key block; `LocalFacts.decideKey` (and `ownKeysOnly` for `deckie-make`) shows a key or a home note, never a guess
 (`docs/architecture/crate-format.md`). The plain HPCP reading stays in the lab-shaped JSON (`deckie.key`, for the
 bench against the lab's sheet) with the reader's result beside it (`deckie.key.three_answer`), and still gives the
 mix windows their song key.
@@ -455,7 +456,7 @@ record, counted by reason and extension, and the files in the crate with damaged
   (no reading at all); otherwise it hashes the file and takes the record of those bytes if there is one (a file that
   was moved, renamed or only touched), and analyses only what is left. An interrupted run (Ctrl-C) loses only the files
   that were being analysed, one per job. A record is reused only if it came from the same engine version with the same
-  tag tempo; the version (0.5.0) goes up whenever the record gains or changes fields, so a work folder made by an
+  tag tempo; the version (0.6.0) goes up whenever the record gains or changes fields, so a work folder made by an
   older version is analysed again. `--fresh` empties the work folder first; deleting it is always safe.
 - **Nothing left out silently** (decision P18). Every file that cannot be analysed is counted by reason and extension
   in the summary and listed in the manifest's `import_log` with its path below the folder and the reason in words:
@@ -544,13 +545,26 @@ one, and the log has their count, their bytes and the crate file's size.
 `Tests/DeckiePCTests` covers the plan, the words and, with the engine, a whole run, a second run, a new song and
 lost storage.
 
-The zip is assembled by `Tools/windows/package.sh` (run in Git Bash on Windows after a release build; it downloads
-nothing): the program, exactly the Swift runtime libraries its import tables name (`Tools/windows/pe_imports.py`),
-Deckie's own `onnxruntime.dll`, the two models, the licences, `READ ME FIRST.txt`, and the starter
-(`Tools/windows/launcher.c`: built against Windows' kernel32 alone, it says in plain words when the folder was not
-unzipped or Microsoft's Visual C++ runtime is missing, and keeps the window open if the program stops). The workflow
-`pc-package.yml` builds it and tries it as a DJ would; `DEPENDENCIES.md` section 3 says what it carries and the two
-open licence questions.
+The zip is assembled by `Tools/windows/package.sh` (run in Git Bash on Windows after the release builds; it
+downloads nothing). Since Nov 14, 2026 it is **Deckie Desk for Windows**: the window (`deckie-desk`, from
+`../desk-shell`), its engine (`deckie-desk-engine`), the pages (`../desk-web`) and this program, with exactly the
+Swift runtime libraries the three programs' import tables name (`Tools/windows/pe_imports.py`), Deckie's own
+`onnxruntime.dll`, the two models, the licences, `READ ME FIRST.txt`, and two starters built from one file
+(`Tools/windows/launcher.c`, against Windows' kernel32 and user32 alone): "Deckie Desk.exe", which opens no console
+window and says what it must in a message box, and "Make Crate File.exe", which says it in the console and keeps
+the window open. Both say in plain words when the folder was not unzipped or Microsoft's Visual C++ runtime is
+missing. Beside them in `Tools/windows`:
+
+- `icon.sh` and `make_ico.py`: the icon, made from the iPad app's picture with Python's standard library and
+  compiled as a resource; linked into the starters and the window. No `.ico` is committed.
+- `pe_kind.py`: says whether a program opens a console window and whether it carries an icon, and marks the zip's
+  copies of the window and the engine as programs that open none.
+- `try-desk.ps1`: how the workflow starts a program from the unzipped folder with no one at the keyboard.
+
+The engine program finds ONNX Runtime and the models beside itself in the zip (`OnnxRuntime.programFolder`, set by
+`deckie-desk-engine`), in the order this program uses: the environment variables, the program's folder, the
+checkout. The workflow `pc-package.yml` builds the zip and tries it as a DJ would; `DEPENDENCIES.md` section 3 says
+what it carries and the open licence questions.
 
 ## End to end on both platforms: `deckie-e2e`
 
@@ -558,6 +572,7 @@ open licence questions.
 deckie-e2e mp3 <file>                      the synthesised test track as an MP3 (needs the ffmpeg program)
 deckie-e2e make <folder> --mp3 <file>      the small music folder
 deckie-e2e check <crate file>              the core's validator, then what the folder should have given
+deckie-e2e check-desk <crate file> <source>   the same for a crate file exported by Deckie Desk (one file)
 deckie-e2e pack <package> <file>           a package folder as one file
 deckie-e2e songs <folder> [--count 4] [--seconds 240]   full-length songs, to time a build
 ```

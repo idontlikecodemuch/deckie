@@ -130,7 +130,8 @@ extension Analysis {
             onsetPattern16: onsetPattern16.map { Py.round($0, 4) },
             flags: crateFlags,
             style: vocal.flatMap { v in v.style.map { CrateTrack.Style(model: v.styleModel ?? vocalModel ?? "vocal-tagger", values: $0) } },
-            bars: BarSeries(series), vocalStructure: crateVocalStructure(), hooks: crateHooks())
+            bars: BarSeries(series), vocalStructure: crateVocalStructure(), hooks: crateHooks(),
+            keyHome: crateKeyHome())
     }
 
     /// `x` rounded to the decimals the crate writes the field `name` with (`CrateFormat.decimals`), so the record read
@@ -191,15 +192,22 @@ extension Analysis {
     public static let keySource = "three-answer"
 
     /// The record's key block: the three-answer reader's result on the block's documented scale
-    /// (`KeyConfidence.threeAnswer`). A key: that key, confidence 1.0. Home note with the mode open, and not sure:
-    /// the reader's best guess as `camelot` with confidence 0.45 and 0.2, both under the line that flags
-    /// `key_uncertain`; whether a reading is shown at all is `LocalFacts.decideKey`'s rule (it shows a key only).
-    /// No block when the audio has no pitch to read.
+    /// (`KeyConfidence.threeAnswer`). A key: that key, confidence 1.0. Not sure: the reader's best guess as `camelot`
+    /// with confidence 0.2, under the line that flags `key_uncertain`, kept in the builder's record only:
+    /// `LocalFacts.decideKey` never shows it. The home note alone: no key block; `crateKeyHome()` says it (engine
+    /// 0.6.0, D36). No block when the audio has no pitch to read.
     func crateKey() -> CrateTrack.Key? {
+        if case .home = threeAnswer.answer { return nil }
         guard let guess = threeAnswer.guess, let spelled = Camelot.tonic(guess) else { return nil }
         return .init(source: Analysis.keySource, confidence: KeyConfidence.threeAnswer(threeAnswer.answer).value,
                      camelot: guess, key: KeyEstimator.pitchNames[spelled.pitchClass],
                      scale: spelled.major ? "major" : "minor", votes: keyVotes, changes: keyChanges())
+    }
+
+    /// The record's `key_home` block (D36): the home note when the reader found it and left the mode open.
+    func crateKeyHome() -> CrateTrack.KeyHome? {
+        guard case .home(let pc) = threeAnswer.answer else { return nil }
+        return .init(source: Analysis.keySource, pitchClass: pc)
     }
 
     /// The record's flags: the analysis's, with `key_uncertain` following the record's key block (a block under 0.5;

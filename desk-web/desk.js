@@ -236,6 +236,9 @@
       const counts = Object.entries(rep.keys_from || {}).sort((a, b) => b[1] - a[1] || (a[0] < b[0] ? -1 : 1));
       if (counts.length) line(t("keysLine", { counts: counts.map(([k, c]) => t("keysCount", { n: c, from: keyFrom(k) })).join(", ") }));
       if (rep.keys_not_read > 0) line(n("keysNone", rep.keys_not_read));
+      // Deckie's own reader (D33, D36): of the songs with no key, those it is not sure of; and those with a home note.
+      if (rep.keys_not_sure > 0) line(n("keysNotSure", rep.keys_not_sure), "indent");
+      if (rep.keys_home_note > 0) line(n("keysHomeNote", rep.keys_home_note));
       if (rep.keys_disagree > 0) line(n("keysDisagree", rep.keys_disagree));
       // The count is the list's (letter AA, 3.2): no title, no artist, or Desk's guess.
       const need = songs && songs.crate === (current() && current().id) ? songs.songs.filter((x) => x.needsName).length : rep.need_name;
@@ -268,7 +271,7 @@
     { key: "title", word: "colTitle", get: (s) => s.title, edit: "title", guess: "title" },
     { key: "artist", word: "colArtist", get: (s) => s.artist || "", edit: "artist", guess: "artist" },
     { key: "bpm", word: "colTempo", get: (s) => s.bpm, show: (s) => (s.bpm != null ? s.bpm.toFixed(1) : t("none")), num: true },
-    { key: "key", word: "colKey", get: (s) => (s.key ? s.key.camelot : ""), cell: keyCell },
+    { key: "key", word: "colKey", get: (s) => (s.key ? s.key.camelot : s.homeNote ? s.homeNote.camelot[0] : ""), cell: keyCell },
     { key: "keyFrom", word: "colKeyFrom", get: (s) => (s.key ? programName(s.key.from) : ""), title: keyHelp, cls: "mut" },
     { key: "seconds", word: "colLength", get: (s) => s.seconds, show: (s) => mmss(s.seconds), num: true },
     { key: "where", word: "colWhere", get: (s) => placeLines(s).join(" · "), title: (s) => placeLines(s).join("\n") },
@@ -279,11 +282,13 @@
     return s.places.map((p) => p.line || (p.folder ? p.folder : t("topOfMusicFolder")));
   }
   function keyHelp(s) {
-    if (!s.key) return t("keyNotRead");
+    // No key: the home note alone (D36), a song Deckie read and is not sure of (D33), or a key not read here.
+    if (!s.key && s.homeNote) return t("homeNoteHelp", { minor: s.homeNote.camelot[0], major: s.homeNote.camelot[1] });
+    if (!s.key) return t(s.keyState === "not_sure" ? "keyDeckieNotSure" : "keyNotRead");
     return [s.key.camelot + " " + keyFrom(s.key.from)].concat(s.key.others.map((o) => t("keySays", { program: programName(o.from), camelot: o.camelot }))).join("; ");
   }
   function keyCell(s, td) {
-    td.textContent = s.key ? s.key.camelot : t("none");
+    td.textContent = s.key ? s.key.camelot : s.homeNote ? t("homeNote", { note: s.homeNote.note }) : t("none");
     td.title = keyHelp(s);
     if (s.key && s.key.uncertain) td.append(" ", el("span", { class: "unsure", text: "?", title: t("notSureOfKey"), "aria-label": t("notSureOfKey") }));
   }

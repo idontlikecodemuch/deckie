@@ -29,6 +29,9 @@ public struct Track: Sendable {
     public var nBars: Int
     public var camelot: String
     public var keyConf: Double
+    /// The home note alone (0 to 11, C = 0), for a song whose key was not read but whose home note was (D36; the
+    /// crate's `key_home`). Used only when `camelot` is not a code.
+    public var homePitchClass: Int? = nil
     public var inBars: Int
     public var outBars: Int
     /// Mix-in window loudness (power mean of the bars) relative to the whole track, in LU.
@@ -142,24 +145,74 @@ public enum PairScoring {
     /// Why the key term says nothing: one of the two keys was not read.
     public static let keyNotRead = "key not read"
 
+    /// The confidence a home note alone counts with in the key term: the key block's own level for "the home note,
+    /// mode open" (0.45, under the 0.5 line of `key_uncertain`). No new number: it is the scale the block already has.
+    public static let homeNoteConfidence = 0.45
+
+    /// The keys a track may be compared as: its key when that was read; else, when only its home note was, the two
+    /// keys on that note (minor first, with `homeNoteConfidence`); else none.
+    public static func keyCandidates(_ t: Track) -> (codes: [String], confidence: Double, homeOnly: Bool) {
+        if keyRead(t) { return ([t.camelot], t.keyConf, false) }
+        if let pc = t.homePitchClass, (0...11).contains(pc) {
+            return ([Camelot.code(pitchClass: pc, major: false), Camelot.code(pitchClass: pc, major: true)], homeNoteConfidence, true)
+        }
+        return ([], 0, false)
+    }
+
+    /// Whether the key term has something to compare for a track: a key, or a home note.
+    public static func keyKnown(_ t: Track) -> Bool { !keyCandidates(t).codes.isEmpty }
+
+    /// What the key text calls a track's key: its code, or "home note A".
+    public static func keyLabel(_ t: Track) -> String {
+        if keyRead(t) { return t.camelot }
+        if let pc = t.homePitchClass, (0...11).contains(pc) { return "home note \(KeyEstimator.pitchNames[pc])" }
+        return ""
+    }
+
     /// Key term: the B.9 table, or a pitch shift of B by up to two semitones when that lands on a neighbour,
-    /// scaled by the lower of the two key confidences. When either key was not read there is nothing to compare: 0,
-    /// with the reason `keyNotRead`, and `scorePair` leaves the key out of the pair's score (D16: nothing is scored
-    /// on a key not read).
+    /// scaled by the lower of the two key confidences. When either song has neither a key nor a home note there is
+    /// nothing to compare: 0, with the reason `keyNotRead`, and `scorePair` leaves the key out of the pair's score
+    /// (D16: nothing is scored on a key not read).
+    ///
+    /// **A home note alone** (D36). A song whose mode the reader left open states no third, so it is compared as
+    /// either of the two keys on its home note, whichever fits the other song better: against a song with a key, the
+    /// better of the two; between two songs with home notes only, the best of the four pairings (which is their
+    /// notes' fit: the same note, a fifth apart, and so on, and the relative pairing a minor third apart). The first
+    /// best pairing wins a tie (minor before major, A's before B's). It then counts with `homeNoteConfidence`, so by
+    /// the rule above a home-note fit is worth 0.725 of the same fit between two keys read with full confidence: it
+    /// ranks as a fit, below a sure one. Two songs whose keys were both read are compared exactly as before.
+    /// `codes` are the two keys compared.
     public static func keyTerm(_ A: Track, _ B: Track)
         -> (value: Double, raw: Double, shift: Int, why: String, confidence: Double) {
-        guard keyRead(A) && keyRead(B) else { return (0, 0, 0, keyNotRead, 0) }
-        let (raw, why) = Camelot.rawCompatibility(A.camelot, B.camelot)
-        var best = raw, shift = 0
-        for s in [1, -1, 2, -2] {
-            let (r2, _) = Camelot.rawCompatibility(A.camelot, Camelot.shifted(B.camelot, semitones: s))
-            if r2 >= 0.85 {
-                let v = 0.85 - 0.12 * Double(abs(s))
-                if v > best { best = v; shift = s }
+        let t = keyTermDetail(A, B)
+        return (t.value, t.raw, t.shift, t.why, t.confidence)
+    }
+
+    public static func keyTermDetail(_ A: Track, _ B: Track)
+        -> (value: Double, raw: Double, shift: Int, why: String, confidence: Double, codes: (a: String, b: String)?) {
+        let ca = keyCandidates(A), cb = keyCandidates(B)
+        guard !ca.codes.isEmpty && !cb.codes.isEmpty else { return (0, 0, 0, keyNotRead, 0, nil) }
+        func one(_ a: String, _ b: String) -> (best: Double, raw: Double, shift: Int, why: String) {
+            let (raw, why) = Camelot.rawCompatibility(a, b)
+            var best = raw, shift = 0
+            for s in [1, -1, 2, -2] {
+                let (r2, _) = Camelot.rawCompatibility(a, Camelot.shifted(b, semitones: s))
+                if r2 >= 0.85 {
+                    let v = 0.85 - 0.12 * Double(abs(s))
+                    if v > best { best = v; shift = s }
+                }
+            }
+            return (best, raw, shift, why)
+        }
+        var top = one(ca.codes[0], cb.codes[0]), codes = (ca.codes[0], cb.codes[0])
+        for a in ca.codes {
+            for b in cb.codes where (a, b) != codes {
+                let t = one(a, b)
+                if t.best > top.best { top = t; codes = (a, b) }
             }
         }
-        let c = min(A.keyConf, B.keyConf)
-        return (best * (0.5 + 0.5 * c), raw, shift, why, c)
+        let c = min(ca.confidence, cb.confidence)
+        return (top.best * (0.5 + 0.5 * c), top.raw, top.shift, top.why, c, codes)
     }
 
     /// Tempo term from A's end tempo and B's start tempo over the seven multipliers.
@@ -261,7 +314,7 @@ public enum PairScoring {
     public static func scorePair(_ A: Track, _ B: Track, timbrePct: Double) -> PairScore? {
         let (tempo, k, klab, s, reject) = tempoTerm(A, B)
         if reject { return nil }
-        let (key, _, shift, kwhy, kc) = keyTerm(A, B)
+        let (key, _, shift, kwhy, kc, kcodes) = keyTermDetail(A, B)
         let dE = B.inRel - A.outRel
         let energy = 1 - min(max(abs(dE) - 2, 0), 8) / 8
         var L = min(A.outBars, B.inBars)
@@ -287,7 +340,7 @@ public enum PairScoring {
         let style = styleTerm(A, B)
         var terms = ScoreTerms(tempo: tempo, key: key, energy: energy, vocal: vocal, phrase: phrase,
                                timbre: timbre, rhythm: rhythm, style: style)
-        let keysRead = keyRead(A) && keyRead(B)
+        let keysRead = keyKnown(A) && keyKnown(B)
         if !keysRead {
             // A key not read neither helps nor hurts the pair: the key term takes the weighted mean of the other
             // terms, so the score is the weighted mean of the terms that are known.
@@ -313,7 +366,9 @@ public enum PairScoring {
             txt["tempo"] = "\(B.bpmIn * k < A.bpmOut ? "+" : "-")\(Py.fixed(s, 1))% stretch on B "
                 + "(\(Py.fixed(A.bpmOut, 1)) end -> \(Py.fixed(B.bpmIn, 1)) start)"
         }
-        var ktxt = "\(A.camelot) -> \(B.camelot)"
+        var ktxt = "\(keyLabel(A)) -> \(keyLabel(B))"
+        let homeOnly = !keyRead(A) || !keyRead(B)
+        if keysRead && homeOnly, let kcodes { ktxt += " (as \(kcodes.a) -> \(kcodes.b))" }
         if !keysRead {
             ktxt = keyNotRead
         } else if shift != 0 {
@@ -321,7 +376,11 @@ public enum PairScoring {
         } else if kwhy != "same key" {
             ktxt += " (\(kwhy))"
         }
-        if keysRead && kc < 0.5 { ktxt += ", key unsure" }
+        if keysRead && homeOnly {
+            ktxt += ", home note only"
+        } else if keysRead && kc < 0.5 {
+            ktxt += ", key unsure"
+        }
         txt["key"] = ktxt
         txt["energy"] = abs(dE) <= 2
             ? "energy steady (\(Py.signedFixed(dE, 1)) LU)"

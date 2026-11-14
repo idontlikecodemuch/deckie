@@ -88,6 +88,7 @@ Sent with `state` when the crate showing has songs and after every change to the
             "vocals": 0.42, "vocalHeavy": false,
             "key": {"camelot": "8A", "key": "A", "scale": "minor", "from": "rekordbox-xml", "uncertain": false,
                     "others": [{"from": "deckie", "camelot": "8A"}]},
+            "keyState": "key", "homeNote": null,
             "places": [{"source": "Stick 3", "folder": "House", "number": 4, "line": "Stick 3 / House 4"}],
             "file": "04 Song X.mp3", "signed": false, "notes": ["gridUnsure"], "damagedFrames": 0, "cover": true}],
  "sources": [{"name": "Stick 3", "songs": 12,
@@ -118,6 +119,14 @@ A song's cover (D36, added Nov 14, 2026; no new protocol number, as only a field
 song carries `cover`, true when its record in the crate file names a cover (`file.cover`), else false. It says only
 that there is one; the picture is asked for with `song.cover` ("Covers", below). An engine from before D36 sends no
 `cover`, which a page reads as false.
+
+**The key of a song** (D33, D36). `keyState` says what the record holds, and the page shows, where a key shows:
+`key` (the `key` object, as before); `home_note` (`key` is null and `homeNote` is `{"note": "A", "camelot": ["8A",
+"11B"]}`: Deckie's reader found the home note and left the mode open; words `homeNote`, with `homeNoteHelp` as its
+explanation); `not_sure` (both null: Deckie read the song and is not sure; words `keyDeckieNotSure`); `not_read` (both
+null: no key was read on the computer that made the record; words `keyNotRead`). The run's report carries the counts
+in `local.report`: `keys_not_read` (songs with neither), `keys_not_sure` (of those, the ones Deckie read; words
+`keysNotSure`) and `keys_home_note` (songs with a home note, not counted in the first; words `keysHomeNote`).
 
 Codes, each with its words in the list: a key's `from` (`keyFrom.<code>` and `programName.<code>`), `nameFrom` (codes
 joined by `+`, `nameFromPart.<code>`), `notes` (`needsName`, `damagedFrames`, `gridUnsure`, `vocalsNotRead`, `signed`)
@@ -186,9 +195,10 @@ any other folder takes its own name, and the folders inside it are its groups. T
 become "Name" and "Name 2". The run goes into the crate showing, or, on the first screen, into a new crate named after
 what is read.
 
-`crate.export` writes `<folder>/<crate name>.deckiecrate` (a folder, crate v1 as it is). This is where Desk on
-Windows and Linux hands a crate file out (DeskSession.export); when the single-file form of a crate file lands (the
-branch `pc/windows-builder`), the export switches to it there and the pages do not change.
+`crate.export` writes `<folder>/<crate name>.deckiecrate` as **one file**, the single-file form of a crate file
+(`docs/architecture/crate-format.md`: the same files with the same bytes in one uncompressed archive), replacing a
+crate file of that name in either form. This is where Desk on Windows and Linux hands a crate file out
+(`DeskSession.export`, switched Nov 14, 2026; the pages did not change). Deckie Booth opens both forms.
 
 Error codes: `bad_request` (not JSON, no `type`, a field missing), `unknown_type`, `busy` (a run is going),
 `no_crate` (nothing with songs is showing), `engine_missing` (this computer cannot read music yet), `failed` (the

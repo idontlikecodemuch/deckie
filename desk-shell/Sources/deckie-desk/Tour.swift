@@ -62,7 +62,7 @@ enum Tour {
             guard let m = try? JSONSerialization.jsonObject(with: Data(line.utf8)) as? [String: Any] else { return }
             lock.lock(); events.append(m); lock.unlock()
         }
-        func say(_ s: String) { FileHandle.standardError.write(Data(("[tour] " + s + "\n").utf8)) }
+        func say(_ s: String) { Notice.say("[tour] " + s) }
 
         func run(_ i: Int) {
             guard i < steps.count else {
@@ -97,7 +97,7 @@ enum Tour {
             desk.window.onWindowThread { run(0) }
         }
         #else
-        FileHandle.standardError.write(Data("deckie-desk: --tour takes pictures on the Mac only\n".utf8))
+        Notice.say("deckie-desk: --tour takes pictures on the Mac only")
         exit(1)
         #endif
     }

@@ -1,6 +1,249 @@
-# Check-ins: the Windows builder (branch `pc/windows-builder`)
+# Check-ins: the Windows builder (branches `pc/windows-builder`, `pc/m4a`, `pc/package-desk`)
 
 Newest entry first. Each entry: when, what is done, what failed and why, what is next, and one plain line.
+
+**Newest zip, Deckie Desk with its window: `pc-package` run 43581053583** (branch `pc/package-desk`, commit
+`c964f6c`), artifact `Deckie-Desk-for-Windows-first-test` (id 14108458447): **128,981,732 bytes**, SHA-256
+`65c94acef23ff8d1fe983ff40004a436415f22bdfc9c88fbd7f626e2dd3ccb97`. It supersedes every zip named further down.
+
+## Nov 14, 2026, 10:00 UTC: Deckie Desk for Windows is packaged and tried on the runner; all four workflows green
+
+**The zip to use: `pc-package` run 43581053583** (branch `pc/package-desk`, commit `c964f6c`), artifact
+`Deckie-Desk-for-Windows-first-test` (id 14108458447, kept 30 days): `Deckie-Desk-for-Windows-first-test.zip`,
+**128,981,732 bytes**, SHA-256 `65c94acef23ff8d1fe983ff40004a436415f22bdfc9c88fbd7f626e2dd3ccb97`. It is a run artifact only: no release, no tag, no pull request.
+
+**All four workflows are green on that one commit:** `pc-package` 43581053583, `desk-window` 43581053551,
+`core-linux` 43581053633, `core-windows` 43581053570. The commits after `c964f6c` on the branch change documents
+only and start no workflow.
+
+**What a DJ gets.** A folder, "Deckie Desk for Windows (first test)": `READ ME FIRST.txt`, `Deckie Desk.exe`,
+`Make Crate File.exe`, and `app` (the window, its engine, the pages, `deckie-make`, 19 runtime libraries, ONNX
+Runtime, the two models, the licences). Unzip, double-click "Deckie Desk". Nothing is installed.
+
+**Seen on the runner** (Windows Server 2025, the unzipped folder in "A DJ's PC", PATH cut down to `System32` and
+the Windows folder, every start through `Deckie Desk.exe` unless said):
+
+| What | Result |
+|---|---|
+| The window | made, with WebView2 156.0.4314.58; Desk's own icon is on the window (asked of the window itself) |
+| No console window | read from the program files: `Deckie Desk.exe`, `deckie-desk.exe` and `deckie-desk-engine.exe` are programs of the kind Windows gives no console to. No person looked |
+| The page | loaded, and drew the first screen in the engine's words: heading "Your crate starts here.", button "Add music" |
+| The engine | found `onnxruntime.dll` and `models/` beside itself (it says it is ready to read music) |
+| **Start-up time** | from starting `Deckie Desk.exe` to the page showing the engine's words: **0.54 s and 0.47 s** on two starts with nothing to write to, as a double click starts it. The very first start on the account, when the web view makes its own storage, is slower: **9.4 s** in this run, and 3.1, 5.3 and 4.5 s in the three runs before it (measured inside `deckie-desk.exe`) |
+| A run | the test music folder ("My Müsic": a WAV, a FLAC, an MP3, a nested folder, a name that is not ASCII, one file too short, one protected, hidden files) added through the page's own Add music button and folder chooser (answered by the check); the run finished in 9.0 s; the finished screen said "4 songs went in. 2 files didn't go in: Analysis failed (1), Protected, cannot be read (1). Keys: 4 read by Deckie." |
+| Export | through the page's Export button: `My Müsic.deckiecrate`, **one file**, 27,239 bytes; the core's validator reads it (`deckie-e2e check-desk`): single-file form, 4 songs at 124 BPM and 32 bars, key 8A, each from the source "My Müsic" |
+| Where Desk keeps its crates | that run used the place a DJ's PC uses, nothing set: `C:\Users\runneradmin\AppData\Local\Deckie Desk`. After it, this account held `AppData\Local\Deckie Desk` (26 files, 238 KB: the crate and what was worked out for each song), `AppData\Local\Deckie` (`Make Crate File`'s) and `AppData\Roaming\deckie-desk.exe` (the web view's own storage, 5.1 MB), which is what the READ ME says |
+| A PC without the WebView2 Runtime | tried honestly: the registry values that say where the runtime is were renamed for a moment, so **the program's own detection said no**. Deckie Desk ended with its code 4 and the words "Deckie Desk needs a free part of Windows that this PC does not have yet: Microsoft's WebView2 Runtime..." with Microsoft's page and "Make Crate File". With the values back, the window opened again. The message **box** was not shown (nobody could click it): the words went to standard error |
+| Started from inside the zip | the starter alone says "Unzip first..." and ends with 3 (the words, not the box) |
+| `Make Crate File` | everything it passed before: a folder dropped on it, a second run, the typed path, the starter alone, four four-minute songs |
+
+**What failed along the way, exactly:**
+
+1. `desk-window` 43575041468: the shell did not compile on Windows. A variable was named `small`, which a Windows
+   header defines as something else. Renamed.
+2. `desk-window` 43575623174 and `core-windows` 43576872162: the engine test `speaksTheProtocolWithNoMusicRead`
+   failed twice, at two different lines, each reading "the latest event" straight after a reply. Both lines were
+   there before this work; a busy runner delivers the event a moment later. The test now waits for the event that
+   shows each change. It is the race the brief named.
+3. `pc-package` 43575623179: `Deckie Desk.exe` did not finish in three minutes. `pc-package` 43576872179 showed
+   why: started with nothing to write to, **the window program stopped at once with Windows' code 0xC000001D**,
+   and the starter then waited in a message box nobody could click. The cause was a line written for a developer:
+   a program with no console, started by a double click, has no standard error at all, and Swift stops a program
+   that writes to one that is not there. My first fix (handing the program Windows' "NUL" to write to) did not
+   help, because Swift writes through the C runtime's own file number, which is set once when the program starts.
+   The fix that works: the shell asks once whether it has a standard error and does not write when it has none.
+   **This would have stopped every real double click.** It was caught only because the workflow starts the program
+   the way a double click does.
+4. `pc-package` 43578864554: a new step of mine expected Desk's storage folder to exist after a start that stored
+   nothing. Desk makes it with the first crate. The step now follows the run, which uses that folder.
+5. `core-windows` 43578864539 and `desk-window` 43580169379: the test
+   `exportWritesTheCrateFileUnderItsNameAndDeleteMovesOn` failed, twice in eight Windows runs, at its last step:
+   deleting the crate. "Couldn't delete ...: another program kept the file open (tried 6 times over about a
+   second)", and the file named was a temporary one that a save leaves when its move into place is interrupted.
+   That is the Windows hold `DeckieFiles` was written for (another program, a virus scanner most likely, reading a
+   file Deckie has just written); a second was not always enough for a whole folder. A delete now waits about five
+   seconds before it gives up. **I did not prove the cause**: I did not see which program held the file, and my
+   new export writes more small files than the old one did, which may be why it showed now. It passed on the
+   commit after (one run of each workflow), which is not proof either. If it returns, the next thing to look at
+   is whether the temporary file is being held by Deckie's own program.
+
+**Every decision made on the owner's behalf, with its reason** (1 to 10 are in the entry below at more length;
+repeated in one line each so this entry stands alone):
+
+1. Folder and zip renamed to "Deckie Desk for Windows (first test)": the thing a DJ gets is Desk.
+2. No console window by marking the finished programs' kind (`pe_kind.py`), not by a build switch: the tests'
+   builds stay console programs, and the engine needs it too since Swift's child-starting has no "no window" switch.
+3. The engine finds its files beside itself through `OnnxRuntime.programFolder`: the order `deckie-make` uses.
+4. The WebView2 test is the window's own loader; the registry values Microsoft documents only choose the words.
+5. The message asks (Yes or No) before opening Microsoft's page; Deckie downloads nothing.
+6. The icon keeps the rounded corners of `site/icon.svg`.
+7. The icon file: plain bitmaps for the seven small sizes, a PNG for 256.
+8. The programs carry a description and version; no company name and no copyright line (the owner's to word).
+9. Desk's export writes one file on Windows and Linux only; the Mac keeps the package.
+10. `deckie-e2e check-desk` reads Desk's exported crate file.
+11. **`Make Crate File` stays in the zip and is the offered way on a PC without WebView2**, as the brief said.
+    Microsoft's installer for the runtime is **not** shipped: it would be a new licence question for the owner.
+12. **A check must never wait on a box.** `DECKIE_NO_BOXES` makes the starter and the shell say their words on
+    standard error; the workflow sets it for every start. A DJ never sets it.
+13. **A test switch, `DECKIE_DESK_NO_WEBVIEW2`**, makes the shell behave as on a PC without the runtime. The
+    workflow did not need it (hiding the registry values worked) and falls back to it if a runner ever refuses.
+14. **The shell's own words** (four messages a DJ can meet before there is a window) live in
+    `desk-shell/Sources/deckie-desk/Notice.swift` as named values, in the voice of `docs/product/voice.md`. The
+    pages still hold no words; the engine's list cannot be asked when there is no window to show it in.
+15. **The READ ME says key is read on a PC and recognition is not yet**, which is what `main` held tonight, and is
+    worded to stay true when Deckie's own fingerprint lands: it tells the DJ to look at the window's own line ("N
+    can't be recognised yet"). If the fingerprint has landed by morning, only the one dated sentence is stale.
+16. **Racy lines in an engine test that I did not write were fixed** (four reads, at three places) rather than
+    re-run until green.
+17. **A delete waits about five seconds for a held file, not one** (`DeckieFiles.removePauses`), in the core
+    everyone shares. Reason: failure 5 above; a DJ deleting a crate should not have to ask twice. The other
+    operations keep their one second.
+18. **D36 says Desk is packaged for Windows "once the core is complete, not before".** This work was asked for
+    tonight all the same, so it is done as a first test, labelled so everywhere, and not released.
+19. **`main` was not merged into the branch.** While this was built, `main` moved on by 34 commits (the run screen
+    of D37, and the lookup through MusicBrainz of D36, among others). The zip is built from `main` as it stood
+    when the branch was cut (`098afc1`), so it has neither. Reason: the lookup is the first thing in Deckie that
+    uses the network, and D36 says the privacy line is reworded before that reaches anyone outside; the READ ME
+    in this zip says "It works with no internet" and "Nothing is looked up on the internet in this version",
+    which is true of this zip and would not be of a merged one. Those words are the owner's. Deckie's own
+    fingerprint had not reached the crate file on `main` by 10:00 UTC, so the READ ME's line on recognition is
+    still the true one.
+
+**Not done, or not proven, said plainly:**
+
+- No person has seen the window, the icon, the message box or the absence of a console. A runner has no screen.
+- The message box itself was never shown, nor its Yes button opening Microsoft's page.
+- The runner is Windows Server 2025 with the WebView2 Runtime and Microsoft's Visual C++ runtime already on it. It
+  is not Windows 10 or 11, and its account is an administrator.
+- A real double click goes through Explorer; the workflow's start is the same kind (a program with a window,
+  nothing to write to), which is how failure 3 was found, but it is not Explorer.
+- Dragging a folder onto the window, a music CD, a USB stick in the Add music list, Listen: none was tried here.
+- The crate file opening in Deckie Booth on a real iPad was not tried in this work.
+- Two copies of Deckie Desk open at once share one storage; nothing stops that, and it is not tested.
+- The window is 1180 by 760 points; on a small laptop screen (1366 by 768) it may not fit. Not tried.
+
+**Next, for whoever picks this up:** merging `main` into `pc/package-desk` (or the other way) conflicts in four
+files, tried and put back: `.github/workflows/pc-package.yml` (the list of branches), `desk-shell/Sources/
+deckie-desk/main.swift` (the tour's options beside the check's), `core/Tests/DeckieDeskTests/EngineProcessTests.swift`
+(new tests beside the waits) and this file. None is deep. After the merge the READ ME and the tester's page need the
+lookup's words, and the packaging run should be read again: the lookup brings Foundation's networking library into
+the engine, which the import-table reader will copy by itself, and which no run has tried from the zip.
+
+**For a person with a real PC, in this order:**
+
+1. On the PC, download the artifact zip in a browser (that is what makes Windows treat it as "from the
+   internet"). Note what the browser and Windows' antivirus say about the download.
+2. Right-click the zip, "Extract All". Note anything the antivirus says while it unzips.
+3. Before unzipping anything else: open the zip by double-clicking it and double-click "Deckie Desk" inside it.
+   Expected: a box saying "Unzip first".
+4. In the unzipped folder, look at the two programs in Explorer: both should show Deckie's icon (the orange record
+   on dark purple), in the list and as large icons.
+5. Double-click "Deckie Desk". Expected: the blue "Windows protected your PC" box; "More info", then "Run anyway".
+   Does it ask again for a second program? (The starter starts another unsigned program.) Does it ask again on
+   the next start?
+6. Watch for a black console window flashing or staying. There should be none, at start or when music is added.
+7. The window: titled "Deckie Desk", the icon in its title bar, on the taskbar and in Alt-Tab; Task Manager should
+   call it "Deckie Desk". Time it from the double click.
+8. Click "Add music", "Choose a folder…": the real Windows folder chooser. Pick a small music folder. Watch the
+   run to the end; read what the finished screen says.
+9. "Export crate file…" onto a USB stick or into iCloud Drive; get it to an iPad and open it in Deckie Booth.
+10. Drag a music folder from Explorer onto the window.
+11. Plug in a USB stick with music; does it show under "Add music"? If the PC has a disc drive, a music CD.
+12. Close the window in the middle of a run; start again; "Carry on".
+13. Play a song in the window (Listen), an MP3 and an M4A.
+14. Start "Deckie Desk" twice. (Two windows on one storage: not handled.)
+15. Drag a music folder onto "Make Crate File": the console window, the crate file next to the folder.
+16. The same on an account that is **not an administrator**.
+17. The same on **Windows 10** (and on Windows 11 if the first PC was 10). Check a laptop with a small screen and
+    one with display scaling at 125 or 150 percent.
+18. **A PC without the WebView2 Runtime** (a Windows 10 that never had Edge updated, or one where the runtime is
+    uninstalled under "Apps"): double-click "Deckie Desk". Expected: a box naming Microsoft's WebView2 Runtime and
+    its page; "Yes" opens the page in the browser; "Download WebView2" there, install, start again and the window
+    opens. Then "No" on a second PC, and "Make Crate File" there.
+19. A PC whose Windows account name has letters outside English, or with the folder on a OneDrive Desktop.
+20. A long run: a thousand songs, the laptop on battery, the lid closed for a while.
+21. Remove it: delete the folder; look in `%LOCALAPPDATA%` and `%APPDATA%` for what is left (the READ ME names it).
+
+carry on
+
+## Nov 14, 2026, 08:45 UTC: branch `pc/package-desk` (from `main`): Deckie Desk is in the zip; it assembles on the runner; its first start from the zip does not finish yet
+
+The work: package Deckie Desk for Windows (the window `deckie-desk`, its engine, the pages) as a folder a DJ unzips
+and runs, with its icon, no console window and a plain message on a PC without the WebView2 Runtime (the part of
+Windows, from Microsoft, that draws Desk's window). Nobody is awake to ask, so each decision is written here with
+its reason.
+
+**Done and seen on the runner** (`pc-package` run 43575623179, commit `a2c9694`):
+
+- The zip assembles: `Deckie-Desk-for-Windows-first-test.zip`, 128,973,372 bytes, 46 files. It holds
+  `Deckie Desk.exe` and `Make Crate File.exe` at the top, and in `app` the window, the engine, `deckie-make`, the
+  pages, 19 runtime libraries, ONNX Runtime, the models and the licences (now with the `webview` library's licence
+  and the licence of Microsoft's WebView2 SDK header).
+- The icon is made in the run from the iPad app's picture by `core/Tools/windows/make_ico.py` (102,045 bytes, eight
+  sizes) and compiled by `llvm-rc`, which the Swift toolchain on the runner does carry. The check of the finished
+  programs says: `Deckie Desk.exe` and `deckie-desk.exe` open no console window and carry the icon; the engine
+  opens no console window; `Make Crate File.exe` is a console program and carries the icon.
+- `Make Crate File` from the new zip passes everything it passed before.
+- `core-linux` and `core-windows` are green with the core's two changes (the single file on export; the engine
+  finding its files beside itself).
+
+**Failed, and why:**
+
+1. `desk-window` run 43575041468: the shell did not compile on Windows. I had named a variable `small`, and a
+   Windows header defines that word as something else. Renamed. It compiles now (run 43575623174).
+2. `desk-window` run 43575623174: one engine test failed, `speaksTheProtocolWithNoMusicRead`, at a line that read
+   the latest `state` event straight after a reply. That is the race the brief warned of, in a line that was there
+   before; the test now waits for the event it means.
+3. `pc-package` run 43575623179: **`Deckie Desk.exe`, started from the unzipped folder, did not finish its check in
+   three minutes**, and its log file was empty. An empty log means the program started and then stopped or hung
+   before the window was made. I do not know why yet. The same program as a console build passes the same check in
+   `desk-window`. What differs in the zip: a release build, marked as a program with no console window, started
+   with nothing to write to, with PATH cut down. My first suspect is something I added: at start the program gave
+   itself Windows' "NUL" as standard output and error when it had none; the web view may not start under that.
+
+**Next:** the run in progress (commit `926a701`) starts the window program four ways and writes down what Windows
+itself says about each, so the cause is seen rather than guessed. I have already taken the "NUL" step out (the
+program now leaves its standard handles alone and simply does not write when it has none) and made the check's
+time limit start before the window is made, so a web view that never comes up ends the check with words.
+
+**Decisions made so far, each with its reason:**
+
+1. **The folder and zip are renamed** "Deckie Desk for Windows (first test)" and
+   `Deckie-Desk-for-Windows-first-test.zip` (artifact of the same name). The thing a DJ gets is now Desk, and the old
+   name said "for PC".
+2. **No console window by marking the finished programs**, not by a build switch: the copies of `deckie-desk.exe`
+   and `deckie-desk-engine.exe` that go into the zip have one two-byte field of their header changed
+   (`core/Tools/windows/pe_kind.py`; Microsoft's `editbin /SUBSYSTEM` does the same). Reason: the builds the tests
+   use stay console programs, so their messages show, and no build flag has to be threaded through two packages.
+   The engine is marked too because Swift's way of starting a child program has no "no window" switch; a child
+   marked this way gets no console from Windows at all.
+3. **The engine finds its files beside itself** through one new setting in the core
+   (`OnnxRuntime.programFolder`), which the engine program sets to its own folder; the environment variables still
+   come first, the checkout last. Reason: the same order `deckie-make` uses, and it works for every run the engine
+   makes, not only the first.
+4. **The WebView2 check is the window's own loader**, not a second test in the starter: the shell tries to make the
+   window, and when that fails on Windows it reads the registry values Microsoft documents to say which of two
+   things is true (not installed; installed but did not start). Reason: one test cannot disagree with itself.
+5. **The message asks before opening Microsoft's page** (Yes or No), and names the page in words as well. Nothing
+   is downloaded by Deckie. The page is the one Microsoft's own documentation says to send people to
+   (`https://developer.microsoft.com/microsoft-edge/webview2/consumer/`, read tonight).
+6. **The icon keeps the rounded corners of `site/icon.svg`** (radius 230 in 1024). The iPad picture is a full
+   square that iOS rounds itself; Windows shows a picture as it is, and a square would look unlike the site.
+7. **The icon file holds plain bitmaps for the seven small sizes and a PNG for 256**, not PNGs throughout. Reason:
+   it is the layout every Windows and both resource compilers read; it cost ten more lines.
+8. **The programs also carry a description** ("Deckie Desk"; version 0.1.0), which Task Manager and a file's
+   Properties show, and **no company name and no copyright line**: those are the owner's to word.
+9. **Desk's export writes the single file on Windows and Linux only**; the Mac keeps the package, since its own
+   Desk does not use this path and AirDrop moves a package as one thing.
+10. **A new mode of the test tool, `deckie-e2e check-desk`**, reads Desk's exported crate file: the validator's
+    existing checks assume the PC program's layout, and Desk names each file from its source.
+
+consider changing direction only if the next run shows the window cannot start at all as a program with no
+console; otherwise carry on
+
+**The last zip without the window, with `.m4a` reading: `pc-package` run 43545418975** (branch `pc/m4a`, commit
+`665490a`), artifact `Deckie-for-PC-first-test` (id 14094366437): **122,379,915 bytes**, SHA-256
+`4da005fe55bce0d5be43b12d5aba0806185c39c685a565b48c9492215308874d`.
 
 ## Nov 14, 2026, 08:00 UTC: covers (D36) on branch `pc/covers`: core, builders and Desk written; all four workflows green
 

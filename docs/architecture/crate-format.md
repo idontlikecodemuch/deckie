@@ -80,8 +80,8 @@ memo Q's vocal fields, `vocal_structure` and `hooks`, are instead left out when 
   `file.sha256` as null. `CrateIDs.id(forFileBytes:)` and `CrateIDs.sha256(of:)` compute both, on SHA-256 written in
   Swift (`SHA256.swift`), so no system library is needed.
 - `schema`: 1. `features_present`: sorted names, from `grid`, `tempo_segments`, `key`, `key_changes`, `phrase`,
-  `sections`, `mix_windows`, `ends`, `loudness`, `vocal`, `onset_pattern`, `style`, `vocal_structure`, `hooks` and
-  `bars.<series>`. Readers ignore names they do not know, but keep a per-bar series they do not know. **proposed** (the
+  `sections`, `mix_windows`, `ends`, `loudness`, `vocal`, `onset_pattern`, `style`, `vocal_structure`, `hooks`,
+  `key_home` (D36) and `bars.<series>`. Readers ignore names they do not know, but keep a per-bar series they do not know. **proposed** (the
   names; `vocal_structure` and `hooks` with memo Q's vocal fields).
 - `file`: `name`, `rel` (path below the folder the crate was built from, or, for an entry read from a source, below
   that source's top, the source being named by `ident.disc` (D25, Nov 13, 2026; meaning only); or null; never absolute), `bytes` or null,
@@ -127,10 +127,11 @@ memo Q's vocal fields, `vocal_structure` and `hooks`, are instead left out when 
   source, the engine is not; track L wrote `deckie-core`, which now names the code both engines share), `version`,
   `platform` (`macos-arm64`, `linux-x86_64`, `windows-x86_64`), `fidelity`, `models` (each `name`, `version` or null,
   `weights_sha256` or null), `decoder` (`name`, `version` or null) or null. An engine's `version` goes up whenever the
-  record it writes gains or changes fields (the Windows and Linux engine's is 0.5.0: 0.2.0 brought the vocal
+  record it writes gains or changes fields (the Windows and Linux engine's is 0.6.0: 0.2.0 brought the vocal
   blocks and `file.tag_bpm`, 0.3.0 the three-profile key vote, which changes keys, 0.3.1 `file.damaged_frames`, with
   damaged MP3 frames silenced, 0.4.0 the whitened-HPCP key, which changes keys again, 0.5.0 the three-answer key
-  reader of D33, which changes the key block's source, confidence, code and votes), so a builder's work folder made
+  reader of D33, which changes the key block's source, confidence, code and votes, 0.6.0 the home note of D36:
+  `key_home` in place of a key block at 0.45), so a builder's work folder made
   by an older version is analysed again rather than reused.
   **proposed**: `fidelity` 0 means not benchmarked; n means the build passed benchmark tier n, tier 1 being the stage 1
   pass marks. A device with the audio re-analyses a record when its own fidelity is higher, or the record's level is a
@@ -158,17 +159,19 @@ memo Q's vocal fields, `vocal_structure` and `hooks`, are instead left out when 
   keys added to `key.votes` under these names.
   **Deckie's own reading from engine 0.5.0** (D33, Nov 14, 2026; meaning only, no field added or changed): the
   three-answer reader (`ThreeAnswerKey` in DeckieCore; research X2) writes `key.source` `three-answer` and puts its
-  answer on the block's confidence scale: **1.0** a key (its two readings name the same home note and the same mode);
-  **0.45** the home note with the mode open (the same home note, different modes); **0.2** not sure (different home
-  notes). In the last two `key.camelot` is only the reader's best guess, both are under the 0.5 line that sets
-  `key_uncertain`, and the two are told apart by the value. `key.votes` gains `hpcp_discount` and
-  `note_transcription` (the two readings' own keys) and `hpcp_whitened` (the 0.4.0 method's key) beside the four
-  it had. That is the builder's record, as the engine wrote it. **What a crate file shows** is decided by
-  `LocalFacts.decideKey`: a three-answer reading is the record's key only at 1.0; at 0.45 or 0.2 the record has no
-  `key` block (unless a DJ's own key takes its place), and a reading under 0.5 is not kept as the vote `deckie`
-  beside a DJ's key. So a crate file made by Desk or `deckie-build` never carries a three-answer key the reader
-  was not sure of. "Home note known, mode open" cannot be said with the fields above, since `key.camelot` names a
-  mode: see "The mode left open", proposed, below.
+  answer on the block's confidence scale: **1.0** a key (its two readings name the same home note and the same
+  mode); **0.2** not sure (different home notes), when `key.camelot` is only the reader's best guess, under the 0.5
+  line that sets `key_uncertain`. Its third answer, the home note alone (the same home note, different modes), is
+  not a key block: it is the `key_home` block ("The home note", below; engine 0.6.0, D36. Engine 0.5.0 wrote a key
+  block at **0.45** for it, which `LocalFacts` still reads as a home note). `key.votes` gains `hpcp_discount` and
+  `note_transcription` (the two readings' own keys) and `hpcp_whitened` (the 0.4.0 method's key) beside the four it
+  had. That is the builder's record, as the engine wrote it. **What a crate file shows** is decided by
+  `LocalFacts.decideKey` (Desk and `deckie-build`) and `LocalFacts.ownKeysOnly` (`deckie-make`): a three-answer
+  reading is the record's key only at 1.0; a reading at 0.2 is dropped, so the record has no `key` block (unless a
+  DJ's own key takes its place), and it is not kept as the vote `deckie` beside a DJ's key. So a crate file never
+  carries a three-answer key the reader was not sure of. **What a record says about its key** is then one of four
+  things (`CrateTrack.keyState`): a key; a home note; not sure (a record of the `deckie` engine from 0.5.0 with
+  neither: the reader reads every song); not read (any other record with neither).
 - `phrase` *(phrase)*: `source`, `confidence`, `lattice_phase_bar` (1 to 8), `boundaries_bars`. Its `source` is track
   L's `structure.source` and covers `sections` too.
 - `sections` *(sections)*: a list of `start_bar`, `end_bar`, `label` (`intro`, `main`, `break`, `outro`), `energy`.
@@ -632,7 +635,9 @@ example crate above as one file (21,416 bytes against the package's 20,626: 790 
   the same crate. `CrateArchive.pack(package:to:)` writes a package as one file; `CrateArchive.unpack(_:to:)` turns
   one file back into a package folder, for an app that keeps crates as packages and writes its own files into them.
 - **Who writes which.** The Mac keeps writing packages (D28: Desk keeps its crates in its own storage, as packages).
-  The PC builder writes the single-file form next to the music folder. Either may be sent to an iPad.
+  The PC builder writes the single-file form next to the music folder, and Deckie Desk on Windows and Linux writes
+  it when a crate file is exported (`DeskSession.export`, since Nov 14, 2026; in its own storage Desk keeps packages
+  there too). Either may be sent to an iPad.
 
 **What the iPad app needs**, built Nov 13 (`deck-app/README.md`, "Crate files from a PC"). (1) Its reads go through
 `CrateReader.read(from:)`, which takes both forms. (2) A crate file handed to the app is taken into its own storage by
@@ -646,34 +651,51 @@ Two type identifiers with the **same extension** do cover both: `io.christophers
 a file. So the single file keeps the name `<name>.deckiecrate`, and nothing in this format changes. Still to see on a
 real iPad: AirDrop, iCloud Drive and a cable.
 
-## The mode left open **proposed** (Nov 14, 2026, with D33; waits for the owner's word)
+## The home note (D36, Nov 14, 2026; decided)
 
-D33's reader has three answers: a key, the home note with the mode left open, and not sure. The first is a `key`
-block; the third is no `key` block, which every reader already understands as "key not read". The second cannot be
-written today: `key.camelot` is required text and a Camelot code always names a mode, and `key.key` with a null
-`key.scale` would still need a code beside it. Writing a guessed code with a low confidence would show a mode the
-reader did not find to every reader that ignores the confidence, which D16 rules out.
+D33's reader has three answers: a key, the home note alone, and not sure. The first is a `key` block; the third is
+no `key` block, which every reader understands as no key. The second could not be written: `key.camelot` is required
+text and a Camelot code always names a mode, and a guessed code at a low confidence would show a mode the reader did
+not find to every reader that ignores the confidence, which D16 rules out. The owner accepted the addition proposed
+with D33 and named it: on screen it is the **home note** ("home note, mode open" was clunky).
 
-**The smallest addition** that changes no existing field's meaning: one optional block beside `key`, left out when
-absent (as `vocal_structure` and `hooks` are, so existing records keep their bytes), with the feature name
-`key_home`:
+**The block.** One optional block beside `key`, left out when absent (as `vocal_structure` and `hooks` are, so
+every record without it keeps its bytes), with the feature name `key_home`:
 
-- `key_home` *(key_home)*: `source` (the method, `three-answer`), `note` (the home note as `key.key` spells it,
-  for example `A`), `pitch_class` (0 to 11, C = 0), `camelot` (the two codes on that home note, minor first, for
-  example `["8A", "11B"]`).
+- `key_home` *(key_home)*: `source` (the method, `three-answer`), `note` (the home note as the engine spells a
+  key's, sharps: `A`, `C#`), `pitch_class` (0 to 11, C = 0), `camelot` (the two codes on that home note, minor
+  first: `["8A", "11B"]`).
 
-Rules: a record has `key_home` only when it has no `key` block (a key, the DJ's or Deckie's, always replaces it);
-a reader that does not know the block ignores it and sees a song with no key, which is true as far as it goes; a
-reader that knows it may show the note ("A, mode open") or the two codes, and a scorer may treat the song as
-fitting either code. `schema` and `min_reader` stay 1.
+**Rules.**
 
-**Until it is accepted** nothing is written: `LocalFacts.decideKey` treats "home note, mode open" as no key and
-counts it apart (`keys_mode_open` in the run's report), and the builder's record keeps the reading (confidence
-0.45, the home note in `key.key`), so accepting this needs no second analysis of anyone's music. On the outside
-sets of research X2 this is 5 to 12 percent of songs, with the home note right on 61 to 82 percent of them.
+- A record has `key_home` only when it has no `key` block: a key, the DJ's or Deckie's or Apple's, always replaces
+  it. The validator refuses a record with both, a `pitch_class` outside 0 to 11, a `camelot` that is not the two
+  codes on that pitch class in that order, and a `note` that is not its name.
+- `features_present` lists `key_home` exactly when the block is there.
+- `schema` and `min_reader` stay 1. A reader from before the block passes over the member (it ignores keys it does
+  not know) and over the name in `features_present` (it checks only the names it knows), and sees a song with no
+  key, which is true as far as it goes. Proved both ways in `KeyHomeTests` (DeckieCrateTests): a crate without the
+  block is written, read and written again to the same bytes with no `key_home` in them; a crate with it reads
+  through the previous reader's shape; and by hand, the reader built from the commit before this one checked a
+  crate file written with the block (the check-in of Nov 14 records the run).
+- **Who writes it.** The engine (0.6.0), in the builder's record, when the reader's answer is the home note alone;
+  `LocalFacts.decideKey` and `ownKeysOnly` keep it when no key takes its place, remove it when a DJ's key does, and
+  bring it back from the builder's records if that key goes. A record read by Apple's framework never has one.
+- **The run's report** counts it apart: `keys_home_note` (songs with a home note; not counted in `keys_not_read`),
+  beside `keys_not_sure` (of the songs with no key, those Deckie read and was not sure of).
+- **Scoring** (`PairScoring.keyTerm`): a song with only a home note is compared as either of the two keys on it,
+  whichever fits the other song better, and counts with the confidence 0.45 (the level the key block's scale already
+  has for it), so a home-note fit is worth 0.725 of the same fit between two keys read with full confidence. Two
+  songs with only home notes: the best of the four pairings. A song with neither a key nor a home note stays out of
+  the key term, as before, and two songs whose keys were both read score exactly as before.
+- **On screen** it is "Home note A". Desk's rows carry `keyState` and `homeNote`
+  (docs/architecture/desk-protocol.md); the words are `homeNote`, `homeNoteHelp`, `keyDeckieNotSure`.
 
-Not proposed, and why: allowing `key.camelot` to be null (changes a required field's type for every reader); a
-flag such as `key_mode_open` on a block that still carries a guessed code (old readers would show the guess).
+On the outside sets of research X2 this is 5 to 12 percent of songs, with the home note right on 61 to 82 percent of
+them.
+
+Not done, and why: allowing `key.camelot` to be null (changes a required field's type for every reader); a flag on
+a block that still carries a guessed code (old readers would show the guess).
 
 ## Addition with D36 (Nov 14, 2026): covers
 
@@ -771,9 +793,8 @@ crate file itself calls `Cover.make(picture)` and `cover.write(into: package)` b
     its origin) and `file.other_tags` (the rest of the file's text tags, within bounds, with what was left out
     counted), both left out when empty; no version raised. The fact names, the origins, the order of which source
     wins and the bounds are this format's choices, made with D34.
-14. Proposed Nov 14, 2026 (with D33). `key_home`: the home note with the mode left open, an optional block beside
-    `key`, present only when there is no `key` block; nothing is written until it is accepted ("The mode left
-    open", above).
-14. Addition with D36 (Nov 14, 2026, the owner's "lets add them"). Covers: `file.cover` (the SHA-256 of the source
+14. Accepted Nov 14, 2026 (D36, the owner's yes). `key_home`: the home note alone, an optional block beside `key`,
+    present only when there is no `key` block, left out when absent; no version raised ("The home note", above).
+15. Addition with D36 (Nov 14, 2026, the owner's "lets add them"). Covers: `file.cover` (the SHA-256 of the source
     picture, left out when none) and `covers/<hash>.jpg`, one 128-pixel JPEG of at most 24 KB for each distinct
     picture; no version raised.

@@ -599,6 +599,20 @@ The owner's answers to the open list of Nov 14.
   Desk's two windows and in the booth is a named variable in one place for each app. The Inter font in the Windows
   and Linux window is a question for the design pass.
 
+### D37. The run screen shows what Desk is doing, and is worth watching (Nov 14)
+The owner, on the screen a DJ watches while Desk reads their music: "The loader needs more visual interest. Some
+quite sayings like AI does, Some visuals (waveforms) some representations of what is happening and some fun
+moments."
+
+- **The run screen draws what is really happening**: each song's own wave as it is read, what Desk found in it,
+  and the crate filling up. Nothing on it is decoration that pretends to be progress.
+- **Quiet sayings** change as it works, in the voice of a DJ friend, tied to the step Desk is on or to something
+  true it just found.
+- **Fun moments** mark real things: a round number of songs, an hour of music read, every key on the wheel found.
+- **The plain facts stay**: how many songs are done, how long is left, and that it can be left to run. Reduced
+  motion and screen readers get the plain version.
+- The sayings are words like any others: placeholders in the one word list until the copy audit.
+
 ### Note on D19 (Nov 1): versions of a song stay separate rows
 Christopher, on two remixes of one song both showing in the picks: "we shouldn't merge them unless they are the same
 songs. DJs often have a bunch of versions of the same song". So the booth folds together only copies of the same

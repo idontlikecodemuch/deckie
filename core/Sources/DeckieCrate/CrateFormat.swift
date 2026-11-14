@@ -46,12 +46,14 @@ public enum CrateFormat {
         /// Where the track is sung, to the beat, and the hook candidates (accepted Oct 29, 2026, with memo Q's vocal fields).
         public static let vocalStructure = "vocal_structure"
         public static let hooks = "hooks"
+        /// The home note of a song whose mode was left open (D36, Nov 14, 2026).
+        public static let keyHome = "key_home"
         public static let barsPrefix = "bars."
         public static func bars(_ series: String) -> String { barsPrefix + series }
 
         /// Every block name above (not the per-bar series).
         public static let blocks = [grid, tempoSegments, key, keyChanges, phrase, sections, mixWindows, ends, loudness,
-                                    vocal, onsetPattern, style, vocalStructure, hooks]
+                                    vocal, onsetPattern, style, vocalStructure, hooks, keyHome]
     }
 
     /// The engine families (`engine.family`). A family names an engine, never a licence: the Windows and Linux
