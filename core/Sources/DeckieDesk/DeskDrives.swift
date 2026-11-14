@@ -19,7 +19,16 @@ public enum DeskDrives {
         public init(name: String, path: String) { self.name = name; self.path = path }
     }
 
-    public static func list() -> [Drive] {
+    /// Lists the folders inside this folder as the drives plugged in, in place of the real ones (tests, and trials
+    /// with generated songs, so nothing reads a DJ's own drives).
+    public static let standInVariable = "DECKIE_DESK_DRIVES"
+
+    public static func list(environment: [String: String] = ProcessInfo.processInfo.environment) -> [Drive] {
+        if let stand = environment[standInVariable], !stand.isEmpty {
+            let root = URL(fileURLWithPath: stand, isDirectory: true)
+            let names = (try? FileManager.default.contentsOfDirectory(atPath: root.path)) ?? []
+            return names.filter { !$0.hasPrefix(".") }.sorted().map { Drive(name: $0, path: root.appendingPathComponent($0).path) }
+        }
         #if os(macOS)
         let keys: [URLResourceKey] = [.volumeNameKey, .volumeIsRemovableKey, .volumeIsEjectableKey, .volumeIsInternalKey,
                                       .volumeIsRootFileSystemKey, .volumeIsBrowsableKey]

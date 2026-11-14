@@ -35,6 +35,9 @@ void deskshell_set_html(deskshell_t s, const char *html);
 /// Hands `text` (UTF-8, one message) to the page's `window.deckieShell.receive`. Any thread.
 void deskshell_post(deskshell_t s, const char *text);
 
+/// Runs `js` in the page. Window's thread. The shell's tour and check use it; the pages' messages use deskshell_post.
+void deskshell_eval(deskshell_t s, const char *js);
+
 /// Runs `fn(context)` on the window's thread. Any thread.
 void deskshell_dispatch(deskshell_t s, deskshell_work_fn fn, void *context);
 
@@ -57,6 +60,10 @@ char *deskshell_choose_file(deskshell_t s, const char *title);
 void deskshell_open_folder(const char *path);
 
 void deskshell_free(char *text);
+
+/// The web view itself (a WKWebView on the Mac, a WebKitWebView on Linux, an ICoreWebView2Controller on Windows), for
+/// the shell's own uses (the Mac's snapshots of the window for its screenshots).
+void *deskshell_native_view(deskshell_t s);
 
 /// Which web view this is: "WebView2", "WebKitGTK" or "WKWebView".
 const char *deskshell_engine_name(void);

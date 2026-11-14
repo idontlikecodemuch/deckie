@@ -53,6 +53,16 @@ jobs:
       - name: The engine's tests (a child program, generated songs)
         working-directory: core
         run: swift test --skip-build --filter "DeskWordsTests|DeskSessionTests|EngineProcessTests"
+      # Desk's storage in a scratch folder, and no DJ libraries looked for in the runner's home folder.
+      - name: The whole window, the engine and the pages together
+        working-directory: desk-shell
+        env:
+          WEBKIT_DISABLE_SANDBOX_THIS_IS_DANGEROUS: "1"
+          DECKIE_DESK_HOME: /tmp/desk-check/desk
+          DECKIE_DJ_HOME: /tmp/desk-check/dj
+        run: |
+          xvfb-run -a dbus-run-session -- .build/debug/deckie-desk --check \
+            --engine ../core/.build/debug/deckie-desk-engine --pages ../desk-web
 
   windows:
     runs-on: windows-latest
@@ -102,3 +112,11 @@ jobs:
       - name: The engine's tests (a child program, generated songs)
         working-directory: core
         run: swift test --skip-build --filter "DeskWordsTests|DeskSessionTests|EngineProcessTests"
+      - name: The whole window, the engine and the pages together
+        working-directory: desk-shell
+        shell: pwsh
+        run: |
+          $env:DECKIE_DESK_HOME = "$env:RUNNER_TEMP\desk-check\desk"
+          $env:DECKIE_DJ_HOME = "$env:RUNNER_TEMP\desk-check\dj"
+          .build\debug\deckie-desk.exe --check --engine ..\core\.build\debug\deckie-desk-engine.exe --pages ..\desk-web
+          if ($LASTEXITCODE -ne 0) { throw "the check failed ($LASTEXITCODE)" }

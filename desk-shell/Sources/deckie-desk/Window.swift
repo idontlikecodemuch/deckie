@@ -35,6 +35,11 @@ final class Window: @unchecked Sendable {
     /// Hands one message to the page. Any thread.
     func post(_ text: String) { deskshell_post(handle, text) }
 
+    /// Runs JavaScript in the page. Window's thread.
+    func eval(_ js: String) { deskshell_eval(handle, js) }
+
+    var nativeView: UnsafeMutableRawPointer? { deskshell_native_view(handle) }
+
     /// Runs `work` on the window's thread. Any thread.
     func onWindowThread(_ work: @escaping @Sendable () -> Void) {
         let box = Unmanaged.passRetained(WorkBox(work)).toOpaque()
