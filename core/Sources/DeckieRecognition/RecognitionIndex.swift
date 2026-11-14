@@ -29,6 +29,9 @@ public struct PairingConfig: Sendable, Equatable {
     /// thousands of times more values, so a lookup returns almost nothing but the song. The price: all three points
     /// must survive the room, not two.
     public var triples = true
+    /// Whether a slice's point is its strongest (by the constellation's strength levels; the earliest of equals)
+    /// rather than its first in time.
+    public var byStrength = true
 
     public init() {}
 
@@ -85,14 +88,15 @@ public struct RecognitionIndex: Sendable {
         self.landmark = landmark; self.pairing = pairing
         ids = songs.map(\.id)
         var songStart: [Int] = [], pointStart: [Int] = []
-        var pointFrame: [Int32] = [], pointPitch: [UInt16] = []
+        var pointFrame: [Int32] = [], pointPitch: [UInt16] = [], pointLevel: [Int8] = []
         var at = 0
         for s in songs {
             at += Self.padding
             songStart.append(at); pointStart.append(pointFrame.count)
             for i in 0..<s.landmarks.count {
                 pointFrame.append(Int32(at + Int(s.landmarks.frames[i])))
-                pointPitch.append(s.landmarks.pitches[i])
+                pointPitch.append(s.landmarks.pitch(i))
+                pointLevel.append(Int8(s.landmarks.level(i)))
             }
             at += max(s.landmarks.frameCount, Int(s.landmarks.frames.last ?? 0) + 1)
         }
@@ -106,6 +110,7 @@ public struct RecognitionIndex: Sendable {
         let p = pairing
         let unit = p.pitchBinUnits
         var slotBin = [Int](repeating: 0, count: p.fanOut), slotGap = [Int](repeating: 0, count: p.fanOut)
+        var slotLevel = [Int8](repeating: 0, count: p.fanOut)
         func forEachPair(_ body: (_ hash: Int, _ anchor: Int) -> Void) {
             for s in 0..<songs.count {
                 let lo = pointStart[s], hi = pointStart[s + 1]
@@ -119,13 +124,18 @@ public struct RecognitionIndex: Sendable {
                         let b = Int(pointPitch[j]) / unit
                         if gap >= p.minGap && abs(b - a) <= p.maxPitchBins {
                             let k = p.slice(gap: gap)
-                            if filled & (1 << k) == 0 {
+                            let level = p.byStrength ? pointLevel[j] : 0
+                            if filled & (1 << k) == 0 || level > slotLevel[k] {
                                 filled |= 1 << k
-                                slotBin[k] = b; slotGap[k] = gap
-                                if !p.triples { body(p.hash(anchorBin: a, targetBin: b, gap: gap), ta) }
+                                slotBin[k] = b; slotGap[k] = gap; slotLevel[k] = level
                             }
                         }
                         j += 1
+                    }
+                    if !p.triples {
+                        for k in 0..<p.fanOut where filled & (1 << k) != 0 {
+                            body(p.hash(anchorBin: a, targetBin: slotBin[k], gap: slotGap[k]), ta)
+                        }
                     }
                     if p.triples {
                         for k in 0..<p.fanOut {

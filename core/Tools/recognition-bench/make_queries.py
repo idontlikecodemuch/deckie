@@ -46,25 +46,41 @@ def decode(job):
     return os.path.getsize(dst) / 2 / SR
 
 
-def prepare(data, work, jobs):
+AUDIO = (".mp3", ".flac", ".wav", ".aif", ".aiff", ".m4a", ".aac", ".ogg", ".opus", ".wma", ".alac")
+
+
+def prepare(data, work, jobs, music=None):
     os.makedirs(os.path.join(work, "pcm"), exist_ok=True)
     songs = []
-    for bucket, pattern in [("dance", "songs/dance/*.mp3"), ("other", "songs/other/*.mp3"), ("gsplus", "gsplus/**/*.mp3")]:
-        listing = os.path.join(data, f"songs_{bucket}.json")
-        # Only the songs in the fetch's own list (each with its licence on record) are used.
-        listed = {g["id"] for g in json.load(open(listing))} if os.path.exists(listing) else None
-        for path in sorted(glob.glob(os.path.join(data, pattern), recursive=True)):
-            base = os.path.splitext(os.path.basename(path))[0]
-            if listed is not None and base not in listed:
-                continue
-            sid = base if bucket != "gsplus" else "g" + base.split(".")[0]
-            songs.append((sid, path, bucket))
+    if music:
+        # Any folder of music as the catalogue. A song's id is a hash of its path inside the folder, so nothing
+        # this run writes carries a title or an artist.
+        for root, _, files in os.walk(music):
+            for name in sorted(files):
+                if name.lower().endswith(AUDIO) and not name.startswith("."):
+                    path = os.path.join(root, name)
+                    sid = "m" + hashlib.sha1(os.path.relpath(path, music).encode()).hexdigest()[:12]
+                    songs.append((sid, path, "library"))
+        songs.sort()
+    else:
+        for bucket, pattern in [("dance", "songs/dance/*.mp3"), ("other", "songs/other/*.mp3"), ("gsplus", "gsplus/**/*.mp3")]:
+            listing = os.path.join(data, f"songs_{bucket}.json")
+            # Only the songs in the fetch's own list (each with its licence on record) are used.
+            listed = {g["id"] for g in json.load(open(listing))} if os.path.exists(listing) else None
+            for path in sorted(glob.glob(os.path.join(data, pattern), recursive=True)):
+                base = os.path.splitext(os.path.basename(path))[0]
+                if listed is not None and base not in listed:
+                    continue
+                sid = base if bucket != "gsplus" else "g" + base.split(".")[0]
+                songs.append((sid, path, bucket))
     with Pool(jobs) as pool:
         secs = pool.map(decode, [(p, os.path.join(work, "pcm", s + ".s16")) for s, p, _ in songs])
     with open(os.path.join(work, "songs.tsv"), "w") as f:
         for (sid, path, bucket), sec in zip(songs, secs):
             if sec and sec >= 60:
-                f.write(f"{sid}\t{path}\t{bucket}\t{sec:.2f}\t{role_of(sid)}\n")
+                # With a music folder the fingerprints are made from the decoded copy, so any format ffmpeg reads works.
+                shown = os.path.join(work, "pcm", sid + ".s16") if music else path
+                f.write(f"{sid}\t{shown}\t{bucket}\t{sec:.2f}\t{role_of(sid)}\n")
     print("songs:", sum(1 for s in secs if s and s >= 60), "of", len(songs))
 
 
@@ -305,8 +321,9 @@ if __name__ == "__main__":
     ap.add_argument("--dev-n", type=int, default=40)
     ap.add_argument("--jobs", type=int, default=os.cpu_count())
     ap.add_argument("--only", choices=["grid", "booth", "absent"])
+    ap.add_argument("--music", help="a folder of music to use as the catalogue instead of the fetched songs")
     a = ap.parse_args()
     if a.command == "prepare":
-        prepare(a.data, a.work, a.jobs)
+        prepare(a.data, a.work, a.jobs, a.music)
     else:
         queries(a.data, a.work, a.n, a.dev_n, a.jobs, a.only)

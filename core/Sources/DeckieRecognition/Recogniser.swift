@@ -113,7 +113,10 @@ public final class Recogniser {
         let unit = Double(p.pitchBinUnits)
         let n = min(query.count, query.frames.firstIndex { $0 >= UInt32(RecognitionIndex.maxQueryFrames) } ?? query.count)
         guard n >= 4 else { return [] }
-        let qt = (0..<n).map { Double(query.frames[$0]) }, qp = (0..<n).map { Double(query.pitches[$0]) }
+        let qt = (0..<n).map { Double(query.frames[$0]) }, qp = (0..<n).map { Double(query.pitch($0)) }
+        // Strength for choosing a slice's points: as measured when the query was made from audio, else its level.
+        let qs: [Float] = p.byStrength ? (0..<n).map { query.strengths.count == query.count ? query.strengths[$0] : Float(query.level($0)) }
+                                       : [Float](repeating: 0, count: n)
         let bins = p.pitchBins(octaves: ix.landmark.octaves)
 
         var best: [Vote] = []
@@ -122,6 +125,7 @@ public final class Recogniser {
         // Per slice of the current anchor: how many targets it has, and each one's pitch bin and gap.
         var taken = [Int](repeating: 0, count: p.fanOut)
         var slotBin = [Int](repeating: 0, count: p.fanOut * per), slotGap = [Int](repeating: 0, count: p.fanOut * per)
+        var slotStrength = [Float](repeating: 0, count: p.fanOut * per)
         // The candidate's lookups, gathered first so that the table reads (each a cache miss) run back to back.
         var hashes: [Int] = [], shifts: [Double] = [], spans: [(Int, Int)] = []
         for cand in grid.candidates {
@@ -143,15 +147,29 @@ public final class Recogniser {
                     let b = qbin[j]
                     if gap >= p.minGap && b >= 0 && abs(b - a) <= p.maxPitchBins {
                         let k = p.slice(gap: gap)
-                        if taken[k] < per {
-                            slotBin[k * per + taken[k]] = b; slotGap[k * per + taken[k]] = gap
-                            taken[k] += 1
-                            if !p.triples { hashes.append(p.hash(anchorBin: a, targetBin: b, gap: gap)); shifts.append(shiftT) }
+                        // Keep the slice's `per` strongest (the earliest of equals), strongest first.
+                        var at = taken[k]
+                        while at > 0 && qs[j] > slotStrength[k * per + at - 1] { at -= 1 }
+                        if at < per {
+                            var m = min(taken[k], per - 1)
+                            while m > at {
+                                slotBin[k * per + m] = slotBin[k * per + m - 1]; slotGap[k * per + m] = slotGap[k * per + m - 1]
+                                slotStrength[k * per + m] = slotStrength[k * per + m - 1]
+                                m -= 1
+                            }
+                            slotBin[k * per + at] = b; slotGap[k * per + at] = gap; slotStrength[k * per + at] = qs[j]
+                            if taken[k] < per { taken[k] += 1 }
                         }
                     }
                     j += 1
                 }
-                if p.triples {
+                if !p.triples {
+                    for k in 0..<p.fanOut {
+                        for x in 0..<taken[k] {
+                            hashes.append(p.hash(anchorBin: a, targetBin: slotBin[k * per + x], gap: slotGap[k * per + x])); shifts.append(shiftT)
+                        }
+                    }
+                } else {
                     for k in 0..<p.fanOut {
                         let (k1, k2) = p.slicePair(k)
                         for x in 0..<taken[k1] {

@@ -33,6 +33,11 @@ public struct LandmarkConfig: Sendable, Equatable {
     public var frequencyReach = 0.12
     /// Points this far below the loudest bin of the audio are not taken (silence and digital noise).
     public var floorDB = 60.0
+    /// A point's strength is how far it stands above the average level of its own neighbourhood, in decibels (so a
+    /// room's or a speaker's tone does not change it much); it is kept as one of four levels, cut at these values.
+    /// The cuts are the quartiles measured on a sample of the benchmark's dev songs (13, 16 and 19 dB).
+    /// The strongest points are the likeliest to survive noise (Wang 2003, 2.1), so hashes are built from them.
+    public var strengthSteps: [Double] = [13, 16, 19]
 
     public init() {}
 
@@ -45,16 +50,23 @@ public struct LandmarkConfig: Sendable, Equatable {
 public struct Landmarks: Sendable, Equatable {
     /// Frame of each point (16 ms steps), ascending.
     public var frames: [UInt32]
-    /// Frequency of each point, in 1/4096 of an octave above the band's low edge (300 Hz).
-    public var pitches: [UInt16]
+    /// Frequency of each point, in 1/4096 of an octave above the band's low edge (300 Hz), in the low 14 bits; the
+    /// point's strength level (0 to 3) in the top two.
+    public var packed: [UInt16]
+    /// Each point's strength in decibels, as measured: only on a constellation just made from audio (a query's), not
+    /// kept on disk and not part of equality.
+    public var strengths: [Float] = []
+    public static func == (a: Landmarks, b: Landmarks) -> Bool { a.frames == b.frames && a.packed == b.packed && a.frameCount == b.frameCount }
+    @inline(__always) public func pitch(_ i: Int) -> UInt16 { packed[i] & 0x3fff }
+    @inline(__always) public func level(_ i: Int) -> Int { Int(packed[i] >> 14) }
     /// Frames analysed (the audio's length).
     public var frameCount: Int
 
     public static let pitchUnitsPerOctave = 4096.0
 
-    public init(frames: [UInt32], pitches: [UInt16], frameCount: Int) {
-        precondition(frames.count == pitches.count)
-        self.frames = frames; self.pitches = pitches; self.frameCount = frameCount
+    public init(frames: [UInt32], pitches packed: [UInt16], frameCount: Int) {
+        precondition(frames.count == packed.count)
+        self.frames = frames; self.packed = packed; self.frameCount = frameCount
     }
 
     public var count: Int { frames.count }
@@ -105,7 +117,7 @@ public struct Landmarks: Sendable, Equatable {
         }
         let floor = loudest - Float(c.floorDB)
 
-        var frames: [UInt32] = [], pitches: [UInt16] = []
+        var frames: [UInt32] = [], pitches: [UInt16] = [], strengths: [Float] = []
         let T = c.timeReach
         let top = c.octaves * Self.pitchUnitsPerOctave
         spec.withUnsafeBufferPointer { s in
@@ -144,21 +156,31 @@ public struct Landmarks: Sendable, Equatable {
                     let oct = log2((Double(k) + delta) * binHz / c.lowHz)
                     let units = (oct * Self.pitchUnitsPerOctave).rounded()
                     if units < 0 || units >= top { continue }
-                    frames.append(UInt32(t)); pitches.append(UInt16(units))
+                    // Strength: decibels above the mean level of the neighbourhood (the floor stands in for silence).
+                    var sum = 0.0, cells = 0
+                    for u in t0...t1 {
+                        let r = base + u * nb
+                        for j in lo...hi { sum += Double(max(r[j], floor)); cells += 1 }
+                    }
+                    let strength = Double(v) - sum / Double(cells)
+                    let level = c.strengthSteps.reduce(0) { $0 + (strength >= $1 ? 1 : 0) }
+                    frames.append(UInt32(t)); pitches.append(UInt16(units) | UInt16(level) << 14)
+                    strengths.append(Float(strength))
                 }
             }
         }
         self.init(frames: frames, pitches: pitches, frameCount: frameCount)
+        self.strengths = strengths
     }
 
     // MARK: On disk
 
-    /// The bytes kept for a song: "DKL1", the frame count and point count (little-endian UInt32 each), then for each
-    /// point the frames since the point before as a varint (7 bits a byte, low first) and the pitch as a little-endian
-    /// UInt16. About three bytes a point.
+    /// The bytes kept for a song: "DKL2", the frame count and point count (little-endian UInt32 each), then for each
+    /// point the frames since the point before as a varint (7 bits a byte, low first) and the pitch with its strength
+    /// level as a little-endian UInt16. About three bytes a point.
     public func encoded() -> Data {
         var d = Data(capacity: 12 + 3 * count)
-        d.append(contentsOf: Array("DKL1".utf8))
+        d.append(contentsOf: Array("DKL2".utf8))
         func put32(_ v: UInt32) { for i in 0..<4 { d.append(UInt8((v >> (8 * UInt32(i))) & 0xff)) } }
         put32(UInt32(frameCount)); put32(UInt32(count))
         var last: UInt32 = 0
@@ -167,7 +189,7 @@ public struct Landmarks: Sendable, Equatable {
             last = frames[i]
             while delta >= 0x80 { d.append(UInt8(delta & 0x7f) | 0x80); delta >>= 7 }
             d.append(UInt8(delta))
-            d.append(UInt8(pitches[i] & 0xff)); d.append(UInt8(pitches[i] >> 8))
+            d.append(UInt8(packed[i] & 0xff)); d.append(UInt8(packed[i] >> 8))
         }
         return d
     }
@@ -175,7 +197,7 @@ public struct Landmarks: Sendable, Equatable {
     /// Reads `encoded()`'s bytes; nil when they are not a constellation.
     public init?(encoded d: Data) {
         let b = [UInt8](d)
-        guard b.count >= 12, Array(b[0..<4]) == Array("DKL1".utf8) else { return nil }
+        guard b.count >= 12, Array(b[0..<4]) == Array("DKL2".utf8) else { return nil }
         func get32(_ at: Int) -> UInt32 { (0..<4).reduce(UInt32(0)) { $0 | UInt32(b[at + $1]) << (8 * UInt32($1)) } }
         let frameCount = Int(get32(4)), n = Int(get32(8))
         var frames: [UInt32] = [], pitches: [UInt16] = []

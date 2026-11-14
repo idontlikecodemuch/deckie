@@ -4,7 +4,7 @@
   evaluate.py WORK [--results results.tsv] [--threshold T]
 
 A query is "right" when the best song is the true one and its score reaches the threshold, "wrong" when another song
-reaches it, "none" otherwise. The threshold is chosen on the dev half only: the lowest score that 99.9 % of the dev
+reaches it, "none" otherwise. The score is the matcher's confidence: a song's match count over the third-best song's. The threshold is chosen on the dev half only: the lowest score that 99.9 % of the dev
 queries with no right answer (songs left out of the index, noise alone) stay under. Everything in the tables is
 the eval half, which played no part in any choice.
 """
@@ -22,13 +22,13 @@ def load(work, results):
     rows = []
     for line in open(results):
         f = line.rstrip("\n").split("\t")
-        if len(f) < 16:
+        if len(f) < 18:
             continue
         qid, length = f[0].split("_")
         t = truth[qid]
         rows.append(dict(t=t, length=int(length), points=int(f[1]), ms_print=float(f[2]), ms_match=float(f[3]),
-                         id=f[4], score=float(f[5]), matched=int(f[6]), offset=float(f[7]), tempo=float(f[8]), pitch=float(f[9]),
-                         id2=f[10], score2=float(f[11])))
+                         id=f[4], score=float(f[16]), raw=float(f[5]), matched=int(f[6]), offset=float(f[7]), tempo=float(f[8]), pitch=float(f[9]),
+                         id2=f[10], score2=float(f[17])))
     return rows
 
 
@@ -101,7 +101,7 @@ def main():
     # 3. By kind of music.
     print("\n### Clean excerpts by kind of music (all speeds, both modes): right, percent\n")
     print("| bucket | n | " + " | ".join(f"{l} s" for l in LENGTHS) + " |\n|---|---|" + "---|" * len(LENGTHS))
-    for b in ("dance", "other", "gsplus"):
+    for b in sorted({r["t"]["bucket"] for r in ev if r["t"]["cell"] == "grid"}):
         cells = []; n = 0
         for l in LENGTHS:
             k, n = cellrate(r for r in ev if r["t"]["cell"] == "grid" and r["t"]["bucket"] == b and r["length"] == l)

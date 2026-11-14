@@ -96,16 +96,26 @@ case "print":
     parallel(songs.count, jobs: jobs) { i, _ in
         let id = songs[i][0], path = songs[i][1]
         let t0 = now()
-        guard let buffer = try? AudioDecoder.decode(URL(fileURLWithPath: path)) else {
-            rows.set(i, "\(id)\tFAILED"); return
+        var mono: [Float] = []
+        var rate = 16000
+        if path.hasSuffix(".s16") {
+            // Already decoded by the benchmark's scripts: 16-bit little-endian mono at 16 kHz.
+            guard let data = FileManager.default.contents(atPath: path) else { rows.set(i, "\(id)\tFAILED"); return }
+            mono = [Float](repeating: 0, count: data.count / 2)
+            data.withUnsafeBytes { raw in
+                for k in 0..<mono.count { mono[k] = Float(Int16(littleEndian: raw.loadUnaligned(fromByteOffset: 2 * k, as: Int16.self))) / 32768 }
+            }
+        } else {
+            guard let buffer = try? AudioDecoder.decode(URL(fileURLWithPath: path)) else { rows.set(i, "\(id)\tFAILED"); return }
+            mono = buffer.mono(); rate = buffer.sampleRate
         }
-        let mono = buffer.mono()
+        let seconds = Double(mono.count) / Double(rate)
         let t1 = now()
-        let marks = Landmarks(mono: mono, sampleRate: buffer.sampleRate, config: config)
+        let marks = Landmarks(mono: mono, sampleRate: rate, config: config)
         let t2 = now()
         let data = marks.encoded()
         try? data.write(to: URL(fileURLWithPath: out + "/" + id + ".dkl"))
-        rows.set(i, String(format: "%@\t%.2f\t%d\t%d\t%.1f\t%.1f", id, buffer.duration, marks.count, data.count, t1 - t0, t2 - t1))
+        rows.set(i, String(format: "%@\t%.2f\t%d\t%d\t%.1f\t%.1f", id, seconds, marks.count, data.count, t1 - t0, t2 - t1))
     }
     print(rows.joined(songs.count), terminator: "")
 
@@ -120,10 +130,33 @@ case "match":
         guard let d = FileManager.default.contents(atPath: dir + "/" + name), let m = Landmarks(encoded: d) else { fail("bad print \(name)") }
         songs.append((id, m))
     }
+    // --limit N: only the first N songs (ids in order). --pad N: fill the index up to N songs with altered copies
+    // of the real constellations (time reversed, every pitch moved round the band by a different amount per copy):
+    // they have a real song's density and rhythm of points and match no query, so they load the index as more
+    // songs would without being more music.
+    if let limit = o.values["--limit"].flatMap(Int.init), limit < songs.count { songs = Array(songs.prefix(limit)) }
+    if let pad = o.values["--pad"].flatMap(Int.init), !songs.isEmpty {
+        let real = songs.count
+        let top = UInt16(LandmarkConfig().octaves * Landmarks.pitchUnitsPerOctave)
+        var copy = 0
+        while songs.count < pad {
+            let source = songs[(songs.count - real) % real].landmarks
+            copy = (songs.count - real) / real + 1
+            let turn = UInt16((copy * 997 + 311) % Int(top))
+            var frames: [UInt32] = [], packed: [UInt16] = []
+            for i in stride(from: source.count - 1, through: 0, by: -1) {
+                frames.append(UInt32(source.frameCount - 1) - min(UInt32(source.frameCount - 1), source.frames[i]))
+                packed.append((source.pitch(i) + turn) % top | UInt16(source.level(i)) << 14)
+            }
+            // Points of one frame must stay in pitch order within the frame for nothing here; time order is enough.
+            songs.append(("pad\(songs.count)", Landmarks(frames: frames, pitches: packed, frameCount: source.frameCount)))
+        }
+    }
     let config = landmarkConfig(o)
     var pairing = PairingConfig()
     pairing.fanOut = o.int("--fan-out", pairing.fanOut)
     if o.flags.contains("--pairs") { pairing.triples = false }
+    if o.flags.contains("--first-in-time") { pairing.byStrength = false }
     let verified = o.int("--verified", 12)
     pairing.queryPerSlice = o.int("--query-per-slice", pairing.queryPerSlice)
     let t0 = now()
@@ -198,6 +231,17 @@ case "match":
     }
     let text = rows.joined(queries.count)
     guard (try? text.write(toFile: o.string("--out"), atomically: true, encoding: .utf8)) != nil else { fail("cannot write results") }
+
+case "strengths":
+    // The spread of point strengths over some songs (to place the four levels at equal shares).
+    let songs = lines(o.string("--list"))
+    var all: [Float] = []
+    for s in songs {
+        guard let buffer = try? AudioDecoder.decode(URL(fileURLWithPath: s[1])) else { continue }
+        all += Landmarks(mono: buffer.mono(), sampleRate: buffer.sampleRate, config: landmarkConfig(o)).strengths
+    }
+    all.sort()
+    print(all.count, [0.1, 0.25, 0.5, 0.75, 0.9].map { String(format: "%.0f%%: %.1f dB", $0 * 100, all[Int($0 * Double(all.count - 1))]) }.joined(separator: ", "))
 
 default:
     fail("unknown command \(command)")
