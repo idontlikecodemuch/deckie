@@ -1,6 +1,81 @@
-# Check-ins: the Windows builder (branch `pc/windows-builder`)
+# Check-ins: the Windows builder (branches `pc/windows-builder`, `pc/m4a`, `pc/package-desk`)
 
 Newest entry first. Each entry: when, what is done, what failed and why, what is next, and one plain line.
+
+## Nov 14, 2026, 08:45 UTC: branch `pc/package-desk` (from `main`): Deckie Desk is in the zip; it assembles on the runner; its first start from the zip does not finish yet
+
+The work: package Deckie Desk for Windows (the window `deckie-desk`, its engine, the pages) as a folder a DJ unzips
+and runs, with its icon, no console window and a plain message on a PC without the WebView2 Runtime (the part of
+Windows, from Microsoft, that draws Desk's window). Nobody is awake to ask, so each decision is written here with
+its reason.
+
+**Done and seen on the runner** (`pc-package` run 43575623179, commit `a2c9694`):
+
+- The zip assembles: `Deckie-Desk-for-Windows-first-test.zip`, 128,973,372 bytes, 46 files. It holds
+  `Deckie Desk.exe` and `Make Crate File.exe` at the top, and in `app` the window, the engine, `deckie-make`, the
+  pages, 19 runtime libraries, ONNX Runtime, the models and the licences (now with the `webview` library's licence
+  and the licence of Microsoft's WebView2 SDK header).
+- The icon is made in the run from the iPad app's picture by `core/Tools/windows/make_ico.py` (102,045 bytes, eight
+  sizes) and compiled by `llvm-rc`, which the Swift toolchain on the runner does carry. The check of the finished
+  programs says: `Deckie Desk.exe` and `deckie-desk.exe` open no console window and carry the icon; the engine
+  opens no console window; `Make Crate File.exe` is a console program and carries the icon.
+- `Make Crate File` from the new zip passes everything it passed before.
+- `core-linux` and `core-windows` are green with the core's two changes (the single file on export; the engine
+  finding its files beside itself).
+
+**Failed, and why:**
+
+1. `desk-window` run 43575041468: the shell did not compile on Windows. I had named a variable `small`, and a
+   Windows header defines that word as something else. Renamed. It compiles now (run 43575623174).
+2. `desk-window` run 43575623174: one engine test failed, `speaksTheProtocolWithNoMusicRead`, at a line that read
+   the latest `state` event straight after a reply. That is the race the brief warned of, in a line that was there
+   before; the test now waits for the event it means.
+3. `pc-package` run 43575623179: **`Deckie Desk.exe`, started from the unzipped folder, did not finish its check in
+   three minutes**, and its log file was empty. An empty log means the program started and then stopped or hung
+   before the window was made. I do not know why yet. The same program as a console build passes the same check in
+   `desk-window`. What differs in the zip: a release build, marked as a program with no console window, started
+   with nothing to write to, with PATH cut down. My first suspect is something I added: at start the program gave
+   itself Windows' "NUL" as standard output and error when it had none; the web view may not start under that.
+
+**Next:** the run in progress (commit `926a701`) starts the window program four ways and writes down what Windows
+itself says about each, so the cause is seen rather than guessed. I have already taken the "NUL" step out (the
+program now leaves its standard handles alone and simply does not write when it has none) and made the check's
+time limit start before the window is made, so a web view that never comes up ends the check with words.
+
+**Decisions made so far, each with its reason:**
+
+1. **The folder and zip are renamed** "Deckie Desk for Windows (first test)" and
+   `Deckie-Desk-for-Windows-first-test.zip` (artifact of the same name). The thing a DJ gets is now Desk, and the old
+   name said "for PC".
+2. **No console window by marking the finished programs**, not by a build switch: the copies of `deckie-desk.exe`
+   and `deckie-desk-engine.exe` that go into the zip have one two-byte field of their header changed
+   (`core/Tools/windows/pe_kind.py`; Microsoft's `editbin /SUBSYSTEM` does the same). Reason: the builds the tests
+   use stay console programs, so their messages show, and no build flag has to be threaded through two packages.
+   The engine is marked too because Swift's way of starting a child program has no "no window" switch; a child
+   marked this way gets no console from Windows at all.
+3. **The engine finds its files beside itself** through one new setting in the core
+   (`OnnxRuntime.programFolder`), which the engine program sets to its own folder; the environment variables still
+   come first, the checkout last. Reason: the same order `deckie-make` uses, and it works for every run the engine
+   makes, not only the first.
+4. **The WebView2 check is the window's own loader**, not a second test in the starter: the shell tries to make the
+   window, and when that fails on Windows it reads the registry values Microsoft documents to say which of two
+   things is true (not installed; installed but did not start). Reason: one test cannot disagree with itself.
+5. **The message asks before opening Microsoft's page** (Yes or No), and names the page in words as well. Nothing
+   is downloaded by Deckie. The page is the one Microsoft's own documentation says to send people to
+   (`https://developer.microsoft.com/microsoft-edge/webview2/consumer/`, read tonight).
+6. **The icon keeps the rounded corners of `site/icon.svg`** (radius 230 in 1024). The iPad picture is a full
+   square that iOS rounds itself; Windows shows a picture as it is, and a square would look unlike the site.
+7. **The icon file holds plain bitmaps for the seven small sizes and a PNG for 256**, not PNGs throughout. Reason:
+   it is the layout every Windows and both resource compilers read; it cost ten more lines.
+8. **The programs also carry a description** ("Deckie Desk"; version 0.1.0), which Task Manager and a file's
+   Properties show, and **no company name and no copyright line**: those are the owner's to word.
+9. **Desk's export writes the single file on Windows and Linux only**; the Mac keeps the package, since its own
+   Desk does not use this path and AirDrop moves a package as one thing.
+10. **A new mode of the test tool, `deckie-e2e check-desk`**, reads Desk's exported crate file: the validator's
+    existing checks assume the PC program's layout, and Desk names each file from its source.
+
+consider changing direction only if the next run shows the window cannot start at all as a program with no
+console; otherwise carry on
 
 **Newest zip, with `.m4a` reading: `pc-package` run 43545418975** (branch `pc/m4a`, commit `665490a`), artifact
 `Deckie-for-PC-first-test` (id 14094366437): **122,379,915 bytes**, SHA-256
