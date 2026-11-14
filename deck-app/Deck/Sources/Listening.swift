@@ -325,7 +325,7 @@ func speedFromPlaces(_ points: [(audioTime: Double, offset: Double)]) -> (ratio:
                     return a - Self.changeWindow <= x.at && x.at <= b + Self.changeWindow
                 }
             }
-            y.atChange = near(x.apple, { $0.deckieFirst }, { $0.deckieLast }) || near(x.deckie, { $0.appleFirst }, { $0.appleLast })
+            y.atChange = near(x.apple, { $0.deckieFirst }, { $0.deckieLast }) && near(x.deckie, { $0.appleFirst }, { $0.appleLast })
             return y
         }
     }
