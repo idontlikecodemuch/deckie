@@ -24,9 +24,9 @@
   --fs-small: 12.5px; --fs-big: 26px; --fs-stage: 17px; --fs-label: 11.5px; --fs-note: 13px; --fs-head: 14px;
   --stage-gap: 20px; --fact-gap: 6px 22px; --fig-gap: 10px; --fig-pad: 12px 14px; --r-wall: 8px;
   --inner-gap: 8px; --inner-gap-s: 6px; --inner-gap-xs: 4px;
-  --stage-h: 128px;                       /* the song on stage: its wave's height */
+  --stage-h: 100px;                       /* the song on stage: its wave's height */
   --stage-wave-w: 46%;
-  --fig-h: 74px;                          /* a figure's picture */
+  --fig-h: 58px;                          /* a figure's picture */
   --wall-h: 220px;                        /* the wall of waves */
   --wave: rgba(180, 144, 255, 0.82);      /* a song's wave */
   --wave-quiet: rgba(180, 144, 255, 0.28);
