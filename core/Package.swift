@@ -11,6 +11,8 @@
 // and reported as not supported yet, a copy-protected MP4 as protected. It re-exports DeckieAudio.
 // CDrMp3, CDrFlac: dr_mp3.h and dr_flac.h compiled as plain C, the same on Linux, Windows and macOS; nothing is
 // downloaded at build time.
+// CMediaFoundation: a small C shim over Windows' Media Foundation (the platform's own AAC and Apple Lossless decoder),
+// opened at run time so nothing links it; elsewhere it only says it is not available. Being measured, not yet used.
 // COnnxRuntime: ONNX Runtime's C API header (vendored, MIT; DEPENDENCIES.md) and a small C shim that opens the
 // library at run time (dlopen, or LoadLibraryExW on Windows), so nothing links it and the package builds without it.
 // DeckieInference: ONNX Runtime from Swift (`OnnxRuntime`, `OnnxSession`), the Beat This! beat tracker
@@ -56,7 +58,8 @@ let package = Package(
         .executableTarget(name: "crate-from-lab", dependencies: ["DeckieLab", "DeckieCrate"]),
         .target(name: "CDrMp3"),
         .target(name: "CDrFlac"),
-        .target(name: "DeckieDecode", dependencies: ["DeckieAudio", "CDrMp3", "CDrFlac"]),
+        .target(name: "CMediaFoundation"),
+        .target(name: "DeckieDecode", dependencies: ["DeckieAudio", "CDrMp3", "CDrFlac", "CMediaFoundation"]),
         .target(name: "COnnxRuntime", linkerSettings: [.linkedLibrary("dl", .when(platforms: [.linux]))]),
         .target(name: "DeckieInference", dependencies: ["COnnxRuntime", "DeckieAudio", "DeckieCore"]),
         .target(name: "DeckieEngine",

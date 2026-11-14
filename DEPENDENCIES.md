@@ -144,7 +144,7 @@ the program from starting. So the zip carries it beside the program, as Swift's 
 | What | Microsoft's C and C++ runtime libraries for programs built with its Visual C++ tools, version 14 |
 | The exact files | `msvcp140.dll`, `msvcp140_1.dll`, `vcruntime140.dll`, `vcruntime140_1.dll`, in the zip's `app` folder, unmodified. Nothing else of Microsoft's is included |
 | From where | the copies the Swift 6.4.1 toolchain for Windows installs beside its own runtime libraries (section 1); `package.sh` copies them because the program's import tables name them, and stops if one is missing. Nothing is downloaded |
-| Sizes, versions, hashes | VCRUNTIME-TABLE-PENDING |
+| Sizes, versions, hashes | all four are version 14.42.34433.0 (read from the files in `pc-package` run 43535065527): `msvcp140.dll`, 575,592 bytes, SHA-256 `9057d39b36b6c7d054865ee2bf9cde7a490fe3b01ec4e82514687e24f576269f`; `msvcp140_1.dll`, 35,944 bytes, `a65249861238e1c18b84ae5d112617c438d83a76b67eddc170ad82dbc2338665`; `vcruntime140.dll`, 120,432 bytes, `da72e6677bd1bcd01c453c1998aaa19aeaf6659f4774cf6848409da8232a95b2`; `vcruntime140_1.dll`, 49,744 bytes, `26e470b29bed3d873e0c328186e53f95e9edbfe0b0fd0cda44743a0b1a04a828`. Each run writes them into its summary, so a toolchain update that changes them shows |
 | Notice in the zip | `app/licences/Microsoft-Visual-C++-runtime-NOTICE.txt` (source: `core/notices/microsoft-vc-runtime/NOTICE.txt`), and a row in the acknowledgements |
 
 **Terms:** not open source. The files are Microsoft's "Distributable Code" under the Microsoft Software License

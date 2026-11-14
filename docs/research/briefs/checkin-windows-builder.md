@@ -2,6 +2,38 @@
 
 Newest entry first. Each entry: when, what is done, what failed and why, what is next, and one plain line.
 
+**The zip to use: `pc-package` run 43535065527** (commit `21ad255`), artifact `Deckie-for-PC-first-test` (id
+14090055016, kept to Dec 14, 2026): `Deckie-for-PC-first-test.zip`, **122,280,833 bytes**, SHA-256
+`6e1cd29b2c9cce10c6e0059954612d5ee9bb35f0b036270773f6cbf4e857e480`. Microsoft's runtime included. Earlier zips are
+superseded.
+
+## Nov 14, 2026, 00:45 UTC: the owner's four answers applied; `main` merged; all three workflows green; fresh zip
+
+The main session relayed the owner's yes to all four open points (Nov 13). Done:
+
+- **Microsoft's Visual C++ runtime ships in the zip**: `msvcp140.dll`, `msvcp140_1.dll`, `vcruntime140.dll`,
+  `vcruntime140_1.dll`, version 14.42.34433.0, the copies the Swift toolchain installs beside its own runtime, with
+  a notice in the zip's licences and a row in the acknowledgements. Recorded in `DEPENDENCIES.md` section 3 with
+  sizes, hashes and the quoted terms. **One thing for the attorney**, written there: Microsoft's permission is given
+  to licensed Visual Studio users (the free Community edition counts, within its limits), so the company should
+  hold one; and I could quote Microsoft's list of distributable files but not the licence terms themselves, whose
+  page did not give up its text.
+- **ICU's Unicode License V3** is on the allowlist ("the owner, Nov 13, 2026"); its text ships in the zip.
+- The iPad side and the engine's key: nothing done, as told.
+- **`main` merged** (at `3be2986`), no conflicts. The merged tree passes 412 tests here on Linux.
+- **All three workflows green on `21ad255`**: `core-windows` 43535065509, `core-linux` 43535065566, `pc-package`
+  43535065527. The zip was again unzipped and run on the runner with nothing but Windows on the path; this time the
+  runtime it used is its own. Four four-minute songs: 5.8 s a song by the clock (10.8 s each on its own).
+
+**Failed:** nothing in this round.
+
+**Next, started:** `.m4a` through Windows' Media Foundation. First only a measurement: a small shim and a test
+that prints where the click in the AAC test tone lands on the Windows runner, which says whether Windows removes
+the encoder's lead-in. Nothing is wired into the builder until that is known. The commit after `21ad255` carries
+it; if it turns the Windows workflow red I fix or back it out, and say so here.
+
+carry on
+
 ## Nov 14, 2026, 00:10 UTC: done as far as a runner can show; three decisions open
 
 **Done.** All three workflows are green on commit `13d69b8`:

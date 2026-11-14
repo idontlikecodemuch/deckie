@@ -14,6 +14,17 @@ library file a Windows program loads when it starts.
 Every claim below is marked: **[runner]** seen on a GitHub Windows runner in the run named; **[linux]** seen on
 Linux only; **[not proven]** cannot be shown without a real PC, or was not tried.
 
+## Update, Nov 14, 2026
+
+The owner answered the open decisions below with yes to all (Nov 13, relayed by the main session). Microsoft's
+runtime now ships in the zip and ICU's licence is on the allowlist, both recorded in `DEPENDENCIES.md` section 3;
+the iPad side is the main session's; the engine's key stays as it is (the note on D30 and D16). `main` is merged.
+**The zip to use is `pc-package` run 43535065527** (commit `21ad255`): 122,280,833 bytes, SHA-256
+`6e1cd29b2c9cce10c6e0059954612d5ee9bb35f0b036270773f6cbf4e857e480`, with `core-windows` 43535065509 and `core-linux`
+43535065566 green on the same commit. So "a PC without Microsoft's runtime" is no longer a known gap, though still
+not tried on such a PC. The rest of this letter is as written on Nov 13; where it says the runtime is not shipped,
+this note replaces it.
+
 ## In plain words
 
 - There is a zip. Unzipped, a DJ drags a music folder onto "Make Crate File", a window shows each song with the
