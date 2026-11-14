@@ -133,10 +133,28 @@ struct PendingBanner: View {
     }
 }
 
+/// The run (D37): the plain facts first (songs done, time left, what didn't go in, that it can be left), a quiet line
+/// that changes, the song Desk just read with what it found, the figures so far, and the crate as a wall of waves
+/// (RunScreen.swift). The run's list of files is kept, folded away.
 struct RunView: View {
     @EnvironmentObject var model: DeskModel
+    @Environment(\.accessibilityReduceMotion) private var reduce
+    @State private var showList = false
     var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
+        ScrollView {
+            content.padding(20).frame(maxWidth: 1000)
+                .frame(maxWidth: .infinity)
+        }
+        .onAppear { model.watch.reduceMotion = reduce }
+        .onChange(of: reduce) { _, r in model.watch.reduceMotion = r }
+        .onReceive(NotificationCenter.default.publisher(for: NSWindow.didChangeOcclusionStateNotification)) { n in
+            // Drawing stops while the window is hidden; the songs keep arriving and show when it is back.
+            if let w = n.object as? NSWindow, !w.isSheet { model.watch.visible = w.occlusionState.contains(.visible) }
+        }
+    }
+
+    private var content: some View {
+        VStack(alignment: .leading, spacing: RunLook.gap) {
             Text(Words.runTitle).font(.title2)
             Text(Words.runReading(model.runRead, into: model.current?.name ?? "")).foregroundStyle(.secondary)
             if model.discAsk != nil {
@@ -149,19 +167,43 @@ struct RunView: View {
                     }
                 }.padding(10).background(.quaternary, in: RoundedRectangle(cornerRadius: 8))
             }
-            if model.runTotal > 0 {
-                ProgressView(value: Double(model.runDone), total: Double(model.runTotal))
-                HStack {
-                    Text(Words.songsOf(model.runDone, model.runTotal))
-                    Text(stage).foregroundStyle(.secondary)
-                    Spacer()
-                    if let r = model.runRemaining { Text(Words.timeLeft(r)).foregroundStyle(.secondary) }
-                }.font(.callout)
-            } else { ProgressView().controlSize(.small) }
-            List(model.runLines.indices, id: \.self) { i in
-                Text(model.runLines[i]).font(.system(.caption, design: .monospaced)).lineLimit(1)
+            RunProgressLine(watch: model.watch)
+            SayingLine(watch: model.watch)
+            Text(DeskWords.text("leaveRunning")).font(.caption).foregroundStyle(.tertiary)
+            StageView(watch: model.watch)
+            FiguresView(watch: model.watch)
+            WallView(watch: model.watch, title: DeskWords.text("wallTitle"))
+            DisclosureGroup(DeskWords.text("runListTitle"), isExpanded: $showList) {
+                VStack(alignment: .leading, spacing: 2) {
+                    ForEach(model.runLines.suffix(200).indices, id: \.self) { i in
+                        Text(model.runLines.suffix(200)[i]).font(.system(.caption, design: .monospaced)).lineLimit(1)
+                    }
+                }.frame(maxWidth: .infinity, alignment: .leading)
             }
-        }.padding(20)
+            .font(.callout).foregroundStyle(.secondary)
+        }
+    }
+}
+
+/// The plain facts, always in view: songs done of songs found, the step, what didn't go in, the time left.
+struct RunProgressLine: View {
+    @EnvironmentObject var model: DeskModel
+    @ObservedObject var watch: RunWatch
+    @Environment(\.accessibilityReduceMotion) private var reduce
+    var body: some View {
+        if model.runTotal > 0 {
+            ProgressView(value: Double(model.runDone), total: Double(model.runTotal))
+                .tint(RunLook.accent)
+                .shadow(color: RunLook.accent.opacity(watch.moment == "songs" && !reduce ? 0.9 : 0), radius: 6)
+                .animation(.easeOut(duration: RunLook.moment / 2), value: watch.moment)
+            HStack {
+                Text(Words.songsOf(model.runDone, model.runTotal))
+                Text(stage).foregroundStyle(.secondary)
+                if watch.figures.notIn > 0 { Text(Words.filesDidntGoIn(watch.figures.notIn)).foregroundStyle(.orange) }
+                Spacer()
+                if let r = model.runRemaining { Text(Words.timeLeft(r)).foregroundStyle(.secondary) }
+            }.font(.callout)
+        } else { ProgressView().controlSize(.small) }
     }
 
     private var stage: String {
@@ -179,9 +221,18 @@ struct FinishedView: View {
     let report: RunReport
 
     var body: some View {
+        ScrollView {
         VStack(spacing: 14) {
             Image(systemName: "checkmark.circle").font(.system(size: 48)).foregroundStyle(.secondary)
             Text(Words.finishedTitle(report.read, report.crate)).font(.title2)
+            // The crate as sound (D37): the run's songs, one line each, as they joined, and the run's last moment.
+            if !model.watch.songs.isEmpty {
+                VStack(alignment: .leading, spacing: 8) {
+                    if let line = model.watch.finishedLine { Text(line).fontWeight(.semibold) }
+                    WallView(watch: model.watch, title: DeskWords.text("wallTitleDone", ["read": report.read]))
+                }
+                .frame(maxWidth: 760)
+            }
             VStack(alignment: .leading, spacing: 6) {
                 Text(report.notInCount == 0 ? Words.everySongWentIn : Words.wentIn(report.wentIn))
                 if report.notInCount > 0 {
@@ -220,6 +271,25 @@ struct FinishedView: View {
             }
         }
         .padding(40)
+        .frame(maxWidth: .infinity)
+        }
+    }
+}
+
+/// The quiet line under the progress: a line for the step Desk is on, or something true it just found, or a moment.
+/// It changes every several seconds and never jumps: a fade, or under reduced motion a plain change.
+struct SayingLine: View {
+    @ObservedObject var watch: RunWatch
+    @Environment(\.accessibilityReduceMotion) private var reduce
+    var body: some View {
+        Text(watch.saying)
+            .fontWeight(watch.sayingIsMoment ? .semibold : .regular)
+            .foregroundStyle(watch.sayingIsMoment ? .primary : .secondary)
+            .lineLimit(1)
+            .frame(maxWidth: .infinity, minHeight: 20, alignment: .leading)
+            .id(watch.saying)
+            .transition(.opacity)
+            .animation(reduce ? nil : .easeInOut(duration: RunLook.fade), value: watch.saying)
     }
 }
 
