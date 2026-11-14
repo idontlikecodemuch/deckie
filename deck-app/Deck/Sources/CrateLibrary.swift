@@ -21,9 +21,7 @@ struct CrateLibrary {
     /// How long building the sorted cosine list took when the crate loaded, in seconds.
     let poolSecs: Double
 
-    static let moveLabels = ["bass_swap_8": "short blend", "bass_swap_16": "blend", "bass_swap_32": "long blend",
-                             "ramped_blend": "ramp blend", "filter_sweep": "filter out", "quick_blend_echo": "echo out",
-                             "brake_cut": "brake/cut"]
+    static let moveLabels = Words.moveLabels
 
     static func load(_ url: URL) throws -> CrateLibrary {
         let crate = try CrateReader.read(from: url)

@@ -52,10 +52,10 @@ func joinInfo(_ a: Track, _ b: Track, _ p: Pair?, deckAPitch: Double) -> JoinInf
     let okP = pitch.map { $0.isFinite } ?? false
     let bm = tr != "brake_cut" && ["1", "1/2", "2"].contains(ml) && okP && abs(pitch!) <= 16
     let pt: String
-    if tr == "brake_cut" { pt = "cut in, no beat-match" }
-    else if bm { pt = "PITCH " + signed1(pitch!) + "%" + (ml != "1" ? " · x" + ml : "") }
-    else if ml != "1" { pt = "PITCH n/a · x" + ml }
-    else { pt = "PITCH n/a" + (okP ? " · " + signed1(pitch!) + "%" : "") }
+    if tr == "brake_cut" { pt = Words.pitchCutIn }
+    else if bm { pt = Words.pitchCaps(signed1(pitch!)) + (ml != "1" ? Words.pitchMultiple(ml) : "") }
+    else if ml != "1" { pt = Words.pitchNA + Words.pitchMultiple(ml) }
+    else { pt = Words.pitchNA + (okP ? Words.pitchAside(signed1(pitch!)) : "") }
     let ka = p?.ka ?? a.key ?? "?", kb = p?.kb ?? b.key ?? "?"
     let v = keyVerdict(ka, kb, p?.reasons ?? [])
     let vk = v == "clash" ? 2 : (v.hasPrefix("pitch-shift") || v.contains("unsure")) ? 1 : 0
@@ -81,7 +81,7 @@ struct LibraryFilter: Equatable {
     }
     /// "CD1+CD2", "Singalongs+all": the discs that are on, by their short names, then "all" when the rest is on.
     var label: String {
-        (Library.shared.data.discs.filter { isOn($0.disc) }.map(\.short) + (other ? ["all"] : [])).joined(separator: "+")
+        (Library.shared.data.discs.filter { isOn($0.disc) }.map(\.short) + (other ? [Words.filterAll] : [])).joined(separator: Words.filterJoin)
     }
 }
 
@@ -124,17 +124,17 @@ struct Suggester {
         // The place the row shows (D27): the one that leads among those the filter allows.
         guard let t = lib.placed(p.b, playingDisc: cur.disc, among: target.allows) else { return [] }
         var tags: [String] = []
-        if p.m == "1/2" { tags.append("half time") }
-        else if p.m == "2" { tags.append("double time") }
-        else if p.m != "1" { tags.append("x\(p.m) tempo") }
+        if p.m == "1/2" { tags.append(Words.tagHalfTime) }
+        else if p.m == "2" { tags.append(Words.tagDoubleTime) }
+        else if p.m != "1" { tags.append(Words.tagTempoMultiple(p.m)) }
         let ao = cur.bpmOut ?? cur.bpmShown, bi = (t.bpmIn ?? t.bpmShown) * (MNUM[p.m] ?? 1)
-        if p.st >= 4 || (ao > 0 && abs(bi / ao - 1) >= 0.04) { tags.append("tempo change") }
-        if t.hal && !cur.hal { tags.append("Halloween") }
-        if let d = t.disc, let cd = cur.disc, d != cd { tags.append("to " + (lib.data.discs.first { $0.disc == d }?.short ?? d)) }
+        if p.st >= 4 || (ao > 0 && abs(bi / ao - 1) >= 0.04) { tags.append(Words.tagTempoChange) }
+        if t.hal && !cur.hal { tags.append(Words.tagHalloween) }
+        if let d = t.disc, let cd = cur.disc, d != cd { tags.append(Words.tagTo(lib.data.discs.first { $0.disc == d }?.short ?? d)) }
         // not on any source the booth has: say which folder it is in (a crate file with no sources has no "off")
-        else if !t.on && !lib.data.discs.isEmpty { tags.append(t.folder.isEmpty ? "in the crate" : "in " + t.folder) }
+        else if !t.on && !lib.data.discs.isEmpty { tags.append(t.folder.isEmpty ? Words.tagInCrate : Words.tagIn(t.folder)) }
         if !t.era.isEmpty && !cur.era.isEmpty && t.era != cur.era { tags.append(t.era) }
-        if deepCut { tags.append("deep cut") }
+        if deepCut { tags.append(Words.tagDeepCut) }
         return tags
     }
 
@@ -164,5 +164,5 @@ struct Suggester {
 
 extension Array where Element == String {
     /// "CD1, CD2 or All": the words joined for a sentence.
-    var joinedWithOr: String { count < 2 ? joined() : dropLast().joined(separator: ", ") + " or " + last! }
+    var joinedWithOr: String { Words.orList(self) }
 }

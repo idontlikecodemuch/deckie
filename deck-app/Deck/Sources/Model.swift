@@ -91,8 +91,7 @@ struct Track: Codable, Identifiable, Hashable {
     /// with only those present; nil when the crate file gives none. How facts are shown is to be refined (D34).
     var factsLine: String? {
         guard let f = facts else { return nil }
-        let parts = ["release", "year", "label", "genre"].compactMap { f[$0].map { $0.joined(separator: ", ") } }.filter { !$0.isEmpty }
-        return parts.isEmpty ? nil : parts.joined(separator: " · ")
+        return Words.factsLine(["release", "year", "label", "genre"].compactMap { f[$0] })
     }
 
     /// Where this track is shown: its source, folder and number.
@@ -122,16 +121,16 @@ struct Track: Codable, Identifiable, Hashable {
     /// file's own folder, which is how the DJ's software shows it.
     var folderPath: String {
         guard let s = sourceName else { return folder }
-        return folder.isEmpty ? "\(s) /" : "\(s) / \(folder) /"
+        return folder.isEmpty ? Words.sourceTop(s) : Words.sourceFolder(s, folder)
     }
     /// "Stick 3 / House / 04": where this copy is, as an "also on" line says it; with no source, the file's own folder.
     var placeText: String {
         guard let s = sourceName else { return folder }
-        return s + (folder.isEmpty ? "" : " / \(folder)") + (num.map { String(format: " / %02d", $0) } ?? "")
+        return s + (folder.isEmpty ? "" : Words.placeJoin + folder) + (num.map { Words.placeNumber($0) } ?? "")
     }
     /// "06 Lady (Hear Me Tonight)": track number as in the file name on the deck. A song with no name reads
     /// "06 · no name yet" (research AA, 3.13: the place leads, never a blank row or a placeholder title).
-    var numberedSong: String { num.map { String(format: "%02d · ", $0) + songShown } ?? songShown }
+    var numberedSong: String { num.map { Words.numbered($0, songShown) } ?? songShown }
 
     // A song with no name (research AA, 3.13). The booth finds and shows it like any other; its place leads, and the
     // file name is shown only as a file name, never in the title's place. The words are in `Words`.
@@ -148,8 +147,8 @@ struct Track: Codable, Identifiable, Hashable {
         if hasName { return numberedSong }
         // Broken by phrase: the source's name on one line, the folder and number on the next.
         if let s = sourceName {
-            let rest = [folder.isEmpty ? nil : folder, num.map { String(format: "%02d", $0) }].compactMap { $0 }.joined(separator: " / ")
-            return rest.isEmpty ? s : s + "\n" + rest
+            let rest = [folder.isEmpty ? nil : folder, num.map { Words.number($0) }].compactMap { $0 }.joined(separator: Words.placeJoin)
+            return rest.isEmpty ? s : Words.twoLines(s, rest)
         }
         return placeText.isEmpty ? Words.noNameYet : placeText
     }
@@ -157,7 +156,7 @@ struct Track: Codable, Identifiable, Hashable {
     /// name yet".
     var oneLine: String {
         if hasName { return song }
-        return placeText.isEmpty ? Words.noNameYet : placeText + " · " + Words.noNameYetInRow
+        return placeText.isEmpty ? Words.noNameYet : placeText + Words.dotJoin + Words.noNameYetInRow
     }
     /// What the search in More looks through: title and artist, or for a song with no name its place and file name;
     /// and every fact the crate file gives it (D34: release, label, genre, ...).
@@ -204,7 +203,7 @@ struct Disc: Codable, Hashable {
     var short: String {
         if name.count <= 10 { return name }
         if let w = name.split(separator: " ").first, w.count <= 10 { return String(w) }
-        return String(name.prefix(9)) + "…"
+        return String(name.prefix(9)) + Words.cutShort
     }
     var color: Color { Theme.disc(cd) }
 }
@@ -337,8 +336,8 @@ final class Library {
         guard !others.isEmpty else { return nil }
         let onDiscs = others.filter { $0.cd != nil }.map(\.placeText)
         let inFolders = others.filter { $0.cd == nil }.map(\.placeText)
-        return ((onDiscs.isEmpty ? [] : ["also on " + onDiscs.joined(separator: ", ")])
-                + (inFolders.isEmpty ? [] : ["also in " + inFolders.joined(separator: ", ")])).joined(separator: " · ")
+        return ((onDiscs.isEmpty ? [] : [Words.alsoOn(onDiscs)])
+                + (inFolders.isEmpty ? [] : [Words.alsoIn(inFolders)])).joined(separator: Words.dotJoin)
     }
 
     static var rememberedCrate: URL? {
@@ -391,33 +390,7 @@ final class Library {
     func takePickSecs() -> Double? { defer { lastPickSecs = nil }; return lastPickSecs }
 }
 
-// MARK: - theme (the web player's tokens)
-
-enum Theme {
-    static let bg = Color(hex: 0x0f0a17)
-    static let bg2 = Color(hex: 0x160f22)
-    static let card = Color(hex: 0x1d1530)
-    static let card2 = Color(hex: 0x251b3b)
-    static let line = Color(hex: 0x30254a)
-    static let tx = Color(hex: 0xf2edf9)
-    static let mut = Color(hex: 0xab9fc2)
-    static let dim = Color(hex: 0x76698f)
-    static let acc = Color(hex: 0xb490ff)
-    static let acc2 = Color(hex: 0x8a5cff)
-    static let accDim = Color(hex: 0x4a3b6e)
-    static let orange = Color(hex: 0xff8a1f)
-    static let amber = Color(hex: 0xffc040)
-    static let bad = Color(hex: 0xff5d6c)
-    static let ok = Color(hex: 0x72dca0)
-    static let sing = Color(hex: 0x8f7bc8)     // CD1: muted lavender
-    static let mix = Color(hex: 0x5a6cc0)      // CD2: dark, spooky blue
-    /// A disc's colour by its number: the two disc colours alternating (odd discs lavender, even discs blue).
-    static func disc(_ cd: Int) -> Color { cd % 2 == 1 ? sing : mix }
-    static let hal = Color(hex: 0xff8a1f)
-    static let rsn = Color(hex: 0xa99bd0)
-    static let chipTx = Color(hex: 0xe3d6ff)
-    static let backdrop = LinearGradient(colors: [Color(hex: 0x1c1036), Color(hex: 0x0f0a17)], startPoint: .topTrailing, endPoint: .bottomLeading)
-}
+// The theme's colours (the web player's tokens) are Theme, in Look.swift.
 
 extension Color {
     init(hex: UInt32, alpha: Double = 1) {
@@ -429,4 +402,4 @@ func fmtTime(_ s: Double) -> String {
     let t = max(0, Int(s.rounded()))
     return String(format: "%d:%02d", t / 60, t % 60)
 }
-func signed1(_ p: Double) -> String { (p > 0.05 ? "+" : p < -0.05 ? "−" : "±") + String(format: "%.1f", abs(p)) }
+func signed1(_ p: Double) -> String { Words.signed(p > 0.05 ? Words.signPlus : p < -0.05 ? Words.signMinus : Words.signNone, abs(p)) }
