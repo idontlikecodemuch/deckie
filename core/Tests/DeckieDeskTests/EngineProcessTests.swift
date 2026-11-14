@@ -172,10 +172,15 @@ final class EngineProcess: @unchecked Sendable {
         // The crate menu: rename, a new crate, back.
         let renamed = try e.request("crate.rename", ["crate": info.id, "name": "Friday late"])
         #expect(renamed["name"] as? String == "Friday late")
+        // The state that follows each request is waited for, not read straight after the reply: the two travel on
+        // the same pipe but a busy machine may hand the test the reply first.
+        mark = e.received.count
         _ = try e.request("crate.new")
-        #expect(e.last("state")?["current"] is NSNull)
+        #expect(e.wait(from: mark) { $0["event"] as? String == "state" && $0["current"] is NSNull } != nil)
+        mark = e.received.count
         _ = try e.request("crate.show", ["crate": info.id])
-        #expect((e.last("state")?["current"] as? [String: Any])?["name"] as? String == "Friday late")
+        #expect(e.wait(from: mark) { $0["event"] as? String == "state"
+            && ($0["current"] as? [String: Any])?["name"] as? String == "Friday late" } != nil)
 
         // Export, into a folder whose name is not English either.
         let out = root.appendingPathComponent("Export ö")
@@ -501,7 +506,8 @@ final class EngineProcess: @unchecked Sendable {
         let home = root.appendingPathComponent("home")
         #expect(musicFiles(under: home).isEmpty)
         // Listen reads the song off the disc, as WAV, handed over in chunks; nothing is written.
-        let songsEvent = try #require(e.last("songs"))
+        // The songs follow the state on the same pipe: waited for, not read at once.
+        let songsEvent = try #require(e.wait { $0["event"] as? String == "songs" && !(($0["songs"] as? [[String: Any]]) ?? []).isEmpty })
         let first = try #require((songsEvent["songs"] as? [[String: Any]])?.first?["id"] as? String)
         let mark = e.received.count
         let audio = try e.request("song.audio", ["song": first], seconds: 60)
