@@ -279,7 +279,7 @@ public enum LocalFacts {
         // engine before 0.5.0 (any other source) is shown as it was.
         var shown: CrateTrack.Key? = own
         var notSure = false
-        if let o = own, o.source == threeAnswerSource, o.confidence < 0.5 {
+        if let o = own, ownKeySources.contains(o.source), o.confidence < 0.5 {
             shown = nil
             notSure = ownHome == nil
         }
@@ -326,6 +326,10 @@ public enum LocalFacts {
     /// The three-answer reader's `key.source`, and the confidence it gives "home note, mode open" (DeckieEngine's
     /// `Analysis.keySource` and `KeyConfidence.modeOpen`, which this module does not import).
     public static let threeAnswerSource = "three-answer"
+    /// The sources of a key Deckie read itself and shows only when sure (confidence at least one half): the
+    /// three-answer reader's and the learned reader's (`Analysis.learnedKeySource`, engine 0.7.0).
+    public static let learnedKeySource = "learned-key"
+    public static let ownKeySources: Set<String> = [threeAnswerSource, learnedKeySource]
     public static let modeOpenConfidence = 0.45
 
     /// The ladder for one song, or nil when its tags name it fully (nothing to change but a key taken off its title).
