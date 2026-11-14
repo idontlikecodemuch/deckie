@@ -2,6 +2,64 @@
 
 Branch `trial/own-recognition`. Newest entry first. Nothing here ships without the owner's decision.
 
+## Nov 14, 2026, 03:10 UTC: the full benchmark has run once, with the fast matcher
+
+**Done since the last entry**
+- The matcher is now three-point hashes built from each stretch's strongest points (a strength level kept in two
+  spare bits of every point, so the fingerprint is the same size), with the yes-or-no test described last time.
+  Two-point hashes are kept in the code for comparison only: they cannot meet the speed condition.
+- The whole benchmark ran: 969 songs in the index (109 more held out as "not in the crate"), 17,880 clips, 71,520
+  queries. The threshold was set on the dev half; every figure below is the other half.
+- Added, not yet run: the index padded to 10,000 songs (running now), any folder of music as the catalogue.
+
+**Numbers** (eval half; "right" = the right song named and accepted; wrong songs named: 0 to 1 in 500 in every row)
+
+| Condition | 3 s | 5 s | 8 s | 12 s |
+|---|---|---|---|---|
+| Clean, vinyl-style, every setting -16 to +16 (1,700 queries) | 97.0 | 99.6 | 99.9 | 100 |
+| Clean, key held, every setting (1,600) | 99.6 | 99.9 | 99.9 | 99.9 |
+| Small speaker (250 to 3000 Hz), or everything above 2 kHz removed | 99 | 100 | 100 | 100 |
+| Room (a measured room response) | 76 | 89 | 95 | 98 |
+| Room + crowd, music 10 dB over | 63 | 79 | 89 | 93 |
+| Room + crowd, music 5 dB over | 43 | 64 | 76 | 85 |
+| Room + crowd, equal level | 31 | 48 | 61 | 72 |
+| Room + crowd, music 5 dB under | 12 | 22 | 33 | 43 |
+| Room + pink noise, equal level | 37 | 54 | 68 | 77 |
+| Room + pink noise, music 5 dB under | 15 | 28 | 44 | 57 |
+| Small speaker + room + crowd at equal level | 47 | 65 | 79 | 86 |
+| Two songs at equal level: one of the two named / both named | 95 / 16 | 99 / 35 | 99 / 48 | 100 / 59 |
+
+| Other measures | Result |
+|---|---|
+| A song not in the index named anyway, clean | 5 of 1,944 queries, setting aside one held-out clip that is the same track as a clip in the index under another id (named 40 times of 56: the matcher was right about it) |
+| Same, in a room with crowd at equal level; and noise alone | 0 of 1,952 (the same-track clip: 3 of 48); 0 of 400 |
+| Speed reading, vinyl-style, from pitch (8 s): median / 90th | 0.00 / 0.01 points clean; 0.01 / 0.04 in a room with crowd |
+| Speed reading from times (8 s): median / 90th | 0.02 / 0.05 clean vinyl; 0.13 / 0.35 in a room with crowd |
+| Key-held reading against Rubber Band's stretch | 0.22 median, but the error grows with the setting and is absent with a second stretcher (ffmpeg: 0.02), so it is that stretcher's own speed, not the reader |
+| Vinyl or key-held told apart | every right answer at 2 % and beyond |
+| Time to answer, one core, 969 songs (four jobs sharing the machine) | 15 ms for 3 s of audio, 56 ms for 8 s, 90 ms for 12 s, plus 4 to 17 ms to fingerprint the query |
+
+**Against letter H's ShazamKit figures** (8 s; H used 25 songs of one crate, a synthetic reverb and 373 distractors,
+so the rooms differ): clean across the fader, equal (H: 25 of 25 with nine signatures a song; here 99.9 % with one).
+In its room alone H had 49 to 50 of 50; here 95 %. With pink noise at equal level H had 90 to 100 %; here 68 %. At
+5 dB under, H had 78 to 94 %; here 44 %. **So in loud noise this is clearly behind ShazamKit**; the measured rooms
+here are harsher than H's reverb, and I cannot say how much of the gap that explains.
+
+**What I think it means.** If the booth iPad hears the monitor 10 dB or more over the crowd, a song is named in 8 to
+12 s about nine times in ten at any fader setting, with almost no wrong names. At equal level it takes longer and
+misses about three in ten within 12 s. Nobody has measured a real booth's level for this trial; that is the number
+that decides whether this is enough.
+
+**Next**
+1. Time and false matches against catalogue size to 10,000 (running), against the 80 ms target.
+2. One more attempt at noise: a deeper second pass (more of the query's points) used only when the fast pass finds
+   nothing, measured for what it gains and costs.
+3. The same benchmark with the speed undone on the audio (letter W's comparison).
+4. Real DJ mixes (the owner's yes received): Creative Commons mixes and UnmixDB, reported separately.
+5. The one-command run on any music folder; the research letter.
+
+**Carry on.** Direction unchanged; the noise gap to ShazamKit is the thing to watch.
+
 ## Nov 14, 2026, 02:10 UTC: first booth-condition numbers; the matcher is too slow as built, and what I am doing about it
 
 **Received** (through the orientation session): the owner's yes on real DJ mixes; "it has to be faster before we
