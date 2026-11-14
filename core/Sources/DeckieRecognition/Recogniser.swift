@@ -55,6 +55,9 @@ public struct RecognitionMatch: Sendable, Equatable {
     /// (a kick drum on every beat puts points in the same places) that `score` alone is high for them; what marks a
     /// true match is standing clear of the other songs. This is the number to threshold.
     public var confidence: Double
+    /// Other songs of the index that matched as well and hold the same sound (other files of this recording, or a
+    /// long file that contains it): the same answer under other names.
+    public var copies: [Int] = []
 
     /// The fader reading, in percent.
     public var speedPercent: Double { (tempoRatio - 1) * 100 }
@@ -74,6 +77,12 @@ public final class Recogniser {
     /// The wide check: when above 0, the songs checked are the first this many the votes propose (two votes each),
     /// in place of the `verified` fullest votes whatever their songs.
     public var checkSongs = 0
+    /// Whether songs the index says hold the same sound count as one when a match is judged (off only while the
+    /// index itself is looking for them).
+    public var judgeCopies = true
+    /// For measuring whether forgiving a time difference that moved one step pays (letter AB's item 5): every
+    /// three-point hash of the query is looked up five ways, not one. Off: it did not pay (the size study's row).
+    public var fuzzyGaps = false
     /// Points taken per slice of the query (nil: the index's own setting).
     public var queryPerSlice: Int?
     /// A fitted point counts when the song has a point within these distances: frames, and 1/4096 octaves (0.85 %).
@@ -202,7 +211,8 @@ public final class Recogniser {
                 if !p.triples {
                     for k in 0..<p.fanOut {
                         for x in 0..<taken[k] {
-                            hashes.append(p.hash(anchorBin: a, targetBin: slotBin[k * per + x], gap: slotGap[k * per + x])); shifts.append(shiftT)
+                            let h = p.hash(anchorBin: a, targetBin: slotBin[k * per + x], gap: slotGap[k * per + x])
+                            if p.keptPair(h) { hashes.append(h); shifts.append(shiftT) }
                         }
                     }
                 } else if p.points == 4 {
@@ -228,9 +238,16 @@ public final class Recogniser {
                             for y in 0..<taken[k2] {
                                 let h = p.hash(anchorBin: a, bin1: slotBin[k1 * per + x], gap1: slotGap[k1 * per + x],
                                                bin2: slotBin[k2 * per + y], gap2: slotGap[k2 * per + y])
-                                if !p.kept(h) { continue }
-                                hashes.append(h)
-                                shifts.append(shiftT)
+                                if p.kept(h) { hashes.append(h); shifts.append(shiftT) }
+                                if fuzzyGaps {
+                                    // Also the four hashes with one of the two time differences a step to either side.
+                                    for (d1, d2) in [(-p.gapStep, 0), (p.gapStep, 0), (0, -p.gapStep), (0, p.gapStep)] {
+                                        let g1 = slotGap[k1 * per + x] + d1, g2 = slotGap[k2 * per + y] + d2
+                                        if g1 < 0 || g2 < 0 { continue }
+                                        let hf = p.hash(anchorBin: a, bin1: slotBin[k1 * per + x], gap1: g1, bin2: slotBin[k2 * per + y], gap2: g2)
+                                        if p.kept(hf) { hashes.append(hf); shifts.append(shiftT) }
+                                    }
+                                }
                             }
                         }
                     }
@@ -313,6 +330,15 @@ public final class Recogniser {
             bySong[s] = m
         }
         var found = bySong.values.sorted { $0.score != $1.score ? $0.score > $1.score : $0.songIndex < $1.songIndex }
+        // Songs that hold the same sound as a better-scoring one (another file of the recording, or a file that
+        // contains it) are not other songs: they are taken out of the list and noted on the one they repeat.
+        if judgeCopies && !ix.related.isEmpty {
+            var kept: [RecognitionMatch] = []
+            for m in found {
+                if let at = kept.firstIndex(where: { ix.isRelated($0.songIndex, m.songIndex) }) { kept[at].copies.append(m.songIndex) } else { kept.append(m) }
+            }
+            found = kept
+        }
         // Each song's score over the third-best song's: two songs may truly be playing, the third never is.
         let yardstick = max(Self.leastYardstick, found.count >= 3 ? found[2].score : 0)
         for i in found.indices { found[i].confidence = found[i].score / yardstick }

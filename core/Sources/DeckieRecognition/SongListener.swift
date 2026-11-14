@@ -146,7 +146,7 @@ public final class SongListener {
             }
             i += take; heard += take
             if sound.count > 2 * keep { sound.removeFirst(sound.count - keep) }
-            if heard == nextReading, let reading = read() { out.append(reading); latest = reading }
+            if heard == nextReading, let reading = pooled({ read() }) { out.append(reading); latest = reading }
         }
         return out
     }
@@ -268,4 +268,16 @@ public final class BoothRecogniser: @unchecked Sendable {
 
     /// Waits until everything fed so far has been read (for tests and tools; an app has no need of it).
     public func finish() { queue.sync {} ; while true { lock.lock(); let busy = working; lock.unlock(); if !busy { break }; queue.sync {} } }
+}
+
+/// Runs `body` so that whatever Foundation set aside for later release while it ran is released when it ends. On
+/// Apple's systems such memory otherwise waits for the thread's own pool, which a long-lived thread may never empty:
+/// measured on a Mac, a tool's memory grew with every query (docs/research/w3-recognition-real-room.md). Elsewhere
+/// there is no such pool and this only runs `body`.
+@inline(__always) public func pooled<T>(_ body: () -> T) -> T {
+    #if canImport(ObjectiveC)
+    return autoreleasepool(invoking: body)
+    #else
+    return body()
+    #endif
 }
