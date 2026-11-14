@@ -901,15 +901,49 @@ def report(a):
         results.append((name, read_results(path)))
     LS = sorted({q["L"] for _, R in results for q in R.values()})
 
+    cur = {"ids": None}
+    cat_ids = {}
+    for spec in a.catalogue_ids or []:
+        n_, f_ = spec.split("=", 1)
+        cat_ids[n_] = {l.strip() for l in open(f_) if l.strip()}
+
     def judge(q):
         b = q["best"]
         named = b[0] != "-" and b[6] >= thr
         kind, groups = key.window(q["rid"], q["t"], q["L"])
         right = named and any(b[0] in key.sids[g] for g in groups)
+        if kind == "song" and cur["ids"] is not None and not (key.sids[next(iter(groups))] & cur["ids"]):
+            kind = "song outside this catalogue"
         return kind, groups, named, right
 
+    titles = {k: norm(v["title"]).split()[:3] for k, v in json.load(open(os.path.join(work, "catalogue.json"))).items()}
+
+    def wrong_kind(b, groups):
+        if b in mix_ids:
+            return "the pre-mixed disc's track"
+        ok = set().union(*(key.sids[g] for g in groups)) if groups else set()
+        if b in titles and any(titles.get(o) == titles[b] for o in ok):
+            return "another version or copy of the playing song (same title)"
+        if b not in titles:
+            return "a song from the added music (never played)"
+        return "another song"
+
     for name, R in results:
+        cur["ids"] = cat_ids.get(name)
         w("## Catalogue: %s\n" % name)
+        if cur["ids"] is not None:
+            outside = sum(1 for q in R.values() if q["L"] == max(LS) and key.recs[q["rid"]]["part"] == "set" and judge(q)[0] == "song outside this catalogue")
+            w("One-song windows whose song is not in this catalogue are left out of its tables (%d of the set's %g s windows).\n" % (outside, max(LS)))
+        wr = collections.defaultdict(collections.Counter)
+        for q in R.values():
+            if key.recs[q["rid"]]["part"] != "set":
+                continue
+            kind, groups, named, right = judge(q)
+            if kind in ("song", "blend") and named and not right:
+                wr[wrong_kind(q["best"][0], groups)][q["L"]] += 1
+        if wr:
+            w("Wrong names in the set's one-song and blend windows, by what was named (windows; 3 / 5 / 8 / 12 s): " + "; ".join(
+                "%s %s" % (k, " / ".join(str(v[L]) for L in LS)) for k, v in sorted(wr.items())) + ".\n")
         ms = collections.defaultdict(list); fp = collections.defaultdict(list)
         for q in R.values():
             ms[q["L"]].append(q["ms"]); fp[q["L"]].append(q["fpms"])
@@ -1014,6 +1048,8 @@ def report(a):
                 for s in key.stretches:
                     if s["part"] != "set" or s["kind"] != kind_sel or s["end"] - s["start"] < 30:
                         continue
+                    if cur["ids"] is not None and not (key.sids[s["g"]] & cur["ids"]):
+                        continue
                     n += 1
                     hit = None
                     for q in byrid[s["rid"]]:
@@ -1061,6 +1097,8 @@ def report(a):
         reads = []
         for s in key.stretches:
             if s["part"] != "set" or s["end"] - s["start"] < 30:
+                continue
+            if cur["ids"] is not None and not (key.sids[s["g"]] & cur["ids"]):
                 continue
             v = [q for q in byrid[s["rid"]] if q["L"] == max(LS) and s["start"] <= q["t"] - q["L"] and q["t"] <= s["end"]
                  and q["best"][6] >= thr and q["best"][0] in key.sids[s["g"]]]
@@ -1266,6 +1304,7 @@ def main():
     q.add_argument("--subset", default=""); q.add_argument("--only", default="", help="recordings to use (a test run)")
     q = sub.add_parser("report"); q.add_argument("work"); q.add_argument("results", nargs="+")
     q.add_argument("--threshold", type=float, default=2.96); q.add_argument("--mix", default="")
+    q.add_argument("--catalogue-ids", nargs="*", help="NAME=ids.txt: the songs a catalogue holds (tables then leave out songs it lacks)")
     q.add_argument("--booth-catalogue", default="", help="the booth's own catalogue that night (JSON with tracks: song, artist, dur)")
     a = p.parse_args()
     {"prepare": prepare, "catalogue": catalogue, "extra": extra, "truth": truth, "report": report}[a.cmd](a)
