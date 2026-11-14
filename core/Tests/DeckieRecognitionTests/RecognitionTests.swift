@@ -227,4 +227,42 @@ import DeckieRecognition
         #expect(box.readings.last?.id == "song2")
         #expect(booth.latest == box.readings.last)
     }
+
+    // MARK: Songs that hold the same sound
+
+    @Test func aSecondFileOfARecordingAndAFileThatContainsItDoNotCountAgainstIt() throws {
+        // The eight songs, a second file of song 3 (the same recording, quieter and at another rate), and a long file
+        // that is songs 1 and 2 end to end, as a continuous mix kept as one track is.
+        var songs = (0..<8).map { (id: "song\($0)", landmarks: Landmarks(mono: Self.song(seed: UInt64(100 + $0)), sampleRate: Self.rate)) }
+        let again = Resampler.resample(Self.song(seed: 103).map { $0 * 0.5 }, from: Self.rate, to: 11025)
+        songs.append((id: "song3 again", landmarks: Landmarks(mono: again, sampleRate: 11025)))
+        songs.append((id: "the mix", landmarks: Landmarks(mono: Self.song(seed: 101) + Self.song(seed: 102), sampleRate: Self.rate)))
+        songs.append((id: "song3 a third time", landmarks: Landmarks(mono: Self.song(seed: 103).map { $0 * 0.8 }, sampleRate: Self.rate)))
+        let index = RecognitionIndex(songs: songs)
+        #expect(index.isRelated(3, 8) && index.isRelated(8, 3) && index.isRelated(3, 10) && index.isRelated(8, 10))
+        #expect(index.isRelated(1, 9) && index.isRelated(2, 9))
+        #expect(!index.isRelated(1, 2) && !index.isRelated(3, 4) && !index.isRelated(0, 9))
+        // Without the search the three files of song 3 stand against each other (a match is judged against the
+        // third best) and the match looks unsure.
+        let plain = RecognitionIndex(songs: songs, findCopies: false)
+        let q3 = Landmarks(mono: Self.excerpt(Self.song(seed: 103), from: 17.3, seconds: 5), sampleRate: Self.rate)
+        let alone = try #require(Recogniser(index: Self.index).match(q3).first)
+        let unsure = try #require(Recogniser(index: plain).match(q3).first)
+        let sure = try #require(Recogniser(index: index).match(q3).first)
+        #expect(["song3", "song3 again", "song3 a third time"].contains(sure.id))
+        #expect(sure.copies.count == 2)
+        #expect(sure.confidence > 0.6 * alone.confidence && sure.confidence > 3)
+        #expect(unsure.confidence < 0.5 * sure.confidence)
+        // A song inside the long file: named as the song or as the file, surely either way.
+        let q2 = Landmarks(mono: Self.excerpt(Self.song(seed: 102), from: 8, seconds: 5), sampleRate: Self.rate)
+        let inMix = try #require(Recogniser(index: index).match(q2).first)
+        #expect(["song2", "the mix"].contains(inMix.id) && inMix.confidence > 3)
+        // The crate file's own keys do the same with no search, and the index file keeps what was found.
+        let keyed = RecognitionIndex(songs: songs, sameRecording: [nil, nil, nil, "k", nil, nil, nil, nil, "k", nil, nil], findCopies: false)
+        #expect(keyed.isRelated(3, 8) && !keyed.isRelated(1, 9))
+        let url = Self.temporaryFile("copies.dkx")
+        defer { try? FileManager.default.removeItem(at: url.deletingLastPathComponent()) }
+        try index.write(to: url)
+        #expect(try RecognitionIndex(contentsOf: url).related == index.related)
+    }
 }

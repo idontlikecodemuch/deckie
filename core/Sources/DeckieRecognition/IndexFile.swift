@@ -37,13 +37,13 @@ extension RecognitionIndex {
     static let fileMark: [UInt8] = Array("DKX1".utf8)
     /// Bumped when the file's layout or the meaning of an entry changes: an index file is a cache, made again from
     /// the fingerprints whenever its version or its settings are not the ones wanted.
-    public static let fileVersion: UInt32 = 1
-    private static let sections = 10
+    public static let fileVersion: UInt32 = 2
+    private static let sections = 11
 
     /// The index as one file's bytes: a header (the mark `DKX1`, a version, the timeline's length, then the place and
     /// length of each part), and the parts, each starting on an 8-byte boundary: the settings (JSON), the songs'
     /// ids, where each song starts on the timeline and among the points, the points (frame, pitch), the table, the
-    /// entries, and their tags. Numbers are little-endian, as on every system Deckie runs on.
+    /// entries, their tags, and the pairs of songs that hold the same sound. Numbers are little-endian, as on every system Deckie runs on.
     public func fileData() -> Data {
         precondition(1.littleEndian == 1)
         let settings = (try? JSONEncoder().encode(FileSettings(landmark: landmark, pairing: pairing, stamp: stamp))) ?? Data()
@@ -56,6 +56,10 @@ extension RecognitionIndex {
         parts.append(entries.withUnsafeBufferPointer { Data(buffer: $0) })
         parts.append(extra.withUnsafeBufferPointer { Data(buffer: $0) })
         parts.append(tags.withUnsafeBufferPointer { Data(buffer: $0) })
+        // The related songs, as pairs of song numbers (each pair once).
+        var pairs: [Int32] = []
+        for (a, others) in related.enumerated() { for b in others where Int(b) > a { pairs.append(Int32(a)); pairs.append(b) } }
+        parts.append(pairs.withUnsafeBufferPointer { Data(buffer: $0) })
         let headerSize = 24 + 16 * Self.sections
         var header = Data(Self.fileMark)
         func put<V: FixedWidthInteger>(_ v: V, into d: inout Data) { withUnsafeBytes(of: v.littleEndian) { d.append(contentsOf: $0) } }
@@ -115,6 +119,15 @@ extension RecognitionIndex {
         entries = Block(data: data, offset: places[7].0, count: places[7].1 / 4)
         extra = Block(data: data, offset: places[8].0, count: places[8].1 / 2)
         tags = Block(data: data, offset: places[9].0, count: places[9].1)
+        var sets = [[Int32]](repeating: [], count: ids.count)
+        let pairCount = places[10].1 / 8
+        data.withUnsafeBytes { raw in
+            for k in 0..<pairCount {
+                let a = Int(raw.loadUnaligned(fromByteOffset: places[10].0 + 8 * k, as: Int32.self)), b = Int(raw.loadUnaligned(fromByteOffset: places[10].0 + 8 * k + 4, as: Int32.self))
+                if a >= 0, b >= 0, a < sets.count, b < sets.count { sets[a].append(Int32(b)); sets[b].append(Int32(a)) }
+            }
+        }
+        related = sets
         guard pointFrame.count == pointPitch.count, pointFrame.count == (pointStart.last ?? 0), offsets.count == (1 << pairing.tableBits) + 1 else {
             throw fail("the parts do not fit together")
         }
@@ -139,9 +152,10 @@ extension RecognitionIndex {
     /// booth's settings and from the same songs (`stamp`); otherwise builds the index from `songs()` (the crate
     /// file's fingerprints), writes it to `url`, and opens that. So the building happens once per crate file, the
     /// first time the booth sees it, and what is used afterwards is always the mapped file.
-    public static func cached(at url: URL, stamp: String, songs: () -> [(id: String, landmarks: Landmarks)]) throws -> RecognitionIndex {
+    public static func cached(at url: URL, stamp: String, sameRecording: [String?] = [],
+                              songs: () -> [(id: String, landmarks: Landmarks)]) throws -> RecognitionIndex {
         if let kept = try? RecognitionIndex(contentsOf: url), kept.stamp == stamp, kept.settingsMatch(PairingConfig.booth) { return kept }
-        let built = RecognitionIndex(songs: songs(), pairing: PairingConfig.booth, stamp: stamp)
+        let built = RecognitionIndex(songs: songs(), pairing: PairingConfig.booth, stamp: stamp, sameRecording: sameRecording)
         try built.write(to: url)
         return try RecognitionIndex(contentsOf: url)
     }
