@@ -78,6 +78,26 @@ import DeckieRecognition
     private var challengerLast = Date.distantPast
     static let hold: TimeInterval = 10
     var alsoHearing: String?                          // another song heard while the current one is kept
+    // Deckie's song change (D35): the song its readings name in a row that is not on screen, how many readings named
+    // it, when the first did, how many more are needed (`deckieWait`) and the least in all (`carefulWait`).
+    private var deckieRun: (id: String, count: Int, since: Date, left: Int, least: Int)?
+    /// The song on screen was set by hand and has not been heard since.
+    private var byHand = false
+    /// How strongly Deckie's listener last heard the playing song when it followed it (its points above chance), and
+    /// when: a song coming in must be heard more strongly than that to take over on one confirmation.
+    private var currentHeld: (score: Double, at: Date)?
+    /// The song that was on screen before the playing one, and when it gave way.
+    private var leftId: String?
+    private var leftAt = Date.distantPast
+    /// Deckie's: no reading has named the playing song for `notHeardAfter` seconds (talk, silence, the music
+    /// stopped). The song stays on screen, marked as not heard just now.
+    private(set) var notHeard = false
+    /// Deckie's pitch readings of the playing song since the last song change or fader move (`updatePitch`).
+    private var speeds: (id: String, values: [Double], lone: Double?)?
+    /// The song heard coming in under the playing one, when the recogniser reports one (`Reading.incoming`); the
+    /// leading copy of it, never the playing song. Not shown yet: its place is the panel's foot, where "also hearing"
+    /// sits now, before the switch.
+    private(set) var incoming: Reading.Incoming?
     private var pendingJump: Event?   // a same-song match at an unexpected offset (repeated chorus?) waiting for confirmation
     private var catalog: SHCustomCatalog?
     private var task: Task<Void, Never>?
@@ -163,6 +183,12 @@ import DeckieRecognition
         let now = Date()
         guard currentId != nil, source != .manual else { return }
         let sinceCur = now.timeIntervalSince(lastCurrentMatch)
+        // Deckie's (D35): a few seconds with no reading of the playing song and it is marked as not heard just now;
+        // it stays on screen with its picks. Apple's results come too far apart for this, so Apple's is as it was.
+        if !notHeard, listening == .deckie || listening == .both, sinceCur > Self.notHeardAfter {
+            notHeard = true
+            note("not heard just now (no reading of it for \(Int(sinceCur)) s)")
+        }
         if !paused && sinceCur > 5 && inputLevel < Self.quietDB {
             paused = true; frozenAt = lastCurrentMatch.addingTimeInterval(1)
             note("paused (quiet, no match for \(Int(sinceCur)) s)")
@@ -171,6 +197,7 @@ import DeckieRecognition
             note("nothing recognised for 2 min: back to listening")
             currentId = nil; currentPlace = nil; paused = false; frozenAt = nil; positionKnown = false; alsoHearing = nil
             events.removeAll(); hits.removeAll()
+            notHeard = false; deckieRun = nil; speeds = nil; incoming = nil
             status = "listening…"
         }
     }
@@ -343,6 +370,7 @@ import DeckieRecognition
         stop()
         currentId = nil; currentPlace = nil; history = []; positionKnown = false; paused = false; frozenAt = nil
         alsoHearing = nil; events.removeAll(); hits.removeAll(); pendingId = nil; challengerId = nil
+        notHeard = false; deckieRun = nil; byHand = false; leftId = nil; speeds = nil; incoming = nil
         comparison.reset()
     }
 
@@ -352,6 +380,10 @@ import DeckieRecognition
         switchTo(id, place: place)
         source = .manual; positionKnown = false; status = "set by hand"
         events.removeAll()
+        byHand = true
+        // The clocks of "not heard" and of the 2-minute rule start from the choice: before, the first second of
+        // listening after a song was set by hand found no match ever and cleared it.
+        lastCurrentMatch = Date(); lastAnyMatch = Date()
     }
 
     // MARK: file test (debug): matches rendered segments of a file, optionally simulating continuous play
@@ -461,18 +493,70 @@ import DeckieRecognition
     /// (followed, but not heard in this second) is no new evidence and changes nothing.
     private func deckieReading(_ r: ListenReading, heard: Date) {
         guard listening == .deckie || listening == .both else { return }
+        defer { if Self.traceShown { trace(r) } }
         if r.state == .held && r.confidence == 0 { return }
         let speed = r.speedPercent
         let reading = Reading(from: .deckie, date: heard, audioTime: r.time, id: r.id, position: r.positionSeconds, speedPercent: speed,
                               keyLock: r.keyLock, pitchRatio: r.keyLock == false ? 1 + (speed ?? 0) / 100 : 1,
                               speedFrom: Words.speedFromDeckie, confidence: r.confidence, vouched: true,
-                              fresh: r.state == .named, milliseconds: r.milliseconds)
+                              fresh: r.state == .named, milliseconds: r.milliseconds, wait: Self.deckieWait(r))
         if r.state == .named, let id = r.id {
             note(String(format: "Deckie named %@ at %.1fs, speed %+.2f%%, key lock %@, confidence %.1f (%.0f ms), heard %.1fs", Library.shared.track(id)?.title ?? id,
                         r.positionSeconds ?? 0, speed ?? 0, r.keyLock.map { $0 ? "on" : "off" } ?? "?", r.confidence, r.milliseconds, r.time))
         }
         if listening == .both, r.id != nil { compared(comparison.heard(reading, at: recorder.isActive ? recorder.elapsed : r.time)) }
         take(reading)
+    }
+
+    // MARK: new (D35, note of Nov 14): the booth switches sooner when Deckie's is sure
+
+    /// The listener's own thresholds (`ListenSettings`): a search at `sure` names a song on its own; one at `fair`
+    /// names it only when the search before put the same song on the same line.
+    static let listenSettings = ListenSettings()
+    /// Readings the booth waits for before a song Deckie's names replaces the one on screen:
+    /// - named, sure (confidence 3 or more) and agreeing with the search a second or two before on place and speed:
+    ///   none, the name already rests on two searches seconds apart;
+    /// - named and sure, on one search: one, the next reading naming it too (the listener's check of it, its points
+    ///   agreeing 6 or more above chance over the last 5 s);
+    /// - named and only fair (2.6 to 3, two weak searches agreeing): `fairWait`, so the name rests on about five
+    ///   seconds of agreeing sound before it replaces the song a DJ is reading picks from;
+    /// - followed (held): one; a held reading that comes after a name of the same song is its confirmation.
+    static let fairWait = 3
+    static func deckieWait(_ r: ListenReading) -> Int {
+        switch r.state {
+        case .named where r.confidence >= listenSettings.sure: return r.searched?.agrees == true ? 0 : 1
+        case .named: return fairWait
+        default: return 1
+        }
+    }
+    /// The wait for a song that would undo a recent change or a choice: the song on screen until less than
+    /// `returnWindow` seconds ago (no flicker back in a blend), or any song while the one on screen was set by hand
+    /// and has not been heard since. That many readings in a row naming it, whatever their confidence.
+    static let carefulWait = 3
+    static let returnWindow: TimeInterval = 30
+    /// How recent the playing song's own followed reading must be for the dominance check (two readings).
+    static let dominanceWindow: TimeInterval = 2
+    /// The playing song is marked as not heard just now after this many seconds with no reading of it.
+    static let notHeardAfter: TimeInterval = 4
+    /// The pitch shown from Deckie's readings: the median of the playing song's last `pitchReadings` speeds, started
+    /// afresh on a song change, and when two readings in a row lie more than `faderJump` percent from the median and
+    /// within `faderJump` of each other (the fader moved: shown from the second, about a second after the move). One
+    /// reading that far off on its own is set aside (measured: +7.6 % once in a song at +6 % as it faded out). The
+    /// reading's own wobble in a song is a tenth to three tenths (the generated set); nine readings steady it to a
+    /// tenth, and a move of half a percent or more is shown from two readings rather than averaged in.
+    static let pitchReadings = 9
+    static let faderJump = 0.5
+
+    /// For measuring (launch argument `-traceShown YES`): after each of Deckie's readings, one line on the console with
+    /// the sound's time, what the reading said and what the screen shows. Not in the log the details sheet shows.
+    static let traceShown = UserDefaults.standard.bool(forKey: "traceShown")
+    private func trace(_ r: ListenReading) {
+        let lib = Library.shared
+        let line = String(format: "SHOWN heard %.1f reading %@ %@ conf %.1f agrees %@ raw %+.2f | screen %@ pitch %+.1f %@ notHeard %@ paused %@\n",
+                          r.time, r.id.flatMap { lib.track($0)?.title } ?? "-", r.state.rawValue, r.confidence,
+                          r.searched.map { $0.agrees ? "yes" : "no" } ?? "-", r.speedPercent ?? .nan, current?.title ?? "-", pitchPct,
+                          pitchKind.rawValue.isEmpty ? "none" : pitchKind.rawValue, notHeard ? "yes" : "no", paused ? "yes" : "no")
+        FileHandle.standardError.write(line.data(using: .utf8)!)
     }
 
     /// Compare mode: the comparison goes into the set's log when something new is in it (a song named, a
@@ -495,6 +579,8 @@ import DeckieRecognition
             if noMatchCount % 5 == 1 { note(String(format: "no match (%d so far), input %.0f dB", noMatchCount, inputLevel)) }
             if let ms = r.milliseconds { lastLatencyMs = ms }
             if currentId == nil { status = "listening…" }      // with a song on screen, keep it (2-minute rule in tick)
+            if r.wait != nil { deckieRun = nil }               // Deckie's: nothing heard breaks a run of readings
+            incoming = nil
             return
         }
         let predicted = positionKnown ? position(at: now) : nil
@@ -503,6 +589,13 @@ import DeckieRecognition
         // disc in order), so every copy of it counts as one challenger.
         let lib = Library.shared
         let id = lib.sameSong(matched, currentId) ? currentId! : lib.leadingCopy(of: matched, playingDisc: current?.disc)
+        // The song coming in (D35): kept as its leading copy, never the song this reading names.
+        incoming = r.incoming.flatMap { inc in
+            if lib.sameSong(inc.id, matched) { return nil }
+            var c = inc
+            c.id = lib.sameSong(inc.id, currentId) ? currentId! : lib.leadingCopy(of: inc.id, playingDisc: current?.disc)
+            return c
+        }
         matchCount += 1
         lastMatch = now
         if let ms = r.milliseconds { lastLatencyMs = ms }
@@ -515,6 +608,11 @@ import DeckieRecognition
             if paused && inputLevel < Self.quietDB { return }
             let resumed = paused || now.timeIntervalSince(lastCurrentMatch) > 5
             lastCurrentMatch = now
+            // Heard: no longer marked as not heard, no longer only set by hand, and any run of readings naming
+            // another song is broken.
+            if notHeard { note("heard again") }
+            notHeard = false; byHand = false; deckieRun = nil
+            if r.wait != nil { currentHeld = r.fresh ? nil : (r.confidence, now) }
             if resumed {
                 // back after a pause / gap: continue from wherever the song is now, no confirmation needed
                 if paused { note(String(format: "resumed at %.1fs", offset)) }
@@ -558,6 +656,38 @@ import DeckieRecognition
                 lastCurrentMatch = now
                 switchTo(id)
                 firstMatchSeconds = now.timeIntervalSince(source == .mic ? max(startedAt, songStartedAt) : startedAt)
+            } else if let wait = r.wait {
+                // Deckie's (D35): its listener has already gathered the evidence across seconds, so the booth waits
+                // only as many readings as the name's standing asks (`deckieWait`), and longer for a song that would
+                // undo a recent change or a song set by hand (`carefulWait`).
+                if var run = deckieRun, run.id == id {
+                    run.count += 1; run.left = min(run.left - 1, wait); deckieRun = run
+                } else {
+                    let careful = byHand || (id == leftId && now.timeIntervalSince(leftAt) < Self.returnWindow)
+                    deckieRun = (id, 1, now, wait, careful ? Self.carefulWait : 1)
+                }
+                // Dominance, kept from the old hold: a followed reading of the new song no stronger than the playing
+                // song's own a moment ago (`dominanceWindow`) does not confirm on its own; the careful wait applies.
+                // (On the test set a wrong name once came with a weak check, 17.6 against the playing song's 62; every
+                // real change's check stood above the playing song's last.)
+                if !r.fresh, let h = currentHeld, now.timeIntervalSince(h.at) <= Self.dominanceWindow, r.confidence <= h.score {
+                    deckieRun?.least = max(deckieRun?.least ?? 0, Self.carefulWait)
+                }
+                challengerLast = now
+                guard let run = deckieRun else { return }
+                if run.left <= 0 && run.count >= run.least {
+                    note(String(format: "switch to %@ (Deckie's: %d reading%@ in %.1f s%@)", Library.shared.track(id)?.song ?? id, run.count,
+                                run.count == 1 ? "" : "s", now.timeIntervalSince(run.since), run.least > 1 ? ", the careful wait" : ""))
+                    paused = false; frozenAt = nil; lastCurrentMatch = now
+                    switchTo(id)
+                    challengerId = nil; alsoHearing = nil
+                    firstMatchSeconds = now.timeIntervalSince(run.since)
+                } else {
+                    // A wait of more than a second shows the other song meanwhile, as Apple's hold does; a one-reading
+                    // wait does not, so the foot does not flash just before the title changes.
+                    if max(run.left, run.least - run.count) > 1 { alsoHearing = Library.shared.track(id)?.oneLine }
+                    return
+                }
             } else {
                 if challengerId != id || now.timeIntervalSince(challengerLast) > 12 { challengerId = id; challengerSince = now }
                 challengerLast = now
@@ -600,8 +730,18 @@ import DeckieRecognition
     }
     static let recordEvery: TimeInterval = 5
 
+    /// The middle value (the mean of the middle two for an even count).
+    static func median(_ v: [Double]) -> Double {
+        guard !v.isEmpty else { return 0 }
+        let s = v.sorted(), n = s.count
+        return n % 2 == 1 ? s[n / 2] : (s[n / 2 - 1] + s[n / 2]) / 2
+    }
+
     private func switchTo(_ id: String, place: TrackPlace? = nil) {
         justSwitched = true
+        if let c = currentId, c != id { leftId = c; leftAt = Date() }
+        notHeard = false; byHand = false; deckieRun = nil; speeds = nil; currentHeld = nil
+        if incoming?.id == id { incoming = nil }
         if id != currentId || place != nil {
             currentPlace = place ?? Library.shared.placed(id, playingDisc: current?.disc)?.place
         }
@@ -619,6 +759,32 @@ import DeckieRecognition
     /// The pitch shown, from the readings of the playing song: the key moved (vinyl-style), the speed read from one
     /// listen (Deckie's), or the speed from how fast the place moves (Apple's with the key held).
     private func updatePitch(_ r: Reading, _ ev: Event) {
+        if r.from == .deckie, let s = r.speedPercent {
+            // Deckie's (D35): the deck's speed from each second's listen wobbles by a tenth or two; the pitch shown is
+            // the median of the playing song's last `pitchReadings`, started afresh on a song change and when two
+            // readings in a row move more than `faderJump` from it (the fader moved: not averaged in). The key
+            // held or not to be told, the tempo shown is still the tempo the song plays at (the BPM and the song time
+            // follow `rate`).
+            if var run = speeds, run.id == ev.id {
+                if abs(s - Self.median(run.values)) <= Self.faderJump {
+                    run.values.append(s); run.values = Array(run.values.suffix(Self.pitchReadings)); run.lone = nil
+                } else if let lone = run.lone, abs(s - lone) <= Self.faderJump {
+                    // Two readings in a row away from the median and agreeing: the fader moved. Start from them.
+                    note(String(format: "fader moved: %+.2f%%, %+.2f%% after %+.2f%%", lone, s, Self.median(run.values)))
+                    run.values = [lone, s]; run.lone = nil
+                } else {
+                    run.lone = s           // one reading away from the rest: set aside until the next agrees
+                }
+                speeds = run
+            } else {
+                speeds = (ev.id, [s], nil)
+            }
+            let m = Self.median(speeds?.values ?? [s])
+            pitchPct = (m * 10).rounded() / 10; rate = 1 + m / 100
+            pitchKind = r.keyLock == true ? .masterTempo : r.keyLock == false ? .vinyl : .none
+            pitchFrom = r.speedFrom
+            return
+        }
         if abs(ev.freqRatio - 1) > 0.008 {
             // vinyl-style (master tempo off): key and tempo moved together; the key's ratio says how much, averaged
             // over the song's last four readings and shown to a tenth
