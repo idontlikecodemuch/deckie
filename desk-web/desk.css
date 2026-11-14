@@ -547,6 +547,8 @@ td.listen button[aria-pressed=true] { background: var(--acc); color: var(--ink);
 .names .fact .from { font-size: var(--fs-fact-from); color: var(--dim); margin-top: var(--fact-from-gap); }
 .names .fact .from.guess { color: var(--warn); }
 .names .fact .value { padding: var(--fact-value-pad); }
+/* Clean or dirty (D39): one of three, the same field look as the tool sheets' menus. */
+.names .fact select { font: inherit; color: var(--tx); background: var(--field); border: var(--field-line) solid var(--hair); border-radius: var(--r-field); padding: var(--tool-select-pad); }
 .names .offer { background: var(--surface); border-radius: var(--r-field); padding: var(--offer-pad); margin-top: var(--offer-above); display: flex; flex-wrap: wrap; gap: var(--offer-gap); align-items: center; }
 .names .offer p { width: 100%; font-size: var(--fs-offer); }
 .names .facts-line { font-size: var(--fs-facts-line); color: var(--mut); margin-bottom: var(--facts-line-gap); overflow-wrap: anywhere; }

@@ -305,7 +305,8 @@
   const columns = [
     { key: "listen", word: "listen", get: () => "", cell: listenCell, label: true, nosort: true },
     { key: "why", word: "colWhy", get: (s) => (s.nameReason ? t("nameReason." + s.nameReason) : ""), cls: "why", onlyNeed: true },
-    { key: "title", word: "colTitle", get: (s) => s.title, edit: "title", guess: "title" },
+    // The title shown with its version, as DJs write it (D39); a fix in place edits the title itself.
+    { key: "title", word: "colTitle", get: (s) => s.title, show: (s) => s.shown || s.title, edit: "title", guess: "title" },
     { key: "artist", word: "colArtist", get: (s) => s.artist || "", edit: "artist", guess: "artist" },
     { key: "bpm", word: "colTempo", get: (s) => s.bpm, show: (s) => (s.bpm != null ? s.bpm.toFixed(1) : t("none")), num: true },
     { key: "key", word: "colKey", get: (s) => (s.key ? s.key.camelot : s.homeNote ? s.homeNote.camelot[0] : ""), cell: keyCell },
@@ -504,6 +505,20 @@
       }
       body.append(box);
     });
+    // Clean or dirty (D39): a fact of its own, the DJ's to set; never taken from a lookup.
+    {
+      const f = s.names ? s.names.lyrics : null;
+      const now = f && f.value != null ? f.value : "";
+      const sel = el("select", { id: "fact-lyrics", "data-field": "lyrics" });
+      for (const c of ["clean", "dirty", ""]) {
+        const o = el("option", { value: c, text: t(c ? "lyrics." + c : "lyrics.none") });
+        if (c === now) o.selected = true;
+        sel.append(o);
+      }
+      sel.addEventListener("change", () => request("song.fix", { song: s.id, facts: { lyrics: sel.value } }, { errorWord: "couldntSave" }));
+      body.append(el("div", { class: "fact" }, el("label", { for: "fact-lyrics", text: t("lyrics") }), sel,
+        el("p", { class: "from", text: f && f.value != null ? fromLine(f).text : t("lyricsHelp") })));
+    }
     // A song's facts (D34): release, year, label and genre as fields like the names, each with where it came from;
     // the rest listed, read-only. Everything here goes to the iPad.
     for (const field of ["release", "year", "label", "genre"]) {
@@ -841,6 +856,8 @@
       }
       if (s.several) card.append(el("p", { class: "outcome", text: t("lookupSeveral") }));
       else if (s.chosen == null) card.append(el("p", { class: "outcome", text: t("lookupNoneFits") }));
+      // D39: the original of the DJ's own version: the version stays, the year and label are the original's.
+      else if (s.mode === "original") card.append(el("p", { class: "outcome", text: t("lookupOriginalLine") }));
       const choice = lookup.choices.get(s.song) || { candidate: -1, fields: new Set() };
       const table = el("table");
       table.append(el("thead", null, el("tr", null, el("th", null, el("span", { class: "sr", text: t("lookupUseThis") })),
