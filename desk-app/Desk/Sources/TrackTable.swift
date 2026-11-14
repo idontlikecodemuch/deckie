@@ -20,10 +20,10 @@ struct TrackTable: View {
             TableColumn(Words.colTempo) { t in Text(t.grid.map { Words.tempo($0.bpm) } ?? Words.none) }.width(Look.Size.colTempo)
             TableColumn(Words.colKey) { t in
                 HStack(spacing: Look.Space.keyCell) {
-                    Text(t.key?.camelot ?? Words.none).help(Self.keyHelp(t))
-                    if t.flags.contains("key_uncertain") { Image(systemName: "questionmark.circle").foregroundStyle(.secondary).help(Words.notSureOfKey) }
+                    Text(Self.keyCell(t)).lineLimit(1).help(Self.keyHelp(t))
+                    if t.key != nil, t.flags.contains("key_uncertain") { Image(systemName: "questionmark.circle").foregroundStyle(.secondary).help(Words.notSureOfKey) }
                 }
-            }.width(Look.Size.colKey)
+            }.width(min: Look.Size.colKey, ideal: Look.Size.colKeyIdeal)
             TableColumn(Words.colKeyFrom) { t in
                 Text(t.key.map { Words.programName($0.source) } ?? "").foregroundStyle(.secondary).lineLimit(1).help(Self.keyHelp(t))
             }.width(min: Look.Size.colKeyFromMin, ideal: Look.Size.colKeyFromIdeal)
@@ -69,10 +69,30 @@ struct TrackTable: View {
     /// The key and where it came from, then what the DJ's other programs and tags say ("8A from Traktor; rekordbox says
     /// 9A"), or D16's words when there is no key.
     static func keyHelp(_ t: CrateTrack) -> String {
-        guard let k = t.key else { return Words.keyNotRead }
+        guard let k = t.key else { return noKeyWords(t) }
         let others = k.votes.filter { (LocalFacts.djOrigins.contains($0.key) || $0.key == LocalFacts.ownVote) && $0.key != k.source }.sorted { $0.key < $1.key }
             .map { Words.keySays($0.key, $0.value) }
         return Words.keyHelp([Words.keyHelpFirst(k.camelot, from: k.source)] + others)
+    }
+
+    /// What the Key column shows (D33, D36, as the pages do): the code; "Home note A" when the reader found the home
+    /// note alone; else the dash, with the words in its help.
+    static func keyCell(_ t: CrateTrack) -> String {
+        if let k = t.key { return k.camelot }
+        if t.keyState == .homeNote, let h = t.keyHome { return Words.homeNote(h.note) }
+        return Words.none
+    }
+
+    /// A song with no key, in words, by what its record says: the home note and the two keys it can fit; Deckie read
+    /// it and is not sure; or no key was read on the computer that made the record.
+    static func noKeyWords(_ t: CrateTrack) -> String {
+        switch t.keyState {
+        case .homeNote:
+            guard let h = t.keyHome, h.camelot.count == 2 else { return Words.keyNotRead }
+            return Words.homeNoteHelp(minor: h.camelot[0], major: h.camelot[1])
+        case .notSure: return Words.keyDeckieNotSure
+        case .key, .notRead: return Words.keyNotRead
+        }
     }
 
     static func notes(_ t: CrateTrack, reason: String? = nil) -> String {
@@ -112,6 +132,8 @@ struct Inspector: View {
         ScrollView {
             if model.selection.count == 1, let id = model.selection.first, let t = model.binding(for: id) {
                 VStack(alignment: .leading, spacing: Look.Space.inspector) {
+                    // The song's cover (D36), small, as the pages show it; a song without one gets the same empty square.
+                    CoverSquare(package: model.current.map { model.shelf.package($0.id) }, hash: t.file.cover)
                     Text(Words.names).font(Look.Fonts.inspectorHeading)
                     let f = model.facts(t)
                     field(Words.title, t.ident.title, id: id, fact: f.title, field: "title") { v in
@@ -202,7 +224,8 @@ struct Inspector: View {
                         if let g = t.grid { row(Words.rowTempo, Words.tempoValue(bpm: g.bpm, bars: g.nBars, firstDownbeat: g.firstDownbeatS)) }
                         if let segs = t.tempoSegments, segs.count > 1 { row(Words.rowTempoChanges, Words.segments(segs.count)) }
                         if let k = t.key { row(Words.rowKey, Words.rowKeyText(camelot: k.camelot, key: k.key, scale: k.scale, notSure: t.flags.contains("key_uncertain"), help: String(TrackTable.keyHelp(t).dropFirst(k.camelot.count + 1)))) }
-                        else { row(Words.rowKey, Words.keyNotRead) }
+                        else if t.keyState == .homeNote, let h = t.keyHome { row(Words.rowKey, Words.homeNote(h.note)); row("", TrackTable.noKeyWords(t)) }
+                        else { row(Words.rowKey, TrackTable.noKeyWords(t)) }
                         if let s = t.ident.source { row(Words.rowNameFrom, Words.nameFrom(s)) }
                         if let ch = t.key?.changes, !ch.isEmpty { row(Words.rowKeyChanges, Words.keyChanges(ch.map { Words.keyFromBar($0.camelot, $0.startBar) })) }
                         if let l = t.loudness { row(Words.rowLoudness, Words.loudnessValue(lufs: l.integratedLufs, peak: l.truePeakDb)) }
@@ -326,5 +349,34 @@ struct NotesCell: View {
     var body: some View {
         let why = model.reason(track)
         Text(TrackTable.notes(track, reason: why)).foregroundStyle(why != nil ? Look.Colour.needsName : Color.secondary).lineLimit(1)
+    }
+}
+
+/// A song's cover in the names panel (D36): the crate file's `covers/<hash>.jpg`, read when the song is shown and
+/// never before, through the reader's checks (`CrateReader.coverData`). A song without one, a cover still being read,
+/// and one that cannot be shown all get the same empty square, so the fields below never move when a picture arrives.
+struct CoverSquare: View {
+    let package: URL?
+    let hash: String?
+    @State private var image: NSImage?
+    @State private var shown: String?
+
+    var body: some View {
+        ZStack {
+            RoundedRectangle(cornerRadius: Look.Shape.cover).fill(Look.Colour.coverEmpty)
+            if let image, shown == hash {
+                Image(nsImage: image).resizable().interpolation(.high).aspectRatio(contentMode: .fit)
+            }
+        }
+        .frame(width: Look.Size.cover, height: Look.Size.cover)
+        .clipShape(RoundedRectangle(cornerRadius: Look.Shape.cover))
+        .accessibilityElement()
+        .accessibilityLabel(image != nil && shown == hash ? Words.cover : Words.noCover)
+        .task(id: hash) {
+            image = nil; shown = hash
+            guard let package, let hash else { return }
+            let data = await Task.detached(priority: .utility) { CrateReader.coverData(in: package, hash: hash) }.value
+            if !Task.isCancelled, shown == hash, let data { image = NSImage(data: data) }
+        }
     }
 }
