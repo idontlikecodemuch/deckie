@@ -652,6 +652,36 @@ updated shortly, correct?"
   note with the wrong mode; the home-note answer exists so that Deckie does not guess it.
 - The owner's reading of where this stands: "Overall it feels like we are there or very close."
 
+### D39. Desk reads a song's name the way a DJ means it (Nov 14)
+From the lookup test on a real library (letter AA2) and the research it led to (letter AC). The owner, on the first
+wording of the changes: "all of this needs to be couched in how DJs use and organize their music", and on a
+version in a file's name: "It seems like Mike would use "show me love extended mix" or "yah dirty" as the song
+title."
+
+- **A song's name is its artist, its title and its version**, with clean or dirty where it applies. The version is
+  why a DJ owns that file. Three things are kept apart: everything is **kept** as the DJ wrote it; the title is
+  **shown** with its version; only the words **sent** to a lookup leave the version, marks, numbers and website
+  names out.
+- **Clean or dirty is a fact of its own**: clean, dirty, or not said. Read from the name and tags or set by the DJ,
+  never taken from a lookup. The booth can show it. How the booth lets a DJ choose between a clean and a dirty copy
+  is left to the design pass; the owner's first thought: "we show both and if they tap one it shows where it is."
+- **A version is compared by its kind**, not its spelling, from a list of version kinds that says which are
+  different audio. Only copies and remasters are the same recording as the original; every other version, a clean
+  edit included, is its own song (D19, D24).
+- **The artist is taken from a folder only when the folder is plainly one artist's album.** A compilation's folder
+  names the release; a dated folder or the DJ's own category names only the place.
+- **Of several credited artists, the first is the one a song is filed under and sent to a lookup; any of them
+  finds it in a search.** The credit is kept as written.
+- **A lookup never changes a DJ's name for a song, and never touches the DJ's genre**, which is the DJ's own way of
+  sorting, not a catalogue's.
+- **For a song from a compilation, two facts**: where the DJ's copy is, and when the song first came out.
+- **For a DJ's edit that no catalogue holds, Desk may take the original's year and label**, marked as the
+  original's, though its length cannot fit. (The owner: "The second I agree".) It is the one place the length check
+  is set aside.
+- **Changes to the lookup are judged on music it has not seen.** The music added on Nov 13 is split in two by whole
+  folder: one half for this round, the other kept untouched for a later check. ("Let's talk half of it for this
+  round so we have a fresh half later.")
+
 ### Note on D19 (Nov 1): versions of a song stay separate rows
 Christopher, on two remixes of one song both showing in the picks: "we shouldn't merge them unless they are the same
 songs. DJs often have a bunch of versions of the same song". So the booth folds together only copies of the same
