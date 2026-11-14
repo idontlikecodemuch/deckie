@@ -164,9 +164,14 @@ final class EngineProcess: @unchecked Sendable {
         let beforeMove = e.received.count
         _ = try e.request("song.move", ["song": "bbbb", "source": "Stick Three", "folder": "House", "by": -1])
         // The songs event follows the reply; wait for it rather than take the last one seen.
-        let moved = try #require(e.wait(from: beforeMove) { $0["event"] as? String == "songs" })
-        let folder = (((moved["sources"] as? [[String: Any]])?.first)?["folders"] as? [[String: Any]])?.first
-        #expect((folder?["songs"] as? [[String: Any]])?.map { $0["id"] as? String } == ["bbbb", "aaaa"])
+        // The rename's own songs event may still be on its way when the move is asked for, so the one waited for is
+        // the one that shows the move, not merely the next.
+        func firstFolderIds(_ m: [String: Any]) -> [String?]? {
+            let folder = (((m["sources"] as? [[String: Any]])?.first)?["folders"] as? [[String: Any]])?.first
+            return (folder?["songs"] as? [[String: Any]])?.map { $0["id"] as? String }
+        }
+        let moved = e.wait(from: beforeMove) { $0["event"] as? String == "songs" && firstFolderIds($0) == ["bbbb", "aaaa"] }
+        #expect(moved != nil, "no songs event showed the move")
         #expect((try e.request("source.removeCount", ["source": "Stick Three"])["songs"] as? NSNumber)?.intValue == 2)
 
         // The crate menu: rename, a new crate, back.
