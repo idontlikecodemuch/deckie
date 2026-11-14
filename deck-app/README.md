@@ -14,7 +14,7 @@ Deck app/
   Deck/
     Sources/
       DeckApp.swift           app, tabs, suggestion state, deck:// test hooks
-      Model.swift             bundled data model, theme colours (the web player's tokens)
+      Model.swift             bundled data model
       Mixing.swift            joinInfo / keyVerdict port + the suggestion sampler
       Recognizer.swift        microphone + file-test matching, position / pitch / confidence logic
       ListenView.swift        Listen page: playing panel, whole-song wave, chips
@@ -22,7 +22,8 @@ Deck app/
       SuggestionsView.swift   Up next: Simple / Full and the Shuffle dial, the ranked picks, More, JoinView (Canvas port of drawJoin)
       OtherViews.swift        the Crate tab (sources and folders, Open crate file), Mix map (WKWebView)
       CrateLibrary.swift      a crate file as the booth sees it (tracks, places, waves, signatures, picks)
-      Words.swift             the words for opening crate files and songs with no name (placeholders, D28)
+      Words.swift             every word the booth shows, by screen (D28, D36)
+      Look.swift              every design value: Theme (the web player's colours) and Look, by screen (D36)
     Resources/
       deck_data.json          built by tools/prep_data.py
       overview.json           whole-song waveforms (tools/overview_waves.py, also run by prep_data.py)
@@ -36,6 +37,20 @@ Deck app/
     catalogtool/main.swift    macOS command-line tool: signatures, catalog, matching bench, live mic test
     build/                    caches: sigs/ (signatures), mixwaves_all.json, manifest.json
 ```
+
+## Words and design values (D36)
+
+- **Words**: every word the booth shows, speaks or puts in a chip is in `Deck/Sources/Words.swift`, organised by
+  screen, each with a note of where it shows. Words built from parts are functions with named blanks
+  (`Words.syncBarsLeft(3)`); separators are words too.
+- **Design values**: every colour, font, size, space, corner, opacity, line and time is in `Deck/Sources/Look.swift`:
+  `Theme` (the web player's colours) and `Look`, grouped by screen (`Look.Listen`, `Look.Picks`, `Look.Crate`,
+  `Look.Join`, `Look.FX` and the rest). Left in the views: the system's named roles (`.secondary`), SF Symbol
+  names, 0, and the drawings' own arithmetic.
+- **To change one**: a word in Words.swift, a design value in Look.swift. Nothing else changes.
+- **The rule**: views hold neither. The core's `BoothVariablesTests` read the views and fail when one creeps back
+  in. Recognizer.swift's few words (the test sheet's pitch details) are still there, and SetRecorder writes files,
+  not the screen.
 
 ## Rebuild the data and the catalog (after tracks change)
 

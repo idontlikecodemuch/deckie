@@ -15,39 +15,37 @@ struct DebugSheet: View {
     var body: some View {
         NavigationStack {
             Form {
-                Section("Test with file") {
-                    Stepper("Start at \(Int(start)) s", value: $start, in: 0...600, step: 15)
-                    Picker("Play it as", selection: $render) {
-                        Text("original").tag("o")
-                        Text("vinyl −8").tag("r-8"); Text("vinyl −4").tag("r-4"); Text("vinyl +4").tag("r+4"); Text("vinyl +8").tag("r+8")
-                        Text("tempo −4").tag("t-4"); Text("tempo +4").tag("t+4"); Text("tempo +8").tag("t+8")
+                Section(Words.testWithFileSection) {
+                    Stepper(Words.startAt(Int(start)), value: $start, in: 0...600, step: 15)
+                    Picker(Words.playItAs, selection: $render) {
+                        ForEach(Words.renders, id: \.code) { Text($0.words).tag($0.code) }
                     }
-                    Toggle("Keep going (simulate playing)", isOn: $loop)
-                    Button("Choose an audio file…") { importing = true }
+                    Toggle(Words.keepGoing, isOn: $loop)
+                    Button(Words.chooseAudioFile) { importing = true }
                     ForEach(files, id: \.self) { u in
                         Button(u.lastPathComponent) { rec.testFile(u, start: start, render: render, loop: loop); dismiss() }
                     }
                 }
-                Section("Set recording") {
+                Section(Words.setRecording) {
                     @Bindable var rec = rec
-                    Toggle("Record while listening", isOn: $rec.recordingOn)
-                    if rec.recActive { Button(rec.recPaused ? "Resume recording" : "Pause recording") { rec.toggleRecPause() } }
-                    Text("Files: Files app > On My iPad > Deck > Sets (or Finder > iPad > Files).").font(.footnote).foregroundStyle(.secondary)
-                    ForEach(setFiles, id: \.self) { Text($0).font(.system(size: 13, design: .monospaced)) }
+                    Toggle(Words.recordWhileListening, isOn: $rec.recordingOn)
+                    if rec.recActive { Button(rec.recPaused ? Words.resumeRecording : Words.pauseRecording) { rec.toggleRecPause() } }
+                    Text(Words.setFilesWhere).font(Look.Debug.noteFont).foregroundStyle(.secondary)
+                    ForEach(setFiles, id: \.self) { Text($0).font(Look.Debug.fileFont) }
                 }
-                Section("Status") {
-                    LabeledContent("Matches", value: "\(rec.matchCount)")
-                    LabeledContent("Last match latency", value: String(format: "%.0f ms", rec.lastLatencyMs))
-                    if let f = rec.firstMatchSeconds { LabeledContent("Time to recognise current song", value: String(format: "%.1f s", f)) }
-                    LabeledContent("Pitch", value: "\(signed1(rec.pitchPct))% \(rec.pitchKind.rawValue) (\(rec.pitchFrom))")
-                    Button("Back to the microphone") { rec.startMic(); dismiss() }
+                Section(Words.status) {
+                    LabeledContent(Words.matches, value: "\(rec.matchCount)")
+                    LabeledContent(Words.lastLatency, value: Words.milliseconds(rec.lastLatencyMs))
+                    if let f = rec.firstMatchSeconds { LabeledContent(Words.timeToRecognise, value: Words.seconds(f)) }
+                    LabeledContent(Words.pitch, value: Words.pitchValue(signed1(rec.pitchPct), rec.pitchKind.rawValue, rec.pitchFrom))
+                    Button(Words.backToMic) { rec.startMic(); dismiss() }
                 }
-                Section("Log") {
-                    ForEach(Array(rec.log.reversed().enumerated()), id: \.offset) { Text($0.element).font(.system(size: 12, design: .monospaced)) }
+                Section(Words.log) {
+                    ForEach(Array(rec.log.reversed().enumerated()), id: \.offset) { Text($0.element).font(Look.Debug.logFont) }
                 }
             }
-            .navigationTitle("Debug")
-            .toolbar { Button("Done") { dismiss() } }
+            .navigationTitle(Words.debugTitle)
+            .toolbar { Button(Words.done) { dismiss() } }
             .fileImporter(isPresented: $importing, allowedContentTypes: [.audio, .mp3, .mpeg4Audio, .wav]) { r in
                 if case .success(let u) = r { rec.testFile(u, start: start, render: render, loop: loop); dismiss() }
             }
@@ -66,10 +64,10 @@ struct LevelMeter: View {
     var body: some View {
         let x = CGFloat(min(1, max(0, (db + 60) / 60)))
         ZStack(alignment: .leading) {
-            Capsule().fill(Color.white.opacity(0.1))
-            Capsule().fill(LinearGradient(colors: [Theme.mix, Theme.ok, Theme.amber], startPoint: .leading, endPoint: .trailing)).frame(width: 70 * x)
+            Capsule().fill(Look.Debug.meterTrack)
+            Capsule().fill(LinearGradient(colors: [Theme.mix, Theme.ok, Theme.amber], startPoint: .leading, endPoint: .trailing)).frame(width: Look.Debug.meterWidth * x)
         }
-        .frame(width: 70, height: 8)
-        .accessibilityLabel("Input level")
+        .frame(width: Look.Debug.meterWidth, height: Look.Debug.meterHeight)
+        .accessibilityLabel(Words.inputLevel)
     }
 }

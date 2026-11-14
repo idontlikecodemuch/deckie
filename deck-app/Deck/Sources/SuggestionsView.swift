@@ -16,7 +16,7 @@ struct UpNextPanel: View {
     var body: some View {
         @Bindable var sug = sug
         let m = RowMetrics(simple: sug.mode == .simple, minimal: sug.minimal)
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: Look.Picks.panelGap) {
             PickControls()
             if let cur = rec.current {
                 ScrollViewReader { proxy in
@@ -24,24 +24,24 @@ struct UpNextPanel: View {
                     VStack(alignment: .leading, spacing: 0) {
                         let picks = sug.options.filter { $0.kind == .pick }
                         if let pinned = sug.options.first(where: { $0.kind == .pinned }), let t = Library.shared.placed(pinned.id, playingDisc: cur.disc, among: sug.target.allows) {
-                            groupLabel("Next")
-                            if sug.minimal { PlainPick(cur: cur, target: t, pair: pinned.pair, kind: .pinned, tags: [], big: m.simple).padding(.top, 6) }
+                            groupLabel(Words.groupNext)
+                            if sug.minimal { PlainPick(cur: cur, target: t, pair: pinned.pair, kind: .pinned, tags: [], big: m.simple).padding(.top, Look.Picks.plainPinnedTop) }
                             else { NextRow(cur: cur, target: t, pair: pinned.pair, kind: .pinned, tags: [], zoom: zoom, m: m) }
                             Color.clear.frame(height: m.groupGap)
                         }
                         if picks.isEmpty {
-                            Text(sug.target.label.isEmpty ? "Switch on \((Library.shared.data.discs.map(\.short) + ["All"]).joinedWithOr) above." : "No good matches in \(sug.target.label).")
-                                .font(.system(size: 20)).foregroundStyle(Theme.dim).padding(.vertical, 40)
+                            Text(sug.target.label.isEmpty ? Words.switchOn((Library.shared.data.discs.map(\.short) + [Words.all]).joinedWithOr) : Words.noGoodMatches(sug.target.label))
+                                .font(Look.Picks.emptyFont).foregroundStyle(Theme.dim).padding(.vertical, Look.Picks.emptyPadding)
                         } else {
                             VStack(alignment: .leading, spacing: m.cardGap) {
-                                groupLabel("Picks")
+                                groupLabel(Words.groupPicks)
                                 ForEach(picks) { o in row(cur, o, m) }
                             }
                         }
                         if !sug.rest.isEmpty {
-                            groupLabel("More").padding(.top, m.groupGap).padding(.bottom, m.cardGap).id("more")
+                            groupLabel(Words.groupMore).padding(.top, m.groupGap).padding(.bottom, m.cardGap).id("more")
                             MoreSearchField(text: $sug.moreQuery, focused: $searchFocused)
-                                .padding(.bottom, m.cardGap + 4)
+                                .padding(.bottom, m.cardGap + Look.Picks.searchBelowExtra)
                             // the rest of the crate: a few thousand rows in a big library, built as they scroll in
                             let q = sug.moreQuery.trimmingCharacters(in: .whitespaces)
                             LazyVStack(alignment: .leading, spacing: m.cardGap) {
@@ -49,7 +49,7 @@ struct UpNextPanel: View {
                                     let cut = min(sug.restShortlist, sug.rest.count)
                                     ForEach(sug.rest[..<cut]) { o in row(cur, o, m) }
                                     if cut < sug.rest.count {
-                                        ShortlistEndMarker().padding(.vertical, m.simple ? 10 : 6).id("crate-rest")
+                                        ShortlistEndMarker().padding(.vertical, m.simple ? Look.Picks.markerPaddingSimple : Look.Picks.markerPadding).id("crate-rest")
                                         ForEach(sug.rest[cut...]) { o in row(cur, o, m) }
                                     }
                                 } else {
@@ -58,15 +58,15 @@ struct UpNextPanel: View {
                                         return t.matches(q)
                                     }
                                     if hits.isEmpty {
-                                        Text("Nothing in More matches \u{201C}\(q)\u{201D}.").font(.system(size: 17)).foregroundStyle(Theme.dim).padding(.vertical, 20)
+                                        Text(Words.nothingMatches(q)).font(Look.Picks.nothingFont).foregroundStyle(Theme.dim).padding(.vertical, Look.Picks.nothingPadding)
                                     }
                                     ForEach(hits) { o in row(cur, o, m) }
                                 }
-                                Color.clear.frame(height: 1).id("more-end")   // test hook: scroll?to=more-end
+                                Color.clear.frame(height: Look.Picks.endAnchor).id("more-end")   // test hook: scroll?to=more-end
                             }
                         }
                     }
-                    .padding(.bottom, 30 + keyboardHeight)
+                    .padding(.bottom, Look.Picks.listFoot + keyboardHeight)
                 }
                 .scrollDismissesKeyboard(.interactively)
                 .onChange(of: searchFocused) { _, f in if f { withAnimation { proxy.scrollTo("more", anchor: .top) } } }
@@ -89,14 +89,14 @@ struct UpNextPanel: View {
     /// its "also on".
     @ViewBuilder private func row(_ cur: Track, _ o: Option, _ m: RowMetrics) -> some View {
         if let t = Library.shared.placed(o.id, playingDisc: cur.disc, among: sug.target.allows) {
-            if sug.minimal { PlainPick(cur: cur, target: t, pair: o.pair, kind: o.kind, tags: o.tags, big: m.simple).padding(.top, sug.minimal ? 14 : 0) }
+            if sug.minimal { PlainPick(cur: cur, target: t, pair: o.pair, kind: o.kind, tags: o.tags, big: m.simple).padding(.top, sug.minimal ? Look.Picks.plainTop : 0) }
             else { NextRow(cur: cur, target: t, pair: o.pair, kind: o.kind, tags: o.tags, zoom: zoom, m: m) }
         }
     }
 
     private func groupLabel(_ s: String) -> some View {
-        Text(s.uppercased()).font(.system(size: 13, weight: .bold)).kerning(1.2).foregroundStyle(Theme.dim)
-            .frame(height: sug.mode == .simple ? 22 : 17, alignment: .bottomLeading)
+        Text(s.uppercased()).font(Look.Picks.groupFont).kerning(Look.Picks.groupKerning).foregroundStyle(Theme.dim)
+            .frame(height: sug.mode == .simple ? Look.Picks.groupHeightSimple : Look.Picks.groupHeight, alignment: .bottomLeading)
     }
 
 }
@@ -107,36 +107,36 @@ struct MoreSearchField: View {
     var focused: FocusState<Bool>.Binding
 
     var body: some View {
-        HStack(spacing: 8) {
-            Image(systemName: "magnifyingglass").font(.system(size: 16, weight: .medium)).foregroundStyle(Theme.dim)
-            TextField("", text: $text, prompt: Text("Search More by title or artist").foregroundStyle(Theme.dim))
-                .font(.system(size: 17)).foregroundStyle(Theme.tx).tint(Theme.orange)
+        HStack(spacing: Look.Search.gap) {
+            Image(systemName: "magnifyingglass").font(Look.Search.iconFont).foregroundStyle(Theme.dim)
+            TextField("", text: $text, prompt: Text(Words.searchMore).foregroundStyle(Theme.dim))
+                .font(Look.Search.font).foregroundStyle(Theme.tx).tint(Theme.orange)
                 .textInputAutocapitalization(.never).autocorrectionDisabled().submitLabel(.search)
                 .focused(focused)
                 .onSubmit { focused.wrappedValue = false }
             if !text.isEmpty {
                 Button { text = "" } label: {
-                    Image(systemName: "xmark.circle.fill").font(.system(size: 18)).foregroundStyle(Theme.mut)
-                        .frame(width: 44, height: 44).contentShape(Rectangle())
+                    Image(systemName: "xmark.circle.fill").font(Look.Search.clearFont).foregroundStyle(Theme.mut)
+                        .frame(width: Look.Search.clearSize, height: Look.Search.clearSize).contentShape(Rectangle())
                 }
-                .accessibilityLabel("Clear search")
+                .accessibilityLabel(Words.clearSearch)
             }
         }
-        .padding(.leading, 14).padding(.trailing, text.isEmpty ? 14 : 0)
-        .frame(minHeight: 44)
-        .background(RoundedRectangle(cornerRadius: 12).fill(Color.white.opacity(0.06)))
-        .overlay(RoundedRectangle(cornerRadius: 12).stroke(focused.wrappedValue ? Theme.orange.opacity(0.6) : Theme.line, lineWidth: 1))
-        .frame(maxWidth: 520, alignment: .leading)
+        .padding(.leading, Look.Search.sides).padding(.trailing, text.isEmpty ? Look.Search.sides : 0)
+        .frame(minHeight: Look.Search.minHeight)
+        .background(RoundedRectangle(cornerRadius: Look.Search.radius).fill(Look.Search.fill))
+        .overlay(RoundedRectangle(cornerRadius: Look.Search.radius).stroke(focused.wrappedValue ? Theme.orange.opacity(Look.Search.focusOpacity) : Theme.line, lineWidth: Look.Search.line))
+        .frame(maxWidth: Look.Search.maxWidth, alignment: .leading)
     }
 }
 
 /// Where the shortlist ends in More: a thin line with a small dim label.
 struct ShortlistEndMarker: View {
     var body: some View {
-        HStack(spacing: 10) {
-            Rectangle().fill(Theme.line).frame(width: 24, height: 1)
-            Text("rest of the crate, by score").font(.system(size: 12, weight: .medium)).foregroundStyle(Theme.dim).fixedSize()
-            Rectangle().fill(Theme.line).frame(height: 1)
+        HStack(spacing: Look.Marker.gap) {
+            Rectangle().fill(Theme.line).frame(width: Look.Marker.leadWidth, height: Look.Marker.line)
+            Text(Words.restOfCrate).font(Look.Marker.font).foregroundStyle(Theme.dim).fixedSize()
+            Rectangle().fill(Theme.line).frame(height: Look.Marker.line)
         }
         .accessibilityElement(children: .combine)
     }
@@ -144,22 +144,22 @@ struct ShortlistEndMarker: View {
 
 /// "128 BPM · pitch +3.2%" ("128→140 BPM" when the song changes tempo; no pitch when it can't be beat-matched)
 func pickBPMLine(_ t: Track, _ pair: Pair?, _ ji: JoinInfo) -> String {
-    var bpm = String(format: "%.0f BPM", t.bpmShown)
-    if let bi = t.bpmIn, abs(bi / max(1, t.bpmShown) - 1) > 0.02 { bpm = String(format: "%.0f→%.0f BPM", bi, t.bpmShown) }
+    var bpm = Words.bpm(t.bpmShown)
+    if let bi = t.bpmIn, abs(bi / max(1, t.bpmShown) - 1) > 0.02 { bpm = Words.bpmChange(bi, t.bpmShown) }
     guard pair?.tr != "brake_cut", ji.beatMatch, let p = ji.pitch else { return bpm }
-    return bpm + " · pitch " + signed1(p) + "%" + (pair.map { $0.m != "1" ? " (x\($0.m))" : "" } ?? "")
+    return Words.pitchAfterBPM(bpm, signed1(p)) + (pair.map { $0.m != "1" ? Words.tempoMultiple($0.m) : "" } ?? "")
 }
 /// the move: "blend", "echo out · key clash", "no beat-match · brake"
 func pickMoveLine(_ pair: Pair?, _ ji: JoinInfo) -> String {
     var parts: [String] = []
-    if pair?.tr == "brake_cut" || !ji.beatMatch { parts.append("no beat-match") }
+    if pair?.tr == "brake_cut" || !ji.beatMatch { parts.append(Words.noBeatMatch) }
     if let p = pair {
         // the moves as a small menu: primary / alternative
-        let mv = (p.mv?.isEmpty == false ? p.mv! : [p.trl]).map { $0 == "brake/cut" ? "brake" : $0 }
-        parts.append(mv.prefix(2).joined(separator: " / "))
+        let mv = (p.mv?.isEmpty == false ? p.mv! : [p.trl]).map { $0 == Words.brakeCut ? Words.brake : $0 }
+        parts.append(mv.prefix(2).joined(separator: Words.movesJoin))
     }
-    if ji.verdict == "clash" { parts.append("key clash") }
-    return parts.joined(separator: " · ")
+    if ji.verdict == "clash" { parts.append(Words.keyClash) }
+    return parts.joined(separator: Words.moveLineJoin)
 }
 
 struct PickControls: View {
@@ -172,8 +172,8 @@ struct PickControls: View {
     /// on the right.
     var body: some View {
         @Bindable var sug = sug
-        return HStack(spacing: 12) {
-            toggle(["Simple", "Full"], sug.mode == .simple ? 0 : 1) { i in sug.mode = i == 0 ? .simple : .full; sug.reroll(rec) }
+        return HStack(spacing: Look.Controls.pickControlsGap) {
+            toggle([Words.simple, Words.full], sug.mode == .simple ? 0 : 1) { i in sug.mode = i == 0 ? .simple : .full; sug.reroll(rec) }
                 .fixedSize()
             shuffleDial($sug.shuffle)
             Spacer(minLength: 0)
@@ -181,7 +181,7 @@ struct PickControls: View {
                 ForEach(Library.shared.data.discs, id: \.disc) { d in
                     libChip(d.short, on: sug.target.isOn(d.disc), color: d.color) { sug.target.toggle(d.disc); sug.reroll(rec) }
                 }
-                libChip("All", on: sug.target.other, color: Theme.acc) { sug.target.other.toggle(); sug.reroll(rec) }
+                libChip(Words.all, on: sug.target.other, color: Theme.acc) { sug.target.other.toggle(); sug.reroll(rec) }
             }
         }
     }
@@ -189,48 +189,48 @@ struct PickControls: View {
     /// The Shuffle dial: 0% = the shortlist in score order, 100% = a fair shuffle of it. Letting go re-rolls the
     /// picks (and so does each step from VoiceOver's adjust gesture).
     private func shuffleDial(_ value: Binding<Double>) -> some View {
-        HStack(spacing: 10) {
-            HStack(spacing: 5) {
-                Text("Shuffle").font(.system(size: 15)).foregroundStyle(Theme.dim)
-                Text("\(Int((value.wrappedValue * 100).rounded()))%").font(.system(size: 15, weight: .semibold).monospacedDigit())
-                    .foregroundStyle(Theme.tx).frame(width: 44, alignment: .leading)
+        HStack(spacing: Look.Controls.dialGap) {
+            HStack(spacing: Look.Controls.dialLabelGap) {
+                Text(Words.shuffle).font(Look.Controls.dialFont).foregroundStyle(Theme.dim)
+                Text(Words.percent(Int((value.wrappedValue * 100).rounded()))).font(Look.Controls.dialValueFont)
+                    .foregroundStyle(Theme.tx).frame(width: Look.Controls.dialValueWidth, alignment: .leading)
             }
             .lineLimit(1).fixedSize()
             Slider(value: value, in: 0...1, step: 0.05) { editing in
                 dragging = editing
                 if !editing { sug.reroll(rec) }
             }
-            .frame(minWidth: 90, maxWidth: 190)
+            .frame(minWidth: Look.Controls.dialMinWidth, maxWidth: Look.Controls.dialMaxWidth)
         }
-        .frame(minHeight: 44)
+        .frame(minHeight: Look.Controls.dialMinHeight)
         .onChange(of: value.wrappedValue) { _, v in if !dragging && v != sug.rolledShuffle { sug.reroll(rec) } }
         .accessibilityElement(children: .contain)
-        .accessibilityLabel("Shuffle")
+        .accessibilityLabel(Words.shuffle)
     }
 
     private func libChip(_ t: String, on: Bool, color: Color, _ act: @escaping () -> Void) -> some View {
         Button(action: act) {
-            Text(t).font(.system(size: 14, weight: on ? .semibold : .regular))
+            Text(t).font(Look.Chips.libraryFont(on))
                 .foregroundStyle(on ? Theme.tx : Theme.dim)
-                .padding(.horizontal, 11).frame(height: 30)
-                .background(Capsule().fill(on ? color.opacity(0.28) : Color.clear))
-                .overlay(Capsule().stroke(on ? Color.clear : Theme.dim.opacity(0.4), lineWidth: 1))
+                .padding(.horizontal, Look.Chips.librarySides).frame(height: Look.Chips.libraryHeight)
+                .background(Capsule().fill(on ? color.opacity(Look.Chips.libraryOnOpacity) : Color.clear))
+                .overlay(Capsule().stroke(on ? Color.clear : Theme.dim.opacity(Look.Chips.libraryOffOpacity), lineWidth: Look.Chips.libraryLine))
         }
-        .frame(minHeight: 40)
+        .frame(minHeight: Look.Chips.libraryMinHeight)
         .fixedSize()
         .accessibilityAddTraits(on ? .isSelected : [])
     }
 
     private func toggle(_ labels: [String], _ sel: Int, _ act: @escaping (Int) -> Void) -> some View {
-        HStack(spacing: 2) {
+        HStack(spacing: Look.Controls.modeGap) {
             ForEach(labels.indices, id: \.self) { i in
                 Button { act(i) } label: {
-                    Text(labels[i]).font(.system(size: 15, weight: i == sel ? .semibold : .regular))
+                    Text(labels[i]).font(Look.Controls.modeFont(i == sel))
                         .foregroundStyle(i == sel ? Theme.tx : Theme.dim)
-                        .padding(.horizontal, 7).frame(minHeight: 36)
+                        .padding(.horizontal, Look.Controls.modeSides).frame(minHeight: Look.Controls.modeMinHeight)
                 }
                 .accessibilityAddTraits(i == sel ? .isSelected : [])
-                if i < labels.count - 1 { Text("/").font(.system(size: 15)).foregroundStyle(Theme.dim.opacity(0.5)) }
+                if i < labels.count - 1 { Text(Words.modeJoin).font(Look.Controls.modeJoinFont).foregroundStyle(Theme.dim.opacity(Look.Controls.modeJoinOpacity)) }
             }
         }
     }
@@ -239,18 +239,18 @@ struct PickControls: View {
 struct RowMetrics {
     let simple: Bool
     var minimal = false
-    var titleSize: CGFloat { simple ? 25 : 19 }
-    var lineSize: CGFloat { simple ? 16 : 12.5 }      // folder path, artist
-    var bpmSize: CGFloat { simple ? 18 : 15 }
-    var smallSize: CGFloat { simple ? 16 : 13 }
-    var textWidth: CGFloat { simple ? 275 : 235 }
-    var waveHeight: CGFloat { simple ? 96 : 68 }
-    var cardHeight: CGFloat { simple ? 152 : 106 }
-    var padH: CGFloat { simple ? 20 : 16 }
-    var padV: CGFloat { simple ? 14 : 7 }
-    var cardGap: CGFloat { simple ? 10 : 6 }
-    var groupGap: CGFloat { minimal ? 40 : simple ? 30 : 12 }
-    var labelHeight: CGFloat { simple ? 22 : 17 }
+    var titleSize: CGFloat { simple ? Look.Picks.titleSimple : Look.Picks.title }
+    var lineSize: CGFloat { simple ? Look.Picks.lineSimple : Look.Picks.line }      // folder path, artist
+    var bpmSize: CGFloat { simple ? Look.Picks.bpmSimple : Look.Picks.bpm }
+    var smallSize: CGFloat { simple ? Look.Picks.smallSimple : Look.Picks.small }
+    var textWidth: CGFloat { simple ? Look.Picks.textWidthSimple : Look.Picks.textWidth }
+    var waveHeight: CGFloat { simple ? Look.Picks.waveHeightSimple : Look.Picks.waveHeight }
+    var cardHeight: CGFloat { simple ? Look.Picks.cardHeightSimple : Look.Picks.cardHeight }
+    var padH: CGFloat { simple ? Look.Picks.sidesSimple : Look.Picks.sides }
+    var padV: CGFloat { simple ? Look.Picks.topSimple : Look.Picks.top }
+    var cardGap: CGFloat { simple ? Look.Picks.cardGapSimple : Look.Picks.cardGap }
+    var groupGap: CGFloat { minimal ? Look.Picks.groupGapMinimal : simple ? Look.Picks.groupGapSimple : Look.Picks.groupGap }
+    var labelHeight: CGFloat { simple ? Look.Picks.groupHeightSimple : Look.Picks.groupHeight }
 }
 
 /// One pick in a soft card: folder path, "06 · Title", artist, BPM · pitch, one small info line; the join wave right after.
@@ -268,52 +268,52 @@ struct NextRow: View {
 
     var body: some View {
         let ji = joinInfo(cur, target, pair, deckAPitch: rec.source == .manual ? 0 : rec.pitchPct)
-        HStack(alignment: .center, spacing: 18) {
-            VStack(alignment: .leading, spacing: m.simple ? 3 : 1) {
-                Text(target.folderPath).font(.system(size: m.lineSize, weight: .semibold, design: .rounded)).foregroundStyle(target.on ? target.discColor : Theme.mut).lineLimit(1)
+        HStack(alignment: .center, spacing: Look.Picks.rowGap) {
+            VStack(alignment: .leading, spacing: m.simple ? Look.Picks.textGapSimple : Look.Picks.textGap) {
+                Text(target.folderPath).font(Look.Picks.placeFont(m.lineSize)).foregroundStyle(target.on ? target.discColor : Theme.mut).lineLimit(1)
                 if let also = Library.shared.alsoOn(target, playingDisc: cur.disc) {
-                    Text(also).font(.system(size: m.smallSize, design: .rounded)).foregroundStyle(Theme.dim).lineLimit(1).minimumScaleFactor(0.8)
+                    Text(also).font(Look.Picks.alsoFont(m.smallSize)).foregroundStyle(Theme.dim).lineLimit(1).minimumScaleFactor(Look.Picks.alsoShrink)
                 }
-                Text(target.numberedSong).font(.system(size: m.titleSize, weight: .semibold)).foregroundStyle(Theme.tx).lineLimit(1).minimumScaleFactor(0.75)
-                Text(target.secondLine).font(.system(size: m.lineSize)).foregroundStyle(Theme.dim).lineLimit(1)
-                Text(bpmLine(ji)).font(.system(size: m.bpmSize, weight: .regular, design: .rounded)).foregroundStyle(Theme.amber.opacity(0.85)).lineLimit(1).padding(.top, m.simple ? 3 : 1)
-                Text(smallLine(ji)).font(.system(size: m.smallSize + 1)).foregroundStyle(Theme.mut).lineLimit(1).minimumScaleFactor(0.8)
+                Text(target.numberedSong).font(Look.Picks.titleFont(m.titleSize)).foregroundStyle(Theme.tx).lineLimit(1).minimumScaleFactor(Look.Picks.titleShrink)
+                Text(target.secondLine).font(Look.Picks.artistFont(m.lineSize)).foregroundStyle(Theme.dim).lineLimit(1)
+                Text(bpmLine(ji)).font(Look.Picks.bpmFont(m.bpmSize)).foregroundStyle(Theme.amber.opacity(Look.Picks.bpmOpacity)).lineLimit(1).padding(.top, m.simple ? Look.Picks.bpmTopSimple : Look.Picks.bpmTop)
+                Text(smallLine(ji)).font(Look.Picks.moveFont(m.smallSize)).foregroundStyle(Theme.mut).lineLimit(1).minimumScaleFactor(Look.Picks.moveShrink)
             }
             .frame(width: m.textWidth, alignment: .leading)
             if let wa = cur.wOut, let wb = target.wHead ?? target.wIn {
                 let pts = StartPoint.candidates(for: target)
                 let sp = pts[(sug.startIdx[target.id] ?? 0) % max(1, pts.count)]
-                VStack(alignment: .leading, spacing: 2) {
+                VStack(alignment: .leading, spacing: Look.Picks.joinGap) {
                     JoinView(a: cur, b: target, wa: wa, wb: wb, startB: sp.t, info: ji, zoom: zoom, height: m.waveHeight, marks: pts.map(\.t))
                         .contentShape(Rectangle())
                         .onTapGesture { sug.startIdx[target.id] = ((sug.startIdx[target.id] ?? 0) + 1) % max(1, pts.count) }
-                        .accessibilityHint("Tap to try another start point of the next song")
+                        .accessibilityHint(Words.tryAnotherStart)
                     GeometryReader { g in
-                        let fs: CGFloat = m.simple ? 13 : 11
-                        let tw = fs * 0.62 * CGFloat(fmtTime(sp.t).count)        // monospaced width of "0:34"
-                        HStack(alignment: .firstTextBaseline, spacing: 6) {
-                            Text(fmtTime(sp.t)).font(.system(size: fs, weight: .semibold, design: .monospaced)).foregroundStyle(Theme.mut)
-                            if pts.count > 1 { Text("\(pts.count) syncs").font(.system(size: m.simple ? 10 : 9)).foregroundStyle(Theme.dim) }
+                        let fs: CGFloat = m.simple ? Look.Picks.startTimeSimple : Look.Picks.startTime
+                        let tw = fs * Look.Picks.monoWidthShare * CGFloat(fmtTime(sp.t).count)        // monospaced width of "0:34"
+                        HStack(alignment: .firstTextBaseline, spacing: Look.Picks.startGap) {
+                            Text(fmtTime(sp.t)).font(Look.Picks.startTimeFont(fs)).foregroundStyle(Theme.mut)
+                            if pts.count > 1 { Text(Words.syncs(pts.count)).font(Look.Picks.syncsFont(m.simple)).foregroundStyle(Theme.dim) }
                         }
                         .lineLimit(1).fixedSize()
-                        .offset(x: max(0, g.size.width * 0.25 - tw / 2))
+                        .offset(x: max(0, g.size.width * Look.Picks.startTimeAt - tw / 2))
                     }
-                    .frame(height: m.simple ? 16 : 14)
+                    .frame(height: m.simple ? Look.Picks.startRowSimple : Look.Picks.startRow)
                 }
                 .frame(maxWidth: .infinity)
             } else { Spacer() }
         }
-        .padding(.horizontal, m.padH).padding(.top, m.padV).padding(.bottom, max(2, m.padV * 0.35))
+        .padding(.horizontal, m.padH).padding(.top, m.padV).padding(.bottom, max(Look.Picks.bottomMin, m.padV * Look.Picks.bottomShare))
         .frame(height: m.cardHeight)
-        .background(RoundedRectangle(cornerRadius: 16).fill(Color.white.opacity(0.045)))
-        .overlay(alignment: .topTrailing) { cornerChips.padding(.top, 7).padding(.trailing, 10) }
-        .overlay(alignment: .leading) { if kind == .pinned { Capsule().fill(Theme.orange).frame(width: 4).padding(.vertical, 16) } }
+        .background(RoundedRectangle(cornerRadius: Look.Picks.cardRadius).fill(Look.Picks.cardFill))
+        .overlay(alignment: .topTrailing) { cornerChips.padding(.top, Look.Picks.chipsTop).padding(.trailing, Look.Picks.chipsTrailing) }
+        .overlay(alignment: .leading) { if kind == .pinned { Capsule().fill(Theme.orange).frame(width: Look.Picks.pinnedBar).padding(.vertical, Look.Picks.pinnedBarInset) } }
         .contentShape(Rectangle())
         .onTapGesture { sug.pin(target.id, rec) }
         .onLongPressGesture { showDetail = true }
         .popover(isPresented: $showDetail) { detail(ji).presentationCompactAdaptation(.popover) }
         .accessibilityElement(children: .combine)
-        .accessibilityHint(kind == .pinned ? "Tap to unpin" : "Tap to pin as next, long-press for why")
+        .accessibilityHint(kind == .pinned ? Words.tapToUnpin : Words.tapToPin)
     }
 
     private func bpmLine(_ ji: JoinInfo) -> String { pickBPMLine(target, pair, ji) }
@@ -321,39 +321,31 @@ struct NextRow: View {
 
     /// tiny chips in the card's upper-right corner: what is unexpected about the pick (its first tag), Halloween, remix
     private var cornerChips: some View {
-        HStack(spacing: 4) {
-            if kind == .pick, let t = tags.first(where: { $0 != "Halloween" }) { TinyChip(text: t) }
-            if target.hal { TinyChip(text: "🎃") }
-            if target.isRemix { TinyChip(text: "RMX") }
+        HStack(spacing: Look.Chips.cornerGap) {
+            if kind == .pick, let t = tags.first(where: { $0 != Words.tagHalloween }) { TinyChip(text: t) }
+            if target.hal { TinyChip(text: Words.pumpkin) }
+            if target.isRemix { TinyChip(text: Words.remixMark) }
         }
     }
 
     private func detail(_ ji: JoinInfo) -> some View {
-        VStack(alignment: .leading, spacing: 10) {
-            Text(target.hasName ? (target.artist.isEmpty ? target.song : "\(target.artist) – \(target.song)") : target.oneLine).font(.system(size: 18, weight: .bold))
+        VStack(alignment: .leading, spacing: Look.Detail.gap) {
+            Text(target.hasName ? (target.artist.isEmpty ? target.song : Words.artistSong(target.artist, target.song)) : target.oneLine).font(Look.Detail.titleFont)
             if !target.ver.isEmpty { Text(target.ver).foregroundStyle(.secondary) }
-            Text("Key \(target.key ?? "?") · \(ji.keyText) \(ji.verdict)").font(.system(size: 15))
-            Text("Pitch: set the incoming deck's pitch fader to \(ji.pitch.map { signed1($0) + "%" } ?? "n/a") so the tempos match.").font(.system(size: 15))
+            Text(Words.keyLine(target.key ?? Words.unknownKey, ji.keyText, ji.verdict)).font(Look.Detail.font)
+            Text(Words.pitchHelp(ji.pitch.map { Words.percentText(signed1($0)) } ?? Words.notAvailable)).font(Look.Detail.font)
             if let p = pair {
-                Text(String(format: "Match score %.2f · %.1f%% stretch", p.s, p.st)).font(.system(size: 14)).foregroundStyle(.secondary)
-                Text("Moves: " + (p.mv ?? [p.trl]).enumerated().map { "\($0.offset + 1). \($0.element)" }.joined(separator: "   ")).font(.system(size: 15))
-                ForEach(p.reasons, id: \.self) { Text("• " + $0).font(.system(size: 15)) }
+                Text(Words.matchScore(p.s, p.st)).font(Look.Detail.scoreFont).foregroundStyle(.secondary)
+                Text(Words.moves(p.mv ?? [p.trl])).font(Look.Detail.font)
+                ForEach(p.reasons, id: \.self) { Text(Words.reason($0)).font(Look.Detail.font) }
             }
         }
-        .padding(20).frame(width: 420, alignment: .leading)
+        .padding(Look.Detail.padding).frame(width: Look.Detail.width, alignment: .leading)
     }
 }
 
 func verdictPhrase(_ v: String) -> String {
-    switch v {
-    case "same key": return "same key"
-    case "neighbour": return "neighbour key"
-    case "relative": return "relative key"
-    case "boost": return "key boost"
-    case "clash": return "keys clash"
-    case "key unsure": return "key unsure"
-    default: return v
-    }
+    Words.verdictPhrase(v)
 }
 
 /// Where the next song could come in: its mix-in window (default), the track start, the first steady-beat bar,
@@ -364,17 +356,17 @@ struct StartPoint: Hashable {
     static func candidates(for b: Track) -> [StartPoint] {
         let bar = 240 / b.gridBPM
         let mi = b.mixIn?[0] ?? (b.firstBeat ?? 0)
-        var pts = [StartPoint(t: mi, label: "mix-in start")]
+        var pts = [StartPoint(t: mi, label: Words.startMixIn)]
         func add(_ t: Double, _ l: String) { if t >= 0, !pts.contains(where: { abs($0.t - t) < 0.5 }) { pts.append(StartPoint(t: t, label: l)) } }
         guard let h = b.wHead else { return pts }
         let headEnd = h.t0 + Double(h.n) * 60 / b.gridBPM / Double(b.samplesPerBeat) - 2 * bar
-        add(0, "track start")
-        if let s = b.steadyIn, s < headEnd { add(s, "steady beat") }
+        add(0, Words.startTrack)
+        if let s = b.steadyIn, s < headEnd { add(s, Words.startSteady) }
         let fb = b.firstBeat ?? mi
         let miBar = Int(((mi - fb) / bar).rounded())
         for k in 1...7 {
             let t = mi + Double(8 * k) * bar
-            if t < headEnd { add(t, "bar \(miBar + 8 * k + 1)") }
+            if t < headEnd { add(t, Words.startBar(miBar + 8 * k + 1)) }
         }
         return pts
     }
@@ -384,22 +376,22 @@ struct StartPoint: Hashable {
 struct TinyChip: View {
     let text: String
     var body: some View {
-        Text(text).font(.system(size: 10, weight: .semibold, design: .rounded)).foregroundStyle(Theme.dim)
-            .padding(.horizontal, 5).frame(height: 17)
-            .background(Capsule().fill(Color.white.opacity(0.06)))
+        Text(text).font(Look.Chips.tinyFont).foregroundStyle(Theme.dim)
+            .padding(.horizontal, Look.Chips.tinySides).frame(height: Look.Chips.tinyHeight)
+            .background(Capsule().fill(Look.Chips.tinyFill))
     }
 }
 
 /// Halloween and remix/edit marks as tiny chips.
 struct Marks: View {
     let track: Track
-    var size: CGFloat = 11
+    var size: CGFloat = Look.Chips.marksSize
     var body: some View {
-        HStack(spacing: 4) {
-            if track.hal { TinyChip(text: "🎃") }
-            if track.isRemix { TinyChip(text: "RMX") }
+        HStack(spacing: Look.Chips.cornerGap) {
+            if track.hal { TinyChip(text: Words.pumpkin) }
+            if track.isRemix { TinyChip(text: Words.remixMark) }
         }
-        .accessibilityLabel((track.hal ? "Halloween " : "") + (track.isRemix ? "remix" : ""))
+        .accessibilityLabel(Words.marksSpoken(halloween: track.hal, remix: track.isRemix))
     }
 }
 
@@ -420,8 +412,8 @@ struct JoinView: View {
         let spbA = a.samplesPerBeat, spbB = b.samplesPerBeat
         Canvas { g, size in
             let W = size.width, H = size.height
-            let num: CGFloat = 10
-            let laneA = (num, H / 2 - 1), laneB = (H / 2 + 1, H - num)
+            let num: CGFloat = Look.Join.numberRoom
+            let laneA = (num, H / 2 - Look.Join.laneGap / 2), laneB = (H / 2 + Look.Join.laneGap / 2, H - num)
             let barA = Double(4 * spbA)                            // lane-A samples per bar
             let P = W / (Double(zoom) * barA)
             let uMin = -2 * barA                                   // 2 bars before the join
@@ -434,24 +426,24 @@ struct JoinView: View {
             let bLen = (Double(wb.win[1]) - jB) * sB
             let uEnd = bLen > 0 ? min(aLen, bLen) : aLen
             let ov = CGRect(x: X(0), y: laneA.0, width: max(0, min(W, X(uEnd)) - X(0)), height: laneB.1 - laneA.0)
-            g.fill(Path(ov), with: .color(.white.opacity(0.07)))
-            g.fill(Path(CGRect(x: ov.minX, y: ov.minY, width: ov.width, height: 1)), with: .color(Theme.amber.opacity(0.7)))
-            g.fill(Path(CGRect(x: ov.minX, y: ov.maxY - 1, width: ov.width, height: 1)), with: .color(Theme.amber.opacity(0.7)))
+            g.fill(Path(ov), with: .color(Look.Join.overlapFill))
+            g.fill(Path(CGRect(x: ov.minX, y: ov.minY, width: ov.width, height: Look.Join.overlapLine)), with: .color(Theme.amber.opacity(Look.Join.overlapLineOpacity)))
+            g.fill(Path(CGRect(x: ov.minX, y: ov.maxY - Look.Join.overlapLine, width: ov.width, height: Look.Join.overlapLine)), with: .color(Theme.amber.opacity(Look.Join.overlapLineOpacity)))
             func lane(_ w: Wave, _ vals: [Int], j: Double, scl: Double, spb: Int, _ ly: (CGFloat, CGFloat), _ col: Color, fallbackK0: Int, numberY: CGFloat, brightFromJoin: Bool = false, numbers: Bool = true) {
-                let mid = (ly.0 + ly.1) / 2, half = (ly.1 - ly.0) / 2 - 1
+                let mid = (ly.0 + ly.1) / 2, half = (ly.1 - ly.0) / 2 - Look.Join.laneInset
                 let step = P * scl
                 let k0 = w.k0 ?? fallbackK0
                 var on = Path(), off = Path()
                 for i in 0..<min(w.n, vals.count) {
                     let x = X((Double(i) - j) * scl)
                     if x < -step || x > W { continue }
-                    let hh = max(0.5, CGFloat(vals[i]) / 63 * half)
-                    let r = CGRect(x: x, y: mid - hh, width: step + 0.3, height: hh * 2)
+                    let hh = max(Look.Join.barMin, CGFloat(vals[i]) / 63 * half)
+                    let r = CGRect(x: x, y: mid - hh, width: step + Look.Join.barOverlap, height: hh * 2)
                     let bright = brightFromJoin ? Double(i) >= j.rounded() : (i >= w.win[0] && i < w.win[1])
                     if bright { on.addRect(r) } else { off.addRect(r) }
                 }
-                g.fill(off, with: .color(col.opacity(0.3)))
-                g.fill(on, with: .color(col.opacity(0.78)))
+                g.fill(off, with: .color(col.opacity(Look.Join.offOpacity)))
+                g.fill(on, with: .color(col.opacity(Look.Join.onOpacity)))
                 let perBar = 4 * spb, perPhrase = 32 * spb
                 for i in 0...w.n {
                     let k = k0 + i
@@ -461,18 +453,18 @@ struct JoinView: View {
                     let isBar = ((k % perBar) + perBar) % perBar == 0
                     if !isBar {
                         // beat line: a thin dark cut through the filled shape
-                        g.fill(Path(CGRect(x: x - 0.5, y: ly.0 + 1, width: 1, height: ly.1 - ly.0 - 2)), with: .color(Theme.bg.opacity(0.75)))
+                        g.fill(Path(CGRect(x: x - Look.Join.beatLine / 2, y: ly.0 + Look.Join.beatInset, width: Look.Join.beatLine, height: ly.1 - ly.0 - 2 * Look.Join.beatInset)), with: .color(Theme.bg.opacity(Look.Join.beatOpacity)))
                         continue
                     }
                     let phrase = ((k % perPhrase) + perPhrase) % perPhrase == 0
-                    g.fill(Path(CGRect(x: x - 0.5, y: ly.0, width: phrase ? 1.3 : 0.8, height: ly.1 - ly.0)), with: .color(.white.opacity(phrase ? 0.6 : 0.3)))
+                    g.fill(Path(CGRect(x: x - Look.Join.barLineOffset, y: ly.0, width: phrase ? Look.Join.phraseLine : Look.Join.barLine, height: ly.1 - ly.0)), with: .color(Look.Join.lines.opacity(phrase ? Look.Join.phraseOpacity : Look.Join.barOpacity)))
                     if numbers && phrase && k >= 0 {
-                        g.draw(Text("\(k / perBar + 1)").font(.system(size: 9, weight: .semibold, design: .monospaced)).foregroundColor(Theme.mut),
-                               at: CGPoint(x: x + 2, y: numberY), anchor: .leading)
+                        g.draw(Text("\(k / perBar + 1)").font(Look.Join.numberFont).foregroundColor(Theme.mut),
+                               at: CGPoint(x: x + Look.Join.numberInset, y: numberY), anchor: .leading)
                     }
                 }
                 let xe = X((Double(w.win[1]) - j) * scl)
-                if xe > 0 && xe < W { g.fill(Path(CGRect(x: xe - 1, y: ly.0, width: 2, height: ly.1 - ly.0)), with: .color(col)) }
+                if xe > 0 && xe < W { g.fill(Path(CGRect(x: xe - Look.Join.windowEnd / 2, y: ly.0, width: Look.Join.windowEnd, height: ly.1 - ly.0)), with: .color(col)) }
             }
             let fbA = (JoinView.bar(at: a.mixOut?[0] ?? 0, of: a) - 1) * 4 * spbA - wa.win[0]
             let fbB = -wb.win[0]                                    // mix-in window starts on bar 1
@@ -482,26 +474,26 @@ struct JoinView: View {
             let PB = 60 / b.gridBPM / Double(spbB)
             for (n, t) in marks.enumerated() {
                 let x = X(((t - wb.t0) / PB - jB) * sB)
-                if x < 4 || x > W - 8 { continue }
+                if x < Look.Join.markLeftMin || x > W - Look.Join.markRightMin { continue }
                 if n == 0 {
                     // the recommended first sync point (B's mix-in start): a small labelled marker under the lane
-                    var tri = Path(); tri.move(to: CGPoint(x: x, y: laneB.1 + 1)); tri.addLine(to: CGPoint(x: x - 3.5, y: laneB.1 + 6)); tri.addLine(to: CGPoint(x: x + 3.5, y: laneB.1 + 6)); tri.closeSubpath()
-                    g.fill(tri, with: .color(Theme.amber.opacity(0.9)))
-                    g.draw(Text("sync").font(.system(size: 8, weight: .bold, design: .rounded)).foregroundColor(Theme.amber.opacity(0.9)),
-                           at: CGPoint(x: x + 5, y: H - num / 2 + 1), anchor: .leading)
+                    var tri = Path(); tri.move(to: CGPoint(x: x, y: laneB.1 + Look.Join.syncTriTop)); tri.addLine(to: CGPoint(x: x - Look.Join.syncTriHalf, y: laneB.1 + Look.Join.syncTriBottom)); tri.addLine(to: CGPoint(x: x + Look.Join.syncTriHalf, y: laneB.1 + Look.Join.syncTriBottom)); tri.closeSubpath()
+                    g.fill(tri, with: .color(Theme.amber.opacity(Look.Join.syncOpacity)))
+                    g.draw(Text(Words.syncMark).font(Look.Join.markFont).foregroundColor(Theme.amber.opacity(Look.Join.syncOpacity)),
+                           at: CGPoint(x: x + Look.Join.syncLabelInset, y: H - num / 2 + Look.Join.syncLabelDrop), anchor: .leading)
                     continue
                 }
                 if abs(t - startB) <= 0.3 { continue }
-                g.fill(Path(CGRect(x: x - 0.5, y: laneB.1 - 5, width: 1, height: 5)), with: .color(Theme.mut))
-                g.draw(Text("\(n + 1)").font(.system(size: 8, weight: .bold, design: .rounded)).foregroundColor(Theme.mut),
+                g.fill(Path(CGRect(x: x - Look.Join.tickWidth / 2, y: laneB.1 - Look.Join.tickHeight, width: Look.Join.tickWidth, height: Look.Join.tickHeight)), with: .color(Theme.mut))
+                g.draw(Text("\(n + 1)").font(Look.Join.markFont).foregroundColor(Theme.mut),
                        at: CGPoint(x: x, y: H - num / 2), anchor: .center)
             }
             var c = g
-            c.addFilter(.shadow(color: .white.opacity(0.8), radius: 3))
-            c.fill(Path(CGRect(x: X(0) - 1, y: laneA.0 - 2, width: 2, height: laneB.1 - laneA.0 + 4)), with: .color(.white))
+            c.addFilter(.shadow(color: Look.Join.joinGlow, radius: Look.Join.joinGlowRadius))
+            c.fill(Path(CGRect(x: X(0) - Look.Join.joinLine / 2, y: laneA.0 - Look.Join.joinOverhang, width: Look.Join.joinLine, height: laneB.1 - laneA.0 + 2 * Look.Join.joinOverhang)), with: .color(Look.Join.join))
         }
         .frame(height: height)
-        .accessibilityLabel("Join: end of \(a.oneLine) over \(b.oneLine) from \(fmtTime(startB))")
+        .accessibilityLabel(Words.joinSpoken(a.oneLine, b.oneLine, fmtTime(startB)))
     }
 
     static func bar(at t: Double, of tr: Track) -> Int {
