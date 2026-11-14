@@ -29,13 +29,15 @@ import Testing
             process.standardOutput = output
             process.standardError = FileHandle.nullDevice
             guard (try? process.run()) != nil else { return nil }
-            var text = ""
-            let end = Date().addingTimeInterval(60)
-            while Date() < end, text.split(separator: "\n").count < 2 {
+            // Two lines, counted in bytes: on Windows Python ends a line with a return and a line feed, which Swift
+            // reads as one character that is not a line feed.
+            var bytes = Data()
+            while bytes.filter({ $0 == 0x0A }).count < 2 {
                 let d = output.fileHandleForReading.availableData
                 if d.isEmpty { break }
-                text += String(decoding: d, as: UTF8.self)
+                bytes.append(d)
             }
+            let text = String(decoding: bytes, as: UTF8.self)
             for line in text.split(whereSeparator: \.isNewline) {
                 let parts = line.split(separator: " ")
                 if parts.count == 2, parts[0] == "PORT" { port = Int(parts[1]) ?? 0 }
