@@ -613,6 +613,26 @@ moments."
   motion and screen readers get the plain version.
 - The sayings are words like any others: placeholders in the one word list until the copy audit.
 
+### Note on D35 (Nov 14, morning): faster to a name, and the song coming in
+After the recogniser was finished and run on the recorded party set (letters W3 and W4), the owner on how long a
+name takes: "8 seconds is kind of a long time. What's the distribution? Would like songs to be locked by 5ish. Not
+a hard rule." And: "I just think it's a little slow at recognizing which is its core function."
+
+- **Naming the song quickly is the recogniser's core job**, and it is to get faster.
+- **No target number yet.** "I'd rather know where the distribution is first then give it a 5sec target." The spread
+  of times to a name is measured first, by kind of change (a hard cut, a blend) and by how loud the room is, along
+  with what more size buys, second by second; the target is set from that.
+- **Size may rise to buy speed.** The booth's own memory for a crate is small, and "we could probably make it even
+  a little larger if it helps on our other metrics." What grows is the index the booth builds and keeps on the
+  iPad; the fingerprint in the crate file stays as it is.
+- **The booth switches sooner.** Its wait before changing the song on screen was written for Apple's recogniser;
+  when Deckie's is sure, the wait comes down to about a second. (The owner's yes.)
+- **The song coming in is shown.** In a blend the recogniser reports the song it hears under the one playing, and
+  the booth shows it as coming in before it switches: "I like that. Let's build it in. If we want to remove it
+  later as part of the UI (like in simplify mode) we can."
+- **Both recognisers at once is a test setting**, for judging the two on one night. A crate file made on a Mac
+  carries both kinds of fingerprint until Deckie's has been judged on a real set; then Apple's can go.
+
 ### Note on D19 (Nov 1): versions of a song stay separate rows
 Christopher, on two remixes of one song both showing in the picks: "we shouldn't merge them unless they are the same
 songs. DJs often have a bunch of versions of the same song". So the booth folds together only copies of the same
