@@ -59,6 +59,15 @@ def run(work, bench, name, args):
     subprocess.run([bench, "match", "--prints", os.path.join(work, prints), "--queries", os.path.join(work, "q_size.tsv"),
                     "--leave-out", os.path.join(work, "absent.txt"), "--out", res, "--memory-out", mem,
                     "--jobs", str(os.cpu_count())] + args, check=True, stderr=subprocess.DEVNULL)
+    with open(os.path.join(out, "rows.jsonl"), "a") as f:
+        f.write(json.dumps(dict(name=name, args=" ".join(args), prints=prints, seconds=time.time() - t0)) + "\n")
+    print(json.dumps({k: (round(v, 1) if isinstance(v, float) else v) for k, v in metrics(work, name, prints).items()}))
+
+
+def metrics(work, name, prints="prints"):
+    """One configuration's figures, worked out from its saved answers."""
+    out = os.path.join(work, "size")
+    res = os.path.join(out, name + ".tsv"); mem = os.path.join(out, name + ".mem")
     truth = load_truth(work)
     rows = []
     for l in open(res):
@@ -69,8 +78,8 @@ def run(work, bench, name, args):
     T = float(np.quantile(neg, 0.999)) + 1e-6
     songs, memory, points, hashes = (int(x) for x in open(mem).read().split())
     disk = sum(os.path.getsize(os.path.join(work, prints, f)) for f in os.listdir(os.path.join(work, prints))) / len(os.listdir(os.path.join(work, prints)))
-    row = dict(name=name, args=" ".join(args), threshold=T, songs=songs, memory_kb_per_song=memory / 1e3 / songs,
-               hashes_per_song=hashes / songs, disk_kb_per_song=disk / 1e3, seconds=time.time() - t0)
+    row = dict(name=name, threshold=T, songs=songs, memory_kb_per_song=memory / 1e3 / songs,
+               hashes_per_song=hashes / songs, disk_kb_per_song=disk / 1e3)
     wrong = total = 0
     for cond, label in CONDITIONS:
         for L in LENGTHS:
@@ -80,25 +89,24 @@ def run(work, bench, name, args):
             row[f"{label}/{L}"] = 100 * right / max(1, len(sel))
     row["wrong_per_1000"] = 1000 * wrong / max(1, total)
     # Songs that are not in the index, eval half, leaving out a held-out song that is the same recording as an
-    # indexed one (over half of its queries name one same song).
+    # indexed one (over half of its clean queries name one same song, as in evaluate.py).
     by = {}
     for r in rows:
-        if r[0]["role"] == "absent" and r[0]["bucket"] != "noise":
+        if r[0]["role"] == "absent" and r[0]["bucket"] != "noise" and r[0]["condition"] == "clean":
             by.setdefault(r[0]["song"], []).append(r[2] if r[3] >= T else None)
     twins = {s for s, got in by.items() if max(set(got), key=got.count) is not None and got.count(max(set(got), key=got.count)) > len(got) / 2}
     ab = [r for r in rows if r[0]["role"] == "absent" and r[0].get("split") == "eval" and r[0]["song"] not in twins]
     row["absent_named_per_1000"] = 1000 * sum(1 for r in ab if r[3] >= T) / max(1, len(ab))
     ms = np.array([r[4] for r in rows if r[1] == "8"])
     row["ms_8s_median"] = float(np.median(ms)); row["ms_8s_p95"] = float(np.quantile(ms, 0.95))
-    with open(os.path.join(out, "rows.jsonl"), "a") as f:
-        f.write(json.dumps(row) + "\n")
-    print(json.dumps({k: (round(v, 1) if isinstance(v, float) else v) for k, v in row.items()}))
+    return row
 
 
 def table(work):
     rows = {}
     for l in open(os.path.join(work, "size", "rows.jsonl")):
-        r = json.loads(l); rows[r["name"]] = r          # a name run again replaces its row
+        r = json.loads(l)
+        rows[r["name"]] = metrics(work, r["name"], r.get("prints", "prints"))
     print("| configuration | memory, KB a song | on disk, KB a song | clean 5 / 8 / 12 s | room | crowd 10 dB under | crowd at equal level | wrong per 1,000 | absent named per 1,000 | 8 s query, ms (four jobs): median / 95th |")
     print("|---|---|---|---|---|---|---|---|---|---|")
     for r in rows.values():

@@ -162,6 +162,7 @@ case "match":
     if o.flags.contains("--wide-entries") { pairing.compact = false }
     pairing.entriesPerSlot = o.int("--entries-per-slot", pairing.entriesPerSlot)
     pairing.keepOneIn = o.int("--keep-one-in", pairing.keepOneIn)
+    pairing.minAnchorLevel = o.int("--min-anchor-level", pairing.minAnchorLevel)
     pairing.maxGap = o.int("--max-gap", pairing.maxGap)
     let verified = o.int("--verified", 12)
     pairing.queryPerSlice = o.int("--query-per-slice", pairing.queryPerSlice)
@@ -182,6 +183,10 @@ case "match":
     var grid = SpeedGrid()
     grid.stepPercent = o.double("--step", grid.stepPercent)
     if o.flags.contains("--no-speed") { grid.maxPercent = 0 }
+    let proposalCount = o.int("--proposals", 0)
+    // --dense-query: the query's constellation is made with the denser neighbourhood (64 ms, 8 %) and three points
+    // are taken per slice, on every query (not only as a second pass).
+    let denseQuery = o.flags.contains("--dense-query")
     let deep = o.flags.contains("--deep")
     let deepBelow = o.double("--deep-below", 3.0)
     let deepConfig: LandmarkConfig = {
@@ -224,7 +229,8 @@ case "match":
             }
         }
         let t0 = now()
-        var marks = Landmarks(mono: samples, sampleRate: rate, config: config)
+        var marks = Landmarks(mono: samples, sampleRate: rate, config: denseQuery ? deepConfig : config)
+        if denseQuery { pool[w].queryPerSlice = 3 }
         var t1 = now()
         var found: [RecognitionMatch] = []
         if audioStep > 0 {
@@ -250,7 +256,7 @@ case "match":
                 let more = Landmarks(mono: samples, sampleRate: rate, config: deepConfig)
                 pool[w].queryPerSlice = 3
                 let again = pool[w].match(more)
-                pool[w].queryPerSlice = nil
+                pool[w].queryPerSlice = denseQuery ? 3 : nil
                 if (again.first?.confidence ?? 0) > (found.first?.confidence ?? 0) { found = again }
             }
         }
@@ -263,6 +269,10 @@ case "match":
             } else { row += "\t-\t0\t0\t0\t1\t1" }
         }
         row += String(format: "\t%.3f\t%.3f", found.first?.confidence ?? 0, found.count > 1 ? found[1].confidence : 0)
+        if proposalCount > 0 {
+            // --proposals K: one more column, the first pass's K proposed songs, best first.
+            row += "\t" + pool[w].proposals(marks, count: proposalCount).map { index.ids[$0] }.joined(separator: ",")
+        }
         rows.set(i, row)
     }
     let text = rows.joined(queries.count)
