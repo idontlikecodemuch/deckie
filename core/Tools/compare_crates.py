@@ -29,6 +29,8 @@ a rounding edge can land one step either side. So:
     the last decimals only. A whole frame's move would show as 0.02 s and fail, as it should;
   - `secs` (how long the analysis took), `analysed_at`, the device and platform labels, the crate's id and dates are
     different by nature and are not compared;
+  - a fingerprint's `made_at` and `made_by` (when and on what it was made) are different by nature too; its points
+    (prints/<id>.dkl) must be the same in at least 99 of 100 places;
   - per-bar series and the style vector are float16 (about three significant digits): values may differ by 0.05 (dB for
     the loudness and band series, probability for the vocal series) or, for the style vector (unit length, 1,024
     values), by 0.002 in any value.
@@ -53,9 +55,37 @@ DECIMALS = {
     "min_repetition": 3, "short_margin": 3, "sung_share": 3, "seconds": 4,
 }
 STEPS = 2
+
+
+def dkl_points(data):
+    """The (frame, packed pitch) points of a fingerprint file, or None when the bytes are not one."""
+    if len(data) < 12 or data[:4] != b"DKL2":
+        return None
+    n = int.from_bytes(data[8:12], "little")
+    points, i, frame = [], 12, 0
+    for _ in range(n):
+        delta = shift = 0
+        while True:
+            if i >= len(data):
+                return None
+            byte = data[i]; i += 1
+            delta |= (byte & 0x7F) << shift
+            if not byte & 0x80:
+                break
+            shift += 7
+        if i + 2 > len(data):
+            return None
+        frame += delta
+        points.append((frame, data[i] | data[i + 1] << 8))
+        i += 2
+    return points
 # Not compared: different by nature on two machines or two runs.
 SKIP = {"secs", "analysed_at", "device", "platform", "crate_id", "created_at", "built_at", "built_by", "devices_seen",
-        "imported_at"}
+        "imported_at", "made_at", "made_by"}
+# A song's fingerprint (prints/<id>.dkl, D35): the share of its points that must be the same on both machines. The
+# points are peaks of a spectrogram, so a last-digit difference in the arithmetic can, rarely, tip which of two
+# near-equal neighbours is the peak; the count of points is compared exactly through the record's `print.points`.
+PRINT_SHARE = 0.99
 SERIES_TOLERANCE = 0.05
 STYLE_TOLERANCE = 0.002
 
@@ -162,6 +192,22 @@ def main():
                 continue
             r.number(kind, f"{path}[{i}]", x, y, tolerance)
 
+    prints = sorted(k for k in set(fa) | set(fb) if k.startswith("prints/") and k.endswith(".dkl"))
+    same_prints = 0
+    for path in prints:
+        if path not in fa or path not in fb:
+            r.failures.append(f"{path}: only in the {'second' if path not in fa else 'first'}")
+            continue
+        if fa[path] == fb[path]:
+            same_prints += 1
+            continue
+        a, b = dkl_points(fa[path]), dkl_points(fb[path])
+        if a is None or b is None:
+            r.failures.append(f"{path}: not a fingerprint")
+            continue
+        shared = len(set(a) & set(b)) / max(1, max(len(a), len(b)))
+        if shared < PRINT_SHARE:
+            r.failures.append(f"{path}: only {100 * shared:.1f} % of the fingerprint's points are the same")
     covers = sorted(k for k in set(fa) | set(fb) if k.startswith("covers/") and k.endswith(".jpg"))
     for path in covers:
         if path not in fa or path not in fb:
@@ -169,7 +215,7 @@ def main():
         elif fa[path] != fb[path]:
             r.failures.append(f"{path}: the bytes differ ({len(fa[path])} bytes against {len(fb[path])})")
 
-    lines = [f"Compared {len(set(ta) & set(tb))} songs, {len(sidecars)} sidecar files, {len(covers)} covers.", ""]
+    lines = [f"Compared {len(set(ta) & set(tb))} songs, {len(sidecars)} sidecar files, {len(covers)} covers, {len(prints)} fingerprints ({same_prints} identical byte for byte).", ""]
     if r.largest:
         lines += ["| Field | Largest difference | Allowed | Where |", "|---|---|---|---|"]
         for field in sorted(r.largest):

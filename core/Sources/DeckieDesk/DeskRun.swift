@@ -106,6 +106,10 @@ public struct RunReport: Codable, Equatable, Sendable {
     /// Covers (D36), as the builder counted them: songs with one, distinct covers and their bytes, pictures that could
     /// not be used. Nil in a line written before covers.
     public var covers: CoverCounts? = nil
+    /// Songs fingerprinted for recognition in this run (D35; the builder's count), and the crate's songs that carry
+    /// a fingerprint after it. Nil in a line written before it. Not the prints above, which find copies.
+    public var fingerprinted: Int? = nil
+    public var songsWithFingerprint: Int? = nil
 
     enum CodingKeys: String, CodingKey {
         case crate, read, seconds, analysed, reused, copies, jobs, device, engine, damaged
@@ -114,7 +118,7 @@ public struct RunReport: Codable, Equatable, Sendable {
         case signaturesMade = "signatures_made", signaturesKept = "signatures_kept", signaturesFailed = "signatures_failed"
         case printsMade = "prints_made", printsKept = "prints_kept", printsFailed = "prints_failed"
         case songsInCrate = "songs_in_crate", songsPerMinute = "songs_per_minute", carriedOn = "carried_on"
-        case local, disc, covers
+        case local, disc, covers, fingerprinted, songsWithFingerprint = "songs_with_fingerprint"
     }
 
     /// Songs that did not go in.
@@ -122,7 +126,8 @@ public struct RunReport: Codable, Equatable, Sendable {
 }
 
 /// The one run (D28, desk.md section 2): everything a crate needs from what was added, in one go. The builder reads
-/// and analyses (keeping its records in the shared file store); as each song is read, its recognition signature and
+/// and analyses (keeping its records in the shared file store, each with the song's fingerprint for recognition, D35,
+/// made from the audio the analysis decoded); as each song is read, its recognition signature and
 /// its print are made, or taken from the store; then copies of one recording are linked, the keys and names already on
 /// the computer are gathered (`DeskLocalFacts`, D30), the DJ's name fixes are put back, every place's path is remembered, and the crate file is written. Stopping at any point loses nothing
 /// already done; running again carries on.
@@ -389,7 +394,7 @@ public final class DeskRun: @unchecked Sendable {
         state.lock.lock(); state.done = state.total; state.lock.unlock()
         emit(.saving, nil)
 
-        // 3. Save: signatures into the crate file, copies linked, the DJ's fixes put back, the crate's name.
+        // 3. Save: signatures and fingerprints into the crate file, copies linked, the DJ's fixes put back, the crate's name.
         let sigFolder = pkg.appendingPathComponent(CrateFormat.signaturesFolder)
         try DeckieFiles.createDirectory(sigFolder)
         var prints: [String: RecordingPrint] = [:]
@@ -400,6 +405,9 @@ public final class DeskRun: @unchecked Sendable {
                 if !fm.fileExists(atPath: dest.path) { try DeckieFiles.write(s.data, to: dest) }
                 if crate.tracks[i].signatures["o"] == nil { crate.tracks[i].signatures["o"] = s.made }
             }
+            // The fingerprint (D35) comes with the builder's record. An entry kept from an earlier crate file, not
+            // read now, takes the one the store has, when its file was since read for another crate.
+            if crate.tracks[i].fingerprint == nil { crate.tracks[i].fingerprint = store.fingerprint(id) }
             if let p = store.print(id) { prints[id] = p }
         }
         let copies = crate.setCutKeys(prints: prints)
@@ -452,7 +460,8 @@ public final class DeskRun: @unchecked Sendable {
             disc: disc.map(\.current).map { r in
                 DiscReport(text: r.text, songs: r.toc.songs.count, named: request.source.flatMap { discNamed[$0] } ?? 0,
                            damagedSectors: r.damagedSectors, titled: r.discTitle != nil)
-            }, covers: result.covers)
+            }, covers: result.covers,
+            fingerprinted: result.fingerprinted, songsWithFingerprint: crate.tracks.filter { $0.fingerprint != nil }.count)
         state.lock.unlock()
         try Self.appendRun(report, to: shelf.file(Self.runsFile, of: crateId))
         try? DeckieFiles.remove(pendingURL)

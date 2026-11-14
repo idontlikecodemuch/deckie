@@ -1,8 +1,10 @@
 import Foundation
 import DeckieCore
 import DeckieCrate
+import DeckieDecode
 import DeckieEngine
 import DeckieInference
+import DeckieRecognition
 
 /// What a build is asked to do (`deckie-build <folder> --out <name>.deckiecrate ...`).
 public struct BuildOptions: Sendable {
@@ -124,6 +126,9 @@ public struct BuildResult: Sendable {
     public var rekordbox: CrateManifest.ImportLog.Rekordbox?
     /// Wall-clock seconds of the whole build.
     public var seconds: Double
+    /// Songs fingerprinted in this run (D35): with their analysis, or, for a record made before the fingerprint,
+    /// from one decode of the file. A file whose record has its fingerprint is not fingerprinted again.
+    public var fingerprinted: Int = 0
     /// Every file read in this run that is in the crate, by entry id: its place and its path below the folder read
     /// (below the source's top for a source), so a caller can remember where each place's file is.
     public var placesRead: [String: [ReadPlace]] = [:]
@@ -262,6 +267,7 @@ public final class Builder: Sendable {
         var finished = 0
         var analysedSeconds: [Double] = []
         var analysedIDs: Set<String> = []
+        var fingerprinted = 0
         var reused = 0
         let started = Date()
     }
@@ -312,9 +318,11 @@ public final class Builder: Sendable {
         var queue: [Int] = []
         for (i, f) in files.enumerated() {
             if let line = work.line(for: f.rel), line.size == f.size, line.modified == f.modified, line.engine == label {
-                if line.status == "ok", let id = line.id,
+                // A line from before the fingerprint (D35) is looked at again, once, to give its record one.
+                if line.status == "ok", let id = line.id, line.fingerprint == true,
                    tagTempo(rekordbox: rekordboxOf[i], tags: line.tags) == line.bpmTag,
-                   FileManager.default.fileExists(atPath: work.recordURL(id).path) {
+                   FileManager.default.fileExists(atPath: work.recordURL(id).path),
+                   FileManager.default.fileExists(atPath: WorkRecords.fingerprintURL(id, in: work.recordsFolder).path) {
                     done[f.rel] = .ok(id: id, tags: line.tags)
                     continue
                 }
@@ -341,27 +349,30 @@ public final class Builder: Sendable {
             let i = queued[k]
             var f = files[i]
             var seconds: Double? = nil
+            var fingerprinted = false
             let outcome: Done
             if let given = self.options.files {
-                // Songs read one at a time: one worked out before is not read; any other is fetched, read and let go.
-                if let id = given.knownId(f), let r = work.record(id), r.engine == label,
+                // Songs read one at a time: one worked out before, fingerprint and all, is not read; any other is
+                // fetched, read and let go.
+                if let id = given.knownId(f), let r = work.record(id), r.engine == label, r.track.fingerprint != nil,
                    r.bpmTag == self.tagTempo(rekordbox: rekordboxOf[i], tags: nil) {
                     outcome = .ok(id: id, tags: nil)
                 } else {
                     guard !stopped.isSet else { return }
                     do { f.url = try given.fetch(f) } catch { given.release(f); stopped.set(error); return }
                     outcome = self.process(f, rekordbox: rekordboxOf[i], work: work, engine: engine!, label: label,
-                                           seconds: &seconds)
+                                           seconds: &seconds, fingerprinted: &fingerprinted)
                 }
             } else {
                 outcome = self.process(f, rekordbox: rekordboxOf[i], work: work, engine: engine!, label: label,
-                                       seconds: &seconds)
+                                       seconds: &seconds, fingerprinted: &fingerprinted)
             }
             defer { self.options.files?.release(f) }
             results.lock.lock()
             defer { results.lock.unlock() }
             results.done[f.rel] = outcome
             results.finished += 1
+            if fingerprinted { results.fingerprinted += 1 }
             let reported: FileProgress.Outcome
             var doneId: String? = nil
             switch outcome {
@@ -488,6 +499,8 @@ public final class Builder: Sendable {
             if let before, let own = before.own, own.disc != nil {
                 var t = before.entry
                 t.ident.otherPlaces = ordered(before.others + here.map(\.place), without: own)
+                // An entry from a crate file made before the fingerprint (D35) gains the one its record has now.
+                if t.fingerprint == nil { t.fingerprint = work.record(id)?.track.fingerprint }
                 tracks.append(t)
                 continue
             }
@@ -504,6 +517,8 @@ public final class Builder: Sendable {
             t.ident.otherPlaces = ordered(rest, without: t.ident.ownPlace)
             if let old = existing?.tracks.first(where: { $0.id == id }) {
                 t.signatures = old.signatures
+                // The same bytes have the same fingerprint: one the crate file has stays when the record has none.
+                if t.fingerprint == nil { t.fingerprint = old.fingerprint }
                 // The same bytes are the same recording, so copies found before (D24) stay found.
                 if t.ident.cutKey == nil { t.ident.cutKey = old.ident.cutKey }
                 // An entry imported again unchanged keeps the time it was first imported, so a rebuild from the
@@ -555,7 +570,8 @@ public final class Builder: Sendable {
         var result = BuildResult(crate: crate, output: options.output, filesSeen: files.count,
                                  analysed: results.analysedSeconds.count, analysisSeconds: results.analysedSeconds,
                                  reused: readOrder.filter { !results.analysedIDs.contains($0) }.count,
-                                 entries: entries, rekordbox: rbSummary, seconds: Date().timeIntervalSince(t0))
+                                 entries: entries, rekordbox: rbSummary, seconds: Date().timeIntervalSince(t0),
+                                 fingerprinted: results.fingerprinted)
         result.covers = coverCounts
         let inCrate = Set(crate.tracks.map(\.id))
         for (id, list) in read where inCrate.contains(id) {
@@ -585,14 +601,14 @@ public final class Builder: Sendable {
 
     /// One queued file: tags, hash, then the work folder's record for those bytes or a fresh analysis.
     private func process(_ f: SourceFile, rekordbox: RekordboxCollection.Track?, work: WorkStore, engine: Analyser,
-                         label: String, seconds: inout Double?) -> Done {
+                         label: String, seconds: inout Double?, fingerprinted: inout Bool) -> Done {
         typealias R = CrateManifest.ImportLog.Reason
         let tags = FileTags.read(f.url)
         let tag = tagTempo(rekordbox: rekordbox, tags: tags)
-        func line(_ status: String, id: String? = nil, failure: FileFailure? = nil) -> WorkStore.FileLine {
+        func line(_ status: String, id: String? = nil, failure: FileFailure? = nil, fingerprint: Bool? = nil) -> WorkStore.FileLine {
             .init(rel: f.rel, size: f.size, modified: f.modified, status: status, engine: label, id: id,
                   bpmTag: status == "ok" ? tag : nil, tags: tags.isEmpty ? nil : tags, reason: failure?.reason,
-                  message: failure?.message)
+                  message: failure?.message, fingerprint: fingerprint)
         }
         func failed(_ failure: FileFailure) -> Done {
             if failure.isLasting { try? work.append(line("failed", failure: failure)) }
@@ -606,8 +622,15 @@ public final class Builder: Sendable {
             return failed(FileFailure(reason: R.decodeError, message: "could not be read (\(error.localizedDescription))"))
         }
         let id = CrateIDs.id(forSHA256: CrateIDs.sha256(of: data))
-        if let record = work.record(id), record.engine == label, record.bpmTag == tag {
-            try? work.append(line("ok", id: id))
+        if var record = work.record(id), record.engine == label, record.bpmTag == tag {
+            // A record made before the fingerprint (D35) gains it from one decode of the file, not a whole analysis.
+            // A file that cannot be decoded now keeps its record and is tried again on the next run.
+            if record.track.fingerprint == nil,
+               let made = try? Builder.fingerprint(of: f.url, device: options.device, at: utcNow()) {
+                record.track.fingerprint = made
+                if (try? work.save(record)) != nil { fingerprinted = true } else { record.track.fingerprint = nil }
+            }
+            try? work.append(line("ok", id: id, fingerprint: record.track.fingerprint != nil))
             return .ok(id: id, tags: tags)
         }
         do {
@@ -625,12 +648,21 @@ public final class Builder: Sendable {
             }
             try work.save(WorkStore.Record(engine: label, bpmTag: tag, track: track, bars: track.bars?.series,
                                            style: track.style?.values))
-            try work.append(line("ok", id: analysis.id))
+            try work.append(line("ok", id: analysis.id, fingerprint: track.fingerprint != nil))
             seconds = elapsed
+            fingerprinted = track.fingerprint != nil
             return .ok(id: analysis.id, tags: tags)
         } catch {
             return failed(FileFailure.classify(error, path: f.url.path))
         }
+    }
+
+    /// The fingerprint (D35) of the audio file at `url`, for a record made before the engine made one with the
+    /// analysis: the file decoded once by the engine's own decoder, the channels averaged, at the file's own rate
+    /// (`Landmarks` brings it to its 8 kHz).
+    public static func fingerprint(of url: URL, device: String, at madeAt: String) throws -> CrateTrack.Fingerprint {
+        let buffer = try AudioDecoder.decodeReporting(url).buffer
+        return .init(Landmarks(mono: buffer.mono(), sampleRate: buffer.sampleRate), madeBy: device, madeAt: madeAt)
     }
 
     /// The import log's words for a file's damaged frames, times as minutes and seconds from the start of the track:

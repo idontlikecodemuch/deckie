@@ -169,7 +169,8 @@ public final class DeskProtocol: @unchecked Sendable {
               "musicFolderSongs": crate.tracks.contains { $0.ident.allPlaces.contains { $0.disc == nil } },
               "importLog": log.map { Self.plain($0) } ?? NSNull(),
               "notIn": log?.notInCount ?? 0,
-              "unsigned": crate.tracks.filter { $0.signatures.isEmpty }.count])
+              // Songs the booth cannot name from their sound: neither a fingerprint (D35) nor a signature.
+              "unsigned": crate.tracks.filter { !$0.canBeRecognised }.count])
     }
 
     func reply(_ id: Any?, _ fields: [String: Any] = [:]) {

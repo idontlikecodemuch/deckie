@@ -2,6 +2,185 @@
 
 Branch `trial/own-recognition`. Newest entry first. Nothing here ships without the owner's decision.
 
+## Nov 14, 2026, 11:20 UTC: overnight, entry 2: the design is decided and built; the last measurements are running
+
+This entry replaces what entry 1 said about the design: a late row changed the choice from three-point to
+two-point hashes. The morning page will replace this one.
+
+**The design, decided** (every figure: eval half, 969 outside songs, right song named and accepted, percent at
+5 / 8 / 12 s; noise levels nominal, in band the crowd is 0.5 dB worse)
+
+| What the booth holds | KB a song (at 5,000 songs) | clean | room | crowd 10 dB under | crowd at equal level |
+|---|---|---|---|---|---|
+| **Chosen: two-point hashes, the strongest half of the points round each as anchors, 3 hashes an anchor, wide check** | 47 (41) | 99 / 99 / 100 | 88 / 93 / 98 | 81 / 91 / 95 | 58 / 71 / 79 |
+| **Small setting: the strongest quarter** | 28 (21) | 99 / 98 / 99 | 79 / 89 / 95 | 69 / 84 / 90 | 50 / 62 / 73 |
+| the strongest eighth (where it starts to break) | 18 (11) | 95 / 99 / 99 | 66 / 80 / 89 | 58 / 74 / 84 | 38 / 52 / 63 |
+| threes, 1 hash in 4, dense listen, wide check | 40 | 100 / 100 / 100 | 81 / 90 / 95 | 72 / 83 / 90 | 46 / 58 / 69 |
+| fours, ratio form, wide check | 40 | 99 / 100 / 100 | 69 / 79 / 85 | 59 / 68 / 76 | 34 / 43 / 50 |
+| fours, hashed like threes, 1 in 4, wide check | 40 | 100 / 100 / 100 | 58 / 70 / 79 | 44 / 56 / 63 | 22 / 32 / 39 |
+| the first trial (W2), for reference | 261 | 100 / 100 / 100 | 89 / 95 / 98 | 78 / 89 / 93 | 48 / 60 / 72 |
+
+- **Twos beat threes beat fours at equal memory, in every noisy cell.** A hash survives only if all its points do;
+  in noise that decides it. What made twos too slow in the first trial was the size of their index, and a thin one
+  is fast enough: 62 ms for an 8 s listen here.
+- **Fours do not win a place.** Their one gain is speed (the ratio form needs no speed search: 27 ms), which is no
+  longer the constraint. They are in the code, off.
+- **The small setting matches the first trial at a twelfth of its memory** and meets the 100 MB line for 5,000
+  songs (105 MB). **The chosen setting beats the first trial in every noisy cell at a sixth of its memory** (205 MB
+  for 5,000 songs). I chose the larger as the default because the index is a file opened in place, which Apple
+  describes as not charged to the app, and noise is the first worry in D35; the small one is one word in the code
+  (`PairingConfig.boothSmall`) if the device says otherwise.
+- **A flaw found and fixed on the way**: choosing anchors by fixed loudness levels left some passages with no
+  anchors, and 11 clean listens in 500 were missed. Anchors are now the strongest share of the points within a
+  second either side, so every passage keeps its share.
+- **Fuzzy lookup and a denser listen**: the denser listen helped thin threes and did nothing for twos at three
+  times the time; off. Fuzzy lookup was built as an option and its row was not run after the choice moved to twos;
+  not measured.
+
+**Copies of one recording** (the real-room test's main finding). Songs that hold the same sound are found when the
+index is built, from the crate file's own keys and from the fingerprints (a second file of a recording; a long
+file that contains a song), and never counted against each other. The test asked for, on the benchmark: with every
+song present twice and 20 long files of six songs each joined end to end, the index scores 100 / 100 / 100 clean,
+90 / 95 / 99 room, 84 / 92 / 96 crowd 10 dB under, 60 / 72 / 80 at equal level: the same as without them. With the
+search switched off the same index drops to 89 clean and 82 room at 8 s.
+
+**Built and green.** Branch `recog/core` (cut from `main`, `main` merged in since): the fingerprint in the crate
+file with its own version number, every builder writing it, the index file opened in place, the listener and its
+non-blocking wrapper, `deckie-listen`. Both workflows are green on it: `core-linux` run 43585502813 and
+`core-windows` run 43585500581 (which also compares a Windows-built crate file with a Linux-built one,
+fingerprints included). Three earlier runs each failed on a different Desk engine-process test before I made the
+fingerprint quicker in unoptimised builds; I did not prove that was the cause.
+
+**Running now**: the generated mixes and the whole eval half through the finished listener; time, memory and false
+names at 1,000 to 10,000 songs. **Then**: letter W4 and the morning page.
+
+## Nov 14, 2026, 08:20 UTC: overnight, entry 1: the design is nearly decided; the real thing is half built
+
+**Received**: "Keep this going ... get that song recognition element complete." Nobody to ask until morning, so
+each decision is written here with its evidence. Newest entry first; this one will be replaced by the morning page.
+
+**Decisions so far**
+
+1. **The check is widened, and pairs inside a short list are dropped.** The first pass now hands the best two
+   proposals of each of its first 50 songs to the point-by-point check (it used to check its 12 fullest votes).
+   Evidence (eval half, 969 songs, 5 / 8 / 12 s): crowd at equal level 49 / 61 / 73 % becomes 56 / 68 / 76 %; crowd
+   10 dB under, 81 / 89 / 94 becomes 83 / 91 / 95; no wrong name and no absent song named. Matching the short list
+   again with two-point hashes took 0.7 s a query as built (re-hashing 50 whole songs) and the point check already
+   uses each point singly, so it was not pursued.
+2. **A thin index with a dense listen.** The microphone's side takes more points (a smaller neighbourhood, three per
+   slice); the songs' side keeps a fraction of its hashes.
+
+| What the booth holds (three-point hashes, wide check) | KB a song | 5,000 songs | room | crowd 10 dB under | crowd at equal level |
+|---|---|---|---|---|---|
+| the trial's index and check, for reference | 261 | 1.3 GB | 89 / 95 / 98 | 78 / 89 / 93 | 48 / 60 / 72 |
+| every hash, wide check | 162 | 0.8 GB | 90 / 95 / 98 | 83 / 91 / 95 | 56 / 68 / 76 |
+| 1 hash in 4, dense listen, wide check | 40 | 200 MB | 81 / 90 / 95 | 72 / 83 / 90 | 46 / 58 / 69 |
+| 1 hash in 8, dense listen, wide check | 20 | 100 MB | 72 / 83 / 90 | 61 / 74 / 83 | 34 / 49 / 58 |
+
+3. **Four points do not win a place, on the evidence so far.** Same benchmark, same check, equal memory:
+
+| First pass | KB a song | room | crowd 10 dB under | crowd at equal level | 8 s query, ms |
+|---|---|---|---|---|---|
+| threes, 1 hash in 4 | 40 | 81 / 90 / 95 | 72 / 83 / 90 | 46 / 58 / 69 | 110 |
+| fours, ratio form, one a point | 40 | 69 / 79 / 85 | 59 / 68 / 76 | 34 / 43 / 50 | 27 |
+| threes, 1 hash in 8 | 20 | 72 / 83 / 90 | 61 / 74 / 83 | 34 / 49 / 58 | 109 |
+| fours, ratio form, stronger half of points | 20 | 60 / 69 / 80 | 53 / 63 / 71 | 29 / 37 / 46 | 22 |
+
+   Fours are four times faster (no speed search) and that is all they buy; threes at half the memory beat them in
+   every noisy cell. Since speed is no longer the constraint, threes stay. Rows still to come: fours hashed like
+   threes, two fours a point, thin pairs.
+
+**Built tonight** (branch `recog/size`, merged into `recog/core`)
+- The index as one file, opened in place from storage; built once per crate file and made again only when the
+  songs change.
+- The listener: fed sound at any rate in any pieces, it gives a reading a second (song, place, speed, key lock,
+  confidence, or "nothing yet"), gathers evidence across two listens, follows a named song with one cheap check a
+  second and searches the crate every other second to notice a new song. A wrapper for an app never blocks the
+  caller. `deckie-listen` plays any recording through it and prints each second.
+- First mix played through it: first song named at 3 s, the next song named one second after the first ended, read
+  at +8.39 % with key lock on (label: +8.3 %); 10 ms a reading while following, 60 to 90 ms when it searches.
+- **The fingerprint is in the crate file and every builder writes it** (`recog/core`): `prints/<id>.dkl` beside
+  `signatures/`, a `print` key on the record with its own version number, reader, writer, validator, the single-file
+  form, Desk's shared store (a file is fingerprinted once), `deckie-build`, `deckie-make`; "can't be recognised yet"
+  now counts songs with neither a fingerprint nor a signature. 121 + 77 + 40 + 6 + 35 tests pass on Linux; both
+  workflows are running on the branch.
+
+**Next, in order**: finish the decision table; choose the listener's thresholds on the dev half; run the whole
+benchmark and the generated mixes through the listener; letter W4; the morning page.
+
+## Nov 14, 2026, 07:05 UTC: size study, first results; letter AB and the four-point question taken up
+
+**Received**: letter AB (merged and read; its order (a) to (e) is the order I am following), and the owner's
+question "Can we use 4 points?" (both forms are built; their rows are being measured now).
+
+**Size, thinning alone** (eval half, 969 songs; right song named and accepted, percent at 5 / 8 / 12 s; noise levels
+are nominal, see the last table)
+
+| What the booth holds | KB a song | room | crowd 10 dB under | crowd at equal level | songs not in the index named, per 1,000 |
+|---|---|---|---|---|---|
+| As in the trial (5-byte entries, short table slots) | 261 | 89 / 95 / 98 | 78 / 89 / 93 | 48 / 60 / 72 | 1.6 |
+| 4-byte entries, 32 entries a slot | 162 | 88 / 95 / 98 | 81 / 89 / 94 | 49 / 61 / 73 | 1.9 |
+| keep 1 hash in 2 | 81 | 83 / 91 / 95 | 73 / 84 / 91 | 45 / 57 / 68 | 1.6 |
+| keep 1 hash in 4 | 40 | 77 / 87 / 92 | 62 / 78 / 86 | 34 / 49 / 57 | 0.6 |
+| keep 1 hash in 8 | 20 | 63 / 76 / 85 | 52 / 67 / 76 | 24 / 35 / 45 | 1.6 |
+| keep 1 hash in 16 | 10 | 50 / 64 / 74 | 38 / 51 / 62 | 16 / 26 / 32 | 8.2 |
+
+Clean audio stays at 98 to 100 % in every row. The fingerprint in the crate file is unchanged (19 KB a song here).
+Fewer hashes per point does worse than dropping hashes at random at the same size (3 a point: 82 KB, room 86 % at
+8 s against 91 %). **So: nothing lost down to 162 KB; a small loss at 81; thinning by itself cannot reach the 20 KB
+target without a large loss.** Wrong names stay under 1 in 1,000 throughout.
+
+**AB's item (a), the first number**: with the full index, at equal-level crowd noise the right song is the first
+proposal 54 % of the time, within the first 10 proposals 67 %, the first 30, 75 %, the first 50, 78 % and the first
+100, 82 % (dev half, 5 to 12 s pooled; room: 87 / 92 / 95 / 97 / 98). So a check of 50 songs has about 24 points to
+win at that noise. The same count for thin indexes and for four-point hashes is running.
+
+**Four points, built two ways** (from the paper's description; no outside code): hashed like triples with the speed
+search; and the ratio form, where the first and last point set a frame and the two between are described as
+fractions of it, so there is no speed search. First look only (40 dev clips a condition): the ratio form answers in
+about 10 ms and holds 40 KB a song with one quad per point; alone it names every clean clip and loses to triples in
+noise (equal-level crowd, first proposal right: about 30 % against 60 %). The fair rows (thin reference, dense
+query, pairs as the check, equal memory) are queued.
+
+**Noise both ways** (AB's inference, measured on 200 clips made like the benchmark's): inside the 300 to 3600 Hz
+band the fingerprint reads, crowd noise is 0.5 dB worse than its nominal level at the median (dance music: 1.6 dB
+worse; one clip in ten, 6.6 dB worse or more) and pink noise is 2.4 dB better. So "0 dB crowd" is about -0.5 dB in
+band, not several decibels worse: the crowd recordings carry bass too.
+
+**Running now**: the top-K count for thin triples, pairs and both kinds of fours; the two-step rows (the index
+proposes 30 or 50 songs, pairs check them).
+
+**Then**: the three sizes asked for at 2,000, 5,000 and 10,000 songs; fours against triples as proposers; the mixed
+index; (c) evidence across seconds and following a named song on the generated mixes; (d) the count of hashes lost
+by one step. **Carry on.**
+
+## Nov 14, 2026, 06:05 UTC: the size study has started (branch `recog/size`)
+
+**Received**: D35 (a fingerprint of our own; speed is fine if a song is named in a few seconds; size is the large
+problem, smaller first and crate splitting second; noise waits for letter AB). This entry and the ones above it
+are on the new branch `recog/size`, cut from `main`.
+
+**The figure being brought down** is what the booth must hold in memory to match: 0.3 MB a song in the trial.
+
+**Target, and why.** A 5,000-song crate matched in under 100 MB of memory: 20 KB a song, about the size of the
+fingerprint on disk (19 KB for the outside set's average 3.4-minute song). The booth iPad is also drawing the
+screen, listening and scoring picks, and an app that holds hundreds of megabytes is the first one the system closes
+when memory is short. The same line puts 2,000 songs at 40 MB and 10,000 at 200 MB.
+
+**How it is being measured.** The same benchmark, eval half only: 12,600 queries (clean, room, room with crowd 10 dB
+under and at equal level, and songs not in the index, at 5, 8 and 12 s), each configuration with its own threshold
+set on the dev half's no-right-answer clips as before. Memory is counted by the index itself (entries, table, 16
+bytes a song). The songs' points are no longer counted as memory: only the final check of a dozen songs reads them,
+so they can stay on storage (19 KB a song, read as needed).
+
+**First row**: the trial's configuration holds 261 KB a song by this count and scores as it did (room 95 % at 8 s).
+
+**Being tried, in this order**: 4-byte entries and a smaller table (should lose nothing); fewer hashes per point;
+keeping one hash in 2, 4, 8, 16; fewer and stronger points in the songs; and a two-step matcher in which a small
+index in memory only proposes a short list of songs and those are matched in full from their points on storage.
+
+**Carry on.**
+
 ## Nov 14, 2026, 03:50 UTC: all measurements in; the letter is written
 
 **The report is `docs/research/w2-own-recognition-trial.md`.** Read its section 1 first.

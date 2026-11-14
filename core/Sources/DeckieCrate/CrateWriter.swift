@@ -4,8 +4,8 @@ import Foundation
 /// always gives the same bytes. It checks the crate first and writes nothing when there is a problem.
 public enum CrateWriter {
     /// The crate's files, by their path inside the package folder: `manifest.json`, `crate.json`, and a
-    /// `bars/<id>.bin` and `style/<id>.bin` for each track that has them. Signature files are not among them: they
-    /// are made on an Apple device and only listed in the records.
+    /// `bars/<id>.bin`, `style/<id>.bin` and `prints/<id>.dkl` for each track that has them. Signature files are not
+    /// among them: they are made on an Apple device and only listed in the records.
     public static func encode(_ crate: Crate) throws -> [String: Data] {
         // Checked in the written order, so a problem's tracks[i] is the record a reader would see there.
         var crate = crate
@@ -39,12 +39,14 @@ public enum CrateWriter {
         for t in tracks {
             if let bars = t.bars, let n = t.grid?.nBars { files[CrateFormat.barsPath(t.id)] = Sidecar.bars(bars, nBars: n) }
             if let style = t.style { files[CrateFormat.stylePath(t.id)] = Sidecar.style(style.values) }
+            if let print = t.fingerprint { files[CrateFormat.printPath(t.id)] = print.data }
         }
         return files
     }
 
     /// Writes the crate into the package folder at `package` (made if missing): replaces `manifest.json`,
-    /// `crate.json` and the sidecars of its tracks, deletes the `.bin` sidecars of tracks no longer in it, and leaves
+    /// `crate.json` and the sidecars of its tracks, deletes the `.bin` sidecars and the `.dkl` fingerprints of tracks
+    /// no longer in it (or no longer with one), and leaves
     /// every other file alone (`prefs.json`, `history/`, `signatures/`, `catalog/`, ...). Each listed signature's
     /// file must already be in the package.
     public static func write(_ crate: Crate, to package: URL) throws {
@@ -68,10 +70,11 @@ public enum CrateWriter {
         if !missing.isEmpty { throw CrateError(missing) }
 
         try DeckieFiles.createDirectory(package)
-        for folder in [CrateFormat.barsFolder, CrateFormat.styleFolder] {
+        for (folder, ext) in [(CrateFormat.barsFolder, ".bin"), (CrateFormat.styleFolder, ".bin"),
+                              (CrateFormat.printsFolder, ".dkl")] {
             let dir = package.appendingPathComponent(folder)
             guard let names = try? fm.contentsOfDirectory(atPath: dir.path) else { continue }
-            for name in names where name.hasSuffix(".bin") && files["\(folder)/\(name)"] == nil {
+            for name in names where name.hasSuffix(ext) && files["\(folder)/\(name)"] == nil {
                 try DeckieFiles.remove(dir.appendingPathComponent(name))
             }
         }

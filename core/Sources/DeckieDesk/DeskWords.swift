@@ -237,6 +237,8 @@ public enum DeskWords {
         // the bottom line
         "songs.one": "1 song",
         "songs.other": "{n} songs",
+        // {n} is the songs with neither a fingerprint (D35) nor a recognition signature (`CrateTrack.canBeRecognised`);
+        // whoever shows the line leaves it out when that is 0, so it is gone once every song carries a fingerprint.
         "cantBeRecognised": "{n} can't be recognised yet",
         "filesDidntGoIn.one": "1 file didn't go in",
         "filesDidntGoIn.other": "{n} files didn't go in",

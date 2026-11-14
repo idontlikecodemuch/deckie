@@ -122,6 +122,13 @@ struct PCBuildTests {
         #expect(crate.manifest.name == "Friday Set")
         #expect(crate.tracks.compactMap(\.file.rel).sorted() == ["Warm up/Deep/Zw\u{f6}lf.flac", "Warm up/One.wav"])
         #expect(outcome.songs == 2 && outcome.filesFound == 5 && outcome.readNow == 2)
+        // Each song carries its fingerprint for recognition (D35), inside the one file like every sidecar.
+        let inside = try CrateArchive.read(plan.crateFile)
+        for t in crate.tracks {
+            let print = try #require(t.fingerprint)
+            #expect(print.points > 0 && print.landmarks?.count == print.points)
+            #expect(inside["prints/\(t.id).dkl"] == print.data)
+        }
         // Nothing else appears beside the music, and nothing inside it.
         let beside = try FileManager.default.contentsOfDirectory(atPath: root.path).sorted()
         #expect(beside == ["Friday Set", "Friday Set Deckie log.txt", "Friday Set.deckiecrate", "storage"])

@@ -132,7 +132,8 @@ Codes, each with its words in the list: a key's `from` (`keyFrom.<code>` and `pr
 joined by `+`, `nameFromPart.<code>`), `notes` (`needsName`, `damagedFrames`, `gridUnsure`, `vocalsNotRead`, `signed`)
 and an import log's `reason` (`reason.<code>`). A place with no `source` is in the music folder (`folder` "" is its
 top). `notIn` counts the files that did not go in (a damaged frame is a note on a song that did); `unsigned` the songs
-the booth cannot recognise yet.
+the booth cannot recognise yet: those with neither a fingerprint (D35, the crate file's `print`) nor a recognition
+signature. The field keeps its name from when only signatures counted.
 
 ### The run
 
