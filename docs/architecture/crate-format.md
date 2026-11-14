@@ -478,6 +478,102 @@ reading in `Builder.swift`.
 **What the reader checks** for it: each place has a `disc` or a `folder` (it says some place); a `disc` is not empty; a
 `folder` is not an absolute path; a `track` is 1 or more; no place is listed twice or repeats the entry's own.
 
+## Addition with D34 (Nov 14, 2026): a song's facts
+
+D34, decided by the owner on Nov 14, 2026: "Let's port and save whatever info the song crate file has", and each fact
+says where it came from, so a lookup fills the same fields and a DJ's own entry is never overwritten. Until now the
+crate file kept a song's title, artist and version, and nothing else its file said: the release, the year, the
+label, the genre and the rest stayed in Desk, or were never read. Additive like D27: no field changes name or
+meaning, `schema` and `min_reader` stay 1, a crate file written before it reads with no facts and writes back byte
+for byte, and a reader that does not know it (it ignores keys it does not know) opens a crate file that has it and
+shows the song as before. Code: `CrateTrack.Fact`, `CrateTrack.OtherTags` and `SongFacts` (`SongFacts.swift`), the
+file's reading in `FileFacts` (`core/Sources/DeckieBuild/FileFacts.swift`), the libraries' in `DJLibraries.swift`
+and `Rekordbox.swift`, the gathering in `LocalFacts+SongFacts.swift`; tests in
+`core/Tests/DeckieCrateTests/SongFactsTests.swift` and `core/Tests/DeckieBuildTests/FileFactsTests.swift`.
+
+Two places, both **left out when empty, never written as null, `{}` or `[]`**, as `ident.other_places` is, so every
+record without them keeps its bytes and the example crate is unchanged:
+
+- **`ident.facts`**, an object, inside `ident` beside the title, artist and version it adds to: one member per fact,
+  by name, each `{"from": origin, "values": [text, ...]}`. `values` is a list of one or more texts in every fact, so
+  every fact reads the same way in any language; a fact that may hold several (a file may give several genres) keeps
+  each once, in the file's order. Every value is text, as the source wrote it: numbers too (`"2"`), and the tempo
+  and key a file's tags state are text the DJ's software wrote (`bpm_text`, `key_text`), never Deckie's reading,
+  which stays in `grid` and `key`. The names Deckie knows (`SongFacts.known`), in the order a window lists them:
+
+  | Name | What it is |
+  |---|---|
+  | `release` | the release (album, EP, single, compilation) the song is on |
+  | `release_artist` | the release's own artist, kept only where it differs from the song's artist |
+  | `year`, `date` | four digits; and the whole date as written when the source gives more than the year |
+  | `original_year`, `original_date` | the same for the first release, when the source says this is a later one |
+  | `label`, `catalog_number` | the record label, and its number for the release |
+  | `genre` | one or more |
+  | `track_number`, `track_count`, `disc_number`, `disc_count` | the song's number on the release and how many songs it has; the disc's number in a set and how many discs |
+  | `composer`, `lyricist`, `remixer`, `producer`, `original_artist` | people, one or more each |
+  | `isrc`, `barcode` | the recording's code (one per version), and the release's UPC or EAN |
+  | `bpm_text`, `key_text` | the tempo and the key the file's tags state, as written |
+  | `comment`, `grouping`, `mood` | as the DJ or their software wrote them |
+  | `subtitle` | the tag standards' line under the title (ID3's `TIT3`), kept apart from `ident.version` |
+  | `compilation` | `1` when the source marks the release as a compilation |
+  | `copyright`, `language` | as written |
+
+  A name is lower-case letters, digits and `_`, starting with a letter; a reader ignores a name it does not know, so
+  a later fact is added without a new version. The title, the artist and the version are never facts: they stay in
+  `ident.title`, `ident.artist` and `ident.version`, named as before (D30).
+- **`file.other_tags`**, an object, inside `file` beside `tag_bpm`, the other fact about the file: everything else the
+  file's text tags say, so nothing is thrown away. `formats` is the tag formats read, in the order read (`id3v2.2`,
+  `id3v2.3`, `id3v2.4`, `id3v1`, `vorbis`, `riff-info`, `aiff-text`, `mp4`); `tags` is each text tag Deckie has no
+  fact for, by **the tag's own name** as the file has it (an ID3 frame's four letters, `TXXX:<description>` and
+  `COMM:<description>` for ID3's described frames, a Vorbis key as written, a RIFF INFO item's four letters, an MP4
+  atom's name, `----:<mean>:<name>` for iTunes' free-form atoms) to its values, a list as in a fact; and `left_out`
+  counts what was not kept, by reason (below). Its origin is always the file's tags. It is there when the file's
+  tags held anything at all, and left out otherwise.
+
+**Where a fact came from** (`from`): `tag` (the file's tags), `cdtext` (a music CD's CD-Text), a DJ program by the
+names `key.source` already uses (`rekordbox-xml`, `traktor`, `engine-dj`, `serato`, `virtualdj`: that program's
+library on the computer, or for `rekordbox-xml` also the collection export given to the builder), `user` (the DJ, in
+Desk), and **`lookup:<service>`** for a lookup the DJ asks for later (note on D30), naming its service
+(`lookup:musicbrainz`). An origin is letters, digits, `-`, `_`, `.` and `:`, 1 to 64 bytes; a reader shows one it does
+not know as it is.
+
+**Which source wins** (`SongFacts.rank`), one value per fact: the DJ, then the file's tags, then a DJ program's
+library (the most recently written first, as for the key), then the disc, then a lookup. So a lookup fills only what
+nothing else gives, and nothing but the DJ replaces the DJ's own entry. Reading a source again replaces the facts that
+source gave before (a file's tags: every `tag` fact and `file.other_tags`; a library read now: that program's), and
+keeps the rest; a file that is not there keeps what its tags gave last time. A DJ's entries live in Desk's storage
+with the DJ's name fixes (`corrections.json`) and are put back after every read, so they survive it, as name fixes do.
+
+**Bounds**, so a tag can never swell a crate file (`SongFacts`): text only (a value that is not plain text, with a
+control character other than a tab or a line break, is data and left out); a value at most **1,024 bytes** of UTF-8
+(`too_long` past it); at most **16 values** a fact or tag (`too_many` for the rest); a tag's name at most **64 bytes**
+(`too_long`); the facts of one song at most **8,192 bytes**, names and values together, taken in the table's order
+(`over_total` for a fact past it); and the other tags of one file at most **4,096 bytes**, taken in name order
+(`over_total` for the tags past it). Never read at all, and counted: pictures (`picture`), any other data that is not
+text, such as play counts, ratings, volume settings and binary ids (`binary`), and the private data DJ programs and
+players keep in text tags (`private`: Serato's markers, Traktor's, iTunes' volume, gapless and database notes). Each
+reason is counted once per item left out; `left_out` holds only reasons with a count. A song with the usual tags
+adds 150 to 500 bytes; the most any one song can add is about 13 KB with the JSON around them.
+
+**What the reader checks**: each fact's name is well formed and its origin is one; each fact and each other tag has
+1 to 16 values, each plain text, trimmed, not empty, at most 1,024 bytes; the facts hold at most 8,192 bytes; each
+tag's name is plain text of 1 to 64 bytes; the other tags hold at most 4,096 bytes; every count in `left_out` is 1 or more; and `file.other_tags`, when
+there, is not empty.
+
+An example record's two places (the rest of the record as above):
+
+```json
+"file": {..., "other_tags": {"formats": ["id3v2.4", "id3v1"], "left_out": {"picture": 1, "private": 1},
+                             "tags": {"TSSE": ["LAME 3.100"], "TXXX:Crowd": ["peak time"]}}, ...},
+"ident": {..., "facts": {"bpm_text": {"from": "tag", "values": ["124"]},
+                         "genre": {"from": "tag", "values": ["House", "Deep House"]},
+                         "label": {"from": "user", "values": ["Nervous"]},
+                         "release": {"from": "tag", "values": ["Friday Night"]},
+                         "track_count": {"from": "tag", "values": ["12"]},
+                         "track_number": {"from": "tag", "values": ["2"]},
+                         "year": {"from": "traktor", "values": ["1999"]}}, ...}
+```
+
 ## Addition (Nov 13, 2026, with D29): the single-file form **proposed**
 
 A crate file as one file, for the platforms where a package folder is only a folder. On a Mac a `.deckiecrate` is a
@@ -565,3 +661,7 @@ real iPad: AirDrop, iCloud Drive and a cable.
     name, written and read by `CrateArchive`; `CrateReader.read(from:)` takes either form. Nothing inside changes;
     no version raised. The iPad's document types cover both forms with one extension (two type identifiers, settled
     Nov 13 in the simulator).
+13. Decided Nov 14, 2026 (D34, the owner's yes to sending every fact). `ident.facts` (the facts Deckie knows, each with
+    its origin) and `file.other_tags` (the rest of the file's text tags, within bounds, with what was left out
+    counted), both left out when empty; no version raised. The fact names, the origins, the order of which source
+    wins and the bounds are this format's choices, made with D34.

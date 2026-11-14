@@ -594,7 +594,8 @@ public final class Builder: Sendable {
     }
 
     /// A work record made ready for the crate: the file's current name and path, the track's names (from rekordbox,
-    /// else the file's tags, else the file name), the DJ's key as a vote, and the `imported` block, its rekordbox entry
+    /// else the file's tags, else the file name), its facts (D34: the file's tags, then the rekordbox export's), the
+    /// DJ's key as a vote, and the `imported` block, its rekordbox entry
     /// taken at `importedAt`. The tag tempo is already in the record (`file.tag_bpm`), as the analysis was given it.
     func dressed(_ record: WorkStore.Record, file f: SourceFile, tags: FileTags?, rekordbox rb: RekordboxCollection.Track?,
                  collection: RekordboxCollection?, importedAt: String) -> CrateTrack {
@@ -621,6 +622,10 @@ public final class Builder: Sendable {
         if let tonality = rb?.tonality, let code = RekordboxCollection.camelot(fromTonality: tonality) {
             t.key?.votes["rekordbox-xml"] = code
         }
+        // Whatever the file's tags say beyond its names (D34), then what the rekordbox export adds.
+        t.ident.facts = [:]
+        FileFacts.read(f.url).apply(to: &t)
+        for (name, values) in rb?.facts ?? [:] { t.ident.offer(name, .init(values, from: DJProgram.rekordbox.rawValue)) }
         // The DJ's own data under the name of the program it came from; null when nothing was imported.
         if let rb, let collection {
             t.imported = .init(rekordbox: collection.crateBlock(for: rb, importedAt: importedAt))

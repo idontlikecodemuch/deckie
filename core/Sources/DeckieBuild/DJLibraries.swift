@@ -39,7 +39,8 @@ public enum DJProgram: String, Codable, CaseIterable, Sendable {
     }
 }
 
-/// One song in a DJ program's library: where the program says its file is, the names it has for it, and its key.
+/// One song in a DJ program's library: where the program says its file is, the names it has for it, its key, and the
+/// other facts it keeps (D34).
 public struct DJLibraryEntry: Sendable, Equatable {
     /// The file's path, as absolute paths it may be at, "/" between names (a program on Windows writes "\"). Most
     /// programs give one; Traktor on a Mac and Serato give two (the startup disk, or the named drive).
@@ -53,12 +54,16 @@ public struct DJLibraryEntry: Sendable, Equatable {
     /// The file's size in bytes, when the program keeps it, and how far off it may be (Traktor keeps kilobytes).
     public var size: Int?
     public var sizeSlack: Int
+    /// What the program holds about the song beyond its names and key (D34), by `SongFacts` name: release, genre,
+    /// label, year, comment and the rest it keeps.
+    public var facts: [String: [String]]
 
     public init(paths: [String], title: String? = nil, artist: String? = nil, version: String? = nil,
-                keyAsWritten: String? = nil, camelot: String? = nil, size: Int? = nil, sizeSlack: Int = 0) {
+                keyAsWritten: String? = nil, camelot: String? = nil, size: Int? = nil, sizeSlack: Int = 0,
+                facts: [String: [String]] = [:]) {
         self.paths = paths; self.title = title; self.artist = artist; self.version = version
         self.keyAsWritten = keyAsWritten; self.camelot = camelot ?? keyAsWritten.flatMap(KeyNotation.camelot)
-        self.size = size; self.sizeSlack = sizeSlack
+        self.size = size; self.sizeSlack = sizeSlack; self.facts = facts
     }
 }
 
@@ -122,7 +127,7 @@ public struct DJLibrary: Sendable {
         try RekordboxCollection.parse(data).tracks.compactMap { t in
             guard let p = t.path else { return nil }
             return DJLibraryEntry(paths: [PathKey.slashes(p)], title: t.name, artist: t.artist, version: t.mix,
-                                  keyAsWritten: t.tonality, size: t.size)
+                                  keyAsWritten: t.tonality, size: t.size, facts: t.facts)
         }
     }
 
@@ -159,6 +164,19 @@ public struct DJLibrary: Sendable {
                 case "INFO" where current != nil:
                     if let k = nonEmpty(a["KEY"]) { current?.keyAsWritten = k; current?.camelot = KeyNotation.camelot(k) }
                     if let kb = a["FILESIZE"].flatMap({ Int($0) }) { current?.size = kb * 1024; current?.sizeSlack = 1024 }
+                    current?.facts.merge(RekordboxCollection.facts(a, traktorInfo)) { old, _ in old }
+                    // RELEASE_DATE is "2001/5/1"; a date of the 1st of January is Traktor's way of giving the year only.
+                    if let d = nonEmpty(a["RELEASE_DATE"]) {
+                        let p = d.split(separator: "/").map(String.init)
+                        if let y = p.first, y.count == 4, Int(y).map({ $0 > 0 }) == true {
+                            current?.facts[SongFacts.year] = [y]
+                            if p.count == 3, !(p[1] == "1" && p[2] == "1"), let m = Int(p[1]), let day = Int(p[2]) {
+                                current?.facts[SongFacts.date] = [String(format: "%@-%02d-%02d", y, m, day)]
+                            }
+                        }
+                    }
+                case "ALBUM" where current != nil:
+                    current?.facts.merge(RekordboxCollection.facts(a, [("TITLE", SongFacts.release), ("TRACK", SongFacts.trackNumber)])) { old, _ in old }
                 default: break
                 }
             case .end(let name):
@@ -172,6 +190,13 @@ public struct DJLibrary: Sendable {
         guard sawRoot else { throw ReadError(file: "", message: "has no NML element: not a Traktor collection") }
         return out
     }
+
+    /// Traktor's `INFO` attributes with a `SongFacts` meaning.
+    static let traktorInfo: [(String, String)] = [
+        ("GENRE", SongFacts.genre), ("LABEL", SongFacts.label), ("COMMENT", SongFacts.comment),
+        ("REMIXER", SongFacts.remixer), ("PRODUCER", SongFacts.producer), ("CATALOG_NO", SongFacts.catalogNumber),
+        ("COMPOSER", SongFacts.composer), ("GROUPING", SongFacts.grouping),
+    ]
 
     // MARK: VirtualDJ: database.xml
 
@@ -200,6 +225,11 @@ public struct DJLibrary: Sendable {
                 case "Tags" where current != nil:
                     current?.title = nonEmpty(a["Title"]); current?.artist = nonEmpty(a["Author"])
                     current?.version = nonEmpty(a["Remix"]); tagKey = nonEmpty(a["Key"])
+                    current?.facts = RekordboxCollection.facts(a, [
+                        ("Album", SongFacts.release), ("Genre", SongFacts.genre), ("Year", SongFacts.year),
+                        ("Label", SongFacts.label), ("Composer", SongFacts.composer), ("Grouping", SongFacts.grouping),
+                        ("TrackNumber", SongFacts.trackNumber),
+                    ])
                 case "Scan" where current != nil:
                     scanKey = nonEmpty(a["Key"])
                 default: break
@@ -236,9 +266,17 @@ public struct DJLibrary: Sendable {
             var path = PathKey.slashes(p)
             if !PathKey.isAbsolute(path) { path = PathKey.resolved(top + "/" + path) }
             let key = row["key"]?.integer.map(Int.init)
+            var text: [String: String] = [:]
+            for c in ["album", "genre", "comment", "label", "composer", "remixer"] { if let v = row[c]?.text { text[c] = v } }
+            if let y = row["year"]?.integer ?? row["year"]?.text.flatMap({ Int64($0) }) { text["year"] = String(y) }
             return DJLibraryEntry(paths: [path], title: nonEmpty(row["title"]?.text), artist: nonEmpty(row["artist"]?.text),
                                   keyAsWritten: key.map(String.init), camelot: key.flatMap(engineKey),
-                                  size: row["fileBytes"]?.integer.map(Int.init))
+                                  size: row["fileBytes"]?.integer.map(Int.init),
+                                  facts: RekordboxCollection.facts(text, [
+                                      ("album", SongFacts.release), ("genre", SongFacts.genre), ("comment", SongFacts.comment),
+                                      ("label", SongFacts.label), ("composer", SongFacts.composer),
+                                      ("remixer", SongFacts.remixer), ("year", SongFacts.year),
+                                  ]))
         }
     }
 
@@ -282,7 +320,10 @@ public struct DJLibrary: Sendable {
                 case "tsng": e.title = nonEmpty(utf16BE(v))
                 case "tart": e.artist = nonEmpty(utf16BE(v))
                 case "tkey": e.keyAsWritten = nonEmpty(utf16BE(v)); e.camelot = e.keyAsWritten.flatMap(KeyNotation.camelot)
-                default: break
+                default:
+                    if let fact = seratoFacts[t], let s = nonEmpty(utf16BE(v)), !(fact == SongFacts.year && Int(s) == 0) {
+                        e.facts[fact] = fact == SongFacts.genre ? FileFacts.genres([s]) : [s]
+                    }
                 }
             }
             if !e.paths.isEmpty { out.append(e) }
@@ -290,6 +331,14 @@ public struct DJLibrary: Sendable {
         guard sawVersion || !out.isEmpty else { throw ReadError(file: "", message: "is not a Serato database") }
         return out
     }
+
+    /// Serato's text fields with a `SongFacts` meaning (D34), as the same descriptions name them: `talb` the album,
+    /// `tgen` the genre, `tlbl` the label, `ttyr` the year, `tcom` the comment, `tgrp` the grouping, `tcmp` the
+    /// composer.
+    static let seratoFacts: [String: String] = [
+        "talb": SongFacts.release, "tgen": SongFacts.genre, "tlbl": SongFacts.label, "ttyr": SongFacts.year,
+        "tcom": SongFacts.comment, "tgrp": SongFacts.grouping, "tcmp": SongFacts.composer,
+    ]
 
     static func seratoFields(_ b: ArraySlice<UInt8>) -> [(String, ArraySlice<UInt8>)] {
         var out: [(String, ArraySlice<UInt8>)] = []
