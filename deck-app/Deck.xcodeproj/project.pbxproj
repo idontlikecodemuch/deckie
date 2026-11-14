@@ -18,6 +18,7 @@
 		827B79B64A1E31FD990CA700 /* DeckieCrate in Frameworks */ = {isa = PBXBuildFile; productRef = B49D1D7567EBFBB382FD970D /* DeckieCrate */; };
 		82FB6E3B4B79F9ED651B7A58 /* deck_data.json in Resources */ = {isa = PBXBuildFile; fileRef = FCF6D813B16B533041BE8EC9 /* deck_data.json */; };
 		A363EF687A2B1A25437BA175 /* DeckApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A0CD63E51A2860949AEFB3B /* DeckApp.swift */; };
+		B530B20B2F40A10D5681F8B4 /* Words.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4EE148A8A234AAD6644DE7A /* Words.swift */; };
 		C14D34FFF4EB371C93C4BC9F /* mixmap.html in Resources */ = {isa = PBXBuildFile; fileRef = E92D407609A47C60440A7251 /* mixmap.html */; };
 		CE3B6D0B375CF18CB83E44B5 /* DebugSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 549771412DCA2A83C4F58275 /* DebugSheet.swift */; };
 		CEE3667911D1572F5C0F6754 /* ListenView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 51FCBBBC567C3AF3489222CD /* ListenView.swift */; };
@@ -39,6 +40,7 @@
 		9768B101742C7EC94619E350 /* Deck.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Deck.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		9A0CD63E51A2860949AEFB3B /* DeckApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeckApp.swift; sourceTree = "<group>"; };
 		AD0D6A7A5D1690A64DABA356 /* Recognizer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Recognizer.swift; sourceTree = "<group>"; };
+		B4EE148A8A234AAD6644DE7A /* Words.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Words.swift; sourceTree = "<group>"; };
 		C87E434C1DA957EE6100DE2C /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		DEF7E88C03C4E70C553BFF09 /* CrateLibrary.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CrateLibrary.swift; sourceTree = "<group>"; };
 		E92D407609A47C60440A7251 /* mixmap.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = mixmap.html; sourceTree = "<group>"; };
@@ -83,6 +85,7 @@
 				AD0D6A7A5D1690A64DABA356 /* Recognizer.swift */,
 				001E556F1E189DBC15BA3038 /* SetRecorder.swift */,
 				5F33A59DF2EA4FB46DB59A0A /* SuggestionsView.swift */,
+				B4EE148A8A234AAD6644DE7A /* Words.swift */,
 			);
 			path = Sources;
 			sourceTree = "<group>";
@@ -213,6 +216,7 @@
 				05BCC8C1945690F7C9BD6C72 /* Recognizer.swift in Sources */,
 				42CBE67850ABEF9626F8760F /* SetRecorder.swift in Sources */,
 				6D412B519593C96765D95340 /* SuggestionsView.swift in Sources */,
+				B530B20B2F40A10D5681F8B4 /* Words.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

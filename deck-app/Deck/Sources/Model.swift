@@ -79,6 +79,9 @@ struct Track: Codable, Identifiable, Hashable {
     let bpmGrid: Double?
     /// The entry's other places (D27): the same file found somewhere else. Nil in the bundled data.
     var others: [TrackPlace]? = nil
+    /// False when the crate file gives the song no usable title (`SongName`: empty, a number, "Track 07"); nil (named)
+    /// in the bundled data.
+    var named: Bool? = nil
 
     /// Where this track is shown: its source, folder and number.
     var place: TrackPlace { TrackPlace(disc: disc, folder: folder, num: num) }
@@ -114,8 +117,42 @@ struct Track: Codable, Identifiable, Hashable {
         guard let s = sourceName else { return folder }
         return s + (folder.isEmpty ? "" : " / \(folder)") + (num.map { String(format: " / %02d", $0) } ?? "")
     }
-    /// "06 Lady (Hear Me Tonight)": track number as in the file name on the deck
-    var numberedSong: String { num.map { String(format: "%02d · ", $0) + song } ?? song }
+    /// "06 Lady (Hear Me Tonight)": track number as in the file name on the deck. A song with no name reads
+    /// "06 · no name yet" (research AA, 3.13: the place leads, never a blank row or a placeholder title).
+    var numberedSong: String { num.map { String(format: "%02d · ", $0) + songShown } ?? songShown }
+
+    // A song with no name (research AA, 3.13). The booth finds and shows it like any other; its place leads, and the
+    // file name is shown only as a file name, never in the title's place. The words are in `Words`.
+    /// Whether the crate file names this song.
+    var hasName: Bool { named ?? true }
+    /// The title, or "no name yet".
+    var songShown: String { hasName ? song : Words.noNameYetInRow }
+    /// The line under the title: the artist (nothing when there is none), or for a song with no name the file it was
+    /// read from ("file: Track07").
+    var secondLine: String { hasName ? artist : (deck.isEmpty ? "" : Words.fileLine(deck)) }
+    /// The playing panel's big line: the title with its number, or for a song with no name its place ("Friday night
+    /// / Peak / 07"; the folder when it is on no source; "No name yet" when it has neither).
+    var playingTitle: String {
+        if hasName { return numberedSong }
+        // Broken by phrase: the source's name on one line, the folder and number on the next.
+        if let s = sourceName {
+            let rest = [folder.isEmpty ? nil : folder, num.map { String(format: "%02d", $0) }].compactMap { $0 }.joined(separator: " / ")
+            return rest.isEmpty ? s : s + "\n" + rest
+        }
+        return placeText.isEmpty ? Words.noNameYet : placeText
+    }
+    /// The song in one line, for a log, a tracklist or a spoken label: "Song A", or "Friday night / Peak / 07 · no
+    /// name yet".
+    var oneLine: String {
+        if hasName { return song }
+        return placeText.isEmpty ? Words.noNameYet : placeText + " · " + Words.noNameYetInRow
+    }
+    /// What the search in More looks through: title and artist, or for a song with no name its place and file name.
+    func matches(_ q: String) -> Bool {
+        if hasName { return song.localizedStandardContains(q) || artist.localizedStandardContains(q) }
+        return placeText.localizedStandardContains(q) || deck.localizedStandardContains(q)
+            || Words.noNameYetInRow.localizedStandardContains(q)
+    }
     /// the source's colour, the two colours alternating by the source's position (first lavender, second blue, third
     /// lavender, ...; no source: the accent)
     var discColor: Color { cd.map(Theme.disc) ?? Theme.acc }
@@ -177,10 +214,15 @@ final class Library {
     private init() {
         data = DeckData(generated: "", tracks: [], discs: [], pairs: [:], catalogVariants: nil)
         byId = [:]; overview = [:]
-        // A crate first: the one remembered, else one placed in the app's Documents folder (Files app, Finder);
-        // the bundled data otherwise.
-        if let url = Library.rememberedCrate ?? Library.crateInDocuments, let c = try? CrateLibrary.load(url) {
+        // A crate first: the one remembered (opened before, kept in the app's own storage), else one placed in the
+        // app's Documents folder (Files app, Finder), taken into the app's storage in either form; the bundled data
+        // otherwise.
+        if let url = Library.rememberedCrate, let c = try? CrateLibrary.load(url) {
             apply(c)
+        } else if let doc = Library.crateInDocuments, let r = try? CrateImport.copy(doc, into: Library.storeFolder),
+                  let c = try? CrateLibrary.load(r.package) {
+            apply(c)
+            UserDefaults.standard.set(r.package.path, forKey: "cratePath")
         } else if let url = Bundle.main.url(forResource: "deck_data", withExtension: "json"),
                   let d = try? Data(contentsOf: url), let dd = try? JSONDecoder().decode(DeckData.self, from: d) {
             data = dd
@@ -195,6 +237,36 @@ final class Library {
         apply(try CrateLibrary.load(url))
         UserDefaults.standard.set(url.path, forKey: "cratePath")
     }
+
+    /// Opens a crate file the DJ handed the app (Files, AirDrop, iCloud Drive, a cable, "Open in", or a test hook), in
+    /// either form: a package folder made on a Mac or the single file made on a PC. It is copied (a package) or
+    /// unpacked (a single file) into the app's own storage, read whole there, and only then used; the file the DJ
+    /// gave is only read. A file from a file provider (iCloud Drive) is read through a file coordinator, so it is
+    /// downloaded first when it is not on the iPad yet.
+    func open(crateFile url: URL) throws -> CrateImport.Result {
+        let scoped = url.startAccessingSecurityScopedResource()
+        defer { if scoped { url.stopAccessingSecurityScopedResource() } }
+        var result: Result<CrateImport.Result, Error> = .failure(CocoaError(.fileReadUnknown))
+        var coordinationError: NSError?
+        NSFileCoordinator().coordinate(readingItemAt: url, options: [], error: &coordinationError) { readable in
+            result = Result { try CrateImport.copy(readable, into: Library.storeFolder) }
+        }
+        if let coordinationError { throw coordinationError }
+        let r = try result.get()
+        try load(crate: r.package)
+        return r
+    }
+
+    /// Where the app keeps the crate files it has opened, as packages: Application Support/Crates, out of the DJ's
+    /// way (not in the Files app).
+    static var storeFolder: URL {
+        let base = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
+        return base.appendingPathComponent("Crates", isDirectory: true)
+    }
+
+    /// Whether the booth can name what is playing: the bundled data's catalogue, or a crate file with fingerprints
+    /// (recognition signatures). A crate file made on a PC has none yet (D29); its songs are set by hand.
+    var canRecognise: Bool { crate.map { !$0.signatures.isEmpty } ?? true }
 
     private func apply(_ c: CrateLibrary) {
         crate = c

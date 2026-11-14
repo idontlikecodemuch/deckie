@@ -10,6 +10,7 @@ struct CrateTabView: View {
     static let title = "Crate"
 
     @Environment(Recognizer.self) private var rec
+    @Environment(SuggestState.self) private var sug
     @Binding var tab: Int
     @State private var shelf: String?
     @AppStorage("cdsDetails") private var details = false
@@ -48,6 +49,7 @@ struct CrateTabView: View {
                 VStack(alignment: .leading, spacing: 8) {
                     HStack(alignment: .lastTextBaseline, spacing: 14) {
                         Text(Self.title).font(.system(size: 26, weight: .heavy)).foregroundStyle(Theme.tx)
+                        if let name = Library.shared.crate?.name { Text(name).font(.system(size: 17, weight: .semibold)).foregroundStyle(Theme.mut).lineLimit(1) }
                         Text("tap a song to set it as playing").font(.system(size: 13)).foregroundStyle(Theme.dim)
                         Spacer()
                         if !landscape && all.count > 1 {
@@ -58,6 +60,10 @@ struct CrateTabView: View {
                         }
                         Button { details.toggle() } label: {
                             Text(details ? "Compact" : "Details").font(.system(size: 15)).foregroundStyle(Theme.mut).frame(minHeight: 36)
+                        }
+                        // Either form: a Mac's package or a PC's single file, from Files, iCloud Drive or a drive.
+                        Button { sug.chooseCrateFile = true } label: {
+                            Label(Words.openCrateFile, systemImage: "folder").font(.system(size: 15)).foregroundStyle(Theme.mut).frame(minHeight: 36)
                         }
                     }
                     let pick = shelf ?? all.first?.id
@@ -141,8 +147,8 @@ struct CrateTabView: View {
         let playing = t.id == rec.currentId
         return Button { rec.setManual(t.id, place: p); tab = 0 } label: {
             HStack(spacing: 6) {
-                Text((n.map { String(format: "%02d · ", $0) } ?? "") + t.song).font(.system(size: 13.5, weight: .medium)).foregroundStyle(playing ? Theme.orange : Theme.tx).lineLimit(1).layoutPriority(1)
-                Text(t.artist).font(.system(size: 10)).foregroundStyle(Theme.dim).lineLimit(1)
+                Text((n.map { String(format: "%02d · ", $0) } ?? "") + t.songShown).font(.system(size: 13.5, weight: t.hasName ? .medium : .regular)).foregroundStyle(playing ? Theme.orange : (t.hasName ? Theme.tx : Theme.mut)).lineLimit(1).layoutPriority(1)
+                Text(t.secondLine).font(.system(size: 10)).foregroundStyle(Theme.dim).lineLimit(1)
                 Spacer(minLength: 2)
                 if t.hal { Text("🎃").font(.system(size: 9)).fixedSize() }
                 Text(String(format: "%.0f", t.bpmTag ?? t.bpmShown)).font(.system(size: 12, weight: .semibold, design: .monospaced)).foregroundStyle(Theme.mut).fixedSize()
@@ -157,7 +163,7 @@ struct CrateTabView: View {
         let lib = Library.shared
         return VStack(alignment: .leading, spacing: 6) {
             if showName {
-                Text(s.name + "  ·  \(s.groups.reduce(0) { $0 + $1.ids.count }) tracks").font(.system(size: 17, weight: .bold)).foregroundStyle(s.color)
+                Text(s.name + "  ·  \(s.groups.reduce(0) { $0 + $1.ids.count }) songs").font(.system(size: 17, weight: .bold)).foregroundStyle(s.color)
             }
             ScrollView {
                 LazyVStack(alignment: .leading, spacing: 2, pinnedViews: [.sectionHeaders]) {
@@ -185,10 +191,10 @@ struct CrateTabView: View {
                 Text(n.map { String(format: "%02d", $0) } ?? "").font(.system(size: 16, weight: .semibold, design: .monospaced)).foregroundStyle(Theme.dim).frame(width: 26)
                 VStack(alignment: .leading, spacing: 1) {
                     HStack(spacing: 6) {
-                        Text(t.song).font(.system(size: 18, weight: .semibold)).foregroundStyle(playing ? Theme.orange : Theme.tx).lineLimit(1)
+                        Text(t.songShown).font(.system(size: 18, weight: t.hasName ? .semibold : .regular)).foregroundStyle(playing ? Theme.orange : (t.hasName ? Theme.tx : Theme.mut)).lineLimit(1)
                         Marks(track: t, size: 12)
                     }
-                    Text(t.artist + (t.ver.isEmpty ? "" : " · " + t.ver)).font(.system(size: 14)).foregroundStyle(Theme.dim).lineLimit(1)
+                    Text(t.hasName ? t.artist + (t.ver.isEmpty ? "" : " · " + t.ver) : t.secondLine).font(.system(size: 14)).foregroundStyle(Theme.dim).lineLimit(1)
                 }
                 Spacer(minLength: 8)
                 Text(t.key ?? "?").font(.system(size: 15, weight: .semibold, design: .monospaced)).foregroundStyle(Theme.mut).frame(width: 40, alignment: .trailing)

@@ -43,6 +43,24 @@ targets:
         UIBackgroundModes: [audio]
         ITSAppUsesNonExemptEncryption: false
         LSSupportsOpeningDocumentsInPlace: true
+        # The crate file (D21): one type for both forms, the package a Mac writes and the single file a PC writes
+        # (docs/architecture/crate-format.md, "The single-file form"; README "Crate files from a PC" for the evidence).
+        UTExportedTypeDeclarations:
+          - UTTypeIdentifier: io.christophershannon.deckie.crate
+            UTTypeDescription: Deckie crate file
+            UTTypeConformsTo: [com.apple.package, public.composite-content]
+            UTTypeTagSpecification:
+              public.filename-extension: [deckiecrate]
+          - UTTypeIdentifier: io.christophershannon.deckie.crate-file
+            UTTypeDescription: Deckie crate file
+            UTTypeConformsTo: [public.data, public.composite-content]
+            UTTypeTagSpecification:
+              public.filename-extension: [deckiecrate]
+        CFBundleDocumentTypes:
+          - CFBundleTypeName: Deckie crate file
+            CFBundleTypeRole: Viewer
+            LSHandlerRank: Owner
+            LSItemContentTypes: [io.christophershannon.deckie.crate, io.christophershannon.deckie.crate-file]
         CFBundleURLTypes:
           - CFBundleURLName: io.christophershannon.deck
             CFBundleURLSchemes: [deck]
