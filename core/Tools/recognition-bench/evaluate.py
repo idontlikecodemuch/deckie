@@ -65,6 +65,25 @@ def main():
         sel = list(sel)
         return sum(r["v"] == what for r in sel), len(sel)
 
+    # A held-out song that is the same recording as a song in the index under another id (a second release of one
+    # track) is not a song "not in the crate". It is found here by its own behaviour: over half of its clean
+    # queries name one and the same indexed song. Such songs are counted apart.
+    by_song = defaultdict(list)
+    for r in rows:
+        if r["t"]["role"] == "absent" and r["t"]["bucket"] != "noise" and r["t"]["condition"] == "clean":
+            by_song[r["t"]["song"]].append(r["id"] if r["v"] != "none" else None)
+    twins = set()
+    for song, named in by_song.items():
+        top = max(set(named), key=named.count)
+        if top is not None and named.count(top) > len(named) / 2:
+            twins.add(song)
+    twin_rows = [r for r in ev if r["t"]["role"] == "absent" and r["t"]["song"] in twins and r["t"]["bucket"] != "noise"]
+    ev = [r for r in ev if not (r["t"]["role"] == "absent" and r["t"]["song"] in twins and r["t"]["bucket"] != "noise")]
+    out["same_recording_songs_set_aside"] = len(twins)
+    if twins:
+        k = sum(r["v"] != "none" for r in twin_rows)
+        print(f"Set aside: {len(twins)} held-out song(s) that are the same recording as an indexed song under another id; their eval queries named that song {k} times of {len(twin_rows)}.\n")
+
     # 1. No right answer.
     print("### Queries with no right answer (eval half): how often a song is named anyway\n")
     print("| kind | " + " | ".join(f"{l} s" for l in LENGTHS) + " |\n|---|" + "---|" * len(LENGTHS))
