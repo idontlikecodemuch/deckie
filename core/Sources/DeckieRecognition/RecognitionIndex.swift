@@ -58,12 +58,22 @@ public struct PairingConfig: Sendable, Equatable, Codable {
     public init() {}
 
     /// The settings the booth's index is built with (chosen in the size study; docs/research/w4-recognition-complete.md).
-    /// Three-point hashes from the strongest points, one hash kept in four, four bytes an entry: 40 KB a song in the
-    /// index (the size study's choice: a quarter of the full index for 3 to 6 points of accuracy, made up by the
-    /// listener's denser listen, wider check and longer look).
+    /// Two-point hashes; anchors are the strongest half of the points around them; three hashes an anchor (three
+    /// slices of the target zone, the strongest point of each): about 41 KB a song in the index. The size study's
+    /// choice (docs/research/w4-recognition-complete.md): it names more songs in noise than any other index tried,
+    /// at a sixth of the first trial's memory.
     public static var booth: PairingConfig {
         var p = PairingConfig()
-        p.keepOneIn = 4
+        p.triples = false
+        p.anchorShare = 0.5
+        p.fanOut = 3
+        return p
+    }
+    /// The same with the strongest quarter as anchors: about 21 KB a song, for a crate of several thousand songs
+    /// on a device short of storage or memory. It gives up about eight points in noise.
+    public static var boothSmall: PairingConfig {
+        var p = booth
+        p.anchorShare = 0.25
         return p
     }
 
