@@ -46,7 +46,9 @@ public final class BeatTracker: @unchecked Sendable {
     /// this was built from (where the export script writes it).
     public static func modelCandidates() -> [String] {
         if let path = ProcessInfo.processInfo.environment[modelEnvironmentVariable], !path.isEmpty { return [path] }
-        return [OnnxRuntime.coreFolder.appendingPathComponent(".models").appendingPathComponent(modelFileName).path]
+        // Beside a shipped program first (`models/` in OnnxRuntime.programFolder, when the program set it).
+        return OnnxRuntime.candidates(named: modelFileName, in: "models",
+                                      checkout: OnnxRuntime.coreFolder.appendingPathComponent(".models").appendingPathComponent(modelFileName))
     }
 
     /// The first candidate that exists, or nil.

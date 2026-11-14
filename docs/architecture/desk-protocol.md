@@ -244,9 +244,10 @@ any other folder takes its own name, and the folders inside it are its groups. T
 become "Name" and "Name 2". The run goes into the crate showing, or, on the first screen, into a new crate named after
 what is read.
 
-`crate.export` writes `<folder>/<crate name>.deckiecrate` (a folder, crate v1 as it is). This is where Desk on
-Windows and Linux hands a crate file out (DeskSession.export); when the single-file form of a crate file lands (the
-branch `pc/windows-builder`), the export switches to it there and the pages do not change.
+`crate.export` writes `<folder>/<crate name>.deckiecrate` as **one file**, the single-file form of a crate file
+(`docs/architecture/crate-format.md`: the same files with the same bytes in one uncompressed archive), replacing a
+crate file of that name in either form. This is where Desk on Windows and Linux hands a crate file out
+(`DeskSession.export`, switched Nov 14, 2026; the pages did not change). Deckie Booth opens both forms.
 
 Error codes: `bad_request` (not JSON, no `type`, a field missing), `unknown_type`, `busy` (a run is going),
 `no_crate` (nothing with songs is showing), `engine_missing` (this computer cannot read music yet), `failed` (the

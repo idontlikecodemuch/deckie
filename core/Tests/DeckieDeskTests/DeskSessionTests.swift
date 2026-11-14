@@ -122,6 +122,12 @@ import DeckieCrate
         #expect(path.lastPathComponent == "Fri- late-early.deckiecrate")
         let c = try CrateReader.read(from: path)
         #expect(c.manifest.name == "Fri: late/early" && c.tracks.count == 2)
+        // One file on Windows and Linux, the package on the Mac.
+        #if os(Windows) || os(Linux)
+        #expect(DeskSession.exportsSingleFile && CrateArchive.isArchive(path))
+        #else
+        #expect(!DeskSession.exportsSingleFile && !CrateArchive.isArchive(path))
+        #endif
 
         let other = try s.shelf.make(name: "Saturday")
         #expect(s.show(other.id) && s.crate == nil)
@@ -130,6 +136,40 @@ import DeckieCrate
         #expect(s.current?.id == info.id)
         try s.delete(info.id)
         #expect(s.current == nil && s.crates.isEmpty)
+    }
+
+    /// The single-file form on export (the switch DeskSession.export makes on Windows and Linux), tried on every
+    /// system: one file that holds exactly the package's files with the same bytes, replaces what an earlier export
+    /// left under the name in either form, and leaves nothing behind in Desk's storage.
+    @Test func exportAsOneFileHoldsThePackagesFilesAndReplacesAnEarlierExport() throws {
+        let (s, _) = try make("session-export-one-file")
+        let out = try scratch("session-export-one-file-out")
+        let fm = FileManager.default
+
+        let package = try s.export(into: out, singleFile: false)
+        var isFolder: ObjCBool = false
+        #expect(fm.fileExists(atPath: package.path, isDirectory: &isFolder) && isFolder.boolValue)
+        let fromPackage = try CrateReader.read(from: package)
+
+        // The same name, now as one file: the package folder left by the first export is replaced.
+        let file = try s.export(into: out, singleFile: true)
+        #expect(file.path == package.path)
+        #expect(fm.fileExists(atPath: file.path, isDirectory: &isFolder) && !isFolder.boolValue)
+        #expect(CrateArchive.isArchive(file))
+        let inside = try CrateArchive.read(file)
+        for (name, data) in inside {
+            #expect(try Data(contentsOf: s.shelf.package(s.current!.id).appendingPathComponent(name)) == data, "\(name)")
+        }
+        #expect(inside[CrateFormat.manifestFile] != nil && inside[CrateFormat.tracksFile] != nil)
+        let fromFile = try CrateReader.read(from: file)
+        #expect(fromFile.manifest.name == fromPackage.manifest.name)
+        #expect(fromFile.tracks.map(\.id) == fromPackage.tracks.map(\.id) && fromFile.tracks.count == 2)
+
+        // Again over the file: the same bytes (the form is canonical), and no scratch folder is left in storage.
+        let bytes = try Data(contentsOf: file)
+        #expect(try Data(contentsOf: s.export(into: out, singleFile: true)) == bytes)
+        let left = try fm.contentsOfDirectory(atPath: s.home.root.path).filter { $0.hasPrefix("export-") }
+        #expect(left.isEmpty)
     }
 
     @Test func aFolderAddedIsASourceNamedAfterItself() throws {

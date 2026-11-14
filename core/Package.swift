@@ -103,7 +103,7 @@ let package = Package(
         .testTarget(name: "DeckieLookupTests", dependencies: ["DeckieLookup"], exclude: ["Fixtures"]),
         // deckie-desk-engine: Desk's engine for the Windows and Linux window (D32), DeskProtocol over standard input
         // and output (docs/architecture/desk-protocol.md).
-        .executableTarget(name: "deckie-desk-engine", dependencies: ["DeckieDesk", "DeckieEngine"]),
+        .executableTarget(name: "deckie-desk-engine", dependencies: ["DeckieDesk", "DeckieEngine", "DeckieInference"]),
         .target(name: "DeckiePC", dependencies: ["DeckieBuild", "DeckieEngine", "DeckieCrate", "DeckieCore", "DeckieInference"]),
         .executableTarget(name: "deckie-make", dependencies: ["DeckiePC"]),
         .target(name: "DeckieRecognition", dependencies: ["DeckieCore"]),

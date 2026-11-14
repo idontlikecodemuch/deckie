@@ -7,6 +7,9 @@
 //                                      checks it holds what the folder should give; exits with 1 and says why if not
 //   deckie-e2e check-pc <crate file>   the same for the PC program's crate file, which reads every folder (it has no
 //                                      rule that leaves out folders starting with "_"), so 4 songs
+//   deckie-e2e check-desk <crate file> <source>   the same for a crate file exported by Deckie Desk on Windows or
+//                                      Linux after the folder was added as the source named <source>: one file, 4
+//                                      songs, each from that source
 //   deckie-e2e pack <package> <file>   the package folder as one file (CrateArchive), for the workflow to keep
 //   deckie-e2e mp3 <file>              the synthesised test track as a 64 kbps mono MP3, encoded by the ffmpeg
 //                                      program (Linux and macOS). No audio is committed: the workflows make this file
@@ -225,7 +228,9 @@ func checkM4A(_ file: URL) {
     print("\(file.lastPathComponent): AAC and Apple Lossless read through Windows' decoder, their grids where the WAV's is")
 }
 
-func check(_ file: URL, pc: Bool = false) {
+/// `source`: Desk's crate file, where the folder added is a source of that name: every folder is read, as by the PC
+/// program, the import log names each file from the source's name down, and the crate file must be one file.
+func check(_ file: URL, pc: Bool = false, source: String? = nil) {
     let crate: Crate
     do {
         crate = try CrateReader.read(from: file)
@@ -250,7 +255,12 @@ func check(_ file: URL, pc: Bool = false) {
     }
     let log = crate.manifest.importLog
     let entries = (log?.entries ?? []).map { "\($0.rel): \($0.reason)" }.sorted()
-    let expected = (["\(lockedRel): protected", "\(toneRel): analysis_error"] + (pc ? [] : ["_old: skipped"])).sorted()
+    let under = source.map { $0 + "/" } ?? ""
+    let expected = (["\(under)\(lockedRel): protected", "\(under)\(toneRel): analysis_error"] + (pc ? [] : ["_old: skipped"])).sorted()
+    if let source {
+        expect(CrateArchive.isArchive(file), "Desk's crate file is not in the single-file form")
+        expect(crate.tracks.allSatisfy { $0.ident.disc == source }, "not every song's source is \(source)")
+    }
     expect(entries == expected, "the import log has \(entries), expected \(expected)")
     expect(log?.filesSeen == songs.count + 2, "files seen: \(log?.filesSeen ?? -1), expected \(songs.count + 2) (the songs and two that did not go in)")
     expect(log?.tracks == songs.count, "the import log counts \(log?.tracks ?? -1) songs, expected \(songs.count)")
@@ -322,6 +332,7 @@ do {
         try make(URL(fileURLWithPath: args[1]), mp3: URL(fileURLWithPath: args[3]))
     case ("check", 2): check(URL(fileURLWithPath: args[1]))
     case ("check-pc", 2): check(URL(fileURLWithPath: args[1]), pc: true)
+    case ("check-desk", 3): check(URL(fileURLWithPath: args[1]), pc: true, source: args[2])
     case ("pack", 3):
         try CrateArchive.pack(package: URL(fileURLWithPath: args[1]), to: URL(fileURLWithPath: args[2]))
         print("wrote \(args[2])")

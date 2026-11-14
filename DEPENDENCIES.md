@@ -121,14 +121,32 @@ acknowledgements. A build that tags vocals carries the YAMNet model file (sectio
 with AudioSet's attribution in the acknowledgements.
 
 **The first Windows build exists, as a workflow artifact only** (Nov 13, 2026, D29; not a release, not handed to
-anyone yet). The workflow `.github/workflows/pc-package.yml` builds the zip "Deckie for PC (first test)" with
-`core/Tools/windows/package.sh`, which downloads nothing: the release build of `deckie-make`, exactly the Swift
-runtime libraries that program's own import tables name (read by `core/Tools/windows/pe_imports.py` and copied
-from the toolchain the runner installed, section 1), Deckie's own `onnxruntime.dll` (section 6; the script refuses
-Microsoft's), the two pinned models (sections 7 and 8), and a folder of licences: this file whole, the table above
-as `ACKNOWLEDGEMENTS.txt`, ONNX Runtime's `LICENSE` and `ThirdPartyNotices.txt` (Eigen's MPL notice is in it), the
-two Eigen patches (`core/notices/eigen/`), and the Swift runtime's licence texts (`core/notices/swift/`, with their
-sources and hashes), and `FILES.txt`, every file in the zip with its size and SHA-256.
+anyone yet). Since Nov 14, 2026 it is Deckie Desk with its window (D32), on the branch `pc/package-desk`. The
+workflow `.github/workflows/pc-package.yml` builds the zip "Deckie Desk for Windows (first test)" with
+`core/Tools/windows/package.sh`, which downloads nothing. **What the zip carries:**
+
+| In the zip | What it is | From |
+|---|---|---|
+| `Deckie Desk.exe`, `Make Crate File.exe` | the two starters: small C programs against Windows' `kernel32.dll` and `user32.dll` only, no C runtime inside | `core/Tools/windows/launcher.c`, built in the packaging step with the toolchain's clang |
+| `app/deckie-desk.exe` | Desk's window, the release build of `desk-shell/`; the `webview` library (section 9) and the WebView2 SDK header's declarations (section 10) are compiled into it | this repository |
+| `app/deckie-desk-engine.exe`, `app/deckie-make.exe` | Desk's engine and the program without a window, release builds from `core/`; dr_mp3 and dr_flac (sections 4 and 5) are compiled into both | this repository |
+| `app/desk-web/` | the pages the window shows: `index.html`, `desk.css`, `desk.js`. Deckie's own; they load nothing from the network and carry no font or library of anyone else's | `desk-web/` |
+| `app/*.dll` (Swift) | exactly the Swift runtime libraries the three programs' own import tables name, read by `core/Tools/windows/pe_imports.py` and copied from the toolchain the runner installed | section 1 |
+| `app/msvcp140.dll`, `msvcp140_1.dll`, `vcruntime140.dll`, `vcruntime140_1.dll` | Microsoft's Visual C++ runtime (below) | the same toolchain folder |
+| `app/onnxruntime.dll` | Deckie's own build of ONNX Runtime without the usage-reporting client; the script refuses Microsoft's | section 6 |
+| `app/models/` | the two pinned models | sections 7 and 8 |
+| the icon, inside the two starters and `deckie-desk.exe` | Deckie's own picture (`deck-app/Deck/Assets.xcassets/AppIcon.appiconset/icon1024.png`), scaled and written as an `.ico` by `core/Tools/windows/make_ico.py` (Python's standard library only) and compiled by the resource compiler the runner already has (`llvm-rc` from the toolchain, else the Windows SDK's `rc.exe`); the `.ico` is made in each run and not committed | this repository |
+| `app/licences/` | this file whole; the table above as `ACKNOWLEDGEMENTS.txt`; ONNX Runtime's `LICENSE` and `ThirdPartyNotices.txt` (Eigen's MPL notice is in it); the two Eigen patches (`core/notices/eigen/`); the Swift runtime's licence texts (`core/notices/swift/`, with their sources and hashes); Microsoft's notice for the Visual C++ runtime; **`webview-LICENSE.txt`** (section 9, the vendored `LICENSE`) and **`Microsoft-WebView2-SDK-LICENSE.txt`** (section 10, the vendored `LICENSE.txt`); and `FILES.txt`, every file in the zip with its size and SHA-256 and what is expected from Windows | |
+
+**Not in the zip, and needed by the window: Microsoft's WebView2 Runtime** (section 10). It is part of Windows 11
+and, in Microsoft's words, on "the vast majority of Windows 10 devices"; Deckie does not ship it, link it or
+download it. A PC without it gets a message naming Microsoft's page for it, and `Make Crate File` still works there.
+Shipping Microsoft's small installer for it ("Evergreen Bootstrapper") would be a new licence question, like the
+Visual C++ runtime, and is the owner's to decide; it is not done.
+
+Nothing new was added as a dependency for the window's packaging: the icon tool, the resource script and the
+check of each program's kind (`core/Tools/windows/pe_kind.py`) are Deckie's own, in Python's standard library and
+the tools the runner already had.
 
 What the Swift runtime brings, listed as this section promised: the standard library and its companions, Foundation
 (swift-foundation and swift-corelibs-foundation) and the dispatch library, all **Apache 2.0 with the Runtime Library
@@ -172,10 +190,11 @@ should hold one; and the copies come from the Swift toolchain's folder, not from
 owner's, though they are the same Microsoft files. The licence terms themselves were not quoted: the page did not
 yield its text to this session.
 
-The zip's starter (`core/Tools/windows/launcher.c`) still looks for the four files before anything else, in the
-program's own folder first, and says in plain words what to install should they be missing or too old. The starter
-itself is built with the toolchain's clang against Windows' `kernel32.dll` alone, with no C runtime inside it, so it
-adds no dependency. `DECKIE_SHIP_VC_RUNTIME=0` builds the zip without the files.
+The zip's starters (`core/Tools/windows/launcher.c`, built twice) still look for the four files before anything
+else, in the program's own folder first, and say in plain words what to install should they be missing or too old.
+The starters are built with the toolchain's clang against Windows' `kernel32.dll` and `user32.dll` (for the message
+box) alone, with no C runtime inside them, so they add no dependency. `DECKIE_SHIP_VC_RUNTIME=0` builds the zip
+without the files.
 
 **Windows' Media Foundation** (since Nov 14, 2026, D33) decodes AAC and Apple Lossless files on Windows. It is part
 of Windows, like the web view: nothing of it is shipped, linked or downloaded; `core/Sources/CMediaFoundation` opens
@@ -982,8 +1001,19 @@ itself (`deskshell.cc`, `Window.swift`). It sends nothing anywhere.
 - **Windows: the Microsoft Edge WebView2 Runtime**, part of Windows 11 and installed on most Windows 10 PCs. The
   shell loads it at run time with the `webview` library's own loader (`WEBVIEW_MSWEBVIEW2_BUILTIN_IMPL`), so no
   `WebView2Loader.dll` travels with Desk. The CI runner had version 156.0.4314.58 (Nov 13, 2026). A PC without it
-  gets no window (`deckie-desk` says so and exits); installing it, or bundling Microsoft's bootstrapper, is a packaging
-  question still open. Its terms are Microsoft's for the runtime, which Deckie does not redistribute.
+  gets no window: since Nov 14, 2026 `deckie-desk` then says so in a message box, names Microsoft's own page for
+  people who need the runtime (`https://developer.microsoft.com/microsoft-edge/webview2/consumer/`), opens it only
+  if the DJ says yes, and points to `Make Crate File`, which does not need it. Nothing is downloaded by Deckie.
+  Bundling Microsoft's bootstrapper is a question still open, for the owner. Its terms are Microsoft's for the
+  runtime, which Deckie does not redistribute.
+  What Microsoft says about which Windows has it (read Nov 14, 2026, "Distribute your app and the WebView2 Runtime",
+  `https://learn.microsoft.com/en-us/microsoft-edge/webview2/concepts/distribution`, page dated Oct 2, 2026): "The
+  Evergreen WebView2 Runtime will be included as part of the Windows 11 operating system", and "The vast majority
+  of Windows 10 devices have the WebView2 Runtime installed already ... A small number of Windows 10 devices don't
+  have the WebView2 Runtime installed." The same page gives the registry values that say whether it is installed
+  (`pv` under `EdgeUpdate\Clients\{F3017226-FE2A-4295-8BDF-00C3A9A7E4C5}`, for the PC and for the account), which
+  the shell reads to say why a window could not be made; the window itself is made by the `webview` library's
+  loader, which reads the neighbouring `ClientState` values, so the loader's answer is the test.
 - **Linux: WebKitGTK 4.1 with GTK 3**, from the distribution (Ubuntu's `libwebkit2gtk-4.1-0`; CI installs
   `libwebkit2gtk-4.1-dev` from Ubuntu 24.04's archive, 2.52.6 with GTK 3.24.41 on Nov 13, 2026). LGPL 2.1, loaded
   from the system as separate libraries, which the allowlist allows; nothing of it is copied into Deckie. The apt
