@@ -123,6 +123,12 @@ if let path = values["--index"] {
 FileHandle.standardError.write(Data(String(format: "index: %d songs, %.1f MB (%.1f KB a song), ready in %.0f ms\n", index.songCount,
                                             Double(index.fileBytes) / 1e6, Double(index.fileBytes) / 1e3 / Double(max(1, index.songCount)),
                                             Double(DispatchTime.now().uptimeNanoseconds - t0) / 1e6).utf8))
+if let path = values["--related-out"] {
+    // The pairs of songs the index holds to be the same sound, by id, for scoring.
+    var text = ""
+    for (a, others) in index.related.enumerated() { for b in others where Int(b) > a { text += index.ids[a] + "\t" + index.ids[Int(b)] + "\n" } }
+    try? text.write(toFile: path, atomically: true, encoding: .utf8)
+}
 if flags.contains("--build-only") {
     // Only the building: how long it took is above; here, the most memory it held.
     FileHandle.standardError.write(Data(String(format: "built: %d songs, %d hashes, %d that hold the same sound as another; peak memory of the process %@\n", index.songCount,

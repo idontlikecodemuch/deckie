@@ -16,8 +16,11 @@ enum SameRecording {
     /// Pairs of songs in `index` that hold the same sound. From each song three stretches of 8 s are taken (a fifth,
     /// a half and four fifths of the way through) and matched against the index at the song's own speed; another
     /// song is related when it answers two of the three with most of the stretch's points in place, at one and the
-    /// same shift between the two songs. A copy answers with no shift; a file that contains the song answers at the
-    /// song's place in it. A remix or a different song answers at most by chance, far below the bar.
+    /// same shift between the two songs, or answers one of them with seven points in ten in place. A copy answers
+    /// with no shift; a file that contains the song answers at the song's place in it; a version that shares a
+    /// passage (an edit, another release of the track) answers for that passage. A remix or a different song
+    /// answers at most by chance, far below the bar. Related songs are not said to be the same song: they are only
+    /// not counted against each other, and a match names the one whose points fit best and lists the rest.
     static func find(in index: RecognitionIndex) -> [(Int, Int)] {
         var grid = SpeedGrid()
         grid.maxPercent = 1                     // the same recording is at the same speed: 0.99, 1 and 1.01 only
@@ -45,6 +48,9 @@ enum SameRecording {
                         guard f.count >= 20 else { continue }
                         let probe = Landmarks(frames: f, pitches: p, frameCount: stretch)
                         for m in recogniser.match(probe) where m.songIndex != s && abs(m.tempoRatio - 1) < 0.005 && m.matched * 2 >= m.queryPoints {
+                            // One stretch with seven points in ten in place is the same sound for certain: a version
+                            // of the song (an edit, another release) that shares this passage though not the whole.
+                            if m.matched * 10 >= m.queryPoints * 7 { pairs.insert([min(s, m.songIndex), max(s, m.songIndex)]) }
                             seen[m.songIndex, default: []].append(m.offsetSeconds / index.landmark.frameSeconds - Double(from - index.songStart[s]))
                         }
                     }

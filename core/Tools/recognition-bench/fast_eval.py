@@ -23,7 +23,24 @@ NAMES = {"clean": "clean", "room": "room", "room+crowd+10": "room, crowd 10 dB u
          "room+crowd-5": "room, crowd 5 dB over the music", "booth(speaker+room+crowd0)": "small speaker, room, crowd at equal level"}
 
 
+RELATED = {}
+
+
+def related(path):
+    """Songs the index holds to be the same sound as another (deckie-listen --related-out): naming one of them is
+    naming the song, as it is for the listener itself."""
+    if path and os.path.exists(path):
+        for l in open(path):
+            a, b = l.rstrip("\n").split("\t")
+            RELATED.setdefault(a, set()).add(b); RELATED.setdefault(b, set()).add(a)
+
+
+def same(answer, song):
+    return answer == song or answer in RELATED.get(song, ())
+
+
 def load(work, path):
+    related(path[:-4] + ".related")
     truth = {t["qid"]: t for t in (json.loads(l) for l in open(os.path.join(work, "fast", "truth.jsonl")))}
     by = defaultdict(list)
     for l in open(path):
@@ -35,7 +52,7 @@ def load(work, path):
 
 def first_right(rs, song, after=0.0):
     for f in rs:
-        if f[2] != "nothingYet" and f[3] == song and float(f[1]) > after:
+        if f[2] != "nothingYet" and same(f[3], song) and float(f[1]) > after:
             return float(f[1]) - after
     return None
 
@@ -60,13 +77,16 @@ def starts(work, path, label=None):
         ms += [float(f[8]) for f in rs]
         search_ms += [float(f[8]) for f in rs if f[2] == "nothingYet"]
         if t["role"] == "absent":
+            # A held-out clip that is the same track as an indexed clip under another id is not "not in the index".
+            if t["bucket"] != "noise" and t["song"].startswith("g3367551"):
+                continue
             absent[1] += 1; absent[0] += any(f[2] != "nothingYet" for f in rs)
         elif t["cell"] == "cut":
             cuts[t["condition"]].append(first_right(rs, t["song"], t["cut_at"]))
-            cut_wrong[t["condition"]] += any(f[2] != "nothingYet" and f[3] not in (t["song"], t["before"]) for f in rs)
+            cut_wrong[t["condition"]] += any(f[2] != "nothingYet" and not same(f[3], t["song"]) and not same(f[3], t["before"]) for f in rs)
         else:
             cells[t["condition"]].append(first_right(rs, t["song"]))
-            wrong[t["condition"]] += any(f[2] != "nothingYet" and f[3] != t["song"] for f in rs)
+            wrong[t["condition"]] += any(f[2] != "nothingYet" and not same(f[3], t["song"]) for f in rs)
     print("| condition | clips | seconds to the first right name: median / 75th / 90th percentile | never named in 30 s, % | named by " +
           " / ".join(f"{m}" for m in MARKS) + " s, % of clips | a wrong song named, % of clips |")
     print("|---|---|---|---|---|---|")
@@ -98,8 +118,57 @@ def starts(work, path, label=None):
             f.write(json.dumps(row) + "\n")
 
 
+def curve(work, names):
+    """The size curve: one row a setting (WORK/fast/r_<name>.tsv and ix_<name>.dkx), the second by which half, three
+    quarters and nine in ten of the songs are named in each condition, the share named by 5 s, wrong names, size."""
+    songs = [l.rstrip("\n").split("\t") for l in open(os.path.join(work, "songs.tsv"))]
+    minutes = sum(float(x[3]) for x in songs if x[4] != "absent") / 60
+    out = []
+    for name in names:
+        path = os.path.join(work, "fast", f"r_{name}.tsv")
+        if not os.path.exists(path):
+            continue
+        RELATED.clear()
+        truth, by = load(work, path)
+        cells = defaultdict(list); cuts = defaultdict(list); wrong = 0; total = 0; absent = [0, 0]; sm = []
+        for q, rs in by.items():
+            t = truth[q]
+            if t.get("split", t["role"]) != "eval":
+                continue
+            sm += [float(f[8]) for f in rs if f[2] == "nothingYet"]
+            if t["role"] == "absent":
+                if t["bucket"] != "noise" and t["song"].startswith("g3367551"):
+                    continue
+                absent[1] += 1; absent[0] += any(f[2] != "nothingYet" for f in rs)
+            elif t["cell"] == "cut":
+                cuts[t["condition"]].append(first_right(rs, t["song"], t["cut_at"]))
+            else:
+                cells[t["condition"]].append(first_right(rs, t["song"]))
+                total += 1; wrong += any(f[2] != "nothingYet" and not same(f[3], t["song"]) for f in rs)
+        size = os.path.getsize(os.path.join(work, "fast", f"ix_{name}.dkx"))
+        # The table's 2 million counters are a fixed 8.4 MB whatever the crate; the rest grows with the music.
+        fixed = (1 << 21) * 4 / 1e6
+        out.append(dict(name=name, kb_min=(size / 1e6 - fixed) * 1e3 / minutes, cells=cells, cuts=cuts, wrong=wrong, total=total, absent=absent,
+                        search=float(np.median(sm)) if sm else 0))
+    print("| setting | index, KB a minute of music | index for 2,000 / 5,000 songs of 4.2 min, MB | " +
+          " | ".join(NAMES[c] for c in ORDER) + " | hard cut, clean | hard cut, crowd at equal level | wrong song named, clips | not-in-index song named, clips | a search, ms |")
+    print("|---|---|---|" + "---|" * (len(ORDER) + 5))
+    for r in out:
+        def three(v):
+            a, b, d, _, _ = dist(v, len(v))
+            return f"{a} / {b} / {d}"
+        print(f"| {r['name']} | {r['kb_min']:.1f} | {r['kb_min'] * 4.2 * 2 + 8.4:.0f} / {r['kb_min'] * 4.2 * 5 + 8.4:.0f} | " + " | ".join(three(r["cells"][c]) for c in ORDER) +
+              f" | {three(r['cuts']['clean'])} | {three(r['cuts']['room+crowd0'])} | {r['wrong']} of {r['total']} | {r['absent'][0]} of {r['absent'][1]} | {r['search']:.0f} |")
+    print("\n| setting | named by 5 s, % of clips: " + " | ".join(NAMES[c] for c in ORDER) + " | hard cut, clean | hard cut, crowd 10 dB under | hard cut, crowd at equal level |")
+    print("|---|" + "---|" * (len(ORDER) + 3))
+    for r in out:
+        five = lambda v: f"{dist(v, len(v))[4][MARKS.index(5)]:.0f}"
+        print(f"| {r['name']} | " + " | ".join(five(r["cells"][c]) for c in ORDER) + f" | {five(r['cuts']['clean'])} | {five(r['cuts']['room+crowd+10'])} | {five(r['cuts']['room+crowd0'])} |")
+
+
 def blends(work, unmix, path):
     import unmix_eval
+    related(path[:-4] + ".related")
     by = defaultdict(list)
     for l in open(path):
         f = l.rstrip("\n").split("\t")
@@ -118,7 +187,7 @@ def blends(work, unmix, path):
         for f in by[mix]:
             if len(f) > 9 and f[-4] != "-":
                 o["coming_readings"] += 1
-                o["wrong_coming"] += f[-4] not in inside
+                o["wrong_coming"] += not any(same(f[-4], x) for x in inside)
         for k in sorted(tracks):
             if k == min(tracks) or "fadein" not in tracks[k] or k not in ids or abs(tracks[k].get("speed", 1) - 1) > 0.16:
                 continue
@@ -174,6 +243,8 @@ def tune(work, path):
 if __name__ == "__main__":
     if sys.argv[1] == "starts":
         starts(sys.argv[2], sys.argv[3], sys.argv[4] if len(sys.argv) > 4 else None)
+    elif sys.argv[1] == "curve":
+        curve(sys.argv[2], sys.argv[3:])
     elif sys.argv[1] == "blends":
         blends(sys.argv[2], sys.argv[3], sys.argv[4])
     else:
