@@ -24,6 +24,10 @@ superseded.
 
 **Failed:** nothing.
 
+Later the same hour: the test that pins the measurement went in as `702eeac`, and all three workflows are green on
+it too (`core-windows` 43538078109, `core-linux` 43538078136, `pc-package` 43538078075). Nothing after it touches
+code.
+
 **Next:** waits on the decision above. The branch is ready for the main session to merge.
 
 carry on; consider changing direction on `.m4a` only if refusing files without a stated lead-in loses too many of a
