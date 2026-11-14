@@ -2,7 +2,12 @@
 
 Newest entry first. Each entry: when, what is done, what failed and why, what is next, and one plain line.
 
-## Nov 14, 2026, 08:00 UTC: covers (D36) on branch `pc/covers`: core, builders and Desk written; runs RUNS-PENDING
+## Nov 14, 2026, 08:00 UTC: covers (D36) on branch `pc/covers`: core, builders and Desk written; all four workflows green
+
+**Green on commit `a15a78b`**: `core-linux` 43572620220, `core-windows` 43572620242 (which also compares the
+Linux and Windows crate files: the same covers, byte for byte), `desk-window` 43572620234, `pc-package` 43572620331.
+Covers are parked here while the packaging of Desk's window is done first, on `pc/package-desk` (the owner's change
+of order). What is left for covers is listed under "Not done" below; nothing is half-written.
 
 **The addition as written** (`docs/architecture/crate-format.md`, "Addition with D36"):
 
@@ -67,8 +72,9 @@ cover; Wuffs (Apache 2.0) is the stronger decoder if that is wanted.
 
 **Failed along the way:** the window workflow failed twice (runs 43569575522 and 43570530998) in two older engine
 tests that read an event straight after a reply; with one more test running beside them they lost the race on the
-runners (never here). They now wait for the event. One Windows core run (43569575464) failed its test step on the
-same commit; I did not read its log, and took it for the same race, which is a guess until the next run.
+runners (never here). They now wait for the event. A third such check failed once more on Windows (run 43571817713) and was fixed the same way. One Windows core
+run (43569575464) failed its test step on the same commit; I did not read its log and took it for the same race,
+which the later green runs support but do not prove.
 
 **Could not verify:** anything on a Mac or an iPad; the pages' cover drawing in a real web view (the window check
 runs in CI only); real covers from real files (every test picture is generated, every tag built by hand); a
