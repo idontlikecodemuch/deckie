@@ -497,6 +497,20 @@ Swift. If we have to build in rust we should rebuild the whole thing on it. Not 
   interface, and one list of words for Desk on every computer.
 - The same flow as the Mac: open Deckie Desk, add music, watch it build, send the crate file to the iPad.
 
+### Note on D30 (Nov 13): naming is route A plus one explicit lookup by sound
+From research letter AA. The owner: "My thought is A plus another method. It will be via "look up song via ____"
+and an explicit different use than the rest of the app. It could even just direct you to and batch upload or
+something. We can figure that out later. There is a real use case for a CD someone had that is a bunch of songs
+with no labels. Even if it only gets some of them right. I have Picard music brainz and it does that."
+
+- **Route A is built first**: everything that names a song with nothing leaving the computer, including reading a
+  burned music CD's own titles, on every computer.
+- **One lookup by sound is wanted beside it**, for the disc of songs with no labels. It is named for the service it
+  uses ("Look up song via ..."), is plainly a different kind of step from the rest of the app, and is never
+  automatic. Getting some of the songs right is enough to be worth having.
+- **Which service, and how it is offered** (inside Desk, or by sending the DJ to another tool with a batch), is
+  not decided. The services' terms and prices are in letter AA.
+
 ### Note on D19 (Nov 1): versions of a song stay separate rows
 Christopher, on two remixes of one song both showing in the picks: "we shouldn't merge them unless they are the same
 songs. DJs often have a bunch of versions of the same song". So the booth folds together only copies of the same
