@@ -32,6 +32,6 @@ extension Crate {
     /// songs, else built from the fingerprints, written there and opened (`RecognitionIndex.cached`).
     public func recognitionIndex(cachedAt url: URL) throws -> RecognitionIndex {
         let r = recognitionSongs()
-        return try RecognitionIndex.cached(at: url, stamp: r.stamp) { r.songs }
+        return try RecognitionIndex.cached(at: url, stamp: r.stamp, sameRecording: r.sameRecording) { r.songs }
     }
 }

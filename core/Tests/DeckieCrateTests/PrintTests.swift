@@ -168,6 +168,8 @@ import DeckieRecognition
         let url = dir.appendingPathComponent("index.dkx")
         let index = try c.recognitionIndex(cachedAt: url)
         #expect(index.ids == ["t0", "t1", "t2"] && index.stamp == r.stamp)
+        // The two entries the crate file calls one recording are one to the index; the third is not.
+        #expect(index.isRelated(0, 1) && !index.isRelated(0, 2) && !index.isRelated(1, 2))
         // The second time the kept file is opened, not built again.
         let made = try Data(contentsOf: url)
         #expect(try c.recognitionIndex(cachedAt: url).ids == index.ids)
