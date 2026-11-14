@@ -71,6 +71,7 @@ extension Analysis {
         let lt = localTempo
         var models = [CrateTrack.Engine.Model(name: Analysis.gridSource)]
         if let vocalModel { models.append(.init(name: vocalModel)) }
+        if learnedKey != nil, let learnedKeyModel { models.append(.init(name: learnedKeyModel)) }
         var rel: String? = nil
         if let root = options.musicRoot {
             let prefix = root.hasSuffix("/") ? root : root + "/"

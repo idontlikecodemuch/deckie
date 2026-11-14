@@ -168,7 +168,19 @@ score on the other half) says it clears the mark on this sheet without being a b
 real gain has to come from the key method research on the Mac (research R), measured per folder and held out. `KeyTests.swift` checks the vote against the lab's B.9 block, run from analyze.py's
 own source by `Tools/make_key_fixtures.py`, on the 68 test matrices, on made-up votes and on the lab's 373 tracks.
 
-**The key the record carries** (`Sources/DeckieCore/Key/ThreeAnswerKey.swift`, `NoteChroma.swift`), engine 0.5.0
+**The learned key reader** (`Sources/DeckieCore/Key/LearnedKey.swift`, `Sources/DeckieEngine/KeyModel.swift`),
+engine 0.7.0, research X4 (`docs/research/x4-key-complete.md`): a small convolutional model in plain Swift over a
+log-frequency spectrogram (126 bands, five frames a second), 235,598 numbers in one file, `deckie-key.f16`, pinned by
+its SHA-256. Its probability is the confidence: a key at one half or more, the home note when the two keys on one
+note reach one half together, otherwise not sure. **The file is not in the repository** (no trained numbers are, by
+the key work's standing rule) and is not yet published; where it is present (`DECKIE_KEY_MODEL`, `core/.models/`, or
+`models/` beside the PC program) it decides the record's key (`key.source` `learned-key`), and where it is not, the
+three-answer reader below does, as in 0.6.0. `DEPENDENCIES.md`, section 11, records what it was trained on. Its test
+uses a model of made-up numbers that Swift and Python both write down; the trained model's parity is run by hand
+(`mixer/keytrial/kt_x4.py parity`: 270 recordings, every answer equal, probabilities equal to six decimals; half a
+second for a two-minute recording).
+
+**The key the record carries without that file** (`Sources/DeckieCore/Key/ThreeAnswerKey.swift`, `NoteChroma.swift`), engine 0.5.0
 (D33) and 0.6.0 (the home note, D36): the three-answer reader of research X2 (`docs/research/x2-own-key-trial.md`, section 5.1). Two readings of the
 song: the HPCP below with the overtones' share taken off each frame (research R's row A), and a note-transcription
 profile (row B: audio at 11,025 Hz, a log-frequency spectrum a third of a semitone fine, one tuning per song, and per
@@ -456,7 +468,7 @@ record, counted by reason and extension, and the files in the crate with damaged
   (no reading at all); otherwise it hashes the file and takes the record of those bytes if there is one (a file that
   was moved, renamed or only touched), and analyses only what is left. An interrupted run (Ctrl-C) loses only the files
   that were being analysed, one per job. A record is reused only if it came from the same engine version with the same
-  tag tempo; the version (0.6.0) goes up whenever the record gains or changes fields, so a work folder made by an
+  tag tempo; the version (0.7.0) goes up whenever the record gains or changes fields, so a work folder made by an
   older version is analysed again. `--fresh` empties the work folder first; deleting it is always safe.
 - **Nothing left out silently** (decision P18). Every file that cannot be analysed is counted by reason and extension
   in the summary and listed in the manifest's `import_log` with its path below the folder and the reason in words:

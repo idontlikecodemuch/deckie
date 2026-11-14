@@ -243,7 +243,7 @@ extension Analysis {
         func m(_ k: String, _ v: J) -> J.Member { J.Member(k, v) }
         guard let l = learnedKey else { return .null }
         return .object([
-            m("model", .string(LearnedKey.Model.shipped.name)), m("answer", .string(l.answer.name)),
+            m("model", learnedKeyModel.map { .string($0) } ?? .null), m("answer", .string(l.answer.name)),
             m("camelot", l.answer.camelot.map { .string($0) } ?? .null),
             m("home_pitch_class", l.answer.pitchClass.map { .int($0) } ?? .null),
             m("best", l.camelot.map { .string($0) } ?? .null), m("probability", J.round(l.keyProbability, 4)),

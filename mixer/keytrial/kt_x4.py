@@ -332,7 +332,7 @@ def main_ship():
 # ---------------------------------------------------------------------------------------------------------------
 # The model as it ships: batch normalisation folded into the convolutions, every number rounded to a 16-bit float,
 # no reading at several pitch shifts, a long song read in stretches of 600 frames. core/Sources/DeckieCore/Key/
-# LearnedKey.swift computes exactly this; `export` writes its numbers and the fixture its test reads.
+# LearnedKey.swift computes exactly this; `export` writes the file it loads, `fixture` the values its test reads.
 STRETCH, SHORTEST = 600, 16
 
 def folded(model):
@@ -379,7 +379,7 @@ def shipped_probs(scores, lean, T):
 
 def main_export(mode):
     """python kt_x4.py export <mode>: the chosen model's numbers as shipped, its temperature on the validation artists,
-    its scores on the three sets as shipped -> x4_shipped_results.md, LearnedKeyWeights.swift and the Swift fixture."""
+    its scores on the three sets as shipped -> x4_shipped_results.md, and the file core/.models/deckie-key.f16."""
     import torch, base64, hashlib, kt_cnn as C, kt_three as T3, kt_extract as KE
     torch.set_num_threads(1)
     share = json.load(open(os.path.join(kt.HERE, "x4_lean.json")))["lean_minor_share"]
@@ -407,25 +407,62 @@ def main_export(mode):
         for t in (0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9):
             sel = P.max(1) >= t
             if sel.any(): print(f"| {t:.1f} | {100 * sel.mean():.1f} | {100 * (k[sel] == y[sel]).mean():.1f} | {100 * P.max(1)[sel].mean():.1f} |")
-    # the Swift side
-    core = os.path.join(kt.HERE, "..", "..", "core")
-    open(os.path.join(core, "Sources", "DeckieCore", "Key", "LearnedKeyWeights.swift"), "w").write(
-        "// Written by mixer/keytrial/kt_x4.py (`export`); do not edit by hand. The learned key reader's numbers (`LearnedKey`):\n"
-        f"// {len(flat)} 16-bit floats, low byte first, base64. SHA-256 of the {len(raw)} bytes: {digest}.\n"
-        "// Where every training recording came from and its licence: DEPENDENCIES.md, the section on Deckie's key reader.\n"
-        "enum LearnedKeyWeights {\n"
-        f"    static let name = \"deckie-key-{digest[:8]}\"\n    static let sha256 = \"{digest}\"\n"
-        f"    static let minorLean = {lean!r}\n    static let temperature = {Tm!r}\n"
-        f"    static let base64 = \"{base64.b64encode(raw).decode()}\"\n}}\n")
-    cases = []
+    # the file the Swift reader loads (core/.models is not in the repository), and the values LearnedKey.swift pins
+    out = os.path.join(kt.HERE, "..", "..", "core", ".models"); os.makedirs(out, exist_ok=True)
+    open(os.path.join(out, "deckie-key.f16"), "wb").write(raw)
+    print(f"\nwrote core/.models/deckie-key.f16; pin in LearnedKey.Model: name deckie-key-{digest[:8]}, bytes {len(raw)}, SHA-256 {digest}, minor lean {lean!r}, temperature {Tm!r}")
+
+def synthetic_flat():
+    """A model of made-up numbers that Swift and Python can both write down exactly (the Swift test makes the same):
+    a linear congruential generator, s = s * 1664525 + 1013904223 mod 2^32 from 12345; each draw is
+    v = (s >> 8) mod 2001 - 1000; a weight is v / 1000 * 1.7 / sqrt(inputs to one output), a bias v / 1000 * 0.05,
+    both rounded to 32-bit floats; the input's scale is 1 and its shift 0."""
+    st = 12345; out = [1.0, 0.0]
+    def draw(n):
+        nonlocal st; v = np.zeros(n)
+        for i in range(n):
+            st = (st * 1664525 + 1013904223) & 0xFFFFFFFF; v[i] = ((st >> 8) % 2001) - 1000
+        return v
+    for o, i, kh, kw in SHAPES:
+        out += list(np.float32(draw(o * i * kh * kw) / 1000.0 * (1.7 / np.sqrt(float(i * kh * kw))))); out += list(np.float32(draw(o) / 1000.0 * 0.05))
+    return np.array(out, dtype=np.float32)
+
+def main_fixture():
+    """python kt_x4.py fixture: the reference's values for the made-up model on the generated clips of
+    three_answer.json -> core/Tests/DeckieCoreTests/Fixtures/learned_key.json (no trained number is in it)."""
+    import kt_three as T3, kt_extract as KE
+    flat = synthetic_flat(); lean, Tm = 0.1, 0.05; cases = []
     for nm, seed, chords, det in T3.FIXTURE_CLIPS:
         if chords is None: continue
         spec = [[(T3.inc_of(m, det), 3 if j == 0 else 2) for j, m in enumerate(ch)] for ch in chords]; y = T3.synth(seed, spec, 20)
         L = KE.logspec(y)[:, KE.BASE:KE.BASE + KE.NB_MODEL].astype(np.float32); sc = shipped_scores(L, flat); pr = shipped_probs(sc, lean, Tm); kind, k, h = three(pr[None])
         cases.append({"name": nm, "frames": int(L.shape[0]), "spectrogram_rows": {str(i): [float(x) for x in L[i]] for i in (0, 1, 50, L.shape[0] - 1)},
                       "scores": [float(x) for x in sc], "probabilities": [float(x) for x in pr], "answer": ("key", "home", "none")[int(kind[0])], "key": int(k[0]), "home": int(h[0])})
-    json.dump({"about": "written by mixer/keytrial/kt_x4.py export: the learned key reader's reference values on the generated clips of three_answer.json",
-               "weights_sha256": digest, "cases": cases}, open(os.path.join(core, "Tests", "DeckieCoreTests", "Fixtures", "learned_key.json"), "w"), indent=0)
+        print(nm, cases[-1]["answer"], cases[-1]["key"], f"{pr.max():.3f}", f"score spread {sc.max() - sc.min():.4f}")
+    json.dump({"about": "written by mixer/keytrial/kt_x4.py fixture: the learned key reader's reference values, for a model of made-up numbers (kt_x4.synthetic_flat), on the generated clips of three_answer.json",
+               "minor_lean": lean, "temperature": Tm, "numbers": int(len(flat)), "numbers_sum": float(flat.astype(np.float64).sum()), "cases": cases},
+              open(os.path.join(kt.HERE, "..", "..", "core", "Tests", "DeckieCoreTests", "Fixtures", "learned_key.json"), "w"), indent=0)
+
+def main_parity(mode, tool, every=10):
+    """python kt_x4.py parity <mode> "<swift tool> --learned": every tenth recording of the three outside sets, decoded
+    here and piped to the Swift reader; its 24 probabilities and its answer against this file's on the same samples."""
+    import torch, subprocess, struct, kt_cnn as C, kt_extract as KE, key_parity as KP
+    torch.set_num_threads(1)
+    share = json.load(open(os.path.join(kt.HERE, "x4_lean.json")))["lean_minor_share"]
+    z = np.load(os.path.join(kt.CACHE, f"x4_cnn_{mode}.npz")); tm = float(z["train_minor"]); lean = float(np.log(share / (1 - share)) - np.log(tm / (1 - tm)))
+    model = C.Net(); model.load_state_dict(torch.load(os.path.join(kt.CACHE, f"x4_cnn_{mode}.pt"))); model.eval(); flat = folded(model)
+    Tm = float(open(os.path.join(kt.HERE, "..", "..", "core", "Sources", "DeckieCore", "Key", "LearnedKey.swift")).read().split("pinnedTemperature = ")[1].split("\n")[0])
+    p = subprocess.Popen(tool.split(), stdin=subprocess.PIPE, stdout=subprocess.PIPE); n = same = 0; worst = 0.0; secs = 0.0; kinds = collections.Counter()
+    for name in ("mtg", "gsplus", "gs"):
+        for c in C.get(name)[::every]:
+            y, _ = KP.load44(c["path"]); L = KE.logspec(y)[:, KE.BASE:KE.BASE + KE.NB_MODEL].astype(np.float32)
+            pr = shipped_probs(shipped_scores(L, flat), lean, Tm); kind, k, h = three(pr[None]); t0 = time.time()
+            p.stdin.write(struct.pack("<q", len(y))); p.stdin.write(y.astype("<f4").tobytes()); p.stdin.flush()
+            got = p.stdout.readline().decode().rstrip("\n").split("\t"); secs += time.time() - t0
+            q = np.array([float(x) for x in got[2:]]); worst = max(worst, float(np.abs(q - pr).max())); n += 1; kinds[got[0]] += 1
+            same += int(got[0] == ("key", "home", "none")[int(kind[0])] and int(got[1]) == int(k[0]))
+    p.stdin.write(struct.pack("<q", -1)); p.stdin.close(); p.wait()
+    print(f"recordings {n}: the Swift reader's answer and likeliest key equal the Python reference's on {same}; largest difference in any probability {worst:.5f}; answers {dict(kinds)}; Swift time {secs / n:.2f} s a two-minute recording (pipe included)")
 
 def main_record(mode):
     """python kt_x4.py record <mode>: every recording the chosen model learned from, with its page and its licence
@@ -434,7 +471,7 @@ def main_record(mode):
     real = KS.load_real(); fsl = json.load(open(os.path.join(KS.FSL, "metadata.json")))
     z = zipfile.ZipFile(os.path.join(os.path.dirname(kt.DATA), "fmameta", "fma_metadata.zip"))
     r = csv.reader(io.TextIOWrapper(z.open("fma_metadata/raw_tracks.csv"), encoding="utf-8")); h = next(r); ix = {k: i for i, k in enumerate(h)}
-    fma = {row[0]: (row[ix["track_title"]].strip(), row[ix["track_url"]], row[ix["license_title"]], row[ix["license_url"]]) for row in r}
+    fma = {row[0]: (row[ix["track_title"]].strip(), row[ix["track_url"]] or row[ix["album_url"]] or row[ix["artist_url"]], row[ix["license_title"]], row[ix["license_url"]]) for row in r}
     rows = []
     for x in real:
         if x["source"] == "fsl":
@@ -466,3 +503,5 @@ if __name__ == "__main__":
     elif a[1] == "ship": main_ship()
     elif a[1] == "export": main_export(a[2])
     elif a[1] == "record": main_record(a[2])
+    elif a[1] == "parity": main_parity(a[2], a[3])
+    elif a[1] == "fixture": main_fixture()

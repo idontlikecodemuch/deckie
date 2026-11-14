@@ -169,6 +169,8 @@ public struct Analysis: Sendable {
     /// a key, the home note alone, or not sure, each from its own probability. Nil: the three-answer reader decides,
     /// as before 0.7.0.
     public var learnedKey: LearnedKey.Result? = nil
+    /// The learned reader's model, as the crate's `engine.models` names it; nil without the learned reader.
+    public var learnedKeyModel: String? = nil
     /// The record's answer: the learned reader's, or the three-answer reader's without it.
     public var keyAnswer: ThreeAnswerKey.Answer { learnedKey?.answer ?? threeAnswer.answer }
 

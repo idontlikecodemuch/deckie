@@ -127,11 +127,12 @@ memo Q's vocal fields, `vocal_structure` and `hooks`, are instead left out when 
   source, the engine is not; track L wrote `deckie-core`, which now names the code both engines share), `version`,
   `platform` (`macos-arm64`, `linux-x86_64`, `windows-x86_64`), `fidelity`, `models` (each `name`, `version` or null,
   `weights_sha256` or null), `decoder` (`name`, `version` or null) or null. An engine's `version` goes up whenever the
-  record it writes gains or changes fields (the Windows and Linux engine's is 0.6.0: 0.2.0 brought the vocal
+  record it writes gains or changes fields (the Windows and Linux engine's is 0.7.0: 0.2.0 brought the vocal
   blocks and `file.tag_bpm`, 0.3.0 the three-profile key vote, which changes keys, 0.3.1 `file.damaged_frames`, with
   damaged MP3 frames silenced, 0.4.0 the whitened-HPCP key, which changes keys again, 0.5.0 the three-answer key
   reader of D33, which changes the key block's source, confidence, code and votes, 0.6.0 the home note of D36:
-  `key_home` in place of a key block at 0.45), so a builder's work folder made
+  `key_home` in place of a key block at 0.45, 0.7.0 the learned key reader of research X4, which where its model
+  file is present writes the key block's source `learned-key` with a probability as the confidence), so a builder's work folder made
   by an older version is analysed again rather than reused.
   **proposed**: `fidelity` 0 means not benchmarked; n means the build passed benchmark tier n, tier 1 being the stage 1
   pass marks. A device with the audio re-analyses a record when its own fidelity is higher, or the record's level is a
@@ -141,7 +142,8 @@ memo Q's vocal fields, `vocal_structure` and `hooks`, are instead left out when 
 - `tempo_segments` *(tempo_segments)* **proposed** (spec 5.2's grid marker): a list of `start_bar`, `start_s`, `bpm`,
   `beats_per_bar`, `beat_in_bar` (1 when the segment starts on a downbeat, as rekordbox's `Battito`), `confidence`
   or null. One segment for a steady track.
-- `key` *(key)*: `source` (`three-answer` from engine 0.5.0, D33's reader, below; `hpcp-whitened` in 0.4.0, research
+- `key` *(key)*: `source` (`learned-key` from engine 0.7.0 where the learned reader's model is present, below;
+  `three-answer` from engine 0.5.0, D33's reader, below, and from 0.7.0 without that model; `hpcp-whitened` in 0.4.0, research
   R's method; `votes` from 0.3.0, `stft-edma` before), `confidence`, `camelot`, `key` or null, `scale` or null, `votes` (source name to Camelot
   code), `changes` *(key_changes)*: a list of `start_bar`, `end_bar`, `camelot`, or null. **proposed**: objects
   rather than track A's three-element lists.
@@ -172,6 +174,18 @@ memo Q's vocal fields, `vocal_structure` and `hooks`, are instead left out when 
   carries a three-answer key the reader was not sure of. **What a record says about its key** is then one of four
   things (`CrateTrack.keyState`): a key; a home note; not sure (a record of the `deckie` engine from 0.5.0 with
   neither: the reader reads every song); not read (any other record with neither).
+  **Deckie's own reading from engine 0.7.0, where the learned reader's model is present** (research X4, Nov 14,
+  2026; meaning only, no field added or changed): the learned reader (`LearnedKey` in DeckieCore) writes
+  `key.source` `learned-key`, its likeliest key as `key.camelot`, and that key's **probability** (0 to 1, three
+  decimals) as `key.confidence`. A key is its answer when the probability is **at least 0.5**; under 0.5 the block
+  is its best guess, flagged `key_uncertain`, and is dropped by `LocalFacts` exactly as a three-answer guess is
+  (the rule there is the same line: one of Deckie's own readings is shown only at 0.5 or more). Its home-note answer
+  (no key at one half, the two keys on one note together at one half) is the `key_home` block with `source`
+  `learned-key` and no key block. `key.votes` gains `three_answer`, the three-answer reader's key when it gave one.
+  `engine.models` names the model (`deckie-key-2b4fe8fa`). So a confidence of 1.0 from `three-answer` and of 0.83
+  from `learned-key` are not on one scale: the first is a rule's "sure", the second a measured chance of being
+  right (how well that chance holds on outside music: research X4). Without the model file an engine at 0.7.0
+  writes the three-answer record above, unchanged.
 - `phrase` *(phrase)*: `source`, `confidence`, `lattice_phase_bar` (1 to 8), `boundaries_bars`. Its `source` is track
   L's `structure.source` and covers `sections` too.
 - `sections` *(sections)*: a list of `start_bar`, `end_bar`, `label` (`intro`, `main`, `break`, `outro`), `energy`.
@@ -660,7 +674,7 @@ with D33 and named it: on screen it is the **home note** ("home note, mode open"
 **The block.** One optional block beside `key`, left out when absent (as `vocal_structure` and `hooks` are, so
 every record without it keeps its bytes), with the feature name `key_home`:
 
-- `key_home` *(key_home)*: `source` (the method, `three-answer`), `note` (the home note as the engine spells a
+- `key_home` *(key_home)*: `source` (the method, `three-answer` or, from engine 0.7.0 with its model, `learned-key`), `note` (the home note as the engine spells a
   key's, sharps: `A`, `C#`), `pitch_class` (0 to 11, C = 0), `camelot` (the two codes on that home note, minor
   first: `["8A", "11B"]`).
 

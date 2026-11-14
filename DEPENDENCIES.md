@@ -1,7 +1,7 @@
 # Dependencies
 
 What Deckie's PC and Linux track relies on that it did not write itself; last checked Oct 28, 2026 (section 8,
-Oct 29). The rule (charter `docs/architecture/pc-linux-track.md`, decision P16): every dependency is pinned by version
+Oct 29; section 11, Nov 14). The rule (charter `docs/architecture/pc-linux-track.md`, decision P16): every dependency is pinned by version
 and by hash, and its licence is quoted here before it is adopted. A hash, or digest, is a long fingerprint computed from a file's exact
 bytes: change one byte and it changes, so a matching hash proves a file is the one recorded here.
 
@@ -13,7 +13,8 @@ run time from a file fetched per machine, never linked and never committed; the 
 trained weights (section 7), exported once to a model file by a script whose Python tools are development-only,
 the file published on this repository's release `models-1` and fetched by its hash; and the weights of Google's
 YAMNet audio tagger, the vocal tagger's model (section 8), fetched by pinned URL and hash and exported and published
-the same way. Deckie's Swift package (`core/`) declares no packages from elsewhere,
+the same way; and, prepared but not shipped, the file of Deckie's own key reader (section 11), which Deckie
+trained itself on openly licensed recordings and which is not in the repository. Deckie's Swift package (`core/`) declares no packages from elsewhere,
 so it has no `Package.resolved` (Swift's list of exact package versions); dr_mp3, dr_flac and the ONNX Runtime header
 are copied files pinned by their hashes, not packages.
 
@@ -1026,6 +1027,66 @@ So the Windows Desk's acknowledgements carry Microsoft's notice (the table above
 **Not adopted: the Inter font.** The pages name Inter first, as the site does, but do not carry it: its licence (SIL
 Open Font Licence 1.1) is not on the allowlist. Where Inter is not installed the system's own interface font shows
 (Segoe UI, Cantarell, Ubuntu). Carrying it is the owner's call.
+
+## 11. Deckie's key reader: a model Deckie trained itself (prepared; its file is not in the repository)
+
+From engine 0.7.0 the record's key can be read by a small convolutional model of Deckie's own (`LearnedKey`,
+`core/Sources/DeckieCore/Key/LearnedKey.swift`; research X4, `docs/research/x4-key-complete.md`). It is the first
+model Deckie trained, so D15's record is written from the other side: there is no publisher's licence to quote, and
+what is recorded is where every training recording came from and under what terms. Checked Nov 14, 2026.
+
+**Status: prepared, not shipped.** The standing rule of the key work is that no trained numbers are committed, and
+no release asset has been published. So the model's file is in neither place, the acknowledgements table above has
+no row for it, and every build from this repository reads keys with the untrained three-answer reader. The code is
+pinned to one file by its hash; putting that file where the engine looks turns the learned reader on, with nothing
+else to change. Publishing the file (as an asset of the release `models-1`, like the two other models, or in the
+repository) is the owner's decision; when it is made, the row for the table is the one in the last paragraph here.
+
+| | |
+|---|---|
+| The file | `deckie-key.f16`: 235,598 numbers as 16-bit floats, 471,196 bytes. Looked for at `DECKIE_KEY_MODEL`, else `core/.models/` in a checkout, else `models/` beside the PC program (`KeyModel`, `PCBuild.EngineFiles`). It runs in plain Swift: no model runtime |
+| Name and hash | `deckie-key-2b4fe8fa`; SHA-256 `2b4fe8fabf4fc5bd301e04af6c136afe76399f0077984a7f5df78b0ba0b07f7d`, pinned in `LearnedKey.Model`; a file with any other hash is refused |
+| Made by | `mixer/keytrial/kt_x4.py` (`cnn mix`, then `export mix`), Nov 14, 2026, on one computer's CPU in 47 minutes; the script, its settings and its random seeds are in the repository, the training audio is not |
+| What it holds | weights of small filters over a picture of the pitch content of sound. No audio, no picture of any recording and no list of labels is in it |
+| Training recordings | 3,129. `kt_x4.py record mix` writes the list, one recording a line with its title, its page at the source and its licence (710,133 bytes, SHA-256 `8769b179fc1c09ba39ba9d84fdb03d57f67359be32cbb30771797e43d14c87f5`). The list is not committed either: titles and pages name people, and the repository's rule is to name none. It ships with the model, as the credit CC BY asks for |
+| Replacement path | the untrained three-answer reader (`ThreeAnswerKey`), which needs no trained numbers and is what runs without the file. A recording's owner who objects is answered by retraining without that recording, or by this path |
+
+**The recordings and their terms.** Only recordings whose own licence allows commercial use and adaptation were
+used: CC BY (any version), CC0, or a public-domain mark. Recordings under non-commercial, no-derivatives or
+share-alike licences, and those marked "Public Domain / Sound Recording Common Law Protection", were left out before
+anything was fetched (research X3, section 1, gives the reasons).
+
+| Source | Recordings | Each recording's own licence | The key it was taught with |
+|---|---:|---|---|
+| Freesound Loop Dataset (Zenodo record 3967852) | 710 loops | CC0 1.0: 379; CC BY 3.0: 331 (from the set's `metadata.json`) | a person's: the set's annotations (record licence CC BY 4.0), used only where the annotators agree |
+| Free Music Archive songs labelled by FMAK (Zenodo record 10719860; audio licence from the archive's `tracks.csv`) | 371 songs | CC BY, versions 2.0 to 4.0: 345; CC0 or public-domain mark: 26 | a person's: FMAK's labels (record licence CC BY 4.0) |
+| Open Well-Tempered Clavier, Book 1 | 48 recordings | CC0 1.0 | the key in each piece's title |
+| Free Music Archive, 30-second clips (`fma_large.zip` of the archive's research data set) | 2,000 clips | CC BY, versions 1.0 to 4.0: 1,717; CC0 or public-domain mark: 283 | none of anyone's: the key Deckie's untrained three-answer reader named, used only where that reader was sure |
+
+**Attribution.** CC BY asks that the author be credited, the licence named and changes indicated. The list gives,
+for every recording, its title, its page at the source (which names its author) and its licence with the licence's
+page; the app's acknowledgements would carry the row below and point to the list. The recordings were not changed
+and are not redistributed; they were read to fit the model's numbers.
+
+**Not settled, written down so nobody has to find it again** (research X3, "For the attorney", has the detail):
+
+- Whether a list of pages is credit enough for the CC BY 3.0 recordings, or the authors' names must be printed in
+  the app. The names are on the listed pages and can be added to the list in a day.
+- FMAK's record says CC BY 4.0 and also "The dataset is meant for research purposes". The labels of 371 songs come
+  from it. Without them the model would be retrained on the other 2,758 recordings.
+- The 71 Free Music Archive recordings marked "Public Domain" or "Public Domain Mark 1.0" rest on their uploaders'
+  statements.
+
+**Nothing trained on the GiantSteps sets ships or is prepared to.** They are used only to score the reader
+(research X4).
+
+**The row for the acknowledgements table**, to add to `core/dependencies.json` when the file is published: name
+"Deckie's key reader (learned model)"; version "deckie-key-2b4fe8fa (engine 0.7.0)"; licence "Deckie's own model;
+its training recordings are under CC BY (credited in the list of section 11), CC0 or public domain"; training sets
+"3,129 recordings, each under its own CC BY, CC0 or public-domain terms: 710 Freesound loops and 371 Free Music
+Archive songs with human key labels (labels CC BY 4.0), 48 CC0 piano recordings, 2,000 Free Music Archive clips
+whose key Deckie's untrained reader named; trained by Deckie"; replacement path "the untrained three-answer reader,
+which needs no trained numbers".
 
 ## Checked and rejected
 

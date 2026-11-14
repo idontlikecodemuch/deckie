@@ -1,10 +1,12 @@
 import Foundation
 
 /// Deckie's learned key reader (research X4, `docs/research/x4-key-complete.md`): a small convolutional model over a
-/// log-frequency spectrogram, in plain Swift, with nothing to link and nothing to download. Its numbers
-/// (`LearnedKeyWeights`) were fitted by `mixer/keytrial/kt_x4.py` only on recordings whose own licence allows a shipped
-/// model (CC BY, CC0, public domain); `DEPENDENCIES.md` lists them. The Python reference is `kt_x4.py` (`reference`),
-/// and Fixtures/learned_key.json holds its values on generated clips.
+/// log-frequency spectrogram, in plain Swift, with nothing to link. Its numbers (`Model`, 471,196 bytes in the file
+/// `deckie-key.f16`) were fitted by `mixer/keytrial/kt_x4.py` only on recordings whose own licence allows a shipped
+/// model (CC BY, CC0, public domain); `DEPENDENCIES.md`, section 11, says which. The file is not in the repository:
+/// where it is present the engine reads keys with this reader, and where it is not, with the untrained
+/// three-answer reader. The Python reference is `kt_x4.py` (`shipped_scores`), and Fixtures/learned_key.json holds
+/// its values on generated clips for a model of made-up numbers both sides can write down.
 ///
 /// The steps, each the reference's:
 /// 1. **Spectrogram.** Mono audio at 44,100 Hz; frames of 16,384 samples (a periodic Hann window) every 8,820 samples
@@ -130,17 +132,43 @@ public enum LearnedKey {
         public var temperature: Double
         public var name: String
 
-        /// The model whose numbers ship in `LearnedKeyWeights`.
-        public static let shipped: Model = try! Model(base64: LearnedKeyWeights.base64, minorLean: LearnedKeyWeights.minorLean,
-                                                      temperature: LearnedKeyWeights.temperature, name: LearnedKeyWeights.name)
+        /// The file the numbers live in, beside the other models (`core/.models`, or `models/` in a package). It is
+        /// not in the repository (no trained numbers are); without it the engine reads keys with the untrained
+        /// three-answer reader.
+        public static let fileName = "deckie-key.f16"
+        /// The one file this code is pinned to (research X4, the model `mix`): its name, size, SHA-256, and the two
+        /// values fixed where it was made (the lean from openly licensed electronic music, the temperature on
+        /// labelled recordings it did not learn from).
+        public static let pinnedName = "deckie-key-2b4fe8fa"
+        public static let pinnedByteCount = 471_196
+        public static let pinnedSHA256 = "2b4fe8fabf4fc5bd301e04af6c136afe76399f0077984a7f5df78b0ba0b07f7d"
+        public static let pinnedMinorLean = 0.10967048463898905
+        public static let pinnedTemperature = 1.3522496441040666
 
         public struct BadWeights: Error {}
 
-        /// The numbers as 16-bit floats, low byte first, in the order `kt_x4.py export` writes them: the input's scale
-        /// and shift; for each convolution its weights (out, in, frames, bands) then its biases.
+        /// The pinned file's bytes as a model (the caller checks the SHA-256; this checks the size).
+        public init(pinnedFile data: Data) throws {
+            guard data.count == Model.pinnedByteCount else { throw BadWeights() }
+            try self.init(data: data, minorLean: Model.pinnedMinorLean, temperature: Model.pinnedTemperature, name: Model.pinnedName)
+        }
+
         public init(base64: String, minorLean: Double, temperature: Double, name: String) throws {
             guard let data = Data(base64Encoded: base64) else { throw BadWeights() }
-            let v: [Float] = stride(from: 0, to: data.count - 1, by: 2).map { Model.half(UInt16(data[$0]) | UInt16(data[$0 + 1]) << 8) }
+            try self.init(data: data, minorLean: minorLean, temperature: temperature, name: name)
+        }
+
+        /// The numbers as 16-bit floats, low byte first, in the order `kt_x4.py export` writes them: the input's scale
+        /// and shift; for each convolution its weights (out, in, frames, bands) then its biases.
+        public init(data: Data, minorLean: Double, temperature: Double, name: String) throws {
+            guard data.count % 2 == 0 else { throw BadWeights() }
+            let bytes = [UInt8](data)
+            let v: [Float] = stride(from: 0, to: bytes.count, by: 2).map { Model.half(UInt16(bytes[$0]) | UInt16(bytes[$0 + 1]) << 8) }
+            try self.init(values: v, minorLean: minorLean, temperature: temperature, name: name)
+        }
+
+        /// The numbers themselves, in the same order.
+        public init(values v: [Float], minorLean: Double, temperature: Double, name: String) throws {
             var at = 0
             func take(_ n: Int) throws -> [Float] {
                 guard at + n <= v.count else { throw BadWeights() }
@@ -152,13 +180,17 @@ public enum LearnedKey {
             }
             let head = try take(2)
             inputScale = head[0]; inputShift = head[1]
-            convs = [try layer(12, 1, 5, 5), try layer(12, 12, 3, 3), try layer(24, 12, 3, 3), try layer(24, 24, 3, 3),
-                     try layer(48, 24, 3, 3), try layer(48, 48, 3, 3), try layer(96, 48, 3, 3), try layer(96, 96, 3, 3)]
-            proj = try layer(48, 96, 1, bands / 8)
-            last = try layer(24, 48, 1, 1)
+            convs = try Model.shapes[..<8].map { try layer($0.0, $0.1, $0.2, $0.3) }
+            proj = try layer(Model.shapes[8].0, Model.shapes[8].1, Model.shapes[8].2, Model.shapes[8].3)
+            last = try layer(Model.shapes[9].0, Model.shapes[9].1, Model.shapes[9].2, Model.shapes[9].3)
             guard at == v.count else { throw BadWeights() }
             self.minorLean = minorLean; self.temperature = temperature; self.name = name
         }
+
+        /// Each convolution's shape (out, in, frames, bands), in the file's order: 235,598 numbers with the two at
+        /// the head and a bias per output map.
+        public static let shapes: [(Int, Int, Int, Int)] = [(12, 1, 5, 5), (12, 12, 3, 3), (24, 12, 3, 3), (24, 24, 3, 3), (48, 24, 3, 3),
+                                                            (48, 48, 3, 3), (96, 48, 3, 3), (96, 96, 3, 3), (48, 96, 1, bands / 8), (24, 48, 1, 1)]
 
         /// A 16-bit float's value.
         static func half(_ h: UInt16) -> Float {
@@ -253,7 +285,7 @@ public enum LearnedKey {
     }
 
     /// The model's 24 scores for a whole spectrogram: stretch by stretch, averaged by length.
-    public static func scores(spectrogram spec: [Float], frames: Int, model: Model = .shipped) -> [Double]? {
+    public static func scores(spectrogram spec: [Float], frames: Int, model: Model) -> [Double]? {
         guard frames >= 8 else { return nil }
         var total = [Double](repeating: 0, count: 24), weight = 0.0, at = 0
         while at < frames {
@@ -267,7 +299,7 @@ public enum LearnedKey {
     }
 
     /// Probabilities from scores: softmax, the minor keys raised by the lean, the whole divided by the temperature.
-    public static func probabilities(scores s: [Double], model: Model = .shipped) -> [Double] {
+    public static func probabilities(scores s: [Double], model: Model) -> [Double] {
         func logSoftmax(_ v: [Double]) -> [Double] {
             let top = v.max() ?? 0, z = log(v.reduce(0) { $0 + exp($1 - top) }) + top
             return v.map { $0 - z }
@@ -288,7 +320,7 @@ public enum LearnedKey {
     }
 
     /// The reader on mono audio at 44,100 Hz (any other rate throws `HPCPKey.EstimateError.resampleFirst`).
-    public static func read(_ mono: [Float], sampleRate rate: Int, model: Model = .shipped) throws -> Result {
+    public static func read(_ mono: [Float], sampleRate rate: Int, model: Model) throws -> Result {
         guard rate == sampleRate else { throw HPCPKey.EstimateError.resampleFirst(sampleRate: rate) }
         let (n, spec) = spectrogram(mono)
         guard let s = scores(spectrogram: spec, frames: n, model: model) else {
