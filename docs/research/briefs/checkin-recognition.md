@@ -2,7 +2,7 @@
 
 Branch `trial/own-recognition`. Newest entry first. Nothing here ships without the owner's decision.
 
-## Nov 14, 2026, 03:10 UTC: the full benchmark has run once, with the fast matcher
+## Nov 14, 2026, 01:25 UTC: the full benchmark has run once, with the fast matcher
 
 **Done since the last entry**
 - The matcher is now three-point hashes built from each stretch's strongest points (a strength level kept in two
@@ -60,7 +60,7 @@ that decides whether this is enough.
 
 **Carry on.** Direction unchanged; the noise gap to ShazamKit is the thing to watch.
 
-## Nov 14, 2026, 02:10 UTC: first booth-condition numbers; the matcher is too slow as built, and what I am doing about it
+## Nov 14, 2026, 00:50 UTC: first booth-condition numbers; the matcher is too slow as built, and what I am doing about it
 
 **Received** (through the orientation session): the owner's yes on real DJ mixes; "it has to be faster before we
 finalize it"; timing and false matches wanted against catalogue size up to 10,000 songs; the benchmark must run on
