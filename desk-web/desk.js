@@ -459,10 +459,35 @@
       }
       body.append(box);
     });
-    const rel = s.names && s.names.release;
-    body.append(el("div", { class: "fact" }, el("label", { text: t("release") }),
-      el("p", { class: "value", text: rel && rel.value ? rel.value : t("none") }),
-      el("p", { class: "from", text: rel && rel.value ? factFrom(rel.from) : t("factNotFound") })));
+    // A song's facts (D34): release, year, label and genre as fields like the names, each with where it came from;
+    // the rest listed, read-only. Everything here goes to the iPad.
+    for (const field of ["release", "year", "label", "genre"]) {
+      const f = s.names ? s.names[field] : null;
+      const id = "fact-" + field;
+      const input = el("input", { type: "text", id, "data-field": field, autocomplete: "off", spellcheck: "false",
+        placeholder: field === "genre" ? t("genreHint") : null });
+      input.value = f && f.value != null ? f.value : "";
+      input.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") { e.preventDefault(); commitSongFact(s, field, input); }
+        else if (e.key === "Escape") { e.preventDefault(); input.value = f && f.value != null ? f.value : ""; input.blur(); }
+      });
+      input.addEventListener("change", () => commitSongFact(s, field, input));
+      body.append(el("div", { class: "fact" }, el("label", { for: id, text: t(field) }), input,
+        el("p", { class: "from", text: fromLine(f).text })));
+    }
+    const others = (s.names && s.names.others) || [];
+    if (others.length) {
+      body.append(el("div", { class: "fact facts-list" }, el("label", { text: t("moreFacts") }),
+        ...others.map((o) => el("p", { class: "value", text: coded("factName", o.name) + ": " + o.value,
+          title: o.from ? factFrom(o.from) : null }))));
+    }
+    const tags = (s.names && s.names.fileTags) || [];
+    const left = Object.keys((s.names && s.names.leftOut) || {});
+    if (tags.length || left.length) {
+      body.append(el("div", { class: "fact facts-list" }, el("label", { text: t("fileTagsHeading") }),
+        ...tags.map((o) => el("p", { class: "mut", text: o.name + ": " + o.value })),
+        ...(left.length ? [el("p", { class: "from", text: t("leftOutLine", { what: left.map((r) => coded("leftOut", r)).join(", ") }) })] : [])));
+    }
     body.append(el("div", { class: "fact" }, el("label", { text: t("whereLabel") }),
       ...placeLines(s).map((l, i) => el("p", { class: i ? "mut" : "value", text: l }))));
     body.append(el("p", { class: "facts-line", text: t("lengthLine", { length: mmss(s.seconds) }) }));
@@ -501,6 +526,15 @@
       const next = visibleOrder[i + 1] || (onlyNeedName ? visibleOrder.find((x) => x !== s.id) : null);
       if (next) { select(next); const ti = $("fact-title"); if (ti) ti.focus(); }
     }
+  }
+
+  /// Return on one of a song's facts (D34): a change is the DJ's (one step of undo); an empty field clears it.
+  function commitSongFact(s, field, input) {
+    const v = input.value.trim();
+    const f = s.names ? s.names[field] : null;
+    const before = f && f.value != null ? f.value : "";
+    if (v === before) return;
+    request("song.fix", { song: s.id, facts: { [field]: v } }, { errorWord: "couldntSave" });
   }
 
   function checkSongs(ids) {

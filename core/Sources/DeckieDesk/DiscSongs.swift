@@ -36,6 +36,11 @@ public enum DiscRecords {
         public var titles: [Int: String]
         public var performers: [Int: String]
         public var isrcs: [Int: String]
+        /// The rest of what CD-Text carries (D34), by song number (0 is the disc); nil in a record made before.
+        public var composers: [Int: String]?
+        public var songwriters: [Int: String]?
+        public var messages: [Int: String]?
+        public var barcode: String?
         /// The songs worked out: number, the song's id (the hash of its sound, as an entry's id is) and the sectors
         /// that could not be read even on a second try (silence in what was read).
         public var songs: [Song]
@@ -56,12 +61,13 @@ public enum DiscRecords {
             titles = (b?.titles ?? [:]).filter { $0.key > 0 }
             performers = (b?.performers ?? [:]).filter { $0.key > 0 }
             isrcs = b?.isrcs ?? [:]
+            composers = b?.composers; songwriters = b?.songwriters; messages = b?.messages; barcode = b?.barcode
             songs = []
             self.fileExtension = fileExtension
         }
 
         enum CodingKeys: String, CodingKey {
-            case toc, text, titles, performers, isrcs, songs
+            case toc, text, titles, performers, isrcs, songs, composers, songwriters, messages, barcode
             case textDetail = "text_detail", discTitle = "disc_title", discPerformer = "disc_performer"
             case fileExtension = "file_extension"
         }
@@ -76,6 +82,10 @@ public enum DiscRecords {
             titles = try c.decodeIfPresent([Int: String].self, forKey: .titles) ?? [:]
             performers = try c.decodeIfPresent([Int: String].self, forKey: .performers) ?? [:]
             isrcs = try c.decodeIfPresent([Int: String].self, forKey: .isrcs) ?? [:]
+            composers = try c.decodeIfPresent([Int: String].self, forKey: .composers)
+            songwriters = try c.decodeIfPresent([Int: String].self, forKey: .songwriters)
+            messages = try c.decodeIfPresent([Int: String].self, forKey: .messages)
+            barcode = try c.decodeIfPresent(String.self, forKey: .barcode)
             songs = try c.decodeIfPresent([Song].self, forKey: .songs) ?? []
             fileExtension = try c.decodeIfPresent(String.self, forKey: .fileExtension) ?? "wav"
         }

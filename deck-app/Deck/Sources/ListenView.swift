@@ -63,6 +63,10 @@ struct PlayingPanel: View {
                         Text(t.playingTitle).font(.system(size: 44, weight: .heavy)).foregroundStyle(t.hasName ? Theme.tx : (t.on ? t.discColor : Theme.tx)).lineLimit(2).minimumScaleFactor(0.6)
                         if t.hasName {
                             Text(t.artist).font(.system(size: 24, weight: .medium)).foregroundStyle(Theme.mut).lineLimit(1).minimumScaleFactor(0.7)
+                            // The song's facts (D34) in one short line; none shows nothing, as before.
+                            if let line = t.factsLine {
+                                Text(line).font(.system(size: 15)).foregroundStyle(Theme.dim).lineLimit(1).truncationMode(.tail)
+                            }
                         } else {
                             Text(Words.noNameYet).font(.system(size: 24, weight: .medium)).foregroundStyle(Theme.mut).lineLimit(1)
                             if !t.secondLine.isEmpty {

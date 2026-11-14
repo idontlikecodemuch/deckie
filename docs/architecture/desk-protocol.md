@@ -104,6 +104,15 @@ for `title`, `artist`, `version` and `release`: `from` is a code with words `fac
 `user` "you typed this", `pasted`, `pattern`, `playlist`); `guess` is Desk's guess, not yet checked; `checked` is a
 guess the DJ kept.
 
+A song's facts (D34, added Nov 14, 2026; no new protocol number, as only fields were added): `names` also carries
+`year`, `label` and `genre`, the same shape, from the crate file's `ident.facts` (`release` too, which falls back to
+what Desk noted for a disc with no title of its own); a fact's `from` is the crate file's origin (`tag`, `cdtext`, a
+DJ program, `user`, or `lookup:<service>` later), with words `factFrom.<code>`; a genre's `value` is its values
+joined by ", ". `names.others` lists the song's other facts in the crate file's order, each `{"name", "value",
+"from"}` (words `factName.<name>`); `names.fileTags` the rest of the file's tags, each `{"name", "value"}` by the
+tag's own name; `names.leftOut` what was not sent, reason to count (words `leftOut.<reason>`). All read-only except
+through `song.fix` below.
+
 Codes, each with its words in the list: a key's `from` (`keyFrom.<code>` and `programName.<code>`), `nameFrom` (codes
 joined by `+`, `nameFromPart.<code>`), `notes` (`needsName`, `damagedFrames`, `gridUnsure`, `vocalsNotRead`, `signed`)
 and an import log's `reason` (`reason.<code>`). A place with no `source` is in the music folder (`folder` "" is its
@@ -154,7 +163,7 @@ Every request gets a reply. While a run goes, only `state`, `drives.list`, `crat
 | `song.audio` | `song`; `decoded` (optional) | `type`, `bytes`, `chunks`, `token`, `seconds`, `start`, `kind` | `audio.chunk` events |
 | `run.add` | `path`; `name` (a drive's name, optional) | `source` (the source's name), `crate` | `run.started`, `run.progress`…, `run.finished` or `run.failed`, `state`, `songs` |
 | `run.carryOn` | | as `run.add` | as `run.add` |
-| `song.fix` | `song` (id); any of `title`, `artist`, `version` (text; "" clears artist or version), `tags` (list) | | `state`, `songs` |
+| `song.fix` | `song` (id); any of `title`, `artist`, `version` (text; "" clears artist or version), `tags` (list); `facts` (D34: an object of fact name to text, any of the crate file's fact names; "" clears one; a genre may be several, split at "," or ";") | | `state`, `songs` |
 | `source.rename` | `source`, `name` | | `state`, `songs` |
 | `folder.rename` | `source`, `folder`, `name` | | `state`, `songs` |
 | `song.move` | `song`, `source`, `folder`, `by` (-1 up, 1 down) | | `state`, `songs` |

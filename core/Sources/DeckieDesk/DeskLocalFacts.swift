@@ -81,8 +81,45 @@ public enum DeskLocalFacts {
         let tops = Array(info.roots.values) + (info.musicFolderURL.map { [$0] } ?? [])
         let chosen = DJLibraryChoices.load(home).chosen.map { DJLibraryLocations.Found(program: $0.program, url: URL(fileURLWithPath: $0.path)) }
         let refs = files(for: crate, paths: paths, roots: info.roots, musicFolder: info.musicFolderURL)
-        return LocalFacts.gather(&crate, files: refs, djHome: djHome(for: home, environment: environment), tops: tops,
-                                 chosen: chosen, records: home.store.records)
+        var summary = LocalFacts.gather(&crate, files: refs, djHome: djHome(for: home, environment: environment), tops: tops,
+                                        chosen: chosen, records: home.store.records)
+        let fromDisc = discFacts(&crate, home: home, info: info)
+        var from = summary.report.factsFrom ?? [:]
+        from[SongFacts.Origin.disc] = fromDisc > 0 ? fromDisc : nil
+        summary.report.factsFrom = from
+        return summary
+    }
+
+    /// A music CD's facts from its CD-Text (D34), as `cdtext`: the disc's title as the release, its performer as the
+    /// release's artist where it differs from the song's, and each song's ISRC, composer (or songwriter) and message.
+    /// Replaces what the disc gave before; a song's file or library, or the DJ, ranks higher. Returns the songs given
+    /// facts.
+    @discardableResult
+    public static func discFacts(_ crate: inout Crate, home: DeskHome, info: CrateInfo) -> Int {
+        var discs: [String: DiscRecords.Record] = [:]
+        for (source, id) in info.discs { if let r = DiscRecords.record(home, disc: id) { discs[source] = r } }
+        var given = 0
+        for i in crate.tracks.indices {
+            crate.tracks[i].ident.dropFacts { $0 == SongFacts.Origin.disc }
+            guard let (r, n) = crate.tracks[i].ident.allPlaces.lazy.compactMap({ p -> (DiscRecords.Record, Int)? in
+                guard let d = p.disc, let r = discs[d], let n = p.track else { return nil }
+                return (r, n)
+            }).first else { continue }
+            var id = crate.tracks[i].ident
+            let from = SongFacts.Origin.disc
+            func offer(_ name: String, _ v: String?) { if let v { id.offer(name, .init(v, from: from)) } }
+            offer(SongFacts.release, r.discTitle)
+            if let p = r.discPerformer, p.compare(r.performers[n] ?? id.artist ?? "", options: .caseInsensitive) != .orderedSame {
+                offer(SongFacts.releaseArtist, p)
+            }
+            offer(SongFacts.isrc, r.isrcs[n])
+            offer(SongFacts.composer, r.composers?[n] ?? r.songwriters?[n])
+            offer(SongFacts.comment, r.messages?[n])
+            offer(SongFacts.barcode, r.barcode)
+            if id.facts.values.contains(where: { $0.from == from }) { given += 1 }
+            crate.tracks[i].ident = id
+        }
+        return given
     }
 
     /// "Look again for keys and names" on a crate the desk keeps, without reading its music again: gathers, puts the
