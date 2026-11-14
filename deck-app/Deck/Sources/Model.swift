@@ -105,6 +105,9 @@ struct Track: Codable, Identifiable, Hashable {
     /// Whether `keyShown` is words rather than a code or "?", so a narrow key column lets it be as wide as it needs.
     var keyShownIsWords: Bool { key == nil && (keyHome != nil || keyNotSure == true) }
 
+    /// Clean or dirty (D39), from the crate file's `lyrics` fact: "clean", "dirty", or nil when not said.
+    var lyrics: String? { facts?["lyrics"]?.first }
+
     /// The short line of facts where a song's details are shown: "Friday Night · 1999 · Nervous · House, Garage",
     /// with only those present; nil when the crate file gives none. How facts are shown is to be refined (D34).
     var factsLine: String? {

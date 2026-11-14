@@ -113,6 +113,11 @@ enum Words {
     static let pumpkin = "🎃"
     /// The remix mark.
     static let remixMark = "RMX"
+    /// new (D39): clean or dirty, as a small mark where it is known (the crate file's `lyrics` fact). A placeholder
+    /// until the copy audit.
+    static let cleanMark = "clean"
+    static let dirtyMark = "dirty"
+    static func lyricsMark(_ lyrics: String) -> String? { lyrics == "clean" ? cleanMark : (lyrics == "dirty" ? dirtyMark : nil) }
 
     // MARK: a crate file with no fingerprints (the playing panel)
 
