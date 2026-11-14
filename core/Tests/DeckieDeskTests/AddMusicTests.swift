@@ -219,6 +219,60 @@ struct StopKeepsSongsTests {
         #expect(rest.analysed == 3 - crate.tracks.count)   // the songs read before are not read again
         #expect(DeskRun.pending(home: home, crateId: info.id) == nil)
     }
+
+    /// A source already in the crate is read again because its files changed, and the DJ stops part-way: every song
+    /// the crate had before stays (the ones not reached yet as they were), the ones read so far are the new reading,
+    /// and Carry on reads only the songs not reached.
+    @Test func stopDuringAReReadKeepsTheSongsThatWereThere() async throws {
+        let root = try scratch("stop-reread")
+        let stick = root.appendingPathComponent("Stick 3/House")
+        try FileManager.default.createDirectory(at: stick, withIntermediateDirectories: true)
+        let buffer = TestTrack.render()
+        func write(_ gains: [Double], at date: Date? = nil) throws {
+            for (i, gain) in gains.enumerated() {
+                let url = stick.appendingPathComponent("0\(i + 1) Song.wav")
+                try TestTrack.wav(AudioBuffer(sampleRate: buffer.sampleRate, channelCount: buffer.channelCount,
+                                              samples: buffer.samples.map { $0 * Float(gain) })).write(to: url)
+                // The same length is the same size: the time it changed is what says it changed.
+                if let date { try FileManager.default.setAttributes([.modificationDate: date], ofItemAtPath: url.path) }
+            }
+        }
+        try write([1.0, 0.6, 0.35])
+        let home = DeskHome(root: root.appendingPathComponent("home"))
+        try home.prepare()
+        let info = try home.shelf.make(name: "My crate")
+        let analyser = try Builder.makeAnalyser(jobs: 1)
+        let request = RunRequest(folder: root.appendingPathComponent("Stick 3"), source: "Stick 3")
+        func run() -> DeskRun {
+            DeskRun(home: home, crateId: info.id, request: request, jobs: 1, device: "Mac15,6", analyser: analyser,
+                    signer: nil, printer: DeskRun.portablePrint)
+        }
+        let (first, _) = try await CPUTurns.exclusive { try run().run() }
+        #expect(first.tracks.count == 3)
+        let before = Set(first.tracks.map(\.id))
+
+        // Every file changes (new bytes, a later time), and the stick is read again; Stop once one song is read.
+        try write([0.9, 0.5, 0.3], at: Date().addingTimeInterval(120))
+        let again = run()
+        let (stopped, report) = try await CPUTurns.exclusive {
+            try again.run { p in if case .file? = p.line { again.stop() } }
+        }
+        #expect(report.stopped == true)
+        let readNow = Set(stopped.tracks.map(\.id)).subtracting(before)
+        #expect(readNow.count >= 1 && readNow.count < 3, "\(readNow.count)")
+        // Nothing taken away: the songs not reached yet are there as they were, one entry per file.
+        #expect(stopped.tracks.count == 3, "\(stopped.tracks.count)")
+        #expect(Set(stopped.tracks.map(\.id)).intersection(before).count == 3 - readNow.count)
+        #expect(Set(stopped.tracks.compactMap(\.file.rel)) == ["House/01 Song.wav", "House/02 Song.wav", "House/03 Song.wav"])
+        #expect(try CrateReader.read(from: home.shelf.package(info.id)).tracks.count == 3)
+        #expect(DeskRun.pending(home: home, crateId: info.id) == request)
+
+        // Carry on: only the songs not reached are read; the old readings are replaced, none is left behind.
+        let (all, rest) = try await CPUTurns.exclusive { try run().run() }
+        #expect(rest.stopped == nil && rest.analysed == 3 - readNow.count)
+        #expect(all.tracks.count == 3 && Set(all.tracks.map(\.id)).isDisjoint(with: before))
+        #expect(DeskRun.pending(home: home, crateId: info.id) == nil)
+    }
 }
 
 /// Collects the messages a protocol in this process sends.

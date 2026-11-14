@@ -450,6 +450,21 @@ public final class Builder: Sendable {
             return Place(disc: nil, folder: SourceReading.group(of: rel), track: nil)
         }
 
+        // A stopped build replaces only what it reached. A file of this read not reached yet (a source read again
+        // because its files changed, stopped part-way) keeps the place, the entry and the import-log line it had
+        // before, until Carry on reads it: Stop never takes a song out of the crate.
+        let stoppedEarly = notReached > 0
+        let reached = stoppedEarly ? Set(files.filter { done[$0.rel] != nil }.map(\.rel)) : []
+        let notReachedPlaces = stoppedEarly ? Set(files.filter { done[$0.rel] == nil }.map(placeRead)) : []
+        /// Whether a place the crate had is replaced by this read. `file` is the entry's own file (below the folder,
+        /// as `files` names it) for its own place; another place has no file of its own, so its place says.
+        func replaced(_ p: Place, file: String?) -> Bool {
+            guard belongsToRead(p) else { return false }
+            guard stoppedEarly else { return true }
+            if let file { return reached.contains(file) }
+            return !notReachedPlaces.contains(p)
+        }
+
         // What the crate keeps from before: each entry with the places that do not belong to this read. Their
         // import-log entries stay too.
         var kept: [String: (entry: CrateTrack, own: Place?, others: [Place])] = [:]
@@ -459,14 +474,16 @@ public final class Builder: Sendable {
                 // An entry only in a folder on the Mac keeps no folder label; as a place, it is `file.rel`'s folder.
                 var mine = t.ident.ownPlace
                 if mine.disc == nil && mine.folder == nil { mine.folder = SourceReading.group(of: t.file.rel ?? "") }
-                let own = belongsToRead(mine) ? nil : mine
-                let others = t.ident.otherPlaces.filter { !belongsToRead($0) }
+                let own = replaced(mine, file: prefix + (t.file.rel ?? "")) ? nil : mine
+                let others = t.ident.otherPlaces.filter { !replaced($0, file: nil) }
                 if own != nil || !others.isEmpty { kept[t.id] = (t, own, others) }
             }
             for e in existing.manifest.importLog?.entries ?? [] {
                 let fromSource = { (s: String) in e.rel.hasPrefix(s + "/") }
                 let keep = options.source.map { !fromSource($0) } ?? options.keepSources.contains(where: fromSource)
-                if keep { keptEntries.append(e) }
+                // A stopped build keeps the line of a file it did not reach (a left-out folder is logged anew).
+                let notReachedLine = stoppedEarly && !reached.contains(e.rel) && e.reason != Reason.skipped
+                if keep || notReachedLine { keptEntries.append(e) }
             }
         }
         let keptPlaces = kept.values.reduce(0) { $0 + ($1.own == nil ? 0 : 1) + $1.others.count }
