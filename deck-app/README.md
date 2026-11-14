@@ -20,7 +20,9 @@ Deck app/
       ListenView.swift        Listen page: playing panel, whole-song wave, chips
       DebugSheet.swift        test-with-file sheet, mic level meter
       SuggestionsView.swift   Up next: Simple / Full and the Shuffle dial, the ranked picks, More, JoinView (Canvas port of drawJoin)
-      OtherViews.swift        the Crate tab (sources and folders), Mix map (WKWebView)
+      OtherViews.swift        the Crate tab (sources and folders, Open crate file), Mix map (WKWebView)
+      CrateLibrary.swift      a crate file as the booth sees it (tracks, places, waves, signatures, picks)
+      Words.swift             the words for opening crate files and songs with no name (placeholders, D28)
     Resources/
       deck_data.json          built by tools/prep_data.py
       overview.json           whole-song waveforms (tools/overview_waves.py, also run by prep_data.py)
@@ -174,7 +176,10 @@ built app's embedded.mobileprovision), so the app keeps working until then witho
 dial, 0 to 1, then re-roll), `deck://pin?i=0`, `deck://tab?i=0|1|2`,
 `deck://scroll?to=more|crate-rest|more-end` (scroll the picks to More, to where the shortlist ends, or to the end),
 `deck://search?q=love` (search More; an empty q clears),
-`deck://orient?o=landscape|portrait`.
+`deck://orient?o=landscape|portrait`,
+`deck://crate?path=/abs/x.deckiecrate` (or `deck://open?path=`: open a crate file in either form, as "Open in" does),
+`deck://choose` (the Open crate file chooser), `deck://minimal?on=0|1`,
+`deck://after?s=<seconds>&u=<url-encoded hook>` (run a hook later).
 
 ## Limitations
 
@@ -201,9 +206,55 @@ team 566NNM5HT8 added in Xcode > Settings > Accounts, or an App Store Connect AP
 -authenticationKeyIssuerID <ISSUER>` to the export command). The App Store Connect app record for
 `io.christophershannon.deck` must exist (Apps > + > New App).
 
+## Crate files from a PC, and songs with no name (Nov 13, 2026)
+
+**Opening a crate file, either form.** The booth opens a crate file whether it is the Mac's package (a folder) or the
+single file a PC writes (one plain zip under the same name, `docs/architecture/crate-format.md`, "The single-file
+form"): from the Files app (tap it), "Open in" and the share sheet, AirDrop, iCloud Drive, or the Crate tab's "Open
+crate file" (the system's chooser). Either form is taken into the app's own storage as a package
+(`Library/Application Support/Crates/<crate id>.deckiecrate`) by the core's `CrateImport.copy`: a package is copied, a
+single file is unpacked with `CrateArchive.unpack`, and the copy is read whole before it replaces anything. The file the
+DJ gave is only read (it is opened in place, through a file coordinator, so a file in iCloud Drive is downloaded first);
+it is never moved or changed. A damaged file is refused in plain words with the reader's own line under them, and the
+crate file open before stays open: "This crate file is not complete…" for a file cut short, "…is damaged, so it cannot
+be opened…" for a changed byte, "This is not a crate file…", "…made by a newer Deckie…". A crate file placed in the
+Documents folder is taken in the same way at launch. After an open the booth shows "Friday night is open: 5 songs."
+
+**The file type, settled in the simulator.** One declared type cannot cover both forms. Declared as a package
+(`com.apple.package`), `.deckiecrate` names a folder only: the system gives a plain file with that extension a dynamic
+type of its own (`UTType(filenameExtension:conformingTo: .data)` returned `dyn.ah62d4rv4ge80k3pdrry0n25wqf4gn`), and the
+chooser showed the PC's single files greyed out while the packages could be chosen
+(scratchpad `booth-single/shots/10-picker-type-package-only.png`). So `project.yml` declares **two type identifiers
+with the same extension**: `io.christophershannon.deckie.crate` (a package) and `io.christophershannon.deckie.crate-file`
+(a plain file, `public.data`), both under one document type the booth owns. The system picks by what the item is: a
+folder resolves to the first, a file to the second (both logged at launch as `type for .deckiecrate as a folder / as a
+file`). With that, every crate file in the chooser could be chosen, a single file tapped in the Files app opened the
+booth directly, and a package chosen in the chooser opened too. **No second extension and no change to the format were
+needed.** Deckie Desk on the Mac does not declare the type yet; when it does it should use the same two identifiers.
+
+**A crate file with no fingerprints** (one made on a PC today): the booth opens it and shows its songs, places and
+picks. There is nothing to listen for, so the bundled catalogue is not used either (it would name songs that are not in
+the crate), the mic button is hidden, the corner says "not listening", and the playing panel says once, until a song is
+set: "Set the song by hand. The booth cannot name what is playing from this crate file yet: it has no song
+fingerprints. Tap a song in the Crate tab to set it as playing", with a "Choose a song" button to the Crate tab. Picks
+work as for any song set by hand. Set recording runs from the listening microphone, so it does not run with such a
+crate file.
+
+**A song with no name** (research AA, 3.13). A song whose title is not usable by the crate file's own rule
+(`SongName.isUsableTitle` in the core, the rule Desk's "Needs a name" uses: empty, only a number, "Track 07", "Audio
+Track 3", "Untitled", "Unknown") is found and shown like any other, and its place leads:
+- the playing panel: the place in the title's size, broken by phrase ("Friday night" / "2 Peak / 03"; the folder for a
+  song on no source), then "No name yet", then the file it was read from as a file ("file: 03 07"), never in the
+  title's place;
+- picks and the Minimal pills: under the place line, "03 · no name yet" and "file: 03 07" where the artist goes;
+- the Crate tab: "03 · no name yet" in the quieter colour, with the file line, under its place's heading;
+- the search in More looks through the place and the file name of such a song, and "no name" finds them all;
+- logs, the set's tracklist and the join view's spoken label use "Friday night / 2 Peak / 03 · no name yet".
+The words are placeholders in one list, `Deck/Sources/Words.swift` (D28).
+
 ## Crate files (Oct 29, 2026)
 
-The app can run from a crate file made by Deckie Desk instead of the bundled data: put a `.deckiecrate` package in the
+The app can run from a crate file made by Deckie Desk instead of the bundled data: put a `.deckiecrate` (either form) in the
 app's Documents folder (Files app > On My iPad > Deck, or Finder > iPad > Files) and relaunch, or point a test launch at
 one with `deck://crate?path=/abs/x.deckiecrate`. The crate file gives the tracks and their analysis, the whole-song wave
 (from the per-bar loudness), the recognition catalogue (one plain signature per track, made on the Mac) and the picks:
