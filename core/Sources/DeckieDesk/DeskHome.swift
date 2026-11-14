@@ -58,7 +58,7 @@ public struct DeskHome: Sendable, Equatable {
         let marker = root.appendingPathComponent("desk.json")
         if let data = try? Data(contentsOf: marker),
            let f = (try? JSONDecoder().decode([String: Int].self, from: data))?["format"], f > Self.format {
-            throw DeskError("\(root.path) was made by a newer Deckie Desk (format \(f)); this one reads format \(Self.format)")
+            throw DeskError(DeskWords.text("error.newerHome", ["path": root.path, "found": "\(f)", "format": "\(Self.format)"]))
         }
         try DeckieFiles.write(Data("{\"format\":\(Self.format)}\n".utf8), to: marker)
     }

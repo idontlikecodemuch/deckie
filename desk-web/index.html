@@ -13,20 +13,20 @@
      data-w gets the word of that name; data-w-label sets aria-label, data-w-title the tooltip. -->
 <header class="bar" role="toolbar" data-w-label="appName">
   <div class="menu-wrap">
-    <button id="crate-button" class="crate-button" aria-haspopup="menu" aria-expanded="false" data-w-title="crateMenuHelp"><span id="crate-name"></span><span class="chev" aria-hidden="true">▾</span></button>
+    <button id="crate-button" class="crate-button" aria-haspopup="menu" aria-expanded="false" data-w-title="crateMenuHelp"><span id="crate-name"></span><span class="chev" aria-hidden="true" data-w="glyph.menu"></span></button>
     <ul id="crate-menu" class="menu" role="menu" hidden></ul>
   </div>
   <span class="grow"></span>
   <button id="undo" class="small" disabled></button>
   <button id="redo" class="small" disabled></button>
   <div class="menu-wrap">
-    <button id="add-button" aria-haspopup="menu" aria-expanded="false" data-w-title="addMusicHelp"><span id="add-label"></span><span class="chev" aria-hidden="true">▾</span></button>
+    <button id="add-button" aria-haspopup="menu" aria-expanded="false" data-w-title="addMusicHelp"><span id="add-label"></span><span class="chev" aria-hidden="true" data-w="glyph.menu"></span></button>
     <ul id="add-menu" class="menu right" role="menu" hidden></ul>
   </div>
   <button id="sources-button" aria-pressed="false" data-w-title="sourcesHelp" hidden></button>
   <button id="log-button" data-w="whatDidntGoIn" hidden></button>
   <div class="menu-wrap">
-    <button id="more-button" aria-haspopup="menu" aria-expanded="false" data-w-label="moreMenu" data-w-title="moreMenu">⋯</button>
+    <button id="more-button" aria-haspopup="menu" aria-expanded="false" data-w-label="moreMenu" data-w-title="moreMenu" data-w="glyph.more"></button>
     <ul id="more-menu" class="menu right" role="menu" hidden></ul>
   </div>
   <button id="export-button" class="main" data-w="exportCrateFile" hidden></button>
@@ -41,7 +41,7 @@
 <main>
   <!-- The first screen: no crate showing yet. -->
   <section id="first" class="screen center" aria-labelledby="first-title" hidden>
-    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M3 8l9-5 9 5v8l-9 5-9-5z"/><path d="M3 8l9 5 9-5M12 13v8"/></svg>
+    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path d="M3 8l9-5 9 5v8l-9 5-9-5z"/><path d="M3 8l9 5 9-5M12 13v8"/></svg>
     <h1 id="first-title" data-w="firstTitle"></h1>
     <p id="first-body" class="body"></p>
     <div class="actions">
@@ -95,7 +95,7 @@
       <div class="figures">
         <div id="fig-music" class="fig card"><h2 data-w="figMusic"></h2><p id="fig-music-value" class="big"></p></div>
         <div id="fig-tempos-card" class="fig card"><h2 data-w="figTempos"></h2><canvas id="fig-tempos" class="hist" role="img"></canvas><p id="fig-tempos-text" class="small mut"></p></div>
-        <div id="fig-keys-card" class="fig card fig-keys"><h2 data-w="figKeys"></h2><svg id="fig-keys" class="wheel" viewBox="0 0 120 120" role="img"></svg><p id="fig-keys-text" class="small mut"></p></div>
+        <div id="fig-keys-card" class="fig card fig-keys"><h2 data-w="figKeys"></h2><svg id="fig-keys" class="wheel" role="img"></svg><p id="fig-keys-text" class="small mut"></p></div>
         <div class="fig card fig-list">
           <p><span data-w="figNeedName"></span> <b id="fig-needname"></b></p>
           <p><span data-w="figSameFile"></span> <b id="fig-samefile"></b></p>
@@ -121,7 +121,7 @@
   <!-- After a run. -->
   <section id="finished" class="screen" aria-labelledby="finished-title" hidden>
     <div class="finished">
-      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M8 12.5l2.6 2.6L16 9.6"/></svg>
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M8 12.5l2.6 2.6L16 9.6"/></svg>
       <h1 id="finished-title"></h1>
       <!-- The crate as sound (D37): the run's songs, one line each, as they joined. -->
       <div id="done-wall-card" class="wall-card card done" hidden>
@@ -159,7 +159,7 @@
       <button id="need-check" class="small" data-w-title="looksRightHelp"></button>
       <button id="need-lookup" class="small net" hidden></button>
       <div class="menu-wrap">
-        <button id="tools-button" class="small" aria-haspopup="menu" aria-expanded="false"><span data-w="nameTools"></span><span class="chev" aria-hidden="true">▾</span></button>
+        <button id="tools-button" class="small" aria-haspopup="menu" aria-expanded="false"><span data-w="nameTools"></span><span class="chev" aria-hidden="true" data-w="glyph.menu"></span></button>
         <ul id="tools-menu" class="menu right" role="menu" hidden></ul>
       </div>
     </div>
@@ -174,9 +174,9 @@
     <!-- Listen (D33): play, pause, back and forward, a scrub bar, the position and the length. -->
     <div id="player" class="player" role="region" hidden>
       <button id="player-play" class="small play"></button>
-      <button id="player-back" class="small" data-w-label="back30" data-w-title="back30">−30</button>
+      <button id="player-back" class="small" data-w-label="back30" data-w-title="back30" data-w="back30Short"></button>
       <input id="player-scrub" type="range" min="0" max="1000" value="0" step="1">
-      <button id="player-forward" class="small" data-w-label="forward30" data-w-title="forward30">+30</button>
+      <button id="player-forward" class="small" data-w-label="forward30" data-w-title="forward30" data-w="forward30Short"></button>
       <span id="player-time" class="mut time"></span>
       <span id="player-title" class="title"></span>
       <button id="player-stop" class="small" data-w="stopListening"></button>
@@ -272,7 +272,7 @@
      candidates side by side and a tick per field. -->
 <dialog id="lookup" class="wide lookup" aria-labelledby="lookup-title">
   <form method="dialog">
-    <div class="net-band" role="note"><svg class="net-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.6 2.8 3.9 5.8 3.9 9s-1.3 6.2-3.9 9c-2.6-2.8-3.9-5.8-3.9-9S9.4 5.8 12 3z"/></svg><span id="lookup-kind" data-w="lookupKindLine"></span></div>
+    <div class="net-band" role="note"><svg class="net-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.6 2.8 3.9 5.8 3.9 9s-1.3 6.2-3.9 9c-2.6-2.8-3.9-5.8-3.9-9S9.4 5.8 12 3z"/></svg><span id="lookup-kind" data-w="lookupKindLine"></span></div>
     <h2 id="lookup-title"></h2>
     <div id="lookup-ask">
       <label id="lookup-scope-wrap"><span data-w="lookupSongsFrom"></span> <select id="lookup-scope"></select></label>

@@ -110,11 +110,13 @@ final class Desk: @unchecked Sendable {
         case "shell.chooseFolder":
             let purpose = m["purpose"] as? String
             let preset = purpose == "export" ? options.exportAnswer : options.addMusicAnswer
-            let path = preset ?? window.chooseFolder(message: m["message"] as? String ?? "")
+            let path = preset ?? window.chooseFolder(message: m["message"] as? String ?? "", accept: m["accept"] as? String ?? "",
+                                                     cancel: m["cancel"] as? String ?? "")
             reply(id, path.map { ["path": $0] } ?? ["cancelled": true])
         case "shell.chooseFile":
             let preset = m["purpose"] as? String == "playlist" ? options.playlistAnswer : nil
-            let path = preset ?? window.chooseFile(message: m["message"] as? String ?? "")
+            let path = preset ?? window.chooseFile(message: m["message"] as? String ?? "", accept: m["accept"] as? String ?? "",
+                                                   cancel: m["cancel"] as? String ?? "")
             reply(id, path.map { ["path": $0] } ?? ["cancelled": true])
         case "shell.openFolder":
             if let p = m["path"] as? String { Window.openFolder(p) }
