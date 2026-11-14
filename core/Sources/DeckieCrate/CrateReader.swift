@@ -99,6 +99,19 @@ public enum CrateReader {
                 let path = CrateFormat.signaturePath(t.id, variant)
                 if !exists(path) { add(tf, "tracks[\(i)].signatures.\(variant)", "\(path) is not in the package") }
             }
+            // The cover (D36): its thumbnail must be in the crate file, a JPEG, within the size a cover may take.
+            if let cover = t.file.cover, CrateIDs.isSHA256(cover) {
+                let path = CrateFormat.coverPath(cover)
+                if let data = file(path) {
+                    if data.count > CrateFormat.coverMaxBytes {
+                        add(path, "", "is \(data.count) bytes; a cover is at most \(CrateFormat.coverMaxBytes)")
+                    } else if !data.starts(with: [0xFF, 0xD8, 0xFF]) {
+                        add(path, "", "is not a JPEG picture")
+                    }
+                } else {
+                    add(tf, "tracks[\(i)].file.cover", "\(path) is not in the package")
+                }
+            }
             tracks[i] = t
         }
         let crate = Crate(manifest: manifest, tracks: tracks)

@@ -11,6 +11,16 @@ public enum CrateFormat {
     public static let barsFolder = "bars"
     public static let styleFolder = "style"
     public static let signaturesFolder = "signatures"
+    /// Covers (D36): one small JPEG for each distinct picture, `covers/<SHA-256 of the source picture>.jpg`.
+    public static let coversFolder = "covers"
+    /// A cover's longest side in pixels, the JPEG quality it is written at, and the most bytes one may take.
+    public static let coverSide = 128
+    public static let coverQuality = 80
+    public static let coverMaxBytes = 24 * 1024
+    /// The source pictures that are made into covers at all: at most this many bytes, and (in the thumbnail maker)
+    /// at most 8,192 pixels a side.
+    public static let coverMaxSourceBytes = 32 * 1024 * 1024
+    public static func coverPath(_ hash: String) -> String { "\(coversFolder)/\(hash).jpg" }
 
     static func barsPath(_ id: String) -> String { "\(barsFolder)/\(id).bin" }
     static func stylePath(_ id: String) -> String { "\(styleFolder)/\(id).bin" }
