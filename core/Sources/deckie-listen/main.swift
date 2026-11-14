@@ -98,6 +98,7 @@ let settings: ListenSettings = {
     if let v = values["--check-songs"].flatMap(Int.init) { s.checkSongs = v }
     if let v = values["--search-every"].flatMap(Int.init) { s.searchEvery = v }
     if let v = values["--lost-after"].flatMap(Int.init) { s.lostAfter = v }
+    if let v = values["--hold-window"].flatMap(Double.init) { s.holdWindow = v }
     if flags.contains("--plain-query") { s.denseQuery = false }
     if flags.contains("--no-follow") { s.follow = false }
     return s
