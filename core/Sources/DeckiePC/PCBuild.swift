@@ -158,6 +158,8 @@ public struct PCBuild: Sendable {
         /// Songs in the crate file whose start could not be placed to the sample (the record's flag
         /// `start_uncertain`: an AAC file that states its lead-in nowhere), by their path below the folder.
         public var startUncertain: [String] = []
+        /// Deckie's own key reader over the crate file's songs (D33, D36): a key shown, the home note alone, not sure.
+        public var keysRead = 0, keysHomeNote = 0, keysNotSure = 0
         public var seconds: Double
         public var jobs: Int
     }
@@ -236,6 +238,12 @@ public struct PCBuild: Sendable {
             }
         }
 
+        // Deckie's own key is shown only when its reader is sure (D33): a key, the home note alone (D36), or neither.
+        // The builder's records keep the reading; the crate file carries what is shown.
+        var shown = result.crate
+        let keys = LocalFacts.ownKeysOnly(&shown)
+        if shown != result.crate { try CrateWriter.write(shown, to: plan.package) }
+
         // The package as one file, checked by reading it back before the DJ is told it is there.
         let staged = plan.work.appendingPathComponent("staged." + CrateFormat.packageExtension)
         try CrateArchive.pack(package: plan.package, to: staged)
@@ -263,6 +271,9 @@ public struct PCBuild: Sendable {
                        copies: entries.filter { $0.reason == R.duplicate }.count,
                        damagedSpots: entries.filter { $0.reason == R.damagedFrames }.count,
                        seconds: Date().timeIntervalSince(started), jobs: jobs)
+        outcome.keysRead = keys.keysFrom[LocalFacts.ownVote] ?? 0
+        outcome.keysHomeNote = keys.keysHomeNote
+        outcome.keysNotSure = keys.keysNotSure
         outcome.startUncertain = result.crate.tracks.filter { $0.flags.contains("start_uncertain") }
             .map { $0.file.rel ?? $0.file.name }.sorted()
         return outcome
@@ -288,6 +299,9 @@ public struct PCBuild: Sendable {
         if o.copies > 0 { lines.append(PCWords.copies(o.copies)) }
         if o.damagedSpots > 0 { lines.append(PCWords.damagedSpots(o.damagedSpots)) }
         if !o.startUncertain.isEmpty { lines.append(PCWords.startUncertain(o.startUncertain.count)) }
+        if o.keysRead + o.keysHomeNote + o.keysNotSure > 0 {
+            lines.append(PCWords.keys(read: o.keysRead, homeNote: o.keysHomeNote, notSure: o.keysNotSure))
+        }
         lines.append(PCWords.took(o.seconds))
         lines.append("")
         if o.plan.elsewhere { lines.append(PCWords.writtenElsewhere(o.plan.crateFile.deletingLastPathComponent().path)) }

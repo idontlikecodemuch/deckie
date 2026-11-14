@@ -87,6 +87,7 @@ Sent with `state` when the crate showing has songs and after every change to the
             "vocals": 0.42, "vocalHeavy": false,
             "key": {"camelot": "8A", "key": "A", "scale": "minor", "from": "rekordbox-xml", "uncertain": false,
                     "others": [{"from": "deckie", "camelot": "8A"}]},
+            "keyState": "key", "homeNote": null,
             "places": [{"source": "Stick 3", "folder": "House", "number": 4, "line": "Stick 3 / House 4"}],
             "file": "04 Song X.mp3", "signed": false, "notes": ["gridUnsure"], "damagedFrames": 0}],
  "sources": [{"name": "Stick 3", "songs": 12,
@@ -112,6 +113,14 @@ joined by ", ". `names.others` lists the song's other facts in the crate file's 
 "from"}` (words `factName.<name>`); `names.fileTags` the rest of the file's tags, each `{"name", "value"}` by the
 tag's own name; `names.leftOut` what was not sent, reason to count (words `leftOut.<reason>`). All read-only except
 through `song.fix` below.
+
+**The key of a song** (D33, D36). `keyState` says what the record holds, and the page shows, where a key shows:
+`key` (the `key` object, as before); `home_note` (`key` is null and `homeNote` is `{"note": "A", "camelot": ["8A",
+"11B"]}`: Deckie's reader found the home note and left the mode open; words `homeNote`, with `homeNoteHelp` as its
+explanation); `not_sure` (both null: Deckie read the song and is not sure; words `keyDeckieNotSure`); `not_read` (both
+null: no key was read on the computer that made the record; words `keyNotRead`). The run's report carries the counts
+in `local.report`: `keys_not_read` (songs with neither), `keys_not_sure` (of those, the ones Deckie read; words
+`keysNotSure`) and `keys_home_note` (songs with a home note, not counted in the first; words `keysHomeNote`).
 
 Codes, each with its words in the list: a key's `from` (`keyFrom.<code>` and `programName.<code>`), `nameFrom` (codes
 joined by `+`, `nameFromPart.<code>`), `notes` (`needsName`, `damagedFrames`, `gridUnsure`, `vocalsNotRead`, `signed`)

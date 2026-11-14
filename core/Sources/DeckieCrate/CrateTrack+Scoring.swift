@@ -20,7 +20,7 @@ extension CrateTrack {
         let title = ident.artist.map { "\($0) - \(ident.title)" } ?? ident.title
         // On a source when any of its places is (D27): its own place, else the first other place on one.
         let disc = ident.disc ?? ident.otherPlaces.first { $0.disc != nil }?.disc
-        return DeckieCore.Track(
+        var track = DeckieCore.Track(
             id: id, title: title, ver: ident.version ?? "", secs: file.durationS,
             cutKey: recordingKey,
             isLongest: ident.isLongest ?? true, onDisc: disc != nil, disc: disc,
@@ -36,6 +36,9 @@ extension CrateTrack {
             vocIn: Self.slice(voc, i0, i1), vocOut: Self.slice(voc, o0, o1), vocFirst16: Self.slice(voc, i0, i0 + 16),
             pattern: onsetPattern16 ?? [], embedding: emb.map { $0 / norm },
             fadeOut: ends?.fadeOut ?? false, flags: flags, kind: ident.kind ?? "", era: ident.era ?? "")
+        // The home note alone (D36), for a record with no key.
+        if key == nil { track.homePitchClass = keyHome?.pitchClass }
+        return track
     }
 
     /// Power mean in dB of the finite values of `a[lo..<hi]` (clamped), -70 when there are none: the lab's `pmean`.

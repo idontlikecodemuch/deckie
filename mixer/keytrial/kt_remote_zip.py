@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Read single members of a large zip over HTTP range requests, so a few gigabytes of a data set need not be fetched
-to use a part of it. Standard library only (urllib, zlib, struct); handles zip64."""
-import struct, zlib, urllib.request, time
+to use a part of it. Standard library only (urllib, zlib, bz2, struct); handles zip64, and stored, deflated and bzip2 members."""
+import struct, zlib, bz2, urllib.request, time
 
 class RemoteZip:
     def __init__(self, url):
@@ -40,4 +40,6 @@ class RemoteZip:
         off, csize, usize, method = self.members[name]
         head = self._get(off, off + 29); nl, el = struct.unpack("<HH", head[26:30])
         data = self._get(off + 30 + nl + el, off + 30 + nl + el + csize - 1) if csize else b""
-        return data if method == 0 else zlib.decompress(data, -15)
+        if method == 0: return data
+        if method == 12: return bz2.decompress(data)          # bzip2, as the Free Music Archive's zips use
+        return zlib.decompress(data, -15)
