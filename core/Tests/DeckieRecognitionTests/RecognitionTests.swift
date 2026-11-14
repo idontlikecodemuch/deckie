@@ -50,6 +50,13 @@ import DeckieRecognition
         #expect(Landmarks(encoded: marks.encoded()) == marks)
         #expect(marks.encoded().count < 4 * marks.count + 12)
         #expect(Landmarks(encoded: Data([1, 2, 3])) == nil)
+        // Damaged bytes are refused, never a reason to stop: a count the bytes cannot hold, and frame gaps that add
+        // up past the largest frame number (a crate file's reader takes these bytes from a file it did not write).
+        let head = Data("DKL2".utf8) + Data([0, 0, 0, 0])
+        #expect(Landmarks(encoded: head + Data([0xFF, 0xFF, 0xFF, 0xFF, 1, 2, 3])) == nil)
+        let farGap: [UInt8] = [0xFF, 0xFF, 0xFF, 0xFF, 0x0F, 0, 0]
+        #expect(Landmarks(encoded: head + Data([2, 0, 0, 0] + farGap + farGap)) == nil)
+        #expect(Landmarks(encoded: head + Data([1, 0, 0, 0] + farGap))?.frames == [UInt32.max])
     }
 
     @Test func anExcerptIsFoundWithItsPlace() throws {
