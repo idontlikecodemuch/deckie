@@ -23,7 +23,25 @@ public struct PairingConfig: Sendable, Equatable {
     /// song) landing in the slice before the song's own.
     public var queryPerSlice = 2
 
+    /// Whether a hash is made of three points (the anchor and the points of two slices) rather than two. A pair's
+    /// hash has some 470,000 possible values and a thousand songs make some 40 million pairs, so every lookup
+    /// returns about a hundred unrelated anchors and nearly all the matcher's time goes on them; a triple's has
+    /// thousands of times more values, so a lookup returns almost nothing but the song. The price: all three points
+    /// must survive the room, not two.
+    public var triples = true
+
     public init() {}
+
+    /// The slices whose points join the anchor in triple k: each slice with the next, the last with the first.
+    @inline(__always) func slicePair(_ k: Int) -> (Int, Int) { k + 1 < fanOut ? (k, k + 1) : (0, k) }
+    var tableBits: Int { triples ? 24 : Self.hashBits }
+    /// A triple's 35 bits (anchor pitch, two pitch differences, two time differences) folded to the table's 24 by a
+    /// multiplicative hash (Knuth's golden-ratio constant); two different triples sharing a slot only add stray votes.
+    @inline(__always) func hash(anchorBin a: Int, bin1: Int, gap1: Int, bin2: Int, gap2: Int) -> Int {
+        let raw = UInt64(a) | UInt64(bin1 - a + maxPitchBins) << 7 | UInt64(bin2 - a + maxPitchBins) << 14
+            | UInt64(gap1 / gapStep) << 21 | UInt64(gap2 / gapStep) << 28
+        return Int((raw &* 0x9E37_79B9_7F4A_7C15) >> 40)
+    }
 
     var pitchBinUnits: Int { Int(Landmarks.pitchUnitsPerOctave) / pitchBinsPerOctave }
     func pitchBins(octaves: Double) -> Int { Int((octaves * Double(pitchBinsPerOctave)).rounded(.up)) }
@@ -83,10 +101,11 @@ public struct RecognitionIndex: Sendable {
         precondition(timelineFrames < Int(Int32.max))
 
         // Two passes over every pair: count each hash, then place the anchors.
-        let size = 1 << PairingConfig.hashBits
+        let size = 1 << pairing.tableBits
         var counts = [UInt32](repeating: 0, count: size + 1)
         let p = pairing
         let unit = p.pitchBinUnits
+        var slotBin = [Int](repeating: 0, count: p.fanOut), slotGap = [Int](repeating: 0, count: p.fanOut)
         func forEachPair(_ body: (_ hash: Int, _ anchor: Int) -> Void) {
             for s in 0..<songs.count {
                 let lo = pointStart[s], hi = pointStart[s + 1]
@@ -102,10 +121,19 @@ public struct RecognitionIndex: Sendable {
                             let k = p.slice(gap: gap)
                             if filled & (1 << k) == 0 {
                                 filled |= 1 << k
-                                body(p.hash(anchorBin: a, targetBin: b, gap: gap), ta)
+                                slotBin[k] = b; slotGap[k] = gap
+                                if !p.triples { body(p.hash(anchorBin: a, targetBin: b, gap: gap), ta) }
                             }
                         }
                         j += 1
+                    }
+                    if p.triples {
+                        for k in 0..<p.fanOut {
+                            let (k1, k2) = p.slicePair(k)
+                            if filled & (1 << k1) != 0 && filled & (1 << k2) != 0 {
+                                body(p.hash(anchorBin: a, bin1: slotBin[k1], gap1: slotGap[k1], bin2: slotBin[k2], gap2: slotGap[k2]), ta)
+                            }
+                        }
                     }
                 }
             }

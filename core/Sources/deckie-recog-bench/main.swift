@@ -15,7 +15,9 @@ import DeckieRecognition
 //       -17 to +17 and match each copy as it is (the comparison the research letter W asks for; vinyl-style only).
 //       queries.tsv: query id <tab> raw file (16-bit little-endian mono) <tab> first sample <tab> samples <tab> rate.
 //       Writes per query: id, points, milliseconds to fingerprint the query, milliseconds to match, then for the best
-//       and the second-best song: id, score, matched points, offset in seconds, tempo ratio, pitch ratio.
+//       and the second-best song: id, score, matched points, offset in seconds, tempo ratio, pitch ratio; then the
+//       two songs' confidences (the number to threshold).
+//       --pairs: two-point hashes only; --hybrid: three-point hashes, then two-point ones when nothing sure is found.
 
 func fail(_ message: String) -> Never {
     FileHandle.standardError.write(Data((message + "\n").utf8))
@@ -121,6 +123,8 @@ case "match":
     let config = landmarkConfig(o)
     var pairing = PairingConfig()
     pairing.fanOut = o.int("--fan-out", pairing.fanOut)
+    if o.flags.contains("--pairs") { pairing.triples = false }
+    let verified = o.int("--verified", 12)
     pairing.queryPerSlice = o.int("--query-per-slice", pairing.queryPerSlice)
     let t0 = now()
     let index = RecognitionIndex(songs: songs, landmark: config, pairing: pairing)
@@ -139,6 +143,10 @@ case "match":
     let queries = lines(o.string("--queries"))
     let rows = Collector()
     let recognisers = (0..<jobs).map { _ in Recogniser(index: index, grid: grid) }
+    let fallback = o.flags.contains("--hybrid") ? { () -> RecognitionIndex in
+        var pairs = pairing; pairs.triples = false
+        return RecognitionIndex(songs: songs, landmark: config, pairing: pairs) }() : nil
+    for r in recognisers { r.verified = verified; r.fallback = fallback; r.fallbackBelow = o.double("--fallback-below", r.fallbackBelow) }
     nonisolated(unsafe) let pool = recognisers
     parallel(queries.count, jobs: jobs) { i, w in
         let q = queries[i]
@@ -185,6 +193,7 @@ case "match":
                 row += String(format: "\t%@\t%.3f\t%d\t%.3f\t%.5f\t%.5f", m.id, m.score, m.matched, m.offsetSeconds, m.tempoRatio, m.pitchRatio)
             } else { row += "\t-\t0\t0\t0\t1\t1" }
         }
+        row += String(format: "\t%.3f\t%.3f", found.first?.confidence ?? 0, found.count > 1 ? found[1].confidence : 0)
         rows.set(i, row)
     }
     let text = rows.joined(queries.count)
