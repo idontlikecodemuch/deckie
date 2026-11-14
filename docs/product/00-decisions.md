@@ -541,6 +541,24 @@ crate file."
   stick. Desk says so in plain words.
 - This holds for every source. Desk never was a way to copy music, and it is not one now.
 
+### D34. Whatever a song's file says about it goes into the crate file (Nov 14)
+The decision, in the owner's words, asked whether the release, label, year and genre Desk finds should stay in Desk
+or travel to the booth: "Let's port and save whatever info the song crate file has. if the user wants to add a
+bunch of genre info or release info it should go to the app and maybe show in the mix list. how we display we can
+refine later but whatever info it has should be sent." And: "As we figure out the "song name and info" part of the
+song id (via another service) we should fold that into these other fields. If we have the track name(s) there may
+be a free way to find out and fill genre for example."
+
+- **Every fact a song's file carries is read and written into the crate file**: release, year, label, genre,
+  numbers on the release, and the rest of what its tags say. The booth receives all of it.
+- **A DJ can add to it and correct it in Desk**, and what they enter goes to the booth the same way.
+- **Each fact says where it came from** (the file, the disc, the DJ, later a lookup), so a lookup fills the same
+  fields and never a separate set, and a DJ's own entry is never overwritten.
+- **How the booth shows these facts is to be refined.** Sending them is decided; display is not.
+- **This is an addition to crate v1** (the next after D27's places): no existing field changes name or meaning.
+- **Filling genre and the like from a song's name** belongs to the lookup that the DJ asks for (note on D30); the
+  sources and their terms are in letter AA.
+
 ### Note on D19 (Nov 1): versions of a song stay separate rows
 Christopher, on two remixes of one song both showing in the picks: "we shouldn't merge them unless they are the same
 songs. DJs often have a bunch of versions of the same song". So the booth folds together only copies of the same
