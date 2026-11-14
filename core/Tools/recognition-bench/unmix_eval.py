@@ -60,7 +60,7 @@ def labels(path):
 
 
 def prepare(unmix, work):
-    out = os.path.join(work, "unmix")
+    out = os.path.join(os.path.abspath(work), "unmix")
     os.makedirs(os.path.join(out, "pcm"), exist_ok=True)
     refs = sorted(glob.glob(os.path.join(unmix, "**", "refsongs", "*.mp3"), recursive=True))
     mixes = sorted(glob.glob(os.path.join(unmix, "**", "mixes", "*.mp3"), recursive=True))
