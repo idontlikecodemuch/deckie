@@ -181,15 +181,22 @@ import DeckieBuild
         let alone = Lines()
         let out2 = RunScreenOut { alone.add($0) }
         var t = RunTally()
-        var a = song("a"), b = song("b")
-        _ = t.add(&a); _ = t.add(&b)
-        for s in [a, b] {
+        let a = song("a"), b = song("b")
+        for var s in [a, b] {
+            _ = t.add(&s)
             var p = RunProgress(stage: .reading, done: 0, total: 2, remaining: nil, line: nil)
             p.song = s; p.figures = t.figures
             out2.offer(p)
         }
         let end = Date().addingTimeInterval(2)
         while alone.count < 2 && Date() < end { Thread.sleep(forTimeInterval: 0.02) }
-        #expect(alone.count == 2)
+        #expect(alone.count >= 2)
+        // The totals at most once a second: the second song went without them, and they follow.
+        let later = Date().addingTimeInterval(3)
+        while alone.count < 3 && Date() < later { Thread.sleep(forTimeInterval: 0.02) }
+        let sent = try alone.all.map { try #require(JSONSerialization.jsonObject(with: $0) as? [String: Any]) }
+        #expect(sent.count == 3)
+        #expect(sent.map { $0["figures"] != nil } == [true, false, true])
+        #expect(((sent.last?["figures"] as? [String: Any])?["songs"] as? NSNumber)?.intValue == 2)
     }
 }

@@ -139,8 +139,8 @@ A music CD's songs are named `Track 01.wav` and so on in `rel` (`.aiff` on the M
 While a run goes, `run.songs` carries what the run screen draws: the songs that joined it, what is true of them, and
 the running totals. It comes at most four times a second (DeskProtocol's `RunScreenOut`), with every song that
 joined since the last one, in the order they joined; a burst (songs read before, which join together while
-finishing) is split into lines of at most 500 songs, the totals with the last. The last `run.songs` comes before
-`run.finished`.
+finishing) is split into lines of at most 500 songs. `figures` comes at most once a second and is left out
+between; the page keeps the last it had. The last `run.songs` comes before `run.finished`, with the totals.
 
 ```json
 {"event": "run.songs",
@@ -166,8 +166,8 @@ finishing) is split into lines of at most 500 songs, the totals with the last. T
   labelled it the intro. Fields with no value are left out.
 - `figures` count the songs on the screen: `seconds` of music in them; `tempos[i]` the songs from
   `tempoLow + i × tempoStep` BPM to the next bin, the end bins holding anything beyond; `major`, `minor` and `home`
-  by home note (0 = C); `noKey`; `keysFound` (keys on the wheel of 24 with a song); `needName` (no usable title or no artist, as Desk has them; once Desk has looked for
-  names while saving, the songs that still need one); `sameFile` (songs found in a second place of what is read);
+  by home note (0 = C); `noKey`; `keysFound` (keys on the wheel of 24 with a song); `needName` (no usable title or
+  no artist, as Desk has them; once Desk has looked for names while saving, the songs that still need one); `sameFile` (songs found in a second place of what is read);
   `copies` (songs in a group of copies of one recording, D24), present once Desk links them while saving; `notIn`.
 - A note is said with the words `fact.<code>` or `moment.<code>` (by count with `n`), its `values` filling the blanks.
   Facts: `slowest`, `fastest`, `tempoRun`, `commonTempo`, `newKey` (`mode` is the code `major` or `minor`, words
@@ -178,8 +178,10 @@ finishing) is split into lines of at most 500 songs, the totals with the last. T
 - The sayings for the step Desk is on are words, not messages: `saying.reading.<n>`, `saying.finishing.<n>`,
   `saying.disc.<n>` and `saying.saving.<n>`, numbered from 1.
 
-About 470 bytes a song with the totals: a run of 5,000 songs sends about 2.4 MB of `run.songs` in all, however its
-songs arrive (measured by `RunScreenTests.songsTravelInSmallBatches`).
+A song is about 460 bytes and the totals about 600: songs read before, which join in a burst, cost about 480 bytes
+a song (`RunScreenTests.songsTravelInSmallBatches`: 5,000 songs, 2.4 MB in 11 lines); songs read one at a time, each
+with the totals, about 1.1 KB (a run of 502 generated songs sent 543 KB of `run.songs` in 1,073 seconds). So a run of
+5,000 songs sends between about 2.4 MB and 5.5 MB in all, over hours.
 
 A run's `report` has `disc` for a music CD: `text` (`names`, `none` "this disc has no names on it", or `drive` "the
 drive gave none; the disc may have some"), `songs`, `named` (songs named from the disc's CD-Text),

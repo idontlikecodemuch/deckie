@@ -42,6 +42,7 @@
   --wall-col-min: 150;                    /* px the narrowest column of waves */
   --wall-dense-col-min: 18;               /* px the narrowest column of brightness lines */
   --wall-gap: 6; --wall-dense-gap: 2;     /* px between columns */
+  --wall-dense-line: 3;                   /* px a brightness line aims for, before columns run out */
   --t-draw: 900ms;                        /* a wave drawing in */
   --t-hold: 3200ms;                       /* a song on stage, with nothing waiting */
   --t-hold-min: 300ms;                    /* a song on stage, with many waiting */

@@ -284,7 +284,8 @@
         // Too many for waves: each song a line of brightness, as thin as one pixel; columns as narrow as --wall-dense-col-min.
         const dgap = Math.max(1, Math.round((parseFloat(css("--wall-dense-gap")) || 2) * dpr));
         const maxDense = Math.max(1, Math.floor((w + dgap) / (denseMin + dgap)));
-        const cols = Math.min(maxDense, Math.max(1, Math.ceil(count / h)));
+        const line = Math.max(1, (parseFloat(css("--wall-dense-line")) || 3) * dpr);
+        const cols = Math.min(maxDense, Math.max(1, Math.ceil(count / Math.max(1, Math.floor(h / line)))));
         const rows = Math.ceil(count / cols);
         return { mode: "dense", cols, rows, lh: Math.max(1, h / rows), gap: dgap, cw: (w - dgap * (cols - 1)) / cols, tall: rows > h };
       }
@@ -296,6 +297,11 @@
         ctx.clearRect(0, 0, w, h);
         if (!count) { layout = null; return; }
         const L = plan(w, h, count, dpr);
+        if (L.tall) {
+          // More songs than pixel rows even at the narrowest columns: the wall grows taller, one pixel a song.
+          canvas.style.height = Math.ceil(L.rows / dpr) + "px";
+          return soon();
+        }
         readCurve();
         layout = Object.assign(L, { w, h, dpr });
         const img = ctx.createImageData(w, h), px = img.data;
@@ -369,7 +375,7 @@
         now: draw, soon,
         label(text) { canvas.setAttribute("aria-label", text); },
         settle() { pulse(canvas, "settle"); },
-        reset() { pick = -1; newest = -1; nameEl.textContent = ""; layout = null; },
+        reset() { pick = -1; newest = -1; nameEl.textContent = ""; layout = null; canvas.style.height = ""; },
       };
     }
     const runWall = Wall($("run-wall"), $("run-wall-name"));
