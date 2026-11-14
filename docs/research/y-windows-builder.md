@@ -257,3 +257,48 @@ committed. The one binary-looking file committed is the 21 KB example crate file
 - **Key**: waits on `trial/own-key`, on D30's reading of keys from files' tags and DJ programs (the other agent's
   work on `main`, which reaches the PC program through `Builder` when merged), and on the D16 point above.
 - **`.m4a`**: the section above.
+
+## Next for the packaging: the window, not only `deckie-make` (noted Nov 14, 2026)
+
+Since this letter, `main` gained Desk's window for Windows and Linux (D32): `deckie-desk` (the shell, in
+`desk-shell/`), `deckie-desk-engine` (the engine program, in `core/`) and the pages (`desk-web/`). The zip should
+carry those next. Nothing below is built; no installer is proposed yet.
+
+**What it takes, in `core/Tools/windows/package.sh` and `pc-package.yml`:**
+
+1. **Build two more programs** in release: `deckie-desk-engine` (in `core/`) and `deckie-desk` (in `desk-shell/`, a
+   second Swift package, so a second build step).
+2. **Lay them out as the shell expects**: it looks for the engine and the pages beside itself. So `app/` gains
+   `deckie-desk.exe`, `deckie-desk-engine.exe` and a `pages/` folder (the four files of `desk-web/`). The engine's
+   own files (`onnxruntime.dll`, `models/`) are already there; whether `deckie-desk-engine` finds them beside
+   itself as `deckie-make` does (`PCBuild.EngineFiles.locate`) has to be checked, and made so if not.
+3. **Libraries**: run the import-table reader over all three programs, not one. The shell brings no new library of
+   ours (`webview` is compiled in; `WebView2Loader.dll` is not needed, `DEPENDENCIES.md` section 10), but it may name
+   Windows libraries the builder does not, which only changes the "expected from Windows" list.
+4. **The starter**: "Make Crate File.exe" becomes, or gains a sibling, "Deckie Desk.exe" that starts
+   `app\deckie-desk.exe`. A window program should not open a console: the starter and the shell both need the
+   Windows "windows" subsystem, and the starter's plain-words messages (not unzipped; a part missing) then need a
+   message box in place of console text. About 40 more lines of C. `deckie-make` can stay in the zip as the
+   fallback for a PC where the window will not open.
+5. **A PC without the WebView2 runtime.** Windows 11 has it; most Windows 10 PCs have it; some do not, and then
+   `deckie-desk` says so and exits. Three ways, cheapest first: (a) the starter checks for it (a registry value
+   Microsoft documents) and, when it is missing, says so in plain words with Microsoft's download address, and
+   offers `deckie-make`; (b) ship Microsoft's small "Evergreen Bootstrapper" (about 2 MB) and run it on first start,
+   which downloads and installs the runtime: that is Microsoft code under Microsoft's terms, a new licence
+   question like the Visual C++ runtime, and it needs the internet and may ask for administrator rights; (c) ship
+   the whole "Fixed Version" runtime beside the program (over 150 MB, also Microsoft's terms). I would do (a) for
+   the first test and ask the owner about (b). None of it can be tried on the runner, which has the runtime.
+6. **Desk's icon.** A Windows program's icon is a `.ico` file compiled into the program as a resource. That needs:
+   the artwork as an `.ico` with the usual sizes (16 to 256 pixels), which does not exist in the repository for
+   Windows; a two-line resource script; and the resource compiler (`llvm-rc`, if the Swift toolchain carries it, or
+   the Windows SDK's `rc.exe`, which the runner has) run in the packaging step and linked into both the starter and
+   `deckie-desk.exe` (the window's taskbar icon comes from the program that owns the window). The `.ico` is an
+   image, so committing it should be the owner's call under "commit no binaries".
+7. **Try it on the runner** as now: unzip into a fresh folder, cut the path to Windows itself, and run the window's
+   own check (`deckie-desk --check`) from the zip. A runner has no screen a person sees, but `desk-window.yml`
+   already runs that check on Windows, so it works there.
+8. **The words**: `READ ME FIRST.txt` and the tester's page change from "drag a folder onto Make Crate File" to
+   "open Deckie Desk".
+
+Size: about two days, most of it points 4 to 6. Open for the owner: the icon file, and whether Microsoft's
+bootstrapper ships.
