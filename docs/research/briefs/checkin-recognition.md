@@ -63,7 +63,7 @@ study's run; 15 to 40 clips in the clean cells, 100 to 500 in the others; no 3 s
 
 **Carry on** with our own fingerprint; this closes "have we tried Chromaprint?".
 
-## Nov 14, 2026, 17:55 UTC: `recog/fast`, stage 2 (first three sizes): a larger index does not make a name come sooner; the listener does
+## Nov 14, 2026, 17:55 UTC: `recog/fast`, stage 2: a larger index does not make a name come sooner; the listener does
 
 **The table asked for** (eval half of the outside set, 969 songs in the index, 30 s clips that start at a random
 place in a song, a reading every second; "by 5 s" is the share of clips with the right name on screen 5 s after the
@@ -74,8 +74,10 @@ sound began)
 | `boothSmall` (strongest quarter, 3 hashes) | 5.7 | 57 / 129 MB | 99 % | 84 % | 65 % | 44 % | 22 % | 66 % | 93 % | 31 % | 4 of 1,200 clips | 1 of 217 |
 | `booth` (strongest half, 3 hashes) | 11.5 | 105 / 250 MB | 100 % | 92 % | 75 % | 48 % | 26 % | 68 % | 96 % | 31 % | 4 of 1,200 | 0 of 217 |
 | strongest three quarters, 3 hashes | 17.3 | 154 / 371 MB | 100 % | 94 % | 78 % | 50 % | 25 % | 76 % | 97 % | 36 % | 0 of 1,200 | 0 of 217 |
-| strongest half, 4 hashes | running | | | | | | | | | | | |
-| every point, 3 hashes; half, 6; every point, 6 | to come | | | | | | | | | | | |
+| strongest half, 4 hashes | 15.3 | 137 / 330 MB | 100 % | 92 % | 78 % | 53 % | 26 % | 74 % | 96 % | 35 % | 0 of 1,200 | 0 of 217 |
+| every point, 3 hashes | 23.0 | 202 / 492 MB | 100 % | 96 % | 81 % | 51 % | 24 % | 75 % | 98 % | 35 % | 0 of 1,200 | 0 of 217 |
+| strongest half, 6 hashes | 22.9 | 200 / 489 MB | 100 % | 94 % | 80 % | 56 % | 27 % | 77 % | 98 % | 37 % | 0 of 1,200 | 0 of 217 |
+| every point, 6 hashes | 45.7 | 392 / 968 MB | 100 % | 96 % | 78 % | 56 % | 28 % | 74 % | 95 % | 33 % | 0 of 1,200 | 0 of 217 |
 
 (Sizes exclude a fixed 8.4 MB table that does not grow with the crate; the megabyte columns include it.)
 
@@ -86,10 +88,14 @@ sound began)
 | `boothSmall` | 3 / 3 / 3 | 3 / 5 / 7 | 4 / 7 / 9 | 7 / 14 / over 30 | 11 / over 30 / over 30 | 4 / 7 / 16 | 5 / 5 / 5 | 7 / 10 / 30 | 120 |
 | `booth` | 3 / 3 / 3 | 3 / 4 / 5 | 4 / 5 / 9 | 6 / 11 / 22 | 9 / over 30 / over 30 | 4 / 7 / 11 | 5 / 5 / 5 | 7 / 9 / 30 | 156 |
 | three quarters, 3 hashes | 3 / 3 / 3 | 3 / 4 / 5 | 4 / 5 / 9 | 6 / 10 / 21 | 9 / over 30 / over 30 | 4 / 5 / 11 | 5 / 5 / 5 | 6 / 8 / 21 | 205 |
+| half, 4 hashes | 3 / 3 / 3 | 3 / 4 / 5 | 4 / 5 / 9 | 5 / 10 / 23 | 9 / over 30 / over 30 | 4 / 6 / 10 | 5 / 5 / 5 | 6 / 8 / 20 | 235 |
+| every point, 3 hashes | 3 / 3 / 3 | 3 / 4 / 5 | 4 / 5 / 9 | 5 / 10 / 22 | 9 / over 30 / over 30 | 4 / 5 / 10 | 4 / 5 / 5 | 6 / 8 / 21 | 250 |
+| half, 6 hashes | 3 / 3 / 3 | 3 / 4 / 5 | 3 / 5 / 8 | 5 / 11 / 22 | 9 / 27 / over 30 | 4 / 5 / 9 | 5 / 5 / 5 | 6 / 8 / 20 | 434 |
+| every point, 6 hashes | 3 / 3 / 3 | 3 / 4 / 5 | 4 / 5 / 8 | 5 / 9 / 22 | 9 / 27 / over 30 | 4 / 6 / 9 | 5 / 5 / 5 | 6 / 8 / 20 | 754 |
 
-- **Where the bend is, so far**: at `booth`. From small to booth (twice the index) buys 8 to 10 points at 5 s in a
+- **Where the bend is**: at `booth`. From small to booth (twice the index) buys 8 to 10 points at 5 s in a
   room; from booth to half as large again buys 2 or 3 points in most columns (8 behind a small speaker) and costs a
-  third more search time. The three larger sizes are still running and may move this; I do not expect them to.
+  third more search time. All seven sizes are now in (updated 20:10 UTC) and agree: four times the `booth` index (46 KB a minute, close to 1 GB for 5,000 songs) names no more clips by 5 s than twice does, and a search takes 0.75 s.
 - **The spread answers "is 8 seconds right?"**: in a clean or quiet room a name is up at 3 s for half the clips and
   by 5 s for 9 in 10. 3 s is the floor only because the listener does not look before it has 3 s of sound. The
   slow cases are loud crowds (at equal level half the clips take 6 s, a tenth over 20 s) and those are slow at
