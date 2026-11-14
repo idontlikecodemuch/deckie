@@ -75,6 +75,10 @@ enum Look {
         static let coverGap: CGFloat = 14
         static let coverOpacity = 0.9
         static let playingTitleGap: CGFloat = 4
+        /// new (D35): the playing song's names and cover while Deckie's has not heard it for a few seconds (it stays
+        /// on screen with its picks). A placeholder until the design pass.
+        static let notHeardOpacity = 0.5
+        static let notHeardFade = 0.4                              // seconds the dimming takes
         static let placeFont = Font.system(size: 18, weight: .semibold, design: .rounded)
         static let alsoFont = Font.system(size: 14, weight: .medium, design: .rounded)
         static let alsoShrink: CGFloat = 0.7

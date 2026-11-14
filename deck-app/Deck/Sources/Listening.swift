@@ -53,6 +53,21 @@ struct Reading {
     var fresh = true
     /// How long the reading took to work out.
     var milliseconds: Double?
+    /// Deckie's: how many more readings naming this song the booth waits for before it replaces the song on screen
+    /// (0: at once). Nil for Apple's, whose readings keep the hold written for them (`Recognizer.take`).
+    var wait: Int?
+    /// The song heard coming in under the one playing, when the recogniser reports one (the next version of Deckie's
+    /// listener will; nothing fills it yet). The booth carries it as `Recognizer.incoming`.
+    var incoming: Incoming?
+
+    /// A second song heard under the playing one: the song (a crate entry's id), its place, its speed, how sure.
+    struct Incoming: Equatable {
+        var id: String
+        var position: Double?
+        var speedPercent: Double?
+        var keyLock: Bool?
+        var confidence: Double
+    }
 }
 
 /// Hears the booth's sound: one buffer at a time, from the microphone tap or a test file. Called off the main thread.

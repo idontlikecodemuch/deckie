@@ -356,4 +356,11 @@ enum Words {
             + (disagreed == 0 ? "." : atChange == disagreed ? ", each as one song gave way to the next." : ", \(atChange) of them as one song gave way to the next.")
     }
     static let compareNotOn = "Choose both above to compare them on the next set."
+
+    // MARK: new (D35, note of Nov 14): letting go. A placeholder pending the copy pass.
+
+    /// The status corner when Deckie's has not heard the playing song for a few seconds (talk, noise, the music
+    /// stopped) and the room is not quiet; in a quiet room the corner says "paused", as before. The song stays on
+    /// screen with its picks, its names dimmed.
+    static let statusNotHeard = " · not heard just now"
 }
