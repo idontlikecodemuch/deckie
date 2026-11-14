@@ -3,7 +3,7 @@ name: core-linux
 
 on:
   push:
-    branches: [main, pc-linux]
+    branches: [main, pc-linux, pc/windows-builder]
     paths: [core/**, mixer/features/**, mixer/candidates.json, mixer/recs.json, .github/workflows/core-linux.yml]
   pull_request:
     paths: [core/**, mixer/features/**, mixer/candidates.json, mixer/recs.json, .github/workflows/core-linux.yml]
@@ -143,3 +143,23 @@ jobs:
       - name: Test
         working-directory: core
         run: swift test
+      # The whole build, end to end, with the command-line builder, the same steps as core-windows.yml so the two
+      # stay level: a small music folder (WAV, FLAC and MP3, a nested folder, a name with a space, a name that is
+      # not ASCII, hidden files; core/Sources/deckie-e2e), the crate file, the core's validator on both of its forms,
+      # and a second run that must find nothing to do. The comparison of the Linux and Windows crate files is in
+      # core-windows.yml, which builds both in one run.
+      - name: "End to end: build a crate file from a music folder and validate it"
+        working-directory: core
+        run: |
+          # The MP3 of the synthesised test track is encoded here with Ubuntu's ffmpeg program (a test tool only;
+          # no audio is committed).
+          apt-get update
+          apt-get install -y --no-install-recommends ffmpeg
+          swift run deckie-e2e mp3 /tmp/e2e-test_track.mp3
+          swift run deckie-e2e make /tmp/e2e/Music --mp3 /tmp/e2e-test_track.mp3
+          swift run deckie-build /tmp/e2e/Music --out /tmp/e2e/E2E.deckiecrate --jobs 2
+          swift run deckie-e2e check /tmp/e2e/E2E.deckiecrate
+          swift run deckie-e2e pack /tmp/e2e/E2E.deckiecrate /tmp/e2e/e2e-linux.deckiecrate
+          swift run deckie-e2e check /tmp/e2e/e2e-linux.deckiecrate
+          swift run deckie-build /tmp/e2e/Music --out /tmp/e2e/E2E.deckiecrate --jobs 2 | tee /tmp/e2e/second.txt
+          grep -q "5 unchanged since the last run; nothing to analyse" /tmp/e2e/second.txt
