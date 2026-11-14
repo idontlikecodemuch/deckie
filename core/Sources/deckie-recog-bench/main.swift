@@ -17,6 +17,8 @@ import DeckieRecognition
 //       Writes per query: id, points, milliseconds to fingerprint the query, milliseconds to match, then for the best
 //       and the second-best song: id, score, matched points, offset in seconds, tempo ratio, pitch ratio; then the
 //       two songs' confidences (the number to threshold).
+//       --deep: when the first answer's confidence is under --deep-below (3), match again with a denser
+//       constellation of the query and three points per slice, and keep the better answer.
 //       --pairs: two-point hashes only; --hybrid: three-point hashes, then two-point ones when nothing sure is found.
 
 func fail(_ message: String) -> Never {
@@ -171,6 +173,13 @@ case "match":
     var grid = SpeedGrid()
     grid.stepPercent = o.double("--step", grid.stepPercent)
     if o.flags.contains("--no-speed") { grid.maxPercent = 0 }
+    let deep = o.flags.contains("--deep")
+    let deepBelow = o.double("--deep-below", 3.0)
+    let deepConfig: LandmarkConfig = {
+        var c = config
+        c.timeReach = o.int("--deep-time-reach", 4); c.frequencyReach = o.double("--deep-frequency-reach", 0.08)
+        return c
+    }()
     let audioStep = o.double("--audio-copies", 0)
     if audioStep > 0 { grid.maxPercent = 0 }
     let queries = lines(o.string("--queries"))
@@ -217,6 +226,14 @@ case "match":
             t1 = t0
         } else {
             found = pool[w].match(marks)
+            if deep, (found.first?.confidence ?? 0) < deepBelow {
+                // The deeper second pass: a denser constellation of the query and more of its points per slice.
+                let more = Landmarks(mono: samples, sampleRate: rate, config: deepConfig)
+                pool[w].queryPerSlice = 3
+                let again = pool[w].match(more)
+                pool[w].queryPerSlice = nil
+                if (again.first?.confidence ?? 0) > (found.first?.confidence ?? 0) { found = again }
+            }
         }
         let t2 = now()
         var row = String(format: "%@\t%d\t%.2f\t%.2f", q[0], marks.count, t1 - t0, t2 - t1)

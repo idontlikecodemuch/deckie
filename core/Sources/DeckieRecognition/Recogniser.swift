@@ -22,18 +22,14 @@ public struct SpeedGrid: Sendable, Equatable {
 
     public init() {}
 
-    /// (speed, whether the frequencies move with it), the unchanged candidate first.
+    /// (speed, whether the frequencies move with it): the key-held candidates from slowest to fastest, then the
+    /// vinyl ones. Neighbours in speed make mostly the same hashes, so in this order the table's memory touched for
+    /// one candidate is still at hand for the next.
     var candidates: [(speed: Double, vinyl: Bool)] {
-        var out: [(Double, Bool)] = [(1, false)]
         let n = Int((maxPercent / stepPercent).rounded(.down))
-        guard n >= 1 else { return out }
-        for k in 1...n {
-            for sign in [1.0, -1.0] {
-                let v = 1 + sign * Double(k) * stepPercent / 100
-                if tempoOnly { out.append((v, false)) }
-                if vinyl { out.append((v, true)) }
-            }
-        }
+        var out: [(Double, Bool)] = []
+        if tempoOnly || n < 1 { for k in -n...n { out.append((1 + Double(k) * stepPercent / 100, false)) } } else { out.append((1, false)) }
+        if vinyl && n >= 1 { for k in -n...n where k != 0 { out.append((1 + Double(k) * stepPercent / 100, true)) } }
         return out
     }
 }
@@ -75,6 +71,8 @@ public final class Recogniser {
     public var grid: SpeedGrid
     /// How many of the best (candidate speed, offset) votes are checked against the song's points.
     public var verified = 12
+    /// Points taken per slice of the query (nil: the index's own setting).
+    public var queryPerSlice: Int?
     /// A fitted point counts when the song has a point within these distances: frames, and 1/4096 octaves (0.85 %).
     public var timeTolerance = 2.0
     public var pitchTolerance = 50.0
@@ -121,7 +119,7 @@ public final class Recogniser {
 
         var best: [Vote] = []
         var qbin = [Int](repeating: -1, count: n)
-        let per = p.queryPerSlice
+        let per = queryPerSlice ?? p.queryPerSlice
         // Per slice of the current anchor: how many targets it has, and each one's pitch bin and gap.
         var taken = [Int](repeating: 0, count: p.fanOut)
         var slotBin = [Int](repeating: 0, count: p.fanOut * per), slotGap = [Int](repeating: 0, count: p.fanOut * per)
