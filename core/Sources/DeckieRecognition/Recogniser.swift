@@ -185,17 +185,23 @@ public final class Recogniser {
                     do {
                         votes.withUnsafeMutableBufferPointer { votes in
                             spans.removeAll(keepingCapacity: true)
-                            for h in hashes { spans.append((Int(offsets[h]), Int(offsets[h + 1]))) }
-                            for (x, span) in spans.enumerated() where span.1 > span.0 {
-                                let shiftT = shifts[x]
-                                var e = span.0
-                                while e < span.1 {
-                                    let bin = Int(Double(entries[e]) - shiftT) / Self.binFrames
-                                    if bin >= 0 {
-                                        if votes[bin] == 0 { touched.append(Int32(bin)) }
-                                        if votes[bin] < .max { votes[bin] += 1 }
+                            for h in hashes { let slot = p.slot(h); spans.append((Int(offsets[slot]), Int(offsets[slot + 1]))) }
+                            ix.tags.withUnsafeBufferPointer { tags in
+                                let tagged = p.triples
+                                for (x, span) in spans.enumerated() where span.1 > span.0 {
+                                    let shiftT = shifts[x]
+                                    let tag = p.tag(hashes[x])
+                                    var e = span.0
+                                    while e < span.1 {
+                                        if !tagged || tags[e] == tag {
+                                            let bin = Int(Double(entries[e]) - shiftT) / Self.binFrames
+                                            if bin >= 0 {
+                                                if votes[bin] == 0 { touched.append(Int32(bin)) }
+                                                if votes[bin] < .max { votes[bin] += 1 }
+                                            }
+                                        }
+                                        e += 1
                                     }
-                                    e += 1
                                 }
                             }
                             // The three fullest pairs of neighbouring bins for this candidate, then clear.

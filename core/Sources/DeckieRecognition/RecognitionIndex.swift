@@ -37,14 +37,21 @@ public struct PairingConfig: Sendable, Equatable {
 
     /// The slices whose points join the anchor in triple k: each slice with the next, the last with the first.
     @inline(__always) func slicePair(_ k: Int) -> (Int, Int) { k + 1 < fanOut ? (k, k + 1) : (0, k) }
-    var tableBits: Int { triples ? 24 : Self.hashBits }
-    /// A triple's 35 bits (anchor pitch, two pitch differences, two time differences) folded to the table's 24 by a
-    /// multiplicative hash (Knuth's golden-ratio constant); two different triples sharing a slot only add stray votes.
+    /// The table's size as a power of two: for pairs the hash's own 21 bits; for triples set by the index to the
+    /// catalogue (about one slot for every four entries, from 2^20 to 2^26 slots), so that a slot stays a few entries long.
+    public internal(set) var tableBits = 24
+    /// A triple's 35 bits (anchor pitch, two pitch differences, two time differences) folded by a multiplicative
+    /// hash (Knuth's golden-ratio constant): the top bits are its slot in the table, the next 8 a tag kept with
+    /// each entry. As a catalogue grows, different triples come to share slots; the tag lets the matcher pass over
+    /// the entries of other triples in a slot (all but one in 256) without casting a vote for them.
     @inline(__always) func hash(anchorBin a: Int, bin1: Int, gap1: Int, bin2: Int, gap2: Int) -> Int {
         let raw = UInt64(a) | UInt64(bin1 - a + maxPitchBins) << 7 | UInt64(bin2 - a + maxPitchBins) << 14
             | UInt64(gap1 / gapStep) << 21 | UInt64(gap2 / gapStep) << 28
-        return Int((raw &* 0x9E37_79B9_7F4A_7C15) >> 40)
+        return Int((raw &* 0x9E37_79B9_7F4A_7C15) >> 24)
     }
+    /// The table slot and the tag of a hash value (a pair's hash is its own slot, with no tag).
+    @inline(__always) func slot(_ h: Int) -> Int { triples ? h >> (40 - tableBits) : h }
+    @inline(__always) func tag(_ h: Int) -> UInt8 { triples ? UInt8((h >> (32 - tableBits)) & 0xff) : 0 }
 
     var pitchBinUnits: Int { Int(Landmarks.pitchUnitsPerOctave) / pitchBinsPerOctave }
     func pitchBins(octaves: Double) -> Int { Int((octaves * Double(pitchBinsPerOctave)).rounded(.up)) }
@@ -78,6 +85,8 @@ public struct RecognitionIndex: Sendable {
     /// The hash table: the anchors (their frames on the timeline) of hash h are entries[offsets[h]..<offsets[h + 1]].
     let offsets: [UInt32]
     let entries: [UInt32]
+    /// Each entry's tag (three-point hashes only; empty otherwise).
+    let tags: [UInt8]
 
     public var songCount: Int { ids.count }
     public var hashCount: Int { entries.count }
@@ -85,6 +94,15 @@ public struct RecognitionIndex: Sendable {
 
     public init(songs: [(id: String, landmarks: Landmarks)], landmark: LandmarkConfig = LandmarkConfig(),
                 pairing: PairingConfig = PairingConfig()) {
+        var pairing = pairing
+        if pairing.triples {
+            let entries = songs.reduce(0) { $0 + $1.landmarks.count } * pairing.fanOut
+            var bits = 20
+            while bits < 26 && (1 << bits) * 4 < entries { bits += 1 }
+            pairing.tableBits = bits
+        } else {
+            pairing.tableBits = PairingConfig.hashBits
+        }
         self.landmark = landmark; self.pairing = pairing
         ids = songs.map(\.id)
         var songStart: [Int] = [], pointStart: [Int] = []
@@ -148,11 +166,18 @@ public struct RecognitionIndex: Sendable {
                 }
             }
         }
-        forEachPair { h, _ in counts[h + 1] += 1 }
+        forEachPair { h, _ in counts[p.slot(h) + 1] += 1 }
         for h in 0..<size { counts[h + 1] += counts[h] }
         var entries = [UInt32](repeating: 0, count: Int(counts[size]))
         var next = counts
-        forEachPair { h, frame in entries[Int(next[h])] = UInt32(frame); next[h] += 1 }
+        var tags = [UInt8](repeating: 0, count: p.triples ? entries.count : 0)
+        forEachPair { h, frame in
+            let at = Int(next[p.slot(h)])
+            entries[at] = UInt32(frame)
+            if p.triples { tags[at] = p.tag(h) }
+            next[p.slot(h)] += 1
+        }
+        self.tags = tags
         self.songStart = songStart; self.pointStart = pointStart
         self.pointFrame = pointFrame; self.pointPitch = pointPitch
         offsets = counts; self.entries = entries
