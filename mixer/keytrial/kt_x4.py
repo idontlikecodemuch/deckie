@@ -427,6 +427,36 @@ def main_export(mode):
     json.dump({"about": "written by mixer/keytrial/kt_x4.py export: the learned key reader's reference values on the generated clips of three_answer.json",
                "weights_sha256": digest, "cases": cases}, open(os.path.join(core, "Tests", "DeckieCoreTests", "Fixtures", "learned_key.json"), "w"), indent=0)
 
+def main_record(mode):
+    """python kt_x4.py record <mode>: every recording the chosen model learned from, with its page and its licence
+    -> core/notices/deckie-key/training-recordings.tsv (the record D15 asks for; DEPENDENCIES.md points at it)."""
+    import zipfile, io, csv, hashlib
+    real = KS.load_real(); fsl = json.load(open(os.path.join(KS.FSL, "metadata.json")))
+    z = zipfile.ZipFile(os.path.join(os.path.dirname(kt.DATA), "fmameta", "fma_metadata.zip"))
+    r = csv.reader(io.TextIOWrapper(z.open("fma_metadata/raw_tracks.csv"), encoding="utf-8")); h = next(r); ix = {k: i for i, k in enumerate(h)}
+    fma = {row[0]: (row[ix["track_title"]].strip(), row[ix["track_url"]], row[ix["license_title"]], row[ix["license_url"]]) for row in r}
+    rows = []
+    for x in real:
+        if x["source"] == "fsl":
+            m = fsl[x["id"]]; lic = m.get("license", "")
+            rows.append(("Freesound Loop Dataset", x["id"], m.get("name", "").strip(), f"https://freesound.org/s/{x['id']}/", x["licence"], lic, "human key label (the set's annotators)"))
+        elif x["source"] == "fmak":
+            t = fma[x["id"][4:]]; rows.append(("Free Music Archive (FMAK key label)", x["id"][4:], t[0], t[1], t[2], t[3], "human key label (FMAK, CC BY 4.0)"))
+        else: rows.append(("Open Well-Tempered Clavier, Book 1", x["id"][3:], "", "https://welltemperedclavier.org/", "CC0 1.0", "https://creativecommons.org/publicdomain/zero/1.0/", "key from the title"))
+    if mode in ("mix", "pseudo", "ssl"):
+        opened = load_open(); rng = np.random.default_rng(0)
+        if mode == "ssl": use, how = opened, "no label (pitch-shifted pairs)"
+        else:
+            pse = [q for q in opened if q["key"] >= 0]; use = [pse[i] for i in rng.permutation(len(pse))[:PSEUDO_CAP]]; how = "key named by the untrained reader"
+        for q in use:
+            t = fma[q["id"][4:]]; rows.append(("Free Music Archive", q["id"][4:], t[0], t[1], t[2], t[3], how))
+        if mode == "pseudo": rows = [x for x in rows if x[0] == "Free Music Archive"]
+    out = os.path.join(kt.HERE, "..", "..", "core", "notices", "deckie-key"); os.makedirs(out, exist_ok=True)
+    clean = lambda v: " ".join(str(v).split())
+    body = "source\tid\ttitle\tpage\tlicence\tlicence_page\tused_as\n" + "".join("\t".join(clean(v) for v in x) + "\n" for x in rows)
+    open(os.path.join(out, "training-recordings.tsv"), "w", encoding="utf-8").write(body)
+    print(len(rows), "recordings;", dict(collections.Counter(x[0] for x in rows)), "; licences", dict(collections.Counter(x[4] for x in rows).most_common(12)), "; SHA-256", hashlib.sha256(body.encode()).hexdigest())
+
 if __name__ == "__main__":
     a = sys.argv
     if a[1] == "feats": main_feats(int(a[a.index("--jobs") + 1]) if "--jobs" in a else 4)
@@ -435,3 +465,4 @@ if __name__ == "__main__":
     elif a[1] == "report": main_report()
     elif a[1] == "ship": main_ship()
     elif a[1] == "export": main_export(a[2])
+    elif a[1] == "record": main_record(a[2])
