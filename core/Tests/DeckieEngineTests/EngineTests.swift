@@ -347,6 +347,7 @@ struct EngineTests {
         var votes = ["hpcp_edma": d.profileKeys[0].camelot, "hpcp_bgate": d.profileKeys[1].camelot,
                      "hpcp_braw": d.profileKeys[2].camelot, "stft_edma": a.key.whole.camelot,
                      "hpcp_whitened": d.camelot, "hpcp_discount": three.camelotA!, "note_transcription": three.camelotB!]
+        let votesWithoutTheLearnedReader = votes
         if let k = three.answer.camelot { votes["three_answer"] = k }
         if let learned = a.learnedKey {
         #expect(abs(learned.probabilities.reduce(0, +) - 1) < 1e-9 && learned.probabilities.count == 24)
@@ -363,7 +364,7 @@ struct EngineTests {
         }
         print("learned key: \(learned.answer), probability \(Py.fixed(learned.keyProbability, 3)), home note \(Py.fixed(learned.homeProbability, 3))")
         } else {
-            #expect(t.key?.source == "three-answer" && t.key?.votes == votes)
+            #expect(t.key?.source == "three-answer" && t.key?.votes == votesWithoutTheLearnedReader)
         }
         // The three-answer reader, still beside it: the test track is a plain progression in one key, and both of
         // its readings find it. Without the learned reader the record is the three-answer reader's, as in 0.6.0.
