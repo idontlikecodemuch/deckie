@@ -32,10 +32,11 @@ enum Words {
     static let noDriveFound = "No CD or drive found. Put one in, or choose a folder."
     static let chooseFolder = "Choose a folder…"
     static let addMusicHelp = "Read a CD, a USB stick or an SD card as it is: its name, its folders and the order of its songs"
-    static let chooseSourceMessage = "Choose a CD, a drive or a folder. Deckie reads its name, its folders and the order of its songs as they are."
+    /// new (D31): the folder chooser's message, for Add music and for the rekordbox route alike.
+    static let chooseSourceMessage = "Choose the folder your music is in. It becomes a source, named after the folder."
     static let chooseSourcePrompt = "Add"
     static let rekordboxMessage = "Choose the collection you exported from rekordbox (File > Export Collection in xml format). Deckie takes names, tempos, keys, cues and playlists from it; nothing is sent anywhere."
-    static let rekordboxFolderMessage = "Choose the folder of music. Deckie reads every song below it and writes a crate file; the music stays where it is."
+    static let rekordboxFolderMessage = chooseSourceMessage   // new (D31)
     static let start = "Start"
 
     // MARK: while it works
@@ -75,6 +76,25 @@ enum Words {
     static let seeSongs = "See the songs"
     static let whatDidntGoIn = "What didn't go in"   // desk.md
 
+    /// new (D30): what the run took from what is already on this computer.
+    static func keysLine(_ counts: [(origin: String, n: Int)]) -> String {
+        "Keys: " + counts.map { "\($0.n) \(keyFrom($0.origin))" }.joined(separator: ", ") + "."
+    }
+    static func keysNone(_ n: Int) -> String {
+        n == 1 ? "1 song has no key yet." : "\(n) songs have no key yet."
+    }
+    static func keysDisagree(_ n: Int) -> String {
+        n == 1 ? "On 1 song your programs give different keys; the newest program's is shown."
+            : "On \(n) songs your programs give different keys; the newest program's is shown."
+    }
+    static func needName(_ n: Int) -> String { n == 1 ? "1 song still needs a name." : "\(n) songs still need a name." }
+    static let everySongHasAName = "Every song has a name."
+    static let showThem = "Show them"
+    static let rekordboxLocked = "rekordbox keeps its own library locked. To bring its keys in, export your collection from rekordbox (File > Export Collection in xml format) and choose it with File > Choose a DJ library…"
+    static let rekordboxExportNotRead = "This music has a rekordbox USB export, which Desk doesn't read yet."
+    static func librariesRead(_ names: [String]) -> String { "Read from " + names.joined(separator: ", ") + "." }
+    static func couldntReadLibrary(_ detail: String) -> String { "Couldn't read a DJ library. \(detail)" }
+
     // MARK: a run that stopped (new, from desk.md's message)
     static func stoppedReading(_ read: String) -> String {
         "Desk stopped before it finished reading \(read). Songs already read are kept."
@@ -103,6 +123,10 @@ enum Words {
     static func songs(_ n: Int) -> String { n == 1 ? "1 song" : "\(n) songs" }
     static func cantBeRecognised(_ n: Int) -> String { "\(n) can't be recognised yet" }
     static func filesDidntGoIn(_ n: Int) -> String { n == 1 ? "1 file didn't go in" : "\(n) files didn't go in" }
+    /// new (D30)
+    static func needNameCount(_ n: Int) -> String { n == 1 ? "1 needs a name" : "\(n) need a name" }
+    static let showAllSongs = "Show all songs"
+    static let onlyNeedName = "Showing the songs that need a name"
 
     // MARK: the table
     static let colTitle = "Title"
@@ -115,6 +139,9 @@ enum Words {
     static let colWhere = "Where"
     static let colNotes = "Notes"
     static let notSureOfKey = "Not sure of the key"
+    /// new (D30)
+    static let colKeyFrom = "Key from"
+    static let needsNameNote = "needs a name"
     static let topOfMusicFolder = "the top of the music folder"
     static func damagedFrames(_ n: Int) -> String { n == 1 ? "1 damaged frame" : "\(n) damaged frames" }
     static let gridUnsure = "beat grid unsure"
@@ -141,6 +168,57 @@ enum Words {
     static func segments(_ n: Int) -> String { "\(n) segments" }
     static let rowKey = "Key"
     static let keyNotSure = ", not sure"
+    /// new (D30): where a key or a name came from.
+    static let rowNameFrom = "Name from"
+    static let keyNotRead = "Key not read on this computer yet"   // D16's words
+    static func keySays(_ origin: String, _ camelot: String) -> String { "\(programName(origin)) says \(camelot)" }
+    static func keyFrom(_ source: String) -> String {
+        switch source {
+        case "rekordbox-xml": return "from rekordbox"
+        case "traktor": return "from Traktor"
+        case "engine-dj": return "from Engine DJ"
+        case "serato": return "from Serato"
+        case "virtualdj": return "from VirtualDJ"
+        case "tag": return "from the file's tag"
+        case "tag-comment": return "from the file's comment"
+        case "tag-title": return "from the file's title"
+        case "apple-mu": return "read by Apple's Music Understanding"
+        case "deckie", "votes", "hpcp-whitened", "stft-edma": return "read by Deckie"
+        default: return "from \(source)"
+        }
+    }
+    /// The short form, for the table's column.
+    static func programName(_ source: String) -> String {
+        switch source {
+        case "rekordbox-xml": return "rekordbox"
+        case "traktor": return "Traktor"
+        case "engine-dj": return "Engine DJ"
+        case "serato": return "Serato"
+        case "virtualdj": return "VirtualDJ"
+        case "tag": return "the file's tag"
+        case "tag-comment": return "the file's comment"
+        case "tag-title": return "the file's title"
+        case "apple-mu": return "Apple"
+        case "deckie", "votes", "hpcp-whitened", "stft-edma": return "Deckie"
+        default: return source
+        }
+    }
+    static func nameFrom(_ source: String) -> String {
+        source.split(separator: "+").map { part -> String in
+            switch part {
+            case "tag": return "the file's tags"
+            case "filename": return "the file name"
+            case "folder": return "the folder"
+            case "cue": return "a cue sheet"
+            case "m3u": return "a playlist"
+            case "tracklist": return "a tracklist"
+            case "copy": return "a copy of the same recording"
+            case "user": return "you"
+            case "lab": return "the lab"
+            default: return programName(String(part))
+            }
+        }.joined(separator: " and ")
+    }
     static let rowKeyChanges = "Key changes"
     static func keyFromBar(_ camelot: String, _ bar: Int) -> String { "\(camelot) from bar \(bar)" }
     static let rowLoudness = "Loudness"
@@ -167,6 +245,8 @@ enum Words {
 
     // MARK: the Sources panel
     static let sourcesTitle = "Sources"
+    /// new (D31): the caption under the panel's title.
+    static let sourcesCaption = "A source is a CD, a drive or a folder you added. Each keeps its own name."
     static let nothingReadYet = "Nothing read from a CD or a drive yet."
     static let sourcesEmptyBody = "Add music from a CD, a USB stick or an SD card, and its name, its folders and the order of its songs show here, as your player shows them."
     static func sourceLine(_ name: String, songs n: Int) -> String { "\(name)  ·  \(n) \(n == 1 ? "song" : "songs")" }
@@ -186,6 +266,7 @@ enum Words {
                : "\(n) songs go from the crate. Songs that are somewhere else too stay.")
     }
     static let remove = "Remove"
+    /// Only for crate files made before D31, whose songs from the Mac have no source.
     static let musicFolderName = "The music folder"
     static let removeMusicFolder = "Remove the music folder…"
 
@@ -208,6 +289,14 @@ enum Words {
         default: return r.replacingOccurrences(of: "_", with: " ").capitalized
         }
     }
+
+    // MARK: keys and names from this computer (new, D30)
+    static let lookAgain = "Look again for keys and names"
+    static let chooseLibrary = "Choose a DJ library…"
+    static let chooseLibraryMessage = "Choose a library a DJ program keeps: a rekordbox collection export (XML), Traktor's collection.nml, Engine DJ's m.db, Serato's database V2 or VirtualDJ's database.xml. Desk only reads it, and reads it again on every run."
+    static func libraryChosen(_ source: String) -> String { "Desk will read \(programName(source)) for keys and names on every run. Look again to read it now." }
+    static func lookedAgain(_ lines: [String]) -> String { lines.joined(separator: " ") }
+    static let undoLookAgain = "Look again"
 
     // MARK: undo (shown in the Edit menu after "Undo"); new
     static let undoNameFix = "Name fix"

@@ -1,12 +1,14 @@
 import SwiftUI
 import DeckieCrate
+import DeckieBuild
 
 struct TrackTable: View {
     @EnvironmentObject var model: DeskModel
     @State private var sortOrder = [KeyPathComparator(\CrateTrack.ident.title)]
 
     var body: some View {
-        let tracks = (model.crate?.tracks ?? []).sorted(using: sortOrder)
+        let all = model.crate?.tracks ?? []
+        let tracks = (model.onlyNeedName ? all.filter(LocalFacts.needsName) : all).sorted(using: sortOrder)
         Table(tracks, selection: $model.selection, sortOrder: $sortOrder) {
             TableColumn(Words.colTitle, value: \.ident.title) { Text($0.ident.title) }
             TableColumn(Words.colArtist, value: \.ident.artist, comparator: OptionalStringComparator()) { Text($0.ident.artist ?? "") }
@@ -14,10 +16,13 @@ struct TrackTable: View {
             TableColumn(Words.colTempo) { t in Text(t.grid.map { Words.tempo($0.bpm) } ?? Words.none) }.width(60)
             TableColumn(Words.colKey) { t in
                 HStack(spacing: 4) {
-                    Text(t.key?.camelot ?? Words.none)
+                    Text(t.key?.camelot ?? Words.none).help(Self.keyHelp(t))
                     if t.flags.contains("key_uncertain") { Image(systemName: "questionmark.circle").foregroundStyle(.secondary).help(Words.notSureOfKey) }
                 }
             }.width(60)
+            TableColumn(Words.colKeyFrom) { t in
+                Text(t.key.map { Words.programName($0.source) } ?? "").foregroundStyle(.secondary).lineLimit(1).help(Self.keyHelp(t))
+            }.width(min: 60, ideal: 90)
             TableColumn(Words.colBars) { t in Text(t.grid.map { "\($0.nBars)" } ?? Words.none) }.width(50)
             TableColumn(Words.colLength) { t in Text(Words.mmss(t.file.durationS)) }.width(60)
             TableColumn(Words.colVocals) { t in Text(t.vocal.map { Words.percent($0.mean) } ?? Words.none) }.width(56)
@@ -41,8 +46,18 @@ struct TrackTable: View {
         }
     }
 
+    /// The key and where it came from, then what the DJ's other programs and tags say ("8A from Traktor; rekordbox says
+    /// 9A"), or D16's words when there is no key.
+    static func keyHelp(_ t: CrateTrack) -> String {
+        guard let k = t.key else { return Words.keyNotRead }
+        let others = k.votes.filter { (LocalFacts.djOrigins.contains($0.key) || $0.key == LocalFacts.ownVote) && $0.key != k.source }.sorted { $0.key < $1.key }
+            .map { Words.keySays($0.key, $0.value) }
+        return ([k.camelot + " " + Words.keyFrom(k.source)] + others).joined(separator: "; ")
+    }
+
     static func notes(_ t: CrateTrack) -> String {
         var n: [String] = []
+        if LocalFacts.needsName(t) { n.append(Words.needsNameNote) }
         if let d = t.file.damagedFrames, !d.isEmpty { n.append(Words.damagedFrames(d.count)) }
         if t.flags.contains("low_grid_confidence") { n.append(Words.gridUnsure) }
         if t.flags.contains("vocal_unknown") { n.append(Words.vocalsNotRead) }
@@ -108,7 +123,9 @@ struct Inspector: View {
                         row(Words.rowFile, t.file.name)
                         if let g = t.grid { row(Words.rowTempo, Words.tempoValue(bpm: g.bpm, bars: g.nBars, firstDownbeat: g.firstDownbeatS)) }
                         if let segs = t.tempoSegments, segs.count > 1 { row(Words.rowTempoChanges, Words.segments(segs.count)) }
-                        if let k = t.key { row(Words.rowKey, "\(k.camelot)" + (k.key.map { " (\($0) \(k.scale ?? ""))" } ?? "") + (t.flags.contains("key_uncertain") ? Words.keyNotSure : "")) }
+                        if let k = t.key { row(Words.rowKey, "\(k.camelot)" + (k.key.map { " (\($0) \(k.scale ?? ""))" } ?? "") + (t.flags.contains("key_uncertain") ? Words.keyNotSure : "") + "\n" + String(TrackTable.keyHelp(t).dropFirst(k.camelot.count + 1))) }
+                        else { row(Words.rowKey, Words.keyNotRead) }
+                        if let s = t.ident.source { row(Words.rowNameFrom, Words.nameFrom(s)) }
                         if let ch = t.key?.changes, !ch.isEmpty { row(Words.rowKeyChanges, ch.map { Words.keyFromBar($0.camelot, $0.startBar) }.joined(separator: ", ")) }
                         if let l = t.loudness { row(Words.rowLoudness, Words.loudnessValue(lufs: l.integratedLufs, peak: l.truePeakDb)) }
                         if let mi = t.mixIn, let mo = t.mixOut { row(Words.rowMixWindows, Words.mixWindows(inFrom: mi.startBar, inTo: mi.endBar, outFrom: mo.startBar, outTo: mo.endBar)) }

@@ -1,6 +1,7 @@
 import SwiftUI
 import DeckieCrate
 import DeckieDesk
+import DeckieBuild
 
 struct ContentView: View {
     @EnvironmentObject var model: DeskModel
@@ -170,6 +171,16 @@ struct FinishedView: View {
                     }
                 }
                 if report.foldersLeftOut > 0 { Text(Words.foldersLeftOut(report.foldersLeftOut)).foregroundStyle(.secondary) }
+                if let local = report.local {
+                    ForEach(LocalLines.keyLines(local), id: \.self) { Text($0) }
+                    HStack {
+                        Text(local.report.needName == 0 ? Words.everySongHasAName : Words.needName(local.report.needName))
+                        if local.report.needName > 0 {
+                            Button(Words.showThem) { model.onlyNeedName = true; model.finished = nil }.buttonStyle(.link)
+                        }
+                    }
+                    ForEach(LocalLines.notes(local), id: \.self) { Text($0).foregroundStyle(.secondary) }
+                }
                 Text(Words.took(report.seconds, perMinute: report.songsPerMinute)).foregroundStyle(.secondary)
             }
             .frame(maxWidth: 420, alignment: .leading)
@@ -207,6 +218,12 @@ struct StatusBar: View {
                 Text(Words.songs(c.tracks.count)).bold()
                 let unsigned = c.tracks.filter { $0.signatures.isEmpty }.count
                 if unsigned > 0 { Text(Words.cantBeRecognised(unsigned)).foregroundStyle(.secondary) }
+                let unnamed = c.tracks.filter(LocalFacts.needsName).count
+                if unnamed > 0 || model.onlyNeedName {
+                    Button(model.onlyNeedName ? Words.showAllSongs : Words.needNameCount(unnamed)) { model.onlyNeedName.toggle() }
+                        .buttonStyle(.link)
+                }
+                if model.onlyNeedName { Text(Words.onlyNeedName).foregroundStyle(.secondary) }
                 if let log = c.manifest.importLog {
                     let out = log.entries.filter { $0.reason != CrateManifest.ImportLog.Reason.damagedFrames }.count
                     if out > 0 {
@@ -217,5 +234,33 @@ struct StatusBar: View {
             Spacer()
         }
         .font(.callout).padding(.horizontal, 12).padding(.vertical, 6).background(.bar)
+    }
+}
+
+/// The finished screen's and Look again's sentences about keys and names (D30).
+enum LocalLines {
+    /// "Keys: 212 from rekordbox, 40 from the file's tag.", the songs with no key, and where programs disagree.
+    static func keyLines(_ s: LocalFactsSummary) -> [String] {
+        var out: [String] = []
+        let counts = s.report.keysFrom.sorted { $0.value != $1.value ? $0.value > $1.value : $0.key < $1.key }
+            .map { (origin: $0.key, n: $0.value) }
+        if !counts.isEmpty { out.append(Words.keysLine(counts)) }
+        if s.report.keysNotRead > 0 { out.append(Words.keysNone(s.report.keysNotRead)) }
+        if s.report.keysDisagree > 0 { out.append(Words.keysDisagree(s.report.keysDisagree)) }
+        return out
+    }
+
+    /// The libraries read, the ones that could not be, and rekordbox's locked library.
+    static func notes(_ s: LocalFactsSummary) -> [String] {
+        var out: [String] = []
+        if !s.libraries.isEmpty { out.append(Words.librariesRead(s.libraries.map { Words.programName($0.program.rawValue) })) }
+        out += s.failed.map(Words.couldntReadLibrary)
+        if s.rekordboxLocked { out.append(Words.rekordboxLocked) }
+        if s.rekordboxExport { out.append(Words.rekordboxExportNotRead) }
+        return out
+    }
+
+    static func lines(_ s: LocalFactsSummary) -> [String] {
+        keyLines(s) + [s.report.needName == 0 ? Words.everySongHasAName : Words.needName(s.report.needName)] + notes(s)
     }
 }

@@ -1,8 +1,8 @@
 import SwiftUI
 import DeckieCrate
 
-// The Sources panel (D25, D26). A source is the thing a DJ holds that the songs were read from: a burned CD, a USB
-// stick, an SD card. Desk reads one as it is (Add music, DeskModel.addSource), so the panel shows what was read and is
+// The Sources panel (D25, D26, D31). A source is the thing a DJ holds that the songs were read from: a burned CD, a USB
+// stick, an SD card, or a folder the DJ added (named after that top folder, its folders inside as groups). Desk reads one as it is (Add music, DeskModel.addSource), so the panel shows what was read and is
 // for corrections: a name, or an order Desk read wrongly; and for taking a source back out of the crate. On screen a
 // source is shown by its own name; the word "source" is ours, in documents and code. The operations are the shared
 // core's (DeckieCrate's Discs.swift, where the field is still called disc; DeckieDesk's removeSource).
@@ -22,7 +22,9 @@ extension DeskModel {
     /// walks them, songs by their number.
     var sourceOutline: [DiscPlan] { crate?.discPlan ?? [] }
 
-    /// Whether some songs are in the music folder (no source): the rekordbox route, or a crate made before sources.
+    /// Whether some songs are in the music folder (no source): only in a crate made before D31, when the rekordbox
+    /// route read the music folder with no source. Every way of adding music now reads a source, so the panel's
+    /// "Remove the music folder…" shows only for such a crate.
     var hasMusicFolderSongs: Bool { crate?.tracks.contains { $0.ident.allPlaces.contains { $0.disc == nil } } ?? false }
 
     /// The folder of what is selected in the panel (a folder, or a song's folder).
@@ -86,10 +88,12 @@ struct SourcesPanel: View {
     var body: some View {
         let outline = model.sourceOutline
         VStack(spacing: 0) {
-            HStack {
+            VStack(alignment: .leading, spacing: 2) {
                 Text(Words.sourcesTitle).font(.headline)
-                Spacer()
+                Text(Words.sourcesCaption).font(.caption).foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
             }
+            .frame(maxWidth: .infinity, alignment: .leading)
             .padding(.horizontal, 12).padding(.vertical, 8)
             Divider()
             if outline.isEmpty {

@@ -276,7 +276,11 @@ public final class Builder: Sendable {
         let existing = try existingCrate()
         let work = try WorkStore(folder: options.workFolder, fresh: options.fresh, records: options.sharedRecords)
         let label = Builder.engineKey(vocalModel: vocalModel)
-        let rekordboxOf = files.map { f in matcher?.match(absolutePath: f.url.path, rel: f.rel, size: f.size) }
+        // Matched by the path below the folder chosen, without the source's name put before it for the log: a folder
+        // read as a source (D31) is named after itself, or "Music 2", which is not a folder in rekordbox's paths.
+        let rekordboxOf = files.map { f in
+            matcher?.match(absolutePath: f.url.path, rel: String(f.rel.dropFirst(prefix.count)), size: f.size)
+        }
         let rbSummary = collection.map {
             CrateManifest.ImportLog.Rekordbox(tracks: $0.tracks.count, matched: rekordboxOf.compactMap { $0 }.count)
         }

@@ -10,7 +10,8 @@ func keyVerdict(_ ka: String, _ kb: String, _ reasons: [String]) -> String {
         guard let last = k.last, last == "A" || last == "B", let n = Int(k.dropLast()), (1...12).contains(n) else { return nil }
         return (n, last)
     }
-    guard let pa = parse(ka), let pb = parse(kb) else { return "key unsure" }
+    // A key not read is neither good nor bad for the pair (D16; the core's scoring leaves it out too).
+    guard let pa = parse(ka), let pb = parse(kb) else { return "key not read" }
     if ka == kb { return "same key" }
     let d = ((pb.0 - pa.0) % 12 + 12) % 12
     if pa.1 == pb.1 && (d == 1 || d == 11) { return "neighbour" }
