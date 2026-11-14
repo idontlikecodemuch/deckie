@@ -122,6 +122,10 @@ public final class Recogniser {
         return (second.first?.confidence ?? 0) > (first.first?.confidence ?? 0) ? second : first
     }
 
+    /// The songs the index in memory proposes for a query, best first: those whose votes pile highest, before any
+    /// check (for measuring how often the right song is among the first so many).
+    public func proposals(_ query: Landmarks, count: Int) -> [Int] { run(index, query, shortlist: count).1 }
+
     private func run(_ ix: RecognitionIndex, _ query: Landmarks, shortlist: Int? = nil) -> ([RecognitionMatch], [Int]) {
         let p = ix.pairing
         let unit = Double(p.pitchBinUnits)
@@ -134,6 +138,8 @@ public final class Recogniser {
         let bins = p.pitchBins(octaves: ix.landmark.octaves)
 
         var best: [Vote] = []
+        // The fullest bins kept from each candidate speed: three for a direct answer, more when a list is wanted.
+        let keep = shortlist == nil ? 3 : 8
         var qbin = [Int](repeating: -1, count: n)
         let per = queryPerSlice ?? p.queryPerSlice
         // Per slice of the current anchor: how many targets it has, and each one's pitch bin and gap.
@@ -229,10 +235,10 @@ public final class Recogniser {
                             for t in touched {
                                 let b = Int(t)
                                 let c = Int(votes[b]) + Int(votes[b + 1])
-                                if top.count < 3 || c > top[top.count - 1].0 {
+                                if top.count < keep || c > top[top.count - 1].0 {
                                     top.append((c, b))
                                     top.sort { $0.0 > $1.0 }
-                                    if top.count > 3 { top.removeLast() }
+                                    if top.count > keep { top.removeLast() }
                                 }
                             }
                             for t in touched { votes[Int(t)] = 0 }

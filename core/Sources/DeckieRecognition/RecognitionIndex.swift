@@ -45,6 +45,9 @@ public struct PairingConfig: Sendable, Equatable {
     /// Keep one hash in this many (a power of two), chosen by the hash's own low bits, so a song and a query drop
     /// the same ones.
     public var keepOneIn = 1
+    /// Only a song's points of this strength level or more (0 to 3) are anchors in the index; every point can still
+    /// be a target, and every point of a query is tried as an anchor. Level 2 keeps the stronger half.
+    public var minAnchorLevel = 0
 
     public init() {}
 
@@ -120,7 +123,8 @@ public struct RecognitionIndex: Sendable {
                 pairing: PairingConfig = PairingConfig()) {
         var pairing = pairing
         if pairing.triples {
-            let entries = songs.reduce(0) { $0 + $1.landmarks.count } * pairing.tripleCount / max(1, pairing.keepOneIn)
+            let share = [1.0, 0.75, 0.5, 0.25][max(0, min(3, pairing.minAnchorLevel))]   // the levels are quartiles
+            let entries = Int(Double(songs.reduce(0) { $0 + $1.landmarks.count } * pairing.tripleCount) * share) / max(1, pairing.keepOneIn)
             var bits = 12
             while bits < 26 && (1 << bits) * pairing.entriesPerSlot < entries { bits += 1 }
             pairing.tableBits = bits
@@ -157,6 +161,7 @@ public struct RecognitionIndex: Sendable {
             for s in 0..<songs.count {
                 let lo = pointStart[s], hi = pointStart[s + 1]
                 for i in lo..<hi {
+                    if p.triples && Int(pointLevel[i]) < p.minAnchorLevel { continue }
                     let a = Int(pointPitch[i]) / unit, ta = Int(pointFrame[i])
                     var filled = 0   // bit k set once slice k has its point
                     var j = i + 1
