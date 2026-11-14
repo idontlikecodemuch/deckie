@@ -51,7 +51,9 @@
     <p class="dim" data-w="dropHere"></p>
   </section>
 
-  <!-- The run: one progress bar. -->
+  <!-- The run (D37): the plain facts first (songs done, time left, what didn't go in, that it can be left), a quiet
+       line that changes, the song Desk just read with what it found, the figures counted so far, and the crate as a
+       wall of waves. Everything drawn is a song Desk read; run.js draws it. -->
   <section id="run" class="screen" aria-labelledby="run-title" hidden>
     <div class="run">
       <h1 id="run-title" data-w="runTitle"></h1>
@@ -62,13 +64,57 @@
         <div class="row"><input id="disc-ask-input" type="text" autocomplete="off" spellcheck="false"><button class="main" data-w="ok"></button></div>
       </form>
       <div id="run-bar" class="progress waiting" role="progressbar" aria-labelledby="run-title" aria-valuemin="0" aria-valuemax="100"><div></div></div>
-      <div class="run-line" aria-live="polite" aria-atomic="true">
+      <div class="run-line">
         <span id="run-count"></span>
         <span id="run-stage" class="mut"></span>
+        <span id="run-notin" class="warn" hidden></span>
         <span class="grow"></span>
         <span id="run-left" class="mut"></span>
       </div>
-      <ol id="run-log" class="log" role="log" aria-live="off" data-w-label="runTitle"></ol>
+      <p id="run-saying" class="saying"></p>
+      <p class="leave dim" data-w="leaveRunning"></p>
+
+      <!-- The song on stage: its own wave, its bars marked, and what Desk found in it. -->
+      <div id="stage" class="stage card">
+        <canvas id="stage-wave" class="stage-wave" role="img"></canvas>
+        <div class="stage-facts">
+          <p class="stage-name"><b id="stage-title"></b> <span id="stage-artist" class="mut"></span> <span id="stage-before" class="chip" data-w="stageBefore" hidden></span></p>
+          <dl class="stage-dl">
+            <div><dt data-w="stageTempo"></dt><dd id="stage-tempo" class="tempo"></dd></div>
+            <div><dt data-w="stageKey"></dt><dd id="stage-key"></dd></div>
+            <div><dt data-w="stageBars"></dt><dd id="stage-bars"></dd></div>
+            <div><dt data-w="stageLength"></dt><dd id="stage-length"></dd></div>
+            <div class="where"><dt data-w="stageWhere"></dt><dd id="stage-where"></dd></div>
+          </dl>
+          <p id="stage-more" class="dim small"></p>
+        </div>
+        <p id="stage-empty" class="stage-empty mut" data-w="stageFirstSoon"></p>
+      </div>
+
+      <!-- What Desk has found so far: each a true count. -->
+      <div class="figures">
+        <div id="fig-music" class="fig card"><h2 data-w="figMusic"></h2><p id="fig-music-value" class="big"></p></div>
+        <div id="fig-tempos-card" class="fig card"><h2 data-w="figTempos"></h2><canvas id="fig-tempos" class="hist" role="img"></canvas><p id="fig-tempos-text" class="small mut"></p></div>
+        <div id="fig-keys-card" class="fig card fig-keys"><h2 data-w="figKeys"></h2><svg id="fig-keys" class="wheel" viewBox="0 0 120 120" role="img"></svg><p id="fig-keys-text" class="small mut"></p></div>
+        <div class="fig card fig-list">
+          <p><span data-w="figNeedName"></span> <b id="fig-needname"></b></p>
+          <p><span data-w="figSameFile"></span> <b id="fig-samefile"></b></p>
+          <p><span data-w="figCopies"></span> <b id="fig-copies"></b></p>
+          <p><span data-w="figNotIn"></span> <b id="fig-notin"></b></p>
+        </div>
+      </div>
+
+      <!-- The crate filling up: one line a song. -->
+      <div class="wall-card card">
+        <div class="wall-head"><h2 id="run-wall-title" data-w="wallTitle"></h2><span id="run-wall-name" class="wall-name mut"></span></div>
+        <canvas id="run-wall" class="wall" tabindex="0" role="img" aria-describedby="run-wall-help"></canvas>
+        <p id="run-wall-help" class="dim small" data-w="wallHelp"></p>
+      </div>
+
+      <details class="run-list"><summary data-w="runListTitle"></summary>
+        <ol id="run-log" class="log" role="log" aria-live="off" data-w-label="runTitle"></ol>
+      </details>
+      <div id="run-announce" class="sr" aria-live="polite" aria-atomic="true"></div>
     </div>
   </section>
 
@@ -77,6 +123,13 @@
     <div class="finished">
       <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M8 12.5l2.6 2.6L16 9.6"/></svg>
       <h1 id="finished-title"></h1>
+      <!-- The crate as sound (D37): the run's songs, one line each, as they joined. -->
+      <div id="done-wall-card" class="wall-card card done" hidden>
+        <p id="done-moment" class="saying moment"></p>
+        <div class="wall-head"><h2 id="done-wall-title"></h2><span id="done-wall-name" class="wall-name mut"></span></div>
+        <canvas id="done-wall" class="wall" tabindex="0" role="img" aria-describedby="done-wall-help"></canvas>
+        <p id="done-wall-help" class="dim small" data-w="wallHelp"></p>
+      </div>
       <div id="finished-summary" class="summary card"></div>
       <p data-w="nextStep"></p>
       <div class="actions">
@@ -104,6 +157,7 @@
       <h2 id="need-title"></h2>
       <span class="grow"></span>
       <button id="need-check" class="small" data-w-title="looksRightHelp"></button>
+      <button id="need-lookup" class="small net" hidden></button>
       <div class="menu-wrap">
         <button id="tools-button" class="small" aria-haspopup="menu" aria-expanded="false"><span data-w="nameTools"></span><span class="chev" aria-hidden="true">▾</span></button>
         <ul id="tools-menu" class="menu right" role="menu" hidden></ul>
@@ -128,7 +182,9 @@
       <button id="player-stop" class="small" data-w="stopListening"></button>
     </div>
     </div>
-    <!-- One song's names (letter AA, 3.4): each fact with where it came from; a guess looks like a guess. -->
+    <!-- One song's names (letter AA, 3.4): each fact with where it came from; a guess looks like a guess. The song's
+         cover (D36) is drawn first in it by desk.js, from bytes the engine sends: a data: address, which img-src
+         above already allows; nothing is fetched and no path is told. -->
     <aside id="names" class="side names" aria-labelledby="names-title" hidden>
       <header><h2 id="names-title" data-w="names"></h2><button id="names-close" class="small" data-w="done"></button></header>
       <div class="scroll" id="names-body"></div>
@@ -210,8 +266,51 @@
   </form>
 </dialog>
 
+<!-- "Look up songs via MusicBrainz" (D36): the one step that uses the internet, and looks it. The engine does the
+     lookup; this page never touches the network (connect-src 'none' above). Three steps in one dialog: the sentence
+     saying what will be sent and to whom, the count while it goes (it can be stopped), then the review with the
+     candidates side by side and a tick per field. -->
+<dialog id="lookup" class="wide lookup" aria-labelledby="lookup-title">
+  <form method="dialog">
+    <div class="net-band" role="note"><svg class="net-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.6 2.8 3.9 5.8 3.9 9s-1.3 6.2-3.9 9c-2.6-2.8-3.9-5.8-3.9-9S9.4 5.8 12 3z"/></svg><span id="lookup-kind" data-w="lookupKindLine"></span></div>
+    <h2 id="lookup-title"></h2>
+    <div id="lookup-ask">
+      <label id="lookup-scope-wrap"><span data-w="lookupSongsFrom"></span> <select id="lookup-scope"></select></label>
+      <div id="lookup-sentence" class="sentence" aria-live="polite"></div>
+    </div>
+    <div id="lookup-progress" hidden>
+      <div id="lookup-bar" class="progress net" role="progressbar" aria-labelledby="lookup-title" aria-valuemin="0" aria-valuemax="100"><div></div></div>
+      <p id="lookup-count" class="count" aria-live="polite"></p>
+      <p class="mut" data-w="lookupProgressHelp"></p>
+    </div>
+    <div id="lookup-review" hidden>
+      <p id="lookup-summary" class="summary-line" role="status"></p>
+      <p id="lookup-disc" class="mut"></p>
+      <p class="mut" data-w="lookupReviewHelp"></p>
+      <div id="lookup-songs" class="lookup-songs"></div>
+      <p class="mut small-print" data-w="lookupGenreNote"></p>
+    </div>
+    <div class="buttons">
+      <button id="lookup-sent-link" type="button" class="link sent-link" data-w="lookupSentLink"></button>
+      <span class="grow"></span>
+      <button id="lookup-cancel" value="cancel"></button>
+      <button id="lookup-go" type="button" class="main net"></button>
+    </div>
+  </form>
+</dialog>
+<dialog id="sent" class="wide sent" aria-labelledby="sent-title">
+  <form method="dialog">
+    <h2 id="sent-title" data-w="lookupSentTitle"></h2>
+    <p class="mut" data-w="lookupSentIntro"></p>
+    <ol id="sent-list" class="sent-list"></ol>
+    <p id="sent-empty" class="mut" data-w="lookupSentEmpty" hidden></p>
+    <div class="buttons"><button id="sent-clear" type="button" class="danger" data-w="lookupSentClear"></button><span class="grow"></span><button value="ok" class="main" data-w="done"></button></div>
+  </form>
+</dialog>
+
 <audio id="audio" preload="auto" hidden></audio>
 <div id="announce" class="sr" aria-live="assertive"></div>
+<script src="run.js"></script>
 <script src="desk.js"></script>
 </body>
 </html>

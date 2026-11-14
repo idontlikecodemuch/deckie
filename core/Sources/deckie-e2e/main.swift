@@ -25,22 +25,29 @@
 // The folder (songs are the engine's synthesised test track, `TestTrack`: 63 s of drums at 124 BPM in A minor):
 //
 //   Singles/Track One.wav                 32-bit float WAV; a space in the name
+//   Singles/folder.jpg                    a picture beside the music (a JPEG made here): Track One's cover (D36)
 //   Singles/Deep Cuts/Träck Zwei.flac     16-bit FLAC, written here with no encoder; a nested folder, a name that is
-//                                         not ASCII (ä as one character, U+00E4)
-//   Album/03 Track Three.mp3              the MP3 of the test track given with --mp3
+//                                         not ASCII (ä as one character, U+00E4); a PNG in its own PICTURE block,
+//                                         which is its cover
+//   Album/03 Track Three.mp3              the MP3 of the test track given with --mp3; no picture of its own, and the
+//                                         one beside it is not a picture, so it has no cover
 //   Album/short tone.mp3                  DeckieDecode's 4-second test tone: too short to analyse, so not in the crate
 //   Album/locked.m4p                      the stand-in for a copy-protected file: not in the crate, "protected"
-//   Album/cover.jpg                       not audio: not counted
+//   Album/cover.jpg                       not audio: not counted; four bytes that start as a JPEG does and stop: a
+//                                         picture that cannot be made into a cover
 //   .hidden.wav                           a hidden file (its name starts with a dot; on Windows also marked hidden)
 //   Hidden By Windows.wav                 Windows only: an ordinary name, marked hidden the Windows way
 //   .hidden folder/inside.wav             a hidden folder
 //   _old/parked.wav                       a folder left out by the builder's rule, with an import-log entry
 //
-// So a correct build has 3 songs, 2 files that did not go in (one analysis_error, one protected) and one left-out folder.
+// So a correct build has 3 songs, 2 files that did not go in (one analysis_error, one protected) and one left-out
+// folder; 2 of the songs have a cover, each its own, and `covers/` holds those two thumbnails and nothing else. No
+// picture is committed: both are made here by code (`TestPicture`), the same bytes on every system.
 
 import Foundation
 import DeckieAudio
 import DeckieCore
+import DeckieCovers
 import DeckieCrate
 import DeckieTestSupport
 #if os(Windows)
@@ -61,6 +68,13 @@ let flacRel = "Singles/Deep Cuts/Tr\u{e4}ck Zwei.flac"
 let mp3Rel = "Album/03 Track Three.mp3"
 let toneRel = "Album/short tone.mp3"
 let lockedRel = "Album/locked.m4p"
+
+/// The two pictures of the folder: the JPEG beside Track One (made from a generated picture by the thumbnail code,
+/// which gives the same bytes on Linux and Windows) and the PNG inside the FLAC file.
+func besidePicture() throws -> Data {
+    try Cover.portableThumbnail(TestPicture.sleeve(side: 300, seed: 1), side: 300, quality: 90).jpeg
+}
+let flacPicture = TestPicture.sleeve(side: 160, seed: 2)
 
 func url(_ root: URL, _ rel: String) -> URL {
     rel.split(separator: "/").reduce(root) { $0.appendingPathComponent(String($1)) }
@@ -83,7 +97,8 @@ func make(_ root: URL, mp3: URL) throws {
     let track = TestTrack.render()
     let wav = TestTrack.wav(track)
     try write(wav, wavRel)
-    try write(FLACWriter.flac16(track), flacRel)
+    try write(FLACWriter.flac16(track, picture: flacPicture), flacRel)
+    try write(try besidePicture(), "Singles/folder.jpg")
     try write(try Data(contentsOf: mp3), mp3Rel)
     try write(try Data(contentsOf: decodeFixtures.appendingPathComponent("tone.mp3")), toneRel)
     try write(try Data(contentsOf: decodeFixtures.appendingPathComponent("protected.m4p")), lockedRel)
@@ -244,13 +259,62 @@ func check(_ file: URL, pc: Bool = false) {
     let text = (try? CrateWriter.encode(crate)).flatMap { $0[CrateFormat.tracksFile] }.map { String(decoding: $0, as: UTF8.self) } ?? ""
     expect(text.contains("Tr\u{e4}ck Zwei.flac"), "the name that is not ASCII did not come through as written")
 
+    // Covers (D36): the WAV's is the picture beside it, the FLAC's the one in its tags; nothing else has one, and
+    // the crate file holds those two thumbnails and no other.
+    let files = crateFiles(file)
+    let coverFiles = files.filter { $0.key.hasPrefix(CrateFormat.coversFolder + "/") }
+    let beside = (try? besidePicture()) ?? Data()
+    let expectedCovers = [wavRel: Cover.hash(of: beside), flacRel: Cover.hash(of: flacPicture)]
+    for t in crate.tracks {
+        let rel = t.file.rel ?? "?"
+        expect(t.file.cover == expectedCovers[rel], "\(rel): file.cover is \(t.file.cover ?? "none"), expected \(expectedCovers[rel] ?? "none")")
+    }
+    expect(coverFiles.keys.sorted() == expectedCovers.values.map(CrateFormat.coverPath).sorted(),
+           "the covers are \(coverFiles.keys.sorted()), expected \(expectedCovers.values.map(CrateFormat.coverPath).sorted())")
+    for (path, jpeg) in coverFiles {
+        expect(jpeg.starts(with: [0xFF, 0xD8, 0xFF]) && jpeg.count <= CrateFormat.coverMaxBytes, "\(path): not a JPEG of at most \(CrateFormat.coverMaxBytes) bytes")
+    }
+    #if !canImport(ImageIO)
+    // Linux and Windows make the thumbnail with the same code: the bytes are what `Cover.make` gives here.
+    for picture in [beside, flacPicture] {
+        let path = CrateFormat.coverPath(Cover.hash(of: picture))
+        expect(coverFiles[path] == (try? Cover.make(picture))?.jpeg, "\(path): not the thumbnail Cover.make gives for its picture")
+    }
+    #endif
+
     if !wrong.isEmpty { fail("\(file.lastPathComponent) is a valid crate file but not the expected one:\n  " + wrong.joined(separator: "\n  ")) }
     print("\(file.lastPathComponent): valid (\(CrateArchive.isArchive(file) ? "single-file form" : "package folder")), "
           + "\(songs.count) songs, 2 files not in it with their reasons, \(pc ? "no" : "1") folder left out, hidden files not read")
     for t in crate.tracks.sorted(by: { ($0.file.rel ?? "") < ($1.file.rel ?? "") }) {
         print("  \(t.file.rel ?? "?"): \(t.grid?.bpm ?? 0) BPM, \(t.grid?.nBars ?? 0) bars, key \(t.key?.camelot ?? "none"), "
-              + "\(t.loudness?.integratedLufs ?? 0) LUFS, analysed in \(t.analysis.secs.map { "\($0)" } ?? "?") s")
+              + "\(t.loudness?.integratedLufs ?? 0) LUFS, analysed in \(t.analysis.secs.map { "\($0)" } ?? "?") s, "
+              + "cover \(t.file.cover.map { String($0.prefix(12)) } ?? "none")")
     }
+    // Sizes: what the covers add. The crate file's size is that of its single-file form, which stores every file as
+    // it is, so it is the same whichever form was given.
+    let withCovers = (try? CrateArchive.encode(files))?.count ?? 0
+    let withoutCovers = (try? CrateArchive.encode(files.filter { coverFiles[$0.key] == nil }))?.count ?? 0
+    print("covers: \(crate.tracks.filter { $0.file.cover != nil }.count) songs with a cover, \(coverFiles.count) distinct covers, "
+          + "\(coverFiles.values.reduce(0) { $0 + $1.count }) bytes together")
+    print("crate file's size (single-file form): \(withCovers) bytes with the covers folder, \(withoutCovers) bytes without")
+}
+
+/// Every file of a crate file, by its path inside it, from either form.
+func crateFiles(_ file: URL) -> [String: Data] {
+    if CrateArchive.isArchive(file) { return (try? CrateArchive.read(file)) ?? [:] }
+    var files: [String: Data] = [:]
+    let fm = FileManager.default
+    func walk(_ folder: URL, _ below: String) {
+        for name in (try? fm.contentsOfDirectory(atPath: folder.path)) ?? [] {
+            let item = folder.appendingPathComponent(name)
+            var isFolder: ObjCBool = false
+            guard fm.fileExists(atPath: item.path, isDirectory: &isFolder) else { continue }
+            if isFolder.boolValue { walk(item, below + name + "/") }
+            else if let data = try? Data(contentsOf: item) { files[below + name] = data }
+        }
+    }
+    walk(file, "")
+    return files
 }
 
 let args = Array(CommandLine.arguments.dropFirst())

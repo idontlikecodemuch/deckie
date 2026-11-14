@@ -23,6 +23,7 @@ struct DeskApp: App {
                 .onAppear {
                     if let n = Headless.openOnLaunch { model.show(named: n) }
                     if let w = NamingWalk.request { NamingWalk.run(model: model, out: w.out, music: w.music) }
+                    if let w = LookupWalk.request { LookupWalk.run(model: model, out: w.out, music: w.music) }
                     if let s = Snapshot.request {
                         if let n = s.crate { model.show(named: n) }
                         Snapshot.run(model: model, out: s.out)

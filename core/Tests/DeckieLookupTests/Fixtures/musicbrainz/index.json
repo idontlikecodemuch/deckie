@@ -1,0 +1,54 @@
+{
+ "https://musicbrainz.org/ws/2/discid/49HHV7Eb8UKF3aQiNmu1GR8vKTY-?toc=1+6+95462+150+15363+32314+46592+63414+80489&cdstubs=no&inc=artist-credits+recordings+labels&fmt=json": {
+  "file": "12.json",
+  "status": 200
+ },
+ "https://musicbrainz.org/ws/2/discid/4YAPtM27mWifRNtlrR4XBXZ2_G0-?toc=1+4+70150+150+17150+31150+52150&cdstubs=no&inc=artist-credits+recordings+labels&fmt=json": {
+  "file": "13.json",
+  "status": 200
+ },
+ "https://musicbrainz.org/ws/2/discid/njXCrXY_RjzhKizH8CbHZnJS9Ps-?toc=1+14+210150+150+15150+30150+45150+60150+75150+90150+105150+120150+135150+150150+165150+180150+195150&cdstubs=no&inc=artist-credits+recordings+labels&fmt=json": {
+  "file": "14.json",
+  "status": 200
+ },
+ "https://musicbrainz.org/ws/2/recording?query=%2Brecording%3A%22Around%20the%20World%22%20%2Bartist%3A%22Daft%20Punk%22&limit=50&fmt=json": {
+  "file": "01.json",
+  "status": 200
+ },
+ "https://musicbrainz.org/ws/2/recording?query=%2Brecording%3A%22Around%20the%20World%22%20recording%3A%22Around%20the%20World%20%28Radio%20Edit%29%22%20%2Bartist%3A%22Daft%20Punk%22&limit=50&fmt=json": {
+  "file": "10.json",
+  "status": 200
+ },
+ "https://musicbrainz.org/ws/2/recording?query=%2Brecording%3A%22Blue%20Monday%22%20%2Bartist%3A%22New%20Order%22&limit=50&fmt=json": {
+  "file": "03.json",
+  "status": 200
+ },
+ "https://musicbrainz.org/ws/2/recording?query=%2Brecording%3A%22Qzxv%20Plorbeth%20Wunk%22%20%2Bartist%3A%22Nobody%20Zzyx%22&limit=50&fmt=json": {
+  "file": "05.json",
+  "status": 200
+ },
+ "https://musicbrainz.org/ws/2/recording?query=%2Brecording%3A%22da%20funk%22%20%2Bartist%3A%22daft%20punk%22&limit=50&fmt=json": {
+  "file": "08.json",
+  "status": 200
+ },
+ "https://musicbrainz.org/ws/2/recording?query=isrc%3AGBDUW0600009&limit=50&fmt=json": {
+  "file": "06.json",
+  "status": 200
+ },
+ "https://musicbrainz.org/ws/2/release/3d51ceaa-0504-40da-a0d8-4f3de1825874?inc=labels&fmt=json": {
+  "file": "07.json",
+  "status": 200
+ },
+ "https://musicbrainz.org/ws/2/release/51cca1fd-08ba-487b-a1de-80abce447108?inc=labels&fmt=json": {
+  "file": "04.json",
+  "status": 200
+ },
+ "https://musicbrainz.org/ws/2/release/573cb521-d603-4b0e-85f9-c09e5491cf2f?inc=labels&fmt=json": {
+  "file": "11.json",
+  "status": 200
+ },
+ "https://musicbrainz.org/ws/2/release/b1f35e3e-0d4f-451f-93c7-1eb8809b9aa5?inc=labels&fmt=json": {
+  "file": "09.json",
+  "status": 200
+ }
+}

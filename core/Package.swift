@@ -12,6 +12,10 @@
 // and reported as not supported yet, a copy-protected MP4 as protected. It re-exports DeckieAudio.
 // CDrMp3, CDrFlac: dr_mp3.h and dr_flac.h compiled as plain C, the same on Linux, Windows and macOS; nothing is
 // downloaded at build time.
+// CStbImage: stb_image and stb_image_write (vendored, public domain; DEPENDENCIES.md section 11) and the cover
+// thumbnail made with them (deckie_cover.c): JPEG or PNG in, a small JPEG out, the same bytes on every system.
+// DeckieCovers: a song's cover for the crate file (D36): a picture's bytes to one small JPEG, named by the hash of the
+// picture; CStbImage on Linux and Windows, the system's image code on Apple's.
 // CMediaFoundation: a small C shim over Windows' Media Foundation (the platform's own AAC and Apple Lossless decoder),
 // opened at run time so nothing links it; elsewhere it only says it is not available. Being measured, not yet used.
 // COnnxRuntime: ONNX Runtime's C API header (vendored, MIT; DEPENDENCIES.md) and a small C shim that opens the
@@ -23,7 +27,8 @@
 // (decoder, Beat This! through ONNX Runtime, DeckieCore's DSP); its record serialises to the lab's feature JSON and
 // converts to a crate track.
 // DeckieBuild: the crate builder's logic (the folder walk, the resumable work folder, the parallel analysis, the import
-// log, the rekordbox XML reader, the file tag reader and the yardstick bench); deckie-build: its command line.
+// log, the rekordbox XML reader, the file tag reader, each song's cover (D36) and the yardstick bench); deckie-build:
+// its command line.
 // DeckieDesk: what a desk does that is not about windows (D28): where its crates are kept and the list of them, the
 // store of what was worked out for each file (shared by every crate), the DJ's name fixes, where each place's file is,
 // taking a source out of a crate, and the one run that reads, fingerprints, links copies and saves.
@@ -38,9 +43,11 @@
 // awkward names, hidden files) and checks the crate file the builder makes from it. A development tool, not a product.
 // DeckieRecognition: song recognition that Deckie owns (D35; docs/research/w2-own-recognition-trial.md): a landmark
 // fingerprint after Wang 2003 (`Landmarks`), which the engine makes for every song and a crate file carries, and the
-// trial's index and matcher that reads the deck's speed. Plain Swift on DeckieCore; DeckieCrate, DeckieEngine and
-// DeckieBuild depend on it for the fingerprint only.
+// index, the matcher that reads the deck's speed and the booth's listener. Plain Swift on DeckieCore; DeckieEngine and
+// DeckieBuild depend on it for the fingerprint, DeckieCrate also to open the booth's index for a crate.
 // deckie-recog-bench: the trial's measuring tool (core/Tools/recognition-bench).
+// deckie-listen: plays a recording through the booth's recogniser as the booth would hear it, and prints what it
+// would have shown second by second. A development tool.
 // deckie-memprobe: measures the analyser's peak memory on audio files (and synthesises a test track), for tuning.
 // DeckieTestSupport: synthesised test audio (drums, chords, the engine's test track), the beat fixture and an MP3 frame
 // damaged on purpose (`MP3Damage`), shared by the test targets (not a product).
@@ -59,6 +66,7 @@ let package = Package(
         .library(name: "DeckieBuild", targets: ["DeckieBuild"]),
         .library(name: "DeckieDesk", targets: ["DeckieDesk"]),
         .library(name: "DeckieDisc", targets: ["DeckieDisc"]),
+        .library(name: "DeckieLookup", targets: ["DeckieLookup"]),
         .executable(name: "deckie-build", targets: ["deckie-build"]),
         .executable(name: "deckie-desk-engine", targets: ["deckie-desk-engine"]),
         .executable(name: "deckie-make", targets: ["deckie-make"]),
@@ -75,6 +83,8 @@ let package = Package(
         .target(name: "CDrMp3"),
         .target(name: "CDrFlac"),
         .target(name: "CMediaFoundation"),
+        .target(name: "CStbImage"),
+        .target(name: "DeckieCovers", dependencies: ["CStbImage", "DeckieCrate"]),
         .target(name: "DeckieDecode", dependencies: ["DeckieAudio", "CDrMp3", "CDrFlac", "CMediaFoundation"]),
         .target(name: "COnnxRuntime", linkerSettings: [.linkedLibrary("dl", .when(platforms: [.linux]))]),
         .target(name: "DeckieInference", dependencies: ["COnnxRuntime", "DeckieAudio", "DeckieCore"]),
@@ -83,12 +93,20 @@ let package = Package(
                                "DeckieRecognition"]),
         .target(name: "DeckieBuild",
                 dependencies: ["DeckieEngine", "DeckieCrate", "DeckieDecode", "DeckieCore", "DeckieLab", "DeckieInference",
-                               "DeckieAudio", "DeckieRecognition"]),
+                               "DeckieAudio", "DeckieRecognition", "DeckieCovers"]),
         .executableTarget(name: "deckie-build", dependencies: ["DeckieBuild", "DeckieCrate"]),
         .target(name: "CDiscDrive"),
         .target(name: "DeckieDisc", dependencies: ["CDiscDrive", "DeckieCrate"]),
+        // DeckieLookup: the only code that uses the network (D36): MusicBrainz's web service, when the DJ asks. Foundation
+        // only; only DeckieDesk depends on it (NetworkIsolationTests checks no other source names a networking API).
+        .target(name: "DeckieLookup"),
         .target(name: "DeckieDesk", dependencies: ["DeckieBuild", "DeckieEngine", "DeckieCrate", "DeckieCore", "DeckieDecode",
-                                                   "DeckieDisc"]),
+                                                   "DeckieDisc", "DeckieLookup"]),
+        // deckie-lookup-trial: the lookup measured on a folder of music with its tags hidden from it (a development tool,
+        // run only with the owner's say-so on his own music).
+        .executableTarget(name: "deckie-lookup-trial", dependencies: ["DeckieDesk", "DeckieLookup", "DeckieBuild", "DeckieDecode",
+                                                                      "DeckieCrate"]),
+        .testTarget(name: "DeckieLookupTests", dependencies: ["DeckieLookup"], exclude: ["Fixtures"]),
         // deckie-desk-engine: Desk's engine for the Windows and Linux window (D32), DeskProtocol over standard input
         // and output (docs/architecture/desk-protocol.md).
         .executableTarget(name: "deckie-desk-engine", dependencies: ["DeckieDesk", "DeckieEngine"]),
@@ -100,7 +118,8 @@ let package = Package(
         .testTarget(name: "DeckieRecognitionTests", dependencies: ["DeckieRecognition", "DeckieCore"]),
         .target(name: "DeckieTestSupport", dependencies: ["DeckieAudio", "DeckieCore", "DeckieDecode"],
                 path: "Tests/DeckieTestSupport"),
-        .executableTarget(name: "deckie-e2e", dependencies: ["DeckieCrate", "DeckieCore", "DeckieAudio", "DeckieTestSupport"]),
+        .executableTarget(name: "deckie-e2e",
+                          dependencies: ["DeckieCrate", "DeckieCore", "DeckieAudio", "DeckieCovers", "DeckieTestSupport"]),
         .testTarget(name: "DeckieCoreTests", dependencies: ["DeckieCore", "DeckieLab", "DeckieAudio", "DeckieTestSupport"],
                     exclude: ["Fixtures"]),
         .testTarget(name: "DeckieDecodeTests", dependencies: ["DeckieDecode", "DeckieCore", "DeckieTestSupport"],
@@ -113,15 +132,16 @@ let package = Package(
                                    "DeckieLab", "DeckieAudio", "DeckieTestSupport"]),
         .testTarget(name: "DeckieBuildTests",
                     dependencies: ["DeckieBuild", "DeckieEngine", "DeckieCrate", "DeckieLab", "DeckieCore", "DeckieInference",
-                                   "DeckieDecode", "DeckieAudio", "DeckieRecognition", "DeckieTestSupport"],
+                                   "DeckieDecode", "DeckieAudio", "DeckieRecognition", "DeckieCovers", "DeckieTestSupport"],
                     exclude: ["Fixtures"]),
+        .testTarget(name: "DeckieCoversTests", dependencies: ["DeckieCovers", "DeckieCrate", "DeckieTestSupport"]),
         .testTarget(name: "DeckiePCTests",
-                    dependencies: ["DeckiePC", "DeckieBuild", "DeckieCrate", "DeckieAudio", "DeckieTestSupport"]),
+                    dependencies: ["DeckiePC", "DeckieBuild", "DeckieCrate", "DeckieAudio", "DeckieCovers", "DeckieTestSupport"]),
         .testTarget(name: "DeckieDiscTests", dependencies: ["DeckieDisc", "DeckieCrate", "DeckieTestSupport"]),
         .testTarget(name: "DeckieDeskTests",
                     dependencies: ["DeckieDesk", "DeckieDisc", "DeckieBuild", "DeckieEngine", "DeckieCrate", "DeckieCore", "DeckieAudio",
                                    "DeckieDecode", "DeckieInference", "DeckieRecognition", "DeckieTestSupport",
-                                   "deckie-desk-engine"]),
+                                   "deckie-desk-engine", "DeckieLookup"]),
     ]
 )
 

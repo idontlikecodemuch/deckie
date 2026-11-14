@@ -41,10 +41,11 @@ public enum LocalFacts {
         public var keysFrom: [String: Int] = [:]
         /// Songs with no key: none of the DJ's programs or tags had one, and Deckie's own reader did not give one.
         public var keysNotRead = 0
-        /// Of those, the songs Deckie's reader read and was not sure of (D33), and the songs where it found the home
-        /// note and left the mode open (shown as no key until the crate can say "mode open").
+        /// Of those, the songs Deckie's reader read and was not sure of (D33).
         public var keysNotSure = 0
-        public var keysModeOpen = 0
+        /// Songs with no key and a home note: Deckie's reader found the note and left the mode open (D36). Not
+        /// counted in `keysNotRead`.
+        public var keysHomeNote = 0
         /// Songs whose programs and tags gave more than one key.
         public var keysDisagree = 0
         /// Songs named, in part or whole, by each way past the tags (`filename`, `folder`, `cue`, `copy`, ...).
@@ -57,7 +58,7 @@ public enum LocalFacts {
         enum CodingKeys: String, CodingKey {
             case keysFrom = "keys_from", keysNotRead = "keys_not_read", keysDisagree = "keys_disagree"
             case namesFrom = "names_from", needName = "need_name", factsFrom = "facts_from"
-            case keysNotSure = "keys_not_sure", keysModeOpen = "keys_mode_open"
+            case keysNotSure = "keys_not_sure", keysHomeNote = "keys_home_note"
         }
         public init(from decoder: Decoder) throws {
             let c = try decoder.container(keyedBy: CodingKeys.self)
@@ -67,7 +68,7 @@ public enum LocalFacts {
             namesFrom = try c.decodeIfPresent([String: Int].self, forKey: .namesFrom) ?? [:]
             needName = try c.decodeIfPresent(Int.self, forKey: .needName) ?? 0
             keysNotSure = try c.decodeIfPresent(Int.self, forKey: .keysNotSure) ?? 0
-            keysModeOpen = try c.decodeIfPresent(Int.self, forKey: .keysModeOpen) ?? 0
+            keysHomeNote = try c.decodeIfPresent(Int.self, forKey: .keysHomeNote) ?? 0
             factsFrom = try c.decodeIfPresent([String: Int].self, forKey: .factsFrom)
         }
     }
@@ -90,6 +91,28 @@ public enum LocalFacts {
                 return r.track.key
             }
             return ownReading(t)
+        }
+    }
+
+    /// Deckie's own home note for a record (D36): its `key_home` block, or, for a record of engine 0.5.0, the home
+    /// note of a three-answer key block at the "mode open" confidence.
+    public static func ownHome(_ t: CrateTrack) -> CrateTrack.KeyHome? {
+        if let h = t.keyHome { return h }
+        if let k = t.key, k.source == threeAnswerSource, k.confidence >= modeOpenConfidence, k.confidence < 0.5,
+           let tonic = Camelot.tonic(k.camelot) {
+            return .init(source: threeAnswerSource, pitchClass: tonic.pitchClass)
+        }
+        return nil
+    }
+
+    /// Deckie's own home note from the builder's records, for a record that now carries a DJ's key; else `ownHome`.
+    public static func ownHome(records: URL?) -> @Sendable (CrateTrack) -> CrateTrack.KeyHome? {
+        { t in
+            if let records, let data = try? Data(contentsOf: records.appendingPathComponent("\(t.id).json")),
+               let r = try? JSONDecoder().decode(WorkStore.Record.self, from: data) {
+                return ownHome(r.track)
+            }
+            return ownHome(t)
         }
     }
 
@@ -124,6 +147,7 @@ public enum LocalFacts {
     @discardableResult
     public static func apply(to crate: inout Crate, files: [String: [FileRef]], libraries: [DJLibrary],
                              own: (CrateTrack) -> CrateTrack.Key? = LocalFacts.ownReading,
+                             ownHome: (CrateTrack) -> CrateTrack.KeyHome? = LocalFacts.ownHome,
                              fileExists: (URL) -> Bool = { FileManager.default.fileExists(atPath: $0.path) }) -> Report {
         var report = Report()
         // One library per program: the most recently written.
@@ -171,7 +195,7 @@ public enum LocalFacts {
                 // The file is not here to read: the keys its tags gave last time stay.
                 for o in tagOrigins { if let c = old.votes[o] { readings.append(.init(origin: o, camelot: c, written: nil, order: 100 + tagOrigins.firstIndex(of: o)!)) } }
             }
-            decideKey(&t, readings, own: own(t), &report)
+            decideKey(&t, readings, own: own(t), ownHome: ownHome(t), &report)
 
             // Names, part one: everything but a copy's.
             if t.ident.source != "user" && t.ident.source != DJProgram.rekordbox.rawValue {
@@ -216,8 +240,24 @@ public enum LocalFacts {
         return report
     }
 
+    /// The "when sure" rule alone, for a builder that gathers nothing from the computer (`deckie-make`): each record's
+    /// key becomes what `decideKey` shows of Deckie's own reading with no key from the DJ: a key the reader was sure
+    /// of, the home note alone, or neither. Names and DJ's keys are not touched. Returns the counts.
+    @discardableResult
+    public static func ownKeysOnly(_ crate: inout Crate) -> Report {
+        var report = Report()
+        for i in crate.tracks.indices {
+            var t = crate.tracks[i]
+            if let k = t.key, djOrigins.contains(k.source) { continue }
+            decideKey(&t, [], own: ownReading(t), ownHome: ownHome(t), &report)
+            crate.tracks[i] = t
+        }
+        return report
+    }
+
     /// The key block from the readings, by the rule above. `own` is Deckie's own reading of the song, if any.
-    static func decideKey(_ t: inout CrateTrack, _ readings: [Reading], own: CrateTrack.Key?, _ report: inout Report) {
+    static func decideKey(_ t: inout CrateTrack, _ readings: [Reading], own: CrateTrack.Key?,
+                          ownHome: CrateTrack.KeyHome? = nil, _ report: inout Report) {
         var votes: [String: String] = [:]
         for r in readings where votes[r.origin] == nil { votes[r.origin] = r.camelot }
         if Set(readings.map(\.camelot)).count > 1 { report.keysDisagree += 1 }
@@ -226,20 +266,22 @@ public enum LocalFacts {
             // Apple's reading stays the key; the DJ's keys sit beside it.
             k.votes = k.votes.filter { !djOrigins.contains($0.key) }.merging(votes) { _, new in new }
             t.key = k
+            t.keyHome = nil
             report.keysFrom[CrateFormat.EngineFamily.appleMU, default: 0] += 1
             return
         }
 
         // The "when sure" rule (D33; research X2). Deckie's three-answer reader (`ThreeAnswerKey`, `key.source`
-        // `three-answer`) writes its answer as the block's confidence: 1.0 a key, 0.45 the home note with the mode
-        // open, 0.2 not sure (`KeyConfidence.threeAnswer`). Only a key is shown. A song it was not sure of has no key
-        // ("key not read"), and so, for now, has one whose mode it left open: the crate has no way to say "home note
-        // known, mode open" yet (docs/architecture/crate-format.md, "The mode left open", proposed). A reading from an
+        // `three-answer`) gives a key (a block at confidence 1.0), the home note alone (a `key_home` block and no key
+        // block, D36; engine 0.5.0 wrote a key block at 0.45 instead, which `ownHome` reads), or is not sure (a block
+        // at 0.2, its best guess, which is never shown). Only a key at 0.5 or more is the record's key. With no key,
+        // the home note is written as `key_home`; a song the reader was not sure of has neither. A reading from an
         // engine before 0.5.0 (any other source) is shown as it was.
         var shown: CrateTrack.Key? = own
+        var notSure = false
         if let o = own, o.source == threeAnswerSource, o.confidence < 0.5 {
             shown = nil
-            if o.confidence >= modeOpenConfidence { report.keysModeOpen += 1 } else { report.keysNotSure += 1 }
+            notSure = ownHome == nil
         }
 
         guard let first = readings.first else {
@@ -251,13 +293,21 @@ public enum LocalFacts {
                     if shown.confidence < 0.5 { t.flags.append("key_uncertain") }  // the engine's rule (Flags)
                 }
                 report.keysFrom[ownVote, default: 0] += 1
+                t.keyHome = nil
             } else {
                 t.key = nil
                 t.flags.removeAll { $0 == "key_uncertain" }
-                report.keysNotRead += 1
+                t.keyHome = ownHome
+                if ownHome != nil {
+                    report.keysHomeNote += 1
+                } else {
+                    report.keysNotRead += 1
+                    if notSure { report.keysNotSure += 1 }
+                }
             }
             return
         }
+        t.keyHome = nil
         // The DJ's key wins; Deckie's own reading stays beside it as a vote.
         t.flags.removeAll { $0 == "key_uncertain" }
         if let shown { votes[ownVote] = shown.camelot }
@@ -368,7 +418,7 @@ public struct LocalFactsSummary: Codable, Equatable, Sendable {
     public var text: String {
         let r = report
         var s = "keys from: " + (r.keysFrom.isEmpty ? "none" : r.keysFrom.sorted { $0.key < $1.key }.map { "\($0.key) \($0.value)" }.joined(separator: ", "))
-            + "; no key: \(r.keysNotRead) (Deckie not sure: \(r.keysNotSure), home note only: \(r.keysModeOpen)); programs disagree: \(r.keysDisagree)\n"
+            + "; no key: \(r.keysNotRead) (Deckie not sure: \(r.keysNotSure)); home note only: \(r.keysHomeNote); programs disagree: \(r.keysDisagree)\n"
         s += "names from: " + (r.namesFrom.isEmpty ? "tags only" : r.namesFrom.sorted { $0.key < $1.key }.map { "\($0.key) \($0.value)" }.joined(separator: ", "))
             + "; still need a name: \(r.needName)\n"
         if let f = r.factsFrom {
@@ -411,7 +461,8 @@ extension LocalFacts {
             do { libs.append(try DJLibrary.read(f.program, at: f.url)) }
             catch { failed.append("\(f.program.rawValue): \(error)") }
         }
-        var report = apply(to: &crate, files: files, libraries: libs, own: ownReading(records: records))
+        var report = apply(to: &crate, files: files, libraries: libs, own: ownReading(records: records),
+                           ownHome: ownHome(records: records))
         report.factsFrom = gatherFacts(&crate, files: files, libraries: libs)
         return LocalFactsSummary(report: report,
                                  libraries: libs.map { .init(program: $0.program, path: $0.file, songs: $0.entries.count) },

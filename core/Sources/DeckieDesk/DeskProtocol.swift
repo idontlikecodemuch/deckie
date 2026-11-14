@@ -4,6 +4,7 @@ import DeckieBuild
 import DeckieEngine
 import DeckieDecode
 import DeckieDisc
+import DeckieLookup
 
 /// The engine side of Desk's messages (docs/architecture/desk-protocol.md): requests in, one per line, replies and
 /// events out, one per line. `deckie-desk-engine` is this with standard input and output; a test can drive it in the
@@ -67,13 +68,74 @@ public final class DeskProtocol: @unchecked Sendable {
         return any
     }
 
+    /// As `plain`, with dates as ISO 8601 text ("2026-11-14T06:54:39Z").
+    static func plainDated<T: Encodable>(_ value: T) -> Any {
+        let e = JSONEncoder()
+        e.dateEncodingStrategy = .iso8601
+        guard let data = try? e.encode(value), let any = try? JSONSerialization.jsonObject(with: data, options: [.fragmentsAllowed])
+        else { return NSNull() }
+        return any
+    }
+
+    // MARK: Look up songs via MusicBrainz (D36)
+
+    /// The lookup's client: the system's way out, or recorded answers (`DECKIE_LOOKUP_RECORDED`).
+    lazy var lookupClient: MusicBrainz = DeskLookup.client(environment: environment)
+    /// The plan last shown, which `lookup.start` runs.
+    var lookupPlan: DeskLookup.Plan?
+    /// The lookup going, if one is.
+    var lookupRun: DeskLookupRun?
+    private var lookingUp = false
+    private var lookupThreadDone: DispatchSemaphore?
+
+    /// Called with the lock held. The lookup runs on a thread of its own, at one request a second, and sends
+    /// `lookup.progress` as each song is done, then `lookup.finished` with the review (nothing is changed until
+    /// `lookup.apply`). Every request goes into "What Desk has sent" as it is made.
+    func startLookup(_ plan: DeskLookup.Plan, _ id: Any?) throws {
+        let s = session
+        if plan.scope == "song" { s.markExplained() }
+        s.setReview(nil)
+        let home = s.home
+        let sentLock = s.sentLock
+        let run = DeskLookupRun(plan: plan, client: lookupClient, sent: { r in LookupLog.record(r, home: home, lock: sentLock) })
+        lookupRun = run
+        lookingUp = true
+        reply(id, ["songs": plan.summary.songs, "requests": plan.summary.requests, "seconds": plan.summary.seconds])
+        send(["event": "lookup.started", "scope": plan.scope, "songs": plan.songs.count])
+        sendState()
+        let done = DispatchSemaphore(value: 0)
+        lookupThreadDone = done
+        let thread = Thread { [self] in
+            let review = run.run { p in
+                self.send(["event": "lookup.progress", "done": p.done, "total": p.total, "found": p.found])
+            }
+            self.lock.lock()
+            self.lookingUp = false
+            self.lookupRun = nil
+            self.session.setReview(review)
+            self.send(["event": "lookup.finished", "review": Self.plain(review), "summary": DeskLookup.summaryLine(review)])
+            self.sendState()
+            self.lock.unlock()
+            done.signal()
+        }
+        thread.start()
+    }
+
+    /// Waits for a lookup in progress to end (tests).
+    public func waitForLookup() {
+        lock.lock(); let d = lookupThreadDone; lock.unlock()
+        d?.wait()
+        if let d { d.signal() }
+    }
+
     /// The first message, then what is showing.
     public func start() {
         let words = (try? JSONSerialization.jsonObject(with: DeskWords.json)) ?? [:]
         send(["event": "hello", "protocol": Self.version, "engine": "deckie-desk-engine", "platform": Analysis.platform,
               "analysis": ["ready": analysis.ready, "detail": analysis.detail ?? NSNull()] as [String: Any],
               "deletesForGood": true, "wordsVersion": DeskWords.version, "words": words,
-              "computer": DeskWords.computerKind])
+              "computer": DeskWords.computerKind,
+              "lookup": ["service": "MusicBrainz", "available": lookupClient.available] as [String: Any]])
         lock.lock(); defer { lock.unlock() }
         sendState(); sendSongs()
     }
@@ -93,6 +155,7 @@ public final class DeskProtocol: @unchecked Sendable {
                        "musicCD": p.musicCD != nil] as [String: Any]
         }
         send(["event": "state", "crates": crates, "current": current, "pending": pending, "running": running,
+              "lookingUp": lookingUp, "discs": session.current.map { Array($0.discs.keys).sorted() } ?? [],
               "undo": session.undoName ?? NSNull(), "redo": session.redoName ?? NSNull()])
     }
 
@@ -136,8 +199,9 @@ public final class DeskProtocol: @unchecked Sendable {
         if type == "quit" { reply(id); return false }
         lock.lock(); defer { lock.unlock() }
         let readOnly: Set<String> = ["state", "drives.list", "crate.songs", "source.removeCount", "run.nameDisc", "name.split",
-                                     "song.audio"]
+                                     "song.audio", "song.cover", "lookup.sent"]
         if running && !readOnly.contains(type) { fail(id, "busy", "a run is going"); return true }
+        if lookingUp && !readOnly.contains(type) && type != "lookup.stop" { fail(id, "busy", "a lookup is going"); return true }
         do {
             try dispatch(type, obj, id)
         } catch let e as RequestError {
@@ -223,6 +287,12 @@ public final class DeskProtocol: @unchecked Sendable {
         case "song.audio":
             try needCrate()
             try sendAudio(try Self.string(obj, "song"), decoded: (obj["decoded"] as? Bool) ?? false, id)
+        case "song.cover":
+            // A cover (D36) travels as Listen's sound does, inside a message on standard output: no path, no port.
+            // It is at most 24 KB, so the reply itself carries it. No cover, for whatever reason, is a plain answer.
+            if let data = s.cover(try Self.string(obj, "song")) {
+                reply(id, ["cover": true, "type": "image/jpeg", "bytes": data.count, "data": data.base64EncodedString()])
+            } else { reply(id, ["cover": false]) }
         case "run.add":
             let path = try Self.string(obj, "path")
             var isDir: ObjCBool = false
@@ -279,6 +349,41 @@ public final class DeskProtocol: @unchecked Sendable {
         case "library.choose":
             let program = try s.chooseLibrary(URL(fileURLWithPath: try Self.string(obj, "path")))
             reply(id, ["program": program.rawValue])
+        case "lookup.plan":
+            try needCrate()
+            let scope = (obj["scope"] as? String) ?? "songs"
+            let ids = (obj["songs"] as? [String]) ?? (obj["song"] as? String).map { [$0] }
+            let plan = try s.lookupPlan(scope: scope, ids: ids, source: obj["source"] as? String)
+            lookupPlan = plan
+            reply(id, ["plan": Self.plain(plan.summary), "explained": s.lookupLog.explained, "available": lookupClient.available])
+        case "lookup.start":
+            try needCrate()
+            guard let plan = lookupPlan else { throw RequestError(code: "bad_request", detail: "no lookup was planned") }
+            try startLookup(plan, id)
+        case "lookup.stop":
+            lookupRun?.stop()
+            reply(id)
+        case "lookup.review":
+            reply(id, ["review": s.review.map { Self.plain($0) } ?? NSNull(),
+                       "summary": s.review.map { DeskLookup.summaryLine($0) } ?? NSNull()])
+        case "lookup.apply":
+            try needCrate()
+            var choices: [DeskLookup.Choice]? = nil
+            if let given = obj["choices"] {
+                guard let data = try? JSONSerialization.data(withJSONObject: given),
+                      let c = try? JSONDecoder().decode([DeskLookup.Choice].self, from: data) else {
+                    throw RequestError(code: "bad_request", detail: "choices must be a list of {song, candidate, fields}")
+                }
+                choices = c
+            }
+            let n = try s.applyLookup(choices)
+            reply(id, ["songs": n]); sendState(); sendSongs()
+        case "lookup.close":
+            s.setReview(nil); lookupPlan = nil; reply(id)
+        case "lookup.sent":
+            reply(id, ["sent": Self.plainDated(s.lookupLog.sent), "service": "MusicBrainz"])
+        case "lookup.clearSent":
+            try s.clearSent(); reply(id)
         default:
             throw RequestError(code: "unknown_type", detail: type)
         }
@@ -305,8 +410,11 @@ public final class DeskProtocol: @unchecked Sendable {
         runThreadDone = done
         let thread = Thread { [self] in
             let last = LastSent()
+            let screen = RunScreenOut { [weak self] m in self?.send(m) }
             do {
                 let (_, report) = try run.run { p in
+                    // The run screen's songs, notes and totals (D37), in batches at most four times a second.
+                    screen.offer(p)
                     // Every line goes out; bare progress at most ten times a second.
                     if p.line == nil && p.done < p.total && !last.due(every: 0.1) { return }
                     var m: [String: Any] = ["event": "run.progress", "stage": p.stage.rawValue, "done": p.done,
@@ -314,6 +422,7 @@ public final class DeskProtocol: @unchecked Sendable {
                     if let line = p.line { m["line"] = Self.line(line) }
                     self.send(m)
                 }
+                screen.flush()
                 self.lock.lock()
                 self.running = false
                 self.runningDisc = nil
@@ -322,6 +431,7 @@ public final class DeskProtocol: @unchecked Sendable {
                 self.sendState(); self.sendSongs()
                 self.lock.unlock()
             } catch {
+                screen.flush()
                 self.lock.lock()
                 self.running = false
                 self.runningDisc = nil

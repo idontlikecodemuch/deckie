@@ -47,6 +47,12 @@ public struct DeskSongRow: Codable, Equatable, Sendable {
     public var vocals: Double?
     public var vocalHeavy: Bool
     public var key: Key?
+    /// What the record says about the key, as a code: `key`, `home_note`, `not_sure`, `not_read`
+    /// (`CrateTrack.KeyState`). Words: a key as before; `homeNote` for the home note; `keyDeckieNotSure`; `keyNotRead`.
+    public var keyState: String
+    /// The home note alone (D36), when there is no key: its name and the two keys on it.
+    public var homeNote: HomeNote?
+    public struct HomeNote: Codable, Equatable, Sendable { public var note: String; public var camelot: [String] }
     /// Every place the song is (D27), the one that leads first.
     public var places: [Place]
     public var file: String
@@ -54,6 +60,9 @@ public struct DeskSongRow: Codable, Equatable, Sendable {
     /// Notes as codes: `needsName`, `damagedFrames`, `gridUnsure`, `vocalsNotRead`, `signed`.
     public var notes: [String]
     public var damagedFrames: Int
+    /// Whether the song has a cover (D36), so a window asks for the picture (`song.cover`) only when there is one.
+    /// The picture itself, and the hash that names it, are not in the row.
+    public var cover: Bool
 
     public init(_ t: CrateTrack, facts: DeskNaming.Facts? = nil) {
         id = t.id
@@ -79,12 +88,15 @@ public struct DeskSongRow: Codable, Equatable, Sendable {
             key = Key(camelot: k.camelot, key: k.key, scale: k.scale, from: k.source,
                       uncertain: t.flags.contains("key_uncertain"), others: others)
         } else { key = nil }
+        keyState = t.keyState.rawValue
+        homeNote = t.key == nil ? t.keyHome.map { HomeNote(note: $0.note, camelot: $0.camelot) } : nil
         places = t.placesInOrder.map { p in
             Place(source: p.disc, folder: p.folder ?? "", number: p.track, line: Crate.placeLine(p))
         }
         file = t.file.name
         signed = !t.signatures.isEmpty
         damagedFrames = t.file.damagedFrames?.count ?? 0
+        cover = t.file.cover != nil
         var n: [String] = []
         if needsName { n.append("needsName") }
         if damagedFrames > 0 { n.append("damagedFrames") }

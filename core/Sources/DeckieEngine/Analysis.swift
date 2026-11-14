@@ -19,10 +19,10 @@ public struct Analysis: Sendable {
     /// listed as `file.damaged_frames` (`deckie.damaged_frames` in the lab JSON). 0.4.0: the key decided by research
     /// R's whitened HPCP (`HPCPKey`), which changes keys: `key.source` `hpcp-whitened`, its three profiles' keys and
     /// the STFT estimate in `key.votes`, research R's sure rule as the confidence (`KeyConfidence`), and the method's
-    /// detail in `deckie.key`. The fingerprint (`print`, D35) was added without a new version, on purpose: it changes
-    /// no other field, and the builder gives a record made before it its fingerprint from one decode of the file
-    /// (`Builder.fingerprint`), which a new version would have turned into a whole analysis of every song.
-    public static let engineVersion = "0.5.0"
+    /// detail in `deckie.key`. The fingerprint (`print`, D35) was added without a version of its own, on purpose: it
+    /// changes no other field, and the builder gives a record made before it its fingerprint from one decode of the
+    /// file (`Builder.fingerprint`), which a new version would have turned into a whole analysis of every song.
+    public static let engineVersion = "0.6.0"
     /// The lab's feature-file schema the JSON follows (`schema`).
     public static let labSchema = 1
     /// The rate everything is analysed at: the lab decodes at 44.1 kHz and resamples other files to it first (`sr`).
@@ -146,13 +146,24 @@ public struct Analysis: Sendable {
 
     /// The STFT key estimator's results with the edma profile (`KeyEstimator`, mixer/key_light.py): its whole-track
     /// key (no longer deciding; recorded as `stft_edma` for comparison), both mix windows judged against the song key
-    /// (`songKey`, the HPCP method's key), and the key segments.
+    /// (`songKey`: the three-answer reader's key, "8A"; the two keys on its home note, "8A/11B"; or "" when it was
+    /// not sure and the windows are only read), and the key segments.
     public var key: KeyResult
     /// The track's key: research R's whitened HPCP with the edma, bgate and braw profiles (`HPCPKey`). Its
     /// `decision` (the literature's profile numbers) is the record's key, and what mixer/key_parity.py decides.
     public var hpcpKey: HPCPKey.Result
     /// The key confidence, research R's sure rule on the decision (`KeyConfidence`).
     public var keyConfidence: KeyConfidence
+    /// The keys the mix windows are judged against (engine 0.6.0): the reader's key; the two keys on its home note
+    /// (minor first) when it left the mode open; none when it was not sure.
+    public static func songKeys(_ answer: ThreeAnswerKey.Answer) -> [String] {
+        switch answer {
+        case .key(let pc, let minor): return [Camelot.code(pitchClass: pc, major: !minor)]
+        case .home(let pc): return [Camelot.code(pitchClass: pc, major: false), Camelot.code(pitchClass: pc, major: true)]
+        case .notSure: return []
+        }
+    }
+
     /// The key the record carries (engine 0.5.0, D33): the three-answer reader's (`ThreeAnswerKey`), a key, the home
     /// note with the mode open, or not sure. `hpcpKey` above is its plain HPCP reading of the same frames, kept for
     /// the lab's bench and as a vote.

@@ -629,31 +629,38 @@ public struct FileFacts: Equatable, Sendable {
 
     /// An MP4's `moov` box, found among the top-level boxes (it may come after the audio), and its `ilst`.
     static func mp4(_ file: TagFile, into c: inout Collector) {
-        guard let size = file.size else { return }
+        guard let (m, ilst) = mp4Items(file) else { return }
+        c.format("mp4")
+        for (type, body) in boxes(m, ilst) { mp4Item(type: type, m, body, into: &c) }
+    }
+
+    /// The bytes of an MP4's `moov` box and where its list of tags (`ilst`) is in them; nil when the file has none.
+    /// Shared with the cover reader (`CoverReader`), which looks for `covr` in the same list.
+    static func mp4Items(_ file: TagFile) -> (moov: [UInt8], ilst: Range<Int>)? {
+        guard let size = file.size else { return nil }
         var at = 0
         for _ in 0..<64 {
-            guard at + 8 <= size, let h = file.read(at: at, count: 8) else { return }
+            guard at + 8 <= size, let h = file.read(at: at, count: 8) else { return nil }
             let b = [UInt8](h)
             var boxSize = Int(b[0]) << 24 | Int(b[1]) << 16 | Int(b[2]) << 8 | Int(b[3])
             var header = 8
             if boxSize == 1 {
-                guard let big = file.read(at: at + 8, count: 8) else { return }
+                guard let big = file.read(at: at + 8, count: 8) else { return nil }
                 boxSize = big.reduce(0) { $0 << 8 | Int($1) }; header = 16
             } else if boxSize == 0 { boxSize = size - at }
-            guard boxSize >= header else { return }
+            guard boxSize >= header else { return nil }
             if b[4...7].elementsEqual("moov".utf8) {
-                guard boxSize - header <= ID3.maxTagBytes, let moov = file.read(at: at + header, count: boxSize - header) else { return }
+                guard boxSize - header <= ID3.maxTagBytes, let moov = file.read(at: at + header, count: boxSize - header) else { return nil }
                 let m = [UInt8](moov)
                 let meta = child(m, 0..<m.count, "udta").flatMap { child(m, $0, "meta") } ?? child(m, 0..<m.count, "meta")
-                guard let meta, meta.count >= 4 else { return }
+                guard let meta, meta.count >= 4 else { return nil }
                 // `meta` is a full box: four bytes of version and flags before its children.
-                guard let ilst = child(m, (meta.lowerBound + 4)..<meta.upperBound, "ilst") else { return }
-                c.format("mp4")
-                for (type, body) in boxes(m, ilst) { mp4Item(type: type, m, body, into: &c) }
-                return
+                guard let ilst = child(m, (meta.lowerBound + 4)..<meta.upperBound, "ilst") else { return nil }
+                return (m, ilst)
             }
             at += boxSize
         }
+        return nil
     }
 
     static func boxes(_ m: [UInt8], _ range: Range<Int>) -> [(String, Range<Int>)] {

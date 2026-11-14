@@ -210,7 +210,9 @@ struct EngineTests {
         #expect(a.hpcpKey.decision.camelot == TestTrack.camelot)
         #expect(a.hpcpKey.frames == HPCPKey.frameCount(samples: Int((a.duration * 44100).rounded())))
         #expect(a.hpcpKey.decision.profileKeys.map(\.name) == ["edma", "bgate", "braw"])
-        #expect(a.key.songKey == a.hpcpKey.decision.camelot && a.keyConfidence == KeyConfidence.hpcp(a.hpcpKey.decision))
+        // The mix windows are judged against the reader's answer (0.6.0), which on this track is the plain method's key.
+        #expect(a.key.songKey == a.threeAnswer.answer.camelot && a.key.songKey == a.hpcpKey.decision.camelot)
+        #expect(a.keyConfidence == KeyConfidence.hpcp(a.hpcpKey.decision))
         #expect(a.flags.contains("key_uncertain") == !a.hpcpKey.decision.sure)
         // First and last sound: the 10 ms frames around the first and last sample above -60 dBFS.
         let bounds = TestTrack.soundBounds(buffer)
@@ -268,7 +270,7 @@ struct EngineTests {
         #expect(json["key"]?["confidence_rule"] == .string(a.keyConfidence.rule))
         let dk = try #require(json["deckie"]?["key"])
         #expect(dk.keys == ["estimator", "whitening", "frames", "camelot", "key", "scale", "r", "margin", "agree", "sure",
-                            "tables", "profiles", "three_answer", "stft_edma", "song_key", "windows_estimator", "mix_in",
+                            "tables", "profiles", "three_answer", "stft_edma", "song_key", "song_key_from", "windows_estimator", "mix_in",
                             "mix_out", "segments"])
         // The three-answer reader's result (engine 0.5.0), which the crate record's key block follows.
         let ta = try #require(dk["three_answer"])
@@ -334,7 +336,22 @@ struct EngineTests {
         // The test track is a plain progression in one key: both readings find it.
         #expect(three.answer.camelot == TestTrack.camelot && t.key?.camelot == TestTrack.camelot && t.key?.confidence == 1)
         #expect(t.key?.scale == (TestTrack.camelot.hasSuffix("A") ? "minor" : "major"))
-        #expect(t.flags.contains("key_uncertain") == false)
+        #expect(t.flags.contains("key_uncertain") == false && t.keyHome == nil)
+        // The same analysis had the reader found the home note alone: no key block, the `key_home` block, no flag,
+        // and a record that validates. Had it been not sure: the guess at 0.2 for the builder's record, flagged.
+        var home = a
+        home.threeAnswer.answer = .home(pitchClass: 9)
+        let th = home.crateTrack(options: .init(analysedAt: "2026-10-28T12:00:00Z"))
+        #expect(th.key == nil && th.keyHome == .init(source: "three-answer", pitchClass: 9) && !th.flags.contains("key_uncertain"))
+        #expect(th.featuresPresent.contains("key_home") && !th.featuresPresent.contains("key"))
+        #expect(Crate(manifest: CrateManifest(crateId: "h", name: "h", createdAt: "2026-10-28T12:00:00Z", devicesSeen: [Analysis.platform]),
+                      tracks: [th]).problems().isEmpty)
+        var unsure = a
+        unsure.threeAnswer.answer = .notSure
+        let tu = unsure.crateTrack(options: .init(analysedAt: "2026-10-28T12:00:00Z"))
+        #expect(tu.key?.confidence == KeyConfidence.notSure && tu.keyHome == nil && tu.flags.contains("key_uncertain"))
+        #expect(Analysis.songKeys(.key(pitchClass: 9, minor: true)) == ["8A"] && Analysis.songKeys(.home(pitchClass: 9)) == ["8A", "11B"]
+                && Analysis.songKeys(.notSure).isEmpty)
         print("three-answer key: \(three.answer), rows \(three.camelotA ?? "-") / \(three.camelotB ?? "-"), tuning \(Py.fixed(three.tuning, 3))")
         let crate = Crate(manifest: CrateManifest(crateId: "engine-test", name: "engine test",
                                                   createdAt: "2026-10-28T12:00:00Z", devicesSeen: [Analysis.platform]),

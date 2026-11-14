@@ -44,6 +44,9 @@
   const two = (x) => String(x).padStart(2, "0");
   const timeLeft = (s) => (s < 45 ? t("timeLeftUnderMinute") : n("timeLeft", Math.max(1, Math.round(s / 60))));
 
+  // A numbered list of words (name.1, name.2, ... to the first gap), as DeskWords.list.
+  const list = (prefix) => { const out = []; for (let i = 1; W[prefix + "." + i] != null; i++) out.push(t(prefix + "." + i)); return out; };
+
   function applyWords(root) {
     for (const e of root.querySelectorAll("[data-w]")) e.textContent = t(e.dataset.w);
     for (const e of root.querySelectorAll("[data-w-label]")) e.setAttribute("aria-label", t(e.dataset.wLabel));
@@ -78,6 +81,10 @@
   }
   window.desk = { request, render: () => render() };   // for the shell's tour and for tests
 
+  // The run screen (D37, run.js): the song on stage, the figures, the wall of waves, the quiet line and the moments.
+  const politely = (text) => { const a = $("run-announce"); a.textContent = ""; setTimeout(() => { a.textContent = text; }, 30); };
+  const screen = window.DeskRunScreen({ $, el, t, n, mmss, list, timeLeft, announce: politely });
+
   function showError(e, word) {
     if (e.code === "busy") return;
     let text;
@@ -96,27 +103,42 @@
         if (m.protocol !== 2) message([`Protocol ${m.protocol} is not one this window knows (2).`]);
         break;
       case "state":
-        if (undoLine && state && m.undo !== state.undo && m.undo !== "undoNames" && m.undo !== "undoCheck") undoLine = null;
-        if (state && state.current && (!m.current || m.current.id !== state.current.id)) { stopListening(); selected = null; undoLine = null; }
+        if (undoLine && state && m.undo !== state.undo && m.undo !== "undoNames" && m.undo !== "undoCheck" && m.undo !== "undoLookup") undoLine = null;
+        if (state && state.current && (!m.current || m.current.id !== state.current.id)) { stopListening(); selected = null; undoLine = null; dropCovers(); }
         state = m; break;
-      case "songs": songs = m; break;
+      case "songs": songs = m; tidyCovers(); break;
       case "run.started":
+        dropCovers();
         finished = null; exportedPath = null; stopListening(); $("run-log").replaceChildren();
         run = { read: m.read, crateName: m.crateName, done: 0, total: 0, stage: "reading", remaining: null, lines: [] };
         askDisc(m.askName);
+        screen.start(m);
         break;
       case "audio.chunk":
         audioChunk(m); return;
+      case "lookup.started":
+        if (lookup) { lookup.step = "progress"; lookup.progress = { done: 0, total: m.songs, found: 0 }; drawLookup(); }
+        return;
+      case "lookup.progress":
+        if (lookup) { lookup.progress = { done: m.done, total: m.total, found: m.found }; drawLookup(); }
+        return;
+      case "lookup.finished":
+        lookupFinished(m); return;
+      case "run.songs":
+        if (run) screen.songs(m);
+        return;
       case "run.progress":
         if (!run) break;
         Object.assign(run, { done: m.done, total: m.total, stage: m.stage, remaining: m.remaining });
         if (m.line) addLine(m.line);
-        updateRun(); return;
+        updateRun(); screen.progress(run); return;
       case "run.finished":
+        dropCovers();
         run = null; finished = m.report; $("disc-ask").hidden = true; announce(t("finishedTitle", { read: m.report.read, crate: m.report.crate }));
         setTimeout(nextDrop, 0);
         break;
       case "run.failed":
+        dropCovers();
         run = null; message([t("runStopped", { detail: m.detail || "" })]);
         break;
       case "shell.dropped":
@@ -217,6 +239,7 @@
     // The name the DJ gave the disc while it was read replaces the placeholder the report was written with.
     const named = (x) => (discRenamed && x === discRenamed.from ? discRenamed.to : x);
     $("finished-title").textContent = t("finishedTitle", { read: named(r.read), crate: named(r.crate) });
+    screen.finished(Object.assign({}, r, { read: named(r.read) }));
     const box = $("finished-summary");
     box.replaceChildren();
     const line = (text, cls) => box.append(el("p", { text, class: cls }));
@@ -233,6 +256,9 @@
       const counts = Object.entries(rep.keys_from || {}).sort((a, b) => b[1] - a[1] || (a[0] < b[0] ? -1 : 1));
       if (counts.length) line(t("keysLine", { counts: counts.map(([k, c]) => t("keysCount", { n: c, from: keyFrom(k) })).join(", ") }));
       if (rep.keys_not_read > 0) line(n("keysNone", rep.keys_not_read));
+      // Deckie's own reader (D33, D36): of the songs with no key, those it is not sure of; and those with a home note.
+      if (rep.keys_not_sure > 0) line(n("keysNotSure", rep.keys_not_sure), "indent");
+      if (rep.keys_home_note > 0) line(n("keysHomeNote", rep.keys_home_note));
       if (rep.keys_disagree > 0) line(n("keysDisagree", rep.keys_disagree));
       // The count is the list's (letter AA, 3.2): no title, no artist, or Desk's guess.
       const need = songs && songs.crate === (current() && current().id) ? songs.songs.filter((x) => x.needsName).length : rep.need_name;
@@ -265,7 +291,7 @@
     { key: "title", word: "colTitle", get: (s) => s.title, edit: "title", guess: "title" },
     { key: "artist", word: "colArtist", get: (s) => s.artist || "", edit: "artist", guess: "artist" },
     { key: "bpm", word: "colTempo", get: (s) => s.bpm, show: (s) => (s.bpm != null ? s.bpm.toFixed(1) : t("none")), num: true },
-    { key: "key", word: "colKey", get: (s) => (s.key ? s.key.camelot : ""), cell: keyCell },
+    { key: "key", word: "colKey", get: (s) => (s.key ? s.key.camelot : s.homeNote ? s.homeNote.camelot[0] : ""), cell: keyCell },
     { key: "keyFrom", word: "colKeyFrom", get: (s) => (s.key ? programName(s.key.from) : ""), title: keyHelp, cls: "mut" },
     { key: "seconds", word: "colLength", get: (s) => s.seconds, show: (s) => mmss(s.seconds), num: true },
     { key: "where", word: "colWhere", get: (s) => placeLines(s).join(" · "), title: (s) => placeLines(s).join("\n") },
@@ -276,11 +302,13 @@
     return s.places.map((p) => p.line || (p.folder ? p.folder : t("topOfMusicFolder")));
   }
   function keyHelp(s) {
-    if (!s.key) return t("keyNotRead");
+    // No key: the home note alone (D36), a song Deckie read and is not sure of (D33), or a key not read here.
+    if (!s.key && s.homeNote) return t("homeNoteHelp", { minor: s.homeNote.camelot[0], major: s.homeNote.camelot[1] });
+    if (!s.key) return t(s.keyState === "not_sure" ? "keyDeckieNotSure" : "keyNotRead");
     return [s.key.camelot + " " + keyFrom(s.key.from)].concat(s.key.others.map((o) => t("keySays", { program: programName(o.from), camelot: o.camelot }))).join("; ");
   }
   function keyCell(s, td) {
-    td.textContent = s.key ? s.key.camelot : t("none");
+    td.textContent = s.key ? s.key.camelot : s.homeNote ? t("homeNote", { note: s.homeNote.note }) : t("none");
     td.title = keyHelp(s);
     if (s.key && s.key.uncertain) td.append(" ", el("span", { class: "unsure", text: "?", title: t("notSureOfKey"), "aria-label": t("notSureOfKey") }));
   }
@@ -428,7 +456,7 @@
     if (panel.hidden) return;
     const body = $("names-body");
     const keep = document.activeElement && document.activeElement.dataset && document.activeElement.dataset.field;
-    body.replaceChildren();
+    body.replaceChildren(coverBox(s));
     const fields = [["title", "title"], ["artist", "artist"], ["version", "version"]];
     fields.forEach(([field, word], i) => {
       const f = s.names ? s.names[field] : { value: s[field], from: s.nameFrom };
@@ -499,11 +527,65 @@
       foot.append(el("button", { class: "small", text: t("looksRight"), title: t("looksRightHelp"),
         on: { click: () => checkSongs([s.id]) } }));
     }
-    // LOOK UP SONG VIA ... GOES HERE (the note on D30): the one explicit lookup, by sound, beside Listen. Not built:
-    // route A sends nothing anywhere. Its button, its sentence before anything is sent, and "What Desk has sent"
-    // will sit in this row.
+    // "Look up via MusicBrainz" (D36): the one step that uses the internet, in its own colour. The sentence comes
+    // the first time; after that it sits under the button, and the button acts at once. A lookup by sound (AcoustID)
+    // would sit beside it, feeding the same review.
+    foot.append(netButton(t("lookupOne"), () => lookupSong(s)));
+    const info = lookupInfo.get(s.id);
+    if (info && info.explained && info.what && info.what.length) {
+      foot.append(el("p", { class: "lookup-under" }, t("lookupUnder", { what: info.what.map(([k, v]) => t("lookupWhat." + k, { value: v })).join(", ") }) + " ",
+        el("button", { class: "link", type: "button", text: t("lookupSentLink"), on: { click: showSent } })));
+    } else if (!info) {
+      lookupInfoFor(s.id);
+    }
     body.append(foot);
     if (keep) { const k = body.querySelector(`[data-field="${keep}"]`); if (k) k.focus(); }
+  }
+
+  // ---- a song's cover (D36): asked for by the song's id, only when the song says it has one, and only for the song
+  // whose names are showing. The engine answers with the picture's bytes inside the reply (it is at most 24 KB); the
+  // page shows them from a data: address, so it is never told a path and nothing is fetched. A song without a cover,
+  // and one whose cover is still on its way, gets an empty square of the same size (desk.css's --cover-size), so the
+  // fields below never jump.
+  const covers = new Map();   // song id to a data: address, null (asked: none to show) or false (asked, not answered)
+  const coversKept = 200;     // the most the page holds on to; the oldest go first
+  let coversAge = 0;          // raised when the covers are dropped, so an answer that was on its way is left out
+
+  /// Drops every cover kept: another crate is showing, or a run may have changed the songs' pictures.
+  function dropCovers() { covers.clear(); coversAge += 1; }
+  /// Drops the covers of songs that are gone or say they have none now.
+  function tidyCovers() {
+    for (const id of [...covers.keys()]) { const s = songById(id); if (!s || s.cover !== true) covers.delete(id); }
+  }
+
+  function coverBox(s) {
+    const has = s.cover === true;          // an engine from before D36 sends no `cover`: no cover, and nothing asked
+    const kept = has ? covers.get(s.id) : null;
+    if (typeof kept === "string") {
+      const img = el("img", { src: kept, alt: t("cover"), draggable: "false" });
+      const box = el("div", { class: "cover", id: "names-cover" }, img);
+      // Bytes the web view cannot draw are no cover.
+      img.addEventListener("error", () => { covers.set(s.id, null); if (box.isConnected) box.replaceWith(coverBox(s)); });
+      return box;
+    }
+    if (has && kept === undefined) askCover(s.id);
+    // Still on its way: the empty square, said to be nothing yet. None: the same square, labelled.
+    return has && kept !== null ? el("div", { class: "cover none", id: "names-cover", "aria-hidden": "true" })
+      : el("div", { class: "cover none", id: "names-cover", role: "img", "aria-label": t("noCover") });
+  }
+
+  async function askCover(id) {
+    const age = coversAge;
+    covers.set(id, false);
+    const r = await request("song.cover", { song: id }, { quiet: true });
+    if (age !== coversAge || covers.get(id) !== false) return;
+    // Anything but a JPEG in base64 is no cover: an engine that does not know the request, a missing file.
+    const ok = r.ok && r.cover === true && r.type === "image/jpeg" && typeof r.data === "string" && /^[A-Za-z0-9+/]+={0,2}$/.test(r.data);
+    covers.set(id, ok ? "data:image/jpeg;base64," + r.data : null);
+    while (covers.size > coversKept) covers.delete(covers.keys().next().value);
+    // Only the square is redrawn, so a name being typed is not disturbed.
+    const box = $("names-cover"), s = songById(id);
+    if (selected === id && box && s) box.replaceWith(coverBox(s));
   }
 
   /// Return on a fact: a change is the DJ's name (one step of undo); Return on Desk's guess as it is checks it; Return
@@ -552,7 +634,295 @@
     b.hidden = !guesses.length;
     b.textContent = n("looksRightAll", guesses.length);
     b.onclick = () => checkSongs(guesses);
+    const l = $("need-lookup");
+    l.hidden = !list.length;
+    l.replaceChildren(globe(), n("lookupNeedsName", list.length));
+    l.onclick = () => openLookup({ scope: "songs" });
   }
+
+  // ---- "Look up songs via MusicBrainz" (D36; letter AA, 3.8 to 3.12). The engine does the lookup; this page only
+  // shows the sentence, the count, and the review, and sends back what the DJ ticked.
+  let lookup = null;        // { step: "ask"|"progress"|"review", fields, plan, review, choices: Map, progress }
+  const lookupInfo = new Map();   // song id -> { explained, what } for the line under the button
+  const SVGNS = "http://www.w3.org/2000/svg";
+  function globe() {
+    const s = document.createElementNS(SVGNS, "svg");
+    s.setAttribute("viewBox", "0 0 24 24"); s.setAttribute("fill", "none"); s.setAttribute("stroke", "currentColor");
+    s.setAttribute("stroke-width", "1.6"); s.setAttribute("aria-hidden", "true"); s.setAttribute("class", "net-icon");
+    for (const d of ["M3 12h18", "M12 3c2.6 2.8 3.9 5.8 3.9 9s-1.3 6.2-3.9 9c-2.6-2.8-3.9-5.8-3.9-9S9.4 5.8 12 3z"]) {
+      const p = document.createElementNS(SVGNS, "path"); p.setAttribute("d", d); s.append(p);
+    }
+    const c = document.createElementNS(SVGNS, "circle"); c.setAttribute("cx", "12"); c.setAttribute("cy", "12"); c.setAttribute("r", "9"); s.prepend(c);
+    return s;
+  }
+  function netButton(text, onclick, cls) {
+    const b = el("button", { class: "small net" + (cls ? " " + cls : ""), type: "button", on: { click: onclick } });
+    b.append(globe(), text);
+    return b;
+  }
+
+  // What one song would send, and whether the sentence was shown once: asked of the engine (nothing leaves).
+  const asking = new Set();
+  async function lookupInfoFor(id) {
+    if (asking.has(id)) return;
+    asking.add(id);
+    const r = await request("lookup.plan", { scope: "song", song: id }, { quiet: true });
+    asking.delete(id);
+    if (!r.ok) return;
+    lookupInfo.set(id, { explained: r.explained, what: r.plan.what || [], nothing: r.plan.nothingToSend > 0 });
+    if (selected === id) drawNames();
+  }
+
+  async function lookupSong(s) {
+    const r = await request("lookup.plan", { scope: "song", song: s.id }, { errorWord: "couldntOpen" });
+    if (!r.ok) return;
+    lookupInfo.set(s.id, { explained: r.explained, what: r.plan.what || [], nothing: r.plan.nothingToSend > 0 });
+    // Once the sentence has been read, one song is looked up at once; a batch or a disc always asks (letter AA, 3.8).
+    if (r.explained && !r.plan.nothingToSend && r.available) { openLookup({ scope: "song", song: s.id }, r, true); return; }
+    openLookup({ scope: "song", song: s.id }, r);
+  }
+
+  /// The choices the dialog offers: the songs that need a name, the song selected, each source, each music CD.
+  function lookupOptions(fields) {
+    const out = [];
+    const need = songs.songs.filter((x) => x.needsName).length;
+    if (need) out.push({ key: "need", label: t("lookupChoice.needsName") + " (" + need + ")", fields: { scope: "songs" } });
+    const sel = selected && songById(selected);
+    if (sel) out.push({ key: "song:" + sel.id, label: t("lookupChoice.song") + ": " + sel.title, fields: { scope: "song", song: sel.id } });
+    for (const src of songs.sources) {
+      const disc = (state.discs || []).includes(src.name);
+      out.push({ key: (disc ? "disc:" : "source:") + src.name, label: disc ? t("lookupDisc").replace(/…$/, "") + ": " + src.name : src.name + " (" + n("songs", src.songs) + ")",
+        fields: disc ? { scope: "disc", source: src.name } : { scope: "songs", source: src.name } });
+    }
+    const want = fields.scope === "song" ? "song:" + fields.song : fields.scope === "disc" ? "disc:" + fields.source
+      : fields.source ? "source:" + fields.source : "need";
+    if (!out.some((o) => o.key === want) && fields.scope === "song") {
+      const s = songById(fields.song);
+      out.unshift({ key: want, label: t("lookupChoice.song") + ": " + (s ? s.title : ""), fields });
+    }
+    return { out, want: out.some((o) => o.key === want) ? want : (out[0] && out[0].key) };
+  }
+
+  async function openLookup(fields, planned, goNow) {
+    if (!hasSongs()) return;
+    lookup = { step: "ask", fields, plan: null, review: null, choices: new Map(), progress: null, available: true };
+    const d = $("lookup");
+    const sel = $("lookup-scope");
+    const { out, want } = lookupOptions(fields);
+    sel.replaceChildren(...out.map((o) => el("option", { value: o.key, text: o.label, selected: o.key === want })));
+    sel.onchange = () => { const o = out.find((x) => x.key === sel.value); if (o) planLookup(o.fields); };
+    $("lookup-scope-wrap").hidden = fields.scope === "song" && out.length < 2;
+    drawLookup();
+    if (!d.open) d.showModal();
+    if (planned) { lookup.plan = planned.plan; lookup.available = planned.available; drawLookup(); }
+    else await planLookup((out.find((o) => o.key === want) || {}).fields || fields);
+    if (goNow) startLookup();
+  }
+
+  async function planLookup(fields) {
+    if (!lookup) return;
+    lookup.fields = fields;
+    const r = await request("lookup.plan", fields, { errorWord: "couldntOpen" });
+    if (!lookup || !r.ok) return;
+    lookup.plan = r.plan; lookup.available = r.available;
+    drawLookup();
+  }
+
+  function startLookup() {
+    if (!lookup || !lookup.plan) return;
+    if (!lookup.available) { lookup.step = "review"; lookup.review = null; lookup.failure = "notOnThisComputer"; drawLookup(); return; }
+    lookup.step = "progress";
+    lookup.progress = { done: 0, total: lookup.plan.songs, found: 0 };
+    drawLookup();
+    request("lookup.start", {}, { errorWord: "couldntOpen" }).then((r) => { if (!r.ok && lookup) { lookup.step = "ask"; drawLookup(); } });
+  }
+
+  function lookupFinished(m) {
+    if (!lookup) lookup = { step: "review", fields: {}, plan: null, choices: new Map() };
+    lookup.step = "review"; lookup.review = m.review; lookup.summary = m.summary; lookup.failure = null;
+    lookup.choices = new Map();
+    for (const s of m.review.songs) {
+      if (s.chosen == null) continue;
+      const c = s.candidates[s.chosen];
+      lookup.choices.set(s.song, { candidate: s.chosen, fields: new Set(c.changes.filter((x) => x.tick && !x.locked).map((x) => x.field)) });
+    }
+    if (!$("lookup").open) $("lookup").showModal();
+    drawLookup();
+    announce(m.summary || "");
+  }
+
+  function lookupTicked() {
+    let total = 0;
+    if (lookup && lookup.choices) for (const c of lookup.choices.values()) if (c.candidate >= 0) total += c.fields.size;
+    return total;
+  }
+
+  function lengthWords(c, song) {
+    if (c.seconds == null) return t("lookupLengthUnknown");
+    const len = mmss(c.seconds), d = c.difference;
+    if (d == null) return len;
+    if (Math.abs(d) < 1) return t("lookupLengthSame", { length: len });
+    const diff = Math.abs(d) < 60 ? n("seconds", Math.round(Math.abs(d))) : mmss(Math.abs(d));
+    return t(d > 0 ? "lookupLengthLonger" : "lookupLengthShorter", { length: len, difference: diff });
+  }
+
+  function drawLookup() {
+    if (!lookup) return;
+    const L = lookup;
+    $("lookup-ask").hidden = L.step !== "ask";
+    $("lookup-progress").hidden = L.step !== "progress";
+    $("lookup-review").hidden = L.step !== "review";
+    const go = $("lookup-go"), cancel = $("lookup-cancel");
+    go.hidden = false; cancel.hidden = false;
+    if (L.step === "ask") {
+      $("lookup-title").textContent = t("lookupSheetTitle");
+      const box = $("lookup-sentence");
+      box.replaceChildren(...((L.plan && L.plan.sentence) || []).map((x, i) => el("p", { text: x, class: i ? "mut" : null })));
+      go.textContent = t("lookupGo");
+      go.disabled = !L.plan || (L.plan.songs - L.plan.nothingToSend) <= 0;
+      cancel.textContent = t("lookupNotNow");
+    } else if (L.step === "progress") {
+      $("lookup-title").textContent = t("lookupProgressTitle");
+      const p = L.progress || { done: 0, total: 0, found: 0 };
+      const pct = p.total ? Math.round((p.done / p.total) * 100) : 0;
+      const bar = $("lookup-bar");
+      bar.firstElementChild.style.width = pct + "%";
+      bar.setAttribute("aria-valuenow", String(pct));
+      $("lookup-count").textContent = n("lookupProgress", p.total, { done: p.done }) + " · " + n("lookupProgressFound", p.found);
+      go.hidden = true;
+      cancel.textContent = t("lookupStop");
+    } else {
+      $("lookup-title").textContent = t("lookupReviewTitle");
+      $("lookup-summary").textContent = L.failure ? fill(coded("lookupFailure", L.failure), withComputer()) : (L.summary || "");
+      const r = L.review;
+      $("lookup-disc").textContent = r && r.scope === "disc" && !r.failure ? coded("lookupDiscMatch", r.discMatch || "none") : "";
+      $("lookup-disc").hidden = !$("lookup-disc").textContent;
+      drawLookupSongs();
+      const total = lookupTicked();
+      go.textContent = n("lookupApply", total);
+      go.disabled = total === 0;
+      cancel.textContent = t("cancel");
+    }
+  }
+
+  function drawLookupSongs() {
+    const box = $("lookup-songs");
+    box.replaceChildren();
+    const r = lookup.review;
+    if (!r) return;
+    const single = r.scope === "song";
+    for (const s of r.songs) {
+      const card = el("section", { class: "lookup-song", "aria-label": s.title });
+      card.append(el("h3", null, s.title, el("span", { class: "len", text: t("lookupYourSong", { length: mmss(s.seconds) }) })));
+      if (s.outcome !== "found") {
+        let text = coded("lookupOutcome", s.outcome);
+        if (s.outcome === "nothing" && single) text = t("lookupNothingOne");
+        if (s.outcome === "failed" && s.failure) text += ": " + fill(coded("lookupFailure", s.failure), withComputer());
+        card.append(el("p", { class: "outcome", text }));
+        box.append(card);
+        continue;
+      }
+      if (s.several) card.append(el("p", { class: "outcome", text: t("lookupSeveral") }));
+      else if (s.chosen == null) card.append(el("p", { class: "outcome", text: t("lookupNoneFits") }));
+      const choice = lookup.choices.get(s.song) || { candidate: -1, fields: new Set() };
+      const table = el("table");
+      table.append(el("thead", null, el("tr", null, el("th", null, el("span", { class: "sr", text: t("lookupUseThis") })),
+        el("th", { text: t("colTitle") }), el("th", { text: t("colArtist") }), el("th", { text: t("colRelease") }),
+        el("th", { text: t("colYear") }), el("th", { text: t("label") }), el("th", { text: t("colLength") }))));
+      const tb = el("tbody");
+      const pick = (i) => {
+        const c = s.candidates[i];
+        lookup.choices.set(s.song, { candidate: i, fields: new Set(i < 0 ? [] : c.changes.filter((x) => x.tick && !x.locked).map((x) => x.field)) });
+        drawLookup();
+      };
+      s.candidates.forEach((c, i) => {
+        const name = "pick-" + s.song;
+        const radio = el("input", { type: "radio", name, value: String(i), "aria-label": t("lookupUseThis") + ": " + c.title });
+        radio.checked = choice.candidate === i;
+        radio.addEventListener("change", () => pick(i));
+        const notes = (c.notes || []).map((x) => coded("lookupNote", x)).join(", ");
+        const tr = el("tr", { class: [c.otherVersion ? "other" : "", choice.candidate === i ? "using" : ""].join(" ").trim() || null },
+          el("td", null, radio),
+          el("td", null, c.title + (c.version ? " (" + c.version + ")" : ""), notes ? el("div", { class: "notes", text: notes }) : null),
+          el("td", { text: c.artist || "" }), el("td", { text: c.release || "" }), el("td", { text: c.year || "" }),
+          el("td", { text: c.label || "" }),
+          el("td", { class: c.fit === "fits" ? "fits" : c.fit === "off" ? "off" : null, text: lengthWords(c) }));
+        tb.append(tr);
+      });
+      const none = el("input", { type: "radio", name: "pick-" + s.song, value: "-1", "aria-label": t("lookupNoneOfThese") });
+      none.checked = choice.candidate < 0;
+      none.addEventListener("change", () => pick(-1));
+      tb.append(el("tr", null, el("td", null, none), el("td", { colspan: "6", class: "mut", text: t("lookupNoneOfThese") })));
+      table.append(tb);
+      card.append(table);
+      if (choice.candidate >= 0) {
+        const c = s.candidates[choice.candidate];
+        const ticks = el("div", { class: "ticks", role: "group", "aria-label": t("lookupUsing") });
+        for (const ch of c.changes) {
+          const box2 = el("input", { type: "checkbox", disabled: ch.locked });
+          box2.checked = choice.fields.has(ch.field) && !ch.locked;
+          box2.addEventListener("change", () => { if (box2.checked) choice.fields.add(ch.field); else choice.fields.delete(ch.field); drawLookup(); });
+          ticks.append(el("label", null, box2, el("span", { text: t(ch.field) + ": " }),
+            ch.before ? el("span", { class: "before", text: ch.before + " → " }) : null, el("span", { text: ch.after || "" }),
+            ch.note ? el("span", { class: "note", text: "(" + coded("changeNote", ch.note) + ")" }) : null));
+        }
+        if (c.changes.length) card.append(ticks);
+      }
+      box.append(card);
+    }
+  }
+
+  $("lookup-go").addEventListener("click", () => {
+    if (!lookup) return;
+    if (lookup.step === "ask") { startLookup(); return; }
+    if (lookup.step === "review" && lookup.review) {
+      const choices = [];
+      for (const [song, c] of lookup.choices) if (c.candidate >= 0 && c.fields.size) choices.push({ song, candidate: c.candidate, fields: [...c.fields] });
+      request("lookup.apply", { choices }, { errorWord: "couldntSave" }).then((r) => {
+        if (r.ok && r.songs) { undoLine = { text: n("lookupApplied", r.songs) }; render(); }
+      });
+      closeLookup();
+    }
+  });
+  function closeLookup() {
+    const was = lookup;
+    lookup = null;
+    if ($("lookup").open) $("lookup").close("cancel");
+    if (was && was.step === "review") request("lookup.close", {}, { quiet: true });
+    lookupInfo.clear();
+    if (selected) drawNames();
+  }
+  $("lookup-cancel").addEventListener("click", (e) => {
+    e.preventDefault();
+    if (lookup && lookup.step === "progress") { request("lookup.stop", {}, { quiet: true }); return; }
+    closeLookup();
+  });
+  $("lookup").addEventListener("cancel", (e) => {
+    // Escape while it goes stops it (what was found is kept); otherwise it closes.
+    e.preventDefault();
+    $("lookup-cancel").click();
+  });
+  $("lookup-sent-link").addEventListener("click", showSent);
+
+  async function showSent() {
+    const r = await request("lookup.sent", {}, { errorWord: "couldntOpen" });
+    if (!r.ok) return;
+    const list = $("sent-list");
+    const items = (r.sent || []).slice().reverse();
+    list.replaceChildren(...items.map((x) => el("li", null,
+      el("div", { text: t("lookupSentLine", { kind: coded("sentKind", x.kind),
+        fields: (x.fields || []).map(([k, v]) => fill(coded("sentField", k), { value: v })).join(", ") }) }),
+      el("div", { class: "mut", text: t("lookupSentAnswer", { time: new Date(x.at).toLocaleString(), answer: coded("sentAnswer", x.answer) }) }),
+      el("div", { class: "addr", text: x.address }))));
+    $("sent-empty").hidden = items.length > 0;
+    $("sent-clear").disabled = items.length === 0;
+    const d = $("sent");
+    if (!d.open) d.showModal();
+  }
+  $("sent-clear").addEventListener("click", async () => {
+    const r = await request("lookup.clearSent", {}, { errorWord: "couldntSave" });
+    if (r.ok) showSent();
+  });
 
   function drawUndoLine() {
     const u = $("undo-line");
@@ -686,6 +1056,9 @@
     list.append(item(t("pasteList"), go("paste")));
     list.append(item(t("namesFromFileNames"), go("pattern")));
     list.append(item(t("namesFromPlaylist"), go("playlist")));
+    list.append(sep());
+    list.append(item(t("lookupMany"), () => { close(true); openLookup({ scope: "songs" }); }, { class: "net-item" }));
+    list.append(item(t("lookupSentLink"), () => { close(true); showSent(); }, { class: "net-item" }));
   }
   menu($("tools-button"), $("tools-menu"), toolMenu);
 
@@ -999,6 +1372,9 @@
     list.append(item(t("pasteList"), () => { close(true); openTool("paste"); }, { disabled: !songsHere }));
     list.append(item(t("namesFromFileNames"), () => { close(true); openTool("pattern"); }, { disabled: !songsHere }));
     list.append(item(t("namesFromPlaylist"), () => { close(true); openTool("playlist"); }, { disabled: !songsHere }));
+    list.append(sep());
+    list.append(item(t("lookupMany"), () => { close(true); openLookup({ scope: "songs" }); }, { disabled: !songsHere, class: "net-item" }));
+    list.append(item(t("lookupSentLink"), () => { close(true); showSent(); }, { class: "net-item" }));
     list.append(sep());
     list.append(item(t("importCrateFile"), () => { close(true); importCrate(); }));
     list.append(item(t("exportCrateFile"), () => { close(true); exportCrate(); }, { disabled: !songsHere }));

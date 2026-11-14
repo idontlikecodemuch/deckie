@@ -11,8 +11,10 @@ import DeckieCrate
 ///                       record's `print` says who made it when, so a record lists a fingerprint only once its bytes
 ///                       are kept
 ///   files.jsonl         one line per finished file, appended as it finishes: its path below the folder, size and
-///                       modification time, the engine that ran, the tag tempo given, and the record's id or why it
-///                       failed; the last line for a path wins, and a line cut short by an interruption is ignored
+///                       modification time, the engine that ran, the tag tempo given, the record's id or why it
+///                       failed, and which picture it has for a cover; the last line for a path wins, and a line cut short by an interruption is ignored
+///   covers/<hash>.jpg   the thumbnail of each distinct picture found (D36, `BuildCovers`), named as in the crate
+///                       file, so a second run makes none again
 ///   work.json           the folder's own format number
 ///
 /// Deleting the folder, or `--fresh`, starts from nothing; nothing in it is needed once the crate is written.
@@ -40,9 +42,11 @@ final class WorkStore: @unchecked Sendable {
         /// Whether the record had its fingerprint when the line was written. A line from before the fingerprint
         /// (D35) has none, so its file is looked at once more, and fingerprinted from one decode.
         var fingerprint: Bool? = nil
+        /// The file's cover as last found (`CoverNote`), so it is not looked for again; nil until it has been.
+        var cover: CoverNote?
 
         enum CodingKeys: String, CodingKey {
-            case rel, size, modified, status, engine, id, tags, reason, message, bpmTag = "bpm_tag", fingerprint = "print"
+            case rel, size, modified, status, engine, id, tags, reason, message, cover, bpmTag = "bpm_tag", fingerprint = "print"
         }
     }
 
@@ -87,7 +91,7 @@ final class WorkStore: @unchecked Sendable {
             let format = (try? JSONDecoder().decode([String: Int].self, from: Data(contentsOf: marker)))?["format"]
             // A folder with nothing but the work folder's own names (a run stopped before it wrote work.json) is one.
             let names = Set((try? fm.contentsOfDirectory(atPath: folder.path)) ?? [])
-            let ours = format == nil && names.isSubset(of: ["records", "files.jsonl", "work.json"])
+            let ours = format == nil && names.isSubset(of: ["records", "files.jsonl", "work.json", "covers"])
             guard format == Self.format || ours else {
                 throw BuildError("\(folder.path) is not a work folder of this deckie-build; remove it or use --fresh")
             }
