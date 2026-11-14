@@ -39,7 +39,7 @@ The engine's first line, before it reads anything:
 ```json
 {"event": "hello", "protocol": 1, "engine": "deckie-desk-engine", "platform": "windows",
  "analysis": {"ready": true, "detail": null}, "deletesForGood": true,
- "wordsVersion": 1, "words": {"addMusic": "Add music", "...": "..."}}
+ "wordsVersion": 1, "words": {"addMusic": "Add music", "...": "..."}, "computer": "other"}
 ```
 
 - `protocol` is this document's number. A page that does not know it says so and stops.
@@ -47,7 +47,8 @@ The engine's first line, before it reads anything:
   false, Add music is refused with `engine_missing` and `detail` says what is missing.
 - `words` is Desk's one list of words (`core/Sources/DeckieDesk/DeskWords.swift`), the same list the Mac's window
   uses. `{name}` in a word is filled in by the page; `name.one`, `name.other` and `name.zero` are a word's forms by
-  count; `name.<code>` the words for an engine code. The pages hold no words of their own.
+  count; `name.<code>` the words for an engine code; `{thisComputer}` in any word takes `thisComputer.<computer>`
+  ("this Mac" for `mac`, "this computer" for `other`, Windows and Linux). The pages hold no words of their own.
 
 Then the engine sends `state` and, when a crate with songs is showing, `songs`.
 

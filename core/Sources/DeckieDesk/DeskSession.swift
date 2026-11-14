@@ -67,9 +67,7 @@ public final class DeskSession {
     }
 
     public func rename(_ id: String, to name: String) throws {
-        var renamed: CrateInfo?
-        try Self.retrying { renamed = try shelf.rename(id, to: name) }
-        guard let i = renamed else { return }
+        let i = try shelf.rename(id, to: name)
         if current?.id == i.id {
             current = i
             crate?.manifest.name = i.name
@@ -224,26 +222,10 @@ public final class DeskSession {
     /// Writes the crate showing: the crate file, the fixes, the paths, the crate's details.
     public func save() throws {
         guard let info = current else { return }
-        if let c = crate { try Self.retrying { try CrateWriter.write(c, to: shelf.package(info.id)) } }
+        if let c = crate { try CrateWriter.write(c, to: shelf.package(info.id)) }
         try corrections.save(to: shelf.file(DeskRun.correctionsFile, of: info.id))
         try placePaths.save(to: shelf.file(DeskRun.placesFile, of: info.id))
         try shelf.save(info)
-    }
-
-    /// Runs a write again, a few times, when it fails at first. On Windows a file written a moment ago can still be
-    /// held open by another program (a virus scanner, the search indexer), and replacing it then fails with a sharing
-    /// violation (seen on the Windows CI runner, Nov 13, 2026); a moment later it succeeds.
-    static func retrying(_ body: () throws -> Void) throws {
-        var tries = 0
-        while true {
-            do { try body(); return } catch {
-                tries += 1
-                #if os(Windows)
-                if tries < 5 { Thread.sleep(forTimeInterval: 0.1 * Double(tries)); continue }
-                #endif
-                throw error
-            }
-        }
     }
 
     // MARK: out

@@ -1,4 +1,5 @@
 import Foundation
+import DeckieCrate
 
 /// Where a desk keeps everything it makes (D28): its crates, with their work folders, and what it worked out for each
 /// file, shared by every crate. A DJ never chooses this place and never sees it; a crate file appears only when one
@@ -50,13 +51,13 @@ public struct DeskHome: Sendable, Equatable {
     /// Makes the folders and the format marker; refuses a folder made by a newer desk.
     public func prepare() throws {
         let fm = FileManager.default
-        for u in [root, cratesFolder, filesFolder] { try fm.createDirectory(at: u, withIntermediateDirectories: true) }
+        for u in [root, cratesFolder, filesFolder] { try DeckieFiles.createDirectory(u) }
         let marker = root.appendingPathComponent("desk.json")
         if let data = try? Data(contentsOf: marker),
            let f = (try? JSONDecoder().decode([String: Int].self, from: data))?["format"], f > Self.format {
             throw DeskError("\(root.path) was made by a newer Deckie Desk (format \(f)); this one reads format \(Self.format)")
         }
-        try Data("{\"format\":\(Self.format)}\n".utf8).write(to: marker, options: .atomic)
+        try DeckieFiles.write(Data("{\"format\":\(Self.format)}\n".utf8), to: marker)
     }
 }
 
@@ -76,8 +77,6 @@ enum JSONFile {
     static func write<T: Encodable>(_ value: T, to url: URL) throws {
         let e = JSONEncoder()
         e.outputFormatting = [.sortedKeys, .prettyPrinted]
-        try FileManager.default.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
-        let data = try e.encode(value)
-        try DeskSession.retrying { try data.write(to: url, options: .atomic) }
+        try DeckieFiles.write(try e.encode(value), to: url)
     }
 }
