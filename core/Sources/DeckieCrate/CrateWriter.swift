@@ -59,6 +59,11 @@ public enum CrateWriter {
                                                 track: t.id, message: "\(path) is not in the package"))
                 }
             }
+            if let cover = t.file.cover, CrateIDs.isSHA256(cover),
+               !fm.fileExists(atPath: package.appendingPathComponent(CrateFormat.coverPath(cover)).path) {
+                missing.append(CrateProblem(file: CrateFormat.tracksFile, path: "tracks[\(i)].file.cover", track: t.id,
+                                            message: "\(CrateFormat.coverPath(cover)) is not in the package"))
+            }
         }
         if !missing.isEmpty { throw CrateError(missing) }
 
@@ -69,6 +74,13 @@ public enum CrateWriter {
             for name in names where name.hasSuffix(".bin") && files["\(folder)/\(name)"] == nil {
                 try DeckieFiles.remove(dir.appendingPathComponent(name))
             }
+        }
+        // Covers no song names any more go, as the sidecars of removed songs do: taking the last song of a release
+        // out of a crate takes its cover out.
+        let covers = Set(crate.tracks.compactMap(\.file.cover))
+        let coversDir = package.appendingPathComponent(CrateFormat.coversFolder)
+        for name in (try? fm.contentsOfDirectory(atPath: coversDir.path)) ?? [] where name.hasSuffix(".jpg") {
+            if !covers.contains(String(name.dropLast(4))) { try DeckieFiles.remove(coversDir.appendingPathComponent(name)) }
         }
         for path in files.keys.sorted() {
             let url = package.appendingPathComponent(path)

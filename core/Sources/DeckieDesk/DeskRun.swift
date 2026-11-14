@@ -98,6 +98,9 @@ public struct RunReport: Codable, Equatable, Sendable {
     /// A music CD's part of the run (research AA): what the drive said about names, the songs named from the disc,
     /// and the sound that could not be read. Nil for anything else.
     public var disc: DiscReport? = nil
+    /// Covers (D36), as the builder counted them: songs with one, distinct covers and their bytes, pictures that could
+    /// not be used. Nil in a line written before covers.
+    public var covers: CoverCounts? = nil
 
     enum CodingKeys: String, CodingKey {
         case crate, read, seconds, analysed, reused, copies, jobs, device, engine, damaged
@@ -106,7 +109,7 @@ public struct RunReport: Codable, Equatable, Sendable {
         case signaturesMade = "signatures_made", signaturesKept = "signatures_kept", signaturesFailed = "signatures_failed"
         case printsMade = "prints_made", printsKept = "prints_kept", printsFailed = "prints_failed"
         case songsInCrate = "songs_in_crate", songsPerMinute = "songs_per_minute", carriedOn = "carried_on"
-        case local, disc
+        case local, disc, covers
     }
 
     /// Songs that did not go in.
@@ -400,7 +403,7 @@ public final class DeskRun: @unchecked Sendable {
             disc: disc.map(\.current).map { r in
                 DiscReport(text: r.text, songs: r.toc.songs.count, named: request.source.flatMap { discNamed[$0] } ?? 0,
                            damagedSectors: r.damagedSectors, titled: r.discTitle != nil)
-            })
+            }, covers: result.covers)
         state.lock.unlock()
         try Self.appendRun(report, to: shelf.file(Self.runsFile, of: crateId))
         try? DeckieFiles.remove(pendingURL)

@@ -34,6 +34,14 @@
       "replacement_path": null
     },
     {
+      "id": "stb-image",
+      "name": "stb_image and stb_image_write (covers)",
+      "version": "2.32 and 1.18",
+      "licence": "public domain (the Unlicense) or MIT, taken as public domain (section 11)",
+      "training_sets": null,
+      "replacement_path": null
+    },
+    {
       "id": "onnxruntime",
       "name": "ONNX Runtime",
       "version": "1.31.1",

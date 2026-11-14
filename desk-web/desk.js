@@ -97,10 +97,11 @@
         break;
       case "state":
         if (undoLine && state && m.undo !== state.undo && m.undo !== "undoNames" && m.undo !== "undoCheck") undoLine = null;
-        if (state && state.current && (!m.current || m.current.id !== state.current.id)) { stopListening(); selected = null; undoLine = null; }
+        if (state && state.current && (!m.current || m.current.id !== state.current.id)) { stopListening(); selected = null; undoLine = null; dropCovers(); }
         state = m; break;
-      case "songs": songs = m; break;
+      case "songs": songs = m; tidyCovers(); break;
       case "run.started":
+        dropCovers();
         finished = null; exportedPath = null; stopListening(); $("run-log").replaceChildren();
         run = { read: m.read, crateName: m.crateName, done: 0, total: 0, stage: "reading", remaining: null, lines: [] };
         askDisc(m.askName);
@@ -113,10 +114,12 @@
         if (m.line) addLine(m.line);
         updateRun(); return;
       case "run.finished":
+        dropCovers();
         run = null; finished = m.report; $("disc-ask").hidden = true; announce(t("finishedTitle", { read: m.report.read, crate: m.report.crate }));
         setTimeout(nextDrop, 0);
         break;
       case "run.failed":
+        dropCovers();
         run = null; message([t("runStopped", { detail: m.detail || "" })]);
         break;
       case "shell.dropped":
@@ -433,7 +436,7 @@
     if (panel.hidden) return;
     const body = $("names-body");
     const keep = document.activeElement && document.activeElement.dataset && document.activeElement.dataset.field;
-    body.replaceChildren();
+    body.replaceChildren(coverBox(s));
     const fields = [["title", "title"], ["artist", "artist"], ["version", "version"]];
     fields.forEach(([field, word], i) => {
       const f = s.names ? s.names[field] : { value: s[field], from: s.nameFrom };
@@ -509,6 +512,52 @@
     // will sit in this row.
     body.append(foot);
     if (keep) { const k = body.querySelector(`[data-field="${keep}"]`); if (k) k.focus(); }
+  }
+
+  // ---- a song's cover (D36): asked for by the song's id, only when the song says it has one, and only for the song
+  // whose names are showing. The engine answers with the picture's bytes inside the reply (it is at most 24 KB); the
+  // page shows them from a data: address, so it is never told a path and nothing is fetched. A song without a cover,
+  // and one whose cover is still on its way, gets an empty square of the same size (desk.css's --cover-size), so the
+  // fields below never jump.
+  const covers = new Map();   // song id to a data: address, null (asked: none to show) or false (asked, not answered)
+  const coversKept = 200;     // the most the page holds on to; the oldest go first
+  let coversAge = 0;          // raised when the covers are dropped, so an answer that was on its way is left out
+
+  /// Drops every cover kept: another crate is showing, or a run may have changed the songs' pictures.
+  function dropCovers() { covers.clear(); coversAge += 1; }
+  /// Drops the covers of songs that are gone or say they have none now.
+  function tidyCovers() {
+    for (const id of [...covers.keys()]) { const s = songById(id); if (!s || s.cover !== true) covers.delete(id); }
+  }
+
+  function coverBox(s) {
+    const has = s.cover === true;          // an engine from before D36 sends no `cover`: no cover, and nothing asked
+    const kept = has ? covers.get(s.id) : null;
+    if (typeof kept === "string") {
+      const img = el("img", { src: kept, alt: t("cover"), draggable: "false" });
+      const box = el("div", { class: "cover", id: "names-cover" }, img);
+      // Bytes the web view cannot draw are no cover.
+      img.addEventListener("error", () => { covers.set(s.id, null); if (box.isConnected) box.replaceWith(coverBox(s)); });
+      return box;
+    }
+    if (has && kept === undefined) askCover(s.id);
+    // Still on its way: the empty square, said to be nothing yet. None: the same square, labelled.
+    return has && kept !== null ? el("div", { class: "cover none", id: "names-cover", "aria-hidden": "true" })
+      : el("div", { class: "cover none", id: "names-cover", role: "img", "aria-label": t("noCover") });
+  }
+
+  async function askCover(id) {
+    const age = coversAge;
+    covers.set(id, false);
+    const r = await request("song.cover", { song: id }, { quiet: true });
+    if (age !== coversAge || covers.get(id) !== false) return;
+    // Anything but a JPEG in base64 is no cover: an engine that does not know the request, a missing file.
+    const ok = r.ok && r.cover === true && r.type === "image/jpeg" && typeof r.data === "string" && /^[A-Za-z0-9+/]+={0,2}$/.test(r.data);
+    covers.set(id, ok ? "data:image/jpeg;base64," + r.data : null);
+    while (covers.size > coversKept) covers.delete(covers.keys().next().value);
+    // Only the square is redrawn, so a name being typed is not disturbed.
+    const box = $("names-cover"), s = songById(id);
+    if (selected === id && box && s) box.replaceWith(coverBox(s));
   }
 
   /// Return on a fact: a change is the DJ's name (one step of undo); Return on Desk's guess as it is checks it; Return

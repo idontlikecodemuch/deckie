@@ -15,6 +15,9 @@
   --r-card: 16px; --r-panel: 24px; --r-field: 12px; --r-pill: 999px;
   --body: "Inter", system-ui, -apple-system, "Segoe UI", "Cantarell", "Ubuntu", sans-serif;
   --warn: #ffb35c;
+  /* A song's cover in the names panel (D36): its side (the crate file's covers are at most 128 pixels, so this is
+     sharp on every screen), its corners, the fill of the empty square a song without one gets, and the room below. */
+  --cover-size: 80px; --r-cover: 10px; --cover-empty: var(--control); --cover-gap: 12px;
   color-scheme: dark;
 }
 * { box-sizing: border-box; }
@@ -178,6 +181,11 @@ td.listen { width: 34px; padding: 2px 4px; }
 td.listen button { padding: 2px 8px; font-size: 12px; background: var(--control); }
 td.listen button[aria-pressed=true] { background: var(--acc); color: var(--ink); }
 .names { width: 320px; }
+/* The cover, or the empty square of the same size, so the fields below it never move when a picture arrives. A
+   picture that is not square keeps its shape inside the square. */
+.names .cover { width: var(--cover-size); height: var(--cover-size); border-radius: var(--r-cover); background: var(--cover-empty);
+                overflow: hidden; margin-bottom: var(--cover-gap); }
+.names .cover img { display: block; width: 100%; height: 100%; object-fit: contain; }
 .names .fact { margin-bottom: 12px; }
 .names .fact label { display: block; font-size: 12px; color: var(--mut); margin-bottom: 3px; }
 .names .fact .from { font-size: 12px; color: var(--dim); margin-top: 3px; }
