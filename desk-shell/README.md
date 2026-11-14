@@ -25,7 +25,9 @@ engine in turn finds ONNX Runtime and the two models beside itself, then in the 
 - `deckie-desk --check`: the window, the engine and the pages; the page draws the engine's first screen and a
   request goes through it and back. It says how long after the program started the page showed the engine's words.
 - `deckie-desk --check --music <folder> --export-to <folder>`: the same, then as a DJ would, through the page's own
-  buttons: Add music with that folder, the run to its end, Export crate file. `--check-log <file>` writes what a
+  buttons: the new crate named after that folder in the first screen's field, Add music's Add folder with that
+  folder (counted, then read), the run to its end, Export crate file. On the Mac a check sends no lookup over the
+  internet (the engine answers from an empty set of recorded answers). `--check-log <file>` writes what a
   check says to a file as well (a Windows program with no console has no standard error to read).
 - `deckie-desk --tour <out> --music <folder> --export-to <folder>` (Mac only): steps through every screen with the
   music given and writes a picture of each (from the web view itself, so no screen-recording permission is needed).

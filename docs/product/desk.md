@@ -41,7 +41,7 @@ window do the same steps with the same words; the shared parts are DeckieDesk's 
 | 2a | Add drive | Lists the sticks, cards and drives plugged in, each with an icon, its name and its size. A drive bigger than 256 GB is not read whole: "Big Drive is a big drive. It holds 2 TB. Reading a whole drive can take hours, so choose the folder your music is in." with **Choose a folder…** (the chooser opens inside the drive) and **Read the whole drive** |
 | 2b | Add CD | Lists the music CDs and data CDs in a drive, or "There's no CD in a drive. Put one in." |
 | 2c | Add folder, or drops a folder, drive or disc on the window | The system's folder chooser. The top of a big drive gets the big drive's question first |
-| 3 | Waits a moment | Desk counts the songs first, the count rising after a moment ("Looking for songs… 1,204 songs so far"). Above 1,000 songs it asks: "Read 4,812 songs from Big Drive? That's about 9 hours of reading on this Mac. You can stop at any time, and songs already read stay in your crate." with the new crate's name to type, **Cancel** and **Read 4,812 songs**. Below the line it starts at once |
+| 3 | Waits a moment | Desk counts the songs first, the count rising after a moment ("Looking for songs… 1,204 songs so far"). Above 1,000 songs it asks: "Read 4,812 songs from Big Drive? That's about 9 hours of reading on this Mac. You can stop at any time, and songs already read stay in your crate." ("this computer" on Windows and Linux) with the new crate's name to type, **Cancel** and **Read 4,812 songs**. Below the line it starts at once |
 | 4 | Waits, or renames, or stops | The run screen, with the crate's icon and name above it (click to rename; the name is applied when the run ends) and **Stop**. Stop finishes the songs being read and keeps every song read |
 | 5 | Reads the finished screen | "Stick 3 is in Gig Friday", or after Stop "Stopped: 120 songs from Big Drive are in Gig Friday" with **Carry on**. Then **Send to iPad** (Mac) or **Export crate file…** (Windows, Linux), **Add more music** (the same three ways), **Take this back out** (one step of undo), **What didn't go in**, **See the songs** |
 
@@ -74,14 +74,17 @@ from the runs timed on this computer, else 6 songs a minute.
 **Open**
 
 - Whether "With a rekordbox collection…" stays on the first screen (Mac). Proposal: move it to the File menu.
-- The crate's icon is a placeholder (Deckie's record in its line form, one named asset) until the design pass.
+- The crate's icon is the box: Apple's box symbol on the Mac, a matching drawing on Windows and Linux, kept by the
+  owner's choice Nov 14, 2026 (each window names it in one place, for a later design pass).
 
 ---
 
 ## 3. Every word on screen
 
 **These words are placeholders (D28).** Every word is in DeskWords (`core/Sources/DeckieDesk/DeskWords.swift`), one
-list for both windows; the copy audit changes that file. The rule (voice.md): the DJ's own words, plain, sentence
+list for both windows; the copy audit changes that file. Where a word names the computer it says "this Mac" on the
+Mac and "this computer" on Windows and Linux: one blank, `{thisComputer}`, filled by the kind of computer the engine
+runs on (`DeskWords.computerKind`); no other word names the Mac. The rule (voice.md): the DJ's own words, plain, sentence
 case. A crate is the songs; a crate file is the file.
 
 ### The first screen
@@ -89,7 +92,8 @@ case. A crate is the songs; a crate file is the file.
 | Word | Where |
 |---|---|
 | Your crate starts here. | Title |
-| Add your music. Desk reads the tempo, key and bars of every song and writes a crate file, a small file you send to your iPad. Your music never leaves this Mac. | Below it |
+| Add your music. Desk reads the tempo, key and bars of every song and writes a crate file, a small file you send to your iPad. Your music never leaves this Mac. | Below it, on the Mac |
+| … Your music never leaves this computer. | Below it, on Windows and Linux |
 | Into a new crate called [My crate] | The new crate's name |
 | Add drive · Add CD · Add folder | The three ways, everywhere music is added |
 | With a rekordbox collection… · Import crate file… | Below them (the rekordbox route on the Mac only) |
@@ -106,7 +110,8 @@ case. A crate is the songs; a crate file is the file.
 | Big Drive is a big drive · It holds 2 TB. Reading a whole drive can take hours, so choose the folder your music is in. · Choose a folder… · Read the whole drive | A big drive's question |
 | Choose the folder your music is in on Big Drive. Desk reads only that folder. | The chooser inside a big drive |
 | Looking for songs… · 1,204 songs so far | The count |
-| Read 4,812 songs from Big Drive? · That's about 9 hours of reading on this Mac. You can stop at any time, and songs already read stay in your crate. · Read 4,812 songs | The question before a large read |
+| Read 4,812 songs from Big Drive? · That's about 9 hours of reading on this Mac. You can stop at any time, and songs already read stay in your crate. · Read 4,812 songs | The question before a large read, on the Mac |
+| … That's about 9 hours of reading on this computer. … | The same, on Windows and Linux |
 
 ### While it works
 

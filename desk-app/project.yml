@@ -22,8 +22,6 @@ targets:
     platform: macOS
     sources:
       - path: Desk/Sources
-      # The crate's icon (Crate), a vector asset (research AE).
-      - path: Desk/Assets.xcassets
     dependencies:
       - package: DeckieCore
         product: DeckieBuild
