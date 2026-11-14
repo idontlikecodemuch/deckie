@@ -22,6 +22,7 @@ struct DeskApp: App {
             ContentView().environmentObject(model).frame(minWidth: 900, minHeight: 560)
                 .onAppear {
                     if let n = Headless.openOnLaunch { model.show(named: n) }
+                    if let w = NamingWalk.request { NamingWalk.run(model: model, out: w.out, music: w.music) }
                     if let s = Snapshot.request {
                         if let n = s.crate { model.show(named: n) }
                         Snapshot.run(model: model, out: s.out)
@@ -33,6 +34,7 @@ struct DeskApp: App {
             CommandGroup(replacing: .newItem) {
                 Button(Words.newCrate) { model.newCrate() }.keyboardShortcut("n").disabled(model.running)
                 Menu(model.current.map { Words.addMusicTo($0.name) } ?? Words.addMusic) {
+                    ForEach(model.musicCDs, id: \.location) { cd in Button(MusicCDItem.label(cd)) { model.addMusicCD(cd) } }
                     ForEach(model.mountedSources, id: \.url) { m in Button(m.name) { model.addSource(m.url, name: m.name) } }
                     Divider()
                     Button(Words.chooseFolder) { model.askSourceFolder() }

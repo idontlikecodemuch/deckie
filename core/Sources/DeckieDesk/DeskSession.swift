@@ -137,6 +137,13 @@ public final class DeskSession {
     /// the window offers when it asks, once, for the name written on the disc.
     public func addMusicCDRequest(_ location: String, open: (String) throws -> MusicCD = { try MusicCDs.open($0) }) throws
         -> (request: RunRequest, askName: String?) {
+        try Self.musicCDRequest(location, home: home, current: current, open: open)
+    }
+
+    /// As `addMusicCDRequest`, for a window that keeps its own state (the Mac's): `current` is the crate showing.
+    public static func musicCDRequest(_ location: String, home: DeskHome, current: CrateInfo?,
+                                      open: (String) throws -> MusicCD = { try MusicCDs.open($0) }) throws
+        -> (request: RunRequest, askName: String?) {
         let cd = try open(location)
         let (folder, record) = try DiscCopies.prepare(cd, home: home)
         let placeholder = Self.placeholderName(record.toc)
@@ -297,13 +304,7 @@ public final class DeskSession {
     /// The songs a batch tool works on: a source's songs in the order the player shows them, or the songs given.
     public func toolSongs(source: String?, ids: [String]?) -> [DeskNaming.Song] {
         guard let c = crate else { return [] }
-        let byId = Dictionary(c.tracks.map { ($0.id, $0) }, uniquingKeysWith: { a, _ in a })
-        var order: [String] = []
-        if let source, let row = DeskSourceRow.outline(c).first(where: { $0.name == source }) {
-            var seen = Set<String>()
-            for f in row.folders { for s in f.songs where seen.insert(s.id).inserted { order.append(s.id) } }
-        } else if let ids { order = ids }
-        return order.compactMap { byId[$0] }.map { DeskNaming.Song(track: $0, facts: facts($0)) }
+        return DeskNaming.order(c, source: source, ids: ids).map { DeskNaming.Song(track: $0, facts: facts($0)) }
     }
 
     /// The last preview a tool made, until it is applied or another is made.

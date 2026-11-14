@@ -168,6 +168,18 @@ public enum DeskNaming {
         public init(track: CrateTrack, facts: Facts) { self.track = track; self.facts = facts }
     }
 
+    /// The songs a batch tool works on: a source's songs in the order the player shows them (a song in two folders
+    /// once), or the songs given, in that order.
+    public static func order(_ c: Crate, source: String?, ids: [String]?) -> [CrateTrack] {
+        let byId = Dictionary(c.tracks.map { ($0.id, $0) }, uniquingKeysWith: { a, _ in a })
+        var out: [String] = []
+        if let source, let row = DeskSourceRow.outline(c).first(where: { $0.name == source }) {
+            var seen = Set<String>()
+            for f in row.folders { for s in f.songs where seen.insert(s.id).inserted { out.append(s.id) } }
+        } else if let ids { out = ids }
+        return out.compactMap { byId[$0] }
+    }
+
     /// A line of a list, read: an optional leading number ("01.", "1)", "02 -") taken off, then the file-name grammar.
     public static func readLine(_ raw: String) -> (artist: String?, title: String, version: String?) {
         var line = raw.trimmingCharacters(in: .whitespaces)
