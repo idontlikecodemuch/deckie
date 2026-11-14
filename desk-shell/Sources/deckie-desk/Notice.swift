@@ -12,8 +12,10 @@ import Foundation
 enum Notice {
     static let title = "Deckie Desk"
 
-    /// Microsoft's own page for the WebView2 Runtime, named in the message and opened only when the DJ says yes.
-    static let webView2Page = "https://developer.microsoft.com/microsoft-edge/webview2/"
+    /// Microsoft's own page for people who need the WebView2 Runtime (the one Microsoft's documentation says to send
+    /// them to: "Distribute your app and the WebView2 Runtime", read Nov 14, 2026). It is named in the message and
+    /// opened only when the DJ says yes. Nothing is downloaded by Deckie.
+    static let webView2Page = "https://developer.microsoft.com/microsoft-edge/webview2/consumer/"
 
     /// This PC has no WebView2 Runtime. Asked as a question: Yes opens Microsoft's page in the DJ's browser.
     static let noWebView2 = """
@@ -22,7 +24,7 @@ enum Notice {
 
         Get it from Microsoft's own page, install it, then start Deckie Desk again:
         \(webView2Page)
-        On that page, choose "Evergreen Bootstrapper".
+        On that page, choose "Download WebView2".
 
         Or make your crate file now with "Make Crate File" in this folder. It needs nothing else: drag your \
         music folder onto it.
@@ -77,6 +79,14 @@ enum Notice {
     /// One line for a developer or a check.
     static func say(_ line: String) {
         let data = Data((line + "\n").utf8)
+        lock.lock()
+        FileHandle.standardError.write(data)
+        log?.write(data)
+        lock.unlock()
+    }
+
+    /// The engine's own lines for a developer (its standard error), passed on as they come.
+    static func pass(_ data: Data) {
         lock.lock()
         FileHandle.standardError.write(data)
         log?.write(data)
