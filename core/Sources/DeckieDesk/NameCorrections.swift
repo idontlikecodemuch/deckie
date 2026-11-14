@@ -86,9 +86,11 @@ public struct NameCorrections: Codable, Equatable, Sendable {
             if let v = c.version { id.version = v.value }
             if let t = c.tags { id.tags = t }
             if c.title != nil || c.artist != nil || c.version != nil { id.source = "user" }
-            // The DJ's facts go back over whatever the reading found; a cleared one is taken out.
+            // The DJ's facts go back over whatever the reading found; a cleared one is taken out. A fact the DJ took
+            // from a lookup over another source's keeps the lookup as its origin (`lookup:musicbrainz`, D36).
             for (name, values) in c.facts ?? [:] {
-                id.facts[name] = values.isEmpty ? nil : CrateTrack.Fact(values, from: SongFacts.Origin.user)
+                let how = c.from?[name].flatMap { $0.hasPrefix(SongFacts.Origin.lookupPrefix) ? $0 : nil } ?? SongFacts.Origin.user
+                id.facts[name] = values.isEmpty ? nil : CrateTrack.Fact(values, from: how)
             }
             crate.tracks[i].ident = id
             if crate.tracks[i] != before { changed += 1 }

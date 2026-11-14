@@ -2,6 +2,7 @@ import Foundation
 import Testing
 import DeckieAudio
 import DeckieBuild
+import DeckieCovers
 import DeckieCrate
 import DeckiePC
 import DeckieTestSupport
@@ -66,7 +67,9 @@ private final class Lines: @unchecked Sendable {
         let all = [PCWords.hello(version: "1"), PCWords.askForFolder, PCWords.found(songs: 3, toRead: 3),
                    PCWords.found(songs: 3, toRead: 0), PCWords.found(songs: 3, toRead: 1), PCWords.done(songs: 1),
                    PCWords.notYet, PCWords.interrupted, PCWords.copies(2), PCWords.damagedSpots(1), PCWords.took(400),
-                   PCWords.partsMissing("x"), PCWords.inTheWay("x"), PCWords.noSongs("x")]
+                   PCWords.partsMissing("x"), PCWords.inTheWay("x"), PCWords.noSongs("x"),
+                   PCWords.covers(0, of: 1), PCWords.covers(0, of: 5), PCWords.covers(1, of: 1), PCWords.covers(5, of: 5),
+                   PCWords.covers(1, of: 5), PCWords.covers(3, of: 5)]
             + ["unsupported", "protected", "damaged", "decode_error", "analysis_error", "duplicate"].flatMap { r in
                 ["m4a", "wma", "ogg", "mp3"].map { PCWords.why(reason: r, ext: $0) }
             }
@@ -78,6 +81,8 @@ private final class Lines: @unchecked Sendable {
         #expect(PCWords.timeLeft(600).hasPrefix("about 10 minutes left"))
         #expect(PCWords.timeLeft(3 * 3600).hasPrefix("about 3.0 hours left"))
         #expect(PCWords.found(songs: 1, toRead: 1).hasPrefix("Found 1 music file."))
+        #expect(PCWords.covers(3, of: 5) == "3 of 5 songs have a cover." && PCWords.covers(1, of: 5) == "1 of 5 songs has a cover.")
+        #expect(PCWords.covers(5, of: 5) == "All 5 songs have a cover." && PCWords.covers(0, of: 5) == "None of the songs has a cover.")
     }
 }
 
@@ -171,6 +176,62 @@ struct PCBuildTests {
         let fourth = try PCBuild.run(plan, engine: engineFiles!, jobs: 2) { _ in }
         #expect(fourth.readNow == 3 && fourth.songs == 3)
         #expect(try CrateReader.read(from: plan.crateFile).manifest.crateId == crate.manifest.crateId)
+    }
+
+    /// Covers (D36): a picture beside one song and a picture in another's own tags are in the one crate file, the
+    /// words and the log say so, and a second run makes none again.
+    @Test func coversGoIntoTheOneCrateFile() throws {
+        let root = try scratch("covers")
+        defer { try? FileManager.default.removeItem(at: root.deletingLastPathComponent()) }
+        let fm = FileManager.default
+        let folder = root.appendingPathComponent("Saturday")
+        try fm.createDirectory(at: folder.appendingPathComponent("Album"), withIntermediateDirectories: true)
+        let track = TestTrack.render()
+        let beside = try Cover.portableThumbnail(TestPicture.sleeve(side: 200, seed: 5), side: 200, quality: 90).jpeg
+        let own = TestPicture.sleeve(side: 100, seed: 6)
+        try TestTrack.wav(track).write(to: folder.appendingPathComponent("Album/One.wav"))
+        try beside.write(to: folder.appendingPathComponent("Album/Folder.jpg"))
+        try FLACWriter.flac16(track, picture: own).write(to: folder.appendingPathComponent("Two.flac"))
+        let quiet = AudioBuffer(sampleRate: TestTrack.rate, channelCount: 2, samples: track.samples.map { $0 * 0.5 })
+        try TestTrack.wav(quiet).write(to: folder.appendingPathComponent("Three.wav"))
+
+        let plan = try PCBuild.plan(folder: folder, workRoot: root.appendingPathComponent("storage"))
+        let outcome = try PCBuild.run(plan, engine: engineFiles!, jobs: 2) { _ in }
+        #expect(outcome.songs == 3 && outcome.covers.songs == 2 && outcome.covers.distinct == 2 && outcome.covers.made == 2)
+
+        // The single file carries each cover, as `Cover.make` makes it, under the name its record gives.
+        let crate = try CrateReader.read(from: plan.crateFile)
+        let files = try CrateArchive.read(plan.crateFile)
+        let names = [Cover.hash(of: beside), Cover.hash(of: own)]
+        #expect(crate.tracks.first { $0.file.rel == "Album/One.wav" }?.file.cover == names[0])
+        #expect(crate.tracks.first { $0.file.rel == "Two.flac" }?.file.cover == names[1])
+        #expect(crate.tracks.first { $0.file.rel == "Three.wav" }?.file.cover == nil)
+        #expect(files.keys.filter { $0.hasPrefix("covers/") }.sorted() == names.map { "covers/\($0).jpg" }.sorted())
+        #expect(files["covers/\(names[0]).jpg"] == (try Cover.make(beside)).jpeg)
+        #expect(files["covers/\(names[1]).jpg"] == (try Cover.make(own)).jpeg)
+        let coverBytes = names.reduce(0) { $0 + (files["covers/\($1).jpg"]?.count ?? 0) }
+        #expect(outcome.covers.bytes == coverBytes && coverBytes > 0)
+        #expect(outcome.crateFileBytes == (try Data(contentsOf: plan.crateFile)).count)
+
+        // The words and the log.
+        #expect(PCBuild.summary(outcome).contains("Done. 3 songs are in the crate file.\n2 of 3 songs have a cover."))
+        let log = try String(contentsOf: plan.logFile, encoding: .utf8)
+        #expect(log.contains("songs with a cover: 2"))
+        #expect(log.contains("covers in the crate file: 2, \(coverBytes) bytes together (2 made in this run)"))
+        #expect(log.contains("crate file's size: \(outcome.crateFileBytes) bytes"))
+
+        // A second run reads no song and makes no cover, and the crate file is the same, covers and all.
+        let second = try PCBuild.run(plan, engine: engineFiles!, jobs: 2) { _ in }
+        #expect(second.readNow == 0 && second.covers.made == 0 && second.covers.picturesRead == 0 && second.covers.songs == 2)
+        let files2 = try CrateArchive.read(plan.crateFile)
+        #expect(files2.filter { $0.key.hasPrefix("covers/") } == files.filter { $0.key.hasPrefix("covers/") })
+        #expect(try CrateReader.read(from: plan.crateFile).tracks == crate.tracks)
+
+        // The last song with a cover goes: its cover is no longer in the crate file.
+        try fm.removeItem(at: folder.appendingPathComponent("Two.flac"))
+        let third = try PCBuild.run(plan, engine: engineFiles!, jobs: 2) { _ in }
+        #expect(third.songs == 2 && third.covers.distinct == 1)
+        #expect(try CrateArchive.read(plan.crateFile).keys.filter { $0.hasPrefix("covers/") } == ["covers/\(names[0]).jpg"])
     }
 
     @Test func somethingElseUnderTheCrateFilesNameIsNeverOverwritten() throws {

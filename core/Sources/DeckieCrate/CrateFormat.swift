@@ -18,6 +18,16 @@ public enum CrateFormat {
     /// The highest `print.version` this build knows, and the one it writes. A record's print with a higher version
     /// is ignored by the reader: the song reads as having none.
     public static let printVersion = 1
+    /// Covers (D36): one small JPEG for each distinct picture, `covers/<SHA-256 of the source picture>.jpg`.
+    public static let coversFolder = "covers"
+    /// A cover's longest side in pixels, the JPEG quality it is written at, and the most bytes one may take.
+    public static let coverSide = 128
+    public static let coverQuality = 80
+    public static let coverMaxBytes = 24 * 1024
+    /// The source pictures that are made into covers at all: at most this many bytes, and (in the thumbnail maker)
+    /// at most 8,192 pixels a side.
+    public static let coverMaxSourceBytes = 32 * 1024 * 1024
+    public static func coverPath(_ hash: String) -> String { "\(coversFolder)/\(hash).jpg" }
 
     static func barsPath(_ id: String) -> String { "\(barsFolder)/\(id).bin" }
     static func stylePath(_ id: String) -> String { "\(styleFolder)/\(id).bin" }
@@ -45,12 +55,14 @@ public enum CrateFormat {
         /// Where the track is sung, to the beat, and the hook candidates (accepted Oct 29, 2026, with memo Q's vocal fields).
         public static let vocalStructure = "vocal_structure"
         public static let hooks = "hooks"
+        /// The home note of a song whose mode was left open (D36, Nov 14, 2026).
+        public static let keyHome = "key_home"
         public static let barsPrefix = "bars."
         public static func bars(_ series: String) -> String { barsPrefix + series }
 
         /// Every block name above (not the per-bar series).
         public static let blocks = [grid, tempoSegments, key, keyChanges, phrase, sections, mixWindows, ends, loudness,
-                                    vocal, onsetPattern, style, vocalStructure, hooks]
+                                    vocal, onsetPattern, style, vocalStructure, hooks, keyHome]
     }
 
     /// The engine families (`engine.family`). A family names an engine, never a licence: the Windows and Linux

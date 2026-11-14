@@ -61,6 +61,16 @@ jobs:
           swift-build: 6.4.1-RELEASE
       - name: Swift version
         run: swift --version
+      # Report only (D36): what Swift's own networking library would bring if Desk's lookup used it here. Nothing in
+      # Deckie links it (core/Sources/DeckieLookup does not import FoundationNetworking); DEPENDENCIES.md, section 11.
+      - name: "What FoundationNetworking would need (report only)"
+        continue-on-error: true
+        shell: bash
+        run: |
+          f=$(find "$(dirname "$(which swift)")/.." /c/Users/runneradmin/AppData/Local/Programs/Swift -iname 'FoundationNetworking.dll' 2>/dev/null | head -1); echo "$f"
+          ls -la "$f"
+          objdump -p "$f" 2>/dev/null | grep -i 'DLL Name' | sort -u || true
+          strings "$f" 2>/dev/null | grep -E -i -o 'libcurl/[0-9.]+|curl [0-9]+\.[0-9]+\.[0-9]+|Schannel|OpenSSL [0-9.]+|nghttp2/[0-9.]+|zlib/[0-9.]+' | sort -u | head -20 || true
       # ONNX Runtime and the two models, as DEPENDENCIES.md sections 6 to 8 describe, so the engine's suites run:
       # Deckie's own Windows x64 build of ONNX Runtime 1.31.1 (the one a shipped build carries, without Microsoft's
       # usage-reporting client; 6.6 MB) and the two pinned models from the release models-1, each kept only if its

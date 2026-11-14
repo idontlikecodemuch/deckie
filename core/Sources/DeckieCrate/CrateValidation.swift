@@ -178,6 +178,9 @@ extension CrateTrack {
         if let rel = file.rel, isAbsolute(rel) {
             add("file.rel", "\"\(rel)\" is an absolute path; the crate keeps paths relative")
         }
+        if let c = file.cover, !CrateIDs.isSHA256(c) {
+            add("file.cover", "\"\(c)\" must be 64 lower-case hexadecimal characters (the SHA-256 hash of the cover's picture)")
+        }
         if let h = file.sha256 {
             if !CrateIDs.isSHA256(h) {
                 add("file.sha256", "\"\(h)\" must be 64 lower-case hexadecimal characters (a SHA-256 hash)")
@@ -296,6 +299,19 @@ extension CrateTrack {
                 }
                 unit("\(path).confidence", s.confidence)
             }
+        }
+        if let h = keyHome {
+            if key != nil { add("key_home", "is only for a record with no key block, and this one has a key") }
+            if !(0...11).contains(h.pitchClass) {
+                add("key_home.pitch_class", "\(h.pitchClass) must be between 0 (C) and 11 (B)")
+            } else {
+                let want = KeyHome(source: h.source, pitchClass: h.pitchClass)
+                if h.camelot != want.camelot {
+                    add("key_home.camelot", "\(h.camelot) must be the two codes on pitch class \(h.pitchClass), minor first: \(want.camelot)")
+                }
+                if h.note != want.note { add("key_home.note", "\"\(h.note)\" must be \"\(want.note)\", the name of pitch class \(h.pitchClass)") }
+            }
+            if h.source.isEmpty { add("key_home.source", "is empty") }
         }
         if let k = key {
             camelot("key.camelot", k.camelot)

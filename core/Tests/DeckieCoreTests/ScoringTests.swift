@@ -236,6 +236,69 @@ final class ScoredPool: Sendable {
         #expect(k.raw == 0.5 && k.shift == -1 && near(k.value, 0.85 - 0.12, 1e-12))
     }
 
+    /// A home note alone (D36): compared as either key on the note, the better one, at the home note's confidence.
+    @Test func aHomeNoteFitsEitherKeyOnIt() throws {
+        var a = ScoredPool.shared.tracks[0], b = a
+        func home(_ t: inout Track, _ pc: Int) { t.camelot = ""; t.keyConf = 0; t.homePitchClass = pc }
+        let scale = 0.5 + 0.5 * PairScoring.homeNoteConfidence        // 0.725
+        // 1. Home note A against A minor (8A) and against A major (11B): each is a same-key fit.
+        home(&a, 9)
+        for code in ["8A", "11B"] {
+            b.camelot = code; b.keyConf = 1; b.homePitchClass = nil
+            let k = PairScoring.keyTermDetail(a, b)
+            #expect(k.raw == 1 && k.why == "same key" && near(k.value, scale, 1e-12) && k.codes?.b == code && k.shift == 0)
+            #expect(k.confidence == PairScoring.homeNoteConfidence)
+            // The same whichever side has the home note.
+            #expect(near(PairScoring.keyTerm(b, a).value, scale, 1e-12))
+        }
+        // 2. Against the relative major of its minor (C major, 8B) it fits as A minor; against a fifth of its major
+        // (E major, 12B) as A major: the better of the two keys each time.
+        b.camelot = "8B"
+        #expect(PairScoring.keyTermDetail(a, b).raw == 0.85 && PairScoring.keyTermDetail(a, b).codes?.a == "8A")
+        b.camelot = "12B"
+        #expect(PairScoring.keyTermDetail(a, b).raw == 0.9 && PairScoring.keyTermDetail(a, b).codes?.a == "11B")
+        // 3. A key that clashes with both keys on the note clashes (2A, E flat minor).
+        b.camelot = "2A"
+        #expect(PairScoring.keyTermDetail(a, b).raw == 0.15)
+        // 4. Two home notes: the same note fits; a fifth apart fits as a fifth; a minor third apart as relatives
+        // (A minor with C major); a tritone apart clashes.
+        home(&b, 9)
+        #expect(PairScoring.keyTermDetail(a, b).raw == 1 && near(PairScoring.keyTerm(a, b).value, scale, 1e-12))
+        home(&b, 4)
+        #expect(PairScoring.keyTermDetail(a, b).raw == 0.9)
+        home(&b, 0)
+        let rel = PairScoring.keyTermDetail(a, b)
+        #expect(rel.raw == 0.85 && rel.codes?.a == "8A" && rel.codes?.b == "8B")
+        home(&b, 3)
+        #expect(PairScoring.keyTermDetail(a, b).raw == 0.15)
+        // 5. A home-note fit ranks below the same fit between two keys read with full confidence, and above a clash.
+        var k1 = a, k2 = a
+        k1.camelot = "8A"; k1.keyConf = 1; k1.homePitchClass = nil; k2 = k1
+        #expect(PairScoring.keyTerm(k1, k2).value == 1)
+        home(&b, 9)
+        #expect(PairScoring.keyTerm(a, b).value < PairScoring.keyTerm(k1, k2).value && PairScoring.keyTerm(a, b).value > 0.15)
+        // 6. Both keys read: exactly as before, a home note beside a read key is ignored.
+        k2.camelot = "9A"; k2.homePitchClass = 9
+        #expect(PairScoring.keyTerm(k1, k2).value == 0.9 && PairScoring.keyTermDetail(k1, k2).codes! == ("8A", "9A"))
+        // 7. A home note against a key not read at all: still nothing to compare.
+        var none = a; none.camelot = ""; none.keyConf = 0; none.homePitchClass = nil
+        #expect(PairScoring.keyTerm(a, none).why == PairScoring.keyNotRead && PairScoring.keyTerm(a, none).value == 0)
+        #expect(PairScoring.keyKnown(a) && !PairScoring.keyKnown(none) && !PairScoring.keyRead(a))
+        // 8. In a pair's reasons the home note is named.
+        let pool = ScoredPool.shared
+        let a0 = pool.tracks[0]
+        if let b0 = pool.tracks.dropFirst().first(where: { PairScoring.scorePair(a0, $0, timbrePct: 0.5) != nil }) {
+            var h = a0; home(&h, Camelot.tonic(b0.camelot)!.pitchClass)
+            let r = try #require(PairScoring.scorePair(h, b0, timbrePct: 0.5))
+            #expect(!r.reasons.contains { $0.contains(PairScoring.keyNotRead) })
+            #expect(PairScoring.keyLabel(h).hasPrefix("home note ") && PairScoring.keyLabel(b0) == b0.camelot)
+            #expect(near(r.terms.key, scale, 2e-3))                    // the same key, at the home note's confidence
+            let read = try #require(PairScoring.scorePair(a0, b0, timbrePct: 0.5))
+            var hb = b0; hb.homePitchClass = 3
+            #expect(try #require(PairScoring.scorePair(a0, hb, timbrePct: 0.5)).scoreBase == read.scoreBase)
+        }
+    }
+
     /// A key not read (a crate record with no key block: camelot "", confidence 0) neither helps nor hurts a pair
     /// (D16): it is not "same key", and the score is the weighted mean of the other terms.
     @Test func aKeyNotReadScoresNeutrally() throws {

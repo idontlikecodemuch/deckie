@@ -51,6 +51,12 @@ public enum PCWords {
     public static let writing = "Writing the crate file..."
 
     public static func done(songs: Int) -> String { "Done. \(count(songs, "song")) \(songs == 1 ? "is" : "are") in the crate file." }
+    /// How many of the songs in the crate file have a cover.
+    public static func covers(_ n: Int, of songs: Int) -> String {
+        if n == 0 { return songs == 1 ? "The song has no cover." : "None of the songs has a cover." }
+        if n == songs { return songs == 1 ? "The song has a cover." : "All \(songs) songs have a cover." }
+        return "\(n) of \(songs) songs \(n == 1 ? "has" : "have") a cover."
+    }
     public static func notAdded(_ n: Int) -> String { "\(count(n, "file")) could not be added:" }
     public static func notAddedLine(_ n: Int, _ why: String, types: String) -> String { "  \(n)  \(why) (\(types))" }
     public static func copies(_ n: Int) -> String {
@@ -62,6 +68,13 @@ public enum PCWords {
     public static func startUncertain(_ n: Int) -> String {
         "\(count(n, "song")) in the crate file \(n == 1 ? "comes" : "come") from \(n == 1 ? "a file that does" : "files that do") not say exactly where the music starts. "
             + "\(n == 1 ? "Its" : "Their") beats may sit a touch late (up to 0.05 seconds); the log lists \(n == 1 ? "it" : "them")."
+    }
+    /// Deckie's own key reader's three answers over the crate file's songs (D33, D36). New words, placeholders.
+    public static func keys(read: Int, homeNote: Int, notSure: Int) -> String {
+        var parts = ["Key: \(count(read, "song")) with a key"]
+        if homeNote > 0 { parts.append("\(homeNote) with a home note in place of a key") }
+        if notSure > 0 { parts.append("\(notSure) where Deckie is not sure and shows none") }
+        return parts.joined(separator: ", ") + "."
     }
     public static func crateFileIs(_ path: String) -> String { "Your crate file:\n  \(path)" }
     public static func logIs(_ path: String) -> String { "A log of this run, to send if something looks wrong:\n  \(path)" }

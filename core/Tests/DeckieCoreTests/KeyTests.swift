@@ -246,6 +246,39 @@ func randomChroma(seed: UInt64) -> Chromagram {
     }
 }
 
+/// The mix windows judged against the three-answer reader's answer (engine 0.6.0).
+@Suite struct WindowSongKeyTests {
+    @Test func oneKeyIsTheLabsRuleAndSeveralOrNoneAreTheirOwn() {
+        let chroma = randomChroma(seed: 7)
+        let end = Double(chroma.frames) / KeyEstimator.framesPerSecond
+        let whole = KeyEstimator.estimate(chroma).whole.camelot
+        // One key: exactly the lab's function, for any key.
+        for code in [whole, "3A", "10B"] {
+            let one = KeyEstimator.estimate(chroma, mixIn: (0, 20), mixOut: (end - 20, end), songKeys: [code])
+            let lab = KeyEstimator.estimate(chroma, mixIn: (0, 20), mixOut: (end - 20, end), songKey: code)
+            #expect(one == lab && one.songKey == code)
+        }
+        // A home note's two keys: the better fit of the two is what the window is judged against, and it is flagged
+        // only when its own key is far from both.
+        let codes = ["8A", "11B"]
+        let two = KeyEstimator.estimate(chroma, mixIn: (0, 20), mixOut: (end - 20, end), songKeys: codes)
+        #expect(two.songKey == "8A/11B")
+        for (w, side) in [(two.mixIn!, MixEnd.mixIn), (two.mixOut!, MixEnd.mixOut)] {
+            let each = codes.map { KeyEstimator.windowKey(chroma, start: side == .mixIn ? 0 : end - 20, end: side == .mixIn ? 20 : end, side: side, songKey: $0)! }
+            #expect(w.songKeyR == max(each[0].songKeyR, each[1].songKeyR) && w.estimate == each[0].estimate)
+            #expect(w.gain == w.estimate.r - w.songKeyR)
+            let far = codes.allSatisfy { Camelot.wheelCost(w.camelot, $0) >= 2 }
+            #expect(w.flag == (far && w.gain >= 0.08))
+            #expect(!w.flag || (each[0].flag && each[1].flag))        // never flagged unless both keys would flag it
+        }
+        // Nothing to judge against: the window is read, its gain is 0 and it is never flagged.
+        let none = KeyEstimator.estimate(chroma, mixIn: (0, 20), mixOut: (end - 20, end), songKeys: [])
+        #expect(none.songKey == "" && none.mixIn!.estimate == two.mixIn!.estimate)
+        #expect(none.mixIn!.gain == 0 && !none.mixIn!.flag && none.mixOut!.gain == 0 && !none.mixOut!.flag)
+        #expect(none.mixIn!.songKeyR == none.mixIn!.estimate.r)
+    }
+}
+
 @Suite struct KeyVoteTests {
     static var fx: KeyFixture { KeyDecisionTests.fx }
 
