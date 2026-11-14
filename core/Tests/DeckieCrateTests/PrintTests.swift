@@ -174,5 +174,18 @@ import DeckieRecognition
         let made = try Data(contentsOf: url)
         #expect(try c.recognitionIndex(cachedAt: url).ids == index.ids)
         #expect(try Data(contentsOf: url) == made)
+
+        // What an app keeps until the index is ready (the fingerprints as kept, and the keys) gives the same songs.
+        let kept = c.fingerprints()
+        #expect(kept.count == 3 && kept.items.map(\.id) == ["t0", "t1", "t2"])
+        let fromKept = kept.songs()
+        #expect(fromKept.stamp == r.stamp && fromKept.sameRecording == r.sameRecording && fromKept.songs.map(\.landmarks) == r.songs.map(\.landmarks))
+        #expect(try fromKept.index(cachedAt: url).ids == index.ids)
+        #expect(try Data(contentsOf: url) == made)
+        // The small setting is another index: the file is made again with it, and again with the default.
+        let small = try c.recognitionIndex(cachedAt: url, pairing: .boothSmall)
+        #expect(small.pairing.anchorShare == PairingConfig.boothSmall.anchorShare && small.ids == index.ids)
+        #expect(try Data(contentsOf: url) != made)
+        #expect(try c.recognitionIndex(cachedAt: url).pairing.anchorShare == PairingConfig.booth.anchorShare)
     }
 }
