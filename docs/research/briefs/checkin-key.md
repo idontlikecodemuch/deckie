@@ -5,6 +5,18 @@ minor). Exact = key right. Home note = home note right, whatever the mode. Mode 
 note is right, the share with the right mode. The bar (D16) = exact within five points of Apple on each half:
 36.5 on the major half, 70.6 on the minor half.
 
+## Nov 14, 2026, 00:30 UTC. Complete
+
+All four phases are done and pushed. The letter is `docs/research/x2-own-key-trial.md`; the commands are in
+`mixer/keytrial/README.md`. The numbers are those of the entry below. One addition since: the trained model with
+three answers and no fitted threshold (a key when it is more likely than not, the home note alone when only the home
+note is, "not sure" otherwise) shows a key on 70.8 percent of MTG songs and is right on 76.4 percent of them, against
+the untrained reader's 70.4 percent shown and 64.8 right.
+
+**Nothing further is running. The owner's calls:** which of the letter's options to take (my recommendation: ship
+the untrained three-answer reader, commission the labelled set, and rule that the bar is precision of the keys shown
+against Apple on the same songs).
+
 ## Nov 14, 2026, 00:25 UTC. Phase 3 done: a trained model of our own equals Apple (evaluation only)
 
 **Done.** The small convolutional model trained on five artist-grouped folds (each clip scored by a model that never
