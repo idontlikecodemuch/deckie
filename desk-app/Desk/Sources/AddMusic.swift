@@ -193,11 +193,13 @@ struct NewCrateNameField: View {
     }
 }
 
-/// The crate's icon (one named asset, `Crate`, for the design pass to swap).
+/// The crate's icon: Apple's box symbol, kept by the owner's choice (Nov 14, 2026). Named here once, for a design
+/// pass to swap; the Windows and Linux pages draw a matching box (`icon-crate` in desk-web/index.html).
 struct CrateIcon: View {
+    static let symbol = "shippingbox"
     var size: CGFloat = Look.Add.crateIconHeader
     var body: some View {
-        Image("Crate").renderingMode(.template).resizable().scaledToFit()
+        Image(systemName: Self.symbol).resizable().scaledToFit()
             .frame(width: size, height: size)
             .accessibilityLabel(Words.crateIcon)
     }
