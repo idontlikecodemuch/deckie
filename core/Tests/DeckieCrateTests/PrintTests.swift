@@ -142,4 +142,35 @@ import DeckieRecognition
         bad.tracks[0].fingerprint?.points = 7
         #expect(throws: CrateError.self) { try CrateWriter.encode(bad) }
     }
+
+    /// What the booth's index is made from: the songs with fingerprints, their same-recording keys, and the stamp.
+    @Test func aCrateGivesTheBoothsIndexItsSongs() throws {
+        var c = sampleCrate()
+        let base = c.tracks[1]
+        c.tracks = ["t0", "t1", "t2", "t3"].enumerated().map { i, id in
+            var t = base
+            t.id = id
+            t.ident.cutKey = i < 2 ? "t0" : nil
+            t.fingerprint = i == 3 ? nil : .init(Self.landmarks(150 + 10 * i), madeBy: "linux-x86_64", madeAt: "2026-11-14T09:00:00Z")
+            return t
+        }
+        let r = c.recognitionSongs()
+        // The song without a fingerprint is left out; the first two share a key and the third has none.
+        #expect(r.songs.map(\.id) == ["t0", "t1", "t2"] && r.sameRecording == ["t0", "t0", nil])
+        #expect(r.songs[2].landmarks == Self.landmarks(170))
+        #expect(r.stamp == RecognitionIndex.stamp(of: r.songs.map { ($0.id, $0.landmarks.count, $0.landmarks.frameCount) }))
+        var other = c
+        other.tracks.removeLast(2)
+        #expect(other.recognitionSongs().stamp != r.stamp)
+
+        let dir = try temporaryFolder()
+        defer { try? FileManager.default.removeItem(at: dir) }
+        let url = dir.appendingPathComponent("index.dkx")
+        let index = try c.recognitionIndex(cachedAt: url)
+        #expect(index.ids == ["t0", "t1", "t2"] && index.stamp == r.stamp)
+        // The second time the kept file is opened, not built again.
+        let made = try Data(contentsOf: url)
+        #expect(try c.recognitionIndex(cachedAt: url).ids == index.ids)
+        #expect(try Data(contentsOf: url) == made)
+    }
 }
