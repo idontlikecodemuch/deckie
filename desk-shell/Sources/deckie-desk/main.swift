@@ -7,7 +7,9 @@
 //   deckie-desk --tour <folder> --music <folder> --export-to <folder>
 //                                       the Mac only: walks every screen with the music given and writes a picture
 //                                       of each into <folder> (Tour.swift); `--naming` walks the naming screens
-//                                       instead (a music CD from DECKIE_DESK_MUSIC_CD, `--playlist <file.m3u>`)
+//                                       instead (a music CD from DECKIE_DESK_MUSIC_CD, `--playlist <file.m3u>`);
+//                                       `--run-screen` the run screen (D37) at a few song counts and finished, and
+//                                       with `--record`, a picture every half second while it runs
 // Options: --engine <path to deckie-desk-engine>, --pages <folder of desk-web>, --debug (the web inspector). By
 // default both are looked for beside this program (deckie-desk-engine, desk-web/), then in the checkout.
 import Foundation
