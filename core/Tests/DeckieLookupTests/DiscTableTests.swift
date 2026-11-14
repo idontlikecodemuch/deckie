@@ -199,7 +199,8 @@ import Testing
         // The pages never touch the network: no request APIs, and their content rules allow no connection.
         var pageHits: [String] = []
         for u in files("desk-web", endings: ["js", "html"]) {
-            let text = try String(contentsOf: u, encoding: .utf8)
+            // SVG's namespace is a name, not an address anything is fetched from.
+            let text = try String(contentsOf: u, encoding: .utf8).replacingOccurrences(of: "http://www.w3.org/2000/svg", with: "")
             for p in ["fetch(", "XMLHttpRequest", "WebSocket", "EventSource", "sendBeacon", "http://", "https://"] where text.contains(p) {
                 pageHits.append("\(u.lastPathComponent): \(p)")
             }

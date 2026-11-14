@@ -664,7 +664,7 @@ public enum DeskWords {
         return fill(table[key + ".other"] ?? code, ["code": code])
     }
 
-    static func fill(_ template: String, _ values: [String: String]) -> String {
+    public static func fill(_ template: String, _ values: [String: String]) -> String {
         guard template.contains("{"), !values.isEmpty else { return template }
         var out = ""
         var rest = Substring(template)
