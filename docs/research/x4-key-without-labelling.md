@@ -21,7 +21,30 @@ is how far a reader should favour minor when it is unsure; dance music is mostly
 songs are half major. The **bar** is D16's: exact key within five points of Apple's framework on the major half and
 on the minor half of the 1,270 GiantSteps MTG clips (36.5 and 70.6).
 
-SUMMARY_HERE
+## Summary
+
+- **The public labelled option exists and is already in use; nothing larger exists.** About 1,080 recordings have
+  human key labels and licences that allow a shipped model (letter X3). Every other body of human key labels has no
+  usable audio, forbids training, or is not dance music; the big "labelled" bodies are a program's answers
+  (section 1).
+- **Labels nobody typed are worth about as much as the human ones, and no more.** The untrained reader's confident
+  answers on 8,332 openly licensed clips, used as labels, teach the 49-number reader to 58.9 exact on MTG (human
+  labels: 58.8; the untrained reader itself: 57.8). Added to the human labels they change nothing measurable for
+  the small model either (61.7 against 61.5). A model cannot learn from its teacher what the teacher gets wrong.
+- **Learning with no labels at all did not work at this size.** Pretraining on pitch-shifted pairs of all 8,332
+  clips barely learned (its answers lined up with human labels on 18 percent of held-out loops; chance is 8), and
+  the model built on it is no better (59.0 exact on MTG). The published versions used 60,000 to a million songs.
+- **A lean Deckie can justify exists, and it is too weak to matter.** Fixed before any score: the share of minor
+  among the untrained reader's key answers on openly licensed electronic music. It came out at **55.2 percent**,
+  barely off even. Applied once, it moves the minor half by under a point. **Nothing lawful reaches the bar as
+  written**: the best misses the minor half by 8.6 points.
+- **What does work: the small model trained only on lawful recordings is a better three-answer reader than the
+  untrained one**, on every set: on MTG it shows a key on 73 percent of songs and is right on 70 percent of those
+  (untrained: 70 and 65; Apple, showing every song: 65). That is letter `x4-key-complete.md`.
+- **The GiantSteps route** stays the only one measured to pass the bar. The page for the attorney is section 4.
+- **Ranking** (section 5): ship the lawful model behind the three answers now; ask the attorney about GiantSteps;
+  do not spend more on label-free training or on the lean.
+
 
 ## 1. Public key labels not weighed before
 
@@ -71,7 +94,7 @@ Counted from each source's own licence field, not from a search page.
 
 | Source | Recordings in all | CC BY, CC0 or public domain | of those, electronic or dance | Fetched here |
 |---|---:|---:|---:|---|
-| Free Music Archive (the research archive's track table, 106,574 tracks) [opened: the file] | 106,574 | **8,352** (CC BY 6,960; CC0 or public domain 1,392) | **2,745** electronic; 773 hip-hop | FETCHED_HERE |
+| Free Music Archive (the research archive's track table, 106,574 tracks) [opened: the file] | 106,574 | **8,352** (CC BY 6,960; CC0 or public domain 1,392) | **2,745** electronic; 773 hip-hop | all 8,352 thirty-second clips (7.9 GB), for evaluation only; 8,332 could be read |
 | Freesound Loop Dataset [opened: the file, letter X3] | 9,455 | about 8,060 (711 with a human key, 7,346 without) | most | the 711 (letter X3) |
 | Jamendo, ccMixter, Freesound at large | | not countable without their commercial terms or an account | | none |
 
@@ -81,7 +104,153 @@ Protection", which is not a clean public-domain statement. **So the whole openly
 about 16,000 recordings, a third of them dance or electronic.** The published label-free readers trained on 60,000
 to a million commercial songs (section 2.4); this pool is four to sixty times smaller.
 
-EXPERIMENTS_HERE
+### 2.2 Pseudo-labels: the untrained reader's confident answers as labels
+
+The untrained three-answer reader was run over the 8,332 clips. Its answer is used as a label only when it is a key
+(its two readings agree on the home note and the mode). No person is involved and the reader was fitted to nothing.
+
+| | Clips | A key | Home note only | Not sure |
+|---|---:|---:|---:|---:|
+| All openly licensed clips | 8,332 | 5,252 (63.0 %) | 577 (6.9 %) | 2,503 (30.0 %) |
+| Electronic | 2,730 | 1,726 | | |
+
+**How right are these labels?** 372 of the clips are FMAK songs with an expert's key. Where the reader gave a key
+(276 of them) it is the expert's key on **58.7 percent** (the home note on 60.9). On Beatport dance music its keys
+are right on 65 to 85 percent; on this mixed music (rock, folk, experimental, thirty-second cuts) they are worse.
+So four pseudo-labels in ten are wrong.
+
+**What a model taught on them learns** (the 49-number learned profiles; exact key, percent):
+
+| Taught on | MTG, 1,270: all | major | minor | GiantSteps+, 468 | GiantSteps Key, 604 |
+|---|---:|---:|---:|---:|---:|
+| Nothing (the untrained reader, every song given a key) | 57.8 | 54.4 | 59.3 | 76.9 | 60.9 |
+| Pseudo-labels only, all genres (5,252) | 58.9 | 54.9 | 60.6 | 75.9 | 61.1 |
+| Pseudo-labels only, electronic (1,726) | 59.4 | 53.9 | 61.8 | 77.1 | 61.4 |
+| Human-labelled recordings (1,081; letter X3) | 58.8 | 56.0 | 60.1 | 78.0 | 62.6 |
+| Human-labelled + pseudo-labels, all genres | 58.8 | 54.9 | 60.5 | 76.3 | 60.9 |
+| Human-labelled + pseudo-labels, electronic | 58.9 | 53.6 | 61.2 | 77.8 | 62.1 |
+
+And the small convolutional model (the pseudo-labelled clips capped at 2,000 for CPU time, drawn at random; read
+at twelve pitch shifts as in letters X2 and X3):
+
+| Taught on | MTG: all | major | minor | Bar as written | GiantSteps+ | GiantSteps Key |
+|---|---:|---:|---:|---|---:|---:|
+| Apple | 65.2 | 41.5 | 75.6 | | | |
+| Human-labelled recordings (letter X3) | 61.5 | 63.5 | 60.6 | fails, minor 9.9 short | 80.1 | 63.1 |
+| **Human-labelled + 2,000 pseudo-labels** | 61.7 | 62.7 | 61.2 | fails, minor 9.4 short | 78.4 | 62.9 |
+| Pseudo-labels only (2,000) | still training when this was written (PSEUDO_ROW) | | | | | |
+
+**What it says.**
+- **Pseudo-labels alone match human labels for the small reader**: 58.9 against 58.8 on MTG, within a point or two
+  on the others. That is a real finding: Deckie could have had its learned profiles with no human label at all.
+- **They add nothing on top of human labels**, for either reader. The student cannot learn what the teacher gets
+  wrong, and the teacher's errors here are the hard cases (mode, and the home note of sparse tracks).
+- **What a student can learn beyond its teacher** is only what the audio shows consistently where the teacher was
+  confident: here, a point of exact key from smoothing over the teacher's two readings. It cannot learn the mode
+  better, because the labels it gets are the easy-mode songs only (the teacher declines the rest).
+
+### 2.3 No labels at all: pitch-shifted pairs
+
+After STONE (Kong and others, 2024), written here from the paper's idea, not its code. Two snippets of one clip are
+in the same key; shift one by a known number of semitones and its key moves by that number. The model's 24 answers
+are folded to 12 key signatures and placed on the circle of fifths; the loss asks each pair to differ by exactly
+its shift, and each answer to be decided. Twelve passes over all 8,332 clips, then the model is taught on the
+human-labelled recordings as in letter X3.
+
+| | Result |
+|---|---|
+| First form of the loss (the batch's mean agreement) | did not move from its starting value in five passes: with every answer undecided at the start it has no slope. Stopped; the form above replaced it |
+| Second form, twelve passes (20 minutes of CPU) | loss 1.15 to 1.00; the signatures line up with human labels on 17.6 percent of 188 held-out loops (chance: 8.3) |
+| The model built on it, MTG exact: all / major / minor | 59.0 / 61.9 / 57.7 (from nothing: 61.5 / 63.5 / 60.6) |
+| GiantSteps+ / GiantSteps Key | 81.4 / 63.7 (from nothing: 80.1 / 63.1) |
+
+**It did not take.** The pretraining learned a little about key signatures and the model built on it is within
+noise of, or below, the one trained from nothing. The published readers of this kind were trained on 60,000 songs
+(STONE) and a million (S-KEY), for hundreds of passes on graphics processors; S-KEY then reaches 72 on the
+GiantSteps Key set (weighted score) with no labels. Their weights cannot be used: STONE's carry no licence, S-KEY's
+say "only for non-commercial research purposes", and both were trained on a streaming service's catalogue. **With
+8,000 clips and one CPU this route is closed; with the whole 16,000-recording pool and a rented graphics processor
+it is a research bet of a week or two, not a delivery.**
+
+### 2.4 Coverage against precision, for every lawful reader
+
+The readers as three-answer readers: confidence from the model's own probability, one number (a temperature)
+fitted on human-labelled recordings the model did not learn from, a key shown at one half or more. Fixed before
+scoring: the candidate of each kind is the one taught on the most lawful data; a learned reader "beats" the
+untrained one if, showing keys on the same share of songs, its shown keys are right more often on MTG and on at
+least one other set, and not worse by more than a point on the third. (Read at twelve pitch shifts here; the
+reader as it ships, read once, is in `x4-key-complete.md`.)
+
+| Reader (MTG, 1,270) | Key shown, percent of songs | Shown keys right | Shown keys right at the untrained reader's coverage (70.4) |
+|---|---:|---:|---:|
+| Untrained three-answer reader | 70.4 | 64.8 | 64.8 |
+| Apple (every song given a key) | 100 | 65.2 | |
+| Learned profiles, human + electronic pseudo-labels | 54.3 | 72.2 | 67.9 |
+| **Small model, human + pseudo-labels** | 73.8 | 70.5 | **71.7** |
+| Small model, pretrained with no labels | 67.6 | 70.5 | 70.1 |
+| Small model, human-labelled only (letter X3; not calibrated) | 64.2 | 73.1 | 71.7 |
+
+| At the untrained reader's coverage | GiantSteps+ (76.1 percent shown) | GiantSteps Key (73.8 percent shown) |
+|---|---:|---:|
+| Untrained three-answer reader | 85.4 | 69.1 |
+| Learned profiles | 86.8 | 71.1 |
+| **Small model, human + pseudo-labels** | **92.7** | **74.7** |
+| Small model, pretrained with no labels | 91.6 | 74.0 |
+| Small model, human-labelled only | 91.9 | 73.5 |
+
+**Every learned reader beats the untrained one by the rule, and the small model by 5 to 7 points on every set.**
+The gain comes from the human-labelled recordings: the model taught on them alone does as well. Pseudo-labels and
+pretraining add nothing that can be measured.
+
+## 3. The minor lean, treated honestly
+
+**The rule, fixed in `kt_x4.py` before any test score was looked at:** the share of minor keys a trained reader
+should lean to is the share of minor among the untrained reader's key answers on the openly licensed **electronic**
+clips. It touches no test collection and no published count of another collection. It is applied in two ways, each
+reported once: the training recordings weighed so that minor ones are that share of the fit (learned profiles),
+and a finished model's minor answers raised as if its training mix had held that share (the small model).
+
+One admission. The script was first run on the 1,725 clips that had been read by then, to check that it worked,
+and it printed test scores with the lean those clips gave (61.9 percent, from 215 electronic clips). The rule was
+not changed afterwards; the number below is the rule's on all 2,730 electronic clips.
+
+| Top-level genre (Free Music Archive) | Clips | Given a key | Minor among those, percent |
+|---|---:|---:|---:|
+| **Electronic** | 2,730 | 1,726 | **55.2** |
+| Hip-hop | 773 | 440 | 70.9 |
+| Experimental | 2,496 | 1,380 | 55.6 |
+| Rock | 1,771 | 1,122 | 54.5 |
+| Pop | 1,368 | 962 | 35.1 |
+| Folk | 1,190 | 789 | 36.2 |
+| All | 8,332 | 5,252 | 51.4 |
+
+**The lean is 55.2 percent minor.** Reported once:
+
+| Reader, leaned to 55.2 percent minor (MTG, 1,270) | Exact: all | major | minor | Bar as written (36.5 / 70.6) |
+|---|---:|---:|---:|---|
+| Learned profiles, human-labelled | 58.9 | 56.5 | 60.0 | fails, minor 10.6 short |
+| Learned profiles, human + electronic pseudo-labels | 58.9 | 53.6 | 61.2 | fails, minor 9.4 short |
+| Small model, human-labelled (letter X3) | 61.3 | 62.2 | 61.0 | fails, minor 9.6 short |
+| Small model, human + pseudo-labels | 61.9 | 61.7 | 62.0 | fails, minor 8.6 short |
+
+**What it says.**
+- **A justified lean exists and it is nearly no lean.** Openly licensed electronic music, as the untrained reader
+  hears it, is 55 percent minor, not the 65 to 85 percent of Beatport's catalogue. Two reasons, neither separable
+  here [inf]: the Free Music Archive's "Electronic" is wider than club music (ambient, chiptune, experimental), and
+  the reader gives a key only where it is confident, which favours clear major songs.
+- **The leans that nearly pass in letter X3 (65 and 85 percent) are published counts of Beatport's own catalogue**,
+  the same shop the test clips come from. They are not counts of the test clips, so using them is not scoring on
+  the test set; but they do tune the reader to that shop's mix. That is the honest description, and it is the
+  owner's call whether it is within the rule that nothing is tuned to one body of music.
+- **By the style a crate records: not possible today.** The crate's `style` block is a vector of numbers from the
+  vocal tagger, with no named style, so there is nothing to look a published count up by. A lean by style would
+  need a named-style reading first (a tagger whose classes include dance styles), and then a lawful count per
+  style, which this pass did not find outside Beatport's.
+- **So the bar as written cannot be reached honestly by leaning.** What separates the lawful model from Apple on
+  the minor half is not the home note (75.4 against 76.4) but a habit: Apple answers minor when unsure, and the
+  test collection is 70 percent minor. Section 5 says what to do about that.
+
+
 
 ## 4. For the attorney: the GiantSteps route
 
@@ -144,8 +313,38 @@ proprietary.
    app shops whose terms require us to hold the rights to what we ship; and that the same data has trained
    published research models for a decade, none of which we would be using.
 
-RANKING_HERE
+## 5. The routes, ranked by likely delivery for least cost
+
+| # | Route | What it delivers | Cost | Likelihood |
+|---|---|---|---|---|
+| 1 | **Ship the small model trained on lawful recordings, behind the three answers** | more keys shown and more of them right than the untrained reader on every set; on MTG the shown keys are right more often than Apple's are over all songs | done: `x4-key-complete.md`; one decision (publish its file) | certain, measured |
+| 2 | **Ask the attorney about the GiantSteps route** (section 4) | the only route measured to pass the bar as written (65.9; 44.0 major, 75.5 minor) | one conversation; if yes, a day to retrain and swap the file | unknown; turns on the answers |
+| 3 | Restate the bar for a reader that may decline | the bar was written for a reader that names a key for every song; a three-answer reader is judged on shown keys. On shown keys the lawful model already equals or beats Apple's overall rate | a decision, no work | the owner's call |
+| 4 | More human-labelled dance music under open licences | each doubling of labelled data was worth 1 to 2 points in letter X2's curve | none exists to fetch (section 1); labelling is off the table | closed |
+| 5 | Label-free pretraining at scale | perhaps the published 72 on GiantSteps Key, if 16,000 recordings are enough; they may not be | a rented graphics processor and one to two weeks | low |
+| 6 | A stronger lean | nearly passes with Beatport's own share (letter X3) | none | not justified without a source outside Beatport (section 3) |
+| 7 | More pseudo-labels | nothing: measured flat | none | closed |
+
+**The one I would take: route 1 now, route 2 in parallel.** Route 1 is finished and gains 5 to 7 points of
+precision at equal coverage for no legal question that was not already open in letter X3. Route 2 costs one
+conversation and is the only way to the bar as written. I would not spend more on routes 5 to 7: each was tried
+here and did not move the score.
+
+
 
 ## What I could not verify
 
-VERIFY_HERE
+- **MusicBrainz**: whether the key attribute's table is in the CC0 core set; what music the 26,116 keyed works
+  are; any route from a keyed work to an openly licensed recording [could not open the search interface].
+- **Could not open**: Chordify's terms, the RWC site, Cambridge-MT's terms, BandLab's, Loopmasters' licence,
+  Uppbeat's, iReal Pro's. What is said of them above is from search summaries, or left out.
+- **WaivOps and Slakh2100**: whether their labels name a key (the files were not fetched; both are program-made).
+- **Freesound and ccMixter at large**: how many openly licensed loops state a key in their names or tags.
+- **The open audio's own licences**: each Free Music Archive track's licence is the archive's 2017 record of it
+  (`tracks.csv`), not checked track by track today.
+- **Why the lean is 55 percent**: the two reasons in section 3 were not separated.
+- **Label-free training at scale**: not tried beyond twelve passes on 8,332 clips on a CPU.
+- **Calibration on other music**: the temperature was fitted on loops and songs that are not Beatport dance music;
+  `x4-key-complete.md` reports how far the stated confidence is from the measured rate on each set.
+- **The small model taught on pseudo-labels only** was still training when this was written; the learned profiles above are the evidence for that row.
+
