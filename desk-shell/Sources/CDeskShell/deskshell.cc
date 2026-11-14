@@ -363,7 +363,11 @@ void deskshell_prepare_process(void) {
   const DWORD which[] = {STD_INPUT_HANDLE, STD_OUTPUT_HANDLE, STD_ERROR_HANDLE};
   for (DWORD w : which) {
     HANDLE h = GetStdHandle(w);
-    if (h != nullptr && h != INVALID_HANDLE_VALUE) continue;
+    if (h != nullptr && h != INVALID_HANDLE_VALUE) {
+      // A number that names nothing in this program (left over from whoever started it) is no better than none.
+      SetLastError(NO_ERROR);
+      if (GetFileType(h) != FILE_TYPE_UNKNOWN || GetLastError() == NO_ERROR) continue;
+    }
     HANDLE nul = CreateFileW(L"NUL", GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE, nullptr,
                              OPEN_EXISTING, 0, nullptr);
     if (nul != INVALID_HANDLE_VALUE) SetStdHandle(w, nul);

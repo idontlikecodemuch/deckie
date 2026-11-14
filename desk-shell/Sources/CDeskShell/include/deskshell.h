@@ -73,7 +73,7 @@ const char *deskshell_engine_name(void);
 
 /// Call first, before anything is written. A program of the "windows" kind started by a double click has no standard
 /// input, output or error at all; this gives it Windows' "NUL" (which swallows what is written) for each one that is
-/// missing, so that a line written for a developer cannot stop the program.
+/// missing or names nothing, so that a line written for a developer cannot stop the program.
 void deskshell_prepare_process(void);
 
 /// The version of Microsoft's WebView2 Runtime (the "Evergreen" one, shared by all programs) installed on this PC,

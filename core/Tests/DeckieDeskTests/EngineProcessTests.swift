@@ -172,10 +172,14 @@ final class EngineProcess: @unchecked Sendable {
         // The crate menu: rename, a new crate, back.
         let renamed = try e.request("crate.rename", ["crate": info.id, "name": "Friday late"])
         #expect(renamed["name"] as? String == "Friday late")
+        // The state that shows each change comes after its reply: waited for, not read straight away (a busy
+        // machine delivers it a moment later).
+        var before = e.received.count
         _ = try e.request("crate.new")
-        #expect(e.last("state")?["current"] is NSNull)
+        #expect(e.wait(from: before) { $0["event"] as? String == "state" && $0["current"] is NSNull } != nil)
+        before = e.received.count
         _ = try e.request("crate.show", ["crate": info.id])
-        #expect((e.last("state")?["current"] as? [String: Any])?["name"] as? String == "Friday late")
+        #expect(e.wait(from: before) { $0["event"] as? String == "state" && ($0["current"] as? [String: Any])?["name"] as? String == "Friday late" } != nil)
 
         // Export, into a folder whose name is not English either.
         let out = root.appendingPathComponent("Export ö")

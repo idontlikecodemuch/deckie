@@ -22,8 +22,10 @@
 // It uses nothing but Windows' own kernel32.dll, and user32.dll for the message box: no C runtime, so it starts on
 // any 64-bit Windows 10 or 11. Built with the clang that comes with Swift.
 //
-// DECKIE_NO_BOXES (any value) in the environment makes "Deckie Desk.exe" write its message to standard error and
-// show no box, so a check with no one at the keyboard does not wait for a click.
+// DECKIE_NO_BOXES (any value) in the environment is for a check with no one at the keyboard, which must not wait
+// for a click: "Deckie Desk.exe" then writes its message to standard error and shows no box, asks Windows to show
+// none of its own either when the real program cannot start (the real program then just ends with Windows' code),
+// and writes the real program's code when it is not 0.
 
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
@@ -76,11 +78,15 @@ static void writeBytes(HANDLE to, const WCHAR *text) {
     if (to != NULL && to != INVALID_HANDLE_VALUE) WriteFile(to, bytes, (DWORD)n, &written, NULL);
 }
 
+#ifdef DECKIE_DESK
+static int quiet(void) { return GetEnvironmentVariableW(L"DECKIE_NO_BOXES", typed, 255) > 0; }
+#endif
+
 // Says one whole message and waits until it has been read: a message box for "Deckie Desk", the console window and
 // "Press Enter" for "Make Crate File".
 static void tell(const WCHAR *text) {
 #ifdef DECKIE_DESK
-    if (GetEnvironmentVariableW(L"DECKIE_NO_BOXES", typed, 255) > 0) {
+    if (quiet()) {
         writeBytes(GetStdHandle(STD_ERROR_HANDLE), text);
         writeBytes(GetStdHandle(STD_ERROR_HANDLE), L"\r\n");
         return;
@@ -98,6 +104,11 @@ static void tell(const WCHAR *text) {
 }
 
 void entry(void) {
+#ifdef DECKIE_DESK
+    // A check: no box of Windows' own when a library is missing or the program stops (the real program inherits
+    // this), so that the code comes back instead of a box nobody can click.
+    if (quiet()) SetErrorMode(SEM_FAILCRITICALERRORS | SEM_NOGPFAULTERRORBOX | SEM_NOOPENFILEERRORBOX);
+#endif
     // Where this program is, and the real one beside it in "app".
     DWORD n = GetModuleFileNameW(NULL, here, 4095);
     while (n > 0 && here[n - 1] != L'\\' && here[n - 1] != L'/') n--;
@@ -170,6 +181,19 @@ void entry(void) {
     GetExitCodeProcess(process.hProcess, &code);
     CloseHandle(process.hThread);
     CloseHandle(process.hProcess);
+#ifdef DECKIE_DESK
+    if (code != 0 && quiet()) {
+        // For a check: the code itself, as Windows writes such codes (0xC0000135 is "a library file was not found").
+        static const WCHAR digits[] = L"0123456789ABCDEF";
+        message[0] = 0;
+        append(message, 4096, L"Deckie Desk (starter): app\\deckie-desk.exe ended with code 0x");
+        size_t at = length(message);
+        for (int shift = 28; shift >= 0; shift -= 4) message[at++] = digits[(code >> shift) & 15];
+        message[at] = 0;
+        append(message, 4096, L"\r\n");
+        writeBytes(GetStdHandle(STD_ERROR_HANDLE), message);
+    }
+#endif
     // Windows' own codes for "a library file was not found" and "a library file is too old to have what the program
     // needs": Microsoft's runtime is there but older than the one Swift was built with.
     if (code == 0xC0000135u || code == 0xC0000139u) {
