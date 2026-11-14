@@ -2,6 +2,113 @@ import SwiftUI
 import DeckieCrate
 import DeckieDesk
 import DeckieLookup
+import DeckieDisc
+
+/// "Deckie Desk" --lookup-walk <out folder> <music folder>: the lookup on this Mac's window with no one at the
+/// keyboard (the lookup's generated songs; MusicBrainz's answers recorded once, from DECKIE_LOOKUP_RECORDED, so
+/// nothing is sent; a stand-in music CD from DECKIE_DESK_MUSIC_CD): one song's button, its sentence, its review and
+/// what was filled in, the line under the button, a source's batch (sentence, count, review), "What Desk has sent",
+/// a disc's sentence and its review. Writes a picture at each step (Snapshot.capture; whole windows and sheets only
+/// when the Mac is unlocked), then quits.
+@MainActor
+enum LookupWalk {
+    static var request: (out: String, music: String)? {
+        let a = CommandLine.arguments
+        guard a.count >= 4, a[1] == "--lookup-walk" else { return nil }
+        return (a[2], a[3])
+    }
+
+    /// The sheet drawn by SwiftUI itself, with no window (when the window server gives nothing: a locked Mac). Controls
+    /// that are AppKit's own (the picker, the checkboxes) may be drawn as placeholders: say so in the report.
+    static func render(_ name: String, model: DeskModel, out: String, sent: Bool = false) {
+        let view = Group { if sent { SentSheet() } else { LookupSheet() } }.environmentObject(model)
+            .background(Color(nsColor: .windowBackgroundColor)).environment(\.colorScheme, .dark)
+        let r = ImageRenderer(content: view)
+        r.scale = 2
+        guard let img = r.nsImage, let tiff = img.tiffRepresentation, let rep = NSBitmapImageRep(data: tiff),
+              let png = rep.representation(using: .png, properties: [:]) else { print("[lookup-walk] could not render \(name)"); return }
+        let url = URL(fileURLWithPath: out).appendingPathComponent("rendered-" + name + ".png")
+        try? png.write(to: url)
+        print("[lookup-walk] rendered \(url.lastPathComponent) \(rep.pixelsWide)x\(rep.pixelsHigh)")
+    }
+
+    static func run(model: DeskModel, out: String, music: String) {
+        Snapshot.prepare(out: out)
+        Task { @MainActor in
+            func wait(_ s: Double) async { try? await Task.sleep(nanoseconds: UInt64(s * 1e9)) }
+            func say(_ s: String) { print("[lookup-walk] " + s) }
+            Snapshot.sizeWindow()
+            model.newCrate()
+            await wait(1)
+            let url = URL(fileURLWithPath: music, isDirectory: true)
+            model.addSource(url, name: url.lastPathComponent)
+            await wait(1.5)
+            while model.running { await wait(0.25) }
+            model.finished = nil
+            await wait(1)
+            guard let around = model.crate?.tracks.first(where: { $0.ident.title == "Around the World" }) else {
+                say("no song"); Snapshot.finish(); return
+            }
+            model.selection = [around.id]
+            await wait(1); Snapshot.capture("m01-panel-lookup-button", hold: 1)
+            model.lookUp(scope: "song", ids: [around.id])
+            await wait(1.2); Snapshot.capture("m02-sentence-one-song", hold: 1, withSheet: true); render("m02-sentence-one-song", model: model, out: out)
+            model.startLookup()
+            for _ in 0..<600 where !(model.lookup?.step == .review) { await wait(0.1) }
+            await wait(1); Snapshot.capture("m03-review-one-song", hold: 1, withSheet: true); render("m03-review-one-song", model: model, out: out)
+            say("one song: \(model.lookup?.review.map(DeskLookup.summaryLine) ?? "-"), ticked \(model.lookup?.ticked ?? 0)")
+            model.applyLookup()
+            await wait(1.2); Snapshot.capture("m04-filled-from-musicbrainz", hold: 1)
+            if let blue = model.crate?.tracks.first(where: { $0.ident.title == "Blue Monday" }) {
+                model.selection = [blue.id]
+                await wait(1); Snapshot.capture("m05-under-the-button", hold: 1)
+            }
+            // Undo the one song's lookup, so the batch asks for it as it was (the answers recorded once are for that).
+            model.undoManager?.undo()
+            model.selection = []
+            await wait(0.5)
+            model.lookUp(scope: "songs", source: model.crate?.discPlan.first?.name)
+            await wait(1.2); Snapshot.capture("m06-sentence-batch", hold: 1, withSheet: true); render("m06-sentence-batch", model: model, out: out)
+            model.startLookup()
+            for _ in 0..<600 where !((model.lookup?.done ?? 0) >= 2 || model.lookup?.step == .review) { await wait(0.1) }
+            Snapshot.capture("m07-progress", hold: 1, withSheet: true); render("m07-progress", model: model, out: out)
+            for _ in 0..<600 where !(model.lookup?.step == .review) { await wait(0.1) }
+            await wait(1); Snapshot.capture("m08-review-batch", hold: 1, withSheet: true); render("m08-review-batch", model: model, out: out)
+            say("batch: \(model.lookup?.review.map(DeskLookup.summaryLine) ?? "-"), ticked \(model.lookup?.ticked ?? 0)")
+            model.applyLookup()
+            await wait(1.2); Snapshot.capture("m09-names-added", hold: 1)
+            say("undo line: \(model.undoLine ?? "none"); still need a name: \(model.needingNames.count)")
+            model.onlyNeedName = true
+            await wait(1); Snapshot.capture("m10-needs-a-name-button", hold: 1)
+            model.showSent = true
+            await wait(1.2); Snapshot.capture("m11-what-desk-has-sent", hold: 1, withSheet: true); render("m11-what-desk-has-sent", model: model, out: out, sent: true)
+            say("sent: \(model.lookupLog.sent.count) requests")
+            model.showSent = false
+            model.onlyNeedName = false
+            model.musicCDs = MusicCDs.list()
+            if let cd = model.musicCDs.first {
+                model.newCrate()
+                await wait(0.5)
+                model.addMusicCD(cd)
+                await wait(0.5)
+                model.discAsk = nil
+                while model.running { await wait(0.25) }
+                model.finished = nil
+                await wait(1)
+                if let source = model.crate?.discPlan.first?.name {
+                    model.lookUp(scope: "disc", source: source)
+                    await wait(1.2); Snapshot.capture("m12-sentence-disc", hold: 1, withSheet: true); render("m12-sentence-disc", model: model, out: out)
+                    model.startLookup()
+                    for _ in 0..<600 where !(model.lookup?.step == .review) { await wait(0.1) }
+                    await wait(1); Snapshot.capture("m13-disc-not-known", hold: 1, withSheet: true); render("m13-disc-not-known", model: model, out: out)
+                    model.lookup = nil
+                }
+            } else { say("no music CD listed (set DECKIE_DESK_MUSIC_CD)") }
+            await wait(0.5)
+            Snapshot.finish()
+        }
+    }
+}
 
 /// "Look up songs via MusicBrainz" on the Mac (D36; letter AA, 3.8 to 3.12): the same plan, sentence, lookup, review
 /// and apply as the Windows and Linux window, all DeckieDesk's (`DeskLookup`, `DeskLookupRun`); this file only shows

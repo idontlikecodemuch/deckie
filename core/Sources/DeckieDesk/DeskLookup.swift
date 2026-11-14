@@ -205,6 +205,11 @@ public enum DeskLookup {
         case "song":
             let key = s.byIsrc > 0 ? "lookupSendOneIsrc" : (s.byFileName > 0 ? "lookupSendOneFileName" : "lookupSendOne")
             lines.append(DeskWords.text(s.nothingToSend > 0 ? "lookupNothingToSendOne" : key))
+            // Then exactly what goes, word for word.
+            if s.nothingToSend == 0, let what = s.what, !what.isEmpty {
+                lines.append(DeskWords.text("lookupSendExactly", ["what": what.map {
+                    DeskWords.text("lookupWhat." + $0[0], ["value": $0[1]]) }.joined(separator: ", ")]))
+            }
         default:
             let asked = s.songs - s.nothingToSend
             lines.append(DeskWords.count("lookupSendMany", asked, ["duration": DeskWords.duration(s.seconds)]))
