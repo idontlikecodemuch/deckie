@@ -112,7 +112,7 @@ def mixes(work, path):
             a = audible[t["mix"]][s]; a[0] = min(a[0], t["at"]); a[1] = max(a[1], t["at"] + 5)
             if t["kind"] == "one song":
                 sp = spans[t["mix"]][s]; sp[0] = min(sp[0], t["at"]); sp[1] = max(sp[1], t["at"] + 5); sp[2] = v
-    out = defaultdict(lambda: dict(seconds=0, right=0, wrong=0, first=[], songs=0, never=0, late=0, speed=[]))
+    out = defaultdict(lambda: dict(seconds=0, right=0, wrong=0, first=[], songs=0, never=0, late=0, followed=0, speed=[]))
     for mix, rs in by.items():
         if mix not in meta:
             continue
@@ -132,16 +132,20 @@ def mixes(work, path):
                 o["speed"] += [abs(float(r[4]) - (v - 1) * 100) for r in inside if r[1] != "nothingYet" and r[2] == song and r[4] != "-"]
             else:
                 o["never"] += 1
+            # Still named after it ended: only for a song that another follows (the labels' windows stop short of
+            # the mix's end, so the last song's own end is not known to the second).
             end = audible[mix][song][1]
-            o["late"] += sum(1 for r in rs if r[0] > end + 3 and r[1] != "nothingYet" and r[2] == song)
+            if any(v[0] > audible[mix][song][0] for k, v in audible[mix].items() if k != song):
+                o["followed"] += 1
+                o["late"] += sum(1 for r in rs if r[0] > end + 3 and r[1] != "nothingYet" and r[2] == song)
     print("### The listener on the generated mixes (UnmixDB): each song while it plays alone\n")
-    print("| time scaling | effect | songs | seconds with the right name, percent | seconds with a song outside the mix named | first right name, seconds after the song is alone: median / 90th | never named | seconds still named 3 s after the song ended | speed reading error, points: median / 90th |")
+    print("| time scaling | effect | songs | seconds with the right name, percent | seconds with a song outside the mix named | first right name, seconds after the song is alone: median / 90th | never named | seconds still named more than 3 s after a song ended (songs followed by another) | speed reading error, points: median / 90th |")
     print("|---|---|---|---|---|---|---|---|---|")
     for key in sorted(out):
         o = out[key]
         f = np.array(o["first"]) if o["first"] else np.array([0.0])
         sp = np.array(o["speed"]) if o["speed"] else np.array([0.0])
-        print(f"| {key[0]} | {key[1]} | {o['songs']} | {100 * o['right'] / max(1, o['seconds']):.1f} | {o['wrong']} of {o['seconds']} | {np.median(f):.0f} / {np.quantile(f, 0.9):.0f} | {o['never']} | {o['late']} | {np.median(sp):.2f} / {np.quantile(sp, 0.9):.2f} |")
+        print(f"| {key[0]} | {key[1]} | {o['songs']} | {100 * o['right'] / max(1, o['seconds']):.1f} | {o['wrong']} of {o['seconds']} | {np.median(f):.0f} / {np.quantile(f, 0.9):.0f} | {o['never']} | {o['late']} ({o['followed']}) | {np.median(sp):.2f} / {np.quantile(sp, 0.9):.2f} |")
 
 
 if __name__ == "__main__":
