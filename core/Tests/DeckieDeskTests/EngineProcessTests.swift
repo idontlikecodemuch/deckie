@@ -249,6 +249,22 @@ final class EngineProcess: @unchecked Sendable {
         #expect(progress.contains { ($0["line"] as? [String: Any])?["kind"] as? String == "started" })
         let started = try #require(e.received.first { $0["event"] as? String == "run.started" })
         #expect(started["crateName"] as? String == "Mix Tapes ü")
+        // The run screen (D37): each song that went in joined it once, with its wave and what Desk found, and the
+        // totals count them; the first song and the end are moments.
+        let screen = e.received.filter { $0["event"] as? String == "run.songs" }
+        let shown = screen.flatMap { ($0["songs"] as? [[String: Any]]) ?? [] }
+        #expect(shown.count == 2)
+        #expect(Set(shown.compactMap { $0["title"] as? String }) == ["01 Song X", "02 Sóng Y"])
+        #expect(shown.allSatisfy { ($0["wave"] as? [Any])?.count == RunSong.waveLength && $0["bpm"] is NSNumber })
+        #expect(shown.allSatisfy { $0["place"] as? String == "Mix Tapes ü / House \($0["title"] as? String == "01 Song X" ? 1 : 2)" })
+        #expect(shown.allSatisfy { (($0["key"] as? [String: Any])?["kind"] as? String).map { ["key", "home", "none"].contains($0) } == true })
+        let figures = try #require(screen.last { $0["figures"] != nil }?["figures"] as? [String: Any])
+        #expect((figures["songs"] as? NSNumber)?.intValue == 2 && (figures["notIn"] as? NSNumber)?.intValue == 1)
+        let notes = screen.flatMap { ($0["notes"] as? [[String: Any]]) ?? [] }
+        #expect(notes.contains { $0["code"] as? String == "first" && $0["kind"] as? String == "moment" })
+        #expect(notes.last?["code"] as? String == "finished")
+        let finishedAt = try #require(e.received.firstIndex { $0["event"] as? String == "run.finished" })
+        #expect(e.received.lastIndex { $0["event"] as? String == "run.songs" }! < finishedAt)
 
         let songs = try #require(e.wait { $0["event"] as? String == "songs" })
         let rows = try #require(songs["songs"] as? [[String: Any]])

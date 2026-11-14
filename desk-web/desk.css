@@ -23,6 +23,42 @@
   --net: #6fd6c9; --net-ink: #08201d; --net-band: rgba(111, 214, 201, 0.12); --net-line: rgba(111, 214, 201, 0.45);
   --fits: #8fe3a2; --off: var(--warn);
   color-scheme: dark;
+
+  /* the run screen (D37): every colour, size and time it uses, here, for the design pass to change in one place.
+     run.js reads the --wall-*, --wave-*, --wheel-* and --t-* values too. */
+  --amber: #ffc040;                       /* a tempo reading, as the booth's pitch line */
+  --run-gap: 14px;
+  --fs-small: 12.5px; --fs-big: 26px; --fs-stage: 17px; --fs-label: 11.5px; --fs-note: 13px; --fs-head: 14px;
+  --stage-gap: 20px; --fact-gap: 6px 22px; --fig-gap: 10px; --fig-pad: 12px 14px; --r-wall: 8px;
+  --inner-gap: 8px; --inner-gap-s: 6px; --inner-gap-xs: 4px;
+  --stage-h: 100px;                       /* the song on stage: its wave's height */
+  --stage-wave-w: 46%;
+  --fig-h: 58px;                          /* a figure's picture */
+  --wall-h: 220px;                        /* the wall of waves */
+  --wave: rgba(180, 144, 255, 0.82);      /* a song's wave */
+  --wave-quiet: rgba(180, 144, 255, 0.28);
+  --wave-new: #ece4ff;                    /* the song that joined last */
+  --wave-pick: #ffc040;                   /* the song pointed at or chosen */
+  --wave-none: rgba(255, 255, 255, 0.10); /* a song with no beat grid: a line, no wave */
+  --wave-tick: rgba(255, 255, 255, 0.22); /* a mark every 8 bars */
+  --wave-tick-strong: rgba(255, 255, 255, 0.45); /* every 32 */
+  --wave-curve: 2.2;                      /* how loudness becomes height, the same for every song */
+  --wheel-empty: rgba(255, 255, 255, 0.055);
+  --wheel-home: #ab9fc2;
+  --wall-wave-min: 6;                     /* px a line needs to be drawn as a wave; thinner lines are drawn as brightness */
+  --wall-col-min: 150;                    /* px the narrowest column of waves */
+  --wall-dense-col-min: 18;               /* px the narrowest column of brightness lines */
+  --wall-gap: 6; --wall-dense-gap: 2;     /* px between columns */
+  --wall-dense-line: 3;                   /* px a brightness line aims for, before columns run out */
+  --t-draw: 900ms;                        /* a wave drawing in */
+  --t-hold: 3200ms;                       /* a song on stage, with nothing waiting */
+  --t-hold-min: 300ms;                    /* a song on stage, with many waiting */
+  --t-hold-still: 2000ms;                 /* a song on stage, at least, under reduced motion */
+  --t-fade: 420ms;
+  --t-saying: 7000ms;                     /* each quiet line */
+  --t-moment: 1600ms;
+  --t-wall: 250ms;                        /* the wall redraws at most this often */
+  --stage-queue-max: 24;                  /* songs waiting for the stage before the oldest go straight to the wall */
 }
 * { box-sizing: border-box; }
 html, body { height: 100%; }
@@ -103,9 +139,68 @@ main { flex: 1; min-height: 0; display: flex; flex-direction: column; }
        font: 12px/1.6 ui-monospace, "Cascadia Mono", "Consolas", "DejaVu Sans Mono", monospace; color: var(--mut); margin: 4px 0 0; list-style: none; }
 .log li { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
+/* the run screen (D37) */
+.run .warn { color: var(--warn); }
+.small { font-size: var(--fs-small); }
+.saying { min-height: 1.5em; color: var(--mut); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+          transition: opacity var(--t-fade) ease; }
+.saying.out { opacity: 0; }
+.saying.moment { color: var(--tx); font-weight: 600; }
+.leave { font-size: var(--fs-small); margin-top: -6px; }
+.chip { display: inline-block; font-size: var(--fs-label); font-weight: 600; color: var(--mut); background: var(--control); padding: 1px 9px; border-radius: var(--r-pill); vertical-align: 2px; }
+.stage { display: flex; gap: var(--stage-gap); align-items: center; position: relative; min-height: calc(var(--stage-h) + 36px); }
+.stage-wave { width: var(--stage-wave-w); height: var(--stage-h); flex: none; display: block; }
+.stage-facts { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: var(--inner-gap); transition: opacity var(--t-fade) ease; }
+.stage.out .stage-facts { opacity: 0; }
+.stage-name { font-size: var(--fs-stage); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.stage-dl { display: flex; flex-wrap: wrap; gap: var(--fact-gap); margin: 0; }
+.stage-dl div { min-width: 4.5em; }
+.stage-dl .where { flex-basis: 100%; }
+.stage-dl dt { font-size: var(--fs-label); color: var(--dim); }
+.stage-dl dd { margin: 0; font-variant-numeric: tabular-nums; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.stage-dl dd.tempo { color: var(--amber); }
+.stage-dl dd.quiet { color: var(--mut); font-weight: 500; }
+.stage-empty { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; }
+.stage.has-song .stage-empty { display: none; }
+.stage:not(.has-song) .stage-wave, .stage:not(.has-song) .stage-facts { visibility: hidden; }
+.figures { display: grid; grid-template-columns: 0.8fr 1.3fr 1fr 1.1fr; gap: var(--fig-gap); }
+.fig { padding: var(--fig-pad); display: flex; flex-direction: column; gap: var(--inner-gap-s); min-width: 0; }
+.fig h2 { font-size: var(--fs-label); font-weight: 600; color: var(--dim); letter-spacing: 0; }
+.fig .big { font-size: var(--fs-big); font-weight: 700; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; line-height: 1.1; }
+.fig .hist { width: 100%; height: var(--fig-h); display: block; }
+.fig-keys { align-items: flex-start; }
+.fig .wheel { width: var(--fig-h); height: var(--fig-h); display: block; align-self: center; overflow: visible; }
+.fig-list { justify-content: center; gap: var(--inner-gap-xs); }
+.fig-list p { display: flex; justify-content: space-between; gap: var(--fig-gap); font-size: var(--fs-note); color: var(--mut); }
+.fig-list b { color: var(--tx); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.fig-list b.later { color: var(--dim); font-weight: 500; }
+.wall-card { display: flex; flex-direction: column; gap: var(--inner-gap); }
+.wall-head { display: flex; align-items: baseline; gap: var(--fig-gap); min-width: 0; }
+.wall-head h2 { font-size: var(--fs-head); flex: none; }
+.wall-name { font-size: var(--fs-note); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.wall { width: 100%; height: var(--wall-h); display: block; border-radius: var(--r-wall); cursor: crosshair; }
+.wall:focus-visible { outline: 2px solid var(--acc); outline-offset: 3px; }
+.run-list summary { cursor: pointer; color: var(--mut); font-size: var(--fs-note); padding: 2px 0; }
+.run-list .log { max-height: 220px; margin-top: 8px; }
+.finished .wall-card { max-width: 52rem; width: 100%; }
+@media (max-width: 860px) { .figures { grid-template-columns: 1fr 1fr; } .stage { flex-direction: column; align-items: stretch; } .stage-wave { width: 100%; } }
+
+/* moments: a second or two of motion, never a pop-up (none at all under reduced motion) */
+@media (prefers-reduced-motion: no-preference) {
+  .progress.moment > div { animation: sweep var(--t-moment) ease-out 1; background-image: linear-gradient(90deg, var(--acc) 0%, #efe6ff 50%, var(--acc) 100%); background-size: 200% 100%; }
+  .card.moment { animation: glow var(--t-moment) ease-out 1; }
+  .wheel.moment { animation: turn var(--t-moment) cubic-bezier(.3, 0, .2, 1) 1; }
+  .wall.settle { animation: settle var(--t-moment) ease-out 1; }
+}
+@keyframes sweep { from { background-position: 100% 0; } to { background-position: -100% 0; } }
+@keyframes glow { 0% { box-shadow: 0 0 0 0 rgba(180, 144, 255, 0); } 30% { box-shadow: 0 0 0 2px rgba(180, 144, 255, 0.55); } 100% { box-shadow: 0 0 0 0 rgba(180, 144, 255, 0); } }
+@keyframes turn { from { transform: rotate(0); } to { transform: rotate(360deg); } }
+@keyframes settle { from { clip-path: inset(0 0 100% 0); } to { clip-path: inset(0 0 0 0); } }
+@media (prefers-reduced-motion: reduce) { .saying, .stage-facts { transition: none; } }
+
 /* the finished screen */
 .finished { padding: 32px 24px; display: flex; flex-direction: column; align-items: center; gap: 16px; }
-.finished .summary { display: flex; flex-direction: column; gap: 6px; max-width: 34rem; width: 100%; }
+.finished .summary { display: flex; flex-direction: column; gap: var(--inner-gap-s); max-width: 34rem; width: 100%; }
 .finished .summary .indent { padding-left: 14px; color: var(--mut); }
 .to-ipad { max-width: 34rem; width: 100%; display: flex; flex-direction: column; gap: 8px; }
 .to-ipad ul { margin: 0; padding-left: 18px; color: var(--mut); display: flex; flex-direction: column; gap: 6px; }
