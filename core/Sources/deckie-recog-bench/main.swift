@@ -188,6 +188,7 @@ case "match":
     pairing.entriesPerSlot = o.int("--entries-per-slot", pairing.entriesPerSlot)
     pairing.keepOneIn = o.int("--keep-one-in", pairing.keepOneIn)
     pairing.minAnchorLevel = o.int("--min-anchor-level", pairing.minAnchorLevel)
+    pairing.anchorShare = o.double("--anchor-share", pairing.anchorShare)
     // Four points: --points 4 (hashed like triples, with the speed search), or --ratio-quads (no speed search).
     pairing.points = o.int("--points", pairing.points)
     if o.flags.contains("--ratio-quads") { pairing.ratio = true }

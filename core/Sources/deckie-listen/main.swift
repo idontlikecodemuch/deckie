@@ -81,8 +81,9 @@ if let path = values["--index"] {
         songs.removeAll { out.contains($0.id) }
     }
     var pairing = PairingConfig.booth
+    if flags.contains("--small") { pairing = PairingConfig.boothSmall }
     if let keep = values["--keep-one-in"].flatMap(Int.init) { pairing.keepOneIn = keep }
-    index = RecognitionIndex(songs: songs, pairing: pairing)
+    index = RecognitionIndex(songs: songs, pairing: pairing, findCopies: !flags.contains("--no-copy-finding"))
     if let save = values["--save-index"] { do { try index.write(to: URL(fileURLWithPath: save)) } catch { fail("\(error)") } }
 } else { fail("give --index FILE or --prints DIR") }
 FileHandle.standardError.write(Data(String(format: "index: %d songs, %.1f MB (%.1f KB a song), ready in %.0f ms\n", index.songCount,

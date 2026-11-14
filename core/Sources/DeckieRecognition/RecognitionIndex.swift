@@ -48,16 +48,32 @@ public struct PairingConfig: Sendable, Equatable, Codable {
     /// Only a song's points of this strength level or more (0 to 3) are anchors in the index; every point can still
     /// be a target, and every point of a query is tried as an anchor. Level 2 keeps the stronger half.
     public var minAnchorLevel = 0
+    /// The share of a song's points that are anchors in the index, chosen locally: a point is an anchor when it is
+    /// among the strongest this share of the points within a second either side of it (by strength level; equals
+    /// are told apart by a fixed scramble of the point's own time and pitch, so the choice is the same every time).
+    /// Unlike `minAnchorLevel`, whose fixed levels leave a passage of modest points with no anchors at all (11 clean
+    /// queries in 500 were missed that way), every passage keeps its share. 1 keeps all.
+    public var anchorShare = 1.0
 
     public init() {}
 
     /// The settings the booth's index is built with (chosen in the size study; docs/research/w4-recognition-complete.md).
-    /// Three-point hashes from the strongest points, one hash kept in four, four bytes an entry: 40 KB a song in the
-    /// index (the size study's choice: a quarter of the full index for 3 to 6 points of accuracy, made up by the
-    /// listener's denser listen, wider check and longer look).
+    /// Two-point hashes; anchors are the strongest half of the points around them; three hashes an anchor (three
+    /// slices of the target zone, the strongest point of each): about 41 KB a song in the index. The size study's
+    /// choice (docs/research/w4-recognition-complete.md): it names more songs in noise than any other index tried,
+    /// at a sixth of the first trial's memory.
     public static var booth: PairingConfig {
         var p = PairingConfig()
-        p.keepOneIn = 4
+        p.triples = false
+        p.anchorShare = 0.5
+        p.fanOut = 3
+        return p
+    }
+    /// The same with the strongest quarter as anchors: about 21 KB a song, for a crate of several thousand songs
+    /// on a device short of storage or memory. It gives up about eight points in noise.
+    public static var boothSmall: PairingConfig {
+        var p = booth
+        p.anchorShare = 0.25
         return p
     }
 
@@ -186,7 +202,7 @@ public struct RecognitionIndex: Sendable {
         self.stamp = stamp
         var pairing = pairing
         if pairing.triples {
-            let share = [1.0, 0.75, 0.5, 0.25][max(0, min(3, pairing.minAnchorLevel))]   // the levels are quartiles
+            let share = [1.0, 0.75, 0.5, 0.25][max(0, min(3, pairing.minAnchorLevel))] * pairing.anchorShare   // the levels are quartiles
             let perAnchor = pairing.ratio ? pairing.ratioFar : (pairing.points == 4 ? pairing.quadCount : pairing.tripleCount)
             let entries = Int(Double(songs.reduce(0) { $0 + $1.landmarks.count } * perAnchor) * share) / max(1, pairing.keepOneIn)
             var bits = 12
@@ -221,11 +237,13 @@ public struct RecognitionIndex: Sendable {
         let unit = p.pitchBinUnits
         var slotBin = [Int](repeating: 0, count: p.fanOut), slotGap = [Int](repeating: 0, count: p.fanOut)
         var slotLevel = [Int8](repeating: 0, count: p.fanOut)
+        let isAnchor = Self.anchors(share: p.anchorShare, songCount: songs.count, pointStart: pointStart, pointFrame: pointFrame,
+                                    pointPitch: pointPitch, pointLevel: pointLevel)
         func forEachPair(_ body: (_ hash: Int, _ anchor: Int) -> Void) {
             for s in 0..<songs.count {
                 let lo = pointStart[s], hi = pointStart[s + 1]
                 for i in lo..<hi {
-                    if Int(pointLevel[i]) < p.minAnchorLevel { continue }
+                    if Int(pointLevel[i]) < p.minAnchorLevel || !isAnchor[i] { continue }
                     let a = Int(pointPitch[i]) / unit, ta = Int(pointFrame[i])
                     var filled = 0   // bit k set once slice k has its point
                     var j = i + 1
@@ -309,6 +327,30 @@ public struct RecognitionIndex: Sendable {
             for h in 0..<(offsets.count - 1) where Int(offsets[h + 1] - offsets[h]) > size { n += Int(offsets[h + 1] - offsets[h]) }
             return Double(n) / Double(max(1, entries.count))
         }
+    }
+
+    /// Which points are anchors when only a share of them is (see `PairingConfig.anchorShare`).
+    static func anchors(share: Double, songCount: Int, pointStart: [Int], pointFrame: [Int32], pointPitch: [UInt16], pointLevel: [Int8]) -> [Bool] {
+        var out = [Bool](repeating: true, count: pointFrame.count)
+        guard share < 1 else { return out }
+        let reach: Int32 = 62            // frames: a second
+        for s in 0..<songCount {
+            let lo = pointStart[s], hi = pointStart[s + 1]
+            var a = lo, b = lo           // the window [a, b) of points within a second of point i
+            var levels = [Int](repeating: 0, count: 4)
+            for i in lo..<hi {
+                while b < hi && pointFrame[b] <= pointFrame[i] + reach { levels[Int(pointLevel[b])] += 1; b += 1 }
+                while pointFrame[a] < pointFrame[i] - reach { levels[Int(pointLevel[a])] -= 1; a += 1 }
+                let mine = Int(pointLevel[i])
+                var stronger = 0
+                for l in (mine + 1)..<4 { stronger += levels[l] }
+                // A fixed scramble of the point's time (within its song) and pitch, as a fraction.
+                let mix = (UInt64(UInt32(pointFrame[i] - pointFrame[lo])) << 16 | UInt64(pointPitch[i])) &* 0x9E37_79B9_7F4A_7C15
+                let u = Double(mix >> 40) / Double(1 << 24)
+                out[i] = Double(stronger) + Double(levels[mine]) * u < share * Double(b - a)
+            }
+        }
+        return out
     }
 
     /// The song whose stretch of the timeline (its padding, then its frames) holds `frame`.
