@@ -408,7 +408,8 @@ final class EngineProcess: @unchecked Sendable {
         let home = root.appendingPathComponent("home")
         #expect(musicFiles(under: home).isEmpty)
         // Listen reads the song off the disc, as WAV, handed over in chunks; nothing is written.
-        let songsEvent = try #require(e.last("songs"))
+        // The songs event may arrive a moment after the state event on a slow machine: wait for one that has songs.
+        let songsEvent = try #require(e.wait { $0["event"] as? String == "songs" && (($0["songs"] as? [[String: Any]])?.isEmpty == false) })
         let first = try #require((songsEvent["songs"] as? [[String: Any]])?.first?["id"] as? String)
         let mark = e.received.count
         let audio = try e.request("song.audio", ["song": first], seconds: 60)
