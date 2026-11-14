@@ -49,6 +49,9 @@ public struct BuildOptions: Sendable {
     /// Songs read one at a time from somewhere that is not a folder (a music CD read by sector), in place of walking
     /// `folder`; `jobs` is then 1.
     public var files: BuildFiles?
+    /// Stop asked for (Desk's Stop button): files not yet started are not read, the ones being read finish, and the
+    /// crate is written with what was read. A stopped build's result says so (`BuildResult.stopped`).
+    public var stop: BuildStop?
 
     public init(folder: URL, output: URL, rekordbox: URL? = nil, jobs: Int = defaultJobs, fileBPMTags: Bool = false,
                 fresh: Bool = false, name: String? = nil, device: String = Analysis.platform,
@@ -109,6 +112,16 @@ public enum BuildEvent: Sendable {
     case writing(tracks: Int)
 }
 
+/// A stop asked for while a build goes, from any thread: the build starts no further file, finishes the ones it is
+/// reading and writes the crate with what was read. Nothing about how a file is analysed changes.
+public final class BuildStop: @unchecked Sendable {
+    private let lock = NSLock()
+    private var asked = false
+    public init() {}
+    public func set() { lock.lock(); asked = true; lock.unlock() }
+    public var isSet: Bool { lock.lock(); defer { lock.unlock() }; return asked }
+}
+
 /// What a build did.
 public struct BuildResult: Sendable {
     public var crate: Crate
@@ -134,6 +147,9 @@ public struct BuildResult: Sendable {
     public var placesRead: [String: [ReadPlace]] = [:]
     /// Covers (D36): songs with one, distinct covers and their bytes, and the pictures that could not be used.
     public var covers = CoverCounts()
+    /// The build was stopped (`BuildOptions.stop`) before every file was read: the files not reached are not in the
+    /// crate, not in the import log and not counted in `filesSeen`.
+    public var stopped = false
 
     /// The summary printed at the end: the counts, the files not in the crate by reason and extension, the files in
     /// it with damaged frames, and where the import log is.
@@ -352,6 +368,8 @@ public final class Builder: Sendable {
         let queued = queue
         let engine = total == 0 ? nil : try analyser ?? Builder.makeAnalyser(jobs: min(options.jobs, total))
         runParallel(count: total, workers: options.jobs) { [self] k in
+            // Stop asked for: no further file is started; the ones being read finish.
+            if self.options.stop?.isSet == true { return }
             let i = queued[k]
             var f = files[i]
             var seconds: Double? = nil
@@ -410,6 +428,8 @@ public final class Builder: Sendable {
         }
         if let e = stopped.error { throw e }
         done.merge(results.done) { _, new in new }
+        // A stopped build writes the crate with what was read; the files it did not reach are left out altogether.
+        let notReached = options.stop?.isSet == true ? files.filter { done[$0.rel] == nil }.count : 0
         // Covers (D36, `BuildCovers`): each file's picture found and its thumbnail made, or taken from the last run.
         let covers = BuildCovers(work: work, output: options.output, enabled: options.files == nil)
         covers.find(files.filter { if case .ok? = done[$0.rel] { return true } else { return false } }, jobs: options.jobs)
@@ -482,6 +502,7 @@ public final class Builder: Sendable {
                 }
                 read[id, default: []].append((i, p))
             case nil:
+                if notReached > 0 { continue }
                 entries.append(.init(rel: f.rel, ext: f.ext, reason: Reason.analysisError, message: "not finished"))
             }
         }
@@ -563,7 +584,7 @@ public final class Builder: Sendable {
         let coverCounts = try covers.place(&tracks)
         let builtAt = utcNow()
         // built_by is the device label the records' analysis.device carries, never the machine's own name.
-        let log = CrateManifest.ImportLog(builtBy: options.device, builtAt: builtAt, filesSeen: files.count + keptFiles,
+        let log = CrateManifest.ImportLog(builtBy: options.device, builtAt: builtAt, filesSeen: files.count - notReached + keptFiles,
                                           tracks: tracks.count, entries: entries, rekordbox: rbSummary)
         let devices = Set((existing?.manifest.devicesSeen ?? []) + [options.device]).sorted()
         let manifest = CrateManifest(
@@ -573,12 +594,13 @@ public final class Builder: Sendable {
         let crate = Crate(manifest: manifest, tracks: tracks.sorted { $0.id.utf8.lexicographicallyPrecedes($1.id.utf8) })
         progress(.writing(tracks: tracks.count))
         do { try CrateWriter.write(crate, to: options.output) } catch { covers.undo(); throw error }
-        var result = BuildResult(crate: crate, output: options.output, filesSeen: files.count,
+        var result = BuildResult(crate: crate, output: options.output, filesSeen: files.count - notReached,
                                  analysed: results.analysedSeconds.count, analysisSeconds: results.analysedSeconds,
                                  reused: readOrder.filter { !results.analysedIDs.contains($0) }.count,
                                  entries: entries, rekordbox: rbSummary, seconds: Date().timeIntervalSince(t0),
                                  fingerprinted: results.fingerprinted)
         result.covers = coverCounts
+        result.stopped = notReached > 0
         let inCrate = Set(crate.tracks.map(\.id))
         for (id, list) in read where inCrate.contains(id) {
             result.placesRead[id] = list.map { ReadPlace(place: $0.place, rel: String(files[$0.file].rel.dropFirst(prefix.count))) }

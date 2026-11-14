@@ -186,6 +186,19 @@
   --menu-sep-h: 1px;
   --text-col: 34rem;                      /* the first screen's words */
   --icon-size: 56px;
+  /* new (research AE): adding music, the crate's name and its icon. Placeholders until the design pass. */
+  --crate-icon: 18px;                     /* the crate's icon beside its name, in the bar and on the run screen */
+  --crate-icon-big: 64px;                 /* and on the first screen */
+  --crate-head-gap: 6px;
+  --way-icon: 16px;                       /* a way's drawing on its button and menu item */
+  --way-gap: 6px;                         /* between a way's drawing and its word */
+  --pick-icon: 22px;
+  --pick-gap: 10px; --pick-pad: 8px 10px; --pick-rows-gap: 2px;
+  --name-row-gap: 8px; --name-field-w: 260px;
+  --crate-add-gap: 10px; --crate-add-pad: 6px 14px;
+  --run-head-gap: 10px;
+  --spinner: 14px; --spinner-line: 2px; --spinner-turn: 0.9s;
+  --count-show-after: 400;                /* milliseconds a count runs before the window shows it */
   --icon-line: 1.5;                       /* the first and finished screens' drawings */
   --banner-dot: 8px;
   --run-max-w: 980px;
@@ -639,3 +652,26 @@ dialog.wide.lookup { max-width: min(var(--lookup-wide-max-w), var(--lookup-wide-
 .sent-list { list-style: none; margin: var(--sent-list-margin); padding: 0; max-height: var(--sent-list-max-h); overflow: auto; display: grid; gap: var(--sent-list-gap); }
 .sent-list li { background: var(--bg); border-radius: var(--r-field); padding: var(--sent-item-pad); font-size: var(--fs-sent-item); }
 .sent-list .addr { color: var(--dim); font-size: var(--fs-sent-addr); word-break: break-all; -webkit-user-select: text; user-select: text; }
+
+/* Adding music (research AE): the three ways, the pickers, the count, and the crate's name with its icon. */
+.defs { position: absolute; width: 0; height: 0; overflow: hidden; }
+.crate-head { display: inline-flex; align-items: center; gap: var(--crate-head-gap); }
+.crate-icon { width: var(--crate-icon); height: var(--crate-icon); color: var(--acc); flex: none; }
+.crate-name { font-weight: var(--fw-crate-button); font-size: var(--fs-crate-button); background: none; padding: var(--space-crate-button); }
+.crate-name:hover:not(:disabled) { background: var(--control); }
+.icon.crate-big { width: var(--crate-icon-big); height: var(--crate-icon-big); }
+.ways { display: inline-flex; flex-wrap: wrap; gap: var(--actions-gap); }
+.way, .menu [role=menuitem] { display: inline-flex; align-items: center; gap: var(--way-gap); }
+.way-icon { width: var(--way-icon); height: var(--way-icon); flex: none; }
+.name-row { display: inline-flex; align-items: center; gap: var(--name-row-gap); }
+.name-row input { width: var(--name-field-w); }
+.pick-list { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--pick-rows-gap); }
+.pick-row { display: flex; align-items: center; gap: var(--pick-gap); width: 100%; text-align: left; background: none; padding: var(--pick-pad); border-radius: var(--r-field); }
+.pick-row:hover, .pick-row:focus-visible { background: var(--control-hi); }
+.pick-icon { width: var(--pick-icon); height: var(--pick-icon); flex: none; color: var(--acc); }
+.pick-text { display: flex; flex-direction: column; }
+.crate-add { display: flex; align-items: center; gap: var(--crate-add-gap); padding: var(--crate-add-pad); border-top: var(--hair-line) solid var(--hair); flex: none; }
+.crate-add .grow, .run-head .grow, dialog .buttons .grow { flex: 1; }
+.run-head { display: flex; align-items: center; gap: var(--run-head-gap); }
+.spinner { display: inline-block; width: var(--spinner); height: var(--spinner); border-radius: var(--r-pill); border: var(--spinner-line) solid var(--hair);
+           border-top-color: var(--acc); animation: turn var(--spinner-turn) linear infinite; vertical-align: middle; }

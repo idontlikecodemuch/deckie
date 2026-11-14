@@ -223,7 +223,7 @@ std::wstring registry_text(HKEY root, const wchar_t *key, const wchar_t *name) {
   return text;
 }
 
-char *choose(deskshell *s, const char *title, bool folders, const char *, const char *) {
+char *choose(deskshell *s, const char *title, bool folders, const char *, const char *, const char *start = nullptr) {
   IFileOpenDialog *dialog = nullptr;
   if (FAILED(CoCreateInstance(CLSID_FileOpenDialog, nullptr, CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&dialog)))) {
     return nullptr;
@@ -235,6 +235,15 @@ char *choose(deskshell *s, const char *title, bool folders, const char *, const 
   dialog->SetOptions(options);
   std::wstring t = widen(title);
   dialog->SetTitle(t.c_str());
+  if (start && *start) {
+    // Opens inside the folder given (a big drive's top).
+    IShellItem *folder = nullptr;
+    std::wstring w = widen(start);
+    if (SUCCEEDED(SHCreateItemFromParsingName(w.c_str(), nullptr, IID_PPV_ARGS(&folder)))) {
+      dialog->SetFolder(folder);
+      folder->Release();
+    }
+  }
   char *out = nullptr;
   HWND owner = s ? static_cast<HWND>(webview_get_window(s->w)) : nullptr;
   if (SUCCEEDED(dialog->Show(owner))) {
@@ -252,15 +261,16 @@ char *choose(deskshell *s, const char *title, bool folders, const char *, const 
   return out;
 }
 #elif defined(WEBVIEW_GTK)
-char *choose(deskshell *s, const char *title, bool folders, const char *accept, const char *cancel) {
+char *choose(deskshell *s, const char *title, bool folders, const char *accept, const char *cancel, const char *start = nullptr) {
   GtkWindow *owner = s ? static_cast<GtkWindow *>(webview_get_window(s->w)) : nullptr;
 #if GTK_MAJOR_VERSION >= 4
-  (void)owner; (void)title; (void)folders; (void)accept; (void)cancel;
+  (void)owner; (void)title; (void)folders; (void)accept; (void)cancel; (void)start;
   return nullptr; // GTK 4 has no blocking dialog; this build uses GTK 3 (webkit2gtk-4.1).
 #else
   GtkWidget *dialog = gtk_file_chooser_dialog_new(
       title, owner, folders ? GTK_FILE_CHOOSER_ACTION_SELECT_FOLDER : GTK_FILE_CHOOSER_ACTION_OPEN, cancel,
       GTK_RESPONSE_CANCEL, accept, GTK_RESPONSE_ACCEPT, nullptr);
+  if (start && *start) gtk_file_chooser_set_current_folder(GTK_FILE_CHOOSER(dialog), start);
   char *out = nullptr;
   if (gtk_dialog_run(GTK_DIALOG(dialog)) == GTK_RESPONSE_ACCEPT) {
     char *path = gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(dialog));
@@ -274,7 +284,7 @@ char *choose(deskshell *s, const char *title, bool folders, const char *accept, 
 #endif
 }
 #else
-char *choose(deskshell *, const char *, bool, const char *, const char *) { return nullptr; }
+char *choose(deskshell *, const char *, bool, const char *, const char *, const char * = nullptr) { return nullptr; }
 #endif
 
 } // namespace
@@ -332,6 +342,10 @@ void deskshell_destroy(deskshell_t s) {
 
 char *deskshell_choose_folder(deskshell_t s, const char *title, const char *accept, const char *cancel) {
   return choose(s, title, true, accept, cancel);
+}
+
+char *deskshell_choose_folder_in(deskshell_t s, const char *title, const char *accept, const char *cancel, const char *start) {
+  return choose(s, title, true, accept, cancel, start);
 }
 
 char *deskshell_choose_file(deskshell_t s, const char *title, const char *accept, const char *cancel) {

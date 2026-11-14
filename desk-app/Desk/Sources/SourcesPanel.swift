@@ -130,7 +130,7 @@ struct SourcesPanel: View {
         }
         .alert(prompt?.title ?? "", isPresented: Binding(get: { prompt != nil }, set: { if !$0 { prompt = nil } })) {
             TextField(Words.nameField, text: $promptText)
-            Button(Words.ok) { commit() }
+            Button(Words.renameButton) { commit() }
             Button(Words.cancel, role: .cancel) { prompt = nil }
         }
     }
@@ -185,39 +185,5 @@ struct SourcesPanel: View {
         case let .renameSource(s): model.renameSource(s, to: promptText)
         case let .renameFolder(s, f): model.renameFolder(f, inSource: s, to: promptText)
         }
-    }
-}
-
-/// Add music: the CDs and drives mounted on this Mac, by their own names, then a folder chooser for anything else.
-/// Each is read as it is, into the crate showing (DeskModel.addSource).
-struct AddMusicMenu: View {
-    @EnvironmentObject var model: DeskModel
-    var label: String? = nil
-    var body: some View {
-        Menu {
-            let mounted = model.mountedSources
-            if mounted.isEmpty && model.musicCDs.isEmpty { Text(Words.noDriveFound) }
-            ForEach(model.musicCDs, id: \.location) { cd in
-                Button(MusicCDItem.label(cd)) { model.addMusicCD(cd) }
-            }
-            ForEach(mounted, id: \.url) { m in
-                Button(m.name) { model.addSource(m.url, name: m.name) }
-            }
-            Divider()
-            Button(Words.chooseFolder) { model.askSourceFolder() }
-        } label: {
-            Label(label ?? model.current.map { Words.addMusicTo($0.name) } ?? Words.addMusic, systemImage: "externaldrive.badge.plus")
-        }
-        .help(Words.addMusicHelp)
-        .disabled(model.running)
-    }
-}
-
-/// A music CD as Add music lists it: "Music CD, 14 songs, 71:12  ·  music CD in Audio CD".
-enum MusicCDItem {
-    static func label(_ cd: MusicCDs.Found) -> String {
-        let secs = Int(cd.seconds.rounded())
-        let name = Words.c("musicCDPlaceholder", cd.songs, ["length": Words.musicCDLength(secs)])
-        return Words.t("musicCDItem", ["name": name, "drive": cd.drive])
     }
 }

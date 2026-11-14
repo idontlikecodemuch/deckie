@@ -56,7 +56,8 @@ enum Tour {
             Step(name: "17-new-crate", js: "desk.request('crate.new');", event: "state", delay: 1.0),
         ]
         let arguments = ProcessInfo.processInfo.arguments
-        let steps = arguments.contains("--lookup") ? lookupSteps(click)
+        let steps = arguments.contains("--add-music") ? addMusicSteps(click)
+            : arguments.contains("--lookup") ? lookupSteps(click)
             : arguments.contains("--naming") ? namingSteps(click)
             : arguments.contains("--run-screen") ? runScreenSteps(click) : tourSteps
         if arguments.contains("--record") { record(desk, out: out.appendingPathComponent("frames")) }
@@ -202,6 +203,35 @@ enum Tour {
     /// The run screen (D37): the run from the first screen to the finished one, with a picture at a few song counts
     /// (`DECKIE_TOUR_SONGS`, the songs in `--music`, sets them), then a line of the wall pointed at and one chosen with
     /// the keyboard.
+    /// Adding music (research AE): the three ways on the first screen and in the bar, Add drive's list, a big drive's
+    /// choice, Add CD's list, the question before a large read with the new crate's name, the run renamed and
+    /// stopped, Carry on, the finished screen's Add more music, the crate screen's row and the header's rename. Needs
+    /// DECKIE_DESK_DRIVES with a "Stick 3" and a big "Big Drive" (DECKIE_DESK_BIG_DRIVE_BYTES) and
+    /// DECKIE_DESK_ASK_ABOVE_SONGS below the stick's songs.
+    static func addMusicSteps(_ click: (String) -> String) -> [Step] {
+        let row = { (name: String) in "[...document.querySelectorAll('#pick-list .pick-row')].find(function (b) { return b.textContent.indexOf(\(js(name))) >= 0; }).click();" }
+        return [
+            Step(name: "a01-first-screen", delay: 2.0),
+            Step(name: "a02-add-menu", js: click("#add-button"), delay: 1.0),
+            Step(name: "a03-add-drive", js: "document.querySelector('#add-menu [role=menuitem]').click();", delay: 1.2),
+            Step(name: "a04-big-drive", js: row("Big Drive"), delay: 1.0),
+            Step(name: nil, js: "document.getElementById('bigdrive').close('cancel');", delay: 0.4),
+            Step(name: "a05-add-cd", js: "document.querySelectorAll('#first-ways button')[1].click();", delay: 1.2),
+            Step(name: nil, js: "document.getElementById('pick').close('cancel'); var f = document.getElementById('first-name'); f.value = 'Gig Friday'; f.dispatchEvent(new Event('change'));", delay: 0.6),
+            Step(name: nil, js: "document.querySelectorAll('#first-ways button')[0].click();", delay: 1.2),
+            Step(name: "a06-ask", js: row("Stick 3"), event: "add.counted", delay: 1.0),
+            Step(name: "a07-running", js: click("#askread-start"), event: "run.started", delay: 2.0),
+            Step(name: "a08-rename-while-reading", js: click("#run-name-button"), delay: 0.8),
+            Step(name: nil, js: "document.getElementById('ask-input').value = 'Gig Friday late'; document.getElementById('ask').close('ok');", delay: 0.6),
+            Step(name: "a09-stopped", js: click("#run-stop"), event: "run.finished", delay: 1.5),
+            Step(name: "a10-finished", js: click("#finished-carryon"), event: "run.finished", delay: 1.5),
+            Step(name: "a11-add-more-menu", js: click("#finished-add"), delay: 0.8),
+            Step(name: nil, js: click("#finished-add"), delay: 0.3),
+            Step(name: "a12-crate", js: click("#finished-songs"), delay: 1.2),
+            Step(name: "a13-rename-header", js: click("#crate-name-button"), delay: 0.8),
+        ]
+    }
+
     static func runScreenSteps(_ click: (String) -> String) -> [Step] {
         let total = ProcessInfo.processInfo.environment["DECKIE_TOUR_SONGS"].flatMap(Int.init) ?? 30
         let done = { (n: Int) -> ([String: Any]) -> Bool in

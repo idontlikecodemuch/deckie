@@ -175,6 +175,35 @@ enum Look {
         static let sentSheetWidth: CGFloat = 760, sentSheetHeight: CGFloat = 560
     }
 
+    /// new (research AE): adding music, the crate's name and its icon. Placeholders until the design pass.
+    enum Add {
+        /// The gap between the three ways' buttons, and between a picker's rows.
+        static let waysGap: CGFloat = 10
+        static let rowsGap: CGFloat = 4
+        static let sheetGap: CGFloat = 12
+        static let rowGap: CGFloat = 10
+        static let rowPaddingV: CGFloat = 4
+        /// The pickers' and the question's width, a row's icon, the crate name field's width.
+        static let sheetWidth: CGFloat = 460
+        static let rowIcon: CGFloat = 24
+        static let nameFieldWidth: CGFloat = 280
+        /// The crate's icon: beside its name in the window's header and on the run screen, and on the first screen.
+        static let crateIconHeader: CGFloat = 18
+        static let crateIconFirst: CGFloat = 64
+        static let headerGap: CGFloat = 6
+        static let renameWidth: CGFloat = 280
+        static let renamePadding: CGFloat = 14
+        /// The crate screen's row of ways, under the songs.
+        static let crateRowH: CGFloat = 12, crateRowV: CGFloat = 6
+        /// Seconds a count runs before Desk shows it (a stick is counted before the eye sees a sheet).
+        static let showCountAfter = 0.4
+        static let rowName = Font.body
+        static let rowDetail = Font.caption
+        static let count = Font.title3.monospacedDigit()
+        static let headerName = Font.headline
+        static let crateRow = Font.callout
+    }
+
     /// Corners, in points.
     enum Shape {
         static let banner: CGFloat = 6
