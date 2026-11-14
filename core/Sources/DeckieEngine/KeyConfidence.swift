@@ -31,6 +31,26 @@ public struct KeyConfidence: Sendable, Equatable {
     /// The two levels.
     public static let sure = 1.0, unsure = 0.45
 
+    /// The three-answer reader's levels on the same scale (engine 0.5.0, D33; `ThreeAnswerKey`):
+    ///
+    ///   a key: both readings name the same home note and the same mode on it                       1.0
+    ///   the home note, mode open: they name the same home note and differ on the mode             0.45
+    ///   not sure: they differ on the home note                                                      0.2
+    ///
+    /// The second and third are under the line that sets `key_uncertain`, and are told apart by their value. The
+    /// record's `key.camelot` is then the reader's best guess (row B's home note, row A's mode), which is not for
+    /// showing: on unseen dance music it was right on about 37 percent of the not-sure songs (research X2).
+    public static let threeAnswerPrefix = "three-answer (hpcp with overtones taken off, note transcription): "
+    public static let modeOpen = 0.45, notSure = 0.2
+
+    public static func threeAnswer(_ a: ThreeAnswerKey.Answer) -> KeyConfidence {
+        switch a {
+        case .key: return KeyConfidence(value: sure, rule: threeAnswerPrefix + "a key: the two readings agree on the home note and the mode")
+        case .home: return KeyConfidence(value: modeOpen, rule: threeAnswerPrefix + "home note, mode open: the two readings agree on the home note only")
+        case .notSure: return KeyConfidence(value: notSure, rule: threeAnswerPrefix + "not sure: the two readings differ on the home note")
+        }
+    }
+
     /// The confidence of a decision of the HPCP key method.
     public static func hpcp(_ d: HPCPKey.Decision) -> KeyConfidence {
         if d.sure {
