@@ -197,6 +197,8 @@ enum Tour {
             Step(name: "l15-sentence-disc", js: scope("disc:"), delay: 1.2),
             Step(name: "l16-disc-not-known", js: click("#lookup-go"), event: "lookup.finished", delay: 1.0),
         ]
+    }
+
     /// The run screen (D37): the run from the first screen to the finished one, with a picture at a few song counts
     /// (`DECKIE_TOUR_SONGS`, the songs in `--music`, sets them), then a line of the wall pointed at and one chosen with
     /// the keyboard.
