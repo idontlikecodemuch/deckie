@@ -96,6 +96,7 @@ let package = Package(
         .executableTarget(name: "deckie-make", dependencies: ["DeckiePC"]),
         .target(name: "DeckieRecognition", dependencies: ["DeckieCore"]),
         .executableTarget(name: "deckie-recog-bench", dependencies: ["DeckieRecognition", "DeckieDecode", "DeckieCore"]),
+        .executableTarget(name: "deckie-listen", dependencies: ["DeckieRecognition", "DeckieDecode"]),
         .testTarget(name: "DeckieRecognitionTests", dependencies: ["DeckieRecognition", "DeckieCore"]),
         .target(name: "DeckieTestSupport", dependencies: ["DeckieAudio", "DeckieCore", "DeckieDecode"],
                 path: "Tests/DeckieTestSupport"),
