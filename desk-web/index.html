@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'none'">
+<title>Deckie Desk</title>
+<link rel="stylesheet" href="desk.css">
+</head>
+<body>
+<!-- Deckie Desk's window on Windows and Linux (D32). No Deckie logic and no words live here: the engine sends what to
+     show and the words to show it with (docs/architecture/desk-protocol.md); desk.js draws it. Every element with
+     data-w gets the word of that name; data-w-label sets aria-label, data-w-title the tooltip. -->
+<header class="bar" role="toolbar" data-w-label="appName">
+  <div class="menu-wrap">
+    <button id="crate-button" class="crate-button" aria-haspopup="menu" aria-expanded="false" data-w-title="crateMenuHelp"><span id="crate-name"></span><span class="chev" aria-hidden="true">▾</span></button>
+    <ul id="crate-menu" class="menu" role="menu" hidden></ul>
+  </div>
+  <span class="grow"></span>
+  <button id="undo" class="small" disabled></button>
+  <button id="redo" class="small" disabled></button>
+  <div class="menu-wrap">
+    <button id="add-button" aria-haspopup="menu" aria-expanded="false" data-w-title="addMusicHelp"><span id="add-label"></span><span class="chev" aria-hidden="true">▾</span></button>
+    <ul id="add-menu" class="menu right" role="menu" hidden></ul>
+  </div>
+  <button id="sources-button" aria-pressed="false" data-w-title="sourcesHelp" hidden></button>
+  <button id="log-button" data-w="whatDidntGoIn" hidden></button>
+  <div class="menu-wrap">
+    <button id="more-button" aria-haspopup="menu" aria-expanded="false" data-w-label="moreMenu" data-w-title="moreMenu">⋯</button>
+    <ul id="more-menu" class="menu right" role="menu" hidden></ul>
+  </div>
+  <button id="export-button" class="main" data-w="exportCrateFile" hidden></button>
+</header>
+
+<div id="pending" class="banner" role="status" hidden>
+  <span class="dot" aria-hidden="true"></span>
+  <span id="pending-text"></span>
+  <button id="carry-on" class="small" data-w="carryOn"></button>
+</div>
+
+<main>
+  <!-- The first screen: no crate showing yet. -->
+  <section id="first" class="screen center" aria-labelledby="first-title" hidden>
+    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M3 8l9-5 9 5v8l-9 5-9-5z"/><path d="M3 8l9 5 9-5M12 13v8"/></svg>
+    <h1 id="first-title" data-w="firstTitle"></h1>
+    <p id="first-body" class="body"></p>
+    <div class="actions">
+      <button id="first-add" class="main" data-w="addMusic"></button>
+      <button id="first-import" data-w="importCrateFile"></button>
+    </div>
+    <p class="dim" data-w="dropHere"></p>
+  </section>
+
+  <!-- The run: one progress bar. -->
+  <section id="run" class="screen" aria-labelledby="run-title" hidden>
+    <div class="run">
+      <h1 id="run-title" data-w="runTitle"></h1>
+      <p id="run-reading" class="mut"></p>
+      <div id="run-bar" class="progress waiting" role="progressbar" aria-labelledby="run-title" aria-valuemin="0" aria-valuemax="100"><div></div></div>
+      <div class="run-line" aria-live="polite" aria-atomic="true">
+        <span id="run-count"></span>
+        <span id="run-stage" class="mut"></span>
+        <span class="grow"></span>
+        <span id="run-left" class="mut"></span>
+      </div>
+      <ol id="run-log" class="log" role="log" aria-live="off" data-w-label="runTitle"></ol>
+    </div>
+  </section>
+
+  <!-- After a run. -->
+  <section id="finished" class="screen" aria-labelledby="finished-title" hidden>
+    <div class="finished">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M8 12.5l2.6 2.6L16 9.6"/></svg>
+      <h1 id="finished-title"></h1>
+      <div id="finished-summary" class="summary card"></div>
+      <p data-w="nextStep"></p>
+      <div class="actions">
+        <button id="finished-export" class="main" data-w="exportCrateFile"></button>
+        <button id="finished-log" data-w="whatDidntGoIn" hidden></button>
+        <button id="finished-songs" data-w="seeSongs"></button>
+      </div>
+      <p id="exported" class="exported" role="status" hidden><span id="exported-text"></span> <button id="exported-open" class="link" data-w="openFolder"></button></p>
+      <div class="to-ipad card">
+        <h2 data-w="toIPadTitle"></h2>
+        <ul>
+          <li data-w="toIPadStick"></li>
+          <li data-w="toIPadICloud"></li>
+          <li data-w="toIPadCable"></li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- The crate: its songs, and the sources panel. -->
+  <section id="crate" class="screen crate" hidden>
+    <div class="table-wrap">
+      <table id="songs" aria-rowcount="0">
+        <caption class="sr" id="songs-caption"></caption>
+        <thead><tr id="songs-head"></tr></thead>
+        <tbody id="songs-body"></tbody>
+      </table>
+      <p id="songs-empty" class="empty-filter" hidden></p>
+    </div>
+    <aside id="side" class="side" aria-labelledby="side-title" hidden>
+      <header><h2 id="side-title" data-w="sourcesTitle"></h2><button id="side-close" class="small" data-w="hideSources"></button></header>
+      <div class="scroll"><ul id="tree" class="tree"></ul>
+        <div id="tree-empty" class="center" hidden>
+          <p class="mut" data-w="nothingReadYet"></p>
+          <p class="mut" data-w="sourcesEmptyBody"></p>
+        </div>
+      </div>
+      <p class="hint" data-w="fixHint"></p>
+    </aside>
+  </section>
+</main>
+
+<footer id="status" class="status" hidden>
+  <b id="status-songs"></b>
+  <span id="status-unsigned"></span>
+  <button id="status-needname" class="link" aria-pressed="false" hidden></button>
+  <span id="status-only" hidden data-w="onlyNeedName"></span>
+  <button id="status-notin" class="link" hidden></button>
+  <span class="grow"></span>
+</footer>
+
+<div id="drop" class="drop" hidden><span data-w="dropHere"></span></div>
+
+<!-- One dialog for asking a name, one for confirming, one for a message, one for what did not go in. -->
+<dialog id="ask" aria-labelledby="ask-title">
+  <form method="dialog">
+    <h2 id="ask-title"></h2>
+    <label class="sr" for="ask-input" data-w="nameField"></label>
+    <input id="ask-input" type="text" autocomplete="off" spellcheck="false">
+    <div class="buttons"><button value="cancel" data-w="cancel"></button><button value="ok" class="main" data-w="ok"></button></div>
+  </form>
+</dialog>
+<dialog id="confirm" aria-labelledby="confirm-title" aria-describedby="confirm-body">
+  <form method="dialog">
+    <h2 id="confirm-title"></h2>
+    <p id="confirm-body" class="mut"></p>
+    <div class="buttons"><button value="cancel" data-w="cancel"></button><button id="confirm-ok" value="ok" class="main"></button></div>
+  </form>
+</dialog>
+<dialog id="message" aria-labelledby="message-title" aria-describedby="message-body">
+  <form method="dialog">
+    <h2 id="message-title" data-w="appName"></h2>
+    <div id="message-body"></div>
+    <div class="buttons"><button value="ok" class="main" data-w="ok"></button></div>
+  </form>
+</dialog>
+<dialog id="log" class="wide" aria-labelledby="log-title">
+  <form method="dialog">
+    <h2 id="log-title" data-w="whatDidntGoIn"></h2>
+    <p id="log-read" class="mut"></p>
+    <div id="log-groups" class="log-groups"></div>
+    <div class="buttons"><button value="ok" class="main" data-w="done"></button></div>
+  </form>
+</dialog>
+
+<div id="announce" class="sr" aria-live="assertive"></div>
+<script src="desk.js"></script>
+</body>
+</html>

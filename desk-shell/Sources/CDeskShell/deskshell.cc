@@ -118,6 +118,82 @@ std::string narrow(const wchar_t *w) {
   return s;
 }
 
+// Folders dropped on the window, on Windows. The page cannot learn a dropped folder's path; WebView2 lets it hand the
+// dropped items to the host (`chrome.webview.postMessageWithAdditionalObjects`), and this handler, beside the
+// `webview` library's own, reads their paths and passes them on as one message, {"type":"shell.droppedPaths",...}.
+class drop_handler : public ICoreWebView2WebMessageReceivedEventHandler {
+public:
+  explicit drop_handler(deskshell *s) : s_(s) {}
+  HRESULT STDMETHODCALLTYPE QueryInterface(REFIID riid, void **out) override {
+    if (riid == IID_IUnknown || riid == IID_ICoreWebView2WebMessageReceivedEventHandler) {
+      *out = this;
+      AddRef();
+      return S_OK;
+    }
+    *out = nullptr;
+    return E_NOINTERFACE;
+  }
+  ULONG STDMETHODCALLTYPE AddRef() override { return ++refs_; }
+  ULONG STDMETHODCALLTYPE Release() override {
+    ULONG r = --refs_;
+    if (r == 0) delete this;
+    return r;
+  }
+  HRESULT STDMETHODCALLTYPE Invoke(ICoreWebView2 *, ICoreWebView2WebMessageReceivedEventArgs *args) override {
+    ICoreWebView2WebMessageReceivedEventArgs2 *args2 = nullptr;
+    if (FAILED(args->QueryInterface(IID_ICoreWebView2WebMessageReceivedEventArgs2, reinterpret_cast<void **>(&args2))) || !args2) {
+      return S_OK;
+    }
+    ICoreWebView2ObjectCollectionView *objects = nullptr;
+    std::string json = "{\"type\":\"shell.droppedPaths\",\"paths\":[";
+    int added = 0;
+    if (SUCCEEDED(args2->get_AdditionalObjects(&objects)) && objects) {
+      UINT32 count = 0;
+      objects->get_Count(&count);
+      for (UINT32 i = 0; i < count; ++i) {
+        IUnknown *item = nullptr;
+        if (FAILED(objects->GetValueAtIndex(i, &item)) || !item) continue;
+        ICoreWebView2File *file = nullptr;
+        if (SUCCEEDED(item->QueryInterface(IID_ICoreWebView2File, reinterpret_cast<void **>(&file))) && file) {
+          LPWSTR path = nullptr;
+          if (SUCCEEDED(file->get_Path(&path)) && path) {
+            if (added++) json += ",";
+            json += js_string(narrow(path).c_str());
+            CoTaskMemFree(path);
+          }
+          file->Release();
+        }
+        item->Release();
+      }
+      objects->Release();
+    }
+    args2->Release();
+    json += "]}";
+    if (added && s_->fn) {
+      std::string wrapped = "[" + js_string(json.c_str()) + "]";
+      s_->fn(wrapped.c_str(), s_->context);
+    }
+    return S_OK;
+  }
+
+private:
+  deskshell *s_;
+  ULONG refs_ = 1;
+};
+
+void listen_for_drops(deskshell *s) {
+  auto *controller = static_cast<ICoreWebView2Controller *>(
+      webview_get_native_handle(s->w, WEBVIEW_NATIVE_HANDLE_KIND_BROWSER_CONTROLLER));
+  if (!controller) return;
+  ICoreWebView2 *view = nullptr;
+  if (FAILED(controller->get_CoreWebView2(&view)) || !view) return;
+  auto *handler = new drop_handler(s);
+  EventRegistrationToken token;
+  view->add_WebMessageReceived(handler, &token);
+  handler->Release();
+  view->Release();
+}
+
 char *choose(deskshell *s, const char *title, bool folders) {
   IFileOpenDialog *dialog = nullptr;
   if (FAILED(CoCreateInstance(CLSID_FileOpenDialog, nullptr, CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&dialog)))) {
@@ -188,6 +264,9 @@ deskshell_t deskshell_create(int debug, const char *title, int width, int height
   init.replace(init.find(marker), marker.size(), deskshell_engine_name());
   webview_init(w, init.c_str());
   webview_bind(w, "__deckieShellSend", on_send, s);
+#if defined(_WIN32)
+  listen_for_drops(s);
+#endif
   return s;
 }
 
@@ -204,6 +283,8 @@ void deskshell_post(deskshell_t s, const char *text) {
   auto *p = new posted{s, "window.deckieShell && window.deckieShell.receive(" + js_string(text) + ");"};
   webview_dispatch(s->w, run_posted, p);
 }
+
+void deskshell_eval(deskshell_t s, const char *js) { webview_eval(s->w, js); }
 
 void deskshell_dispatch(deskshell_t s, deskshell_work_fn fn, void *context) {
   webview_dispatch(s->w, run_work, new work{fn, context});
@@ -239,6 +320,14 @@ void deskshell_open_folder(const char *path) {
 }
 
 void deskshell_free(char *text) { std::free(text); }
+
+void *deskshell_native_view(deskshell_t s) {
+#if defined(WEBVIEW_EDGE)
+  return webview_get_native_handle(s->w, WEBVIEW_NATIVE_HANDLE_KIND_BROWSER_CONTROLLER);
+#else
+  return webview_get_native_handle(s->w, WEBVIEW_NATIVE_HANDLE_KIND_UI_WIDGET);
+#endif
+}
 
 const char *deskshell_engine_name(void) {
 #if defined(WEBVIEW_EDGE)

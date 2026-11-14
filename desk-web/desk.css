@@ -1,0 +1,167 @@
+/* Deckie Desk's window on Windows and Linux (D32). The tokens are site/site.css's (the look of Deckie Booth's Simple
+   view: a flat near-black page, soft filled surfaces with no outline, large radii, pill controls, one lavender accent);
+   keep them in step with that file. The layout is a desktop window's, not the site's page.
+   Inter is named first but not carried here (its licence, OFL 1.1, is not on DEPENDENCIES.md's allowlist yet); where
+   it is not installed the system's own interface font is used. */
+:root {
+  --bg: #0f0a17;
+  --surface: #1a1420;
+  --control: rgba(255, 255, 255, 0.07);
+  --control-hi: rgba(255, 255, 255, 0.12);
+  --field: rgba(255, 255, 255, 0.06);
+  --hair: #30254a;
+  --tx: #f2edf9; --mut: #ab9fc2; --dim: #978bb0;
+  --acc: #b490ff; --ink: #160f22;
+  --r-card: 16px; --r-panel: 24px; --r-field: 12px; --r-pill: 999px;
+  --body: "Inter", system-ui, -apple-system, "Segoe UI", "Cantarell", "Ubuntu", sans-serif;
+  --warn: #ffb35c;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+html { background: var(--bg); }
+body { margin: 0; color: var(--tx); font-family: var(--body); font-size: 14px; line-height: 1.5;
+       display: flex; flex-direction: column; overflow: hidden; -webkit-user-select: none; user-select: none; }
+input, textarea, td, .selectable { -webkit-user-select: text; user-select: text; }
+h1, h2, h3 { margin: 0; font-weight: 700; letter-spacing: -0.02em; text-wrap: balance; }
+h1 { font-size: 26px; line-height: 1.15; }
+h2 { font-size: 18px; }
+h3 { font-size: 14px; font-weight: 650; letter-spacing: -0.01em; }
+p { margin: 0; text-wrap: pretty; }
+[hidden] { display: none !important; }
+.mut { color: var(--mut); }
+.dim { color: var(--dim); }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+:focus-visible { outline: 2px solid var(--acc); outline-offset: 2px; border-radius: 6px; }
+
+/* buttons: pills, the accent for the one main action on a screen */
+button { font: inherit; color: var(--tx); background: var(--control); border: 0; border-radius: var(--r-pill);
+         padding: 7px 15px; cursor: pointer; white-space: nowrap; font-weight: 550; }
+button:hover:not(:disabled) { background: var(--control-hi); }
+button:disabled { opacity: 0.45; cursor: default; }
+button.main { background: var(--acc); color: var(--ink); font-weight: 650; padding: 9px 20px; }
+button.main:hover:not(:disabled) { background: #c4a8ff; }
+button.link { background: none; padding: 0; color: var(--acc); font-weight: 500; text-decoration: underline; text-underline-offset: 3px; }
+button.link:hover { background: none; }
+button.small { padding: 4px 11px; font-size: 13px; }
+button.danger { color: #ffb4c4; }
+button .chev { opacity: 0.7; margin-left: 6px; }
+input[type=text] { font: inherit; color: var(--tx); background: var(--field); border: 1px solid var(--hair);
+                   border-radius: var(--r-field); padding: 7px 11px; width: 100%; }
+input[type=text]:focus { border-color: var(--acc); outline: none; }
+
+/* the bar at the top: the crate menu, then what can be done */
+.bar { display: flex; align-items: center; gap: 8px; padding: 10px 14px; border-bottom: 1px solid var(--hair); flex: none; }
+.bar .grow { flex: 1; }
+.crate-button { font-weight: 700; font-size: 15px; background: none; padding: 6px 10px; }
+.crate-button:hover:not(:disabled) { background: var(--control); }
+
+/* menus: a list that opens under its button */
+.menu-wrap { position: relative; display: inline-block; }
+.menu { position: absolute; z-index: 20; top: calc(100% + 6px); left: 0; min-width: 240px; max-width: 420px; max-height: 60vh;
+        overflow: auto; background: #241c2e; border-radius: var(--r-field); padding: 6px; box-shadow: 0 12px 40px rgba(0,0,0,.5);
+        list-style: none; margin: 0; }
+.menu.right { left: auto; right: 0; }
+.menu [role=menuitem], .menu [role=menuitemradio] { display: block; width: 100%; text-align: left; border-radius: 8px; background: none;
+        padding: 7px 12px 7px 30px; position: relative; font-weight: 500; }
+.menu [role=menuitem]:hover, .menu [role=menuitemradio]:hover, .menu :focus { background: var(--control-hi); outline: none; }
+.menu [aria-checked=true]::before { content: "✓"; position: absolute; left: 11px; color: var(--acc); }
+.menu [role=separator] { height: 1px; background: var(--hair); margin: 6px 4px; }
+.menu .note { padding: 7px 12px; color: var(--mut); font-size: 13px; }
+
+/* the screens */
+main { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+.screen { flex: 1; min-height: 0; overflow: auto; }
+.center { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 14px; padding: 40px 24px; }
+.center .body { max-width: 34rem; color: var(--mut); }
+.actions { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+.card { background: var(--surface); border-radius: var(--r-card); padding: 18px 20px; }
+.icon { width: 56px; height: 56px; color: var(--acc); }
+
+/* a banner for a run that stopped */
+.banner { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; background: var(--surface); border-radius: var(--r-field);
+          padding: 9px 14px; margin: 10px 14px 0; }
+.banner .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--warn); flex: none; }
+
+/* the run */
+.run { padding: 28px 32px; display: flex; flex-direction: column; gap: 10px; max-width: 980px; width: 100%; margin: 0 auto; min-height: 0; }
+.progress { height: 10px; background: var(--control); border-radius: var(--r-pill); overflow: hidden; }
+.progress > div { height: 100%; width: 0; background: var(--acc); border-radius: var(--r-pill); transition: width .25s; }
+.progress.waiting > div { width: 30%; animation: waiting 1.4s ease-in-out infinite; }
+@keyframes waiting { 0% { margin-left: -30%; } 100% { margin-left: 100%; } }
+@media (prefers-reduced-motion: reduce) { .progress > div { transition: none; } .progress.waiting > div { animation: none; width: 100%; opacity: .35; } }
+.run-line { display: flex; gap: 12px; flex-wrap: wrap; }
+.run-line .grow { flex: 1; }
+.log { flex: 1; min-height: 120px; overflow: auto; background: var(--surface); border-radius: var(--r-card); padding: 10px 14px;
+       font: 12px/1.6 ui-monospace, "Cascadia Mono", "Consolas", "DejaVu Sans Mono", monospace; color: var(--mut); margin: 4px 0 0; list-style: none; }
+.log li { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* the finished screen */
+.finished { padding: 32px 24px; display: flex; flex-direction: column; align-items: center; gap: 16px; }
+.finished .summary { display: flex; flex-direction: column; gap: 6px; max-width: 34rem; width: 100%; }
+.finished .summary .indent { padding-left: 14px; color: var(--mut); }
+.to-ipad { max-width: 34rem; width: 100%; display: flex; flex-direction: column; gap: 8px; }
+.to-ipad ul { margin: 0; padding-left: 18px; color: var(--mut); display: flex; flex-direction: column; gap: 6px; }
+.exported { color: var(--tx); max-width: 34rem; width: 100%; overflow-wrap: anywhere; text-align: center; }
+
+/* the crate: the table, with the sources panel beside it */
+.crate { display: flex; min-height: 0; flex: 1; }
+.table-wrap { flex: 1; min-width: 0; overflow: auto; }
+table { border-collapse: separate; border-spacing: 0; width: 100%; }
+thead th { position: sticky; top: 0; background: var(--bg); text-align: left; font-weight: 600; color: var(--mut); padding: 0;
+           border-bottom: 1px solid var(--hair); z-index: 1; }
+thead th button { background: none; border-radius: 0; width: 100%; text-align: left; padding: 9px 10px; color: inherit; font-weight: 600; }
+thead th button:hover { color: var(--tx); background: none; }
+thead th[aria-sort=ascending] button::after { content: " ▲"; font-size: 10px; }
+thead th[aria-sort=descending] button::after { content: " ▼"; font-size: 10px; }
+tbody td { padding: 6px 10px; border-bottom: 1px solid rgba(48, 37, 74, 0.55); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 22rem; }
+tbody tr:hover td { background: rgba(255, 255, 255, 0.025); }
+tbody tr[aria-selected=true] td { background: rgba(180, 144, 255, 0.16); }
+td.num { font-variant-numeric: tabular-nums; }
+td.editable { cursor: text; }
+td.editable:focus { outline: 2px solid var(--acc); outline-offset: -2px; border-radius: 4px; }
+td input[type=text] { padding: 3px 7px; border-radius: 6px; }
+.unsure { color: var(--mut); cursor: help; }
+.empty-filter { padding: 40px; text-align: center; color: var(--mut); }
+
+.side { width: 340px; flex: none; border-left: 1px solid var(--hair); display: flex; flex-direction: column; min-height: 0; }
+.side header { display: flex; align-items: center; padding: 10px 14px; gap: 8px; border-bottom: 1px solid var(--hair); }
+.side header h2 { flex: 1; font-size: 15px; }
+.side .scroll { flex: 1; overflow: auto; padding: 8px 10px; }
+.side .hint { padding: 10px 14px; border-top: 1px solid var(--hair); color: var(--mut); font-size: 12.5px; }
+.tree, .tree ul { list-style: none; margin: 0; padding: 0; }
+.tree .src { margin-bottom: 10px; }
+.tree .row { display: flex; align-items: center; flex-wrap: wrap; gap: 4px 6px; padding: 3px 4px; border-radius: 8px; }
+.tree .src > .row .name { white-space: normal; min-width: 10em; }
+.tree .song .artist { color: var(--mut); margin-left: 6px; }
+.tree .row:hover { background: rgba(255, 255, 255, 0.03); }
+.tree .row .name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tree .src > .row .name { font-weight: 700; }
+.tree .folder { padding-left: 14px; }
+.tree .folder > .row .name::before { content: "▸ "; color: var(--dim); }
+.tree .song { padding-left: 16px; }
+.tree .song .n { font-variant-numeric: tabular-nums; color: var(--dim); width: 2.2em; flex: none; }
+.tree .row .tools { display: flex; gap: 4px; opacity: 0; }
+.tree .row:hover .tools, .tree .row:focus-within .tools { opacity: 1; }
+.tree button.icon-btn { padding: 2px 8px; font-size: 12px; background: var(--control); }
+
+/* the line at the bottom */
+.status { display: flex; align-items: center; gap: 14px; padding: 7px 14px; border-top: 1px solid var(--hair); flex: none; color: var(--mut); font-size: 13px; }
+.status b { color: var(--tx); }
+.status .grow { flex: 1; }
+
+/* dialogs */
+dialog { color: var(--tx); background: var(--surface); border: 0; border-radius: var(--r-panel); padding: 24px; max-width: min(560px, 92vw); width: 100%;
+         box-shadow: 0 20px 70px rgba(0,0,0,.6); }
+dialog::backdrop { background: rgba(8, 5, 12, 0.6); }
+dialog h2 { margin-bottom: 10px; }
+dialog .buttons { display: flex; justify-content: flex-end; gap: 8px; margin-top: 18px; }
+dialog.wide { max-width: min(760px, 94vw); }
+.log-groups { max-height: 55vh; overflow: auto; margin-top: 10px; display: flex; flex-direction: column; gap: 14px; }
+.log-groups h3 { margin-bottom: 4px; }
+.log-groups ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.log-groups code { font: 12.5px ui-monospace, "Cascadia Mono", "Consolas", "DejaVu Sans Mono", monospace; display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* a folder held over the window */
+.drop { position: fixed; inset: 10px; border: 2px dashed var(--acc); border-radius: var(--r-panel); background: rgba(15, 10, 23, 0.85);
+        display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 650; z-index: 50; pointer-events: none; }

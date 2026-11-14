@@ -128,6 +128,8 @@ public enum DeskWords {
         "showSourcesMenu": "Show sources",
         "sourcesHelp": "What was read from each CD, drive or folder, by its own name",
         "sendHelp": "Opens the share sheet, so AirDrop to your iPad is one click",
+        // new (D32): the toolbar's menu of the rest.
+        "moreMenu": "More",
         "undo": "Undo",
         "redo": "Redo",
         "undoNamed": "Undo {action}",
