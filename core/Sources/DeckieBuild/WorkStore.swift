@@ -76,7 +76,7 @@ final class WorkStore: @unchecked Sendable {
         self.recordsFolder = records ?? folder.appendingPathComponent("records")
         let fm = FileManager.default
         let marker = folder.appendingPathComponent("work.json")
-        if fresh { try? fm.removeItem(at: folder) }
+        if fresh { try? DeckieFiles.remove(folder) }
         if fm.fileExists(atPath: folder.path) {
             let format = (try? JSONDecoder().decode([String: Int].self, from: Data(contentsOf: marker)))?["format"]
             // A folder with nothing but the work folder's own names (a run stopped before it wrote work.json) is one.
@@ -86,9 +86,9 @@ final class WorkStore: @unchecked Sendable {
                 throw BuildError("\(folder.path) is not a work folder of this deckie-build; remove it or use --fresh")
             }
         }
-        try fm.createDirectory(at: folder, withIntermediateDirectories: true)
-        try fm.createDirectory(at: recordsFolder, withIntermediateDirectories: true)
-        try Data("{\"format\":\(Self.format)}\n".utf8).write(to: marker, options: .atomic)
+        try DeckieFiles.createDirectory(folder)
+        try DeckieFiles.createDirectory(recordsFolder)
+        try DeckieFiles.write(Data("{\"format\":\(Self.format)}\n".utf8), to: marker)
         if let text = try? String(contentsOf: linesFile, encoding: .utf8) {
             let decoder = JSONDecoder()
             for row in text.split(separator: "\n") {
@@ -119,7 +119,7 @@ final class WorkStore: @unchecked Sendable {
     func save(_ record: Record) throws {
         let encoder = JSONEncoder()
         encoder.outputFormatting = [.sortedKeys]
-        try encoder.encode(record).write(to: recordURL(record.track.id), options: .atomic)
+        try DeckieFiles.write(try encoder.encode(record), to: recordURL(record.track.id))
     }
 
     /// Notes a finished file (after its record is saved).
@@ -134,12 +134,7 @@ final class WorkStore: @unchecked Sendable {
     }
 
     private func appendRaw(_ data: Data) throws {
-        if log == nil {
-            if !FileManager.default.fileExists(atPath: linesFile.path) {
-                _ = FileManager.default.createFile(atPath: linesFile.path, contents: nil)
-            }
-            log = try FileHandle(forWritingTo: linesFile)
-        }
+        if log == nil { log = try DeckieFiles.openForAppending(linesFile) }
         try log!.seekToEnd()
         try log!.write(contentsOf: data)
     }

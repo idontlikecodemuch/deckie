@@ -292,13 +292,13 @@ public final class DeskRun: @unchecked Sendable {
 
         // 3. Save: signatures into the crate file, copies linked, the DJ's fixes put back, the crate's name.
         let sigFolder = pkg.appendingPathComponent(CrateFormat.signaturesFolder)
-        try fm.createDirectory(at: sigFolder, withIntermediateDirectories: true)
+        try DeckieFiles.createDirectory(sigFolder)
         var prints: [String: RecordingPrint] = [:]
         for i in crate.tracks.indices {
             let id = crate.tracks[i].id
             if let s = store.signature(id) {
                 let dest = sigFolder.appendingPathComponent("\(id)_o.shazamsignature")
-                if !fm.fileExists(atPath: dest.path) { try s.data.write(to: dest, options: .atomic) }
+                if !fm.fileExists(atPath: dest.path) { try DeckieFiles.write(s.data, to: dest) }
                 if crate.tracks[i].signatures["o"] == nil { crate.tracks[i].signatures["o"] = s.made }
             }
             if let p = store.print(id) { prints[id] = p }
@@ -339,7 +339,7 @@ public final class DeskRun: @unchecked Sendable {
             jobs: jobs, device: device, engine: Builder.engineLabel, carriedOn: carriedOn, local: local)
         state.lock.unlock()
         try Self.appendRun(report, to: shelf.file(Self.runsFile, of: crateId))
-        try? fm.removeItem(at: pendingURL)
+        try? DeckieFiles.remove(pendingURL)
         return (crate, report)
     }
 
@@ -348,12 +348,7 @@ public final class DeskRun: @unchecked Sendable {
         e.outputFormatting = [.sortedKeys]
         var line = try e.encode(r)
         line.append(0x0A)
-        let fm = FileManager.default
-        if !fm.fileExists(atPath: url.path) { _ = fm.createFile(atPath: url.path, contents: nil) }
-        let h = try FileHandle(forWritingTo: url)
-        defer { try? h.close() }
-        try h.seekToEnd()
-        try h.write(contentsOf: line)
+        try DeckieFiles.append(line, to: url)
     }
 
     public static func utc(_ d: Date) -> String {

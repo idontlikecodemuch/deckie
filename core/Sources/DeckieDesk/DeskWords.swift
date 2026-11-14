@@ -22,6 +22,10 @@ public enum DeskWords {
     public static let table: [String: String] = [
         // the app
         "appName": "Deckie Desk",
+        // The computer Desk runs on, as words name it: `{thisComputer}` in any word is filled with the form for this
+        // computer's kind (`DeskWords.computerKind`: "mac", or "other" for Windows and Linux). D32.
+        "thisComputer.mac": "this Mac",
+        "thisComputer.other": "this computer",
         "ok": "OK",
         "cancel": "Cancel",
         "done": "Done",
@@ -29,9 +33,7 @@ public enum DeskWords {
 
         // the first screen
         "firstTitle": "Your crate starts here.",
-        "firstBody": "Add your music. Desk reads the tempo, key and bars of every song and writes a crate file, a small file you send to your iPad. Your music never leaves this Mac.",
-        // new (D32): the same sentence on Windows and Linux, where "this Mac" is wrong.
-        "firstBodyComputer": "Add your music. Desk reads the tempo, key and bars of every song and writes a crate file, a small file you send to your iPad. Your music never leaves this computer.",
+        "firstBody": "Add your music. Desk reads the tempo, key and bars of every song and writes a crate file, a small file you send to your iPad. Your music never leaves {thisComputer}.",
         "addMusic": "Add music",
         "addMusicTo": "Add music to {crate}",
         "addMusicMore": "Add music…",
@@ -244,7 +246,7 @@ public enum DeskWords {
         "songsSelected": "{n} songs selected.",
         "musicAt": "Music: {path}",
         "whereIsThisMusic": "Where is this music?",
-        "musicFolderMessage": "Where the music for this crate is on this Mac (needed to make recognition signatures).",
+        "musicFolderMessage": "Where the music for this crate is on {thisComputer} (needed to make recognition signatures).",
 
         // the Sources panel
         "sourcesTitle": "Sources",
@@ -321,7 +323,25 @@ public enum DeskWords {
     /// The words named `key` with `{name}` filled from `values`; the key itself when there are none, so a missing word
     /// shows as its name rather than as nothing.
     public static func text(_ key: String, _ values: [String: String] = [:]) -> String {
-        fill(table[key] ?? key, values)
+        fill(table[key] ?? key, withComputer(values))
+    }
+
+    /// The kind of computer this is, for `{thisComputer}`: "mac" on a Mac, "other" on Windows and Linux. The engine
+    /// sends it to the pages with the words.
+    public static var computerKind: String {
+        #if os(macOS)
+        return "mac"
+        #else
+        return "other"
+        #endif
+    }
+
+    /// `values` with `thisComputer` added for the computer of kind `kind`, unless it is given.
+    public static func withComputer(_ values: [String: String], kind: String = computerKind) -> [String: String] {
+        guard values["thisComputer"] == nil else { return values }
+        var v = values
+        v["thisComputer"] = table["thisComputer." + kind] ?? table["thisComputer.other"] ?? ""
+        return v
     }
 
     /// The form of `key` for the count `n` (`key.zero` when n is 0 and there is one, `key.one` for 1, else
@@ -330,7 +350,7 @@ public enum DeskWords {
         let form = n == 0 && table[key + ".zero"] != nil ? "zero" : (n == 1 ? "one" : "other")
         var v = values
         v["n"] = v["n"] ?? String(n)
-        return fill(table[key + "." + form] ?? table[key + ".other"] ?? key, v)
+        return fill(table[key + "." + form] ?? table[key + ".other"] ?? key, withComputer(v))
     }
 
     /// The words of `key` for the engine's code `code` (`key.<code>`), else `key.other` with `{code}` filled in.

@@ -79,7 +79,7 @@ public struct CrateShelf: Sendable {
     public func make(name: String, now: Double = Date().timeIntervalSince1970) throws -> CrateInfo {
         try home.prepare()
         let info = CrateInfo(id: UUID().uuidString.lowercased(), name: unusedName(name), createdAt: now, openedAt: now)
-        try FileManager.default.createDirectory(at: folder(info.id), withIntermediateDirectories: true)
+        try DeckieFiles.createDirectory(folder(info.id))
         try save(info)
         return info
     }
@@ -116,7 +116,7 @@ public struct CrateShelf: Sendable {
     public func delete(_ id: String) throws {
         let f = folder(id)
         guard f.deletingLastPathComponent().standardizedFileURL == home.cratesFolder.standardizedFileURL else { return }
-        if FileManager.default.fileExists(atPath: f.path) { try FileManager.default.removeItem(at: f) }
+        try DeckieFiles.remove(f)
     }
 
     /// Brings in a crate file made elsewhere as a new crate: the file is checked, then copied; the original is only
@@ -128,9 +128,9 @@ public struct CrateShelf: Sendable {
         let info = CrateInfo(id: UUID().uuidString.lowercased(), name: unusedName(c.manifest.name), createdAt: now,
                              openedAt: now)
         let fm = FileManager.default
-        try fm.createDirectory(at: folder(info.id), withIntermediateDirectories: true)
+        try DeckieFiles.createDirectory(folder(info.id))
         do {
-            try fm.copyItem(at: url, to: package(info.id))
+            try DeckieFiles.copy(url, to: package(info.id))
             if info.name != c.manifest.name {
                 var copy = try CrateReader.read(from: package(info.id))
                 copy.manifest.name = info.name
@@ -138,7 +138,7 @@ public struct CrateShelf: Sendable {
             }
             try save(info)
         } catch {
-            try? fm.removeItem(at: folder(info.id))
+            try? DeckieFiles.remove(folder(info.id))
             throw error
         }
         return info
@@ -152,16 +152,16 @@ public struct CrateShelf: Sendable {
         guard fm.fileExists(atPath: pkg.appendingPathComponent(CrateFormat.manifestFile).path) else {
             throw DeskError("the crate has no songs yet, so there is no crate file to write")
         }
-        if fm.fileExists(atPath: destination.path) { try fm.removeItem(at: destination) }
-        try fm.createDirectory(at: destination.deletingLastPathComponent(), withIntermediateDirectories: true)
-        try fm.copyItem(at: pkg, to: destination)
+        try DeckieFiles.remove(destination)
+        try DeckieFiles.createDirectory(destination.deletingLastPathComponent())
+        try DeckieFiles.copy(pkg, to: destination)
         // Signatures of songs taken out of the crate stay in Desk's own copy (an undo puts the songs back); the copy
         // that leaves carries only the crate's own.
         let c = try CrateReader.read(from: destination)
         let listed = Set(c.tracks.flatMap { t in t.signatures.keys.map { "\(t.id)_\($0).shazamsignature" } })
         let sigs = destination.appendingPathComponent(CrateFormat.signaturesFolder)
         for name in (try? fm.contentsOfDirectory(atPath: sigs.path)) ?? [] where name.hasSuffix(".shazamsignature") && !listed.contains(name) {
-            try fm.removeItem(at: sigs.appendingPathComponent(name))
+            try DeckieFiles.remove(sigs.appendingPathComponent(name))
         }
     }
 
@@ -170,7 +170,7 @@ public struct CrateShelf: Sendable {
     public func outboxCopy(_ id: String) throws -> URL {
         guard let i = info(id) else { throw DeskError("no crate \(id)") }
         let fm = FileManager.default
-        if fm.fileExists(atPath: home.outbox.path) { try fm.removeItem(at: home.outbox) }
+        try DeckieFiles.remove(home.outbox)
         let safe = i.name.replacingOccurrences(of: "/", with: "-").replacingOccurrences(of: ":", with: "-")
         let dest = home.outbox.appendingPathComponent(safe + "." + CrateFormat.packageExtension, isDirectory: true)
         try exportCopy(id, to: dest)

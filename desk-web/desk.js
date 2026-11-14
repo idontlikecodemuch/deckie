@@ -21,10 +21,13 @@
   // ---- words (DeskWords' rules: {name} blanks, name.zero/one/other by count, name.<code> by code)
   let W = {};
   const fill = (tpl, v) => tpl.replace(/\{(\w+)\}/g, (m, k) => (v && v[k] != null ? String(v[k]) : m));
-  const t = (key, v) => fill(W[key] ?? key, v || {});
+  // {thisComputer} in any word: "this Mac" or "this computer", by the kind the engine says this computer is.
+  let computer = "other";
+  const withComputer = (v) => Object.assign({ thisComputer: W["thisComputer." + computer] ?? W["thisComputer.other"] ?? "" }, v || {});
+  const t = (key, v) => fill(W[key] ?? key, withComputer(v));
   const n = (key, count, v) => {
     const form = count === 0 && W[key + ".zero"] != null ? "zero" : count === 1 ? "one" : "other";
-    return fill(W[key + "." + form] ?? W[key + ".other"] ?? key, Object.assign({ n: String(count) }, v || {}));
+    return fill(W[key + "." + form] ?? W[key + ".other"] ?? key, withComputer(Object.assign({ n: String(count) }, v || {})));
   };
   const coded = (key, code) => W[key + "." + code] ?? fill(W[key + ".other"] ?? code, { code });
   const reason = (code) => W["reason." + code] ?? code.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
@@ -88,7 +91,7 @@
     if (m.re != null && replies.has(m.re)) { const f = replies.get(m.re); replies.delete(m.re); f(m); return; }
     switch (m.event) {
       case "hello":
-        hello = m; W = m.words || {};
+        hello = m; W = m.words || {}; computer = m.computer || "other";
         applyWords(document);
         if (m.protocol !== 1) message([`Protocol ${m.protocol} is not one this window knows (1).`]);
         break;
@@ -198,8 +201,7 @@
     if (songsHere) { show("crate"); drawCrate(); return; }
     show("first");
     $("status").hidden = true;
-    const mac = (hello.platform || "").startsWith("macos");
-    $("first-body").textContent = t(mac ? "firstBody" : "firstBodyComputer");
+    $("first-body").textContent = t("firstBody");
     if (hello.analysis && !hello.analysis.ready) $("first-body").textContent += " " + t("engineMissing", { detail: "" });
   }
 
