@@ -2,18 +2,19 @@
 
 Newest entry first. Each entry: when, what is done, what failed and why, what is next, and one plain line.
 
-**Newest zip, Deckie Desk with its window, built from `main` as it is now: `pc-package` run 43591315233**
-(branch `pc/package-main`, commit `718e90a`), artifact `Deckie-Desk-for-Windows-first-test` (id 14112921578, kept
-to Dec 14, 2026). The zip inside is **130,071,397 bytes**, SHA-256
-`7387ad511b6156e96562977ec6ff2f54efae3b8f97293d439c8097d20b1baa9d` (what GitHub hands over wraps it once more:
-130,071,587 bytes, SHA-256 `d7ff00679acb251ea2d855799e6336fe9870546583161b50d8273cdc7d57dd48`). It supersedes every
+**Newest zip, Deckie Desk with its window, built from `main` as it is now: `pc-package` run 43593361551**
+(branch `pc/package-main`, commit `7d3e7dd`), artifact `Deckie-Desk-for-Windows-first-test` (id 14113607134, kept
+to Dec 14, 2026). The zip inside is **130,077,006 bytes**, SHA-256
+`1d580d1652058241ea5f8ed609667ae70e8aab8077517cd64fedf28f0714c82e` (what GitHub hands over wraps it once more:
+130,077,196 bytes, SHA-256 `75f8e7e527168e81d6e1794cd74bc9d6f139f8b06273a3c67dba10187c91d251`). It supersedes every
 zip named further down, including run 43581053583, which was built before `main` took covers, the home note, the
 lookup and the run screen.
 
-## Nov 14, 2026, 12:00 UTC: the zip from `main`, checked on the runner; the engine that "did not leave" explained and fixed; all four workflows green on `718e90a`
+## Nov 14, 2026, 12:30 UTC: the zip from `main`, checked on the runner; the engine that "did not leave" explained and fixed; all four workflows green on `7d3e7dd`
 
-Branch `pc/package-main`, cut from `main` at `03947ef`. Green on `718e90a`: `pc-package` 43591315233, `desk-window`
-43591315226, `core-windows` 43591315240, `core-linux` 43591315221. No release, tag or pull request.
+Branch `pc/package-main`, cut from `main` at `03947ef`. Green on `7d3e7dd`, the last commit that changes code: `pc-package` 43593361551, `desk-window`
+43593361588, `core-windows` 43593361554, `core-linux` 43593361574. (Green on the commit before too, `718e90a`:
+43591315233, 43591315226, 43591315240, 43591315221; then one more `desk-window` run on it failed, see below.) No release, tag or pull request.
 
 ### 1. The engine test that failed on Windows
 
@@ -62,7 +63,8 @@ in, so that was not it. What the error itself shows: it is raw, not the "another
 `DeckieFiles` gives after waiting, so it came from the one step that did not wait: `CrateArchive.pack` writing the
 file straight after the old one was deleted. On Windows a file just deleted or just read can be held for a moment
 (by what, the runner does not say; a virus scanner is the usual holder), and the write that replaces it is refused.
-`pack` now tries again for about five seconds, as a delete does. **This one matters on a DJ's PC:** exporting twice
+`pack` now tries again for about five seconds, as a delete does (commit `7d3e7dd`; all four workflows green on
+it, once: one green run does not prove a fault seen twice in about ten runs is gone). **This one matters on a DJ's PC:** exporting twice
 to the same stick is ordinary. Which program held the file is not known. It is the likeliest cause of the two
 crate deletes that failed in eight runs last night as well.
 
@@ -73,17 +75,17 @@ screen added a fourth (`run.js`). The window was made, the engine said hello, an
 43586695700). The script now copies every `.html`, `.css` and `.js` and stops if `index.html` names a file that is
 not in the zip. Nothing but this run would have caught it before the owner did.
 
-**What the runner showed on the zip of run 43591315233** (Windows Server 2025, WebView2 Runtime 156.0.4314.58;
+**What the runner showed on the zip of run 43593361551** (Windows Server 2025, WebView2 Runtime 156.0.4314.58;
 unzipped by Windows' own tool into "A DJ's PC", PATH cut to Windows itself):
 
 - **Started as a double click starts it** (`Deckie Desk.exe`, nothing to write to): window made with its icon, page
-  drew "Your crate starts here." / "Add music". Start-up 0.54 to 0.74 s over five starts; the first ever start on
-  the account 3.05 s.
-- **A music folder added through the page's own buttons**; the run finished in 18.2 s (4 of 6 files went in, as the
+  drew "Your crate starts here." / "Add music". Start-up 0.45 to 0.74 s over five starts; the first ever start on
+  the account 3.87 s.
+- **A music folder added through the page's own buttons**; the run finished in 15.6 s (4 of 6 files went in, as the
   folder is built to give). The run screen is what showed meanwhile: the check now ends on anything the page
   throws (an `error` or an unhandled promise), and nothing was thrown. The finished screen came: "4 songs went in.
   2 files didn't go in ... Keys: 4 read by Deckie. 3 songs still need a name."
-- **Export**: one file, 32,463 bytes, which the core's validator reads as the single-file form with 4 songs.
+- **Export**: one file, 32,462 bytes, which the core's validator reads as the single-file form with 4 songs.
 - **Covers**: the test folder has a picture inside one song's tags (a FLAC) and one beside another; the exported
   file holds both thumbnails (2 songs with a cover, 2 distinct covers, 4,558 bytes) and names them in the records.
 - **The lookup**: asked for as a DJ would (the crate's songs, the More menu, "Look up songs via MusicBrainz", the
@@ -99,7 +101,7 @@ does not look at the run screen's pictures, only that the page threw nothing and
 
 ### 3. What to do first with it on a real PC
 
-1. Download the artifact of run 43591315233, unzip it with "Extract All"; note what the browser and antivirus say.
+1. Download the artifact of run 43593361551, unzip it with "Extract All"; note what the browser and antivirus say.
 2. Double-click "Deckie Desk". At the blue "Windows protected your PC" box: "More info", "Run anyway".
 3. Watch for a black console window (there should be none) and time how long the window takes.
 4. "Add music", "Choose a folder…", pick 20 to 50 real songs, some of them `.m4a`, some with covers.
@@ -146,7 +148,7 @@ a second, the review, the log of what Desk has sent) is shared and already runs 
 5. Covers: nothing more built. A song from a music CD has no picture to take a cover from without the lookup, and
    the thumbnails left in a work folder are a few kilobytes each; both are written down, neither is done.
 
-**Next:** nothing is running that needs watching, beyond the fifth run named above. The branch is ready to merge.
+**Next:** nothing is running. The branch is ready to merge.
 
 **Carry on.**
 
