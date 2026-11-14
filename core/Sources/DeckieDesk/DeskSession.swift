@@ -373,6 +373,90 @@ public final class DeskSession {
         return n
     }
 
+    // MARK: Look up songs via MusicBrainz (D36)
+
+    /// The last lookup's review, until it is applied, closed or another lookup starts.
+    public private(set) var review: DeskLookup.Review?
+
+    /// The plan for a lookup, shown as its sentence before anything is sent: `scope` `disc` for the music CD added as
+    /// `source`; otherwise the songs given (`ids`), a source's songs (`source`), or the songs that need a name.
+    public func lookupPlan(scope: String, ids: [String]? = nil, source: String? = nil) throws -> DeskLookup.Plan {
+        guard let c = crate else { throw DeskError("no crate with songs is showing") }
+        if scope == "disc" {
+            guard let source, let discId = current?.discs[source], let record = DiscRecords.record(home, disc: discId) else {
+                throw DeskError("\(source ?? "that source") is not a music CD Desk has read")
+            }
+            var numbers: [String: Int] = [:]
+            var songs: [DeskNaming.Song] = []
+            for t in DeskNaming.order(c, source: source, ids: nil) {
+                guard let p = t.ident.allPlaces.first(where: { $0.disc == source }),
+                      let n = DeskAudio.discNumber(t, at: p, paths: placePaths) else { continue }
+                numbers[t.id] = n
+                songs.append(DeskNaming.Song(track: t, facts: facts(t)))
+            }
+            // The disc's name: its own title (CD-Text), else the name the DJ gave the source, never the placeholder.
+            let placeholder = Self.placeholderName(record.toc)
+            let name = record.discTitle ?? (source.hasPrefix(placeholder) ? nil : source)
+            return DeskLookup.discPlan(source: source, record: record, songs: songs, numbers: numbers, name: name)
+        }
+        var songs: [DeskNaming.Song]
+        if let ids { songs = toolSongs(source: nil, ids: ids) }
+        else if let source { songs = toolSongs(source: source, ids: nil) }
+        else { songs = c.tracks.compactMap { t in let f = facts(t); return DeskNaming.reason(t, f) == nil ? nil : DeskNaming.Song(track: t, facts: f) } }
+        return DeskLookup.plan(songs, isrcs: discIsrcs(songs.map(\.track)))
+    }
+
+    /// The ISRCs a music CD's sub-code gave for these songs, by song id.
+    func discIsrcs(_ tracks: [CrateTrack]) -> [String: String] {
+        guard let info = current else { return [:] }
+        var out: [String: String] = [:]
+        for t in tracks {
+            for p in t.ident.allPlaces {
+                guard let d = p.disc, let id = info.discs[d], let r = DiscRecords.record(home, disc: id),
+                      let n = DeskAudio.discNumber(t, at: p, paths: placePaths), let isrc = r.isrcs[n] else { continue }
+                out[t.id] = isrc
+            }
+        }
+        return out
+    }
+
+    /// Keeps a finished lookup's review for the window.
+    public func setReview(_ r: DeskLookup.Review?) { review = r }
+
+    /// Applies the review with the DJ's choices (nil: the ones Desk would make) as one step of undo. Returns how many
+    /// songs changed. The review stays, so the window can show what was used.
+    @discardableResult
+    public func applyLookup(_ choices: [DeskLookup.Choice]?) throws -> Int {
+        guard let r = review, crate != nil else { throw DeskError("there is no lookup to use") }
+        var n = 0
+        try change("undoLookup") {
+            n = DeskLookup.apply(r, choices ?? DeskLookup.defaultChoices(r), to: &crate!, corrections: &corrections, book: &book)
+        }
+        return n
+    }
+
+    /// "What Desk has sent", as kept in Desk's storage.
+    public var lookupLog: LookupLog { LookupLog.load(home) }
+    /// One lock for every write to the sent list (the lookup's thread writes it while the window reads it).
+    public let sentLock = NSLock()
+
+    public func clearSent() throws {
+        sentLock.lock(); defer { sentLock.unlock() }
+        var log = LookupLog.load(home)
+        log.sent = []
+        try home.prepare()
+        try log.save(home)
+    }
+
+    /// Notes that the one-song sentence has been shown once: from now on it sits under the button.
+    public func markExplained() {
+        sentLock.lock(); defer { sentLock.unlock() }
+        var log = LookupLog.load(home)
+        guard !log.explained else { return }
+        log.explained = true
+        try? log.save(home)
+    }
+
     // MARK: Listen (D33)
 
     /// A song's sound to play: the first of its places whose source is here, a file on a drive or folder, or the song
