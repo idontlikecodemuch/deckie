@@ -1,5 +1,6 @@
 import Foundation
 import DeckieCore
+import DeckieRecognition
 
 /// One thing wrong with a crate: the file, the field path in it, the track when there is one, and what is wrong.
 public struct CrateProblem: Equatable, Sendable, CustomStringConvertible {
@@ -33,7 +34,8 @@ public struct CrateError: Error, Equatable, CustomStringConvertible {
 extension Crate {
     /// Everything that keeps this crate from being written as the format defines it; empty when it can be.
     /// Checks the versions, ids, every block's ranges and every bar number against the grid. What only a package
-    /// on disk can show (sidecar headers, signature files) the reader and the writer check themselves.
+    /// on disk can show (sidecar headers, signature files, a fingerprint's file being there) the reader and the
+    /// writer check themselves.
     public func problems() -> [CrateProblem] {
         var p = Problems()
         let m = manifest
@@ -381,6 +383,27 @@ extension CrateTrack {
                 add("signatures.\(variant)", "the variant name must be letters, digits, -, + and _ only")
             }
             if signatures[variant]!.madeBy.isEmpty { add("signatures.\(variant).made_by", "is empty") }
+        }
+        // The fingerprint (D35): the record's `print` says what `prints/<id>.dkl` is, and the file must be that.
+        if let f = fingerprint {
+            if f.format != CrateFormat.printFormat { add("print.format", "\"\(f.format)\" must be \(CrateFormat.printFormat)") }
+            if !(1...CrateFormat.printVersion).contains(f.version) {
+                add("print.version", "\(f.version) must be between 1 and \(CrateFormat.printVersion), the version this Deckie writes")
+            }
+            if f.madeBy.isEmpty { add("print.made_by", "is empty") }
+            if f.madeAt.isEmpty { add("print.made_at", "is empty") }
+            if isFileSafe(id) {
+                let file = CrateFormat.printPath(id)
+                if !f.data.starts(with: Array(CrateFormat.printFormat.utf8)) {
+                    p.add(file, "", id, "not a fingerprint (it must start with \(CrateFormat.printFormat))")
+                } else if let landmarks = f.landmarks {
+                    if landmarks.count != f.points {
+                        p.add(file, "", id, "holds \(landmarks.count) points but \(base).print.points is \(f.points)")
+                    }
+                } else {
+                    p.add(file, "", id, "cannot be read as a fingerprint (its points do not fill the file exactly)")
+                }
+            }
         }
         if let r = imported?.rekordbox {
             let rb = "imported.rekordbox"

@@ -11,12 +11,21 @@ public enum CrateFormat {
     public static let barsFolder = "bars"
     public static let styleFolder = "style"
     public static let signaturesFolder = "signatures"
+    /// The songs' fingerprints, one `<id>.dkl` each (D35; crate-format.md, "Addition with D35").
+    public static let printsFolder = "prints"
+    /// A record's `print.format`: the four letters a fingerprint's file starts with.
+    public static let printFormat = "DKL2"
+    /// The highest `print.version` this build knows, and the one it writes. A record's print with a higher version
+    /// is ignored by the reader: the song reads as having none.
+    public static let printVersion = 1
 
     static func barsPath(_ id: String) -> String { "\(barsFolder)/\(id).bin" }
     static func stylePath(_ id: String) -> String { "\(styleFolder)/\(id).bin" }
     static func signaturePath(_ id: String, _ variant: String) -> String {
         "\(signaturesFolder)/\(id)_\(variant).shazamsignature"
     }
+    /// A song's fingerprint inside the package: `prints/<id>.dkl`.
+    public static func printPath(_ id: String) -> String { "\(printsFolder)/\(id).dkl" }
 
     /// Names that `features_present` uses for the optional blocks of a record. A per-bar series is listed as
     /// `bars.<series>` (`Feature.bars(_:)`).

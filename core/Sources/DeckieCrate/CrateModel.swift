@@ -1,8 +1,10 @@
 import Foundation
+import DeckieRecognition
 
 // The crate in memory (docs/architecture/crate-format.md). Swift names are the format's names in camel case; the
 // coding keys carry the format's own. Every optional is written as null, never left out (CrateWriter), except the
-// two blocks added with memo Q's vocal fields, `vocal_structure` and `hooks` (CrateModel+Vocal.swift), which are left
+// two blocks added with memo Q's vocal fields, `vocal_structure` and `hooks` (CrateModel+Vocal.swift), and the later
+// additions (`ident.other_places`, `ident.facts`, `file.other_tags`, `print`), which are left
 // out when absent; a reader takes a missing optional as null. A block that is optional in a record is there exactly when its feature is in
 // `features_present`, which is worked out from the blocks (`CrateTrack.featuresPresent`), never stored apart.
 
@@ -550,6 +552,42 @@ public struct CrateTrack: Codable, Equatable, Sendable {
         enum CodingKeys: String, CodingKey { case madeBy = "made_by", madeAt = "made_at" }
     }
 
+    /// The song's fingerprint, by which a booth names it from its sound (D35; crate-format.md, "Addition with D35"):
+    /// the record's `print` and the bytes of `prints/<id>.dkl`, which are exactly `Landmarks.encoded()`'s. Called a
+    /// fingerprint in code because Deckie Desk already has a "print", the one that finds copies (`RecordingPrint`).
+    public struct Fingerprint: Codable, Equatable, Sendable {
+        /// The four letters the file starts with, `DKL2` (`CrateFormat.printFormat`).
+        public var format: String
+        /// The fingerprint's own version number (`CrateFormat.printVersion`), so the fingerprint can change without
+        /// the crate format changing: a reader that meets a higher one than it knows takes the song as having none.
+        public var version: Int
+        /// The points in the file; the reader checks the file against it.
+        public var points: Int
+        /// The device that made it, a model label as a signature's `made_by` is, and when, UTC to the second.
+        public var madeBy: String
+        public var madeAt: String
+        /// The file's bytes (`prints/<id>.dkl`), not part of crate.json.
+        public internal(set) var data: Data = Data()
+
+        /// The fingerprint of `landmarks`, made by `madeBy` at `madeAt`.
+        public init(_ landmarks: Landmarks, madeBy: String, madeAt: String) {
+            format = CrateFormat.printFormat; version = CrateFormat.printVersion; points = landmarks.count
+            self.madeBy = madeBy; self.madeAt = madeAt; data = landmarks.encoded()
+        }
+
+        /// A fingerprint from its kept bytes; nil when they are not `Landmarks.encoded()`'s.
+        public init?(data: Data, madeBy: String, madeAt: String) {
+            guard let landmarks = Landmarks(encoded: data) else { return nil }
+            self.init(landmarks, madeBy: madeBy, madeAt: madeAt)
+            self.data = data  // the bytes as kept, not written out again
+        }
+
+        /// The constellation the bytes hold; nil when they are not one (the reader and the writer refuse that).
+        public var landmarks: Landmarks? { Landmarks(encoded: data) }
+
+        enum CodingKeys: String, CodingKey { case format, version, points, madeBy = "made_by", madeAt = "made_at" }
+    }
+
     /// What was imported with the track from the DJ's own software, keyed by source: `rekordbox` now, and a Serato
     /// import would sit beside it under its own name. It holds the DJ's data as their software wrote it, never the
     /// engine's, so the block is named for where it came from. Nil when nothing was imported. A reader that does not
@@ -665,6 +703,9 @@ public struct CrateTrack: Codable, Equatable, Sendable {
     /// null, so the records of engines that do not make them keep their bytes.
     public var vocalStructure: VocalStructure?
     public var hooks: Hooks?
+    /// The song's fingerprint (D35, `print` and `prints/<id>.dkl`); nil when no builder has made one, and then left
+    /// out of crate.json, so a record without it keeps its bytes.
+    public var fingerprint: Fingerprint?
     /// The per-bar series (`bars/<id>.bin`), not part of crate.json.
     public var bars: BarSeries? = nil
 
@@ -674,14 +715,18 @@ public struct CrateTrack: Codable, Equatable, Sendable {
                 ends: Ends? = nil, loudness: Loudness? = nil, vocal: Vocal? = nil, onsetPattern16: [Double]? = nil,
                 flags: [String] = [], style: Style? = nil, signatures: [String: Signature] = [:],
                 bars: BarSeries? = nil, imported: Imported? = nil, vocalStructure: VocalStructure? = nil,
-                hooks: Hooks? = nil) {
+                hooks: Hooks? = nil, fingerprint: Fingerprint? = nil) {
         self.id = id; self.schema = schema; self.file = file; self.ident = ident; self.analysis = analysis
         self.engine = engine; self.grid = grid; self.tempoSegments = tempoSegments; self.key = key
         self.phrase = phrase; self.sections = sections; self.mixIn = mixIn; self.mixOut = mixOut; self.ends = ends
         self.loudness = loudness; self.vocal = vocal; self.onsetPattern16 = onsetPattern16; self.flags = flags
         self.style = style; self.signatures = signatures; self.bars = bars; self.imported = imported
-        self.vocalStructure = vocalStructure; self.hooks = hooks
+        self.vocalStructure = vocalStructure; self.hooks = hooks; self.fingerprint = fingerprint
     }
+
+    /// Whether a booth can name the song from its sound: it carries a fingerprint (D35) or a recognition signature
+    /// made on an Apple device.
+    public var canBeRecognised: Bool { fingerprint != nil || !signatures.isEmpty }
 
     /// The record's `features_present`: the optional blocks it holds and its per-bar series, sorted.
     public var featuresPresent: [String] {
@@ -709,9 +754,46 @@ public struct CrateTrack: Codable, Equatable, Sendable {
         case id, schema, file, ident, analysis, engine, grid, key, phrase, sections, ends, loudness, vocal, flags
         case style, signatures, imported, hooks
         case tempoSegments = "tempo_segments", mixIn = "mix_in", mixOut = "mix_out", onsetPattern16 = "onset_pattern_16"
-        case vocalStructure = "vocal_structure"
+        case vocalStructure = "vocal_structure", fingerprint = "print"
     }
     enum ListKeys: String, CodingKey { case featuresPresent = "features_present" }
+
+    /// A missing optional reads as nil, as the synthesised reading did; written out for the one rule it could not
+    /// follow, a print of a later version.
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        id = try c.decode(String.self, forKey: .id)
+        schema = try c.decode(Int.self, forKey: .schema)
+        file = try c.decode(File.self, forKey: .file)
+        ident = try c.decode(Ident.self, forKey: .ident)
+        analysis = try c.decode(Analysis.self, forKey: .analysis)
+        engine = try c.decode(Engine.self, forKey: .engine)
+        grid = try c.decodeIfPresent(Grid.self, forKey: .grid)
+        tempoSegments = try c.decodeIfPresent([TempoSegment].self, forKey: .tempoSegments)
+        key = try c.decodeIfPresent(Key.self, forKey: .key)
+        phrase = try c.decodeIfPresent(Phrase.self, forKey: .phrase)
+        sections = try c.decodeIfPresent([Section].self, forKey: .sections)
+        mixIn = try c.decodeIfPresent(MixWindow.self, forKey: .mixIn)
+        mixOut = try c.decodeIfPresent(MixWindow.self, forKey: .mixOut)
+        ends = try c.decodeIfPresent(Ends.self, forKey: .ends)
+        loudness = try c.decodeIfPresent(Loudness.self, forKey: .loudness)
+        vocal = try c.decodeIfPresent(Vocal.self, forKey: .vocal)
+        onsetPattern16 = try c.decodeIfPresent([Double].self, forKey: .onsetPattern16)
+        flags = try c.decode([String].self, forKey: .flags)
+        style = try c.decodeIfPresent(Style.self, forKey: .style)
+        signatures = try c.decode([String: Signature].self, forKey: .signatures)
+        imported = try c.decodeIfPresent(Imported.self, forKey: .imported)
+        vocalStructure = try c.decodeIfPresent(VocalStructure.self, forKey: .vocalStructure)
+        hooks = try c.decodeIfPresent(Hooks.self, forKey: .hooks)
+        // A print of a later version than this build knows is ignored, whatever else it holds: the song reads as
+        // having none, and the crate file is not refused (crate-format.md, "Addition with D35").
+        struct Version: Decodable { var version: Int }
+        if let v = try c.decodeIfPresent(Version.self, forKey: .fingerprint), v.version <= CrateFormat.printVersion {
+            fingerprint = try c.decode(Fingerprint.self, forKey: .fingerprint)
+        } else {
+            fingerprint = nil
+        }
+    }
 
     public func encode(to encoder: Encoder) throws {
         var c = encoder.container(keyedBy: CodingKeys.self)
@@ -739,6 +821,8 @@ public struct CrateTrack: Codable, Equatable, Sendable {
         // Left out when nil (crate-format.md, "Additions proposed with the vocal fields").
         if let vocalStructure { try c.encode(vocalStructure, forKey: .vocalStructure) }
         if let hooks { try c.encode(hooks, forKey: .hooks) }
+        // Left out when nil (crate-format.md, "Addition with D35").
+        if let fingerprint { try c.encode(fingerprint, forKey: .fingerprint) }
         var l = encoder.container(keyedBy: ListKeys.self)
         try l.encode(featuresPresent, forKey: .featuresPresent)
     }
