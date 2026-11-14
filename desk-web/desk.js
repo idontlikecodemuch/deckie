@@ -44,6 +44,9 @@
   const two = (x) => String(x).padStart(2, "0");
   const timeLeft = (s) => (s < 45 ? t("timeLeftUnderMinute") : n("timeLeft", Math.max(1, Math.round(s / 60))));
 
+  // A numbered list of words (name.1, name.2, ... to the first gap), as DeskWords.list.
+  const list = (prefix) => { const out = []; for (let i = 1; W[prefix + "." + i] != null; i++) out.push(t(prefix + "." + i)); return out; };
+
   function applyWords(root) {
     for (const e of root.querySelectorAll("[data-w]")) e.textContent = t(e.dataset.w);
     for (const e of root.querySelectorAll("[data-w-label]")) e.setAttribute("aria-label", t(e.dataset.wLabel));
@@ -78,6 +81,10 @@
   }
   window.desk = { request, render: () => render() };   // for the shell's tour and for tests
 
+  // The run screen (D37, run.js): the song on stage, the figures, the wall of waves, the quiet line and the moments.
+  const politely = (text) => { const a = $("run-announce"); a.textContent = ""; setTimeout(() => { a.textContent = text; }, 30); };
+  const screen = window.DeskRunScreen({ $, el, t, n, mmss, list, timeLeft, announce: politely });
+
   function showError(e, word) {
     if (e.code === "busy") return;
     let text;
@@ -104,14 +111,18 @@
         finished = null; exportedPath = null; stopListening(); $("run-log").replaceChildren();
         run = { read: m.read, crateName: m.crateName, done: 0, total: 0, stage: "reading", remaining: null, lines: [] };
         askDisc(m.askName);
+        screen.start(m);
         break;
       case "audio.chunk":
         audioChunk(m); return;
+      case "run.songs":
+        if (run) screen.songs(m);
+        return;
       case "run.progress":
         if (!run) break;
         Object.assign(run, { done: m.done, total: m.total, stage: m.stage, remaining: m.remaining });
         if (m.line) addLine(m.line);
-        updateRun(); return;
+        updateRun(); screen.progress(run); return;
       case "run.finished":
         run = null; finished = m.report; $("disc-ask").hidden = true; announce(t("finishedTitle", { read: m.report.read, crate: m.report.crate }));
         setTimeout(nextDrop, 0);
@@ -217,6 +228,7 @@
     // The name the DJ gave the disc while it was read replaces the placeholder the report was written with.
     const named = (x) => (discRenamed && x === discRenamed.from ? discRenamed.to : x);
     $("finished-title").textContent = t("finishedTitle", { read: named(r.read), crate: named(r.crate) });
+    screen.finished(Object.assign({}, r, { read: named(r.read) }));
     const box = $("finished-summary");
     box.replaceChildren();
     const line = (text, cls) => box.append(el("p", { text, class: cls }));
