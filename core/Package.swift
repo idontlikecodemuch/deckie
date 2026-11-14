@@ -26,6 +26,11 @@
 // DeckieDesk: what a desk does that is not about windows (D28): where its crates are kept and the list of them, the
 // store of what was worked out for each file (shared by every crate), the DJ's name fixes, where each place's file is,
 // taking a source out of a crate, and the one run that reads, fingerprints, links copies and saves.
+// CDiscDrive: the three system calls that read a music CD (research AA, 2.2), in C, each compiled only on its own
+// system: SG_IO on Linux, the CD-ROM class driver's DeviceIoControl requests on Windows, DKIOCCDREADTOC on the Mac.
+// DeckieDisc: a music CD as a source: the CD-Text decoder and the table of contents (the same on every computer), the
+// drives behind one interface (CDiscDrive; the Mac's music CD read as the system's own files), a stand-in drive read
+// from a folder, and copying each song off as the table cuts it.
 // DeckiePC: the run behind the PC program a DJ drags a music folder onto (D29): the builder with nothing changed
 // inside, plus where things go, the plain words, the log and the crate file as one file. deckie-make: its console.
 // deckie-e2e: the end-to-end check both workflows run: makes a small music folder (WAV, FLAC, MP3, a nested folder,
@@ -47,6 +52,7 @@ let package = Package(
         .library(name: "DeckieEngine", targets: ["DeckieEngine"]),
         .library(name: "DeckieBuild", targets: ["DeckieBuild"]),
         .library(name: "DeckieDesk", targets: ["DeckieDesk"]),
+        .library(name: "DeckieDisc", targets: ["DeckieDisc"]),
         .executable(name: "deckie-build", targets: ["deckie-build"]),
         .executable(name: "deckie-desk-engine", targets: ["deckie-desk-engine"]),
         .executable(name: "deckie-make", targets: ["deckie-make"]),
@@ -69,7 +75,10 @@ let package = Package(
                 dependencies: ["DeckieEngine", "DeckieCrate", "DeckieDecode", "DeckieCore", "DeckieLab", "DeckieInference",
                                "DeckieAudio"]),
         .executableTarget(name: "deckie-build", dependencies: ["DeckieBuild", "DeckieCrate"]),
-        .target(name: "DeckieDesk", dependencies: ["DeckieBuild", "DeckieEngine", "DeckieCrate", "DeckieCore", "DeckieDecode"]),
+        .target(name: "CDiscDrive"),
+        .target(name: "DeckieDisc", dependencies: ["CDiscDrive", "DeckieCrate"]),
+        .target(name: "DeckieDesk", dependencies: ["DeckieBuild", "DeckieEngine", "DeckieCrate", "DeckieCore", "DeckieDecode",
+                                                   "DeckieDisc"]),
         // deckie-desk-engine: Desk's engine for the Windows and Linux window (D32), DeskProtocol over standard input
         // and output (docs/architecture/desk-protocol.md).
         .executableTarget(name: "deckie-desk-engine", dependencies: ["DeckieDesk", "DeckieEngine"]),
@@ -94,8 +103,9 @@ let package = Package(
                     exclude: ["Fixtures"]),
         .testTarget(name: "DeckiePCTests",
                     dependencies: ["DeckiePC", "DeckieBuild", "DeckieCrate", "DeckieAudio", "DeckieTestSupport"]),
+        .testTarget(name: "DeckieDiscTests", dependencies: ["DeckieDisc", "DeckieCrate", "DeckieTestSupport"]),
         .testTarget(name: "DeckieDeskTests",
-                    dependencies: ["DeckieDesk", "DeckieBuild", "DeckieEngine", "DeckieCrate", "DeckieCore", "DeckieAudio",
+                    dependencies: ["DeckieDesk", "DeckieDisc", "DeckieBuild", "DeckieEngine", "DeckieCrate", "DeckieCore", "DeckieAudio",
                                    "DeckieDecode", "DeckieInference", "DeckieTestSupport", "deckie-desk-engine"]),
     ]
 )
