@@ -10,7 +10,7 @@ struct PlayerBar: View {
     @State private var scrub: Double?
 
     var body: some View {
-        HStack(spacing: 10) {
+        HStack(spacing: Look.Space.player) {
             Button { listener.toggle() } label: { Image(systemName: listener.playing ? "pause.fill" : "play.fill") }
                 .help(listener.playing ? Words.t("pause") : Words.t("play"))
             Button { listener.seek(listener.position - DeskListen.step) } label: { Image(systemName: "gobackward.30") }
@@ -26,11 +26,11 @@ struct PlayerBar: View {
                  ? Words.t("listenTime", ["position": Words.mmss(scrub ?? listener.position), "length": Words.mmss(listener.length)])
                  : Words.t("listenGettingReady", ["title": listener.title]))
                 .monospacedDigit().foregroundStyle(.secondary)
-            Text(listener.title).lineLimit(1).frame(maxWidth: 220, alignment: .leading)
+            Text(listener.title).lineLimit(1).frame(maxWidth: Look.Size.playerTitleWidth, alignment: .leading)
             Button(Words.t("stopListening")) { listener.stop() }
         }
         .buttonStyle(.borderless)
-        .padding(.horizontal, 12).padding(.vertical, 6).background(.bar)
+        .padding(.horizontal, Look.Space.playerH).padding(.vertical, Look.Space.playerV).background(.bar)
     }
 }
 
@@ -50,25 +50,25 @@ struct ToolSheet: View {
     var title: String { Words.t(["paste": "pasteList", "pattern": "namesFromFileNames", "playlist": "namesFromPlaylist"][kind] ?? "nameTools").replacingOccurrences(of: "…", with: "") }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            Text(title).font(.title2)
+        VStack(alignment: .leading, spacing: Look.Space.toolSheet) {
+            Text(title).font(Look.Fonts.sheetTitle)
             HStack {
                 Picker(Words.t("toolSongsFrom"), selection: $source) {
                     ForEach(model.crate?.discPlan.map(\.name) ?? [], id: \.self) { Text($0).tag($0) }
-                }.frame(maxWidth: 320)
+                }.frame(maxWidth: Look.Size.toolSourcePickerWidth)
                 Toggle(Words.t("onlyEmpty"), isOn: $onlyEmpty)
             }
             switch kind {
             case "paste":
                 Text(Words.t("pasteHelp")).foregroundStyle(.secondary)
-                TextEditor(text: $text).font(.system(.body, design: .monospaced)).frame(height: 120)
-                    .overlay(RoundedRectangle(cornerRadius: 4).stroke(.quaternary))
+                TextEditor(text: $text).font(Look.Fonts.toolPaste).frame(height: Look.Size.toolPasteHeight)
+                    .overlay(RoundedRectangle(cornerRadius: Look.Shape.toolPaste).stroke(.quaternary))
             case "pattern":
                 HStack {
                     TextField(Words.t("patternLabel"), text: $pattern).textFieldStyle(.roundedBorder)
-                    Menu("") { ForEach(DeskNaming.patterns, id: \.self) { p in Button(p) { pattern = p } } }.frame(width: 30)
+                    Menu("") { ForEach(DeskNaming.patterns, id: \.self) { p in Button(p) { pattern = p } } }.frame(width: Look.Size.toolPatternMenuWidth)
                 }
-                Text(Words.t("patternHelp")).font(.caption).foregroundStyle(.secondary)
+                Text(Words.t("patternHelp")).font(Look.Fonts.toolHelp).foregroundStyle(.secondary)
             default:
                 Text(Words.t("choosePlaylistMessage")).foregroundStyle(.secondary)
                 HStack {
@@ -76,8 +76,8 @@ struct ToolSheet: View {
                     Text(playlist?.lastPathComponent ?? "").foregroundStyle(.secondary)
                 }
             }
-            Text(Words.t("previewTitle")).font(.headline)
-            if let line = problemLine { Text(line).foregroundStyle(preview?.problem != nil ? .orange : .secondary) }
+            Text(Words.t("previewTitle")).font(Look.Fonts.toolPreviewTitle)
+            if let line = problemLine { Text(line).foregroundStyle(preview?.problem != nil ? Look.Colour.warning : .secondary) }
             List {
                 if let p = preview {
                     ForEach(p.changes.indices, id: \.self) { i in
@@ -85,15 +85,15 @@ struct ToolSheet: View {
                         HStack {
                             Toggle("", isOn: Binding(get: { ticks.contains(i) }, set: { if $0 { ticks.insert(i) } else { ticks.remove(i) } }))
                                 .labelsHidden().disabled(c.locked)
-                            Text(songLabel(c.song)).frame(width: 180, alignment: .leading).lineLimit(1)
-                            Text(Words.t(c.field)).frame(width: 70, alignment: .leading)
-                            Text(c.before ?? Words.none).foregroundStyle(.secondary).frame(width: 150, alignment: .leading).lineLimit(1)
+                            Text(songLabel(c.song)).frame(width: Look.Size.toolSongColumn, alignment: .leading).lineLimit(1)
+                            Text(Words.t(c.field)).frame(width: Look.Size.toolFieldColumn, alignment: .leading)
+                            Text(c.before ?? Words.none).foregroundStyle(.secondary).frame(width: Look.Size.toolBeforeColumn, alignment: .leading).lineLimit(1)
                             Text(c.after ?? "").lineLimit(1)
-                            if let n = c.note { Text("(" + Words.t("changeNote." + n) + ")").font(.caption).foregroundStyle(.secondary) }
+                            if let n = c.note { Text(Words.toolChangeNote(Words.t("changeNote." + n))).font(Look.Fonts.toolNote).foregroundStyle(.secondary) }
                         }
                     }
                 }
-            }.frame(minHeight: 200)
+            }.frame(minHeight: Look.Size.toolPreviewMinHeight)
             HStack {
                 Spacer()
                 Button(Words.cancel) { model.tool = nil }.keyboardShortcut(.cancelAction)
@@ -103,7 +103,7 @@ struct ToolSheet: View {
                 }.buttonStyle(.borderedProminent).disabled(usable == 0)
             }
         }
-        .padding(20).frame(width: 760, height: 600)
+        .padding(Look.Space.sheetPadding).frame(width: Look.Size.toolSheetWidth, height: Look.Size.toolSheetHeight)
         .onAppear {
             let sources = model.crate?.discPlan.map(\.name) ?? []
             let sel = model.selection.first.flatMap { model.binding(for: $0) }?.ident.disc
@@ -140,7 +140,7 @@ struct ToolSheet: View {
 
     func songLabel(_ id: String) -> String {
         guard let t = model.binding(for: id) else { return id }
-        return (t.ident.track.map { String(format: "%02d  ", $0) } ?? "") + t.ident.title
+        return Words.toolSongTitle(t.ident.track, t.ident.title)
     }
 
     func refresh() {

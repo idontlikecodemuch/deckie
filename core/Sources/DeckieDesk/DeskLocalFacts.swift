@@ -23,7 +23,7 @@ public struct DJLibraryChoices: Codable, Equatable, Sendable {
     /// Adds the library file at `url`, its program told from the file; throws when it is no library Desk reads.
     public mutating func add(_ url: URL) throws -> DJProgram {
         guard let program = DJProgram.of(file: url) else {
-            throw DeskError("\(url.lastPathComponent) is not a DJ library Desk reads (a rekordbox XML export, Traktor's collection.nml, Engine DJ's m.db, Serato's database V2 or VirtualDJ's database.xml)")
+            throw DeskError(DeskWords.text("error.notALibrary", ["file": url.lastPathComponent]))
         }
         let c = Choice(program: program, path: url.standardizedFileURL.path)
         if !chosen.contains(c) { chosen.append(c) }
@@ -127,7 +127,7 @@ public enum DeskLocalFacts {
     public static func lookAgain(home: DeskHome, crateId: String,
                                  environment: [String: String] = ProcessInfo.processInfo.environment) throws -> (Crate, LocalFactsSummary) {
         let shelf = home.shelf
-        guard let info = shelf.info(crateId) else { throw DeskError("no crate \(crateId)") }
+        guard let info = shelf.info(crateId) else { throw DeskError(DeskWords.text("error.noCrate", ["id": crateId])) }
         var crate = try CrateReader.read(from: shelf.package(crateId))
         let paths = PlacePaths.load(from: shelf.file(DeskRun.placesFile, of: crateId))
         let summary = gather(&crate, home: home, info: info, paths: paths, environment: environment)
