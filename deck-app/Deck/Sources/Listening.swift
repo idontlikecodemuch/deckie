@@ -215,6 +215,9 @@ func speedFromPlaces(_ points: [(audioTime: Double, offset: Double)]) -> (ratio:
         /// Seconds into the set (the recording's clock) when each first named this song in this play of it.
         var deckieFirst: Double?
         var appleFirst: Double?
+        /// ...and when each last named it.
+        var deckieLast: Double?
+        var appleLast: Double?
         /// The deck's speed each read for it, in percent: Deckie's median reading; Apple's from its key's skew
         /// (vinyl) or from how fast its place moved.
         var deckieSpeed: Double?
@@ -223,9 +226,9 @@ func speedFromPlaces(_ points: [(audioTime: Double, offset: Double)]) -> (ratio:
         var deckieReadings = 0
         var appleMatches = 0
     }
-    /// A moment the two named different songs. `atChange`: one of them named the other's song within `changeWindow`
-    /// seconds of it, so it was one song giving way to the next, heard by one before the other (a blend), not a
-    /// wrong name.
+    /// A moment the two named different songs. `atChange`: each recogniser named the other's song too, within
+    /// `changeWindow` seconds of that moment (or was naming it then), so it was one song giving way to the next, heard
+    /// by one before the other (a blend), not a wrong name.
     struct Disagreement: Codable { var at: Double; var deckie: String; var apple: String; var atChange: Bool? = nil }
     struct Log: Codable {
         var songs: [Song]
@@ -266,6 +269,7 @@ func speedFromPlaces(_ points: [(audioTime: Double, offset: Double)]) -> (ratio:
         case .deckie:
             if songs[row].deckieFirst == nil { songs[row].deckieFirst = (t * 10).rounded() / 10; changed = true }
             songs[row].deckieReadings += 1
+            songs[row].deckieLast = (t * 10).rounded() / 10
             if let s = r.speedPercent { deckieSpeeds[row, default: []].append(s) }
             let s = (deckieSpeeds[row] ?? []).sorted()
             if !s.isEmpty { songs[row].deckieSpeed = (s[s.count / 2] * 100).rounded() / 100 }
@@ -273,6 +277,7 @@ func speedFromPlaces(_ points: [(audioTime: Double, offset: Double)]) -> (ratio:
         case .apple:
             if songs[row].appleFirst == nil { songs[row].appleFirst = (t * 10).rounded() / 10; changed = true }
             songs[row].appleMatches += 1
+            songs[row].appleLast = (t * 10).rounded() / 10
             if abs(r.pitchRatio - 1) > 0.008 { appleSkews[row, default: []].append((r.pitchRatio - 1) * 100) }
             if let p = r.position { applePlaces[row, default: []].append((r.audioTime, p)); applePlaces[row] = Array(applePlaces[row]!.suffix(12)) }
             if let k = appleSkews[row], !k.isEmpty {
@@ -312,10 +317,15 @@ func speedFromPlaces(_ points: [(audioTime: Double, offset: Double)]) -> (ratio:
     var markedDisagreements: [Disagreement] {
         disagreements.map { x in
             var y = x
-            let near = { (id: String, first: (Song) -> Double?) in
-                self.songs.contains { Library.shared.sameSong($0.id, id) && first($0).map { abs($0 - x.at) <= Self.changeWindow } == true }
+            // Whether the recogniser named this song near the moment: its first and last namings of it bracket the
+            // moment, give or take `changeWindow`.
+            let near = { (id: String, first: (Song) -> Double?, last: (Song) -> Double?) in
+                self.songs.contains { s in
+                    guard Library.shared.sameSong(s.id, id), let a = first(s), let b = last(s) else { return false }
+                    return a - Self.changeWindow <= x.at && x.at <= b + Self.changeWindow
+                }
             }
-            y.atChange = near(x.apple, { $0.deckieFirst }) || near(x.deckie, { $0.appleFirst })
+            y.atChange = near(x.apple, { $0.deckieFirst }, { $0.deckieLast }) || near(x.deckie, { $0.appleFirst }, { $0.appleLast })
             return y
         }
     }
