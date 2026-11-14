@@ -158,7 +158,7 @@ small nor safe to ship unmeasured:
 About a day with the runner's cycles, plus a Windows 10 PC for point 3.
 
 **Measured since (Nov 14, `core-windows` run 43536290887).** The shim of point 1 is written
-(`core/Sources/CMediaFoundation`, 190 lines of C, opened at run time as point 2 asks) and builds on Windows; it is
+(`core/Sources/CMediaFoundation`, 176 lines of C, opened at run time as point 2 asks) and builds on Windows; it is
 **not used by the builder**. A test decodes `tone.m4a` with it on the runner (Windows Server 2025, build 26100)
 and reads where the click lands:
 
