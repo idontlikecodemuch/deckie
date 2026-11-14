@@ -92,6 +92,12 @@ struct PlayingPanel: View {
                     Text(Words.setByHandHow).font(Look.Listen.byHandHowFont).foregroundStyle(Theme.dim).fixedSize(horizontal: false, vertical: true)
                     Button(Words.chooseSong) { sug.tabRequest = 1 }.buttonStyle(PillStyle(prominent: true)).padding(.top, Look.Listen.byHandButtonTop)
                 }
+            } else if case .preparing(let n) = rec.deckie.state, rec.hearing != .apple {
+                // Deckie's index is being made from the crate file's fingerprints (once for each crate file).
+                VStack(alignment: .leading, spacing: Look.Listen.listeningGap) {
+                    Text(Words.preparingTitle).font(Look.Listen.titleFont).foregroundStyle(Theme.tx)
+                    Text(Words.preparingBody(n)).font(Look.Listen.listeningHelpFont).foregroundStyle(Theme.dim).fixedSize(horizontal: false, vertical: true)
+                }
             } else {
                 VStack(alignment: .leading, spacing: Look.Listen.listeningGap) {
                     Text(Words.listeningTitle).font(Look.Listen.titleFont).foregroundStyle(Theme.tx)
@@ -170,7 +176,9 @@ struct PlayingPanel: View {
     private var tinyStatus: String {
         var s: String
         switch rec.source {
-        case .idle: s = Library.shared.canRecognise ? Words.statusPaused : Words.notListening
+        case .idle:
+            if case .preparing = rec.deckie.state, rec.hearing != .apple { s = Words.preparingStatus }
+            else { s = Library.shared.canRecognise ? Words.statusPaused : Words.notListening }
         case .mic: s = rec.lastMatch == nil ? Words.statusListening : Words.statusListening
         case .file: s = Words.statusTestFile
         case .manual: s = Words.statusByHand

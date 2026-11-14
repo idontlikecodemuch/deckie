@@ -12,6 +12,16 @@ struct DebugSheet: View {
     @State private var files: [URL] = []
     @State private var setFiles: [String] = []
 
+    /// Deckie's index: its songs, its size on the iPad and its setting; or that it is being made.
+    private var indexLine: String {
+        switch rec.deckie.state {
+        case .ready: return rec.deckie.index.map { Words.indexReady($0.songCount, Double($0.fileBytes) / 1e6, DeckieIndex.settingName) } ?? Words.indexNone
+        case .preparing(let n): return Words.indexPreparing(n)
+        case .failed: return Words.indexFailed
+        case .none: return Words.indexNone
+        }
+    }
+
     var body: some View {
         NavigationStack {
             Form {
@@ -32,6 +42,25 @@ struct DebugSheet: View {
                     if rec.recActive { Button(rec.recPaused ? Words.resumeRecording : Words.pauseRecording) { rec.toggleRecPause() } }
                     Text(Words.setFilesWhere).font(Look.Debug.noteFont).foregroundStyle(.secondary)
                     ForEach(setFiles, id: \.self) { Text($0).font(Look.Debug.fileFont) }
+                }
+                Section(Words.recogniseSection) {
+                    @Bindable var rec = rec
+                    if rec.hasDeckie && rec.hasApple {
+                        Picker(Words.recogniseWith, selection: $rec.chosen) {
+                            ForEach(Hearing.allCases) { Text(Words.hearingName($0)).tag($0) }
+                        }
+                        Text(Words.recogniseHelp).font(Look.Debug.noteFont).foregroundStyle(.secondary)
+                    } else {
+                        LabeledContent(Words.inUse, value: rec.hasDeckie ? Words.onlyDeckie : rec.hasApple ? Words.onlyApple : Words.neither)
+                    }
+                    if rec.hasDeckie { LabeledContent(Words.deckieIndex, value: indexLine) }
+                    LabeledContent(Words.appMemory, value: Words.megabytes(appMemoryMB()))
+                }
+                if rec.hasDeckie && rec.hasApple {
+                    Section(Words.compareSection) {
+                        Text(rec.chosen == .both || !rec.comparison.songs.isEmpty ? rec.comparison.summary : Words.compareNotOn)
+                            .font(Look.Debug.noteFont)
+                    }
                 }
                 Section(Words.status) {
                     LabeledContent(Words.matches, value: "\(rec.matchCount)")
