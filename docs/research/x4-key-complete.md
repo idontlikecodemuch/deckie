@@ -220,7 +220,15 @@ Club music is about two thirds minor in every style, by a count that owes nothin
 collection. (Counting each of the 342 creators once: 67.4.) It also agrees with the one published chart count,
 65 percent.
 
-**Does more real club music move the scores?** RETRAIN_HERE
+**Does more real club music move the scores?** No. Two models were trained after the rule was fixed (a retrained model replaces the shipped one only if, showing keys on the same share of songs, its shown keys are right more often on MTG and on one other set and not worse by more than a point on the third), and read exactly as the shipped one is read. Table: `mixer/keytrial/x4_retrain_results.md`.
+
+| reader | MTG: shown keys right at 73.1 percent shown | MTG every song (major / minor) | GiantSteps+ at 83.8 shown | GiantSteps+ every song | GiantSteps Key at 80.0 shown | GiantSteps Key every song |
+|---|---:|---:|---:|---:|---:|---:|
+| shipped | 69.9 | 60.9 (59.8 / 61.4) | 89.3 | 79.9 | 73.1 | 63.6 |
+| shipped mix + 1,971 club excerpts | 70.8 | 61.4 (59.6 / 62.2) | 88.5 | 80.6 | 71.6 | 63.9 |
+| the 1,971 club excerpts alone | 66.4 | 58.8 (62.4 / 57.2) | 85.7 | 77.6 | 68.7 | 62.6 |
+
+Adding the club excerpts moves every figure by under a point and a half, up on one set and down on two: within the noise of one training run, and not a replacement by the rule (GiantSteps Key is 1.4 down). The club excerpts alone, with no human label at all, come within 2 to 4 points of the shipped reader, which says again that the reader's own labels teach almost as well as human ones; but more of the same kind of label does not teach more. The shipped file stays. What limits the reader now is not the amount of club audio but the quality of the labels: the excerpts are labelled by the untrained reader, so the model can learn little that reader does not already know. Human key labels on club music are what would move it.
 
 ### A slight lean: the candidates
 

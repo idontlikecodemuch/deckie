@@ -5,6 +5,35 @@ minor). Exact = key right. Home note = home note right, whatever the mode. Mode 
 note is right, the share with the right mode. The bar (D16) = exact within five points of Apple on each half:
 36.5 on the major half, 70.6 on the minor half.
 
+## Nov 14, 2026, 19:40 UTC. More club music does not move the scores; the shipped file stays; tests green
+
+Branch `key/versus-apple`. Detail: `docs/research/x4-key-complete.md`, section 2b; table `mixer/keytrial/x4_retrain_results.md`.
+
+**Done.** Both retrains finished and were read exactly as the shipped reader is read. Neither replaces it by the
+rule fixed before training, so there is no new version to publish.
+
+| reader | MTG shown keys right (73.1 % shown) | MTG every song | GiantSteps+ (83.8 % shown) | GiantSteps Key (80.0 % shown) |
+|---|---:|---:|---:|---:|
+| shipped | 69.9 | 60.9 | 89.3 | 73.1 |
+| shipped mix + 1,971 club excerpts | 70.8 | 61.4 | 88.5 | 71.6 |
+| club excerpts alone | 66.4 | 58.8 | 85.7 | 68.7 |
+
+Adding club audio labelled by our own reader changes each figure by under 1.5 points, up on one set and down on
+two: noise. The limit is label quality, not the amount of audio.
+
+**Tests.** `core-linux`, `core-windows` and `desk-window` are green on this branch at 88ac927. They ran with the
+untrained fallback, because the release asset is not uploaded yet; `pc-package` only runs on `pc/**` branches, so it
+did not run here.
+
+**Still open, for the owner or the main session.** (1) Upload the two files to the `models-1` release (names and
+hashes in the 17:00 entry and `DEPENDENCIES.md` section 13); until then every build uses the untrained reader.
+(2) The lean: I suggest the club share, 65.6 percent minor. (3) The bar wording: I suggest wording 1.
+
+**Next.** Nothing further is running. The one thing that would lift the reader is human key labels on club music
+under terms that allow shipping.
+
+Carry on.
+
 ## Nov 14, 2026, 17:00 UTC. One page: publishing the reader, open club music, a slight lean, what "right" means, the bar reworded
 
 Branch `key/versus-apple`. Detail: `docs/research/x4-key-complete.md`, sections 2a and 2b.
