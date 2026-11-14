@@ -77,6 +77,7 @@ enum JSONFile {
         let e = JSONEncoder()
         e.outputFormatting = [.sortedKeys, .prettyPrinted]
         try FileManager.default.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
-        try e.encode(value).write(to: url, options: .atomic)
+        let data = try e.encode(value)
+        try DeskSession.retrying { try data.write(to: url, options: .atomic) }
     }
 }

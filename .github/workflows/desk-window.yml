@@ -1,0 +1,122 @@
+# Deckie Desk on Windows and Linux (D32), on the working branch:
+# - the window: the Swift shell in desk-shell/ (the vendored `webview` library over WebView2 or WebKitGTK) built,
+#   then started for a few seconds: it must make its window, pass one message each way with a page and exit cleanly
+#   (`deckie-desk --self-test`);
+# - the engine: deckie-desk-engine run as a child program by its tests (docs/architecture/desk-protocol.md), with
+#   ONNX Runtime (Deckie's no-telemetry build) and the two models fetched from this repository's releases and checked
+#   by their pinned SHA-256, so the run of generated songs happens here rather than skips;
+# - the whole window: the shell starting the engine and showing the pages from desk-web/ (`deckie-desk --check`).
+name: desk-window
+
+on:
+  push:
+    branches: [pc/desk-window]
+    paths: [desk-shell/**, desk-web/**, core/**, .github/workflows/desk-window.yml]
+  workflow_dispatch:
+
+jobs:
+  linux:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    env:
+      ORT_DISABLE_TELEMETRY: "1"
+    container:
+      # The same pinned Swift 6.4.1 image as core-linux.yml (Ubuntu 24.04; DEPENDENCIES.md, section 1).
+      image: swift@sha256:6304481cf2717966b7ba175162e397ea2f2cc3161909f2b2a5cf40036079a0f7 # swift:6.4.1-noble
+    steps:
+      - uses: actions/checkout@v4
+      # WebKitGTK and GTK 3 come from Ubuntu's own archive, as they would on a DJ's Linux computer (LGPL, loaded from
+      # the system; DEPENDENCIES.md section 10). Xvfb is a screen with no monitor, for starting the window here.
+      - name: Install WebKitGTK, GTK 3, a virtual display and curl
+        run: |
+          apt-get update
+          apt-get install -y --no-install-recommends libwebkit2gtk-4.1-dev pkg-config xvfb xauth dbus-x11 ca-certificates curl
+          pkg-config --modversion webkit2gtk-4.1 gtk+-3.0
+      - name: Build the shell
+        working-directory: desk-shell
+        run: swift build -v
+      # WebKitGTK's own sandbox needs user namespaces, which a CI container does not give; this switch, for this
+      # check only, runs its web process without it. A DJ's computer keeps the sandbox.
+      - name: Start the window under a virtual display and exchange a message with the page
+        working-directory: desk-shell
+        env:
+          WEBKIT_DISABLE_SANDBOX_THIS_IS_DANGEROUS: "1"
+          DECKIE_SELF_TEST_SECONDS: "60"
+        run: xvfb-run -a dbus-run-session -- .build/debug/deckie-desk --self-test
+      - name: Fetch ONNX Runtime (Deckie's no-telemetry build) and the models, checked by hash
+        run: |
+          bash core/Tools/fetch-onnxruntime.sh --deckie
+          bash core/Tools/fetch-models.sh --no-export
+      - name: Build the engine and its tests
+        working-directory: core
+        run: swift build --build-tests
+      - name: The engine's tests (a child program, generated songs)
+        working-directory: core
+        run: swift test --skip-build --filter "DeskWordsTests|DeskSessionTests|EngineProcessTests"
+      # Desk's storage in a scratch folder, and no DJ libraries looked for in the runner's home folder.
+      - name: The whole window, the engine and the pages together
+        working-directory: desk-shell
+        env:
+          WEBKIT_DISABLE_SANDBOX_THIS_IS_DANGEROUS: "1"
+          DECKIE_DESK_HOME: /tmp/desk-check/desk
+          DECKIE_DJ_HOME: /tmp/desk-check/dj
+        run: |
+          xvfb-run -a dbus-run-session -- .build/debug/deckie-desk --check \
+            --engine ../core/.build/debug/deckie-desk-engine --pages ../desk-web
+
+  windows:
+    runs-on: windows-latest
+    timeout-minutes: 60
+    env:
+      ORT_DISABLE_TELEMETRY: "1"
+    steps:
+      - uses: actions/checkout@v4
+      # As core-windows.yml (DEPENDENCIES.md, sections 1 and 2).
+      - uses: compnerd/gha-setup-swift@main
+        with:
+          swift-version: swift-6.4.1-release
+          swift-build: 6.4.1-RELEASE
+      - name: Is the WebView2 runtime here?
+        shell: pwsh
+        run: |
+          $keys = @('HKLM:\SOFTWARE\WOW6432Node\Microsoft\EdgeUpdate\Clients\{F3017226-FE2A-4295-8BDF-00C3A9A7E4C5}',
+                    'HKLM:\SOFTWARE\Microsoft\EdgeUpdate\Clients\{F3017226-FE2A-4295-8BDF-00C3A9A7E4C5}')
+          foreach ($k in $keys) { if (Test-Path $k) { "$k : " + (Get-ItemProperty $k).pv } else { "$k : not present" } }
+      - name: Build the shell
+        working-directory: desk-shell
+        run: swift build -v
+      - name: Start the window and exchange a message with the page
+        working-directory: desk-shell
+        env:
+          DECKIE_SELF_TEST_SECONDS: "60"
+        run: .build\debug\deckie-desk.exe --self-test
+      # Deckie's own Windows build of ONNX Runtime 1.31.1 without the usage-reporting client, from this repository's
+      # release, checked against its pinned SHA-256 (DEPENDENCIES.md, section 6); the models as on Linux (Git's bash
+      # runs the script, with its curl and sha256sum).
+      - name: Fetch ONNX Runtime (Deckie's no-telemetry build) and the models, checked by hash
+        shell: pwsh
+        run: |
+          $zip = "onnxruntime-win-x64-1.31.1-deckie-no-telemetry.zip"
+          $url = "https://github.com/idontlikecodemuch/deckie/releases/download/onnxruntime-1.31.1-deckie-no-telemetry/$zip"
+          Invoke-WebRequest -Uri $url -OutFile "$env:RUNNER_TEMP\$zip"
+          $hash = (Get-FileHash "$env:RUNNER_TEMP\$zip" -Algorithm SHA256).Hash.ToLower()
+          if ($hash -ne "6a5b551f3b446f1d38f3b55cfb058e8ae8e9a6632834ada83a26da624a79a48f") { throw "wrong SHA-256: $hash" }
+          Expand-Archive "$env:RUNNER_TEMP\$zip" -DestinationPath "$env:RUNNER_TEMP\ort"
+          $dll = Get-ChildItem "$env:RUNNER_TEMP\ort" -Recurse -Filter onnxruntime.dll | Select-Object -First 1
+          "DECKIE_ONNXRUNTIME_LIB=$($dll.FullName)" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+          & "C:\Program Files\Git\bin\bash.exe" core/Tools/fetch-models.sh --no-export
+          if ($LASTEXITCODE -ne 0) { throw "fetch-models failed" }
+      - name: Build the engine and its tests
+        working-directory: core
+        run: swift build --build-tests
+      - name: The engine's tests (a child program, generated songs)
+        working-directory: core
+        run: swift test --skip-build --filter "DeskWordsTests|DeskSessionTests|EngineProcessTests"
+      - name: The whole window, the engine and the pages together
+        working-directory: desk-shell
+        shell: pwsh
+        run: |
+          $env:DECKIE_DESK_HOME = "$env:RUNNER_TEMP\desk-check\desk"
+          $env:DECKIE_DJ_HOME = "$env:RUNNER_TEMP\desk-check\dj"
+          .build\debug\deckie-desk.exe --check --engine ..\core\.build\debug\deckie-desk-engine.exe --pages ..\desk-web
+          if ($LASTEXITCODE -ne 0) { throw "the check failed ($LASTEXITCODE)" }
