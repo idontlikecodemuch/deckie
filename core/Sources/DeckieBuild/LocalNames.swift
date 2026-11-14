@@ -1,4 +1,5 @@
 import Foundation
+import DeckieCrate
 
 /// The free, local ways to a song's name (D30; research W section 6.2) that read text: whether a title or an artist is
 /// usable, a file name read by pattern, a folder read as the artist, the key Mixed In Key writes into a comment or a
@@ -7,23 +8,11 @@ public enum LocalNames {
     // MARK: usable names
 
     /// A title that names the song: not empty, not only a number, and not a placeholder such as "Track 01",
-    /// "Audio Track 3", "Untitled" or "Unknown".
-    public static func isUsableTitle(_ s: String?) -> Bool {
-        guard let t = s?.trimmingCharacters(in: .whitespacesAndNewlines), !t.isEmpty else { return false }
-        let words = t.lowercased().filter { !$0.isNumber }.trimmingCharacters(in: .whitespaces.union(.punctuationCharacters))
-        if words.isEmpty { return false }
-        let placeholders: Set<String> = ["track", "audio track", "audiotrack", "piste", "pista", "titel", "title", "untitled",
-                                         "unknown", "unknown title", "no title", "new recording", "recording", "song"]
-        return !placeholders.contains(words)
-    }
+    /// "Audio Track 3", "Untitled" or "Unknown". The rule is the crate file's own (`SongName`), so the booth agrees.
+    public static func isUsableTitle(_ s: String?) -> Bool { SongName.isUsableTitle(s) }
 
     /// An artist that names someone: not empty, and not "Unknown Artist", "Various Artists" or the like.
-    public static func isUsableArtist(_ s: String?) -> Bool {
-        guard let t = s?.trimmingCharacters(in: .whitespacesAndNewlines), !t.isEmpty else { return false }
-        let bad: Set<String> = ["unknown", "unknown artist", "various", "various artists", "va", "v.a.", "v/a", "artist",
-                                "<unknown>", "[unknown]", "none", "no artist"]
-        return !bad.contains(t.lowercased())
-    }
+    public static func isUsableArtist(_ s: String?) -> Bool { SongName.isUsableArtist(s) }
 
     // MARK: file names
 
