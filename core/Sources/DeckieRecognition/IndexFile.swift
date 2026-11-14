@@ -23,6 +23,8 @@ struct Block<T>: @unchecked Sendable {
     var bytes: Int { count * MemoryLayout<T>.stride }
 }
 
+struct FileSettings: Codable { var landmark: LandmarkConfig; var pairing: PairingConfig; var stamp: String }
+
 public struct IndexFileError: Error, CustomStringConvertible {
     public var description: String
 }
@@ -44,8 +46,7 @@ extension RecognitionIndex {
     /// entries, and their tags. Numbers are little-endian, as on every system Deckie runs on.
     public func fileData() -> Data {
         precondition(1.littleEndian == 1)
-        struct Settings: Codable { var landmark: LandmarkConfig; var pairing: PairingConfig }
-        let settings = (try? JSONEncoder().encode(Settings(landmark: landmark, pairing: pairing))) ?? Data()
+        let settings = (try? JSONEncoder().encode(FileSettings(landmark: landmark, pairing: pairing, stamp: stamp))) ?? Data()
         var parts: [Data] = [settings, Data(ids.joined(separator: "\n").utf8),
                              songStart.map(Int64.init).withUnsafeBufferPointer { Data(buffer: $0) },
                              pointStart.map(Int64.init).withUnsafeBufferPointer { Data(buffer: $0) }]
@@ -97,9 +98,8 @@ extension RecognitionIndex {
             guard place >= headerSize, place % 8 == 0, length >= 0, place + length <= data.count else { throw fail("a part lies outside the file") }
             places.append((place, length))
         }
-        struct Settings: Codable { var landmark: LandmarkConfig; var pairing: PairingConfig }
-        guard let settings = try? JSONDecoder().decode(Settings.self, from: data.subdata(in: places[0].0..<(places[0].0 + places[0].1))) else { throw fail("settings") }
-        landmark = settings.landmark; pairing = settings.pairing
+        guard let settings = try? JSONDecoder().decode(FileSettings.self, from: data.subdata(in: places[0].0..<(places[0].0 + places[0].1))) else { throw fail("settings") }
+        landmark = settings.landmark; pairing = settings.pairing; stamp = settings.stamp
         let names = String(decoding: data.subdata(in: places[1].0..<(places[1].0 + places[1].1)), as: UTF8.self)
         ids = names.isEmpty ? [] : names.split(separator: "\n", omittingEmptySubsequences: false).map(String.init)
         func ints(_ i: Int) -> [Int] {
@@ -118,5 +118,38 @@ extension RecognitionIndex {
         guard pointFrame.count == pointPitch.count, pointFrame.count == (pointStart.last ?? 0), offsets.count == (1 << pairing.tableBits) + 1 else {
             throw fail("the parts do not fit together")
         }
+    }
+}
+
+extension RecognitionIndex {
+    /// A short mark of which songs an index was made from: their ids and the sizes of their fingerprints, folded
+    /// into 16 hex digits (FNV-1a). An index file whose stamp is not the crate file's own is made again.
+    public static func stamp(of songs: [(id: String, points: Int, frames: Int)]) -> String {
+        var h: UInt64 = 0xcbf2_9ce4_8422_2325
+        func mix(_ byte: UInt8) { h = (h ^ UInt64(byte)) &* 0x0000_0100_0000_01b3 }
+        for s in songs {
+            for b in s.id.utf8 { mix(b) }
+            mix(0)
+            for v in [s.points, s.frames] { for k in 0..<8 { mix(UInt8((v >> (8 * k)) & 0xff)) } }
+        }
+        return String(h, radix: 16)
+    }
+
+    /// The booth's way to its index: opens the file at `url` in place if it is there, readable, made with the
+    /// booth's settings and from the same songs (`stamp`); otherwise builds the index from `songs()` (the crate
+    /// file's fingerprints), writes it to `url`, and opens that. So the building happens once per crate file, the
+    /// first time the booth sees it, and what is used afterwards is always the mapped file.
+    public static func cached(at url: URL, stamp: String, songs: () -> [(id: String, landmarks: Landmarks)]) throws -> RecognitionIndex {
+        if let kept = try? RecognitionIndex(contentsOf: url), kept.stamp == stamp, kept.settingsMatch(PairingConfig.booth) { return kept }
+        let built = RecognitionIndex(songs: songs(), pairing: PairingConfig.booth, stamp: stamp)
+        try built.write(to: url)
+        return try RecognitionIndex(contentsOf: url)
+    }
+
+    /// Whether this index was built with these settings (the table's size aside, which the index sets itself).
+    func settingsMatch(_ wanted: PairingConfig) -> Bool {
+        var mine = pairing, theirs = wanted
+        mine.tableBits = 0; theirs.tableBits = 0
+        return mine == theirs && landmark == LandmarkConfig()
     }
 }
