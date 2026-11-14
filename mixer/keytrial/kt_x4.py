@@ -39,14 +39,25 @@ import numpy as np
 import kt, kt_ship as KS, kt_prof as KPF, kt_x
 
 FMA = os.path.join(kt.DATA, "fma")
+# A second body of open audio (added Nov 14 for the owner's question on club music): excerpts of about a minute from
+# the middle of each track of the Internet Archive's netlabel releases whose own licence is CC BY, CC0 or public
+# domain and whose tags name a club style exactly (techno, house, electro, drum and bass, trance, breaks, dubstep,
+# garage, acid, hardcore, dance): $DECKIE_KT_DATA/ia/usable.json and audio/<id>.mp3; features in $CACHE/open_ia.
+#
+# THE CLUB LEAN, fixed on Nov 14 before the netlabel clips were read and before any score with it was looked at:
+# the share of minor among the untrained three-answer reader's key answers on those club clips. It is candidate (c)
+# of the owner's four; whatever it comes out at is what is offered, and it is the one recommended if it lies above
+# the pinned 55.2. (Leans of 65 and 85 percent, from published counts of the test collections' own shop, had been
+# scored by then and are reported beside it; they are not chosen by their scores.)
+CORPORA = {"fma": (FMA, "open"), "ia": (os.path.join(kt.DATA, "ia"), "open_ia")}
 ELECTRONIC = "Electronic"
 SSL_EPOCHS, SSL_SNIP = 12, 72   # passes over the open clips with no labels; snippet length, 14 s
 PSEUDO_CAP = 2000          # pseudo-labelled clips the small model is given (CPU time), drawn at random with seed 0
 
 def feat_one(item):
-    tid, path = item
+    tid, path, sub = item
     import soundfile as sf, librosa, kt_three as T, kt_extract as KE
-    out = os.path.join(kt.CACHE, "open", tid + ".npz")
+    out = os.path.join(kt.CACHE, sub, tid + ".npz")
     if os.path.exists(out): return tid, None
     try:
         y, sr = sf.read(path, dtype="float32", always_2d=True); y = y.mean(axis=1)
@@ -58,10 +69,11 @@ def feat_one(item):
     except Exception as ex:
         return tid, str(ex)[:80]
 
-def main_feats(jobs):
-    os.makedirs(os.path.join(kt.CACHE, "open"), exist_ok=True)
-    use = json.load(open(os.path.join(FMA, "usable.json")))
-    todo = [(t, os.path.join(FMA, "audio", t + ".mp3")) for t in use if os.path.exists(os.path.join(FMA, "audio", t + ".mp3"))]
+def main_feats(jobs, corpus="fma"):
+    root, sub = CORPORA[corpus]
+    os.makedirs(os.path.join(kt.CACHE, sub), exist_ok=True)
+    use = json.load(open(os.path.join(root, "usable.json")))
+    todo = [(t, os.path.join(root, "audio", t + ".mp3"), sub) for t in use if os.path.exists(os.path.join(root, "audio", t + ".mp3"))]
     todo.sort(key=lambda it: ELECTRONIC not in use[it[0]]["tops"])          # electronic first: THE LEAN needs them all
     from multiprocessing import Pool
     bad = []
@@ -71,16 +83,18 @@ def main_feats(jobs):
             if k % 1000 == 0: print(k, flush=True)
     print(f"tracks usable {len(use)}, with audio {len(todo)}, not read {len(bad)} {bad[:3]}")
 
-def load_open(with_L=False):
-    use = json.load(open(os.path.join(FMA, "usable.json"))); rows = []
+def load_open(with_L=False, corpus="fma"):
+    root, sub = CORPORA[corpus]
+    use = json.load(open(os.path.join(root, "usable.json"))); rows = []
     artists = sorted({v["artist"] for v in use.values()})
     for tid, v in use.items():
-        p = os.path.join(kt.CACHE, "open", tid + ".npz")
+        p = os.path.join(kt.CACHE, sub, tid + ".npz")
         if not os.path.exists(p): continue
         z = np.load(p); t = np.zeros(24, np.float32); k = int(z["key"])
         if k >= 0: t[k] = 1
         r = {"id": "open" + tid, "pa": z["pa"], "pb": z["pb"], "answer": str(z["answer"]), "key": k, "target": t, "kind": "pseudo",
-             "electronic": ELECTRONIC in v["tops"], "tops": v["tops"], "licence": v["licence"], "group": 100000 + artists.index(v["artist"]), "path": p}
+             "electronic": ELECTRONIC in v["tops"], "tops": v["tops"], "licence": v["licence"], "group": (100000 if corpus == "fma" else 200000) + artists.index(v["artist"]), "path": p,
+             "styles": v.get("styles", [])}
         if with_L: r["L"] = z["L"]
         rows.append(r)
     return rows
@@ -499,6 +513,58 @@ def main_apple():
     print(f"| keys shown, within one step on the wheel, Apple on the same songs | {w1(k, shown):.1f} | {w1(ap, shown):.1f} |")
     print(f"| every song, the home note right | {r[5]:.1f} | {a[5]:.1f} |")
 
+def pinned():
+    t = open(os.path.join(kt.HERE, "..", "..", "core", "Sources", "DeckieCore", "Key", "LearnedKey.swift")).read()
+    return float(t.split("pinnedMinorLean = ")[1].split("\n")[0]), float(t.split("pinnedTemperature = ")[1].split("\n")[0])
+
+def releaned(P, share, tm):
+    """the shipped probabilities with the lean set to a share of minor keys (None: no lean at all)."""
+    lean0, T = pinned(); lp = T * np.log(P + 1e-300); lp[:, 12:] -= lean0
+    if share is not None: lp[:, 12:] += np.log(share / (1 - share)) - np.log(tm / (1 - tm))
+    return softmax(lp / T)
+
+def kinds_row(pred, true):
+    s = kt.stats(pred, true); return [s["exact"], s["parallel"], s["relative"] + s["fifth"], s["other"], s["exact"] + s["relative"] + s["fifth"]]
+
+def main_dj(extra=()):
+    """python kt_x4.py dj [share ...]: the DJ's view of right and wrong (exact; right home note, wrong mode; a
+    neighbour on the wheel; anything else) for the reader as shipped and Apple, and every candidate lean on every
+    measure -> x4_dj_results.md. Extra shares of minor (percent) are added to the candidates."""
+    sys.stdout = KS._Tee(os.path.join(kt.HERE, "x4_dj_results.md"))
+    sets = KS.test_sets(); M = sets[0]; y = M["key"]; ap = M["apple"]; tm = float(np.load(os.path.join(kt.CACHE, "x4_cnn_mix.npz"))["train_minor"])
+    P = {n: np.load(os.path.join(kt.CACHE, f"x4_shipped_{n}.npy")) for n in ("mtg", "gsplus", "gs")}
+    kind, k, h = three(P["mtg"]); shown = kind == 0; home = kind == 1; mi = y >= 12
+    f = lambda v: " | ".join(f"{x:.1f}" for x in v)
+    print("**What right and wrong mean to a DJ (MTG, 1,270 clips; percent of the songs in the row)**\n\n| reader, songs | songs | exact (home note and mode) | right home note, wrong mode | a neighbour on the wheel (relative key, or a fifth away) | anything else | within one step on the wheel (exact or a neighbour) |\n|---|---:|---:|---:|---:|---:|---:|")
+    print(f"| ours, the keys it shows | {int(shown.sum())} | {f(kinds_row(k[shown], y[shown]))} |")
+    print(f"| Apple, on those same songs | {int(shown.sum())} | {f(kinds_row(ap[shown], y[shown]))} |")
+    print(f"| ours, every song (forced to name a key) | {len(y)} | {f(kinds_row(k, y))} |")
+    print(f"| Apple, every song | {len(y)} | {f(kinds_row(ap, y))} |")
+    for nm, sel in (("major songs", ~mi), ("minor songs", mi)):
+        print(f"| ours, the keys it shows, {nm} | {int((shown & sel).sum())} | {f(kinds_row(k[shown & sel], y[shown & sel]))} |")
+        print(f"| Apple, on those same songs | {int((shown & sel).sum())} | {f(kinds_row(ap[shown & sel], y[shown & sel]))} |")
+    hk = k[home]; hy = y[home]; par = (hk % 12 == hy % 12) & (hk != hy)
+    print(f"\nHome-note answers: {int(home.sum())} songs ({100 * home.mean():.1f} percent). The home note shown is right on {100 * (h[home] == hy % 12).mean():.1f} percent of them. "
+          f"Had the reader named its likeliest key there instead: exact {100 * (hk == hy).mean():.1f}, right home note with the wrong mode {100 * par.mean():.1f} ({int(par.sum())} songs), a neighbour {100 * (kinds_row(hk, hy)[2]) / 100:.1f}, anything else {kinds_row(hk, hy)[3]:.1f}.")
+    allpar = (k % 12 == y % 12) & (k != y)
+    print(f"Wrong-mode errors if every song were given a key: {int(allpar.sum())}. Shown as a key: {int((allpar & shown).sum())}. Avoided by a home-note answer: {int((allpar & home).sum())}. Avoided by not sure: {int((allpar & (kind == 2)).sum())}.")
+    print(f"Apple's wrong-mode errors over every song: {int(((ap % 12 == y % 12) & (ap != y)).sum())}.")
+    # leans
+    cands = [("no lean at all (the training mix, %.1f percent minor)" % (100 * tm), None), ("as pinned now: 55.2, open electronic music of the Free Music Archive as the reader hears it", 0.552)]
+    cands += [("65: a published count of one dance chart (letter X)", 0.65), ("85: the published share of the GiantSteps Key set (Knees and others, 2015)", 0.85)]
+    cands += [(f"{x:g}: {why}", x / 100) for x, why in extra]
+    print("\n**Every candidate lean, the reader as shipped otherwise (percent)**\n\n| lean to this share of minor | MTG: major half | minor half | bar as written (36.5 / 70.6) | every song exact | mean of halves | within one step | key shown | shown keys right | Apple right on those songs | shown keys within one step | home note only | GiantSteps+: every song | shown | shown right | GiantSteps Key: every song | shown | shown right |\n|---|" + "---:|" * 2 + "---|" + "---:|" * 14)
+    apr = KS.row_of(ap, y)
+    for name, share in cands:
+        Q = releaned(P["mtg"], share, tm); kd, kk, hh = three(Q); r = KS.row_of(kk, y); sh = kd == 0
+        bar = "passes" if r[1] >= apr[1] - 5 and r[2] >= apr[2] - 5 else ("fails: " + ", ".join(x for x in ((f"major {apr[1] - 5 - r[1]:.1f} short" if r[1] < apr[1] - 5 else ""), (f"minor {apr[2] - 5 - r[2]:.1f} short" if r[2] < apr[2] - 5 else "")) if x))
+        row = f"| {name} | {r[1]:.1f} | {r[2]:.1f} | {bar} | {r[0]:.1f} | {r[3]:.1f} | {r[4]:.1f} | {100 * sh.mean():.1f} | {100 * (kk[sh] == y[sh]).mean():.1f} | {100 * (ap[sh] == y[sh]).mean():.1f} | {kinds_row(kk[sh], y[sh])[4]:.1f} | {100 * (kd == 1).mean():.1f} |"
+        for D, n in ((sets[1], "gsplus"), (sets[2], "gs")):
+            Q = releaned(P[n], share, tm); kd, kk, hh = three(Q); sh = kd == 0
+            row += f" {100 * (kk == D['key']).mean():.1f} | {100 * sh.mean():.1f} | {100 * (kk[sh] == D['key'][sh]).mean():.1f} |"
+        print(row)
+    print(f"| Apple | {apr[1]:.1f} | {apr[2]:.1f} | | {apr[0]:.1f} | {apr[3]:.1f} | {apr[4]:.1f} | 100 | {apr[0]:.1f} | | {apr[4]:.1f} | | | | | | | |")
+
 def main_record(mode):
     """python kt_x4.py record <mode>: every recording the chosen model learned from, with its page and its licence
     -> core/.models/deckie-key-training-recordings.tsv, beside the model's file and, like it, not in the repository
@@ -533,7 +599,7 @@ def main_record(mode):
 
 if __name__ == "__main__":
     a = sys.argv
-    if a[1] == "feats": main_feats(int(a[a.index("--jobs") + 1]) if "--jobs" in a else 4)
+    if a[1] == "feats": main_feats(int(a[a.index("--jobs") + 1]) if "--jobs" in a else 4, a[a.index("--corpus") + 1] if "--corpus" in a else "fma")
     elif a[1] == "pseudo": main_pseudo()
     elif a[1] == "cnn": main_cnn(a[2], int(a[a.index("--threads") + 1]) if "--threads" in a else 4)
     elif a[1] == "report": main_report()
@@ -543,3 +609,4 @@ if __name__ == "__main__":
     elif a[1] == "parity": main_parity(a[2], a[3])
     elif a[1] == "fixture": main_fixture()
     elif a[1] == "apple": main_apple()
+    elif a[1] == "dj": main_dj([(float(x.split("=")[0]), x.split("=")[1]) for x in a[2:]])
