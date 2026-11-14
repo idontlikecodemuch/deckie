@@ -9,7 +9,11 @@ library only.
 
 What must be the same, exactly: the songs (their ids, which are the first 16 hexadecimal digits of the SHA-256 of
 each file's bytes), their paths and names, every whole number (bar counts, bar numbers, sections, mix windows), every
-text (key, labels, flags), every true or false, the import log's entries, and which fields are present.
+text (key, labels, flags, and each song's `file.cover`, the name of its cover), every true or false, the import log's
+entries, and which fields are present. The covers too (D36): both crate files must hold the same set of
+`covers/*.jpg` files with identical bytes. A cover is named by the hash of the picture it was made from, so the names
+are the same on any two machines; the bytes are the same between Linux and Windows, which make the thumbnail with
+the same code (not between either and a Mac, whose system makes its own: this script compares Linux and Windows).
 
 What may differ, and by how much (the tolerance, by field name). The two machines run the same code on the same
 bytes, so every difference comes from arithmetic that is allowed to differ in its last digit: the C maths library
@@ -158,7 +162,14 @@ def main():
                 continue
             r.number(kind, f"{path}[{i}]", x, y, tolerance)
 
-    lines = [f"Compared {len(set(ta) & set(tb))} songs, {len(sidecars)} sidecar files.", ""]
+    covers = sorted(k for k in set(fa) | set(fb) if k.startswith("covers/") and k.endswith(".jpg"))
+    for path in covers:
+        if path not in fa or path not in fb:
+            r.failures.append(f"{path}: only in the {'second' if path not in fa else 'first'}")
+        elif fa[path] != fb[path]:
+            r.failures.append(f"{path}: the bytes differ ({len(fa[path])} bytes against {len(fb[path])})")
+
+    lines = [f"Compared {len(set(ta) & set(tb))} songs, {len(sidecars)} sidecar files, {len(covers)} covers.", ""]
     if r.largest:
         lines += ["| Field | Largest difference | Allowed | Where |", "|---|---|---|---|"]
         for field in sorted(r.largest):

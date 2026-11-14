@@ -176,6 +176,9 @@ extension CrateTrack {
         if let rel = file.rel, isAbsolute(rel) {
             add("file.rel", "\"\(rel)\" is an absolute path; the crate keeps paths relative")
         }
+        if let c = file.cover, !CrateIDs.isSHA256(c) {
+            add("file.cover", "\"\(c)\" must be 64 lower-case hexadecimal characters (the SHA-256 hash of the cover's picture)")
+        }
         if let h = file.sha256 {
             if !CrateIDs.isSHA256(h) {
                 add("file.sha256", "\"\(h)\" must be 64 lower-case hexadecimal characters (a SHA-256 hash)")

@@ -469,6 +469,26 @@ record, counted by reason and extension, and the files in the crate with damaged
   ("damaged frame at 1:01.234 (26 ms), played as silence"), so the DJ knows the file is faulty though playable.
 - **An existing crate** at `--out` keeps its id, name, creation date and devices, and its records' signatures are
   carried over; something at `--out` that is not a crate is never overwritten.
+- **Covers** (D36; `CoverReader.swift`, `BuildCovers.swift`; the format in `docs/architecture/crate-format.md`).
+  Each song that gets a record gets its cover: `file.cover` and one 128-pixel JPEG in the crate's `covers/` for each
+  distinct picture, made by `Cover.make` (DeckieCovers). The picture is the file's own front cover, its bytes as
+  they are in the tag: ID3v2 `APIC` (2.3, 2.4) and `PIC` (2.2), also in a WAV or AIFF file's ID3 chunk; FLAC
+  `PICTURE` blocks and the `METADATA_BLOCK_PICTURE` or `COVERART` Vorbis comment; MP4 `covr`. The picture typed
+  front cover is taken, else the first. A file with no picture of its own takes **a picture beside it**: in the
+  song's own folder, a file named `cover`, `folder`, `front`, `albumart` or `album` with the extension `.jpg`,
+  `.jpeg` or `.png`, in any upper or lower case, tried in that order (`folder.jpg` is what Windows Media Player and
+  Explorer write; `cover.jpg` and `front.jpg` what rippers and stores write). The known weakness: a folder of
+  unrelated singles holding one such picture gives each of them that picture. Songs sharing a picture share one
+  cover. A picture that is damaged, of another kind, or over the limits (32 MB, 8,192 pixels a side) gives no
+  cover; the song goes in all the same, and the summary's `covers:` line counts such pictures by reason
+  (`unreadable`, `too_large`, `too_detailed`) beside the songs with a cover, the distinct covers and their bytes
+  (`BuildResult.covers`). **A second run redoes no cover**: the work folder's line for a file keeps which picture
+  it had and whether it made a cover, and `<name>.deckiebuild/covers/<hash>.jpg` keeps the thumbnail, so an
+  unchanged file gets its cover back with no music file opened for it and nothing decoded. Only a file with no
+  picture of its own is asked again which picture file its folder has now (a listing; when the DJ has added,
+  changed or removed it, that picture alone is read). The tag readers still count each picture as left out of the
+  text tags (`left_out.picture`). Removing the last song that names a cover removes the cover (`CrateWriter`).
+  Songs read off a music CD have none. Tests: `CoverReaderTests`, `CoverBuildTests`.
 - **rekordbox** (`--rekordbox export.xml`, rekordbox's File, Export Collection in xml format): each file is matched to
   its collection entry by its location (the same path; else the entry whose path ends with the file's path below the
   folder, for an export made on another machine; else the one entry with the same name and size). The DJ's
@@ -520,6 +540,8 @@ that storage is gone the crate file itself is unpacked first, so the crate keeps
 crate file's name is never overwritten; no folder is left out by its name; the default for songs read at once is
 research P's (one for every two processors, 3 GB or a quarter of memory left over). The log holds the program's and
 the machine's facts, counts, timings and the files not added with their reasons, and no path above the music folder.
+Covers (above) are in the one file as every folder of the package is; the closing words say how many songs have
+one, and the log has their count, their bytes and the crate file's size.
 `Tests/DeckiePCTests` covers the plan, the words and, with the engine, a whole run, a second run, a new song and
 lost storage.
 
@@ -548,6 +570,12 @@ Windows, by Windows' own hidden mark; a `_old` folder), build a crate file from 
 the folder on Linux in the same run and compares the two crate files with `Tools/compare_crates.py`, whose header
 says what must be identical and what tolerance the rest gets, and why. No audio is committed: the MP3 is encoded once
 per run on Linux and handed to the Windows job.
+
+The folder has pictures too, made by code like the audio (none is committed): a JPEG beside the WAV, a PNG inside
+the FLAC, and four bytes that are not a picture beside the MP3. So two songs have a cover and one does not, which
+`check` requires; it prints the songs with a cover, the distinct covers, their bytes, and the crate file's size with
+and without its `covers/` folder (measured on Linux: 2 songs, 2 covers, 4,558 bytes; 26,002 bytes with, 20,992
+without). `compare_crates.py` requires the same `covers/*.jpg` files with identical bytes on Linux and Windows.
 
 On Windows today the builder reads WAV (16-, 24- and 32-bit integer, 32-bit float, plain and "extensible"), AIFF and
 AIFF-C, MP3 and FLAC (native and Ogg-FLAC, to 24 bits), as on Linux, and, on Windows only, AAC and Apple Lossless

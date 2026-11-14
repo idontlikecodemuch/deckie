@@ -135,7 +135,7 @@ public final class DeskProtocol: @unchecked Sendable {
         if type == "quit" { reply(id); return false }
         lock.lock(); defer { lock.unlock() }
         let readOnly: Set<String> = ["state", "drives.list", "crate.songs", "source.removeCount", "run.nameDisc", "name.split",
-                                     "song.audio"]
+                                     "song.audio", "song.cover"]
         if running && !readOnly.contains(type) { fail(id, "busy", "a run is going"); return true }
         do {
             try dispatch(type, obj, id)
@@ -222,6 +222,12 @@ public final class DeskProtocol: @unchecked Sendable {
         case "song.audio":
             try needCrate()
             try sendAudio(try Self.string(obj, "song"), decoded: (obj["decoded"] as? Bool) ?? false, id)
+        case "song.cover":
+            // A cover (D36) travels as Listen's sound does, inside a message on standard output: no path, no port.
+            // It is at most 24 KB, so the reply itself carries it. No cover, for whatever reason, is a plain answer.
+            if let data = s.cover(try Self.string(obj, "song")) {
+                reply(id, ["cover": true, "type": "image/jpeg", "bytes": data.count, "data": data.base64EncodedString()])
+            } else { reply(id, ["cover": false]) }
         case "run.add":
             let path = try Self.string(obj, "path")
             var isDir: ObjCBool = false

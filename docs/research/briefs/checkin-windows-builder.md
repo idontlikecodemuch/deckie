@@ -2,6 +2,89 @@
 
 Newest entry first. Each entry: when, what is done, what failed and why, what is next, and one plain line.
 
+## Nov 14, 2026, 08:00 UTC: covers (D36) on branch `pc/covers`: core, builders and Desk written; all four workflows green
+
+**Green on commit `a15a78b`**: `core-linux` 43572620220, `core-windows` 43572620242 (which also compares the
+Linux and Windows crate files: the same covers, byte for byte), `desk-window` 43572620234, `pc-package` 43572620331.
+Covers are parked here while the packaging of Desk's window is done first, on `pc/package-desk` (the owner's change
+of order). What is left for covers is listed under "Not done" below; nothing is half-written.
+
+**The addition as written** (`docs/architecture/crate-format.md`, "Addition with D36"):
+
+- A record may carry **`file.cover`**: the SHA-256 of the **source picture's bytes**, left out when the song has
+  none. The thumbnail is **`covers/<hash>.jpg`**, stored once for every song that shares the picture.
+- **One size**: longest side 128 pixels, shape kept, never scaled up; a baseline JPEG at quality 80, anything
+  see-through over white, no metadata. A reader may rely on at most 128 pixels and at most 24 KB.
+- **Limits on the source**: JPEG or PNG only, at most 32 MB and 8,192 pixels a side, the size read before anything
+  is decoded. A damaged, enormous or other-format picture gives no cover; the song still goes in and the picture
+  is counted.
+- **No cap for the whole crate file**; the cap per cover bounds it.
+- **The single-file form** carries the folder as it carries any folder. Nothing new.
+- The writer refuses a record whose cover file is missing and deletes covers no record names, so the last song of
+  a release leaving a crate takes its cover with it.
+- **Why the source's hash**: the thumbnail's bytes are the same on Linux and Windows (a hash pinned in the tests
+  passed on both runners) but will differ on a Mac, which uses the system's image code. Named by the source, one
+  release has one entry whichever computer read it.
+
+**Where the picture comes from**: the file's own front cover (ID3 `APIC` and `PIC`, FLAC `PICTURE` and the two
+Vorbis-comment forms, MP4 `covr`); else a picture beside the song, in its own folder, named `cover`, `folder`,
+`front`, `albumart` or `album` with `.jpg`, `.jpeg` or `.png` (what Windows Media Player, Explorer, rippers and
+stores write). Known weakness: a folder of unrelated singles with one such picture gives every song that picture.
+
+**The builders** (`deckie-build`, `deckie-make`, Desk's run) write covers through one path. A second run does not
+redo them: each file's line in the work folder remembers where its picture came from and its hash, and the
+thumbnail is kept there. A picture added, changed or removed beside the music later is noticed without reading any
+song.
+
+**Desk**: a new request `song.cover` answers with the JPEG inside the message (no port, the page never told a path
+or a hash), each song row says whether it has one, and the naming panel shows it at 80 pixels with an empty square
+of the same size when there is none. Protocol number unchanged (an addition). Two new words in `DeskWords`.
+
+**Measured:**
+
+| | |
+|---|---|
+| A cover from the generated test pictures | 2.2 to 2.3 KB |
+| The worst case tried (512 pixels of random colour) | 5.4 KB |
+| The end-to-end folder (3 songs, 2 covers) | crate file 20,992 bytes without covers, 26,002 with: 4,558 bytes of covers |
+
+**What 2,000 songs would gain.** From these numbers, about 2.3 KB for each distinct picture: 4.6 MB if every song
+has its own cover, under 0.5 MB if they come ten to a release. The rest of the crate file is about 8 MB at that
+size, so the worst case adds a little over half again. Real sleeves have more detail than my generated pictures,
+so 3 to 5 KB each is the safer guess (6 to 10 MB for 2,000 singles); that part is an estimate, not a measurement,
+because no real cover is in the repository.
+
+**Dependency chosen**: stb_image 2.32 and stb_image_write 1.18, two single-file C libraries, public domain or MIT
+at the user's choice, both on the allowlist; vendored by hash (`DEPENDENCIES.md` section 11). The licence was not
+in doubt, so I did not stop. Their resizer was not taken: scaling is 60 lines of whole-number arithmetic of our own,
+which is what makes the bytes the same everywhere. **A judgement to check**: stb_image is not hardened against
+hostile pictures. Only JPEG and PNG are compiled in, sizes are checked before decoding, and a failure gives no
+cover; Wuffs (Apache 2.0) is the stronger decoder if that is wanted.
+
+**What the Mac window and the iPad app need** (not built, could not be):
+
+- Read `file.cover`; when present show `covers/<hash>.jpg` from the package, else a placeholder. For the
+  single-file form, after `CrateArchive.unpack`, or straight from `CrateArchive.read(file)`.
+- The Mac's Desk gets covers from the shared run with no change if it builds against this core; the thumbnail is
+  then made by `Cover.systemThumbnail` (ImageIO). **That function has never been compiled**: it was written on
+  Linux. It needs a build and a look on a Mac first.
+- The booth only reads.
+
+**Failed along the way:** the window workflow failed twice (runs 43569575522 and 43570530998) in two older engine
+tests that read an event straight after a reply; with one more test running beside them they lost the race on the
+runners (never here). They now wait for the event. A third such check failed once more on Windows (run 43571817713) and was fixed the same way. One Windows core
+run (43569575464) failed its test step on the same commit; I did not read its log and took it for the same race,
+which the later green runs support but do not prove.
+
+**Could not verify:** anything on a Mac or an iPad; the pages' cover drawing in a real web view (the window check
+runs in CI only); real covers from real files (every test picture is generated, every tag built by hand); a
+library with thousands of covers; ID3 pictures written by iTunes or Serato specifically.
+
+**Not done:** songs read off a music CD get no cover; thumbnails in the work folder are never cleared out; the
+packaging of Desk's window was not started, as told.
+
+carry on
+
 **Newest zip, with `.m4a` reading: `pc-package` run 43545418975** (branch `pc/m4a`, commit `665490a`), artifact
 `Deckie-for-PC-first-test` (id 14094366437): **122,379,915 bytes**, SHA-256
 `4da005fe55bce0d5be43b12d5aba0806185c39c685a565b48c9492215308874d`. It supersedes the one named further down.

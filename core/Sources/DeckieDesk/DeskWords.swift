@@ -441,6 +441,10 @@ public enum DeskWords {
         "listenPutBack": "Put {source} back in to listen.",
         "listenCantPlay": "This window can't play {kind} files, and Desk can't turn this one into a kind it can. Listen to it in another program.",
         "listenCouldntPlay": "Couldn't play {title}. {detail}",
+        // new (D36): a song's cover in the names panel. Both are read out, not shown: the picture's label, and the
+        // label of the empty square a song without one gets. Placeholders until the copy audit.
+        "cover": "Cover",
+        "noCover": "No cover",
         // new: naming many songs at once, with a preview (letter AA, 3.6).
         "nameTools": "Name songs",
         "namesFromFileNames": "Names from the file names…",

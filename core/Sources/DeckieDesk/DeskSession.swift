@@ -384,6 +384,27 @@ public final class DeskSession {
         return try DeskAudio.find(t, info: current, paths: placePaths, open: open, musicCDs: musicCDs)
     }
 
+    // MARK: covers (D36)
+
+    /// A song's cover for the window to show: the bytes of `covers/<hash>.jpg` in the crate file Desk keeps, or nil
+    /// when there is none to show (no such song, a song without a cover, a file that is gone, too large or not a
+    /// JPEG). The hash is the record's own and is checked before it names a file, so nothing a window sends can
+    /// reach any other file; a cover that cannot be read is no cover, never an error, because a missing picture
+    /// must not stop a DJ naming a song.
+    public func cover(_ id: String) -> Data? {
+        guard let info = current, let hash = crate?.tracks.first(where: { $0.id == id })?.file.cover,
+              CrateIDs.isSHA256(hash) else { return nil }
+        let file = shelf.package(info.id).appendingPathComponent(CrateFormat.coverPath(hash))
+        // Only an ordinary file is read (a link in a crate file brought in from elsewhere could point anywhere), and
+        // its size is asked first, so a file put there by mistake is never loaded whole.
+        guard let facts = try? FileManager.default.attributesOfItem(atPath: file.path),
+              facts[.type] as? FileAttributeType == .typeRegular,
+              let size = facts[.size] as? NSNumber, size.intValue <= CrateFormat.coverMaxBytes,
+              let data = try? Data(contentsOf: file), data.count <= CrateFormat.coverMaxBytes,
+              data.starts(with: [0xFF, 0xD8, 0xFF]) else { return nil }
+        return data
+    }
+
     // MARK: out
 
     /// The crate file written into `folder` under the crate's name; its path. This is the one place where Desk on

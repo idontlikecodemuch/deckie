@@ -60,6 +60,9 @@ public struct DeskSongRow: Codable, Equatable, Sendable {
     /// Notes as codes: `needsName`, `damagedFrames`, `gridUnsure`, `vocalsNotRead`, `signed`.
     public var notes: [String]
     public var damagedFrames: Int
+    /// Whether the song has a cover (D36), so a window asks for the picture (`song.cover`) only when there is one.
+    /// The picture itself, and the hash that names it, are not in the row.
+    public var cover: Bool
 
     public init(_ t: CrateTrack, facts: DeskNaming.Facts? = nil) {
         id = t.id
@@ -93,6 +96,7 @@ public struct DeskSongRow: Codable, Equatable, Sendable {
         file = t.file.name
         signed = !t.signatures.isEmpty
         damagedFrames = t.file.damagedFrames?.count ?? 0
+        cover = t.file.cover != nil
         var n: [String] = []
         if needsName { n.append("needsName") }
         if damagedFrames > 0 { n.append("damagedFrames") }
