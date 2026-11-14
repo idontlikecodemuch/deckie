@@ -29,6 +29,27 @@ final class Window: @unchecked Sendable {
 
     static var engineName: String { String(cString: deskshell_engine_name()) }
 
+    /// False on Windows when the program was started with no standard error (a double click): nothing may be
+    /// written to it then (deskshell.h).
+    static var hasStandardError: Bool { deskshell_has_standard_error() != 0 }
+
+    /// Windows: the version of Microsoft's WebView2 Runtime on this PC, by the registry values Microsoft documents;
+    /// nil when it is not installed, and always nil on the other systems.
+    static var webView2Version: String? {
+        guard let c = deskshell_webview2_version() else { return nil }
+        defer { deskshell_free(c) }
+        return String(cString: c)
+    }
+
+    /// Windows: a message box; true when the DJ chose Yes (or OK). False at once on the other systems.
+    static func notice(title: String, text: String, ask: Bool) -> Bool { deskshell_notice(title, text, ask ? 1 : 0) != 0 }
+
+    /// Windows: opens a web address in the DJ's own browser.
+    static func openAddress(_ address: String) { deskshell_open_address(address) }
+
+    /// Windows: whether the window carries Desk's own icon (the program was built with it).
+    var hasIcon: Bool { deskshell_window_has_icon(handle) != 0 }
+
     func load(_ url: URL) { deskshell_load(handle, url.absoluteString) }
     func setHTML(_ html: String) { deskshell_set_html(handle, html) }
 

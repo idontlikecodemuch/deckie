@@ -39,7 +39,7 @@ final class EngineProcess: @unchecked Sendable {
             while true {
                 let d = err.availableData
                 if d.isEmpty { break }
-                FileHandle.standardError.write(d)
+                Notice.pass(d)
             }
         }
     }

@@ -91,10 +91,35 @@ public final class OnnxRuntime: @unchecked Sendable {
     static let coreFolder = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent()
         .deletingLastPathComponent()
 
-    /// Where `load()` looks, in order: DECKIE_ONNXRUNTIME_LIB alone if it is set, else the checkout's default.
+    /// The folder a shipped program's parts are in, as the Windows zip lays them out (`onnxruntime.dll` or its name
+    /// on this platform, and `models/`), or nil. A program sets it once, when it starts, to the folder it is in
+    /// (`deckie-desk-engine` does); the library and both models are then looked for there before the checkout, the
+    /// same order `deckie-make` uses (PCBuild.EngineFiles.locate). The environment variables still come first.
+    public static var programFolder: URL? {
+        get { programFolderLock.lock(); defer { programFolderLock.unlock() }; return programFolderStored }
+        set { programFolderLock.lock(); programFolderStored = newValue; programFolderLock.unlock() }
+    }
+    private static let programFolderLock = NSLock()
+    nonisolated(unsafe) private static var programFolderStored: URL?
+
+    /// A file's candidates after the environment variable: in `programFolder` (under `subfolder`, when one is
+    /// given), then at `checkout`.
+    static func candidates(named name: String, in subfolder: String?, checkout: URL) -> [String] {
+        var out: [String] = []
+        if let folder = programFolder {
+            let base = subfolder.map { folder.appendingPathComponent($0) } ?? folder
+            out.append(base.appendingPathComponent(name).path)
+        }
+        out.append(checkout.path)
+        return out
+    }
+
+    /// Where `load()` looks, in order: DECKIE_ONNXRUNTIME_LIB alone if it is set; else beside the program when it
+    /// said where it is (`programFolder`), then the checkout's default.
     public static func libraryCandidates() -> [String] {
         if let path = ProcessInfo.processInfo.environment[libraryEnvironmentVariable], !path.isEmpty { return [path] }
-        return [coreFolder.appendingPathComponent(".deps/onnxruntime/lib").appendingPathComponent(libraryFileName).path]
+        return candidates(named: libraryFileName, in: nil,
+                          checkout: coreFolder.appendingPathComponent(".deps/onnxruntime/lib").appendingPathComponent(libraryFileName))
     }
 
     /// The first candidate that exists, or nil: whether ONNX Runtime is available here.

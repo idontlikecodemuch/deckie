@@ -457,15 +457,41 @@ public final class DeskSession {
 
     // MARK: out
 
+    /// Whether this computer hands a crate file out as one file (docs/architecture/crate-format.md, "The single-file
+    /// form"): true on Windows and Linux, where a package is only a folder and awkward to send to an iPad; false on
+    /// the Mac, where Finder and AirDrop move a package as one document. Deckie Booth opens both forms.
+    public static var exportsSingleFile: Bool {
+        #if os(Windows) || os(Linux)
+        return true
+        #else
+        return false
+        #endif
+    }
+
     /// The crate file written into `folder` under the crate's name; its path. This is the one place where Desk on
-    /// Windows and Linux hands a crate file out: when the single-file form of a crate file is ready (being built on the
-    /// branch pc/windows-builder), the export switches to it here.
-    public func export(into folder: URL) throws -> URL {
+    /// Windows and Linux hands a crate file out. `singleFile` chooses the form: one file (the same files with the same
+    /// bytes in one uncompressed archive, `CrateArchive`), or the package folder as it is.
+    public func export(into folder: URL, singleFile: Bool = DeskSession.exportsSingleFile) throws -> URL {
         guard let info = current, crate != nil else { throw DeskError("the crate has no songs yet, so there is no crate file to write") }
         try save()
         let safe = info.name.map { "/\\:*?\"<>|".contains($0) ? "-" : $0 }
-        let dest = folder.appendingPathComponent(String(safe) + "." + CrateFormat.packageExtension, isDirectory: true)
-        try shelf.exportCopy(info.id, to: dest)
+        let name = String(safe) + "." + CrateFormat.packageExtension
+        guard singleFile else {
+            let dest = folder.appendingPathComponent(name, isDirectory: true)
+            try shelf.exportCopy(info.id, to: dest)
+            return dest
+        }
+        // The copy that leaves is made as a package first, in Desk's own storage (exportCopy drops what must not
+        // leave), then written as one file, whole or not at all. A crate file already there under the name, in
+        // either form, is replaced.
+        let scratch = home.root.appendingPathComponent("export-" + UUID().uuidString, isDirectory: true)
+        defer { try? DeckieFiles.remove(scratch) }
+        let package = scratch.appendingPathComponent(name, isDirectory: true)
+        try shelf.exportCopy(info.id, to: package)
+        let dest = folder.appendingPathComponent(name, isDirectory: false)
+        try DeckieFiles.createDirectory(folder)
+        try DeckieFiles.remove(dest)
+        try CrateArchive.pack(package: package, to: dest)
         return dest
     }
 }

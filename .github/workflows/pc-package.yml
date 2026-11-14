@@ -1,14 +1,21 @@
-# The Windows zip a DJ downloads: "Deckie for PC (first test)". Built on a Windows runner from the release build of
-# the PC program, with Swift's runtime libraries, Deckie's own ONNX Runtime, the two models, the licences and the
-# READ ME (core/Tools/windows/package.sh), then tried as a DJ would use it: unzipped into a fresh folder, started
-# through "Make Crate File.exe" with a music folder, with nothing on the path but Windows itself. The zip is kept
-# as a run artifact only: no release, no tag, nothing public beyond the artifact.
+# The Windows zip a DJ downloads: "Deckie Desk for Windows (first test)". Built on a Windows runner: Deckie Desk (the
+# window `deckie-desk` from desk-shell/, its engine `deckie-desk-engine` and the pages from desk-web/), the program
+# without a window (`deckie-make`), Swift's runtime libraries, Deckie's own ONNX Runtime, the two models, the icon,
+# the licences and the READ ME (core/Tools/windows/package.sh). Then tried as a DJ would use it: unzipped by
+# Windows' own tool into a fresh folder whose name has a space, started through "Deckie Desk.exe" and through
+# "Make Crate File.exe", with nothing on the path but Windows itself. The zip is kept as a run artifact only: no
+# release, no tag, nothing public beyond the artifact.
 name: pc-package
 
 on:
   push:
-    branches: [pc/windows-builder, pc/m4a, pc/covers]
-    paths: [core/**, .github/workflows/pc-package.yml]
+    branches: ['pc/**']
+    paths:
+      - core/**
+      - desk-shell/**
+      - desk-web/**
+      - deck-app/Deck/Assets.xcassets/AppIcon.appiconset/**
+      - .github/workflows/pc-package.yml
   workflow_dispatch:
 
 jobs:
@@ -66,11 +73,26 @@ jobs:
       - name: Fetch the models from the release models-1 (checked by hash)
         shell: bash
         run: bash core/Tools/fetch-models.sh --no-export
-      - name: Build the program and the test tool (release)
+      # The icon is made here from the iPad app's picture and compiled into a resource file, the form a linker takes;
+      # no .ico is committed (core/Tools/windows/icon.sh, make_ico.py).
+      - name: Make the icon
+        shell: bash
+        run: bash core/Tools/windows/icon.sh "$RUNNER_TEMP/icon"
+      - name: Build the programs and the test tool (release)
         working-directory: core
         run: |
           swift build -c release --product deckie-make
+          if ($LASTEXITCODE -ne 0) { exit 1 }
+          swift build -c release --product deckie-desk-engine
+          if ($LASTEXITCODE -ne 0) { exit 1 }
           swift build -c release --product deckie-e2e
+          if ($LASTEXITCODE -ne 0) { exit 1 }
+      # The window, with the icon linked in. Git Bash runs it so that the resource file can be named the Windows way
+      # with forward slashes, which every tool on the way to the linker takes.
+      - name: Build the window (release, with its icon)
+        shell: bash
+        working-directory: desk-shell
+        run: swift build -c release -Xlinker "$(cygpath -m "$RUNNER_TEMP/icon/desk.res")"
       # The shipped library must carry no usage-reporting client: the same scan the ONNX Runtime build's gate uses.
       - name: Scan the ONNX Runtime library that ships
         shell: pwsh
@@ -78,7 +100,7 @@ jobs:
       - name: Assemble the zip
         shell: bash
         run: |
-          bash core/Tools/windows/package.sh "$RUNNER_TEMP/package"
+          DECKIE_ICON="$RUNNER_TEMP/icon" bash core/Tools/windows/package.sh "$RUNNER_TEMP/package"
           {
             echo "## The zip"
             cat "$RUNNER_TEMP/package/package-report.md"
@@ -86,8 +108,8 @@ jobs:
       - name: Keep the zip
         uses: actions/upload-artifact@v4
         with:
-          name: Deckie-for-PC-first-test
-          path: ${{ runner.temp }}\package\Deckie-for-PC-first-test.zip
+          name: Deckie-Desk-for-Windows-first-test
+          path: ${{ runner.temp }}\package\Deckie-Desk-for-Windows-first-test.zip
           retention-days: 30
           compression-level: 0
           if-no-files-found: error
@@ -100,7 +122,7 @@ jobs:
         shell: pwsh
         run: |
           $dest = Join-Path $env:RUNNER_TEMP "A DJ's PC"
-          Expand-Archive -Path (Join-Path $env:RUNNER_TEMP "package\Deckie-for-PC-first-test.zip") -DestinationPath $dest
+          Expand-Archive -Path (Join-Path $env:RUNNER_TEMP "package\Deckie-Desk-for-Windows-first-test.zip") -DestinationPath $dest
           Get-ChildItem -Recurse $dest | Select-Object -First 60 FullName, Length | Format-Table -AutoSize | Out-String -Width 200
       - name: "Try it: the test MP3 made on Linux in this run"
         uses: actions/download-artifact@v4
@@ -116,7 +138,7 @@ jobs:
           if ($LASTEXITCODE -ne 0) { exit 1 }
           $saved = $env:PATH
           $env:PATH = "$env:SystemRoot\System32;$env:SystemRoot"
-          $exe = Join-Path $env:RUNNER_TEMP "A DJ's PC\Deckie for PC (first test)\Make Crate File.exe"
+          $exe = Join-Path $env:RUNNER_TEMP "A DJ's PC\Deckie Desk for Windows (first test)\Make Crate File.exe"
           & $exe $music --no-wait
           $code = $LASTEXITCODE
           $env:PATH = $saved
@@ -134,7 +156,7 @@ jobs:
         shell: pwsh
         run: |
           $env:PATH = "$env:SystemRoot\System32;$env:SystemRoot"
-          $exe = Join-Path $env:RUNNER_TEMP "A DJ's PC\Deckie for PC (first test)\Make Crate File.exe"
+          $exe = Join-Path $env:RUNNER_TEMP "A DJ's PC\Deckie Desk for Windows (first test)\Make Crate File.exe"
           $said = & $exe (Join-Path $env:RUNNER_TEMP "tester\My Müsic") --no-wait | Out-String
           $said
           if ($LASTEXITCODE -ne 0) { exit 1 }
@@ -143,7 +165,7 @@ jobs:
         shell: pwsh
         run: |
           $env:PATH = "$env:SystemRoot\System32;$env:SystemRoot"
-          $exe = Join-Path $env:RUNNER_TEMP "A DJ's PC\Deckie for PC (first test)\Make Crate File.exe"
+          $exe = Join-Path $env:RUNNER_TEMP "A DJ's PC\Deckie Desk for Windows (first test)\Make Crate File.exe"
           $music = Join-Path $env:RUNNER_TEMP "tester\My Müsic"
           # A wrong path first, then the right one in quotes, as Windows pastes a dropped folder.
           $said = "C:\no such folder", "`"$music`"" | & $exe --no-wait | Out-String
@@ -157,12 +179,222 @@ jobs:
         run: |
           $alone = Join-Path $env:RUNNER_TEMP "alone"
           New-Item -ItemType Directory -Force $alone | Out-Null
-          Copy-Item (Join-Path $env:RUNNER_TEMP "A DJ's PC\Deckie for PC (first test)\Make Crate File.exe") $alone
+          Copy-Item (Join-Path $env:RUNNER_TEMP "A DJ's PC\Deckie Desk for Windows (first test)\Make Crate File.exe") $alone
           $said = "" | & (Join-Path $alone "Make Crate File.exe") | Out-String
           $said
           if ($LASTEXITCODE -ne 3) { Write-Error "expected the starter to end with 3, got $LASTEXITCODE"; exit 1 }
           if ($said -notmatch "Unzip first") { Write-Error "the starter did not say to unzip"; exit 1 }
           exit 0  # the starter's 3 is the expected ending here, not this step's
+      # ---- Deckie Desk, from the same unzipped folder, with PATH cut down to Windows itself.
+      #
+      # "Deckie Desk.exe" is started with Start-Process and nothing redirected, which is how a program is started
+      # with no console of its own to write to; what the check sees it writes to a file (--check-log). The runner
+      # has no screen a person sees, so "the window opened" here means: the window was made, the page loaded in it
+      # and drew the engine's words, and said so. A real double click in Explorer is for a person (the check-in).
+      - name: "Try Desk: every program is the kind it should be (console window or not, icon or not)"
+        shell: pwsh
+        run: |
+          $root = Join-Path $env:RUNNER_TEMP "A DJ's PC\Deckie Desk for Windows (first test)"
+          $said = python core\Tools\windows\pe_kind.py "$root\Deckie Desk.exe" "$root\Make Crate File.exe" "$root\app\deckie-desk.exe" "$root\app\deckie-desk-engine.exe" "$root\app\deckie-make.exe" | Out-String
+          if ($LASTEXITCODE -ne 0) { exit 1 }
+          $said
+          foreach ($want in "Deckie Desk.exe: window icon", "Make Crate File.exe: console icon", "deckie-desk.exe: window icon", "deckie-desk-engine.exe: window", "deckie-make.exe: console") {
+            if (-not $said.Contains($want)) { Write-Error "expected: $want"; exit 1 }
+          }
+          foreach ($f in "app\desk-web\index.html", "app\desk-web\desk.js", "app\desk-web\desk.css", "app\licences\webview-LICENSE.txt", "app\licences\Microsoft-WebView2-SDK-LICENSE.txt", "app\licences\ACKNOWLEDGEMENTS.txt", "READ ME FIRST.txt") {
+            if (-not (Test-Path (Join-Path $root $f) -PathType Leaf)) { Write-Error "not in the zip: $f"; exit 1 }
+          }
+      # Every start below goes through core/Tools/windows/try-desk.ps1: PATH cut down to Windows itself, no message
+      # box that would wait for a click (DECKIE_NO_BOXES), and, when a program does not end or ends badly, what
+      # Windows itself noted about it.
+      - name: "Try Desk: the first start, with everything it says kept (the window program, then through Deckie Desk.exe)"
+        shell: pwsh
+        run: |
+          . core\Tools\windows\try-desk.ps1
+          $work = Join-Path $env:RUNNER_TEMP "desk-check"
+          New-Item -ItemType Directory -Force $work | Out-Null
+          $env:DECKIE_DESK_HOME = Join-Path $work "desk"
+          $env:DECKIE_DJ_HOME = Join-Path $work "dj"
+          $n = 0
+          foreach ($program in "app\deckie-desk.exe", "Deckie Desk.exe") {
+            $n += 1
+            $log = Join-Path $work "first-$n.log"
+            $r = Start-FromZip -Program $program -Arguments "--check --check-log `"$log`"" -Seconds 150 -Keep
+            "---- $program ended with code $(Format-Code $r.Code). It wrote:"
+            $r.Said
+            "---- Its check log:"
+            if (Test-Path $log) { Get-Content $log } else { "(none was written)" }
+            if ($r.Code -ne 0) {
+              Show-WhatWindowsSaw -Since $r.Since
+              "---- The same with the runner's whole PATH, to tell a missing library from anything else:"
+              $again = Start-FromZip -Program $program -Arguments "--check" -Seconds 150 -Keep -WholePath
+              "ended with code $(Format-Code $again.Code). It wrote:"
+              $again.Said
+              Write-Error "$program did not pass its check"
+              exit 1
+            }
+          }
+      - name: "Try Desk: started as a double click starts it, twice; the window opens and the page shows the engine's words (start-up time)"
+        shell: pwsh
+        run: |
+          . core\Tools\windows\try-desk.ps1
+          $work = Join-Path $env:RUNNER_TEMP "desk-check"
+          $env:DECKIE_DESK_HOME = Join-Path $work "desk"
+          $env:DECKIE_DJ_HOME = Join-Path $work "dj"
+          $times = @()
+          foreach ($n in 1, 2) {
+            $log = Join-Path $work "start-$n.log"
+            # Nothing redirected: no console, nothing to write to. What the check sees is in its log file.
+            $r = Start-FromZip -Program "Deckie Desk.exe" -Arguments "--check --check-log `"$log`"" -Seconds 180
+            if (Test-Path $log) { Get-Content $log } else { "no log was written" }
+            if ($r.Code -ne 0) { Show-WhatWindowsSaw -Since $r.Since; Write-Error "Deckie Desk's check ended with code $(Format-Code $r.Code)"; exit 1 }
+            $said = Get-Content $log | Out-String
+            if ($said -notmatch "window made with WebView2") { Write-Error "no window was made"; exit 1 }
+            if ($said -notmatch "its own icon on the window: yes") { Write-Error "the window does not carry Desk's icon"; exit 1 }
+            if ($said -notmatch 'heading "[^"]+", button "Add music"') { Write-Error "the page did not show the engine's words"; exit 1 }
+            if ($said -notmatch 'ready": (1|true)') { Write-Error "the engine did not find ONNX Runtime and the models beside itself"; exit 1 }
+            if ($said -notmatch "PASSED") { Write-Error "the check did not pass"; exit 1 }
+            if ($said -notmatch "at unix ms (\d+)") { Write-Error "no start-up time in the log"; exit 1 }
+            $whole = ([double]$Matches[1] - $r.Started) / 1000
+            $null = $said -match "engine's words ([0-9.]+) s after the program started"
+            $inside = $Matches[1]
+            $line = "start $n`: the page showed the engine's words $('{0:N2}' -f $whole) s after Deckie Desk.exe was started ($inside s of that inside deckie-desk.exe)"
+            $line
+            $times += $line
+          }
+          $cpu = (Get-CimInstance Win32_Processor | Select-Object -First 1).Name
+          "## Deckie Desk: start-up time on this runner" >> $env:GITHUB_STEP_SUMMARY
+          "From starting ``Deckie Desk.exe`` in the unzipped folder to the page having drawn the engine's words. Processor: $cpu." >> $env:GITHUB_STEP_SUMMARY
+          "" >> $env:GITHUB_STEP_SUMMARY
+          $times | ForEach-Object { "- $_" } >> $env:GITHUB_STEP_SUMMARY
+      - name: "Try Desk: add a music folder through the page, let the run finish, export the crate file, read it back"
+        shell: pwsh
+        run: |
+          . core\Tools\windows\try-desk.ps1
+          $tool = "core\.build\release\deckie-e2e.exe"
+          $work = Join-Path $env:RUNNER_TEMP "desk-check"
+          $music = Join-Path $env:RUNNER_TEMP "desk tester\My Müsic"
+          $out = Join-Path $env:RUNNER_TEMP "desk tester\For the iPad"
+          New-Item -ItemType Directory -Force $out | Out-Null
+          & $tool make $music --mp3 (Join-Path $env:RUNNER_TEMP "package-mp3\test_track.mp3")
+          if ($LASTEXITCODE -ne 0) { exit 1 }
+          # Nothing is set for where Desk keeps its crates: this run uses the place it uses on a DJ's PC.
+          $env:DECKIE_DESK_HOME = $null
+          $env:DECKIE_DJ_HOME = Join-Path $work "dj"
+          $log = Join-Path $work "run.log"
+          $r = Start-FromZip -Program "Deckie Desk.exe" -Arguments "--check --check-log `"$log`" --music `"$music`" --export-to `"$out`"" -Seconds 1200
+          if (Test-Path $log) { Get-Content $log } else { "no log was written" }
+          if ($r.Code -ne 0) { Show-WhatWindowsSaw -Since $r.Since; Write-Error "Deckie Desk's run ended with code $(Format-Code $r.Code)"; exit 1 }
+          if (-not ((Get-Content $log | Out-String) -match "storage .*AppData.Local.Deckie Desk")) { Write-Error "Desk did not keep its crates under the account's local app data"; exit 1 }
+          $crate = Join-Path $out "My Müsic.deckiecrate"
+          if (-not (Test-Path $crate -PathType Leaf)) { Write-Error "the exported crate file is not one file at $crate"; exit 1 }
+          "Exported:"; Get-ChildItem $out | Format-Table Name, Length
+          # The core's validator: one file, the 4 songs of the test folder, each from the source "My Müsic".
+          $read = & $tool check-desk $crate "My Müsic" | Out-String
+          $read
+          if ($LASTEXITCODE -ne 0) { exit 1 }
+          if ($read -notmatch "single-file form") { Write-Error "the crate file is not in the single-file form"; exit 1 }
+          "## Deckie Desk: a run from the zip" >> $env:GITHUB_STEP_SUMMARY
+          '```' >> $env:GITHUB_STEP_SUMMARY
+          Get-Content $log | Where-Object { $_ -match "run started|run finished|finished screen|crate file exported|PASSED" } >> $env:GITHUB_STEP_SUMMARY
+          $read >> $env:GITHUB_STEP_SUMMARY
+          '```' >> $env:GITHUB_STEP_SUMMARY
+      - name: "Try Desk: started without unzipping the rest (the starter alone)"
+        shell: pwsh
+        run: |
+          . core\Tools\windows\try-desk.ps1
+          $alone = Join-Path $env:RUNNER_TEMP "desk alone"
+          New-Item -ItemType Directory -Force $alone | Out-Null
+          Copy-Item (Join-Path $DeckieFolder "Deckie Desk.exe") $alone
+          $r = Start-FromZip -Program "Deckie Desk.exe" -Folder $alone -Seconds 60 -Keep
+          $r.Said
+          if ($r.Code -ne 3) { Write-Error "expected the starter to end with 3, got $(Format-Code $r.Code)"; exit 1 }
+          if ($r.Said -notmatch "Unzip first") { Write-Error "the starter did not say to unzip"; exit 1 }
+          if ($r.Said -notmatch 'start "Deckie Desk" from there') { Write-Error "the starter did not name itself"; exit 1 }
+      # A PC without Microsoft's WebView2 Runtime. The runner has it, so it is hidden for a moment: the registry
+      # values that say where it is (the ones the window's loader reads, and the ones Microsoft documents for
+      # "is it installed") are renamed, Deckie Desk is started, and they are put back. Where the runner does not
+      # allow that, the program's own switch (DECKIE_DESK_NO_WEBVIEW2) stands in, which tries the message and not
+      # the detection; the summary says which it was. The message box itself is not shown here (DECKIE_NO_BOXES):
+      # nobody could click it.
+      - name: "Try Desk: a PC without the WebView2 Runtime"
+        shell: pwsh
+        run: |
+          . core\Tools\windows\try-desk.ps1
+          $work = Join-Path $env:RUNNER_TEMP "desk-check"
+          $env:DECKIE_DESK_HOME = Join-Path $work "desk"
+          $env:DECKIE_DJ_HOME = Join-Path $work "dj"
+          $guid = "{F3017226-FE2A-4295-8BDF-00C3A9A7E4C5}"
+          $spots = @(
+            @{ Key = "HKLM:\SOFTWARE\WOW6432Node\Microsoft\EdgeUpdate\ClientState\$guid"; Name = "EBWebView" },
+            @{ Key = "HKCU:\Software\Microsoft\EdgeUpdate\ClientState\$guid"; Name = "EBWebView" },
+            @{ Key = "HKLM:\SOFTWARE\WOW6432Node\Microsoft\EdgeUpdate\Clients\$guid"; Name = "pv" },
+            @{ Key = "HKCU:\Software\Microsoft\EdgeUpdate\Clients\$guid"; Name = "pv" }
+          )
+          $suffix = "-hidden-by-deckie-check"
+          $hidden = @()
+          $how = "the registry values that say where the WebView2 Runtime is were renamed, so the program's own detection said no"
+          $log = Join-Path $work "no-webview2.log"
+          $r = $null
+          try {
+            try {
+              foreach ($s in $spots) {
+                if (-not (Test-Path -LiteralPath $s.Key)) { "$($s.Key): not present"; continue }
+                $value = (Get-ItemProperty -LiteralPath $s.Key).($s.Name)
+                if ($null -eq $value) { "$($s.Key) has no $($s.Name)"; continue }
+                Rename-ItemProperty -LiteralPath $s.Key -Name $s.Name -NewName ($s.Name + $suffix) -ErrorAction Stop
+                $hidden += $s
+                "$($s.Key): $($s.Name) = $value, hidden"
+              }
+              if ($hidden.Count -eq 0) { throw "nothing to hide" }
+            } catch {
+              "Could not hide the runtime ($_); using the program's own switch instead."
+              $how = "the runner did not allow the runtime to be hidden, so the program's switch DECKIE_DESK_NO_WEBVIEW2 stood in: the message was tried, the detection was not"
+              $env:DECKIE_DESK_NO_WEBVIEW2 = "1"
+            }
+            # Started as a DJ starts it: no --check. It should say what is missing and end.
+            $r = Start-FromZip -Program "Deckie Desk.exe" -Arguments "--check-log `"$log`"" -Seconds 120 -Keep
+          } finally {
+            foreach ($s in $hidden) { Rename-ItemProperty -LiteralPath $s.Key -Name ($s.Name + $suffix) -NewName $s.Name }
+          }
+          "How: $how"
+          "---- It wrote:"; $r.Said
+          $said = if (Test-Path $log) { Get-Content $log | Out-String } else { "" }
+          "---- Its log:"; $said
+          if ($r.Code -ne 4) { Write-Error "expected Deckie Desk to end with 4 (no WebView2 Runtime), got $(Format-Code $r.Code)"; exit 1 }
+          foreach ($want in "Microsoft's WebView2 Runtime", "https://developer.microsoft.com/microsoft-edge/webview2/consumer/", "Make Crate File", "WebView2 Runtime by the registry: not installed") {
+            if (-not $said.Contains($want)) { Write-Error "the message does not say: $want"; exit 1 }
+          }
+          "## Deckie Desk: a PC without the WebView2 Runtime" >> $env:GITHUB_STEP_SUMMARY
+          "How it was tried: $how. Deckie Desk ended with code 4 and these words (in a message box on a real PC; on standard error here):" >> $env:GITHUB_STEP_SUMMARY
+          '```' >> $env:GITHUB_STEP_SUMMARY
+          $said >> $env:GITHUB_STEP_SUMMARY
+          '```' >> $env:GITHUB_STEP_SUMMARY
+          # And with the values back, the window opens again.
+          $env:DECKIE_DESK_NO_WEBVIEW2 = $null
+          $again = Join-Path $work "after.log"
+          $r = Start-FromZip -Program "Deckie Desk.exe" -Arguments "--check --check-log `"$again`"" -Seconds 180
+          if (Test-Path $again) { Get-Content $again } else { "no log was written" }
+          if ($r.Code -ne 0) { Write-Error "after the runtime was put back the check ended with code $(Format-Code $r.Code)"; exit 1 }
+      # What Desk left on this PC, to hold the READ ME to: its crates under the account's local app data (the run
+      # above used that place), and whatever the web view keeps for itself.
+      - name: "Try Desk: what it left on this PC"
+        shell: pwsh
+        run: |
+          $crates = Join-Path $env:LOCALAPPDATA "Deckie Desk"
+          if (-not (Test-Path (Join-Path $crates "Crates") -PathType Container)) { Write-Error "Desk's crates are not in $crates"; exit 1 }
+          "Folders named after Deckie under this account's app data:"
+          foreach ($base in $env:LOCALAPPDATA, $env:APPDATA) {
+            Get-ChildItem $base -Directory -ErrorAction SilentlyContinue | Where-Object { $_.Name -match "deckie" } | ForEach-Object {
+              $files = @(Get-ChildItem $_.FullName -Recurse -File -ErrorAction SilentlyContinue)
+              "  $($_.FullName): $($files.Count) files, $(($files | Measure-Object Length -Sum).Sum) bytes"
+            }
+          }
+          $os = (Get-CimInstance Win32_OperatingSystem)
+          $webview = (Get-ItemProperty -LiteralPath "HKLM:\SOFTWARE\WOW6432Node\Microsoft\EdgeUpdate\Clients\{F3017226-FE2A-4295-8BDF-00C3A9A7E4C5}").pv
+          "This runner: $($os.Caption), version $($os.Version); WebView2 Runtime $webview"
+          "## Where this was tried" >> $env:GITHUB_STEP_SUMMARY
+          "$($os.Caption), version $($os.Version); WebView2 Runtime $webview. Not a DJ's Windows 10 or 11, and no person saw the window." >> $env:GITHUB_STEP_SUMMARY
       # Time per song on this runner, on songs of a real length: four synthesised four-minute songs (two WAV, two
       # FLAC), read with the program's own default for songs at once. The log's numbers go into the summary.
       - name: "Measure: four four-minute songs"
@@ -172,7 +404,7 @@ jobs:
           $music = Join-Path $env:RUNNER_TEMP "timing\Four Songs"
           & $tool songs $music --count 4 --seconds 240
           $env:PATH = "$env:SystemRoot\System32;$env:SystemRoot"
-          $exe = Join-Path $env:RUNNER_TEMP "A DJ's PC\Deckie for PC (first test)\Make Crate File.exe"
+          $exe = Join-Path $env:RUNNER_TEMP "A DJ's PC\Deckie Desk for Windows (first test)\Make Crate File.exe"
           & $exe $music --no-wait
           if ($LASTEXITCODE -ne 0) { exit 1 }
           $log = Get-Content (Join-Path $env:RUNNER_TEMP "timing\Four Songs Deckie log.txt")

@@ -27,7 +27,8 @@ final class Desk: @unchecked Sendable {
     private var closing = false
     /// Every line from the engine as it is passed on, for a check or a tour (window's thread).
     var watchers: [(String) -> Void] = []
-    /// Messages the page sends to the shell that are not requests, for a check or a tour (window's thread).
+    /// Messages the page sends to the shell that are not requests, and its `shell.ready` (the page has loaded and
+    /// listens), for a check or a tour (window's thread).
     var pageWatchers: [([String: Any]) -> Void] = []
 
     init?(options: Options) {
@@ -47,13 +48,14 @@ final class Desk: @unchecked Sendable {
                 guard let self else { return }
                 self.window.onWindowThread {
                     if !self.closing {
-                        FileHandle.standardError.write(Data("deckie-desk: the engine ended (\(status))\n".utf8))
+                        Notice.say("deckie-desk: the engine ended (\(status))")
                         self.toPage(#"{"event":"shell.engineGone"}"#)
                     }
                 }
             })
         } catch {
-            FileHandle.standardError.write(Data("deckie-desk: could not start the engine at \(options.engine.path): \(error)\n".utf8))
+            Notice.say("deckie-desk: could not start the engine at \(options.engine.path): \(error)")
+            Notice.tell(Notice.engineDidNotStart)
             return 1
         }
         window.load(options.pages.appendingPathComponent("index.html"))
@@ -104,6 +106,7 @@ final class Desk: @unchecked Sendable {
             let lines = waiting
             waiting = []
             for l in lines { window.post(l) }
+            for w in pageWatchers { w(m) }
         case "shell.chooseFolder":
             let purpose = m["purpose"] as? String
             let preset = purpose == "export" ? options.exportAnswer : options.addMusicAnswer
