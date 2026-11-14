@@ -278,7 +278,24 @@
   --stage-draw-share: 0.45;               /* the most of a song's time on stage its wave takes to draw in */
   --stage-swap-share: 0.6;                /* the facts change this far through their fade */
   --stage-frame: 33;                      /* ms: the stage draws at most this often (thirty frames a second) */
-  --stage-first-frames: 40;               /* ms: and always in a song's first moments on stage */
+  /* the song on stage, moving (letter AD): from its tempo, bars and wave; still under reduced motion */
+  --t-beat-fastest: 400ms;                /* the quickest pulse: a faster song pulses every other beat */
+  --t-beat-slowest: 1000ms;               /* the slowest pulse: a slower song pulses twice a beat */
+  --stage-beats-in-bar: 4;                /* for the stronger pulse on a bar's first beat, and the slow breath */
+  --stage-pulse: 0.14;                    /* the swell on a beat, as a share of the wave's height */
+  --stage-pulse-downbeat: 0.24;           /* the swell on a bar's first beat */
+  --stage-pulse-fall: 5;                  /* how quickly a pulse falls away within its beat (larger is quicker) */
+  --stage-breath: 0.08;                   /* the slow breath's swell, as a share of the height */
+  --stage-breath-bars: 4;                 /* bars a breath takes */
+  --t-breath-no-tempo: 2400ms;            /* a breath, for a song with no tempo (it only breathes) */
+  --stage-sweep-stagger: 0.6;             /* the change of song: the share of the sweep its start moves along the wave */
+  --stage-morph-overshoot: 1.2;           /* how far each stretch overshoots its new height (0: not at all) */
+  --stage-playhead-bars: 2;               /* the playhead's glow crosses the wave once every this many bars */
+  --t-playhead-no-tempo: 4000ms;          /* and every this long for a song with no tempo */
+  --stage-playhead-w: 0.08;               /* its half width, as a share of the wave's width */
+  --stage-playhead-lift: 0.08;            /* how much it lifts the wave where it passes */
+  --stage-playhead-glow: rgba(236, 228, 255, 0.55);
+  --stage-playhead-clear: rgba(236, 228, 255, 0);
   --hist-baseline: 1;                     /* px: the tempo picture's baseline */
   --hist-bar-gap: 1;                      /* px between its bars */
   --hist-bar-min: 2;                      /* px: its shortest bar */
@@ -303,7 +320,7 @@
   --wall-wave-min-half: 0.5;              /* px: the thinnest half-wave on the wall */
   --wall-dense-dim: 0.25; --wall-dense-bright: 0.75;  /* a brightness line: its least, and how much loudness adds */
   --wall-dense-quiet: 0.5;                /* below this loudness a brightness line takes --wave-quiet */
-  --t-draw: 900ms;                        /* a wave drawing in */
+  --t-draw: 900ms;                        /* a wave sweeping in */
   --t-hold: 3200ms;                       /* a song on stage, with nothing waiting */
   --t-hold-min: 300ms;                    /* a song on stage, with many waiting */
   --t-hold-still: 2000ms;                 /* a song on stage, at least, under reduced motion */

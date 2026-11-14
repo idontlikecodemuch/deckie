@@ -1,10 +1,11 @@
 // The run screen of Deckie Desk's window on Windows and Linux (D37): draws what Desk is really doing and what it really
-// found, from the engine's `run.songs` events (docs/architecture/desk-protocol.md, "The run screen"). Nothing here is
-// decoration: every wave is a song Desk read, every number is counted by the engine, every sentence is one the engine
-// said is true, or a line about the step Desk is on. No words of its own: they are the engine's (DeskWords), passed in.
+// found, from the engine's `run.songs` events (docs/architecture/desk-protocol.md, "The run screen"). Every wave is a
+// song Desk read, every number is counted by the engine, every sentence is one the engine said is true, or a line
+// about the step Desk is on. The song on stage moves for the pleasure of it (letter AD): it pulses and breathes at its
+// own tempo, built from its own wave and bars. No words of its own: they are the engine's (DeskWords), passed in.
 //
-// Drawing is throttled (the stage at most thirty frames a second and only while something moves, the wall at most
-// every --t-wall) and stops while the window is hidden. Under reduced motion nothing moves: the same pictures, still.
+// Drawing is throttled (the stage at most thirty frames a second while the run goes, the wall at most every --t-wall)
+// and stops while the window is hidden. Under reduced motion nothing moves: the same pictures, still.
 // Colours, sizes, shares and times are the CSS variables in desk.css's :root; the numbers left here are the drawing's
 // own arithmetic (64 points a wave, a mark every 8 bars and a longer one every 32, twelve keys round the wheel).
 (function () {
@@ -79,7 +80,7 @@
 
     // ---- the song on stage
     const stage = $("stage"), stageCanvas = $("stage-wave");
-    let queue = [], onStage = null, skipped = 0, timer = 0, raf = 0, lastFrame = 0;
+    let queue = [], onStage = null, skipped = 0, timer = 0, raf = 0, lastFrame = 0, running = false;
 
     function holdFor(waiting) {
       const hold = time("--t-hold"), min = time("--t-hold-min");
@@ -97,7 +98,9 @@
       // Under reduced motion a song stays at least --t-hold-still, so the stage changes as a still picture would.
       const hold = reduced() ? Math.max(time("--t-hold-still"), holdFor(queue.length)) : holdFor(queue.length);
       const ticker = reduced() || hold < num("--stage-ticker");
-      onStage = { song, at: now, hold, draw: ticker ? 0 : Math.min(time("--t-draw"), hold * num("--stage-draw-share")) };
+      // The song before it: its wave is where this one's grows or shrinks from.
+      onStage = { song, at: now, hold, draw: ticker ? 0 : Math.min(time("--t-draw"), hold * num("--stage-draw-share")), from: onStage ? onStage.song.wave : [] };
+      readLook();
       showFacts(song, ticker);
       $("stage-more").textContent = skipped > 0 ? n("stageMore", skipped) : (song.wave.length ? "" : t("stageNoWave"));
       if (queue.length === 0) skipped = 0;
@@ -123,62 +126,144 @@
       stage.classList.add("out");
       setTimeout(fill, time("--t-fade") * num("--stage-swap-share"));
     }
+    /// The stage's values, read from desk.css once a song rather than every frame.
+    let look = null;
+    function readLook() {
+      readCurve();
+      look = {
+        markH: num("--stage-mark-h"), least: num("--stage-wave-min"), room: num("--stage-wave-room"), lineH: num("--stage-line-h"),
+        none: css("--wave-none"), wave: css("--wave"), tick: css("--wave-tick"), tickStrong: css("--wave-tick-strong"),
+        tickW: num("--stage-tick-w"), strongW: num("--stage-tick-strong-w"), tickGap: num("--stage-tick-gap"), tickShort: num("--stage-tick-short"),
+        frame: num("--stage-frame"),
+        fastest: time("--t-beat-fastest"), slowest: time("--t-beat-slowest"), inBar: num("--stage-beats-in-bar"),
+        pulse: num("--stage-pulse"), downbeat: num("--stage-pulse-downbeat"), fall: num("--stage-pulse-fall"),
+        breath: num("--stage-breath"), breathBars: num("--stage-breath-bars"), breathNoTempo: time("--t-breath-no-tempo"),
+        stagger: num("--stage-sweep-stagger"), overshoot: num("--stage-morph-overshoot"),
+        playBars: num("--stage-playhead-bars"), playNoTempo: time("--t-playhead-no-tempo"), playW: num("--stage-playhead-w"),
+        lift: num("--stage-playhead-lift"), glow: css("--stage-playhead-glow"), clear: css("--stage-playhead-clear"),
+      };
+    }
+    // How the song on stage moves (letter AD), the same arithmetic as the Mac's StageMotion: the sweep from the last
+    // song's wave to this one's, a pulse on each beat of its tempo, a slow breath over a few bars, and a playhead
+    // crossing it. Times in ms, each held to nothing or more; every index held to the wave it reads, however short.
+    function beatOf(bpm, L) {
+      if (bpm == null || !isFinite(bpm) || bpm <= 0) return null;
+      let b = 60000 / bpm, turns = 0;
+      while (b < L.fastest && turns < 16) { b *= 2; turns++; }
+      while (b > L.slowest && turns < 32) { b /= 2; turns++; }
+      return b;
+    }
+    function shapeAt(wave, i, n) {
+      if (!wave || !wave.length || n <= 0) return 0;
+      const j = Math.max(0, Math.min(wave.length - 1, Math.floor((i * wave.length) / n)));
+      return shape(Math.min(99, wave[j]));
+    }
+    function motion(st, now, still, L) {
+      const e = isFinite(now - st.at) ? Math.max(0, now - st.at) : 0, sweep = Math.max(0, st.draw || 0);
+      const beat = beatOf(st.song.bpm, L);
+      const m = { e, sweep, still, front: still || sweep <= 0 ? 1 : Math.max(0, Math.min(1, e / Math.max(sweep * L.stagger, 1e-9))), swell: 0, playhead: null };
+      if (still) return m;
+      if (beat) {
+        const ph = e / beat, k = Math.floor(ph), frac = ph - k;
+        const pulse = (k % L.inBar === 0 ? L.downbeat : L.pulse) * Math.exp(-L.fall * frac);
+        m.swell = pulse + L.breath * 0.5 * (1 - Math.cos((2 * Math.PI * ph) / (L.inBar * L.breathBars)));
+      } else {
+        m.swell = L.breath * 0.5 * (1 - Math.cos((2 * Math.PI * e) / L.breathNoTempo));
+      }
+      const cross = beat ? beat * L.inBar * L.playBars : L.playNoTempo;
+      if (e >= sweep && cross > 0) { const t = (e - sweep) / cross; m.playhead = t - Math.floor(t); }
+      return m;
+    }
+    function heightAt(m, i, n, from, to, L) {
+      const target = shapeAt(to, i, n);
+      if (m.still || m.sweep <= 0) return target;
+      const start = (i / Math.max(1, n - 1)) * m.sweep * L.stagger, span = Math.max(m.sweep * (1 - L.stagger), 1e-9);
+      const x = Math.max(0, Math.min(1, (m.e - start) / span)), c = L.overshoot;
+      const eased = 1 + (c + 1) * Math.pow(x - 1, 3) + c * Math.pow(x - 1, 2);
+      const was = shapeAt(from, i, n);
+      return Math.max(0, was + (target - was) * eased);
+    }
     function drawStage(now) {
       if (!onStage || document.hidden) return;
-      const { ctx, w, h } = fit(stageCanvas);
-      const s = onStage.song, wave = s.wave;
-      readCurve();
-      // Held between nothing and all of it: a frame's clock can read a moment before the song went on stage.
-      const p = onStage.draw > 0 ? Math.max(0, Math.min(1, (now - onStage.at) / onStage.draw)) : 1;
+      if (!look) readLook();
+      const L = look, { ctx, w, h, dpr } = fit(stageCanvas);
+      const s = onStage.song, still = reduced();
+      const m = motion(onStage, now, still, L);
       ctx.clearRect(0, 0, w, h);
-      const markH = Math.round(h * num("--stage-mark-h")), waveH = h - markH, mid = waveH / 2, slot = w / WAVE, edge = p * w;
-      ctx.fillStyle = css("--wave-none");
-      ctx.fillRect(0, Math.round(mid), Math.round(edge), num("--stage-line-h"));
-      if (wave.length) {
-        // The wave: mirrored, through the middle of each stretch, drawn in from the left as far as `p`.
-        const shown = Math.max(0, Math.min(WAVE, wave.length, Math.ceil(p * WAVE)));
-        const least = num("--stage-wave-min"), room = num("--stage-wave-room");
-        const half = (i) => Math.max(least, shape(wave[Math.min(Math.max(0, i), wave.length - 1)]) * waveH * room);
+      const markH = Math.round(h * L.markH), waveH = h - markH, mid = waveH / 2, slot = w / WAVE, edge = m.front * w;
+      if (waveH <= 0) return;
+      ctx.fillStyle = L.none;
+      ctx.fillRect(0, Math.round(mid), w, L.lineH);
+      // The wave: mirrored, through the middle of each stretch; each stretch moving from the last song's height to
+      // this one's, then breathing with the song.
+      const playX = m.playhead != null ? m.playhead * w : null;
+      const norm = 1 + L.downbeat + L.breath + L.lift;
+      const halves = [];
+      let any = false;
+      for (let i = 0; i < WAVE; i++) {
+        const base = heightAt(m, i, WAVE, onStage.from, s.wave, L);
+        const d = playX != null ? Math.abs((i + 0.5) * slot - playX) / w / L.playW : 1;
+        const lift = d < 1 ? L.lift * (1 - d) : 0;
+        const v = base * ((1 + m.swell + lift) / norm) * waveH * L.room;
+        if (v > 0) any = true;
+        halves.push(v);
+      }
+      if (any) {
+        const half = (i) => Math.max(L.least, halves[Math.max(0, Math.min(WAVE - 1, i))]);
         ctx.beginPath();
         ctx.moveTo(0, mid - half(0));
-        for (let i = 0; i < shown; i++) ctx.lineTo(Math.min(edge, (i + 0.5) * slot), mid - half(i));
-        ctx.lineTo(edge, mid - half(shown - 1));
-        ctx.lineTo(edge, mid + half(shown - 1));
-        for (let i = shown - 1; i >= 0; i--) ctx.lineTo(Math.min(edge, (i + 0.5) * slot), mid + half(i));
+        for (let i = 0; i < WAVE; i++) ctx.lineTo((i + 0.5) * slot, mid - half(i));
+        ctx.lineTo(w, mid - half(WAVE - 1));
+        ctx.lineTo(w, mid + half(WAVE - 1));
+        for (let i = WAVE - 1; i >= 0; i--) ctx.lineTo((i + 0.5) * slot, mid + half(i));
         ctx.lineTo(0, mid + half(0));
         ctx.closePath();
-        ctx.fillStyle = css("--wave");
+        ctx.fillStyle = L.wave;
         ctx.fill();
+        // The playhead: a soft band of light crossing the wave.
+        if (playX != null) {
+          const band = L.playW * w, g = ctx.createLinearGradient(playX - band, 0, playX + band, 0);
+          g.addColorStop(0, L.clear); g.addColorStop(0.5, L.glow); g.addColorStop(1, L.clear);
+          ctx.fillStyle = g;
+          ctx.fill();
+        }
       }
-      // Its bars marked: a cut through the wave every 8 bars and a mark below it, a longer one every 32.
+      // Its bars marked as the sweep passes: a cut through the wave every 8 bars and a mark below it, a longer one every 32.
       if (s.bars) {
-        const dpr = Math.min(window.devicePixelRatio || 1, 2);
-        const tickW = num("--stage-tick-w") * dpr, strongW = num("--stage-tick-strong-w") * dpr, gap = num("--stage-tick-gap") * dpr;
-        const shortMark = num("--stage-tick-short");
+        const scale = Math.min(dpr, 2);
+        const tickW = L.tickW * scale, strongW = L.strongW * scale, gap = L.tickGap * scale;
         for (let b = 8; b < s.bars; b += 8) {
           const x = Math.round((b / s.bars) * w);
           if (x > edge) break;
           const strong = b % 32 === 0;
           ctx.clearRect(x, 0, strong ? strongW : tickW, waveH);
-          ctx.fillStyle = strong ? css("--wave-tick-strong") : css("--wave-tick");
-          ctx.fillRect(x, waveH + gap, tickW, strong ? markH - gap : (markH - gap) * shortMark);
+          ctx.fillStyle = strong ? L.tickStrong : L.tick;
+          ctx.fillRect(x, waveH + gap, tickW, Math.max(0, strong ? markH - gap : (markH - gap) * L.tickShort));
         }
       }
     }
+    /// Whether the stage is moving: a song on it, the run going, the window showing, the stage on screen, and motion
+    /// allowed. Under reduced motion it draws once a song.
+    const moving = () => running && !!onStage && !document.hidden && !reduced() && stage.offsetParent !== null;
     function tick(now) {
       raf = 0;
       if (document.hidden) return;
-      if (!onStage || now - onStage.at >= onStage.hold) { if (queue.length) nextSong(now); }
-      // At most thirty frames a second, and always the first and the last of a wave's drawing in.
-      const last = onStage && !onStage.drawn && now - onStage.at >= onStage.draw;
-      if (now - lastFrame >= num("--stage-frame") || !onStage || now - onStage.at < num("--stage-first-frames") || last) { drawStage(now); lastFrame = now; if (last) onStage.drawn = true; }
+      if (!look) readLook();
+      let changed = false;
+      if (!onStage || now - onStage.at >= onStage.hold) { if (queue.length) { nextSong(now); changed = true; } }
+      // At most one frame every --stage-frame ms, and always the first of a song.
+      if (changed || now - lastFrame >= look.frame || now < lastFrame) { drawStage(now); lastFrame = now; }
       schedule(now);
     }
-    /// Keeps the stage going only while something moves or waits: a frame while a wave draws in, else one timer.
+    /// Keeps the stage going: a frame every --stage-frame ms while it moves; else one timer for the next song.
     function schedule(now) {
       clearTimeout(timer); timer = 0;
       if (document.hidden || !onStage && !queue.length) return;
-      if (onStage && now - onStage.at < onStage.draw) { raf = raf || requestAnimationFrame(tick); return; }
+      if (moving()) {
+        const wait = Math.max(0, look.frame - (now - lastFrame));
+        timer = setTimeout(() => { raf = raf || requestAnimationFrame(tick); }, wait);
+        return;
+      }
       if (queue.length) {
         const wait = onStage ? Math.max(0, onStage.at + onStage.hold - now) : 0;
         timer = setTimeout(() => { raf = raf || requestAnimationFrame(tick); }, wait);
@@ -464,11 +549,13 @@
       if (document.hidden) return;
       drawFigures(); runWall.now(); doneWall.now(); kick();
     });
+    // Reduced motion turned on or off while the stage shows: still at once, or moving again.
+    if (reduceQuery.addEventListener) reduceQuery.addEventListener("change", kick);
 
     return {
       /// A run started: everything from the last one goes.
       start(m) {
-        songs = []; figures = null; queue = []; onStage = null; skipped = 0; fresh = []; lastNote = null; pendingMoment = null;
+        songs = []; figures = null; queue = []; onStage = null; skipped = 0; fresh = []; lastNote = null; pendingMoment = null; running = true;
         info = { read: m.read, musicCD: !!m.musicCD }; step = "reading"; spoken = { done: -1, at: 0 };
         stage.classList.remove("has-song", "out");
         for (const id of ["stage-title", "stage-artist", "stage-tempo", "stage-key", "stage-bars", "stage-length", "stage-where", "stage-more"]) $(id).textContent = "";
@@ -507,6 +594,7 @@
         const card = $("done-wall-card");
         card.hidden = !songs.length;
         if (!songs.length) return;
+        running = false;
         clearTimeout(sayTimer); clearTimeout(timer); queue = [];
         $("done-wall-title").textContent = t("wallTitleDone", { read: report.read });
         $("done-moment").textContent = lastNote || "";
