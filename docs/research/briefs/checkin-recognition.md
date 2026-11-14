@@ -73,7 +73,8 @@ help; (6) a recording from a loud booth, which says which of these matter.
 
 **Checks.** `recog/core` was green on both workflows before it was merged (`core-linux` 43585502813,
 `core-windows` 43585500581, the second including a Windows-built crate file compared with a Linux-built one,
-fingerprints and all). `recog/finish` adds an option, tools and documents; its runs are noted below when done.
+fingerprints and all). `recog/finish` adds an option, tools and documents, and is green on both too (`core-linux` 43595789807,
+`core-windows` 43595792133).
 
 ## Nov 14, 2026, 11:20 UTC: overnight, entry 2: the design is decided and built; the last measurements are running
 
