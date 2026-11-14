@@ -195,7 +195,11 @@ public final class Builder: Sendable {
     /// What a work record must have been made with to be reused: the engine's label and the vocal tagger's model, or
     /// none (`deckie-0.4.0 vocal:yamnet`, `deckie-0.4.0 vocal:none`), so records made before the vocal model was
     /// installed are made again once it is, and so are records of an older engine version.
-    public static func engineKey(vocalModel: String?) -> String { "\(engineLabel) vocal:\(vocalModel ?? "none")" }
+    /// With the learned key reader's model the key says so too (`deckie-0.7.0 vocal:yamnet key:deckie-key-2b4fe8fa`),
+    /// so records made before that model was installed are made again once it is; without it the key is as before.
+    public static func engineKey(vocalModel: String?, keyModel: String? = nil) -> String {
+        "\(engineLabel) vocal:\(vocalModel ?? "none")" + (keyModel.map { " key:\($0)" } ?? "")
+    }
 
     /// The vocal tagger's model a default analyser will have: YAMNet's name when its model file is there, else nil.
     public static var defaultVocalModel: String? { YAMNet.locateModel() == nil ? nil : YAMNet.modelName }
@@ -208,6 +212,8 @@ public final class Builder: Sendable {
 
     /// The vocal model this build's analyser has (or will have).
     var vocalModel: String? { analyser.map { $0.vocalTagger?.modelName } ?? Builder.defaultVocalModel }
+    /// The key model this build's analyser has (or will have).
+    var keyModel: String? { analyser.map { $0.keyModel?.name } ?? KeyModel.defaultName }
 
     public let options: BuildOptions
     /// The analyser given; nil makes one when there is something to analyse (`makeAnalyser`).
@@ -303,7 +309,7 @@ public final class Builder: Sendable {
         }
         let existing = try existingCrate()
         let work = try WorkStore(folder: options.workFolder, fresh: options.fresh, records: options.sharedRecords)
-        let label = Builder.engineKey(vocalModel: vocalModel)
+        let label = Builder.engineKey(vocalModel: vocalModel, keyModel: keyModel)
         // Matched by the path below the folder chosen, without the source's name put before it for the log: a folder
         // read as a source (D31) is named after itself, or "Music 2", which is not a folder in rekordbox's paths.
         let rekordboxOf = files.map { f in

@@ -21,8 +21,10 @@ public struct PCBuild: Sendable {
         public var beatModel: String
         /// The vocal tagger's model; without it the records have no vocal block (flag `vocal_unknown`).
         public var vocalModel: String?
-        public init(library: String, beatModel: String, vocalModel: String?) {
-            self.library = library; self.beatModel = beatModel; self.vocalModel = vocalModel
+        /// The learned key reader's numbers (`KeyModel`), when the file is there.
+        public var keyModel: String?
+        public init(library: String, beatModel: String, vocalModel: String?, keyModel: String? = nil) {
+            self.library = library; self.beatModel = beatModel; self.vocalModel = vocalModel; self.keyModel = keyModel
         }
 
         /// Where the engine's files are: the environment variables the core already reads if they are set; else in
@@ -44,7 +46,10 @@ public struct PCBuild: Sendable {
                                YAMNet.locateModel()])
             guard let library else { throw PCError.partsMissing(OnnxRuntime.libraryFileName) }
             guard let beat else { throw PCError.partsMissing("models/" + BeatTracker.modelFileName) }
-            return EngineFiles(library: library, beatModel: beat, vocalModel: vocal)
+            let key = first([env[KeyModel.environmentVariable],
+                             folder?.appendingPathComponent("models").appendingPathComponent(LearnedKey.Model.fileName).path,
+                             KeyModel.locate()])
+            return EngineFiles(library: library, beatModel: beat, vocalModel: vocal, keyModel: key)
         }
 
         /// One analyser for all jobs, as `Builder.makeAnalyser` makes it, from these files.
@@ -56,7 +61,7 @@ public struct PCBuild: Sendable {
             let tagger = try vocalModel.map {
                 DeckieVocalTagger(yamnet: try YAMNet(modelPath: $0, runtime: runtime, options: options))
             }
-            return try Analyser(beatTracker: tracker, vocalTagger: tagger)
+            return try Analyser(beatTracker: tracker, vocalTagger: tagger, keyModel: try keyModel.map(KeyModel.load(path:)))
         }
     }
 
@@ -360,6 +365,7 @@ struct RunLog {
             "",
             "program: deckie-make \(PCBuild.version), builder \(Builder.version), engine \(Builder.engineLabel)",
             "vocal model: \(engine.vocalModel == nil ? "missing" : "present")",
+            "key model: \(engine.keyModel == nil ? "missing (keys are read by the untrained reader)" : "present")",
             "platform: \(Analysis.platform)",
             "system: \(info.operatingSystemVersionString)",
             "processors: \(info.activeProcessorCount), memory: \(String(format: "%.1f", Double(info.physicalMemory) / Double(1 << 30))) GB, songs read at once: \(jobs)",

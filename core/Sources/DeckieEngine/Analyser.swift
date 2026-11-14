@@ -77,6 +77,8 @@ public final class Analyser: Sendable {
     /// Why there is no vocal tagger, when the default construction found none (the models that are missing and what
     /// to do); nil otherwise.
     public let vocalTaggerNote: String?
+    /// The learned key reader's numbers (`KeyModel`), or nil: the untrained three-answer reader then decides the key.
+    public let keyModel: LearnedKey.Model?
 
     /// The default analyser: `beatTracker` (nil loads the Beat This! model from where `BeatTracker` looks for it)
     /// and Deckie's vocal tagger (`DeckieVocalTagger.loadDefault()`, YAMNet) when its model is there. When it is not,
@@ -87,16 +89,23 @@ public final class Analyser: Sendable {
         let tagger = try DeckieVocalTagger.loadDefault(runtime: tracker.session.runtime)
         let note = tagger == nil
             ? "no vocal tagger: " + DeckieVocalTagger.missingModels().map(\.description).joined(separator: "; ") : nil
-        self.init(beatTracker: tracker, vocalTagger: tagger, note: note)
+        self.init(beatTracker: tracker, vocalTagger: tagger, note: note, keyModel: try KeyModel.loadDefault())
     }
 
     /// An analyser with `beatTracker` (nil loads the Beat This! model from where `BeatTracker` looks for it) and the
     /// given vocal tagger, or none.
+    /// The learned key reader's numbers are loaded from where `KeyModel` looks for them, when they are there.
     public convenience init(beatTracker: BeatTracker?, vocalTagger: (any VocalTagger)?) throws {
-        self.init(beatTracker: try beatTracker ?? BeatTracker(), vocalTagger: vocalTagger, note: nil)
+        self.init(beatTracker: try beatTracker ?? BeatTracker(), vocalTagger: vocalTagger, note: nil, keyModel: try KeyModel.loadDefault())
     }
 
-    init(beatTracker: BeatTracker, vocalTagger: (any VocalTagger)?, note: String?) {
+    /// The same with the key model given (nil: the untrained three-answer reader decides the key).
+    public convenience init(beatTracker: BeatTracker?, vocalTagger: (any VocalTagger)?, keyModel: LearnedKey.Model?) throws {
+        self.init(beatTracker: try beatTracker ?? BeatTracker(), vocalTagger: vocalTagger, note: nil, keyModel: keyModel)
+    }
+
+    init(beatTracker: BeatTracker, vocalTagger: (any VocalTagger)?, note: String?, keyModel: LearnedKey.Model?) {
+        self.keyModel = keyModel
         self.beatTracker = beatTracker
         self.vocalTagger = vocalTagger
         self.vocalTaggerNote = note
@@ -178,6 +187,10 @@ public final class Analyser: Sendable {
         // The three-answer reader (D33) reads the same frames as the plain HPCP method and carries its result.
         let threeAnswer = try ThreeAnswerKey.read(mono, sampleRate: SR)
         let hpcpKey = threeAnswer.hpcp
+        // The learned reader (engine 0.7.0) decides the record's key when its numbers are there; the three-answer
+        // reader stays beside it, and decides without them.
+        let learnedKey = try keyModel.map { try LearnedKey.read(mono, sampleRate: SR, model: $0) }
+        let keyAnswer = learnedKey?.answer ?? threeAnswer.answer
         let chroma = try KeyEstimator.chroma(m22, sampleRate: KeyEstimator.sampleRate)
         lap("key")
 
@@ -281,13 +294,13 @@ public final class Analyser: Sendable {
         }
 
         // ------------------------------------------------------------------ key: confidence, the two windows, segments
-        // The mix windows are judged against the reader's answer (`ThreeAnswerKey`; engine 0.6.0): its key, either
+        // The mix windows are judged against the reader's answer (`LearnedKey` from engine 0.7.0, `ThreeAnswerKey` in 0.6.0): its key, either
         // key on its home note, or nothing when it was not sure, as the lab judged them against the product's song
         // key (until 0.5.0 that was the plain HPCP method's key, whatever the record's key was). mixer/key_light.py reads the windows from the feature file, rounded to 3
         // decimals.
         let key = KeyEstimator.estimate(chroma, mixIn: (Py.round(mixIn.startS, 3), Py.round(mixIn.endS, 3)),
                                         mixOut: (Py.round(mixOut.startS, 3), Py.round(mixOut.endS, 3)),
-                                        songKeys: Analysis.songKeys(threeAnswer.answer))
+                                        songKeys: Analysis.songKeys(keyAnswer))
         let keyConfidence = KeyConfidence.hpcp(hpcpKey.decision)
 
         // ------------------------------------------------------------------ local tempo, from the rounded record
@@ -321,7 +334,7 @@ public final class Analyser: Sendable {
             grid: G, bars: bars, multiplierVsTag: multTag, tagDevPct: devTag, bpmAgree: bpmAgree,
             madmomWouldRun: madmomWouldRun, noveltyPeaks: novelty.peaks, phrase: phrase, boundariesBars: boundaries,
             sections: sections, firstSound: sound.firstSound, lastSound: ls, endLoudness: end, fade: fade,
-            mixIn: mixIn, mixOut: mixOut, key: key, hpcpKey: hpcpKey, keyConfidence: keyConfidence, threeAnswer: threeAnswer, loudness: loudness,
+            mixIn: mixIn, mixOut: mixOut, key: key, hpcpKey: hpcpKey, keyConfidence: keyConfidence, threeAnswer: threeAnswer, learnedKey: learnedKey, learnedKeyModel: learnedKey == nil ? nil : keyModel?.name, loudness: loudness,
             perBar: .init(lufsSt: lufs, lowDb: levels.lowDB, highDb: levels.highDB, onsetDensity: onsetDensity,
                           vocalProb: vocal?.perBar),
             onsetPattern16: pattern, vocal: vocal, vocalModel: vocal == nil ? nil : vocalTagger?.modelName,
