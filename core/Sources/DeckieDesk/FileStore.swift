@@ -37,8 +37,7 @@ public struct FileStore: Sendable {
 
     /// Keeps a signature (the data first, then the note, so a note always has its data).
     public func saveSignature(_ data: Data, made: CrateTrack.Signature, id: String, variant: String = "o") throws {
-        try FileManager.default.createDirectory(at: signatures, withIntermediateDirectories: true)
-        try data.write(to: signatureFile(id, variant), options: .atomic)
+        try DeckieFiles.write(data, to: signatureFile(id, variant))
         try JSONFile.write(made, to: signatureNote(id, variant))
     }
 
@@ -53,8 +52,7 @@ public struct FileStore: Sendable {
     }
 
     public func savePrint(_ p: RecordingPrint, id: String) throws {
-        try FileManager.default.createDirectory(at: prints, withIntermediateDirectories: true)
-        try Self.encodePrint(p).write(to: printFile(id), options: .atomic)
+        try DeckieFiles.write(Self.encodePrint(p), to: printFile(id))
     }
 
     /// "DKP1", the word count (little-endian UInt32), the words (little-endian UInt32), then one byte per word for

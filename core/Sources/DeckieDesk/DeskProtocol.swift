@@ -64,7 +64,8 @@ public final class DeskProtocol: @unchecked Sendable {
         let words = (try? JSONSerialization.jsonObject(with: DeskWords.json)) ?? [:]
         send(["event": "hello", "protocol": Self.version, "engine": "deckie-desk-engine", "platform": Analysis.platform,
               "analysis": ["ready": analysis.ready, "detail": analysis.detail ?? NSNull()] as [String: Any],
-              "deletesForGood": true, "wordsVersion": DeskWords.version, "words": words])
+              "deletesForGood": true, "wordsVersion": DeskWords.version, "words": words,
+              "computer": DeskWords.computerKind])
         lock.lock(); defer { lock.unlock() }
         sendState(); sendSongs()
     }
