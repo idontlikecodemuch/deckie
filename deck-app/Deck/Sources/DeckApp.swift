@@ -79,7 +79,7 @@ struct DeckApp: App {
             sug.reroll(rec); sug.crateVersion += 1
             let secs = Library.shared.crate.map { String(format: "%.1f", $0.poolSecs) } ?? "?"
             rec.note("crate loaded (\(r.wasSingleFile ? "single file, unpacked" : "package, copied")): \(Library.shared.data.tracks.count) tracks, "
-                     + "\(Library.shared.crate?.signatures.count ?? 0) with fingerprints; picks are scored per song (timbre list \(secs) s)")
+                     + "\(Library.shared.crate?.deckieSongs ?? 0) with Deckie's fingerprints, \(Library.shared.crate?.signatures.count ?? 0) with Apple's signatures; picks are scored per song (timbre list \(secs) s)")
             sug.openedNote = Words.opened(r.crate.manifest.name, songs: Library.shared.songCount)
             tab = 0
             // Listening starts again (with no fingerprints it only says "not listening"); a test hook leaves the mic off.
@@ -93,7 +93,8 @@ struct DeckApp: App {
     /// Test hooks: deck://test?path=/abs/file.mp3&start=60&render=r%2B4&loop=1 · deck://mic · deck://stop ·
     /// deck://lib?cd1=1&cd2=0&all=0 · deck://lib?disc=<name>&on=0|1 · deck://tab?i=1 · deck://set?id=<track id> · deck://mode?m=simple|full · deck://all?on=1 · deck://shuffle (re-roll) ·
     /// deck://shuffle?amt=0.3 (set the Shuffle dial, 0...1, then re-roll) · deck://pin?i=0 ·
-    /// deck://search?q=love (search More's titles and artists; empty q clears)
+    /// deck://search?q=love (search More's titles and artists; empty q clears) ·
+    /// deck://hearing?with=deckie|apple|both (which recogniser; deck://stream plays a file through it as the microphone would)
     private func handle(_ url: URL) {
         let q = URLComponents(url: url, resolvingAgainstBaseURL: false)?.queryItems ?? []
         func v(_ k: String) -> String? { q.first { $0.name == k }?.value }
@@ -106,6 +107,9 @@ struct DeckApp: App {
             guard let p = v("path") else { return }
             tab = 0
             rec.startStream(URL(fileURLWithPath: p), start: Double(v("start") ?? "60") ?? 60, render: v("render") ?? "o")
+        case "hearing":
+            // deck://hearing?with=deckie|apple|both: which recogniser names the song (the details sheet's choice)
+            if let h = v("with").flatMap(Hearing.init(rawValue:)) { rec.chosen = h }
         case "recpause": rec.toggleRecPause()
         case "mic": rec.startMic()
         case "stop": rec.stop()

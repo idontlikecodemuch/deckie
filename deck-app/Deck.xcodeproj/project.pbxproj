@@ -12,11 +12,13 @@
 		15077272C4ECBD996B12A98E /* DeckieCore in Frameworks */ = {isa = PBXBuildFile; productRef = 12304D4AEAAC6FCC6B163B1D /* DeckieCore */; };
 		42CBE67850ABEF9626F8760F /* SetRecorder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 001E556F1E189DBC15BA3038 /* SetRecorder.swift */; };
 		4B4016B134222CC851A98ED2 /* Model.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0323AAE739FAF03D4A3174D4 /* Model.swift */; };
+		4EEDFA8827370DA19CD94F81 /* DeckieRecognition in Frameworks */ = {isa = PBXBuildFile; productRef = DB6322FD4E9AC054C1C71F5B /* DeckieRecognition */; };
 		6041AA18AF863039125F90A1 /* OtherViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 21AD0C7E80EC8F7390973AC9 /* OtherViews.swift */; };
 		6D412B519593C96765D95340 /* SuggestionsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F33A59DF2EA4FB46DB59A0A /* SuggestionsView.swift */; };
 		817B4E4D74AE2997C7F966B6 /* Mixing.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E018A3260ABD70DED456CA5 /* Mixing.swift */; };
 		827B79B64A1E31FD990CA700 /* DeckieCrate in Frameworks */ = {isa = PBXBuildFile; productRef = B49D1D7567EBFBB382FD970D /* DeckieCrate */; };
 		82FB6E3B4B79F9ED651B7A58 /* deck_data.json in Resources */ = {isa = PBXBuildFile; fileRef = FCF6D813B16B533041BE8EC9 /* deck_data.json */; };
+		868CFC2D39BE590AE854F03D /* Listening.swift in Sources */ = {isa = PBXBuildFile; fileRef = CFF68CAE9CF7C52FEF8A465C /* Listening.swift */; };
 		A363EF687A2B1A25437BA175 /* DeckApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A0CD63E51A2860949AEFB3B /* DeckApp.swift */; };
 		B530B20B2F40A10D5681F8B4 /* Words.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4EE148A8A234AAD6644DE7A /* Words.swift */; };
 		C14D34FFF4EB371C93C4BC9F /* mixmap.html in Resources */ = {isa = PBXBuildFile; fileRef = E92D407609A47C60440A7251 /* mixmap.html */; };
@@ -44,6 +46,7 @@
 		AD0D6A7A5D1690A64DABA356 /* Recognizer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Recognizer.swift; sourceTree = "<group>"; };
 		B4EE148A8A234AAD6644DE7A /* Words.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Words.swift; sourceTree = "<group>"; };
 		C87E434C1DA957EE6100DE2C /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		CFF68CAE9CF7C52FEF8A465C /* Listening.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Listening.swift; sourceTree = "<group>"; };
 		DEF7E88C03C4E70C553BFF09 /* CrateLibrary.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CrateLibrary.swift; sourceTree = "<group>"; };
 		E92D407609A47C60440A7251 /* mixmap.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = mixmap.html; sourceTree = "<group>"; };
 		FCF6D813B16B533041BE8EC9 /* deck_data.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = deck_data.json; sourceTree = "<group>"; };
@@ -57,6 +60,7 @@
 			files = (
 				15077272C4ECBD996B12A98E /* DeckieCore in Frameworks */,
 				827B79B64A1E31FD990CA700 /* DeckieCrate in Frameworks */,
+				4EEDFA8827370DA19CD94F81 /* DeckieRecognition in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -80,6 +84,7 @@
 				DEF7E88C03C4E70C553BFF09 /* CrateLibrary.swift */,
 				549771412DCA2A83C4F58275 /* DebugSheet.swift */,
 				9A0CD63E51A2860949AEFB3B /* DeckApp.swift */,
+				CFF68CAE9CF7C52FEF8A465C /* Listening.swift */,
 				51FCBBBC567C3AF3489222CD /* ListenView.swift */,
 				5B731D63AEAD480AB55F2C2C /* Look.swift */,
 				0E018A3260ABD70DED456CA5 /* Mixing.swift */,
@@ -147,6 +152,7 @@
 			packageProductDependencies = (
 				12304D4AEAAC6FCC6B163B1D /* DeckieCore */,
 				B49D1D7567EBFBB382FD970D /* DeckieCrate */,
+				DB6322FD4E9AC054C1C71F5B /* DeckieRecognition */,
 			);
 			productName = Deck;
 			productReference = 9768B101742C7EC94619E350 /* Deck.app */;
@@ -213,6 +219,7 @@
 				CE3B6D0B375CF18CB83E44B5 /* DebugSheet.swift in Sources */,
 				A363EF687A2B1A25437BA175 /* DeckApp.swift in Sources */,
 				CEE3667911D1572F5C0F6754 /* ListenView.swift in Sources */,
+				868CFC2D39BE590AE854F03D /* Listening.swift in Sources */,
 				CE6735A441831F16858ED4D2 /* Look.swift in Sources */,
 				817B4E4D74AE2997C7F966B6 /* Mixing.swift in Sources */,
 				4B4016B134222CC851A98ED2 /* Model.swift in Sources */,
@@ -422,6 +429,10 @@
 		B49D1D7567EBFBB382FD970D /* DeckieCrate */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = DeckieCrate;
+		};
+		DB6322FD4E9AC054C1C71F5B /* DeckieRecognition */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = DeckieRecognition;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
