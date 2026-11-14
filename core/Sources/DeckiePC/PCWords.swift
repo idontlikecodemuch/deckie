@@ -65,7 +65,8 @@ public enum PCWords {
     }
     public static func crateFileIs(_ path: String) -> String { "Your crate file:\n  \(path)" }
     public static func logIs(_ path: String) -> String { "A log of this run, to send if something looks wrong:\n  \(path)" }
-    public static let notYet = "Not in a crate file made on a PC yet: song recognition, and the key unless your files carry one."
+    /// Song recognition was named here until the crate file carried each song's fingerprint (D35).
+    public static let notYet = "Not in a crate file made on a PC yet: the key unless your files carry one."
     public static func took(_ seconds: Double) -> String {
         let m = Int((seconds / 60).rounded())
         return seconds < 90 ? "That took \(Int(seconds.rounded())) seconds." : "That took \(m) minutes."
