@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="96 96 832 832" width="832" height="832">
+<!-- The crate's icon: Deckie's record (site/icon-line.svg) in its line form, at the icon's own measures: the record's
+     edge, one groove, the label and the spindle. One named asset for the design pass to swap; desk-web/index.html's
+     symbol icon-crate is the same drawing. -->
+<g fill="none" stroke="#000" stroke-width="52">
+<circle cx="512" cy="512" r="382"/>
+<circle cx="512" cy="512" r="154"/>
+</g>
+<circle cx="512" cy="512" r="268" fill="none" stroke="#000" stroke-width="26"/>
+<circle cx="512" cy="512" r="42" fill="#000"/>
+</svg>

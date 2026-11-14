@@ -110,6 +110,9 @@ public struct RunReport: Codable, Equatable, Sendable {
     /// a fingerprint after it. Nil in a line written before it. Not the prints above, which find copies.
     public var fingerprinted: Int? = nil
     public var songsWithFingerprint: Int? = nil
+    /// The DJ stopped the run (Stop) before every song was read: the songs read are in the crate, and the run is kept
+    /// to carry on (`pending.json` stays). Nil in a line written before Stop.
+    public var stopped: Bool? = nil
 
     enum CodingKeys: String, CodingKey {
         case crate, read, seconds, analysed, reused, copies, jobs, device, engine, damaged
@@ -118,7 +121,7 @@ public struct RunReport: Codable, Equatable, Sendable {
         case signaturesMade = "signatures_made", signaturesKept = "signatures_kept", signaturesFailed = "signatures_failed"
         case printsMade = "prints_made", printsKept = "prints_kept", printsFailed = "prints_failed"
         case songsInCrate = "songs_in_crate", songsPerMinute = "songs_per_minute", carriedOn = "carried_on"
-        case local, disc, covers, fingerprinted, songsWithFingerprint = "songs_with_fingerprint"
+        case local, disc, covers, fingerprinted, songsWithFingerprint = "songs_with_fingerprint", stopped
     }
 
     /// Songs that did not go in.
@@ -150,6 +153,11 @@ public final class DeskRun: @unchecked Sendable {
     /// one (to find the disc when it is in another drive).
     public var openMusicCD: (String) throws -> MusicCD = { try MusicCDs.open($0) }
     public var findMusicCDs: () -> [MusicCDs.Found] = { MusicCDs.list() }
+    /// Stop (the run screen's button): no further song is started, the ones being read finish, and the crate is saved
+    /// with every song read so far. The run stays pending, so Carry on reads the rest (quickly: what was read is kept).
+    let stopFlag = BuildStop()
+    public func stop() { stopFlag.set() }
+    public var stopAsked: Bool { stopFlag.isSet }
 
     public init(home: DeskHome, crateId: String, request: RunRequest, jobs: Int, device: String,
                 fileBPMTags: Bool = true, analyser: Analyser? = nil, signer: SignatureMaker?, printer: @escaping PrintMaker) {
@@ -227,10 +235,11 @@ public final class DeskRun: @unchecked Sendable {
         let keep: Set<String> = request.source == nil
             ? Set(info.sourceRoots.keys).union(before?.tracks.flatMap { $0.ident.allPlaces.compactMap(\.disc) } ?? [])
             : []
-        let options = BuildOptions(folder: folder, output: pkg, rekordbox: request.rekordbox.map { URL(fileURLWithPath: $0) },
+        var options = BuildOptions(folder: folder, output: pkg, rekordbox: request.rekordbox.map { URL(fileURLWithPath: $0) },
                                    jobs: jobs, fileBPMTags: fileBPMTags, fresh: false, name: info.name, device: device,
                                    source: request.source, keepSources: keep, sharedRecords: store.records,
                                    files: disc)
+        options.stop = stopFlag
         let prefix = request.source.map { $0 + "/" } ?? ""
         let state = State()
         let queue = DispatchQueue(label: "deckie.desk.finish", qos: .userInitiated)
@@ -395,6 +404,8 @@ public final class DeskRun: @unchecked Sendable {
         emit(.saving, nil)
 
         // 3. Save: signatures and fingerprints into the crate file, copies linked, the DJ's fixes put back, the crate's name.
+        // The name as it is now: the DJ may have renamed the crate while it was read.
+        if let now = shelf.info(crateId) { info.name = now.name }
         let sigFolder = pkg.appendingPathComponent(CrateFormat.signaturesFolder)
         try DeckieFiles.createDirectory(sigFolder)
         var prints: [String: RecordingPrint] = [:]
@@ -463,11 +474,14 @@ public final class DeskRun: @unchecked Sendable {
             }, covers: result.covers,
             fingerprinted: result.fingerprinted, songsWithFingerprint: crate.tracks.filter { $0.fingerprint != nil }.count)
         state.lock.unlock()
-        try Self.appendRun(report, to: shelf.file(Self.runsFile, of: crateId))
-        try? DeckieFiles.remove(pendingURL)
+        var line = report
+        line.stopped = result.stopped ? true : nil
+        try Self.appendRun(line, to: shelf.file(Self.runsFile, of: crateId))
+        // A stopped run stays pending, so Carry on reads the rest.
+        if !result.stopped { try? DeckieFiles.remove(pendingURL) }
         state.lock.lock(); let last = state.tally.finished(); state.lock.unlock()
         emit(.saving, nil, notes: [last])
-        return (crate, report)
+        return (crate, line)
     }
 
     static func appendRun(_ r: RunReport, to url: URL) throws {

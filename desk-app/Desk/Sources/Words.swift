@@ -54,6 +54,41 @@ enum Words {
     static let rekordboxFolderMessage = w("rekordboxFolderMessage")
     static let start = w("start")
 
+    // MARK: the three ways to add music, the crate's name, a big drive, counting first, Stop (research AE)
+    static let addMoreMusic = w("addMoreMusic")
+    static func addMoreMusicTo(_ crate: String) -> String { w("addMoreMusicTo", ["crate": crate]) }
+    static let chooseDriveTitle = w("chooseDriveTitle")
+    static let chooseDriveBody = w("chooseDriveBody")
+    static let noDriveIn = w("noDriveIn")
+    static let driveBigNote = w("driveBigNote")
+    static let chooseCDTitle = w("chooseCDTitle")
+    static let chooseCDBody = w("chooseCDBody")
+    static let noCDIn = w("noCDIn")
+    static func dataCDItem(_ name: String) -> String { w("dataCDItem", ["name": name]) }
+    static func bigDriveTitle(_ name: String) -> String { w("bigDriveTitle", ["name": name]) }
+    static func bigDriveBody(_ size: String) -> String { w("bigDriveBody", ["size": size]) }
+    static func bigDriveChooser(_ name: String) -> String { w("bigDriveChooser", ["name": name]) }
+    static let chooseFolderIn = w("chooseFolderIn")
+    static let readWholeDrive = w("readWholeDrive")
+    static let counting = w("counting")
+    static func countingSoFar(_ n: Int) -> String { c("countingSoFar", n) }
+    static func askReadTitle(_ n: Int, _ name: String) -> String { c("askReadTitle", n, ["name": name]) }
+    static func askReadBody(_ about: String) -> String { w("askReadBody", ["about": about]) }
+    static func askReadStart(_ n: Int) -> String { c("askReadStart", n) }
+    static let crateNameLabel = w("crateNameLabel")
+    static let intoNewCrate = w("intoNewCrate")
+    static func intoCrate(_ crate: String) -> String { w("intoCrate", ["crate": crate]) }
+    static let crateIcon = w("crateIcon")
+    static let renameCrateHelp = w("renameCrateHelp")
+    static let renameButton = w("renameButton")
+    static let stopRun = w("stopRun")
+    static let stopRunHelp = w("stopRunHelp")
+    static let stoppingRun = w("stoppingRun")
+    static func stoppedTitle(_ n: Int, _ read: String, _ crate: String) -> String { c("stoppedTitle", n, ["read": read, "crate": crate]) }
+    static let stoppedBody = w("stoppedBody")
+    static let takeBackOut = w("takeBackOut")
+    static let dropHere = w("dropHere")
+
     // MARK: while it works
     static let runTitle = w("runTitle")
     static func runReading(_ read: String, into crate: String) -> String { w("runReading", ["read": read, "crate": crate]) }
