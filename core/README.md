@@ -519,9 +519,12 @@ says what must be identical and what tolerance the rest gets, and why. No audio 
 per run on Linux and handed to the Windows job.
 
 On Windows today the builder reads WAV (16-, 24- and 32-bit integer, 32-bit float, plain and "extensible"), AIFF and
-AIFF-C, MP3 and FLAC (native and Ogg-FLAC, to 24 bits), as on Linux. It does not read AAC or Apple Lossless (`.m4a`,
-`.mp4`, `.aac`), WMA, Ogg Vorbis or Opus (each counted as `unsupported` by type), nor copy-protected files
-(`protected`). `docs/research/y-windows-builder.md` says what reading `.m4a` through Windows' Media Foundation takes.
+AIFF-C, MP3 and FLAC (native and Ogg-FLAC, to 24 bits), as on Linux, and, on Windows only, AAC and Apple Lossless
+(`.m4a`, `.mp4`, `.aac`) through Windows' own Media Foundation (`Sources/CMediaFoundation`, opened at run time; D33).
+Media Foundation hands back an AAC file's encoder lead-in with the sound, so `DeckieDecode/MP4Audio.swift` reads
+what the file says about its start (the edit list, else the `iTunSMPB` tag) and trims; a file that says nothing is
+read whole and its record flagged `start_uncertain`. It does not read WMA, Ogg Vorbis or Opus (each counted as
+`unsupported` by type), nor copy-protected files (`protected`).
 
 ## Measuring memory: `deckie-memprobe`
 

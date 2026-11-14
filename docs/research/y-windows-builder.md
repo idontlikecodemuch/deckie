@@ -258,6 +258,20 @@ committed. The one binary-looking file committed is the 21 KB example crate file
   work on `main`, which reaches the PC program through `Builder` when merged), and on the D16 point above.
 - **`.m4a`**: the section above.
 
+## `.m4a` built (Nov 14, 2026, branch `pc/m4a`, D33)
+
+The plan above was built, with the owner's answer to its one decision: a file that states its lead-in nowhere is
+read and marked. On Windows the builder now reads AAC and Apple Lossless through Media Foundation
+(`core/Sources/CMediaFoundation`, `DeckieDecode/MediaFoundationReader.swift`), trimmed by what the file says
+(`DeckieDecode/MP4Audio.swift`: the edit list, else iTunes' `iTunSMPB` tag; Apple Lossless has none). The mark is
+the name `start_uncertain` in the record's existing `flags` list, so the format gained a name and no field.
+
+**[runner]** `core-windows` run 43545419066: the test tone's click comes back on its exact frame; from the test
+track as AAC and as Apple Lossless the grid starts 4.0 and 2.8 ms from the WAV's (limit 5 ms), and the AAC file
+with its edit list removed starts 22.4 ms late and carries the flag. **[not proven]** Windows 10 and 11, an "N"
+edition, real iTunes purchases, HE-AAC, and how the same files read on a Mac. Still unread: WMA, Ogg, Opus.
+No dependency added: Media Foundation is part of Windows and is opened at run time.
+
 ## Next for the packaging: the window, not only `deckie-make` (noted Nov 14, 2026)
 
 Since this letter, `main` gained Desk's window for Windows and Linux (D32): `deckie-desk` (the shell, in

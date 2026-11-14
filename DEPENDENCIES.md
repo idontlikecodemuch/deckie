@@ -176,6 +176,11 @@ program's own folder first, and says in plain words what to install should they 
 itself is built with the toolchain's clang against Windows' `kernel32.dll` alone, with no C runtime inside it, so it
 adds no dependency. `DECKIE_SHIP_VC_RUNTIME=0` builds the zip without the files.
 
+**Windows' Media Foundation** (since Nov 14, 2026, D33) decodes AAC and Apple Lossless files on Windows. It is part
+of Windows, like the web view: nothing of it is shipped, linked or downloaded; `core/Sources/CMediaFoundation` opens
+`mfplat.dll` and `mfreadwrite.dll` at run time, and on a Windows without them (the "N" editions) such files are
+reported as unreadable. No licence to record.
+
 **A test tool, not a dependency:** the workflows encode one MP3 of the synthesised test track with Ubuntu's `ffmpeg`
 program (installed with apt in the Linux job, unpinned, as `curl` and `python3` already are there), because no audio
 is committed and the Windows runner has no MP3 encoder. Nothing of ffmpeg is linked, shipped or used by the builder.

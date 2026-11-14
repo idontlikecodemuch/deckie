@@ -2,6 +2,50 @@
 
 Newest entry first. Each entry: when, what is done, what failed and why, what is next, and one plain line.
 
+**Newest zip, with `.m4a` reading: `pc-package` run 43545418975** (branch `pc/m4a`, commit `665490a`), artifact
+`Deckie-for-PC-first-test` (id 14094366437): **122,379,915 bytes**, SHA-256
+`4da005fe55bce0d5be43b12d5aba0806185c39c685a565b48c9492215308874d`. It supersedes the one named further down.
+
+## Nov 14, 2026, 02:50 UTC: `.m4a` works on the Windows runner; all three workflows green on `pc/m4a`
+
+**Seen on the Windows runner** (`core-windows` run 43545419066, commit `665490a`; `core-linux` 43545418976 and
+`pc-package` 43545418975 green on the same commit):
+
+- 436 tests pass on Windows. The AAC test tone comes back through the decoder at its own length (176,400 frames)
+  with its click at frame 88,200, where it was; the same file with its edit list taken out comes back whole, the
+  click 1,024 frames late, and marked.
+- **A crate file from real `.m4a` files**, built with `deckie-build` from the test track (124 BPM, first downbeat
+  at 0.5084 s as a WAV):
+
+  | File | First downbeat | Against the WAV | Flag |
+  |---|---|---|---|
+  | AAC, 192 kbps (ffmpeg) | 0.5044 s | -4.0 ms | none |
+  | Apple Lossless | 0.5056 s | -2.8 ms | none |
+  | The AAC file with no stated lead-in | 0.5308 s | +22.4 ms | `start_uncertain` |
+
+  All three are 32 bars at 124 BPM, decoder `media-foundation`. The limit in the check is 5 ms; an untrimmed
+  lead-in is 23 ms, which is what the third file shows. The few milliseconds on the first two are the grid fit, not
+  a shift of the audio (the decoder test puts the click on its exact frame), but the AAC file's 4.0 ms is close to
+  my 5 ms limit, and I have not measured what the same files give on a Mac.
+
+**Failed along the way:** the first Windows run on this branch (43544024924) failed one older test, which expected
+every MP4 that is not protected to be unreadable. True on Linux, no longer on Windows; the test now says so.
+
+**Not proven:** Windows 10 and 11 (the runner is Windows Server 2025); a Windows "N" edition; real iTunes
+purchases (the `iTunSMPB` reading is tested on a file built by hand, since no iTunes file is in the repository);
+HE-AAC (tested as arithmetic only); files with more than two channels.
+
+**Known gap:** a PC that ran an earlier zip keeps its `.m4a` files marked unreadable until its storage folder is
+deleted, because a file that could not be read is not tried again while the engine's version is the same. No earlier
+zip was handed out, so I left the builder's rule alone.
+
+**Also done:** the letter has a section on packaging the window (`deckie-desk`): what it takes, a PC without
+WebView2, the icon. Nothing of it is built.
+
+**Next:** nothing owed. Candidates: WMA (needs a new case in the public format list), a run on a real PC.
+
+carry on
+
 ## Nov 14, 2026, 02:05 UTC: branch `pc/m4a` (from `main`), `.m4a` on Windows written, first push
 
 D33 applied: build it, and a file whose lead-in is stated nowhere is accepted with its start marked uncertain.
