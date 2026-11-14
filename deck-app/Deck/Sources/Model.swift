@@ -82,6 +82,18 @@ struct Track: Codable, Identifiable, Hashable {
     /// False when the crate file gives the song no usable title (`SongName`: empty, a number, "Track 07"); nil (named)
     /// in the bundled data.
     var named: Bool? = nil
+    /// The song's facts from the crate file (D34): release, year, label, genre and whatever else its file, its disc,
+    /// the DJ's programs or the DJ gave, by name, each with its values. Nil in the bundled data and in a crate file
+    /// written before them.
+    var facts: [String: [String]]? = nil
+
+    /// The short line of facts where a song's details are shown: "Friday Night · 1999 · Nervous · House, Garage",
+    /// with only those present; nil when the crate file gives none. How facts are shown is to be refined (D34).
+    var factsLine: String? {
+        guard let f = facts else { return nil }
+        let parts = ["release", "year", "label", "genre"].compactMap { f[$0].map { $0.joined(separator: ", ") } }.filter { !$0.isEmpty }
+        return parts.isEmpty ? nil : parts.joined(separator: " · ")
+    }
 
     /// Where this track is shown: its source, folder and number.
     var place: TrackPlace { TrackPlace(disc: disc, folder: folder, num: num) }
@@ -147,8 +159,10 @@ struct Track: Codable, Identifiable, Hashable {
         if hasName { return song }
         return placeText.isEmpty ? Words.noNameYet : placeText + " · " + Words.noNameYetInRow
     }
-    /// What the search in More looks through: title and artist, or for a song with no name its place and file name.
+    /// What the search in More looks through: title and artist, or for a song with no name its place and file name;
+    /// and every fact the crate file gives it (D34: release, label, genre, ...).
     func matches(_ q: String) -> Bool {
+        if facts?.values.contains(where: { $0.contains { $0.localizedStandardContains(q) } }) == true { return true }
         if hasName { return song.localizedStandardContains(q) || artist.localizedStandardContains(q) }
         return placeText.localizedStandardContains(q) || deck.localizedStandardContains(q)
             || Words.noNameYetInRow.localizedStandardContains(q)
