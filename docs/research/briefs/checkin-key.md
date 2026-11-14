@@ -5,7 +5,7 @@ minor). Exact = key right. Home note = home note right, whatever the mode. Mode 
 note is right, the share with the right mode. The bar (D16) = exact within five points of Apple on each half:
 36.5 on the major half, 70.6 on the minor half.
 
-## Nov 14, 2026, later. The owner's two questions: is it more accurate than Apple, and why did it miss the bar
+## Nov 14, 2026, 16:10 UTC. The owner's two questions: is it more accurate than Apple, and why did it miss the bar
 
 **"More accurate than Apple but decides less often?" No: as accurate as Apple where it decides, and it decides
 less often.** My earlier line compared its shown keys with Apple over all songs, which flattered it. On the same
