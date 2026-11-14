@@ -330,6 +330,51 @@ final class EngineProcess: @unchecked Sendable {
         #expect(e.exitCode() == 0)
     }
 
+    /// A song's facts (D34) through the protocol: sent with each song, the shown four as fields with where each came
+    /// from, the rest listed; `song.fix`'s `facts` makes them the DJ's, "" clears one, and undo takes it back.
+    @Test func factsThroughTheProtocol() throws {
+        let root = try scratch("engine-facts")
+        let home = DeskHome(root: root.appendingPathComponent("home"))
+        try home.prepare()
+        let info = try home.shelf.make(name: "Friday")
+        var a = entry("aaaa", "Night drive", disc: nil, folder: nil, track: nil, rel: "a.mp3")
+        a.ident.artist = "Artist A"
+        a.ident.facts = ["release": .init("Friday Night", from: "tag"), "genre": .init(["House", "Garage"], from: "tag"),
+                         "isrc": .init("USABC9900001", from: "tag")]
+        a.file.otherTags = .init(formats: ["id3v2.4"], tags: ["TSSE": ["LAME"]], leftOut: ["picture": 1])
+        try CrateWriter.write(crate([a], name: "Friday"), to: home.shelf.package(info.id))
+
+        let e = try EngineProcess(home: home.root)
+        defer { if e.process.isRunning { e.process.terminate() } }
+        let songs = try #require(e.wait { $0["event"] as? String == "songs" })
+        let names = try #require((songs["songs"] as? [[String: Any]])?.first?["names"] as? [String: Any])
+        #expect((names["release"] as? [String: Any])?["value"] as? String == "Friday Night")
+        #expect((names["genre"] as? [String: Any])?["value"] as? String == "House, Garage")
+        #expect((names["genre"] as? [String: Any])?["from"] as? String == "tag")
+        #expect((names["others"] as? [[String: Any]])?.first?["name"] as? String == "isrc")
+        #expect((names["fileTags"] as? [[String: Any]])?.first?["name"] as? String == "TSSE")
+        #expect((names["leftOut"] as? [String: Any])?["picture"] as? NSNumber == 1)
+
+        var mark = e.received.count
+        _ = try e.request("song.fix", ["song": "aaaa", "facts": ["label": "Nervous", "genre": "Deep House; Disco", "release": ""]])
+        let after = try #require(e.wait(from: mark) { $0["event"] as? String == "songs" })
+        let fixed = try #require((after["songs"] as? [[String: Any]])?.first?["names"] as? [String: Any])
+        #expect((fixed["label"] as? [String: Any])?["from"] as? String == "user")
+        #expect((fixed["genre"] as? [String: Any])?["value"] as? String == "Deep House, Disco")
+        #expect((fixed["release"] as? [String: Any])?["value"] == nil || (fixed["release"] as? [String: Any])?["value"] is NSNull)
+        // Saved in the crate file, as the DJ's.
+        let saved = try CrateReader.read(from: home.shelf.package(info.id)).tracks[0].ident.facts
+        #expect(saved["label"] == .init("Nervous", from: "user") && saved["release"] == nil)
+        #expect((try e.request("song.fix", ["song": "aaaa", "facts": ["label": 3]])["error"] as? [String: Any])?["code"] as? String == "bad_request")
+        mark = e.received.count
+        _ = try e.request("edit.undo")
+        let undone = try #require(e.wait(from: mark) { $0["event"] as? String == "songs" })
+        let back = try #require((undone["songs"] as? [[String: Any]])?.first?["names"] as? [String: Any])
+        #expect((back["release"] as? [String: Any])?["value"] as? String == "Friday Night")
+        e.close()
+        #expect(e.exitCode() == 0)
+    }
+
     /// A music CD through the engine program, with the stand-in drive (`DECKIE_DESK_MUSIC_CD`): listed by
     /// drives.list, added with run.addMusicCD, named by the DJ while it is read.
     @Test(.enabled(if: Engine.available, "needs ONNX Runtime and the Beat This! model"))

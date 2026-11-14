@@ -227,6 +227,17 @@ public final class DeskSession {
         }
     }
 
+    /// A DJ's facts for one song (D34): release, year, label, genre or any other known fact, by name, as text ("" clears
+    /// one); kept as corrections beside the names, so reading the song again keeps them. One step of undo.
+    public func fixFacts(_ id: String, _ given: [String: String]) throws {
+        guard let i = crate?.tracks.firstIndex(where: { $0.id == id }) else { throw DeskError("no song \(id)") }
+        guard !given.isEmpty else { return }
+        try change("undoNameFix") {
+            var t = crate!.tracks[i]
+            if DeskNaming.fixFacts(&t, given, corrections: &corrections) { crate!.tracks[i] = t }
+        }
+    }
+
     /// Corrects a source's name (D26) everywhere Desk keeps it: the crate, where it was read from, its paths.
     public func renameSource(_ name: String, to new: String) throws {
         let n = new.trimmingCharacters(in: .whitespaces)

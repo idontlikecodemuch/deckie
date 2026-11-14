@@ -7,10 +7,11 @@ import DeckieBuild
 /// guesses; and the batch tools (a pasted list, a pattern over the file names, a playlist, "Looks right"), each a
 /// preview with a tick per field, applied as one step of undo.
 ///
-/// The crate file is not changed: it keeps a song's title, artist and version, and one `ident.source` for the name as
-/// before. Where each field came from, and a song's release, live in Desk's own storage (`names.json` beside the
-/// crate, `NameBook`), and the DJ's own names in `corrections.json` (`NameCorrections`), each field with how the DJ
-/// gave it.
+/// The crate file keeps a song's title, artist and version, and one `ident.source` for the name as before. Where each
+/// name came from, field by field, lives in Desk's own storage (`names.json` beside the crate, `NameBook`), and the
+/// DJ's own names in `corrections.json` (`NameCorrections`), each field with how the DJ gave it. A song's facts (D34:
+/// release, year, label, genre and the rest) are in the crate file with where each came from, and the DJ's own facts
+/// are kept in the same `corrections.json`, so names and facts come back after a re-read by one mechanism.
 public enum DeskNaming {
     /// The fields a DJ names.
     public static let fields = ["title", "artist", "version"]
@@ -37,15 +38,50 @@ public enum DeskNaming {
         }
     }
 
-    /// A song's names as the panel shows them.
+    /// A song's names as the panel shows them, and its facts (D34): release, year, label and genre as fields of their
+    /// own, the rest listed.
     public struct Facts: Codable, Equatable, Sendable {
         public var title: Fact
         public var artist: Fact
         public var version: Fact
         public var release: Fact
-        public func fact(_ field: String) -> Fact {
-            switch field { case "artist": return artist; case "version": return version; case "release": return release; default: return title }
+        public var year: Fact = Fact(value: nil, from: nil)
+        public var label: Fact = Fact(value: nil, from: nil)
+        public var genre: Fact = Fact(value: nil, from: nil)
+        /// The song's other facts, in `SongFacts.known`'s order: each its name (words `factName.<name>`), its values
+        /// as one line, and where it came from.
+        public var others: [Listed] = []
+        /// The rest of the file's tags, by their own names (`file.other_tags`), and what was left out, by reason
+        /// (words `leftOut.<reason>`).
+        public var fileTags: [Listed] = []
+        public var leftOut: [String: Int] = [:]
+
+        public struct Listed: Codable, Equatable, Sendable {
+            public var name: String
+            public var value: String
+            public var from: String?
         }
+
+        public func fact(_ field: String) -> Fact {
+            switch field {
+            case "artist": return artist
+            case "version": return version
+            case "release": return release
+            case "year": return year
+            case "label": return label
+            case "genre": return genre
+            default: return title
+            }
+        }
+    }
+
+    /// The facts a DJ edits in the panel as fields of their own (D34): release, year, label, genre.
+    public static let factFields = SongFacts.shown
+
+    /// A fact as the DJ typed it, as values: a genre may be several, split at "," or ";"; anything else is one value.
+    public static func factValues(_ name: String, _ text: String) -> [String] {
+        let parts = name == SongFacts.genre ? text.split(whereSeparator: { $0 == "," || $0 == ";" }).map(String.init) : [text]
+        return SongFacts.bounded(parts)
     }
 
     /// Why a song is in the "Needs a name" list (letter AA, 3.3): `noTitle` (nothing usable, or a placeholder such as
@@ -78,8 +114,50 @@ public enum DeskNaming {
             return Fact(value: value, from: readFrom, guess: readFrom.map(guessOrigins.contains) ?? false)
         }
         let title = fact("title", LocalNames.isUsableTitle(t.ident.title) ? t.ident.title : nil)
-        return Facts(title: title, artist: fact("artist", t.ident.artist), version: fact("version", t.ident.version),
-                     release: Fact(value: read?.release, from: read?.releaseFrom))
+        // A song's facts are in the crate file with where each came from (D34); the release falls back to what Desk
+        // noted for a disc with no title of its own (the source's name).
+        func song(_ name: String) -> Fact {
+            guard let f = t.ident.facts[name] else { return Fact(value: nil, from: nil) }
+            return Fact(value: f.text, from: f.from)
+        }
+        var release = song(SongFacts.release)
+        if release.value == nil, fix?.facts?[SongFacts.release] == nil, let r = read?.release {
+            release = Fact(value: r, from: read?.releaseFrom)
+        }
+        var out = Facts(title: title, artist: fact("artist", t.ident.artist), version: fact("version", t.ident.version),
+                        release: release)
+        out.year = song(SongFacts.year)
+        out.label = song(SongFacts.label)
+        out.genre = song(SongFacts.genre)
+        let shown = Set(factFields)
+        let names = SongFacts.known + t.ident.facts.keys.filter { !SongFacts.known.contains($0) }.sorted()
+        out.others = names.compactMap { n in
+            guard !shown.contains(n), let f = t.ident.facts[n] else { return nil }
+            return Facts.Listed(name: n, value: f.text, from: f.from)
+        }
+        if let o = t.file.otherTags {
+            out.fileTags = o.tags.keys.sorted().map { Facts.Listed(name: $0, value: o.tags[$0]!.joined(separator: ", "), from: nil) }
+            out.leftOut = o.leftOut
+        }
+        return out
+    }
+
+    /// The DJ's facts for one song (D34): each name given takes the text as the DJ's (`from: user`), and an empty
+    /// text clears it, so the file's own value is not shown either; kept as a correction, so reading the song again
+    /// keeps it. Only the names Deckie knows. Returns whether anything changed.
+    @discardableResult
+    public static func fixFacts(_ t: inout CrateTrack, _ given: [String: String], corrections: inout NameCorrections) -> Bool {
+        let before = t
+        for (name, text) in given where SongFacts.known.contains(name) {
+            let values = factValues(name, text)
+            var next = t.ident.facts
+            next[name] = values.isEmpty ? nil : CrateTrack.Fact(values, from: SongFacts.Origin.user)
+            // Within the crate file's bound on a song's facts; past it the DJ's entry is not taken.
+            guard SongFacts.bytes(next.mapValues(\.values)) <= SongFacts.maxFactBytes else { continue }
+            t.ident.facts = next
+            corrections.giveFact(t.id, name: name, values: values)
+        }
+        return t != before
     }
 
     /// A field's origin as `ident.source` says it: its first part for the title (and version), its second, when it
@@ -473,6 +551,18 @@ extension NameCorrections {
         }
         var f = c.from ?? [:]
         f[field] = how
+        c.from = f
+        byId[id] = c
+    }
+
+    /// Records a fact the DJ gave (D34): its values, or none for a fact the DJ cleared.
+    public mutating func giveFact(_ id: String, name: String, values: [String], how: String = "user") {
+        var c = byId[id] ?? NameCorrection()
+        var facts = c.facts ?? [:]
+        facts[name] = values
+        c.facts = facts
+        var f = c.from ?? [:]
+        f[name] = how
         c.from = f
         byId[id] = c
     }
