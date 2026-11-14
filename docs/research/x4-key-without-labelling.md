@@ -27,10 +27,10 @@ on the minor half of the 1,270 GiantSteps MTG clips (36.5 and 70.6).
   human key labels and licences that allow a shipped model (letter X3). Every other body of human key labels has no
   usable audio, forbids training, or is not dance music; the big "labelled" bodies are a program's answers
   (section 1).
-- **Labels nobody typed are worth about as much as the human ones, and no more.** The untrained reader's confident
-  answers on 8,332 openly licensed clips, used as labels, teach the 49-number reader to 58.9 exact on MTG (human
-  labels: 58.8; the untrained reader itself: 57.8). Added to the human labels they change nothing measurable for
-  the small model either (61.7 against 61.5). A model cannot learn from its teacher what the teacher gets wrong.
+- **Labels nobody typed are worth as much as the human ones.** The untrained reader's confident answers on openly
+  licensed clips, used as labels, teach the small model to 61.5 exact on MTG with no human label at all: the same
+  as the human-labelled model (61.5), and 3.7 points above the untrained reader that made the labels (57.8). Added
+  to the human labels they change nothing (61.7).
 - **Learning with no labels at all did not work at this size.** Pretraining on pitch-shifted pairs of all 8,332
   clips barely learned (its answers lined up with human labels on 18 percent of held-out loops; chance is 8), and
   the model built on it is no better (59.0 exact on MTG). The published versions used 60,000 to a million songs.
@@ -138,16 +138,25 @@ at twelve pitch shifts as in letters X2 and X3):
 | Apple | 65.2 | 41.5 | 75.6 | | | |
 | Human-labelled recordings (letter X3) | 61.5 | 63.5 | 60.6 | fails, minor 9.9 short | 80.1 | 63.1 |
 | **Human-labelled + 2,000 pseudo-labels** | 61.7 | 62.7 | 61.2 | fails, minor 9.4 short | 78.4 | 62.9 |
-| Pseudo-labels only (2,000) | still training when this was written (PSEUDO_ROW) | | | | | |
+| **Pseudo-labels only (2,000 clips, no human label at all)** | 61.5 | 61.4 | 61.5 | fails, minor 9.1 short | 79.1 | 63.1 |
 
 **What it says.**
-- **Pseudo-labels alone match human labels for the small reader**: 58.9 against 58.8 on MTG, within a point or two
-  on the others. That is a real finding: Deckie could have had its learned profiles with no human label at all.
-- **They add nothing on top of human labels**, for either reader. The student cannot learn what the teacher gets
-  wrong, and the teacher's errors here are the hard cases (mode, and the home note of sparse tracks).
-- **What a student can learn beyond its teacher** is only what the audio shows consistently where the teacher was
-  confident: here, a point of exact key from smoothing over the teacher's two readings. It cannot learn the mode
-  better, because the labels it gets are the easy-mode songs only (the teacher declines the rest).
+- **Pseudo-labels alone match human labels, for both readers.** The 49 numbers: 58.9 against 58.8 on MTG. The
+  small model: **61.5 against 61.5**, with no human label anywhere in its training. That is the finding of this
+  pass: Deckie can have its learned reader from openly licensed audio and its own untrained reader alone.
+- **The student beats its teacher.** The untrained reader scores 57.8 on MTG when made to name a key for every
+  song; the small model taught only on that reader's confident answers scores 61.5. Four labels in ten were wrong
+  (above), but the wrong ones are scattered and the right ones agree, and the model sees the whole spectrogram
+  where the teacher sees twelve numbers.
+- **What it cannot learn beyond the teacher is the mode on hard songs.** The teacher gives a key only where its two
+  readings agree, so the labels are the easy-mode songs; the student's mode on the minor half (84 percent right
+  given the home note) is no better than the human-labelled model's.
+- **Pseudo-labels add nothing on top of human labels** (61.7 against 61.5), and human labels add nothing on top of
+  pseudo-labels. Each source alone gets the model to the same place; the ceiling is elsewhere (the lean, section 3).
+- **A consequence for the training record.** A model taught on pseudo-labels alone would have no human-labelled
+  set in its record at all (so none of the FMAK or Freesound label questions of letter X3), only Free Music
+  Archive recordings under CC BY, CC0 and public-domain terms. It was trained here on 2,000 clips; the pool has
+  5,252.
 
 ### 2.3 No labels at all: pitch-shifted pairs
 
@@ -199,8 +208,8 @@ reader as it ships, read once, is in `x4-key-complete.md`.)
 | Small model, human-labelled only | 91.9 | 73.5 |
 
 **Every learned reader beats the untrained one by the rule, and the small model by 5 to 7 points on every set.**
-The gain comes from the human-labelled recordings: the model taught on them alone does as well. Pseudo-labels and
-pretraining add nothing that can be measured.
+The gain comes from training the small model at all: taught on human labels alone, or on pseudo-labels alone, it
+scores the same. Pretraining adds nothing that can be measured.
 
 ## 3. The minor lean, treated honestly
 
@@ -323,7 +332,7 @@ proprietary.
 | 4 | More human-labelled dance music under open licences | each doubling of labelled data was worth 1 to 2 points in letter X2's curve | none exists to fetch (section 1); labelling is off the table | closed |
 | 5 | Label-free pretraining at scale | perhaps the published 72 on GiantSteps Key, if 16,000 recordings are enough; they may not be | a rented graphics processor and one to two weeks | low |
 | 6 | A stronger lean | nearly passes with Beatport's own share (letter X3) | none | not justified without a source outside Beatport (section 3) |
-| 7 | More pseudo-labels | nothing: measured flat | none | closed |
+| 7 | More pseudo-labels on top of human labels | nothing: measured flat. (Pseudo-labels in place of human labels work as well, and shorten the record) | none | closed for accuracy |
 
 **The one I would take: route 1 now, route 2 in parallel.** Route 1 is finished and gains 5 to 7 points of
 precision at equal coverage for no legal question that was not already open in letter X3. Route 2 costs one
@@ -346,5 +355,6 @@ here and did not move the score.
 - **Label-free training at scale**: not tried beyond twelve passes on 8,332 clips on a CPU.
 - **Calibration on other music**: the temperature was fitted on loops and songs that are not Beatport dance music;
   `x4-key-complete.md` reports how far the stated confidence is from the measured rate on each set.
-- **The small model taught on pseudo-labels only** was still training when this was written; the learned profiles above are the evidence for that row.
+- **The pseudo-label-only model as a three-answer reader**: its exact scores are in section 2.2; its coverage
+  against precision as shipped was not measured (it was not the candidate fixed in advance).
 

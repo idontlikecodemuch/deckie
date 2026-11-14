@@ -47,10 +47,12 @@ the untrained reader only if its shown keys are right more often at the same cov
 not worse by more than a point on the third. It won by 5 to 7 points on all three. The 49-number learned profiles
 also beat the untrained reader, by 1 to 3 points; the model is clearly better and still small.
 
-**A plain caveat on the training data.** The 2,000 clips labelled by the untrained reader added nothing that can
-be measured (61.7 against 61.5 exact on MTG). A model trained on the 1,129 human-labelled recordings alone would
-score the same and have a shorter record. I kept the candidate that was fixed in advance rather than switch after
-seeing scores; retraining on the shorter list is 20 minutes if the owner prefers it.
+**A plain note on the training data.** Human labels and the untrained reader's labels turned out to be worth the
+same: the model scores 61.5 exact on MTG taught on the 1,129 human-labelled recordings alone, 61.5 taught on 2,000
+reader-labelled clips alone, and 61.7 on both. I kept the candidate fixed in advance (both) rather than switch
+after seeing scores. Either alone would have a shorter record; the reader-labelled one would have no human-labelled
+set in it at all, which removes the open point about FMAK's "research purposes" sentence. Retraining either is
+under an hour.
 
 ## 2. How it scores
 
