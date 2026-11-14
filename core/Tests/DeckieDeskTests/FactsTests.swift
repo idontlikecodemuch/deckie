@@ -88,8 +88,6 @@ import DeckieTestSupport
         let home = DeskHome(root: root.appendingPathComponent("home"))
         try home.prepare()
         var info = try home.shelf.make(name: "Friday")
-        let copy = DiscCopies.folder(home, disc: "cd-1")
-        try DeckieFiles.createDirectory(copy)
         let text = CDText.decode(DiscFixture.response(DiscFixture.packs([
             (0x80, ["Friday night", "Night drive"].map(DiscFixture.latin1)),
             (0x81, ["DJ Vera", "Artist A"].map(DiscFixture.latin1)),
@@ -97,9 +95,9 @@ import DeckieTestSupport
             (0x8E, ["0123456789012", "GBXYZ0000001"].map { Array($0.utf8) }),
         ], lastSong: 1)))
         let toc = DiscTOC(tracks: [.init(number: 1, start: 0, audio: true)], leadOut: 1000)
-        try JSONFile.write(DiscCopies.Record(toc: toc, reading: .names(text), fileExtension: "wav"),
-                           to: copy.appendingPathComponent(DiscCopies.recordFile))
-        info.sourceRoots["Friday night"] = copy.path
+        // Desk keeps what it learned from a disc, never its music (the note on D33): the record is by the disc's id.
+        try DiscRecords.save(DiscRecords.Record(toc: toc, reading: .names(text), fileExtension: "wav"), home: home)
+        info.discs["Friday night"] = toc.id
         var c = crate([entry("aaaa", "Night drive", disc: "Friday night", folder: "", track: 1, rel: "Track 01.wav")])
         c.tracks[0].ident.artist = "Artist A"
         c.tracks[0].ident.facts["release"] = .init("From A Library", from: "traktor")
