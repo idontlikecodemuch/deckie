@@ -82,11 +82,15 @@ A crate file made on a PC is not complete yet. Two things are missing:
 
 Both are being worked on. Tempo, bars, style and vocals are all there.
 
-File types it reads:    MP3, FLAC, WAV, AIFF
-Not yet:                M4A and AAC (iTunes purchases, Apple Lossless), WMA,
-                        Ogg and Opus
+File types it reads:    MP3, FLAC, WAV, AIFF, and M4A (AAC and Apple Lossless,
+                        such as iTunes purchases)
+Not yet:                WMA, Ogg and Opus
 Never:                  copy-protected files (old iTunes Store purchases,
                         Apple Music downloads). Only Apple's own apps play those.
+
+A few M4A files do not say exactly where their music starts. Deckie still reads
+them and tells you how many: their beats may sit a touch late (up to 0.05
+seconds).
 
 Files it cannot read are counted and listed at the end. Nothing is skipped
 without telling you.

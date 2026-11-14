@@ -274,9 +274,12 @@ func decodeFailure(_ data: Data) -> AudioDecodeError? {
     @Test func plainAACIsStillUnsupportedNotProtected() throws {
         let m4a = try fixtureBytes("tone.m4a")
         #expect(ProtectedMP4.check(m4a) == nil)
+        // On Windows it is read, by Windows' own decoder (MediaFoundationTests).
+        #if !os(Windows)
         let e = try #require(decodeFailure(m4a))
         #expect(e.kind == .unsupported && e.format == .aac)
         #expect(e.message.hasPrefix("AAC is not supported on this platform yet"), "\(e.message)")
+        #endif
     }
 
     /// Edits of tone.m4a (moov after 79 KB of audio, as ffmpeg writes it) and of the stub (moov first, as iTunes
