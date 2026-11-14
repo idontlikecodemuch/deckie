@@ -887,13 +887,18 @@ public enum DeskWords {
 
     /// The kind of computer this is, for `{thisComputer}`: "mac" on a Mac, "other" on Windows and Linux. The engine
     /// sends it to the pages with the words.
+    /// `DECKIE_DESK_COMPUTER=other` (or `mac`) says otherwise, for pictures of the Windows and Linux window made on a
+    /// Mac, so they show the words a Windows or Linux DJ sees.
     public static var computerKind: String {
+        if let kind = ProcessInfo.processInfo.environment[computerVariable], kind == "mac" || kind == "other" { return kind }
         #if os(macOS)
         return "mac"
         #else
         return "other"
         #endif
     }
+
+    public static let computerVariable = "DECKIE_DESK_COMPUTER"
 
     /// `values` with `thisComputer` added for the computer of kind `kind`, unless it is given.
     public static func withComputer(_ values: [String: String], kind: String = computerKind) -> [String: String] {
