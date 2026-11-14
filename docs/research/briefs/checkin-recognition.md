@@ -2,6 +2,67 @@
 
 Branch `trial/own-recognition`. Newest entry first. Nothing here ships without the owner's decision.
 
+## Nov 14, 2026, 18:10 UTC: `recog/fast`: Chromaprint measured as a baseline on the same bench
+
+**Answer**: tried, with numbers. It names a clean recording at exactly the recorded speed from 5 s, and fails on
+every condition a booth has: a moved fader, a room, a crowd, a blend. Nothing in it is worth keeping.
+
+**What was run**: Chromaprint 1.5.1 (the open fingerprint AcoustID uses) through its `fpcalc` tool from the
+system's package, for the bench only (`core/Tools/recognition-bench/chromaprint_baseline.py` and
+`chromaprint_match.c`; never linked into anything shipped). Licence, by its own files: its source is MIT, but it
+includes FFmpeg's resampler, so as a whole it is LGPL 2.1; the package run here is also linked with FFmpeg, so
+LGPL 2.1 applies to what was run. A build with no FFmpeg parts was not made. The 969 indexed songs were
+fingerprinted whole (raw 32-bit frames, about 8 a second); each query is slid against every song at every offset
+and the differing bits counted; a song is named when the share of differing bits is under a threshold set on the
+dev half so that all but one of 300 no-right-answer clips are not named. Results are the eval half.
+
+**Right / wrong, % of clips** (Chromaprint: 100 or 200 clips a cell. Ours: `booth`, single listens, the size
+study's run; 15 to 40 clips in the clean cells, 100 to 500 in the others; no 3 s row or blend in that run)
+
+| Condition | Chromaprint 3 s | 5 s | 8 s | 12 s | Ours 5 s | 8 s | 12 s |
+|---|---|---|---|---|---|---|---|
+| Clean, fader at 0 | 50 / 0 | 99 / 0 | 100 / 0 | 100 / 0 | 100 / 0 | 100 / 0 | 100 / 0 |
+| Clean, fader ±2 %, vinyl (pitch moves) | 0 / 0 | 1 / 0 | 16 / 0 | 10 / 0 | 100 / 0 | 98 / 0 | 98 / 0 |
+| Clean, fader ±6 %, vinyl | 0 / 0 | 0 / 0 | 0 / 2 | 0 / 0 | 100 / 0 | 100 / 0 | 100 / 0 |
+| Clean, fader ±2 %, key held | 6 / 0 | 39 / 0 | 77 / 0 | 66 / 0 | 100 / 0 | 100 / 0 | 100 / 0 |
+| Clean, fader ±6 %, key held | 4 / 0 | 22 / 0 | 52 / 0 | 7 / 0 | 97 / 0 | 100 / 0 | 100 / 0 |
+| Room, fader at 0 | 0 / 0 | 2 / 0 | 5 / 0 | 4 / 0 | 85 / 0 | 94 / 0 | 98 / 0 |
+| Room, crowd 10 dB under, fader at 0 | 0 / 0 | 1 / 1 | 8 / 1 | 6 / 0 | 83 / 0 | 91 / 0 | 96 / 0 |
+| Room, crowd at equal level, fader at 0 | 0 / 0 | 0 / 0 | 0 / 0 | 0 / 0 | 57 / 0 | 68 / 0 | 74 / 0 |
+| Two songs blended at equal level, fader at 0 | 1 / 0 | 0 / 0 | 0 / 0 | 0 / 0 | not in that run | | |
+
+| | Chromaprint | Ours (`booth`) |
+|---|---|---|
+| Song not in the index named (clean, 500 clips a length) | 1, 1, 7, 3 at 3, 5, 8, 12 s | 10, 12, 13 at 5, 8, 12 s, all one held-out song that is a second release of an indexed one; 0 otherwise |
+| Noise alone named (100 clips a length) | 0 | 0 |
+| Bytes a song | 3.8 KB median (32 bytes a second) | fingerprint 5.8 KB a minute; index 11.5 KB a minute |
+| Time for one query, 969 songs | 10 / 28 / 43 ms at 5 / 8 / 12 s, comparing against every song (grows in step with the crate; no index) | 47 / 80 / 136 ms |
+| Shortest sound it can use | 2.8 s; a 3 s query is 96 bits | 3 s by the listener's setting |
+
+**Where it fails and why** (share of differing bits at 12 s, true song against the best wrong song; random is 0.5)
+
+| Condition | True song, median | Best wrong song, median |
+|---|---|---|
+| Clean, fader at 0 | 0.04 | 0.33 |
+| Fader ±2 %, vinyl | 0.20 | 0.31 |
+| Fader ±6 %, vinyl | 0.37 | 0.33 |
+| Fader ±6 %, key held | 0.18 | 0.32 |
+| Room, fader at 0 | 0.28 | 0.33 |
+| Room, crowd at equal level | 0.33 | 0.33 |
+
+- Its frames describe which of the 12 notes of the scale carry the energy (chroma), at fixed steps of an eighth of
+  a second, and are compared frame against frame. A vinyl fader move shifts the notes (6 % is a semitone: every
+  class moves) and any fader move makes the frames drift apart along the query. It has no speed search.
+- A room's echo smears the same note energy across frames; with a crowd at equal level the true song is no closer
+  than a wrong one.
+- **As a first pass** (is the true song simply the closest, ignoring the threshold?): 98 to 100 % clean and key
+  held, but 4 to 6 % at vinyl ±6 %, 70 % in a room at fader 0 at 12 s, 48 % with a crowd at equal level. Our own
+  first pass is better in each of those, so it adds nothing there either.
+- Small print: its thresholds rest on 300 clips, so are rough (why 8 s beats 12 s in places); times were taken on
+  a busy machine; the full report stays in the work folder, not the repository.
+
+**Carry on** with our own fingerprint; this closes "have we tried Chromaprint?".
+
 ## Nov 14, 2026, 17:55 UTC: `recog/fast`, stage 2 (first three sizes): a larger index does not make a name come sooner; the listener does
 
 **The table asked for** (eval half of the outside set, 969 songs in the index, 30 s clips that start at a random
@@ -55,7 +116,7 @@ sound began)
   those 5 s. That is the lingering the real-room run saw, and it is a listener setting, not an index size. Stage 3
   measures the changes: let go sooner, search every second while following, a 2 s first look.
 
-**Chromaprint baseline**: being measured by the bench now; not in this entry.
+**Chromaprint baseline**: see the entry above.
 
 **Next**: the remaining sizes (this table is filled in when they finish), then stage 3 (the listener). **Carry on;
 and consider that the answer to "faster" is in the listener, not in a larger index.**
