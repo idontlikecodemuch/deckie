@@ -214,7 +214,9 @@
 
   function drawFinished() {
     const r = finished;
-    $("finished-title").textContent = t("finishedTitle", { read: r.read, crate: r.crate });
+    // The name the DJ gave the disc while it was read replaces the placeholder the report was written with.
+    const named = (x) => (discRenamed && x === discRenamed.from ? discRenamed.to : x);
+    $("finished-title").textContent = t("finishedTitle", { read: named(r.read), crate: named(r.crate) });
     const box = $("finished-summary");
     box.replaceChildren();
     const line = (text, cls) => box.append(el("p", { text, class: cls }));
@@ -759,6 +761,7 @@
 
   // ---- a music CD with no name of its own: asked once, in passing
   let discAsked = null;
+  let discRenamed = null;   // { from, to }: the disc's placeholder and the name the DJ gave
   function askDisc(name) {
     discAsked = name || null;
     const f = $("disc-ask");
@@ -769,6 +772,7 @@
     e.preventDefault();
     const v = $("disc-ask-input").value.trim();
     $("disc-ask").hidden = true;
+    if (v && discAsked && v !== discAsked) discRenamed = { from: discAsked, to: v };
     if (v && discAsked && v !== discAsked) request("run.nameDisc", { source: discAsked, name: v }, { errorWord: "couldntSave" });
   });
 
