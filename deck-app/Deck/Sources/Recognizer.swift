@@ -400,7 +400,7 @@ import DeckieRecognition
         case .match(let m):
             guard let reading = appleReading(m, now: now, latencyMs: latencyMs, fileEnd: fileEnd, audioTime: audioTime) else { return }
             if listening == .both {
-                if comparison.heard(reading, at: recorder.isActive ? recorder.elapsed : audioTime) { recorder.compare(comparison.log) }
+                compared(comparison.heard(reading, at: recorder.isActive ? recorder.elapsed : audioTime))
             } else { take(reading) }
         case .noMatch:
             if listening == .both { return }
@@ -471,9 +471,17 @@ import DeckieRecognition
             note(String(format: "Deckie named %@ at %.1fs, speed %+.2f%%, key lock %@, confidence %.1f (%.0f ms), heard %.1fs", Library.shared.track(id)?.title ?? id,
                         r.positionSeconds ?? 0, speed ?? 0, r.keyLock.map { $0 ? "on" : "off" } ?? "?", r.confidence, r.milliseconds, r.time))
         }
-        if listening == .both, r.id != nil, comparison.heard(reading, at: recorder.isActive ? recorder.elapsed : r.time) { recorder.compare(comparison.log) }
+        if listening == .both, r.id != nil { compared(comparison.heard(reading, at: recorder.isActive ? recorder.elapsed : r.time)) }
         take(reading)
     }
+
+    /// Compare mode: the comparison goes into the set's log when something new is in it (a song named, a
+    /// disagreement), and every few seconds besides so its speeds and counts stay current.
+    private func compared(_ changed: Bool) {
+        guard recActive, changed || Date().timeIntervalSince(lastCompared) >= Self.recordEvery else { return }
+        recorder.compare(comparison.log); lastCompared = Date()
+    }
+    private var lastCompared = Date.distantPast
 
     // MARK: readings into what the DJ sees
 

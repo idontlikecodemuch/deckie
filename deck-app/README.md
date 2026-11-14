@@ -166,7 +166,32 @@ built app's embedded.mobileprovision), so the app keeps working until then witho
 * The ladybug button opens the debug sheet: "Test with file" (pick an audio file, a start time and a
   pitch rendering; "keep going" simulates playing), match counts, latency and the log.
 
-## How recognition works
+## Deckie's own recogniser (Nov 14, 2026, D35)
+
+* **Which one listens.** A crate file with Deckie's fingerprints (`print`, `prints/<id>.dkl`: every builder writes them
+  now) is recognised with Deckie's own recogniser (`core/Sources/DeckieRecognition`); one with only Apple's signatures
+  (made before D35) with Apple's, as before; one with neither says so, as before. With both kinds the DJ chooses in
+  the details sheet ("…" > Recognise with: Deckie, Apple, or both); Deckie's is the default. Nothing leaves the iPad
+  with either.
+* **One reading.** Both recognisers turn what they hear into a `Reading` (Listening.swift: the song, its place, the
+  deck's speed if it reads it, key lock, a confidence, or nothing yet); `Recognizer.take` is the one place a reading
+  becomes the playing song, the pitch shown and the set's log, so the rest of the app does not know which ran.
+* **The index.** Made once per crate file from its fingerprints, off the main thread (the playing panel says "Getting
+  ready to listen" with the number of songs), kept beside the app's copy of the crate file in Application
+  Support/Crates as `<crate>.recognition.dkx` with the core's stamp, and opened in place (mapped) every time after.
+  Copies of one recording count as one: the crate file's `cut_key`s go to the index, which finds the rest itself.
+  Setting `booth` (the default); `-indexSmall YES` at launch makes it with `boothSmall` instead, for measuring.
+* **The microphone.** The same tap as before (measurement mode: the least processed input) feeds
+  `BoothRecogniser.feed` (mono, at whatever rate arrives) and returns at once; readings come back once a second on the
+  recogniser's own thread, each inside a release pool, and hop to the main actor. The listener follows a named song
+  cheaply and searches the whole crate every other second; the app never restarts or re-searches on its own.
+* **Both, to compare.** The two hear the same sound; Deckie's names the song on screen; the set's log
+  (`<set> log.json`) gains `hearing` and `compare` (each song with when each recogniser first named it and the speed
+  each read, and every moment they named different songs), and the details sheet shows a one-line summary.
+* **Hooks.** `deck://hearing?with=deckie|apple|both`; `deck://stream?path=...&start=0` plays a file through whichever is
+  chosen as the microphone would (`deck://test`, Apple's rendered segments, streams instead when Deckie's is in use).
+
+## How recognition works (Apple's)
 
 * Catalog: one reference signature per track for the original plus vinyl -4 % and +4 % (1041 signatures, 47 MB).
 * Live: AVAudioEngine microphone tap -> `SHSession.matchStreamingBuffer`, results consumed from `session.results`.
@@ -194,7 +219,9 @@ dial, 0 to 1, then re-roll), `deck://pin?i=0`, `deck://tab?i=0|1|2`,
 `deck://orient?o=landscape|portrait`,
 `deck://crate?path=/abs/x.deckiecrate` (or `deck://open?path=`: open a crate file in either form, as "Open in" does),
 `deck://choose` (the Open crate file chooser), `deck://minimal?on=0|1`,
-`deck://after?s=<seconds>&u=<url-encoded hook>` (run a hook later).
+`deck://after?s=<seconds>&u=<url-encoded hook>` (run a hook later),
+`deck://hearing?with=deckie|apple|both` (the recogniser), `deck://stream?path=/abs/set.wav&start=0` (a file played
+through it in real time, as the microphone would hear it; waits for Deckie's index if it is still being made).
 
 ## Limitations
 

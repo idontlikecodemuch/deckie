@@ -223,7 +223,10 @@ func speedFromPlaces(_ points: [(audioTime: Double, offset: Double)]) -> (ratio:
         var deckieReadings = 0
         var appleMatches = 0
     }
-    struct Disagreement: Codable { var at: Double; var deckie: String; var apple: String }
+    /// A moment the two named different songs. `atChange`: one of them named the other's song within `changeWindow`
+    /// seconds of it, so it was one song giving way to the next, heard by one before the other (a blend), not a
+    /// wrong name.
+    struct Disagreement: Codable { var at: Double; var deckie: String; var apple: String; var atChange: Bool? = nil }
     struct Log: Codable {
         var songs: [Song]
         var disagreements: [Disagreement]
@@ -242,7 +245,7 @@ func speedFromPlaces(_ points: [(audioTime: Double, offset: Double)]) -> (ratio:
     static let newPlay = 120.0
     /// Two readings this close in time are about the same moment; a disagreement within this of the last one about
     /// the same two songs is the same disagreement.
-    static let sameMoment = 3.0, sameDisagreement = 15.0
+    static let sameMoment = 3.0, sameDisagreement = 15.0, changeWindow = 30.0
 
     func reset() { songs = []; disagreements = []; open = [:]; lastNamed = [:]; last = [:]; deckieSpeeds = [:]; applePlaces = [:]; appleSkews = [:] }
 
@@ -305,9 +308,22 @@ func speedFromPlaces(_ points: [(audioTime: Double, offset: Double)]) -> (ratio:
         return (d, a, df, af, disagreements.count)
     }
 
+    /// The disagreements, each marked whether it came at a song change.
+    var markedDisagreements: [Disagreement] {
+        disagreements.map { x in
+            var y = x
+            let near = { (id: String, first: (Song) -> Double?) in
+                self.songs.contains { Library.shared.sameSong($0.id, id) && first($0).map { abs($0 - x.at) <= Self.changeWindow } == true }
+            }
+            y.atChange = near(x.apple, { $0.deckieFirst }) || near(x.deckie, { $0.appleFirst })
+            return y
+        }
+    }
+
     var summary: String {
         let c = counts
-        return Words.compareSummary(deckie: c.deckie, apple: c.apple, deckieFirst: c.deckieFirst, appleFirst: c.appleFirst, disagreed: c.disagreed)
+        return Words.compareSummary(deckie: c.deckie, apple: c.apple, deckieFirst: c.deckieFirst, appleFirst: c.appleFirst, disagreed: c.disagreed,
+                                    atChange: markedDisagreements.filter { $0.atChange == true }.count)
     }
-    var log: Log { Log(songs: songs, disagreements: disagreements, summary: summary) }
+    var log: Log { Log(songs: songs, disagreements: markedDisagreements, summary: summary) }
 }

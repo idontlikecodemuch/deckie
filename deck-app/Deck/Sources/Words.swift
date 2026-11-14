@@ -351,8 +351,9 @@ enum Words {
     static let speedFromDeckie = "Deckie's reading"
     /// Compare mode's summary, in the details sheet.
     static let compareSection = "Deckie and Apple compared"
-    static func compareSummary(deckie: Int, apple: Int, deckieFirst: Int, appleFirst: Int, disagreed: Int) -> String {
-        "This set: Deckie named \(deckie) song\(deckie == 1 ? "" : "s"), Apple \(apple); Deckie first \(deckieFirst) time\(deckieFirst == 1 ? "" : "s"), Apple \(appleFirst); disagreed \(disagreed) time\(disagreed == 1 ? "" : "s")."
+    static func compareSummary(deckie: Int, apple: Int, deckieFirst: Int, appleFirst: Int, disagreed: Int, atChange: Int) -> String {
+        "This set: Deckie named \(deckie) song\(deckie == 1 ? "" : "s"), Apple \(apple); Deckie first \(deckieFirst) time\(deckieFirst == 1 ? "" : "s"), Apple \(appleFirst); disagreed \(disagreed) time\(disagreed == 1 ? "" : "s")"
+            + (disagreed == 0 ? "." : atChange == disagreed ? ", each as one song gave way to the next." : ", \(atChange) of them as one song gave way to the next.")
     }
     static let compareNotOn = "Choose both above to compare them on the next set."
 }
