@@ -5,6 +5,7 @@
 // DeckieLab: reads the lab's feature files (mixer/features/<id>.json, mixer/candidates.json) into DeckieCore types,
 // for the parity tests and, later, the Mac benchmark; it also turns them into crate records.
 // DeckieCrate: the crate file (docs/architecture/crate-format.md): its model, a canonical writer and a checking reader.
+// It reads each song's fingerprint with DeckieRecognition's `Landmarks`, to check it.
 // crate-from-lab: a command-line tool that writes a crate from the lab's feature files (core/Tools/make_crate_fixture.sh).
 // DeckieDecode: audio files to float samples for the analysers: WAV and AIFF in plain Swift; MP3 through dr_mp3
 // (CDrMp3) and FLAC through dr_flac (CDrFlac), vendored public-domain C files (DEPENDENCIES.md); AAC is recognised
@@ -35,8 +36,10 @@
 // inside, plus where things go, the plain words, the log and the crate file as one file. deckie-make: its console.
 // deckie-e2e: the end-to-end check both workflows run: makes a small music folder (WAV, FLAC, MP3, a nested folder,
 // awkward names, hidden files) and checks the crate file the builder makes from it. A development tool, not a product.
-// DeckieRecognition: a TRIAL of song recognition that Deckie owns (docs/research/w2-own-recognition-trial.md): a
-// landmark fingerprint after Wang 2003, an index and a matcher that reads the deck's speed. Nothing else depends on it.
+// DeckieRecognition: song recognition that Deckie owns (D35; docs/research/w2-own-recognition-trial.md): a landmark
+// fingerprint after Wang 2003 (`Landmarks`), which the engine makes for every song and a crate file carries, and the
+// trial's index and matcher that reads the deck's speed. Plain Swift on DeckieCore; DeckieCrate, DeckieEngine and
+// DeckieBuild depend on it for the fingerprint only.
 // deckie-recog-bench: the trial's measuring tool (core/Tools/recognition-bench).
 // deckie-memprobe: measures the analyser's peak memory on audio files (and synthesises a test track), for tuning.
 // DeckieTestSupport: synthesised test audio (drums, chords, the engine's test track), the beat fixture and an MP3 frame
@@ -64,7 +67,7 @@ let package = Package(
         .target(name: "DeckieAudio"),
         .target(name: "DeckieCore", dependencies: ["DeckieAudio"]),
         .target(name: "DeckieLab", dependencies: ["DeckieCore", "DeckieCrate"]),
-        .target(name: "DeckieCrate", dependencies: ["DeckieCore"]),
+        .target(name: "DeckieCrate", dependencies: ["DeckieCore", "DeckieRecognition"]),
         .executableTarget(name: "crate-from-lab", dependencies: ["DeckieLab", "DeckieCrate"]),
         // The parity harness of the three-answer key reader: samples in on standard input, answers out
         // (mixer/keytrial/kt_three.py `parity`).
@@ -76,10 +79,11 @@ let package = Package(
         .target(name: "COnnxRuntime", linkerSettings: [.linkedLibrary("dl", .when(platforms: [.linux]))]),
         .target(name: "DeckieInference", dependencies: ["COnnxRuntime", "DeckieAudio", "DeckieCore"]),
         .target(name: "DeckieEngine",
-                dependencies: ["DeckieDecode", "DeckieCore", "DeckieInference", "DeckieCrate", "DeckieAudio"]),
+                dependencies: ["DeckieDecode", "DeckieCore", "DeckieInference", "DeckieCrate", "DeckieAudio",
+                               "DeckieRecognition"]),
         .target(name: "DeckieBuild",
                 dependencies: ["DeckieEngine", "DeckieCrate", "DeckieDecode", "DeckieCore", "DeckieLab", "DeckieInference",
-                               "DeckieAudio"]),
+                               "DeckieAudio", "DeckieRecognition"]),
         .executableTarget(name: "deckie-build", dependencies: ["DeckieBuild", "DeckieCrate"]),
         .target(name: "CDiscDrive"),
         .target(name: "DeckieDisc", dependencies: ["CDiscDrive", "DeckieCrate"]),
@@ -102,7 +106,7 @@ let package = Package(
                     exclude: ["Fixtures"]),
         .testTarget(name: "DeckieInferenceTests", dependencies: ["DeckieInference", "DeckieCore", "DeckieAudio", "DeckieTestSupport"],
                     exclude: ["Fixtures"]),
-        .testTarget(name: "DeckieCrateTests", dependencies: ["DeckieCrate", "DeckieLab", "DeckieCore"]),
+        .testTarget(name: "DeckieCrateTests", dependencies: ["DeckieCrate", "DeckieLab", "DeckieCore", "DeckieRecognition"]),
         .testTarget(name: "DeckieEngineTests",
                     dependencies: ["DeckieEngine", "DeckieDecode", "DeckieCore", "DeckieInference", "DeckieCrate",
                                    "DeckieLab", "DeckieAudio", "DeckieTestSupport"]),

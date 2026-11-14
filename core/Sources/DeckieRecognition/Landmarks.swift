@@ -1,8 +1,10 @@
 import Foundation
 import DeckieCore
 
-// TRIAL (docs/research/w2-own-recognition-trial.md). Song recognition that Deckie owns: nothing here ships without the
-// owner's decision, and nothing outside this folder calls it.
+// Song recognition that Deckie owns (docs/research/w2-own-recognition-trial.md; D35 chose it, Nov 14, 2026). The
+// fingerprint below (`Landmarks`) is what a crate file carries for each song (docs/architecture/crate-format.md,
+// "Addition with D35"): the engine makes it and DeckieCrate checks it. The index and the matcher in this folder are
+// still the trial's.
 //
 // The method is the one published by Wang, "An Industrial-Strength Audio Search Algorithm" (ISMIR 2003), written from
 // the paper: a song is reduced to its "constellation", the points of the spectrogram (time against frequency) that are
@@ -200,6 +202,8 @@ public struct Landmarks: Sendable, Equatable {
         guard b.count >= 12, Array(b[0..<4]) == Array("DKL2".utf8) else { return nil }
         func get32(_ at: Int) -> UInt32 { (0..<4).reduce(UInt32(0)) { $0 | UInt32(b[at + $1]) << (8 * UInt32($1)) } }
         let frameCount = Int(get32(4)), n = Int(get32(8))
+        // A point is three bytes or more, so a count the bytes cannot hold is refused before anything is set aside.
+        guard n <= (b.count - 12) / 3 else { return nil }
         var frames: [UInt32] = [], pitches: [UInt16] = []
         frames.reserveCapacity(n); pitches.reserveCapacity(n)
         var i = 12
@@ -214,7 +218,10 @@ public struct Landmarks: Sendable, Equatable {
                 shift += 7
             }
             guard i + 1 < b.count else { return nil }
-            last += delta
+            // A frame number past UInt32 is not a constellation's (damaged bytes); it must not stop the program.
+            let (frame, overflow) = last.addingReportingOverflow(delta)
+            guard !overflow else { return nil }
+            last = frame
             frames.append(last)
             pitches.append(UInt16(b[i]) | UInt16(b[i + 1]) << 8)
             i += 2
