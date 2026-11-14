@@ -1,4 +1,7 @@
 import Foundation
+#if !canImport(Darwin)
+import CLookupNet
+#endif
 
 // DeckieLookup: the only code in Deckie that uses the network (D36). It speaks MusicBrainz's public web service and
 // nothing else, and only when the DJ asks (the note on D30). Nothing else in the package depends on it but
@@ -8,12 +11,15 @@ import Foundation
 //
 // - **On the Mac** it is Foundation's URL loading (`URLSession`, part of the system), with an ephemeral session: no
 //   cookies, no cache on disk, no stored credentials.
-// - **On Linux and Windows** it is not built. Swift's Foundation keeps URL loading in a separate library,
-//   FoundationNetworking, which is a layer over libcurl: on Linux it links the system's `libcurl.so.4` (and through
-//   it the TLS library and the rest curl was built with), on Windows the toolchain's `FoundationNetworking.dll`
-//   carries its own build of curl. curl's licence is not on the dependency allowlist (DEPENDENCIES.md; the note on
-//   D3 of Oct 28 left it off on purpose), so this module does not import FoundationNetworking and the lookup there
-//   says, in plain words, that it is not on this computer yet. The owner decides the way (the report of Nov 14).
+// - **On Windows** it is WinHTTP, which is part of Windows; **on Linux** it is libsoup 3, which the window's web view
+//   already needs. Both are reached through CLookupNet (a small C layer in this folder) and opened at run time, so
+//   nothing is linked and nothing ships; where the library cannot be opened the lookup says, in plain words, that
+//   it is not on this computer. The owner's yes of Nov 14, 2026 (DEPENDENCIES.md, section 12). Swift's own
+//   FoundationNetworking is still not imported: it is a layer over curl, whose licence is not on the allowlist.
+// - On all three the behaviour is the same: HTTPS checked against the system's certificates, the computer's proxy
+//   settings followed, no cookies, no cache, no credentials, a 20-second wait.
+// - `DECKIE_LOOKUP_OFF` (any value) turns the way out off: the lookup then says it is not on this computer. Every
+//   workflow sets it, so no test can reach the real service by accident.
 //
 // Tests and the window tours never use the network: `RecordedTransport` answers from files recorded once.
 
@@ -75,12 +81,16 @@ public protocol LookupTransport: Sendable {
 }
 
 public enum LookupTransports {
-    /// The system's own way out (the Mac's URL loading), or, on Linux and Windows, one that says it is not built.
+    /// The variable that turns the way out off (any value): tests and workflows set it.
+    public static let offVariable = "DECKIE_LOOKUP_OFF"
+
+    /// The system's own way out: the Mac's URL loading, WinHTTP on Windows, libsoup 3 on Linux; where that library
+    /// cannot be opened, one that says the lookup is not on this computer.
     public static var system: LookupTransport {
         #if canImport(Darwin)
         return SystemTransport.shared
         #else
-        return Unavailable()
+        return PortableTransport.shared.available ? PortableTransport.shared : Unavailable()
         #endif
     }
 
@@ -90,6 +100,7 @@ public enum LookupTransports {
         if let folder = environment[RecordedTransport.environmentVariable], !folder.isEmpty {
             return RecordedTransport(folder: URL(fileURLWithPath: folder, isDirectory: true))
         }
+        if environment[offVariable] != nil { return Unavailable() }
         return system
     }
 
@@ -143,6 +154,52 @@ final class SystemTransport: LookupTransport, @unchecked Sendable {
         task.resume()
         done.wait()
         return try box.result.get()
+    }
+}
+#endif
+
+#if !canImport(Darwin)
+/// The system's networking on Windows (WinHTTP) and Linux (libsoup 3), through CLookupNet: one GET, the headers
+/// given and no others of ours, no cookies, no cache, a 20-second wait at each step.
+public struct PortableTransport: LookupTransport {
+    public static let shared = PortableTransport()
+    /// Seconds to wait at each step (tests shorten it).
+    public var timeout: Int
+    public init(timeout: Int = 20) { self.timeout = timeout }
+
+    public var available: Bool { deckie_net_available() == 1 }
+
+    public func send(_ request: LookupRequest) throws -> LookupResponse {
+        guard let scheme = request.url.scheme?.lowercased(), scheme == "https" || scheme == "http" else {
+            throw LookupFailure.badAnswer
+        }
+        // A header's name and value are one line each: anything else is not sent.
+        let lines = request.headers.sorted { $0.key < $1.key }
+            .filter { !($0.key + $0.value).contains(where: { $0 == "\r" || $0 == "\n" }) }
+            .map { "\($0.key): \($0.value)" }
+        var pointers: [UnsafePointer<CChar>?] = lines.map { UnsafePointer(strdup($0)) }
+        defer { for p in pointers { free(UnsafeMutablePointer(mutating: p)) } }
+        var answer = deckie_net_response()
+        var message = [CChar](repeating: 0, count: 256)
+        let code = pointers.withUnsafeMutableBufferPointer { buffer in
+            deckie_net_get(request.url.absoluteString, buffer.baseAddress, lines.count, Int32(timeout), &answer, &message, message.count)
+        }
+        defer { deckie_net_free(&answer) }
+        switch code {
+        case 0: break
+        case 1: throw LookupFailure.notOnThisComputer
+        case 2: throw LookupFailure.noConnection
+        default: throw LookupFailure.badAnswer
+        }
+        var headers: [String: String] = [:]
+        if let raw = answer.headers {
+            for line in String(cString: raw).split(separator: "\n") {
+                guard let colon = line.firstIndex(of: ":") else { continue }
+                headers[String(line[..<colon])] = line[line.index(after: colon)...].trimmingCharacters(in: .whitespaces)
+            }
+        }
+        let body = answer.body.map { Data(bytes: $0, count: answer.body_size) } ?? Data()
+        return LookupResponse(status: Int(answer.status), headers: headers, body: body)
     }
 }
 #endif

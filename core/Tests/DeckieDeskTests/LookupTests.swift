@@ -217,7 +217,7 @@ import DeckieLookup
         let plan = DeskLookup.plan(LookupSongs.songs([LookupSongs.around, LookupSongs.blue]))
         let r = DeskLookupRun(plan: plan, client: LookupSongs.client(Offline()), sent: { _ in }).run()
         #expect(r.failure == "noConnection" && r.songs[0].outcome == "failed" && r.songs[1].outcome == "notAsked")
-        #expect(DeskLookup.summaryLine(r) == "Looking up needs a connection to the internet. Everything else works without one.")
+        #expect(DeskLookup.summaryLine(r) == "Desk couldn't reach MusicBrainz. Check the internet connection, and that a firewall isn't stopping Deckie Desk. Everything else works without it.")
     }
 
     @Test func applyingFillsTheSameFieldsMarkedAsTheLookupsAndKeepsThemOnARead() throws {

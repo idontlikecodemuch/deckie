@@ -640,7 +640,7 @@ public enum DeskWords {
         "lookupOutcome.notAsked": "Not looked up: stopped first",
         "lookupOutcome.nothingToSend": "Nothing to look it up by",
         "lookupOutcome.failed": "Couldn't look it up",
-        "lookupFailure.noConnection": "Looking up needs a connection to the internet. Everything else works without one.",
+        "lookupFailure.noConnection": "Desk couldn't reach MusicBrainz. Check the internet connection, and that a firewall isn't stopping Deckie Desk. Everything else works without it.",
         "lookupFailure.busy": "MusicBrainz is busy right now and asked Desk to wait. Try again in a minute.",
         "lookupFailure.refused": "MusicBrainz didn't take the request.",
         "lookupFailure.badAnswer": "MusicBrainz's answer couldn't be read.",

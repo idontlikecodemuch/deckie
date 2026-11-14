@@ -100,7 +100,12 @@ let package = Package(
         .target(name: "DeckieDisc", dependencies: ["CDiscDrive", "DeckieCrate"]),
         // DeckieLookup: the only code that uses the network (D36): MusicBrainz's web service, when the DJ asks. Foundation
         // only; only DeckieDesk depends on it (NetworkIsolationTests checks no other source names a networking API).
-        .target(name: "DeckieLookup"),
+        // CLookupNet: one HTTP GET by the system's own networking, opened at run time: WinHTTP on Windows, libsoup 3 on
+        // Linux (DEPENDENCIES.md, section 12). It lives inside the lookup's folder: the lookup is still the only code
+        // that names a networking API.
+        .target(name: "CLookupNet", path: "Sources/DeckieLookup/CLookupNet",
+                linkerSettings: [.linkedLibrary("dl", .when(platforms: [.linux]))]),
+        .target(name: "DeckieLookup", dependencies: ["CLookupNet"], exclude: ["CLookupNet"]),
         .target(name: "DeckieDesk", dependencies: ["DeckieBuild", "DeckieEngine", "DeckieCrate", "DeckieCore", "DeckieDecode",
                                                    "DeckieDisc", "DeckieLookup"]),
         // deckie-lookup-trial: the lookup measured on a folder of music with its tags hidden from it (a development tool,

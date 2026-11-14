@@ -123,13 +123,6 @@ import Testing
         #expect(throws: LookupFailure.refused(400)) { _ = try bad.searchRecordings(RecordingQuery(title: "x")) }
         let junk = MusicBrainz(version: "0.1", transport: Scripted([LookupResponse(status: 200, body: Data("<html>".utf8))]), gate: gate(Clock()))
         #expect(throws: LookupFailure.badAnswer) { _ = try junk.searchRecordings(RecordingQuery(title: "x")) }
-        #if !canImport(Darwin)
-        // Linux and Windows: no way out is built (curl is not on the allowlist), and it says so.
-        #expect(!LookupTransports.system.available)
-        #expect(throws: LookupFailure.notOnThisComputer) {
-            _ = try MusicBrainz(version: "0.1", gate: gate(Clock())).searchRecordings(RecordingQuery(title: "x"))
-        }
-        #endif
     }
 
     @Test func aStopEndsTheWait() {
@@ -183,7 +176,7 @@ import Testing
 
     @Test func noOtherSourceNamesANetworkingAPI() throws {
         let swiftAndC = ["URLSession", "FoundationNetworking", "URLRequest", "NSURLConnection", "CFNetwork", "CFStream",
-                         "curl_", "WinHttp", "WinINet", "InternetOpen", "getaddrinfo", "gethostbyname", "Network.framework",
+                         "curl_", "WinHttp", "winhttp", "WinINet", "soup_", "libsoup", "deckie_net", "InternetOpen", "getaddrinfo", "gethostbyname", "Network.framework",
                          "import Network", "NWConnection", "SCNetworkReachability", "socket(", "contentsOf: URL(string"]
         let sources = files("core/Sources", endings: ["swift", "c", "h", "cc"],
                             skip: ["/DeckieLookup/", "/COnnxRuntime/include/", "/CDrMp3/", "/CDrFlac/"])
@@ -211,5 +204,9 @@ import Testing
         let lookup = files("core/Sources/DeckieLookup", endings: ["swift"])
         let users = try lookup.filter { try String(contentsOf: $0, encoding: .utf8).contains("URLSession(") }
         #expect(users.map(\.lastPathComponent) == ["LookupTransport.swift"])
+        // On Windows and Linux it is the C layer in the lookup's own folder, called from that same file only.
+        let callers = try lookup.filter { try String(contentsOf: $0, encoding: .utf8).contains("deckie_net_get(") }
+        #expect(callers.map(\.lastPathComponent) == ["LookupTransport.swift"])
+        #expect(files("core/Sources/DeckieLookup/CLookupNet", endings: ["c", "h"]).count == 2)
     }
 }

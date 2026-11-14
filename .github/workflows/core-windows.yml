@@ -49,6 +49,10 @@ jobs:
     env:
       # As in core-linux.yml: ONNX Runtime's usage reporting off (Deckie's own build has no reporting client at all).
       ORT_DISABLE_TELEMETRY: "1"
+      # No test or check in a workflow reaches MusicBrainz: the lookup's way out is off (the transport's own tests
+      # ask a small server on the runner itself, and must run here).
+      DECKIE_LOOKUP_OFF: "1"
+      DECKIE_REQUIRE_LOOKUP_NET: "1"
     steps:
       - uses: actions/checkout@v4
       # The action's documented reference is @main; its tag v3 does not exist (first probe run, Oct 28).
@@ -160,6 +164,10 @@ jobs:
     timeout-minutes: 25
     env:
       ORT_DISABLE_TELEMETRY: "1"
+      # No test or check in a workflow reaches MusicBrainz: the lookup's way out is off (the transport's own tests
+      # ask a small server on the runner itself, and must run here).
+      DECKIE_LOOKUP_OFF: "1"
+      DECKIE_REQUIRE_LOOKUP_NET: "1"
     container:
       image: swift@sha256:6304481cf2717966b7ba175162e397ea2f2cc3161909f2b2a5cf40036079a0f7 # swift:6.4.1-noble
     steps:

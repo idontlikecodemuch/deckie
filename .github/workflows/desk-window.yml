@@ -20,6 +20,10 @@ jobs:
     timeout-minutes: 40
     env:
       ORT_DISABLE_TELEMETRY: "1"
+      # No test or check in a workflow reaches MusicBrainz: the lookup's way out is off (the transport's own tests
+      # ask a small server on the runner itself, and must run here).
+      DECKIE_LOOKUP_OFF: "1"
+      DECKIE_REQUIRE_LOOKUP_NET: "1"
     container:
       # The same pinned Swift 6.4.1 image as core-linux.yml (Ubuntu 24.04; DEPENDENCIES.md, section 1).
       image: swift@sha256:6304481cf2717966b7ba175162e397ea2f2cc3161909f2b2a5cf40036079a0f7 # swift:6.4.1-noble
@@ -30,7 +34,7 @@ jobs:
       - name: Install WebKitGTK, GTK 3, a virtual display and curl
         run: |
           apt-get update
-          apt-get install -y --no-install-recommends libwebkit2gtk-4.1-dev pkg-config xvfb xauth dbus-x11 ca-certificates curl
+          apt-get install -y --no-install-recommends libwebkit2gtk-4.1-dev pkg-config xvfb xauth dbus-x11 ca-certificates curl glib-networking python3 openssl
           pkg-config --modversion webkit2gtk-4.1 gtk+-3.0
       - name: Build the shell
         working-directory: desk-shell
@@ -69,6 +73,10 @@ jobs:
     timeout-minutes: 60
     env:
       ORT_DISABLE_TELEMETRY: "1"
+      # No test or check in a workflow reaches MusicBrainz: the lookup's way out is off (the transport's own tests
+      # ask a small server on the runner itself, and must run here).
+      DECKIE_LOOKUP_OFF: "1"
+      DECKIE_REQUIRE_LOOKUP_NET: "1"
     steps:
       - uses: actions/checkout@v4
       # As core-windows.yml (DEPENDENCIES.md, sections 1 and 2).

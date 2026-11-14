@@ -70,6 +70,7 @@ final class EngineProcess: @unchecked Sendable {
         env[DeskHome.environmentVariable] = home.path
         env[DeskLocalFacts.djHomeVariable] = home.appendingPathComponent("dj-home").path
         env["DECKIE_DESK_JOBS"] = "1"
+        env["DECKIE_LOOKUP_OFF"] = "1"   // no engine a test starts can reach MusicBrainz
         for (k, v) in extra { env[k] = v }
         process.environment = env
         process.standardInput = input

@@ -89,8 +89,10 @@ enum Check {
                     end(3)
                 }
                 // Last, the lookup, as a DJ would reach it: the crate's songs, the More menu's "Look up songs via
-                // MusicBrainz" (the first of its items that use the internet), then the dialog's own button once
-                // its sentence is there. On Windows and Linux nothing is sent: the page should say so in words.
+                // MusicBrainz" (the first of its items that use the internet), and the dialog with its sentence
+                // about what would be sent. Where this computer can look songs up, the check then presses "Not
+                // now": a check never sends anything to MusicBrainz. Where it cannot, it presses the dialog's own
+                // button, and the page should say so in words.
                 seen.exportAsked = false
                 eval("document.getElementById('finished-songs').click();")
                 evalWhen("document.getElementById('finished').hidden && !document.getElementById('more-button').disabled",
@@ -102,13 +104,25 @@ enum Check {
                       && document.getElementById('lookup-sentence').textContent && !document.getElementById('lookup-go').disabled
                     """, """
                     var sentence = document.getElementById('lookup-sentence').innerText;
-                    document.getElementById('lookup-go').click();
-                    (function look() {
-                      var review = document.getElementById('lookup-review'), progress = document.getElementById('lookup-progress');
-                      if (review.hidden && progress.hidden) { setTimeout(look, 25); return; }
-                      deckieShell.send(JSON.stringify({ type: 'shell.checkLookup', sentence: sentence, sending: !progress.hidden,
-                        says: document.getElementById('lookup-summary').innerText }));
-                    })();
+                    var go = document.getElementById('lookup-go').textContent, notNow = document.getElementById('lookup-cancel').textContent;
+                    desk.request('lookup.plan', { scope: 'songs' }, { quiet: true }).then(function (r) {
+                      if (r.ok && r.available) {
+                        document.getElementById('lookup-cancel').click();
+                        (function look() {
+                          if (document.getElementById('lookup').open) { setTimeout(look, 25); return; }
+                          deckieShell.send(JSON.stringify({ type: 'shell.checkLookup', sentence: sentence, available: true,
+                            go: go, pressed: notNow }));
+                        })();
+                        return;
+                      }
+                      document.getElementById('lookup-go').click();
+                      (function look() {
+                        var review = document.getElementById('lookup-review');
+                        if (review.hidden) { setTimeout(look, 25); return; }
+                        deckieShell.send(JSON.stringify({ type: 'shell.checkLookup', sentence: sentence, available: false,
+                          says: document.getElementById('lookup-summary').innerText }));
+                      })();
+                    });
                     """)
             }
         }
@@ -164,12 +178,14 @@ enum Check {
             case "shell.checkLookup":
                 let one = { (v: Any?) in (v as? String ?? "").split(whereSeparator: \.isNewline).joined(separator: " ") }
                 say("the lookup's sentence: \(one(m["sentence"]))")
-                if m["sending"] as? Bool == true {
-                    say("the lookup started sending (this computer can look songs up); stopped here")
+                let plain: Bool
+                if m["available"] as? Bool == true {
+                    say("the lookup is available on this computer: its button reads \"\(one(m["go"]))\"; \"\(one(m["pressed"]))\" was pressed and the dialog closed; nothing was sent")
+                    plain = !one(m["sentence"]).isEmpty
                 } else {
-                    say("the lookup says: \(one(m["says"]))")
+                    say("the lookup is not available on this computer, and says: \(one(m["says"]))")
+                    plain = !one(m["says"]).isEmpty
                 }
-                let plain = m["sending"] as? Bool == true || !one(m["says"]).isEmpty
                 say(plain ? "PASSED: music added through the page, the run finished, the crate file was exported, and the lookup answered in words"
                           : "FAILED: the lookup said nothing")
                 end(plain ? 0 : 3)

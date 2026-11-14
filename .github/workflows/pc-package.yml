@@ -296,9 +296,11 @@ jobs:
           if ($read -notmatch "single-file form") { Write-Error "the crate file is not in the single-file form"; exit 1 }
           # The test folder has a picture inside one song's tags and one beside another: both are in the crate file.
           if ($read -notmatch "covers: 2 songs with a cover, 2 distinct covers") { Write-Error "the covers are not in the exported crate file"; exit 1 }
-          # The lookup is not built for Windows yet: asked for through the page, it says so in words and sends nothing.
+          # The lookup works on Windows (WinHTTP): asked for through the page, it shows what would be sent; the check
+          # then presses "Not now". A workflow never sends anything to MusicBrainz.
           $said = Get-Content $log | Out-String
-          if ($said -notmatch "the lookup says: Looking up isn't built for this computer yet") { Write-Error "the lookup did not say plainly that it is not on this computer yet"; exit 1 }
+          if ($said -notmatch "the lookup's sentence: Desk will send") { Write-Error "the lookup did not show what it would send"; exit 1 }
+          if ($said -notmatch "the lookup is available on this computer: .* was pressed and the dialog closed; nothing was sent") { Write-Error "the lookup is not available in the zip, or the check did not stop before sending"; exit 1 }
           if ($said -notmatch "the finished screen says: 4 songs went in") { Write-Error "the finished screen did not come"; exit 1 }
           "## Deckie Desk: a run from the zip" >> $env:GITHUB_STEP_SUMMARY
           '```' >> $env:GITHUB_STEP_SUMMARY
