@@ -1,5 +1,6 @@
 import SwiftUI
 import WebKit
+import DeckieCrate
 
 /// The Crate tab: the crate file's songs where they live. First each source (the CD, stick or card they were read
 /// from) by its own name, its folders in the order the player shows them and its songs by their number there; then,
@@ -197,7 +198,13 @@ struct CrateTabView: View {
                     Text(t.hasName ? Words.artistVersion(t.artist, t.ver) : t.secondLine).font(Look.Crate.rowArtistFont).foregroundStyle(Theme.dim).lineLimit(1)
                 }
                 Spacer(minLength: Look.Crate.rowSpacer)
-                Text(t.key ?? Words.unknownKey).font(Look.Crate.rowKeyFont).foregroundStyle(Theme.mut).frame(width: Look.Crate.rowKeyWidth, alignment: .trailing)
+                // A code or "?" in its narrow column; a home note or "not sure" (D36) in words, as wide as they need,
+                // still against the tempo.
+                if t.keyShownIsWords {
+                    Text(t.keyShown).font(Look.Crate.rowKeyWordsFont).foregroundStyle(Theme.mut).lineLimit(1).fixedSize().frame(minWidth: Look.Crate.rowKeyWidth, alignment: .trailing)
+                } else {
+                    Text(t.keyShown).font(Look.Crate.rowKeyFont).foregroundStyle(Theme.mut).frame(width: Look.Crate.rowKeyWidth, alignment: .trailing)
+                }
                 Text(Words.bpmNumber(t.bpmTag ?? t.bpmShown)).font(Look.Crate.rowBpmFont).foregroundStyle(Theme.tx).frame(width: Look.Crate.rowBpmWidth, alignment: .trailing)
             }
             .padding(.vertical, Look.Crate.rowTopBottom).padding(.horizontal, Look.Crate.rowSides)
@@ -228,5 +235,54 @@ struct MixMapView: View {
             return v
         }
         func updateUIView(_ v: WKWebView, context: Context) {}
+    }
+}
+
+/// A song's cover (D36), small and quiet: the crate file's `covers/<hash>.jpg`, read when the view first shows and
+/// never before, off the main thread, through the reader's checks (`CrateReader.coverData`), so a long list never
+/// waits for pictures. The frame is kept from the start for a song that names a cover, so nothing moves when the
+/// picture arrives; a song without one shows nothing at all (the caller leaves the view out). How covers finally look
+/// is for the design pass: the size, corner and opacity are named in Look.
+struct CoverThumb: View {
+    let hash: String
+    let size: CGFloat
+    let radius: CGFloat
+    let opacity: Double
+    @State private var image: UIImage?
+
+    var body: some View {
+        ZStack {
+            if let image { Image(uiImage: image).resizable().interpolation(.high).aspectRatio(contentMode: .fill).opacity(opacity) }
+        }
+        .frame(width: size, height: size)
+        .clipShape(RoundedRectangle(cornerRadius: radius))
+        .accessibilityHidden(true)
+        .task(id: hash) {
+            image = CoverCache.shared.cached(hash)
+            if image == nil { image = await CoverCache.shared.load(hash) }
+        }
+    }
+}
+
+/// The covers read so far, by hash, for the crate file in use; dropped when another crate file is opened. Songs of one
+/// release share one picture, so each is read and decoded once.
+final class CoverCache: @unchecked Sendable {
+    static let shared = CoverCache()
+    private let cache = NSCache<NSString, UIImage>()
+    private var crate: URL?
+
+    func cached(_ hash: String) -> UIImage? {
+        if crate != Library.shared.crate?.url { cache.removeAllObjects(); crate = Library.shared.crate?.url }
+        return cache.object(forKey: hash as NSString)
+    }
+
+    @MainActor func load(_ hash: String) async -> UIImage? {
+        guard let package = Library.shared.crate?.url else { return nil }
+        let image = await Task.detached(priority: .utility) { () -> UIImage? in
+            guard let data = CrateReader.coverData(in: package, hash: hash) else { return nil }
+            return UIImage(data: data)?.preparingForDisplay()
+        }.value
+        if let image, package == Library.shared.crate?.url { cache.setObject(image, forKey: hash as NSString) }
+        return image
     }
 }

@@ -5,13 +5,21 @@ import DeckieCore
 
 let MNUM: [String: Double] = ["1": 1, "1/2": 0.5, "2": 2, "3/4": 0.75, "4/3": 4.0 / 3, "2/3": 2.0 / 3, "3/2": 1.5]
 
-func keyVerdict(_ ka: String, _ kb: String, _ reasons: [String]) -> String {
+/// `homeNote`: the codes are the ones the scoring compared a home-note song as (D36), not keys that were read. Such a
+/// pair is a clash only when even the better of the two keys on the note clashes; otherwise it fits on the home note,
+/// which is all the pair can honestly claim (the mode is open). `notSure`: a song with no key that Deckie read and was
+/// not sure of (D33), said apart from a key that was never read; both are left out of the score alike (D16).
+func keyVerdict(_ ka: String, _ kb: String, _ reasons: [String], homeNote: Bool = false, notSure: Bool = false) -> String {
     func parse(_ k: String) -> (Int, Character)? {
         guard let last = k.last, last == "A" || last == "B", let n = Int(k.dropLast()), (1...12).contains(n) else { return nil }
         return (n, last)
     }
     // A key not read is neither good nor bad for the pair (D16; the core's scoring leaves it out too).
-    guard let pa = parse(ka), let pb = parse(kb) else { return "key not read" }
+    guard let pa = parse(ka), let pb = parse(kb) else { return notSure ? Words.verdictKeyNotSure : "key not read" }
+    if homeNote {
+        let v = keyVerdict(ka, kb, reasons)
+        return v == "clash" ? v : Words.verdictHomeNote
+    }
     if ka == kb { return "same key" }
     let d = ((pb.0 - pa.0) % 12 + 12) % 12
     if pa.1 == pb.1 && (d == 1 || d == 11) { return "neighbour" }
@@ -57,10 +65,12 @@ func joinInfo(_ a: Track, _ b: Track, _ p: Pair?, deckAPitch: Double) -> JoinInf
     else if ml != "1" { pt = Words.pitchNA + Words.pitchMultiple(ml) }
     else { pt = Words.pitchNA + (okP ? Words.pitchAside(signed1(pitch!)) : "") }
     let ka = p?.ka ?? a.key ?? "?", kb = p?.kb ?? b.key ?? "?"
-    let v = keyVerdict(ka, kb, p?.reasons ?? [])
-    let vk = v == "clash" ? 2 : (v.hasPrefix("pitch-shift") || v.contains("unsure")) ? 1 : 0
+    let v = keyVerdict(ka, kb, p?.reasons ?? [], homeNote: p?.kh == true, notSure: a.keyNotSure == true || b.keyNotSure == true)
+    let vk = v == "clash" ? 2 : (v.hasPrefix("pitch-shift") || v.contains("unsure") || v == Words.verdictHomeNote || v == Words.verdictKeyNotSure) ? 1 : 0
     let sB = bm ? k : ((a.bpm != nil && b.bpm != nil) ? a.bpm! / b.bpm! : 1)
-    return JoinInfo(beatMatch: bm, pitch: pitch, pitchText: pt, keyText: "\(ka) → \(kb)", verdict: v, verdictKind: vk, scaleB: sB)
+    // The keys as the songs show them (D36): a code, "Home note A", "not sure" or "?"; the bundled data's codes as before.
+    let keyText = p?.kh == true || a.keyShownIsWords || b.keyShownIsWords ? Words.keysArrow(a.keyShown, b.keyShown) : Words.keysArrow(ka, kb)
+    return JoinInfo(beatMatch: bm, pitch: pitch, pitchText: pt, keyText: keyText, verdict: v, verdictKind: vk, scaleB: sB)
 }
 
 // MARK: - suggestions

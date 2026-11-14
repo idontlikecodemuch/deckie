@@ -159,6 +159,8 @@ func pickMoveLine(_ pair: Pair?, _ ji: JoinInfo) -> String {
         parts.append(mv.prefix(2).joined(separator: Words.movesJoin))
     }
     if ji.verdict == "clash" { parts.append(Words.keyClash) }
+    // A home-note pair that fits (D36): the fit rests on the note alone, with major or minor open.
+    else if ji.verdict == Words.verdictHomeNote { parts.append(Words.moveHomeNote) }
     return parts.joined(separator: Words.moveLineJoin)
 }
 
@@ -269,6 +271,11 @@ struct NextRow: View {
     var body: some View {
         let ji = joinInfo(cur, target, pair, deckAPitch: rec.source == .manual ? 0 : rec.pitchPct)
         HStack(alignment: .center, spacing: Look.Picks.rowGap) {
+            // The pick's cover (D36), inside the text column, which keeps its width; nothing when the song has none.
+            HStack(alignment: .top, spacing: Look.Picks.coverGap) {
+            if let c = target.cover {
+                CoverThumb(hash: c, size: m.simple ? Look.Picks.coverSimple : Look.Picks.cover, radius: Look.Picks.coverRadius, opacity: Look.Picks.coverOpacity)
+            }
             VStack(alignment: .leading, spacing: m.simple ? Look.Picks.textGapSimple : Look.Picks.textGap) {
                 Text(target.folderPath).font(Look.Picks.placeFont(m.lineSize)).foregroundStyle(target.on ? target.discColor : Theme.mut).lineLimit(1)
                 if let also = Library.shared.alsoOn(target, playingDisc: cur.disc) {
@@ -278,6 +285,7 @@ struct NextRow: View {
                 Text(target.secondLine).font(Look.Picks.artistFont(m.lineSize)).foregroundStyle(Theme.dim).lineLimit(1)
                 Text(bpmLine(ji)).font(Look.Picks.bpmFont(m.bpmSize)).foregroundStyle(Theme.amber.opacity(Look.Picks.bpmOpacity)).lineLimit(1).padding(.top, m.simple ? Look.Picks.bpmTopSimple : Look.Picks.bpmTop)
                 Text(smallLine(ji)).font(Look.Picks.moveFont(m.smallSize)).foregroundStyle(Theme.mut).lineLimit(1).minimumScaleFactor(Look.Picks.moveShrink)
+            }
             }
             .frame(width: m.textWidth, alignment: .leading)
             if let wa = cur.wOut, let wb = target.wHead ?? target.wIn {
@@ -332,7 +340,15 @@ struct NextRow: View {
         VStack(alignment: .leading, spacing: Look.Detail.gap) {
             Text(target.hasName ? (target.artist.isEmpty ? target.song : Words.artistSong(target.artist, target.song)) : target.oneLine).font(Look.Detail.titleFont)
             if !target.ver.isEmpty { Text(target.ver).foregroundStyle(.secondary) }
-            Text(Words.keyLine(target.key ?? Words.unknownKey, ji.keyText, ji.verdict)).font(Look.Detail.font)
+            // A song with no key says which kind of none (D33): Deckie was not sure, or no key was read. A home note
+            // shows in place of the code (D36).
+            if target.key == nil && target.keyHome == nil {
+                Text(target.keyNotSure == true ? Words.keyNotSureLine : Words.keyNotReadLine).font(Look.Detail.font)
+            } else if target.key == nil {
+                Text(Words.homeNoteLine(target.keyShown, ji.keyText, ji.verdict)).font(Look.Detail.font)
+            } else {
+                Text(Words.keyLine(target.keyShown, ji.keyText, ji.verdict)).font(Look.Detail.font)
+            }
             Text(Words.pitchHelp(ji.pitch.map { Words.percentText(signed1($0)) } ?? Words.notAvailable)).font(Look.Detail.font)
             if let p = pair {
                 Text(Words.matchScore(p.s, p.st)).font(Look.Detail.scoreFont).foregroundStyle(.secondary)

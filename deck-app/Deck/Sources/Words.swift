@@ -173,6 +173,26 @@ enum Words {
     static func artistSong(_ artist: String, _ song: String) -> String { "\(artist) – \(song)" }
     static func keyLine(_ key: String, _ keys: String, _ verdict: String) -> String { "Key \(key) · \(keys) \(verdict)" }
     static let unknownKey = "?"
+    /// The two songs' keys in the detail: "8A → 9A", "Home note A → 9A".
+    static func keysArrow(_ a: String, _ b: String) -> String { "\(a) → \(b)" }
+    // new (D36): the key's other states, where a key shows (the Crate tab's rows, a pick's detail, the picks' move
+    // line). Placeholders until the copy audit.
+    /// A home note in place of the wheel code: "Home note A" (Desk's words, `DeskWords` "homeNote").
+    static func homeNote(_ note: String) -> String { "Home note \(note)" }
+    /// A row's key when Deckie read the song and was not sure of it (a key never read stays "?").
+    static let keyNotSureShort = "not sure"
+    /// A pick's detail, for the song it is about, when it has no key: Deckie was not sure, or no key was read.
+    static let keyNotSureLine = "Deckie is not sure of this song's key"
+    static let keyNotReadLine = "Key not read yet"
+    /// A pick's detail for a song with a home note: "Home note A · Home note A → 9A fits on the home note, …".
+    static func homeNoteLine(_ homeNote: String, _ keys: String, _ verdict: String) -> String { "\(homeNote) · \(keys) \(verdict)" }
+    /// The detail's verdict for a pair where a song has only its home note and the keys on it fit; and for a pair
+    /// where a song's key Deckie was not sure of (the scoring leaves the key out of both kinds of pair alike).
+    static let verdictHomeNote = "fits on the home note, major or minor open"
+    static let verdictKeyNotSure = "key not sure"
+    /// The picks' move line, for a pair that fits on a home note: "blend · home note". The fit was counted at the
+    /// home note's lower weight, and the line says so rather than showing nothing, as for a key that was read.
+    static let moveHomeNote = "home note"
     static func pitchHelp(_ pitch: String) -> String { "Pitch: set the incoming deck's pitch fader to \(pitch) so the tempos match." }
     static let notAvailable = "n/a"
     static func matchScore(_ s: Double, _ stretch: Double) -> String { String(format: "Match score %.2f · %.1f%% stretch", s, stretch) }
