@@ -109,14 +109,23 @@ public struct PlacePaths: Codable, Equatable, Sendable {
     public func save(to url: URL) throws { try JSONFile.write(self, to: url) }
 }
 
+extension CrateInfo {
+    /// A name for a folder or a drive being read into this crate (`SourceNaming.unique`), never one of its music CDs'.
+    public func sourceName(_ name: String, root: URL) -> String {
+        SourceNaming.unique(name, root: root, roots: roots, taken: Set(discs.keys))
+    }
+}
+
 /// A name for a source being read, so two different folders that happen to share a name do not become one source.
 public enum SourceNaming {
     /// `name` itself when no source has it, or when the source of that name was read from `root` (the same source
     /// read again), or when the place it was read from is not there now (a stick mounted under another path). Else
     /// "name 2", "name 3", ..., the first free or already read from `root`.
-    public static func unique(_ name: String, root: URL, roots: [String: URL],
+    /// `taken`: names that are never free (the crate's music CDs, which are not found by a path).
+    public static func unique(_ name: String, root: URL, roots: [String: URL], taken: Set<String> = [],
                               exists: (URL) -> Bool = { FileManager.default.fileExists(atPath: $0.path) }) -> String {
         func free(_ n: String) -> Bool {
+            if taken.contains(n) { return false }
             guard let r = roots[n] else { return true }
             return r.standardizedFileURL.path == root.standardizedFileURL.path || !exists(r)
         }

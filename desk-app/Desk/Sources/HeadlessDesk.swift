@@ -78,7 +78,7 @@ enum HeadlessDesk {
                 } else {
                     info = try shelf.mostRecent ?? shelf.make(name: name)
                 }
-                request = RunRequest(folder: url, source: SourceNaming.unique(name, root: url, roots: info.roots))
+                request = RunRequest(folder: url, source: info.sourceName(name, root: url))
                 jobs = args.count >= 3 ? Int(args[2]) ?? 2 : 2
             }
             print("adding \(request.name) to \(info.name), \(jobs) at a time")
@@ -154,7 +154,7 @@ enum HeadlessDesk {
             var paths = PlacePaths.load(from: url)
             paths.forget(source: source)
             paths.fillMissingPaths(&c)
-            if let source { info.sourceRoots[source] = nil } else { info.musicFolder = nil }
+            if let source { info.forget(source: source) } else { info.musicFolder = nil }
             try CrateWriter.write(c, to: shelf.package(info.id))
             try paths.save(to: url)
             try shelf.save(info)

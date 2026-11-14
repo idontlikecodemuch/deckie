@@ -24,13 +24,6 @@ enum Words {
         if f.guess { return w("factGuess", ["from": from]) }
         return from
     }
-    static let stageCopying = w("stageCopying")
-    static func lineCopied(_ number: Int, of: Int, damaged: Int) -> String {
-        w(damaged > 0 ? "lineCopiedDamaged" : "lineCopied", ["number": "\(number)", "of": "\(of)"])
-    }
-    static func megabytes(_ b: Int64) -> String {
-        b >= 1_000_000_000 ? String(format: "%.1f GB", Double(b) / 1e9) : "\(max(1, Int((Double(b) / 1e6).rounded()))) MB"
-    }
 
     // MARK: the app
     static let appName = w("appName")

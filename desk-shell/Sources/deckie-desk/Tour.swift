@@ -133,7 +133,7 @@ enum Tour {
             Step(name: nil, js: "document.getElementById('tool').close('cancel');", delay: 0.4),
             Step(name: nil, js: "desk.request('crate.new');", event: "state", delay: 0.8),
             Step(name: "n15-add-menu-music-cds", js: click("#add-button"), delay: 1.4),
-            Step(name: "n16-copying-asks-disc-name", js: "[...document.querySelectorAll('#add-menu [role=menuitem]')].find(function (b) { return / E$/.test(b.textContent); }).click();",
+            Step(name: "n16-reading-asks-disc-name", js: "[...document.querySelectorAll('#add-menu [role=menuitem]')].find(function (b) { return / E$/.test(b.textContent); }).click();",
                  event: "run.started", delay: 0.6),
             Step(name: nil, js: "var i = document.getElementById('disc-ask-input'); i.value = 'Friday late'; document.getElementById('disc-ask').requestSubmit();", delay: 0.3),
             Step(name: "n17-disc-no-names-finished", event: "run.finished", delay: 1.8),

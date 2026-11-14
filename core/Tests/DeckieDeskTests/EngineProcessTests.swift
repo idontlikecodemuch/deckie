@@ -356,9 +356,32 @@ final class EngineProcess: @unchecked Sendable {
         #expect(done["event"] as? String == "run.finished", "\(done)")
         let disc = try #require((done["report"] as? [String: Any])?["disc"] as? [String: Any])
         #expect(disc["text"] as? String == "none")
-        #expect(e.received.contains { ($0["line"] as? [String: Any])?["kind"] as? String == "copied" })
+        #expect(!e.received.contains { $0["stage"] as? String == "copying" })
         let state = try #require(e.wait { $0["event"] as? String == "state" && ($0["current"] as? [String: Any])?["sources"] as? [String] == ["Friday night"] })
         #expect(state["undo"] as? String == "undoRename")
+        // None of the disc's music is in Desk's storage.
+        let home = root.appendingPathComponent("home")
+        #expect(musicFiles(under: home).isEmpty)
+        // Listen reads the song off the disc, as WAV, handed over in chunks; nothing is written.
+        let songsEvent = try #require(e.last("songs"))
+        let first = try #require((songsEvent["songs"] as? [[String: Any]])?.first?["id"] as? String)
+        let mark = e.received.count
+        let audio = try e.request("song.audio", ["song": first], seconds: 60)
+        #expect(audio["type"] as? String == "audio/wav" && audio["kind"] as? String == "WAV")
+        let bytes = try #require((audio["bytes"] as? NSNumber)?.intValue)
+        let count = try #require((audio["chunks"] as? NSNumber)?.intValue)
+        let token = try #require(audio["token"] as? String)
+        _ = e.wait(from: mark) { $0["event"] as? String == "audio.chunk" && ($0["index"] as? NSNumber)?.intValue == count - 1 }
+        let parts = e.received[mark...].filter { $0["event"] as? String == "audio.chunk" && $0["token"] as? String == token }
+        let joined = parts.compactMap { ($0["data"] as? String).flatMap { Data(base64Encoded: $0) } }.reduce(Data(), +)
+        #expect(joined.count == bytes && joined.prefix(4) == Data("RIFF".utf8))
+        #expect(musicFiles(under: home).isEmpty)
+        // The disc out: Desk says which to put back.
+        try FileManager.default.moveItem(at: drives.appendingPathComponent("E"), to: root.appendingPathComponent("E-out"))
+        let gone = try e.request("song.audio", ["song": first])
+        #expect(gone["ok"] as? Bool == false)
+        #expect((gone["error"] as? [String: Any])?["code"] as? String == "not_here")
+        #expect((gone["error"] as? [String: Any])?["detail"] as? String == "Friday night")
         _ = try e.request("quit")
         #expect(e.exitCode() == 0)
     }

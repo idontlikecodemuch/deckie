@@ -51,6 +51,8 @@ struct DeskRunTests {
         #expect(DeskRun.pending(home: home, crateId: night.id) == nil)
         #expect(DeskRun.runs(home: home, crateId: night.id).count == 1)
         #expect(one.report.songsPerMinute > 0)
+        // A folder is read where it is: no song of it is copied into Desk's storage (the note on D33, Nov 14).
+        #expect(musicFiles(under: home.root).isEmpty)
 
         // 2. The DJ fixes X's name; B is added: X gains B's place, nothing is analysed again, and the fix stays.
         var fixes = NameCorrections()

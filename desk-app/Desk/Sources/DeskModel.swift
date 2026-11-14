@@ -72,6 +72,7 @@ final class DeskModel: ObservableObject {
     private var needsSave = false
 
     init() {
+        DiscReading.clearLeftovers(home)
         mountedSources = MountedSource.all()
         musicCDs = MusicCDs.list()
         listener.onSong = { [weak self] in self?.objectWillChange.send() }
@@ -146,7 +147,6 @@ final class DeskModel: ObservableObject {
             } else {
                 try shelf.delete(info.id)
             }
-            DiscCopies.prune(home)
             reloadCrates()
             if current == nil { if let next = crates.first { show(next) } else { newCrate() } }
         } catch { errorText = Words.couldntDelete(error.localizedDescription) }
@@ -197,8 +197,7 @@ final class DeskModel: ObservableObject {
 
     /// Reads a CD, a drive or a folder as a source into the crate showing, or into a new crate named after it.
     func addSource(_ url: URL, name: String) {
-        let unique = SourceNaming.unique(name, root: url, roots: roots)
-        start(RunRequest(folder: url, source: unique))
+        start(RunRequest(folder: url, source: current?.sourceName(name, root: url) ?? name))
     }
 
     /// The fallback: any folder, read as a source named after its volume (when it is the top of one) or itself.
@@ -228,7 +227,8 @@ final class DeskModel: ObservableObject {
             p.message = Words.rekordboxFolderMessage
             p.begin { [weak self] r in
                 guard r == .OK, let folder = p.url, let self else { return }
-                let source = SourceNaming.unique(MountedSource.name(of: folder), root: folder, roots: self.roots)
+                let name = MountedSource.name(of: folder)
+                let source = self.current?.sourceName(name, root: folder) ?? name
                 self.start(RunRequest(folder: folder, source: source, rekordbox: xml))
             }
         }
@@ -247,7 +247,7 @@ final class DeskModel: ObservableObject {
         do {
             if let c = current { info = c } else { info = try shelf.make(name: request.name); current = info }
         } catch { errorText = Words.runStopped(error.localizedDescription); return }
-        running = true; finished = nil; runRead = request.name; runStage = request.musicCD != nil ? .copying : .reading
+        running = true; finished = nil; runRead = request.name; runStage = .reading
         listener.stop()
         runDone = 0; runTotal = 0; runRemaining = nil; runLines = []
         if let note = Builder.vocalTaggerNote { runLines.append(note) }
@@ -290,8 +290,8 @@ final class DeskModel: ObservableObject {
             case .reused: runLines.append(Words.lineReadBefore(rel))
             case let .failed(f): runLines.append(Words.lineNotRead(rel, reason: f.reason))
             }
-        case let .copied(number, of, damaged)?:
-            runLines.append(Words.lineCopied(number, of: of, damaged: damaged))
+        case let .discDamaged(number, _)?:
+            runLines.append(Words.t("lineDiscDamaged", ["number": "\(number)"]))
         case nil: break
         }
         if runLines.count > 400 { runLines.removeFirst(runLines.count - 400) }
@@ -364,11 +364,10 @@ final class DeskModel: ObservableObject {
             crate!.removeSource(source)
             placePaths.forget(source: source)
             placePaths.fillMissingPaths(&crate!)
-            if let s = source { current?.sourceRoots[s] = nil } else { current?.musicFolder = nil }
+            if let s = source { current?.forget(source: s) } else { current?.musicFolder = nil }
         }
         sourceSelection = nil
         saveNow()
-        DiscCopies.prune(home)
     }
 
     /// Corrects a source's name (D26), everywhere Desk keeps it: the crate, where it was read from, its paths.
@@ -377,7 +376,7 @@ final class DeskModel: ObservableObject {
         guard !n.isEmpty, n != name, crate != nil else { return }
         change(Words.undoRename) {
             crate!.renameDisc(name, to: n)
-            if let p = current?.sourceRoots.removeValue(forKey: name) { current?.sourceRoots[n] = p }
+            current?.renameSource(name, to: n)
             placePaths.renameSource(name, to: n)
         }
         sourceSelection = .source(n)
@@ -543,19 +542,26 @@ final class DeskModel: ObservableObject {
 
     // MARK: Listen (D33)
 
-    /// Plays a song from a third of the way in; says which source to put back when its file is not here.
+    /// Plays a song from a third of the way in, from where it is: its file on a drive or folder, or on a music CD in
+    /// the drive (the system's own file on the disc; nothing is copied). Says which source to put back when it is not
+    /// here.
     func listen(_ t: CrateTrack) {
-        guard let url = audioURL(for: t) else {
-            errorText = Words.t("listenPutBack", ["source": t.ident.disc ?? musicFolder?.lastPathComponent ?? ""])
-            return
+        do {
+            switch try DeskAudio.find(t, info: current, paths: placePaths) {
+            case let .file(url):
+                listener.play(url, id: t.id, title: t.ident.title, start: DeskListen.start(t.file.durationS))
+            case .disc:
+                // Only a stand-in drive (DECKIE_DESK_MUSIC_CD) gives a disc read by sector on a Mac.
+                errorText = Words.t("listenCouldntPlay", ["title": t.ident.title, "detail": ""])
+            }
+        } catch let e as DeskAudio.NotHere {
+            errorText = Words.t("listenPutBack", ["source": e.source])
+        } catch {
+            errorText = Words.t("listenCouldntPlay", ["title": t.ident.title, "detail": error.localizedDescription])
         }
-        listener.play(url, id: t.id, title: t.ident.title, start: DeskListen.start(t.file.durationS))
     }
 
     // MARK: the music on this Mac
-
-    /// Where a song's file is on this Mac: each place it was read at, in turn, the first whose source is plugged in.
-    func audioURL(for t: CrateTrack) -> URL? { placePaths.locate(t, roots: roots, musicFolder: musicFolder) }
 
     func chooseMusicFolder() {
         let p = NSOpenPanel()

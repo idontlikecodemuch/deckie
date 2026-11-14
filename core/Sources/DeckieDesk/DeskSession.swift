@@ -41,6 +41,7 @@ public final class DeskSession {
     /// Opens on the crate opened most recently, or the first screen when there is none.
     public init(home: DeskHome) {
         self.home = home
+        DiscReading.clearLeftovers(home)
         if let first = shelf.list().first { show(first.id) }
     }
 
@@ -83,7 +84,6 @@ public final class DeskSession {
     /// touched), then shows the next most recent crate, or the first screen.
     public func delete(_ id: String) throws {
         try shelf.delete(id)
-        DiscCopies.prune(home)
         if current?.id == id {
             if let next = shelf.list().first { show(next.id) } else { newCrate() }
         }
@@ -102,8 +102,7 @@ public final class DeskSession {
     /// when `url` is the top of one, else after the folder; made unique among the crate's sources.
     public func addRequest(_ url: URL, name: String? = nil) -> RunRequest {
         let base = name ?? DeskDrives.sourceName(of: url)
-        let unique = SourceNaming.unique(base, root: url, roots: current?.roots ?? [:])
-        return RunRequest(folder: url, source: unique)
+        return RunRequest(folder: url, source: current?.sourceName(base, root: url) ?? base)
     }
 
     /// The crate a run goes into: the one showing, else a new one named after what is read (made now).
@@ -132,7 +131,8 @@ public final class DeskSession {
     public private(set) var discName: (source: String, name: String)?
 
     /// What Add music reads for the music CD at `location` (as `MusicCDs.list` gave it): the table and CD-Text are read
-    /// now (both quick) and noted in the disc's copy folder; the songs are copied in the run. The source is named after
+    /// now (both quick) and noted in what Desk keeps about the disc (`DiscRecords`); the songs are read in the run, one
+    /// at a time, and none is kept. The source is named after
     /// the disc's own title when CD-Text has one; otherwise `askName` is the placeholder ("Music CD, 14 songs, 71:12")
     /// the window offers when it asks, once, for the name written on the disc.
     public func addMusicCDRequest(_ location: String, open: (String) throws -> MusicCD = { try MusicCDs.open($0) }) throws
@@ -145,13 +145,16 @@ public final class DeskSession {
                                       open: (String) throws -> MusicCD = { try MusicCDs.open($0) }) throws
         -> (request: RunRequest, askName: String?) {
         let cd = try open(location)
-        let (folder, record) = try DiscCopies.prepare(cd, home: home)
+        try home.prepare()
+        let record = try DiscRecords.prepare(cd, home: home)
         let placeholder = Self.placeholderName(record.toc)
         let base = record.discTitle ?? placeholder
-        // The same disc already a source of this crate keeps its name.
-        let existing = current?.sourceRoots.first { URL(fileURLWithPath: $0.value).standardizedFileURL == folder.standardizedFileURL }?.key
-        let unique = existing ?? SourceNaming.unique(base, root: folder, roots: current?.roots ?? [:])
-        let request = RunRequest(folder: folder, source: unique, musicCD: cd.location, discId: record.toc.id)
+        // The same disc already a source of this crate keeps its name; another never takes a name in use.
+        let existing = current?.discs.first { $0.value == record.toc.id }?.key
+        let names = Set(current.map { Array($0.sourceRoots.keys) } ?? [])
+        let unique = existing ?? SourceNaming.unique(base, root: URL(fileURLWithPath: "/"), roots: [:], taken: names)
+        let request = RunRequest(folder: URL(fileURLWithPath: cd.location), source: unique, musicCD: cd.location,
+                                 discId: record.toc.id)
         return (request, record.discTitle == nil && existing == nil ? unique : nil)
     }
 
@@ -233,7 +236,7 @@ public final class DeskSession {
         guard !n.isEmpty, n != name, crate != nil else { return }
         try change("undoRename") {
             crate!.renameDisc(name, to: n)
-            if let p = current?.sourceRoots.removeValue(forKey: name) { current?.sourceRoots[n] = p }
+            current?.renameSource(name, to: n)
             placePaths.renameSource(name, to: n)
         }
     }
@@ -260,9 +263,8 @@ public final class DeskSession {
             crate!.removeSource(source)
             placePaths.forget(source: source)
             placePaths.fillMissingPaths(&crate!)
-            if let s = source { current?.sourceRoots[s] = nil } else { current?.musicFolder = nil }
+            if let s = source { current?.forget(source: s) } else { current?.musicFolder = nil }
         }
-        DiscCopies.prune(home)
     }
 
     /// "Look again for keys and names" (D30) for the crate showing, without reading its music again. One step of
@@ -362,15 +364,14 @@ public final class DeskSession {
 
     // MARK: Listen (D33)
 
-    /// A song's file to play: the first of its places whose source is here. Throws `NotHere` with the source's name
-    /// when none is (so the window can say "Put Friday night back in to listen").
-    public func audioFile(_ id: String) throws -> URL {
+    /// A song's sound to play: the first of its places whose source is here, a file on a drive or folder, or the song
+    /// on a music CD in a drive (read off it when asked; nothing is copied). Throws `DeskAudio.NotHere` with the
+    /// source's name when none is (so the window can say "Put Friday night back in to listen").
+    public func audio(_ id: String, open: (String) throws -> MusicCD = { try MusicCDs.open($0) },
+                      musicCDs: () -> [MusicCDs.Found] = { MusicCDs.list() }) throws -> DeskAudio.Sound {
         guard let t = crate?.tracks.first(where: { $0.id == id }) else { throw DeskError("no song \(id)") }
-        if let u = placePaths.locate(t, roots: current?.roots ?? [:], musicFolder: current?.musicFolderURL) { return u }
-        throw NotHere(source: t.ident.disc ?? current?.musicFolderURL?.lastPathComponent ?? "")
+        return try DeskAudio.find(t, info: current, paths: placePaths, open: open, musicCDs: musicCDs)
     }
-
-    public struct NotHere: Error { public let source: String }
 
     // MARK: out
 

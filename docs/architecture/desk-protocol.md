@@ -6,7 +6,9 @@ the window around them (`desk-shell/`, a small Swift program over the system's w
 other. The engine can be driven by a test with no window on all three systems (`core/Tests/DeckieDeskTests/EngineProcessTests.swift`).
 
 First written Nov 13, 2026, with the engine. Protocol 2 (Nov 14, 2026): naming a song and music CDs (research AA, route
-A) and Listen (D33). It is a new number because `needsName` changed meaning: it now also holds a song named by Desk's
+A) and Listen (D33). Still protocol 2, later on Nov 14: Desk keeps none of a music CD's music (the note on D33), so the
+`copying` stage, the `copied` line and the report's `bytes` are gone, and the `discDamaged` line is new; a page that
+knows the old ones only stops seeing them. It is a new number because `needsName` changed meaning: it now also holds a song named by Desk's
 guess that the DJ has not checked (`nameReason` says which). Research letter Z, question 2 (way A) and question 4, is the why.
 
 ## How messages travel
@@ -69,8 +71,8 @@ Then the engine sends `state` and, when a crate with songs is showing, `songs`.
 
 - `crates`: every crate, the one opened most recently first. `current` is null on the first screen.
 - `pending`: a run of the crate showing that stopped; `here` says whether its folder or drive is there now (Carry on,
-  or "Put Stick 3 back in to carry on"); `musicCD` is true for a music CD, whose `here` is true when its songs are
-  all copied or the same disc is in a drive.
+  or "Put Stick 3 back in to carry on"); `musicCD` is true for a music CD, whose `here` is true when the same disc
+  is in a drive (Desk keeps none of a disc's music, so a stopped run carries on only with the disc).
 - `undo` and `redo`: the name of the word for the step each would take (`undoNameFix`, `undoRename`, `undoMove`,
   `undoRemove`, `undoLookAgain`, `undoNames`, `undoCheck`), or null.
 
@@ -113,18 +115,19 @@ the booth cannot recognise yet.
 | Event | Fields |
 |---|---|
 | `run.started` | `crate` (id), `crateName`, `read` (the source's name), `carriedOn`, `musicCD`, `askName` (a music CD with no title of its own: the placeholder name to offer when asking once for the name written on it; else null) |
-| `run.progress` | `stage` (`copying` for a music CD's songs, `reading`, `finishing`, `saving`), `done`, `total` (songs done of songs found), `remaining` (seconds left, or null), `line` (or absent) |
+| `run.progress` | `stage` (`reading`, `finishing`, `saving`; a music CD's songs are read in `reading`, one at a time), `done`, `total` (songs done of songs found), `remaining` (seconds left, or null), `line` (or absent) |
 | `run.finished` | `report`: the run's report (DeskRun's RunReport, as `runs.jsonl` holds it, with `local`, the keys and names taken from the computer) |
 | `run.failed` | `detail`: what stopped it, in a sentence. Songs already read are kept |
 
 A `line` is one of `{"kind": "started", "files": 40, "unchanged": 3, "queued": 37}`,
 `{"kind": "read", "rel": "Stick 3/House/04 Song X.mp3", "seconds": 2.1}`, `{"kind": "reused", "rel": "…"}`,
-`{"kind": "notRead", "rel": "…", "reason": "damaged"}`, `{"kind": "copied", "number": 3, "of": 14, "damaged": 0}`
-(a music CD's song copied off the disc; `damaged` sectors of 1/75 s could not be read and are silence).
+`{"kind": "notRead", "rel": "…", "reason": "damaged"}`, `{"kind": "discDamaged", "number": 3, "sectors": 12}`
+(part of a music CD's song 3 could not be read even on a second try: `sectors` of 1/75 s each were read as silence).
+A music CD's songs are named `Track 01.wav` and so on in `rel` (`.aiff` on the Mac).
 
 A run's `report` has `disc` for a music CD: `text` (`names`, `none` "this disc has no names on it", or `drive` "the
 drive gave none; the disc may have some"), `songs`, `named` (songs named from the disc's CD-Text),
-`damaged_sectors`, `titled` (the disc's own title named the source) and `bytes` (the room Desk's copy takes).
+`damaged_sectors` and `titled` (the disc's own title named the source).
 
 ## Requests to the engine
 
@@ -196,8 +199,14 @@ Standard input and output are anonymous pipes between the shell and the engine i
 can open them. When the web view says it cannot play the type (`canPlayType`), or fails to, the page asks again with
 `decoded: true` and the engine sends 16-bit WAV made by the shared decoder (WAV, AIFF, MP3, FLAC); when that fails
 too (`cannot_decode`: an AAC file, say, in a web view without that codec) the window says so in plain words.
-`not_here` (`detail`: the source's name) means no place of the song is plugged in. Listening starts a third of the
-way in (`start`).
+`not_here` (`detail`: the source's name) means no place of the song is plugged in, or its music CD is not in a drive.
+Listening starts a third of the way in (`start`).
+
+A song on a music CD is played from the disc in the drive (found by the disc's id, in whichever drive holds it).
+On Windows and Linux the engine reads that song's sound off the disc when `song.audio` asks (WAV, `kind` `WAV`),
+holds it in memory only while the chunks go out, and writes nothing; reading takes as long as the drive needs, and
+the reply comes when it is read. On the Mac the song is the system's own file on the disc, sent like any file. The
+page joins and plays it the same way, so the scrub bar works on it as on any song.
 
 ## Requests the shell answers
 
