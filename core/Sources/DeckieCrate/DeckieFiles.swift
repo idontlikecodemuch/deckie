@@ -7,8 +7,9 @@ import Foundation
 /// search indexer, a backup or sync client), and replacing, moving or deleting it then fails with a sharing violation
 /// (Win32 error 32) or access denied (5), which Foundation reports as Cocoa error 513, "You don't have permission".
 /// Seen on the Windows CI runner on Nov 13 and 14, 2026. A moment later the same operation succeeds, so a save must
-/// not fail for it. Each operation here is tried again a few times over about a second when it fails that way, then
-/// the error is thrown with the path and what happened. Any other error is thrown at once, as it was.
+/// not fail for it. Each operation here is tried again a few times over about a second (a delete, over about five)
+/// when it fails that way, then the error is thrown with the path and what happened. Any other error is thrown at
+/// once, as it was.
 ///
 /// Nothing about what is written changes: a file is still written whole to a temporary file and moved into place
 /// (`Data.write(options: .atomic)`), as before.
@@ -16,14 +17,24 @@ public enum DeckieFiles {
     /// The pauses between attempts: six attempts in all, about one second of waiting at most.
     public static let pauses: [Double] = [0.05, 0.1, 0.15, 0.25, 0.4]
 
+    /// The pauses for a delete: the same, then longer ones, eleven attempts and about five seconds in all. Deleting
+    /// a folder needs every file in it to be free at the same moment, and one file held anywhere inside stops it.
+    /// Seen on the Windows CI runner on Nov 14, 2026 (twice in eight runs): a crate's folder could not be deleted
+    /// within a second, because a temporary file that an interrupted save had left in it was still held by another
+    /// program. A delete that waits a few seconds is better than one a DJ has to ask for twice.
+    public static let removePauses: [Double] = pauses + [0.6, 0.8, 1.0, 1.0, 1.0]
+
     /// The error thrown when a file stayed held by another program through every attempt.
     public struct HeldError: Error, CustomStringConvertible, LocalizedError {
         public let operation: String
         public let path: String
         public let attempts: Int
+        /// How long the attempts waited in all, in seconds.
+        public var waited: Double = 1
         public let underlying: Error
         public var description: String {
-            "Couldn't \(operation) \(path): another program kept the file open (tried \(attempts) times over about a second). "
+            let long = waited < 1.5 ? "about a second" : "about \(Int(waited.rounded())) seconds"
+            return "Couldn't \(operation) \(path): another program kept the file open (tried \(attempts) times over \(long)). "
                 + "\((underlying as? LocalizedError)?.errorDescription ?? "\(underlying)")"
         }
         public var errorDescription: String? { description }
@@ -60,7 +71,8 @@ public enum DeckieFiles {
             do { return try body() } catch {
                 guard transient(error) else { throw error }
                 guard attempt < pauses.count else {
-                    throw HeldError(operation: operation, path: path, attempts: attempt + 1, underlying: error)
+                    throw HeldError(operation: operation, path: path, attempts: attempt + 1, waited: pauses.reduce(0, +),
+                                    underlying: error)
                 }
                 cleanUp()
                 Thread.sleep(forTimeInterval: pauses[attempt])
@@ -87,7 +99,7 @@ public enum DeckieFiles {
     /// Deletes a file or a folder with everything in it; nothing when it is not there.
     public static func remove(_ url: URL) throws {
         let fm = FileManager.default
-        try retrying("delete", url.path) {
+        try retrying("delete", url.path, pauses: removePauses) {
             guard fm.fileExists(atPath: url.path) else { return }
             try fm.removeItem(at: url)
         }
