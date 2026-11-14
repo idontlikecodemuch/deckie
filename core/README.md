@@ -775,13 +775,24 @@ On a Mac, or on a machine that can reach swift.org, install Swift the normal way
 
 ## Recognition of Deckie's own (`DeckieRecognition`)
 
-Begun as a trial; D35 (Nov 14, 2026) chose it. Its fingerprint (`Landmarks`) is now made by the engine for every
-song and carried in the crate file (`prints/<id>.dkl`; `docs/architecture/crate-format.md`, "Addition with D35"), so
-DeckieCrate, DeckieEngine and DeckieBuild depend on this target for it; the index and the matcher are still the
-trial's, and nothing ships them yet.
-`Sources/DeckieRecognition` is a landmark fingerprint after Wang's 2003 paper (`Landmarks`: a song's spectrogram
-peaks, about 23 KB for four minutes), an index over many songs (`RecognitionIndex`) and a matcher (`Recogniser`) that
-names the song in a few seconds of audio, where in it the audio starts, and the deck's speed (tempo ratio and pitch
-ratio), trying the pitch fader's range on the query's points by arithmetic. `deckie-recog-bench` and
-`Tools/recognition-bench/run.sh` measure it on outside music or on any folder of music. What it does and does not
-do, with every measurement: `docs/research/w2-own-recognition-trial.md`.
+D35 (Nov 14, 2026) chose a fingerprint of Deckie's own; this target is it, for every system.
+
+- **The fingerprint** (`Landmarks`): a song's spectrogram peaks, after Wang's 2003 paper, about 23 KB for four
+  minutes. The engine makes it for every song and the crate file carries it (`prints/<id>.dkl`;
+  `docs/architecture/crate-format.md`, "Addition with D35"), so DeckieCrate, DeckieEngine and DeckieBuild depend on
+  this target.
+- **The index** (`RecognitionIndex`, settings `PairingConfig.booth`): two-point hashes on the strongest half of
+  each song's points, about 41 KB a song; built once per crate file, kept as one file and opened in place from
+  storage (`RecognitionIndex.cached`, or `Crate.recognitionIndex(cachedAt:)` in DeckieCrate, which also passes the
+  crate file's word on which entries are one recording). Songs that hold the same sound (a second file of a
+  recording, a long file that contains a song) are found when it is built and count as one.
+- **The matcher** (`Recogniser`): tries the pitch fader's range on the listen's points by arithmetic, checks the
+  songs proposed point by point, and gives the song, the place in it, the deck's speed (tempo ratio and pitch
+  ratio, so whether key lock is on) and a confidence.
+- **The listener** (`SongListener`; `BoothRecogniser` for an app, whose `feed` never blocks): fed the microphone
+  for a whole set, it gives a reading a second: a song named, followed, or nothing yet.
+- **Tools**: `deckie-listen` plays any recording through the listener and prints each second; `deckie-recog-bench`
+  and `Tools/recognition-bench` measure all of it on outside music or on any folder of music.
+
+What was chosen and why, every measurement, what an app must do and what is unproven:
+`docs/research/w4-recognition-complete.md` (and, before it, `w2-own-recognition-trial.md`).

@@ -2,6 +2,79 @@
 
 Branch `trial/own-recognition`. Newest entry first. Nothing here ships without the owner's decision.
 
+## Nov 14, 2026, 12:45 UTC: THE MORNING PAGE: song recognition is complete in the shared core
+
+The full account is `docs/research/w4-recognition-complete.md`. Everything is on `main` except this page, the
+letter and the last rows, which are on `recog/finish` (cut from `main`).
+
+**What was chosen**
+
+- **One fingerprint per song in the crate file, unchanged from the first trial** (23 KB for four minutes), with a
+  version number of its own; every builder writes it on every system.
+- **The booth's index: two-point hashes, thin.** Anchors are the strongest half of the points round each; three
+  hashes an anchor. 41 KB a song (the first trial: 261). A small setting, 21 KB a song, is one word in the code.
+- **Propose widely, decide by a check**: the first 50 songs proposed are checked point by point.
+- **Copies count as one**: a second file of a recording, or a long file that contains a song, is found when the
+  index is built and never counted against the song. (The real-room test's main finding, fixed and proved on the
+  benchmark: with every song in the index twice and long joined files added, the scores do not move.)
+- **A listener** that gathers evidence across seconds, follows a named song cheaply and notices the next one.
+- **Four points were given a fair trial, two ways, and do not win a place.** At equal memory, at 8 s in a room:
+  twos 93 percent, threes 90, fours 79 and 70; at equal-level crowd: 71, 58, 43 and 32. What fours buy is speed
+  (no speed search), which is no longer the constraint.
+
+**The table** (969 outside songs, the half no choice was made on; the finished listener, fed second by second;
+right song named by that many seconds, percent of clips)
+
+| Condition | 3 s | 5 s | 8 s | 12 s | First trial, one 8 s / 12 s listen |
+|---|---|---|---|---|---|
+| Clean, any fader setting, either mode | 92 | 99 | 100 | 100 | 100 / 100 |
+| A measured room | 67 | 87 | 95 | 98 | 95 / 98 |
+| Room, crowd 10 dB under the music | 54 | 78 | 91 | 96 | 89 / 93 |
+| Room, crowd at equal level | 27 | 54 | 71 | 82 | 60 / 72 |
+| Room, crowd 5 dB over the music | 10 | 25 | 41 | 56 | 33 / 43 |
+| Small speaker, room, crowd at equal level | 43 | 72 | 85 | 93 | 79 / 86 |
+
+| Other measures | Result |
+|---|---|
+| A song that is not in the index named | 0 of 1,074 clips |
+| A wrong song named | 0 to 0.6 percent of clips |
+| Generated DJ mixes: each song's seconds with the right name on screen | 99 percent (77 under heavy distortion); named the second the song is alone, at the median |
+| Fader reading on those mixes | 0.03 to 0.05 points at the median |
+| Index, 5,000 songs | 205 MB as a file opened in place (106 MB small setting), plus 198 MB for a copy of the songs' points |
+| The app's own memory while listening | about 2 KB a song (9 MB for 5,000) |
+| One search of the whole crate, 8 s of sound, one core | 73 ms at 1,000 songs, 344 ms at 5,000, 824 ms at 10,000 (small setting: 230 and 427 ms) |
+| A reading while a song is followed | about 10 ms |
+| Right answers and false names against catalogue size | unchanged from 1,000 to 10,000 songs |
+| Fuzzy lookup (the row owed) | plus 2 to 3 points for twice the time; a small, real gain; off by default |
+
+**What an app must do** (letter, section 5): once per crate file, off the main thread,
+`crate.recognitionIndex(cachedAt:)` (builds the index the first time, opens the file in place after); then
+`BoothRecogniser(index:) { reading in ... }` for the whole set and `feed(samples, channels:, sampleRate:)` from the
+microphone's callback, which copies and returns. A reading a second says named, held or nothing yet, with the
+song's id, the place, the fader and key lock. `deckie-listen` plays any recording through the same listener.
+
+**What remains unproven**
+
+- A loud room. Every noisy figure is simulated; the one real evening measured (W3) was a quiet one, and its numbers
+  sat close to this benchmark's rows for the same levels. Against letter H's ShazamKit figures in loud noise this
+  is still behind (pink noise at equal level, 8 s: 76 percent here, 90 to 100 there in a milder room).
+- An iPad: the time of a reading on its chip, the mapped file's behaviour, the memory to build an index, heat.
+- A real deck's key lock, effects, scratching; speeds beyond 17 percent (not searched for).
+- A crate of thousands of real songs with the copies fix: the owner's library, on his computer.
+- 10,000 songs is at the edge for search time on one core here; past that, the small setting or a split crate.
+- One cell of the generated mixes (vinyl-style with a compressor) is at 82 percent where its neighbours are at 99;
+  not explained.
+
+**What I would try next for loud rooms, in order** (letter, section 7): (1) choose each hash's points across pitch
+bands as well as time, the owner's own point, which changes how the index is built and not the crate file; (2)
+more hashes on the listening side only; (3) add up votes across four or five listens; (4) the beat grid as a
+second check; (5) read up to 5.5 kHz, which would change the fingerprint and so comes last and only if measured to
+help; (6) a recording from a loud booth, which says which of these matter.
+
+**Checks.** `recog/core` was green on both workflows before it was merged (`core-linux` 43585502813,
+`core-windows` 43585500581, the second including a Windows-built crate file compared with a Linux-built one,
+fingerprints and all). `recog/finish` adds an option, tools and documents; its runs are noted below when done.
+
 ## Nov 14, 2026, 11:20 UTC: overnight, entry 2: the design is decided and built; the last measurements are running
 
 This entry replaces what entry 1 said about the design: a late row changed the choice from three-point to
