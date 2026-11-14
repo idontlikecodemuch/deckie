@@ -163,7 +163,12 @@ memo Q's vocal fields, `vocal_structure` and `hooks`, are instead left out when 
   addition), `steady_in_bar`, `steady_out_bar`.
 - `loudness` *(loudness)*: `source`, `confidence` or null, `integrated_lufs`, `lra`, `true_peak_db`.
 - `vocal` *(vocal)*: `source`, `confidence` or null, `mean`, `heavy`.
-- `onset_pattern_16` *(onset_pattern)*: 16 numbers. `flags`: a list of names, possibly empty.
+- `onset_pattern_16` *(onset_pattern)*: 16 numbers. `flags`: a list of names, possibly empty. One name
+  added Nov 14, 2026 (D33), with no field changed: **`start_uncertain`**, set by the engine when its decoder could
+  not place the start of the sound to the sample (an AAC file read on Windows that states its encoder's lead-in
+  nowhere). Every time in such a record (the grid's first downbeat, the tempo segments, the ends) may be up to 48 ms
+  late against the file as a player plays it. A reader shows the song as any other and may show its grid with
+  that caveat; a reader that does not know the name ignores it, as with every flag.
 - `style` *(style)* **proposed**: `model` and `dims`; the values are in `style/<id>.bin`. A reader compares style
   vectors only between records with the same `model`.
 - `signatures` **proposed** (track A had variant to `true`): variant name (`o`, `r-4`, `r+4`, as P11 settles) to

@@ -93,9 +93,15 @@ public struct DecodedAudio: Sendable {
     /// FLAC file rather than concealing anything).
     public var damagedFrames: [DamagedFrame]
 
-    public init(buffer: AudioBuffer, damagedFrames: [DamagedFrame] = []) {
+    /// Set when the decoder could not tell where the sound starts to the sample: an AAC file read through Windows'
+    /// Media Foundation that states its encoder's lead-in nowhere (`MP4Trim`). The audio then starts up to 48 ms
+    /// late. The reason, in words; nil for every file whose start is known.
+    public var startUncertain: String?
+
+    public init(buffer: AudioBuffer, damagedFrames: [DamagedFrame] = [], startUncertain: String? = nil) {
         self.buffer = buffer
         self.damagedFrames = damagedFrames
+        self.startUncertain = startUncertain
     }
 }
 
@@ -177,12 +183,48 @@ public enum AudioDecoder {
             if let found = ProtectedMP4.check(data) {
                 throw AudioDecodeError(kind: .protected, file: path, format: format, message: found.message)
             }
+            #if os(Windows)
+            return try mediaFoundation(url, data: data, format: format)
+            #else
             throw unsupported(path, format, "AAC is not supported on this platform yet: it will use the platform's "
                               + "own decoder (AVFoundation on Apple, Media Foundation on Windows); Linux has no "
                               + "licence-safe AAC decoder in a distribution package")
+            #endif
         case .unknown:
             throw unsupported(path, format, "not a format DeckieDecode recognises (WAV, AIFF, MP3, FLAC, AAC)")
         }
+    }
+
+    /// AAC and Apple Lossless through Windows' own Media Foundation, trimmed to where the file says its sound starts
+    /// and ends (`MP4AudioInfo`, `MP4Trim`). On a Windows without media features (the "N" editions) the file is
+    /// reported as not readable there. Compiled everywhere so its pieces are tested everywhere; only Windows calls it.
+    static func mediaFoundation(_ url: URL, data: Data, format: AudioFormat) throws(AudioDecodeError) -> DecodedAudio {
+        let path = url.path
+        let info = MP4AudioInfo.read(data)
+        let raw: MediaFoundationReader.Raw
+        do {
+            raw = try MediaFoundationReader.decodeRaw(url)
+        } catch let e as MediaFoundationReader.Failure {
+            switch e {
+            case .unavailable:
+                throw unsupported(path, format, "Windows on this PC has no media features (an \"N\" edition), which read "
+                                  + "AAC and Apple Lossless files; Microsoft's free Media Feature Pack adds them")
+            case .failed(let why):
+                throw unsupported(path, format, "Windows could not decode it: \(why)")
+            }
+        } catch {
+            throw unsupported(path, format, "Windows could not decode it: \(error)")
+        }
+        let b = raw.buffer
+        let trim: MP4Trim
+        do {
+            trim = try MP4Trim.plan(info: info, decoded: b.samples.count / b.channelCount, rate: b.sampleRate)
+        } catch {
+            throw unsupported(path, format, error.message)
+        }
+        return DecodedAudio(buffer: AudioBuffer(sampleRate: b.sampleRate, channelCount: b.channelCount,
+                                                samples: trim.apply(b.samples, channels: b.channelCount)),
+                            startUncertain: trim.startUncertain)
     }
 
     static func unsupported(_ file: String, _ format: AudioFormat, _ message: String) -> AudioDecodeError {

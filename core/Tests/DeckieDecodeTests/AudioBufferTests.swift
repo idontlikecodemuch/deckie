@@ -42,10 +42,13 @@ enum Fixture {
         #expect(error.description.contains("no-such-file.wav"))
     }
 
+    // On Windows AAC is read, by Windows' own decoder (MediaFoundationTests).
+    #if !os(Windows)
     @Test func aacIsRecognisedButNotSupportedYet() throws {
         let aac = try #require(decodeError(Fixture.url("tone.m4a")))
         #expect(aac.kind == .unsupported && aac.format == .aac)
         #expect(aac.message.hasPrefix("AAC is not supported on this platform yet"), "\(aac.message)")
         #expect(aac.description.contains("tone.m4a (AAC)"))
     }
+    #endif
 }
