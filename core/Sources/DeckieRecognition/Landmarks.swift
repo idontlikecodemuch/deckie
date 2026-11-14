@@ -92,25 +92,38 @@ public struct Landmarks: Sendable, Equatable {
         var buf = [Double](repeating: 0, count: N)
         var re = [Double](repeating: 0, count: fft.bins), im = [Double](repeating: 0, count: fft.bins)
         var loudest: Float = -200
+        // Pointers and `while` throughout, so that a debug build (where Swift checks every array access) still makes
+        // a song's constellation in about a second: the builders' tests run the engine unoptimised.
         x.withUnsafeBufferPointer { xs in
-            for t in 0..<frameCount {
-                let start = t * H - N / 2
-                for i in 0..<N {
-                    let j = start + i
-                    buf[i] = j >= 0 && j < xs.count ? Double(xs[j]) * window[i] : 0
-                }
-                buf.withUnsafeBufferPointer { b in
+            window.withUnsafeBufferPointer { w in
+                buf.withUnsafeMutableBufferPointer { b in
                     re.withUnsafeMutableBufferPointer { r in
-                        im.withUnsafeMutableBufferPointer { m in fft.forward(b.baseAddress!, real: r.baseAddress!, imag: m.baseAddress!) }
-                    }
-                }
-                spec.withUnsafeMutableBufferPointer { s in
-                    let row = s.baseAddress! + t * nb
-                    for k in b0...b1 {
-                        let p = re[k] * re[k] + im[k] * im[k]
-                        let d = Float(10 * log10(p + 1e-20))
-                        row[k - b0] = d
-                        if d > loudest { loudest = d }
+                        im.withUnsafeMutableBufferPointer { m in
+                            spec.withUnsafeMutableBufferPointer { s in
+                                let count = xs.count
+                                var t = 0
+                                while t < frameCount {
+                                    let start = t * H - N / 2
+                                    var i = 0
+                                    while i < N {
+                                        let j = start + i
+                                        b[i] = j >= 0 && j < count ? Double(xs[j]) * w[i] : 0
+                                        i += 1
+                                    }
+                                    fft.forward(UnsafePointer(b.baseAddress!), real: r.baseAddress!, imag: m.baseAddress!)
+                                    let row = s.baseAddress! + t * nb
+                                    var k = b0
+                                    while k <= b1 {
+                                        let p = r[k] * r[k] + m[k] * m[k]
+                                        let d = Float(10 * log10(p + 1e-20))
+                                        row[k - b0] = d
+                                        if d > loudest { loudest = d }
+                                        k += 1
+                                    }
+                                    t += 1
+                                }
+                            }
+                        }
                     }
                 }
             }
