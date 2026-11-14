@@ -530,6 +530,17 @@ From the key trial (letter X2, merged Nov 13) and the naming research (letter AA
   changes one line of `docs/product/desk.md`: Desk plays a song so the DJ can name it; it still does not mix or
   edit.
 
+### Note on D33 (Nov 14): Desk does not keep a copy of a disc's music
+The first build of reading a music CD copied the disc's audio into Desk's own storage, about 750 MB a disc, so that
+Listen would work with the disc out of the drive. The owner: "The crate file shouldn't rip the music. Its just the
+crate file."
+
+- **Desk reads a disc's music to work it out, and keeps none of it.** Whatever it has to hold while a song is
+  being read is removed as soon as that song is done.
+- **Listening to a song from a disc needs the disc in the drive**, as listening to a song on a stick needs the
+  stick. Desk says so in plain words.
+- This holds for every source. Desk never was a way to copy music, and it is not one now.
+
 ### Note on D19 (Nov 1): versions of a song stay separate rows
 Christopher, on two remixes of one song both showing in the picks: "we shouldn't merge them unless they are the same
 songs. DJs often have a bunch of versions of the same song". So the booth folds together only copies of the same
