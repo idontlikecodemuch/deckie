@@ -190,3 +190,28 @@ struct OnnxSessionTests {
         }
     }
 }
+
+/// Where a shipped program's parts are looked for (OnnxRuntime.programFolder): beside the program before the
+/// checkout, and never when the environment variable names a file. Only the order is checked; nothing is opened.
+@Test func aProgramsOwnFolderIsLookedInBeforeTheCheckout() {
+    let folder = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent("deckie-program-folder-test")
+    let before = OnnxRuntime.programFolder
+    defer { OnnxRuntime.programFolder = before }
+    let env = ProcessInfo.processInfo.environment
+    func check(_ name: String, _ variable: String, _ subfolder: String?, _ candidates: () -> [String]) {
+        OnnxRuntime.programFolder = nil
+        let without = candidates()
+        OnnxRuntime.programFolder = folder
+        let with = candidates()
+        if let set = env[variable], !set.isEmpty {
+            #expect(without == [set] && with == [set], "\(variable) alone when it is set")
+        } else {
+            let beside = (subfolder.map { folder.appendingPathComponent($0) } ?? folder).appendingPathComponent(name).path
+            #expect(with == [beside] + without, "\(name)")
+            #expect(without.count == 1)
+        }
+    }
+    check(OnnxRuntime.libraryFileName, OnnxRuntime.libraryEnvironmentVariable, nil) { OnnxRuntime.libraryCandidates() }
+    check(BeatTracker.modelFileName, BeatTracker.modelEnvironmentVariable, "models") { BeatTracker.modelCandidates() }
+    check(YAMNet.modelFileName, YAMNet.modelEnvironmentVariable, "models") { YAMNet.modelCandidates() }
+}

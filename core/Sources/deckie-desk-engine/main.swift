@@ -4,10 +4,17 @@
 // Its own log lines go to standard error. It exits when its input closes or on {"type":"quit"}.
 //
 // Desk's storage is DeskHome.standard (DECKIE_DESK_HOME moves it, for tests and trials); DJ libraries are looked for
-// as DeskLocalFacts says (DECKIE_DJ_HOME). DECKIE_DESK_JOBS sets the run's jobs.
+// as DeskLocalFacts says (DECKIE_DJ_HOME). DECKIE_DESK_JOBS sets the run's jobs. ONNX Runtime and the two models are
+// found by the environment variables the core reads, else beside this program, else in the checkout.
 import Foundation
 import DeckieDesk
 import DeckieEngine
+import DeckieInference
+
+// In the Windows zip the engine's files sit beside this program (onnxruntime.dll, models/), as they do beside
+// deckie-make; they are looked for there before the checkout a developer runs from.
+OnnxRuntime.programFolder = Bundle.main.executableURL?.deletingLastPathComponent()
+    ?? URL(fileURLWithPath: CommandLine.arguments[0]).deletingLastPathComponent()
 
 let stdout = FileHandle.standardOutput
 let home = DeskHome.standard()

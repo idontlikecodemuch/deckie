@@ -183,6 +183,10 @@ final class EngineProcess: @unchecked Sendable {
         let exported = try e.request("crate.export", ["folder": out.path])
         let path = try #require(exported["path"] as? String)
         #expect(try CrateReader.read(from: URL(fileURLWithPath: path)).manifest.name == "Friday late")
+        // The engine program runs on Windows and Linux, where the crate file leaves as one file.
+        #if os(Windows) || os(Linux)
+        #expect(CrateArchive.isArchive(URL(fileURLWithPath: path)))
+        #endif
 
         // Drives answer on every system (none is required to be plugged in).
         #expect(try e.request("drives.list")["drives"] is [Any])

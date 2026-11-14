@@ -68,6 +68,31 @@ void *deskshell_native_view(deskshell_t s);
 /// Which web view this is: "WebView2", "WebKitGTK" or "WKWebView".
 const char *deskshell_engine_name(void);
 
+// The rest is for Windows, where Desk is a program of the "windows" kind (no console window) started by a double
+// click. Each does nothing, or answers no, on the other systems.
+
+/// Call first, before anything is written. A program of the "windows" kind started by a double click has no standard
+/// input, output or error at all; this gives it Windows' "NUL" (which swallows what is written) for each one that is
+/// missing, so that a line written for a developer cannot stop the program.
+void deskshell_prepare_process(void);
+
+/// The version of Microsoft's WebView2 Runtime (the "Evergreen" one, shared by all programs) installed on this PC,
+/// read from the registry values Microsoft documents for this question (`pv` under `EdgeUpdate\Clients\{F3017226-
+/// FE2A-4295-8BDF-00C3A9A7E4C5}`, for the whole PC and for this account); NULL when there is none. Free it with
+/// deskshell_free. The window itself is the proof (deskshell_create); this says why when it could not be made.
+char *deskshell_webview2_version(void);
+
+/// Shows `text` in a message box titled `title`, over no window. `ask` zero: one button, OK. Non-zero: Yes and No.
+/// Returns 1 for Yes (or OK), 0 otherwise, and 0 at once where there are no message boxes (Linux, the Mac).
+int deskshell_notice(const char *title, const char *text, int ask);
+
+/// Opens a web address in the DJ's own browser. Windows only; only ever called after the DJ said yes.
+void deskshell_open_address(const char *address);
+
+/// 1 when the window carries an icon of its own (the program's icon resource number 1, set on the title bar and the
+/// taskbar when the window was made), 0 when the program was built without one or on the other systems.
+int deskshell_window_has_icon(deskshell_t s);
+
 #ifdef __cplusplus
 }
 #endif

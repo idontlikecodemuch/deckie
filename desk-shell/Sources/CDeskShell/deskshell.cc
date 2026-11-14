@@ -194,6 +194,33 @@ void listen_for_drops(deskshell *s) {
   view->Release();
 }
 
+// Desk's icon on the window: the title bar and Alt-Tab take the small one, the taskbar the large one. The picture is
+// the program's own icon resource, number 1 (core/Tools/windows/icon.sh compiles it; the packaging links it in). A
+// build without it (a developer's) keeps the plain icon Windows gives every window.
+void set_icon(deskshell *s) {
+  HWND window = static_cast<HWND>(webview_get_window(s->w));
+  if (!window) return;
+  HINSTANCE program = GetModuleHandleW(nullptr);
+  HANDLE large = LoadImageW(program, MAKEINTRESOURCEW(1), IMAGE_ICON, GetSystemMetrics(SM_CXICON),
+                            GetSystemMetrics(SM_CYICON), LR_DEFAULTCOLOR | LR_SHARED);
+  HANDLE small = LoadImageW(program, MAKEINTRESOURCEW(1), IMAGE_ICON, GetSystemMetrics(SM_CXSMICON),
+                            GetSystemMetrics(SM_CYSMICON), LR_DEFAULTCOLOR | LR_SHARED);
+  if (large) SendMessageW(window, WM_SETICON, ICON_BIG, reinterpret_cast<LPARAM>(large));
+  if (small) SendMessageW(window, WM_SETICON, ICON_SMALL, reinterpret_cast<LPARAM>(small));
+}
+
+// One value of text from the registry's 32-bit side (where Edge's updater keeps its notes on every Windows), or "".
+std::wstring registry_text(HKEY root, const wchar_t *key, const wchar_t *name) {
+  HKEY opened = nullptr;
+  if (RegOpenKeyExW(root, key, 0, KEY_READ | KEY_WOW64_32KEY, &opened) != ERROR_SUCCESS) return L"";
+  wchar_t text[256] = {0};
+  DWORD bytes = sizeof(text) - sizeof(wchar_t), type = 0;
+  LSTATUS status = RegQueryValueExW(opened, name, nullptr, &type, reinterpret_cast<LPBYTE>(text), &bytes);
+  RegCloseKey(opened);
+  if (status != ERROR_SUCCESS || type != REG_SZ) return L"";
+  return text;
+}
+
 char *choose(deskshell *s, const char *title, bool folders) {
   IFileOpenDialog *dialog = nullptr;
   if (FAILED(CoCreateInstance(CLSID_FileOpenDialog, nullptr, CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&dialog)))) {
@@ -266,6 +293,7 @@ deskshell_t deskshell_create(int debug, const char *title, int width, int height
   webview_bind(w, "__deckieShellSend", on_send, s);
 #if defined(_WIN32)
   listen_for_drops(s);
+  set_icon(s);
 #endif
   return s;
 }
@@ -326,6 +354,63 @@ void *deskshell_native_view(deskshell_t s) {
   return webview_get_native_handle(s->w, WEBVIEW_NATIVE_HANDLE_KIND_BROWSER_CONTROLLER);
 #else
   return webview_get_native_handle(s->w, WEBVIEW_NATIVE_HANDLE_KIND_UI_WIDGET);
+#endif
+}
+
+void deskshell_prepare_process(void) {
+#if defined(_WIN32)
+  const DWORD which[] = {STD_INPUT_HANDLE, STD_OUTPUT_HANDLE, STD_ERROR_HANDLE};
+  for (DWORD w : which) {
+    HANDLE h = GetStdHandle(w);
+    if (h != nullptr && h != INVALID_HANDLE_VALUE) continue;
+    HANDLE nul = CreateFileW(L"NUL", GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE, nullptr,
+                             OPEN_EXISTING, 0, nullptr);
+    if (nul != INVALID_HANDLE_VALUE) SetStdHandle(w, nul);
+  }
+#endif
+}
+
+char *deskshell_webview2_version(void) {
+#if defined(_WIN32)
+  // Microsoft's documented test: `pv` exists and is neither empty nor 0.0.0.0, for the whole PC or for this account.
+  const wchar_t *key = L"SOFTWARE\\Microsoft\\EdgeUpdate\\Clients\\{F3017226-FE2A-4295-8BDF-00C3A9A7E4C5}";
+  const HKEY roots[] = {HKEY_LOCAL_MACHINE, HKEY_CURRENT_USER};
+  for (HKEY root : roots) {
+    std::wstring version = registry_text(root, key, L"pv");
+    if (!version.empty() && version != L"0.0.0.0") return dup(narrow(version.c_str()));
+  }
+#endif
+  return nullptr;
+}
+
+int deskshell_notice(const char *title, const char *text, int ask) {
+#if defined(_WIN32)
+  std::wstring t = widen(title), body = widen(text);
+  UINT kind = (ask ? MB_YESNO : MB_OK) | MB_ICONINFORMATION | MB_SETFOREGROUND;
+  int answer = MessageBoxW(nullptr, body.c_str(), t.c_str(), kind);
+  return (answer == IDYES || answer == IDOK) ? 1 : 0;
+#else
+  (void)title; (void)text; (void)ask;
+  return 0;
+#endif
+}
+
+void deskshell_open_address(const char *address) {
+#if defined(_WIN32)
+  std::wstring a = widen(address);
+  ShellExecuteW(nullptr, L"open", a.c_str(), nullptr, nullptr, SW_SHOWNORMAL);
+#else
+  (void)address;
+#endif
+}
+
+int deskshell_window_has_icon(deskshell_t s) {
+#if defined(_WIN32)
+  HWND window = static_cast<HWND>(webview_get_window(s->w));
+  return window && SendMessageW(window, WM_GETICON, ICON_BIG, 0) != 0 ? 1 : 0;
+#else
+  (void)s;
+  return 0;
 #endif
 }
 
