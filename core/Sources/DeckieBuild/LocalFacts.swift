@@ -39,8 +39,12 @@ public enum LocalFacts {
     public struct Report: Codable, Equatable, Sendable {
         /// Songs whose key came from each origin (`rekordbox-xml`, `traktor`, `tag`, ...; `apple-mu` for Apple's).
         public var keysFrom: [String: Int] = [:]
-        /// Songs with no key: none of the DJ's programs or tags had one.
+        /// Songs with no key: none of the DJ's programs or tags had one, and Deckie's own reader did not give one.
         public var keysNotRead = 0
+        /// Of those, the songs Deckie's reader read and was not sure of (D33), and the songs where it found the home
+        /// note and left the mode open (shown as no key until the crate can say "mode open").
+        public var keysNotSure = 0
+        public var keysModeOpen = 0
         /// Songs whose programs and tags gave more than one key.
         public var keysDisagree = 0
         /// Songs named, in part or whole, by each way past the tags (`filename`, `folder`, `cue`, `copy`, ...).
@@ -51,6 +55,17 @@ public enum LocalFacts {
         enum CodingKeys: String, CodingKey {
             case keysFrom = "keys_from", keysNotRead = "keys_not_read", keysDisagree = "keys_disagree"
             case namesFrom = "names_from", needName = "need_name"
+            case keysNotSure = "keys_not_sure", keysModeOpen = "keys_mode_open"
+        }
+        public init(from decoder: Decoder) throws {
+            let c = try decoder.container(keyedBy: CodingKeys.self)
+            keysFrom = try c.decodeIfPresent([String: Int].self, forKey: .keysFrom) ?? [:]
+            keysNotRead = try c.decodeIfPresent(Int.self, forKey: .keysNotRead) ?? 0
+            keysDisagree = try c.decodeIfPresent(Int.self, forKey: .keysDisagree) ?? 0
+            namesFrom = try c.decodeIfPresent([String: Int].self, forKey: .namesFrom) ?? [:]
+            needName = try c.decodeIfPresent(Int.self, forKey: .needName) ?? 0
+            keysNotSure = try c.decodeIfPresent(Int.self, forKey: .keysNotSure) ?? 0
+            keysModeOpen = try c.decodeIfPresent(Int.self, forKey: .keysModeOpen) ?? 0
         }
     }
 
@@ -212,9 +227,17 @@ public enum LocalFacts {
             return
         }
 
-        // THE "WHEN SURE" RULE GOES HERE. Whether Deckie's own reading of this song is shown at all: for now always
-        // (the owner's note on D30 and D16 prefers a key), until the key trial gives the per-song rule.
-        let shown: CrateTrack.Key? = own
+        // The "when sure" rule (D33; research X2). Deckie's three-answer reader (`ThreeAnswerKey`, `key.source`
+        // `three-answer`) writes its answer as the block's confidence: 1.0 a key, 0.45 the home note with the mode
+        // open, 0.2 not sure (`KeyConfidence.threeAnswer`). Only a key is shown. A song it was not sure of has no key
+        // ("key not read"), and so, for now, has one whose mode it left open: the crate has no way to say "home note
+        // known, mode open" yet (docs/architecture/crate-format.md, "The mode left open", proposed). A reading from an
+        // engine before 0.5.0 (any other source) is shown as it was.
+        var shown: CrateTrack.Key? = own
+        if let o = own, o.source == threeAnswerSource, o.confidence < 0.5 {
+            shown = nil
+            if o.confidence >= modeOpenConfidence { report.keysModeOpen += 1 } else { report.keysNotSure += 1 }
+        }
 
         guard let first = readings.first else {
             // No key from the DJ: Deckie's own reading, exactly as the engine wrote it, or none.
@@ -246,6 +269,11 @@ public enum LocalFacts {
     }
 
     static let noteNames = ["C", "Db", "D", "Eb", "E", "F", "F#", "G", "Ab", "A", "Bb", "B"]
+
+    /// The three-answer reader's `key.source`, and the confidence it gives "home note, mode open" (DeckieEngine's
+    /// `Analysis.keySource` and `KeyConfidence.modeOpen`, which this module does not import).
+    public static let threeAnswerSource = "three-answer"
+    public static let modeOpenConfidence = 0.45
 
     /// The ladder for one song, or nil when its tags name it fully (nothing to change but a key taken off its title).
     static func name(_ t: CrateTrack, ref: FileRef?, tags: FileTags?, titleKey: (camelot: String, title: String)?,
@@ -337,7 +365,7 @@ public struct LocalFactsSummary: Codable, Equatable, Sendable {
     public var text: String {
         let r = report
         var s = "keys from: " + (r.keysFrom.isEmpty ? "none" : r.keysFrom.sorted { $0.key < $1.key }.map { "\($0.key) \($0.value)" }.joined(separator: ", "))
-            + "; no key: \(r.keysNotRead); programs disagree: \(r.keysDisagree)\n"
+            + "; no key: \(r.keysNotRead) (Deckie not sure: \(r.keysNotSure), home note only: \(r.keysModeOpen)); programs disagree: \(r.keysDisagree)\n"
         s += "names from: " + (r.namesFrom.isEmpty ? "tags only" : r.namesFrom.sorted { $0.key < $1.key }.map { "\($0.key) \($0.value)" }.joined(separator: ", "))
             + "; still need a name: \(r.needName)\n"
         for lib in libraries { s += "  read \(lib.program.rawValue): \(lib.path) (\(lib.songs) songs)\n" }

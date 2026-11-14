@@ -57,6 +57,9 @@ let package = Package(
         .target(name: "DeckieLab", dependencies: ["DeckieCore", "DeckieCrate"]),
         .target(name: "DeckieCrate", dependencies: ["DeckieCore"]),
         .executableTarget(name: "crate-from-lab", dependencies: ["DeckieLab", "DeckieCrate"]),
+        // The parity harness of the three-answer key reader: samples in on standard input, answers out
+        // (mixer/keytrial/kt_three.py `parity`).
+        .executableTarget(name: "deckie-keyparity", dependencies: ["DeckieCore"]),
         .target(name: "CDrMp3"),
         .target(name: "CDrFlac"),
         .target(name: "CMediaFoundation"),
