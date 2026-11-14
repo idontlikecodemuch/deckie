@@ -388,10 +388,14 @@ struct PlainPick: View {
         let ji = joinInfo(cur, target, pair, deckAPitch: rec.source == .manual ? 0 : rec.pitchPct)
         HStack(alignment: .center, spacing: 18) {
             VStack(alignment: .leading, spacing: 5) {
-                Text(target.numberedSong).font(.system(size: big ? 22 : 19, weight: .semibold)).foregroundStyle(Theme.tx).lineLimit(1).minimumScaleFactor(0.75)
+                // A song with no name: the place leads in the title's line ("Friday night / Peak / 02 · no name yet").
+                // Broken by phrase: the place on one line, "no name yet" on the next.
+                Text(target.hasName ? target.numberedSong : target.oneLine.replacingOccurrences(of: " · " + Words.noNameYetInRow, with: "\n" + Words.noNameYetInRow)).font(.system(size: big ? 22 : 19, weight: .semibold)).foregroundStyle(Theme.tx).lineLimit(target.hasName ? 1 : 2).minimumScaleFactor(0.75)
                 HStack(spacing: 14) {
                     Text(target.secondLine).font(.system(size: big ? 14 : 13)).foregroundStyle(Theme.dim).lineLimit(1)
-                    Text(target.folderPath).font(.system(size: big ? 14 : 13, weight: .semibold, design: .rounded)).foregroundStyle(target.on ? target.discColor : Theme.dim).lineLimit(1)
+                    if target.hasName {
+                        Text(target.folderPath).font(.system(size: big ? 14 : 13, weight: .semibold, design: .rounded)).foregroundStyle(target.on ? target.discColor : Theme.dim).lineLimit(1)
+                    }
                 }
                 if let also = Library.shared.alsoOn(target, playingDisc: cur.disc) {
                     Text(also).font(.system(size: big ? 13 : 12, design: .rounded)).foregroundStyle(Theme.dim).lineLimit(1).minimumScaleFactor(0.8)
