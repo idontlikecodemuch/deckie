@@ -1109,6 +1109,39 @@ picture 128 pixels across. **Stated, not hidden: this is a judgement, and the ma
 and the date here, re-quote the licence, then `swift build` and `swift test`: `DeckieCoversTests` pins the bytes of
 two thumbnails, so a change in either library's output shows at once (and is then a new pin, since covers already
 written elsewhere keep their old bytes under the same name, which the format allows).
+## 12. Networking for the lookup (D36): nothing added; Swift's networking on Linux and Windows not adopted
+
+"Look up songs via MusicBrainz" (D36) is the first thing in Deckie that uses the network, all of it in
+`core/Sources/DeckieLookup`. **No dependency was added.** What it uses, checked Nov 14, 2026:
+
+- **On the Mac:** Foundation's URL loading (`URLSession`), part of macOS itself, as the Mac's window already uses the
+  system's other frameworks. Nothing ships for it.
+- **On Linux and Windows: not built.** Swift's Foundation keeps URL loading in a separate library,
+  FoundationNetworking (swift-corelibs-foundation, Apache 2.0 with the Runtime Library Exception, like the rest of
+  the toolchain), and that library is a layer over **libcurl**, whose licence (the "curl license", MIT-style) is not
+  on the allowlist below; the note on D3 of Oct 28 left it off on purpose. `DeckieLookup` therefore does not import
+  FoundationNetworking, and on those systems the lookup says, in plain words, that it is not on this computer yet.
+  What adopting it would mean, from a report-only step in each CI workflow (`What FoundationNetworking would need`):
+  - **Linux** (the `swift:6.4.1-noble` image, run 43571502342): `/usr/lib/swift/linux/libFoundationNetworking.so`
+    links the system's `libcurl.so.4` (Ubuntu's `libcurl4t64` 8.5.0-2ubuntu10.16), and through it, at run time:
+    OpenSSL 3 (`libssl`, `libcrypto`; Apache 2.0), nghttp2 (MIT), libpsl (MIT), brotli (MIT), zstd (BSD), zlib,
+    MIT Kerberos (`libgssapi_krb5`, `libkrb5`, …; MIT), libidn2 and libunistring (LGPL 3 or GPL 2), librtmp (LGPL
+    2.1) with GnuTLS (LGPL 2.1), Nettle, Hogweed and GMP (LGPL 3 or GPL 2), libssh (LGPL 2.1), OpenLDAP (`libldap`,
+    `liblber`; the OpenLDAP Public License, not on the allowlist) with Cyrus SASL (BSD-style), p11-kit (BSD),
+    libtasn1 (LGPL 2.1), libffi (MIT). A shipped Linux build would carry or require all of that, on the user's
+    system or in the package. At build time it needs nothing more than the toolchain image already has.
+  - **Windows** (the Swift 6.4.1 toolchain on GitHub's runner, run 43571502369): `FoundationNetworking.dll`
+    (1,477,120 bytes) imports no curl library: curl is built into it, with Windows' own TLS (the file names
+    Schannel, and imports `CRYPT32`, `bcrypt`, `WS2_32` and `Normaliz`, all part of Windows), beside Swift's own
+    runtime DLLs and the Visual C++ runtime the zip already carries (section 3). Shipping it ships curl's code. At
+    build time it needs nothing the toolchain does not already install.
+- **The ways open, for the owner:** (1) accept the curl licence onto the allowlist (it is permissive: "Permission to
+  use, copy, modify, and distribute this software for any purpose with or without fee is hereby granted, provided
+  that the above copyright notice and this permission notice appear in all copies"), and on Linux decide about the
+  system libraries curl brings, the OpenLDAP licence among them; (2) use each system's own HTTP client, as the Mac
+  does: WinHTTP on Windows (part of Windows, nothing to ship), and on Linux libsoup (LGPL 2.1, dynamically linked,
+  already on any machine with WebKitGTK, which Desk's window needs there anyway), each a second small transport in
+  `DeckieLookup` behind the same interface; (3) leave the lookup Mac-only for now.
 
 ## Checked and rejected
 

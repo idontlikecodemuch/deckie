@@ -160,7 +160,10 @@ final class EngineProcess: @unchecked Sendable {
         #expect((undone["songs"] as? [[String: Any]])?.first { $0["id"] as? String == "aaaa" }?["title"] as? String == "Song A")
 
         // Sources: rename, move, how many a removal takes.
+        let beforeRename = e.received.count
         _ = try e.request("source.rename", ["source": "Stick 3", "name": "Stick Three"])
+        // The rename's own songs event comes after its reply: let it arrive before marking where the move starts.
+        _ = e.wait(from: beforeRename) { $0["event"] as? String == "songs" }
         let beforeMove = e.received.count
         _ = try e.request("song.move", ["song": "bbbb", "source": "Stick Three", "folder": "House", "by": -1])
         // The songs event follows the reply; wait for it rather than take the last one seen.
