@@ -152,10 +152,10 @@ extension RecognitionIndex {
     /// booth's settings and from the same songs (`stamp`); otherwise builds the index from `songs()` (the crate
     /// file's fingerprints), writes it to `url`, and opens that. So the building happens once per crate file, the
     /// first time the booth sees it, and what is used afterwards is always the mapped file.
-    public static func cached(at url: URL, stamp: String, sameRecording: [String?] = [],
+    public static func cached(at url: URL, stamp: String, sameRecording: [String?] = [], pairing: PairingConfig = .booth,
                               songs: () -> [(id: String, landmarks: Landmarks)]) throws -> RecognitionIndex {
-        if let kept = try? RecognitionIndex(contentsOf: url), kept.stamp == stamp, kept.settingsMatch(PairingConfig.booth) { return kept }
-        let built = RecognitionIndex(songs: songs(), pairing: PairingConfig.booth, stamp: stamp, sameRecording: sameRecording)
+        if let kept = try? RecognitionIndex(contentsOf: url), kept.stamp == stamp, kept.settingsMatch(pairing) { return kept }
+        let built = RecognitionIndex(songs: songs(), pairing: pairing, stamp: stamp, sameRecording: sameRecording)
         try built.write(to: url)
         return try RecognitionIndex(contentsOf: url)
     }
