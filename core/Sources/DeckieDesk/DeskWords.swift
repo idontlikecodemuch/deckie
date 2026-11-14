@@ -319,9 +319,7 @@ public enum DeskWords {
         "musicCDPlaceholder.other": "Music CD, {n} songs, {length}",
         "askDiscNameTitle": "What's written on this disc?",
         "askDiscNameBody": "Desk names it after that. Reading carries on meanwhile, and you can change the name any time.",
-        "stageCopying": "Copying the songs off the disc",
-        "lineCopied": "Song {number} of {of} copied off the disc",
-        "lineCopiedDamaged": "Song {number} of {of} copied off the disc; part of it couldn't be read and is silence",
+        "lineDiscDamaged": "Song {number}: part of it couldn't be read off the disc and was read as silence",
         "putDiscBack": "Put {read} back in the drive to carry on.",
         // new: the finished screen (letter AA, 3.2).
         "needNameHelp": "They work in the booth as they are. A name makes them easier to find.",
@@ -329,9 +327,8 @@ public enum DeskWords {
         "discDriveNoNames": "The drive gave no names. The disc may have none, or this drive may not pass them on.",
         "discNamed.one": "1 song took its name from the disc.",
         "discNamed.other": "{n} songs took their names from the disc.",
-        "discDamaged": "Some of the disc couldn't be read, even on a second try. Those parts are silence in Desk's copy.",
+        "discDamaged": "Some of the disc couldn't be read, even on a second try. Desk read those parts as silence.",
         "nameThem": "Name them",
-        "discCopyRoom": "Desk keeps a copy of the disc's songs, about {size}, to read them and to listen. It goes when you remove the disc from the crate.",
         // new: the list of songs that need a name (letter AA, 3.3).
         "needsNameFilter": "Needs a name ({n})",
         "colWhy": "Why",

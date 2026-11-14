@@ -19,6 +19,9 @@ import DeckieCrate
 ///       records/<id>.json            the analysis (the builder's work record)
 ///       signatures/<id>_<v>.*        a recognition signature and who made it when
 ///       prints/<id>.print            the print that finds copies of the same recording
+///       discs/<disc id>.json         what was learned from a music CD: its table, its CD-Text, each song's id
+///     Reading/<disc id>/Track 07.wav the one song being read off a music CD by sector (Linux, Windows), removed as
+///                                    soon as that song is done; Desk never keeps a song's sound (`DiscSongs.swift`)
 ///     Outbox/<name>.deckiecrate      the last crate file handed to the share sheet
 public struct DeskHome: Sendable, Equatable {
     /// Overrides the place (tests and manual runs use it so nothing touches the real app storage).

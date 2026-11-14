@@ -33,6 +33,8 @@ public final class DeskProtocol: @unchecked Sendable {
     private var runningDisc: String?
     /// Opens a music CD by its location; a test gives a stand-in.
     public var openMusicCD: @Sendable (String) throws -> MusicCD = { try MusicCDs.open($0) }
+    /// The drives holding a music CD now (the environment's stand-ins, when it names some).
+    var listMusicCDs: () -> [MusicCDs.Found] { { [environment] in MusicCDs.list(environment: environment) } }
 
     public init(home: DeskHome, output: @escaping Output, makeRun: @escaping RunMaker,
                 analysisCheck: () throws -> Void = { try Builder.checkEngine() },
@@ -86,7 +88,8 @@ public final class DeskProtocol: @unchecked Sendable {
         }
         var pending: Any = NSNull()
         if let p = session.pending {
-            pending = ["name": p.name, "folder": p.folder, "here": DeskRun.canCarryOn(p, home: session.home),
+            pending = ["name": p.name, "folder": p.folder,
+                       "here": DeskRun.canCarryOn(p, home: session.home, open: openMusicCD, musicCDs: listMusicCDs),
                        "musicCD": p.musicCD != nil] as [String: Any]
         }
         send(["event": "state", "crates": crates, "current": current, "pending": pending, "running": running,
@@ -284,6 +287,8 @@ public final class DeskProtocol: @unchecked Sendable {
         sendState()
         let run = makeRun(session.home, info.id, request)
         run.openMusicCD = openMusicCD
+        let env = environment
+        run.findMusicCDs = { MusicCDs.list(environment: env) }
         let done = DispatchSemaphore(value: 0)
         runThreadDone = done
         let thread = Thread { [self] in
@@ -342,8 +347,8 @@ public final class DeskProtocol: @unchecked Sendable {
             case .reused: return ["kind": "reused", "rel": rel]
             case let .failed(f): return ["kind": "notRead", "rel": rel, "reason": f.reason]
             }
-        case let .copied(number, of, damaged):
-            return ["kind": "copied", "number": number, "of": of, "damaged": damaged]
+        case let .discDamaged(number, sectors):
+            return ["kind": "discDamaged", "number": number, "sectors": sectors]
         }
     }
 
@@ -369,13 +374,23 @@ public final class DeskProtocol: @unchecked Sendable {
     /// A song's sound for the window to play (docs/architecture/desk-protocol.md, "Listen"): the reply says its media
     /// type, size and where listening starts (a third of the way in, letter AA 3.7), then `audio.chunk` events carry
     /// it in order, base64, over the same standard output as every other message. With `decoded`, the shared decoder
-    /// turns it into 16-bit WAV first, for a file type the web view cannot play. The page is never told a path. Called
-    /// with the lock held.
+    /// turns it into 16-bit WAV first, for a file type the web view cannot play. A song on a music CD is read off the
+    /// disc now, as WAV, held only while it is sent (nothing is written). The page is never told a path. Called with
+    /// the lock held.
     func sendAudio(_ song: String, decoded: Bool, _ id: Any?) throws {
-        let url: URL
-        do { url = try session.audioFile(song) }
-        catch let e as DeskSession.NotHere { throw RequestError(code: "not_here", detail: e.source) }
+        let sound: DeskAudio.Sound
+        do { sound = try session.audio(song, open: openMusicCD, musicCDs: listMusicCDs) }
+        catch let e as DeskAudio.NotHere { throw RequestError(code: "not_here", detail: e.source) }
         var data: Data
+        let url: URL
+        switch sound {
+        case let .disc(cd, s):
+            do { data = try DeskAudio.read(cd, s) }
+            catch { throw RequestError(code: "not_here", detail: session.crate?.tracks.first { $0.id == song }?.ident.disc ?? "") }
+            try sendChunks(song, data: data, type: "audio/wav", kind: "WAV", id)
+            return
+        case let .file(u): url = u
+        }
         var type = Self.mediaType(url.pathExtension)
         if decoded {
             do {
@@ -386,11 +401,16 @@ public final class DeskProtocol: @unchecked Sendable {
         } else {
             data = try Data(contentsOf: url, options: [.mappedIfSafe])
         }
+        try sendChunks(song, data: data, type: type, kind: url.pathExtension.uppercased(), id)
+    }
+
+    /// The reply for `song.audio`, then the sound in `audio.chunk` events.
+    func sendChunks(_ song: String, data: Data, type: String, kind: String, _ id: Any?) throws {
         let seconds = session.crate?.tracks.first { $0.id == song }?.file.durationS ?? 0
         let chunks = max(1, (data.count + Self.audioChunk - 1) / Self.audioChunk)
         let token = UUID().uuidString.lowercased()
         reply(id, ["type": type, "bytes": data.count, "chunks": chunks, "token": token, "seconds": seconds,
-                   "start": DeskListen.start(seconds), "kind": url.pathExtension.uppercased()])
+                   "start": DeskListen.start(seconds), "kind": kind])
         for i in 0..<chunks {
             let part = data.subdata(in: (i * Self.audioChunk)..<min(data.count, (i + 1) * Self.audioChunk))
             send(["event": "audio.chunk", "token": token, "song": song, "index": i, "of": chunks, "data": part.base64EncodedString()])

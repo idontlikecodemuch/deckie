@@ -102,7 +102,7 @@
       case "songs": songs = m; break;
       case "run.started":
         finished = null; exportedPath = null; stopListening(); $("run-log").replaceChildren();
-        run = { read: m.read, crateName: m.crateName, done: 0, total: 0, stage: m.musicCD ? "copying" : "reading", remaining: null, lines: [] };
+        run = { read: m.read, crateName: m.crateName, done: 0, total: 0, stage: "reading", remaining: null, lines: [] };
         askDisc(m.askName);
         break;
       case "audio.chunk":
@@ -138,7 +138,7 @@
     else if (l.kind === "read") s = t("lineRead", { rel: l.rel, seconds: Number(l.seconds).toFixed(1) });
     else if (l.kind === "reused") s = t("lineReadBefore", { rel: l.rel });
     else if (l.kind === "notRead") s = t("lineNotRead", { rel: l.rel, reason: reason(l.reason).toLowerCase() });
-    else if (l.kind === "copied") s = t(l.damaged > 0 ? "lineCopiedDamaged" : "lineCopied", { number: l.number, of: l.of });
+    else if (l.kind === "discDamaged") s = t("lineDiscDamaged", { number: l.number });
     if (!s) return;
     run.lines.push(s);
     if (run.lines.length > 400) run.lines.shift();
@@ -162,7 +162,7 @@
     } else {
       bar.classList.add("waiting"); bar.removeAttribute("aria-valuenow"); $("run-count").textContent = "";
     }
-    $("run-stage").textContent = t({ copying: "stageCopying", reading: "stageReading", finishing: "stageFinishing", saving: "stageSaving" }[run.stage] || "stageReading");
+    $("run-stage").textContent = t({ reading: "stageReading", finishing: "stageFinishing", saving: "stageSaving" }[run.stage] || "stageReading");
     $("run-left").textContent = run.remaining != null ? timeLeft(run.remaining) : "";
   }
 
@@ -245,7 +245,6 @@
       box.append(named);
       if (need) line(t("needNameHelp"), "mut");
       if (d && d.damaged_sectors > 0) line(t("discDamaged"), "mut");
-      if (d && d.bytes) line(t("discCopyRoom", { size: megabytes(d.bytes) }), "mut");
       if ((local.libraries || []).length) line(t("librariesRead", { names: local.libraries.map((l) => programName(l.program)).join(", ") }), "mut");
       for (const f of local.failed || []) line(t("couldntReadLibrary", { detail: f }), "mut");
       if (local.rekordbox_locked) line(t("rekordboxLocked"), "mut");
@@ -258,7 +257,6 @@
   }
 
   const parentOf = (p) => p.replace(/[\\/][^\\/]*[\\/]?$/, "") || p;
-  const megabytes = (b) => (b >= 1e9 ? (b / 1e9).toFixed(1) + " GB" : Math.max(1, Math.round(b / 1e6)) + " MB");
 
   // ---- the songs table
   const columns = [

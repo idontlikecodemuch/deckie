@@ -166,7 +166,6 @@ struct RunView: View {
 
     private var stage: String {
         switch model.runStage {
-        case .copying: return Words.stageCopying
         case .reading: return Words.stageReading
         case .finishing: return Words.stageFinishing
         case .saving: return Words.stageSaving
@@ -208,7 +207,6 @@ struct FinishedView: View {
                     }
                     if need > 0 { Text(Words.t("needNameHelp")).foregroundStyle(.secondary) }
                     if let d = report.disc, d.damagedSectors > 0 { Text(Words.t("discDamaged")).foregroundStyle(.secondary) }
-                    if let d = report.disc, d.bytes > 0 { Text(Words.t("discCopyRoom", ["size": Words.megabytes(d.bytes)])).foregroundStyle(.secondary) }
                     ForEach(LocalLines.notes(local), id: \.self) { Text($0).foregroundStyle(.secondary) }
                 }
                 Text(Words.took(report.seconds, perMinute: report.songsPerMinute)).foregroundStyle(.secondary)

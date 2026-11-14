@@ -14,8 +14,9 @@ public struct RunRequest: Codable, Equatable, Sendable {
     public var folder: String
     public var source: String?
     public var rekordbox: String?
-    /// A music CD (research AA): where the disc is (`MusicCDs.Found.location`) and its id. `folder` is then the
-    /// disc's copy in Desk's storage (`DiscCopies`), which the run fills first.
+    /// A music CD (research AA): where the disc is (`MusicCDs.Found.location`, also `folder`) and its id. Its songs
+    /// are read off the disc one at a time and none is kept (`DiscSongs.swift`); a run that stopped carries on when
+    /// the same disc is in a drive again.
     public var musicCD: String?
     public var discId: String?
     public init(folder: URL, source: String?, rekordbox: URL? = nil, musicCD: String? = nil, discId: String? = nil) {
@@ -29,7 +30,7 @@ public struct RunRequest: Codable, Equatable, Sendable {
 
 /// The stage a run is in. One count goes through all of them: a song is done when it is read, its signature made and
 /// its print made.
-public enum RunStage: String, Codable, Sendable { case copying, reading, finishing, saving }
+public enum RunStage: String, Codable, Sendable { case reading, finishing, saving }
 
 /// A run's progress: songs done of the songs found, and an estimate of the seconds left (nil until there is
 /// something to estimate from).
@@ -48,9 +49,9 @@ public enum RunLine: Sendable, Equatable {
     case started(files: Int, unchanged: Int, queued: Int)
     /// A file was read: its path (the source's name first) and what happened.
     case file(rel: String, outcome: FileProgress.Outcome)
-    /// A music CD's song was copied off the disc: its number, how many songs the disc has, and the sectors (1/75 s)
-    /// that could not be read even on a second try and are silence in the copy.
-    case copied(number: Int, of: Int, damaged: Int)
+    /// Part of a music CD's song could not be read even on a second try: its number, and the sectors (1/75 s each)
+    /// that were read as silence.
+    case discDamaged(number: Int, sectors: Int)
 }
 
 /// What a run did, measured as it ran (no tuning: these are for collecting real timings). Shown on the finished
@@ -132,8 +133,10 @@ public final class DeskRun: @unchecked Sendable {
     let analyser: Analyser?
     let signer: SignatureMaker?
     let printer: PrintMaker
-    /// Opens a music CD by its location (`MusicCDs.open`; a test gives a stand-in).
+    /// Opens a music CD by its location (`MusicCDs.open`; a test gives a stand-in), and lists the drives holding
+    /// one (to find the disc when it is in another drive).
     public var openMusicCD: (String) throws -> MusicCD = { try MusicCDs.open($0) }
+    public var findMusicCDs: () -> [MusicCDs.Found] = { MusicCDs.list() }
 
     public init(home: DeskHome, crateId: String, request: RunRequest, jobs: Int, device: String,
                 fileBPMTags: Bool = true, analyser: Analyser? = nil, signer: SignatureMaker?, printer: @escaping PrintMaker) {
@@ -147,13 +150,13 @@ public final class DeskRun: @unchecked Sendable {
     public static let placesFile = "places.json"
     public static let namesFile = NameBook.file
 
-    /// Whether a run that stopped can carry on now: its folder is here, and for a music CD, its songs are all copied
-    /// or the disc is in a drive.
-    public static func canCarryOn(_ r: RunRequest, home: DeskHome) -> Bool {
-        guard r.musicCD != nil else { return FileManager.default.fileExists(atPath: r.folder) }
-        if let rec = DiscCopies.record(r.folderURL), rec.copied.count >= rec.toc.songs.count { return true }
-        guard let loc = r.musicCD, let cd = try? MusicCDs.open(loc), let toc = try? cd.tableOfContents() else { return false }
-        return toc.id == r.discId
+    /// Whether a run that stopped can carry on now: its folder is here, or for a music CD, the same disc is in a
+    /// drive.
+    public static func canCarryOn(_ r: RunRequest, home: DeskHome,
+                                  open: (String) throws -> MusicCD = { try MusicCDs.open($0) },
+                                  musicCDs: () -> [MusicCDs.Found] = { MusicCDs.list() }) -> Bool {
+        guard let id = r.discId, r.musicCD != nil else { return FileManager.default.fileExists(atPath: r.folder) }
+        return DiscRecords.find(id, near: r.musicCD, open: open, musicCDs: musicCDs) != nil
     }
 
     /// The run a crate has left unfinished, if any.
@@ -190,35 +193,20 @@ public final class DeskRun: @unchecked Sendable {
         let carriedOn = FileManager.default.fileExists(atPath: pendingURL.path)
         try JSONFile.write(request, to: pendingURL)
 
-        let folder = request.folderURL
         let fm = FileManager.default
-        // 0. A music CD: its songs copied off the disc into Desk's storage first, unless they all are already.
-        var discRecord: DiscCopies.Record? = nil
-        if let location = request.musicCD {
-            discRecord = DiscCopies.record(folder)
-            let songs = discRecord?.toc.songs.count ?? 0
-            if discRecord == nil || discRecord!.copied.count < songs {
-                let cd = try openMusicCD(location)
-                if discRecord == nil || (try? cd.tableOfContents().id) != request.discId {
-                    guard let prepared = try? DiscCopies.prepare(cd, home: home), prepared.folder == folder else {
-                        throw DeskError("the disc in the drive is not \(request.name); put \(request.name) back in to carry on")
-                    }
-                    discRecord = prepared.record
-                }
-                let total = discRecord!.toc.songs.count
-                progress(RunProgress(stage: .copying, done: discRecord!.copied.count, total: total, remaining: nil, line: nil))
-                let started = Date()
-                var copiedNow = 0
-                discRecord = try DiscCopies.copySongs(cd, folder: folder, progress: { _, _, _, _ in },
-                                                     copiedSong: { number, damaged in
-                    copiedNow += 1
-                    let done = (DiscCopies.record(folder)?.copied.count) ?? copiedNow
-                    let rate = Date().timeIntervalSince(started) / Double(copiedNow)
-                    progress(RunProgress(stage: .copying, done: done, total: total, remaining: rate * Double(total - done),
-                                         line: .copied(number: number, of: total, damaged: damaged)))
-                })
+        // 0. A music CD: the disc in a drive (the one asked for; a stopped run carries on only with it), what Desk
+        // knows of it, and its songs for the builder, read one at a time and none kept.
+        DiscReading.clearLeftovers(home)
+        let disc = try request.discId.flatMap { id -> DiscSongFiles? in
+            guard request.musicCD != nil else { return nil }
+            guard let cd = DiscRecords.find(id, near: request.musicCD, open: openMusicCD, musicCDs: findMusicCDs) else {
+                throw DeskError("\(request.name) is not in a drive. Put \(request.name) back in to carry on.")
             }
+            return DiscSongFiles(cd: cd, record: try DiscRecords.prepare(cd, home: home), home: home, store: store,
+                                 needsSignature: signer != nil)
         }
+        let folder = disc.map { URL(fileURLWithPath: $0.cd.location) } ?? request.folderURL
+        defer { disc?.clear() }
         let before = fm.fileExists(atPath: pkg.appendingPathComponent(CrateFormat.manifestFile).path)
             ? try CrateReader.read(from: pkg) : nil
         let keep: Set<String> = request.source == nil
@@ -226,7 +214,8 @@ public final class DeskRun: @unchecked Sendable {
             : []
         let options = BuildOptions(folder: folder, output: pkg, rekordbox: request.rekordbox.map { URL(fileURLWithPath: $0) },
                                    jobs: jobs, fileBPMTags: fileBPMTags, fresh: false, name: info.name, device: device,
-                                   source: request.source, keepSources: keep, sharedRecords: store.records)
+                                   source: request.source, keepSources: keep, sharedRecords: store.records,
+                                   files: disc)
         let prefix = request.source.map { $0 + "/" } ?? ""
         let state = State()
         let queue = DispatchQueue(label: "deckie.desk.finish", qos: .userInitiated)
@@ -284,7 +273,8 @@ public final class DeskRun: @unchecked Sendable {
 
         // 1. Read: the builder, with each song finished as soon as it is read.
         let builder = try Builder(options: options, analyser: analyser)
-        let result = try builder.run { event in
+        let result: BuildResult
+        do { result = try builder.run { event in
             switch event {
             case let .started(files, unchanged, queued, _, _):
                 state.lock.lock(); state.total = files; state.lock.unlock()
@@ -294,7 +284,16 @@ public final class DeskRun: @unchecked Sendable {
                 state.builderRemaining = p.remaining; state.builderStamp = Date()
                 if p.id == nil { state.done += 1 } else { state.waiting += 1 }
                 state.lock.unlock()
-                if let id = p.id {
+                if let id = p.id, let disc {
+                    // A music CD's song is finished now, while its file is here; then the builder lets it go.
+                    // One worked out before was not read: its signature and print are in the store already.
+                    let url = disc.file(rel: p.rel)
+                    if url != nil { disc.learned(rel: p.rel, id: id) }
+                    finish(id, url ?? folder.appendingPathComponent(String(p.rel.dropFirst(prefix.count))))
+                    state.lock.lock(); state.waiting -= 1; state.done += 1; state.lock.unlock()
+                    let damaged = disc.damaged(rel: p.rel)
+                    if damaged > 0, let n = DiscSongFiles.number(of: p.rel) { emit(.reading, .discDamaged(number: n, sectors: damaged)) }
+                } else if let id = p.id {
                     let url = folder.appendingPathComponent(String(p.rel.dropFirst(prefix.count)))
                     queue.async {
                         finish(id, url)
@@ -306,6 +305,9 @@ public final class DeskRun: @unchecked Sendable {
             case .writing:
                 break
             }
+        } } catch let e as DiscError where disc != nil {
+            // The disc came out, or the drive stopped answering: nothing of this read is written; carry on asks for it.
+            throw DeskError("\(request.name) could not be read (\(e.description)). Put \(request.name) back in to carry on.")
         }
         queue.sync {}
         let buildSeconds = Date().timeIntervalSince(t0)
@@ -318,7 +320,10 @@ public final class DeskRun: @unchecked Sendable {
         var newPaths = paths
         newPaths.record(result.placesRead, source: request.source, keep: keep)
         newPaths.fillMissingPaths(&crate)
-        if let s = request.source { info.sourceRoots[s] = folder.path } else { info.musicFolder = folder.path }
+        if let s = request.source {
+            info.sourceRoots[s] = folder.path
+            info.discs[s] = disc?.base.toc.id
+        } else { info.musicFolder = folder.path }
         let roots = info.roots, music = info.musicFolderURL
         let todo = crate.tracks.filter { t in
             state.lock.lock(); defer { state.lock.unlock() }
@@ -392,10 +397,9 @@ public final class DeskRun: @unchecked Sendable {
             copies: copies, songsInCrate: crate.tracks.count,
             songsPerMinute: seconds > 0 ? Double(result.filesSeen) / seconds * 60 : 0,
             jobs: jobs, device: device, engine: Builder.engineLabel, carriedOn: carriedOn, local: local,
-            disc: discRecord.map { r in
+            disc: disc.map(\.current).map { r in
                 DiscReport(text: r.text, songs: r.toc.songs.count, named: request.source.flatMap { discNamed[$0] } ?? 0,
-                           damagedSectors: r.damagedSectors, titled: r.discTitle != nil,
-                           bytes: Int64(r.toc.songs.reduce(0) { $0 + $1.sectors } * DiscTOC.bytesPerSector))
+                           damagedSectors: r.damagedSectors, titled: r.discTitle != nil)
             })
         state.lock.unlock()
         try Self.appendRun(report, to: shelf.file(Self.runsFile, of: crateId))

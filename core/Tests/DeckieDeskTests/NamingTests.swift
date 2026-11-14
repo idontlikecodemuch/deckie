@@ -179,8 +179,42 @@ func songs(_ tracks: [CrateTrack], book: NameBook = NameBook(), fixes: NameCorre
     }
 }
 
-/// A music CD through the one run, with the stand-in drive: copied off, named from its CD-Text, its source named after
-/// the disc, the songs placed by number; a disc with no names; the copy kept once and removed with the source.
+/// Every file of music under `folder` (by the audio extensions, and the stand-in's raw sound and part files): Desk
+/// keeps none in its storage, from any source (the note on D33, Nov 14).
+func musicFiles(under folder: URL) -> [String] {
+    let kinds = AudioFiles.extensions.union(["pcm", "part", "cda"])
+    guard let e = FileManager.default.enumerator(at: folder, includingPropertiesForKeys: nil) else { return [] }
+    return e.compactMap { ($0 as? URL).flatMap { kinds.contains($0.pathExtension.lowercased()) ? $0.path : nil } }
+}
+
+/// A drive whose disc can be taken out part way through a run and put back: wraps the stand-in.
+final class Tray: SectorDevice, @unchecked Sendable {
+    let inner: StandInDrive
+    /// Taken out when a sector at or past this one is asked for.
+    var outAt: Int?
+    var out = false
+    var sectorsRead = 0
+    init(_ inner: StandInDrive) { self.inner = inner }
+    func tocBytes() throws -> (bytes: [UInt8], format: Int) {
+        if out { throw DiscError("no disc") }
+        return try inner.tocBytes()
+    }
+    func cdTextBytes() throws -> [UInt8] {
+        if out { throw DiscError("no disc") }
+        return try inner.cdTextBytes()
+    }
+    func audio(from lba: Int, sectors: Int) throws -> [UInt8] {
+        if let o = outAt, lba >= o { out = true; outAt = nil }
+        if out { throw DiscError("no disc") }
+        sectorsRead += sectors
+        return try inner.audio(from: lba, sectors: sectors)
+    }
+}
+
+/// A music CD through the one run, with the stand-in drive: read song by song and none of it kept, named from its
+/// CD-Text, its source named after the disc, the songs placed by number; the same disc again reads nothing; Listen
+/// reads the song off the disc and asks for the disc when it is out; a disc taken out part way is asked for and the
+/// run carries on with only what is left; a disc with no names.
 @Suite(.enabled(if: Engine.available, "needs ONNX Runtime and the Beat This! model"))
 struct MusicCDRunTests {
     static func pcm(_ b: AudioBuffer) -> [Int16] { b.samples.map { Int16(max(-1, min(1, $0)) * 32767) } }
@@ -195,7 +229,7 @@ struct MusicCDRunTests {
         try DiscFixture.writeStandIn(folder, songs: [pcm(b), pcm(quiet)], cdText: text, gap: 75)
     }
 
-    @Test func aMusicCDIsCopiedNamedAndPlaced() async throws {
+    @Test func aMusicCDIsReadNamedAndPlacedAndNoneOfItIsKept() async throws {
         let root = try scratch("music-cd")
         let disc = root.appendingPathComponent("E")
         try Self.makeDisc(disc, names: true)
@@ -206,42 +240,129 @@ struct MusicCDRunTests {
         let open: (String) throws -> MusicCD = { _ in SectorMusicCD(location: disc.path, device: drive) }
         let (request, ask) = try s.addMusicCDRequest(disc.path, open: open)
         #expect(request.source == "Friday night" && ask == nil)
+        let discId = try #require(request.discId)
         let info = try s.crateForRun(request)
         let analyser = try Builder.makeAnalyser(jobs: 1)
-        func run(_ r: RunRequest) throws -> (crate: Crate, report: RunReport) {
-            let run = DeskRun(home: home, crateId: info.id, request: r, jobs: 1, device: "Mac15,6", analyser: analyser,
-                              signer: nil, printer: DeskRun.portablePrint)
+        /// Each song's file, while it was being read: where it was and whether it was there.
+        final class Seen: @unchecked Sendable { var files: [URL] = [] }
+        let seen = Seen()
+        func run(_ r: RunRequest, crate: String) throws -> (crate: Crate, report: RunReport) {
+            let run = DeskRun(home: home, crateId: crate, request: r, jobs: 4, device: "Mac15,6", analyser: analyser,
+                              signer: nil, printer: { url in
+                                  seen.files.append(url)
+                                  // Only the song being read is there, nothing else of the disc.
+                                  #expect(musicFiles(under: home.root).map { URL(fileURLWithPath: $0).lastPathComponent }
+                                          == [url.lastPathComponent])
+                                  return try DeskRun.portablePrint(url)
+                              })
             run.openMusicCD = open
+            run.findMusicCDs = { [] }
             return try run.run()
         }
-        let (c, report) = try await CPUTurns.exclusive { try run(request) }
+        let (c, report) = try await CPUTurns.exclusive { try run(request, crate: info.id) }
         s.runEnded(info.id)
         #expect(report.wentIn == 2)
         #expect(report.disc?.text == "names" && report.disc?.songs == 2 && report.disc?.named == 2)
-        #expect(report.disc?.damagedSectors == 0 && report.disc?.titled == true && (report.disc?.bytes ?? 0) > 0)
+        #expect(report.disc?.damagedSectors == 0 && report.disc?.titled == true)
         let sorted = c.tracks.sorted { ($0.ident.track ?? 0) < ($1.ident.track ?? 0) }
         #expect(sorted.map(\.ident.track) == [1, 2])
         #expect(sorted.allSatisfy { $0.ident.disc == "Friday night" })
+        #expect(sorted.map(\.file.rel) == ["Track 01.wav", "Track 02.wav"])
         #expect(sorted[0].ident.title == "Night drive" && sorted[0].ident.artist == "Artist A")
         // No performer for song 2: the disc's performer stands in.
         #expect(sorted[1].ident.title == "Café Ünder" && sorted[1].ident.artist == "DJ Vera")
         let row = try #require(s.rows.first { $0.id == sorted[0].id })
         #expect(row.names?.title.from == "cdtext" && row.names?.title.guess == true && row.nameReason == "guess")
         #expect(row.names?.release.value == "Friday night")
-        // The copy: in Desk's storage, by the disc's id, the songs cut where the table says.
-        let copy = request.folderURL
-        #expect(DiscCopies.isCopy(copy, home: home))
-        #expect(FileManager.default.fileExists(atPath: copy.appendingPathComponent("Track 01.wav").path))
-        #expect(DiscCopies.size(home) > 0)
-        // The same disc again: nothing is copied twice.
+        // Read one song at a time, each removed when it was done: none of the music is in Desk's storage now.
+        #expect(seen.files.count == 2)
+        #expect(seen.files.allSatisfy { $0.path.hasPrefix(DiscReading.folder(home).path) })
+        #expect(musicFiles(under: home.root).isEmpty)
+        #expect(!FileManager.default.fileExists(atPath: DiscReading.folder(home).path))
+        #expect(!FileManager.default.fileExists(atPath: home.root.appendingPathComponent("Discs").path))
+        // What Desk keeps: the disc's id with the source, and what it learned from the disc.
+        #expect(s.current?.discs["Friday night"] == discId)
+        let record = try #require(DiscRecords.record(home, disc: discId))
+        #expect(record.songs.map(\.id) == sorted.map(\.id))
+        #expect(record.titles[1] == "Night drive")
+        // The same disc again, in this crate or another: nothing is read off it.
         let reads = drive.reads
-        _ = try await CPUTurns.exclusive { try run(request) }
+        _ = try await CPUTurns.exclusive { try run(request, crate: info.id) }
         #expect(drive.reads == reads)
-        // Listen finds the copy.
-        #expect(try s.audioFile(sorted[0].id).lastPathComponent == "Track 01.wav")
-        // Removing the disc from the crate removes the copy.
+        let other = try home.shelf.make(name: "Another")
+        let (again, _) = try await CPUTurns.exclusive { try run(request, crate: other.id) }
+        #expect(drive.reads == reads)
+        #expect(Set(again.tracks.map(\.id)) == Set(sorted.map(\.id)))
+        s.runEnded(info.id)
+        // Listen reads the song off the disc when asked, as WAV, and writes nothing.
+        guard case let .disc(cd, song) = try s.audio(sorted[0].id, open: open, musicCDs: { [] }) else {
+            Issue.record("Listen did not go to the disc"); return
+        }
+        #expect(song.number == 1)
+        let wav = try DeskAudio.read(cd, song)
+        #expect(wav.count == 44 + song.sectors * 2352 && wav.prefix(4) == Data("RIFF".utf8))
+        #expect(musicFiles(under: home.root).isEmpty)
+        // With the disc out, it says which to put back.
+        let out: (String) throws -> MusicCD = { _ in throw DiscError("no disc") }
+        #expect(throws: DeskAudio.NotHere.self) { _ = try s.audio(sorted[0].id, open: out, musicCDs: { [] }) }
+        do { _ = try s.audio(sorted[1].id, open: out, musicCDs: { [] }) } catch let e as DeskAudio.NotHere {
+            #expect(e.source == "Friday night")
+        }
+        // In another drive, it is found there by its id.
+        let elsewhere = MusicCDs.Found(location: "F", drive: "F", songs: 2, seconds: 0, discId: discId)
+        let moved: (String) throws -> MusicCD = { loc in
+            guard loc == "F" else { throw DiscError("no disc") }
+            return SectorMusicCD(location: "F", device: drive)
+        }
+        guard case .disc = try s.audio(sorted[0].id, open: moved, musicCDs: { [elsewhere] }) else {
+            Issue.record("the disc in another drive was not found"); return
+        }
+        // Removing the disc from the crate forgets its id there.
         try s.removeSource("Friday night")
-        #expect(!FileManager.default.fileExists(atPath: copy.path))
+        #expect(s.current?.discs["Friday night"] == nil)
+    }
+
+    /// The disc taken out part way: the run stops and nothing of the song being read is left; the window asks for
+    /// the disc; put back, the run carries on and reads only the song that was not done.
+    @Test func aDiscTakenOutIsAskedForAndTheRunCarriesOn() async throws {
+        let root = try scratch("music-cd-out")
+        let disc = root.appendingPathComponent("E")
+        try Self.makeDisc(disc, names: true)
+        let home = DeskHome(root: root.appendingPathComponent("home"))
+        try home.prepare()
+        let s = DeskSession(home: home)
+        let tray = Tray(StandInDrive(folder: disc))
+        let open: (String) throws -> MusicCD = { _ in SectorMusicCD(location: disc.path, device: tray) }
+        let (request, _) = try s.addMusicCDRequest(disc.path, open: open)
+        let toc = try open(disc.path).tableOfContents()
+        let info = try s.crateForRun(request)
+        let analyser = try Builder.makeAnalyser(jobs: 1)
+        func run(_ r: RunRequest) throws -> (crate: Crate, report: RunReport) {
+            let run = DeskRun(home: home, crateId: info.id, request: r, jobs: 1, device: "Mac15,6", analyser: analyser,
+                              signer: nil, printer: DeskRun.portablePrint)
+            run.openMusicCD = open
+            run.findMusicCDs = { [] }
+            return try run.run()
+        }
+        // Out part way through song 2.
+        tray.outAt = toc.songs[1].start + 40
+        await #expect(throws: DeskError.self) { _ = try await CPUTurns.exclusive { try run(request) } }
+        s.runEnded(info.id)
+        #expect(musicFiles(under: home.root).isEmpty)
+        #expect(!FileManager.default.fileExists(atPath: DiscReading.folder(home).path))
+        let pending = try #require(s.pending)
+        #expect(pending.musicCD != nil)
+        #expect(!DeskRun.canCarryOn(pending, home: home, open: open, musicCDs: { [] }))
+        // Put back: carries on, and reads song 2 only.
+        tray.out = false
+        #expect(DeskRun.canCarryOn(pending, home: home, open: open, musicCDs: { [] }))
+        tray.sectorsRead = 0
+        let (c, report) = try await CPUTurns.exclusive { try run(pending) }
+        #expect(report.carriedOn && report.wentIn == 2 && c.tracks.count == 2)
+        #expect(tray.sectorsRead == toc.songs[1].sectors)
+        #expect(musicFiles(under: home.root).isEmpty)
+        s.runEnded(info.id)
+        #expect(s.pending == nil)
     }
 
     @Test func aDiscWithNoNamesAsksForItsName() async throws {
@@ -262,14 +383,48 @@ struct MusicCDRunTests {
         let run = DeskRun(home: home, crateId: info.id, request: request, jobs: 1, device: "Mac15,6",
                           analyser: try Builder.makeAnalyser(jobs: 1), signer: nil, printer: DeskRun.portablePrint)
         run.openMusicCD = open
+        run.findMusicCDs = { [] }
         let (_, report) = try await CPUTurns.exclusive { try run.run() }
         #expect(report.disc?.text == "none" && report.disc?.titled == false)
         s.runEnded(info.id)
         #expect(s.crate?.discPlan.map(\.name) == ["Friday night"])
         #expect(s.current?.name == "Friday night")   // the crate made from the disc follows its name
+        #expect(s.current?.discs["Friday night"] == request.discId)   // the disc's id follows the name too
         #expect(s.undoName == "undoRename")
         #expect(s.rows.allSatisfy { $0.nameReason == "noTitle" })
         // Each song's file name is Track NN, its place the source and its number.
         #expect(s.crate?.tracks.compactMap(\.ident.track).sorted() == [1, 2])
+        #expect(musicFiles(under: home.root).isEmpty)
+    }
+}
+
+/// What a stopped run or the first build of music CDs left behind is gone when a desk starts: the song being read,
+/// and the copies of discs' songs (`Discs/`), whose records move to `Files/discs/` and whose crates keep the disc's id.
+@Suite struct DiscLeftoverTests {
+    @Test func aDeskStartingClearsWhatWasLeft() throws {
+        let root = try scratch("disc-leftovers")
+        let home = DeskHome(root: root)
+        try home.prepare()
+        let reading = DiscReading.folder(home).appendingPathComponent("cd-0011223344556677")
+        try DeckieFiles.createDirectory(reading)
+        try DeckieFiles.write(Data(count: 1000), to: reading.appendingPathComponent("Track 03.wav"))
+        let toc = try DiscTOC.format0(DiscFixture.toc(starts: [0, 300], leadOut: 600))
+        let old = home.root.appendingPathComponent("Discs").appendingPathComponent(toc.id)
+        var r = DiscRecords.Record(toc: toc, reading: .none, fileExtension: "wav")
+        r.discTitle = "Friday night"
+        try DeckieFiles.write(try JSONEncoder().encode(r), to: old.appendingPathComponent("disc.json"))
+        try DeckieFiles.write(Data(count: 1000), to: old.appendingPathComponent("Track 01.wav"))
+        var info = try home.shelf.make(name: "Friday")
+        info.sourceRoots["Friday night"] = old.path
+        info.sourceRoots["Stick 3"] = root.appendingPathComponent("stick").path
+        try home.shelf.save(info)
+        _ = DeskSession(home: home)
+        #expect(musicFiles(under: home.root).isEmpty)
+        #expect(!FileManager.default.fileExists(atPath: DiscReading.folder(home).path))
+        #expect(!FileManager.default.fileExists(atPath: home.root.appendingPathComponent("Discs").path))
+        #expect(DiscRecords.record(home, disc: toc.id)?.discTitle == "Friday night")
+        let now = try #require(home.shelf.info(info.id))
+        #expect(now.discs == ["Friday night": toc.id])
+        #expect(now.roots.keys.sorted() == ["Stick 3"])
     }
 }

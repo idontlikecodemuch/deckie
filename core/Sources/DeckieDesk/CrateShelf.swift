@@ -15,19 +15,47 @@ public struct CrateInfo: Codable, Equatable, Hashable, Sendable {
     public var sourceRoots: [String: String]
     /// The ordinary folder read with no source (the rekordbox route, or a crate made before sources), if any.
     public var musicFolder: String?
+    /// The sources that are music CDs, by name: each one's disc id (`DiscTOC.id`), so Desk knows the disc when it is
+    /// put in again. Its `sourceRoots` entry is the drive it was last read in; none of its music is kept (the note on
+    /// D33, Nov 14).
+    public var discs: [String: String]
 
     public init(id: String, name: String, createdAt: Double, openedAt: Double, sourceRoots: [String: String] = [:],
-                musicFolder: String? = nil) {
+                musicFolder: String? = nil, discs: [String: String] = [:]) {
         self.id = id; self.name = name; self.createdAt = createdAt; self.openedAt = openedAt
-        self.sourceRoots = sourceRoots; self.musicFolder = musicFolder
+        self.sourceRoots = sourceRoots; self.musicFolder = musicFolder; self.discs = discs
     }
 
     enum CodingKeys: String, CodingKey {
         case id, name, createdAt = "created_at", openedAt = "opened_at", sourceRoots = "source_roots"
-        case musicFolder = "music_folder"
+        case musicFolder = "music_folder", discs
     }
 
-    public var roots: [String: URL] { sourceRoots.mapValues { URL(fileURLWithPath: $0) } }
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        id = try c.decode(String.self, forKey: .id)
+        name = try c.decode(String.self, forKey: .name)
+        createdAt = try c.decode(Double.self, forKey: .createdAt)
+        openedAt = try c.decode(Double.self, forKey: .openedAt)
+        sourceRoots = try c.decodeIfPresent([String: String].self, forKey: .sourceRoots) ?? [:]
+        musicFolder = try c.decodeIfPresent(String.self, forKey: .musicFolder)
+        discs = try c.decodeIfPresent([String: String].self, forKey: .discs) ?? [:]
+    }
+
+    /// Where each source that is a folder or a drive was read from. A music CD's drive is left out: its songs are
+    /// not files there, and are found through the disc (`DeskAudio`).
+    public var roots: [String: URL] {
+        sourceRoots.filter { discs[$0.key] == nil }.mapValues { URL(fileURLWithPath: $0) }
+    }
+
+    /// A source taken out of the crate: where it was read from, and its disc id when it was a music CD.
+    public mutating func forget(source: String) { sourceRoots[source] = nil; discs[source] = nil }
+
+    /// A source renamed: where it was read from, and its disc id, follow the name.
+    public mutating func renameSource(_ old: String, to new: String) {
+        if let p = sourceRoots.removeValue(forKey: old) { sourceRoots[new] = p }
+        if let d = discs.removeValue(forKey: old) { discs[new] = d }
+    }
     public var musicFolderURL: URL? { musicFolder.map { URL(fileURLWithPath: $0) } }
 }
 
