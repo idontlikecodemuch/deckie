@@ -133,12 +133,13 @@ public final class Analyser: Sendable {
         // ------------------------------------------------------------------ decode (44.1 kHz, mono = channel mean)
         // A damaged MP3 frame comes out silent, and is listed (`damagedFrames`): everything below, the true peak
         // included, is measured on the audio as it plays, without the frame's burst.
-        var buffer: AudioBuffer, damagedFrames: [DamagedFrame]
+        var buffer: AudioBuffer, damagedFrames: [DamagedFrame], startUncertain: String?
         do {
             // In a block of its own, so the decoded samples are not held beyond `buffer` once it is resampled.
             let decoded = try AudioDecoder.decodeReporting(url)
             buffer = decoded.buffer
             damagedFrames = decoded.damagedFrames
+            startUncertain = decoded.startUncertain
         }
         let sourceRate = buffer.sampleRate, sourceChannels = buffer.channelCount
         if buffer.sampleRate != SR { buffer = Resampler(from: buffer.sampleRate, to: SR).process(buffer) }
@@ -296,6 +297,9 @@ public final class Analyser: Sendable {
                                      keyConfidence: keyConfidence.value, mixIn: mixIn, mixOut: mixOut,
                                      localTempoFlags: localTempo.flags)
         if vocal == nil { flags.append("vocal_unknown") }
+        // The decoder could not place the start to the sample (an AAC file on Windows that states no lead-in, D33):
+        // every time in the record may be up to 48 ms late. A reader shows the song and treats its grid with care.
+        if startUncertain != nil { flags.append("start_uncertain") }
         lap("windows")
 
         let path = url.path

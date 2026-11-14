@@ -48,6 +48,8 @@ extension Analysis {
         switch source.format {
         case "MP3": return .init(name: "dr_mp3", version: "0.7.4")
         case "FLAC": return .init(name: "dr_flac", version: "0.13.4")
+        // AAC and Apple Lossless are read only on Windows, by Windows' own decoder.
+        case "AAC": return .init(name: "media-foundation", version: nil)
         default: return .init(name: "deckie-decode", version: nil)
         }
     }

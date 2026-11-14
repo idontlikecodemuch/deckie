@@ -274,9 +274,12 @@ func decodeFailure(_ data: Data) -> AudioDecodeError? {
     @Test func plainAACIsStillUnsupportedNotProtected() throws {
         let m4a = try fixtureBytes("tone.m4a")
         #expect(ProtectedMP4.check(m4a) == nil)
+        // On Windows it is read, by Windows' own decoder (MediaFoundationTests).
+        #if !os(Windows)
         let e = try #require(decodeFailure(m4a))
         #expect(e.kind == .unsupported && e.format == .aac)
         #expect(e.message.hasPrefix("AAC is not supported on this platform yet"), "\(e.message)")
+        #endif
     }
 
     /// Edits of tone.m4a (moov after 79 KB of audio, as ffmpeg writes it) and of the stub (moov first, as iTunes
@@ -323,7 +326,11 @@ func decodeFailure(_ data: Data) -> AudioDecodeError? {
         ]
         for (what, bytes, finding) in cases {
             #expect(ProtectedMP4.check(bytes) == finding, "\(what)")
-            // Through the decoder: protected, or the usual "AAC is not supported".
+            // Through the decoder: protected, or the usual "AAC is not supported". On Windows a file that is not
+            // protected goes to Windows' own decoder, which reads the real ones; what it cannot read is unsupported.
+            #if os(Windows)
+            if finding == nil, decodeFailure(bytes) == nil { continue }
+            #endif
             let e = try #require(decodeFailure(bytes), "\(what)")
             let kind: AudioDecodeError.Kind = finding == nil ? .unsupported : .protected
             #expect(e.kind == kind && e.format == .aac, "\(what): \(e.kind)")

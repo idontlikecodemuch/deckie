@@ -155,6 +155,9 @@ public struct PCBuild: Sendable {
         public var notAdded: [(reason: String, ext: String, count: Int)]
         public var copies: Int
         public var damagedSpots: Int
+        /// Songs in the crate file whose start could not be placed to the sample (the record's flag
+        /// `start_uncertain`: an AAC file that states its lead-in nowhere), by their path below the folder.
+        public var startUncertain: [String] = []
         public var seconds: Double
         public var jobs: Int
     }
@@ -255,11 +258,14 @@ public struct PCBuild: Sendable {
             return a != b ? a < b : $0.ext < $1.ext
         }
         log.entries = entries
-        return Outcome(plan: plan, songs: result.crate.tracks.count, filesFound: result.filesSeen,
+        var outcome = Outcome(plan: plan, songs: result.crate.tracks.count, filesFound: result.filesSeen,
                        readNow: result.analysed, secondsPerSong: result.analysisSeconds, notAdded: notAdded,
                        copies: entries.filter { $0.reason == R.duplicate }.count,
                        damagedSpots: entries.filter { $0.reason == R.damagedFrames }.count,
                        seconds: Date().timeIntervalSince(started), jobs: jobs)
+        outcome.startUncertain = result.crate.tracks.filter { $0.flags.contains("start_uncertain") }
+            .map { $0.file.rel ?? $0.file.name }.sorted()
+        return outcome
     }
 
     /// The closing words for a finished run.
@@ -281,6 +287,7 @@ public struct PCBuild: Sendable {
         }
         if o.copies > 0 { lines.append(PCWords.copies(o.copies)) }
         if o.damagedSpots > 0 { lines.append(PCWords.damagedSpots(o.damagedSpots)) }
+        if !o.startUncertain.isEmpty { lines.append(PCWords.startUncertain(o.startUncertain.count)) }
         lines.append(PCWords.took(o.seconds))
         lines.append("")
         if o.plan.elsewhere { lines.append(PCWords.writtenElsewhere(o.plan.crateFile.deletingLastPathComponent().path)) }
@@ -328,7 +335,7 @@ struct RunLog {
             "Deckie for PC, first test: log of one run",
             "What is in this file: the program's version, this computer's type, counts, timings, and the files that could",
             "not be added with the reason for each. No song audio. File names only for files that could not be added or",
-            "have a damaged spot.",
+            "have a damaged spot or an uncertain start.",
             "",
             "program: deckie-make \(PCBuild.version), builder \(Builder.version), engine \(Builder.engineLabel)",
             "vocal model: \(engine.vocalModel == nil ? "missing" : "present")",
@@ -360,6 +367,11 @@ struct RunLog {
         if !damaged.isEmpty {
             lines += ["", "songs added that have a damaged spot: \(damaged.count)"]
             for e in damaged { lines.append("  \(e.rel)  [\(e.message)]") }
+        }
+        if !o.startUncertain.isEmpty {
+            lines += ["", "songs added whose start is uncertain (the file does not say how much lead-in its encoder added; "
+                      + "every time in the record may be up to 0.05 s late): \(o.startUncertain.count)"]
+            for rel in o.startUncertain { lines.append("  \(rel)") }
         }
     }
 
