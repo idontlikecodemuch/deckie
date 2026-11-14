@@ -2,6 +2,64 @@
 
 Branch `trial/own-recognition`. Newest entry first. Nothing here ships without the owner's decision.
 
+## Nov 14, 2026, 17:55 UTC: `recog/fast`, stage 2 (first three sizes): a larger index does not make a name come sooner; the listener does
+
+**The table asked for** (eval half of the outside set, 969 songs in the index, 30 s clips that start at a random
+place in a song, a reading every second; "by 5 s" is the share of clips with the right name on screen 5 s after the
+sound began)
+
+| Setting | Index, KB a minute of music | Index for 2,000 / 5,000 songs of 4.2 min | Clean | Room | Room, crowd 10 dB under | Crowd at equal level | Crowd 5 dB over | Small speaker, room, crowd equal | After a hard cut, clean | After a hard cut, crowd equal | Wrong song named | Song not in the index named |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| `boothSmall` (strongest quarter, 3 hashes) | 5.7 | 57 / 129 MB | 99 % | 84 % | 65 % | 44 % | 22 % | 66 % | 93 % | 31 % | 4 of 1,200 clips | 1 of 217 |
+| `booth` (strongest half, 3 hashes) | 11.5 | 105 / 250 MB | 100 % | 92 % | 75 % | 48 % | 26 % | 68 % | 96 % | 31 % | 4 of 1,200 | 0 of 217 |
+| strongest three quarters, 3 hashes | 17.3 | 154 / 371 MB | 100 % | 94 % | 78 % | 50 % | 25 % | 76 % | 97 % | 36 % | 0 of 1,200 | 0 of 217 |
+| strongest half, 4 hashes | running | | | | | | | | | | | |
+| every point, 3 hashes; half, 6; every point, 6 | to come | | | | | | | | | | | |
+
+(Sizes exclude a fixed 8.4 MB table that does not grow with the crate; the megabyte columns include it.)
+
+**The second by which 50 / 75 / 90 % of clips have the right name**
+
+| Setting | Clean | Room | Room, crowd 10 dB under | Crowd at equal level | Crowd 5 dB over | Small speaker, room, crowd equal | Hard cut, clean | Hard cut, crowd equal | One search, ms |
+|---|---|---|---|---|---|---|---|---|---|
+| `boothSmall` | 3 / 3 / 3 | 3 / 5 / 7 | 4 / 7 / 9 | 7 / 14 / over 30 | 11 / over 30 / over 30 | 4 / 7 / 16 | 5 / 5 / 5 | 7 / 10 / 30 | 120 |
+| `booth` | 3 / 3 / 3 | 3 / 4 / 5 | 4 / 5 / 9 | 6 / 11 / 22 | 9 / over 30 / over 30 | 4 / 7 / 11 | 5 / 5 / 5 | 7 / 9 / 30 | 156 |
+| three quarters, 3 hashes | 3 / 3 / 3 | 3 / 4 / 5 | 4 / 5 / 9 | 6 / 10 / 21 | 9 / over 30 / over 30 | 4 / 5 / 11 | 5 / 5 / 5 | 6 / 8 / 21 | 205 |
+
+- **Where the bend is, so far**: at `booth`. From small to booth (twice the index) buys 8 to 10 points at 5 s in a
+  room; from booth to half as large again buys 2 or 3 points in most columns (8 behind a small speaker) and costs a
+  third more search time. The three larger sizes are still running and may move this; I do not expect them to.
+- **The spread answers "is 8 seconds right?"**: in a clean or quiet room a name is up at 3 s for half the clips and
+  by 5 s for 9 in 10. 3 s is the floor only because the listener does not look before it has 3 s of sound. The
+  slow cases are loud crowds (at equal level half the clips take 6 s, a tenth over 20 s) and those are slow at
+  every index size.
+- **What grows with the setting**: only the index file on the iPad (in step with the number of hashes) and the
+  search time. The fingerprint in the crate file (5.8 KB a minute), the app's own memory while listening (0.5 KB a
+  minute) and the build's working memory (73 MB) do not.
+- **Wrong names**: the 4 at `booth` and small are one pair of clips of a song named as another entry with the
+  same artist and title in the outside set's list (two releases of one recording). The larger index's search for
+  copies finds that pair and the count goes to 0. So no wrong name here is a different song.
+
+**After a hard cut: the old name stays 4 s, at every size** (clips where one song is cut to another at 15 s)
+
+| Index | Condition | Old song still named after the cut, s: median / 75th / 90th | Still named 5 s after | New song named, s after the cut: median / 75th / 90th |
+|---|---|---|---|---|
+| `booth` | clean | 4 / 4 / 4 | 4 % | 5 / 5 / 5 |
+| `booth` | crowd 10 dB under | 4 / 5 / 5 | 31 % | 5 / 6 / 9 |
+| `booth` | crowd equal | 4 / 6 / 7 | 46 % | 7 / 9 / 30 |
+| three quarters | clean | 4 / 4 / 4 | 3 % | 5 / 5 / 5 |
+| three quarters | crowd equal | 4 / 6 / 7 | 44 % | 6 / 8 / 21 |
+
+  A song from silence is named at 3 s; the same song after a cut at 5 s. The 2 s difference is the listener
+  holding the old song (it waits for two failed checks, then searches), and the old name is on screen for 4 of
+  those 5 s. That is the lingering the real-room run saw, and it is a listener setting, not an index size. Stage 3
+  measures the changes: let go sooner, search every second while following, a 2 s first look.
+
+**Chromaprint baseline**: being measured by the bench now; not in this entry.
+
+**Next**: the remaining sizes (this table is filled in when they finish), then stage 3 (the listener). **Carry on;
+and consider that the answer to "faster" is in the listener, not in a larger index.**
+
 ## Nov 14, 2026, 16:20 UTC: `recog/fast`, stage 1: the index is built in a fixed memory, and need not copy the songs' points
 
 **Received**: the owner's reading of the morning page (a name sooner; size may grow if it buys something; no

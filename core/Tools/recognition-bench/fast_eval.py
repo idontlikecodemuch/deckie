@@ -214,6 +214,34 @@ def blends(work, unmix, path):
         print(f"| {key[0]} | {key[1]} | {o['n']} | {np.median(o['fade']):.0f} | {three(o['start'])} | {three(o['middle'])} | {three(o['coming'])} | {o['wrong_coming']} of {o['coming_readings']} |")
 
 
+def linger(work, paths):
+    """After a hard cut: how long the song that has gone stays named, and how long until the new one is."""
+    print("| listener | condition | old song still named after the cut, s: median / 75th / 90th | still named 3 s after, % | 5 s after, % | new song named, s after the cut: median / 75th / 90th | by 5 s, % | seconds showing no name between: median |")
+    print("|---|---|---|---|---|---|---|---|")
+    for path in paths:
+        truth, by = load(work, path)
+        name = os.path.basename(path)[2:-4]
+        for cond in ("clean", "room+crowd+10", "room+crowd0"):
+            old, new, gap = [], [], []
+            for q, t in truth.items():
+                if t["cell"] != "cut" or t["condition"] != cond or q not in by:
+                    continue
+                cut = t["cut_at"]
+                last = [float(f[1]) for f in by[q] if f[2] != "nothingYet" and same(f[3], t["before"]) and float(f[1]) > cut]
+                was = any(f[2] != "nothingYet" and same(f[3], t["before"]) and float(f[1]) <= cut for f in by[q])
+                if not was:
+                    continue
+                o = max(last) - cut if last else 0.0
+                n = first_right(by[q], t["song"], cut)
+                old.append(o); new.append(n)
+                if n is not None:
+                    gap.append(max(0.0, n - o - 1))
+            if not old:
+                continue
+            o = np.array(old); d = dist(new, len(new))
+            print(f"| {name} | {cond} | {np.quantile(o, .5):.0f} / {np.quantile(o, .75):.0f} / {np.quantile(o, .9):.0f} | {100 * np.mean(o >= 3):.0f} | {100 * np.mean(o >= 5):.0f} | {d[0]} / {d[1]} / {d[2]} | {d[4][MARKS.index(5)]:.0f} | {np.median(gap) if gap else float('nan'):.0f} |")
+
+
 def tune(work, path):
     truth, by = load(work, path)
     print("sure fair | no right answer: named /clips | wrong /clips | named by 5 s: " + " | ".join(NAMES[c][:18] for c in ORDER))
@@ -243,6 +271,8 @@ def tune(work, path):
 if __name__ == "__main__":
     if sys.argv[1] == "starts":
         starts(sys.argv[2], sys.argv[3], sys.argv[4] if len(sys.argv) > 4 else None)
+    elif sys.argv[1] == "linger":
+        linger(sys.argv[2], sys.argv[3:])
     elif sys.argv[1] == "curve":
         curve(sys.argv[2], sys.argv[3:])
     elif sys.argv[1] == "blends":
