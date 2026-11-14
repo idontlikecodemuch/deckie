@@ -16,6 +16,8 @@ for b in ("dance", "other", "gsplus", "library"):
     secs = sorted(float(x[3]) for x in s)
     roles = collections.Counter(x[4] for x in s)
     print(f"| {b} | {len(s)} | {sum(secs) / 3600:.1f} | {secs[len(secs) // 2] / 60:.1f} min | {roles['dev']} / {roles['eval']} / {roles['absent']} |")
+if any(x[2] == "library" for x in songs):
+    sys.exit(0)   # a music folder of one's own: nothing fetched to list
 print("\n### Licences of the Internet Archive songs (as each release states)\n")
 lic = collections.Counter(); size = 0
 for b in ("dance", "other"):

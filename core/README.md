@@ -612,3 +612,13 @@ Run again when Swift is already there, it only reports the version. `install-swi
 picks another release or folder. Docker Hub limits anonymous downloads per network address, which a cloud session
 shares; if the limit is used up the script waits and retries for a few minutes, and otherwise says to try later.
 On a Mac, or on a machine that can reach swift.org, install Swift the normal way instead.
+
+## A trial: recognition of Deckie's own (`DeckieRecognition`)
+
+A trial, not a product: nothing else in the package depends on it and nothing ships without the owner's decision.
+`Sources/DeckieRecognition` is a landmark fingerprint after Wang's 2003 paper (`Landmarks`: a song's spectrogram
+peaks, about 23 KB for four minutes), an index over many songs (`RecognitionIndex`) and a matcher (`Recogniser`) that
+names the song in a few seconds of audio, where in it the audio starts, and the deck's speed (tempo ratio and pitch
+ratio), trying the pitch fader's range on the query's points by arithmetic. `deckie-recog-bench` and
+`Tools/recognition-bench/run.sh` measure it on outside music or on any folder of music. What it does and does not
+do, with every measurement: `docs/research/w2-own-recognition-trial.md`.

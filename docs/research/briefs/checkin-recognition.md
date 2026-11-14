@@ -2,6 +2,50 @@
 
 Branch `trial/own-recognition`. Newest entry first. Nothing here ships without the owner's decision.
 
+## Nov 14, 2026, 03:50 UTC: all measurements in; the letter is written
+
+**The report is `docs/research/w2-own-recognition-trial.md`.** Read its section 1 first.
+
+**Done since the last entry**
+- **Speed** (the owner's condition). A check tag on every table entry and a table sized to the catalogue: an 8 s
+  query on one core now takes 42 ms against 1,000 songs, 73 ms against 5,000 (median; 107 ms at the 95th
+  percentile) and 112 ms against 10,000. My target was under 80 ms at 5,000: **met at the median, missed at the
+  95th percentile.** Memory is 0.3 MB a song, which an iPad build would have to shrink or map from disk.
+- **Catalogue size.** Songs named that are not in the index stay at 0 to 5 in 486 queries from 250 to 10,000 songs;
+  right answers stay at 93 to 95 %. Sizes above 969 are padded with altered copies of real constellations, which
+  are not more music: the owner's own run on real songs is the check.
+- **One command on any music folder**: `MUSIC=/path/to/music core/Tools/recognition-bench/run.sh DATA WORK` writes
+  `WORK/results.md`. Songs are named by a hash of their path. Tested here on a folder of 40 songs.
+- **DJ mixes.** UnmixDB (360 generated mixes, exact ground truth, 1,149 songs in the index): with one song playing,
+  100 % of 8 s windows named in unprocessed, bass-boosted and (bar one cell at 81 %) compressed mixes, 72 to 76 %
+  under heavy distortion, and **no wrong song in 25,125 windows**; the key-held fader reading is within 0.03 points
+  at the median. The ten real club mixes from Linz could not be fetched (their links now ask for a sign-in).
+- **Letter W's comparison**: undoing the speed on the audio gives the same answers as moving the points (850 of 850
+  each, clean) at nine times the cost. Dropped.
+- **A deeper second pass** gains 3 to 10 points in noise at up to five times the time on hard queries. Kept as an
+  option, off by default.
+- Both workflows were green on Linux and Windows on an earlier commit of the branch and were run again on the last
+  code commit (results in the next entry or the letter's hand-over note).
+
+| The trial in one table (eval half, 969 songs, 8 s unless said) | Result |
+|---|---|
+| Clean, any fader setting, key held or vinyl-style | 99.9 to 100 % (3 s: 97 to 99.5 %) |
+| Room / room + crowd 10 dB under the music / equal / 5 dB over the music | 95 / 89 / 60 / 33 % |
+| Wrong song named; a song not in the index named | 0 to 1 in 500; 4 of 1,944 clean, 1 of 1,952 noisy |
+| Fader reading: vinyl-style (from pitch); key held | 0.00 median, 0.01 at the 90th percentile; 0.02 to 0.03 median |
+| Fingerprint | 23 KB and 0.42 s per four-minute song |
+| Against ShazamKit (letter H) | equal on clean audio and the fader with one fingerprint for nine; behind in loud noise (pink noise at equal level: 68 % against 90 to 100 %) |
+
+**What is not done, plainly**
+- Phase 3 (ratio fingerprints) was not built: the baseline does not fall short on speed, it falls short on noise,
+  and a hash that needs more points to survive is worse in noise. The letter's section 5 gives the measurements.
+- No real booth, no real deck's key lock, no real club mix, nothing on a Mac or an iPad.
+- The speed target is missed at the 95th percentile, so by the owner's own condition this is **not final**.
+
+**My recommendation** (letter, section 12): put the fingerprint in the crate file now as an addition; keep
+ShazamKit as the Apple booth's recogniser until one evening's recording in a real booth says how loud the problem
+is; then work on noise. **Carry on, or stop here for the owner's decision: the trial's questions are answered.**
+
 ## Nov 14, 2026, 01:25 UTC: the full benchmark has run once, with the fast matcher
 
 **Done since the last entry**
