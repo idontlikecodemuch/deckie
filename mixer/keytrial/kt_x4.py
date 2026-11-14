@@ -593,6 +593,47 @@ def main_club():
     print(f"\nTHE CLUB LEAN: minor share among the reader's key answers on the {len(keyed)} club excerpts it gave a key: {100 * share:.1f} percent (each of the {len(by)} creators counted once: {100 * per:.1f})")
     json.dump({"club_minor_share": share, "per_creator": per, "excerpts_with_a_key": len(keyed)}, open(os.path.join(kt.HERE, "x4_club_lean.json"), "w"))
 
+def main_retrain(modes):
+    """python kt_x4.py retrain <mode> ...: retrained models read as shipped (folded, 16-bit, no pitch shifts, THE LEAN,
+    temperature on the validation artists), against the shipped reader -> x4_retrain_results.md. Writes no model file.
+    The rule, fixed before these were scored: a retrained model replaces the shipped one if, showing keys on the same
+    share of songs as the shipped reader does (its most confident ones), its shown keys are right more often on MTG
+    and on at least one of the other two sets, and not worse by more than a point on the third."""
+    import torch, kt_cnn as C
+    torch.set_num_threads(1)
+    share = json.load(open(os.path.join(kt.HERE, "x4_lean.json")))["lean_minor_share"]
+    sets = KS.test_sets(); names = {"MTG, 1,270": "mtg", "GiantSteps+, 468": "gsplus", "GiantSteps Key, 604": "gs"}
+    real = KS.with_L(KS.load_real()); va = [r for r in real if r["group"] % 5 == 0]; yv = np.array([int(r["target"].argmax()) for r in va])
+    out = {}; notes = []
+    for mode in modes:
+        z = np.load(os.path.join(kt.CACHE, f"x4_cnn_{mode}.npz")); tm = float(z["train_minor"]); lean = float(np.log(share / (1 - share)) - np.log(tm / (1 - tm)))
+        model = C.Net(); model.load_state_dict(torch.load(os.path.join(kt.CACHE, f"x4_cnn_{mode}.pt"))); model.eval(); flat = folded(model)
+        flat = flat.astype("<f2").astype(np.float32)
+        S = np.array([shipped_scores(C.crop(r["L"].astype(np.float32)), flat) for r in va]); lp = S - S.max(1, keepdims=True); lp = lp - np.log(np.exp(lp).sum(1, keepdims=True)); lp[:, 12:] += lean
+        Tm = temperature(lp, yv, lean_weights(yv, share))
+        notes.append(f"{mode}: training mix {100 * tm:.1f} percent minor, lean {lean:+.3f}, temperature {Tm:.3f}, stopped at pass {int(z['info'][2])}, exact on the validation artists {100 * (lp.argmax(1) == yv).mean():.1f}")
+        for D in sets:
+            f = os.path.join(kt.CACHE, f"x4_retrain_{mode}_{names[D['name']]}.npy")
+            if not os.path.exists(f):
+                cl = {c["id"]: c for c in C.get(names[D["name"]])}; clips = [cl[i] for i in D["ids"]]; C.load_L(clips)
+                np.save(f, np.array([shipped_probs(shipped_scores(C.crop(c["L"].astype(np.float32)), flat), lean, Tm) for c in clips]))
+            out[mode, D["name"]] = np.load(f)
+    sys.stdout = KS._Tee(os.path.join(kt.HERE, "x4_retrain_results.md"))
+    print("Retrained models read as shipped, against the shipped reader. " + "; ".join(notes) + ".")
+    wins = {m: [] for m in modes}
+    for D in sets:
+        y = D["key"]; P0 = np.load(os.path.join(kt.CACHE, f"x4_shipped_{names[D['name']]}.npy")); kind0, k0, h0 = three(P0); cov = float((kind0 == 0).mean())
+        print(f"\n**{D['name']}**\n\n| reader | key shown, percent of songs | shown keys right | shown keys' home note right | home note only, percent | those home notes right | not sure | every song given a key: exact | major | minor | shown keys right at the shipped reader's coverage ({100 * cov:.1f}) | expected by its own confidence: shown keys |\n|---|" + "---:|" * 11)
+        for name, P in [("the shipped reader", P0)] + [(f"retrained: {m}", out[m, D["name"]]) for m in modes]:
+            kind, k, h = three(P); v = KS.row_of(k, y); tp = top_precision(P.max(1), k, y, cov)
+            print(f"| {name} | " + " | ".join(f"{x:.1f}" for x in answer_row(kind, k, h, y)) + f" | {v[0]:.1f} | {v[1]:.1f} | {v[2]:.1f} | {tp:.1f} | {100 * P.max(1)[kind == 0].mean():.1f} |")
+            if name == "the shipped reader": base = tp
+            else: wins[name[11:]].append(tp - base)
+    print()
+    for m in modes:
+        d = wins[m]; ok = d[0] > 0 and max(d[1:]) > 0 and min(d[1:]) >= -1
+        print(f"{m}: at the shipped reader's coverage, shown keys right {d[0]:+.1f} on MTG, {d[1]:+.1f} on GiantSteps+, {d[2]:+.1f} on GiantSteps Key: {'replaces the shipped reader by the rule' if ok else 'does not replace the shipped reader by the rule'}.")
+
 def main_record(mode):
     """python kt_x4.py record <mode>: every recording the chosen model learned from, with its page and its licence
     -> core/.models/deckie-key-<version>-credits.tsv, beside the model's file and, like it, not in the repository
@@ -634,6 +675,7 @@ if __name__ == "__main__":
     elif a[1] == "ship": main_ship()
     elif a[1] == "export": main_export(a[2])
     elif a[1] == "record": main_record(a[2])
+    elif a[1] == "retrain": main_retrain(a[2:])
     elif a[1] == "parity": main_parity(a[2], a[3])
     elif a[1] == "fixture": main_fixture()
     elif a[1] == "apple": main_apple()
