@@ -24,8 +24,7 @@ enum SelfTest {
     static func run(seconds: Double) -> Never {
         let started = Date()
         @Sendable func say(_ s: String) {
-            let line = String(format: "[self-test %.2fs] ", Date().timeIntervalSince(started)) + s + "\n"
-            FileHandle.standardError.write(Data(line.utf8))
+            Notice.say(String(format: "[self-test %.2fs] ", Date().timeIntervalSince(started)) + s)
         }
         guard let window = Window(title: "Deckie Desk self-test", width: 640, height: 360, debug: false) else {
             say("FAILED: no window; the system's web view (\(Window.engineName)) could not be started")

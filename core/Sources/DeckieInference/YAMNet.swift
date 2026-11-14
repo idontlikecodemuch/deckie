@@ -135,7 +135,9 @@ public final class YAMNet: @unchecked Sendable {
     /// was built from (where core/Tools/fetch-vocal-models.sh writes it).
     public static func modelCandidates() -> [String] {
         if let path = ProcessInfo.processInfo.environment[modelEnvironmentVariable], !path.isEmpty { return [path] }
-        return [OnnxRuntime.coreFolder.appendingPathComponent(".models").appendingPathComponent(modelFileName).path]
+        // Beside a shipped program first (`models/` in OnnxRuntime.programFolder, when the program set it).
+        return OnnxRuntime.candidates(named: modelFileName, in: "models",
+                                      checkout: OnnxRuntime.coreFolder.appendingPathComponent(".models").appendingPathComponent(modelFileName))
     }
 
     /// The first candidate that exists, or nil.
