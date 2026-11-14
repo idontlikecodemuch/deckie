@@ -268,8 +268,14 @@ struct EngineTests {
         #expect(json["key"]?["confidence_rule"] == .string(a.keyConfidence.rule))
         let dk = try #require(json["deckie"]?["key"])
         #expect(dk.keys == ["estimator", "whitening", "frames", "camelot", "key", "scale", "r", "margin", "agree", "sure",
-                            "tables", "profiles", "stft_edma", "song_key", "windows_estimator", "mix_in",
+                            "tables", "profiles", "three_answer", "stft_edma", "song_key", "windows_estimator", "mix_in",
                             "mix_out", "segments"])
+        // The three-answer reader's result (engine 0.5.0), which the crate record's key block follows.
+        let ta = try #require(dk["three_answer"])
+        #expect(ta.keys == ["answer", "camelot", "home_pitch_class", "hpcp_discount", "note_transcription", "guess",
+                            "tuning", "confidence", "confidence_rule"])
+        #expect(ta["answer"] == .string(a.threeAnswer.answer.name) && ta["camelot"] == .string(TestTrack.camelot))
+        #expect(ta["confidence"] == .number(KeyConfidence.threeAnswer(a.threeAnswer.answer).value))
         #expect(dk["estimator"] == .string("hpcp-whitened") && dk["whitening"] == .bool(true))
         #expect(dk["margin"] == .number(Py.round(a.hpcpKey.decision.margin, 4)) && dk["sure"] == .bool(a.hpcpKey.decision.sure))
         #expect(dk["profiles"]?.keys == ["edma", "bgate", "braw"] && dk["tables"] == .string("literature"))
@@ -314,13 +320,22 @@ struct EngineTests {
         #expect(!t.featuresPresent.contains("vocal") && !t.featuresPresent.contains("bars.vocal"))
         #expect(t.featuresPresent.contains("bars.lufs") && t.featuresPresent.contains("key_changes"))
         #expect(t.mixIn?.vocalFreeBars == nil && t.vocal == nil && t.style == nil && t.flags.contains("vocal_unknown"))
-        // The key decided by the HPCP method: its three profiles' keys and the STFT estimate in the votes, none
-        // deciding; the sure rule's confidence.
-        let d = a.hpcpKey.decision
-        #expect(t.key?.source == "hpcp-whitened" && t.key?.camelot == d.camelot && t.key?.confidence == a.keyConfidence.value)
+        // The key is the three-answer reader's (D33): its answer as the confidence (1.0 a key, 0.45 the home note
+        // with the mode open, 0.2 not sure), its best guess as the code, and in the votes its two readings, the plain
+        // HPCP method's key with its three profiles' keys, and the STFT estimate; `key_uncertain` follows the block.
+        let d = a.hpcpKey.decision, three = a.threeAnswer
+        #expect(three.hpcp == a.hpcpKey)
+        #expect(t.key?.source == "three-answer" && t.key?.camelot == three.guess)
+        #expect(t.key?.confidence == KeyConfidence.threeAnswer(three.answer).value)
         #expect(t.key?.votes == ["hpcp_edma": d.profileKeys[0].camelot, "hpcp_bgate": d.profileKeys[1].camelot,
-                                 "hpcp_braw": d.profileKeys[2].camelot, "stft_edma": a.key.whole.camelot])
-        #expect(t.key?.key == d.key && t.key?.scale == d.mode)
+                                 "hpcp_braw": d.profileKeys[2].camelot, "stft_edma": a.key.whole.camelot,
+                                 "hpcp_whitened": d.camelot, "hpcp_discount": three.camelotA!,
+                                 "note_transcription": three.camelotB!])
+        // The test track is a plain progression in one key: both readings find it.
+        #expect(three.answer.camelot == TestTrack.camelot && t.key?.camelot == TestTrack.camelot && t.key?.confidence == 1)
+        #expect(t.key?.scale == (TestTrack.camelot.hasSuffix("A") ? "minor" : "major"))
+        #expect(t.flags.contains("key_uncertain") == false)
+        print("three-answer key: \(three.answer), rows \(three.camelotA ?? "-") / \(three.camelotB ?? "-"), tuning \(Py.fixed(three.tuning, 3))")
         let crate = Crate(manifest: CrateManifest(crateId: "engine-test", name: "engine test",
                                                   createdAt: "2026-10-28T12:00:00Z", devicesSeen: [Analysis.platform]),
                           tracks: [t])

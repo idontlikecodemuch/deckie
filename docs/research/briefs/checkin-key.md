@@ -1,9 +1,126 @@
-# Check-in: the own-key trial (branch `trial/own-key`)
+# Check-in: the own-key work (branches `trial/own-key`, then `key/three-answer`)
 
 Newest entry first. Scores are percent of clips on the 1,270 GiantSteps-MTG-key clips Apple read (386 major, 884
 minor). Exact = key right. Home note = home note right, whatever the mode. Mode given home = of the clips whose home
 note is right, the share with the right mode. The bar (D16) = exact within five points of Apple on each half:
 36.5 on the major half, 70.6 on the minor half.
+
+## Nov 14, 2026, 04:20 UTC. Piece B done: letter X3, training data that could ship
+
+**The owner's question, answered: yes, a public set can be used, and it gets close to the bar but not over it.**
+Letter: `docs/research/x3-key-training-data.md`. Every licence was opened and is quoted there with the date.
+
+**Done.**
+- **Found and fetched (evaluation only, nothing committed): about 1,080 real recordings with human key labels whose
+  audio and labels both allow a shipped model**: 711 Freesound loops (CC0 or CC BY 3.0; mostly electronic and
+  dance) and 373 FMAK songs whose own licence is CC BY, CC0 or public domain. Plus the CC0 Well-Tempered Clavier (48
+  recordings) for the classical question.
+- **Made**: 1,500 dance clips written by a program of ours to a chosen key, and 412 public-domain chorales played by
+  our own synthesiser. Used only as a supplement; nothing was chosen or scored on them.
+- **Trained only on what could ship, scored on the three GiantSteps sets**: the 49-number learned profiles on every
+  source and mix, and the small model on three mixes.
+
+| Trained on (MTG, 1,270; bar 36.5 major, 70.6 minor) | Reader | Exact: all | major | minor | Home note | Bar as written |
+|---|---|---:|---:|---:|---:|---|
+| Apple | | 65.2 | 41.5 | 75.6 | 76.4 | |
+| The MTG collection itself (letter X2; cannot ship) | small model | 65.9 | 44.0 | 75.5 | 77.0 | passes |
+| Nothing (ships now), every song shown | three-answer reader | 57.8 | 54.4 | 59.3 | 72.4 | fails, minor 11.3 short |
+| **Real, shippable audio only** | small model | **61.5** | 63.5 | 60.6 | 75.5 | fails, minor 9.9 short |
+| the same, leaned to 65 percent minor (a published share) | small model | 62.8 | 53.9 | 66.6 | 75.2 | fails, minor 3.9 short |
+| the same, leaned to 85 percent minor (a published share) | small model | 62.8 | 33.4 | 75.7 | 73.9 | fails, major 3.0 short |
+| Real, shippable audio only | 49 numbers | 58.8 | 56.0 | 60.1 | 73.4 | fails, minor 10.5 short |
+| Real + a quarter program-written music | small model | 60.8 | 58.8 | 61.7 | 74.3 | fails |
+| Program-written music only | small model | 48.3 | 50.0 | 47.5 | 67.7 | fails |
+| Public-domain classical recordings only | 49 numbers | 48.9 | 54.7 | 46.4 | 62.5 | fails |
+
+**What it says.**
+- Shippable real audio teaches the home note as well as Apple reads it, and gives the fairest reader measured so far
+  (63.5 percent of major songs and 60.6 of minor ones). It misses the bar on the minor half because the public data
+  is half major: it never learns "when in doubt, minor", which is how Apple and the trial's model pass.
+- A lean taken from a published count of dance music brings it within 3 to 4 points and does not pass cleanly. At
+  the MTG collection's own 70 percent the 49 numbers pass by 0.3 and 1.5 points: fitted to the test set in one
+  number, so not a pass I would report.
+- **Made-up music: the owner's caution is right.** No gain at any share; within a point up to a quarter of the mix;
+  3 points worse at a half; 3 to 13 worse alone. The songs lost are mostly new mode mistakes. Only the one-chord
+  case is worth keeping, for about a point. Classical recordings alone are worse than no training.
+- Trained generators: their terms forbid it; one paragraph in the letter.
+
+**Recommendation in the letter**: label 400 to 600 free dance tracks ourselves (the audio exists under CC BY and
+CC0; 30 to 60 hours of a musician; no music commissioned) and add the 1,080 recordings found; no made-up music; ask
+the attorney two narrow questions about the FMAK labels and CC BY before anything trained on them ships.
+
+**Carry on, or stop here: both pieces are complete.** Waiting on the owner: the `key_home` proposal (mode open in
+the crate), and whether to start the labelling.
+
+## Nov 14, 2026, 03:10 UTC. Piece A done: the three-answer reader is in the core (branch `key/three-answer`)
+
+From here the entries are on branch `key/three-answer`, cut from `main` after D33. Two pieces: A, the Swift port
+(this entry); B, public training data (letter X3, in progress, next entry).
+
+**Done.**
+- **The reader is in the shared core**: `core/Sources/DeckieCore/Key/ThreeAnswerKey.swift` (the rule and row A's
+  overtone discount) and `NoteChroma.swift` (row B: the note transcription, with its own non-negative least-squares
+  solver; no LAPACK). No new dependency, no learned weights, nothing platform-specific.
+- **Parity, full**: on all **2,091 recordings** of the three outside sets the Swift reader's answer (key, home note
+  with the mode open, or not sure, and which key or note) **equals the Python reference's on 2,091**. Both read the
+  same decoded samples (`mixer/keytrial/kt_three.py parity`, piping each clip to `deckie-keyparity`). The
+  reference's answers are committed: `mixer/keytrial/three_answer_expected.tsv` (key 1,468, home note only 203, not
+  sure 420). The reference itself gives the same answer as the trial's stored readers on all 2,091, although it
+  resamples with the core's own filter instead of soxr and keeps double precision.
+- **Parity, in the test suite**: `ThreeAnswerKeyTests` makes eight clips in whole-number arithmetic on both sides (no
+  audio file) and checks answers exactly and each reading's 24 scores within 1e-5 (measured: 1e-7 and 1e-9).
+- **Wired**: the engine (now 0.5.0) writes the reader's answer as the record's key block: `source` `three-answer`,
+  confidence 1.0 a key, 0.45 home note with the mode open, 0.2 not sure. `LocalFacts.decideKey`, at its marked
+  place, shows a key only: the other two become "key not read" and are counted apart in the run's report. A DJ's own
+  key still wins; a record read by Apple's framework is untouched (D17); a reading Deckie was not sure of no longer
+  sits beside a DJ's key as a vote.
+- **CI**: `core-linux` (run 43548413684) and `core-windows` (run 43548413710) are green on the branch, engine suites
+  included; the Windows run's crate matches the Linux one made in the same run. Locally all 432 tests pass with the
+  models in place.
+- **Cost**: 0.54 s for a two-minute clip in a release build on one core of this machine, the whole reader; about 1.3 s for
+  a five-minute song [scaled, not measured on one].
+
+**Stopped on one point, as asked: "home note known, mode open" cannot be written in a crate file today.**
+`key.camelot` is required and a Camelot code always names a mode. Proposal, in `docs/architecture/crate-format.md`
+("The mode left open"): one optional block beside `key`, `key_home` (`source`, `note`, `pitch_class`, and the two
+codes on that note), present only when there is no `key` block, ignored by readers that do not know it. Until the
+owner says yes nothing is written: such a song shows no key. The builder's record keeps the reading, so saying yes
+later needs no second analysis of anyone's music.
+
+**What the Mac desk and the iPad need** (I cannot build either):
+- *Nothing breaks.* A song Deckie is not sure of has no key block, which both apps already show as "key not read".
+- *Mac desk* (`desk-app`): its finished screen prints `report.keysNotRead`; the report now also has `keysNotSure`
+  and `keysModeOpen`. Words for both are in `DeskWords` (`keysNotSure`, `keysModeOpen`); the Mac's `Words.swift`
+  and `ContentView.swift` need the two lines added beside `keysNone`. On a Mac with Apple's framework the key is
+  Apple's and none of this shows.
+- *iPad* (`deck-app`): no change needed to stay correct. If the mode-open block is accepted: `CrateLibrary` reads
+  `key_home`; the song's row shows the note ("A, mode open") where the Camelot code goes; `Mixing.swift` treats the
+  song as fitting either of the two codes instead of "key not read".
+- *Both*: "key not read on this computer yet" is no longer the right sentence for a song the reader read and was
+  not sure of; a second sentence is wanted ("Deckie is not sure of this song's key"). The record's absence of a key
+  does not say which it is; the run's report does, per run, and `key_home` would per song.
+
+**One thing I did not change**: the mix windows are still judged against the plain HPCP method's song key, as in
+0.4.0, because the lab's bench compares that with its own sheet. Where the three-answer reader names a different
+key or none, the windows' key flags are about the old method's key. Small, and worth a decision.
+
+| Set | A key shown | key right | within one wheel step | Home note only | home note right | Not sure |
+|---|---:|---:|---:|---:|---:|---:|
+| MTG (1,270 Apple read) | 70.4 % | 64.8 | 76.6 | 11.7 % | 79.2 | 17.9 % |
+| GiantSteps+ (468) | 76.1 % | 85.4 | 92.1 | 4.7 % | 81.8 | 19.2 % |
+| GiantSteps Key (604) | 73.8 % | 69.1 | 82.7 | 5.5 % | 60.6 | 20.7 % |
+
+(The trial's figures; the port gives the same answers clip for clip. With every song shown the reader is exact on
+57.8 percent of MTG, 54.4 major and 59.3 minor, against the bar's 36.5 and 70.6: the bar is not met by this reader
+with every song shown, as D33 records.)
+
+**Doing next**: piece B. First results are in: a real, shippable base exists (710 Freesound loops under CC0 or CC BY
+with agreed human keys, 371 FMAK songs whose own audio licence is CC BY, CC0 or public domain, and the CC0
+Well-Tempered Clavier). Forty-nine numbers learned from it score 58.8 on MTG (the untrained reader 57.8; the same
+numbers learned from the test collection's own kind of music 62.7; Apple 65.2). Program-written music added to it is
+neutral up to a quarter of the mix and harmful from a half. The small model is training on the same mixes now.
+
+**Carry on.**
 
 ## Nov 14, 2026, 00:30 UTC. Complete
 
