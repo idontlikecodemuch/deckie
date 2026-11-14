@@ -67,7 +67,9 @@ public final class DeskSession {
     }
 
     public func rename(_ id: String, to name: String) throws {
-        let i = try shelf.rename(id, to: name)
+        var renamed: CrateInfo?
+        try Self.retrying { renamed = try shelf.rename(id, to: name) }
+        guard let i = renamed else { return }
         if current?.id == i.id {
             current = i
             crate?.manifest.name = i.name

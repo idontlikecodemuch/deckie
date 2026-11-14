@@ -48,7 +48,10 @@ import DeckieCrate
         let a = entry("aaaa", "Song A", disc: "Stick 3", folder: "House", track: 1, rel: "House/01 Song A.mp3",
                       others: [.init(disc: "Friday", folder: "Set 1", track: 1)])
         let b = entry("bbbb", "Song B", disc: "Stick 3", folder: "House", track: 2, rel: "House/02 Song B.mp3")
-        try CrateWriter.write(crate([a, b], name: "Friday"), to: home.shelf.package(info.id))
+        // CrateWriter is not DeskSession's: on Windows a file it has just written can still be held by the virus
+        // scanner when the next write replaces it (a sharing violation, seen on the CI runner), so try again.
+        let c = crate([a, b], name: "Friday")
+        try DeskSession.retrying { try CrateWriter.write(c, to: home.shelf.package(info.id)) }
         return (DeskSession(home: home), info)
     }
 
