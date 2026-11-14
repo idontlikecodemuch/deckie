@@ -29,6 +29,15 @@ real only: loops + FMAK songs + Clavier (1,129)	as the mix is	0	GiantSteps Key, 
 real only: loops + FMAK songs + Clavier (1,129)	modes equal	0	MTG, 1,270	55.67	61.40	53.17	57.28	70.24	73.15	81.44	73.67
 real only: loops + FMAK songs + Clavier (1,129)	modes equal	0	GiantSteps+, 468	75.43	72.41	75.85	74.13	87.82	79.49	93.33	95.11
 real only: loops + FMAK songs + Clavier (1,129)	modes equal	0	GiantSteps Key, 604	60.43	47.31	62.82	55.06	77.81	67.38	74.58	92.24
+real only: loops + FMAK songs (1,081)	weighed to 65 percent minor	0	MTG, 1,270	61.18	44.30	68.55	56.43	75.28	73.15	63.10	92.10
+real only: loops + FMAK songs (1,081)	weighed to 65 percent minor	0	GiantSteps+, 468	80.34	65.52	82.44	73.98	90.60	82.26	86.36	99.12
+real only: loops + FMAK songs (1,081)	weighed to 65 percent minor	0	GiantSteps Key, 604	65.07	40.86	69.47	55.17	81.46	69.70	64.41	98.07
+real only: loops + FMAK songs (1,081)	weighed to 70 percent minor	0	MTG, 1,270	61.34	36.79	72.06	54.42	75.04	73.31	54.41	95.07
+real only: loops + FMAK songs (1,081)	weighed to 70 percent minor	0	GiantSteps+, 468	80.34	58.62	83.41	71.02	90.17	82.26	80.95	99.71
+real only: loops + FMAK songs (1,081)	weighed to 70 percent minor	0	GiantSteps Key, 604	65.07	36.56	70.25	53.41	81.13	69.54	60.71	98.63
+real only: loops + FMAK songs (1,081)	weighed to 85 percent minor	0	MTG, 1,270	58.66	16.06	77.26	46.66	73.07	71.73	27.31	99.85
+real only: loops + FMAK songs (1,081)	weighed to 85 percent minor	0	GiantSteps+, 468	78.42	29.31	85.37	57.34	87.82	82.05	50.00	100.00
+real only: loops + FMAK songs (1,081)	weighed to 85 percent minor	0	GiantSteps Key, 604	65.23	21.51	73.19	47.35	79.97	70.20	40.82	99.73
 real base (loops + FMAK songs) + made-up	as the mix is	0	MTG, 1,270	58.82	55.96	60.07	58.01	73.86	73.39	75.52	82.20
 real base (loops + FMAK songs) + made-up	as the mix is	0	GiantSteps+, 468	77.99	70.69	79.02	74.86	89.10	81.20	91.11	96.72
 real base (loops + FMAK songs) + made-up	as the mix is	0	GiantSteps Key, 604	62.58	45.16	65.75	55.46	78.81	68.87	70.00	94.38

@@ -78,6 +78,60 @@ OMP_NUM_THREADS=1 venv/bin/python kt_pc.py  # precision against coverage, confid
 OMP_NUM_THREADS=1 venv/bin/python kt_curve.py   # phase 4: learned profiles against the number of labelled songs; curve_results.tsv
 ```
 
+## The three-answer reader's reference and parity (D33)
+
+```bash
+venv/bin/python kt_three.py expected --jobs 4   # the Python reference on every clip -> three_answer_expected.tsv (about 16 minutes)
+```
+
+```bash
+venv/bin/python kt_three.py parity ../../core/.build/release/deckie-keyparity   # the Swift reader on the same samples (about 25 minutes)
+```
+
+```bash
+venv/bin/python kt_three.py fixture ../../core/Tests/DeckieCoreTests/Fixtures/three_answer.json   # the generated fixture of the Swift test
+```
+
+## Training on data that could ship (research X3)
+
+More data, fetched Nov 14, 2026, for evaluation only, none committed. Only the files used were pulled, by HTTP range
+requests into the archives (`kt_remote_zip.py`):
+
+| Set | Source | Used | Licence |
+|---|---|---|---|
+| Freesound Loop Dataset | Zenodo 3967852 (`annotations.zip`, and `metadata.json` and 711 wav files out of `FSL10K.zip`) | 711 loops whose annotators agree on a key and mode | each loop's own: CC0 1.0 (380) or CC BY 3.0 (331); loops under other licences are not used |
+| FMAK | Zenodo 10719860 (`fma_keys_metadata.csv`, and 373 mp3 files out of its ten zips), joined with `tracks.csv` of the Free Music Archive's `fma_metadata.zip` | 373 songs | labels CC BY 4.0; each song's own: CC BY (347), CC0 or public domain (26) |
+| Open Well-Tempered Clavier, Book 1 | archive.org item `bach-well-tempered-clavier-book-1` (48 mp3 files) | 48 recordings, the key from each title | CC0 |
+| Bach chorales (scores) | the music21 corpus (`pip install music21`) | 412 chorales, rendered by `kt_scores.py` | compositions public domain; the encodings' terms are the corpus's |
+
+Layout under `$DECKIE_KT_DATA`: `fsl/annotations.zip`, `fsl/metadata.json`, `fsl/audio/<freesound id>.wav`;
+`fmak/usable.json` (track id to label, licence, artist, genre), `fmak/audio/<track id>.mp3`; `wtc/tracks.json`,
+`wtc/audio/<nn>.mp3`.
+
+```bash
+venv/bin/python kt_made.py --n 1500 --jobs 4     # program-written dance clips to a chosen key (features only)
+```
+
+```bash
+venv/bin/python kt_scores.py --jobs 2            # public-domain chorales rendered with our synthesiser voices (features only)
+```
+
+```bash
+venv/bin/python kt_ship.py feats --jobs 4        # features of the real, shippable audio
+```
+
+```bash
+OMP_NUM_THREADS=1 venv/bin/python kt_ship.py profiles   # learned profiles on every source and mix -> ship_results.tsv
+```
+
+```bash
+venv/bin/python kt_ship.py cnn --threads 4       # the small convolutional model on three mixes (about 20 minutes each)
+```
+
+```bash
+OMP_NUM_THREADS=1 venv/bin/python kt_ship.py report     # the model's tables
+```
+
 ## Files
 
 | File | What |
@@ -89,6 +143,8 @@ OMP_NUM_THREADS=1 venv/bin/python kt_curve.py   # phase 4: learned profiles agai
 | `kt_prof.py`, `kt_curve.py` | learned key profiles: the smallest trained reader (25 to 169 numbers), and its learning curve |
 | `kt_cnn.py` | the small convolutional model |
 | `kt_x.py`, `kt_pc.py` | the scoring tables |
+| `kt_three.py` | the three-answer reader's Python reference, its parity run against the Swift port, and the test fixture |
+| `kt_ship.py`, `kt_made.py`, `kt_scores.py`, `kt_remote_zip.py` | research X3: readers trained only on data that could ship |
 | `*.tsv` | per-clip keys and per-reader scores (clip ids and keys only; no audio, no artist names) |
 
 ## Protocol

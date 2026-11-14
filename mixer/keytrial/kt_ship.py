@@ -140,14 +140,17 @@ def mix(real, made, share, rng):
     return list(real) + [made[i] for i in rng.permutation(len(made))[:m]]
 
 # ---- learned profiles with soft targets (a 'mode open' clip counts half toward each mode on its home note)
-def fit_profiles(rows, which="AB", equal_modes=False):
+def fit_profiles(rows, which="AB", equal_modes=False, minor_share=None):
+    """minor_share: weigh the clips so that minor ones are that share of the fit (a published share of minor keys in
+    dance music, never one measured on a test set)."""
     import torch
     torch.set_num_threads(1)
     F = {"c_A": np.array([r["pa"] for r in rows]), "c_B": np.array([r["pb"] for r in rows])}
     X = KPF.design(F, which); T = torch.tensor(np.array([r["target"] for r in rows]), dtype=torch.float64)
     W = torch.zeros((2, X.shape[2]), dtype=torch.float64, requires_grad=True); b = torch.zeros(1, dtype=torch.float64, requires_grad=True)
     minor = T[:, 12:].sum(1); w = torch.ones(len(rows), dtype=torch.float64)
-    if equal_modes: w = minor / (2 * minor.mean()) + (1 - minor) / (2 * (1 - minor.mean()))
+    if equal_modes: minor_share = 0.5
+    if minor_share is not None: w = minor * (minor_share / minor.mean()) + (1 - minor) * ((1 - minor_share) / (1 - minor.mean()))
     opt = torch.optim.LBFGS([W, b], max_iter=500, tolerance_grad=1e-9, tolerance_change=1e-12, line_search_fn="strong_wolfe")
     def closure():
         opt.zero_grad(); lp = torch.log_softmax(KPF.scores(X, W, b), dim=1)
@@ -188,8 +191,15 @@ def main_profiles():
     for src, nm in ((("fsl",), "Freesound loops (710)"), (("fmak",), "FMAK songs, CC BY / CC0 / public domain (371)"), (("wtc",), "Well-Tempered Clavier, CC0 (48)"),
                     (("fsl", "fmak"), "loops + FMAK songs (1,081)"), (("fsl", "fmak", "wtc"), "loops + FMAK songs + Clavier (1,129)")):
         run("real only: " + nm, "0", lambda rep, src=src: by(*src), 1)
-    # 2. the made-up share, on the real base (loops + FMAK songs)
     base = by("fsl", "fmak")
+    # 1b. the real base weighed to a published share of minor keys in dance music: 65 percent (a Beatport top 100 of
+    # 2023, letter X's S45), 70 (the plain-key clips of the Beatport EDM Key Dataset as its authors published it),
+    # 85 (GiantSteps Key, Knees et al. 2015). The second is the test set's own share and is shown for that reason only.
+    for share in (0.65, 0.70, 0.85):
+        acc = {}
+        model = fit_profiles(base, "AB", False, minor_share=share)
+        for D in sets: out.append(("real only: loops + FMAK songs (1,081)", f"weighed to {int(100 * share)} percent minor", "0", D["name"], np.array(row_of(KPF.predict(D["F"], model, "AB").argmax(1), D["key"]))))
+    # 2. the made-up share, on the real base (loops + FMAK songs)
     for share in SHARES:
         run("real base (loops + FMAK songs) + made-up", str(share), lambda rep, share=share: mix(base, made, share, np.random.default_rng(100 * share + rep)), 1 if share == 0 else 3, keep=share)
     # 2b. the same with public-domain chorales rendered by our synthesiser in place of program-written music
