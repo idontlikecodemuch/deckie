@@ -330,7 +330,9 @@ bash core/Tools/fetch-models.sh --beat-this --python /tmp/bt/bin/python   # expo
 holding `manifest.json`, `crate.json` (one record per track: grid and tempo segments, key with its votes, phrase,
 sections, mix windows, ends, loudness, vocal, onset pattern, flags, plus track L's engine record, `fidelity`, a
 `source` and confidence per block and `features_present`), float16 sidecars for the per-bar series and the style
-vector, and a `signatures` block that stays empty here, as signatures are made on an Apple device. A shipped engine's
+vector, a `signatures` block that stays empty here, as signatures are made on an Apple device, and since D35 each
+song's fingerprint for recognition (`prints/<id>.dkl`, the bytes of `Landmarks`, with a `print` note on the record),
+which every builder makes from the audio the analysis decoded. A shipped engine's
 record id is the first 16 hexadecimal characters of the SHA-256 hash of the file's bytes, whose whole hash is kept in
 `file.sha256` (`CrateIDs`, on SHA-256 written in Swift); the lab's records keep the lab's ids. `CrateWriter`
 checks a crate and writes it canonically (keys sorted, each number with its field's fixed decimals, nulls written), so
@@ -449,7 +451,9 @@ record, counted by reason and extension, and the files in the crate with damaged
   2 GB are left for the rest (`defaultJobs`; `deckie-memprobe` below measures it). The jobs share one analyser: its ONNX Runtime session may be run from several threads at once,
   and each run gets the processor count over the jobs in threads of its own.
 - **Resumable.** A work folder beside the crate, `<name>.deckiebuild`, keeps every finished file as it finishes:
-  `records/<id>.json` (the engine's record, by the file's SHA-256 id, written whole or not at all) and `files.jsonl`
+  `records/<id>.json` (the engine's record, by the file's SHA-256 id, written whole or not at all), `records/<id>.dkl`
+  (the song's fingerprint, D35, made with the analysis; a record from before it gains one from one decode of the
+  file on the next run, with no second analysis) and `files.jsonl`
   (one line per finished file: its path below the folder, size, modification time, the engine, the tag tempo, the
   record's id or why it failed). A second run takes a file as it is when its size and modification time are the same
   (no reading at all); otherwise it hashes the file and takes the record of those bytes if there is one (a file that
@@ -714,9 +718,12 @@ picks another release or folder. Docker Hub limits anonymous downloads per netwo
 shares; if the limit is used up the script waits and retries for a few minutes, and otherwise says to try later.
 On a Mac, or on a machine that can reach swift.org, install Swift the normal way instead.
 
-## A trial: recognition of Deckie's own (`DeckieRecognition`)
+## Recognition of Deckie's own (`DeckieRecognition`)
 
-A trial, not a product: nothing else in the package depends on it and nothing ships without the owner's decision.
+Begun as a trial; D35 (Nov 14, 2026) chose it. Its fingerprint (`Landmarks`) is now made by the engine for every
+song and carried in the crate file (`prints/<id>.dkl`; `docs/architecture/crate-format.md`, "Addition with D35"), so
+DeckieCrate, DeckieEngine and DeckieBuild depend on this target for it; the index and the matcher are still the
+trial's, and nothing ships them yet.
 `Sources/DeckieRecognition` is a landmark fingerprint after Wang's 2003 paper (`Landmarks`: a song's spectrogram
 peaks, about 23 KB for four minutes), an index over many songs (`RecognitionIndex`) and a matcher (`Recogniser`) that
 names the song in a few seconds of audio, where in it the audio starts, and the deck's speed (tempo ratio and pitch

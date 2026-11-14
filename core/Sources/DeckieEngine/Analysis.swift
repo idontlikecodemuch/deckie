@@ -2,6 +2,7 @@ import Foundation
 import DeckieCore
 import DeckieCrate
 import DeckieDecode
+import DeckieRecognition
 
 /// One track analysed by the engine: everything mixer/analyze.py writes to a feature file that the engine can measure,
 /// kept unrounded (the lab rounds when it writes; `labJSON()` rounds the same way), plus what only the engine knows.
@@ -18,7 +19,9 @@ public struct Analysis: Sendable {
     /// listed as `file.damaged_frames` (`deckie.damaged_frames` in the lab JSON). 0.4.0: the key decided by research
     /// R's whitened HPCP (`HPCPKey`), which changes keys: `key.source` `hpcp-whitened`, its three profiles' keys and
     /// the STFT estimate in `key.votes`, research R's sure rule as the confidence (`KeyConfidence`), and the method's
-    /// detail in `deckie.key`.
+    /// detail in `deckie.key`. The fingerprint (`print`, D35) was added without a new version, on purpose: it changes
+    /// no other field, and the builder gives a record made before it its fingerprint from one decode of the file
+    /// (`Builder.fingerprint`), which a new version would have turned into a whole analysis of every song.
     public static let engineVersion = "0.5.0"
     /// The lab's feature-file schema the JSON follows (`schema`).
     public static let labSchema = 1
@@ -174,6 +177,9 @@ public struct Analysis: Sendable {
     /// The lab's `local_tempo` block, computed from the record's rounded values as the lab computes it from its file.
     public var localTempo: LocalTempo
     public var timings: [Timing]
+    /// The song's fingerprint (D35), made from the decoded audio; the crate record's `print` and `prints/<id>.dkl`.
+    /// Nil only in an analysis put together by hand.
+    public var landmarks: Landmarks? = nil
 
     /// The grid tempo, 60 / period (`bpm`).
     public var bpm: Double { 60.0 / grid.period }
