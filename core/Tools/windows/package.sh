@@ -23,10 +23,11 @@
 #   Deckie-for-PC-first-test.zip   the folder, zipped
 #   package-report.md              sizes, the library list and what Windows must provide, for the workflow's summary
 #
-# Not included, on purpose: Microsoft's Visual C++ runtime (MSVCP140.dll, MSVCP140_1.dll, VCRUNTIME140.dll,
-# VCRUNTIME140_1.dll), which Swift's runtime and ONNX Runtime both need. Its licence is Microsoft's own, not on the
-# allowlist (DEPENDENCIES.md), so shipping it is the owner's decision; the starter says in plain words what to
-# install when a PC does not have it.
+# Included since Nov 13, 2026 (the owner's yes): Microsoft's Visual C++ runtime (msvcp140.dll, msvcp140_1.dll,
+# vcruntime140.dll, vcruntime140_1.dll), which Swift's runtime and ONNX Runtime both need and not every PC has. The
+# copies are the ones the Swift toolchain installs beside its own runtime libraries; they come in with the import
+# closure, unmodified, with their notice (core/notices/microsoft-vc-runtime; DEPENDENCIES.md, section 3).
+# DECKIE_SHIP_VC_RUNTIME=0 leaves them out.
 
 if [ -z "${BASH_VERSION:-}" ]; then echo "package.sh: run this with bash" >&2; exit 1; fi
 set -euo pipefail
@@ -65,16 +66,19 @@ for d in "${dirs[@]}"; do
 done
 [ ${#closure[@]} -gt 0 ] || die "Swift's runtime libraries (swiftCore.dll) are not on PATH"
 "$py" "$here/pe_imports.py" "${closure[@]}" "$app/deckie-make.exe" "$app/onnxruntime.dll" | tr -d '\r' > "$out/imports.txt"
-# DECKIE_SHIP_VC_RUNTIME=1 keeps the toolchain's copy of Microsoft's Visual C++ runtime in the zip instead: for the day
-# the owner says yes to its licence (DEPENDENCIES.md, section 3). Not set anywhere today.
-if [ "${DECKIE_SHIP_VC_RUNTIME:-0}" != 1 ]; then
-# Microsoft's Visual C++ runtime is left out even where the Swift toolchain's own runtime folder holds a copy of it
-# (it does: found by the first packaging run, Nov 13, 2026): those lines become "system" lines, expected from Windows.
-sed -i -E 's/^copy .*[\\/]((msvcp140|vcruntime140|concrt140)[^\\/]*\.dll)$/system \1/I' "$out/imports.txt"
-sort -u -o "$out/imports.txt" "$out/imports.txt"
+ship_vc="${DECKIE_SHIP_VC_RUNTIME:-1}"
+vc_names='^(msvcp140|vcruntime140|concrt140)'
+if [ "$ship_vc" != 1 ]; then
+    # Left out: those lines become "system" lines, expected from Windows.
+    sed -i -E 's/^copy .*[\\/]((msvcp140|vcruntime140|concrt140)[^\\/]*\.dll)$/system \1/I' "$out/imports.txt"
+    sort -u -o "$out/imports.txt" "$out/imports.txt"
 fi
 grep '^copy ' "$out/imports.txt" | sed 's/^copy //' | while IFS= read -r dll; do cp "$dll" "$app/"; done
-if [ "${DECKIE_SHIP_VC_RUNTIME:-0}" != 1 ] && ls "$app" | grep -q -i -E '^(msvcp140|vcruntime140|concrt140)'; then
+if [ "$ship_vc" = 1 ]; then
+    for f in msvcp140.dll msvcp140_1.dll vcruntime140.dll vcruntime140_1.dll; do
+        [ -f "$app/$f" ] || die "Microsoft's $f was not found beside Swift's runtime libraries, so the zip would not start on a PC without it"
+    done
+elif ls "$app" | grep -q -i -E "$vc_names"; then
     die "Microsoft's Visual C++ runtime got into the zip"
 fi
 ls "$app"/swiftCore.dll >/dev/null 2>&1 || die "swiftCore.dll was not found among the program's imports; see $out/imports.txt"
@@ -96,6 +100,7 @@ cp "$core/notices/swift/swift-LICENSE.txt" "$core/notices/swift/swift-foundation
    "$core/notices/swift/swift-corelibs-foundation-and-libdispatch-LICENSE.txt" "$core/notices/swift/ICU-76.1-LICENSE.txt" "$lic/"
 cp "$ort/LICENSE" "$lic/onnxruntime-LICENSE.txt"
 cp "$ort/ThirdPartyNotices.txt" "$lic/onnxruntime-ThirdPartyNotices.txt"
+if [ "$ship_vc" = 1 ]; then cp "$core/notices/microsoft-vc-runtime/NOTICE.txt" "$lic/Microsoft-Visual-C++-runtime-NOTICE.txt"; fi
 mkdir -p "$lic/eigen-patches"
 cp "$core/notices/eigen/"* "$lic/eigen-patches/"
 "$py" - "$core/dependencies.json" > "$lic/ACKNOWLEDGEMENTS.txt" <<'PY'
@@ -123,8 +128,8 @@ print("it are in eigen-patches. Eigen's source: https://gitlab.com/libeigen/eige
 print()
 print("ICU (inside Foundation) is under the Unicode License V3: ICU-76.1-LICENSE.txt.")
 print()
-print("Not in this folder: Microsoft's Visual C++ runtime, which Windows or another program")
-print("provides on most PCs.")
+print("Microsoft's Visual C++ runtime (four files) is Microsoft's own, not open source, and is")
+print("included unmodified under Microsoft's terms: Microsoft-Visual-C++-runtime-NOTICE.txt.")
 PY
 
 # Every file with its size and hash, and what must come from Windows.
@@ -138,9 +143,7 @@ PY
     echo "Library files the program expects from Windows itself (not in this folder):"
     grep '^system ' "$out/imports.txt" | sed 's/^system /  /'
     echo
-    echo "Of those, msvcp140.dll, msvcp140_1.dll, vcruntime140.dll and vcruntime140_1.dll are Microsoft's Visual C++"
-    echo "runtime, which is not part of every Windows; names that start with api-ms-win-crt are Windows 10 and 11's own"
-    echo "C runtime; the rest are parts of every Windows."
+    echo "Names that start with api-ms-win-crt are Windows 10 and 11's own C runtime; the rest are parts of every Windows."
 } > "$lic/FILES.txt"
 
 # The zip (compressed, for the download; nothing to do with the crate file's own uncompressed form).
@@ -165,5 +168,11 @@ PY
     echo "| The starter | \`Make Crate File.exe\`, $(wc -c < "$root/Make Crate File.exe") bytes |"
     echo "| Swift runtime libraries copied | $(grep -c '^copy ' "$out/imports.txt"): $(grep '^copy ' "$out/imports.txt" | sed 's/.*[\\/]//' | tr '\n' ' ') |"
     echo "| Expected from Windows | $(grep '^system ' "$out/imports.txt" | sed 's/^system //' | tr '\n' ' ') |"
+    if [ "$ship_vc" = 1 ]; then
+        for f in msvcp140.dll msvcp140_1.dll vcruntime140.dll vcruntime140_1.dll; do
+            version="$(powershell -NoProfile -Command "(Get-Item '$(cygpath -w "$app/$f")').VersionInfo.FileVersion" 2>/dev/null | tr -d '\r' || true)"
+            echo "| Microsoft's \`$f\` | $(wc -c < "$app/$f") bytes, version $version, SHA-256 \`$(sha256sum "$app/$f" | cut -d' ' -f1)\` |"
+        done
+    fi
 } > "$out/package-report.md"
 cat "$out/package-report.md"

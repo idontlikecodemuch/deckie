@@ -1,0 +1,28 @@
+Microsoft Visual C++ runtime
+============================
+
+The folder "app" holds four files that are Microsoft's, not Deckie's:
+
+    msvcp140.dll
+    msvcp140_1.dll
+    vcruntime140.dll
+    vcruntime140_1.dll
+
+They are the Microsoft Visual C++ runtime, (c) Microsoft Corporation, all rights reserved. Programs built with
+Microsoft's C and C++ tools need them to start, and both Swift's runtime and ONNX Runtime are such programs.
+They are included unmodified, beside the program that uses them, so that Deckie starts on a PC that does not
+have them or has an older copy.
+
+They are not open-source software. They are distributed under the "Distributable Code" terms of the Microsoft
+Software License Terms for Visual Studio, whose list of files that may be distributed with a program says:
+
+    "Subject to the License Terms for the software, you may copy and distribute with your program any of the
+    files within the following folder and its subfolders except as noted below. You may not modify these files.
+    [VisualStudioFolder]\VC\redist"
+
+    https://learn.microsoft.com/en-us/visualstudio/releases/2022/redistribution
+    https://visualstudio.microsoft.com/license-terms/
+
+The copies here are the ones the Swift 6.4.1 toolchain for Windows installs beside its own runtime libraries.
+Their sizes and SHA-256 hashes are in FILES.txt. The same runtime, as an installer, is Microsoft's
+"Visual C++ Redistributable": https://aka.ms/vs/17/release/vc_redist.x64.exe

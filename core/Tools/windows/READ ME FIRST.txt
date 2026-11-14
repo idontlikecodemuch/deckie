@@ -124,9 +124,6 @@ long they took, and the files that could not be added, each with its name and
 the reason. That is all. No song audio, nothing about the songs that went in,
 and not the name of your Windows account.
 
-If Windows says a file such as VCRUNTIME140.dll is missing, the program will
-tell you which free Microsoft part to install, and where to get it.
-
 To remove Deckie: delete this folder. It installed nothing. It keeps its notes
 on what it has already read in a folder called "Deckie" under your Windows
 account's local app data, which you can delete too.
@@ -138,5 +135,5 @@ What is in this folder
     READ ME FIRST.txt     this page
     Make Crate File       the program to start
     app                   the parts it needs; leave them where they are
-    app\licences          the licences of the open-source parts Deckie uses,
-                          and the acknowledgements
+    app\licences          the licences of the parts Deckie uses that others
+                          made, and the acknowledgements
