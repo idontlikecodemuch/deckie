@@ -71,6 +71,7 @@ let package = Package(
         .executable(name: "deckie-build", targets: ["deckie-build"]),
         .executable(name: "deckie-desk-engine", targets: ["deckie-desk-engine"]),
         .executable(name: "deckie-make", targets: ["deckie-make"]),
+        .library(name: "DeckieChroma", targets: ["DeckieChroma"]),
     ],
     targets: [
         .target(name: "DeckieAudio"),
@@ -143,6 +144,13 @@ let package = Package(
                     dependencies: ["DeckieDesk", "DeckieDisc", "DeckieBuild", "DeckieEngine", "DeckieCrate", "DeckieCore", "DeckieAudio",
                                    "DeckieDecode", "DeckieInference", "DeckieRecognition", "DeckieTestSupport",
                                    "deckie-desk-engine", "DeckieLookup"]),
+        // DeckieChroma: a sound fingerprint in the form AcoustID reads (Chromaprint's algorithm 2, ported from its MIT
+        // files; LICENSE-chromaprint), for "Look up songs by sound" (the note on D30). No network: DeckieLookup sends it.
+        .target(name: "DeckieChroma", dependencies: ["DeckieCore", "DeckieDecode"], exclude: ["LICENSE-chromaprint"]),
+        // deckie-sound-trial: the lookup by sound measured on a folder of public recordings (a development tool).
+        .executableTarget(name: "deckie-sound-trial", dependencies: ["DeckieChroma", "DeckieLookup", "DeckieBuild",
+                                                                     "DeckieDecode", "DeckieDesk", "DeckieCrate"]),
+        .testTarget(name: "DeckieChromaTests", dependencies: ["DeckieChroma", "DeckieDecode"]),
     ]
 )
 

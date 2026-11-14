@@ -1,0 +1,47 @@
+DeckieChroma is a Swift port of parts of Chromaprint (https://github.com/acoustid/chromaprint), release v1.6.2,
+commit 3b38c100022bdfb49be7797c4828a476f1621d55. Only files of Chromaprint's own code, each marked "Distributed
+under the MIT license", were ported:
+
+  src/fingerprinter_configuration.cpp   the frame size and step, the chroma filter weights, kClassifiersTest2
+  src/fingerprinter.cpp                 the 28 Hz to 3,520 Hz range and the order of the steps
+  src/fft.cpp, src/fft_lib_kissfft.cpp  the Hamming-windowed power spectrum per frame
+  src/audio/audio_slicer.h              the framing
+  src/chroma.cpp                        the 12-note chroma
+  src/chroma_filter.cpp                 the five-frame smoothing
+  src/chroma_normalizer.h, src/utils.h  the normalising, the window, Gray code, frequency and bin conversions
+  src/fingerprint_calculator.cpp        the 32 bits a frame
+  src/classifier.h, src/filter.h,
+  src/filter_utils.h, src/quantizer.h   the filter shapes and thresholds
+  src/utils/rolling_integral_image.h    the integral image
+  src/fingerprint_compressor.cpp,
+  src/fingerprint_decompressor.cpp,
+  src/utils/pack_int3_array.h,
+  src/utils/pack_int5_array.h,
+  src/utils/base64.h                    the compressed form
+
+Nothing was taken from Chromaprint's LGPL 2.1 parts (src/avresample, taken from FFmpeg, nor FFmpeg's FFT).
+DeckieChroma's resampler is Deckie's own; its Fourier transform is DeckieCore's.
+
+Chromaprint's notice, from its LICENSE.md:
+
+MIT License
+
+Copyright (C) 2010-2016  Lukas Lalinsky
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
