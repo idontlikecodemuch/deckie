@@ -7,6 +7,7 @@ import DeckieEngine
 import DeckieCore
 import DeckieDesk
 import DeckieDisc
+import DeckieLookup
 import AVFoundation
 
 /// What the window shows: the crate that is showing (one of the crates Desk keeps, D28), a run in progress, the
@@ -66,6 +67,16 @@ final class DeskModel: ObservableObject {
     let listener = Listener()
     private var watchers: [NSObjectProtocol] = []
 
+    // "Look up songs via MusicBrainz" (D36; Lookup.swift): its sheet, "What Desk has sent", the lookup going.
+    @Published var lookup: LookupSheetState?
+    @Published var showSent = false
+    /// Whether the one-song sentence has been shown once (kept in Desk's storage with the sent list).
+    @Published var lookupExplained = false
+    let lookupClient = DeskLookup.client()
+    var lookupRun: DeskLookupRun?
+    /// One lock for every write to the sent list (the lookup's thread writes it).
+    let sentLock = NSLock()
+
     /// The window's undo manager, given by the window (ContentView).
     weak var undoManager: UndoManager?
     private var saveTask: Task<Void, Never>?
@@ -87,6 +98,7 @@ final class DeskModel: ObservableObject {
             MainActor.assumeIsolated { self?.saveNow() }
         })
         reloadCrates()
+        lookupExplained = LookupLog.load(home).explained
         if let first = crates.first { show(first) }
     }
 
@@ -326,6 +338,12 @@ final class DeskModel: ObservableObject {
         undoManager?.registerUndo(withTarget: self) { m in MainActor.assumeIsolated { m.restore(before, name: name) } }
         undoManager?.setActionName(name)
         scheduleSave()
+    }
+
+    /// A lookup's apply as one undo step (Lookup.swift): the crate, the corrections and the book, changed together.
+    func changeForLookup(_ name: String, _ body: (inout Crate, inout NameCorrections, inout NameBook) -> Void) {
+        guard crate != nil else { return }
+        change(name) { body(&crate!, &corrections, &book) }
     }
 
     func binding(for id: String) -> CrateTrack? { crate?.tracks.first { $0.id == id } }
