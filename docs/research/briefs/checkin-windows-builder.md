@@ -2,6 +2,32 @@
 
 Newest entry first. Each entry: when, what is done, what failed and why, what is next, and one plain line.
 
+## Nov 14, 2026, 02:05 UTC: branch `pc/m4a` (from `main`), `.m4a` on Windows written, first push
+
+D33 applied: build it, and a file whose lead-in is stated nowhere is accepted with its start marked uncertain.
+
+**Written, tested on Linux where it can be (433 tests pass here), not yet seen on Windows:**
+
+- `core/Sources/DeckieDecode/MP4Audio.swift`: reads what an `.m4a` says about its start and end (the edit list, or
+  iTunes' `iTunSMPB` tag; Apple Lossless has no lead-in) and works out what to drop. It drops the lead-in only when
+  the decoded length shows the decoder handed back the whole track, as measured; a length that fits nothing is
+  refused, not guessed at.
+- `AudioDecoder` on Windows reads AAC and Apple Lossless through the Media Foundation shim and applies that trim.
+  A Windows without media features (the "N" editions) reports the file as unreadable, in words.
+- **The uncertain start uses what the crate file can already say**: the record's `flags` list gains the name
+  `start_uncertain`. No field is added or changed, so there is nothing to stop on; the name is written into
+  `docs/architecture/crate-format.md`. The PC program counts such songs in its closing words and lists them in
+  the log.
+- The Windows workflow now builds a crate file from the test track as AAC, as Apple Lossless, and as AAC with its
+  edit list taken out, and checks the first two grids against the WAV's (within 5 ms; an untrimmed lead-in would be
+  23 ms) and the flag on the third.
+
+**Not done yet:** the note for the letter on packaging the window (`deckie-desk`); WMA, Ogg and Opus stay unread.
+
+**Next:** read the Windows run; fix what breaks.
+
+carry on
+
 **The zip to use: `pc-package` run 43535065527** (commit `21ad255`), artifact `Deckie-for-PC-first-test` (id
 14090055016, kept to Dec 14, 2026): `Deckie-for-PC-first-test.zip`, **122,280,833 bytes**, SHA-256
 `6e1cd29b2c9cce10c6e0059954612d5ee9bb35f0b036270773f6cbf4e857e480`. Microsoft's runtime included. Earlier zips are

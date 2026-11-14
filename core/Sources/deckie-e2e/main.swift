@@ -14,6 +14,13 @@
 //   deckie-e2e songs <folder> [--count 4] [--seconds 240]   a folder of full-length synthesised songs (drums and
 //                                      chords, each at its own tempo), as WAV and FLAC by turns, to time the builder
 //                                      on songs of a real length
+//   deckie-e2e m4a <folder>            the test track as AAC and as Apple Lossless (.m4a), encoded by the ffmpeg
+//                                      program, for the Windows job, which reads them through Windows' own decoder
+//   deckie-e2e m4a-folder <folder> --from <that folder>   a music folder: the test track as WAV, AAC, Apple Lossless,
+//                                      and the AAC file again with its edit list taken out (no stated lead-in)
+//   deckie-e2e check-m4a <crate file>  Windows: all four are songs; the AAC and Apple Lossless grids start where the
+//                                      WAV's does (within 5 ms); the file with no stated lead-in is flagged
+//                                      start_uncertain
 //
 // The folder (songs are the engine's synthesised test track, `TestTrack`: 63 s of drums at 124 BPM in A minor):
 //
@@ -140,6 +147,69 @@ func songs(_ root: URL, count: Int, seconds: Double) throws {
     print("wrote \(count) songs of \(Int(seconds)) s to \(root.path)")
 }
 
+func encode(_ wav: URL, _ out: URL, _ codec: [String]) throws {
+    guard let ffmpeg = TestTrack.findFFmpeg() else { fail("the ffmpeg program was not found") }
+    let p = Process()
+    p.executableURL = URL(fileURLWithPath: ffmpeg)
+    p.arguments = ["-y", "-hide_banner", "-loglevel", "error", "-i", wav.path] + codec + [out.path]
+    try p.run()
+    p.waitUntilExit()
+    if p.terminationStatus != 0 { fail("ffmpeg could not encode \(out.lastPathComponent)") }
+}
+
+func m4aFiles(_ folder: URL) throws {
+    try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+    let wav = folder.appendingPathComponent("track.wav")
+    try TestTrack.wav(TestTrack.render()).write(to: wav)
+    defer { try? FileManager.default.removeItem(at: wav) }
+    try encode(wav, folder.appendingPathComponent("aac.m4a"), ["-codec:a", "aac", "-b:a", "192k"])
+    try encode(wav, folder.appendingPathComponent("alac.m4a"), ["-codec:a", "alac", "-sample_fmt", "s16p"])
+    print("wrote aac.m4a and alac.m4a to \(folder.path)")
+}
+
+let m4aNames = (wav: "Track.wav", aac: "Bought.m4a", alac: "Lossless.m4a", bare: "No lead-in stated.m4a")
+
+func m4aFolder(_ root: URL, from: URL) throws {
+    let fm = FileManager.default
+    try? fm.removeItem(at: root)
+    try fm.createDirectory(at: root, withIntermediateDirectories: true)
+    try TestTrack.wav(TestTrack.render()).write(to: root.appendingPathComponent(m4aNames.wav))
+    let aac = try Data(contentsOf: from.appendingPathComponent("aac.m4a"))
+    try aac.write(to: root.appendingPathComponent(m4aNames.aac))
+    try Data(contentsOf: from.appendingPathComponent("alac.m4a")).write(to: root.appendingPathComponent(m4aNames.alac))
+    // The same AAC file with its edit list's box renamed, so it states its lead-in nowhere.
+    var bare = aac
+    guard let edts = bare.range(of: Data("edts".utf8)) else { fail("aac.m4a has no edit list to take out") }
+    bare.replaceSubrange(edts, with: Data("skip".utf8))
+    try bare.write(to: root.appendingPathComponent(m4aNames.bare))
+    print("wrote the .m4a music folder: \(root.path)")
+}
+
+func checkM4A(_ file: URL) {
+    let crate: Crate
+    do { crate = try CrateReader.read(from: file) } catch { fail("the core's validator refuses \(file.lastPathComponent):\n\(error)") }
+    var wrong: [String] = []
+    func track(_ name: String) -> CrateTrack? { crate.tracks.first { $0.file.name == name } }
+    guard let wav = track(m4aNames.wav), let start = wav.grid?.firstDownbeatS else { fail("the WAV is not in the crate file") }
+    print("\(m4aNames.wav): first downbeat \(start) s, \(wav.grid?.bpm ?? 0) BPM, \(wav.grid?.nBars ?? 0) bars")
+    for (name, uncertain) in [(m4aNames.aac, false), (m4aNames.alac, false), (m4aNames.bare, true)] {
+        guard let t = track(name), let g = t.grid else {
+            let why = crate.manifest.importLog?.entries.first { $0.rel == name }.map { "\($0.reason): \($0.message)" } ?? "no entry"
+            wrong.append("\(name) is not a song in the crate file (\(why))")
+            continue
+        }
+        let late = (g.firstDownbeatS - start) * 1000
+        let flagged = t.flags.contains("start_uncertain")
+        print("\(name): first downbeat \(g.firstDownbeatS) s (\(String(format: "%+.1f", late)) ms against the WAV), \(g.bpm) BPM, "
+              + "\(g.nBars) bars, decoder \(t.engine.decoder?.name ?? "?"), start_uncertain \(flagged)")
+        if g.nBars != TestTrack.bars || abs(g.bpm - TestTrack.bpm) > 0.5 { wrong.append("\(name): \(g.bpm) BPM, \(g.nBars) bars") }
+        if flagged != uncertain { wrong.append("\(name): start_uncertain is \(flagged), expected \(uncertain)") }
+        if !uncertain, abs(late) > 5 { wrong.append("\(name): its grid starts \(late) ms from the WAV's; more than 5 ms") }
+    }
+    if !wrong.isEmpty { fail("the .m4a crate file is not the expected one:\n  " + wrong.joined(separator: "\n  ")) }
+    print("\(file.lastPathComponent): AAC and Apple Lossless read through Windows' decoder, their grids where the WAV's is")
+}
+
 func check(_ file: URL, pc: Bool = false) {
     let crate: Crate
     do {
@@ -196,6 +266,10 @@ do {
             args.firstIndex(of: name).flatMap { $0 + 1 < args.count ? Double(args[$0 + 1]) : nil } ?? fallback
         }
         try songs(URL(fileURLWithPath: args[1]), count: Int(value("--count", 4)), seconds: value("--seconds", 240))
+    case ("m4a", 2): try m4aFiles(URL(fileURLWithPath: args[1]))
+    case ("m4a-folder", 4) where args[2] == "--from":
+        try m4aFolder(URL(fileURLWithPath: args[1]), from: URL(fileURLWithPath: args[3]))
+    case ("check-m4a", 2): checkM4A(URL(fileURLWithPath: args[1]))
     case ("mp3", 2):
         guard let ffmpeg = TestTrack.findFFmpeg() else { fail("the ffmpeg program was not found; it encodes the test MP3") }
         let out = URL(fileURLWithPath: args[1])

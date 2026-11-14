@@ -59,6 +59,10 @@ public enum PCWords {
     public static func damagedSpots(_ n: Int) -> String {
         "\(count(n, "song")) in the crate file \(n == 1 ? "has" : "have") a damaged spot. \(n == 1 ? "It still plays" : "They still play"); the log says where."
     }
+    public static func startUncertain(_ n: Int) -> String {
+        "\(count(n, "song")) in the crate file \(n == 1 ? "comes" : "come") from \(n == 1 ? "a file that does" : "files that do") not say exactly where the music starts. "
+            + "\(n == 1 ? "Its" : "Their") beats may sit a touch late (up to 0.05 seconds); the log lists \(n == 1 ? "it" : "them")."
+    }
     public static func crateFileIs(_ path: String) -> String { "Your crate file:\n  \(path)" }
     public static func logIs(_ path: String) -> String { "A log of this run, to send if something looks wrong:\n  \(path)" }
     public static let notYet = "Not in a crate file made on a PC yet: song recognition, and the key unless your files carry one."
@@ -88,7 +92,7 @@ public enum PCWords {
         switch reason {
         case R.unsupported:
             switch ext {
-            case "m4a", "mp4", "aac": return "AAC and Apple Lossless files (.\(ext)) cannot be read by this version yet"
+            case "m4a", "mp4", "aac": return "Windows on this PC could not read these AAC or Apple Lossless files (.\(ext)); the log says why"
             case "wma": return "Windows Media files (.wma) cannot be read by this version yet"
             case "ogg", "opus": return "Ogg and Opus files (.\(ext)) cannot be read by this version yet"
             default: return "this kind of file cannot be read by this version yet"

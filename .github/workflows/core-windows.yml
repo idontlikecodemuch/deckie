@@ -6,7 +6,7 @@ name: core-windows
 
 on:
   push:
-    branches: [main, pc-linux, pc/windows-builder]
+    branches: [main, pc-linux, pc/windows-builder, pc/m4a]
     paths: [core/**, mixer/features/**, mixer/candidates.json, mixer/recs.json, .github/workflows/core-windows.yml]
   pull_request:
     paths: [core/**, mixer/features/**, mixer/candidates.json, mixer/recs.json, .github/workflows/core-windows.yml]
@@ -27,13 +27,16 @@ jobs:
         run: |
           apt-get update
           apt-get install -y --no-install-recommends ffmpeg
-      - name: Encode the test track
+      - name: Encode the test track (MP3, and AAC and Apple Lossless for the Windows job)
         working-directory: core
-        run: swift run deckie-e2e mp3 /tmp/test_track.mp3
+        run: |
+          mkdir -p /tmp/e2e-audio
+          swift run deckie-e2e mp3 /tmp/e2e-audio/test_track.mp3
+          swift run deckie-e2e m4a /tmp/e2e-audio
       - uses: actions/upload-artifact@v4
         with:
           name: e2e-test-mp3
-          path: /tmp/test_track.mp3
+          path: /tmp/e2e-audio
           retention-days: 7
           compression-level: 0
           if-no-files-found: error
@@ -120,6 +123,16 @@ jobs:
           swift run deckie-build "$RUNNER_TEMP/e2e/Music" --out "$RUNNER_TEMP/e2e/E2E.deckiecrate" --jobs 2 | tee second.txt
           grep -q "5 unchanged since the last run; nothing to analyse" second.txt
           rm second.txt
+      # AAC and Apple Lossless (.m4a), read on Windows only, through Windows' own decoder: the test track as both, and
+      # the AAC file again with its edit list taken out. All must be songs; the two that state their start must have
+      # their grid where the WAV's is (within 5 ms; an untrimmed lead-in would show as 23 ms); the third must carry
+      # the flag start_uncertain (D33).
+      - name: "End to end: .m4a files through Windows' decoder"
+        working-directory: core
+        run: |
+          swift run deckie-e2e m4a-folder "${{ runner.temp }}\m4a\Music" --from "${{ runner.temp }}\e2e-mp3"
+          swift run deckie-build "${{ runner.temp }}\m4a\Music" --out "${{ runner.temp }}\m4a\M4A.deckiecrate" --jobs 2
+          swift run deckie-e2e check-m4a "${{ runner.temp }}\m4a\M4A.deckiecrate"
       - name: Keep the crate file for the comparison
         uses: actions/upload-artifact@v4
         with:

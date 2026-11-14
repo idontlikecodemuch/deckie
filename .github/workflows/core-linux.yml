@@ -3,7 +3,7 @@ name: core-linux
 
 on:
   push:
-    branches: [main, pc-linux, pc/windows-builder]
+    branches: [main, pc-linux, pc/windows-builder, pc/m4a]
     paths: [core/**, mixer/features/**, mixer/candidates.json, mixer/recs.json, .github/workflows/core-linux.yml]
   pull_request:
     paths: [core/**, mixer/features/**, mixer/candidates.json, mixer/recs.json, .github/workflows/core-linux.yml]

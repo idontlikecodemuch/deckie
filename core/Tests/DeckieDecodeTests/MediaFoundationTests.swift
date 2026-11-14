@@ -52,5 +52,47 @@ import Testing
         #expect(frames == 178_176)
         #expect(top - 88_200 == 1_024)
     }
+
+    /// The decoder as the builder calls it: the tone comes back at its own length with the click where it was.
+    @Test func theDecoderPutsTheClickBackAt88200() throws {
+        let decoded: DecodedAudio
+        do {
+            decoded = try AudioDecoder.decodeReporting(Self.tone)
+        } catch {
+            if error.message.contains("no media features") { print("skipped: \(error.message)"); return }
+            throw error
+        }
+        let b = decoded.buffer
+        let frames = b.samples.count / b.channelCount
+        var top = 0, level: Float = 0
+        for i in 0..<frames where abs(b.samples[i * b.channelCount]) > level { level = abs(b.samples[i * b.channelCount]); top = i }
+        #expect(b.sampleRate == 44100 && b.channelCount == 2)
+        #expect(frames == 176_400)
+        #expect(top == 88_200)
+        #expect(decoded.startUncertain == nil)
+    }
+
+    /// The same file with its edit list gone: read whole, the click 1,024 frames late, and marked.
+    @Test func aFileWithNoStatedLeadInIsReadAndMarkedUncertain() throws {
+        let folder = FileManager.default.temporaryDirectory.appendingPathComponent("deckie-mf-\(UUID().uuidString)")
+        try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: folder) }
+        let file = folder.appendingPathComponent("no lead-in stated.m4a")
+        try MP4AudioTests.withoutEditList(try Data(contentsOf: Self.tone)).write(to: file)
+        let decoded: DecodedAudio
+        do {
+            decoded = try AudioDecoder.decodeReporting(file)
+        } catch {
+            if error.message.contains("no media features") { print("skipped: \(error.message)"); return }
+            throw error
+        }
+        let b = decoded.buffer
+        let frames = b.samples.count / b.channelCount
+        var top = 0, level: Float = 0
+        for i in 0..<frames where abs(b.samples[i * b.channelCount]) > level { level = abs(b.samples[i * b.channelCount]); top = i }
+        print("MEDIA FOUNDATION, edit list removed: frames \(frames), click at \(top)")
+        #expect(decoded.startUncertain != nil)
+        #expect(top - 88_200 == 1_024 || top == 88_200, "click at \(top)")
+    }
     #endif
 }
