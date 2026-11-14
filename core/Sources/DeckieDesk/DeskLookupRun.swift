@@ -11,6 +11,8 @@ public final class DeskLookupRun: @unchecked Sendable {
     private let lock = NSLock()
     private var stopFlag = false
     private var requests = 0
+    /// Whether the label of the release that fits is asked for (a second request a song). The trial leaves it out.
+    public var fetchLabels = true
 
     /// Progress: songs done, songs in all, songs with a candidate so far.
     public struct Progress: Sendable, Equatable {
@@ -54,7 +56,7 @@ public final class DeskLookupRun: @unchecked Sendable {
                 for j in cands.indices { DeskLookup.rate(&cands[j], known: known, isrcs: recs[j].isrcs ?? []) }
                 var (ordered, chosen, several) = DeskLookup.order(cands, known: known)
                 // The label of the release that fits (a recording's search answer has none): one more request.
-                if let c = chosen, ordered[c].label == nil, let rid = ordered[c].releaseId {
+                if fetchLabels, let c = chosen, ordered[c].label == nil, let rid = ordered[c].releaseId {
                     if let rel = try? client.release(rid), let label = rel.labels.first { ordered[c].label = label }
                     if isStopped { throw LookupFailure.stopped }
                 }

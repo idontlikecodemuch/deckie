@@ -64,7 +64,7 @@ public enum DeskLookup {
                 if let a = r.artist, LocalNames.isUsableTitle(r.title) {
                     query = RecordingQuery(title: r.version.map { "\(r.title) (\($0))" } ?? r.title, artist: a)
                 } else {
-                    query = RecordingQuery(words: r.version.map { "\(r.title) \($0)" } ?? r.title)
+                    query = RecordingQuery(words: r.version.map { "\(r.title) (\($0))" } ?? r.title)
                 }
                 if let g = goodIsrc { return Ask(kind: "isrc", isrc: g, query: query) }
                 return Ask(kind: "fileName", isrc: nil, query: query)
@@ -266,7 +266,7 @@ public enum DeskLookup {
                 let split = DeskNaming.splitVersion(t.ident.title)
                 title = split.title
                 version = t.ident.version.flatMap { $0.isEmpty ? nil : $0 } ?? split.version
-            } else if let q = ask.query, let qt = q.title {
+            } else if let q = ask.query, let qt = q.title ?? q.words {
                 let split = DeskNaming.splitVersion(qt)
                 title = split.title; version = split.version
             }
@@ -284,7 +284,7 @@ public enum DeskLookup {
                                      "remastered", "remaster"]
 
     /// Text compared loosely: lower case, accents and punctuation gone, "&" as "and", one space between words.
-    static func norm(_ s: String?) -> String {
+    public static func norm(_ s: String?) -> String {
         guard let s else { return "" }
         let folded = s.folding(options: [.caseInsensitive, .diacriticInsensitive, .widthInsensitive], locale: nil)
             .replacingOccurrences(of: "&", with: " and ")
@@ -295,7 +295,7 @@ public enum DeskLookup {
     }
 
     /// A version's words that make it another recording (letter AA, 6.2): live, remix, edit, dub and the like.
-    static func markers(_ s: String?) -> Set<String> {
+    public static func markers(_ s: String?) -> Set<String> {
         let n = norm(s)
         guard !n.isEmpty, !plain.contains(n) else { return [] }
         let words = Set(n.split(separator: " ").map(String.init))
@@ -406,6 +406,9 @@ public enum DeskLookup {
         let names = Set(fitting.map { norm($0.title) + "|" + norm($0.artist) })
         let several = names.count > 1
         guard let first = kept.first, group(first) == 0, !several else { return (kept, nil, several) }
+        // A title with no artist names many songs (letter AA, option B's risks): a list to choose from, not an answer.
+        // An ISRC or a disc names one recording, so those may be chosen with no artist known.
+        if norm(known.artist).isEmpty && known.kind != "isrc" && known.kind != "disc" { return (kept, nil, false) }
         // It must agree with the title Desk has, and with the artist when Desk has one.
         let kt = norm(known.title), ka = norm(known.artist)
         let titleOK = kt.isEmpty || norm(first.title) == kt || norm(first.title).contains(kt) || kt.contains(norm(first.title))

@@ -132,6 +132,27 @@ import DeckieLookup
         #expect(label.locked && label.note == "yours")
     }
 
+    @Test func aTitleWithNoArtistGivesAListToChooseFromNotAnAnswer() throws {
+        // The answer to the Around the World search, served for the file-name words of a file with no tags.
+        let index = try JSONDecoder().decode([String: RecordedTransport.Entry].self,
+                                             from: Data(contentsOf: LookupSongs.fixtures.appendingPathComponent("index.json")))
+        let file = try #require(index.first { $0.key.contains("Around%20the%20World%22%20%2Bartist") && !$0.key.contains("Radio") }?.value.file)
+        struct Same: LookupTransport { let body: Data; var available: Bool { true }; func send(_ r: LookupRequest) throws -> LookupResponse { LookupResponse(status: 200, body: body) } }
+        let body = try Data(contentsOf: LookupSongs.fixtures.appendingPathComponent(file))
+        let untagged = LookupSongs.song("u1", "", seconds: 429.4, file: "01 Around the World.wav", source: "filename")
+        let radio = LookupSongs.song("u2", "", seconds: 239.0, file: "Around the World (Radio Edit).wav", source: "filename")
+        let plan = DeskLookup.plan(LookupSongs.songs([untagged, radio]))
+        #expect(plan.asks.map(\.kind) == ["fileName", "fileName"])
+        #expect(plan.asks[0].query == RecordingQuery(words: "Around the World"))
+        let r = DeskLookupRun(plan: plan, client: LookupSongs.client(Same(body: body)), sent: { _ in }).run()
+        #expect(r.songs[0].outcome == "found" && r.songs[0].chosen == nil)
+        #expect(r.songs[0].candidates.first?.fit == "fits")
+        // The file name's version counts: an answer with no version is the original, not this edit.
+        #expect(r.songs[1].chosen == nil)
+        let originals = r.songs[1].candidates.filter { $0.version == nil }
+        #expect(originals.allSatisfy { $0.otherVersion })
+    }
+
     // MARK: discs
 
     @Test func aKnownDiscNamesEverySong() throws {

@@ -77,7 +77,7 @@ import Testing
     @Test func theWordsAreEscapedForTheSearchLanguage() {
         #expect(MusicBrainz.lucene(RecordingQuery(title: "Say \"Hi\" (Extended Mix)", artist: "AC/DC", release: "Live: 1979"))
                 == #"+recording:"Say \"Hi\"" recording:"Say \"Hi\" (Extended Mix)" +artist:"AC/DC" release:"Live: 1979""#)
-        #expect(MusicBrainz.lucene(RecordingQuery(words: "da funk (live) - 1997")) == #"recording:(da funk \(live\) \- 1997) artist:(da funk \(live\) \- 1997)"#)
+        #expect(MusicBrainz.lucene(RecordingQuery(words: "da funk - 1997 (live)")) == #"recording:"da funk - 1997"^4 recording:(da funk \- 1997 \(live\)) artist:(da funk \- 1997)"#)
         #expect(MusicBrainz.lucene(RecordingQuery()) == nil)
         #expect(MusicBrainz.bareTitle("Night drive (extended mix)") == "Night drive")
         #expect(MusicBrainz.bareTitle("(Untitled)") == "(Untitled)")
