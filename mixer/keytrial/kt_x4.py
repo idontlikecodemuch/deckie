@@ -466,7 +466,9 @@ def main_parity(mode, tool, every=10):
 
 def main_record(mode):
     """python kt_x4.py record <mode>: every recording the chosen model learned from, with its page and its licence
-    -> core/notices/deckie-key/training-recordings.tsv (the record D15 asks for; DEPENDENCIES.md points at it)."""
+    -> core/.models/deckie-key-training-recordings.tsv, beside the model's file and, like it, not in the repository
+    (titles and pages name people). It is the credit CC BY asks for and the record D15 asks for; DEPENDENCIES.md,
+    section 11, gives its hash and its counts."""
     import zipfile, io, csv, hashlib
     real = KS.load_real(); fsl = json.load(open(os.path.join(KS.FSL, "metadata.json")))
     z = zipfile.ZipFile(os.path.join(os.path.dirname(kt.DATA), "fmameta", "fma_metadata.zip"))
@@ -488,10 +490,10 @@ def main_record(mode):
         for q in use:
             t = fma[q["id"][4:]]; rows.append(("Free Music Archive", q["id"][4:], t[0], t[1], t[2], t[3], how))
         if mode == "pseudo": rows = [x for x in rows if x[0] == "Free Music Archive"]
-    out = os.path.join(kt.HERE, "..", "..", "core", "notices", "deckie-key"); os.makedirs(out, exist_ok=True)
+    out = os.path.join(kt.HERE, "..", "..", "core", ".models"); os.makedirs(out, exist_ok=True)
     clean = lambda v: " ".join(str(v).split())
     body = "source\tid\ttitle\tpage\tlicence\tlicence_page\tused_as\n" + "".join("\t".join(clean(v) for v in x) + "\n" for x in rows)
-    open(os.path.join(out, "training-recordings.tsv"), "w", encoding="utf-8").write(body)
+    open(os.path.join(out, "deckie-key-training-recordings.tsv"), "w", encoding="utf-8").write(body)
     print(len(rows), "recordings;", dict(collections.Counter(x[0] for x in rows)), "; licences", dict(collections.Counter(x[4] for x in rows).most_common(12)), "; SHA-256", hashlib.sha256(body.encode()).hexdigest())
 
 if __name__ == "__main__":

@@ -132,6 +132,32 @@ venv/bin/python kt_ship.py cnn --threads 4       # the small convolutional model
 OMP_NUM_THREADS=1 venv/bin/python kt_ship.py report     # the model's tables
 ```
 
+## Research X4: without labelling, and the reader that can ship
+
+More data, fetched Nov 14, 2026, for evaluation only, none committed: the thirty-second clips of the 8,352 Free
+Music Archive tracks whose own licence is CC BY, CC0 or public domain (`tracks.csv` of `fma_metadata.zip`; tracks
+marked "Public Domain / Sound Recording Common Law Protection" left out), read one by one out of `fma_large.zip`
+(`https://os.unil.cloud.switch.ch/fma/`; `kt_remote_zip.py`, 7.9 GB) into `$DECKIE_KT_DATA/fma/audio/<track id>.mp3`
+with `$DECKIE_KT_DATA/fma/usable.json` (track id to licence, artist, top-level genres).
+
+```bash
+venv/bin/python kt_x4.py feats --jobs 4                       # the untrained reader and the spectrogram, per clip
+OMP_NUM_THREADS=1 venv/bin/python kt_x4.py pseudo             # pseudo-labels, THE LEAN -> x4_lean.json, profiles
+venv/bin/python kt_x4.py cnn ssl --threads 4                  # pretrained with no labels, then the human labels
+venv/bin/python kt_x4.py cnn mix --threads 4                  # human labels + 2,000 pseudo-labels (the one chosen)
+venv/bin/python kt_x4.py cnn pseudo --threads 4               # pseudo-labels only
+OMP_NUM_THREADS=1 venv/bin/python kt_x4.py report             # -> x4_results.md
+OMP_NUM_THREADS=1 venv/bin/python kt_x4.py ship               # readers as three-answer readers -> x4_ship_results.md
+OMP_NUM_THREADS=1 venv/bin/python kt_x4.py export mix         # as shipped -> x4_shipped_results.md, core/.models/deckie-key.f16
+OMP_NUM_THREADS=1 venv/bin/python kt_x4.py record mix         # every training recording, its page and licence (not committed)
+OMP_NUM_THREADS=1 venv/bin/python kt_x4.py fixture            # the Swift test's fixture, for a model of made-up numbers
+venv/bin/python kt_x4.py parity mix "<path>/deckie-keyparity --learned <path>/deckie-key.f16"   # Swift against this file
+```
+
+The rules fixed before scoring (the lean, the candidate, the thresholds, what "beats" means) are written at the
+top of `kt_x4.py` and above `main_ship`. `core/.models/deckie-key.f16` and the list `record` writes are not in the
+repository: no trained numbers are committed, and the list names people.
+
 ## Files
 
 | File | What |
@@ -145,6 +171,7 @@ OMP_NUM_THREADS=1 venv/bin/python kt_ship.py report     # the model's tables
 | `kt_x.py`, `kt_pc.py` | the scoring tables |
 | `kt_three.py` | the three-answer reader's Python reference, its parity run against the Swift port, and the test fixture |
 | `kt_ship.py`, `kt_made.py`, `kt_scores.py`, `kt_remote_zip.py` | research X3: readers trained only on data that could ship |
+| `kt_x4.py` | research X4: pseudo-labels, no-label pretraining, the lean, the reader as shipped, its export, record, fixture and parity |
 | `*.tsv` | per-clip keys and per-reader scores (clip ids and keys only; no audio, no artist names) |
 
 ## Protocol
