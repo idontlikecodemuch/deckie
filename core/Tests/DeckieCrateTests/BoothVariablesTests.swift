@@ -11,14 +11,15 @@ import Testing
 /// to anything (unless it is a key's or an id's prefix); a separator in `joined(separator:)` other than spaces or a
 /// line break; and `String(format:)` with a letter in its format. What it cannot catch: a literal kept in a variable
 /// and shown later, a word made with interpolation outside those places, the debug log's own lines (`note(`, or a line marked `// log`), and the
-/// recogniser (Recognizer.swift), left as it is while another change is made there.
+/// recogniser (Recognizer.swift: its status lines and the details sheet's older pitch notes; the new words for
+/// Deckie's recogniser, D35, are in Words.swift, and Listening.swift is read like a view).
 @Suite struct BoothVariablesTests {
     static let repo: URL = {
         var u = URL(fileURLWithPath: #filePath)
         for _ in 0..<4 { u.deleteLastPathComponent() }   // Tests/DeckieCrateTests/<file> -> core -> repo
         return u
     }()
-    static let views = ["CrateLibrary", "DebugSheet", "DeckApp", "ListenView", "Mixing", "Model", "OtherViews",
+    static let views = ["CrateLibrary", "DebugSheet", "DeckApp", "Listening", "ListenView", "Mixing", "Model", "OtherViews",
                         "SuggestionsView"].map { "deck-app/Deck/Sources/\($0).swift" }   // SetRecorder writes files, not the screen
     static func lines(_ path: String) -> [(Int, String)] {
         let s = (try? String(contentsOf: repo.appendingPathComponent(path), encoding: .utf8)) ?? ""
