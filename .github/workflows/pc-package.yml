@@ -294,9 +294,15 @@ jobs:
           $read
           if ($LASTEXITCODE -ne 0) { exit 1 }
           if ($read -notmatch "single-file form") { Write-Error "the crate file is not in the single-file form"; exit 1 }
+          # The test folder has a picture inside one song's tags and one beside another: both are in the crate file.
+          if ($read -notmatch "covers: 2 songs with a cover, 2 distinct covers") { Write-Error "the covers are not in the exported crate file"; exit 1 }
+          # The lookup is not built for Windows yet: asked for through the page, it says so in words and sends nothing.
+          $said = Get-Content $log | Out-String
+          if ($said -notmatch "the lookup says: Looking up isn't built for this computer yet") { Write-Error "the lookup did not say plainly that it is not on this computer yet"; exit 1 }
+          if ($said -notmatch "the finished screen says: 4 songs went in") { Write-Error "the finished screen did not come"; exit 1 }
           "## Deckie Desk: a run from the zip" >> $env:GITHUB_STEP_SUMMARY
           '```' >> $env:GITHUB_STEP_SUMMARY
-          Get-Content $log | Where-Object { $_ -match "run started|run finished|finished screen|crate file exported|PASSED" } >> $env:GITHUB_STEP_SUMMARY
+          Get-Content $log | Where-Object { $_ -match "run started|run finished|finished screen|crate file exported|lookup|PASSED" } >> $env:GITHUB_STEP_SUMMARY
           $read >> $env:GITHUB_STEP_SUMMARY
           '```' >> $env:GITHUB_STEP_SUMMARY
       - name: "Try Desk: started without unzipping the rest (the starter alone)"
