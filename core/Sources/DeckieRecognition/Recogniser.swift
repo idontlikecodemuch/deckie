@@ -81,7 +81,8 @@ public final class Recogniser {
     /// index itself is looking for them).
     public var judgeCopies = true
     /// For measuring whether forgiving a time difference that moved one step pays (letter AB's item 5): every
-    /// three-point hash of the query is looked up five ways, not one. Off: it did not pay (the size study's row).
+    /// hash of the query is also looked up with each of its time differences a step to either side (three ways
+    /// for a pair, five for a triple). Off unless the size study's row says it earns its place.
     public var fuzzyGaps = false
     /// Points taken per slice of the query (nil: the index's own setting).
     public var queryPerSlice: Int?
@@ -213,6 +214,13 @@ public final class Recogniser {
                         for x in 0..<taken[k] {
                             let h = p.hash(anchorBin: a, targetBin: slotBin[k * per + x], gap: slotGap[k * per + x])
                             if p.keptPair(h) { hashes.append(h); shifts.append(shiftT) }
+                            if fuzzyGaps {
+                                // Also the two hashes with the time difference a step to either side.
+                                for d in [-p.gapStep, p.gapStep] where slotGap[k * per + x] + d >= 0 {
+                                    let hf = p.hash(anchorBin: a, targetBin: slotBin[k * per + x], gap: slotGap[k * per + x] + d)
+                                    if p.keptPair(hf) { hashes.append(hf); shifts.append(shiftT) }
+                                }
+                            }
                         }
                     }
                 } else if p.points == 4 {
