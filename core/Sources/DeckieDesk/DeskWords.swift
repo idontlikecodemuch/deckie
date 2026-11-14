@@ -89,10 +89,11 @@ public enum DeskWords {
         "keysCount": "{n} {from}",
         "keysNone.one": "1 song has no key yet.",
         "keysNone.other": "{n} songs have no key yet.",
-        "keysNotSure.one": "On 1 song Deckie was not sure of the key, so it shows none.",
-        "keysNotSure.other": "On {n} songs Deckie was not sure of the key, so it shows none.",
-        "keysModeOpen.one": "On 1 song Deckie found the home note but not whether it is major or minor.",
-        "keysModeOpen.other": "On {n} songs Deckie found the home note but not whether it is major or minor.",
+        // new (D33, D36): the finished screen's counts for Deckie's own reader. Placeholders until the copy audit.
+        "keysNotSure.one": "On 1 song Deckie is not sure of the key, so it shows none.",
+        "keysNotSure.other": "On {n} songs Deckie is not sure of the key, so it shows none.",
+        "keysHomeNote.one": "1 song has a home note in place of a key.",
+        "keysHomeNote.other": "{n} songs have a home note in place of a key.",
         "keysDisagree.one": "On 1 song your programs give different keys; the newest program's is shown.",
         "keysDisagree.other": "On {n} songs your programs give different keys; the newest program's is shown.",
         "needName.one": "1 song still needs a name.",
@@ -192,6 +193,11 @@ public enum DeskWords {
         "keyNotSure": ", not sure",
         "rowNameFrom": "Name from",
         "keyNotRead": "Key not read on this computer yet",
+        // new (D36): the home note, shown where a key shows; and a song Deckie read and is not sure of, as distinct
+        // from one not read. Placeholders until the copy audit.
+        "homeNote": "Home note {note}",
+        "homeNoteHelp": "Deckie found this song's home note, not whether it is major or minor. It can fit {minor} or {major}.",
+        "keyDeckieNotSure": "Deckie is not sure of this song's key",
         "keySays": "{program} says {camelot}",
         "keyFrom.rekordbox-xml": "from rekordbox",
         "keyFrom.traktor": "from Traktor",

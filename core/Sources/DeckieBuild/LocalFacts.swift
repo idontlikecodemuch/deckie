@@ -240,6 +240,21 @@ public enum LocalFacts {
         return report
     }
 
+    /// The "when sure" rule alone, for a builder that gathers nothing from the computer (`deckie-make`): each record's
+    /// key becomes what `decideKey` shows of Deckie's own reading with no key from the DJ: a key the reader was sure
+    /// of, the home note alone, or neither. Names and DJ's keys are not touched. Returns the counts.
+    @discardableResult
+    public static func ownKeysOnly(_ crate: inout Crate) -> Report {
+        var report = Report()
+        for i in crate.tracks.indices {
+            var t = crate.tracks[i]
+            if let k = t.key, djOrigins.contains(k.source) { continue }
+            decideKey(&t, [], own: ownReading(t), ownHome: ownHome(t), &report)
+            crate.tracks[i] = t
+        }
+        return report
+    }
+
     /// The key block from the readings, by the rule above. `own` is Deckie's own reading of the song, if any.
     static func decideKey(_ t: inout CrateTrack, _ readings: [Reading], own: CrateTrack.Key?,
                           ownHome: CrateTrack.KeyHome? = nil, _ report: inout Report) {
