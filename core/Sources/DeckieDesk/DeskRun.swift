@@ -197,7 +197,7 @@ public final class DeskRun: @unchecked Sendable {
         let t0 = Date()
         try home.prepare()
         let shelf = home.shelf, store = home.store
-        guard var info = shelf.info(crateId) else { throw DeskError("no crate \(crateId)") }
+        guard var info = shelf.info(crateId) else { throw DeskError(DeskWords.text("error.noCrate", ["id": crateId])) }
         let pkg = shelf.package(crateId)
         let pendingURL = shelf.file(Self.pendingFile, of: crateId)
         let carriedOn = FileManager.default.fileExists(atPath: pendingURL.path)
@@ -210,7 +210,7 @@ public final class DeskRun: @unchecked Sendable {
         let disc = try request.discId.flatMap { id -> DiscSongFiles? in
             guard request.musicCD != nil else { return nil }
             guard let cd = DiscRecords.find(id, near: request.musicCD, open: openMusicCD, musicCDs: findMusicCDs) else {
-                throw DeskError("\(request.name) is not in a drive. Put \(request.name) back in to carry on.")
+                throw DeskError(DeskWords.text("error.notInADrive", ["name": request.name]))
             }
             return DiscSongFiles(cd: cd, record: try DiscRecords.prepare(cd, home: home), home: home, store: store,
                                  needsSignature: signer != nil)
@@ -342,7 +342,7 @@ public final class DeskRun: @unchecked Sendable {
             }
         } } catch let e as DiscError where disc != nil {
             // The disc came out, or the drive stopped answering: nothing of this read is written; carry on asks for it.
-            throw DeskError("\(request.name) could not be read (\(e.description)). Put \(request.name) back in to carry on.")
+            throw DeskError(DeskWords.text("error.couldNotRead", ["name": request.name, "detail": e.description]))
         }
         queue.sync {}
         screen.sync {}

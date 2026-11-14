@@ -125,7 +125,7 @@ public struct CrateShelf: Sendable {
     /// name given, made unique among the crates.
     @discardableResult
     public func rename(_ id: String, to new: String) throws -> CrateInfo {
-        guard var i = info(id) else { throw DeskError("no crate \(id)") }
+        guard var i = info(id) else { throw DeskError(DeskWords.text("error.noCrate", ["id": id])) }
         let n = new.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !n.isEmpty, n != i.name else { return i }
         i.name = unusedName(n, except: id)
@@ -178,7 +178,7 @@ public struct CrateShelf: Sendable {
         let pkg = package(id)
         let fm = FileManager.default
         guard fm.fileExists(atPath: pkg.appendingPathComponent(CrateFormat.manifestFile).path) else {
-            throw DeskError("the crate has no songs yet, so there is no crate file to write")
+            throw DeskError(DeskWords.text("error.noSongsNoCrateFile"))
         }
         try DeckieFiles.remove(destination)
         try DeckieFiles.createDirectory(destination.deletingLastPathComponent())
@@ -196,7 +196,7 @@ public struct CrateShelf: Sendable {
     /// The crate file copied to the outbox under the crate's name (`Friday night.deckiecrate`), ready for the share
     /// sheet; the outbox holds only the last one.
     public func outboxCopy(_ id: String) throws -> URL {
-        guard let i = info(id) else { throw DeskError("no crate \(id)") }
+        guard let i = info(id) else { throw DeskError(DeskWords.text("error.noCrate", ["id": id])) }
         let fm = FileManager.default
         try DeckieFiles.remove(home.outbox)
         let safe = i.name.replacingOccurrences(of: "/", with: "-").replacingOccurrences(of: ":", with: "-")

@@ -61,7 +61,8 @@ public struct RunSong: Codable, Equatable, Sendable {
     /// The loudness scale, the same for every song so the waves compare: per-bar loudness (LUFS, the analysis's `lufs`
     /// series) from -30, near silence for music, to -4, louder than almost any master.
     public static let waveFloorLufs = -30.0, waveCeilLufs = -4.0
-    public static let noteNames = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"]
+    /// The twelve home notes as the run screen names them, C first: DeskWords' `noteName.1` to `noteName.12`.
+    public static let noteNames = DeskWords.list("noteName")
 
     public init(id: String, number: Int = 0, title: String, artist: String?, bpm: Double?, key: Key, bars: Int?,
                 seconds: Double, place: String?, folder: String?, wave: [Int], introBars: Int?, before: Bool) {
