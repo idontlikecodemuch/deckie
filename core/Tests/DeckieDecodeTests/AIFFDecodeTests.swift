@@ -326,7 +326,11 @@ func decodeFailure(_ data: Data) -> AudioDecodeError? {
         ]
         for (what, bytes, finding) in cases {
             #expect(ProtectedMP4.check(bytes) == finding, "\(what)")
-            // Through the decoder: protected, or the usual "AAC is not supported".
+            // Through the decoder: protected, or the usual "AAC is not supported". On Windows a file that is not
+            // protected goes to Windows' own decoder, which reads the real ones; what it cannot read is unsupported.
+            #if os(Windows)
+            if finding == nil, decodeFailure(bytes) == nil { continue }
+            #endif
             let e = try #require(decodeFailure(bytes), "\(what)")
             let kind: AudioDecodeError.Kind = finding == nil ? .unsupported : .protected
             #expect(e.kind == kind && e.format == .aac, "\(what): \(e.kind)")
