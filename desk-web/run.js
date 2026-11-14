@@ -90,7 +90,8 @@
         skipped += drop;
       }
       const song = queue.shift();
-      const hold = holdFor(queue.length);
+      // Under reduced motion a song stays at least --t-hold-still, so the stage changes as a still picture would.
+      const hold = reduced() ? Math.max(time("--t-hold-still") || 2000, holdFor(queue.length)) : holdFor(queue.length);
       const ticker = reduced() || hold < 900;
       onStage = { song, at: now, hold, draw: ticker ? 0 : Math.min(time("--t-draw"), hold * 0.45) };
       showFacts(song, ticker);
@@ -492,6 +493,7 @@
         clearTimeout(sayTimer); clearTimeout(timer); queue = [];
         $("done-wall-title").textContent = t("wallTitleDone", { read: report.read });
         $("done-moment").textContent = lastNote || "";
+        $("done-moment").hidden = !lastNote;
         doneWall.label(t("wallTitleDone", { read: report.read }) + ", " + n("songs", songs.length));
         requestAnimationFrame(() => { doneWall.now(); if (!card.dataset.settled) { card.dataset.settled = "1"; doneWall.settle(); } });
       },

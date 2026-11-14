@@ -46,6 +46,7 @@
   --t-draw: 900ms;                        /* a wave drawing in */
   --t-hold: 3200ms;                       /* a song on stage, with nothing waiting */
   --t-hold-min: 300ms;                    /* a song on stage, with many waiting */
+  --t-hold-still: 2000ms;                 /* a song on stage, at least, under reduced motion */
   --t-fade: 420ms;
   --t-saying: 7000ms;                     /* each quiet line */
   --t-moment: 1600ms;
