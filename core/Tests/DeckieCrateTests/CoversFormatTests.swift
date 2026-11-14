@@ -81,4 +81,21 @@ import DeckieCrate
         #expect(try FileManager.default.contentsOfDirectory(atPath: covers.path) == [Self.hash + ".jpg"])
         #expect(try CrateReader.read(from: package) == fewer)
     }
+
+    @Test func aReaderAppGetsACoversBytesOnlyWhenTheyAreACover() throws {
+        let package = try temporaryFolder().appendingPathComponent("Shown.deckiecrate")
+        defer { try? FileManager.default.removeItem(at: package.deletingLastPathComponent()) }
+        let covers = package.appendingPathComponent("covers")
+        try FileManager.default.createDirectory(at: covers, withIntermediateDirectories: true)
+        try Self.jpeg.write(to: covers.appendingPathComponent(Self.hash + ".jpg"))
+        #expect(CrateReader.coverData(in: package, hash: Self.hash) == Self.jpeg)
+        // No file, a hash that is not one, a file that is not a JPEG or is too large: no cover, never an error.
+        #expect(CrateReader.coverData(in: package, hash: Self.other) == nil)
+        #expect(CrateReader.coverData(in: package, hash: "../" + Self.hash) == nil)
+        try Data("not a jpeg".utf8).write(to: covers.appendingPathComponent(Self.other + ".jpg"))
+        #expect(CrateReader.coverData(in: package, hash: Self.other) == nil)
+        try Data([0xFF, 0xD8, 0xFF] + Array(repeating: UInt8(0), count: CrateFormat.coverMaxBytes))
+            .write(to: covers.appendingPathComponent(Self.other + ".jpg"))
+        #expect(CrateReader.coverData(in: package, hash: Self.other) == nil)
+    }
 }

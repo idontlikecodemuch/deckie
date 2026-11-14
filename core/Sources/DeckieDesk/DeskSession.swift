@@ -442,17 +442,10 @@ public final class DeskSession {
     /// reach any other file; a cover that cannot be read is no cover, never an error, because a missing picture
     /// must not stop a DJ naming a song.
     public func cover(_ id: String) -> Data? {
-        guard let info = current, let hash = crate?.tracks.first(where: { $0.id == id })?.file.cover,
-              CrateIDs.isSHA256(hash) else { return nil }
-        let file = shelf.package(info.id).appendingPathComponent(CrateFormat.coverPath(hash))
-        // Only an ordinary file is read (a link in a crate file brought in from elsewhere could point anywhere), and
-        // its size is asked first, so a file put there by mistake is never loaded whole.
-        guard let facts = try? FileManager.default.attributesOfItem(atPath: file.path),
-              facts[.type] as? FileAttributeType == .typeRegular,
-              let size = facts[.size] as? NSNumber, size.intValue <= CrateFormat.coverMaxBytes,
-              let data = try? Data(contentsOf: file), data.count <= CrateFormat.coverMaxBytes,
-              data.starts(with: [0xFF, 0xD8, 0xFF]) else { return nil }
-        return data
+        guard let info = current, let hash = crate?.tracks.first(where: { $0.id == id })?.file.cover else { return nil }
+        // The checks (the hash's form, an ordinary file, its size first, a JPEG's start) are the reader's, shared with
+        // the Mac's window and the booth.
+        return CrateReader.coverData(in: shelf.package(info.id), hash: hash)
     }
 
     // MARK: out
