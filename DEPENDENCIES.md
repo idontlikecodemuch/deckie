@@ -1233,6 +1233,34 @@ Archive songs with human key labels (labels CC BY 4.0), 48 CC0 piano recordings,
 whose key Deckie's untrained reader named; trained by Deckie"; replacement path "the untrained three-answer reader,
 which needs no trained numbers".
 
+## 14. Chromaprint's method, ported for the lookup by sound (prepared; not yet used by Desk)
+
+"Look up songs by sound" (the note on D30) needs a fingerprint in the form AcoustID reads: Chromaprint's algorithm 2.
+Research letters B and AA planned to ship Chromaprint itself, which as a whole is LGPL 2.1, as a separate library or
+its `fpcalc` program beside Desk. Instead `core/Sources/DeckieChroma` is a Swift port of the parts of Chromaprint
+that are under its MIT licence, so nothing LGPL is in Deckie and nothing extra ships. Checked Nov 14, 2026; research
+AA4 (`docs/research/aa4-lookup-by-sound.md`) has the measurements.
+
+| | |
+|---|---|
+| Source | `https://github.com/acoustid/chromaprint`, release v1.6.2, commit `3b38c100022bdfb49be7797c4828a476f1621d55` (the tag `v1.6.2` points at it, read from the repository's refs) |
+| Licence of the project | its `LICENSE.md`: "Chromaprint's own source code is licensed under the MIT license, but we include some parts of the FFmpeg library, which is licensed under the LGPL 2.1 license. As a whole, Chromaprint should be therefore considered to be licensed under the LGPL 2.1 license." |
+| What was ported (each file's header: "Distributed under the MIT license") | `src/fingerprinter_configuration.cpp` (frame size and step, the chroma filter's weights, the table `kClassifiersTest2`), `src/fingerprinter.cpp` (28 Hz to 3,520 Hz), `src/fft.cpp` and `src/fft_lib_kissfft.cpp` (the windowed power spectrum), `src/audio/audio_slicer.h`, `src/chroma.cpp`, `src/chroma_filter.cpp`, `src/chroma_normalizer.h`, `src/utils.h`, `src/fingerprint_calculator.cpp`, `src/classifier.h`, `src/filter.h`, `src/filter_utils.h`, `src/quantizer.h`, `src/utils/rolling_integral_image.h`, `src/fingerprint_compressor.cpp`, `src/fingerprint_decompressor.cpp`, `src/utils/pack_int3_array.h`, `src/utils/pack_int5_array.h`, `src/utils/base64.h` |
+| Read for numbers only, nothing ported | `src/cmd/fpcalc.cpp` (the 120-second default; it has no header of its own and falls under the project's MIT notice) and `src/audio/ffmpeg_audio_processor_swresample.h` (MIT: the settings fpcalc gives FFmpeg's resampler, 16 taps, cutoff 0.8) |
+| Not used, not read | `src/avresample/` (FFmpeg's resampler, LGPL 2.1), FFmpeg's FFT (which `fft_lib_avfft.cpp` and `fft_lib_avtx.cpp` call), kissfft (`src/3rdparty`, BSD), FFTW. DeckieChroma's resampler is Deckie's own (`Resampler.swift`, a Kaiser-windowed sinc), its Fourier transform DeckieCore's |
+| Notice | Chromaprint's MIT notice, "Copyright (C) 2010-2016 Lukas Lalinsky", kept in `core/Sources/DeckieChroma/LICENSE-chromaprint`, which also lists the files above |
+
+**Status: prepared, not shipped.** No window of Desk calls it yet, so the acknowledgements table above has no row
+for it. When Desk does, the row to add to `core/dependencies.json` is: name "Chromaprint (ported to Swift: the
+sound fingerprint for the lookup by sound)"; version "1.6.2 (algorithm 2)"; licence "MIT (Chromaprint's own code;
+none of its LGPL parts are used)".
+
+**Not a dependency: `fpcalc`.** The official macOS build of `fpcalc` 1.6.2
+(`chromaprint-fpcalc-1.6.2-macos-arm64.tar.gz` from the release page, SHA-256
+`f3bc56cb42d89a01237bb3f3629329e4ec75f7c1b0217acf6e9bf952ac47979b`) was used on one Mac to check the port. It is
+not committed, not shipped and not needed by the tests, which keep what it printed for four generated sounds as
+numbers (`core/Tests/DeckieChromaTests/FpcalcPrints.swift`).
+
 ## Checked and rejected
 
 **ffmpeg's libraries from Ubuntu 24.04**, checked Oct 28, 2026 as the Linux decoder track M section 3.1 names:
