@@ -52,16 +52,35 @@ struct PlayingPanel: View {
             if let t = rec.current {
                 VStack(alignment: .leading, spacing: 22) {
                     VStack(alignment: .leading, spacing: 4) {
-                        Text(t.folderPath).font(.system(size: 18, weight: .semibold, design: .rounded)).foregroundStyle(t.on ? t.discColor : Theme.dim).lineLimit(1)
+                        // A song with no name: its place leads, in the title's size (research AA, 3.13), so the
+                        // small place line above is not repeated.
+                        if t.hasName {
+                            Text(t.folderPath).font(.system(size: 18, weight: .semibold, design: .rounded)).foregroundStyle(t.on ? t.discColor : Theme.dim).lineLimit(1)
+                        }
                         if let also = Library.shared.alsoOn(t, playingDisc: t.disc) {
                             Text(also).font(.system(size: 14, weight: .medium, design: .rounded)).foregroundStyle(Theme.mut).lineLimit(1).minimumScaleFactor(0.7)
                         }
-                        Text(t.numberedSong).font(.system(size: 44, weight: .heavy)).foregroundStyle(Theme.tx).lineLimit(2).minimumScaleFactor(0.6)
-                        Text(t.artist).font(.system(size: 24, weight: .medium)).foregroundStyle(Theme.mut).lineLimit(1).minimumScaleFactor(0.7)
+                        Text(t.playingTitle).font(.system(size: 44, weight: .heavy)).foregroundStyle(t.hasName ? Theme.tx : (t.on ? t.discColor : Theme.tx)).lineLimit(2).minimumScaleFactor(0.6)
+                        if t.hasName {
+                            Text(t.artist).font(.system(size: 24, weight: .medium)).foregroundStyle(Theme.mut).lineLimit(1).minimumScaleFactor(0.7)
+                        } else {
+                            Text(Words.noNameYet).font(.system(size: 24, weight: .medium)).foregroundStyle(Theme.mut).lineLimit(1)
+                            if !t.secondLine.isEmpty {
+                                Text(t.secondLine).font(.system(size: 15)).foregroundStyle(Theme.dim).lineLimit(1).truncationMode(.middle)
+                            }
+                        }
                     }
                     Text(String(format: "%.0f BPM", t.bpmShown * (rec.source == .manual ? 1 : rec.rate)))
                         .font(.system(size: 22, weight: .regular, design: .rounded)).foregroundStyle(Theme.rsn)
                     SongWave(track: t, height: waveHeight)
+                }
+            } else if !Library.shared.canRecognise {
+                // A crate file with no fingerprints: said once, here, until a song is set by hand.
+                VStack(alignment: .leading, spacing: 14) {
+                    Text(Words.setByHandTitle).font(.system(size: 44, weight: .heavy)).foregroundStyle(Theme.tx).minimumScaleFactor(0.6)
+                    Text(Words.noFingerprints).font(.system(size: 20)).foregroundStyle(Theme.mut).fixedSize(horizontal: false, vertical: true)
+                    Text(Words.setByHandHow).font(.system(size: 18)).foregroundStyle(Theme.dim).fixedSize(horizontal: false, vertical: true)
+                    Button(Words.chooseSong) { sug.tabRequest = 1 }.buttonStyle(PillStyle(prominent: true)).padding(.top, 6)
                 }
             } else {
                 VStack(alignment: .leading, spacing: 10) {
@@ -117,10 +136,13 @@ struct PlayingPanel: View {
     private var corner: some View {
         HStack(spacing: 2) {
             status.padding(.trailing, 6)
-            Button { rec.source == .mic ? rec.stop() : rec.startMic() } label: {
-                Image(systemName: rec.source == .mic ? "mic" : "mic.slash").font(.system(size: 14)).foregroundStyle(Theme.dim).frame(width: 34, height: 34)
+            // Nothing to listen for in a crate file with no fingerprints, so no mic button.
+            if Library.shared.canRecognise {
+                Button { rec.source == .mic ? rec.stop() : rec.startMic() } label: {
+                    Image(systemName: rec.source == .mic ? "mic" : "mic.slash").font(.system(size: 14)).foregroundStyle(Theme.dim).frame(width: 34, height: 34)
+                }
+                .accessibilityLabel(rec.source == .mic ? "Pause listening" : "Listen")
             }
-            .accessibilityLabel(rec.source == .mic ? "Pause listening" : "Listen")
             Button { showDebug = true } label: {
                 Image(systemName: "ellipsis").font(.system(size: 14)).foregroundStyle(Theme.dim).frame(width: 34, height: 34)
             }
@@ -138,7 +160,7 @@ struct PlayingPanel: View {
     private var tinyStatus: String {
         var s: String
         switch rec.source {
-        case .idle: s = "paused"
+        case .idle: s = Library.shared.canRecognise ? "paused" : Words.notListening
         case .mic: s = rec.lastMatch == nil ? "listening" : "listening"
         case .file: s = "test file"
         case .manual: s = "set by hand"
@@ -368,7 +390,7 @@ struct PlainPick: View {
             VStack(alignment: .leading, spacing: 5) {
                 Text(target.numberedSong).font(.system(size: big ? 22 : 19, weight: .semibold)).foregroundStyle(Theme.tx).lineLimit(1).minimumScaleFactor(0.75)
                 HStack(spacing: 14) {
-                    Text(target.artist).font(.system(size: big ? 14 : 13)).foregroundStyle(Theme.dim).lineLimit(1)
+                    Text(target.secondLine).font(.system(size: big ? 14 : 13)).foregroundStyle(Theme.dim).lineLimit(1)
                     Text(target.folderPath).font(.system(size: big ? 14 : 13, weight: .semibold, design: .rounded)).foregroundStyle(target.on ? target.discColor : Theme.dim).lineLimit(1)
                 }
                 if let also = Library.shared.alsoOn(target, playingDisc: cur.disc) {

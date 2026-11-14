@@ -91,7 +91,7 @@ final class SetRecorder: @unchecked Sendable {
                 lg.entries.append(e)
                 let t = Int(at), clock = DateFormatter.localizedString(from: Date(), dateStyle: .none, timeStyle: .short)
                 let p = abs(pitch) < 0.25 ? "pitch ±0" : String(format: "pitch %+.1f%%", pitch) + (pitchKind.isEmpty ? "" : " " + pitchKind)
-                let line = String(format: "%02d:%02d:%02d", t / 3600, t / 60 % 60, t % 60) + "  \(clock)  \(loc) · \(track.song) – \(track.artist)  (\(p))\n"
+                let line = String(format: "%02d:%02d:%02d", t / 3600, t / 60 % 60, t % 60) + "  \(clock)  \(loc) · \(track.hasName ? track.song + (track.artist.isEmpty ? "" : " – " + track.artist) : Words.noNameYetInRow + (track.deck.isEmpty ? "" : " (" + Words.fileLine(track.deck) + ")"))  (\(p))\n"
                 if let h = try? FileHandle(forWritingTo: SetRecorder.folder.appendingPathComponent(base + " tracklist.txt")) {
                     h.seekToEndOfFile(); h.write(line.data(using: .utf8)!); try? h.close()
                 }
