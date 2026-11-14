@@ -45,7 +45,9 @@ public final class DeskLookupRun: @unchecked Sendable {
             let ask = plan.asks[i]
             var r = DeskLookup.SongResult(song: song.track.id, title: song.track.ident.title, seconds: song.track.file.durationS,
                                           ask: ask, outcome: "notAsked", failure: nil, candidates: [], chosen: nil, several: false)
-            if stopped || failure != nil || isStopped { stopped = stopped || isStopped; results.append(r); continue }
+            if stopped || failure != nil || isStopped {
+                stopped = stopped || isStopped; results.append(r); progress(next(results, total)); continue
+            }
             if ask.kind == "none" { r.outcome = "nothingToSend"; results.append(r); progress(next(results, total)); continue }
             do {
                 var recs: [MBRecording] = []

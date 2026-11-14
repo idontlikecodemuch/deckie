@@ -239,8 +239,15 @@ button.net .net-icon { width: 14px; height: 14px; vertical-align: -2px; margin-r
 .lookup-song h3 { display: flex; gap: 10px; align-items: baseline; }
 .lookup-song h3 .len { font-weight: 450; color: var(--mut); font-size: 13px; }
 .lookup-song .outcome { color: var(--mut); font-size: 13px; margin-top: 4px; }
-.lookup-song table { width: 100%; border-collapse: collapse; margin-top: 8px; }
-.lookup-song th, .lookup-song td { text-align: left; padding: 4px 6px; font-size: 13px; vertical-align: top; }
+dialog.wide.lookup { max-width: min(1060px, 96vw); }
+.lookup-song table { width: 100%; border-collapse: collapse; margin-top: 8px; table-layout: fixed; }
+.lookup-song th, .lookup-song td { text-align: left; padding: 4px 6px; font-size: 13px; vertical-align: top; overflow-wrap: anywhere; }
+.lookup-song th:nth-child(1) { width: 30px; }
+.lookup-song th:nth-child(2) { width: 27%; }
+.lookup-song th:nth-child(3) { width: 14%; }
+.lookup-song th:nth-child(4) { width: 20%; }
+.lookup-song th:nth-child(5) { width: 52px; }
+.lookup-song th:nth-child(6) { width: 13%; }
 .lookup-song th { color: var(--dim); font-weight: 550; font-size: 12px; }
 .lookup-song tr.other td { color: var(--mut); }
 .lookup-song tr.using td { background: var(--net-band); }
