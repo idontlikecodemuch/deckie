@@ -88,7 +88,7 @@ public final class OnnxRuntime: @unchecked Sendable {
 
     /// This checkout's core/ folder, found from this source file's path at build time (exists on a development
     /// machine; elsewhere the default path simply is not there).
-    static let coreFolder = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent()
+    public static let coreFolder = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent()
         .deletingLastPathComponent()
 
     /// Where `load()` looks, in order: DECKIE_ONNXRUNTIME_LIB alone if it is set, else the checkout's default.

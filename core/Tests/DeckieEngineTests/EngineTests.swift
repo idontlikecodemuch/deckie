@@ -282,10 +282,14 @@ struct EngineTests {
         #expect(ta["answer"] == .string(a.threeAnswer.answer.name) && ta["camelot"] == .string(TestTrack.camelot))
         #expect(ta["confidence"] == .number(KeyConfidence.threeAnswer(a.threeAnswer.answer).value))
         // The learned reader's result (engine 0.7.0), which the crate record's key block follows.
-        let lk = try #require(dk["learned"]), learned = try #require(a.learnedKey)
-        #expect(lk.keys == ["model", "answer", "camelot", "home_pitch_class", "best", "probability", "home_probability", "probabilities"])
-        #expect(lk["model"] == .string(LearnedKey.Model.shipped.name) && lk["answer"] == .string(learned.answer.name))
-        #expect(lk["probability"] == .number(Py.round(learned.keyProbability, 4)) && lk["best"] == .string(learned.camelot!))
+        if let learned = a.learnedKey {
+            let lk = try #require(dk["learned"])
+            #expect(lk.keys == ["model", "answer", "camelot", "home_pitch_class", "best", "probability", "home_probability", "probabilities"])
+            #expect(lk["model"] == .string(LearnedKey.Model.pinnedName) && lk["answer"] == .string(learned.answer.name))
+            #expect(lk["probability"] == .number(Py.round(learned.keyProbability, 4)) && lk["best"] == .string(learned.camelot!))
+        } else {
+            #expect(dk["learned"] == .null)
+        }
         #expect(dk["estimator"] == .string("hpcp-whitened") && dk["whitening"] == .bool(true))
         #expect(dk["margin"] == .number(Py.round(a.hpcpKey.decision.margin, 4)) && dk["sure"] == .bool(a.hpcpKey.decision.sure))
         #expect(dk["profiles"]?.keys == ["edma", "bgate", "braw"] && dk["tables"] == .string("literature"))
@@ -334,13 +338,18 @@ struct EngineTests {
         // as the confidence; in the votes the three-answer reader's two readings (and its key when it gave one), the
         // plain HPCP method's key with its three profiles' keys, and the STFT estimate; `key_uncertain` follows the
         // block (under one half).
-        let d = a.hpcpKey.decision, three = a.threeAnswer, learned = try #require(a.learnedKey)
-        #expect(three.hpcp == a.hpcpKey && a.keyAnswer == learned.answer)
-        #expect(abs(learned.probabilities.reduce(0, +) - 1) < 1e-9 && learned.probabilities.count == 24)
+        // The learned reader runs when its numbers are on this computer (`KeyModel`; the file is not in the
+        // repository); without them the record is the three-answer reader's, checked further down either way.
+        let d = a.hpcpKey.decision, three = a.threeAnswer
+        #expect(three.hpcp == a.hpcpKey && (a.learnedKey == nil) == (KeyModel.locate() == nil))
+        #expect(a.keyAnswer == (a.learnedKey?.answer ?? three.answer) && a.learnedKeyModel == (a.learnedKey == nil ? nil : LearnedKey.Model.pinnedName))
+        #expect(t.engine.models.contains { $0.name == LearnedKey.Model.pinnedName } == (a.learnedKey != nil))
         var votes = ["hpcp_edma": d.profileKeys[0].camelot, "hpcp_bgate": d.profileKeys[1].camelot,
                      "hpcp_braw": d.profileKeys[2].camelot, "stft_edma": a.key.whole.camelot,
                      "hpcp_whitened": d.camelot, "hpcp_discount": three.camelotA!, "note_transcription": three.camelotB!]
         if let k = three.answer.camelot { votes["three_answer"] = k }
+        if let learned = a.learnedKey {
+        #expect(abs(learned.probabilities.reduce(0, +) - 1) < 1e-9 && learned.probabilities.count == 24)
         switch learned.answer {
         case .key:
             #expect(t.key?.source == "learned-key" && t.key?.camelot == learned.camelot && t.keyHome == nil)
@@ -351,6 +360,10 @@ struct EngineTests {
             #expect(t.key == nil && t.keyHome == .init(source: "learned-key", pitchClass: pc) && !t.flags.contains("key_uncertain"))
         case .notSure:
             #expect(t.key?.source == "learned-key" && (t.key?.confidence ?? 1) < 0.5 && t.flags.contains("key_uncertain") && t.keyHome == nil)
+        }
+        print("learned key: \(learned.answer), probability \(Py.fixed(learned.keyProbability, 3)), home note \(Py.fixed(learned.homeProbability, 3))")
+        } else {
+            #expect(t.key?.source == "three-answer" && t.key?.votes == votes)
         }
         // The three-answer reader, still beside it: the test track is a plain progression in one key, and both of
         // its readings find it. Without the learned reader the record is the three-answer reader's, as in 0.6.0.
@@ -366,11 +379,13 @@ struct EngineTests {
         // guess under one half, for the builder's record, flagged). Each record validates.
         func withLearned(_ answer: ThreeAnswerKey.Answer, _ p: Double) -> CrateTrack {
             var x = a
-            x.learnedKey = LearnedKey.Result(answer: answer, probabilities: learned.probabilities, best: 21, keyProbability: p,
-                                             home: 9, homeProbability: 0.9, frames: learned.frames)
+            x.learnedKey = LearnedKey.Result(answer: answer, probabilities: [Double](repeating: 1.0 / 24, count: 24), best: 21,
+                                             keyProbability: p, home: 9, homeProbability: 0.9, frames: 100)
+            x.learnedKeyModel = "a-model"
             return x.crateTrack(options: .init(analysedAt: "2026-10-28T12:00:00Z"))
         }
         let lk = withLearned(.key(pitchClass: 9, minor: true), 0.8)
+        #expect(lk.engine.models.contains { $0.name == "a-model" } && lk.key?.source == "learned-key")
         #expect(lk.key?.camelot == "8A" && lk.key?.confidence == 0.8 && lk.key?.scale == "minor" && lk.key?.key == "A" && lk.keyHome == nil)
         let lh = withLearned(.home(pitchClass: 9), 0.45)
         #expect(lh.key == nil && lh.keyHome == .init(source: "learned-key", pitchClass: 9) && !lh.flags.contains("key_uncertain"))
@@ -476,7 +491,7 @@ struct EngineTests {
         _ = try JSONDecoder().decode(FeatureFile.Structure.self, from: json.data)
         let t = a.crateTrack(options: .init(analysedAt: "2026-10-28T12:00:00Z"))
         #expect(t.featuresPresent.contains("vocal") && t.featuresPresent.contains("bars.vocal"))
-        #expect(t.engine.models.map(\.name) == [Analysis.gridSource, "stub-vocal"])
+        #expect(t.engine.models.map(\.name) == [Analysis.gridSource, "stub-vocal"] + (KeyModel.locate() == nil ? [] : [LearnedKey.Model.pinnedName]))
         let crate = Crate(manifest: CrateManifest(crateId: "engine-test", name: "engine test",
                                                   createdAt: "2026-10-28T12:00:00Z", devicesSeen: []), tracks: [t])
         #expect(crate.problems().isEmpty)
