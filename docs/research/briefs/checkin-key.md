@@ -5,7 +5,7 @@ minor). Exact = key right. Home note = home note right, whatever the mode. Mode 
 note is right, the share with the right mode. The bar (D16) = exact within five points of Apple on each half:
 36.5 on the major half, 70.6 on the minor half.
 
-## Nov 14, 2026, 11:15 UTC. A learned key reader that can ship is built and wins; its file is not published (the owner's call)
+## Nov 14, 2026, 11:05 UTC. A learned key reader that can ship is built and wins; its file is not published (the owner's call)
 
 **Done** (branch `key/shippable`; letters `docs/research/x4-key-complete.md`, short, and
 `docs/research/x4-key-without-labelling.md`, the experiments and the page for the attorney).
