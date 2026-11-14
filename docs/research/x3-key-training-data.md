@@ -22,7 +22,33 @@ on the minor half of the GiantSteps MTG clips (36.5 and 70.6).
 
 ## Summary
 
-SUMMARY_TBD
+- **A public set can be used; nothing needs commissioning to start.** About 1,080 real recordings have human key
+  labels and licences that allow a shipped model, on both the audio and the label: **711 Freesound loops** (CC0 or
+  CC BY 3.0, mostly electronic and dance) and **373 FMAK songs** whose own audio licence is CC BY, CC0 or public
+  domain. The GiantSteps sets, which the trial trained on, cannot be used: share-alike labels on Beatport's audio.
+- **Trained only on that, a reader of Deckie's own gets close to the bar and does not pass it.** The small model
+  reads the home note as well as Apple (75.5 against 76.4) and scores 61.5 exact on the MTG clips (Apple 65.2; the
+  untrained reader 57.8). On the bar as written it is 9.9 points short on the minor half, because the public data is
+  half major and teaches no lean toward minor. Leaned to a published share of minor keys in dance music it is 3.9
+  short (65 percent) or 3.0 short on the other half (85 percent); nothing passes cleanly.
+- **It is the fairest reader measured so far**: 63.5 percent of major-key songs and 60.6 of minor ones right, a mean
+  of 62.1 against Apple's 58.5 and 59.7 for the model that passed the bar in letter X2.
+- **Public-domain classical recordings do not help.** The CC0 Well-Tempered Clavier alone teaches a reader that is
+  nine points worse on dance music than no training at all; added to the real base it changes nothing. That agrees
+  with the published record of classical and pop readers on dance music.
+- **Made-up music does not help, and hurts past a quarter of the mix**, as the owner feared. Program-written dance
+  clips and public-domain chorales played by our own synthesiser were each tried at 10, 25, 50 and 100 percent of the
+  mix, scored on real records only: within a point of the real base up to a quarter, three points worse at a half
+  (program-written), and three to thirteen worse alone. What goes wrong is the mode: the made-up music's clean thirds teach a trust in the
+  third that real records punish. Of the made-up cases only the one-chord case earns a small place (about a point);
+  the minor-with-relative-major-bass case does harm and is dropped.
+- **Trained generators are not a route**: every service's terms forbid training on its output.
+- **What would close the rest**: real dance music with the mix of modes dance music has. The audio exists under free
+  licences (8,352 Free Music Archive tracks under CC BY, CC0 or public domain; 7,346 more free loops); labelling 400
+  to 600 of it, plus 300 for scoring, is 30 to 60 hours of a musician's time and needs no music to be commissioned.
+- **For the attorney**: the "research purposes" sentence beside FMAK's CC BY labels, and whether attribution is all
+  that CC BY training data asks. Creative Commons' own cautious reading is that share-alike data would taint
+  weights and non-commercial data is out.
 
 ## 1. What "could ship" means
 
@@ -279,7 +305,37 @@ GiantSteps Key 60.6). Three draws each.
 
 ### 5.5 The small convolutional model on shippable mixes
 
-CNN_TBD
+The trial's small model (236,006 numbers), unchanged, trained on 941 real clips (loops, FMAK songs and the Clavier
+recordings; 54 percent minor) with 188 real clips of other uploaders and artists for the stopping choice; one run
+per mix. "Leaned" raises the finished model's minor answers as if its training mix had held the stated share of
+minor clips; nothing is retrained.
+
+| Trained on | MTG exact: all | major | minor | Mean of halves | Within one step | Home note | Bar as written | GiantSteps+ exact | GiantSteps Key exact |
+|---|---:|---:|---:|---:|---:|---:|---|---:|---:|
+| *Apple* | 65.2 | 41.5 | 75.6 | 58.5 | 78.3 | 76.4 | | | |
+| *The MTG collection itself, other artists (letter X2; cannot ship)* | 65.9 | 44.0 | 75.5 | 59.7 | 79.5 | 77.0 | passes | 82.9 | 68.7 |
+| **Real, shippable audio only** | **61.5** | 63.5 | 60.6 | **62.1** | 75.4 | 75.5 | fails: minor 9.9 short | 80.1 | 63.1 |
+| the same, leaned to 65 percent minor | 62.8 | 53.9 | 66.6 | 60.3 | 76.9 | 75.2 | fails: minor 3.9 short | 81.4 | 64.1 |
+| the same, leaned to 70 percent minor * | 63.7 | 49.5 | 69.9 | 59.7 | 77.9 | 75.0 | fails: minor 0.7 short | 83.3 | 65.2 |
+| the same, leaned to 85 percent minor | 62.8 | 33.4 | 75.7 | 54.5 | 76.6 | 73.9 | fails: major 3.0 short | 85.0 | 68.4 |
+| Real + a quarter program-written | 60.8 | 58.8 | 61.7 | 60.2 | 75.3 | 74.3 | fails: minor 8.9 short | 80.1 | 63.2 |
+| Program-written only | 48.3 | 50.0 | 47.5 | 48.8 | 63.5 | 67.7 | fails: minor 23.1 short | 71.2 | 56.5 |
+
+Drift on MTG against the real-only model: with a quarter made-up, 76 clips lost (15 fifth, 16 relative, 31 parallel,
+14 other) and 67 gained, net minus 9; made-up only, 277 lost (123 of them parallel) and 109 gained, net minus 168.
+
+- **On shippable real audio alone the small model reads the home note as well as Apple** (75.5 against 76.4; the
+  model trained on the test collection's own music: 77.0), from loops with a median length of 11 seconds and a few
+  hundred songs.
+- **With no lean it is the most even-handed reader measured in either letter**: 63.5 on major and 60.6 on minor, a
+  mean of 62.1 against Apple's 58.5. Exact over all clips is 61.5, four points under Apple, because MTG is 70
+  percent minor and this reader does not guess minor.
+- **Against the bar as written it fails, and the lean does not rescue it cleanly.** Leaned to the published 65
+  percent it is 3.9 short on the minor half; to the published 85 percent, 3.0 short on the major half; at MTG's own
+  70 percent, 0.7 short on the minor half. A share between 75 and 80 percent would pass both halves, but no published
+  count gives that number, and choosing it would be fitting one number to the test set.
+- **Made-up music gives this reader nothing either**: a quarter of it costs 0.7 exact on MTG and is level on the
+  other two sets; alone it is 13 points worse, and the new errors are mostly the mode.
 
 ## 6. Labelling openly licensed dance music ourselves
 
@@ -308,7 +364,28 @@ allow it, and only the keys are missing.
 All on the 1,270 MTG clips; the bar is 36.5 major and 70.6 minor. Rows marked * are fitted to the test set's own mix
 of modes in one number.
 
-MIXES_TBD
+| Mix that could ship | Reader | Exact: all | major | minor | Mean of halves | Bar as written | Note |
+|---|---|---:|---:|---:|---:|---|---|
+| Nothing trained (ships now, D33) | three-answer reader, every song shown | 57.8 | 54.4 | 59.3 | 56.8 | fails: minor 11.3 short | it shows a key on 70 percent of songs and is right on 64.8 percent of those |
+| Real loops + FMAK songs (1,081) | 49 learned numbers | 58.8 | 56.0 | 60.1 | 58.0 | fails: minor 10.5 short | |
+| the same, weighed to 65 percent minor | 49 learned numbers | 61.2 | 44.3 | 68.6 | 56.4 | fails: minor 2.0 short | a published share |
+| the same, weighed to 70 percent minor * | 49 learned numbers | 61.3 | 36.8 | 72.1 | 54.4 | passes by 0.3 and 1.5 | MTG's own share: not a clean pass |
+| the same, weighed to 85 percent minor | 49 learned numbers | 58.7 | 16.1 | 77.3 | 46.7 | fails: major 20.4 short | a published share |
+| Real loops + songs + Clavier (1,129) | small model | 61.5 | 63.5 | 60.6 | 62.1 | fails: minor 9.9 short | best mean of halves measured |
+| the same, leaned to 65 percent minor | small model | 62.8 | 53.9 | 66.6 | 60.3 | fails: minor 3.9 short | a published share |
+| the same, leaned to 70 percent minor * | small model | 63.7 | 49.5 | 69.9 | 59.7 | fails: minor 0.7 short | MTG's own share |
+| the same, leaned to 85 percent minor | small model | 62.8 | 33.4 | 75.7 | 54.5 | fails: major 3.0 short | a published share |
+| Real + a quarter program-written | 49 numbers / small model | 57.9 / 60.8 | 54.5 / 58.8 | 59.4 / 61.7 | 56.9 / 60.2 | fails | no gain over real alone |
+| Real + a quarter rendered chorales | 49 learned numbers | 58.3 | 56.4 | 59.1 | 57.7 | fails | no gain |
+| Public-domain classical recordings alone (48) | 49 learned numbers | 48.9 | 54.7 | 46.4 | 50.5 | fails | worse than nothing trained |
+| Program-written music alone | 49 numbers / small model | 50.7 / 48.3 | 50.0 / 50.0 | 50.9 / 47.5 | 50.5 / 48.8 | fails | worse than nothing trained |
+| *For scale: the MTG collection's own music (cannot ship)* | small model | 65.9 | 44.0 | 75.5 | 59.7 | passes | letter X2 |
+| *For scale: Apple* | | 65.2 | 41.5 | 75.6 | 58.5 | | |
+
+**How much of the gap each closes.** From the untrained reader (57.8 exact) to the bar-passing model of letter X2
+(65.9) is 8.1 points. Real shippable audio closes 1.0 of it with 49 numbers and 3.7 with the small model; with a
+published 65 percent lean, 3.4 and 5.0; made-up music closes none of it at any share and opens it when it is more
+than a quarter of the mix; classical recordings close none.
 
 ## What I could not verify
 
@@ -339,4 +416,28 @@ MIXES_TBD
 
 ## Options for the owner
 
-OPTIONS_TBD
+1. **Keep shipping the untrained reader and train nothing yet.** Cost nothing. The bar is not met by a reader of
+   Deckie's own until better data exists.
+2. **Label free dance music ourselves, then train** (section 6): 400 to 600 tracks to fit and 300 to score, from
+   the Free Music Archive's and Freesound's CC BY and CC0 audio, 30 to 60 hours of a musician, labels Deckie's own.
+   Add the 1,080 recordings already usable. Expected [inf, from this letter and X2's learning curve]: the home note
+   at Apple's level, and the bar within reach once the training music is about as minor as dance music is. This is
+   the commissioned set of D16 without commissioning music.
+3. **Train on the public base now and ship it behind the three answers** in place of, or beside, the untrained
+   reader: plus 1 to 4 points of exact key and a better home note today, from data whose licences are in section 2.
+   It does not pass the bar as written. It needs the attorney's word on the two FMAK points first; the loops alone
+   (CC0 and CC BY, no such question) give the 49-number reader 58.1.
+4. **Take a lean from a published count** (65 percent minor): 3.4 to 5.0 of the 8.1 points to the bar-passing
+   model, at the cost of 10 to 12 points on major-key songs. It still fails the bar by 2 to 4 points on the minor
+   half. A lean is a decision about which DJs the reader serves better, and is the owner's.
+5. **Do not add made-up music**, beyond perhaps a few percent of one-chord and no-third clips if a reader with a
+   "mode open" answer is ever trained; and do not use classical recordings or trained generators.
+6. **Fetch the rest**: MusicNet and the Free Music Archive's audio (unreachable from this session), a mixed-genre
+   scoring set, and Apple on GiantSteps+ (letter X2's open items).
+
+**Recommendation.** Options 2 and 5, with 3 after the attorney has looked. The public data answers the owner's
+question with a yes: it is real, it is licensed, and it already teaches the home note as well as the best reader
+we have measured. What it lacks is dance music's own mix of modes, and the cheapest honest way to get that is to
+label free dance tracks, not to make music up. On the lean (option 4) I would not fit one to pass the bar: the
+reader trained without it gets six major-key songs in ten right where Apple gets four, and I would rather the owner
+saw that number before deciding that the bar's minor half is the one that matters.

@@ -5,6 +5,53 @@ minor). Exact = key right. Home note = home note right, whatever the mode. Mode 
 note is right, the share with the right mode. The bar (D16) = exact within five points of Apple on each half:
 36.5 on the major half, 70.6 on the minor half.
 
+## Nov 14, 2026, 04:20 UTC. Piece B done: letter X3, training data that could ship
+
+**The owner's question, answered: yes, a public set can be used, and it gets close to the bar but not over it.**
+Letter: `docs/research/x3-key-training-data.md`. Every licence was opened and is quoted there with the date.
+
+**Done.**
+- **Found and fetched (evaluation only, nothing committed): about 1,080 real recordings with human key labels whose
+  audio and labels both allow a shipped model**: 711 Freesound loops (CC0 or CC BY 3.0; mostly electronic and
+  dance) and 373 FMAK songs whose own licence is CC BY, CC0 or public domain. Plus the CC0 Well-Tempered Clavier (48
+  recordings) for the classical question.
+- **Made**: 1,500 dance clips written by a program of ours to a chosen key, and 412 public-domain chorales played by
+  our own synthesiser. Used only as a supplement; nothing was chosen or scored on them.
+- **Trained only on what could ship, scored on the three GiantSteps sets**: the 49-number learned profiles on every
+  source and mix, and the small model on three mixes.
+
+| Trained on (MTG, 1,270; bar 36.5 major, 70.6 minor) | Reader | Exact: all | major | minor | Home note | Bar as written |
+|---|---|---:|---:|---:|---:|---|
+| Apple | | 65.2 | 41.5 | 75.6 | 76.4 | |
+| The MTG collection itself (letter X2; cannot ship) | small model | 65.9 | 44.0 | 75.5 | 77.0 | passes |
+| Nothing (ships now), every song shown | three-answer reader | 57.8 | 54.4 | 59.3 | 72.4 | fails, minor 11.3 short |
+| **Real, shippable audio only** | small model | **61.5** | 63.5 | 60.6 | 75.5 | fails, minor 9.9 short |
+| the same, leaned to 65 percent minor (a published share) | small model | 62.8 | 53.9 | 66.6 | 75.2 | fails, minor 3.9 short |
+| the same, leaned to 85 percent minor (a published share) | small model | 62.8 | 33.4 | 75.7 | 73.9 | fails, major 3.0 short |
+| Real, shippable audio only | 49 numbers | 58.8 | 56.0 | 60.1 | 73.4 | fails, minor 10.5 short |
+| Real + a quarter program-written music | small model | 60.8 | 58.8 | 61.7 | 74.3 | fails |
+| Program-written music only | small model | 48.3 | 50.0 | 47.5 | 67.7 | fails |
+| Public-domain classical recordings only | 49 numbers | 48.9 | 54.7 | 46.4 | 62.5 | fails |
+
+**What it says.**
+- Shippable real audio teaches the home note as well as Apple reads it, and gives the fairest reader measured so far
+  (63.5 percent of major songs and 60.6 of minor ones). It misses the bar on the minor half because the public data
+  is half major: it never learns "when in doubt, minor", which is how Apple and the trial's model pass.
+- A lean taken from a published count of dance music brings it within 3 to 4 points and does not pass cleanly. At
+  the MTG collection's own 70 percent the 49 numbers pass by 0.3 and 1.5 points: fitted to the test set in one
+  number, so not a pass I would report.
+- **Made-up music: the owner's caution is right.** No gain at any share; within a point up to a quarter of the mix;
+  3 points worse at a half; 3 to 13 worse alone. The songs lost are mostly new mode mistakes. Only the one-chord
+  case is worth keeping, for about a point. Classical recordings alone are worse than no training.
+- Trained generators: their terms forbid it; one paragraph in the letter.
+
+**Recommendation in the letter**: label 400 to 600 free dance tracks ourselves (the audio exists under CC BY and
+CC0; 30 to 60 hours of a musician; no music commissioned) and add the 1,080 recordings found; no made-up music; ask
+the attorney two narrow questions about the FMAK labels and CC BY before anything trained on them ships.
+
+**Carry on, or stop here: both pieces are complete.** Waiting on the owner: the `key_home` proposal (mode open in
+the crate), and whether to start the labelling.
+
 ## Nov 14, 2026, 03:10 UTC. Piece A done: the three-answer reader is in the core (branch `key/three-answer`)
 
 From here the entries are on branch `key/three-answer`, cut from `main` after D33. Two pieces: A, the Swift port

@@ -266,8 +266,17 @@ def main_cnn(threads):
             print(f"[made-up {share} %] {name} exact {100 * (lp.argmax(1) == y).mean():.1f}", flush=True)
         np.savez_compressed(os.path.join(kt.CACHE, f"ship_cnn_{share}.npz"), **res)
 
+class _Tee:
+    def __init__(self, path): self.fh = open(path, "w"); self.out = sys.stdout
+    def write(self, x): self.fh.write(x); self.out.write(x)
+    def flush(self): self.fh.flush(); self.out.flush()
+
 def main_report():
+    sys.stdout = _Tee(os.path.join(kt.HERE, "ship_cnn_results.md"))      # the tables, kept beside ship_results.tsv
     sets = test_sets(); M = sets[0]
+    real = load_real(); tr = [r for r in real if r["group"] % 5 != 0]
+    global TRAIN_MINOR
+    TRAIN_MINOR = float(np.mean([r["target"][12:].sum() for r in tr])); print(f"minor share of the model's real training clips: {100 * TRAIN_MINOR:.1f} percent\n")
     print("| reader | trained on | set | " + HEAD[2:] + " bar as written |\n|---|---|---|" + "---:|" * 8 + "---|")
     ap = row_of(M["apple"], M["key"]); print("| Apple | | MTG, 1,270 | " + " | ".join(f"{x:.1f}" for x in ap) + " | |")
     names = {"mtg": "MTG, 1,270", "gsplus": "GiantSteps+, 468", "gs": "GiantSteps Key, 604"}
@@ -281,7 +290,15 @@ def main_report():
             v = row_of(pred, D["key"]); bar = ""
             if key == "mtg":
                 bar = "passes" if v[1] >= ap[1] - 5 and v[2] >= ap[2] - 5 else f"fails (major {v[1] - ap[1] + 5:+.1f}, minor {v[2] - ap[2] + 5:+.1f} against the bar)"; base[share] = pred
-            print(f"| small convolutional model | real loops + {share} % made-up (stopped at pass {int(z['info'][2])}, real validation {100 * z['info'][3]:.1f}) | {names[key]} | " + " | ".join(f"{x:.1f}" for x in v) + f" | {bar} |")
+            print(f"| small convolutional model | real (loops, FMAK songs, Clavier) + {share} % made-up (stopped at pass {int(z['info'][2])}, real validation {100 * z['info'][3]:.1f}) | {names[key]} | " + " | ".join(f"{x:.1f}" for x in v) + f" | {bar} |")
+            # the same model leaned toward minor after the fact: its minor answers' log-probabilities raised as if
+            # the training mix had held the stated share of minor clips (a prior shift; no retraining)
+            if share == 0:
+                m = TRAIN_MINOR
+                for target in (0.65, 0.70, 0.85):
+                    lp2 = lp.copy(); lp2[:, 12:] += np.log(target / (1 - target)) - np.log(m / (1 - m)); v2 = row_of(lp2.argmax(1), D["key"]); bar2 = ""
+                    if key == "mtg": bar2 = "passes" if v2[1] >= ap[1] - 5 and v2[2] >= ap[2] - 5 else f"fails (major {v2[1] - ap[1] + 5:+.1f}, minor {v2[2] - ap[2] + 5:+.1f} against the bar)"
+                    print(f"| small convolutional model | real only, leaned to {int(100 * target)} percent minor after training | {names[key]} | " + " | ".join(f"{x:.1f}" for x in v2) + f" | {bar2} |")
     if 0 in base:
         print("\n**Drift on MTG, convolutional model**: clips right with no made-up music and wrong with it\n\n| made-up share | lost: fifth | relative | parallel | other | lost in all | gained | net |\n|---|---:|---:|---:|---:|---:|---:|---:|")
         for share in (25, 100):
