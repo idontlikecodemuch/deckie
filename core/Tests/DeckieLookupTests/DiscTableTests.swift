@@ -67,7 +67,7 @@ import Testing
     @Test func everyRequestNamesTheAppItsVersionAndThePublicSiteAndNothingElse() throws {
         let s = Scripted([ok])
         let mb = MusicBrainz(version: "0.1", transport: s, gate: gate(Clock()))
-        _ = try mb.searchRecordings(RecordingQuery(title: "Blue Monday", artist: "[artist]"))
+        _ = try mb.searchRecordings(RecordingQuery(title: "Blue Monday", artist: "New Order"))
         let r = try #require(s.asked.first)
         #expect(r.headers == ["User-Agent": "DeckieDesk/0.1 ( https://deckie.io )", "Accept": "application/json"])
         #expect(r.url.absoluteString == "https://musicbrainz.org/ws/2/recording?query=%2Brecording%3A%22Blue%20Monday%22%20%2Bartist%3A%22New%20Order%22&limit=50&fmt=json")
@@ -77,7 +77,7 @@ import Testing
     @Test func theWordsAreEscapedForTheSearchLanguage() {
         #expect(MusicBrainz.lucene(RecordingQuery(title: "Say \"Hi\" (Extended Mix)", artist: "AC/DC", release: "Live: 1979"))
                 == #"+recording:"Say \"Hi\"" recording:"Say \"Hi\" (Extended Mix)" +artist:"AC/DC" release:"Live: 1979""#)
-        #expect(MusicBrainz.lucene(RecordingQuery(words: "da funk (live) - 1997")) == #"recording:(da funk \(live\) \- 1997) artist:(da funk \(live\) \- 1997)"#)
+        #expect(MusicBrainz.lucene(RecordingQuery(words: "da funk - 1997 (live)")) == #"recording:"da funk - 1997"^4 recording:(da funk \- 1997 \(live\)) artist:(da funk \- 1997)"#)
         #expect(MusicBrainz.lucene(RecordingQuery()) == nil)
         #expect(MusicBrainz.bareTitle("Night drive (extended mix)") == "Night drive")
         #expect(MusicBrainz.bareTitle("(Untitled)") == "(Untitled)")
@@ -151,10 +151,10 @@ import Testing
 
     @Test func theRecordedAnswersRead() throws {
         let mb = MusicBrainz(version: "0.1", transport: RecordedTransport(folder: fixtures), gate: MusicBrainzGate(interval: 0, sleep: { _ in }))
-        let recs = try mb.searchRecordings(RecordingQuery(title: "[song]", artist: "[artist]"))
+        let recs = try mb.searchRecordings(RecordingQuery(title: "Around the World", artist: "Daft Punk"))
         #expect(recs.count >= 25)
         let album = try #require(recs.first { $0.length == 429506 })
-        #expect(album.artistCredit?.line == "[artist]")
+        #expect(album.artistCredit?.line == "Daft Punk")
         #expect(album.isrcs?.contains("GBDUW0600009") == true)
         #expect((album.releases ?? []).count > 10)
         let byIsrc = try mb.searchRecordings(isrc: "gb-duw-06-00009")

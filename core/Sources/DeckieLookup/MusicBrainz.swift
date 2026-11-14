@@ -80,7 +80,7 @@ public struct SentRequest: Codable, Equatable, Sendable {
     public var service: String
     /// `recordingSearch`, `isrcSearch`, `disc`, `releaseSearch`, `release` (words `sentKind.<kind>`).
     public var kind: String
-    /// What it carried, in order: `[["title", "Blue Monday"], ["artist", "[artist]"]]` (words `sentField.<name>`).
+    /// What it carried, in order: `[["title", "Blue Monday"], ["artist", "New Order"]]` (words `sentField.<name>`).
     public var fields: [[String]]
     public var address: String
     public var answer: String
@@ -282,8 +282,10 @@ public struct MusicBrainz: Sendable {
             return parts.joined(separator: " ")
         }
         if let w = q.words?.trimmingCharacters(in: .whitespaces), !w.isEmpty {
-            let words = escapedWords(w)
-            return "recording:(\(words)) artist:(\(words))"
+            // The words as a title first (a file named after its song alone), then each word in the title or the
+            // artist (a file named "artist title" with no dash between).
+            let bare = bareTitle(w)
+            return "recording:\"\(phrase(bare))\"^4 recording:(\(escapedWords(w))) artist:(\(escapedWords(bare)))"
         }
         return nil
     }
