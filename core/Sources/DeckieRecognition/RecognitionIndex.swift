@@ -4,7 +4,7 @@ import Foundation
 
 /// How points are paired into hashes (Wang 2003, section 2.2: each point is an "anchor" paired with points in a "target
 /// zone" after it; a hash is the two frequencies and the time between them).
-public struct PairingConfig: Sendable, Equatable {
+public struct PairingConfig: Sendable, Equatable, Codable {
     /// Frequency steps to the octave in a hash (2.2 % a step). The step sets how far the deck's speed may be from a
     /// candidate speed before a pair's hash changes; the candidates (`SpeedGrid`) are spaced to fit inside it.
     public var pitchBinsPerOctave = 32
@@ -50,6 +50,9 @@ public struct PairingConfig: Sendable, Equatable {
     public var minAnchorLevel = 0
 
     public init() {}
+
+    /// The settings the booth's index is built with (chosen in the size study; docs/research/w4-recognition-complete.md).
+    public static var booth: PairingConfig { PairingConfig() }
 
     /// The slices whose points join the anchor in triple k: each slice with the next, the last with the first.
     @inline(__always) func slicePair(_ k: Int) -> (Int, Int) { k + 1 < fanOut ? (k, k + 1) : (0, k) }
@@ -128,15 +131,15 @@ public struct RecognitionIndex: Sendable {
     /// Each song's first point in the arrays below, and one past the last.
     let pointStart: [Int]
     /// Every song's points: frame on the timeline, and pitch.
-    let pointFrame: [Int32]
-    let pointPitch: [UInt16]
+    let pointFrame: Block<Int32>
+    let pointPitch: Block<UInt16>
     /// The hash table: the anchors (their frames on the timeline) of hash h are entries[offsets[h]..<offsets[h + 1]].
-    let offsets: [UInt32]
-    let entries: [UInt32]
+    let offsets: Block<UInt32>
+    let entries: Block<UInt32>
     /// Ratio quads only: each entry's anchor pitch step (7 bits) and tag (9 bits).
-    let extra: [UInt16]
+    let extra: Block<UInt16>
     /// Each entry's tag (three-point hashes only; empty otherwise).
-    let tags: [UInt8]
+    let tags: Block<UInt8>
 
     public var songCount: Int { ids.count }
     public var hashCount: Int { entries.count }
@@ -238,8 +241,8 @@ public struct RecognitionIndex: Sendable {
             let built = RatioQuads.build(p, songCount: songs.count, pointStart: pointStart, pointFrame: pointFrame,
                                          pointPitch: pointPitch, pointLevel: pointLevel)
             self.songStart = songStart; self.pointStart = pointStart
-            self.pointFrame = pointFrame; self.pointPitch = pointPitch
-            offsets = built.offsets; entries = built.entries; extra = built.extra; tags = []
+            self.pointFrame = Block(pointFrame); self.pointPitch = Block(pointPitch)
+            offsets = Block(built.offsets); entries = Block(built.entries); extra = Block(built.extra); tags = Block([])
             return
         }
         forEachPair { h, _ in counts[p.slot(h) + 1] += 1 }
@@ -259,18 +262,20 @@ public struct RecognitionIndex: Sendable {
             }
             next[p.slot(h)] += 1
         }
-        self.tags = tags; extra = []
+        self.tags = Block(tags); extra = Block([])
         self.songStart = songStart; self.pointStart = pointStart
-        self.pointFrame = pointFrame; self.pointPitch = pointPitch
-        offsets = counts; self.entries = entries
+        self.pointFrame = Block(pointFrame); self.pointPitch = Block(pointPitch)
+        offsets = Block(counts); self.entries = Block(entries)
     }
 
     /// The share of all hashes that sit in buckets (one bucket per hash value) larger than `size`: how lopsided the
     /// table is.
     public func shareInBuckets(largerThan size: Int) -> Double {
-        var n = 0
-        for h in 0..<(offsets.count - 1) where Int(offsets[h + 1] - offsets[h]) > size { n += Int(offsets[h + 1] - offsets[h]) }
-        return Double(n) / Double(max(1, entries.count))
+        offsets.withUnsafeBufferPointer { offsets in
+            var n = 0
+            for h in 0..<(offsets.count - 1) where Int(offsets[h + 1] - offsets[h]) > size { n += Int(offsets[h + 1] - offsets[h]) }
+            return Double(n) / Double(max(1, entries.count))
+        }
     }
 
     /// The song whose stretch of the timeline (its padding, then its frames) holds `frame`.
