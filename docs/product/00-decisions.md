@@ -633,6 +633,25 @@ a hard rule." And: "I just think it's a little slow at recognizing which is its 
 - **Both recognisers at once is a test setting**, for judging the two on one night. A crate file made on a Mac
   carries both kinds of fingerprint until Deckie's has been judged on a real set; then Apple's can go.
 
+### D38. Deckie's own key reader ships: its trained file is published (Nov 14)
+From the key work of Nov 13 and 14 (letters X2, X3, X4). The owner: "Yes we can publish. Though I think it will be
+updated shortly, correct?"
+
+- **The learned key reader ships.** It was trained only on recordings whose licences allow it, runs in plain Swift
+  on every system, and gives the three answers of D33 and D36: a key, the home note, or not sure. Its file is
+  published the way the engine's other models are, with a version of its own, and replaced by a newer file when a
+  retrain beats it by a rule fixed beforehand. The untrained reader stays as the fallback.
+- **What it learned from is disclosed** (D15), with the credits its sources' licences ask for.
+- **A slight lean toward minor is the owner's inclination**, taken from a source that is not the test collection
+  and fixed before any test score is looked at; which source, and whether it applies only to dance and electronic
+  songs, is chosen from measurements still to come.
+- **The bar of D16 is to be reworded.** It was written before it was known that Apple's reader leans toward minor,
+  and as written it rewards that lean. The new wording is to judge the keys Deckie shows by whether they mix
+  correctly, against Apple's on the same songs; the exact sentence is chosen when the numbers are in.
+- "Right" in the key tables means the home note and the mode both. The error that harms a mix is the right home
+  note with the wrong mode; the home-note answer exists so that Deckie does not guess it.
+- The owner's reading of where this stands: "Overall it feels like we are there or very close."
+
 ### Note on D19 (Nov 1): versions of a song stay separate rows
 Christopher, on two remixes of one song both showing in the picks: "we shouldn't merge them unless they are the same
 songs. DJs often have a bunch of versions of the same song". So the booth folds together only copies of the same
