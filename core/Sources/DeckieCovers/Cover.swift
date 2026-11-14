@@ -74,6 +74,21 @@ public struct Cover: Equatable, Sendable {
     }
 
     #if canImport(ImageIO)
+    /// Whether a picture's last bytes are its format's own ending: a JPEG's end-of-image marker (allowing a little
+    /// padding after it, which some writers leave) or a PNG's closing chunk. A file cut short has neither.
+    static func endsAsItShould(_ picture: Data, kind: String?) -> Bool {
+        let tail = Array(picture.suffix(4096))
+        if kind == "public.png" {
+            let end: [UInt8] = [0x49, 0x45, 0x4E, 0x44, 0xAE, 0x42, 0x60, 0x82]
+            return tail.count >= end.count && Array(tail.suffix(end.count)) == end
+        }
+        guard tail.count >= 2 else { return false }
+        for i in stride(from: tail.count - 2, through: 0, by: -1) where tail[i] == 0xFF && tail[i + 1] == 0xD9 {
+            return tail[(i + 2)...].allSatisfy { $0 == 0 || $0 == 0xFF }
+        }
+        return false
+    }
+
     /// The thumbnail by Apple's ImageIO. Written for the Mac and the iPad and not compiled or run where this was
     /// written (Linux and Windows): to be checked on a Mac.
     static func systemThumbnail(_ picture: Data, side: Int, quality: Int) throws(Failure) -> (jpeg: Data, width: Int, height: Int) {
@@ -82,12 +97,22 @@ public struct Cover: Equatable, Sendable {
               let sw = properties[kCGImagePropertyPixelWidth] as? Int, let sh = properties[kCGImagePropertyPixelHeight] as? Int
         else { throw .unreadable }
         guard sw <= 8192, sh <= 8192 else { throw .tooLarge }
+        // The same pictures as on Linux and Windows, and no others: a JPEG or a PNG, whole. ImageIO reads many more
+        // kinds and will make a thumbnail from the top half of a file that was cut short; a cover is refused then,
+        // not guessed at (checked on a Mac, Nov 14, 2026).
+        let kind = CGImageSourceGetType(source) as String?
+        guard kind == "public.jpeg" || kind == "public.png" else { throw .unreadable }
+        guard CGImageSourceGetStatus(source) == .statusComplete,
+              CGImageSourceGetStatusAtIndex(source, 0) == .statusComplete else { throw .unreadable }
         let options: [CFString: Any] = [
             kCGImageSourceCreateThumbnailFromImageAlways: true,
             kCGImageSourceCreateThumbnailWithTransform: true,
             kCGImageSourceThumbnailMaxPixelSize: min(side, max(sw, sh)),
         ]
         guard let image = CGImageSourceCreateThumbnailAtIndex(source, 0, options as CFDictionary) else { throw .unreadable }
+        // Only decoding shows that a file was cut short: asked again afterwards, ImageIO says so.
+        guard CGImageSourceGetStatusAtIndex(source, 0) == .statusComplete,
+              Self.endsAsItShould(picture, kind: kind) else { throw .unreadable }
         let data = NSMutableData()
         guard let destination = CGImageDestinationCreateWithData(data, "public.jpeg" as CFString, 1, nil) else { throw .unreadable }
         // Anything see-through is laid over white by drawing into a context without alpha first.

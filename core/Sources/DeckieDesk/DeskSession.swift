@@ -373,6 +373,56 @@ public final class DeskSession {
         return n
     }
 
+    // MARK: Look up songs via MusicBrainz (D36)
+
+    /// The last lookup's review, until it is applied, closed or another lookup starts.
+    public private(set) var review: DeskLookup.Review?
+
+    /// The plan for a lookup, shown as its sentence before anything is sent: `scope` `disc` for the music CD added as
+    /// `source`; otherwise the songs given (`ids`), a source's songs (`source`), or the songs that need a name.
+    public func lookupPlan(scope: String, ids: [String]? = nil, source: String? = nil) throws -> DeskLookup.Plan {
+        guard let c = crate else { throw DeskError("no crate with songs is showing") }
+        return try DeskLookup.plan(scope: scope, ids: ids, source: source, crate: c, info: current, paths: placePaths,
+                                   home: home, facts: facts)
+    }
+
+    /// Keeps a finished lookup's review for the window.
+    public func setReview(_ r: DeskLookup.Review?) { review = r }
+
+    /// Applies the review with the DJ's choices (nil: the ones Desk would make) as one step of undo. Returns how many
+    /// songs changed. The review stays, so the window can show what was used.
+    @discardableResult
+    public func applyLookup(_ choices: [DeskLookup.Choice]?) throws -> Int {
+        guard let r = review, crate != nil else { throw DeskError("there is no lookup to use") }
+        var n = 0
+        try change("undoLookup") {
+            n = DeskLookup.apply(r, choices ?? DeskLookup.defaultChoices(r), to: &crate!, corrections: &corrections, book: &book)
+        }
+        return n
+    }
+
+    /// "What Desk has sent", as kept in Desk's storage.
+    public var lookupLog: LookupLog { LookupLog.load(home) }
+    /// One lock for every write to the sent list (the lookup's thread writes it while the window reads it).
+    public let sentLock = NSLock()
+
+    public func clearSent() throws {
+        sentLock.lock(); defer { sentLock.unlock() }
+        var log = LookupLog.load(home)
+        log.sent = []
+        try home.prepare()
+        try log.save(home)
+    }
+
+    /// Notes that the one-song sentence has been shown once: from now on it sits under the button.
+    public func markExplained() {
+        sentLock.lock(); defer { sentLock.unlock() }
+        var log = LookupLog.load(home)
+        guard !log.explained else { return }
+        log.explained = true
+        try? log.save(home)
+    }
+
     // MARK: Listen (D33)
 
     /// A song's sound to play: the first of its places whose source is here, a file on a drive or folder, or the song

@@ -7,7 +7,9 @@
 //   deckie-desk --tour <folder> --music <folder> --export-to <folder>
 //                                       the Mac only: walks every screen with the music given and writes a picture
 //                                       of each into <folder> (Tour.swift); `--naming` walks the naming screens
-//                                       instead (a music CD from DECKIE_DESK_MUSIC_CD, `--playlist <file.m3u>`)
+//                                       instead (a music CD from DECKIE_DESK_MUSIC_CD, `--playlist <file.m3u>`);
+//                                       `--run-screen` the run screen (D37) at a few song counts and finished, and
+//                                       with `--record`, a picture every half second while it runs
 //   deckie-desk --check --music <folder> --export-to <folder>
 //                                       the check carried on as a DJ would: Add music with that folder (the page's
 //                                       own button; the folder chooser answers with it), the run to its end, Export

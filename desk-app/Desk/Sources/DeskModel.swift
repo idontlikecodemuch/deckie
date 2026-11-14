@@ -7,6 +7,7 @@ import DeckieEngine
 import DeckieCore
 import DeckieDesk
 import DeckieDisc
+import DeckieLookup
 import AVFoundation
 
 /// What the window shows: the crate that is showing (one of the crates Desk keeps, D28), a run in progress, the
@@ -38,6 +39,9 @@ final class DeskModel: ObservableObject {
     @Published var runTotal = 0
     @Published var runRemaining: Double?
     @Published var runLines: [String] = []
+    /// The run screen's songs, figures, stage, quiet line and moments (D37, RunScreen.swift); kept for the finished
+    /// screen's wall until the next run.
+    let watch = RunWatch()
     /// The finished screen's report, until the DJ moves on.
     @Published var finished: RunReport?
 
@@ -66,6 +70,16 @@ final class DeskModel: ObservableObject {
     let listener = Listener()
     private var watchers: [NSObjectProtocol] = []
 
+    // "Look up songs via MusicBrainz" (D36; Lookup.swift): its sheet, "What Desk has sent", the lookup going.
+    @Published var lookup: LookupSheetState?
+    @Published var showSent = false
+    /// Whether the one-song sentence has been shown once (kept in Desk's storage with the sent list).
+    @Published var lookupExplained = false
+    let lookupClient = DeskLookup.client()
+    var lookupRun: DeskLookupRun?
+    /// One lock for every write to the sent list (the lookup's thread writes it).
+    let sentLock = NSLock()
+
     /// The window's undo manager, given by the window (ContentView).
     weak var undoManager: UndoManager?
     private var saveTask: Task<Void, Never>?
@@ -87,6 +101,7 @@ final class DeskModel: ObservableObject {
             MainActor.assumeIsolated { self?.saveNow() }
         })
         reloadCrates()
+        lookupExplained = LookupLog.load(home).explained
         if let first = crates.first { show(first) }
     }
 
@@ -250,6 +265,7 @@ final class DeskModel: ObservableObject {
         running = true; finished = nil; runRead = request.name; runStage = .reading
         listener.stop()
         runDone = 0; runTotal = 0; runRemaining = nil; runLines = []
+        watch.start(musicCD: request.musicCD != nil)
         if let note = Builder.vocalTaggerNote { runLines.append(note) }
         undoManager?.removeAllActions()
         let run = DeskRun(home: home, crateId: info.id, request: request, jobs: jobs, device: Device.modelLabel(),
@@ -259,6 +275,7 @@ final class DeskModel: ObservableObject {
             do {
                 let (crate, report) = try run.run { p in Task { @MainActor in model.handle(p) } }
                 await MainActor.run {
+                    model.watch.stop()
                     model.running = false
                     model.reloadCrates()
                     if let i = model.crates.first(where: { $0.id == info.id }) { model.show(i) }
@@ -268,6 +285,7 @@ final class DeskModel: ObservableObject {
                 }
             } catch {
                 await MainActor.run {
+                    model.watch.stop()
                     model.running = false
                     model.reloadCrates()
                     if let i = model.crates.first(where: { $0.id == info.id }) { model.show(i) }
@@ -280,6 +298,7 @@ final class DeskModel: ObservableObject {
 
     private func handle(_ p: RunProgress) {
         guard running else { return }
+        watch.take(p)
         runStage = p.stage; runDone = p.done; runTotal = p.total; runRemaining = p.remaining
         switch p.line {
         case let .started(files, unchanged, queued)?:
@@ -326,6 +345,12 @@ final class DeskModel: ObservableObject {
         undoManager?.registerUndo(withTarget: self) { m in MainActor.assumeIsolated { m.restore(before, name: name) } }
         undoManager?.setActionName(name)
         scheduleSave()
+    }
+
+    /// A lookup's apply as one undo step (Lookup.swift): the crate, the corrections and the book, changed together.
+    func changeForLookup(_ name: String, _ body: (inout Crate, inout NameCorrections, inout NameBook) -> Void) {
+        guard crate != nil else { return }
+        change(name) { body(&crate!, &corrections, &book) }
     }
 
     func binding(for id: String) -> CrateTrack? { crate?.tracks.first { $0.id == id } }

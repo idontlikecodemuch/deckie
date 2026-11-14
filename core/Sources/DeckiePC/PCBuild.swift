@@ -158,12 +158,12 @@ public struct PCBuild: Sendable {
         /// Songs in the crate file whose start could not be placed to the sample (the record's flag
         /// `start_uncertain`: an AAC file that states its lead-in nowhere), by their path below the folder.
         public var startUncertain: [String] = []
+        /// Deckie's own key reader over the crate file's songs (D33, D36): a key shown, the home note alone, not sure.
+        public var keysRead = 0, keysHomeNote = 0, keysNotSure = 0
         /// Covers (D36): songs with one, distinct covers and their bytes, pictures that could not be used.
         public var covers = CoverCounts()
         /// The crate file's size in bytes, covers included.
         public var crateFileBytes = 0
-        /// Deckie's own key reader over the crate file's songs (D33, D36): a key shown, the home note alone, not sure.
-        public var keysRead = 0, keysHomeNote = 0, keysNotSure = 0
         public var seconds: Double
         public var jobs: Int
     }

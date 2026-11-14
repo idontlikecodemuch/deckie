@@ -27,6 +27,16 @@ jobs:
       - uses: actions/checkout@v4
       - name: Swift version
         run: swift --version
+      # Report only (D36): what Swift's own networking library would bring if Desk's lookup used it here. Nothing in
+      # Deckie links it (core/Sources/DeckieLookup does not import FoundationNetworking); DEPENDENCIES.md, section 11.
+      - name: "What FoundationNetworking would need (report only)"
+        continue-on-error: true
+        run: |
+          f=$(find / -name 'libFoundationNetworking.so' -not -path '*/proc/*' 2>/dev/null | head -1); echo "$f"
+          ldd "$f" | sed 's/ (0x.*//'
+          for lib in $(ldd "$f" | awk '/=>/ {print $3}'); do dpkg -S "$lib" 2>/dev/null; done | sort -u
+          dpkg -s libcurl4t64 2>/dev/null | grep -E '^(Package|Version|Depends):' || dpkg -s libcurl4 2>/dev/null | grep -E '^(Package|Version|Depends):'
+          ls /usr/share/doc/libcurl4t64/copyright /usr/share/doc/libcurl4/copyright 2>/dev/null | head -1 | xargs -r sed -n '1,40p'
       # ONNX Runtime and the Beat This! model, so that the beat tracker's tests run here rather than skip. Both are
       # cached between runs: ONNX Runtime by the fetch script's hash (the script pins the archive by its SHA-256),
       # the model by the hash of the export script and its pinned requirements (the script holds the model's pinned

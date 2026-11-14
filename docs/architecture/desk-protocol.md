@@ -75,7 +75,7 @@ Then the engine sends `state` and, when a crate with songs is showing, `songs`.
   or "Put Stick 3 back in to carry on"); `musicCD` is true for a music CD, whose `here` is true when the same disc
   is in a drive (Desk keeps none of a disc's music, so a stopped run carries on only with the disc).
 - `undo` and `redo`: the name of the word for the step each would take (`undoNameFix`, `undoRename`, `undoMove`,
-  `undoRemove`, `undoLookAgain`, `undoNames`, `undoCheck`), or null.
+  `undoRemove`, `undoLookAgain`, `undoNames`, `undoCheck`, `undoLookup`), or null.
 
 ### `songs`: the crate's songs, sources and what did not go in
 
@@ -115,11 +115,6 @@ joined by ", ". `names.others` lists the song's other facts in the crate file's 
 tag's own name; `names.leftOut` what was not sent, reason to count (words `leftOut.<reason>`). All read-only except
 through `song.fix` below.
 
-A song's cover (D36, added Nov 14, 2026; no new protocol number, as only a field and a request were added): each
-song carries `cover`, true when its record in the crate file names a cover (`file.cover`), else false. It says only
-that there is one; the picture is asked for with `song.cover` ("Covers", below). An engine from before D36 sends no
-`cover`, which a page reads as false.
-
 **The key of a song** (D33, D36). `keyState` says what the record holds, and the page shows, where a key shows:
 `key` (the `key` object, as before); `home_note` (`key` is null and `homeNote` is `{"note": "A", "camelot": ["8A",
 "11B"]}`: Deckie's reader found the home note and left the mode open; words `homeNote`, with `homeNoteHelp` as its
@@ -127,6 +122,11 @@ explanation); `not_sure` (both null: Deckie read the song and is not sure; words
 null: no key was read on the computer that made the record; words `keyNotRead`). The run's report carries the counts
 in `local.report`: `keys_not_read` (songs with neither), `keys_not_sure` (of those, the ones Deckie read; words
 `keysNotSure`) and `keys_home_note` (songs with a home note, not counted in the first; words `keysHomeNote`).
+
+A song's cover (D36, added Nov 14, 2026; no new protocol number, as only a field and a request were added): each
+song carries `cover`, true when its record in the crate file names a cover (`file.cover`), else false. It says only
+that there is one; the picture is asked for with `song.cover` ("Covers", below). An engine from before D36 sends no
+`cover`, which a page reads as false.
 
 Codes, each with its words in the list: a key's `from` (`keyFrom.<code>` and `programName.<code>`), `nameFrom` (codes
 joined by `+`, `nameFromPart.<code>`), `notes` (`needsName`, `damagedFrames`, `gridUnsure`, `vocalsNotRead`, `signed`)
@@ -148,6 +148,55 @@ A `line` is one of `{"kind": "started", "files": 40, "unchanged": 3, "queued": 3
 `{"kind": "notRead", "rel": "…", "reason": "damaged"}`, `{"kind": "discDamaged", "number": 3, "sectors": 12}`
 (part of a music CD's song 3 could not be read even on a second try: `sectors` of 1/75 s each were read as silence).
 A music CD's songs are named `Track 01.wav` and so on in `rel` (`.aiff` on the Mac).
+
+### The run screen (D37, added Nov 14, 2026; no new protocol number, as only an event was added)
+
+While a run goes, `run.songs` carries what the run screen draws: the songs that joined it, what is true of them, and
+the running totals. It comes at most four times a second (DeskProtocol's `RunScreenOut`), with every song that
+joined since the last one, in the order they joined; a burst (songs read before, which join together while
+finishing) is split into lines of at most 500 songs. `figures` comes at most once a second and is left out
+between; the page keeps the last it had. The last `run.songs` comes before `run.finished`, with the totals.
+
+```json
+{"event": "run.songs",
+ "songs": [{"id": "246ec2a99e080616", "number": 12, "title": "Night Drive", "artist": "Ola Brandt",
+            "bpm": 124.0, "key": {"kind": "key", "camelot": "8A", "note": 9, "name": "A", "minor": true, "uncertain": false},
+            "bars": 96, "seconds": 241.3, "place": "Stick 3 / House 4", "wave": [12, 14, 40, "…64 values…"],
+            "introBars": 16, "before": false}],
+ "notes": [{"kind": "fact", "code": "slowest", "song": "246ec2a99e080616", "values": {"title": "Night Drive", "bpm": "98"}},
+           {"kind": "moment", "code": "songs", "n": 50, "values": {"n": "50"}}],
+ "figures": {"songs": 12, "seconds": 2894.2, "tempoLow": 50, "tempoStep": 2, "tempos": [0, "…100 counts…"],
+             "noTempo": 0, "slowest": 98.0, "fastest": 128.0, "major": ["…12…"], "minor": ["…12…"], "home": ["…12…"],
+             "noKey": 1, "keysFound": 9, "needName": 2, "sameFile": 1, "notIn": 0}}
+```
+
+- A song (DeckieDesk's `RunSong`) joins once, when it is read, or for a song unchanged since the last run, while
+  finishing (`before` true). `title` and `artist` are its names as Desk has them then (rekordbox's, else the file's
+  tags, else the file name); the names Desk finds on the computer afterwards are in `songs` as always. `key.kind` is
+  what Desk decided: `key` (with `camelot`, `note` 0 = C, `name`, `minor`; `uncertain` for an earlier reader's key
+  under its sure line), `home` (the home note alone: `note` and `name`), or `none` (not sure). `place` is the booth's
+  place line; a song in the music folder has `folder` instead. `wave` is 64 values from 0 to 99: the loudest bar of
+  each stretch of the song's bars, on one scale for every song (per-bar loudness from -30 LUFS to -4 LUFS), so waves
+  compare; it is empty for a song with no beat grid. `introBars` is the length of the first section when the engine
+  labelled it the intro. Fields with no value are left out.
+- `figures` count the songs on the screen: `seconds` of music in them; `tempos[i]` the songs from
+  `tempoLow + i × tempoStep` BPM to the next bin, the end bins holding anything beyond; `major`, `minor` and `home`
+  by home note (0 = C); `noKey`; `keysFound` (keys on the wheel of 24 with a song); `needName` (no usable title or
+  no artist, as Desk has them; once Desk has looked for names while saving, the songs that still need one); `sameFile` (songs found in a second place of what is read);
+  `copies` (songs in a group of copies of one recording, D24), present once Desk links them while saving; `notIn`.
+- A note is said with the words `fact.<code>` or `moment.<code>` (by count with `n`), its `values` filling the blanks.
+  Facts: `slowest`, `fastest`, `tempoRun`, `commonTempo`, `newKey` (`mode` is the code `major` or `minor`, words
+  `mode.<code>`), `keysFound`, `homeNote`, `notSure`, `longest`, `shortest` (`length` as 4:05), `longestIntro`,
+  `twoPlaces`, `needName`, `copies`. Moments: `first`, `songs` (10, 50, 100, 500, 1,000, then every thousand),
+  `hour` (each full hour of music), `wheel` (all 24 keys found), `disc` (a music CD read to its end), `finished`
+  (`seconds` of music, for the window to say in its words). Each is true when it is sent.
+- The sayings for the step Desk is on are words, not messages: `saying.reading.<n>`, `saying.finishing.<n>`,
+  `saying.disc.<n>` and `saying.saving.<n>`, numbered from 1.
+
+A song is about 460 bytes and the totals about 600: songs read before, which join in a burst, cost about 480 bytes
+a song (`RunScreenTests.songsTravelInSmallBatches`: 5,000 songs, 2.4 MB in 11 lines); songs read one at a time, each
+with the totals, about 1.1 KB (a run of 502 generated songs sent 543 KB of `run.songs` in 1,073 seconds). So a run of
+5,000 songs sends between about 2.4 MB and 5.5 MB in all, over hours.
 
 A run's `report` has `disc` for a music CD: `text` (`names`, `none` "this disc has no names on it", or `drive` "the
 drive gave none; the disc may have some"), `songs`, `named` (songs named from the disc's CD-Text),
@@ -263,6 +312,58 @@ only then, and only for the song whose names it is showing:
   comes back and the page shows its placeholder.
 - The page keeps the covers it was given only while their crate is showing and no run has changed it; a songs event
   that says a song has no cover any more drops that one.
+
+### Look up songs via MusicBrainz (D36, added Nov 14, 2026; no new protocol number: only fields, events and requests were added)
+
+The one step in Desk that uses the internet. **The engine does the lookup; the pages never touch the network** (their
+content rules keep `connect-src 'none'`), and the only code that does is `DeckieLookup` in the core. Nothing is sent
+until the DJ has read the sentence and pressed "Look it up"; nothing is changed until the DJ applies the review.
+
+`hello` carries `lookup: {"service": "MusicBrainz", "available": bool}`: false where this computer has no way to look up
+yet (Windows and Linux, today: Swift's networking there needs curl, which is not on the licence allowlist), and then
+the window says so in plain words (`lookupFailure.notOnThisComputer`). `state` carries `lookingUp` (a lookup is going;
+requests that change something are refused with `busy`, except `lookup.stop`) and `discs` (the sources that are music
+CDs, which can be looked up as a disc).
+
+| `type` | Fields | Reply carries | Then |
+|---|---|---|---|
+| `lookup.plan` | `scope`: `song` (with `song`), `songs` (with `songs` ids, or `source`, or neither for the songs that need a name), `disc` (with `source`) | `plan` (below), `explained` (the one-song sentence was shown once), `available` | nothing is sent anywhere |
+| `lookup.start` | | `songs`, `requests`, `seconds` (the most it can take at one request a second) | `lookup.started`, `lookup.progress`…, `lookup.finished`, `state` |
+| `lookup.stop` | | | the lookup ends after the request it is waiting on; `lookup.finished` with `stopped`, what was found kept |
+| `lookup.review` | | `review`, `summary` (the last one, or null) | |
+| `lookup.apply` | `choices`: `[{"song", "candidate", "fields": ["title", "year", …]}]` (absent: the ones Desk would make) | `songs` (how many changed) | `state` (`undo` is `undoLookup`), `songs` |
+| `lookup.close` | | | the review is let go |
+| `lookup.sent` | | `sent` ("What Desk has sent": every request, oldest first) | |
+| `lookup.clearSent` | | | |
+
+A `plan` is `{"scope", "songs", "byIsrc", "byWords", "byFileName", "nothingToSend", "requests", "seconds",
+"discName", "sentence", "what"}`: `sentence` is the lines to show before anything is sent, in Desk's words (what will be
+sent, to whom, what will not, how long); `what` (one song) is what it would send, as `[["title", "Blue Monday"],
+["artist", "New Order"]]` (words `lookupWhat.<name>`), for the line under the button once the sentence has been read.
+
+Events: `{"event": "lookup.started", "scope", "songs"}`; `{"event": "lookup.progress", "done", "total", "found"}` as
+each song is done; `{"event": "lookup.finished", "review", "summary"}`.
+
+A `review` is `{"scope", "source", "songs", "stopped", "failure", "requests", "discMatch"}`. `failure` (a code, words
+`lookupFailure.<code>`: `noConnection`, `busy`, `refused`, `badAnswer`, `notOnThisComputer`) ended the whole lookup.
+`discMatch` (a disc): `exact` (MusicBrainz knew it by its id), `fuzzy` (a disc like it, every song the same length),
+`byName`, or null (words `lookupDiscMatch.<code>`, `none` for null). Each song is `{"song", "title", "seconds", "ask",
+"outcome", "failure", "candidates", "chosen", "several"}`: `outcome` `found`, `nothing`, `failed`, `notAsked` (stopped
+first), `nothingToSend` (words `lookupOutcome.<code>`); `chosen` is the candidate Desk would use (exactly one fits by
+length and agrees), or null, with `several` when more than one different answer fits. Each candidate is `{"recording",
+"title", "version", "artist", "release", "releaseId", "year", "label", "seconds", "fit", "difference", "otherVersion",
+"notes", "agree", "changes"}`: `fit` `fits` (within 3 s of the song), `off` or `unknown`; `difference` its length less
+the song's; `otherVersion` plainly another version (shown, never preferred); `notes` codes (words `lookupNote.<code>`);
+`changes` the preview's changes (as `names.preview`'s, with `field` also `release`, `year`, `label`), `tick` meaning
+"ticked when this candidate is used", `locked` the DJ's own entry or the song's own version, `note` also `yourVersion`,
+`otherVersion`, `original` (words `changeNote.<code>`).
+
+A `sent` entry is `{"at" (ISO 8601), "service", "kind", "fields", "address", "answer"}`: `kind` `recordingSearch`,
+`isrcSearch`, `disc`, `releaseSearch`, `release` (words `sentKind.<kind>`); `fields` what it carried, as name and
+value (words `sentField.<name>`); `address` the whole address asked for; `answer` `ok`, `nothing`, `busy` and the
+failure codes (words `sentAnswer.<code>`). Kept in Desk's storage (`lookups.json`), clearable.
+
+What was applied has the origin `lookup:musicbrainz` (`factFrom.lookup:musicbrainz`), in `names` as in the crate file.
 
 ## Requests the shell answers
 

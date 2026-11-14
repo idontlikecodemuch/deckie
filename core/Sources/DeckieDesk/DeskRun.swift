@@ -41,6 +41,11 @@ public struct RunProgress: Sendable {
     public var remaining: Double?
     /// What just happened, for the run's list, or nil.
     public var line: RunLine?
+    /// The run screen (D37): a song that just joined it, what is true of it now (and any moment), and the running
+    /// totals of every song on it so far.
+    public var song: RunSong? = nil
+    public var notes: [RunNote] = []
+    public var figures = RunFigures()
 }
 
 /// One line of a run's list, as data; a desk says it in its own words.
@@ -184,6 +189,8 @@ public final class DeskRun: @unchecked Sendable {
         var builderRemaining: Double?
         var builderStamp = Date()
         var sigMade = 0, sigKept = 0, sigFailed = 0, printMade = 0, printKept = 0, printFailed = 0
+        /// The run screen's songs and totals (D37).
+        var tally = RunTally()
     }
 
     public func run(progress: @escaping @Sendable (RunProgress) -> Void = { _ in }) throws -> (crate: Crate, report: RunReport) {
@@ -236,12 +243,33 @@ public final class DeskRun: @unchecked Sendable {
             default: return nil
             }
         }
-        @Sendable func emit(_ stage: RunStage, _ line: RunLine?) {
+        @Sendable func emit(_ stage: RunStage, _ line: RunLine?, song: RunSong? = nil, notes: [RunNote] = []) {
             state.lock.lock()
-            let p = RunProgress(stage: stage, done: min(state.done, state.total), total: state.total, remaining: estimate(),
+            var p = RunProgress(stage: stage, done: min(state.done, state.total), total: state.total, remaining: estimate(),
                                 line: line)
+            p.song = song; p.notes = notes; p.figures = state.tally.figures
             state.lock.unlock()
             progress(p)
+        }
+        // The run screen (D37): a song joins it when it is read, from its record in the store (on a queue of its own,
+        // so the reading never waits for it); a second place of a song on it already is noted, not shown twice.
+        let screen = DispatchQueue(label: "deckie.desk.screen", qos: .utility)
+        @Sendable func show(_ id: String, title: String?, artist: String?, place: CrateTrack.Place?, before: Bool,
+                            stage: RunStage, track: CrateTrack? = nil) {
+            state.lock.lock()
+            if state.tally.has(id) {
+                let notes = state.tally.again(id, title: title ?? "", place: place.flatMap(Crate.placeLine))
+                state.lock.unlock()
+                emit(stage, nil, notes: notes)
+                return
+            }
+            state.lock.unlock()
+            guard let t = track ?? Builder.finishedRecord(id, records: store.records) else { return }
+            var song = RunSong(t, title: title, artist: artist, place: place, before: before)
+            state.lock.lock()
+            let notes = state.tally.add(&song)
+            state.lock.unlock()
+            emit(stage, nil, song: song, notes: notes)
         }
         /// Makes (or takes from the store) the signature and the print of one file. Called on the finishing queue.
         @Sendable func finish(_ id: String, _ url: URL) {
@@ -285,8 +313,12 @@ public final class DeskRun: @unchecked Sendable {
             case let .file(p):
                 state.lock.lock()
                 state.builderRemaining = p.remaining; state.builderStamp = Date()
-                if p.id == nil { state.done += 1 } else { state.waiting += 1 }
+                if p.id == nil { state.done += 1; state.tally.notIn() } else { state.waiting += 1 }
                 state.lock.unlock()
+                if let id = p.id {
+                    let before: Bool = { if case .analysed = p.outcome { return false }; return true }()
+                    screen.async { show(id, title: p.title, artist: p.artist, place: p.place, before: before, stage: .reading) }
+                }
                 if let id = p.id, let disc {
                     // A music CD's song is finished now, while its file is here; then the builder lets it go.
                     // One worked out before was not read: its signature and print are in the store already.
@@ -313,6 +345,8 @@ public final class DeskRun: @unchecked Sendable {
             throw DeskError("\(request.name) could not be read (\(e.description)). Put \(request.name) back in to carry on.")
         }
         queue.sync {}
+        screen.sync {}
+        if disc != nil { emit(.finishing, nil, notes: [state.tally.discRead()]) }
         let buildSeconds = Date().timeIntervalSince(t0)
         let t1 = Date()
 
@@ -340,6 +374,12 @@ public final class DeskRun: @unchecked Sendable {
             if let url { finish(t.id, url) } else {
                 state.lock.lock(); state.finishedIds.insert(t.id); state.lock.unlock()
             }
+            // A song of what was read that the builder did not have to look at (unchanged since the last run) joins
+            // the run screen now, from the crate's own record; its other places in the read are noted.
+            for r in result.placesRead[t.id] ?? [] {
+                show(t.id, title: t.ident.title, artist: t.ident.artist, place: r.place, before: true, stage: .finishing,
+                     track: t)
+            }
             state.lock.lock()
             state.waiting -= 1
             state.done += result.placesRead[t.id]?.count ?? 0
@@ -363,6 +403,11 @@ public final class DeskRun: @unchecked Sendable {
             if let p = store.print(id) { prints[id] = p }
         }
         let copies = crate.setCutKeys(prints: prints)
+        let read = Set(result.placesRead.keys)
+        state.lock.lock()
+        let copyNotes = state.tally.copies(crate.tracks.filter { read.contains($0.id) && $0.ident.cutKey != nil }.count)
+        state.lock.unlock()
+        emit(.saving, nil, notes: copyNotes)
         // Keys and names already on the computer: the files' tags, the DJ programs' libraries, tracklists, copies.
         let local = DeskLocalFacts.gather(&crate, home: home, info: info, paths: newPaths)
         // A music CD's names from its CD-Text; where every name came from, and each song's release (research AA).
@@ -371,6 +416,10 @@ public final class DeskRun: @unchecked Sendable {
         try book.save(to: shelf.file(Self.namesFile, of: crateId))
         let corrections = NameCorrections.load(from: shelf.file(Self.correctionsFile, of: crateId))
         corrections.apply(to: &crate)
+        state.lock.lock()
+        state.tally.needName(crate.tracks.filter { read.contains($0.id) && LocalFacts.needsName($0) }.count)
+        state.lock.unlock()
+        emit(.saving, nil)
         crate.manifest.name = info.name
         try CrateWriter.write(crate, to: pkg)
         newPaths.keepOnly(Set(crate.tracks.map(\.id)))
@@ -407,6 +456,8 @@ public final class DeskRun: @unchecked Sendable {
         state.lock.unlock()
         try Self.appendRun(report, to: shelf.file(Self.runsFile, of: crateId))
         try? DeckieFiles.remove(pendingURL)
+        state.lock.lock(); let last = state.tally.finished(); state.lock.unlock()
+        emit(.saving, nil, notes: [last])
         return (crate, report)
     }
 

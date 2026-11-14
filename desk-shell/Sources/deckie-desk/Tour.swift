@@ -55,7 +55,11 @@ enum Tour {
             Step(name: "16-undo-named", js: click("#side-close"), delay: 0.6),
             Step(name: "17-new-crate", js: "desk.request('crate.new');", event: "state", delay: 1.0),
         ]
-        let steps = ProcessInfo.processInfo.arguments.contains("--naming") ? namingSteps(click) : tourSteps
+        let arguments = ProcessInfo.processInfo.arguments
+        let steps = arguments.contains("--lookup") ? lookupSteps(click)
+            : arguments.contains("--naming") ? namingSteps(click)
+            : arguments.contains("--run-screen") ? runScreenSteps(click) : tourSteps
+        if arguments.contains("--record") { record(desk, out: out.appendingPathComponent("frames")) }
         var events: [[String: Any]] = []
         let lock = NSLock()
         desk.watchers.append { line in
@@ -147,6 +151,109 @@ enum Tour {
                  event: "run.finished", delay: 1.8),
             Step(name: "n22-disc-names-panel", js: click("#finished-songs") + " setTimeout(function () { document.querySelector('#songs-body tr td[data-col=title]').click(); }, 400);", delay: 1.2),
         ]
+    }
+
+    /// "Look up songs via MusicBrainz" (D36): one song's button, its sentence, its review and what was filled in; the
+    /// line under the button after that; a source's batch with its sentence, its count while it goes and its review;
+    /// the needs-a-name bar's button; "What Desk has sent"; a music CD's sentence and MusicBrainz not knowing it. Needs
+    /// the lookup's generated songs as `--music`, DECKIE_LOOKUP_RECORDED (answers recorded once; nothing is sent), and
+    /// stand-in disc E in DECKIE_DESK_MUSIC_CD.
+    static func lookupSteps(_ click: (String) -> String) -> [Step] {
+        let row = { (title: String) in "[...document.querySelectorAll('#songs-body td[data-col=title]')].find(function (c) { return c.textContent === \(js(title)); }).click();" }
+        let menuText = { (menu: String, text: String) in "[...document.querySelectorAll('#\(menu) [role=menuitem]')].find(function (b) { return b.textContent.indexOf(\(js(text))) === 0; }).click();" }
+        let scope = { (prefix: String) in "var s = document.getElementById('lookup-scope'); s.value = [...s.options].find(function (o) { return o.value.indexOf(\(js(prefix))) === 0; }).value; s.dispatchEvent(new Event('change'));" }
+        return [
+            Step(name: nil, delay: 2.0),
+            Step(name: nil, js: click("#add-button"), delay: 0.8),
+            Step(name: nil, js: "[...document.querySelectorAll('#add-menu [role=menuitem]')].pop().click();", event: "run.finished", delay: 1.0),
+            Step(name: nil, js: click("#finished-songs"), delay: 1.0),
+            Step(name: "l01-panel-lookup-button", js: row("Around the World"), delay: 1.0),
+            Step(name: "l02-sentence-one-song", js: click("#names .foot button.net"), delay: 1.2),
+            Step(name: "l03-review-one-song", js: click("#lookup-go"), event: "lookup.finished", delay: 1.0),
+            Step(name: "l04-filled-from-musicbrainz", js: click("#lookup-go"), event: "songs", delay: 1.2),
+            Step(name: "l05-under-the-button", js: row("Blue Monday"), delay: 1.5),
+            // Undo the one song's lookup, so the batch asks for it as it was (the answers recorded once are for that).
+            Step(name: nil, js: click("#undo"), event: "songs", delay: 0.6),
+            Step(name: "l06-more-menu", js: click("#more-button"), delay: 0.8),
+            Step(name: nil, js: menuText("more-menu", "Look up songs via MusicBrainz"), delay: 1.0),
+            Step(name: "l07-sentence-batch", js: scope("source:"), delay: 1.2),
+            Step(name: "l08-progress", js: click("#lookup-go"), event: "lookup.progress",
+                 eventTest: { (($0["done"] as? NSNumber)?.intValue ?? 0) >= 2 }, delay: 0.2),
+            Step(name: "l09-review-batch", event: "lookup.finished", delay: 1.0),
+            Step(name: "l10-review-batch-further", js: "document.getElementById('lookup-songs').scrollTop = 900;", delay: 0.6),
+            Step(name: "l11-review-batch-end", js: "var b = document.getElementById('lookup-songs'); b.scrollTop = b.scrollHeight;", delay: 0.6),
+            Step(name: "l12-names-added", js: click("#lookup-go"), event: "songs", delay: 1.2),
+            Step(name: "l13-needs-a-name-bar", js: click("#status-needname"), delay: 1.0),
+            Step(name: nil, js: click("#more-button"), delay: 0.6),
+            Step(name: "l14-what-desk-has-sent", js: menuText("more-menu", "What Desk has sent"), delay: 1.2),
+            Step(name: nil, js: "document.getElementById('sent').close('ok');", delay: 0.4),
+            Step(name: nil, js: "desk.request('crate.new');", event: "state", delay: 0.8),
+            Step(name: nil, js: click("#add-button"), delay: 1.2),
+            Step(name: nil, js: "[...document.querySelectorAll('#add-menu [role=menuitem]')].find(function (b) { return / E$/.test(b.textContent); }).click();",
+                 event: "run.finished", delay: 1.0),
+            Step(name: nil, js: click("#finished-songs"), delay: 1.0),
+            Step(name: nil, js: click("#more-button"), delay: 0.6),
+            Step(name: nil, js: menuText("more-menu", "Look up songs via MusicBrainz"), delay: 1.0),
+            Step(name: "l15-sentence-disc", js: scope("disc:"), delay: 1.2),
+            Step(name: "l16-disc-not-known", js: click("#lookup-go"), event: "lookup.finished", delay: 1.0),
+        ]
+    }
+
+    /// The run screen (D37): the run from the first screen to the finished one, with a picture at a few song counts
+    /// (`DECKIE_TOUR_SONGS`, the songs in `--music`, sets them), then a line of the wall pointed at and one chosen with
+    /// the keyboard.
+    static func runScreenSteps(_ click: (String) -> String) -> [Step] {
+        let total = ProcessInfo.processInfo.environment["DECKIE_TOUR_SONGS"].flatMap(Int.init) ?? 30
+        let done = { (n: Int) -> ([String: Any]) -> Bool in
+            { $0["event"] as? String == "run.progress" && (($0["done"] as? NSNumber)?.intValue ?? 0) >= n }
+        }
+        var steps = [Step(name: "r01-first-screen", delay: 1.5), Step(name: nil, js: click("#add-button"), delay: 0.8),
+                     Step(name: "r02-first-song", js: "[...document.querySelectorAll('#add-menu [role=menuitem]')].pop().click();",
+                          event: "run.progress", eventTest: done(1), delay: 1.0)]
+        var seen = Set<Int>()
+        for (i, n) in [3, total / 4, total / 2, total * 3 / 4, total * 9 / 10].enumerated() where n > 0 && seen.insert(n).inserted {
+            steps.append(Step(name: "r0\(i + 3)-\(n)-songs", event: "run.progress", eventTest: done(n), delay: 1.2))
+        }
+        steps.append(Step(name: "r08-finished", event: "run.finished", delay: 2.4))
+        steps.append(Step(name: "r09-wall-pointed", js: """
+            var c = document.getElementById('done-wall'), r = c.getBoundingClientRect();
+            c.dispatchEvent(new MouseEvent('mousemove', { clientX: r.left + r.width * 0.3, clientY: r.top + r.height * 0.42, bubbles: true }));
+            """, delay: 0.8))
+        steps.append(Step(name: "r10-wall-keyboard", js: """
+            var c = document.getElementById('done-wall'); c.focus();
+            c.dispatchEvent(new KeyboardEvent('keydown', { key: 'End', bubbles: true }));
+            c.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowUp', bubbles: true }));
+            """, delay: 0.8))
+        return steps
+    }
+
+    /// With `--record`: a picture of the window every half second from the moment a run starts until a few seconds
+    /// after it finishes, numbered in order, for a short film of the run screen (ffmpeg makes one from them).
+    static func record(_ desk: Desk, out: URL) {
+        #if os(macOS)
+        try? FileManager.default.createDirectory(at: out, withIntermediateDirectories: true)
+        let lock = NSLock()
+        var started = false, finishedAt: Date?
+        desk.watchers.append { line in
+            lock.lock(); defer { lock.unlock() }
+            if line.contains("\"event\":\"run.started\"") { started = true }
+            if line.contains("\"event\":\"run.finished\"") { finishedAt = Date() }
+        }
+        Thread.detachNewThread {
+            var frame = 0
+            while true {
+                Thread.sleep(forTimeInterval: 0.5)
+                lock.lock(); let go = started, end = finishedAt; lock.unlock()
+                if let end, Date().timeIntervalSince(end) > 4 { return }
+                guard go else { continue }
+                frame += 1
+                let url = out.appendingPathComponent(String(format: "%05d.png", frame))
+                let wait = DispatchSemaphore(value: 0)
+                desk.window.onWindowThread { snapshot(desk, to: url) { _ in wait.signal() } }
+                wait.wait()
+            }
+        }
+        #endif
     }
 
     static func js(_ s: String) -> String {
