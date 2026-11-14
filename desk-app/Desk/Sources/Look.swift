@@ -290,6 +290,26 @@ enum RunLook {
     /// Songs waiting for the stage before the oldest go straight to the wall.
     static let queueMax = 24
     static let frame = 1.0 / 30
+
+    // the song on stage, moving (letter AD): built from its tempo, bars and wave; still under reduced motion
+    /// Seconds between pulses, at the quickest and the slowest: a song faster than the quickest pulses every other beat,
+    /// one slower than the slowest twice a beat (so nothing pulses more than two and a half times a second).
+    static let beatFastest = 0.4, beatSlowest = 1.0
+    /// Beats in a bar, for the stronger pulse on each bar's first beat and the slow breath.
+    static let beatsInBar = 4.0
+    /// The swell on a beat and on a bar's first beat, as a share of the wave's height, and how quickly it falls away
+    /// within the beat (larger is quicker).
+    static let pulse = 0.14, pulseDownbeat = 0.24, pulseFall = 5.0
+    /// The slow breath: its swell as a share of the height, over this many bars; a song with no tempo breathes only,
+    /// once every this many seconds.
+    static let breath = 0.08, breathBars = 4.0, breathNoTempoSeconds = 2.4
+    /// The change of song: the share of the sweep the start moves along the wave (the rest is each stretch's own
+    /// move), and the overshoot of each stretch's move (0 is none).
+    static let sweepStagger = 0.6, morphOvershoot = 1.2
+    /// The playhead's glow: it crosses the wave once every this many bars of the song's tempo (or seconds with no
+    /// tempo), its half width as a share of the wave's width, how much it lifts the wave, and its colour.
+    static let playheadBars = 2.0, playheadNoTempoSeconds = 4.0, playheadWidth = 0.08, playheadLift = 0.08
+    static let playheadGlow = Color(nsColor: waveNew).opacity(0.55)
 }
 
 /// The lookup's look (D36): the step that uses the internet, marked everywhere by its own colour and the globe.

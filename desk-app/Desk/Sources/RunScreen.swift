@@ -5,8 +5,9 @@ import DeckieDesk
 // The run screen on the Mac (D37): the same screen as the Windows and Linux window's (desk-web/run.js), from the same
 // data, which the Mac gets from DeskRun directly (RunProgress's song, notes and figures). Everything drawn is a song
 // Desk read; every number is counted by the core; every sentence is one the core said is true, or a line about the
-// step Desk is on, from the one word list. Drawing is throttled and stops while the window is hidden; under reduced
-// motion nothing moves.
+// step Desk is on, from the one word list. The song on stage moves for the pleasure of it (letter AD): it sweeps in
+// from the last song's wave, then pulses and breathes at its own tempo. Drawing is throttled and stops while the
+// window is hidden; under reduced motion nothing moves.
 
 // The run screen's look is RunLook, in Look.swift.
 
@@ -14,12 +15,13 @@ import DeckieDesk
 /// quiet line, and the moments.
 @MainActor
 final class RunWatch: ObservableObject {
-    struct Staged: Equatable { var song: RunSong; var at: Date; var hold: Double; var draw: Double }
+    /// The song on stage: when it went on, how long it stays at least, how long its sweep in takes (0: at once), and
+    /// the wave of the song before it, which its own grows or shrinks from.
+    struct Staged: Equatable { var song: RunSong; var at: Date; var hold: Double; var draw: Double; var from: [Int] }
 
     @Published private(set) var songs: [RunSong] = []
     @Published private(set) var figures = RunFigures()
     @Published private(set) var staged: Staged?
-    @Published private(set) var drawing = false
     @Published private(set) var skipped = 0
     @Published private(set) var saying = ""
     @Published private(set) var sayingIsMoment = false
@@ -40,7 +42,7 @@ final class RunWatch: ObservableObject {
     private var lastWasFact = false
     private var step: RunStage = .reading
     private var musicCD = false
-    private var stageTimer: Timer?, sayTimer: Timer?, wallTimer: Timer?, drawTimer: Timer?
+    private var stageTimer: Timer?, sayTimer: Timer?, wallTimer: Timer?
     private var spoken = (done: -1, at: Date.distantPast)
 
     func start(musicCD: Bool) {
@@ -73,7 +75,7 @@ final class RunWatch: ObservableObject {
     }
 
     func stop() {
-        for t in [stageTimer, sayTimer, wallTimer, drawTimer] { t?.invalidate() }
+        for t in [stageTimer, sayTimer, wallTimer] { t?.invalidate() }
         queue = []
     }
 
@@ -91,11 +93,8 @@ final class RunWatch: ObservableObject {
         // Under reduced motion a song stays at least `holdStill`, so the stage changes as a still picture would.
         if reduceMotion { hold = max(hold, RunLook.holdStill) }
         let ticker = reduceMotion || hold < RunLook.ticker
-        staged = Staged(song: song, at: Date(), hold: hold, draw: ticker ? 0 : min(RunLook.draw, hold * RunLook.drawShare))
+        staged = Staged(song: song, at: Date(), hold: hold, draw: ticker ? 0 : min(RunLook.draw, hold * RunLook.drawShare), from: staged?.song.wave ?? [])
         if queue.isEmpty && skipped > 0 { stageTimerFire(after: hold) { [weak self] in self?.skipped = 0 } }
-        drawing = staged!.draw > 0 && visible
-        drawTimer?.invalidate()
-        if drawing { drawTimer = once(after: staged!.draw) { [weak self] in self?.drawing = false } }
         scheduleStage()
     }
 
@@ -250,10 +249,13 @@ struct StageView: View {
         RunCard(moment: watch.moment == "first") {
             if let s = watch.staged {
                 HStack(alignment: .center, spacing: RunLook.stageGap) {
-                    TimelineView(.animation(minimumInterval: RunLook.frame, paused: reduce || !watch.drawing || !watch.visible)) { tl in
+                    // Moving the whole time it is on stage (letter AD), at most `frame` apart; still under reduced
+                    // motion and while the window is hidden.
+                    TimelineView(.animation(minimumInterval: RunLook.frame, paused: reduce || !watch.visible)) { tl in
                         Canvas { gc, size in
-                            let p = s.draw > 0 ? min(1, tl.date.timeIntervalSince(s.at) / s.draw) : 1
-                            StageView.draw(s.song, progress: reduce ? 1 : p, in: &gc, size: size)
+                            let t0 = CACurrentMediaTime()
+                            StageView.draw(s, elapsed: tl.date.timeIntervalSince(s.at), still: reduce, in: &gc, size: size)
+                            RunCost.add(from: t0)
                         }
                     }
                     .frame(height: RunLook.stageHeight).frame(maxWidth: .infinity)
@@ -300,28 +302,42 @@ struct StageView: View {
         .accessibilityElement(children: .combine)
     }
 
-    static func draw(_ s: RunSong, progress: Double, in gc: inout GraphicsContext, size: CGSize) {
-        // The frame's clock can read a moment before the song went on stage, so the share drawn is held between
-        // nothing and all of it; a share below nothing once stopped the app.
-        let p = progress.isFinite ? max(0, min(1, progress)) : 1
-        let w = size.width, markH = (size.height * RunLook.stageMarkShare).rounded(), h = size.height - markH, mid = h / 2, edge = p * w
-        gc.fill(Path(CGRect(x: 0, y: mid.rounded(), width: edge, height: RunLook.stageLine)), with: .color(Color(nsColor: RunLook.waveNone)))
+    static func draw(_ st: RunWatch.Staged, elapsed: Double, still: Bool, in gc: inout GraphicsContext, size: CGSize) {
+        let s = st.song, w = size.width, markH = (size.height * RunLook.stageMarkShare).rounded(), h = size.height - markH, mid = h / 2
+        guard w > 0, h > 0 else { return }
+        let m = StageMotion(bpm: s.bpm, elapsed: elapsed, sweep: st.draw, still: still)
+        let edge = CGFloat(m.front) * w
+        gc.fill(Path(CGRect(x: 0, y: mid.rounded(), width: w, height: RunLook.stageLine)), with: .color(Color(nsColor: RunLook.waveNone)))
         let n = RunSong.waveLength, slot = w / CGFloat(n)
-        if !s.wave.isEmpty {
-            // The wave: mirrored, through the middle of each stretch, drawn in from the left as far as `p`.
-            let shown = max(0, min(n, s.wave.count, Int((p * Double(n)).rounded(.up))))
-            func half(_ i: Int) -> CGFloat { max(RunLook.stageWaveMin, CGFloat(pow(Double(s.wave[min(max(0, i), s.wave.count - 1)]) / 99, RunLook.waveCurve)) * h * RunLook.stageWaveRoom) }
+        // The wave: mirrored, through the middle of each stretch; each stretch moving from the last song's height to
+        // this one's, then breathing with the song (StageMotion).
+        let playX = m.playhead.map { CGFloat($0) * w }
+        let halves: [CGFloat] = (0..<n).map { i in
+            let base = m.height(i, of: n, from: st.from, to: s.wave)
+            let x = (CGFloat(i) + 0.5) * slot
+            let lift = playX.map { m.lift(distance: Double(abs(x - $0) / w)) } ?? 0
+            return CGFloat(base * m.scale(lift: lift)) * h * RunLook.stageWaveRoom
+        }
+        if halves.contains(where: { $0 > 0 }) {
+            func half(_ i: Int) -> CGFloat { max(RunLook.stageWaveMin, halves[max(0, min(n - 1, i))]) }
             var path = Path()
             path.move(to: CGPoint(x: 0, y: mid - half(0)))
-            for i in 0..<shown { path.addLine(to: CGPoint(x: min(edge, (CGFloat(i) + 0.5) * slot), y: mid - half(i))) }
-            path.addLine(to: CGPoint(x: edge, y: mid - half(max(0, shown - 1))))
-            path.addLine(to: CGPoint(x: edge, y: mid + half(max(0, shown - 1))))
-            for i in stride(from: shown - 1, through: 0, by: -1) { path.addLine(to: CGPoint(x: min(edge, (CGFloat(i) + 0.5) * slot), y: mid + half(i))) }
+            for i in 0..<n { path.addLine(to: CGPoint(x: (CGFloat(i) + 0.5) * slot, y: mid - half(i))) }
+            path.addLine(to: CGPoint(x: w, y: mid - half(n - 1)))
+            path.addLine(to: CGPoint(x: w, y: mid + half(n - 1)))
+            for i in stride(from: n - 1, through: 0, by: -1) { path.addLine(to: CGPoint(x: (CGFloat(i) + 0.5) * slot, y: mid + half(i))) }
             path.addLine(to: CGPoint(x: 0, y: mid + half(0)))
             path.closeSubpath()
             gc.fill(path, with: .color(Color(nsColor: RunLook.wave)))
+            // The playhead: a soft band of light crossing the wave.
+            if let x = playX {
+                let band = CGFloat(RunLook.playheadWidth) * w
+                gc.fill(path, with: .linearGradient(Gradient(colors: [RunLook.playheadGlow.opacity(0), RunLook.playheadGlow, RunLook.playheadGlow.opacity(0)]),
+                                                    startPoint: CGPoint(x: x - band, y: 0), endPoint: CGPoint(x: x + band, y: 0)))
+            }
         }
-        // Its bars marked: a cut through the wave every 8 bars and a mark below it, a longer one every 32.
+        // Its bars marked as the sweep passes: a cut through the wave every 8 bars and a mark below it, a longer one
+        // every 32.
         if let bars = s.bars, bars > 0 {
             var b = 8
             while b < bars {
@@ -331,11 +347,87 @@ struct StageView: View {
                 gc.blendMode = .clear
                 gc.fill(Path(CGRect(x: x, y: 0, width: strong ? RunLook.stageTickStrongWidth : RunLook.stageTickWidth, height: h)), with: .color(.black))
                 gc.blendMode = .normal
-                gc.fill(Path(CGRect(x: x, y: h + RunLook.stageTickGap, width: RunLook.stageTickWidth, height: strong ? markH - RunLook.stageTickGap : (markH - RunLook.stageTickGap) * RunLook.stageTickShort)),
+                gc.fill(Path(CGRect(x: x, y: h + RunLook.stageTickGap, width: RunLook.stageTickWidth, height: max(0, strong ? markH - RunLook.stageTickGap : (markH - RunLook.stageTickGap) * RunLook.stageTickShort))),
                         with: .color(strong ? RunLook.tickStrong : RunLook.tick))
                 b += 8
             }
         }
+    }
+}
+
+/// How the song on stage moves at one moment (letter AD), the same arithmetic as the pages' run.js: the sweep from
+/// the last song's wave to this one's, a pulse on each beat of its tempo, a slow breath over a few bars, and a playhead
+/// crossing it. Every time is held to nothing or more (a frame's clock can read a moment before the song went on
+/// stage) and every index to the wave it reads, however short.
+struct StageMotion {
+    /// The share of the width the sweep has reached, 0 to 1.
+    let front: Double
+    /// Where the playhead is, 0 to 1 across, once the sweep is over; nil before then and when still.
+    let playhead: Double?
+    let elapsed: Double, sweep: Double, still: Bool
+    /// The swell now from the pulse and the breath, as a share of the height.
+    let swell: Double
+
+    init(bpm: Double?, elapsed: Double, sweep: Double, still: Bool) {
+        let e = elapsed.isFinite ? max(0, elapsed) : 0
+        let sw = sweep.isFinite ? max(0, sweep) : 0
+        self.elapsed = e; self.sweep = sw; self.still = still
+        let beat = Self.beat(bpm)
+        front = still || sw <= 0 ? 1 : max(0, min(1, e / max(sw * RunLook.sweepStagger, .ulpOfOne)))
+        guard !still else { swell = 0; playhead = nil; return }
+        if let beat {
+            let ph = e / beat, k = ph.rounded(.down), frac = ph - k
+            let down = k.truncatingRemainder(dividingBy: RunLook.beatsInBar) == 0
+            let pulse = (down ? RunLook.pulseDownbeat : RunLook.pulse) * exp(-RunLook.pulseFall * frac)
+            swell = pulse + RunLook.breath * 0.5 * (1 - cos(2 * .pi * ph / (RunLook.beatsInBar * RunLook.breathBars)))
+        } else {
+            swell = RunLook.breath * 0.5 * (1 - cos(2 * .pi * e / RunLook.breathNoTempoSeconds))
+        }
+        let cross = beat.map { $0 * RunLook.beatsInBar * RunLook.playheadBars } ?? RunLook.playheadNoTempoSeconds
+        if e >= sw, cross > 0 {
+            let t = (e - sw) / cross
+            playhead = t - t.rounded(.down)
+        } else { playhead = nil }
+    }
+
+    /// Seconds between pulses: the song's beat, doubled or halved into `beatFastest` to `beatSlowest`; nil with no tempo.
+    static func beat(_ bpm: Double?) -> Double? {
+        guard let bpm, bpm.isFinite, bpm > 0 else { return nil }
+        var b = 60 / bpm, turns = 0
+        while b < RunLook.beatFastest && turns < 16 { b *= 2; turns += 1 }
+        while b > RunLook.beatSlowest && turns < 32 { b /= 2; turns += 1 }
+        return b
+    }
+
+    /// A wave's height at stretch `i` of `n`, 0 to 1 on the one curve every song shares; 0 with no wave.
+    static func shape(_ wave: [Int], _ i: Int, of n: Int) -> Double {
+        guard !wave.isEmpty, n > 0 else { return 0 }
+        let j = max(0, min(wave.count - 1, i * wave.count / n))
+        return pow(Double(max(0, min(99, wave[j]))) / 99, RunLook.waveCurve)
+    }
+
+    /// Stretch `i`'s height now, on its way from the last song's wave to this one's: each stretch starts in turn from
+    /// the left and settles with a small overshoot.
+    func height(_ i: Int, of n: Int, from old: [Int], to new: [Int]) -> Double {
+        let target = Self.shape(new, i, of: n)
+        guard !still, sweep > 0 else { return target }
+        let start = Double(i) / Double(max(1, n - 1)) * sweep * RunLook.sweepStagger
+        let span = max(sweep * (1 - RunLook.sweepStagger), .ulpOfOne)
+        let x = max(0, min(1, (elapsed - start) / span)), c = RunLook.morphOvershoot
+        let eased = 1 + (c + 1) * pow(x - 1, 3) + c * pow(x - 1, 2)
+        let was = Self.shape(old, i, of: n)
+        return max(0, was + (target - was) * eased)
+    }
+
+    /// The playhead's lift at a distance from it (a share of the width).
+    func lift(distance: Double) -> Double {
+        let d = distance / RunLook.playheadWidth
+        return d.isFinite && d < 1 ? RunLook.playheadLift * (1 - d) : 0
+    }
+
+    /// The share of the room a height takes now: at the fullest swell the wave fills `stageWaveRoom`.
+    func scale(lift: Double) -> Double {
+        (1 + swell + lift) / (1 + RunLook.pulseDownbeat + RunLook.breath + RunLook.playheadLift)
     }
 }
 
