@@ -519,16 +519,17 @@ example crate above as one file (21,416 bytes against the package's 20,626: 790 
 - **Who writes which.** The Mac keeps writing packages (D28: Desk keeps its crates in its own storage, as packages).
   The PC builder writes the single-file form next to the music folder. Either may be sent to an iPad.
 
-**What the iPad app needs** (not built here; this track cannot build that app). (1) Its reads already go through
-`CrateReader.read(from:)` (`deck-app/Deck/Sources/CrateLibrary.swift`), which now takes both forms, so reading needs
-no change once the app builds against this core. (2) Where it imports a crate file as a copy into its own storage,
-it copies a folder today; for a single file it should call `CrateArchive.unpack(_:to:)` into the package folder it
-would have copied to, so everything after the import (its `prefs.json`, `history/`, signatures made on the device)
-works on a package as now. (3) Its declared document type for `.deckiecrate` says "package"; the declaration must
-also accept a plain file with that extension, or Files and the share sheet will not offer Deckie Booth for a
-PC-made crate file. Whether one declared type can cover both a package and a flat file with one extension has not
-been tried on a device; if it cannot, the single file takes a second extension (say `.deckiecratefile`) and nothing
-else here changes. That is the one open point, and it needs an iPad to settle.
+**What the iPad app needs**, built Nov 13 (`deck-app/README.md`, "Crate files from a PC"). (1) Its reads go through
+`CrateReader.read(from:)`, which takes both forms. (2) A crate file handed to the app is taken into its own storage by
+`CrateImport.copy` (`core/Sources/DeckieCrate/CrateImport.swift`): a package is copied, a single file is unpacked with
+`CrateArchive.unpack`, and the copy is read whole before it replaces anything, so everything after works on a package
+as before; the file the DJ gave is never changed. (3) The open point is settled, in the iPad simulator: one declared
+type cannot cover both forms, because a type that conforms to `com.apple.package` names folders only and the system
+gives a plain file with the same extension a dynamic type of its own (the chooser showed the single files greyed out).
+Two type identifiers with the **same extension** do cover both: `io.christophershannon.deckie.crate` (a package) and
+`io.christophershannon.deckie.crate-file` (a plain file), and the system picks one by whether the item is a folder or
+a file. So the single file keeps the name `<name>.deckiecrate`, and nothing in this format changes. Still to see on a
+real iPad: AirDrop, iCloud Drive and a cable.
 
 ## The proposals in one list, for the main session
 
@@ -557,4 +558,5 @@ else here changes. That is the one open point, and it needs an iPad to settle.
     and `track`, left out when empty; no version raised.
 12. Proposed Nov 13, 2026 (with D29). The single-file form: the same files in one uncompressed zip under the same
     name, written and read by `CrateArchive`; `CrateReader.read(from:)` takes either form. Nothing inside changes;
-    no version raised. Open: whether the iPad's document type can cover both forms with one extension.
+    no version raised. The iPad's document types cover both forms with one extension (two type identifiers, settled
+    Nov 13 in the simulator).
