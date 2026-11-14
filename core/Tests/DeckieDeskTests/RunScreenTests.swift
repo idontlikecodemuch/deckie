@@ -60,11 +60,11 @@ import DeckieBuild
         #expect(f.songs == 3 && a.number == 1 && c.number == 3)
         #expect(f.seconds == 3800)
         #expect(f.tempos[Int((124 - RunFigures.tempoFloor) / RunFigures.tempoBin)] == 1)
-        #expect(f.tempos[15] == 1 && f.noTempo == 1 && f.tempos.reduce(0, +) == 2)
+        #expect(f.tempos[Int((90 - RunFigures.tempoFloor) / RunFigures.tempoBin)] == 1 && f.noTempo == 1 && f.tempos.reduce(0, +) == 2)
         #expect(f.slowest == 90 && f.fastest == 124)
         #expect(f.minor[9] == 1 && f.home[2] == 1 && f.noKey == 1 && f.keysFound == 1)
         // Tempos past either end are counted in the end bins.
-        var slow = song("s", bpm: 40), fast = song("f", bpm: 260)
+        var slow = song("s", bpm: 30), fast = song("f", bpm: 300)
         _ = tally.add(&slow); _ = tally.add(&fast)
         #expect(tally.figures.tempos.first == 1 && tally.figures.tempos.last == 1)
         #expect(tally.figures.tempos.count == RunFigures.tempoBins)

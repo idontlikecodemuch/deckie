@@ -150,9 +150,9 @@ finishing) is split into lines of at most 500 songs, the totals with the last. T
             "introBars": 16, "before": false}],
  "notes": [{"kind": "fact", "code": "slowest", "song": "246ec2a99e080616", "values": {"title": "Night Drive", "bpm": "98"}},
            {"kind": "moment", "code": "songs", "n": 50, "values": {"n": "50"}}],
- "figures": {"songs": 12, "seconds": 2894.2, "tempoLow": 60, "tempoStep": 2, "tempos": [0, "…70 counts…"],
+ "figures": {"songs": 12, "seconds": 2894.2, "tempoLow": 50, "tempoStep": 2, "tempos": [0, "…100 counts…"],
              "noTempo": 0, "slowest": 98.0, "fastest": 128.0, "major": ["…12…"], "minor": ["…12…"], "home": ["…12…"],
-             "noKey": 1, "needName": 2, "sameFile": 1, "notIn": 0}}
+             "noKey": 1, "keysFound": 9, "needName": 2, "sameFile": 1, "notIn": 0}}
 ```
 
 - A song (DeckieDesk's `RunSong`) joins once, when it is read, or for a song unchanged since the last run, while
@@ -166,7 +166,7 @@ finishing) is split into lines of at most 500 songs, the totals with the last. T
   labelled it the intro. Fields with no value are left out.
 - `figures` count the songs on the screen: `seconds` of music in them; `tempos[i]` the songs from
   `tempoLow + i × tempoStep` BPM to the next bin, the end bins holding anything beyond; `major`, `minor` and `home`
-  by home note (0 = C); `noKey`; `needName` (no usable title or no artist, as Desk has them; once Desk has looked for
+  by home note (0 = C); `noKey`; `keysFound` (keys on the wheel of 24 with a song); `needName` (no usable title or no artist, as Desk has them; once Desk has looked for
   names while saving, the songs that still need one); `sameFile` (songs found in a second place of what is read);
   `copies` (songs in a group of copies of one recording, D24), present once Desk links them while saving; `notIn`.
 - A note is said with the words `fact.<code>` or `moment.<code>` (by count with `n`), its `values` filling the blanks.

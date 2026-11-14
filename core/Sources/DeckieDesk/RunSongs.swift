@@ -126,6 +126,8 @@ public struct RunFigures: Codable, Equatable, Sendable {
     public var minor = [Int](repeating: 0, count: 12)
     public var home = [Int](repeating: 0, count: 12)
     public var noKey = 0
+    /// Keys on the wheel found so far, of 24.
+    public var keysFound = 0
     /// Songs with no usable title or no artist yet, as Desk has them.
     public var needName = 0
     /// Songs found in more than one place in what is read (the same file's bytes twice).
@@ -135,12 +137,9 @@ public struct RunFigures: Codable, Equatable, Sendable {
     /// Files that did not go in.
     public var notIn = 0
 
-    public static let tempoFloor = 60.0, tempoBin = 2.0, tempoBins = 70
+    public static let tempoFloor = 50.0, tempoBin = 2.0, tempoBins = 100
 
     public init() {}
-
-    /// Keys on the wheel found so far, of 24.
-    public var keysFound: Int { major.filter { $0 > 0 }.count + minor.filter { $0 > 0 }.count }
 }
 
 /// Something true Desk just found (`fact`) or a real event worth a brief mark (`moment`, D37), as a code with its
@@ -269,6 +268,7 @@ public struct RunTally: Sendable {
         }
         let h = Int(f.seconds / 3600)
         if h > hours { hours = h; notes.append(RunNote(.moment, "hour", n: h)) }
+        f.keysFound = f.major.filter { $0 > 0 }.count + f.minor.filter { $0 > 0 }.count
         if !wheelSaid && f.keysFound == 24 { wheelSaid = true; notes.append(RunNote(.moment, "wheel")) }
         let k = f.keysFound
         if k != figures.keysFound && Self.keysWorthSaying.contains(k) { notes.append(RunNote(.fact, "keysFound", n: k)) }
