@@ -124,4 +124,107 @@ import DeckieRecognition
         let found = Recogniser(index: Self.index).match(Landmarks(mono: zip(a, b).map { $0 + $1 }, sampleRate: Self.rate))
         #expect(Set(found.prefix(2).map(\.id)) == ["song2", "song7"])
     }
+
+    // MARK: The index as a file, and the listener
+
+    static func temporaryFile(_ name: String) -> URL {
+        let dir = FileManager.default.temporaryDirectory.appendingPathComponent("deckie-recognition-tests-\(UUID().uuidString)")
+        try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        return dir.appendingPathComponent(name)
+    }
+
+    @Test func anIndexOpenedFromItsFileAnswersAsTheOneBuilt() throws {
+        let url = Self.temporaryFile("crate.dkx")
+        defer { try? FileManager.default.removeItem(at: url.deletingLastPathComponent()) }
+        try Self.index.write(to: url)
+        let q = Landmarks(mono: Self.excerpt(Self.song(seed: 104), from: 9, seconds: 6), sampleRate: Self.rate)
+        let built = try #require(Recogniser(index: Self.index).match(q).first)
+        for mapped in [true, false] {
+            let opened = try RecognitionIndex(contentsOf: url, mapped: mapped)
+            #expect(opened.ids == Self.index.ids)
+            let again = try #require(Recogniser(index: opened).match(q).first)
+            #expect(again == built)
+        }
+        // A file that is not an index is refused, not read.
+        try Data("not an index".utf8).write(to: url)
+        #expect(throws: IndexFileError.self) { try RecognitionIndex(contentsOf: url) }
+    }
+
+    @Test func theCachedIndexIsBuiltOnceAndMadeAgainWhenTheSongsChange() throws {
+        let url = Self.temporaryFile("crate.dkx")
+        defer { try? FileManager.default.removeItem(at: url.deletingLastPathComponent()) }
+        let songs = (0..<3).map { (id: "song\($0)", landmarks: Landmarks(mono: Self.song(seed: UInt64(300 + $0), seconds: 20), sampleRate: Self.rate)) }
+        let stamp = RecognitionIndex.stamp(of: songs.map { ($0.id, $0.landmarks.count, $0.landmarks.frameCount) })
+        var builds = 0
+        let first = try RecognitionIndex.cached(at: url, stamp: stamp) { builds += 1; return songs }
+        let second = try RecognitionIndex.cached(at: url, stamp: stamp) { builds += 1; return songs }
+        #expect(builds == 1)
+        #expect(first.ids == second.ids && second.songCount == 3)
+        let fewer = Array(songs.prefix(2))
+        let other = RecognitionIndex.stamp(of: fewer.map { ($0.id, $0.landmarks.count, $0.landmarks.frameCount) })
+        #expect(other != stamp)
+        let third = try RecognitionIndex.cached(at: url, stamp: other) { builds += 1; return fewer }
+        #expect(builds == 2 && third.songCount == 2)
+    }
+
+    /// Song 2 from 10 s in for 20 s, then song 6 (at +6 %, key held) from 5 s in for 20 s, fed in tenths of a second.
+    static let set: [Float] = {
+        let a = excerpt(song(seed: 102), from: 10, seconds: 20)
+        let b = excerpt(song(seed: 106, tempo: 1.06), from: 5 / 1.06, seconds: 20)
+        return a + b
+    }()
+
+    @Test func theListenerNamesFollowsAndNoticesTheNextSong() throws {
+        let listener = SongListener(index: Self.index)
+        var readings: [ListenReading] = []
+        var at = 0
+        while at < Self.set.count {
+            let end = min(Self.set.count, at + Self.rate / 10)
+            readings += listener.hear(Array(Self.set[at..<end]), sampleRate: Self.rate)
+            at = end
+        }
+        #expect(readings.count == 38)                               // one a second from the third second on
+        let first = try #require(readings.first)
+        #expect(first.time == 3 && first.state == .named && first.id == "song2")
+        // The first song: held, at the right place, at zero.
+        for r in readings where r.time >= 4 && r.time <= 20 {
+            #expect(r.id == "song2" && r.state == .held)
+            #expect(abs((r.positionSeconds ?? 0) - (10 + r.time)) < 0.15)
+            #expect(abs(r.speedPercent ?? 9) < 0.3)
+        }
+        // The second: named within a few seconds of starting, then at the right place, speed and key lock.
+        let change = try #require(readings.first { $0.id == "song6" })
+        #expect(change.time <= 26)
+        for r in readings where r.time >= 30 {
+            #expect(r.id == "song6")
+            #expect(abs((r.positionSeconds ?? 0) - (5 + (r.time - 20) * 1.06)) < 0.2)
+            #expect(abs((r.speedPercent ?? 0) - 6) < 0.3)
+            #expect(r.keyLock == true)
+        }
+        // Sound that is no song of the crate: nothing is named.
+        listener.reset()
+        let none = listener.hear(Self.excerpt(Self.song(seed: 999), from: 0, seconds: 12), sampleRate: Self.rate)
+        #expect(none.allSatisfy { $0.state == .nothingYet })
+    }
+
+    @Test func theBoothRecogniserTakesSoundWithoutWaitingAndReadsItInOrder() throws {
+        final class Box: @unchecked Sendable { let lock = NSLock(); var readings: [ListenReading] = [] }
+        let box = Box()
+        let booth = BoothRecogniser(index: Self.index) { r in box.lock.lock(); box.readings.append(r); box.lock.unlock() }
+        let t0 = DispatchTime.now().uptimeNanoseconds
+        // Stereo at 44.1 kHz, as a microphone might deliver it, a quarter of a second at a time.
+        let stereo = Resampler.resample(Array(Self.set.prefix(12 * Self.rate)), from: Self.rate, to: 44100).flatMap { [$0, $0] }
+        var at = 0
+        while at < stereo.count {
+            let end = min(stereo.count, at + 2 * 11025)
+            booth.feed(Array(stereo[at..<end]), channels: 2, sampleRate: 44100)
+            at = end
+        }
+        let fed = Double(DispatchTime.now().uptimeNanoseconds - t0) / 1e9
+        booth.finish()
+        #expect(fed < 1.0)                                          // feeding 12 s of sound did not wait for the readings
+        #expect(box.readings.map(\.time) == box.readings.map(\.time).sorted())
+        #expect(box.readings.last?.id == "song2")
+        #expect(booth.latest == box.readings.last)
+    }
 }
