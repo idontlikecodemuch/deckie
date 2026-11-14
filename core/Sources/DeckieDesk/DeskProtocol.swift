@@ -2,6 +2,8 @@ import Foundation
 import DeckieCrate
 import DeckieBuild
 import DeckieEngine
+import DeckieDecode
+import DeckieDisc
 
 /// The engine side of Desk's messages (docs/architecture/desk-protocol.md): requests in, one per line, replies and
 /// events out, one per line. `deckie-desk-engine` is this with standard input and output; a test can drive it in the
@@ -10,7 +12,7 @@ import DeckieEngine
 /// Requests are handled one at a time on the caller's thread; a run goes on a thread of its own and sends its events
 /// from there, so every output line goes through one lock.
 public final class DeskProtocol: @unchecked Sendable {
-    public static let version = 1
+    public static let version = 2
 
     /// Writes one message (a JSON object, no line feed).
     public typealias Output = @Sendable (Data) -> Void
@@ -27,6 +29,10 @@ public final class DeskProtocol: @unchecked Sendable {
     private let outLock = NSLock()
     private var running = false
     private var runThreadDone: DispatchSemaphore?
+    /// The source a music CD's run is adding, while it goes (for the name the DJ gives it meanwhile).
+    private var runningDisc: String?
+    /// Opens a music CD by its location; a test gives a stand-in.
+    public var openMusicCD: @Sendable (String) throws -> MusicCD = { try MusicCDs.open($0) }
 
     public init(home: DeskHome, output: @escaping Output, makeRun: @escaping RunMaker,
                 analysisCheck: () throws -> Void = { try Builder.checkEngine() },
@@ -80,7 +86,8 @@ public final class DeskProtocol: @unchecked Sendable {
         }
         var pending: Any = NSNull()
         if let p = session.pending {
-            pending = ["name": p.name, "folder": p.folder, "here": FileManager.default.fileExists(atPath: p.folder)] as [String: Any]
+            pending = ["name": p.name, "folder": p.folder, "here": DeskRun.canCarryOn(p, home: session.home),
+                       "musicCD": p.musicCD != nil] as [String: Any]
         }
         send(["event": "state", "crates": crates, "current": current, "pending": pending, "running": running,
               "undo": session.undoName ?? NSNull(), "redo": session.redoName ?? NSNull()])
@@ -91,7 +98,7 @@ public final class DeskProtocol: @unchecked Sendable {
         guard let info = session.current, let crate = session.crate else { return }
         let log = DeskImportLog(crate)
         send(["event": "songs", "crate": info.id,
-              "songs": Self.plain(crate.tracks.map(DeskSongRow.init)),
+              "songs": Self.plain(session.rows),
               "sources": Self.plain(DeskSourceRow.outline(crate)),
               "musicFolderSongs": crate.tracks.contains { $0.ident.allPlaces.contains { $0.disc == nil } },
               "importLog": log.map { Self.plain($0) } ?? NSNull(),
@@ -124,7 +131,8 @@ public final class DeskProtocol: @unchecked Sendable {
         let id = obj["id"]
         if type == "quit" { reply(id); return false }
         lock.lock(); defer { lock.unlock() }
-        let readOnly: Set<String> = ["state", "drives.list", "crate.songs", "source.removeCount"]
+        let readOnly: Set<String> = ["state", "drives.list", "crate.songs", "source.removeCount", "run.nameDisc", "name.split",
+                                     "song.audio"]
         if running && !readOnly.contains(type) { fail(id, "busy", "a run is going"); return true }
         do {
             try dispatch(type, obj, id)
@@ -172,7 +180,45 @@ public final class DeskProtocol: @unchecked Sendable {
             let path = try s.export(into: URL(fileURLWithPath: try Self.string(obj, "folder"), isDirectory: true))
             reply(id, ["path": path.path])
         case "drives.list":
-            reply(id, ["drives": Self.plain(DeskDrives.list())])
+            reply(id, ["drives": Self.plain(DeskDrives.list()), "musicCDs": Self.plain(MusicCDs.list(environment: environment))])
+        case "run.addMusicCD":
+            let location = try Self.string(obj, "location")
+            let (request, ask) = try s.addMusicCDRequest(location, open: openMusicCD)
+            try startRun(request, id, askName: ask)
+        case "run.nameDisc":
+            let name = try Self.string(obj, "name")
+            let source = (obj["source"] as? String) ?? runningDisc
+            guard let source else { throw RequestError(code: "bad_request", detail: "no music CD is being read") }
+            if running && source == runningDisc {
+                try s.nameDisc(source: source, to: name, running: true); reply(id)
+            } else {
+                try needCrate(); try s.nameDisc(source: source, to: name, running: false); changed()
+            }
+        case "name.split":
+            if let r = DeskNaming.split(try Self.string(obj, "text")) {
+                reply(id, ["split": true, "artist": r.artist ?? NSNull(), "title": r.title, "version": r.version ?? NSNull()])
+            } else { reply(id, ["split": false]) }
+        case "names.preview":
+            try needCrate()
+            let p = try s.makePreview(tool: try Self.string(obj, "tool"), source: obj["source"] as? String,
+                                      ids: obj["songs"] as? [String], text: obj["text"] as? String,
+                                      pattern: obj["pattern"] as? String,
+                                      playlist: (obj["path"] as? String).map { URL(fileURLWithPath: $0) },
+                                      onlyEmpty: (obj["onlyEmpty"] as? Bool) ?? true)
+            reply(id, ["preview": Self.plain(p), "patterns": DeskNaming.patterns])
+        case "names.apply":
+            try needCrate()
+            let ticks = (obj["ticks"] as? [NSNumber]).map { Set($0.map(\.intValue)) }
+            let n = try s.applyPreview(ticks: ticks)
+            reply(id, ["songs": n]); sendState(); sendSongs()
+        case "song.check":
+            try needCrate()
+            let ids = try (obj["songs"] as? [String]) ?? [Self.string(obj, "song")]
+            let n = try s.check(ids, field: obj["field"] as? String)
+            reply(id, ["songs": n]); sendState(); sendSongs()
+        case "song.audio":
+            try needCrate()
+            try sendAudio(try Self.string(obj, "song"), decoded: (obj["decoded"] as? Bool) ?? false, id)
         case "run.add":
             let path = try Self.string(obj, "path")
             var isDir: ObjCBool = false
@@ -226,15 +272,18 @@ public final class DeskProtocol: @unchecked Sendable {
     // MARK: the run
 
     /// Called with the lock held.
-    func startRun(_ request: RunRequest, _ id: Any?) throws {
+    func startRun(_ request: RunRequest, _ id: Any?, askName: String? = nil) throws {
         guard analysis.ready else { throw RequestError(code: "engine_missing", detail: analysis.detail) }
         let info = try session.crateForRun(request)
         let carriedOn = session.pending == request
         running = true
-        reply(id, ["source": request.source ?? NSNull(), "crate": info.id])
-        send(["event": "run.started", "crate": info.id, "crateName": info.name, "read": request.name, "carriedOn": carriedOn])
+        runningDisc = request.musicCD != nil ? request.source : nil
+        reply(id, ["source": request.source ?? NSNull(), "crate": info.id, "askName": askName ?? NSNull()])
+        send(["event": "run.started", "crate": info.id, "crateName": info.name, "read": request.name, "carriedOn": carriedOn,
+              "musicCD": request.musicCD != nil, "askName": askName ?? NSNull()])
         sendState()
         let run = makeRun(session.home, info.id, request)
+        run.openMusicCD = openMusicCD
         let done = DispatchSemaphore(value: 0)
         runThreadDone = done
         let thread = Thread { [self] in
@@ -250,6 +299,7 @@ public final class DeskProtocol: @unchecked Sendable {
                 }
                 self.lock.lock()
                 self.running = false
+                self.runningDisc = nil
                 self.session.runEnded(info.id)
                 self.send(["event": "run.finished", "report": Self.plain(report)])
                 self.sendState(); self.sendSongs()
@@ -257,6 +307,7 @@ public final class DeskProtocol: @unchecked Sendable {
             } catch {
                 self.lock.lock()
                 self.running = false
+                self.runningDisc = nil
                 self.session.runEnded(info.id)
                 self.send(["event": "run.failed", "detail": (error as? LocalizedError)?.errorDescription ?? "\(error)"])
                 self.sendState(); self.sendSongs()
@@ -291,7 +342,75 @@ public final class DeskProtocol: @unchecked Sendable {
             case .reused: return ["kind": "reused", "rel": rel]
             case let .failed(f): return ["kind": "notRead", "rel": rel, "reason": f.reason]
             }
+        case let .copied(number, of, damaged):
+            return ["kind": "copied", "number": number, "of": of, "damaged": damaged]
         }
+    }
+
+    // MARK: Listen (D33)
+
+    /// Bytes of audio a chunk carries before base64 (768 KB, about 1 MB of text a line).
+    static let audioChunk = 768 * 1024
+
+    /// The media types the window's web view is told, by file ending.
+    public static func mediaType(_ ext: String) -> String {
+        switch ext.lowercased() {
+        case "mp3": return "audio/mpeg"
+        case "wav", "wave": return "audio/wav"
+        case "flac": return "audio/flac"
+        case "m4a", "aac", "mp4", "alac": return "audio/mp4"
+        case "aif", "aiff", "aifc": return "audio/aiff"
+        case "ogg", "oga": return "audio/ogg"
+        case "opus": return "audio/ogg; codecs=opus"
+        default: return "application/octet-stream"
+        }
+    }
+
+    /// A song's sound for the window to play (docs/architecture/desk-protocol.md, "Listen"): the reply says its media
+    /// type, size and where listening starts (a third of the way in, letter AA 3.7), then `audio.chunk` events carry
+    /// it in order, base64, over the same standard output as every other message. With `decoded`, the shared decoder
+    /// turns it into 16-bit WAV first, for a file type the web view cannot play. The page is never told a path. Called
+    /// with the lock held.
+    func sendAudio(_ song: String, decoded: Bool, _ id: Any?) throws {
+        let url: URL
+        do { url = try session.audioFile(song) }
+        catch let e as DeskSession.NotHere { throw RequestError(code: "not_here", detail: e.source) }
+        var data: Data
+        var type = Self.mediaType(url.pathExtension)
+        if decoded {
+            do {
+                let b = try AudioDecoder.decode(url)
+                data = Self.wav(b.samples, channels: b.channelCount, rate: b.sampleRate)
+                type = "audio/wav"
+            } catch { throw RequestError(code: "cannot_decode", detail: url.pathExtension.uppercased()) }
+        } else {
+            data = try Data(contentsOf: url, options: [.mappedIfSafe])
+        }
+        let seconds = session.crate?.tracks.first { $0.id == song }?.file.durationS ?? 0
+        let chunks = max(1, (data.count + Self.audioChunk - 1) / Self.audioChunk)
+        let token = UUID().uuidString.lowercased()
+        reply(id, ["type": type, "bytes": data.count, "chunks": chunks, "token": token, "seconds": seconds,
+                   "start": DeskListen.start(seconds), "kind": url.pathExtension.uppercased()])
+        for i in 0..<chunks {
+            let part = data.subdata(in: (i * Self.audioChunk)..<min(data.count, (i + 1) * Self.audioChunk))
+            send(["event": "audio.chunk", "token": token, "song": song, "index": i, "of": chunks, "data": part.base64EncodedString()])
+        }
+    }
+
+    /// Interleaved float samples as a 16-bit PCM WAV file.
+    static func wav(_ samples: [Float], channels: Int, rate: Int) -> Data {
+        var d = Data(capacity: 44 + samples.count * 2)
+        func u32(_ v: UInt32) { withUnsafeBytes(of: v.littleEndian) { d.append(contentsOf: $0) } }
+        func u16(_ v: UInt16) { withUnsafeBytes(of: v.littleEndian) { d.append(contentsOf: $0) } }
+        let bytes = UInt32(samples.count * 2)
+        d.append(contentsOf: Array("RIFF".utf8)); u32(36 + bytes); d.append(contentsOf: Array("WAVE".utf8))
+        d.append(contentsOf: Array("fmt ".utf8)); u32(16); u16(1); u16(UInt16(channels)); u32(UInt32(rate))
+        u32(UInt32(rate * channels * 2)); u16(UInt16(channels * 2)); u16(16)
+        d.append(contentsOf: Array("data".utf8)); u32(bytes)
+        var pcm = [Int16](repeating: 0, count: samples.count)
+        for i in samples.indices { pcm[i] = Int16(max(-1, min(1, samples[i])) * 32767) }
+        pcm.withUnsafeBufferPointer { d.append(Data(buffer: $0)) }
+        return d
     }
 
     /// Waits for a run in progress to end (tests, and the engine's quit).

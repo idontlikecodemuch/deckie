@@ -34,7 +34,12 @@ public struct DeskSongRow: Codable, Equatable, Sendable {
     public var tags: [String]
     /// Where the name came from, as codes joined by "+" (`tag`, `filename`, `user`, ...).
     public var nameFrom: String?
+    /// In the "Needs a name" list: no usable title, no artist, or a guess of Desk's not yet checked (letter AA, 3.3).
     public var needsName: Bool
+    /// Why, as a code: `noTitle`, `noArtist`, `guess` (words `nameReason.<code>`); nil when it has a name.
+    public var nameReason: String?
+    /// Each name, where it came from and whether it is a guess (the panel's small lines, letter AA 3.4).
+    public var names: DeskNaming.Facts?
     /// Tempo in beats per minute, and bars; nil when the song has no beat grid.
     public var bpm: Double?
     public var bars: Int?
@@ -50,14 +55,17 @@ public struct DeskSongRow: Codable, Equatable, Sendable {
     public var notes: [String]
     public var damagedFrames: Int
 
-    public init(_ t: CrateTrack) {
+    public init(_ t: CrateTrack, facts: DeskNaming.Facts? = nil) {
         id = t.id
         title = t.ident.title
         artist = t.ident.artist
         version = t.ident.version
         tags = t.ident.tags
         nameFrom = t.ident.source
-        needsName = LocalFacts.needsName(t)
+        names = facts
+        nameReason = facts.flatMap { DeskNaming.reason(t, $0) } ?? (LocalFacts.needsName(t) ? "noTitle" : nil)
+        if facts == nil && nameReason != nil && LocalNames.isUsableTitle(t.ident.title) { nameReason = "noArtist" }
+        needsName = nameReason != nil
         bpm = t.grid?.bpm
         bars = t.grid?.nBars
         seconds = t.file.durationS
