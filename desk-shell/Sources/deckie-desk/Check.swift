@@ -10,7 +10,23 @@ import Foundation
 /// answers with the second folder). It passes when the engine says where it wrote the crate file and the file is
 /// there. Nothing is done behind the page's back: every step is a click in the page.
 enum Check {
-    static func arm(_ desk: Desk, seconds: Double, music: String?, exportTo: String?) {
+    /// What has happened so far. Written on the window's thread; the time limit's thread only reads it to say how
+    /// far the check got.
+    final class Seen: @unchecked Sendable { var window = false, hello = false, drawn = false, exportAsked = false, finished = false }
+    static let seen = Seen()
+
+    /// Ends the program with code 2 when the check has not ended it within `seconds`, saying how far it got. Started
+    /// before the window is made, so that a web view that never comes up cannot make a check wait for ever.
+    static func limit(seconds: Double) {
+        Thread.detachNewThread {
+            Thread.sleep(forTimeInterval: seconds)
+            Notice.say("[check] FAILED: not done within \(Int(seconds)) s (window made: \(seen.window), hello seen: \(seen.hello), "
+                       + "page drawn: \(seen.drawn), run finished: \(seen.finished))")
+            exit(2)
+        }
+    }
+
+    static func arm(_ desk: Desk, music: String?, exportTo: String?) {
         let started = Notice.started
         @Sendable func say(_ s: String) {
             Notice.say(String(format: "[check %.2fs] ", Date().timeIntervalSince(started)) + s)
@@ -30,10 +46,7 @@ enum Check {
                 """)
         }
         let fullRun = music != nil && exportTo != nil
-        // What has happened so far. Written on the window's thread; the time limit's thread only reads it to say
-        // how far the check got.
-        final class Seen: @unchecked Sendable { var hello = false, drawn = false, exportAsked = false, finished = false }
-        let seen = Seen()
+        seen.window = true
 
         say("window made with \(Window.engineName); its own icon on the window: \(desk.window.hasIcon ? "yes" : "no")")
         desk.watchers.append { line in
@@ -124,11 +137,6 @@ enum Check {
                 end(3)
             default: break
             }
-        }
-        Thread.detachNewThread {
-            Thread.sleep(forTimeInterval: seconds)
-            say("FAILED: not done within \(Int(seconds)) s (hello seen: \(seen.hello), page drawn: \(seen.drawn), run finished: \(seen.finished))")
-            exit(2)
         }
     }
 }

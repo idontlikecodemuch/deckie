@@ -71,10 +71,11 @@ const char *deskshell_engine_name(void);
 // The rest is for Windows, where Desk is a program of the "windows" kind (no console window) started by a double
 // click. Each does nothing, or answers no, on the other systems.
 
-/// Call first, before anything is written. A program of the "windows" kind started by a double click has no standard
-/// input, output or error at all; this gives it Windows' "NUL" (which swallows what is written) for each one that is
-/// missing or names nothing, so that a line written for a developer cannot stop the program.
-void deskshell_prepare_process(void);
+/// Whether this program has a standard error to write to. A program of the "windows" kind started by a double click
+/// has none at all, and writing to it must not be tried; the shell asks once and keeps its lines for a developer to
+/// itself when the answer is 0 (Notice.swift). The program's standard handles are left exactly as Windows gave them,
+/// as in any other program with a window. Always 1 on the other systems.
+int deskshell_has_standard_error(void);
 
 /// The version of Microsoft's WebView2 Runtime (the "Evergreen" one, shared by all programs) installed on this PC,
 /// read from the registry values Microsoft documents for this question (`pv` under `EdgeUpdate\Clients\{F3017226-

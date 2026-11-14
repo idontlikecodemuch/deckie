@@ -29,8 +29,9 @@ final class Window: @unchecked Sendable {
 
     static var engineName: String { String(cString: deskshell_engine_name()) }
 
-    /// Windows: gives a program started by a double click somewhere harmless to write (deskshell.h). Call first.
-    static func prepareProcess() { deskshell_prepare_process() }
+    /// False on Windows when the program was started with no standard error (a double click): nothing may be
+    /// written to it then (deskshell.h).
+    static var hasStandardError: Bool { deskshell_has_standard_error() != 0 }
 
     /// Windows: the version of Microsoft's WebView2 Runtime on this PC, by the registry values Microsoft documents;
     /// nil when it is not installed, and always nil on the other systems.
