@@ -1,9 +1,77 @@
-# Check-in: the own-key work (branches `trial/own-key`, then `key/three-answer`)
+# Check-in: the own-key work (branches `trial/own-key`, `key/three-answer`, `key/home-note`)
 
 Newest entry first. Scores are percent of clips on the 1,270 GiantSteps-MTG-key clips Apple read (386 major, 884
 minor). Exact = key right. Home note = home note right, whatever the mode. Mode given home = of the clips whose home
 note is right, the share with the right mode. The bar (D16) = exact within five points of Apple on each half:
 36.5 on the major half, 70.6 on the minor half.
+
+## Nov 14, 2026, 07:45 UTC. The home note is in (D36), branch `key/home-note`
+
+**Done.** A song whose home note Deckie is sure of, and whose mode (major or minor) it is not, now carries that home
+note from the reader to the crate, the scoring and the screens. On screen it is "Home note A".
+
+- **Crate format.** `key_home` moved from proposed to decided in `docs/architecture/crate-format.md`: a block of
+  `source`, `note`, `pitch_class` and `camelot` (the two wheel codes on that note, minor first). It is written only
+  when the song has no `key` block; the validator refuses both together, a note that does not match its pitch class,
+  or codes that are not the two on that note. Tests cover writing, reading back with and without it, and each refusal.
+- **Older readers, proved by hand.** The reader from `main` as it stood before this change (6b36d55) was built in a
+  scratch package and given a crate file carrying `key_home`: "read 2 tracks; problems: []", and the song shows no key.
+  An older writer drops the block when it rewrites the file, as the format's rule for unknown blocks says.
+- **Engine 0.6.0 and `LocalFacts.decideKey`** write the home note when the answer is the home note alone. The run's
+  report counts it (`keys_home_note`) apart from "Deckie not sure" (`keys_not_sure`) and "not read". `deckie-build`
+  and `deckie-make` print the counts.
+- **A gap found and closed.** `deckie-make` wrote the engine's own record straight into the crate file, so a
+  not-sure song went out with a low-confidence key. It now applies the same when-sure rule as `deckie-build`.
+- **Scoring rule.** A home-note song is compared as each of the two keys on its note and the better fit is taken
+  (two home-note songs: the best of the four pairings). The fit counts at 0.45 of a sure key's weight
+  (`PairScoring.homeNoteConfidence`), which makes a home-note match worth 0.725 of a sure-key match. Why: the home
+  note is what the reader measurably gets right (72 percent, against 58 for the full key), the true key is one of
+  those two, so the better pairing is the most the pair can honestly claim, and the lower weight keeps a claimed fit
+  below a known one. Keyed pairs score exactly as before; a song with neither is neutral, as "key not read" was.
+  Tests cover each case.
+- **Words and Desk.** New, marked as placeholders in `DeskWords`: "Home note {note}", "Deckie is not sure of this
+  song's key", and the two finished-screen counts. Desk's song rows carry `keyState` (key, home_note, not_sure,
+  not_read) and `homeNote` (`docs/architecture/desk-protocol.md`); the pages in `desk-web/` show them.
+- **Mix windows.** A window's key is now judged against what the reader said: one key; the two keys on a home note
+  (best fit, flagged only when far from both); or nothing (the window is read, not judged, and never flagged).
+  The lab JSON gains `deckie.key.song_key_from` (key, home note or none).
+
+**What moved in the lab-parity tests, and why.** No number moved. The fixture tests call the window function with
+the song key given, so they are untouched. The engine test's song-key check now compares with the three-answer
+reader's key, which equals the plain method's on the test track. The pinned list of `deckie.key` members gained
+`song_key_from`. The bench reads the twelve-note profile members, which did not change.
+
+| Check | Result |
+|---|---|
+| Full suite here (Linux, with the models) | 528 tests, 0 failing |
+| `core-linux` on 842b579 | green, run 43570831569 |
+| `core-windows` on 842b579 | running when this was written, run 43570831630; the next entry says how it ended |
+| `desk-window` on 842b579 | green, run 43570831626 |
+
+**What the Mac window needs (`desk-app/Desk/Sources`; not built here).**
+- `Words.swift:94` and `:174`: add `keysNotSure`, `keysHomeNote` (counts), `homeNote`, `homeNoteHelp`,
+  `keyDeckieNotSure`, beside `keysNone` and `keyNotRead`.
+- `TrackTable.swift:72`: `guard let k = t.key else { return Words.keyNotRead }` should branch on the row's
+  `keyState`: home note help, not sure, or not read.
+- `TrackTable.swift:195`: `else { row(Words.rowKey, Words.keyNotRead) }` the same three-way branch.
+- `ContentView.swift:288`: `keysNone(s.report.keysNotRead)` add lines for `keysHomeNote` and `keysNotSure`.
+
+**What the iPad app needs (`deck-app/Deck/Sources`; not built here).**
+- `CrateLibrary.swift:72`: `key: t.key?.camelot` drops the home note; carry `t.keyHome` and set the scoring
+  track's `homePitchClass` (the core's `CrateTrack+Scoring` already does this, if that path is used).
+- `CrateLibrary.swift:167`: `ka`/`kb` fall back to "?"; use the core's `keyLabel`.
+- `Mixing.swift:13-14`: `keyVerdict` returns "key not read" whenever a code does not parse; a home note needs its
+  own verdict from the core's pair score.
+- `Mixing.swift:59`, `OtherViews.swift:200`, `SuggestionsView.swift:335`: `t.key ?? "?"` should show
+  "Home note A" or the not-sure words.
+
+**Next.** The owner's point on training data (no hand labelling; a public labelled option): a second pass, letter
+`docs/research/x4-key-without-labelling.md`, on branch `key/without-labelling`. Under way: 8,352 openly licensed
+Free Music Archive clips (CC BY, CC0, public domain; 2,745 electronic) fetched for evaluation, the untrained reader
+run over them for labels nobody typed and for a minor lean fixed before any test score, and a model pretrained with
+no labels at all.
+
+**Carry on.**
 
 ## Nov 14, 2026, 04:20 UTC. Piece B done: letter X3, training data that could ship
 
