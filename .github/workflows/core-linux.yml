@@ -147,6 +147,10 @@ jobs:
           compression-level: 0
           if-no-files-found: error
           include-hidden-files: true # the folder .models starts with a dot, which the action otherwise skips
+      # The learned key reader's file is optional: when the release has none, or it is not the pinned file, the
+      # engine reads keys with the untrained reader and the step still succeeds (core/Tools/fetch-key-model.sh).
+      - name: Fetch the learned key reader's file, when the release has it (checked by hash)
+        run: bash core/Tools/fetch-key-model.sh
       - name: Build
         working-directory: core
         run: swift build -v

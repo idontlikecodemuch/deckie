@@ -73,6 +73,10 @@ enum Bundled {
             let yam = models.appendingPathComponent(YAMNet.modelFileName)
             if FileManager.default.fileExists(atPath: beat.path) { setenv(BeatTracker.modelEnvironmentVariable, beat.path, 0) }
             if FileManager.default.fileExists(atPath: yam.path) { setenv(YAMNet.modelEnvironmentVariable, yam.path, 0) }
+            // The learned key reader's file, when the bundle has it (optional; the engine checks its hash and reads
+            // keys with the untrained reader without it).
+            let key = models.appendingPathComponent(LearnedKey.Model.fileName)
+            if FileManager.default.fileExists(atPath: key.path) { setenv(KeyModel.environmentVariable, key.path, 0) }
         }
     }
 }

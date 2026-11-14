@@ -99,6 +99,16 @@ struct LearnedKeyFixture: Decodable {
         m.minorLean = log(2.0)
         let leaned = LearnedKey.probabilities(scores: [Double](repeating: 0.3, count: 24), model: m)
         #expect(abs(leaned[12] / leaned[0] - 2) < 1e-9 && abs(leaned.reduce(0, +) - 1) < 1e-12)
+        // The lean as a setting: a share of minor keys, counted from the share the model learned from. At that
+        // share it is no lean; at two thirds against one half it would be log 2; the name says the share.
+        let same = Self.model.leaned(toMinorShare: LearnedKey.Model.pinnedTrainingMinorShare)
+        #expect(abs(same.minorLean) < 1e-12)
+        let more = Self.model.leaned(toMinorShare: 0.65)
+        let from = LearnedKey.Model.pinnedTrainingMinorShare
+        #expect(abs(more.minorLean - (log(0.65 / 0.35) - log(from / (1 - from)))) < 1e-12 && more.minorLean > 0)
+        #expect(more.name == "made-up-minor65" && Self.model.leaned(toMinorShare: 0.4).minorLean < 0)
+        let even = [Double](repeating: 0.3, count: 24)
+        #expect(LearnedKey.probabilities(scores: even, model: more)[12] > LearnedKey.probabilities(scores: even, model: same)[12])
         // A temperature above 1 pulls the probabilities together; under 1 it drives them apart.
         var s = [Double](repeating: 0, count: 24); s[21] = 2
         m.minorLean = 0

@@ -61,7 +61,7 @@ public struct PCBuild: Sendable {
             let tagger = try vocalModel.map {
                 DeckieVocalTagger(yamnet: try YAMNet(modelPath: $0, runtime: runtime, options: options))
             }
-            return try Analyser(beatTracker: tracker, vocalTagger: tagger, keyModel: try keyModel.map(KeyModel.load(path:)))
+            return try Analyser(beatTracker: tracker, vocalTagger: tagger, keyModel: KeyModel.usable(keyModel))
         }
     }
 
@@ -365,7 +365,7 @@ struct RunLog {
             "",
             "program: deckie-make \(PCBuild.version), builder \(Builder.version), engine \(Builder.engineLabel)",
             "vocal model: \(engine.vocalModel == nil ? "missing" : "present")",
-            "key model: \(engine.keyModel == nil ? "missing (keys are read by the untrained reader)" : "present")",
+            "key model: \(KeyModel.usable(engine.keyModel)?.name ?? "missing or not the pinned file (keys are read by the untrained reader)")",
             "platform: \(Analysis.platform)",
             "system: \(info.operatingSystemVersionString)",
             "processors: \(info.activeProcessorCount), memory: \(String(format: "%.1f", Double(info.physicalMemory) / Double(1 << 30))) GB, songs read at once: \(jobs)",

@@ -393,7 +393,7 @@ def shipped_probs(scores, lean, T):
 
 def main_export(mode):
     """python kt_x4.py export <mode>: the chosen model's numbers as shipped, its temperature on the validation artists,
-    its scores on the three sets as shipped -> x4_shipped_results.md, and the file core/.models/deckie-key.f16."""
+    its scores on the three sets as shipped -> x4_shipped_results.md, and the file core/.models/deckie-key-<version>.f16."""
     import torch, base64, hashlib, kt_cnn as C, kt_three as T3, kt_extract as KE
     torch.set_num_threads(1)
     share = json.load(open(os.path.join(kt.HERE, "x4_lean.json")))["lean_minor_share"]
@@ -423,8 +423,8 @@ def main_export(mode):
             if sel.any(): print(f"| {t:.1f} | {100 * sel.mean():.1f} | {100 * (k[sel] == y[sel]).mean():.1f} | {100 * P.max(1)[sel].mean():.1f} |")
     # the file the Swift reader loads (core/.models is not in the repository), and the values LearnedKey.swift pins
     out = os.path.join(kt.HERE, "..", "..", "core", ".models"); os.makedirs(out, exist_ok=True)
-    open(os.path.join(out, "deckie-key.f16"), "wb").write(raw)
-    print(f"\nwrote core/.models/deckie-key.f16; pin in LearnedKey.Model: name deckie-key-{digest[:8]}, bytes {len(raw)}, SHA-256 {digest}, minor lean {lean!r}, temperature {Tm!r}")
+    open(os.path.join(out, f"deckie-key-{digest[:8]}.f16"), "wb").write(raw)
+    print(f"\nwrote core/.models/deckie-key-{digest[:8]}.f16; pin in LearnedKey.Model: name deckie-key-{digest[:8]}, bytes {len(raw)}, SHA-256 {digest}, minor lean {lean!r}, temperature {Tm!r}")
 
 def synthetic_flat():
     """A model of made-up numbers that Swift and Python can both write down exactly (the Swift test makes the same):
@@ -567,9 +567,9 @@ def main_dj(extra=()):
 
 def main_record(mode):
     """python kt_x4.py record <mode>: every recording the chosen model learned from, with its page and its licence
-    -> core/.models/deckie-key-training-recordings.tsv, beside the model's file and, like it, not in the repository
+    -> core/.models/deckie-key-<version>-credits.tsv, beside the model's file and, like it, not in the repository
     (titles and pages name people). It is the credit CC BY asks for and the record D15 asks for; DEPENDENCIES.md,
-    section 11, gives its hash and its counts."""
+    section 13, gives its hash and its counts."""
     import zipfile, io, csv, hashlib
     real = KS.load_real(); fsl = json.load(open(os.path.join(KS.FSL, "metadata.json")))
     z = zipfile.ZipFile(os.path.join(os.path.dirname(kt.DATA), "fmameta", "fma_metadata.zip"))
@@ -594,7 +594,7 @@ def main_record(mode):
     out = os.path.join(kt.HERE, "..", "..", "core", ".models"); os.makedirs(out, exist_ok=True)
     clean = lambda v: " ".join(str(v).split())
     body = "source\tid\ttitle\tpage\tlicence\tlicence_page\tused_as\n" + "".join("\t".join(clean(v) for v in x) + "\n" for x in rows)
-    open(os.path.join(out, "deckie-key-training-recordings.tsv"), "w", encoding="utf-8").write(body)
+    open(os.path.join(out, "deckie-key-2b4fe8fa-credits.tsv"), "w", encoding="utf-8").write(body)
     print(len(rows), "recordings;", dict(collections.Counter(x[0] for x in rows)), "; licences", dict(collections.Counter(x[4] for x in rows).most_common(12)), "; SHA-256", hashlib.sha256(body.encode()).hexdigest())
 
 if __name__ == "__main__":

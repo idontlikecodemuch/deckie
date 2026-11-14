@@ -285,7 +285,7 @@ struct EngineTests {
         if let learned = a.learnedKey {
             let lk = try #require(dk["learned"])
             #expect(lk.keys == ["model", "answer", "camelot", "home_pitch_class", "best", "probability", "home_probability", "probabilities"])
-            #expect(lk["model"] == .string(LearnedKey.Model.pinnedName) && lk["answer"] == .string(learned.answer.name))
+            #expect(lk["model"] == .string(KeyModel.defaultName!) && lk["answer"] == .string(learned.answer.name))
             #expect(lk["probability"] == .number(Py.round(learned.keyProbability, 4)) && lk["best"] == .string(learned.camelot!))
         } else {
             #expect(dk["learned"] == .null)
@@ -341,9 +341,19 @@ struct EngineTests {
         // The learned reader runs when its numbers are on this computer (`KeyModel`; the file is not in the
         // repository); without them the record is the three-answer reader's, checked further down either way.
         let d = a.hpcpKey.decision, three = a.threeAnswer
-        #expect(three.hpcp == a.hpcpKey && (a.learnedKey == nil) == (KeyModel.locate() == nil))
-        #expect(a.keyAnswer == (a.learnedKey?.answer ?? three.answer) && a.learnedKeyModel == (a.learnedKey == nil ? nil : LearnedKey.Model.pinnedName))
-        #expect(t.engine.models.contains { $0.name == LearnedKey.Model.pinnedName } == (a.learnedKey != nil))
+        #expect(three.hpcp == a.hpcpKey && (a.learnedKey == nil) == (KeyModel.defaultName == nil))
+        #expect(a.keyAnswer == (a.learnedKey?.answer ?? three.answer) && a.learnedKeyModel == (a.learnedKey == nil ? nil : KeyModel.defaultName))
+        // A file that is not the pinned one, or no file, is not used: the untrained reader is the fallback.
+        let wrong = FileManager.default.temporaryDirectory.appendingPathComponent("not-the-key-model-\(UUID().uuidString).f16")
+        try Data(count: LearnedKey.Model.pinnedByteCount).write(to: wrong)
+        defer { try? FileManager.default.removeItem(at: wrong) }
+        #expect(KeyModel.usable(wrong.path) == nil && KeyModel.usable(nil) == nil && KeyModel.usable("/no/such/file") == nil)
+        #expect(throws: KeyModel.LoadError.self) { try KeyModel.load(path: wrong.path) }
+        #expect((KeyModel.note == nil) == (KeyModel.defaultName != nil))
+        #expect(LearnedKey.Model.fileName == LearnedKey.Model.pinnedName + ".f16")
+        // The lean is a setting that is off until chosen.
+        #expect(KeyModel.chosenMinorShare == nil)
+        #expect(t.engine.models.contains { $0.name == KeyModel.defaultName } == (a.learnedKey != nil))
         var votes = ["hpcp_edma": d.profileKeys[0].camelot, "hpcp_bgate": d.profileKeys[1].camelot,
                      "hpcp_braw": d.profileKeys[2].camelot, "stft_edma": a.key.whole.camelot,
                      "hpcp_whitened": d.camelot, "hpcp_discount": three.camelotA!, "note_transcription": three.camelotB!]
@@ -492,7 +502,7 @@ struct EngineTests {
         _ = try JSONDecoder().decode(FeatureFile.Structure.self, from: json.data)
         let t = a.crateTrack(options: .init(analysedAt: "2026-10-28T12:00:00Z"))
         #expect(t.featuresPresent.contains("vocal") && t.featuresPresent.contains("bars.vocal"))
-        #expect(t.engine.models.map(\.name) == [Analysis.gridSource, "stub-vocal"] + (KeyModel.locate() == nil ? [] : [LearnedKey.Model.pinnedName]))
+        #expect(t.engine.models.map(\.name) == [Analysis.gridSource, "stub-vocal"] + (KeyModel.defaultName.map { [$0] } ?? []))
         let crate = Crate(manifest: CrateManifest(crateId: "engine-test", name: "engine test",
                                                   createdAt: "2026-10-28T12:00:00Z", devicesSeen: []), tracks: [t])
         #expect(crate.problems().isEmpty)

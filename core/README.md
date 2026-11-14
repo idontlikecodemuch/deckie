@@ -170,12 +170,14 @@ own source by `Tools/make_key_fixtures.py`, on the 68 test matrices, on made-up 
 
 **The learned key reader** (`Sources/DeckieCore/Key/LearnedKey.swift`, `Sources/DeckieEngine/KeyModel.swift`),
 engine 0.7.0, research X4 (`docs/research/x4-key-complete.md`): a small convolutional model in plain Swift over a
-log-frequency spectrogram (126 bands, five frames a second), 235,598 numbers in one file, `deckie-key.f16`, pinned by
+log-frequency spectrogram (126 bands, five frames a second), 235,598 numbers in one file, pinned by
 its SHA-256. Its probability is the confidence: a key at one half or more, the home note when the two keys on one
-note reach one half together, otherwise not sure. **The file is not in the repository** (no trained numbers are, by
-the key work's standing rule) and is not yet published; where it is present (`DECKIE_KEY_MODEL`, `core/.models/`, or
-`models/` beside the PC program) it decides the record's key (`key.source` `learned-key`), and where it is not, the
-three-answer reader below does, as in 0.6.0. `DEPENDENCIES.md`, section 11, records what it was trained on. Its test
+note reach one half together, otherwise not sure. **The file is not in the git tree**: it is an asset of the release `models-1`
+(`deckie-key-2b4fe8fa.f16`, fetched by `Tools/fetch-key-model.sh`, with its credit list). Where it is present
+(`DECKIE_KEY_MODEL`, `models/` beside a shipped program, or `core/.models/`) it decides the record's key
+(`key.source` `learned-key`, the model named in `engine.models`); where it is absent or is not the pinned file, the
+three-answer reader below does, as in 0.6.0. A lean toward minor keys is a setting, off until chosen
+(`KeyModel.chosenMinorShare`, or `DECKIE_KEY_MINOR_SHARE` to try one). `DEPENDENCIES.md`, section 13, records what it was trained on. Its test
 uses a model of made-up numbers that Swift and Python both write down; the trained model's parity is run by hand
 (`mixer/keytrial/kt_x4.py parity`: 270 recordings, every answer equal, probabilities equal to six decimals; half a
 second for a two-minute recording).

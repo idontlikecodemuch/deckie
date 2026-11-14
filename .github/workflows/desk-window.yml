@@ -47,6 +47,7 @@ jobs:
         run: |
           bash core/Tools/fetch-onnxruntime.sh --deckie
           bash core/Tools/fetch-models.sh --no-export
+          bash core/Tools/fetch-key-model.sh   # optional: the learned key reader's file, when the release has it
       - name: Build the engine and its tests
         working-directory: core
         run: swift build --build-tests
@@ -106,6 +107,7 @@ jobs:
           "DECKIE_ONNXRUNTIME_LIB=$($dll.FullName)" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
           & "C:\Program Files\Git\bin\bash.exe" core/Tools/fetch-models.sh --no-export
           if ($LASTEXITCODE -ne 0) { throw "fetch-models failed" }
+          & "C:\Program Files\Git\bin\bash.exe" core/Tools/fetch-key-model.sh
       - name: Build the engine and its tests
         working-directory: core
         run: swift build --build-tests

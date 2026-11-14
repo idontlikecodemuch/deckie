@@ -2,8 +2,8 @@ import Foundation
 
 /// Deckie's learned key reader (research X4, `docs/research/x4-key-complete.md`): a small convolutional model over a
 /// log-frequency spectrogram, in plain Swift, with nothing to link. Its numbers (`Model`, 471,196 bytes in the file
-/// `deckie-key.f16`) were fitted by `mixer/keytrial/kt_x4.py` only on recordings whose own licence allows a shipped
-/// model (CC BY, CC0, public domain); `DEPENDENCIES.md`, section 11, says which. The file is not in the repository:
+/// `deckie-key-2b4fe8fa.f16`) were fitted by `mixer/keytrial/kt_x4.py` only on recordings whose own licence allows a shipped
+/// model (CC BY, CC0, public domain); `DEPENDENCIES.md`, section 13, says which. The file is not in the repository:
 /// where it is present the engine reads keys with this reader, and where it is not, with the untrained
 /// three-answer reader. The Python reference is `kt_x4.py` (`shipped_scores`), and Fixtures/learned_key.json holds
 /// its values on generated clips for a model of made-up numbers both sides can write down.
@@ -132,10 +132,12 @@ public enum LearnedKey {
         public var temperature: Double
         public var name: String
 
-        /// The file the numbers live in, beside the other models (`core/.models`, or `models/` in a package). It is
-        /// not in the repository (no trained numbers are); without it the engine reads keys with the untrained
-        /// three-answer reader.
-        public static let fileName = "deckie-key.f16"
+        /// The file the numbers live in, beside the other models (`core/.models`, or `models/` in a package). Its name
+        /// carries its version: a retrained model is a new file and a new pin here, never the same name with other
+        /// bytes. It is not in the repository (no trained numbers are); it is an asset of the release `models-1`,
+        /// fetched by `core/Tools/fetch-key-model.sh`. Without it, or with a file whose hash is not the pinned one,
+        /// the engine reads keys with the untrained three-answer reader.
+        public static let fileName = "deckie-key-2b4fe8fa.f16"
         /// The one file this code is pinned to (research X4, the model `mix`): its name, size, SHA-256, and the two
         /// values fixed where it was made (the lean from openly licensed electronic music, the temperature on
         /// labelled recordings it did not learn from).
@@ -144,6 +146,22 @@ public enum LearnedKey {
         public static let pinnedSHA256 = "2b4fe8fabf4fc5bd301e04af6c136afe76399f0077984a7f5df78b0ba0b07f7d"
         public static let pinnedMinorLean = 0.10967048463898905
         public static let pinnedTemperature = 1.3522496441040666
+
+        /// The share of minor keys among the recordings the pinned model learned from; a lean is counted from it.
+        public static let pinnedTrainingMinorShare = 0.5243114829063416
+
+        /// This model leaned to a share of minor keys (0 to 1, exclusive): its minor answers raised, or lowered, as
+        /// if the music it learned from had held that share. A lean is a setting, off unless chosen (`KeyModel`):
+        /// the pinned model carries the small one fixed where it was made (55.2 percent). Its name says the share
+        /// (`deckie-key-2b4fe8fa-minor65`), so records made with different leans are told apart.
+        public func leaned(toMinorShare share: Double) -> Model {
+            precondition(share > 0 && share < 1, "a share of minor keys is between 0 and 1")
+            var m = self
+            let from = Model.pinnedTrainingMinorShare
+            m.minorLean = log(share / (1 - share)) - log(from / (1 - from))
+            m.name = name + "-minor" + String(Int((share * 100).rounded()))
+            return m
+        }
 
         public struct BadWeights: Error {}
 

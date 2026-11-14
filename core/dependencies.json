@@ -66,6 +66,14 @@
       "replacement_path": "vocal fields absent, record flagged vocal_unknown (section 8)"
     },
     {
+      "id": "deckie-key",
+      "name": "Deckie's key reader (learned model)",
+      "version": "deckie-key-2b4fe8fa (engine 0.7.0)",
+      "licence": "Deckie's own model; its training recordings are under CC BY (credited in deckie-key-2b4fe8fa-credits.tsv, beside the model), CC0 or public domain (section 13)",
+      "training_sets": "3,129 recordings, each under its own CC BY, CC0 or public-domain terms: 710 Freesound loops and 371 Free Music Archive songs with human key labels (labels CC BY 4.0), 48 CC0 piano recordings, 2,000 Free Music Archive clips whose key Deckie's untrained reader named; trained by Deckie (section 13)",
+      "replacement_path": "the untrained three-answer reader, which needs no trained numbers and runs whenever the model's file is absent (section 13)"
+    },
+    {
       "id": "webview",
       "name": "webview (Desk's window on Windows and Linux)",
       "version": "0.12.0",

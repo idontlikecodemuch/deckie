@@ -38,7 +38,7 @@ key is right.
 |---|---|
 | The reader | `LearnedKey` (`core/Sources/DeckieCore/Key/LearnedKey.swift`): a log-frequency spectrogram (126 bands, five frames a second) and a convolutional model of 235,598 numbers, in plain Swift. Engine 0.7.0 |
 | Its file | `deckie-key.f16`, 471,196 bytes, name `deckie-key-2b4fe8fa`, SHA-256 `2b4fe8fabf4fc5bd301e04af6c136afe76399f0077984a7f5df78b0ba0b07f7d`. Found at `DECKIE_KEY_MODEL`, in `core/.models/`, or in `models/` beside the PC program; any other file is refused |
-| Trained on | 3,129 recordings under CC BY, CC0 or public-domain terms: 710 Freesound loops and 371 Free Music Archive songs with human key labels, 48 CC0 piano recordings, and 2,000 Free Music Archive clips labelled by the untrained reader. `DEPENDENCIES.md`, section 11, has the record in D15's shape |
+| Trained on | 3,129 recordings under CC BY, CC0 or public-domain terms: 710 Freesound loops and 371 Free Music Archive songs with human key labels, 48 CC0 piano recordings, and 2,000 Free Music Archive clips labelled by the untrained reader. `DEPENDENCIES.md`, section 13, has the record in D15's shape |
 | Not trained on | anything from GiantSteps or Beatport, anything non-commercial or share-alike, anything of the owner's |
 | In a record | `key.source` `learned-key`; `key.confidence` the key's probability; `key_home` for a home note; `engine.models` names the model; the three-answer reader's key is kept as a vote |
 | Without the file | the untrained three-answer reader, exactly as in engine 0.6.0 |
@@ -211,7 +211,7 @@ is the `key_home` block they already need to handle (the check-in of 07:45 lists
 - `TrackTable.swift:194`: the key row could add how sure Deckie is when `key.source` is `learned-key`: "8A (A
   minor), fairly sure". Use words in three steps (under 0.6, 0.6 to 0.8, over 0.8), not the percent (section 3).
   New words needed in `Words.swift` beside `keyNotRead` (line 174).
-- Acknowledgements: a row for the model when its file ships (`DEPENDENCIES.md`, section 11, has the row).
+- Acknowledgements: a row for the model when its file ships (`DEPENDENCIES.md`, section 13, has the row).
 
 **iPad app (`deck-app/Deck/Sources`).**
 - `CrateLibrary.swift:72` (`keyConf: t.key?.confidence`): the value is now a probability between 0.5 and 1 for
@@ -247,5 +247,5 @@ remade by `kt_x4.py cnn mix`, `export mix` and `record mix` (about an hour and a
   correctness, not for accuracy.
 - **Windows**: the reader's arithmetic is plain Swift and the tests run in `core-windows`; the trained file's
   parity run was on Linux only.
-- **The three open points on the training data** in `DEPENDENCIES.md`, section 11 (credit for CC BY 3.0, FMAK's
+- **The three open points on the training data** in `DEPENDENCIES.md`, section 13 (credit for CC BY 3.0, FMAK's
   "research purposes" sentence, uploaders' public-domain statements), are the attorney's.

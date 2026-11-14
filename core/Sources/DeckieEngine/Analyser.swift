@@ -89,14 +89,14 @@ public final class Analyser: Sendable {
         let tagger = try DeckieVocalTagger.loadDefault(runtime: tracker.session.runtime)
         let note = tagger == nil
             ? "no vocal tagger: " + DeckieVocalTagger.missingModels().map(\.description).joined(separator: "; ") : nil
-        self.init(beatTracker: tracker, vocalTagger: tagger, note: note, keyModel: try KeyModel.loadDefault())
+        self.init(beatTracker: tracker, vocalTagger: tagger, note: note, keyModel: KeyModel.loadDefault())
     }
 
     /// An analyser with `beatTracker` (nil loads the Beat This! model from where `BeatTracker` looks for it) and the
     /// given vocal tagger, or none.
     /// The learned key reader's numbers are loaded from where `KeyModel` looks for them, when they are there.
     public convenience init(beatTracker: BeatTracker?, vocalTagger: (any VocalTagger)?) throws {
-        self.init(beatTracker: try beatTracker ?? BeatTracker(), vocalTagger: vocalTagger, note: nil, keyModel: try KeyModel.loadDefault())
+        self.init(beatTracker: try beatTracker ?? BeatTracker(), vocalTagger: vocalTagger, note: nil, keyModel: KeyModel.loadDefault())
     }
 
     /// The same with the key model given (nil: the untrained three-answer reader decides the key).

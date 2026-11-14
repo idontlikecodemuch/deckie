@@ -1,7 +1,7 @@
 # Dependencies
 
 What Deckie's PC and Linux track relies on that it did not write itself; last checked Oct 28, 2026 (section 8,
-Oct 29; section 11, Nov 14). The rule (charter `docs/architecture/pc-linux-track.md`, decision P16): every dependency is pinned by version
+Oct 29; section 13, Nov 14). The rule (charter `docs/architecture/pc-linux-track.md`, decision P16): every dependency is pinned by version
 and by hash, and its licence is quoted here before it is adopted. A hash, or digest, is a long fingerprint computed from a file's exact
 bytes: change one byte and it changes, so a matching hash proves a file is the one recorded here.
 
@@ -13,8 +13,8 @@ run time from a file fetched per machine, never linked and never committed; the 
 trained weights (section 7), exported once to a model file by a script whose Python tools are development-only,
 the file published on this repository's release `models-1` and fetched by its hash; and the weights of Google's
 YAMNet audio tagger, the vocal tagger's model (section 8), fetched by pinned URL and hash and exported and published
-the same way; and, prepared but not shipped, the file of Deckie's own key reader (section 11), which Deckie
-trained itself on openly licensed recordings and which is not in the repository. Deckie's Swift package (`core/`) declares no packages from elsewhere,
+the same way; and the file of Deckie's own key reader (section 13), which Deckie trained itself on openly licensed
+recordings, published as an asset of the same release and fetched by its hash, with its credit list. Deckie's Swift package (`core/`) declares no packages from elsewhere,
 so it has no `Package.resolved` (Swift's list of exact package versions); dr_mp3, dr_flac and the ONNX Runtime header
 are copied files pinned by their hashes, not packages.
 
@@ -39,6 +39,7 @@ alters a row goes into the JSON in the same commit.
 | ONNX Runtime | 1.31.1 | MIT; carries Eigen under MPL 2.0, unmodified by Deckie; carries ONNX Runtime's two published patches (IBM Z builds; nothing compiled on Linux, Windows or macOS differs), shipped beside Eigen's notice (section 6); the shipped library is Deckie's own build without Microsoft's usage-reporting client | | |
 | Beat This! (beat tracker, checkpoint final0) | ISMIR 2024 release, checkpoint final0 | MIT (section 7) | 15 sets, everything but GTZAN; terms range from MIT and CC BY to CC BY-NC and all rights reserved, each in section 7's table | tempo and bar grid from Deckie's own code at lower confidence (section 7) |
 | YAMNet (vocal tagger) | tensorflow/models commit a6e25e2 weights | Apache 2.0 (section 8) | AudioSet: labels CC BY 4.0, clips are their YouTube uploaders'; trained by Google (section 8) | vocal fields absent, record flagged vocal_unknown (section 8) |
+| Deckie's key reader (learned model) | deckie-key-2b4fe8fa (engine 0.7.0) | Deckie's own model; its training recordings are under CC BY (credited in deckie-key-2b4fe8fa-credits.tsv, beside the model), CC0 or public domain (section 13) | 3,129 recordings, each under its own CC BY, CC0 or public-domain terms: 710 Freesound loops and 371 Free Music Archive songs with human key labels (labels CC BY 4.0), 48 CC0 piano recordings, 2,000 Free Music Archive clips whose key Deckie's untrained reader named; trained by Deckie (section 13) | the untrained three-answer reader, which needs no trained numbers and runs whenever the model's file is absent (section 13) |
 | webview (Desk's window on Windows and Linux) | 0.12.0 | MIT (section 9) | | |
 | Microsoft WebView2 SDK header (Desk's window on Windows) | 1.0.4191.47 | BSD 3-clause (section 10) | | |
 
@@ -1173,27 +1174,31 @@ written elsewhere keep their old bytes under the same name, which the format all
   does: WinHTTP on Windows (part of Windows, nothing to ship), and on Linux libsoup (LGPL 2.1, dynamically linked,
   already on any machine with WebKitGTK, which Desk's window needs there anyway), each a second small transport in
   `DeckieLookup` behind the same interface; (3) leave the lookup Mac-only for now.
-## 13. Deckie's key reader: a model Deckie trained itself (prepared; its file is not in the repository)
+## 13. Deckie's key reader: a model Deckie trained itself (a release asset, fetched by pinned hash)
 
-From engine 0.7.0 the record's key can be read by a small convolutional model of Deckie's own (`LearnedKey`,
+From engine 0.7.0 the record's key is read by a small convolutional model of Deckie's own (`LearnedKey`,
 `core/Sources/DeckieCore/Key/LearnedKey.swift`; research X4, `docs/research/x4-key-complete.md`). It is the first
 model Deckie trained, so D15's record is written from the other side: there is no publisher's licence to quote, and
 what is recorded is where every training recording came from and under what terms. Checked Nov 14, 2026.
 
-**Status: prepared, not shipped.** The standing rule of the key work is that no trained numbers are committed, and
-no release asset has been published. So the model's file is in neither place, the acknowledgements table above has
-no row for it, and every build from this repository reads keys with the untrained three-answer reader. The code is
-pinned to one file by its hash; putting that file where the engine looks turns the learned reader on, with nothing
-else to change. Publishing the file (as an asset of the release `models-1`, like the two other models, or in the
-repository) is the owner's decision; when it is made, the row for the table is the one in the last paragraph here.
+**Status: shipped as a release asset, by the owner's decision of Nov 14, 2026** ("Yes we can publish"). Like the
+two other models, the file is an asset of this repository's release `models-1`, fetched by its pinned SHA-256
+(`core/Tools/fetch-key-model.sh`); no trained numbers are in the git tree. Its name carries its version, so a
+retrained model is a new file and a new pin, never the same name with other bytes. The model is optional by design:
+where the file is absent, or is not the pinned file byte for byte, the engine reads keys with the untrained
+three-answer reader and says so. **The upload itself was not done from the session that wrote this** (it had no way
+to upload a release asset): until the two files below are on the release, every build fetches nothing and falls
+back; `fetch-key-model.sh` reports which.
 
 | | |
 |---|---|
-| The file | `deckie-key.f16`: 235,598 numbers as 16-bit floats, 471,196 bytes. Looked for at `DECKIE_KEY_MODEL`, else `core/.models/` in a checkout, else `models/` beside the PC program (`KeyModel`, `PCBuild.EngineFiles`). It runs in plain Swift: no model runtime |
-| Name and hash | `deckie-key-2b4fe8fa`; SHA-256 `2b4fe8fabf4fc5bd301e04af6c136afe76399f0077984a7f5df78b0ba0b07f7d`, pinned in `LearnedKey.Model`; a file with any other hash is refused |
+| The file | `deckie-key-2b4fe8fa.f16`: 235,598 numbers as 16-bit floats, 471,196 bytes; `https://github.com/idontlikecodemuch/deckie/releases/download/models-1/deckie-key-2b4fe8fa.f16`. Looked for at `DECKIE_KEY_MODEL`, in `models/` beside a shipped program, then in `core/.models/` (`KeyModel`). It runs in plain Swift: no model runtime |
+| Name and hash | `deckie-key-2b4fe8fa`; SHA-256 `2b4fe8fabf4fc5bd301e04af6c136afe76399f0077984a7f5df78b0ba0b07f7d`, pinned in `LearnedKey.Model`; a file with any other hash is not used |
+| Where builds get it | `core/Tools/fetch-key-model.sh`, run by `core-linux.yml`, `core-windows.yml`, `desk-window.yml` and `pc-package.yml` after the other models; the PC package copies it to `app/models/` and its credit list to `app/licences/` (`core/Tools/windows/package.sh`); the Mac desk copies both from `Vendor/models/` into its bundle (`desk-app/project.yml`) and points the engine at the file (`DeskApp.swift`, `Bundled`) |
+| In a record | `engine.models` names the model (`deckie-key-2b4fe8fa`, or `deckie-key-2b4fe8fa-minor65` when a lean is set), and `key.source` is `learned-key`; so a crate file says which reader, and which version of it, gave each key |
 | Made by | `mixer/keytrial/kt_x4.py` (`cnn mix`, then `export mix`), Nov 14, 2026, on one computer's CPU in 47 minutes; the script, its settings and its random seeds are in the repository, the training audio is not |
 | What it holds | weights of small filters over a picture of the pitch content of sound. No audio, no picture of any recording and no list of labels is in it |
-| Training recordings | 3,129. `kt_x4.py record mix` writes the list, one recording a line with its title, its page at the source and its licence (710,133 bytes, SHA-256 `8769b179fc1c09ba39ba9d84fdb03d57f67359be32cbb30771797e43d14c87f5`). The list is not committed either: titles and pages name people, and the repository's rule is to name none. It ships with the model, as the credit CC BY asks for |
+| Training recordings | 3,129, listed one a line with each one's title, its page at the source and its licence in `deckie-key-2b4fe8fa-credits.tsv` (710,133 bytes, SHA-256 `8769b179fc1c09ba39ba9d84fdb03d57f67359be32cbb30771797e43d14c87f5`, pinned in `fetch-key-model.sh`), a second asset of the release, written by `kt_x4.py record mix`. It ships beside the model and is the credit CC BY asks for; the acknowledgements point to it. It is not in the git tree |
 | Replacement path | the untrained three-answer reader (`ThreeAnswerKey`), which needs no trained numbers and is what runs without the file. A recording's owner who objects is answered by retraining without that recording, or by this path |
 
 **The recordings and their terms.** Only recordings whose own licence allows commercial use and adaptation were
@@ -1208,10 +1213,11 @@ anything was fetched (research X3, section 1, gives the reasons).
 | Open Well-Tempered Clavier, Book 1 | 48 recordings | CC0 1.0 | the key in each piece's title |
 | Free Music Archive, 30-second clips (`fma_large.zip` of the archive's research data set) | 2,000 clips | CC BY, versions 1.0 to 4.0: 1,717; CC0 or public-domain mark: 283 | none of anyone's: the key Deckie's untrained three-answer reader named, used only where that reader was sure |
 
-**Attribution.** CC BY asks that the author be credited, the licence named and changes indicated. The list gives,
-for every recording, its title, its page at the source (which names its author) and its licence with the licence's
-page; the app's acknowledgements would carry the row below and point to the list. The recordings were not changed
-and are not redistributed; they were read to fit the model's numbers.
+**Attribution.** CC BY asks that the author be credited, the licence named and changes indicated. The credit list
+gives, for every recording, its title, its page at the source (which names its author) and its licence with the
+licence's page. It ships beside the model (the PC package's `licences/` folder, the Mac desk's bundle) and the
+acknowledgements row names it; it is not pasted into the product's screens. The recordings were not changed and
+are not redistributed; they were read to fit the model's numbers.
 
 **Not settled, written down so nobody has to find it again** (research X3, "For the attorney", has the detail):
 
@@ -1225,13 +1231,11 @@ and are not redistributed; they were read to fit the model's numbers.
 **Nothing trained on the GiantSteps sets ships or is prepared to.** They are used only to score the reader
 (research X4).
 
-**The row for the acknowledgements table**, to add to `core/dependencies.json` when the file is published: name
-"Deckie's key reader (learned model)"; version "deckie-key-2b4fe8fa (engine 0.7.0)"; licence "Deckie's own model;
-its training recordings are under CC BY (credited in the list of section 11), CC0 or public domain"; training sets
-"3,129 recordings, each under its own CC BY, CC0 or public-domain terms: 710 Freesound loops and 371 Free Music
-Archive songs with human key labels (labels CC BY 4.0), 48 CC0 piano recordings, 2,000 Free Music Archive clips
-whose key Deckie's untrained reader named; trained by Deckie"; replacement path "the untrained three-answer reader,
-which needs no trained numbers".
+**To publish a retrained model**: train and export it (`kt_x4.py cnn`, `export`), which names the file by the
+first eight digits of its hash; write its credit list (`record`); upload both to the release `models-1`; change
+`pinnedName`, `pinnedByteCount`, `pinnedSHA256`, `pinnedMinorLean`, `pinnedTemperature` and
+`pinnedTrainingMinorShare` in `LearnedKey.Model`, `fileName`, and `CREDITS_SHA256` in `fetch-key-model.sh`; change
+the row in `core/dependencies.json` and this section. The old file stays on the release.
 
 ## Checked and rejected
 

@@ -104,7 +104,7 @@ public final class OnnxRuntime: @unchecked Sendable {
 
     /// A file's candidates after the environment variable: in `programFolder` (under `subfolder`, when one is
     /// given), then at `checkout`.
-    static func candidates(named name: String, in subfolder: String?, checkout: URL) -> [String] {
+    public static func candidates(named name: String, in subfolder: String?, checkout: URL) -> [String] {
         var out: [String] = []
         if let folder = programFolder {
             let base = subfolder.map { folder.appendingPathComponent($0) } ?? folder

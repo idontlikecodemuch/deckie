@@ -66,4 +66,7 @@ targets:
           mkdir -p "$F" "$R"
           cp -f "$V/libonnxruntime.1.31.1.dylib" "$F/"
           cp -f "$V/models/beat_this_final0.onnx" "$V/models/yamnet.onnx" "$R/"
+          # The learned key reader's file and its credit list, when they are in Vendor/models (optional: without
+          # them the engine reads keys with the untrained reader).
+          for f in "$V"/models/deckie-key-*.f16 "$V"/models/deckie-key-*-credits.tsv; do [ -f "$f" ] && cp -f "$f" "$R/"; done; true
           codesign --force --sign - "$F/libonnxruntime.1.31.1.dylib"

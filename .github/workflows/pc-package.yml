@@ -73,6 +73,10 @@ jobs:
       - name: Fetch the models from the release models-1 (checked by hash)
         shell: bash
         run: bash core/Tools/fetch-models.sh --no-export
+      # Optional: packaged when the release has it; otherwise the package reads keys with the untrained reader.
+      - name: Fetch the learned key reader's file, when the release has it (checked by hash)
+        shell: bash
+        run: bash core/Tools/fetch-key-model.sh
       # The icon is made here from the iPad app's picture and compiled into a resource file, the form a linker takes;
       # no .ico is committed (core/Tools/windows/icon.sh, make_ico.py).
       - name: Make the icon
