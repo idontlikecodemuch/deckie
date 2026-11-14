@@ -2,6 +2,79 @@
 
 Branch `trial/own-recognition`. Newest entry first. Nothing here ships without the owner's decision.
 
+## Nov 14, 2026, 07:05 UTC: size study, first results; letter AB and the four-point question taken up
+
+**Received**: letter AB (merged and read; its order (a) to (e) is the order I am following), and the owner's
+question "Can we use 4 points?" (both forms are built; their rows are being measured now).
+
+**Size, thinning alone** (eval half, 969 songs; right song named and accepted, percent at 5 / 8 / 12 s; noise levels
+are nominal, see the last table)
+
+| What the booth holds | KB a song | room | crowd 10 dB under | crowd at equal level | songs not in the index named, per 1,000 |
+|---|---|---|---|---|---|
+| As in the trial (5-byte entries, short table slots) | 261 | 89 / 95 / 98 | 78 / 89 / 93 | 48 / 60 / 72 | 1.6 |
+| 4-byte entries, 32 entries a slot | 162 | 88 / 95 / 98 | 81 / 89 / 94 | 49 / 61 / 73 | 1.9 |
+| keep 1 hash in 2 | 81 | 83 / 91 / 95 | 73 / 84 / 91 | 45 / 57 / 68 | 1.6 |
+| keep 1 hash in 4 | 40 | 77 / 87 / 92 | 62 / 78 / 86 | 34 / 49 / 57 | 0.6 |
+| keep 1 hash in 8 | 20 | 63 / 76 / 85 | 52 / 67 / 76 | 24 / 35 / 45 | 1.6 |
+| keep 1 hash in 16 | 10 | 50 / 64 / 74 | 38 / 51 / 62 | 16 / 26 / 32 | 8.2 |
+
+Clean audio stays at 98 to 100 % in every row. The fingerprint in the crate file is unchanged (19 KB a song here).
+Fewer hashes per point does worse than dropping hashes at random at the same size (3 a point: 82 KB, room 86 % at
+8 s against 91 %). **So: nothing lost down to 162 KB; a small loss at 81; thinning by itself cannot reach the 20 KB
+target without a large loss.** Wrong names stay under 1 in 1,000 throughout.
+
+**AB's item (a), the first number**: with the full index, at equal-level crowd noise the right song is the first
+proposal 54 % of the time, within the first 10 proposals 67 %, the first 30, 75 %, the first 50, 78 % and the first
+100, 82 % (dev half, 5 to 12 s pooled; room: 87 / 92 / 95 / 97 / 98). So a check of 50 songs has about 24 points to
+win at that noise. The same count for thin indexes and for four-point hashes is running.
+
+**Four points, built two ways** (from the paper's description; no outside code): hashed like triples with the speed
+search; and the ratio form, where the first and last point set a frame and the two between are described as
+fractions of it, so there is no speed search. First look only (40 dev clips a condition): the ratio form answers in
+about 10 ms and holds 40 KB a song with one quad per point; alone it names every clean clip and loses to triples in
+noise (equal-level crowd, first proposal right: about 30 % against 60 %). The fair rows (thin reference, dense
+query, pairs as the check, equal memory) are queued.
+
+**Noise both ways** (AB's inference, measured on 200 clips made like the benchmark's): inside the 300 to 3600 Hz
+band the fingerprint reads, crowd noise is 0.5 dB worse than its nominal level at the median (dance music: 1.6 dB
+worse; one clip in ten, 6.6 dB worse or more) and pink noise is 2.4 dB better. So "0 dB crowd" is about -0.5 dB in
+band, not several decibels worse: the crowd recordings carry bass too.
+
+**Running now**: the top-K count for thin triples, pairs and both kinds of fours; the two-step rows (the index
+proposes 30 or 50 songs, pairs check them).
+
+**Then**: the three sizes asked for at 2,000, 5,000 and 10,000 songs; fours against triples as proposers; the mixed
+index; (c) evidence across seconds and following a named song on the generated mixes; (d) the count of hashes lost
+by one step. **Carry on.**
+
+## Nov 14, 2026, 06:05 UTC: the size study has started (branch `recog/size`)
+
+**Received**: D35 (a fingerprint of our own; speed is fine if a song is named in a few seconds; size is the large
+problem, smaller first and crate splitting second; noise waits for letter AB). This entry and the ones above it
+are on the new branch `recog/size`, cut from `main`.
+
+**The figure being brought down** is what the booth must hold in memory to match: 0.3 MB a song in the trial.
+
+**Target, and why.** A 5,000-song crate matched in under 100 MB of memory: 20 KB a song, about the size of the
+fingerprint on disk (19 KB for the outside set's average 3.4-minute song). The booth iPad is also drawing the
+screen, listening and scoring picks, and an app that holds hundreds of megabytes is the first one the system closes
+when memory is short. The same line puts 2,000 songs at 40 MB and 10,000 at 200 MB.
+
+**How it is being measured.** The same benchmark, eval half only: 12,600 queries (clean, room, room with crowd 10 dB
+under and at equal level, and songs not in the index, at 5, 8 and 12 s), each configuration with its own threshold
+set on the dev half's no-right-answer clips as before. Memory is counted by the index itself (entries, table, 16
+bytes a song). The songs' points are no longer counted as memory: only the final check of a dozen songs reads them,
+so they can stay on storage (19 KB a song, read as needed).
+
+**First row**: the trial's configuration holds 261 KB a song by this count and scores as it did (room 95 % at 8 s).
+
+**Being tried, in this order**: 4-byte entries and a smaller table (should lose nothing); fewer hashes per point;
+keeping one hash in 2, 4, 8, 16; fewer and stronger points in the songs; and a two-step matcher in which a small
+index in memory only proposes a short list of songs and those are matched in full from their points on storage.
+
+**Carry on.**
+
 ## Nov 14, 2026, 03:50 UTC: all measurements in; the letter is written
 
 **The report is `docs/research/w2-own-recognition-trial.md`.** Read its section 1 first.

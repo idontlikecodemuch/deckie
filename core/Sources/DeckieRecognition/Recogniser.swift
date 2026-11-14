@@ -71,6 +71,9 @@ public final class Recogniser {
     public var grid: SpeedGrid
     /// How many of the best (candidate speed, offset) votes are checked against the song's points.
     public var verified = 12
+    /// The wide check: when above 0, the songs checked are the first this many the votes propose (two votes each),
+    /// in place of the `verified` fullest votes whatever their songs.
+    public var checkSongs = 0
     /// Points taken per slice of the query (nil: the index's own setting).
     public var queryPerSlice: Int?
     /// A fitted point counts when the song has a point within these distances: frames, and 1/4096 octaves (0.85 %).
@@ -79,6 +82,11 @@ public final class Recogniser {
 
     /// A second index of the same songs to turn to when the first finds nothing sure (in the trial: pairs, slower and
     /// better in noise, behind triples), and the confidence under which it is turned to.
+    /// The two-step way (see `match`): how many songs the index in memory proposes (0: one step), how a proposed
+    /// song's constellation is fetched, and how the fetched songs are hashed.
+    public var shortlistSize = 0
+    public var detail: ((Int) -> Landmarks)?
+    public var detailPairing = PairingConfig()
     public var fallback: RecognitionIndex?
     public var fallbackBelow = 3.0
 
@@ -87,30 +95,57 @@ public final class Recogniser {
     static let binFrames = 8
     /// The least the third-best song's score is taken to be, when there are fewer than three or it is tiny.
     static let leastYardstick = 5.0
-    private var votes: [UInt8]
-    private var touched: [Int32] = []
+    var votes: [UInt8]
+    var touched: [Int32] = []
 
     public init(index: RecognitionIndex, grid: SpeedGrid = SpeedGrid()) {
         self.index = index; self.grid = grid
         votes = [UInt8](repeating: 0, count: index.timelineFrames / Self.binFrames + 2)
     }
 
-    private struct Vote { var count: Int; var bin: Int; var speed: Double; var vinyl: Bool }
+    struct Vote { var count: Int; var bin: Int; var speed: Double; var vinyl: Bool }
 
     /// The songs found in `query`, best first, one entry a song. Empty when nothing lined up at all; whether the best
     /// is a true match is for the caller to decide from its `score`.
     public func match(_ query: Landmarks) -> [RecognitionMatch] {
-        let first = run(index, query)
+        if shortlistSize > 0, let detail {
+            // Two steps. The index held in memory only proposes songs: the `shortlistSize` whose votes pile highest.
+            // Those songs' constellations are then fetched (from storage, in a booth), hashed in full here and now,
+            // and the query is matched against that small index alone.
+            let songs = run(index, query, shortlist: shortlistSize).1
+            guard !songs.isEmpty else { return [] }
+            let small = RecognitionIndex(songs: songs.map { (index.ids[$0], detail($0)) }, landmark: index.landmark, pairing: detailPairing)
+            var found = run(small, query).0
+            for i in found.indices { found[i].songIndex = songs[found[i].songIndex] }
+            return found
+        }
+        let first = run(index, query).0
         guard let fallback, (first.first?.confidence ?? 0) < fallbackBelow else { return first }
-        let second = run(fallback, query)
+        let second = run(fallback, query).0
         return (second.first?.confidence ?? 0) > (first.first?.confidence ?? 0) ? second : first
     }
 
-    private func run(_ ix: RecognitionIndex, _ query: Landmarks) -> [RecognitionMatch] {
+    /// Checks one song at one place and speed against a query, with no search: where a song already named should be
+    /// now. `offsetSeconds` is where in the song the query's first sample is expected; the fit moves it, the speed
+    /// and the pitch to where the points agree, as in a full match. `score` is how far the count of agreeing points
+    /// stands above chance; `confidence` is left at 0 (there are no other songs to compare with).
+    public func check(_ query: Landmarks, song: Int, offsetSeconds: Double, tempoRatio: Double, pitchRatio: Double) -> RecognitionMatch? {
+        let n = min(query.count, query.frames.firstIndex { $0 >= UInt32(RecognitionIndex.maxQueryFrames) } ?? query.count)
+        guard n >= 4, song >= 0, song < index.songCount else { return nil }
+        let qt = (0..<n).map { Double(query.frames[$0]) }, qp = (0..<n).map { Double(query.pitch($0)) }
+        return verify(in: index, qt: qt, qp: qp, song: song, offset: offsetSeconds / index.landmark.frameSeconds,
+                      speed: tempoRatio, shift: log2(pitchRatio) * Landmarks.pitchUnitsPerOctave)
+    }
+
+    /// The songs the index in memory proposes for a query, best first: those whose votes pile highest, before any
+    /// check (for measuring how often the right song is among the first so many).
+    public func proposals(_ query: Landmarks, count: Int) -> [Int] { run(index, query, shortlist: count).1 }
+
+    private func run(_ ix: RecognitionIndex, _ query: Landmarks, shortlist: Int? = nil) -> ([RecognitionMatch], [Int]) {
         let p = ix.pairing
         let unit = Double(p.pitchBinUnits)
         let n = min(query.count, query.frames.firstIndex { $0 >= UInt32(RecognitionIndex.maxQueryFrames) } ?? query.count)
-        guard n >= 4 else { return [] }
+        guard n >= 4 else { return ([], []) }
         let qt = (0..<n).map { Double(query.frames[$0]) }, qp = (0..<n).map { Double(query.pitch($0)) }
         // Strength for choosing a slice's points: as measured when the query was made from audio, else its level.
         let qs: [Float] = p.byStrength ? (0..<n).map { query.strengths.count == query.count ? query.strengths[$0] : Float(query.level($0)) }
@@ -118,6 +153,8 @@ public final class Recogniser {
         let bins = p.pitchBins(octaves: ix.landmark.octaves)
 
         var best: [Vote] = []
+        // The fullest bins kept from each candidate speed: three for a direct answer, more when a list is wanted.
+        let keep = shortlist == nil && checkSongs == 0 ? 3 : 8
         var qbin = [Int](repeating: -1, count: n)
         let per = queryPerSlice ?? p.queryPerSlice
         // Per slice of the current anchor: how many targets it has, and each one's pitch bin and gap.
@@ -126,7 +163,8 @@ public final class Recogniser {
         var slotStrength = [Float](repeating: 0, count: p.fanOut * per)
         // The candidate's lookups, gathered first so that the table reads (each a cache miss) run back to back.
         var hashes: [Int] = [], shifts: [Double] = [], spans: [(Int, Int)] = []
-        for cand in grid.candidates {
+        if p.ratio { best = ratioVotes(ix, qt: qt, qp: qp, qs: qs, keep: 40) }
+        for cand in (p.ratio ? [] : grid.candidates) {
             let v = cand.speed
             let shift = cand.vinyl ? log2(v) * Landmarks.pitchUnitsPerOctave : 0
             for i in 0..<n {
@@ -167,13 +205,31 @@ public final class Recogniser {
                             hashes.append(p.hash(anchorBin: a, targetBin: slotBin[k * per + x], gap: slotGap[k * per + x])); shifts.append(shiftT)
                         }
                     }
+                } else if p.points == 4 {
+                    for k in 0..<p.quadCount {
+                        let (k1, k2, k3) = p.sliceTriple(k)
+                        for x in 0..<taken[k1] {
+                            for y in 0..<taken[k2] {
+                                for z in 0..<taken[k3] {
+                                    let h = p.hash(anchorBin: a, bin1: slotBin[k1 * per + x], gap1: slotGap[k1 * per + x],
+                                                   bin2: slotBin[k2 * per + y], gap2: slotGap[k2 * per + y],
+                                                   bin3: slotBin[k3 * per + z], gap3: slotGap[k3 * per + z])
+                                    if !p.kept(h) { continue }
+                                    hashes.append(h)
+                                    shifts.append(shiftT)
+                                }
+                            }
+                        }
+                    }
                 } else {
-                    for k in 0..<p.fanOut {
+                    for k in 0..<p.tripleCount {
                         let (k1, k2) = p.slicePair(k)
                         for x in 0..<taken[k1] {
                             for y in 0..<taken[k2] {
-                                hashes.append(p.hash(anchorBin: a, bin1: slotBin[k1 * per + x], gap1: slotGap[k1 * per + x],
-                                                     bin2: slotBin[k2 * per + y], gap2: slotGap[k2 * per + y]))
+                                let h = p.hash(anchorBin: a, bin1: slotBin[k1 * per + x], gap1: slotGap[k1 * per + x],
+                                               bin2: slotBin[k2 * per + y], gap2: slotGap[k2 * per + y])
+                                if !p.kept(h) { continue }
+                                hashes.append(h)
                                 shifts.append(shiftT)
                             }
                         }
@@ -187,14 +243,16 @@ public final class Recogniser {
                             spans.removeAll(keepingCapacity: true)
                             for h in hashes { let slot = p.slot(h); spans.append((Int(offsets[slot]), Int(offsets[slot + 1]))) }
                             ix.tags.withUnsafeBufferPointer { tags in
-                                let tagged = p.triples
+                                let tagged = p.triples, packed = p.triples && p.compact
                                 for (x, span) in spans.enumerated() where span.1 > span.0 {
                                     let shiftT = shifts[x]
                                     let tag = p.tag(hashes[x])
                                     var e = span.0
                                     while e < span.1 {
-                                        if !tagged || tags[e] == tag {
-                                            let bin = Int(Double(entries[e]) - shiftT) / Self.binFrames
+                                        let entry = entries[e]
+                                        if packed ? UInt8(entry & 0x7f) == tag : (!tagged || tags[e] == tag) {
+                                            let frame = packed ? Double((entry >> 7) * 8 + 4) : Double(entry)
+                                            let bin = Int(frame - shiftT) / Self.binFrames
                                             if bin >= 0 {
                                                 if votes[bin] == 0 { touched.append(Int32(bin)) }
                                                 if votes[bin] < .max { votes[bin] += 1 }
@@ -209,10 +267,10 @@ public final class Recogniser {
                             for t in touched {
                                 let b = Int(t)
                                 let c = Int(votes[b]) + Int(votes[b + 1])
-                                if top.count < 3 || c > top[top.count - 1].0 {
+                                if top.count < keep || c > top[top.count - 1].0 {
                                     top.append((c, b))
                                     top.sort { $0.0 > $1.0 }
-                                    if top.count > 3 { top.removeLast() }
+                                    if top.count > keep { top.removeLast() }
                                 }
                             }
                             for t in touched { votes[Int(t)] = 0 }
@@ -225,14 +283,30 @@ public final class Recogniser {
         }
 
         best.sort { $0.count > $1.count }
+        if let shortlist {
+            var songs: [Int] = []
+            for vote in best {
+                let s = ix.song(atTimelineFrame: (vote.bin + 1) * Self.binFrames)
+                if !songs.contains(s) { songs.append(s); if songs.count == shortlist { break } }
+            }
+            return ([], songs)
+        }
         var bySong: [Int: RecognitionMatch] = [:]
         var checked = 0
+        var perSong: [Int: Int] = [:]
         for vote in best {
-            // At least `verified` votes, and on until four songs have been seen (the third is the yardstick below).
-            if checked >= 5 * verified || (checked >= verified && bySong.count >= 4) { break }
-            checked += 1
             let frame = (vote.bin + 1) * Self.binFrames
             let s = ix.song(atTimelineFrame: frame)
+            if checkSongs > 0 {
+                // The wide check: the two fullest votes of each of the first `checkSongs` songs proposed.
+                if perSong.count >= checkSongs && perSong[s] == nil { continue }
+                if perSong[s, default: 0] >= 2 { continue }
+                perSong[s, default: 0] += 1
+            } else {
+                // At least `verified` votes, and on until four songs have been seen (the third is the yardstick below).
+                if checked >= 5 * verified || (checked >= verified && bySong.count >= 4) { break }
+            }
+            checked += 1
             guard let m = verify(in: ix, qt: qt, qp: qp, song: s, offset: Double(frame - ix.songStart[s]), speed: vote.speed,
                                  shift: vote.vinyl ? log2(vote.speed) * Landmarks.pitchUnitsPerOctave : 0) else { continue }
             if let old = bySong[s], old.score >= m.score { continue }
@@ -242,7 +316,7 @@ public final class Recogniser {
         // Each song's score over the third-best song's: two songs may truly be playing, the third never is.
         let yardstick = max(Self.leastYardstick, found.count >= 3 ? found[2].score : 0)
         for i in found.indices { found[i].confidence = found[i].score / yardstick }
-        return found
+        return (found, [])
     }
 
     /// Lines the query's points up with one song's from a starting offset, speed and pitch shift; refits the three
