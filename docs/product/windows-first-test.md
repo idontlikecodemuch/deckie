@@ -98,18 +98,14 @@ memory), how many songs were found and how long they took, and the files that co
 name and the reason. That is all. No song audio, nothing about the songs that went in, and not the name of your
 Windows account.
 
-If Windows says a file such as VCRUNTIME140.dll is missing, the program will tell you which free Microsoft part to
-install, and where to get it.
-
 To remove Deckie: delete its folder. It installed nothing. It keeps its notes on what it has already read in a
 folder called "Deckie" under your Windows account's local app data, which you can delete too.
 
 ## For whoever hands this to a tester
 
 - The zip is the artifact `Deckie-for-PC-first-test` of a run of the workflow `pc-package`. It is not a release.
-- Three things on this page are not proven on a real PC, only on GitHub's Windows machine: that the blue box
-  appears and "Run anyway" is enough; that a PC without Microsoft's Visual C++ runtime gets the plain message; and
-  the times. The letter says which claims are which.
+- Two things on this page are not proven on a real PC, only on GitHub's Windows machine: that the blue box
+  appears and "Run anyway" is enough; and the times. The letter says which claims are which.
 - The iPad cannot open the one-file form until Deckie Booth is built against the current core and its document
   type takes a plain file (`docs/architecture/crate-format.md`, "The single-file form"). Until then the tester can
   make the crate file and send the log, which is what this first test is for.

@@ -10,6 +10,14 @@
       "replacement_path": null
     },
     {
+      "id": "msvc-runtime",
+      "name": "Microsoft Visual C++ runtime (Windows builds only)",
+      "version": "14, as the Swift 6.4.1 toolchain for Windows carries it",
+      "licence": "Microsoft's own terms, not open source: the Distributable Code section of the Microsoft Software License Terms for Visual Studio; four files, unmodified (section 3)",
+      "training_sets": null,
+      "replacement_path": null
+    },
+    {
       "id": "dr-mp3",
       "name": "dr_mp3",
       "version": "0.7.4",
