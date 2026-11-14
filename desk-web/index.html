@@ -128,7 +128,9 @@
       <button id="player-stop" class="small" data-w="stopListening"></button>
     </div>
     </div>
-    <!-- One song's names (letter AA, 3.4): each fact with where it came from; a guess looks like a guess. -->
+    <!-- One song's names (letter AA, 3.4): each fact with where it came from; a guess looks like a guess. The song's
+         cover (D36) is drawn first in it by desk.js, from bytes the engine sends: a data: address, which img-src
+         above already allows; nothing is fetched and no path is told. -->
     <aside id="names" class="side names" aria-labelledby="names-title" hidden>
       <header><h2 id="names-title" data-w="names"></h2><button id="names-close" class="small" data-w="done"></button></header>
       <div class="scroll" id="names-body"></div>
