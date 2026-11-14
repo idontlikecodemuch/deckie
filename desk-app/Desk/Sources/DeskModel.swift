@@ -19,6 +19,8 @@ final class DeskModel: ObservableObject {
     @Published var current: CrateInfo?
     @Published var crate: Crate?
     @Published var selection: Set<String> = []
+    /// The table shows only the songs that still need a name (D30).
+    @Published var onlyNeedName = false
     private(set) var corrections = NameCorrections()
     private(set) var placePaths = PlacePaths()
     /// A run of the crate showing that stopped before it finished.
@@ -87,7 +89,7 @@ final class DeskModel: ObservableObject {
         corrections = NameCorrections.load(from: shelf.file(DeskRun.correctionsFile, of: info.id))
         placePaths = PlacePaths.load(from: shelf.file(DeskRun.placesFile, of: info.id))
         pending = DeskRun.pending(home: home, crateId: info.id)
-        selection = []; sourceSelection = nil; finished = nil
+        selection = []; sourceSelection = nil; finished = nil; onlyNeedName = false
         reloadCrates()
     }
 
@@ -188,8 +190,8 @@ final class DeskModel: ObservableObject {
         }
     }
 
-    /// The rekordbox route, where it was: a collection export, then the folder of music, read as the music folder
-    /// (no source) with the names, tempos, keys and cues from rekordbox.
+    /// The rekordbox route, where it was: a collection export, then the folder of music, read as a source named after
+    /// that folder like any folder added (D31), with the names, tempos, keys and cues from rekordbox.
     func askRekordbox() {
         let x = NSOpenPanel()
         x.canChooseDirectories = false; x.canChooseFiles = true; x.allowsMultipleSelection = false
@@ -203,7 +205,8 @@ final class DeskModel: ObservableObject {
             p.message = Words.rekordboxFolderMessage
             p.begin { [weak self] r in
                 guard r == .OK, let folder = p.url, let self else { return }
-                self.start(RunRequest(folder: folder, source: nil, rekordbox: xml))
+                let source = SourceNaming.unique(MountedSource.name(of: folder), root: folder, roots: self.roots)
+                self.start(RunRequest(folder: folder, source: source, rekordbox: xml))
             }
         }
     }
@@ -369,6 +372,45 @@ final class DeskModel: ObservableObject {
             try placePaths.save(to: shelf.file(DeskRun.placesFile, of: info.id))
             try shelf.save(info)
         } catch { errorText = Words.couldntSave(error.localizedDescription) }
+    }
+
+    // MARK: keys and names already on this Mac (D30)
+
+    /// "Look again for keys and names": the files' tags, the DJ libraries and the rest read again for the crate
+    /// showing, without reading its music again. One undo step.
+    func lookAgain() {
+        guard let info = current, crate != nil, !running else { return }
+        saveNow()
+        let home = self.home
+        Task.detached(priority: .userInitiated) {
+            let result = Result { try DeskLocalFacts.lookAgain(home: home, crateId: info.id) }
+            await MainActor.run {
+                switch result {
+                case .success(let (c, summary)):
+                    self.change(Words.undoLookAgain) { self.crate = c }
+                    self.errorText = Words.lookedAgain(LocalLines.lines(summary))
+                case .failure(let error):
+                    self.errorText = Words.runStopped(error.localizedDescription)
+                }
+            }
+        }
+    }
+
+    /// A DJ library chosen by hand, read on every run from now on.
+    func chooseLibrary() {
+        let p = NSOpenPanel()
+        p.canChooseDirectories = false; p.canChooseFiles = true; p.allowsMultipleSelection = false
+        p.treatsFilePackagesAsDirectories = true
+        p.message = Words.chooseLibraryMessage
+        p.begin { [weak self] r in
+            guard r == .OK, let url = p.url, let self else { return }
+            do {
+                var choices = DJLibraryChoices.load(self.home)
+                let program = try choices.add(url)
+                try choices.save(self.home)
+                self.errorText = Words.libraryChosen(program.rawValue)
+            } catch { self.errorText = Words.couldntReadLibrary(error.localizedDescription) }
+        }
     }
 
     // MARK: the music on this Mac

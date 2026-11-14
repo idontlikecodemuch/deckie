@@ -18,13 +18,17 @@ import DeckieDesk
 ///   --delete-crate <crate>                     deletes a crate for good
 ///   --export <crate> <out.deckiecrate>         writes a copy of its crate file
 ///   --import <file.deckiecrate>                brings a crate file in as a copy
+///   --libraries [crate]                        the DJ libraries a run would read for keys and names (D30)
+///   --choose-library <file>                    adds a DJ library to read on every run
+///   --look-again [crate]                       Look again for keys and names, without reading the music again
 /// Words printed here are for the person at the terminal, not the DJ's screen, so they are not in Words.swift.
 enum HeadlessDesk {
     static func runIfAsked() {
         let a = CommandLine.arguments
         guard a.count >= 2, a[1].hasPrefix("--") else { return }
         let modes = ["--crates", "--add-music", "--carry-on", "--show", "--locate", "--fix", "--remove-source",
-                     "--rename-crate", "--delete-crate", "--export", "--import"]
+                     "--rename-crate", "--delete-crate", "--export", "--import", "--libraries", "--choose-library",
+                     "--look-again"]
         guard modes.contains(a[1]) else { return }
         setvbuf(stdout, nil, _IOLBF, 0)
         let home = DeskHome.standard()
@@ -92,6 +96,7 @@ enum HeadlessDesk {
             print("done: \(r.read) into \(r.crate): \(r.songsSeen) seen, \(r.wentIn) went in, \(r.notInCount) didn't \(r.notIn)")
             print(String(format: "took %.1f s (build %.1f s, finishing %.1f s), %.1f songs a minute", r.seconds, r.buildSeconds,
                          r.finishSeconds, r.songsPerMinute))
+            if let l = r.local { printLocal(l) }
             print("analysed \(r.analysed), reused \(r.reused); signatures made \(r.signaturesMade), kept \(r.signaturesKept), failed \(r.signaturesFailed); prints made \(r.printsMade), kept \(r.printsKept), failed \(r.printsFailed); copies \(r.copies); \(crate.tracks.count) songs in the crate" + (r.carriedOn ? "; carried on a stopped run" : ""))
 
         case "--show":
@@ -102,7 +107,9 @@ enum HeadlessDesk {
                 let places = t.placesInOrder.map { Crate.placeLine($0) ?? ("folder " + ($0.folder ?? "")) }.joined(separator: " · ")
                 print("  \(t.id)  \(t.ident.title)" + (t.ident.artist.map { " — \($0)" } ?? "") + "  [\(places)]"
                       + "  rel=\(t.file.rel ?? "nil")" + (t.signatures["o"] == nil ? "  no signature" : "  signed")
-                      + (t.ident.cutKey.map { "  copy of \($0)" } ?? "") + (t.ident.source == "user" ? "  (fixed)" : ""))
+                      + (t.ident.cutKey.map { "  copy of \($0)" } ?? "") + (t.ident.source == "user" ? "  (fixed)" : "")
+                      + "  name from \(t.ident.source ?? "?")" + (LocalFacts.needsName(t) ? " (needs a name)" : "")
+                      + "  key " + (t.key.map { "\($0.camelot) from \($0.source) votes \($0.votes.sorted { $0.key < $1.key }.map { "\($0.key)=\($0.value)" }.joined(separator: ","))" } ?? "not read"))
             }
 
         case "--locate":
@@ -174,9 +181,32 @@ enum HeadlessDesk {
             let i = try shelf.importCopy(of: URL(fileURLWithPath: path))
             print("imported as \(i.name) (\(i.id))")
 
+        case "--libraries":
+            let info = try crate(args.first, home)
+            let f = DeskLocalFacts.find(home: home, info: info)
+            print("DJ home: \(DeskLocalFacts.djHome(for: home)?.path ?? "none (set \(DeskLocalFacts.djHomeVariable))")")
+            for l in f.found { print("  \(l.program.rawValue)\t\(l.url.path)") }
+            if f.rekordboxLocked { print("  rekordbox's own library is here (encrypted, not read)") }
+            if f.rekordboxExport { print("  a rekordbox USB export is on a source (not read)") }
+
+        case "--choose-library":
+            guard let path = args.first else { throw DeskError("--choose-library <file>") }
+            var c = DJLibraryChoices.load(home)
+            let p = try c.add(URL(fileURLWithPath: path))
+            try c.save(home)
+            print("will read \(p.rawValue): \(path)")
+
+        case "--look-again":
+            let info = try crate(args.first, home)
+            let (c, l) = try DeskLocalFacts.lookAgain(home: home, crateId: info.id)
+            printLocal(l)
+            print("\(c.tracks.count) songs; crate saved")
+
         default: break
         }
     }
+
+    static func printLocal(_ l: LocalFactsSummary) { print(l.text, terminator: "") }
 }
 
 /// A value shared with the run's progress callback.

@@ -235,4 +235,49 @@ final class ScoredPool: Sendable {
         let k = PairScoring.keyTerm(a, b)
         #expect(k.raw == 0.5 && k.shift == -1 && near(k.value, 0.85 - 0.12, 1e-12))
     }
+
+    /// A key not read (a crate record with no key block: camelot "", confidence 0) neither helps nor hurts a pair
+    /// (D16): it is not "same key", and the score is the weighted mean of the other terms.
+    @Test func aKeyNotReadScoresNeutrally() throws {
+        let pool = ScoredPool.shared
+        // A pair the pool scores, with keys on both sides: its score is unchanged by this rule.
+        let a0 = pool.tracks[0]
+        guard let b0 = pool.tracks.dropFirst().first(where: { PairScoring.scorePair(a0, $0, timbrePct: 0.5) != nil }) else {
+            Issue.record("no scorable pair in the pool"); return
+        }
+        let withKeys = try #require(PairScoring.scorePair(a0, b0, timbrePct: 0.5))
+        #expect(PairScoring.keyRead(a0) && PairScoring.keyRead(b0))
+        let weights = Dictionary(uniqueKeysWithValues: PairScoring.weights)
+        func others(_ t: ScoreTerms) -> Double {
+            PairScoring.weights.filter { $0.0 != "key" }.reduce(0) { $0 + $1.1 * t[$1.0] } / (1 - weights["key"]!)
+        }
+
+        // Both keys not read: not "same key"; the key term is the mean of the others, the score that same mean.
+        var a = a0, b = b0
+        a.camelot = ""; a.keyConf = 0; b.camelot = ""; b.keyConf = 0
+        #expect(PairScoring.keyTerm(a, b).why == PairScoring.keyNotRead && PairScoring.keyTerm(a, b).value == 0)
+        let none = try #require(PairScoring.scorePair(a, b, timbrePct: 0.5))
+        #expect(near(none.terms.key, others(none.terms), 2e-3))
+        #expect(near(none.scoreBase, others(none.terms), 2e-3))
+        #expect(none.reasons.contains { $0.contains(PairScoring.keyNotRead) } || !none.reasons.contains { $0.contains("same key") })
+        #expect(none.keyShiftSt == 0)
+
+        // One read, one not: the same, whichever side has it.
+        a = a0; b = b0; b.camelot = ""; b.keyConf = 0
+        let one = try #require(PairScoring.scorePair(a, b, timbrePct: 0.5))
+        #expect(near(one.scoreBase, others(one.terms), 2e-3) && near(one.terms.key, others(one.terms), 2e-3))
+        a = a0; b = b0; a.camelot = "?"
+        let other = try #require(PairScoring.scorePair(a, b, timbrePct: 0.5))
+        #expect(near(other.scoreBase, others(other.terms), 2e-3))
+        // The other terms are the same as with keys, so only the key's part moved.
+        #expect(one.terms.tempo == withKeys.terms.tempo && one.terms.energy == withKeys.terms.energy)
+
+        // Two songs with no key score exactly as two songs whose key term equals their other terms' mean would:
+        // no better than a pair with keys that score the same elsewhere and fit only that well.
+        var c = a0, d = b0
+        c.camelot = "8A"; d.camelot = "8A"; c.keyConf = 1; d.keyConf = 1
+        let same = try #require(PairScoring.scorePair(c, d, timbrePct: 0.5))
+        #expect(same.terms.key == 1)
+        #expect(none.scoreBase <= same.scoreBase + 1e-9)
+    }
 }

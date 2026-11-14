@@ -12,12 +12,14 @@
 
 import Foundation
 import DeckieBuild
+import DeckieCrate
 import DeckieEngine
 import DeckieInference
 
 let usage = """
     usage:
       deckie-build <folder> --out <name>.deckiecrate [--rekordbox export.xml] [--jobs N] [--bpm-tags] [--name N] [--fresh]
+                   [--dj-home <folder> | --no-dj-home] [--library <file>]...
       deckie-build bench <folder> --features <dir> --candidates <file> [--music-root path] [--out bench.json]
                    [--records dir] [--jobs N] [--ids id,id,...] [--fresh]
       deckie-build mp3-check <folder> [--jobs N]
@@ -29,6 +31,11 @@ let usage = """
       Files that cannot be analysed are counted in the summary and listed in the crate's manifest (import_log).
       --rekordbox takes names, the DJ's tempo (which steers the analysis), key, cues and playlists from a rekordbox
       collection export; --bpm-tags takes a file's own tempo tag (ID3 TBPM, FLAC BPM) when rekordbox gives none.
+      Then, as Deckie Desk's run does (D30), keys and names already on the computer are gathered: the files' key tags
+      and comments, the libraries of Traktor, Engine DJ, Serato and VirtualDJ where each keeps one in the home folder
+      (--dj-home, or DECKIE_DJ_HOME, names another; --no-dj-home looks in none) and at the top of <folder>, and any
+      --library file (also a rekordbox XML); and names from file names, folders, tracklists and copies. Every library
+      is read from a copy, never written. The summary says how many keys and names came from where.
     bench: analyses every lab track found below <folder> (a candidates row's path, less the music root, which
       defaults to the folder the rows' paths share) and compares it with the lab's feature file by the stage 1
       measures; prints a table and writes the JSON. The engine's records go to <out>.records and are taken again on
@@ -117,7 +124,19 @@ do {
         FileHandle.standardOutput.write(Data(text.utf8))
         if !holds { exit(1) }
     } else {
-        let (folder, o) = parse(args, flags: ["bpm-tags", "fresh"], values: ["out", "rekordbox", "jobs", "name"])
+        // --library may be given more than once: take those out before the usual parse.
+        var chosen: [DJLibraryLocations.Found] = []
+        var rest: [String] = []
+        var it = args.makeIterator()
+        while let a = it.next() {
+            if a == "--library" {
+                guard let f = it.next() else { fail("--library needs a file", code: 2) }
+                let u = url(f)
+                guard let p = DJProgram.of(file: u) else { fail("\(f) is not a DJ library deckie-build reads", code: 2) }
+                chosen.append(.init(program: p, url: u))
+            } else { rest.append(a) }
+        }
+        let (folder, o) = parse(rest, flags: ["bpm-tags", "fresh", "no-dj-home"], values: ["out", "rekordbox", "jobs", "name", "dj-home"])
         guard let out = o["out"] else { fail("--out <name>.deckiecrate is required\n\(usage)", code: 2) }
         var output = url(out)
         if output.pathExtension != "deckiecrate" { output = output.appendingPathExtension("deckiecrate") }
@@ -130,6 +149,18 @@ do {
         let result = try builder.run(progress: { say(ProgressText.line($0)) })
         say("")
         FileHandle.standardOutput.write(Data(result.summary.utf8))
+        // Keys and names already on the computer, as Deckie Desk's run gathers them (D30).
+        let env = ProcessInfo.processInfo.environment
+        let djHome: URL? = o["no-dj-home"] != nil ? nil
+            : o["dj-home"].map(url) ?? env["DECKIE_DJ_HOME"].flatMap { $0.isEmpty ? nil : url($0) }
+            ?? FileManager.default.homeDirectoryForCurrentUser
+        var crate = result.crate
+        let summary = LocalFacts.gather(&crate, files: LocalFacts.files(read: result.placesRead, top: options.folder),
+                                        djHome: djHome, tops: [options.folder], chosen: chosen,
+                                        records: options.sharedRecords ?? options.workFolder.appendingPathComponent("records"))
+        try CrateWriter.write(crate, to: output)
+        say("keys and names from this computer (DJ home: \(djHome?.path ?? "none")):")
+        FileHandle.standardOutput.write(Data(summary.text.utf8))
     }
 } catch {
     fail("\(error)")

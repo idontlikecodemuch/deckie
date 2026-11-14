@@ -91,4 +91,45 @@ struct DeskRunTests {
         #expect(five.report.carriedOn && five.report.analysed == 0)
         #expect(DeskRun.pending(home: home, crateId: other.id) == nil)
     }
+
+    /// The rekordbox route reads the folder chosen as a source like any folder added (D31): its places carry the
+    /// source's name, the folders inside it are its groups, where it was read from is kept as that source's top, and
+    /// rekordbox's entries are still matched by the path below the folder, even when the source is not named as the
+    /// folder is in rekordbox's paths ("Music 2", made unique) and rekordbox knew the music under another home.
+    @Test func theRekordboxRouteReadsTheFolderAsASource() async throws {
+        let root = try scratch("rekordbox-source")
+        let fm = FileManager.default
+        let music = root.appendingPathComponent("Music")
+        try fm.createDirectory(at: music.appendingPathComponent("House"), withIntermediateDirectories: true)
+        try TestTrack.wav(TestTrack.render()).write(to: music.appendingPathComponent("House/01 Song X.wav"))
+        let xml = root.appendingPathComponent("collection.xml")
+        try Data("""
+            <?xml version="1.0" encoding="UTF-8"?>
+            <DJ_PLAYLISTS Version="1.0.0">
+              <PRODUCT Name="rekordbox" Version="6.8.5" Company="AlphaTheta"/>
+              <COLLECTION Entries="1">
+                <TRACK TrackID="7" Name="Named By Rekordbox" Artist="The Synths" AverageBpm="124.00" Tonality="Am"
+                       Location="file://localhost/Users/someone/Music/House/01%20Song%20X.wav"/>
+              </COLLECTION>
+            </DJ_PLAYLISTS>
+            """.utf8).write(to: xml)
+
+        let home = DeskHome(root: root.appendingPathComponent("home"))
+        let crate = try home.shelf.make(name: "Friday")
+        let analyser = try Builder.makeAnalyser(jobs: 1)
+        let request = RunRequest(folder: music, source: "Music 2", rekordbox: xml)
+        let (out, report) = try await CPUTurns.exclusive {
+            try DeskRun(home: home, crateId: crate.id, request: request, jobs: 1, device: "Mac15,6", analyser: analyser,
+                        signer: { _ in Data("sig".utf8) }, printer: DeskRun.portablePrint).run()
+        }
+        #expect(report.read == "Music 2" && report.wentIn == 1)
+        let t = try #require(out.tracks.first)
+        #expect(t.ident.disc == "Music 2" && t.ident.folder == "House" && t.ident.track == 1)
+        #expect(t.file.rel == "House/01 Song X.wav")
+        #expect(t.ident.title == "Named By Rekordbox" && t.ident.artist == "The Synths")
+        #expect(t.imported?.rekordbox?.trackId == "7")
+        #expect(out.discPlan.map(\.name) == ["Music 2"])
+        let info = try #require(home.shelf.info(crate.id))
+        #expect(info.sourceRoots["Music 2"] == music.path && info.musicFolder == nil)
+    }
 }
