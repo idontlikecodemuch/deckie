@@ -12,8 +12,9 @@ struct TrackTable: View {
         let tracks = (model.onlyNeedName ? all.filter { model.reason($0) != nil } : all).sorted(using: sortOrder)
         Table(tracks, selection: $model.selection, sortOrder: $sortOrder) {
             TableColumn(Words.colTitle, value: \.ident.title) { (t: CrateTrack) in
-                HStack(spacing: 4) { ListenMark(on: model.listener.song == t.id); NameCell(track: t, field: "title") }
+                HStack(spacing: 6) { PlayButton(track: t); NameCell(track: t, field: "title") }
             }
+            .width(min: 140, ideal: 220)
             TableColumn(Words.colArtist, value: \.ident.artist, comparator: OptionalStringComparator()) { (t: CrateTrack) in NameCell(track: t, field: "artist") }
                 .width(min: 100, ideal: 160)
             TableColumn(Words.colTempo) { t in Text(t.grid.map { Words.tempo($0.bpm) } ?? Words.none) }.width(60)
@@ -238,14 +239,28 @@ struct CommitField: View {
     }
 }
 
-/// The table's Listen button for a song.
-struct ListenCell: View {
+/// The play button at the start of each row, inside the Title cell (a column of its own passed the table builder's
+/// limit): play, and pause for the song that is playing; pressed again, it plays on from where it paused. It selects
+/// its row, as the Windows and Linux window's does, and never starts an edit: titles are edited in the inspector. The
+/// space bar on the selected song and the context menu's Listen still work; a screen reader reads it as "Listen to
+/// <title>" or "Pause <title>".
+struct PlayButton: View {
     @EnvironmentObject var model: DeskModel
     let track: CrateTrack
     var body: some View {
-        let on = model.listener.song == track.id
-        Button { on ? model.listener.stop() : model.listen(track) } label: { Image(systemName: on ? "stop.fill" : "play.fill") }
-            .buttonStyle(.borderless).help(Words.t("listenTo", ["title": track.ident.title]))
+        let mine = model.listener.song == track.id
+        let pause = mine && model.listener.playing
+        let label = Words.t(pause ? "pauseSong" : "listenTo", ["title": track.ident.title])
+        Button {
+            model.selection = [track.id]
+            model.playOrPause(track)
+        } label: {
+            Image(systemName: pause ? "pause.fill" : "play.fill").frame(width: 14)
+        }
+        .buttonStyle(.borderless)
+        .foregroundStyle(mine ? AnyShapeStyle(.tint) : AnyShapeStyle(.secondary))
+        .help(label)
+        .accessibilityLabel(label)
     }
 }
 
@@ -268,13 +283,5 @@ struct NotesCell: View {
     var body: some View {
         let why = model.reason(track)
         Text(TrackTable.notes(track, reason: why)).foregroundStyle(why != nil ? Color.orange : Color.secondary).lineLimit(1)
-    }
-}
-
-/// A small speaker beside the title of the song playing (the table's Listen is its context menu and the space bar).
-struct ListenMark: View {
-    let on: Bool
-    var body: some View {
-        if on { Image(systemName: "speaker.wave.2.fill").foregroundStyle(.tint) }
     }
 }
