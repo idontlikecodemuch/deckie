@@ -128,16 +128,17 @@
       const { ctx, w, h } = fit(stageCanvas);
       const s = onStage.song, wave = s.wave;
       readCurve();
-      const p = onStage.draw > 0 ? Math.min(1, (now - onStage.at) / onStage.draw) : 1;
+      // Held between nothing and all of it: a frame's clock can read a moment before the song went on stage.
+      const p = onStage.draw > 0 ? Math.max(0, Math.min(1, (now - onStage.at) / onStage.draw)) : 1;
       ctx.clearRect(0, 0, w, h);
       const markH = Math.round(h * num("--stage-mark-h")), waveH = h - markH, mid = waveH / 2, slot = w / WAVE, edge = p * w;
       ctx.fillStyle = css("--wave-none");
       ctx.fillRect(0, Math.round(mid), Math.round(edge), num("--stage-line-h"));
       if (wave.length) {
         // The wave: mirrored, through the middle of each stretch, drawn in from the left as far as `p`.
-        const shown = Math.min(WAVE, Math.ceil(p * WAVE));
+        const shown = Math.max(0, Math.min(WAVE, wave.length, Math.ceil(p * WAVE)));
         const least = num("--stage-wave-min"), room = num("--stage-wave-room");
-        const half = (i) => Math.max(least, shape(wave[i]) * waveH * room);
+        const half = (i) => Math.max(least, shape(wave[Math.min(Math.max(0, i), wave.length - 1)]) * waveH * room);
         ctx.beginPath();
         ctx.moveTo(0, mid - half(0));
         for (let i = 0; i < shown; i++) ctx.lineTo(Math.min(edge, (i + 0.5) * slot), mid - half(i));

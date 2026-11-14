@@ -300,14 +300,17 @@ struct StageView: View {
         .accessibilityElement(children: .combine)
     }
 
-    static func draw(_ s: RunSong, progress p: Double, in gc: inout GraphicsContext, size: CGSize) {
+    static func draw(_ s: RunSong, progress: Double, in gc: inout GraphicsContext, size: CGSize) {
+        // The frame's clock can read a moment before the song went on stage, so the share drawn is held between
+        // nothing and all of it; a share below nothing once stopped the app.
+        let p = progress.isFinite ? max(0, min(1, progress)) : 1
         let w = size.width, markH = (size.height * RunLook.stageMarkShare).rounded(), h = size.height - markH, mid = h / 2, edge = p * w
         gc.fill(Path(CGRect(x: 0, y: mid.rounded(), width: edge, height: RunLook.stageLine)), with: .color(Color(nsColor: RunLook.waveNone)))
         let n = RunSong.waveLength, slot = w / CGFloat(n)
         if !s.wave.isEmpty {
             // The wave: mirrored, through the middle of each stretch, drawn in from the left as far as `p`.
-            let shown = min(n, Int((p * Double(n)).rounded(.up)))
-            func half(_ i: Int) -> CGFloat { max(RunLook.stageWaveMin, CGFloat(pow(Double(s.wave[i]) / 99, RunLook.waveCurve)) * h * RunLook.stageWaveRoom) }
+            let shown = max(0, min(n, s.wave.count, Int((p * Double(n)).rounded(.up))))
+            func half(_ i: Int) -> CGFloat { max(RunLook.stageWaveMin, CGFloat(pow(Double(s.wave[min(max(0, i), s.wave.count - 1)]) / 99, RunLook.waveCurve)) * h * RunLook.stageWaveRoom) }
             var path = Path()
             path.move(to: CGPoint(x: 0, y: mid - half(0)))
             for i in 0..<shown { path.addLine(to: CGPoint(x: min(edge, (CGFloat(i) + 0.5) * slot), y: mid - half(i))) }
@@ -555,7 +558,8 @@ enum WallPicture {
 
     private static func rgba(_ c: NSColor) -> (UInt8, UInt8, UInt8, Double) {
         let s = c.usingColorSpace(.deviceRGB) ?? c
-        return (UInt8(s.redComponent * 255), UInt8(s.greenComponent * 255), UInt8(s.blueComponent * 255), Double(s.alphaComponent))
+        func part(_ v: CGFloat) -> UInt8 { UInt8(max(0, min(255, (v.isFinite ? v : 0) * 255))) }
+        return (part(s.redComponent), part(s.greenComponent), part(s.blueComponent), Double(max(0, min(1, s.alphaComponent))))
     }
 
     private static func draw(_ songs: [RunSong], size: CGSize, scale: CGFloat, pick: Int?) -> Made {
@@ -566,7 +570,8 @@ enum WallPicture {
         let cWave = rgba(RunLook.wave), cQuiet = rgba(RunLook.waveQuiet), cNew = rgba(RunLook.waveNew),
             cPick = rgba(RunLook.wavePick), cNone = rgba(RunLook.waveNone)
         func put(_ x: Int, _ y: Int, _ c: (UInt8, UInt8, UInt8, Double), _ a: Double) {
-            let o = (y * w + x) * 4, al = c.3 * a
+            guard x >= 0, x < w, y >= 0, y < h else { return }
+            let o = (y * w + x) * 4, al = max(0, min(1, c.3 * a))
             px[o] = UInt8(Double(c.0) * al); px[o + 1] = UInt8(Double(c.1) * al); px[o + 2] = UInt8(Double(c.2) * al); px[o + 3] = UInt8(255 * al)
         }
         let n = RunSong.waveLength, last = songs.count - 1
@@ -579,7 +584,7 @@ enum WallPicture {
             let cw = Double(x1 - x0)
             if s.wave.isEmpty { let y = (y0 + y1) / 2; for x in x0..<x1 { put(x, y, cNone, 1) }; continue }
             for x in x0..<x1 {
-                let v = pow(Double(s.wave[min(n - 1, Int(Double(x - x0) / cw * Double(n)))]) / 99, RunLook.waveCurve)
+                let v = pow(Double(s.wave[max(0, min(n - 1, s.wave.count - 1, Int(Double(x - x0) / cw * Double(n))))]) / 99, RunLook.waveCurve)
                 if L.wave {
                     let mid = Double(y0 + y1 - 1) / 2, half = max(RunLook.wallWaveMinHalf, v * Double(y1 - y0) * RunLook.wallWaveRoom)
                     var y = max(y0, Int((mid - half).rounded()))
