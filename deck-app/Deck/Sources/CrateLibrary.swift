@@ -80,7 +80,9 @@ struct CrateLibrary {
                 others: t.ident.otherPlaces.isEmpty ? nil : t.ident.otherPlaces.map { p in
                     TrackPlace(disc: p.disc, folder: p.disc != nil ? p.folder ?? ""
                                : (p.folder ?? "").components(separatedBy: "/").last ?? "", num: p.track)
-                }))
+                },
+                // A song with no usable title (the crate file's own rule, `SongName`) leads with its place.
+                named: t.hasUsableTitle ? nil : false))
             if let vals = barVals {
                 overview[t.id] = Overview(n: vals.count, dur: t.file.durationS, s: String(vals.map { Overview.alphabet[$0] }))
             }

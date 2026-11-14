@@ -68,7 +68,12 @@ import SwiftUI
     func rebuildCatalog() {
         let c = SHCustomCatalog()
         let sigs = Library.shared.crate?.signatures ?? []
-        if !sigs.isEmpty {
+        if let crate = Library.shared.crate, sigs.isEmpty {
+            // A crate file with no fingerprints (one made on a PC, for now): nothing to listen for. The bundled
+            // catalogue would name songs that are not in this crate, so there is no catalogue; songs are set by hand.
+            catalog = nil
+            note("crate \(crate.name) has no fingerprints: songs are set by hand")
+        } else if !sigs.isEmpty {
             var n = 0
             for s in sigs {
                 guard let d = try? Data(contentsOf: s.url), let sig = try? SHSignature(dataRepresentation: d) else { continue }
@@ -166,8 +171,10 @@ import SwiftUI
     // MARK: microphone
 
     func startMic() {
+        // Nothing to listen for (a crate file with no fingerprints): the playing panel says so once; a song playing by
+        // hand stays.
+        guard let catalog else { if source != .manual { stop(); status = Words.notListening }; return }
         stop()
-        guard let catalog else { status = "no catalog"; return }
         source = .mic; status = "listening…"; startedAt = Date()
         task = Task { [weak self] in
             let granted = await AVAudioApplication.requestRecordPermission()
@@ -250,6 +257,14 @@ import SwiftUI
         if recActive { recorder.finish(); recActive = false; note("recording closed") }
         if source != .manual { source = .idle }
         status = "stopped"
+    }
+
+    /// Another crate file is open: nothing from the last one is playing or was played.
+    func forgetSongs() {
+        source = .idle
+        stop()
+        currentId = nil; currentPlace = nil; history = []; positionKnown = false; paused = false; frozenAt = nil
+        alsoHearing = nil; events.removeAll(); hits.removeAll(); pendingId = nil; challengerId = nil
     }
 
     /// Sets the playing song by hand; `place` is where it was chosen (the Crate tab), else the place that leads.
@@ -405,7 +420,7 @@ import SwiftUI
                         challengerId = nil; alsoHearing = nil
                         firstMatchSeconds = now.timeIntervalSince(challengerSince)
                     } else {
-                        alsoHearing = Library.shared.track(id)?.song
+                        alsoHearing = Library.shared.track(id)?.oneLine
                         return
                     }
                 }
