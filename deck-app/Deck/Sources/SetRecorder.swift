@@ -17,8 +17,16 @@ final class SetRecorder: @unchecked Sendable {
         var pitch: Double         // detected deck pitch %
         var pitchKind: String     // "", "vinyl", "master tempo"
         var confidence: Double
+        // new (D35), left out when not known; a reader that does not know them ignores them
+        var keyLock: Bool? = nil      // whether the deck seemed to hold the key (Deckie's reading)
+        var heardBy: String? = nil    // "deckie" or "apple": the recogniser whose reading this is
     }
-    struct Log: Codable { var started: String; var audioFile: String; var entries: [Entry] }
+    struct Log: Codable {
+        var started: String; var audioFile: String; var entries: [Entry]
+        // new (D35): the recogniser in use ("deckie", "apple", "both"), and in "both" the two compared song by song
+        var hearing: String? = nil
+        var compare: Comparison.Log? = nil
+    }
 
     private let q = DispatchQueue(label: "deck.recorder")
     private var file: AVAudioFile?
@@ -42,7 +50,7 @@ final class SetRecorder: @unchecked Sendable {
     /// recorded seconds (pauses excluded)
     var elapsed: Double { q.sync { Double(frames) / sampleRate } }
 
-    func begin(format: AVAudioFormat) throws {
+    func begin(format: AVAudioFormat, hearing: String? = nil) throws {
         finish()
         let f = DateFormatter(); f.dateFormat = "yyyy-MM-dd HH-mm-ss"
         let name = "Deck set \(f.string(from: Date()))"
@@ -54,7 +62,7 @@ final class SetRecorder: @unchecked Sendable {
         let iso = ISO8601DateFormatter()
         q.sync {
             file = af; frames = 0; sampleRate = format.sampleRate; _paused = false; baseName = name
-            log = Log(started: iso.string(from: Date()), audioFile: name + ".aac", entries: [])
+            log = Log(started: iso.string(from: Date()), audioFile: name + ".aac", entries: [], hearing: hearing)
         }
         writeLog()
         let header = "Deck set recorded \(iso.string(from: Date()))\naudio: \(name).aac\n\n"
@@ -76,16 +84,17 @@ final class SetRecorder: @unchecked Sendable {
     }
 
     /// A new song: add an entry and a tracklist line. Same song again: refresh its pitch and confidence.
-    func record(track: Track, pitch: Double, pitchKind: String, confidence: Double, newSong: Bool) {
+    func record(track: Track, pitch: Double, pitchKind: String, confidence: Double, newSong: Bool, keyLock: Bool? = nil, heardBy: String? = nil) {
         let loc = track.disc == nil ? "in " + (track.folder.isEmpty ? "the crate" : track.folder) : track.placeText
         q.async { [self] in
             guard var lg = log, let base = baseName else { return }
             let at = Double(frames) / sampleRate
             let e = Entry(time: ISO8601DateFormatter().string(from: Date()), at: (at * 10).rounded() / 10, id: track.id, title: track.song,
                           artist: track.artist, location: loc, pitch: (pitch * 10).rounded() / 10, pitchKind: pitchKind,
-                          confidence: (confidence * 100).rounded() / 100)
+                          confidence: (confidence * 100).rounded() / 100, keyLock: keyLock, heardBy: heardBy)
             if !newSong, let last = lg.entries.last, last.id == track.id {
                 var u = last; u.pitch = e.pitch; u.pitchKind = e.pitchKind; u.confidence = max(last.confidence, e.confidence)
+                if keyLock != nil { u.keyLock = keyLock }
                 lg.entries[lg.entries.count - 1] = u
             } else {
                 lg.entries.append(e)
@@ -97,6 +106,15 @@ final class SetRecorder: @unchecked Sendable {
                 }
             }
             log = lg
+            writeLogLocked()
+        }
+    }
+
+    /// Compare mode: the two recognisers' record of the set so far, written into the log.
+    func compare(_ c: Comparison.Log) {
+        q.async { [self] in
+            guard log != nil else { return }
+            log?.compare = c
             writeLogLocked()
         }
     }

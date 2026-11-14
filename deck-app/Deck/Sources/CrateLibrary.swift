@@ -15,6 +15,10 @@ struct CrateLibrary {
     let data: DeckData
     let overview: [String: Overview]
     let signatures: [SignatureRef]
+    /// How many songs carry Deckie's fingerprint (D35), and the fingerprints themselves until Deckie's index is made
+    /// from them (the Library hands them on once and lets them go).
+    let deckieSongs: Int
+    var fingerprints: Crate.Fingerprints?
     /// The scoring tracks and the sorted cosine list, for scoring one song's picks at a time.
     let pool: PairPool
     let coreById: [String: DeckieCore.Track]
@@ -117,8 +121,9 @@ struct CrateLibrary {
         let poolSecs = Date().timeIntervalSince(t0)
 
         let data = DeckData(generated: crate.manifest.createdAt, tracks: tracks, discs: discs, pairs: [:], catalogVariants: ["o"])
+        let prints = crate.fingerprints()
         return CrateLibrary(url: url, name: crate.manifest.name, data: data, overview: overview, signatures: sigs,
-                            pool: pool, coreById: coreById, poolSecs: poolSecs)
+                            deckieSongs: prints.count, fingerprints: prints.count > 0 ? prints : nil, pool: pool, coreById: coreById, poolSecs: poolSecs)
     }
 
     /// Samples per beat of the join lanes built from a crate: a quarter beat per sample, 16 per bar.

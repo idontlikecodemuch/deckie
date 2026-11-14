@@ -300,9 +300,20 @@ final class Library {
 
     /// Whether the booth can name what is playing: the bundled data's catalogue, or a crate file with fingerprints
     /// (recognition signatures). A crate file made on a PC has none yet (D29); its songs are set by hand.
-    var canRecognise: Bool { crate.map { !$0.signatures.isEmpty } ?? true }
+    var canRecognise: Bool { crate.map { !$0.signatures.isEmpty || $0.deckieSongs > 0 } ?? true }
+
+    /// The open crate file's fingerprints, handed once to Deckie's index and then let go (they are not needed again
+    /// until another crate file opens, and a large crate's are many megabytes).
+    func takeFingerprints() -> Crate.Fingerprints? {
+        defer { pendingFingerprints = nil }
+        return pendingFingerprints
+    }
+    private var pendingFingerprints: Crate.Fingerprints?
 
     private func apply(_ c: CrateLibrary) {
+        var c = c
+        pendingFingerprints = c.fingerprints
+        c.fingerprints = nil
         crate = c
         recentPicks = [:]; recentOrder = []
         data = c.data

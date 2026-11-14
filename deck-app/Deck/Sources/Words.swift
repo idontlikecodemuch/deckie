@@ -313,4 +313,46 @@ enum Words {
     static let backToMic = "Back to the microphone"
     static let log = "Log"
     static let inputLevel = "Input level"
+
+    // MARK: new (D35): which recogniser names the song. Placeholders pending the copy and design passes. Nothing
+    // leaves the iPad with either, so the booth says "Deckie" and "Apple", never a name that sounds like an online
+    // service.
+
+    /// The playing panel while Deckie's index is made from the crate file's fingerprints (once for each crate file).
+    static let preparingTitle = "Getting ready to listen"
+    static func preparingBody(_ songs: Int) -> String {
+        "Reading the fingerprints of \(songs) song\(songs == 1 ? "" : "s"). This happens once for each crate file."
+    }
+    /// The status corner meanwhile.
+    static let preparingStatus = "getting ready"
+    /// The details sheet: the choice of recogniser, and what is in use.
+    static let recogniseSection = "Recognise with"
+    static let recogniseWith = "Recognise songs with"
+    static func hearingName(_ h: Hearing) -> String {
+        switch h {
+        case .deckie: return "Deckie"
+        case .apple: return "Apple"
+        case .both: return "Both, to compare"
+        }
+    }
+    static let recogniseHelp = "Both recognise on the iPad. With both, Deckie's names the song on screen and the set's log compares the two."
+    static let inUse = "In use"
+    static let onlyDeckie = "Deckie (this crate file has Deckie's fingerprints only)"
+    static let onlyApple = "Apple (this crate file was made before Deckie's fingerprints)"
+    static let neither = "Neither (this crate file has no fingerprints)"
+    static let deckieIndex = "Deckie's index"
+    static func indexReady(_ songs: Int, _ mb: Double, _ setting: String) -> String { String(format: "%d songs · %.1f MB on the iPad · %@", songs, mb, setting) }
+    static func indexPreparing(_ songs: Int) -> String { "being made from \(songs) songs" }
+    static let indexNone = "none"
+    static let indexFailed = "could not be made"
+    static let appMemory = "App memory"
+    static func megabytes(_ mb: Double) -> String { String(format: "%.0f MB", mb) }
+    /// How the pitch was found, for the details sheet's pitch line.
+    static let speedFromDeckie = "Deckie's reading"
+    /// Compare mode's summary, in the details sheet.
+    static let compareSection = "Deckie and Apple compared"
+    static func compareSummary(deckie: Int, apple: Int, deckieFirst: Int, appleFirst: Int, disagreed: Int) -> String {
+        "This set: Deckie named \(deckie) song\(deckie == 1 ? "" : "s"), Apple \(apple); Deckie first \(deckieFirst) time\(deckieFirst == 1 ? "" : "s"), Apple \(appleFirst); disagreed \(disagreed) time\(disagreed == 1 ? "" : "s")."
+    }
+    static let compareNotOn = "Choose both above to compare them on the next set."
 }

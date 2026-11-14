@@ -26,6 +26,8 @@ targets:
         product: DeckieCore
       - package: DeckieCore
         product: DeckieCrate
+      - package: DeckieCore
+        product: DeckieRecognition
     info:
       path: Deck/Info.plist
       properties:
