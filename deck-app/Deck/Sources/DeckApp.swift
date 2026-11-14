@@ -14,13 +14,13 @@ struct DeckApp: App {
     var body: some Scene {
         WindowGroup {
             TabView(selection: $tab) {
-                ListenView().tabItem { Label("Listen", systemImage: "waveform") }.tag(0)
+                ListenView().tabItem { Label(Words.tabListen, systemImage: "waveform") }.tag(0)
                 CrateTabView(tab: $tab).tabItem { Label(CrateTabView.title, systemImage: "square.stack") }.tag(1)
-                MixMapView().tabItem { Label("Mix map", systemImage: "point.3.connected.trianglepath.dotted") }.tag(2)
+                MixMapView().tabItem { Label(Words.tabMixMap, systemImage: "point.3.connected.trianglepath.dotted") }.tag(2)
             }
             // The library is not observed: another crate file open redraws every tab from it.
             .id(sug.crateVersion)
-            .overlay(alignment: .topLeading) { MinimalToggle().padding(.leading, 20).padding(.top, 2) }
+            .overlay(alignment: .topLeading) { MinimalToggle().padding(.leading, Look.App.minimalLeading).padding(.top, Look.App.minimalTop) }
             .tint(Theme.orange)
             .environment(rec)
             .environment(sug)
@@ -47,17 +47,17 @@ struct DeckApp: App {
             }
             .alert(sug.openProblem?.title ?? "", isPresented: Binding(get: { sug.openProblem != nil }, set: { if !$0 { sug.openProblem = nil } }),
                    presenting: sug.openProblem) { _ in
-                Button("OK", role: .cancel) {}
+                Button(Words.ok, role: .cancel) {}
             } message: { p in
-                Text(p.why + "\n\n" + p.detail)
+                Text(Words.openProblem(p.why, p.detail))
             }
             .overlay(alignment: .top) {
                 if let note = sug.openedNote {
-                    Text(note).font(.system(size: 16, weight: .semibold)).foregroundStyle(Theme.tx)
-                        .padding(.horizontal, 18).frame(minHeight: 40)
-                        .background(Capsule().fill(Theme.card2)).overlay(Capsule().stroke(Theme.line, lineWidth: 1))
-                        .padding(.top, 8)
-                        .task(id: note) { try? await Task.sleep(for: .seconds(5)); if sug.openedNote == note { sug.openedNote = nil } }
+                    Text(note).font(Look.App.noteFont).foregroundStyle(Theme.tx)
+                        .padding(.horizontal, Look.App.noteSides).frame(minHeight: Look.App.noteMinHeight)
+                        .background(Capsule().fill(Theme.card2)).overlay(Capsule().stroke(Theme.line, lineWidth: Look.App.noteLine))
+                        .padding(.top, Look.App.noteTop)
+                        .task(id: note) { try? await Task.sleep(for: .seconds(Look.App.noteSeconds)); if sug.openedNote == note { sug.openedNote = nil } }
                         .accessibilityAddTraits(.isStaticText)
                 }
             }
@@ -202,14 +202,14 @@ struct DeckApp: App {
         shortlistSize = short
         restShortlist = short + lead - n
         rolledFor = cur.id; rolledShuffle = shuffle
-        let scored = Library.shared.takePickSecs().map { String(format: " (scored in %.0f ms)", $0 * 1000) } ?? ""
+        let scored = Library.shared.takePickSecs().map { String(format: " (scored in %.0f ms)", $0 * 1000) } ?? ""   // log
         var rank = 0
         let rows = options.map { o -> String in
             let t = Library.shared.track(o.id)
             let r: String
             if o.kind == .pinned { r = "pinned" } else { rank += 1; r = "\(rank)." }
             let sc = o.pair.map { String(format: "%.3f", $0.s) } ?? "-"
-            return "\(r) \(t?.song ?? o.id) \(sc)\(o.tags.isEmpty ? "" : " <" + o.tags.joined(separator: ",") + ">")"
+            return "\(r) \(t?.song ?? o.id) \(sc)\(o.tags.isEmpty ? "" : " <" + o.tags.joined(separator: ",") + ">")"   // log
         }
         rec.note("suggestions for \(cur.song)\(scored) [\(mode.rawValue)\(", " + target.label)]: shuffle \(Int((shuffle * 100).rounded()))%, shortlist \(shortlistSize): "
                  + rows.joined(separator: " | ") + " | more \(rest.count) (shortlist \(restShortlist), rest \(rest.count - restShortlist))")
@@ -247,17 +247,17 @@ struct MinimalToggle: View {
     @Environment(SuggestState.self) private var sug
     var body: some View {
         Button { sug.minimal.toggle() } label: {
-            HStack(spacing: 6) {
-                Image(systemName: sug.minimal ? "text.alignleft" : "waveform").font(.system(size: 13, weight: .medium))
-                Text("Minimal").font(.system(size: 13, weight: sug.minimal ? .semibold : .regular))
+            HStack(spacing: Look.App.minimalGap) {
+                Image(systemName: sug.minimal ? "text.alignleft" : "waveform").font(Look.App.minimalIconFont)
+                Text(Words.minimal).font(Look.App.minimalFont(sug.minimal))
             }
             .foregroundStyle(sug.minimal ? Theme.tx : Theme.dim)
-            .padding(.horizontal, 10).frame(height: 30)
-            .background(Capsule().fill(sug.minimal ? Color.white.opacity(0.12) : Color.clear))
-            .overlay(Capsule().stroke(Theme.dim.opacity(sug.minimal ? 0 : 0.35), lineWidth: 1))
+            .padding(.horizontal, Look.App.minimalSides).frame(height: Look.App.minimalHeight)
+            .background(Capsule().fill(sug.minimal ? Look.App.minimalOnFill : Color.clear))
+            .overlay(Capsule().stroke(Theme.dim.opacity(sug.minimal ? 0 : Look.App.minimalOffLineOpacity), lineWidth: Look.App.minimalLine))
         }
-        .frame(minHeight: 44)
-        .accessibilityLabel("Minimal display")
-        .accessibilityValue(sug.minimal ? "on" : "off")
+        .frame(minHeight: Look.App.minimalMinHeight)
+        .accessibilityLabel(Words.minimalSpoken)
+        .accessibilityValue(sug.minimal ? Words.switchOn : Words.switchOff)
     }
 }
