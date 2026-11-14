@@ -161,8 +161,10 @@ final class EngineProcess: @unchecked Sendable {
 
         // Sources: rename, move, how many a removal takes.
         _ = try e.request("source.rename", ["source": "Stick 3", "name": "Stick Three"])
+        let beforeMove = e.received.count
         _ = try e.request("song.move", ["song": "bbbb", "source": "Stick Three", "folder": "House", "by": -1])
-        let moved = try #require(e.last("songs"))
+        // The songs event follows the reply; wait for it rather than take the last one seen.
+        let moved = try #require(e.wait(from: beforeMove) { $0["event"] as? String == "songs" })
         let folder = (((moved["sources"] as? [[String: Any]])?.first)?["folders"] as? [[String: Any]])?.first
         #expect((folder?["songs"] as? [[String: Any]])?.map { $0["id"] as? String } == ["bbbb", "aaaa"])
         #expect((try e.request("source.removeCount", ["source": "Stick Three"])["songs"] as? NSNumber)?.intValue == 2)
@@ -296,6 +298,8 @@ final class EngineProcess: @unchecked Sendable {
         let applied = try e.request("names.apply", ["ticks": Array(changes.indices)])
         #expect((applied["songs"] as? NSNumber)?.intValue == 1)
         #expect(e.wait(from: mark) { $0["event"] as? String == "state" }?["undo"] as? String == "undoNames")
+        // The apply's own songs event comes after its state; wait for it, so the next mark is past it.
+        _ = e.wait(from: mark) { $0["event"] as? String == "songs" }
         mark = e.received.count
         let checked = try e.request("song.check", ["songs": ["bbbb"]])
         #expect((checked["songs"] as? NSNumber)?.intValue == 1)
