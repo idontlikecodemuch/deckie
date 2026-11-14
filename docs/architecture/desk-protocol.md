@@ -106,6 +106,10 @@ for `title`, `artist`, `version` and `release`: `from` is a code with words `fac
 `user` "you typed this", `pasted`, `pattern`, `playlist`); `guess` is Desk's guess, not yet checked; `checked` is a
 guess the DJ kept.
 
+Added with D39 (Nov 14, 2026): each song carries `shown`, the title as shown with its version as DJs write it, and
+`lyrics` (`clean`, `dirty`, or null when not said); `names` also has `lyrics` (its value and `from`) and `shown`.
+`song.fix` takes `facts: {"lyrics": "clean" | "dirty" | ""}` ("" is not said, the DJ's own). No version raised.
+
 A song's facts (D34, added Nov 14, 2026; no new protocol number, as only fields were added): `names` also carries
 `year`, `label` and `genre`, the same shape, from the crate file's `ident.facts` (`release` too, which falls back to
 what Desk noted for a disc with no title of its own); a fact's `from` is the crate file's origin (`tag`, `cdtext`, a
@@ -358,6 +362,16 @@ the song's; `otherVersion` plainly another version (shown, never preferred); `no
 `changes` the preview's changes (as `names.preview`'s, with `field` also `release`, `year`, `label`), `tick` meaning
 "ticked when this candidate is used", `locked` the DJ's own entry or the song's own version, `note` also `yourVersion`,
 `otherVersion`, `original` (words `changeNote.<code>`).
+
+Added with D39: a song may also carry `mode` (`original`: the chosen candidate is the original of the song's own
+version, and only its year and label are offered, as `original_year` and `original_label`), `rules` (what let the
+choice through: `fits`, `fold`, `kind:<match>`, `original`, `folder`, `askedAgain`) and `askedAgain` (how many second
+asks with free words were made). A candidate may also carry `credited` and `featuring` (the catalogue's names and
+which were guests), `match` (its version against the song's by kind: `same`, `catalogueWord`, `sameTake`, `original`,
+`other`, `notInCatalogue`), `titleAgrees`, `artistAgrees`, `lyrics` (as the catalogue says it, shown, never taken)
+and `disagree` (the fields folded candidates disagree on). New note codes: `catalogueWord`, `sameTake`,
+`notInCatalogue`, `fromFolder`, `askedAgain`; change notes `catalogueWord`, `firstRelease`, `disagree`; change fields
+also `original_year`, `original_label`. No version raised.
 
 A `sent` entry is `{"at" (ISO 8601), "service", "kind", "fields", "address", "answer"}`: `kind` `recordingSearch`,
 `isrcSearch`, `disc`, `releaseSearch`, `release` (words `sentKind.<kind>`); `fields` what it carried, as name and

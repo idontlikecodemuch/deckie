@@ -152,6 +152,8 @@ struct Inspector: View {
                     }
                     field(Words.artist, t.ident.artist ?? "", id: id, fact: f.artist, field: "artist") { v in model.update(id) { $0.ident.artist = v.isEmpty ? nil : v } }
                     field(Words.version, t.ident.version ?? "", id: id, fact: f.version, field: "version") { v in model.update(id) { $0.ident.version = v.isEmpty ? nil : v } }
+                    // Clean or dirty (D39): a fact of its own, the DJ's to set; never taken from a lookup.
+                    lyricsField(f.lyrics, id: id)
                     // A song's facts (D34): release, year, label and genre as fields like the names, with where each
                     // came from; the rest listed. Everything here goes to the iPad.
                     ForEach(DeskNaming.factFields, id: \.self) { name in
@@ -272,6 +274,21 @@ struct Inspector: View {
         }
     }
 
+    /// Clean, dirty or not said (D39), with where the song's own name or tags said it.
+    @ViewBuilder func lyricsField(_ fact: DeskNaming.Fact, id: String) -> some View {
+        VStack(alignment: .leading, spacing: Look.Space.field) {
+            Text(Words.t("lyrics")).font(Look.Fonts.inspectorLabel).foregroundStyle(.secondary)
+            Picker(Words.t("lyrics"), selection: Binding(get: { fact.value ?? "" }, set: { v in
+                if v != (fact.value ?? "") { model.setFacts(id, [SongFacts.lyrics: v]) }
+            })) {
+                ForEach(DeskNaming.lyricsChoices, id: \.self) { c in Text(Words.t(c.isEmpty ? "lyrics.none" : "lyrics." + c)).tag(c) }
+            }
+            .pickerStyle(.segmented).labelsHidden()
+            Text(fact.value == nil ? Words.t("lyricsHelp") : DeskWords.coded("factFrom", fact.from ?? ""))
+                .font(Look.Fonts.inspectorSmallPrint).foregroundStyle(.secondary)
+        }
+    }
+
     @ViewBuilder func row(_ k: String, _ v: String) -> some View {
         GridRow { Text(k).foregroundStyle(.secondary).gridColumnAlignment(.trailing); Text(v).textSelection(.enabled) }
     }
@@ -337,7 +354,8 @@ struct NameCell: View {
     let field: String
     var body: some View {
         let f = model.facts(track).fact(field)
-        let text = field == "title" ? track.ident.title : (track.ident.artist ?? "")
+        // The title as shown: with its version, as DJs write it (D39).
+        let text = field == "title" ? NameReading.shown(title: track.ident.title, version: track.ident.version) : (track.ident.artist ?? "")
         Text(text).italic(f.guess).foregroundStyle(f.guess ? Color.secondary : Color.primary)
     }
 }
