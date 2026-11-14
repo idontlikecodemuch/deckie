@@ -204,6 +204,14 @@ def main_cnn(mode, threads):
         torch.save(model.state_dict(), os.path.join(kt.CACHE, "x4_ssl_pre.pt"))
         tr = list(tr_real)
     elif mode == "pseudo": tr = list(pse)
+    elif mode in ("club", "clubonly"):
+        # The owner's question of Nov 14: does more real club music move the scores? The netlabel club excerpts the
+        # untrained reader gave a key (all of them), added to the chosen model's training mix ("club"), or alone
+        # ("clubonly"). Fixed before training: a retrained model replaces the shipped one only by the rule above
+        # main_ship, against the shipped reader instead of the untrained one.
+        ia = [r for r in load_open(with_L=True, corpus="ia") if r["key"] >= 0]
+        print(f"club excerpts with a key from the untrained reader: {len(ia)}", flush=True)
+        tr = (list(tr_real) + list(pse) + ia) if mode == "club" else ia
     else: tr = list(tr_real) + list(pse)
     opt = torch.optim.Adam(model.parameters(), lr=C.LR, weight_decay=C.WD)
     steps = C.EPOCHS * ((len(tr) + C.BATCH - 1) // C.BATCH); sched = torch.optim.lr_scheduler.OneCycleLR(opt, max_lr=C.LR, total_steps=steps)
@@ -565,6 +573,26 @@ def main_dj(extra=()):
         print(row)
     print(f"| Apple | {apr[1]:.1f} | {apr[2]:.1f} | | {apr[0]:.1f} | {apr[3]:.1f} | {apr[4]:.1f} | 100 | {apr[0]:.1f} | | {apr[4]:.1f} | | | | | | | |")
 
+def main_club():
+    """python kt_x4.py club: the netlabel club excerpts as the untrained reader hears them: how many it gave a key, the
+    share of minor among those by style, and THE CLUB LEAN (see the top) -> x4_club_results.md, x4_club_lean.json."""
+    sys.stdout = KS._Tee(os.path.join(kt.HERE, "x4_club_results.md"))
+    rows = load_open(corpus="ia"); n = len(rows); c = collections.Counter(r["answer"] for r in rows); keyed = [r for r in rows if r["key"] >= 0]
+    print(f"club excerpts read {n}: a key {c['key']} ({100 * c['key'] / n:.1f} %), home note only {c['home']} ({100 * c['home'] / n:.1f} %), not sure {c['none']} ({100 * c['none'] / n:.1f} %)")
+    print(f"licences: {dict(collections.Counter(r['licence'] for r in rows))}; releases' creators {len({r['group'] for r in rows})}")
+    print("\n| style (a release's own tag; a release may carry several) | excerpts | given a key | minor among those, percent |\n|---|---:|---:|---:|")
+    for g, _ in collections.Counter(t for r in rows for t in r["styles"]).most_common():
+        sub = [r for r in rows if g in r["styles"]]; k = [r for r in sub if r["key"] >= 0]
+        print(f"| {g} | {len(sub)} | {len(k)} | {100 * np.mean([r['key'] >= 12 for r in k]):.1f} |")
+    share = float(np.mean([r["key"] >= 12 for r in keyed]))
+    # one creator with many releases should not set the share: the same, each creator counted once
+    by = collections.defaultdict(list)
+    for r in keyed: by[r["group"]].append(r["key"] >= 12)
+    per = float(np.mean([np.mean(v) for v in by.values()]))
+    print(f"| all | {n} | {len(keyed)} | {100 * share:.1f} |")
+    print(f"\nTHE CLUB LEAN: minor share among the reader's key answers on the {len(keyed)} club excerpts it gave a key: {100 * share:.1f} percent (each of the {len(by)} creators counted once: {100 * per:.1f})")
+    json.dump({"club_minor_share": share, "per_creator": per, "excerpts_with_a_key": len(keyed)}, open(os.path.join(kt.HERE, "x4_club_lean.json"), "w"))
+
 def main_record(mode):
     """python kt_x4.py record <mode>: every recording the chosen model learned from, with its page and its licence
     -> core/.models/deckie-key-<version>-credits.tsv, beside the model's file and, like it, not in the repository
@@ -609,4 +637,5 @@ if __name__ == "__main__":
     elif a[1] == "parity": main_parity(a[2], a[3])
     elif a[1] == "fixture": main_fixture()
     elif a[1] == "apple": main_apple()
+    elif a[1] == "club": main_club()
     elif a[1] == "dj": main_dj([(float(x.split("=")[0]), x.split("=")[1]) for x in a[2:]])
