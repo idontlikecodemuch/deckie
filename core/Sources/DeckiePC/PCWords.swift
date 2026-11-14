@@ -51,6 +51,12 @@ public enum PCWords {
     public static let writing = "Writing the crate file..."
 
     public static func done(songs: Int) -> String { "Done. \(count(songs, "song")) \(songs == 1 ? "is" : "are") in the crate file." }
+    /// How many of the songs in the crate file have a cover.
+    public static func covers(_ n: Int, of songs: Int) -> String {
+        if n == 0 { return songs == 1 ? "The song has no cover." : "None of the songs has a cover." }
+        if n == songs { return songs == 1 ? "The song has a cover." : "All \(songs) songs have a cover." }
+        return "\(n) of \(songs) songs \(n == 1 ? "has" : "have") a cover."
+    }
     public static func notAdded(_ n: Int) -> String { "\(count(n, "file")) could not be added:" }
     public static func notAddedLine(_ n: Int, _ why: String, types: String) -> String { "  \(n)  \(why) (\(types))" }
     public static func copies(_ n: Int) -> String {

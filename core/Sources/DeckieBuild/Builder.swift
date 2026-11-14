@@ -122,6 +122,8 @@ public struct BuildResult: Sendable {
     /// Every file read in this run that is in the crate, by entry id: its place and its path below the folder read
     /// (below the source's top for a source), so a caller can remember where each place's file is.
     public var placesRead: [String: [ReadPlace]] = [:]
+    /// Covers (D36): songs with one, distinct covers and their bytes, and the pictures that could not be used.
+    public var covers = CoverCounts()
 
     /// The summary printed at the end: the counts, the files not in the crate by reason and extension, the files in
     /// it with damaged frames, and where the import log is.
@@ -155,6 +157,7 @@ public struct BuildResult: Sendable {
         if !entries.isEmpty {
             s += "  each file and its reason: import_log in \(output.lastPathComponent)/manifest.json\n"
         }
+        s += covers.summaryLine + "\n"
         if let rb = rekordbox { s += "rekordbox: \(rb.matched) of \(rb.tracks) collection tracks matched a file\n" }
         s += "wrote \(output.path): \(crate.tracks.count) track\(crate.tracks.count == 1 ? "" : "s") in "
             + "\(clock(seconds))\n"
@@ -168,9 +171,10 @@ public struct BuildResult: Sendable {
 /// listed there too, with their times.
 public final class Builder: Sendable {
     /// The builder's own version, raised with the engine's when what the builder writes changes (0.2.0: the import
-    /// log's device label and the record's `imported` block; 0.2.1: the import log's `damaged_frames` entries).
-    public static let version = "0.2.1"
-    /// The program and its version (`deckie-build 0.2.1`), printed when a build starts and written as the bench
+    /// log's device label and the record's `imported` block; 0.2.1: the import log's `damaged_frames` entries;
+    /// 0.2.2: covers, D36).
+    public static let version = "0.2.2"
+    /// The program and its version (`deckie-build 0.2.2`), printed when a build starts and written as the bench
     /// report's `tool`. Not written in the crate: the manifest's `import_log.built_by` names the device instead.
     public static var programLabel: String { "deckie-build \(version)" }
     /// The work folder's extension.
@@ -376,6 +380,9 @@ public final class Builder: Sendable {
         }
         if let e = stopped.error { throw e }
         done.merge(results.done) { _, new in new }
+        // Covers (D36, `BuildCovers`): each file's picture found and its thumbnail made, or taken from the last run.
+        let covers = BuildCovers(work: work, output: options.output, enabled: options.files == nil)
+        covers.find(files.filter { if case .ok? = done[$0.rel] { return true } else { return false } }, jobs: options.jobs)
 
         // Places (D27): every file read now is a place of the entry for its bytes. A place belongs to this read when it
         // is on the source being read, or, for an ordinary folder, has no source or one not kept (`belongsToRead`);
@@ -477,6 +484,7 @@ public final class Builder: Sendable {
             guard case .ok(_, let tags)? = done[f.rel], let record = work.record(id) else { continue }
             var t = dressed(record, file: f, tags: tags, rekordbox: rekordboxOf[from.file], collection: collection,
                             importedAt: importedAt)
+            t.file.cover = covers.cover(of: f)
             // An ordinary folder's entry keeps no folder label of its own, as before: its place is `file.rel`'s.
             t.ident.ownPlace = options.source == nil ? Place(disc: nil, folder: nil, track: nil) : lead
             let rest = (before?.own.map { [$0] } ?? []) + (before?.others ?? []) + here.map(\.place).filter { $0 != lead }
@@ -516,6 +524,9 @@ public final class Builder: Sendable {
         let keptFiles = keptPlaces + keptEntries.filter { $0.reason != Reason.damagedFrames && $0.reason != Reason.skipped }.count
         entries = (keptEntries + entries).sorted { $0.rel.utf8.lexicographicallyPrecedes($1.rel.utf8) }
 
+        // The thumbnails go into the package before the records that name them: the writer refuses a record whose
+        // cover is missing, and takes out every cover no record names.
+        let coverCounts = try covers.place(&tracks)
         let builtAt = utcNow()
         // built_by is the device label the records' analysis.device carries, never the machine's own name.
         let log = CrateManifest.ImportLog(builtBy: options.device, builtAt: builtAt, filesSeen: files.count + keptFiles,
@@ -527,11 +538,12 @@ public final class Builder: Sendable {
             createdAt: existing?.manifest.createdAt ?? builtAt, devicesSeen: devices, importLog: log)
         let crate = Crate(manifest: manifest, tracks: tracks.sorted { $0.id.utf8.lexicographicallyPrecedes($1.id.utf8) })
         progress(.writing(tracks: tracks.count))
-        try CrateWriter.write(crate, to: options.output)
+        do { try CrateWriter.write(crate, to: options.output) } catch { covers.undo(); throw error }
         var result = BuildResult(crate: crate, output: options.output, filesSeen: files.count,
                                  analysed: results.analysedSeconds.count, analysisSeconds: results.analysedSeconds,
                                  reused: readOrder.filter { !results.analysedIDs.contains($0) }.count,
                                  entries: entries, rekordbox: rbSummary, seconds: Date().timeIntervalSince(t0))
+        result.covers = coverCounts
         let inCrate = Set(crate.tracks.map(\.id))
         for (id, list) in read where inCrate.contains(id) {
             result.placesRead[id] = list.map { ReadPlace(place: $0.place, rel: String(files[$0.file].rel.dropFirst(prefix.count))) }
