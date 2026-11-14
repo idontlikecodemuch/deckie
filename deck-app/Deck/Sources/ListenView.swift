@@ -80,6 +80,9 @@ struct PlayingPanel: View {
                         }
                     }
                     }
+                    // Not heard just now (Deckie's, D35): the song stays, its names dimmed.
+                    .opacity(rec.notHeard ? Look.Listen.notHeardOpacity : 1)
+                    .animation(.easeInOut(duration: Look.Listen.notHeardFade), value: rec.notHeard)
                     Text(Words.bpm(t.bpmShown * (rec.source == .manual ? 1 : rec.rate)))
                         .font(Look.Listen.bpmFont).foregroundStyle(Theme.rsn)
                     SongWave(track: t, height: waveHeight)
@@ -168,7 +171,9 @@ struct PlayingPanel: View {
 
     private var dotColor: Color {
         switch rec.source {
-        case .mic, .file: return rec.lastMatch.map { Date().timeIntervalSince($0) < Look.Listen.matchFresh } == true ? Theme.ok : Theme.dim
+        case .mic, .file:
+            if rec.notHeard { return Theme.dim }       // Deckie's (D35): the playing song not heard just now
+            return rec.lastMatch.map { Date().timeIntervalSince($0) < Look.Listen.matchFresh } == true ? Theme.ok : Theme.dim
         default: return Theme.dim.opacity(Look.Listen.idleDotOpacity)
         }
     }
@@ -185,8 +190,12 @@ struct PlayingPanel: View {
         }
         if rec.currentId != nil && rec.source != .manual {
             if rec.paused { s += Words.statusAlsoPaused }
-            let c = rec.confidence
-            s += c > 0.75 ? Words.statusSure : c > 0.45 ? Words.statusLikely : c > 0 ? Words.statusUnsure : ""
+            // Deckie's (D35): a song not heard for a few seconds is not called sure; in a quiet room "paused" says it.
+            else if rec.notHeard { s += Words.statusNotHeard }
+            if !rec.notHeard {
+                let c = rec.confidence
+                s += c > 0.75 ? Words.statusSure : c > 0.45 ? Words.statusLikely : c > 0 ? Words.statusUnsure : ""
+            }
             if abs(rec.pitchPct) >= 0.25 { s += Words.statusDeck(signed1(rec.pitchPct)) }
         }
         return s

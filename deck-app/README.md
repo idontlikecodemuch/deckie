@@ -139,7 +139,7 @@ built app's embedded.mobileprovision), so the app keeps working until then witho
   start point (mix-in start, track start, steady beat, then every 8 bars); "start 0:32" under the wave shows it,
   and a pinned pick keeps it. Join snippets are 8 samples per beat (tools/mixwaves_all.py --spb 8; refresh only
   them with `prep_data.py --snippets-only`).
-* **Song changes**: a blend (both songs heard) switches only after the new song has out-matched the current one for
+* **Song changes** (Apple's; Deckie's switches sooner, see Deckie's own recogniser below): a blend (both songs heard) switches only after the new song has out-matched the current one for
   about 10 s ("also hearing: …" shows the other song meanwhile); a hard cut (the old song stops matching, the new
   one matches 3 times within 6 s) switches in about 4–5 s; another copy of the same recording never counts as a change, while a remix, an edit or a live version of a song is a song of its own (D24).
 * **Pauses**: when the song stops matching and the room is quiet the song stays on screen, its position freezes and
@@ -190,6 +190,22 @@ built app's embedded.mobileprovision), so the app keeps working until then witho
   each read, and every moment they named different songs), and the details sheet shows a one-line summary.
 * **Hooks.** `deck://hearing?with=deckie|apple|both`; `deck://stream?path=...&start=0` plays a file through whichever is
   chosen as the microphone would (`deck://test`, Apple's rendered segments, streams instead when Deckie's is in use).
+  `-traceShown YES` at launch writes one `SHOWN` line to the console after each of Deckie's readings (the sound's
+  time, what the reading said, what the screen shows, the pitch shown), for measuring.
+* **Song changes with Deckie's (note on D35, Nov 14).** The listener already gathers evidence across seconds, so the
+  hold written for Apple's (above, under Using it) is not applied to its readings. Each reading carries a wait
+  (`Reading.wait`, `Recognizer.deckieWait`): a name that is sure (confidence 3 or more, the listener's own `sure`) and
+  agrees with the search before on place and speed replaces the song on screen at once; a sure name on one search,
+  on the next reading that names it too (about a second); a fair name (2.6 to 3) after three more readings. A song
+  that was on screen until less than 30 s ago, or any song while the one on screen was set by hand and not heard
+  since, needs three readings in a row; so does a song whose confirming check is no stronger than the playing song's
+  own check a moment before (dominance, kept from the old hold). A reading of the playing song, or one that names
+  nothing, breaks a run. Apple's readings keep the old hold. When no reading has named the playing song for 4 s, it
+  stays on screen with its picks, its names dimmed and the corner saying "not heard just now" ("paused" in a quiet
+  room, as before). The pitch shown is the median of the song's last nine readings, started afresh on a song change
+  and when two readings in a row move more than half a percent from it (the fader moved); one such reading alone is
+  set aside. `Reading.incoming` carries a song heard coming in under the
+  playing one, for the listener's next version; the booth keeps it as `Recognizer.incoming` and does not show it yet.
 
 ## How recognition works (Apple's)
 
