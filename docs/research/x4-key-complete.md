@@ -165,6 +165,147 @@ hears the mode better on minor songs, which no lawful training tried here achiev
 a quarter of songs where Apple would be right half the time, is much better than Apple on major songs and worse on
 minor ones, and misses the bar because the bar rewards guessing minor.
 
+## 2b. Openly licensed club music, a slight lean, what "right" means, and the bar reworded (added Nov 14)
+
+The owner, after section 2a: "And we have done a deep search of the internet for public license club music? There
+has to be some out there. My inclination would be to add a slight lean. Though I also think the bar needs to be
+reworded. It is a problem for the DJ to get a wrong key or mode right? Is our 'accurate' based on getting a key or a
+key and mode? Overall it feels like we are there or very close." Tables: `mixer/keytrial/x4_club_results.md`,
+`x4_dj_results.md`.
+
+### Club music under licences that allow a shipped model
+
+Counted from each source's own licence field (opened Nov 14, 2026). Usable: CC0, public domain, CC BY. Set aside:
+share-alike, and non-commercial or no-derivatives.
+
+| Source | How counted | Usable club music | Set aside: share-alike | Set aside: non-commercial or no-derivatives | Fetched? |
+|---|---|---|---|---|---|
+| **Internet Archive, netlabel releases** (77,109 releases) | its search interface, by licence and tag; then each release's file list | **684 releases whose tags name a club style exactly: 6,175 tracks** (CC BY 398 releases, CC0 or public domain 286). By the looser tag search: 1,301 releases, but 570 of them are one noise label whose name contains "trance" | 770 releases | 13,875 releases | **yes: about a minute from the middle of 3,667 tracks** (up to 12 a release; 5.1 GB), evaluation only |
+| Internet Archive, its mirror of Jamendo's albums (294,067 albums) | the same | 2,333 dance-tagged albums, all CC BY | 2,207 albums | 20,362 albums | no (next in line: the largest untouched pool) |
+| MTG-Jamendo research set (55,701 tracks) | its per-track licence file | 627 dance tracks, 53 hours (the same catalogue as the row above) | 1,744 tracks | 6,246 tracks | no: "made available solely for non-commercial research and academic use"; audio only as 508 GB of archives |
+| Jamendo's own interface | its documentation | needs an account; "may be used freely for non-commercial uses" | | | no |
+| ccMixter | its query interface | 1,458 dance-tagged uploads; about 750 are whole remixes (54 hours), the rest samples and vocals | 20 | 5,245 | no |
+| TeknoAXE (one author's catalogue) | its genre pages | 1,029 tracks, CC BY 4.0 | 0 | 0 | no; one author's sound would dominate |
+| Ektoplazm (psychedelic trance) | its release pages | 82 releases | 1 | 1,949 | no |
+| SampleSwap's music section | its genre pages | 109 songs | 286 | 615 | no |
+| Free Music Archive, research set (letter X4) | its track table | 2,745 electronic tracks (wider than club) | | 78 percent of the archive | yes, earlier: 30-second clips |
+| Incompetech, Audionautix | catalogues | about 165 tracks; soundtrack electronica, not club | 0 | 0 | no |
+| Magnatune, SoundCloud, Bandcamp, Pixabay, the Free Music Archive's live site, NoCopyrightSounds, sample packs (99Sounds, MusicRadar, Legowelt) | terms | none: non-commercial, or scraping and training forbidden, or no open licence | | | no |
+
+**So: yes, there is some, and most open club music is not usable.** Nine in ten openly licensed dance releases
+carry a non-commercial or no-derivatives licence. What is usable and within reach is about 6,000 netlabel tracks
+(a sample of them now fetched) and about 2,300 Jamendo albums on the Internet Archive, perhaps 15,000 to 20,000
+tracks more [inf: seven or eight tracks an album]. The Internet Archive "does not make guarantees as to the
+copyright status of items"; each release's licence is its uploader's statement.
+
+**What the reader hears in it.** Of 3,650 club excerpts read, the untrained reader gave a key to 1,971 (54 percent),
+a home note to 327 and nothing to 1,352: club music is harder for it than the Free Music Archive's mix (63 percent).
+
+| Style (the release's own tag) | Excerpts | Given a key | Minor among those, percent |
+|---|---:|---:|---:|
+| Techno | 1,877 | 955 | 65.2 |
+| Electro | 745 | 447 | 63.8 |
+| House | 633 | 351 | 64.1 |
+| Dance | 551 | 311 | 66.9 |
+| Breaks | 440 | 259 | 70.3 |
+| Dubstep | 377 | 236 | 74.2 |
+| Hardcore | 372 | 179 | 65.9 |
+| Drum and bass | 348 | 184 | 62.5 |
+| Acid | 279 | 153 | 63.4 |
+| Trance | 237 | 141 | 67.4 |
+| Garage | 149 | 88 | 65.9 |
+| **All club excerpts** | 3,650 | 1,971 | **65.6** |
+
+Club music is about two thirds minor in every style, by a count that owes nothing to Beatport or to the test
+collection. (Counting each of the 342 creators once: 67.4.) It also agrees with the one published chart count,
+65 percent.
+
+**Does more real club music move the scores?** RETRAIN_HERE
+
+### A slight lean: the candidates
+
+The lean raises the model's minor answers as if the music it learned from had held a given share of minor keys.
+**The source of candidate (c) was fixed and committed before the club excerpts were read** (`kt_x4.py`, "THE CLUB
+LEAN"); by then leans of 65 and 85 had been scored, and they are shown, not chosen by their scores. MTG, 1,270
+clips, the reader as it ships otherwise:
+
+| Lean to this share of minor | Source | Major half | Minor half | Bar as written (36.5 / 70.6) | Every song, exact | Within one step | Key shown | Shown keys right | Apple on those songs |
+|---|---|---:|---:|---|---:|---:|---:|---:|---:|
+| (a) as now, 55.2 | open electronic music of the Free Music Archive, as the reader hears it | 59.8 | 61.5 | fails: minor 9.0 short | 61.0 | 74.9 | 73.1 | 69.9 | 71.3 |
+| none at all, 52.4 | the training mix | 60.1 | 61.0 | fails: minor 9.6 short | 60.7 | 74.5 | 72.6 | 69.5 | 70.9 |
+| (b) 65 | a published count of one Beatport chart (letter X) | 54.9 | 65.5 | fails: minor 5.1 short | 62.3 | 75.9 | 73.0 | 71.1 | 72.3 |
+| (b) 85 | the published share of the GiantSteps Key set, a sibling of the test collection | 42.5 | 72.2 | **passes** | 63.1 | 77.0 | 74.2 | 71.9 | 72.1 |
+| **(c) 65.6** | **the share the reader finds in openly licensed club music (above)** | 53.9 | 65.6 | fails: minor 5.0 short | 62.0 | 75.7 | 73.2 | 71.2 | 72.2 |
+| Apple | | 41.5 | 75.6 | | 65.2 | 78.3 | 100 | 65.2 | |
+
+| | GiantSteps+: every song | key shown | shown right | GiantSteps Key: every song | key shown | shown right |
+|---|---:|---:|---:|---:|---:|---:|
+| (a) as now | 79.9 | 83.8 | 89.3 | 63.6 | 80.0 | 73.1 |
+| (b) 65 | 80.8 | 83.3 | 90.3 | 64.7 | 80.0 | 73.7 |
+| (b) 85 | 82.7 | 85.0 | 91.2 | 67.1 | 82.8 | 74.6 |
+| **(c) 65.6** | 80.8 | 83.1 | 90.2 | 64.7 | 79.8 | 73.9 |
+
+- **(c) is the one I would take.** It is slight, it has a source Deckie measured itself on music that is neither
+  the test nor its shop, and it helps every measure on all three sets by about a point: on MTG the shown keys go
+  from 69.9 to 71.2 percent right at the same coverage, level with Apple's 72.2 on those songs. It costs six points
+  on major songs (59.8 to 53.9), which stay 12 above Apple.
+- **(b) 85 passes the bar as written, and I would not take it.** Its source is the count of a set drawn from the
+  same shop as the test, and it gets there by Apple's own trade: the major half falls to 42.5.
+- **(d) By the style a crate records: cannot be built today.** The crate's `style` block is a list of numbers with
+  no named style. Until the engine can say "this is dance music", a lean applies to every song. That matters for
+  a DJ who plays pop or disco, where songs are mostly major (35 percent minor in the open pop measured in letter
+  X4): there the lean would cost accuracy. If (c) is chosen it should be said in the product's notes that the
+  reader is tuned to club music.
+- **How it is built.** `KeyModel.chosenMinorShare` (nil today). Setting it to `0.656` is the whole change; the
+  model's name in a record becomes `deckie-key-2b4fe8fa-minor66`, so crates made with and without the lean are
+  told apart and work folders are analysed again. `DECKIE_KEY_MINOR_SHARE=65.6` tries it without changing code.
+
+### What "right" means to a DJ
+
+In every table above, "right" is **exact: the home note and the mode both**. For mixing, errors are not equal:
+
+| MTG, 1,270 clips; percent of the songs in the row | Songs | Exact | Right home note, wrong mode (two songs laid over each other clash) | A neighbour on the wheel: the relative key, or a fifth away (mixes fine) | Anything else | Within one step on the wheel (exact or a neighbour) |
+|---|---:|---:|---:|---:|---:|---:|
+| **Ours, the keys it shows** | 928 | 69.9 | 14.0 | 11.3 | 4.7 | **81.2** |
+| Apple, on those same songs | 928 | 71.2 | 12.0 | 11.6 | 5.2 | 82.9 |
+| Ours, every song (forced) | 1,270 | 60.9 | 14.0 | 13.9 | 11.2 | 74.8 |
+| Apple, every song | 1,270 | 65.2 | 11.2 | 13.1 | 10.5 | 78.3 |
+| Ours, shown keys, major songs | 298 | 66.1 | 20.1 | 9.4 | 4.4 | 75.5 |
+| Apple, same songs | 298 | 45.6 | 31.2 | 18.1 | 5.0 | 63.8 |
+| Ours, shown keys, minor songs | 630 | 71.7 | 11.1 | 12.2 | 4.9 | 84.0 |
+| Apple, same songs | 630 | 83.3 | 2.9 | 8.6 | 5.2 | 91.9 |
+
+- **Of the keys Deckie shows, four in five mix correctly** (81.2 percent within one step), the same as Apple's on
+  those songs (82.9; not a real difference, p = 0.24). One in seven has the right home note and the wrong mode,
+  which is the error a DJ hears; one in twenty is simply wrong.
+- **The home-note answer exists for exactly that error and catches part of it.** Forced to name a key for every
+  song, the reader would make 178 wrong-mode errors. 130 of them are among the keys it shows; 32 are avoided
+  because it showed the home note alone, 16 because it said not sure. On the 125 songs given a home note, a forced
+  key would have had the wrong mode on one song in four (25.6 percent).
+- **So the mode is the remaining problem**, on both readers: Apple makes 142 wrong-mode errors over all songs, and
+  on major songs it gets the mode wrong on 31 percent of them.
+
+### The bar, reworded: three candidates
+
+Each is one sentence a DJ could read, with what it gives today (MTG unless said).
+
+| # | Wording | Today | Passes? |
+|---|---|---|---|
+| 1 | **"Of the keys Deckie shows, as many mix correctly (within one step on the wheel) as Apple's on the same songs, give or take three points; and Deckie shows a key for at least seven songs in ten."** | 81.2 against Apple's 82.9 (1.7 behind, not a real difference); 73.1 percent shown | **passes** |
+| 2 | "A key is shown only when it is right at least two times in three on music the reader has never heard, on every outside collection." | 69.9 (MTG), 89.3 (GiantSteps+), 73.1 (GiantSteps Key) | passes; at "seven times in ten" it would fail on MTG by 0.1 |
+| 3 | "With every song given a key, Deckie is no more than five points behind Apple, counting a major song as much as a minor one." (The old bar's spirit: no worse than Apple; scoring the halves' average instead of each half, so preferring minor earns nothing.) | 60.6 against Apple's 58.5 | passes, 2.1 ahead |
+| old | "Exact within five points of Apple on the major half and on the minor half, every song given a key." | 59.8 and 61.4 against 41.5 and 75.6 | fails: minor 9.2 short |
+
+**I would choose wording 1.** It measures what the DJ is given (shown keys), in the DJ's terms (does it mix), against
+the reference the owner named (Apple, on the same songs), and its second half stops the reader from passing by
+going quiet. A lean cannot game it: leaning helps only if the shown keys really do mix better. Wording 3 is the
+fair repair of the old bar if the owner wants to keep judging every song. Wording 2 needs no Apple at all, which is
+its strength and its weakness: "two times in three" is a number someone has to pick.
+
+**Is it there or very close?** On wording 1 it is there today, and with lean (c) the shown keys are right as often
+as Apple's on the same songs (71.2 against 72.2). Where it is behind: Apple names a key for every song and is still
+right on 65 percent of them; Deckie is silent on a quarter.
+
 ## 3. How honest the confidence is
 
 The confidence is the model's own probability, softened by one number (a temperature of 1.35) fitted on 188

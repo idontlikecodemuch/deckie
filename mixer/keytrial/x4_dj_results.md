@@ -23,4 +23,5 @@ Apple's wrong-mode errors over every song: 142.
 | as pinned now: 55.2, open electronic music of the Free Music Archive as the reader hears it | 59.8 | 61.5 | fails: minor 9.0 short | 61.0 | 60.7 | 74.9 | 73.1 | 69.9 | 71.3 | 81.3 | 9.8 | 79.9 | 83.8 | 89.3 | 63.6 | 80.0 | 73.1 |
 | 65: a published count of one dance chart (letter X) | 54.9 | 65.5 | fails: minor 5.1 short | 62.3 | 60.2 | 75.9 | 73.0 | 71.1 | 72.3 | 82.5 | 10.6 | 80.8 | 83.3 | 90.3 | 64.7 | 80.0 | 73.7 |
 | 85: the published share of the GiantSteps Key set (Knees and others, 2015) | 42.5 | 72.2 | passes | 63.1 | 57.3 | 77.0 | 74.2 | 71.9 | 72.1 | 82.8 | 8.2 | 82.7 | 85.0 | 91.2 | 67.1 | 82.8 | 74.6 |
+| 65.6: the club lean: the share the untrained reader finds in 1,971 openly licensed club excerpts (netlabel releases) | 53.9 | 65.6 | fails: minor 5.0 short | 62.0 | 59.7 | 75.7 | 73.2 | 71.2 | 72.2 | 82.7 | 10.4 | 80.8 | 83.1 | 90.2 | 64.7 | 79.8 | 73.9 |
 | Apple | 41.5 | 75.6 | | 65.2 | 58.5 | 78.3 | 100 | 65.2 | | 78.3 | | | | | | | |
