@@ -281,7 +281,7 @@ final class EngineProcess: @unchecked Sendable {
         #expect(!progress.isEmpty)
         #expect(progress.contains { ($0["line"] as? [String: Any])?["kind"] as? String == "started" })
         let started = try #require(e.received.first { $0["event"] as? String == "run.started" })
-        #expect(started["crateName"] as? String == "Mix Tapes ü")
+        #expect(started["crateName"] as? String == "My crate")   // a new crate is never named after its first source (research AE)
         // The run screen (D37): each song that went in joined it once, with its wave and what Desk found, and the
         // totals count them; the first song and the end are moments.
         let screen = e.received.filter { $0["event"] as? String == "run.songs" }

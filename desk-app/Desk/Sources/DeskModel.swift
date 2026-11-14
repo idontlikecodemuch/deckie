@@ -51,10 +51,20 @@ final class DeskModel: ObservableObject {
     @Published var deleting: CrateInfo?
     @Published var removing: String??
 
-    // Sources (SourcesPanel.swift): whether the panel shows and what is selected in it; the CDs and drives mounted now.
+    // Sources (SourcesPanel.swift): whether the panel shows and what is selected in it; the drives and data CDs
+    // plugged in now, with their kinds and sizes (DeskDrives, the same list the Windows and Linux engine gives).
     @Published var showSources = false
     @Published var sourceSelection: SourceItem?
-    @Published var mountedSources: [MountedSource] = []
+    @Published var drives: [DeskDrives.Drive] = []
+
+    // Adding music (research AE; AddMusic.swift): the step showing (a picker, a big drive's choice, the count, the
+    // question before a large read), the first screen's name for a new crate, Stop, and a name given during a run.
+    @Published var addStep: AddStep?
+    @Published var newCrateName = ""
+    @Published var stopping = false
+    @Published var nameDuringRun: String?
+    private var countStop: DeskAddMusic.CountStop?
+    private var runHandle: DeskRun?
     /// The music CDs in this Mac's drives (research AA), offered beside drives and folders.
     @Published var musicCDs: [MusicCDs.Found] = []
 
@@ -87,13 +97,13 @@ final class DeskModel: ObservableObject {
 
     init() {
         DiscReading.clearLeftovers(home)
-        mountedSources = MountedSource.all()
+        drives = DeskDrives.list()
         musicCDs = MusicCDs.list()
         listener.onSong = { [weak self] in self?.objectWillChange.send() }
         let center = NSWorkspace.shared.notificationCenter
         for name in [NSWorkspace.didMountNotification, NSWorkspace.didUnmountNotification, NSWorkspace.didRenameVolumeNotification] {
             watchers.append(center.addObserver(forName: name, object: nil, queue: .main) { [weak self] _ in
-                MainActor.assumeIsolated { self?.mountedSources = MountedSource.all(); self?.musicCDs = MusicCDs.list() }
+                MainActor.assumeIsolated { self?.drives = DeskDrives.list(); self?.musicCDs = MusicCDs.list() }
             })
         }
         watchers.append(NotificationCenter.default.addObserver(forName: NSApplication.willTerminateNotification, object: nil,
@@ -101,6 +111,7 @@ final class DeskModel: ObservableObject {
             MainActor.assumeIsolated { self?.saveNow() }
         })
         reloadCrates()
+        newCrateName = DeskAddMusic.newCrateName(shelf: shelf)
         lookupExplained = LookupLog.load(home).explained
         if let first = crates.first { show(first) }
     }
@@ -132,24 +143,45 @@ final class DeskModel: ObservableObject {
 
     func show(named name: String) { if let i = crates.first(where: { $0.name == name }) { show(i) } }
 
-    /// "New crate": the first screen; the crate is made, named after what is read, when music is added.
+    /// "New crate": the first screen; the crate is made when music is added, with the name on that screen ("My crate",
+    /// numbered when taken; research AE, finding 2), never the name of what is read.
     func newCrate() {
         saveNow()
+        newCrateName = DeskAddMusic.newCrateName(shelf: shelf)
         undoManager?.removeAllActions()
         current = nil; crate = nil; pending = nil; finished = nil; selection = []; sourceSelection = nil
         book = NameBook(); listener.stop(); undoLine = nil
     }
 
+    /// Renames a crate. The crate showing is renamed as one step of undo (its crate file carries the name too); during
+    /// a run the name shows at once and is applied when the run ends; on the first screen it is the new crate's name.
     func rename(_ info: CrateInfo, to name: String) {
+        let n = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !n.isEmpty else { return }
+        if running, info.id == current?.id { nameDuringRun = n == info.name ? nil : n; return }
+        guard info.id == current?.id else {
+            saveNow()
+            do { _ = try shelf.rename(info.id, to: n); reloadCrates() }
+            catch { errorText = Words.couldntRename(error.localizedDescription) }
+            return
+        }
+        guard n != info.name else { return }
+        let unique = shelf.unusedName(n, except: info.id)
+        change(Words.undoRename) {
+            current?.name = unique
+            if crate != nil { crate?.manifest.name = unique }
+        }
         saveNow()
-        do {
-            let i = try shelf.rename(info.id, to: name)
-            if current?.id == i.id {
-                current = i
-                if crate != nil { crate?.manifest.name = i.name }
-            }
-            reloadCrates()
-        } catch { errorText = Words.couldntRename(error.localizedDescription) }
+    }
+
+    /// The name the window shows for the crate: the one given during a run, the crate's, or the new crate's.
+    var shownName: String { nameDuringRun ?? current?.name ?? newCrateName }
+
+    /// The header's and the run screen's rename: the crate showing, or the new crate's name on the first screen.
+    func renameShown(_ name: String) {
+        if let c = current { rename(c, to: name); return }
+        let n = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        if !n.isEmpty { newCrateName = n }
     }
 
     /// Deletes a crate (after the window asked): to the Trash, or for good when Desk's storage is a test folder
@@ -208,14 +240,66 @@ final class DeskModel: ObservableObject {
         } catch { errorText = Words.couldntOpen(error.localizedDescription) }
     }
 
-    // MARK: Add music: the one run
+    // MARK: Add music: the three ways in (research AE), then the one run
 
-    /// Reads a CD, a drive or a folder as a source into the crate showing, or into a new crate named after it.
+    /// One of the three ways (DeskAddMusic.ways): Add drive and Add CD show what is plugged in; Add folder is the
+    /// system's folder chooser.
+    func addWay(_ id: String) {
+        guard !running else { return }
+        switch id {
+        case "drive": drives = DeskDrives.list(); addStep = .drives
+        case "cd": drives = DeskDrives.list(); musicCDs = MusicCDs.list(); addStep = .cds
+        default: addStep = nil; askSourceFolder()
+        }
+    }
+
+    /// A drive from the list: a big one offers a folder inside it first; any other is counted, then read.
+    func chooseDrive(_ d: DeskDrives.Drive) {
+        if d.big { addStep = .bigDrive(d); return }
+        addStep = nil
+        countThenAdd(URL(fileURLWithPath: d.path, isDirectory: true), name: d.name)
+    }
+
+    /// A big drive: the folder chooser opens inside it, saying why.
+    func chooseFolder(in d: DeskDrives.Drive) {
+        addStep = nil
+        let p = NSOpenPanel()
+        p.canChooseDirectories = true; p.canChooseFiles = false; p.allowsMultipleSelection = false
+        p.directoryURL = URL(fileURLWithPath: d.path, isDirectory: true)
+        p.prompt = Words.chooseSourcePrompt
+        p.message = Words.bigDriveChooser(d.name)
+        p.begin { [weak self] r in
+            guard r == .OK, let url = p.url, let self else { return }
+            self.countThenAdd(url, name: url.standardizedFileURL.path == URL(fileURLWithPath: d.path).standardizedFileURL.path
+                              ? d.name : MountedSource.name(of: url))
+        }
+    }
+
+    /// "Read the whole drive": counted, then asked about, as anything large is.
+    func readWholeDrive(_ d: DeskDrives.Drive) {
+        addStep = nil
+        countThenAdd(URL(fileURLWithPath: d.path, isDirectory: true), name: d.name)
+    }
+
+    /// Reads a CD, a drive or a folder as a source into the crate showing, or into a new crate with the first screen's
+    /// name.
     func addSource(_ url: URL, name: String) {
         start(RunRequest(folder: url, source: current?.sourceName(name, root: url) ?? name))
     }
 
-    /// The fallback: any folder, read as a source named after its volume (when it is the top of one) or itself.
+    /// Any folder: the top of a big drive offers a folder inside it first; anything else is counted, then read.
+    func addChosen(_ url: URL) {
+        let name = MountedSource.name(of: url)
+        if DeskAddMusic.isTopOfBigDrive(url) {
+            let bytes = DeskDrives.size(of: url.path)
+            addStep = .bigDrive(DeskDrives.Drive(name: name, path: url.path, bytes: bytes, big: true))
+            return
+        }
+        countThenAdd(url, name: name)
+    }
+
+    /// Add folder: the system's folder chooser; the folder becomes a source named after its volume (when it is the top
+    /// of one) or itself.
     func askSourceFolder() {
         let p = NSOpenPanel()
         p.canChooseDirectories = true; p.canChooseFiles = false; p.allowsMultipleSelection = false
@@ -223,8 +307,65 @@ final class DeskModel: ObservableObject {
         p.message = Words.chooseSourceMessage
         p.begin { [weak self] r in
             guard r == .OK, let url = p.url, let self else { return }
-            self.addSource(url, name: MountedSource.name(of: url))
+            self.addChosen(url)
         }
+    }
+
+    /// Folders, drives or discs dropped on the window: the first folder among them, as Add folder takes it.
+    func dropped(_ urls: [URL]) {
+        guard !running, addStep == nil else { return }
+        let folder = urls.first { (try? $0.resourceValues(forKeys: [.isDirectoryKey]))?.isDirectory == true }
+        if let folder { addChosen(folder) }
+    }
+
+    /// Counts the songs first (the count shows rising once it takes longer than a moment); above the line Desk asks,
+    /// with the count and about how long reading takes, before reading anything (research AE, finding 3).
+    func countThenAdd(_ url: URL, name: String) {
+        countStop?.set()
+        let stop = DeskAddMusic.CountStop()
+        countStop = stop
+        let home = self.home
+        DispatchQueue.main.asyncAfter(deadline: .now() + Look.Add.showCountAfter) { [weak self] in
+            MainActor.assumeIsolated {
+                guard let self, self.countStop === stop, !stop.isSet, self.addStep == nil else { return }
+                self.addStep = .counting(name: name, songs: 0)
+            }
+        }
+        Task.detached(priority: .userInitiated) { [weak self] in
+            let check = DeskAddMusic.check(url, home: home, stop: stop) { n in
+                Task { @MainActor in
+                    guard let self, self.countStop === stop, case .counting? = self.addStep else { return }
+                    self.addStep = .counting(name: name, songs: n)
+                }
+            }
+            await MainActor.run {
+                guard let self, self.countStop === stop else { return }
+                self.countStop = nil
+                if check.stopped { self.addStep = nil; return }
+                if check.ask { self.addStep = .ask(check, url: url, name: name); return }
+                self.addStep = nil
+                self.addSource(url, name: name)
+            }
+        }
+    }
+
+    /// Cancel on the count or the question.
+    func cancelAdd() {
+        countStop?.set(); countStop = nil
+        addStep = nil
+    }
+
+    /// Start, on the question before a large read.
+    func confirmAdd(_ url: URL, name: String) {
+        addStep = nil
+        addSource(url, name: name)
+    }
+
+    /// Stop, on the run screen: the songs being read finish, and every song read so far stays in the crate.
+    func stopRun() {
+        guard running, let r = runHandle else { return }
+        r.stop()
+        stopping = true
     }
 
     /// The rekordbox route, where it was: a collection export, then the folder of music, read as a source named after
@@ -260,7 +401,8 @@ final class DeskModel: ObservableObject {
         saveNow()
         let info: CrateInfo
         do {
-            if let c = current { info = c } else { info = try shelf.make(name: request.name); current = info }
+            if let c = current { info = c }
+            else { info = try shelf.make(name: newCrateName.isEmpty ? DeskAddMusic.defaultCrateName : newCrateName); current = info }
         } catch { errorText = Words.runStopped(error.localizedDescription); return }
         running = true; finished = nil; runRead = request.name; runStage = .reading
         listener.stop()
@@ -270,6 +412,7 @@ final class DeskModel: ObservableObject {
         undoManager?.removeAllActions()
         let run = DeskRun(home: home, crateId: info.id, request: request, jobs: jobs, device: Device.modelLabel(),
                           signer: { try Signatures.signature(of: $0) }, printer: { try Signatures.recordingPrint(of: $0) })
+        runHandle = run; stopping = false; nameDuringRun = nil
         let model = self
         Task.detached(priority: .userInitiated) {
             do {
@@ -280,7 +423,10 @@ final class DeskModel: ObservableObject {
                     model.reloadCrates()
                     if let i = model.crates.first(where: { $0.id == info.id }) { model.show(i) }
                     model.crate = crate
-                    model.finished = report
+                    var shown = report
+                    model.applyNameDuringRun()
+                    if let n = model.current?.name { shown.crate = n }
+                    model.finished = shown
                     model.applyDiscName()
                 }
             } catch {
@@ -289,11 +435,20 @@ final class DeskModel: ObservableObject {
                     model.running = false
                     model.reloadCrates()
                     if let i = model.crates.first(where: { $0.id == info.id }) { model.show(i) }
+                    model.applyNameDuringRun()
                     model.applyDiscName()
                     model.errorText = Words.runStopped(error.localizedDescription)
                 }
             }
         }
+    }
+
+    /// A name given while the run went: applied now, as one step of undo.
+    private func applyNameDuringRun() {
+        runHandle = nil; stopping = false
+        guard let n = nameDuringRun, let c = current else { nameDuringRun = nil; return }
+        nameDuringRun = nil
+        rename(c, to: n)
     }
 
     private func handle(_ p: RunProgress) {
@@ -438,6 +593,7 @@ final class DeskModel: ObservableObject {
             try placePaths.save(to: shelf.file(DeskRun.placesFile, of: info.id))
             try book.save(to: shelf.file(DeskRun.namesFile, of: info.id))
             try shelf.save(info)
+            reloadCrates()
         } catch { errorText = Words.couldntSave(error.localizedDescription) }
     }
 
@@ -616,25 +772,9 @@ final class DeskModel: ObservableObject {
     }
 }
 
-/// A CD or a drive mounted on this Mac that Add music offers: removable, ejectable or external, never the Mac's own
-/// disk; shown by its own name.
-struct MountedSource: Hashable {
-    let name: String
-    let url: URL
-
-    static func all() -> [MountedSource] {
-        let keys: [URLResourceKey] = [.volumeNameKey, .volumeIsRemovableKey, .volumeIsEjectableKey, .volumeIsInternalKey,
-                                      .volumeIsRootFileSystemKey, .volumeIsBrowsableKey]
-        let urls = FileManager.default.mountedVolumeURLs(includingResourceValuesForKeys: keys, options: [.skipHiddenVolumes]) ?? []
-        return urls.compactMap { u in
-            guard let v = try? u.resourceValues(forKeys: Set(keys)), v.volumeIsRootFileSystem != true,
-                  v.volumeIsBrowsable != false,
-                  v.volumeIsRemovable == true || v.volumeIsEjectable == true || v.volumeIsInternal == false,
-                  !MusicCDs.isMacMusicCD(u) else { return nil }   // a music CD is offered as one
-            return MountedSource(name: SourceReading.name(volumeName: v.volumeName, folderName: u.lastPathComponent), url: u)
-        }
-        .sorted { $0.name.localizedStandardCompare($1.name) == .orderedAscending }
-    }
+/// The drives Add drive offers are DeskDrives' (removable, ejectable or external, never the Mac's own disk; each with
+/// its kind and size). This names a folder the DJ chose as a source.
+enum MountedSource {
 
     /// A chosen folder's source name: its volume's name when it is the top of a volume, else its own name.
     static func name(of url: URL) -> String {

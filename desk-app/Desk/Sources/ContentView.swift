@@ -16,9 +16,10 @@ struct ContentView: View {
             else if model.crate != nil { CrateView() }
             else { EmptyCrateView() }
         }
-        .navigationTitle(model.current?.name ?? Words.appName)
+        .navigationTitle(model.shownName)
         .toolbar {
-            ToolbarItem(placement: .navigation) { CrateMenu() }
+            // The crate's icon and name, always; a click renames it (research AE). The menu beside it switches crates.
+            ToolbarItem(placement: .navigation) { HStack { CrateName(); CrateMenu() } }
             ToolbarItemGroup(placement: .primaryAction) {
                 AddMusicMenu()
                 if model.crate != nil {
@@ -37,7 +38,7 @@ struct ContentView: View {
                     } label: { Label(Words.t("nameTools"), systemImage: "character.cursor.ibeam") }
                     .disabled(model.running)
                     Button { model.showSources.toggle() } label: {
-                        Label(model.showSources ? Words.hideSources : Words.sources, systemImage: "externaldrive")
+                        Label(model.showSources ? Words.hideSources : Words.sources, systemImage: "list.bullet.indent")
                     }
                     .help(Words.sourcesHelp).disabled(model.running)
                     Button { model.showImportLog = true } label: { Label(Words.whatDidntGoIn, systemImage: "list.bullet.rectangle") }
@@ -50,13 +51,24 @@ struct ContentView: View {
         .onAppear { model.undoManager = undoManager }
         .onChange(of: undoManager) { _, u in model.undoManager = u }
         .sheet(isPresented: $model.showImportLog) { ImportLogView() }
+        .sheet(item: $model.addStep) { step in AddStepSheet(step: step).environmentObject(model) }
+        // A folder, a drive or a disc dropped on the window is added as Add folder adds one.
+        .onDrop(of: [.fileURL], isTargeted: nil) { providers in
+            for p in providers {
+                _ = p.loadObject(ofClass: URL.self) { url, _ in
+                    guard let url else { return }
+                    Task { @MainActor in model.dropped([url]) }
+                }
+            }
+            return !providers.isEmpty
+        }
         .alert(Words.appName, isPresented: Binding(get: { model.errorText != nil }, set: { if !$0 { model.errorText = nil } })) {
             Button(Words.ok) { model.errorText = nil }
         } message: { Text(model.errorText ?? "") }
         .alert(model.renaming.map { Words.renameTitle($0.name) } ?? "",
                isPresented: Binding(get: { model.renaming != nil }, set: { if !$0 { model.renaming = nil } })) {
             TextField(Words.nameField, text: $renameText)
-            Button(Words.ok) { if let c = model.renaming { model.rename(c, to: renameText) }; model.renaming = nil }
+            Button(Words.renameButton) { if let c = model.renaming { model.rename(c, to: renameText) }; model.renaming = nil }
             Button(Words.cancel, role: .cancel) { model.renaming = nil }
         }
         .onChange(of: model.renaming) { _, c in if let c { renameText = c.name } }
@@ -66,7 +78,10 @@ struct ContentView: View {
             Button(Words.cancel, role: .cancel) { model.deleting = nil }
         } message: { Text(Words.deleteCrateBody) }
         .confirmationDialog(removeTitle, isPresented: Binding(get: { model.removing != nil }, set: { if !$0 { model.removing = nil } })) {
-            Button(Words.remove, role: .destructive) { if let s = model.removing { model.removeSource(s) }; model.removing = nil }
+            Button(Words.remove, role: .destructive) {
+                if let s = model.removing { model.removeSource(s); model.finished = nil }
+                model.removing = nil
+            }
             Button(Words.cancel, role: .cancel) { model.removing = nil }
         } message: { Text(Words.removeBody(model.crate?.entriesOnlyOn(source: model.removing ?? nil).count ?? 0)) }
     }
@@ -77,7 +92,7 @@ struct ContentView: View {
     }
 }
 
-/// Which crate is showing, and the way to the others: each crate, then New crate, rename and delete.
+/// The way to the other crates, beside the crate's name: each crate, then New crate, rename and delete.
 struct CrateMenu: View {
     @EnvironmentObject var model: DeskModel
     var body: some View {
@@ -95,8 +110,7 @@ struct CrateMenu: View {
                 Button(Words.deleteCrate) { model.deleting = c }
             }
         } label: {
-            Label(model.current?.name ?? Words.newCrate, systemImage: "shippingbox")
-                .labelStyle(.titleAndIcon)
+            Label(Words.crateMenuHelp, systemImage: "chevron.down").labelStyle(.iconOnly)
         }
         .help(Words.crateMenuHelp)
         .disabled(model.running)
@@ -107,16 +121,19 @@ struct EmptyCrateView: View {
     @EnvironmentObject var model: DeskModel
     var body: some View {
         VStack(spacing: Look.Space.firstScreen) {
-            Image(systemName: "shippingbox").font(Look.Fonts.firstIcon).foregroundStyle(.secondary)
+            CrateIcon(size: Look.Add.crateIconFirst).foregroundStyle(.secondary)
             Text(Words.firstTitle).font(Look.Fonts.screenTitle)
             Text(Words.firstBody)
                 .multilineTextAlignment(.center).foregroundStyle(.secondary).frame(maxWidth: Look.Size.firstBodyWidth)
             PendingBanner()
+            // The crate's name, filled in; then the three ways in, the same as everywhere music is added (research AE).
+            NewCrateNameField()
+            AddWayButtons(prominent: true)
             HStack {
-                AddMusicMenu().fixedSize().buttonStyle(.borderedProminent)
                 Button(Words.withRekordbox) { model.askRekordbox() }
                 Button(Words.importCrateFile) { model.askImport() }
             }
+            Text(Words.dropHere).foregroundStyle(.tertiary)
         }.padding(Look.Space.firstScreenPadding)
     }
 }
@@ -160,8 +177,10 @@ struct RunView: View {
 
     private var content: some View {
         VStack(alignment: .leading, spacing: RunLook.gap) {
+            // The crate's name, to rename while it is read, and Stop (research AE).
+            RunHeader()
             Text(Words.runTitle).font(Look.Fonts.screenTitle)
-            Text(Words.runReading(model.runRead, into: model.current?.name ?? "")).foregroundStyle(.secondary)
+            Text(Words.runReading(model.runRead, into: model.shownName)).foregroundStyle(.secondary)
             if model.discAsk != nil {
                 // A music CD with no name of its own: asked once, in passing; the run never waits (letter AA, 2.5).
                 VStack(alignment: .leading, spacing: Look.Space.discAsk) {
@@ -224,12 +243,16 @@ struct RunProgressLine: View {
 struct FinishedView: View {
     @EnvironmentObject var model: DeskModel
     let report: RunReport
+    /// Stopped by the DJ (Stop): the songs read are in, and the rest can be carried on.
+    private var stopped: Bool { report.stopped == true }
 
     var body: some View {
         ScrollView {
         VStack(spacing: Look.Space.finishedScreen) {
-            Image(systemName: "checkmark.circle").font(Look.Fonts.finishedIcon).foregroundStyle(.secondary)
-            Text(Words.finishedTitle(report.read, report.crate)).font(Look.Fonts.screenTitle)
+            Image(systemName: stopped ? "pause.circle" : "checkmark.circle").font(Look.Fonts.finishedIcon).foregroundStyle(.secondary)
+            Text(stopped ? Words.stoppedTitle(report.wentIn, report.read, report.crate) : Words.finishedTitle(report.read, report.crate))
+                .font(Look.Fonts.screenTitle)
+            if stopped { Text(Words.stoppedBody).foregroundStyle(.secondary) }
             // The crate as sound (D37): the run's songs, one line each, as they joined, and the run's last moment.
             if !model.watch.songs.isEmpty {
                 VStack(alignment: .leading, spacing: Look.Space.finishedWall) {
@@ -270,7 +293,13 @@ struct FinishedView: View {
             .frame(maxWidth: Look.Size.finishedSummaryWidth, alignment: .leading)
             Text(Words.nextStep).padding(.top, Look.Space.nextStepAbove)
             HStack {
+                if stopped, model.pending != nil { Button(Words.carryOn) { model.carryOn() }.buttonStyle(.borderedProminent) }
                 Button(Words.sendToIPad) { model.sendToIPad() }.buttonStyle(.borderedProminent)
+                // A way back to add more (research AE, finding 1), and to take back out what should not have gone in.
+                AddMusicMenu(label: Words.addMoreMusic).fixedSize()
+                if model.crate?.discPlan.contains(where: { $0.name == report.read }) == true {
+                    Button(Words.takeBackOut) { model.removing = .some(report.read) }
+                }
                 if report.notInCount > 0 || report.damaged > 0 { Button(Words.whatDidntGoIn) { model.showImportLog = true } }
                 Button(Words.seeSongs) { model.finished = nil }
             }
@@ -312,6 +341,8 @@ struct CrateView: View {
         .safeAreaInset(edge: .bottom) {
             VStack(spacing: 0) {
                 if model.listener.song != nil { PlayerBar(listener: model.listener) }
+                Divider()
+                CrateAddRow()
                 StatusBar()
             }
         }

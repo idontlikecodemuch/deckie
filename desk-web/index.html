@@ -8,12 +8,26 @@
 <link rel="stylesheet" href="desk.css">
 </head>
 <body>
+<!-- The drawings the pages use, by name. icon-crate is the crate's icon: Deckie's record (site/icon-line.svg) in its
+     line form, the same drawing as the Mac's asset Crate (desk-app/Desk/Assets.xcassets); one place to swap it in the
+     design pass. icon-drive, icon-disc and icon-folder are the three ways to add music (DeskAddMusic.ways). -->
+<svg class="defs" aria-hidden="true" focusable="false">
+  <symbol id="icon-crate" viewBox="96 96 832 832"><g fill="none" stroke="currentColor"><circle cx="512" cy="512" r="382" stroke-width="52"/><circle cx="512" cy="512" r="154" stroke-width="52"/><circle cx="512" cy="512" r="268" stroke-width="26"/></g><circle cx="512" cy="512" r="42" fill="currentColor"/></symbol>
+  <symbol id="icon-drive" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><rect x="3" y="7" width="18" height="10" rx="2"/><path d="M7 12.5h4"/><circle cx="17" cy="12" r="1" fill="currentColor"/></g></symbol>
+  <symbol id="icon-disc" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="2.5"/></g></symbol>
+  <symbol id="icon-folder" viewBox="0 0 24 24"><path d="M3 7.5a1.5 1.5 0 0 1 1.5-1.5h4.4l2 2h8.6a1.5 1.5 0 0 1 1.5 1.5v8a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 17.5z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></symbol>
+</svg>
 <!-- Deckie Desk's window on Windows and Linux (D32). No Deckie logic and no words live here: the engine sends what to
      show and the words to show it with (docs/architecture/desk-protocol.md); desk.js draws it. Every element with
      data-w gets the word of that name; data-w-label sets aria-label, data-w-title the tooltip. -->
 <header class="bar" role="toolbar" data-w-label="appName">
+  <!-- The crate's icon and name, always; a click renames it (research AE). The menu beside it switches crates. -->
+  <span class="crate-head">
+    <svg class="crate-icon" role="img" data-w-label="crateIcon"><use href="#icon-crate"/></svg>
+    <button id="crate-name-button" class="crate-name" data-w-title="renameCrateHelp"><span id="crate-name"></span></button>
+  </span>
   <div class="menu-wrap">
-    <button id="crate-button" class="crate-button" aria-haspopup="menu" aria-expanded="false" data-w-title="crateMenuHelp"><span id="crate-name"></span><span class="chev" aria-hidden="true" data-w="glyph.menu"></span></button>
+    <button id="crate-button" class="crate-button" aria-haspopup="menu" aria-expanded="false" data-w-title="crateMenuHelp" data-w-label="crateMenuHelp"><span class="chev" aria-hidden="true" data-w="glyph.menu"></span></button>
     <ul id="crate-menu" class="menu" role="menu" hidden></ul>
   </div>
   <span class="grow"></span>
@@ -41,11 +55,13 @@
 <main>
   <!-- The first screen: no crate showing yet. -->
   <section id="first" class="screen center" aria-labelledby="first-title" hidden>
-    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path d="M3 8l9-5 9 5v8l-9 5-9-5z"/><path d="M3 8l9 5 9-5M12 13v8"/></svg>
+    <svg class="icon crate-big" aria-hidden="true"><use href="#icon-crate"/></svg>
     <h1 id="first-title" data-w="firstTitle"></h1>
     <p id="first-body" class="body"></p>
+    <!-- The crate's name, filled in; then the three ways in, the same as everywhere music is added (research AE). -->
+    <label class="name-row"><span class="mut" data-w="intoNewCrate"></span> <input id="first-name" type="text" autocomplete="off" spellcheck="false" data-w-label="crateNameLabel"></label>
+    <div id="first-ways" class="actions ways"></div>
     <div class="actions">
-      <button id="first-add" class="main" data-w="addMusic"></button>
       <button id="first-import" data-w="importCrateFile"></button>
     </div>
     <p class="dim" data-w="dropHere"></p>
@@ -56,6 +72,16 @@
        wall of waves. Everything drawn is a song Desk read; run.js draws it. -->
   <section id="run" class="screen" aria-labelledby="run-title" hidden>
     <div class="run">
+      <!-- The crate's name, to rename while it is read, and Stop (research AE). Drawn by desk.js, not run.js. -->
+      <div class="run-head">
+        <span class="crate-head">
+          <svg class="crate-icon" aria-hidden="true"><use href="#icon-crate"/></svg>
+          <button id="run-name-button" class="crate-name" data-w-title="renameCrateHelp"><span id="run-name"></span></button>
+        </span>
+        <span class="grow"></span>
+        <span id="run-stopping" class="mut" data-w="stoppingRun" hidden></span>
+        <button id="run-stop" data-w="stopRun" data-w-title="stopRunHelp"></button>
+      </div>
       <h1 id="run-title" data-w="runTitle"></h1>
       <p id="run-reading" class="mut"></p>
       <!-- A music CD with no name of its own: asked once, in passing; the run never waits for it (letter AA, 2.5). -->
@@ -123,6 +149,7 @@
     <div class="finished">
       <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M8 12.5l2.6 2.6L16 9.6"/></svg>
       <h1 id="finished-title"></h1>
+      <p id="finished-stopped" class="mut" data-w="stoppedBody" hidden></p>
       <!-- The crate as sound (D37): the run's songs, one line each, as they joined. -->
       <div id="done-wall-card" class="wall-card card done" hidden>
         <p id="done-moment" class="saying moment"></p>
@@ -133,7 +160,14 @@
       <div id="finished-summary" class="summary card"></div>
       <p data-w="nextStep"></p>
       <div class="actions">
+        <button id="finished-carryon" class="main" data-w="carryOn" hidden></button>
         <button id="finished-export" class="main" data-w="exportCrateFile"></button>
+        <!-- A way back to add more (research AE, finding 1), and to take back out what should not have gone in. -->
+        <div class="menu-wrap">
+          <button id="finished-add" aria-haspopup="menu" aria-expanded="false"><span data-w="addMoreMusic"></span><span class="chev" aria-hidden="true" data-w="glyph.menu"></span></button>
+          <ul id="finished-add-menu" class="menu" role="menu" hidden></ul>
+        </div>
+        <button id="finished-takeout" data-w="takeBackOut" hidden></button>
         <button id="finished-log" data-w="whatDidntGoIn" hidden></button>
         <button id="finished-songs" data-w="seeSongs"></button>
       </div>
@@ -202,6 +236,13 @@
   </section>
 </main>
 
+<!-- The crate screen's way back to add more, under its songs (research AE, finding 1). -->
+<div id="crate-add" class="crate-add" hidden>
+  <span id="crate-add-label" class="mut"></span>
+  <span id="crate-ways" class="ways"></span>
+  <span class="grow"></span>
+  <span class="dim" data-w="dropHere"></span>
+</div>
 <footer id="status" class="status" hidden>
   <b id="status-songs"></b>
   <span id="status-unsigned"></span>
@@ -220,7 +261,37 @@
     <h2 id="ask-title"></h2>
     <label class="sr" for="ask-input" data-w="nameField"></label>
     <input id="ask-input" type="text" autocomplete="off" spellcheck="false">
-    <div class="buttons"><button value="cancel" data-w="cancel"></button><button value="ok" class="main" data-w="ok"></button></div>
+    <div class="buttons"><button value="cancel" data-w="cancel"></button><button value="ok" class="main" data-w="renameButton"></button></div>
+  </form>
+</dialog>
+<!-- Adding music (research AE): Add drive's and Add CD's lists; a big drive's choice; the count, then the question
+     before a large read, with a new crate's name. -->
+<dialog id="pick" aria-labelledby="pick-title">
+  <form method="dialog">
+    <h2 id="pick-title"></h2>
+    <p id="pick-body" class="mut"></p>
+    <ul id="pick-list" class="pick-list"></ul>
+    <p id="pick-empty" class="mut" hidden></p>
+    <div class="buttons"><button value="cancel" data-w="cancel"></button></div>
+  </form>
+</dialog>
+<dialog id="bigdrive" aria-labelledby="bigdrive-title" aria-describedby="bigdrive-body">
+  <form method="dialog">
+    <h2 id="bigdrive-title"></h2>
+    <p id="bigdrive-body"></p>
+    <div class="buttons"><button value="whole" data-w="readWholeDrive"></button><span class="grow"></span><button value="cancel" data-w="cancel"></button><button value="folder" class="main" data-w="chooseFolderIn"></button></div>
+  </form>
+</dialog>
+<dialog id="askread" aria-labelledby="askread-title" aria-describedby="askread-body">
+  <form method="dialog">
+    <h2 id="askread-title"></h2>
+    <div id="askread-counting"><p class="count" aria-live="polite"><span class="spinner" aria-hidden="true"></span> <span id="askread-count"></span></p><p id="askread-name" class="mut"></p></div>
+    <div id="askread-ask" hidden>
+      <p id="askread-body"></p>
+      <label id="askread-new" class="name-row"><span class="mut" data-w="intoNewCrate"></span> <input id="askread-name-input" type="text" autocomplete="off" spellcheck="false" data-w-label="crateNameLabel"></label>
+      <p id="askread-into" class="mut"></p>
+    </div>
+    <div class="buttons"><button value="cancel" data-w="cancel"></button><button id="askread-start" value="start" class="main" hidden></button></div>
   </form>
 </dialog>
 <dialog id="confirm" aria-labelledby="confirm-title" aria-describedby="confirm-body">

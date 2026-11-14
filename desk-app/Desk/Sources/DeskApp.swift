@@ -34,12 +34,10 @@ struct DeskApp: App {
         .commands {
             CommandGroup(replacing: .newItem) {
                 Button(Words.newCrate) { model.newCrate() }.keyboardShortcut("n").disabled(model.running)
-                Menu(model.current.map { Words.addMusicTo($0.name) } ?? Words.addMusic) {
-                    ForEach(model.musicCDs, id: \.location) { cd in Button(MusicCDItem.label(cd)) { model.addMusicCD(cd) } }
-                    ForEach(model.mountedSources, id: \.url) { m in Button(m.name) { model.addSource(m.url, name: m.name) } }
-                    Divider()
-                    Button(Words.chooseFolder) { model.askSourceFolder() }
-                }.disabled(model.running)
+                // The three ways to add music, as everywhere else (research AE).
+                Section(model.current.map { Words.addMusicTo($0.name) } ?? Words.addMusic) {
+                    AddWayItems(model: model).disabled(model.running)
+                }
                 Button(Words.withRekordboxMenu) { model.askRekordbox() }.disabled(model.running)
                 Divider()
                 Button(Words.lookAgain) { model.lookAgain() }.disabled(model.crate == nil || model.running)

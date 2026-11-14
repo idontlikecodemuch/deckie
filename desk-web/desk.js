@@ -18,6 +18,18 @@
     return e;
   };
 
+  /// A number from desk.css's :root (a time in milliseconds, written there without its unit).
+  const num = (name) => parseFloat(getComputedStyle(document.documentElement).getPropertyValue(name));
+  /// One of index.html's drawings (`icon-<name>`), at the size its class gives it.
+  const icon = (name, cls) => {
+    const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    svg.setAttribute("class", cls || "way-icon"); svg.setAttribute("aria-hidden", "true");
+    const use = document.createElementNS("http://www.w3.org/2000/svg", "use");
+    use.setAttribute("href", `#icon-${name}`);
+    svg.append(use);
+    return svg;
+  };
+
   // ---- words (DeskWords' rules: {name} blanks, name.zero/one/other by count, name.<code> by code)
   // The only words the pages hold: they show when the engine's words are not there (the pages opened in a browser) or
   // may not be the words this page knows (another protocol). Every other word is DeskWords', from the engine.
@@ -79,6 +91,9 @@
   let sort = { key: "title", dir: 1 };
   let selected = null;
   const dropQueue = [];
+  // Adding music (research AE): the count going (its path, name and the crate name typed meanwhile), and the run's
+  // report when Stop ended it.
+  let adding = null;
 
   // ---- talking: to the shell, which passes the engine's lines through
   const shell = window.deckieShell;
@@ -161,6 +176,11 @@
         for (const p of m.paths || []) dropQueue.push(p);
         nextDrop();
         break;
+      case "add.counting":
+        if (adding && adding.path === m.path) { adding.songs = m.songs; drawCounting(); }
+        return;
+      case "add.counted":
+        counted(m); return;
       case "shell.engineGone":
         run = null; message([t("engineGone")]);
         break;
@@ -205,19 +225,29 @@
   }
 
   // ---- drawing
-  function show(id) { for (const s of ["first", "run", "finished", "crate"]) $(s).hidden = s !== id; }
+  function show(id) {
+    for (const s of ["first", "run", "finished", "crate"]) $(s).hidden = s !== id;
+    $("crate-add").hidden = true;
+  }
   const current = () => (state && state.current) || null;
   const hasSongs = () => !!(current() && current().hasSongs && songs && songs.crate === current().id);
+
+  /// The crate's name as the window shows it: the crate showing (with a name given during a run), or the new crate's.
+  const shownName = () => (current() ? current().name : (state && state.newName) || t("defaultCrateName"));
 
   function render() {
     if (!hello || !state) return;
     const c = current();
     const busy = !!run || state.running;
-    $("crate-name").textContent = c ? c.name : t("newCrate");
+    $("crate-name").textContent = shownName();
+    $("run-name").textContent = shownName();
     $("crate-button").disabled = busy;
-    $("add-label").textContent = c ? t("addMusicTo", { crate: c.name }) : t("addMusic");
+    $("add-label").textContent = t("addMusic");
     $("add-button").disabled = busy || (hello.analysis && !hello.analysis.ready);
-    $("first-add").disabled = $("add-button").disabled;
+    drawWays($("first-ways"), true, $("add-button").disabled);
+    $("run-stop").disabled = !!state.stopping;
+    $("run-stopping").hidden = !state.stopping;
+    if (document.activeElement !== $("first-name")) $("first-name").value = state.newName || "";
     $("more-button").disabled = busy;
     $("undo").disabled = busy || !state.undo;
     $("redo").disabled = busy || !state.redo;
@@ -244,7 +274,13 @@
 
     if (busy) { show("run"); updateRun(); $("status").hidden = true; return; }
     if (finished) { show("finished"); drawFinished(); $("status").hidden = true; return; }
-    if (songsHere) { show("crate"); drawCrate(); return; }
+    if (songsHere) {
+      show("crate"); drawCrate();
+      $("crate-add").hidden = false;
+      $("crate-add-label").textContent = t("addMoreMusicTo", { crate: shownName() });
+      drawWays($("crate-ways"), false, busy);
+      return;
+    }
     show("first");
     $("status").hidden = true;
     $("first-body").textContent = t("firstBody");
@@ -255,7 +291,13 @@
     const r = finished;
     // The name the DJ gave the disc while it was read replaces the placeholder the report was written with.
     const named = (x) => (discRenamed && x === discRenamed.from ? discRenamed.to : x);
-    $("finished-title").textContent = t("finishedTitle", { read: named(r.read), crate: named(r.crate) });
+    const stopped = r.stopped === true;
+    $("finished-title").textContent = stopped ? n("stoppedTitle", r.went_in, { read: named(r.read), crate: named(r.crate) })
+      : t("finishedTitle", { read: named(r.read), crate: named(r.crate) });
+    $("finished-stopped").hidden = !stopped;
+    $("finished-carryon").hidden = !(stopped && state.pending && state.pending.here);
+    // Take this back out: the source just read, while it is in the crate (research AE, problem 13).
+    $("finished-takeout").hidden = !(current() && (current().sources || []).includes(named(r.read)));
     screen.finished(Object.assign({}, r, { read: named(r.read) }));
     const box = $("finished-summary");
     box.replaceChildren();
@@ -1254,7 +1296,8 @@
     if (!r.ok) return;
     const ok = await confirmIt(t("removeTitle", { source: source == null ? t("musicFolderName") : source, crate: current().name }),
       n("removeBody", r.songs), t("remove"));
-    if (ok) request("source.remove", { source }, { errorWord: "couldntSave" });
+    if (ok) await request("source.remove", { source }, { errorWord: "couldntSave" });
+    return ok;
   }
 
   // ---- dialogs
@@ -1355,21 +1398,8 @@
     }
   });
 
-  async function buildAddMenu(list, close) {
-    const r = await request("drives.list", {}, { quiet: true });
-    const drives = (r.ok && r.drives) || [];
-    const cds = (r.ok && r.musicCDs) || [];
-    if (!drives.length && !cds.length) list.append(el("li", { role: "none", class: "note", text: t("noDriveFound") }));
-    for (const cd of cds) {
-      const secs = Math.round(cd.seconds);
-      const name = n("musicCDPlaceholder", cd.songs, { length: Math.floor(secs / 60) + ":" + two(secs % 60) });
-      list.append(item(t("musicCDItem", { name, drive: cd.drive }), () => { close(true); request("run.addMusicCD", { location: cd.location }, { errorWord: "runStopped" }); }));
-    }
-    for (const d of drives) list.append(item(d.name, () => { close(true); addMusic(d.path, d.name); }));
-    list.append(sep());
-    list.append(item(t("chooseFolder"), () => { close(true); chooseAndAdd(); }));
-  }
-  menu($("add-button"), $("add-menu"), buildAddMenu);
+  menu($("add-button"), $("add-menu"), buildWaysMenu);
+  menu($("finished-add"), $("finished-add-menu"), buildWaysMenu);
 
   menu($("more-button"), $("more-menu"), (list, close) => {
     const songsHere = hasSongs();
@@ -1412,17 +1442,167 @@
     return out;
   }
 
+  // ---- adding music: the three ways, the same everywhere (DeskAddMusic.ways, from the engine's first message)
+  const ways = () => (hello && hello.addWays) || [];
+
+  /// The three ways as buttons: the first screen's (main) and the crate screen's row.
+  function drawWays(box, main, disabled) {
+    box.replaceChildren(...ways().map((w) => el("button", { class: main ? "main way" : "small way", title: t(w.help), disabled: disabled || null,
+      on: { click: () => addWay(w.id) } }, icon(w.icon), el("span", { text: t(w.word) }))));
+  }
+  /// The three ways as a menu's items: the bar's Add music and the finished screen's Add more music.
+  function buildWaysMenu(list, close) {
+    for (const w of ways()) {
+      list.append(el("li", { role: "none" }, el("button", { role: "menuitem", tabindex: "-1", title: t(w.help),
+        on: { click: () => { close(true); addWay(w.id); } } }, icon(w.icon), el("span", { text: t(w.word) }))));
+    }
+  }
+
+  function addWay(id) {
+    if (run || (state && state.running)) return;
+    if (id === "folder") chooseAndAdd();
+    else pickFrom(id);
+  }
+
+  /// Add drive's list (sticks, cards and drives, each with its size) and Add CD's (music CDs and data CDs).
+  async function pickFrom(id) {
+    const r = await request("drives.list", {}, { quiet: true });
+    const drives = ((r.ok && r.drives) || []).filter((d) => (d.kind || "drive") === (id === "cd" ? "cd" : "drive"));
+    const cds = id === "cd" ? (r.ok && r.musicCDs) || [] : [];
+    const d = $("pick");
+    $("pick-title").textContent = t(id === "cd" ? "chooseCDTitle" : "chooseDriveTitle");
+    $("pick-body").textContent = t(id === "cd" ? "chooseCDBody" : "chooseDriveBody");
+    const list = $("pick-list");
+    list.replaceChildren();
+    const row = (iconName, name, detail, fn) => list.append(el("li", null, el("button", { class: "pick-row", type: "button",
+      on: { click: () => { d.close("cancel"); fn(); } } }, icon(iconName, "pick-icon"),
+      el("span", { class: "pick-text" }, el("span", { text: name }), detail ? el("span", { class: "mut small", text: detail }) : null))));
+    for (const cd of cds) {
+      const secs = Math.round(cd.seconds);
+      const name = n("musicCDPlaceholder", cd.songs, { length: Math.floor(secs / 60) + ":" + two(secs % 60) });
+      row("disc", t("musicCDItem", { name, drive: cd.drive }), null,
+        () => request("run.addMusicCD", { location: cd.location }, { errorWord: "runStopped" }));
+    }
+    for (const x of drives) {
+      const detail = join("join.places", [x.size, x.big ? t("driveBigNote") : null].filter(Boolean));
+      row(id === "cd" ? "disc" : "drive", id === "cd" ? t("dataCDItem", { name: x.name }) : x.name, detail, () => chooseDrive(x));
+    }
+    $("pick-empty").hidden = cds.length + drives.length > 0;
+    $("pick-empty").textContent = t(id === "cd" ? "noCDIn" : "noDriveIn");
+    d.showModal();
+  }
+
+  /// A drive from the list: a big one offers a folder inside it first; any other is counted, then read.
+  function chooseDrive(x) {
+    if (x.big) { bigDrive(x); return; }
+    countThenAdd(x.path, x.name);
+  }
+
+  /// A big drive: choose the folder the music is in (the chooser opens inside it, saying why), or read it whole.
+  function bigDrive(x) {
+    const d = $("bigdrive");
+    $("bigdrive-title").textContent = t("bigDriveTitle", { name: x.name });
+    $("bigdrive-body").textContent = t("bigDriveBody", { size: x.size || "" });
+    d.returnValue = "";
+    d.onclose = async () => {
+      if (d.returnValue === "whole") countThenAdd(x.path, x.name);
+      if (d.returnValue !== "folder") return;
+      const f = await request("shell.chooseFolder", Object.assign({ purpose: "addMusic", start: x.path,
+        message: t("bigDriveChooser", { name: x.name }) }, chooserWords(true)), { quiet: true });
+      if (f.ok && f.path) countThenAdd(f.path, samePath(f.path, x.path) ? x.name : null);
+    };
+    d.showModal();
+  }
+  const samePath = (a, b) => a.replace(/[\\/]+$/, "").toLowerCase() === b.replace(/[\\/]+$/, "").toLowerCase();
+
+  /// Counts the songs first; the count shows rising once it takes longer than a moment. Above the line Desk asks,
+  /// with the count and about how long reading takes, before reading anything (research AE, finding 3).
+  async function countThenAdd(path, name) {
+    adding = { path, name, songs: 0, shown: false };
+    const mine = adding;
+    setTimeout(() => { if (adding === mine && !mine.done) { mine.shown = true; openCounting(); } }, num("--count-show-after"));
+    const r = await request("add.count", name ? { path, name } : { path }, { errorWord: "runStopped" });
+    if (!r.ok && adding === mine) adding = null;
+  }
+  function openCounting() {
+    const d = $("askread");
+    $("askread-counting").hidden = false; $("askread-ask").hidden = true; $("askread-start").hidden = true;
+    $("askread-title").textContent = t("counting");
+    drawCounting();
+    d.returnValue = "";
+    d.onclose = () => {
+      const a = adding;
+      if (!a) return;
+      if (d.returnValue === "start") { adding = null; addMusic(a.path, a.name, a.crateName); return; }
+      if (!a.done) request("add.countStop", {}, { quiet: true });
+      adding = null;
+    };
+    if (!d.open) d.showModal();
+  }
+  function drawCounting() {
+    if (!adding) return;
+    $("askread-count").textContent = n("countingSoFar", adding.songs);
+    $("askread-name").textContent = adding.name || "";
+  }
+  function counted(m) {
+    const a = adding;
+    if (!a || a.path !== m.path) return;
+    a.done = true; a.name = a.name || m.name;
+    const d = $("askread");
+    if (m.stopped) { adding = null; if (d.open) d.close("cancel"); return; }
+    if (!m.ask) {
+      adding = null;
+      if (d.open) { d.onclose = null; d.close("cancel"); }
+      addMusic(a.path, a.name);
+      return;
+    }
+    // The question: how many songs, about how long, and which crate they go into (a new one's name to type).
+    if (!d.open) openCounting();
+    $("askread-title").textContent = n("askReadTitle", m.songs, { name: a.name });
+    $("askread-body").textContent = t("askReadBody", { about: m.about });
+    const isNew = !current();
+    $("askread-new").hidden = !isNew;
+    $("askread-into").hidden = isNew;
+    $("askread-into").textContent = t("intoCrate", { crate: shownName() });
+    $("askread-name-input").value = shownName();
+    $("askread-name-input").oninput = () => { a.crateName = $("askread-name-input").value; };
+    $("askread-start").textContent = n("askReadStart", m.songs);
+    $("askread-start").hidden = false;
+    $("askread-counting").hidden = true; $("askread-ask").hidden = false;
+    $("askread-name-input").select();
+  }
+
   // ---- what the DJ does
-  function addMusic(path, name) {
+  function addMusic(path, name, crateName) {
     const fields = { path };
     if (name) fields.name = name;
+    // A new crate takes the first screen's name (or the one typed in the question), never the source's.
+    if (!current()) fields.crateName = crateName || $("first-name").value || (state && state.newName) || "";
     request("run.add", fields, { errorWord: "runStopped" });
   }
   async function chooseAndAdd() {
     const f = await request("shell.chooseFolder", Object.assign({ purpose: "addMusic", message: t("chooseSourceMessage") }, chooserWords(true)), { quiet: true });
-    if (f.ok && f.path) addMusic(f.path);
+    if (f.ok && f.path) addChosen(f.path);
   }
-  function nextDrop() { if (!run && !(state && state.running) && dropQueue.length) addMusic(dropQueue.shift()); }
+  /// A folder chosen or dropped: the top of a big drive offers a folder inside it first; anything else is counted.
+  async function addChosen(path) {
+    const r = await request("drives.list", {}, { quiet: true });
+    const x = ((r.ok && r.drives) || []).find((d) => samePath(d.path, path));
+    if (x && x.big) { bigDrive(x); return; }
+    countThenAdd(path, x ? x.name : null);
+  }
+  function nextDrop() { if (!run && !(state && state.running) && !adding && dropQueue.length) addChosen(dropQueue.shift()); }
+
+  /// The crate's name, renamed from the header or the run screen: the crate showing (during a run it is applied when
+  /// the run ends), or the new crate's name on the first screen.
+  function renameShown() {
+    const c = current();
+    const name = shownName();
+    askName(t("renameTitle", { name }), name, (v) => {
+      if (c) request("crate.rename", { crate: c.id, name: v }, { errorWord: "couldntRename" });
+      else request("crate.newName", { name: v }, { quiet: true });
+    });
+  }
   async function importCrate() {
     const f = await request("shell.chooseFile", Object.assign({ purpose: "import", message: t("importMessage") }, chooserWords(false)), { quiet: true });
     if (f.ok && f.path) { finished = null; request("crate.import", { path: f.path }, { errorWord: "couldntOpen" }); }
@@ -1442,9 +1622,13 @@
     message([t("exportedTo", { folder: parentOf(r.path) })], extra);
   }
 
-  $("first-add").addEventListener("click", () => {
-    // The first screen's button opens the same menu as the bar's.
-    $("add-button").click();
+  $("crate-name-button").addEventListener("click", renameShown);
+  $("run-name-button").addEventListener("click", renameShown);
+  $("run-stop").addEventListener("click", () => request("run.stop", {}, { quiet: true }));
+  $("first-name").addEventListener("change", () => request("crate.newName", { name: $("first-name").value }, { quiet: true }));
+  $("finished-carryon").addEventListener("click", () => request("run.carryOn", {}, { errorWord: "runStopped" }));
+  $("finished-takeout").addEventListener("click", async () => {
+    if (finished && await askRemove(finished.read)) { finished = null; render(); }
   });
   $("first-import").addEventListener("click", importCrate);
   $("carry-on").addEventListener("click", () => request("run.carryOn", {}, { errorWord: "runStopped" }));

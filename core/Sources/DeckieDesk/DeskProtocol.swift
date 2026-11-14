@@ -32,6 +32,11 @@ public final class DeskProtocol: @unchecked Sendable {
     private var runThreadDone: DispatchSemaphore?
     /// The source a music CD's run is adding, while it goes (for the name the DJ gives it meanwhile).
     private var runningDisc: String?
+    /// The run going, for Stop; and whether Stop was asked.
+    private var currentRun: DeskRun?
+    private var stopping = false
+    /// The count going before a large read (`add.count`), for Cancel.
+    private var counting: DeskAddMusic.CountStop?
     /// Opens a music CD by its location; a test gives a stand-in.
     public var openMusicCD: @Sendable (String) throws -> MusicCD = { try MusicCDs.open($0) }
     /// The drives holding a music CD now (the environment's stand-ins, when it names some).
@@ -135,6 +140,8 @@ public final class DeskProtocol: @unchecked Sendable {
               "analysis": ["ready": analysis.ready, "detail": analysis.detail ?? NSNull()] as [String: Any],
               "deletesForGood": true, "wordsVersion": DeskWords.version, "words": words,
               "computer": DeskWords.computerKind,
+              // The three ways to add music, the same as the Mac's (DeskAddMusic.ways): each one's word, help and icon.
+              "addWays": DeskAddMusic.ways.map { ["id": $0.id, "word": $0.word, "help": $0.help, "icon": $0.pageIcon] },
               "lookup": ["service": "MusicBrainz", "available": lookupClient.available] as [String: Any]])
         lock.lock(); defer { lock.unlock() }
         sendState(); sendSongs()
@@ -145,7 +152,7 @@ public final class DeskProtocol: @unchecked Sendable {
         let crates = session.crates.map { ["id": $0.id, "name": $0.name] }
         var current: Any = NSNull()
         if let c = session.current {
-            current = ["id": c.id, "name": c.name, "hasSongs": session.crate != nil, "songs": session.crate?.tracks.count ?? 0,
+            current = ["id": c.id, "name": session.shownName ?? c.name, "hasSongs": session.crate != nil, "songs": session.crate?.tracks.count ?? 0,
                        "sources": session.crate?.discPlan.map(\.name) ?? []] as [String: Any]
         }
         var pending: Any = NSNull()
@@ -155,6 +162,7 @@ public final class DeskProtocol: @unchecked Sendable {
                        "musicCD": p.musicCD != nil] as [String: Any]
         }
         send(["event": "state", "crates": crates, "current": current, "pending": pending, "running": running,
+              "stopping": stopping, "newName": session.newCrateName,
               "lookingUp": lookingUp, "discs": session.current.map { Array($0.discs.keys).sorted() } ?? [],
               "undo": session.undoName ?? NSNull(), "redo": session.redoName ?? NSNull()])
     }
@@ -199,7 +207,7 @@ public final class DeskProtocol: @unchecked Sendable {
         if type == "quit" { reply(id); return false }
         lock.lock(); defer { lock.unlock() }
         let readOnly: Set<String> = ["state", "drives.list", "crate.songs", "source.removeCount", "run.nameDisc", "name.split",
-                                     "song.audio", "song.cover", "lookup.sent"]
+                                     "song.audio", "song.cover", "lookup.sent", "run.stop", "crate.rename", "add.countStop"]
         if running && !readOnly.contains(type) { fail(id, "busy", "a run is going"); return true }
         if lookingUp && !readOnly.contains(type) && type != "lookup.stop" { fail(id, "busy", "a lookup is going"); return true }
         do {
@@ -235,8 +243,34 @@ public final class DeskProtocol: @unchecked Sendable {
             s.newCrate(); reply(id); sendState()
         case "crate.rename":
             let crateId = try Self.string(obj, "crate")
-            try s.rename(crateId, to: try Self.string(obj, "name"))
-            reply(id, ["name": s.shelf.info(crateId)?.name ?? NSNull()]); sendState(); sendSongs()
+            let name = try Self.string(obj, "name")
+            if lookingUp { throw RequestError(code: "busy", detail: "a lookup is going") }
+            if running {
+                // While a run reads it, only the crate being read can be renamed; the name is applied when it ends.
+                guard crateId == s.current?.id else { throw RequestError(code: "busy", detail: "a run is going") }
+                s.renameDuringRun(name)
+                reply(id, ["name": s.shownName ?? NSNull()]); sendState()
+            } else {
+                try s.rename(crateId, to: name)
+                reply(id, ["name": s.shelf.info(crateId)?.name ?? NSNull()]); sendState(); sendSongs()
+            }
+        case "crate.newName":
+            s.setNewCrateName(try Self.string(obj, "name"))
+            reply(id, ["name": s.newCrateName]); sendState()
+        case "run.stop":
+            guard running, let run = currentRun else { reply(id); return }
+            run.stop()
+            stopping = true
+            reply(id); sendState()
+        case "add.count":
+            let path = try Self.string(obj, "path")
+            var isDir: ObjCBool = false
+            guard FileManager.default.fileExists(atPath: path, isDirectory: &isDir), isDir.boolValue else {
+                throw RequestError(code: "bad_request", detail: "\(path) is not a folder")
+            }
+            startCount(URL(fileURLWithPath: path, isDirectory: true), name: obj["name"] as? String, id)
+        case "add.countStop":
+            counting?.set(); reply(id)
         case "crate.delete":
             try s.delete(try Self.string(obj, "crate")); changed()
         case "crate.import":
@@ -299,6 +333,8 @@ public final class DeskProtocol: @unchecked Sendable {
             guard FileManager.default.fileExists(atPath: path, isDirectory: &isDir), isDir.boolValue else {
                 throw RequestError(code: "bad_request", detail: "\(path) is not a folder")
             }
+            // A new crate's name, as the first screen or the question before a large read has it (research AE).
+            if s.current == nil, let crateName = obj["crateName"] as? String { s.setNewCrateName(crateName) }
             try startRun(s.addRequest(URL(fileURLWithPath: path, isDirectory: true), name: obj["name"] as? String), id)
         case "run.carryOn":
             guard let p = s.pending else { throw RequestError(code: "bad_request", detail: "no run to carry on") }
@@ -389,6 +425,31 @@ public final class DeskProtocol: @unchecked Sendable {
         }
     }
 
+    // MARK: counting before a large read (research AE, finding 3)
+
+    /// Called with the lock held. Counts the songs below `folder` on a thread of its own, sending `add.counting` as
+    /// the count rises and `add.counted` at the end: the count, the estimate in words, and whether to ask first.
+    func startCount(_ folder: URL, name: String?, _ id: Any?) {
+        counting?.set()
+        let stop = DeskAddMusic.CountStop()
+        counting = stop
+        let home = session.home, env = environment, path = folder.path
+        let shown = name ?? DeskDrives.sourceName(of: folder)
+        reply(id, ["path": path])
+        let thread = Thread { [self] in
+            let last = LastSent()
+            let c = DeskAddMusic.check(folder, home: home, environment: env, stop: stop) { n in
+                if last.due(every: 0.2) { self.send(["event": "add.counting", "path": path, "songs": n]) }
+            }
+            self.send(["event": "add.counted", "path": path, "name": shown, "songs": c.songs, "bytes": c.bytes,
+                       "seconds": c.seconds, "about": DeskAddMusic.aboutWords(c.seconds), "ask": c.ask, "stopped": c.stopped])
+            self.lock.lock()
+            if self.counting === stop { self.counting = nil }
+            self.lock.unlock()
+        }
+        thread.start()
+    }
+
     // MARK: the run
 
     /// Called with the lock held.
@@ -403,6 +464,8 @@ public final class DeskProtocol: @unchecked Sendable {
               "musicCD": request.musicCD != nil, "askName": askName ?? NSNull()])
         sendState()
         let run = makeRun(session.home, info.id, request)
+        currentRun = run
+        stopping = false
         run.openMusicCD = openMusicCD
         let env = environment
         run.findMusicCDs = { MusicCDs.list(environment: env) }
@@ -426,8 +489,13 @@ public final class DeskProtocol: @unchecked Sendable {
                 self.lock.lock()
                 self.running = false
                 self.runningDisc = nil
+                self.currentRun = nil
+                self.stopping = false
                 self.session.runEnded(info.id)
-                self.send(["event": "run.finished", "report": Self.plain(report)])
+                // The crate's name as it is now: a name given while the run went is applied as it ends.
+                var shown = report
+                if let n = self.session.current?.name { shown.crate = n }
+                self.send(["event": "run.finished", "report": Self.plain(shown)])
                 self.sendState(); self.sendSongs()
                 self.lock.unlock()
             } catch {
@@ -435,6 +503,8 @@ public final class DeskProtocol: @unchecked Sendable {
                 self.lock.lock()
                 self.running = false
                 self.runningDisc = nil
+                self.currentRun = nil
+                self.stopping = false
                 self.session.runEnded(info.id)
                 self.send(["event": "run.failed", "detail": (error as? LocalizedError)?.errorDescription ?? "\(error)"])
                 self.sendState(); self.sendSongs()
