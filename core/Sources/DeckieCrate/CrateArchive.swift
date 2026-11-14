@@ -23,10 +23,11 @@ public enum CrateArchive {
     /// single-file form.
     public static func isArchive(_ url: URL) -> Bool {
         var isFolder: ObjCBool = false
+        // Read through a mapping, not a FileHandle: on Windows a FileHandle (Foundation, Swift 6.4.1) is one a child
+        // program started at that moment inherits, and a child holding the crate file open stops it being replaced.
         guard FileManager.default.fileExists(atPath: url.path, isDirectory: &isFolder), !isFolder.boolValue,
-              let handle = try? FileHandle(forReadingFrom: url) else { return false }
-        defer { try? handle.close() }
-        let head = [UInt8]((try? handle.read(upToCount: 4)) ?? Data())
+              let data = try? Data(contentsOf: url, options: .mappedIfSafe) else { return false }
+        let head = [UInt8](data.prefix(4))
         return head == [0x50, 0x4B, 0x03, 0x04] || head == [0x50, 0x4B, 0x05, 0x06]
     }
 
