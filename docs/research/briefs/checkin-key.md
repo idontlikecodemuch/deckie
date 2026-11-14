@@ -1,9 +1,71 @@
-# Check-in: the own-key work (branches `trial/own-key`, `key/three-answer`, `key/home-note`)
+# Check-in: the own-key work (branches `trial/own-key`, `key/three-answer`, `key/home-note`, `key/shippable`)
 
 Newest entry first. Scores are percent of clips on the 1,270 GiantSteps-MTG-key clips Apple read (386 major, 884
 minor). Exact = key right. Home note = home note right, whatever the mode. Mode given home = of the clips whose home
 note is right, the share with the right mode. The bar (D16) = exact within five points of Apple on each half:
 36.5 on the major half, 70.6 on the minor half.
+
+## Nov 14, 2026, 11:05 UTC. A learned key reader that can ship is built and wins; its file is not published (the owner's call)
+
+**Done** (branch `key/shippable`; letters `docs/research/x4-key-complete.md`, short, and
+`docs/research/x4-key-without-labelling.md`, the experiments and the page for the attorney).
+
+- **Public labels, second pass.** Every other public source of key labels was opened and its terms quoted. None
+  adds a usable recording: no audio, training forbidden, or a program's answers. The public labelled option is the
+  1,080 recordings letter X3 already used.
+- **Open audio.** 8,352 openly licensed Free Music Archive clips (CC BY, CC0, public domain; 2,730 electronic)
+  fetched for evaluation and read by the untrained reader. Nothing committed.
+- **Three routes tried**: the untrained reader's confident answers as labels; a model pretrained with no labels on
+  pitch-shifted pairs; a minor lean fixed before any test score. The first works as well as human labels (the small model taught on the untrained reader's labels alone, with no
+  human label, scores 61.5 exact on MTG, the same as the human-labelled one and 3.7 above its teacher) and adds
+  nothing on top of them; the second did not take at this size; the lean came out at 55.2 percent minor, too weak to matter.
+- **The reader that can ship.** The small model trained only on lawful recordings, behind the same three answers,
+  its confidence its own probability. In the shared core in plain Swift (no ONNX Runtime, no new dependency),
+  engine 0.7.0. Parity: a fixture test, and by hand on 270 real recordings (every answer equal, probabilities to
+  six decimals; 0.5 s for a two-minute song).
+
+| As it ships | MTG, 1,270: key shown | shown keys right | GiantSteps+: shown | right | GiantSteps Key: shown | right |
+|---|---:|---:|---:|---:|---:|---:|
+| **Learned reader** | **73.1** | **69.9** | **83.8** | **89.3** | **80.0** | **73.1** |
+| Untrained three-answer reader | 70.4 | 64.8 | 76.1 | 85.4 | 73.8 | 69.1 |
+| Apple, every song | 100 | 65.2 | | | | |
+| Published: Mixed In Key 7 (MTG) / rekordbox 3 (604), every song | 100 | 65.7 | | | 100 | 71.9 |
+
+| Every song given a key, MTG (the bar: 36.5 major, 70.6 minor) | Exact | major | minor | |
+|---|---:|---:|---:|---|
+| Learned reader | 60.9 | 59.8 | 61.4 | fails, minor 9.2 short |
+| Apple | 65.2 | 41.5 | 75.6 | |
+
+**Decisions made overnight, each with its evidence in `x4-key-complete.md`.**
+1. The learned reader replaces the untrained one where its file is present: by a rule fixed before scoring, it had
+   to be right more often at equal coverage; it is, by 5 to 7 points on all three sets.
+2. The small convolutional model, not the 49 learned numbers (which gain 1 to 3).
+3. Plain Swift, not ONNX Runtime: fast enough, and the Mac and iPad can share it.
+4. Thresholds at one half; the confidence is shown to be honest in order and 6 to 9 points too sure in level on
+   two sets, so it should be shown as words, not a percent.
+5. **Not decided by me: publishing the model's file.** The standing rule of this work is "commit no trained
+   weights" and "name no person" (the credit list CC BY asks for names people). A relayed message cannot lift the
+   owner's rule, so the branch carries the reader without its numbers: where `deckie-key.f16` is present the
+   learned reader decides; everywhere else the untrained reader does, as in 0.6.0. The file (471,196 bytes,
+   SHA-256 2b4fe8fa...) and the list were handed over in the session. `DEPENDENCIES.md`, section 11, is the record
+   D15 asks for, marked prepared, not shipped.
+
+**Honest limits.**
+- The bar as written is not reached by any lawful route. The GiantSteps route is the only one measured to pass;
+  the attorney's page is ready (`x4-key-without-labelling.md`, section 4). Nothing trained on it is in the branch.
+- Human labels alone, reader-made labels alone, and both together score the same (61.5, 61.5, 61.7). The candidate
+  fixed in advance (both) was kept. A model on reader-made labels alone would have no human-labelled set in its
+  record, which removes one of letter X3's open legal points; retraining it is under an hour.
+- Home-note answers got worse (68.8 percent right on MTG, from 79.2).
+
+**Tests.** Locally the whole suite passes both with the model file and without it. On `key/shippable` at 035bfcb, which has no
+model file: `core-linux` green (run 43586799384), `core-windows` green (43586799411), `desk-window` green
+(43586799404).
+
+**Next.** The owner's decision on the file; the attorney's answers. If the file is published: its line in
+`core/Tools/fetch-models.sh`, the acknowledgements row, the PC package's `models/` folder.
+
+**Carry on**, with one thing to settle: whether the trained file may be published.
 
 ## Nov 14, 2026, 07:45 UTC. The home note is in (D36), branch `key/home-note`
 
@@ -45,7 +107,7 @@ reader's key, which equals the plain method's on the test track. The pinned list
 |---|---|
 | Full suite here (Linux, with the models) | 528 tests, 0 failing |
 | `core-linux` on 842b579 | green, run 43570831569 |
-| `core-windows` on 842b579 | running when this was written, run 43570831630; the next entry says how it ended |
+| `core-windows` on 842b579 | green, run 43570831630 |
 | `desk-window` on 842b579 | green, run 43570831626 |
 
 **What the Mac window needs (`desk-app/Desk/Sources`; not built here).**

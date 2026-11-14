@@ -212,7 +212,7 @@ extension Analysis {
             m("profiles", .object(h.decision.profileKeys.map {
                 m($0.name, .object([m("camelot", .string($0.camelot)), m("r", J.round($0.r, 3))]))
             })),
-            m("three_answer", threeAnswerBlock()),
+            m("three_answer", threeAnswerBlock()), m("learned", learnedBlock()),
             m("stft_edma", estimate(key.whole)),
             m("song_key", .string(key.songKey)), m("song_key_from", .string(songKeyFrom)),
             m("windows_estimator", .string("fft-chroma-edma")),
@@ -227,11 +227,29 @@ extension Analysis {
     /// `key` (the reader's key), `home note` (the two keys on its home note, the better fit of the two per window)
     /// or `none` (not sure: the windows are read, not judged; their gain is 0 and they are never flagged).
     var songKeyFrom: String {
-        switch threeAnswer.answer {
+        switch keyAnswer {
         case .key: return "key"
         case .home: return "home note"
         case .notSure: return "none"
         }
+    }
+
+    /// `deckie.key.learned` (engine 0.7.0): the learned reader's result, which is the crate record's key: its model,
+    /// `answer` (`key`, `home` or `none`), the answer's `camelot` or null, the home note's pitch class or null, the
+    /// likeliest key (`best`) with its probability, the likeliest home note's probability, and all 24 probabilities
+    /// (index = home note, C = 0, plus 12 if minor; 4 decimals). Null without the learned reader.
+    func learnedBlock() -> JSONValue {
+        typealias J = JSONValue
+        func m(_ k: String, _ v: J) -> J.Member { J.Member(k, v) }
+        guard let l = learnedKey else { return .null }
+        return .object([
+            m("model", learnedKeyModel.map { .string($0) } ?? .null), m("answer", .string(l.answer.name)),
+            m("camelot", l.answer.camelot.map { .string($0) } ?? .null),
+            m("home_pitch_class", l.answer.pitchClass.map { .int($0) } ?? .null),
+            m("best", l.camelot.map { .string($0) } ?? .null), m("probability", J.round(l.keyProbability, 4)),
+            m("home_probability", J.round(l.homeProbability, 4)),
+            m("probabilities", .array(l.probabilities.map { J.round($0, 4) })),
+        ])
     }
 
     /// `deckie.key.three_answer` (engine 0.5.0, D33): the three-answer reader's result, which is the crate record's
