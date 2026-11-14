@@ -7,6 +7,28 @@ Newest entry first. Each entry: when, what is done, what failed and why, what is
 `6e1cd29b2c9cce10c6e0059954612d5ee9bb35f0b036270773f6cbf4e857e480`. Microsoft's runtime included. Earlier zips are
 superseded.
 
+## Nov 14, 2026, 01:15 UTC: `.m4a` measured, reported before building; still green
+
+- **Measured on the Windows runner** (`core-windows` run 43536290887, commit `fffaeb7`, all jobs green): Windows'
+  Media Foundation does **not** remove the lead-in of an AAC file. On the test tone the click comes out 1,024
+  frames (23.2 ms) late and the audio 1,776 frames too long. The file's edit list says both numbers, so Deckie has
+  to read it and trim.
+- **So `.m4a` is larger than hoped, and is reported, not built**, as asked: two to three days. The plan and the one
+  decision it needs (what to do with AAC files that state their lead-in nowhere: refuse them, or accept them with
+  the start marked uncertain) are in the letter, "File types on Windows", "Measured since".
+- What is in the tree: the shim (`core/Sources/CMediaFoundation`) and the test that pins the measurement. The
+  builder does not use them; `.m4a` is still counted as unreadable, in plain words.
+- All three workflows are green on `fffaeb7` (`core-windows` 43536290887, `core-linux` 43536290919, `pc-package`
+  43536291060). The zip named at the top (run 43535065527) is unchanged in what it does; the newer run's zip
+  differs only by the unused shim inside the program.
+
+**Failed:** nothing.
+
+**Next:** waits on the decision above. The branch is ready for the main session to merge.
+
+carry on; consider changing direction on `.m4a` only if refusing files without a stated lead-in loses too many of a
+real DJ's files, because then the record needs a new field and that is a format addition
+
 ## Nov 14, 2026, 00:45 UTC: the owner's four answers applied; `main` merged; all three workflows green; fresh zip
 
 The main session relayed the owner's yes to all four open points (Nov 13). Done:

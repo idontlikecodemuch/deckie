@@ -44,7 +44,13 @@ import Testing
               + "click offset from 88200: \(top - 88200) frames, first sample above -60 dB at frame \(firstSound)")
         #expect(b.sampleRate == 44100)
         #expect(b.channelCount == 2)
-        #expect(frames > 170_000)
+        // Measured on GitHub's Windows runner (Windows Server 2025, build 26100), core-windows run 43536290887:
+        // Media Foundation does not remove the lead-in. It hands back every AAC frame whole, 174 of 1,024, so the
+        // click is 1,024 frames late and the audio 1,776 frames too long. The file's own edit list says both numbers
+        // (start at 1,024, play 4.000 s), so a reader has to apply it itself. Pinned, so that the day a Windows
+        // update starts trimming, this fails and the rule is looked at again instead of trimming twice.
+        #expect(frames == 178_176)
+        #expect(top - 88_200 == 1_024)
     }
     #endif
 }

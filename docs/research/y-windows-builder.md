@@ -157,6 +157,36 @@ small nor safe to ship unmeasured:
 
 About a day with the runner's cycles, plus a Windows 10 PC for point 3.
 
+**Measured since (Nov 14, `core-windows` run 43536290887).** The shim of point 1 is written
+(`core/Sources/CMediaFoundation`, 190 lines of C, opened at run time as point 2 asks) and builds on Windows; it is
+**not used by the builder**. A test decodes `tone.m4a` with it on the runner (Windows Server 2025, build 26100)
+and reads where the click lands:
+
+| | Media Foundation gave | The file is |
+|---|---|---|
+| Length | 178,176 frames (174 AAC frames of 1,024, every one whole) | 176,400 frames (4.000 s) |
+| The click | frame 89,224 | frame 88,200 |
+| First block's time stamp | 0.0 s | |
+
+So **Windows does not remove the lead-in**: everything is 1,024 frames (23.2 ms) late, and the end is not cut
+either. The file itself says both numbers in its edit list (start at 1,024, play 4.000 s), so the answer to point
+3 is that Deckie has to read the edit list and trim. That makes the remaining work larger than "one line in the
+decoder", which is why it is reported here and not built:
+
+1. Read the MP4's edit list, time scales and sample count (a box reader exists in `ProtectedMP4.swift`), and trim
+   the start and the end by them. Tested on Linux too, since it is plain Swift.
+2. Decide by length, not by trust: trim only when the decoded length is the untrimmed one (whole AAC frames); take
+   it as it is when it already has the edit list's length (a Windows that trims); refuse the file when it is
+   neither. Then a Windows version that behaves differently cannot give a silently wrong grid.
+3. Files with no edit list. Many AAC files, iTunes' own among them, state the lead-in in an `iTunSMPB` tag
+   instead; that has to be read as well. A file that states it nowhere has to be either refused or read with a
+   guess, and a guess is a late grid. **This needs a decision**: refuse such files (honest, loses some), or accept
+   them and record that the start is uncertain (needs a place in the record, which the format does not have).
+4. Apple Lossless: no lead-in by design, so the same path with nothing to trim; needs a generated test file.
+5. Still only Windows Server 2025 measured. Windows 10 and 11 need a PC; point 2 is the guard until then.
+
+Size: two to three days with tests, most of it points 1 and 3. No dependency and no licence question.
+
 ## The single-file form (step 3)
 
 Chosen: a plain zip with nothing compressed, under the same name `<name>.deckiecrate`, written and read by our own
