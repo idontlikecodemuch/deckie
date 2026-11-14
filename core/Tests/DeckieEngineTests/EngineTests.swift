@@ -268,8 +268,14 @@ struct EngineTests {
         #expect(json["key"]?["confidence_rule"] == .string(a.keyConfidence.rule))
         let dk = try #require(json["deckie"]?["key"])
         #expect(dk.keys == ["estimator", "whitening", "frames", "camelot", "key", "scale", "r", "margin", "agree", "sure",
-                            "tables", "profiles", "stft_edma", "song_key", "windows_estimator", "mix_in",
+                            "tables", "profiles", "three_answer", "stft_edma", "song_key", "windows_estimator", "mix_in",
                             "mix_out", "segments"])
+        // The three-answer reader's result (engine 0.5.0), which the crate record's key block follows.
+        let ta = try #require(dk["three_answer"])
+        #expect(ta.keys == ["answer", "camelot", "home_pitch_class", "hpcp_discount", "note_transcription", "guess",
+                            "tuning", "confidence", "confidence_rule"])
+        #expect(ta["answer"] == .string(a.threeAnswer.answer.name) && ta["camelot"] == .string(TestTrack.camelot))
+        #expect(ta["confidence"] == .number(KeyConfidence.threeAnswer(a.threeAnswer.answer).value))
         #expect(dk["estimator"] == .string("hpcp-whitened") && dk["whitening"] == .bool(true))
         #expect(dk["margin"] == .number(Py.round(a.hpcpKey.decision.margin, 4)) && dk["sure"] == .bool(a.hpcpKey.decision.sure))
         #expect(dk["profiles"]?.keys == ["edma", "bgate", "braw"] && dk["tables"] == .string("literature"))
