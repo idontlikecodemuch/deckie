@@ -394,7 +394,8 @@ public final class DeskRun: @unchecked Sendable {
             jobs: jobs, device: device, engine: Builder.engineLabel, carriedOn: carriedOn, local: local,
             disc: discRecord.map { r in
                 DiscReport(text: r.text, songs: r.toc.songs.count, named: request.source.flatMap { discNamed[$0] } ?? 0,
-                           damagedSectors: r.damagedSectors, titled: r.discTitle != nil)
+                           damagedSectors: r.damagedSectors, titled: r.discTitle != nil,
+                           bytes: Int64(r.toc.songs.reduce(0) { $0 + $1.sectors } * DiscTOC.bytesPerSector))
             })
         state.lock.unlock()
         try Self.appendRun(report, to: shelf.file(Self.runsFile, of: crateId))
