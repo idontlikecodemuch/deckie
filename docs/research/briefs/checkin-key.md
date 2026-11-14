@@ -45,7 +45,7 @@ reader's key, which equals the plain method's on the test track. The pinned list
 |---|---|
 | Full suite here (Linux, with the models) | 528 tests, 0 failing |
 | `core-linux` on 842b579 | green, run 43570831569 |
-| `core-windows` on 842b579 | running when this was written, run 43570831630; the next entry says how it ended |
+| `core-windows` on 842b579 | green, run 43570831630 |
 | `desk-window` on 842b579 | green, run 43570831626 |
 
 **What the Mac window needs (`desk-app/Desk/Sources`; not built here).**
