@@ -39,7 +39,8 @@ public struct FileFacts: Equatable, Sendable {
     public func apply(to t: inout CrateTrack) {
         t.ident.dropFacts { $0 == SongFacts.Origin.tag }
         for (name, values) in facts { t.ident.offer(name, .init(values, from: SongFacts.Origin.tag)) }
-        t.file.otherTags = other.isEmpty ? nil : other
+        // Kept when the file's tags gave a fact, another tag, or something left out; the formats alone say nothing.
+        t.file.otherTags = other.tags.isEmpty && other.leftOut.isEmpty && facts.isEmpty ? nil : other
     }
 
     /// The facts of the file at `url`; empty when it has none or cannot be read.

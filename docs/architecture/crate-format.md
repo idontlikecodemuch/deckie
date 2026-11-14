@@ -528,7 +528,7 @@ record without them keeps its bytes and the example crate is unchanged:
   `COMM:<description>` for ID3's described frames, a Vorbis key as written, a RIFF INFO item's four letters, an MP4
   atom's name, `----:<mean>:<name>` for iTunes' free-form atoms) to its values, a list as in a fact; and `left_out`
   counts what was not kept, by reason (below). Its origin is always the file's tags. It is there when the file's
-  tags held anything at all, and left out otherwise.
+  tags gave a fact, another tag or something left out, and left out otherwise (the formats alone say nothing).
 
 **Where a fact came from** (`from`): `tag` (the file's tags), `cdtext` (a music CD's CD-Text), a DJ program by the
 names `key.source` already uses (`rekordbox-xml`, `traktor`, `engine-dj`, `serato`, `virtualdj`: that program's
