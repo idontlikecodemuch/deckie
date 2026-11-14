@@ -18,9 +18,11 @@ key is right.
 
 - **The learned reader beats the untrained one on both counts, on every set.** On the 1,270 MTG clips it shows a
   key on 73 percent of songs and is right on 70 percent of those; the untrained reader shows 70 and is right on 65.
-- **Its shown keys are right more often than Apple's framework is over all songs** (69.9 against 65.2 on MTG), and
-  more often than the published scores of Mixed In Key 7 (65.7 there) and rekordbox 3 (71.9 on the 604-clip set;
-  the learned reader's shown keys: 73.1). Those tools name a key for every song; Deckie declines one song in four.
+- **Beside Apple on the same songs it is level, not better** (section 2a, added Nov 14 after the owner asked). On
+  the 73 percent of MTG songs it shows, it is right on 69.9 percent and Apple on 71.2; the difference is not real
+  (sign test p = 0.44). It is far better than Apple on major songs and clearly worse on minor ones. The published
+  scores of Mixed In Key 7 (65.7 on MTG) and rekordbox 3 (71.9 on the 604-clip set; the learned reader's shown
+  keys: 73.1) are over every song, so they are not the same comparison.
 - **It does not pass D16's bar as written**, which scores every song: 60.9 exact (59.8 major, 61.4 minor), 9.2
   short on the minor half. No lawful route does (`x4-key-without-labelling.md`, section 3).
 - **It is in the shared core, in plain Swift, with no new dependency**, parity-tested against the Python, and takes
@@ -78,13 +80,90 @@ As it ships: read once (not at several pitch shifts), numbers rounded to 16 bits
 | Small model trained on the MTG collection itself (letter X2; cannot ship) | 65.9 | 44.0 | 75.5 | passes |
 
 **Read it this way.** At the owner's measure (keys shown as right as the paid tools, at more coverage) the learned
-reader is there: its shown keys are right as often as or more often than those tools' keys, and it shows more than
-the untrained reader did. At the bar's measure (every song, both halves) it is not: it is the fairest reader
+reader is level with Apple on the songs it shows (section 2a) and shows more than the untrained reader did. The
+tools' published scores are over every song, so "more often right than the tools" would compare an easier set of
+songs with a harder one. At the bar's measure (every song, both halves) it is not: it is the fairest reader
 measured (60 percent on each half), where Apple is right on 76 percent of minor songs and 42 percent of major ones.
 
 **One thing got worse.** Its home-note answers are fewer and less often right than the untrained reader's (9.8
 percent of songs at 68.8 percent right, against 11.7 at 79.2). The untrained reader's home note comes from two
 methods agreeing; the model's from summing two probabilities. It is the weakest of the three answers now.
+
+## 2a. Beside Apple, song by song (added Nov 14)
+
+The owner asked: "Why didn't it meet the bar?" and "am I to understand that it is more accurate than Apple but
+makes a determination less often?" Apple's answer for each of the 1,270 MTG clips is from the first trial; the
+learned reader is as it ships. "Only ours right" and "only Apple right" count the songs where the two differ in
+being right; the sign test asks whether that split could be chance (p under 0.05: a real difference). Table:
+`mixer/keytrial/x4_apple_results.md` (`kt_x4.py apple`).
+
+**The second question first: no.** It is not more accurate than Apple. On the songs where it shows a key, the two
+are level. On the songs it declines, Apple would have been right about half the time. Over all songs Apple is
+ahead.
+
+| MTG, 1,270 clips | Songs | Ours right | Apple right, same songs | Only ours right | Only Apple right | Real difference? |
+|---|---:|---:|---:|---:|---:|---|
+| **Ours shows a key** (73.1 percent) | 928 | 69.9 | 71.2 | 95 | 107 | no (p = 0.44) |
+| **Ours declines** (ours forced to name a key) | 342 | 36.5 | 48.8 | 41 | 83 | yes, Apple (p = 0.0002) |
+| Every song | 1,270 | 60.9 | 65.2 | 136 | 190 | yes, Apple (p = 0.003) |
+
+So declining is doing its job (the declined songs are the ones it would get wrong two times in three), but Apple
+is right on half of those, and Deckie shows nothing there.
+
+| The most confident share shown | Songs | Ours right | Apple right, same songs | Only ours | Only Apple | Real difference? |
+|---:|---:|---:|---:|---:|---:|---|
+| 60 percent | 762 | 73.2 | 74.5 | 65 | 75 | no (p = 0.45) |
+| 70 percent | 889 | 71.0 | 71.5 | 90 | 95 | no (p = 0.77) |
+| 80 percent | 1,016 | 68.1 | 70.3 | 105 | 127 | no (p = 0.17) |
+| 90 percent | 1,143 | 64.2 | 67.7 | 119 | 159 | yes, Apple (p = 0.02) |
+| 100 percent | 1,270 | 60.9 | 65.2 | 136 | 190 | yes, Apple (p = 0.003) |
+
+**By major and minor: each reader is strong where the other is weak.**
+
+| | Songs | Ours right | Apple right, same songs | Only ours | Only Apple | Real difference? |
+|---|---:|---:|---:|---:|---:|---|
+| **Major songs**, ours shows a key | 298 | 66.1 | 45.6 | 73 | 12 | yes, ours (p under 0.001) |
+| Major songs, ours declines | 88 | 38.6 | 27.3 | 23 | 13 | no (p = 0.13) |
+| Major songs, every song | 386 | 59.8 | 41.5 | 96 | 25 | yes, ours (p under 0.001) |
+| **Minor songs**, ours shows a key | 630 | 71.7 | 83.3 | 22 | 95 | yes, Apple (p under 0.001) |
+| Minor songs, ours declines | 254 | 35.8 | 56.3 | 18 | 70 | yes, Apple (p under 0.001) |
+| Minor songs, every song | 884 | 61.4 | 75.6 | 40 | 165 | yes, Apple (p under 0.001) |
+
+The same holds at every share shown: on major songs ours leads by 18 to 20 points, on minor songs Apple leads by
+10 to 14. Ours answers "minor" for 62 percent of songs and Apple for 79 percent; the collection is 70 percent
+minor.
+
+**Why it did not meet the bar.** The bar as written scores a reader that names a key for every song, and asks it
+to be within five points of Apple on the major songs and, separately, on the minor songs (36.5 and 70.6). The
+learned reader scores 59.8 on the major half, 23 points over, and 61.4 on the minor half, 9.2 under. The reason is
+a habit, not hearing: both readers find the home note about equally often (75.0 and 76.4 percent). The music the
+reader may lawfully learn from is half major, so when the mode is unclear it has no reason to prefer minor, and it
+splits its doubt evenly. Apple prefers minor when unsure. On dance music, which is mostly minor, that habit earns
+Apple 75.6 on the minor half and costs it the major half, where it is right on 41.5 percent. A lean added to the
+reader does the same trade: leaned to 65 percent minor (a published share of one dance chart) it reached 66.6 on
+the minor half, 3.9 short, and 53.9 on the major; leaned to 85 percent (another published share) it reached 75.7
+on the minor half and fell to 33.4 on the major, 3.0 short on that side (letter X3; at twelve pitch shifts). No
+lean passed both halves. For the bar to be met honestly, one of three things would have to be true: the reader
+learns from dance music that is as minor as the test (only the GiantSteps route has it, and that is the
+attorney's question); or Deckie has a count of minor keys in dance music from a source that is not the test's own
+shop, and applies it (none was found; openly licensed electronic music came out at 55 percent); or the reader
+hears the mode better on minor songs, which no lawful training tried here achieved.
+
+**What could be measured instead.**
+
+| Measure (MTG, 1,270 clips) | Ours | Apple | Who leads |
+|---|---|---|---|
+| **The bar as written**: every song given a key, exact on the major half and on the minor half | 59.8 and 61.4 | 41.5 and 75.6 | fails the minor half by 9.2; passes the major by 23 |
+| Every song given a key, exact | 60.9 | 65.2 | Apple by 4.3 (real) |
+| Every song given a key, the mean of the two halves (a major song counts as much as a minor one) | 60.6 | 58.5 | ours by 2.1 |
+| **Keys shown** (73.1 percent of songs), exact, Apple on the same songs | 69.9 | 71.2 | level (not a real difference) |
+| Every song, within one step on the wheel (exact, relative, or a fifth away) | 74.8 | 78.3 | Apple by 3.5 |
+| Keys shown, within one step, Apple on the same songs | 81.2 | 82.9 | level |
+| Every song, the home note | 75.0 | 76.4 | level |
+
+**In one line for the owner:** Deckie's reader is as right as Apple on the songs where it speaks, says nothing on
+a quarter of songs where Apple would be right half the time, is much better than Apple on major songs and worse on
+minor ones, and misses the bar because the bar rewards guessing minor.
 
 ## 3. How honest the confidence is
 

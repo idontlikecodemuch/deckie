@@ -1,9 +1,53 @@
-# Check-in: the own-key work (branches `trial/own-key`, `key/three-answer`, `key/home-note`, `key/shippable`)
+# Check-in: the own-key work (branches `trial/own-key`, `key/three-answer`, `key/home-note`, `key/shippable`, `key/versus-apple`)
 
 Newest entry first. Scores are percent of clips on the 1,270 GiantSteps-MTG-key clips Apple read (386 major, 884
 minor). Exact = key right. Home note = home note right, whatever the mode. Mode given home = of the clips whose home
 note is right, the share with the right mode. The bar (D16) = exact within five points of Apple on each half:
 36.5 on the major half, 70.6 on the minor half.
+
+## Nov 14, 2026, later. The owner's two questions: is it more accurate than Apple, and why did it miss the bar
+
+**"More accurate than Apple but decides less often?" No: as accurate as Apple where it decides, and it decides
+less often.** My earlier line compared its shown keys with Apple over all songs, which flattered it. On the same
+songs (1,270 MTG clips, the reader as it ships; detail in `docs/research/x4-key-complete.md`, section 2a, branch
+`key/versus-apple`):
+
+| | Songs | Ours right | Apple right, same songs | Is the difference real? |
+|---|---:|---:|---:|---|
+| Ours shows a key (73 percent of songs) | 928 | 69.9 | 71.2 | no (p = 0.44) |
+| Ours declines (ours forced to answer) | 342 | 36.5 | 48.8 | yes, Apple |
+| Every song | 1,270 | 60.9 | 65.2 | yes, Apple |
+| Major songs, ours shows a key | 298 | 66.1 | 45.6 | yes, ours, by 20 points |
+| Minor songs, ours shows a key | 630 | 71.7 | 83.3 | yes, Apple, by 12 points |
+
+Where it declines it would have been wrong two times in three, so declining works; but Apple is right on half of
+those songs, and Deckie shows nothing there. It is level with Apple at 60, 70 and 80 percent shown and behind at
+90 and 100.
+
+**"Why didn't it meet the bar?"** The bar scores a reader that names a key for every song, and wants it within
+five points of Apple on major songs and on minor songs separately. Ours scores 59.8 on major (23 over) and 61.4 on
+minor (9.2 under). Both readers find the home note equally often (75.0 and 76.4); the gap is a habit. Lawful
+training music is half major, so ours splits its doubt evenly between the modes. Apple answers minor when unsure
+(79 percent of its answers are minor; ours 62), which on mostly-minor dance music gets it 75.6 on the minor half
+and 41.5 on the major. A lean copied from a published share got ours to within 3.9 on the minor half (at 65
+percent) or passed it and broke the major half (at 85); none passed both. To meet the bar honestly the reader
+would need dance music as minor as the test to learn from (the GiantSteps route, the attorney's question), or a
+count of minor keys from a source that is not the test's own shop (none found), or to hear the mode better on
+minor songs (not achieved).
+
+**What could be measured instead.**
+
+| Measure (MTG) | Ours | Apple |
+|---|---|---|
+| The bar as written: every song, major half and minor half | 59.8 and 61.4 | 41.5 and 75.6 |
+| Every song given a key, exact | 60.9 | 65.2 |
+| Every song, the mean of the two halves | 60.6 | 58.5 |
+| Keys shown, Apple on the same songs | 69.9 | 71.2 |
+| Every song, within one step on the wheel | 74.8 | 78.3 |
+| Every song, the home note | 75.0 | 76.4 |
+
+**Carry on.** Nothing here changes what ships; it changes how to describe it: "as right as Apple on the songs
+where it gives a key, fairer between major and minor, silent on one song in four".
 
 ## Nov 14, 2026, 11:05 UTC. A learned key reader that can ship is built and wins; its file is not published (the owner's call)
 

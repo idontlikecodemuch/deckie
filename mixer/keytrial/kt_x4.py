@@ -464,6 +464,41 @@ def main_parity(mode, tool, every=10):
     p.stdin.write(struct.pack("<q", -1)); p.stdin.close(); p.wait()
     print(f"recordings {n}: the Swift reader's answer and likeliest key equal the Python reference's on {same}; largest difference in any probability {worst:.5f}; answers {dict(kinds)}; Swift time {secs / n:.2f} s a two-minute recording (pipe included)")
 
+def main_apple():
+    """python kt_x4.py apple: the learned reader as shipped beside Apple, song by song, on the 1,270 MTG clips Apple
+    read (the probabilities `export` kept): on the songs it shows and on those it declines, by major and minor, at
+    60 to 100 percent shown, with the sign test on the songs where one is right and the other wrong
+    -> x4_apple_results.md."""
+    sys.stdout = KS._Tee(os.path.join(kt.HERE, "x4_apple_results.md"))
+    M = KS.test_sets()[0]; y = M["key"]; ap = M["apple"]; P = np.load(os.path.join(kt.CACHE, "x4_shipped_mtg.npy"))
+    kind, k, h = three(P); conf = P.max(1); ok = k == y; aok = ap == y; mi = y >= 12
+    def line(name, sel):
+        n = int(sel.sum()); g, l, pv = kt.paired(aok[sel], ok[sel])
+        return f"| {name} | {n} | {100 * n / len(y):.1f} | {100 * ok[sel].mean():.1f} | {100 * aok[sel].mean():.1f} | {100 * (ok[sel].mean() - aok[sel].mean()):+.1f} | {g} | {l} | {pv:.3g} |"
+    head = "| songs | count | percent of the 1,270 | ours right | Apple right | ours minus Apple | only ours right | only Apple right | sign test p |\n|---|---:|---:|---:|---:|---:|---:|---:|---:|"
+    shown = kind == 0
+    print("**As it ships (a key shown at one half or more)**\n\n" + head)
+    for nm, base in (("all", np.ones(len(y), bool)), ("major", ~mi), ("minor", mi)):
+        print(line(f"{nm}: shown a key", shown & base)); print(line(f"{nm}: declined (ours forced to name its likeliest key)", ~shown & base)); print(line(f"{nm}: every song", base))
+    print(f"\nOf the songs shown a key, {100 * mi[shown].mean():.1f} percent are minor; of those declined, {100 * mi[~shown].mean():.1f}; of all, {100 * mi.mean():.1f}.")
+    print(f"What ours answers: minor on {100 * (k >= 12).mean():.1f} percent of all songs; Apple on {100 * (ap >= 12).mean():.1f}.")
+    order = np.argsort(-conf)
+    for nm, base in (("all songs", np.ones(len(y), bool)), ("major songs", ~mi), ("minor songs", mi)):
+        print(f"\n**The most confident share shown, {nm}** (the share is of all 1,270; the row counts the {nm} among them)\n\n" + head)
+        for c in (60, 70, 80, 90, 100):
+            sel = np.zeros(len(y), bool); sel[order[:int(round(len(y) * c / 100))]] = True
+            print(line(f"{c} percent shown", sel & base))
+    w1 = lambda pred, sel: (lambda s: s["exact"] + s["fifth"] + s["relative"])(kt.stats(pred[sel], y[sel]))
+    allsel = np.ones(len(y), bool); r = KS.row_of(k, y); a = KS.row_of(ap, y)
+    print("\n**What could be measured**\n\n| measure | ours | Apple |\n|---|---|---|")
+    print(f"| the bar as written: every song given a key, exact on the major half and on the minor half | {r[1]:.1f} and {r[2]:.1f} | {a[1]:.1f} and {a[2]:.1f} |")
+    print(f"| every song given a key, exact | {r[0]:.1f} | {a[0]:.1f} |")
+    print(f"| every song given a key, the mean of the two halves | {r[3]:.1f} | {a[3]:.1f} |")
+    print(f"| keys shown ({100 * shown.mean():.1f} percent of songs), exact, Apple on the same songs | {100 * ok[shown].mean():.1f} | {100 * aok[shown].mean():.1f} |")
+    print(f"| every song given a key, within one step on the wheel | {w1(k, allsel):.1f} | {w1(ap, allsel):.1f} |")
+    print(f"| keys shown, within one step on the wheel, Apple on the same songs | {w1(k, shown):.1f} | {w1(ap, shown):.1f} |")
+    print(f"| every song, the home note right | {r[5]:.1f} | {a[5]:.1f} |")
+
 def main_record(mode):
     """python kt_x4.py record <mode>: every recording the chosen model learned from, with its page and its licence
     -> core/.models/deckie-key-training-recordings.tsv, beside the model's file and, like it, not in the repository
@@ -507,3 +542,4 @@ if __name__ == "__main__":
     elif a[1] == "record": main_record(a[2])
     elif a[1] == "parity": main_parity(a[2], a[3])
     elif a[1] == "fixture": main_fixture()
+    elif a[1] == "apple": main_apple()
