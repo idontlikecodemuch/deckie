@@ -93,6 +93,8 @@ public struct PairingConfig: Sendable, Equatable, Codable {
     /// with two slices there is only the one pairing.
     var tripleCount: Int { fanOut >= 3 ? fanOut : (fanOut == 2 ? 1 : 0) }
     @inline(__always) func kept(_ h: Int) -> Bool { keepOneIn <= 1 || h & (keepOneIn - 1) == 0 }
+    /// The same for a pair's hash, whose own low bits are its time difference: the hash is stirred first.
+    @inline(__always) func keptPair(_ h: Int) -> Bool { keepOneIn <= 1 || Int((UInt64(h) &* 0x9E37_79B9_7F4A_7C15) >> 40) & (keepOneIn - 1) == 0 }
     /// The table's size as a power of two: for pairs the hash's own 21 bits; for triples set by the index to the
     /// catalogue (about one slot for every four entries, from 2^20 to 2^26 slots), so that a slot stays a few entries long.
     public internal(set) var tableBits = 24
@@ -128,6 +130,11 @@ public struct RecognitionIndex: Sendable {
     public let ids: [String]
     /// A mark of which songs the index was made from (see `stamp(of:)`); empty when the maker gave none.
     public let stamp: String
+    /// For each song, the other songs that hold the same sound: another file of the same recording, or a long file
+    /// (a continuous mix kept as one track) that contains it, or one it contains. Such songs are never counted
+    /// against each other when a match is judged (see `Recogniser`, and SameRecording.swift for how they are found).
+    public internal(set) var related: [[Int32]] = []
+    public func isRelated(_ a: Int, _ b: Int) -> Bool { a == b || (a < related.count && related[a].contains(Int32(b))) }
 
     /// Frames of padding before each song on the one long timeline all songs are laid on, and the longest query (in
     /// frames) that padding allows at the fastest candidate speed.
@@ -159,8 +166,23 @@ public struct RecognitionIndex: Sendable {
     public var pointBytes: Int { pointFrame.count * 6 }
     public var pointCount: Int { pointFrame.count }
 
+    /// `sameRecording`: for each song, a key that is equal for files of one recording (a crate file's own word on
+    /// its copies), or nil. `findCopies`: also look for copies and containing files in the fingerprints themselves,
+    /// which costs three short matches a song and needs no key.
     public init(songs: [(id: String, landmarks: Landmarks)], landmark: LandmarkConfig = LandmarkConfig(),
-                pairing: PairingConfig = PairingConfig(), stamp: String = "") {
+                pairing: PairingConfig = PairingConfig(), stamp: String = "", sameRecording: [String?] = [], findCopies: Bool = true) {
+        self.init(building: songs, landmark: landmark, pairing: pairing, stamp: stamp)
+        var pairs: [(Int, Int)] = []
+        var byKey: [String: [Int]] = [:]
+        for (i, key) in sameRecording.enumerated() where i < songs.count { if let key { byKey[key, default: []].append(i) } }
+        for group in byKey.values where group.count > 1 { for a in group { for b in group where a < b { pairs.append((a, b)) } } }
+        if findCopies { pairs += SameRecording.find(in: self) }
+        var sets = [Set<Int32>](repeating: [], count: songs.count)
+        for (a, b) in pairs { sets[a].insert(Int32(b)); sets[b].insert(Int32(a)) }
+        related = sets.map { $0.sorted() }
+    }
+
+    init(building songs: [(id: String, landmarks: Landmarks)], landmark: LandmarkConfig, pairing: PairingConfig, stamp: String) {
         self.stamp = stamp
         var pairing = pairing
         if pairing.triples {
@@ -223,7 +245,8 @@ public struct RecognitionIndex: Sendable {
                     }
                     if !p.triples {
                         for k in 0..<p.fanOut where filled & (1 << k) != 0 {
-                            body(p.hash(anchorBin: a, targetBin: slotBin[k], gap: slotGap[k]), ta)
+                            let h = p.hash(anchorBin: a, targetBin: slotBin[k], gap: slotGap[k])
+                            if p.keptPair(h) { body(h, ta) }
                         }
                     }
                     if p.triples && p.points == 4 {

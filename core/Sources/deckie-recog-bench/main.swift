@@ -154,6 +154,31 @@ case "match":
             songs.append(("pad\(songs.count)", Landmarks(frames: frames, pitches: packed, frameCount: source.frameCount)))
         }
     }
+    // The test for copies (docs/research/w3-recognition-real-room.md): --duplicate-all adds a second entry for every
+    // song, "<id>~copy", with the same fingerprint; --join N adds long files, each N of the songs end to end
+    // ("join~<k>", listed with their songs in --join-map FILE), as a continuous mix kept as one track is. With them an
+    // index must score as it does without. --no-copy-finding leaves the index's own search for such songs out.
+    if o.flags.contains("--duplicate-all") {
+        songs += songs.map { ($0.id + "~copy", $0.landmarks) }
+    }
+    if let per = o.values["--join"].flatMap(Int.init), per > 1 {
+        let real = songs.filter { !$0.id.hasSuffix("~copy") }
+        var map = ""
+        var k = 0
+        while (k + 1) * per * 8 <= real.count {      // one joined file for every 8 x N songs, from songs spread through the list
+            let members = (0..<per).map { real[(k * per * 8 + $0 * 8) % real.count] }
+            var frames: [UInt32] = [], packed: [UInt16] = []
+            var at = 0
+            for m in members {
+                for i in 0..<m.landmarks.count { frames.append(UInt32(at) + m.landmarks.frames[i]); packed.append(m.landmarks.packed[i]) }
+                at += m.landmarks.frameCount
+            }
+            songs.append(("join~\(k)", Landmarks(frames: frames, pitches: packed, frameCount: at)))
+            map += "join~\(k)\t" + members.map(\.id).joined(separator: "\t") + "\n"
+            k += 1
+        }
+        if let path = o.values["--join-map"] { try? map.write(toFile: path, atomically: true, encoding: .utf8) }
+    }
     let config = landmarkConfig(o)
     var pairing = PairingConfig()
     pairing.fanOut = o.int("--fan-out", pairing.fanOut)
@@ -173,7 +198,8 @@ case "match":
     let verified = o.int("--verified", 12)
     pairing.queryPerSlice = o.int("--query-per-slice", pairing.queryPerSlice)
     let t0 = now()
-    let index = RecognitionIndex(songs: songs, landmark: config, pairing: pairing)
+    let index = RecognitionIndex(songs: songs, landmark: config, pairing: pairing, findCopies: !o.flags.contains("--no-copy-finding"))
+    FileHandle.standardError.write(Data("songs that hold the same sound as another: \(index.related.filter { !$0.isEmpty }.count)\n".utf8))
     FileHandle.standardError.write(Data(String(format: "index: %d songs, %d points, %d hashes, %.0f ms; memory %.1f MB (%.1f KB a song), points on storage %.1f MB\n",
                                                 index.songCount, index.pointCount, index.hashCount, now() - t0,
                                                 Double(index.memoryBytes) / 1e6, Double(index.memoryBytes) / 1e3 / Double(max(1, index.songCount)),
@@ -212,7 +238,7 @@ case "match":
     // --shortlist K [--detail pairs]: the index only proposes K songs; those are hashed in full (three-point hashes,
     // or two-point with --detail pairs) from their constellations, which here stand in for files on storage.
     let checkSongs = o.int("--check-songs", 0)
-    for r in recognisers { r.checkSongs = checkSongs }
+    for r in recognisers { r.checkSongs = checkSongs; r.fuzzyGaps = o.flags.contains("--fuzzy-gaps") }
     let shortlist = o.int("--shortlist", 0)
     if shortlist > 0 {
         nonisolated(unsafe) let all = songs
@@ -222,7 +248,7 @@ case "match":
         for r in recognisers { r.shortlistSize = shortlist; r.detailPairing = full; r.detail = { all[$0].landmarks } }
     }
     nonisolated(unsafe) let pool = recognisers
-    parallel(queries.count, jobs: jobs) { i, w in
+    parallel(queries.count, jobs: jobs) { i, w in pooled {
         let q = queries[i]
         guard q.count >= 5, let first = Int(q[2]), let count = Int(q[3]), let rate = Int(q[4]),
               let handle = FileHandle(forReadingAtPath: q[1]) else { rows.set(i, "\(q[0])\tFAILED"); return }
@@ -282,7 +308,7 @@ case "match":
             row += "\t" + pool[w].proposals(marks, count: proposalCount).map { index.ids[$0] }.joined(separator: "\u{1F}")
         }
         rows.set(i, row)
-    }
+    } }
     let text = rows.joined(queries.count)
     guard (try? text.write(toFile: o.string("--out"), atomically: true, encoding: .utf8)) != nil else { fail("cannot write results") }
 
