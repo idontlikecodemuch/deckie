@@ -188,16 +188,29 @@ extension Analysis {
             })
     }
 
-    /// The crate's `key.source`: the method that decides the key (engine 0.5.0: the three-answer reader, D33).
+    /// The crate's `key.source` when the three-answer reader decides (engine 0.5.0 and 0.6.0, D33).
     public static let keySource = "three-answer"
+    /// The crate's `key.source` when the learned reader decides (engine 0.7.0, research X4).
+    public static let learnedKeySource = "learned-key"
 
-    /// The record's key block: the three-answer reader's result on the block's documented scale
-    /// (`KeyConfidence.threeAnswer`). A key: that key, confidence 1.0. Not sure: the reader's best guess as `camelot`
-    /// with confidence 0.2, under the line that flags `key_uncertain`, kept in the builder's record only:
-    /// `LocalFacts.decideKey` never shows it. The home note alone: no key block; `crateKeyHome()` says it (engine
-    /// 0.6.0, D36). No block when the audio has no pitch to read.
+    /// The record's key block. **The learned reader** (engine 0.7.0): its likeliest key with that key's probability as
+    /// the confidence (3 decimals). A key is an answer when the probability is at least one half; under it the block
+    /// is the reader's best guess, flagged `key_uncertain` and kept in the builder's record only
+    /// (`LocalFacts.decideKey` never shows it). The home note alone: no key block; `crateKeyHome()` says it (D36).
+    /// No block when the audio is too short to read. **Without the learned reader**: the three-answer reader's result
+    /// on its three levels (`KeyConfidence.threeAnswer`: 1.0 a key, 0.2 its guess when not sure).
     func crateKey() -> CrateTrack.Key? {
-        if case .home = threeAnswer.answer { return nil }
+        if case .home = keyAnswer { return nil }
+        if let l = learnedKey {
+            guard let best = l.best, let code = l.camelot else { return nil }
+            // Rounding may not carry a guess over the line that shows it.
+            let shown: Bool
+            if case .key = l.answer { shown = true } else { shown = false }
+            let confidence = shown ? max(0.5, Py.round(l.keyProbability, 3)) : min(0.499, Py.round(l.keyProbability, 3))
+            return .init(source: Analysis.learnedKeySource, confidence: confidence, camelot: code,
+                         key: KeyEstimator.pitchNames[best % 12], scale: best < 12 ? "major" : "minor", votes: keyVotes,
+                         changes: keyChanges())
+        }
         guard let guess = threeAnswer.guess, let spelled = Camelot.tonic(guess) else { return nil }
         return .init(source: Analysis.keySource, confidence: KeyConfidence.threeAnswer(threeAnswer.answer).value,
                      camelot: guess, key: KeyEstimator.pitchNames[spelled.pitchClass],
@@ -206,8 +219,8 @@ extension Analysis {
 
     /// The record's `key_home` block (D36): the home note when the reader found it and left the mode open.
     func crateKeyHome() -> CrateTrack.KeyHome? {
-        guard case .home(let pc) = threeAnswer.answer else { return nil }
-        return .init(source: Analysis.keySource, pitchClass: pc)
+        guard case .home(let pc) = keyAnswer else { return nil }
+        return .init(source: learnedKey == nil ? Analysis.keySource : Analysis.learnedKeySource, pitchClass: pc)
     }
 
     /// The record's flags: the analysis's, with `key_uncertain` following the record's key block (a block under 0.5;
@@ -233,6 +246,8 @@ extension Analysis {
         votes["hpcp_whitened"] = hpcpKey.decision.camelot
         if let a = threeAnswer.camelotA { votes["hpcp_discount"] = a }
         if let b = threeAnswer.camelotB { votes["note_transcription"] = b }
+        // With the learned reader deciding, the three-answer reader's key (when it gave one) is a vote too.
+        if learnedKey != nil, let t = threeAnswer.answer.camelot { votes["three_answer"] = t }
         return votes
     }
 

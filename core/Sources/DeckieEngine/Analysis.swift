@@ -19,7 +19,7 @@ public struct Analysis: Sendable {
     /// R's whitened HPCP (`HPCPKey`), which changes keys: `key.source` `hpcp-whitened`, its three profiles' keys and
     /// the STFT estimate in `key.votes`, research R's sure rule as the confidence (`KeyConfidence`), and the method's
     /// detail in `deckie.key`.
-    public static let engineVersion = "0.6.0"
+    public static let engineVersion = "0.7.0"
     /// The lab's feature-file schema the JSON follows (`schema`).
     public static let labSchema = 1
     /// The rate everything is analysed at: the lab decodes at 44.1 kHz and resamples other files to it first (`sr`).
@@ -165,6 +165,12 @@ public struct Analysis: Sendable {
     /// note with the mode open, or not sure. `hpcpKey` above is its plain HPCP reading of the same frames, kept for
     /// the lab's bench and as a vote.
     public var threeAnswer: ThreeAnswerKey.Result
+    /// The learned reader's result (engine 0.7.0, research X4; `LearnedKey`), which is the record's key when present:
+    /// a key, the home note alone, or not sure, each from its own probability. Nil: the three-answer reader decides,
+    /// as before 0.7.0.
+    public var learnedKey: LearnedKey.Result? = nil
+    /// The record's answer: the learned reader's, or the three-answer reader's without it.
+    public var keyAnswer: ThreeAnswerKey.Answer { learnedKey?.answer ?? threeAnswer.answer }
 
     public var loudness: Loudness
     public var perBar: PerBar

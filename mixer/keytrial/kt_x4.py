@@ -28,8 +28,10 @@ Self-supervised pretraining, after STONE (Kong et al., ISMIR 2024), written here
 code: two snippets of one recording are in the same key; a snippet shifted by c semitones is in the key c semitones
 away. The model's 24 answers are folded to 12 key signatures (a major key and its relative minor share one), each
 snippet's 12 probabilities are turned into one point on the circle of fifths (z = sum_k p_k exp(2 pi i 7 k / 12)), and
-the loss asks the batch's mean of z_A conj(z_B), turned back by the known shift, to be 1: that needs every answer to be
-decided (|z| near 1) and every pair to differ by exactly its shift. No label is used. The model is then trained on the
+the loss asks two things: that z_A equal z_B turned by the known shift (the pair differs by exactly its shift), and
+that every |z| be 1 (every answer is decided). No label is used. (A first form, the batch's mean of z_A conj(z_B)
+turned back by the shift to be 1, did not move from its starting value in five passes: with every answer undecided at
+the start, z is 0 and that form has no slope there. The second term gives one.) The model is then trained on the
 human-labelled recordings as in letter X3, starting from those weights instead of from nothing."""
 import os, sys, json, time, collections, warnings
 warnings.filterwarnings("ignore")
@@ -174,8 +176,9 @@ def main_cnn(mode, threads):
                 XA, _, SA = batch(rows, rng, SN); XB, _, SB = batch(rows, rng, SN)
                 zA, zB = z_of(model(XA)), z_of(model(XB))
                 d = (SA - SB).float() * (2 * np.pi * 7 / 12)                     # A's key is B's turned by the shift difference
-                r = (zA * torch.conj(zB) * torch.complex(torch.cos(-d), torch.sin(-d))).mean()
-                loss = 0.5 * torch.abs(1 - r) ** 2
+                diff = zA - zB * torch.complex(torch.cos(d), torch.sin(d))
+                mag = lambda z: torch.sqrt(z.real ** 2 + z.imag ** 2 + 1e-8)
+                loss = (diff.real ** 2 + diff.imag ** 2).mean() + ((1 - mag(zA)) ** 2 + (1 - mag(zB)) ** 2).mean()
                 opt.zero_grad(); loss.backward(); opt.step(); sched.step(); tot += float(loss); nb += 1
             # how the 12 signatures line up with the human-labelled validation loops (reported, not used to choose)
             model.eval()
@@ -267,8 +270,10 @@ def three(p, t_key=0.5, t_home=0.5):
     return kind, k, np.where(kind == 0, k % 12, h)
 
 def untrained(D):
-    a, b = D["R"]["A"].argmax(1), D["R"]["B"].argmax(1); same_home = a % 12 == b % 12
-    kind = np.where(same_home & (a == b), 0, np.where(same_home, 1, 2)); conf = D["R"]["A"].max(1) + D["R"]["B"].max(1)
+    import kt_three as T
+    SA = np.array([T.scores24(x) for x in D["F"]["c_A"]]); SB = np.array([T.scores24(x) for x in D["F"]["c_B"]])
+    a, b = SA.argmax(1), SB.argmax(1); same_home = a % 12 == b % 12
+    kind = np.where(same_home & (a == b), 0, np.where(same_home, 1, 2)); conf = SA.max(1) + SB.max(1)
     return kind, b, b % 12, conf
 
 def answer_row(kind, k, h, y):
@@ -324,6 +329,104 @@ def main_ship():
             p = softmax(f(D)); kind, k, h = three(p); both = (kind == 0) & (ukey == k) & (uk == 0)
             print(f"| {name}, and the untrained reader names the same key | {100 * both.mean():.1f} | {100 * (k[both] == y[both]).mean():.1f} | | | | | | | | | | |")
 
+# ---------------------------------------------------------------------------------------------------------------
+# The model as it ships: batch normalisation folded into the convolutions, every number rounded to a 16-bit float,
+# no reading at several pitch shifts, a long song read in stretches of 600 frames. core/Sources/DeckieCore/Key/
+# LearnedKey.swift computes exactly this; `export` writes its numbers and the fixture its test reads.
+STRETCH, SHORTEST = 600, 16
+
+def folded(model):
+    """the numbers in the order LearnedKey.swift reads them, as float16."""
+    import torch
+    def bn(b): sc = b.weight / torch.sqrt(b.running_var + b.eps); return sc, b.bias - b.running_mean * sc
+    out = []; sc, sh = bn(model.norm); out += [sc.detach().numpy().ravel(), sh.detach().numpy().ravel()]
+    for blk in (model.b1, model.b2, model.b3, model.b4):
+        for ci, bi in ((0, 1), (3, 4)):
+            sc, sh = bn(blk[bi]); out += [(blk[ci].weight * sc[:, None, None, None]).detach().numpy().ravel(), sh.detach().numpy().ravel()]
+    sc, sh = bn(model.pbn); out += [(model.proj.weight * sc[:, None, None, None]).detach().numpy().ravel(), sh.detach().numpy().ravel()]
+    out += [model.out.weight.detach().numpy().ravel(), model.out.bias.detach().numpy().ravel()]
+    return np.concatenate(out).astype(np.float16)
+
+SHAPES = [(12, 1, 5, 5), (12, 12, 3, 3), (24, 12, 3, 3), (24, 24, 3, 3), (48, 24, 3, 3), (48, 48, 3, 3), (96, 48, 3, 3), (96, 96, 3, 3), (48, 96, 1, 15), (24, 48, 1, 1)]
+
+def shipped_scores(L126, flat):
+    """(24,) scores of one spectrogram (frames, 126) from the folded float16 numbers: what LearnedKey.swift computes."""
+    import torch, torch.nn.functional as Fn
+    v = torch.from_numpy(flat.astype(np.float32)); at = 2; layers = []
+    for o, i, kh, kw in SHAPES:
+        w = v[at:at + o * i * kh * kw].reshape(o, i, kh, kw); at += o * i * kh * kw; b = v[at:at + o]; at += o; layers.append((w, b))
+    assert at == len(v)
+    def stretch(x):
+        x = torch.from_numpy(np.ascontiguousarray(x, dtype=np.float32))[None, None] * v[0] + v[1]
+        for blk in range(4):
+            for j in (0, 1):
+                w, b = layers[2 * blk + j]; x = Fn.elu(Fn.conv2d(x, w, b, padding=(w.shape[2] // 2, w.shape[3] // 2)))
+            if blk < 3: x = Fn.max_pool2d(x, 2)
+        x = Fn.elu(Fn.conv2d(x, *layers[8])); return Fn.conv2d(x, *layers[9]).mean(dim=(2, 3))[0].numpy().astype(np.float64)
+    n = L126.shape[0]
+    if n < 8: return None
+    tot = np.zeros(24); wsum = 0; a = 0
+    with torch.no_grad():
+        while a < n:
+            m = min(STRETCH, n - a)
+            if m < SHORTEST and a > 0: break
+            tot += stretch(L126[a:a + m]) * m; wsum += m; a += m
+    return tot / wsum
+
+def shipped_probs(scores, lean, T):
+    lp = scores - scores.max(); lp = lp - np.log(np.exp(lp).sum()); lp = lp.copy(); lp[12:] += lean
+    return softmax((lp / T)[None])[0]
+
+def main_export(mode):
+    """python kt_x4.py export <mode>: the chosen model's numbers as shipped, its temperature on the validation artists,
+    its scores on the three sets as shipped -> x4_shipped_results.md, LearnedKeyWeights.swift and the Swift fixture."""
+    import torch, base64, hashlib, kt_cnn as C, kt_three as T3, kt_extract as KE
+    torch.set_num_threads(1)
+    share = json.load(open(os.path.join(kt.HERE, "x4_lean.json")))["lean_minor_share"]
+    z = np.load(os.path.join(kt.CACHE, f"x4_cnn_{mode}.npz")); tm = float(z["train_minor"]); lean = float(np.log(share / (1 - share)) - np.log(tm / (1 - tm)))
+    model = C.Net(); model.load_state_dict(torch.load(os.path.join(kt.CACHE, f"x4_cnn_{mode}.pt"))); model.eval()
+    flat = folded(model); raw = flat.astype("<f2").tobytes(); digest = hashlib.sha256(raw).hexdigest()
+    # temperature: on the validation artists' recordings, read as shipped
+    real = KS.with_L(KS.load_real()); va = [r for r in real if r["group"] % 5 == 0]; yv = np.array([int(r["target"].argmax()) for r in va])
+    S = np.array([shipped_scores(C.crop(r["L"].astype(np.float32)), flat) for r in va]); lp = S - S.max(1, keepdims=True); lp = lp - np.log(np.exp(lp).sum(1, keepdims=True)); lp[:, 12:] += lean
+    Tm = temperature(lp, yv, lean_weights(yv, share))
+    sys.stdout = KS._Tee(os.path.join(kt.HERE, "x4_shipped_results.md"))
+    print(f"model {mode}: {len(flat)} numbers, {len(raw)} bytes as 16-bit floats, SHA-256 {digest}; lean {lean:+.4f} (THE LEAN {100 * share:.1f} percent minor, training mix {100 * tm:.1f}); temperature {Tm:.3f} on {len(va)} validation recordings (exact there {100 * (lp.argmax(1) == yv).mean():.1f})")
+    sets = KS.test_sets(); names = {"MTG, 1,270": "mtg", "GiantSteps+, 468": "gsplus", "GiantSteps Key, 604": "gs"}
+    for D in sets:
+        cl = {c["id"]: c for c in C.get(names[D["name"]])}; clips = [cl[i] for i in D["ids"]]; C.load_L(clips); y = D["key"]
+        P = np.array([shipped_probs(shipped_scores(C.crop(c["L"].astype(np.float32)), flat), lean, Tm) for c in clips])
+        np.save(os.path.join(kt.CACHE, f"x4_shipped_{names[D['name']]}.npy"), P)
+        kind, k, h = three(P); uk, ukey, uh, _ = untrained(D); v = KS.row_of(k, y); cov = float((uk == 0).mean())
+        print(f"\n**{D['name']}**\n\n| reader | key shown, percent of songs | shown keys right | shown keys' home note right | home note only, percent | those home notes right | not sure | every song given a key: exact | major | minor | shown keys right at the untrained reader's coverage | expected by its own confidence: shown keys |\n|---|" + "---:|" * 11)
+        print("| untrained three-answer reader | " + " | ".join(f"{x:.1f}" for x in answer_row(uk, ukey, uh, y)) + f" | | | | {100 * (ukey[uk == 0] == y[uk == 0]).mean():.1f} | |")
+        if "apple" in D:
+            ap = KS.row_of(D["apple"], y); print(f"| Apple (every song given a key) | 100.0 | {ap[0]:.1f} | {ap[5]:.1f} | | | | {ap[0]:.1f} | {ap[1]:.1f} | {ap[2]:.1f} | | |")
+        print("| the learned reader as shipped | " + " | ".join(f"{x:.1f}" for x in answer_row(kind, k, h, y)) + f" | {v[0]:.1f} | {v[1]:.1f} | {v[2]:.1f} | {top_precision(P.max(1), k, y, cov):.1f} | {100 * P.max(1)[kind == 0].mean():.1f} |")
+        print("\n| shown at least this sure | songs shown, percent | shown keys right | the reader's own mean confidence |\n|---:|---:|---:|---:|")
+        for t in (0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9):
+            sel = P.max(1) >= t
+            if sel.any(): print(f"| {t:.1f} | {100 * sel.mean():.1f} | {100 * (k[sel] == y[sel]).mean():.1f} | {100 * P.max(1)[sel].mean():.1f} |")
+    # the Swift side
+    core = os.path.join(kt.HERE, "..", "..", "core")
+    open(os.path.join(core, "Sources", "DeckieCore", "Key", "LearnedKeyWeights.swift"), "w").write(
+        "// Written by mixer/keytrial/kt_x4.py (`export`); do not edit by hand. The learned key reader's numbers (`LearnedKey`):\n"
+        f"// {len(flat)} 16-bit floats, low byte first, base64. SHA-256 of the {len(raw)} bytes: {digest}.\n"
+        "// Where every training recording came from and its licence: DEPENDENCIES.md, the section on Deckie's key reader.\n"
+        "enum LearnedKeyWeights {\n"
+        f"    static let name = \"deckie-key-{digest[:8]}\"\n    static let sha256 = \"{digest}\"\n"
+        f"    static let minorLean = {lean!r}\n    static let temperature = {Tm!r}\n"
+        f"    static let base64 = \"{base64.b64encode(raw).decode()}\"\n}}\n")
+    cases = []
+    for nm, seed, chords, det in T3.FIXTURE_CLIPS:
+        if chords is None: continue
+        spec = [[(T3.inc_of(m, det), 3 if j == 0 else 2) for j, m in enumerate(ch)] for ch in chords]; y = T3.synth(seed, spec, 20)
+        L = KE.logspec(y)[:, KE.BASE:KE.BASE + KE.NB_MODEL].astype(np.float32); sc = shipped_scores(L, flat); pr = shipped_probs(sc, lean, Tm); kind, k, h = three(pr[None])
+        cases.append({"name": nm, "frames": int(L.shape[0]), "spectrogram_rows": {str(i): [float(x) for x in L[i]] for i in (0, 1, 50, L.shape[0] - 1)},
+                      "scores": [float(x) for x in sc], "probabilities": [float(x) for x in pr], "answer": ("key", "home", "none")[int(kind[0])], "key": int(k[0]), "home": int(h[0])})
+    json.dump({"about": "written by mixer/keytrial/kt_x4.py export: the learned key reader's reference values on the generated clips of three_answer.json",
+               "weights_sha256": digest, "cases": cases}, open(os.path.join(core, "Tests", "DeckieCoreTests", "Fixtures", "learned_key.json"), "w"), indent=0)
+
 if __name__ == "__main__":
     a = sys.argv
     if a[1] == "feats": main_feats(int(a[a.index("--jobs") + 1]) if "--jobs" in a else 4)
@@ -331,3 +434,4 @@ if __name__ == "__main__":
     elif a[1] == "cnn": main_cnn(a[2], int(a[a.index("--threads") + 1]) if "--threads" in a else 4)
     elif a[1] == "report": main_report()
     elif a[1] == "ship": main_ship()
+    elif a[1] == "export": main_export(a[2])

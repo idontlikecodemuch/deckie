@@ -173,6 +173,8 @@ public final class Analyser: Sendable {
         // The three-answer reader (D33) reads the same frames as the plain HPCP method and carries its result.
         let threeAnswer = try ThreeAnswerKey.read(mono, sampleRate: SR)
         let hpcpKey = threeAnswer.hpcp
+        // The learned reader (engine 0.7.0) decides the record's key; the three-answer reader stays beside it.
+        let learnedKey = try LearnedKey.read(mono, sampleRate: SR)
         let chroma = try KeyEstimator.chroma(m22, sampleRate: KeyEstimator.sampleRate)
         lap("key")
 
@@ -276,13 +278,13 @@ public final class Analyser: Sendable {
         }
 
         // ------------------------------------------------------------------ key: confidence, the two windows, segments
-        // The mix windows are judged against the reader's answer (`ThreeAnswerKey`; engine 0.6.0): its key, either
+        // The mix windows are judged against the reader's answer (`LearnedKey` from engine 0.7.0, `ThreeAnswerKey` in 0.6.0): its key, either
         // key on its home note, or nothing when it was not sure, as the lab judged them against the product's song
         // key (until 0.5.0 that was the plain HPCP method's key, whatever the record's key was). mixer/key_light.py reads the windows from the feature file, rounded to 3
         // decimals.
         let key = KeyEstimator.estimate(chroma, mixIn: (Py.round(mixIn.startS, 3), Py.round(mixIn.endS, 3)),
                                         mixOut: (Py.round(mixOut.startS, 3), Py.round(mixOut.endS, 3)),
-                                        songKeys: Analysis.songKeys(threeAnswer.answer))
+                                        songKeys: Analysis.songKeys(learnedKey.answer))
         let keyConfidence = KeyConfidence.hpcp(hpcpKey.decision)
 
         // ------------------------------------------------------------------ local tempo, from the rounded record
@@ -316,7 +318,7 @@ public final class Analyser: Sendable {
             grid: G, bars: bars, multiplierVsTag: multTag, tagDevPct: devTag, bpmAgree: bpmAgree,
             madmomWouldRun: madmomWouldRun, noveltyPeaks: novelty.peaks, phrase: phrase, boundariesBars: boundaries,
             sections: sections, firstSound: sound.firstSound, lastSound: ls, endLoudness: end, fade: fade,
-            mixIn: mixIn, mixOut: mixOut, key: key, hpcpKey: hpcpKey, keyConfidence: keyConfidence, threeAnswer: threeAnswer, loudness: loudness,
+            mixIn: mixIn, mixOut: mixOut, key: key, hpcpKey: hpcpKey, keyConfidence: keyConfidence, threeAnswer: threeAnswer, learnedKey: learnedKey, loudness: loudness,
             perBar: .init(lufsSt: lufs, lowDb: levels.lowDB, highDb: levels.highDB, onsetDensity: onsetDensity,
                           vocalProb: vocal?.perBar),
             onsetPattern16: pattern, vocal: vocal, vocalModel: vocal == nil ? nil : vocalTagger?.modelName,
