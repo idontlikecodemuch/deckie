@@ -635,7 +635,9 @@ example crate above as one file (21,416 bytes against the package's 20,626: 790 
   the same crate. `CrateArchive.pack(package:to:)` writes a package as one file; `CrateArchive.unpack(_:to:)` turns
   one file back into a package folder, for an app that keeps crates as packages and writes its own files into them.
 - **Who writes which.** The Mac keeps writing packages (D28: Desk keeps its crates in its own storage, as packages).
-  The PC builder writes the single-file form next to the music folder. Either may be sent to an iPad.
+  The PC builder writes the single-file form next to the music folder, and Deckie Desk on Windows and Linux writes
+  it when a crate file is exported (`DeskSession.export`, since Nov 14, 2026; in its own storage Desk keeps packages
+  there too). Either may be sent to an iPad.
 
 **What the iPad app needs**, built Nov 13 (`deck-app/README.md`, "Crate files from a PC"). (1) Its reads go through
 `CrateReader.read(from:)`, which takes both forms. (2) A crate file handed to the app is taken into its own storage by

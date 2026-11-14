@@ -150,23 +150,32 @@ final class EngineProcess: @unchecked Sendable {
         var mark = e.received.count
         let fix = try e.request("song.fix", ["song": "aaaa", "title": "Café 東京 — ü", "artist": "Zoë"])
         #expect(fix["ok"] as? Bool == true)
-        let after = try #require(e.wait(from: mark) { $0["event"] as? String == "songs" })
-        let a = (after["songs"] as? [[String: Any]])?.first { $0["id"] as? String == "aaaa" }
-        #expect(a?["title"] as? String == "Café 東京 — ü" && a?["artist"] as? String == "Zoë" && a?["nameFrom"] as? String == "user")
-        #expect(e.wait(from: mark) { $0["event"] as? String == "state" }?["undo"] as? String == "undoNameFix")
+        // Each change is waited for as the event that shows it, not as "the next event of that kind": on a busy
+        // machine an event from the step before can still be on its way when the next request's reply has come.
+        func songA(_ m: [String: Any]) -> [String: Any]? {
+            guard m["event"] as? String == "songs" else { return nil }
+            return (m["songs"] as? [[String: Any]])?.first { $0["id"] as? String == "aaaa" }
+        }
+        let after = try #require(e.wait(from: mark) { songA($0)?["title"] as? String == "Café 東京 — ü" })
+        let a = songA(after)
+        #expect(a?["artist"] as? String == "Zoë" && a?["nameFrom"] as? String == "user")
+        #expect(e.wait(from: mark) { $0["event"] as? String == "state" && $0["undo"] as? String == "undoNameFix" } != nil)
         mark = e.received.count
         _ = try e.request("edit.undo")
-        let undone = try #require(e.wait(from: mark) { $0["event"] as? String == "songs" })
-        #expect((undone["songs"] as? [[String: Any]])?.first { $0["id"] as? String == "aaaa" }?["title"] as? String == "Song A")
+        #expect(e.wait(from: mark) { songA($0)?["title"] as? String == "Song A" } != nil)
 
         // Sources: rename, move, how many a removal takes.
+        mark = e.received.count
         _ = try e.request("source.rename", ["source": "Stick 3", "name": "Stick Three"])
-        let beforeMove = e.received.count
+        func firstFolder(_ m: [String: Any]) -> [String?]? {
+            guard m["event"] as? String == "songs", let source = (m["sources"] as? [[String: Any]])?.first,
+                  source["name"] as? String == "Stick Three" else { return nil }
+            return ((source["folders"] as? [[String: Any]])?.first?["songs"] as? [[String: Any]])?.map { $0["id"] as? String }
+        }
+        #expect(e.wait(from: mark) { firstFolder($0) == ["aaaa", "bbbb"] } != nil)
+        mark = e.received.count
         _ = try e.request("song.move", ["song": "bbbb", "source": "Stick Three", "folder": "House", "by": -1])
-        // The songs event follows the reply; wait for it rather than take the last one seen.
-        let moved = try #require(e.wait(from: beforeMove) { $0["event"] as? String == "songs" })
-        let folder = (((moved["sources"] as? [[String: Any]])?.first)?["folders"] as? [[String: Any]])?.first
-        #expect((folder?["songs"] as? [[String: Any]])?.map { $0["id"] as? String } == ["bbbb", "aaaa"])
+        #expect(e.wait(from: mark) { firstFolder($0) == ["bbbb", "aaaa"] } != nil)
         #expect((try e.request("source.removeCount", ["source": "Stick Three"])["songs"] as? NSNumber)?.intValue == 2)
 
         // The crate menu: rename, a new crate, back.

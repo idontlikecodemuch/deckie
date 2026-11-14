@@ -64,7 +64,7 @@ enum Check {
                 guard fullRun, !seen.finished else { return }
                 seen.finished = true
                 let report = m["report"] as? [String: Any] ?? [:]
-                say("run finished: \(report["went_in"] ?? "?") of \(report["songs_seen"] ?? "?") files went in, \(report["songs_in_crate"] ?? "?") songs in the crate, in \(report["seconds"] ?? "?") s")
+                say("run finished: \(report["went_in"] ?? "?") of \(report["songs_seen"] ?? "?") files went in, \(report["songs_in_crate"] ?? "?") songs in the crate, in \((report["seconds"] as? NSNumber).map { String(format: "%.1f", $0.doubleValue) } ?? "?") s")
                 // The finished screen, then its Export button, as soon as the page shows it.
                 evalWhen("!document.getElementById('finished').hidden && document.getElementById('finished-summary').textContent", """
                     deckieShell.send(JSON.stringify({ type: 'shell.checkFinished',

@@ -316,3 +316,34 @@ carry those next. Nothing below is built; no installer is proposed yet.
 
 Size: about two days, most of it points 4 to 6. Open for the owner: the icon file, and whether Microsoft's
 bootstrapper ships.
+
+## The window is packaged (Nov 14, 2026, branch `pc/package-desk`)
+
+The section above was the plan. It is built: the zip is now **Deckie Desk for Windows**, the window with its
+engine and pages, with `deckie-make` kept beside it. The check-ins (`briefs/checkin-windows-builder.md`) have the
+run, the zip's size and hash, every decision and what failed on the way. In short:
+
+- **The folder**: `Deckie Desk.exe` and `Make Crate File.exe` at the top; in `app`, `deckie-desk.exe`,
+  `deckie-desk-engine.exe`, `desk-web/`, `deckie-make.exe`, the runtime libraries the three programs' import tables
+  name, ONNX Runtime, the models and the licences (now with the `webview` library's and the WebView2 SDK header's).
+  The window finds the engine and the pages beside itself; the engine now finds ONNX Runtime and the models beside
+  itself too (`OnnxRuntime.programFolder`), as `deckie-make` always did.
+- **No console window**: the starter is linked as a program with a window; the zip's copies of the window and the
+  engine are marked the same way after they are built (`core/Tools/windows/pe_kind.py`, one field of the program
+  file's header). A program started like that has no standard error at all, and writing to it stopped the first
+  build cold (Windows' code 0xC000001D); the shell now asks first and keeps quiet when there is none.
+- **The icon**: made in each run from the iPad app's picture by `core/Tools/windows/make_ico.py` (standard-library
+  Python: it reads the PNG, scales by area averaging, rounds the corners as `site/icon.svg` has them), compiled by
+  the toolchain's `llvm-rc`, linked into both starters and the window, and set on the window's title bar and
+  taskbar button by the shell. No `.ico` is committed.
+- **A PC without the WebView2 Runtime**: the shell says so in a message box, names Microsoft's page, opens it only
+  on a yes, and points to `Make Crate File`. Nothing is downloaded by Deckie; Microsoft's installer is not shipped
+  (the owner's question still).
+- **One file on export**: `DeskSession.export` writes the single-file form on Windows and Linux.
+
+**[runner]** RUNNER_FACTS
+
+**[not proven]** Everything a person must see: a real double click and that no console window shows, the blue
+"Windows protected your PC" box, antivirus, the icon in Explorer and on the taskbar, the message box on a PC that
+really has no WebView2 Runtime, an account without administrator rights, Windows 10 and 11 themselves (the runner
+is Windows Server 2025), dragging a folder onto the window, a music CD, and the crate file opening on an iPad.

@@ -523,13 +523,26 @@ the machine's facts, counts, timings and the files not added with their reasons,
 `Tests/DeckiePCTests` covers the plan, the words and, with the engine, a whole run, a second run, a new song and
 lost storage.
 
-The zip is assembled by `Tools/windows/package.sh` (run in Git Bash on Windows after a release build; it downloads
-nothing): the program, exactly the Swift runtime libraries its import tables name (`Tools/windows/pe_imports.py`),
-Deckie's own `onnxruntime.dll`, the two models, the licences, `READ ME FIRST.txt`, and the starter
-(`Tools/windows/launcher.c`: built against Windows' kernel32 alone, it says in plain words when the folder was not
-unzipped or Microsoft's Visual C++ runtime is missing, and keeps the window open if the program stops). The workflow
-`pc-package.yml` builds it and tries it as a DJ would; `DEPENDENCIES.md` section 3 says what it carries and the two
-open licence questions.
+The zip is assembled by `Tools/windows/package.sh` (run in Git Bash on Windows after the release builds; it
+downloads nothing). Since Nov 14, 2026 it is **Deckie Desk for Windows**: the window (`deckie-desk`, from
+`../desk-shell`), its engine (`deckie-desk-engine`), the pages (`../desk-web`) and this program, with exactly the
+Swift runtime libraries the three programs' import tables name (`Tools/windows/pe_imports.py`), Deckie's own
+`onnxruntime.dll`, the two models, the licences, `READ ME FIRST.txt`, and two starters built from one file
+(`Tools/windows/launcher.c`, against Windows' kernel32 and user32 alone): "Deckie Desk.exe", which opens no console
+window and says what it must in a message box, and "Make Crate File.exe", which says it in the console and keeps
+the window open. Both say in plain words when the folder was not unzipped or Microsoft's Visual C++ runtime is
+missing. Beside them in `Tools/windows`:
+
+- `icon.sh` and `make_ico.py`: the icon, made from the iPad app's picture with Python's standard library and
+  compiled as a resource; linked into the starters and the window. No `.ico` is committed.
+- `pe_kind.py`: says whether a program opens a console window and whether it carries an icon, and marks the zip's
+  copies of the window and the engine as programs that open none.
+- `try-desk.ps1`: how the workflow starts a program from the unzipped folder with no one at the keyboard.
+
+The engine program finds ONNX Runtime and the models beside itself in the zip (`OnnxRuntime.programFolder`, set by
+`deckie-desk-engine`), in the order this program uses: the environment variables, the program's folder, the
+checkout. The workflow `pc-package.yml` builds the zip and tries it as a DJ would; `DEPENDENCIES.md` section 3 says
+what it carries and the open licence questions.
 
 ## End to end on both platforms: `deckie-e2e`
 
@@ -537,6 +550,7 @@ open licence questions.
 deckie-e2e mp3 <file>                      the synthesised test track as an MP3 (needs the ffmpeg program)
 deckie-e2e make <folder> --mp3 <file>      the small music folder
 deckie-e2e check <crate file>              the core's validator, then what the folder should have given
+deckie-e2e check-desk <crate file> <source>   the same for a crate file exported by Deckie Desk (one file)
 deckie-e2e pack <package> <file>           a package folder as one file
 deckie-e2e songs <folder> [--count 4] [--seconds 240]   full-length songs, to time a build
 ```
