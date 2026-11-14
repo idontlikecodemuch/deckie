@@ -90,6 +90,11 @@ public struct FileProgress: Sendable {
     public var remaining: Double?
     /// The file's id (its content's hash) when it has a record, so a caller can do more with it as it finishes.
     public var id: String? = nil
+    /// For a file with a record (D37, the run screen): its names as the crate will first have them (rekordbox's,
+    /// else the file's tags, else the file name, as `dressed` names it) and the place it was read from.
+    public var title: String? = nil
+    public var artist: String? = nil
+    public var place: CrateTrack.Place? = nil
 }
 
 /// The build's progress, as it goes.
@@ -371,8 +376,16 @@ public final class Builder: Sendable {
             let elapsed = Date().timeIntervalSince(results.started)
             let remaining: Double? = results.analysedSeconds.isEmpty ? nil
                 : elapsed / Double(results.finished) * Double(total - results.finished)
-            progress(.file(FileProgress(done: results.finished, total: total, rel: f.rel, outcome: reported,
-                                        elapsed: elapsed, remaining: remaining, id: doneId)))
+            var fp = FileProgress(done: results.finished, total: total, rel: f.rel, outcome: reported,
+                                  elapsed: elapsed, remaining: remaining, id: doneId)
+            if case .ok(_, let tags) = outcome {
+                let rel = String(f.rel.dropFirst(prefix.count))
+                let name = Builder.firstName(rekordbox: rekordboxOf[i], tags: tags, rel: f.rel)
+                fp.title = name.title; fp.artist = name.artist
+                fp.place = places[rel].map { CrateTrack.Place(disc: $0.source, folder: $0.group, track: $0.number) }
+                    ?? CrateTrack.Place(disc: nil, folder: SourceReading.group(of: rel), track: nil)
+            }
+            progress(.file(fp))
         }
         if let e = stopped.error { throw e }
         done.merge(results.done) { _, new in new }
@@ -663,5 +676,22 @@ public final class Builder: Sendable {
             t.imported = nil
         }
         return t
+    }
+
+    /// A file's names as `dressed` first gives them: rekordbox's, else the file's tags, else the file name. For the
+    /// progress (D37); the crate's own names come from `dressed` and what Desk adds after.
+    static func firstName(rekordbox rb: RekordboxCollection.Track?, tags: FileTags?, rel: String) -> (title: String, artist: String?) {
+        if let name = rb?.name { return (name, rb?.artist) }
+        if let title = tags?.title { return (title, tags?.artist) }
+        return ((CratePath.lastName(rel) as NSString).deletingPathExtension, nil)
+    }
+
+    /// The finished record of a file's bytes, with its per-bar series, from a records folder (the work folder's or
+    /// a shared one, `BuildOptions.sharedRecords`); nil when there is none. For a caller that shows a song as it
+    /// finishes (D37).
+    public static func finishedRecord(_ id: String, records: URL) -> CrateTrack? {
+        guard let data = try? Data(contentsOf: records.appendingPathComponent("\(id).json")),
+              let r = try? JSONDecoder().decode(WorkStore.Record.self, from: data) else { return nil }
+        return r.crateTrack
     }
 }
