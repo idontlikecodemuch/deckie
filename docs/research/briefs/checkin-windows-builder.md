@@ -2,6 +2,46 @@
 
 Newest entry first. Each entry: when, what is done, what failed and why, what is next, and one plain line.
 
+## Nov 14, 2026, 00:10 UTC: done as far as a runner can show; three decisions open
+
+**Done.** All three workflows are green on commit `13d69b8`:
+
+- `core-windows` run 43529510729: 379 tests passed on Windows with the engine suites running; the end-to-end build;
+  Windows against Linux, every compared value identical on the three test songs.
+- `core-linux` run 43529510806: the same suites and end-to-end steps.
+- `pc-package` run **43529510736**: the zip, **121,600,412 bytes** (SHA-256 `f41d6cd8…29d6`), artifact
+  `Deckie-for-PC-first-test`, kept to Dec 13, 2026. Without Microsoft's runtime files this time. Built, unzipped
+  and tried on the runner as a DJ would use it.
+- Measured on the runner, four four-minute songs, two at once: 6.0 s a song by the clock (11.2 s each on its own);
+  the run before, on another runner, 11.3 s by the clock.
+- The letter: `docs/research/y-windows-builder.md`, with each claim marked as seen on a runner or not provable
+  without a real PC. The tester's words: `core/Tools/windows/READ ME FIRST.txt` and
+  `docs/product/windows-first-test.md`.
+- The branch merges with `main` (at `3be2986`) without conflicts, checked with `git merge-tree`; not merged.
+
+**Failed or not done:**
+
+- Reading `.m4a` on Windows (step 2's "build what is small and safe"): not built. Nothing about it was small or
+  safe; the letter says what it takes.
+- Nothing was tried on a real PC. The letter's table lists what that leaves unproven: the blue "Windows protected
+  your PC" box, antivirus, a real drag and drop, typing into a real console window, a PC without Microsoft's
+  runtime, Windows 10, Windows on Arm, a standard (non-administrator) user.
+- The zip of the earlier run 43528242707 contains Microsoft's runtime files and should not be handed on.
+
+**Open, for the owner or the main session, before a tester gets the zip:**
+
+1. Ship Microsoft's Visual C++ runtime in the zip or not. I recommend shipping it.
+2. ICU's licence (Unicode License V3), which Swift's Foundation brings: yes or no.
+3. The iPad app: build against this core, call `CrateArchive.unpack` on import, and let its document type take a
+   plain file. Needs a device.
+4. The engine writes its own key on Windows and Linux, which D16 says it should not yet.
+
+**Next, if this carries on:** a run by hand on a real PC; then `.m4a` through Media Foundation with the lead-in
+measured.
+
+carry on, once the three decisions are made; consider changing direction only if the iPad cannot take a plain
+file under `.deckiecrate`, because then the single file needs its own extension (a small change, in one place)
+
 ## Nov 13, 2026, 23:45 UTC: steps 1, 3 and 4 seen working on Windows runners; step 5 written; step 2 reported, not built
 
 **Done and seen on GitHub's Windows machine:**
