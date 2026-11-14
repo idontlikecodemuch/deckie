@@ -51,7 +51,9 @@
     <p class="dim" data-w="dropHere"></p>
   </section>
 
-  <!-- The run: one progress bar. -->
+  <!-- The run (D37): the plain facts first (songs done, time left, what didn't go in, that it can be left), a quiet
+       line that changes, the song Desk just read with what it found, the figures counted so far, and the crate as a
+       wall of waves. Everything drawn is a song Desk read; run.js draws it. -->
   <section id="run" class="screen" aria-labelledby="run-title" hidden>
     <div class="run">
       <h1 id="run-title" data-w="runTitle"></h1>
@@ -62,13 +64,57 @@
         <div class="row"><input id="disc-ask-input" type="text" autocomplete="off" spellcheck="false"><button class="main" data-w="ok"></button></div>
       </form>
       <div id="run-bar" class="progress waiting" role="progressbar" aria-labelledby="run-title" aria-valuemin="0" aria-valuemax="100"><div></div></div>
-      <div class="run-line" aria-live="polite" aria-atomic="true">
+      <div class="run-line">
         <span id="run-count"></span>
         <span id="run-stage" class="mut"></span>
+        <span id="run-notin" class="warn" hidden></span>
         <span class="grow"></span>
         <span id="run-left" class="mut"></span>
       </div>
-      <ol id="run-log" class="log" role="log" aria-live="off" data-w-label="runTitle"></ol>
+      <p id="run-saying" class="saying"></p>
+      <p class="leave dim" data-w="leaveRunning"></p>
+
+      <!-- The song on stage: its own wave, its bars marked, and what Desk found in it. -->
+      <div id="stage" class="stage card">
+        <canvas id="stage-wave" class="stage-wave" role="img"></canvas>
+        <div class="stage-facts">
+          <p class="stage-name"><b id="stage-title"></b> <span id="stage-artist" class="mut"></span> <span id="stage-before" class="chip" data-w="stageBefore" hidden></span></p>
+          <dl class="stage-dl">
+            <div><dt data-w="stageTempo"></dt><dd id="stage-tempo" class="tempo"></dd></div>
+            <div><dt data-w="stageKey"></dt><dd id="stage-key"></dd></div>
+            <div><dt data-w="stageBars"></dt><dd id="stage-bars"></dd></div>
+            <div><dt data-w="stageLength"></dt><dd id="stage-length"></dd></div>
+            <div class="where"><dt data-w="stageWhere"></dt><dd id="stage-where"></dd></div>
+          </dl>
+          <p id="stage-more" class="dim small"></p>
+        </div>
+        <p id="stage-empty" class="stage-empty mut" data-w="stageFirstSoon"></p>
+      </div>
+
+      <!-- What Desk has found so far: each a true count. -->
+      <div class="figures">
+        <div id="fig-music" class="fig card"><h2 data-w="figMusic"></h2><p id="fig-music-value" class="big"></p></div>
+        <div id="fig-tempos-card" class="fig card"><h2 data-w="figTempos"></h2><canvas id="fig-tempos" class="hist" role="img"></canvas><p id="fig-tempos-text" class="small mut"></p></div>
+        <div id="fig-keys-card" class="fig card fig-keys"><h2 data-w="figKeys"></h2><svg id="fig-keys" class="wheel" viewBox="0 0 120 120" role="img"></svg><p id="fig-keys-text" class="small mut"></p></div>
+        <div class="fig card fig-list">
+          <p><span data-w="figNeedName"></span> <b id="fig-needname"></b></p>
+          <p><span data-w="figSameFile"></span> <b id="fig-samefile"></b></p>
+          <p><span data-w="figCopies"></span> <b id="fig-copies"></b></p>
+          <p><span data-w="figNotIn"></span> <b id="fig-notin"></b></p>
+        </div>
+      </div>
+
+      <!-- The crate filling up: one line a song. -->
+      <div class="wall-card card">
+        <div class="wall-head"><h2 id="run-wall-title" data-w="wallTitle"></h2><span id="run-wall-name" class="wall-name mut"></span></div>
+        <canvas id="run-wall" class="wall" tabindex="0" role="img" aria-describedby="run-wall-help"></canvas>
+        <p id="run-wall-help" class="dim small" data-w="wallHelp"></p>
+      </div>
+
+      <details class="run-list"><summary data-w="runListTitle"></summary>
+        <ol id="run-log" class="log" role="log" aria-live="off" data-w-label="runTitle"></ol>
+      </details>
+      <div id="run-announce" class="sr" aria-live="polite" aria-atomic="true"></div>
     </div>
   </section>
 
@@ -77,6 +123,13 @@
     <div class="finished">
       <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M8 12.5l2.6 2.6L16 9.6"/></svg>
       <h1 id="finished-title"></h1>
+      <!-- The crate as sound (D37): the run's songs, one line each, as they joined. -->
+      <div id="done-wall-card" class="wall-card card done" hidden>
+        <p id="done-moment" class="saying moment"></p>
+        <div class="wall-head"><h2 id="done-wall-title"></h2><span id="done-wall-name" class="wall-name mut"></span></div>
+        <canvas id="done-wall" class="wall" tabindex="0" role="img" aria-describedby="done-wall-help"></canvas>
+        <p id="done-wall-help" class="dim small" data-w="wallHelp"></p>
+      </div>
       <div id="finished-summary" class="summary card"></div>
       <p data-w="nextStep"></p>
       <div class="actions">
@@ -212,6 +265,7 @@
 
 <audio id="audio" preload="auto" hidden></audio>
 <div id="announce" class="sr" aria-live="assertive"></div>
+<script src="run.js"></script>
 <script src="desk.js"></script>
 </body>
 </html>
