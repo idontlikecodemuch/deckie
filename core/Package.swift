@@ -11,6 +11,10 @@
 // and reported as not supported yet, a copy-protected MP4 as protected. It re-exports DeckieAudio.
 // CDrMp3, CDrFlac: dr_mp3.h and dr_flac.h compiled as plain C, the same on Linux, Windows and macOS; nothing is
 // downloaded at build time.
+// CStbImage: stb_image and stb_image_write (vendored, public domain; DEPENDENCIES.md section 11) and the cover
+// thumbnail made with them (deckie_cover.c): JPEG or PNG in, a small JPEG out, the same bytes on every system.
+// DeckieCovers: a song's cover for the crate file (D36): a picture's bytes to one small JPEG, named by the hash of the
+// picture; CStbImage on Linux and Windows, the system's image code on Apple's.
 // CMediaFoundation: a small C shim over Windows' Media Foundation (the platform's own AAC and Apple Lossless decoder),
 // opened at run time so nothing links it; elsewhere it only says it is not available. Being measured, not yet used.
 // COnnxRuntime: ONNX Runtime's C API header (vendored, MIT; DEPENDENCIES.md) and a small C shim that opens the
@@ -72,6 +76,8 @@ let package = Package(
         .target(name: "CDrMp3"),
         .target(name: "CDrFlac"),
         .target(name: "CMediaFoundation"),
+        .target(name: "CStbImage"),
+        .target(name: "DeckieCovers", dependencies: ["CStbImage", "DeckieCrate"]),
         .target(name: "DeckieDecode", dependencies: ["DeckieAudio", "CDrMp3", "CDrFlac", "CMediaFoundation"]),
         .target(name: "COnnxRuntime", linkerSettings: [.linkedLibrary("dl", .when(platforms: [.linux]))]),
         .target(name: "DeckieInference", dependencies: ["COnnxRuntime", "DeckieAudio", "DeckieCore"]),
@@ -110,6 +116,7 @@ let package = Package(
                     dependencies: ["DeckieBuild", "DeckieEngine", "DeckieCrate", "DeckieLab", "DeckieCore", "DeckieInference",
                                    "DeckieDecode", "DeckieAudio", "DeckieTestSupport"],
                     exclude: ["Fixtures"]),
+        .testTarget(name: "DeckieCoversTests", dependencies: ["DeckieCovers", "DeckieCrate", "DeckieTestSupport"]),
         .testTarget(name: "DeckiePCTests",
                     dependencies: ["DeckiePC", "DeckieBuild", "DeckieCrate", "DeckieAudio", "DeckieTestSupport"]),
         .testTarget(name: "DeckieDiscTests", dependencies: ["DeckieDisc", "DeckieCrate", "DeckieTestSupport"]),

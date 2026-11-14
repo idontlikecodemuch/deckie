@@ -7,7 +7,7 @@ name: pc-package
 
 on:
   push:
-    branches: [pc/windows-builder, pc/m4a]
+    branches: [pc/windows-builder, pc/m4a, pc/covers]
     paths: [core/**, .github/workflows/pc-package.yml]
   workflow_dispatch:
 

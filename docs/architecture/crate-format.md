@@ -675,6 +675,68 @@ sets of research X2 this is 5 to 12 percent of songs, with the home note right o
 Not proposed, and why: allowing `key.camelot` to be null (changes a required field's type for every reader); a
 flag such as `key_mode_open` on a block that still carries a guessed code (old readers would show the guess).
 
+## Addition with D36 (Nov 14, 2026): covers
+
+D36: "Covers go into the crate file... A small picture for each release, stored once, as an addition." Additive like
+every addition above: no field changes name or meaning, `schema` and `min_reader` stay 1, a crate file written before
+it reads as it did, and a reader that does not know it ignores the new key and the new folder and shows no cover.
+Code: `CrateTrack.File.cover`, `CrateFormat.cover*` and the checks in `CrateReader` and `CrateWriter` (DeckieCrate);
+`Cover` (DeckieCovers), which makes the thumbnail; tests in `CoversFormatTests` and `DeckieCoversTests`.
+
+```
+Example.deckiecrate/
+  covers/<sha256 of the source picture>.jpg     one small JPEG for each distinct picture
+```
+
+- **`file.cover`**, text: the SHA-256 hash (64 lower-case hexadecimal characters) of the **picture the cover was
+  made from**, exactly as its bytes were found (in the file's tag, or the picture file beside the music). It names
+  the thumbnail, `covers/<hash>.jpg`. **Left out when the song has no cover**, never written as null, so a record
+  without one keeps its bytes. It sits in `file` because it is a fact about the file, like `file.other_tags`, where
+  the picture is still counted as left out of the text tags (`left_out.picture`): the tags hold no picture; the
+  cover is its own thing.
+- **Stored once.** Songs of one release carry the same picture, byte for byte, so they name the same hash and share
+  one file. Two pictures that only look alike (another scan, another size) are two covers.
+- **Why the hash is the source picture's and not the thumbnail's.** The thumbnail is made by different code on
+  different systems (below), and two encoders never give the same bytes. Named by the source, one release has one
+  entry whichever computer read which song, and a crate file merged from two computers does not double its covers.
+- **One size: the longest side 128 pixels**, the shape kept, never scaled up (a 50-pixel picture stays 50). Why 128:
+  a cover in a list is about 48 to 64 points across, which is 96 to 128 pixels on the screens Deckie runs on, so
+  128 is sharp there and a little soft only if shown larger. Measured, a cover is 2 to 5 KB (below), against about
+  4 KB of everything else for a song. A second, larger size for a now-playing view would cost four times as much
+  for something no screen shows yet; if the design pass wants it, it is a later addition beside this one
+  (`covers/<hash>@2.jpg`), not a change to it.
+- **A baseline JPEG at quality 80**, sRGB assumed, anything see-through laid over white, no metadata carried over
+  (no camera data, no embedded profile, no text). A reader may rely on: a JPEG; at most 128 pixels a side; at most
+  **24 KB** (`CrateFormat.coverMaxBytes`).
+- **Limits on the source.** A picture is made into a cover only if it is a JPEG or a PNG, at most 32 MB and at most
+  8,192 pixels a side; its size in pixels is read before any of it is decoded. A picture that is damaged, of
+  another kind (GIF, WebP, BMP), or over those limits gives **no cover**: the song is in the crate file as any
+  other, without `file.cover`, and the builder counts such pictures in its summary. A thumbnail that came out over
+  24 KB is made again at quality 60, then 40, then given up; with scaling by area this has not happened on any test
+  picture (512 pixels of random colour give 5.4 KB).
+- **No cap for the crate file as a whole.** The cap per cover bounds it: at most 24 KB for each distinct picture,
+  and in practice 2 to 5 KB.
+- **The single-file form** carries the folder as it carries every folder: `covers/<hash>.jpg` entries, stored, after
+  `crate.json` in path order. Nothing new.
+- **Where the picture comes from**, in this order (the builder, `core/README.md`): the file's own front cover (ID3
+  `APIC`, FLAC `PICTURE`, MP4 `covr`); else a picture file beside the song (below).
+- **Writing.** The thumbnail must be in the package before the records that name it are written; the writer refuses
+  a record whose cover is missing, and **deletes every `covers/*.jpg` that no record names**, so taking the last
+  song of a release out of a crate takes its cover out, as sidecars go with their songs.
+- **Which system makes it.** On Linux and Windows the thumbnail is decoded by stb_image, scaled by whole-number
+  area averaging and encoded by stb_image_write (`DEPENDENCIES.md` section 11): the same bytes on both, checked by
+  a hash pinned in the tests. On Apple's systems it is made by the system's image code, so the Mac's bytes for the
+  same picture differ; the name does not.
+
+**What the reader checks:** `file.cover` is 64 lower-case hexadecimal characters; `covers/<hash>.jpg` is in the crate
+file, starts as a JPEG does and is at most 24 KB. A cover in the folder that no record names is ignored. It does not
+decode the picture.
+
+**What a reader app needs** (the Mac window and the iPad app; not built here): read `file.cover`; when it is there,
+show `covers/<hash>.jpg` from the package (or, for the single-file form, after `CrateArchive.unpack`, or straight
+from `CrateArchive.read(file)["covers/<hash>.jpg"]`); when it is not, show its placeholder. An app that writes a
+crate file itself calls `Cover.make(picture)` and `cover.write(into: package)` before `CrateWriter.write`.
+
 ## The proposals in one list, for the main session
 
 1. Track L's additions: the `engine` block beside `analysis` (which keeps its label); the `features_present` names;
@@ -711,3 +773,6 @@ flag such as `key_mode_open` on a block that still carries a guessed code (old r
 14. Proposed Nov 14, 2026 (with D33). `key_home`: the home note with the mode left open, an optional block beside
     `key`, present only when there is no `key` block; nothing is written until it is accepted ("The mode left
     open", above).
+14. Addition with D36 (Nov 14, 2026, the owner's "lets add them"). Covers: `file.cover` (the SHA-256 of the source
+    picture, left out when none) and `covers/<hash>.jpg`, one 128-pixel JPEG of at most 24 KB for each distinct
+    picture; no version raised.

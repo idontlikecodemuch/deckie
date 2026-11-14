@@ -34,6 +34,7 @@ alters a row goes into the JSON in the same commit.
 | Microsoft Visual C++ runtime (Windows builds only) | 14, as the Swift 6.4.1 toolchain for Windows carries it | Microsoft's own terms, not open source: the Distributable Code section of the Microsoft Software License Terms for Visual Studio; four files, unmodified (section 3) | | |
 | dr_mp3 | 0.7.4 | public domain (the Unlicense) or MIT No Attribution, taken as public domain (section 4) | | |
 | dr_flac | 0.13.4 | the same choice, taken as public domain (section 5) | | |
+| stb_image and stb_image_write (covers) | 2.32 and 1.18 | public domain (the Unlicense) or MIT, taken as public domain (section 11) | | |
 | ONNX Runtime | 1.31.1 | MIT; carries Eigen under MPL 2.0, unmodified by Deckie; carries ONNX Runtime's two published patches (IBM Z builds; nothing compiled on Linux, Windows or macOS differs), shipped beside Eigen's notice (section 6); the shipped library is Deckie's own build without Microsoft's usage-reporting client | | |
 | Beat This! (beat tracker, checkpoint final0) | ISMIR 2024 release, checkpoint final0 | MIT (section 7) | 15 sets, everything but GTZAN; terms range from MIT and CC BY to CC BY-NC and all rights reserved, each in section 7's table | tempo and bar grid from Deckie's own code at lower confidence (section 7) |
 | YAMNet (vocal tagger) | tensorflow/models commit a6e25e2 weights | Apache 2.0 (section 8) | AudioSet: labels CC BY 4.0, clips are their YouTube uploaders'; trained by Google (section 8) | vocal fields absent, record flagged vocal_unknown (section 8) |
@@ -1026,6 +1027,88 @@ So the Windows Desk's acknowledgements carry Microsoft's notice (the table above
 **Not adopted: the Inter font.** The pages name Inter first, as the site does, but do not carry it: its licence (SIL
 Open Font Licence 1.1) is not on the allowlist. Where Inter is not installed the system's own interface font shows
 (Segoe UI, Cantarell, Ubuntu). Carrying it is the owner's call.
+
+## 11. stb_image and stb_image_write, for covers (vendored)
+
+Two single-file C libraries by Sean Barrett and contributors, from the `stb` collection: **stb_image** decodes
+pictures, **stb_image_write** encodes them. Deckie uses them on Linux and Windows to make a song's cover (D36;
+`docs/architecture/crate-format.md`, "Addition with D36"): a JPEG or PNG from a file's tag in, one small JPEG out.
+On Apple's systems the system's image code does this and these two are compiled but not called. They are vendored:
+copied unmodified into `core/Sources/CStbImage/include/`, compiled as the C target `CStbImage` by `deckie_cover.c`,
+which switches on only what a cover needs (`STBI_ONLY_JPEG`, `STBI_ONLY_PNG`, no file access: `STBI_NO_STDIO`,
+`STBI_WRITE_NO_STDIO`; no HDR) and holds Deckie's own scaling (area averaging in whole numbers, so every machine
+gives the same bytes; stb's resizer, a third file with floating point, is not used). Nothing is downloaded at build
+time.
+
+| | stb_image | stb_image_write |
+|---|---|---|
+| Version | the header's first line says `stb_image - v2.32` | `stb_image_write - v1.18` |
+| Source | `https://raw.githubusercontent.com/nothings/stb/master/stb_image.h`, downloaded Nov 14, 2026, when `master` was commit `9600522de53973336fa033a289858a4354cbb04c` (read with `git ls-remote`) | the same, `stb_image_write.h` |
+| SHA-256 | `deb4f18c9ca21b751a1323019031c94c0bf5ca1d2929ef5913cc56f00aab6e91` | `a8e7f77f0ccfdc9bac09a71268b131931ff81aafca82c393aeb6aaba10d9e7ca` |
+| Size | 277,883 bytes, 7,798 lines | 80,759 bytes, 1,924 lines |
+
+The URL names a branch, which moves, so the hash is the pin, as for dr_mp3 and dr_flac (sections 4 and 5).
+
+**Licence:** a choice of the MIT licence or public domain (the Unlicense), the same choice as the dr libraries'
+with the alternatives in the other order; both are on the allowlist. Deckie takes them as public domain, and under
+MIT where public domain is not recognised (which asks that the copyright notice travel with the software: it is
+quoted here and in the zip's copy of this file). Quoted from the end of both headers, the same text in each:
+
+```text
+This software is available under 2 licenses -- choose whichever you prefer.
+------------------------------------------------------------------------------
+ALTERNATIVE A - MIT License
+Copyright (c) 2017 Sean Barrett
+Permission is hereby granted, free of charge, to any person obtaining a copy of
+this software and associated documentation files (the "Software"), to deal in
+the Software without restriction, including without limitation the rights to
+use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
+of the Software, and to permit persons to whom the Software is furnished to do
+so, subject to the following conditions:
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+------------------------------------------------------------------------------
+ALTERNATIVE B - Public Domain (www.unlicense.org)
+This is free and unencumbered software released into the public domain.
+Anyone is free to copy, modify, publish, use, compile, sell, or distribute this
+software, either in source code form or as a compiled binary, for any purpose,
+commercial or non-commercial, and by any means.
+In jurisdictions that recognize copyright laws, the author or authors of this
+software dedicate any and all copyright interest in the software to the public
+domain. We make this dedication for the benefit of the public at large and to
+the detriment of our heirs and successors. We intend this dedication to be an
+overt act of relinquishment in perpetuity of all present and future rights to
+this software under copyright law.
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
+ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+```
+
+**What was weighed.** A picture inside a music file is data from anywhere, and stb_image is known to be less
+hardened than the big decoders: its own header says it is for images a program trusts. What is done about that here:
+only JPEG and PNG are compiled in; a picture's size in pixels is read first and anything over 8,192 a side or 32 MB
+is refused before decoding; a picture that fails to decode gives no cover and nothing else. The alternatives:
+**libjpeg-turbo with libpng and zlib** (BSD-style, IJG and zlib licences, on the allowlist) are the hardened
+standard but are three libraries with build systems of their own on three platforms; **Wuffs** (Apache 2.0, one C
+file, written to be safe on hostile input) decodes JPEG and PNG and would be the stronger decoder, with
+stb_image_write kept for encoding. Wuffs is the upgrade to make if covers ever come from somewhere less trusted
+than the DJ's own files; it was not vendored now because it is 1.5 MB of generated C to review and pin for a
+picture 128 pixels across. **Stated, not hidden: this is a judgement, and the main session may prefer Wuffs now.**
+
+**How to update:** download both headers again to the same paths, record the new version lines, hashes, the commit
+and the date here, re-quote the licence, then `swift build` and `swift test`: `DeckieCoversTests` pins the bytes of
+two thumbnails, so a change in either library's output shows at once (and is then a new pin, since covers already
+written elsewhere keep their old bytes under the same name, which the format allows).
 
 ## Checked and rejected
 

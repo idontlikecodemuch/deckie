@@ -188,6 +188,10 @@ public struct CrateTrack: Codable, Equatable, Sendable {
         /// The rest of the file's text tags, by their own names (D34, `file.other_tags`); nil when there were none
         /// beyond the facts, and then left out of the file, so a record without it keeps its bytes.
         public var otherTags: OtherTags?
+        /// The song's cover (D36, `file.cover`): the SHA-256 hash, 64 lower-case hexadecimal characters, of the
+        /// picture it came from, which names the thumbnail `covers/<hash>.jpg` in the crate file. Songs with the
+        /// same picture share one. Nil when the song has no cover, and then left out of the file.
+        public var cover: String?
 
         /// One damaged frame: where its decoded audio starts, in seconds from the start of the decoded audio, and how
         /// long it is (one MP3 frame, 26.1 ms at 44.1 kHz).
@@ -205,7 +209,7 @@ public struct CrateTrack: Codable, Equatable, Sendable {
         }
         enum CodingKeys: String, CodingKey {
             case name, rel, bytes, sha256, sha1Head = "sha1_head", durationS = "duration_s", tagBpm = "tag_bpm"
-            case damagedFrames = "damaged_frames", otherTags = "other_tags"
+            case damagedFrames = "damaged_frames", otherTags = "other_tags", cover
         }
         public func encode(to encoder: Encoder) throws {
             var c = encoder.container(keyedBy: CodingKeys.self)
@@ -219,6 +223,8 @@ public struct CrateTrack: Codable, Equatable, Sendable {
             try c.encodeIfPresent(damagedFrames, forKey: .damagedFrames)
             // Left out when nil (crate-format.md, "Addition with D34").
             if let otherTags { try c.encode(otherTags, forKey: .otherTags) }
+            // Left out when nil (crate-format.md, "Addition with D36").
+            if let cover { try c.encode(cover, forKey: .cover) }
         }
     }
 
