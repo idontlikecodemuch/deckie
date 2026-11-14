@@ -106,18 +106,18 @@ struct CrateMenu: View {
 struct EmptyCrateView: View {
     @EnvironmentObject var model: DeskModel
     var body: some View {
-        VStack(spacing: 14) {
-            Image(systemName: "shippingbox").font(.system(size: 56)).foregroundStyle(.secondary)
-            Text(Words.firstTitle).font(.title2)
+        VStack(spacing: Look.Space.firstScreen) {
+            Image(systemName: "shippingbox").font(Look.Fonts.firstIcon).foregroundStyle(.secondary)
+            Text(Words.firstTitle).font(Look.Fonts.screenTitle)
             Text(Words.firstBody)
-                .multilineTextAlignment(.center).foregroundStyle(.secondary).frame(maxWidth: 520)
+                .multilineTextAlignment(.center).foregroundStyle(.secondary).frame(maxWidth: Look.Size.firstBodyWidth)
             PendingBanner()
             HStack {
                 AddMusicMenu().fixedSize().buttonStyle(.borderedProminent)
                 Button(Words.withRekordbox) { model.askRekordbox() }
                 Button(Words.importCrateFile) { model.askImport() }
             }
-        }.padding(40)
+        }.padding(Look.Space.firstScreenPadding)
     }
 }
 
@@ -127,13 +127,13 @@ struct PendingBanner: View {
     var body: some View {
         if let p = model.pending {
             let here = DeskRun.canCarryOn(p, home: model.home)
-            HStack(spacing: 10) {
-                Image(systemName: "exclamationmark.circle").foregroundStyle(.orange)
+            HStack(spacing: Look.Space.pendingBanner) {
+                Image(systemName: "exclamationmark.circle").foregroundStyle(Look.Colour.warning)
                 Text(Words.stoppedReading(p.name))
                 if here { Button(Words.carryOn) { model.carryOn() } }
                 else { Text(p.musicCD != nil ? Words.t("putDiscBack", ["read": p.name]) : Words.putBack(p.name)).foregroundStyle(.secondary) }
             }
-            .font(.callout).padding(8).background(.quaternary, in: RoundedRectangle(cornerRadius: 6))
+            .font(Look.Fonts.banner).padding(Look.Space.bannerPadding).background(.quaternary, in: RoundedRectangle(cornerRadius: Look.Shape.banner))
         }
     }
 }
@@ -147,7 +147,7 @@ struct RunView: View {
     @State private var showList = false
     var body: some View {
         ScrollView {
-            content.padding(20).frame(maxWidth: 1000)
+            content.padding(Look.Space.runScreenPadding).frame(maxWidth: Look.Size.runScreenWidth)
                 .frame(maxWidth: .infinity)
         }
         .onAppear { model.watch.reduceMotion = reduce }
@@ -160,32 +160,32 @@ struct RunView: View {
 
     private var content: some View {
         VStack(alignment: .leading, spacing: RunLook.gap) {
-            Text(Words.runTitle).font(.title2)
+            Text(Words.runTitle).font(Look.Fonts.screenTitle)
             Text(Words.runReading(model.runRead, into: model.current?.name ?? "")).foregroundStyle(.secondary)
             if model.discAsk != nil {
                 // A music CD with no name of its own: asked once, in passing; the run never waits (letter AA, 2.5).
-                VStack(alignment: .leading, spacing: 6) {
-                    (Text(Words.t("askDiscNameTitle")).bold() + Text(" " + Words.t("askDiscNameBody")).foregroundColor(.secondary))
+                VStack(alignment: .leading, spacing: Look.Space.discAsk) {
+                    (Text(Words.t("askDiscNameTitle")).fontWeight(Look.Fonts.discAskTitleWeight) + Text(Words.askDiscNameBodyAfterTitle()).foregroundColor(.secondary))
                     HStack {
                         TextField(Words.nameField, text: $model.discAnswer).textFieldStyle(.roundedBorder).onSubmit { model.nameDisc() }
                         Button(Words.ok) { model.nameDisc() }.buttonStyle(.borderedProminent)
                     }
-                }.padding(10).background(.quaternary, in: RoundedRectangle(cornerRadius: 8))
+                }.padding(Look.Space.discAskPadding).background(.quaternary, in: RoundedRectangle(cornerRadius: Look.Shape.discAsk))
             }
             RunProgressLine(watch: model.watch)
             SayingLine(watch: model.watch)
-            Text(DeskWords.text("leaveRunning")).font(.caption).foregroundStyle(.tertiary)
+            Text(DeskWords.text("leaveRunning")).font(Look.Fonts.leaveRunning).foregroundStyle(.tertiary)
             StageView(watch: model.watch)
             FiguresView(watch: model.watch)
             WallView(watch: model.watch, title: DeskWords.text("wallTitle"))
             DisclosureGroup(DeskWords.text("runListTitle"), isExpanded: $showList) {
-                VStack(alignment: .leading, spacing: 2) {
+                VStack(alignment: .leading, spacing: Look.Space.runList) {
                     ForEach(model.runLines.suffix(200).indices, id: \.self) { i in
-                        Text(model.runLines.suffix(200)[i]).font(.system(.caption, design: .monospaced)).lineLimit(1)
+                        Text(model.runLines.suffix(200)[i]).font(Look.Fonts.runListLine).lineLimit(1)
                     }
                 }.frame(maxWidth: .infinity, alignment: .leading)
             }
-            .font(.callout).foregroundStyle(.secondary)
+            .font(Look.Fonts.runList).foregroundStyle(.secondary)
         }
     }
 }
@@ -199,15 +199,15 @@ struct RunProgressLine: View {
         if model.runTotal > 0 {
             ProgressView(value: Double(model.runDone), total: Double(model.runTotal))
                 .tint(RunLook.accent)
-                .shadow(color: RunLook.accent.opacity(watch.moment == "songs" && !reduce ? 0.9 : 0), radius: 6)
-                .animation(.easeOut(duration: RunLook.moment / 2), value: watch.moment)
+                .shadow(color: RunLook.accent.opacity(watch.moment == "songs" && !reduce ? RunLook.momentGlowOpacity : 0), radius: RunLook.momentGlowRadius)
+                .animation(.easeOut(duration: RunLook.momentFlash), value: watch.moment)
             HStack {
                 Text(Words.songsOf(model.runDone, model.runTotal))
                 Text(stage).foregroundStyle(.secondary)
-                if watch.figures.notIn > 0 { Text(Words.filesDidntGoIn(watch.figures.notIn)).foregroundStyle(.orange) }
+                if watch.figures.notIn > 0 { Text(Words.filesDidntGoIn(watch.figures.notIn)).foregroundStyle(Look.Colour.warning) }
                 Spacer()
                 if let r = model.runRemaining { Text(Words.timeLeft(r)).foregroundStyle(.secondary) }
-            }.font(.callout)
+            }.font(Look.Fonts.runProgress)
         } else { ProgressView().controlSize(.small) }
     }
 
@@ -227,23 +227,23 @@ struct FinishedView: View {
 
     var body: some View {
         ScrollView {
-        VStack(spacing: 14) {
-            Image(systemName: "checkmark.circle").font(.system(size: 48)).foregroundStyle(.secondary)
-            Text(Words.finishedTitle(report.read, report.crate)).font(.title2)
+        VStack(spacing: Look.Space.finishedScreen) {
+            Image(systemName: "checkmark.circle").font(Look.Fonts.finishedIcon).foregroundStyle(.secondary)
+            Text(Words.finishedTitle(report.read, report.crate)).font(Look.Fonts.screenTitle)
             // The crate as sound (D37): the run's songs, one line each, as they joined, and the run's last moment.
             if !model.watch.songs.isEmpty {
-                VStack(alignment: .leading, spacing: 8) {
-                    if let line = model.watch.finishedLine { Text(line).fontWeight(.semibold) }
+                VStack(alignment: .leading, spacing: Look.Space.finishedWall) {
+                    if let line = model.watch.finishedLine { Text(line).fontWeight(Look.Fonts.finishedMomentWeight) }
                     WallView(watch: model.watch, title: DeskWords.text("wallTitleDone", ["read": report.read]))
                 }
-                .frame(maxWidth: 760)
+                .frame(maxWidth: Look.Size.finishedWallWidth)
             }
-            VStack(alignment: .leading, spacing: 6) {
+            VStack(alignment: .leading, spacing: Look.Space.finishedSummary) {
                 Text(report.notInCount == 0 ? Words.everySongWentIn : Words.wentIn(report.wentIn))
                 if report.notInCount > 0 {
                     Text(Words.didntGoIn(report.notInCount))
                     ForEach(report.notIn.keys.sorted(), id: \.self) { r in
-                        Text(Words.reasonCount(r, report.notIn[r]!)).foregroundStyle(.secondary).padding(.leading, 12)
+                        Text(Words.reasonCount(r, report.notIn[r]!)).foregroundStyle(.secondary).padding(.leading, Look.Space.finishedIndent)
                     }
                 }
                 if report.foldersLeftOut > 0 { Text(Words.foldersLeftOut(report.foldersLeftOut)).foregroundStyle(.secondary) }
@@ -267,15 +267,15 @@ struct FinishedView: View {
                 }
                 Text(Words.took(report.seconds, perMinute: report.songsPerMinute)).foregroundStyle(.secondary)
             }
-            .frame(maxWidth: 420, alignment: .leading)
-            Text(Words.nextStep).padding(.top, 6)
+            .frame(maxWidth: Look.Size.finishedSummaryWidth, alignment: .leading)
+            Text(Words.nextStep).padding(.top, Look.Space.nextStepAbove)
             HStack {
                 Button(Words.sendToIPad) { model.sendToIPad() }.buttonStyle(.borderedProminent)
                 if report.notInCount > 0 || report.damaged > 0 { Button(Words.whatDidntGoIn) { model.showImportLog = true } }
                 Button(Words.seeSongs) { model.finished = nil }
             }
         }
-        .padding(40)
+        .padding(Look.Space.finishedScreenPadding)
         .frame(maxWidth: .infinity)
         }
     }
@@ -288,10 +288,10 @@ struct SayingLine: View {
     @Environment(\.accessibilityReduceMotion) private var reduce
     var body: some View {
         Text(watch.saying)
-            .fontWeight(watch.sayingIsMoment ? .semibold : .regular)
+            .fontWeight(watch.sayingIsMoment ? Look.Fonts.sayingMomentWeight : Look.Fonts.sayingWeight)
             .foregroundStyle(watch.sayingIsMoment ? .primary : .secondary)
             .lineLimit(1)
-            .frame(maxWidth: .infinity, minHeight: 20, alignment: .leading)
+            .frame(maxWidth: .infinity, minHeight: Look.Size.sayingMinHeight, alignment: .leading)
             .id(watch.saying)
             .transition(.opacity)
             .animation(reduce ? nil : .easeInOut(duration: RunLook.fade), value: watch.saying)
@@ -302,11 +302,11 @@ struct CrateView: View {
     @EnvironmentObject var model: DeskModel
     var body: some View {
         VStack(spacing: 0) {
-            if model.pending != nil { PendingBanner().padding(8) }
+            if model.pending != nil { PendingBanner().padding(Look.Space.crateBanner) }
             HSplitView {
-                TrackTable().frame(minWidth: 560)
-                if model.showSources { SourcesPanel().frame(minWidth: 260, idealWidth: 300, maxWidth: 420) }
-                Inspector().frame(minWidth: 260, idealWidth: 300, maxWidth: 380)
+                TrackTable().frame(minWidth: Look.Size.tableMinWidth)
+                if model.showSources { SourcesPanel().frame(minWidth: Look.Size.sourcesMinWidth, idealWidth: Look.Size.sourcesIdealWidth, maxWidth: Look.Size.sourcesMaxWidth) }
+                Inspector().frame(minWidth: Look.Size.inspectorMinWidth, idealWidth: Look.Size.inspectorIdealWidth, maxWidth: Look.Size.inspectorMaxWidth)
             }
         }
         .safeAreaInset(edge: .bottom) {
@@ -331,9 +331,9 @@ struct CrateView: View {
 struct StatusBar: View {
     @EnvironmentObject var model: DeskModel
     var body: some View {
-        HStack(spacing: 12) {
+        HStack(spacing: Look.Space.statusBar) {
             if let c = model.crate {
-                Text(Words.songs(c.tracks.count)).bold()
+                Text(Words.songs(c.tracks.count)).fontWeight(Look.Fonts.statusSongsWeight)
                 let unsigned = c.tracks.filter { $0.signatures.isEmpty }.count
                 if unsigned > 0 { Text(Words.cantBeRecognised(unsigned)).foregroundStyle(.secondary) }
                 let unnamed = model.needingNames.count
@@ -359,7 +359,7 @@ struct StatusBar: View {
                 Button(Words.t("undo")) { model.undoLine = nil; model.undoManager?.undo() }.buttonStyle(.link)
             }
         }
-        .font(.callout).padding(.horizontal, 12).padding(.vertical, 6).background(.bar)
+        .font(Look.Fonts.statusBar).padding(.horizontal, Look.Space.statusBarH).padding(.vertical, Look.Space.statusBarV).background(.bar)
     }
 }
 

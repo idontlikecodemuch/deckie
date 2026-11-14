@@ -89,7 +89,7 @@ enum Words {
 
     /// What the run took from what is already on this computer (D30).
     static func keysLine(_ counts: [(origin: String, n: Int)]) -> String {
-        w("keysLine", ["counts": counts.map { w("keysCount", ["n": "\($0.n)", "from": keyFrom($0.origin)]) }.joined(separator: ", ")])
+        w("keysLine", ["counts": join("join.keysCounts", counts.map { w("keysCount", ["n": "\($0.n)", "from": keyFrom($0.origin)]) })])
     }
     static func keysNone(_ count: Int) -> String { n("keysNone", count) }
     static func keysDisagree(_ count: Int) -> String { n("keysDisagree", count) }
@@ -98,7 +98,7 @@ enum Words {
     static let showThem = w("showThem")
     static let rekordboxLocked = w("rekordboxLocked")
     static let rekordboxExportNotRead = w("rekordboxExportNotRead")
-    static func librariesRead(_ names: [String]) -> String { w("librariesRead", ["names": names.joined(separator: ", ")]) }
+    static func librariesRead(_ names: [String]) -> String { w("librariesRead", ["names": join("join.libraries", names)]) }
     static func couldntReadLibrary(_ detail: String) -> String { w("couldntReadLibrary", ["detail": detail]) }
 
     // MARK: a run that stopped
@@ -196,7 +196,8 @@ enum Words {
     static let rowSections = w("rowSections")
     static let rowVocals = w("rowVocals")
     static func vocalsValue(_ mean: Double, heavy: Bool) -> String {
-        w("vocalsValue", ["percent": String(format: "%.0f%%", mean * 100)]) + (heavy ? w("vocalsHeavy") : "")
+        let value = w("vocalsValue", ["percent": String(format: "%.0f%%", mean * 100)])
+        return heavy ? w("vocalsWithHeavy", ["vocals": value, "heavy": w("vocalsHeavy")]) : value
     }
     static let rowEngine = w("rowEngine")
     static func engineOn(_ engine: String, _ device: String) -> String { w("engineOn", ["engine": engine, "device": device]) }
@@ -246,7 +247,7 @@ enum Words {
     static let chooseLibrary = w("chooseLibrary")
     static let chooseLibraryMessage = w("chooseLibraryMessage")
     static func libraryChosen(_ source: String) -> String { w("libraryChosen", ["program": programName(source)]) }
-    static func lookedAgain(_ lines: [String]) -> String { lines.joined(separator: " ") }
+    static func lookedAgain(_ lines: [String]) -> String { join("join.lookedAgain", lines) }
     static let undoLookAgain = w("undoLookAgain")
 
     // MARK: undo (shown in the Edit menu after "Undo")
@@ -266,6 +267,60 @@ enum Words {
     static let exportMessage = w("exportMessage")
     static let importMessage = w("importMessage")
 
+    // MARK: words built from parts (D36): the templates, so no view joins words of its own
+    /// Items joined by the word named `key` (DeskWords' `join.*`): separators are words too.
+    static func join(_ key: String, _ items: [String]) -> String { items.joined(separator: w(key)) }
+    static func places(_ places: [String]) -> String { join("join.places", places) }
+    static func keyHelp(_ parts: [String]) -> String { join("join.keyHelp", parts) }
+    static func keyHelpFirst(_ camelot: String, from source: String) -> String { w("keyHelpFirst", ["camelot": camelot, "from": keyFrom(source)]) }
+    static func notesLine(_ notes: [String]) -> String { join("join.notes", notes) }
+    static func leftOut(_ items: [String]) -> String { join("join.leftOut", items) }
+    static func lookupWhat(_ items: [String]) -> String { join("join.lookupWhat", items) }
+    static func lookupNotes(_ items: [String]) -> String { join("join.lookupNotes", items) }
+    static func sentFields(_ items: [String]) -> String { join("join.sentFields", items) }
+    static func alsoInPlaces(_ items: [String]) -> String { join("join.alsoIn", items) }
+    static func wallSong(_ parts: [String]) -> String { join("join.wallSong", parts) }
+    static func keysFigure(_ parts: [String]) -> String { join("join.keysFigure", parts) }
+    static func keyChanges(_ items: [String]) -> String { join("join.keyChanges", items) }
+    static func sections(_ items: [String]) -> String { join("join.sections", items) }
+    static func signatures(_ items: [String]) -> String { join("join.signatures", items) }
+    static func damagedAtList(_ items: [String]) -> String { join("join.damagedFrames", items) }
+    static func moreFactLine(_ name: String, _ value: String) -> String { w("moreFactLine", ["name": name, "value": value]) }
+    static func fileTagLine(_ name: String, _ value: String) -> String { w("fileTagLine", ["name": name, "value": value]) }
+    static func lookupScopeNeed(_ n: Int) -> String { w("lookupScope.need", ["label": w("lookupChoice.needsName"), "n": "\(n)"]) }
+    static func lookupScopeSong(_ title: String) -> String { w("lookupScope.song", ["label": w("lookupChoice.song"), "title": title]) }
+    static func lookupScopeSelection(_ n: Int) -> String { w("lookupScope.selection", ["label": w("lookupChoice.selection"), "n": "\(n)"]) }
+    static func lookupScopeDisc(_ source: String) -> String {
+        w("lookupScope.disc", ["label": w("lookupDisc").replacingOccurrences(of: "…", with: ""), "source": source])
+    }
+    static func lookupCountLine(_ progress: String, found: String) -> String { w("lookupCountLine", ["progress": progress, "found": found]) }
+    static func lookupOutcomeFailed(_ outcome: String, failure: String) -> String { w("lookupOutcomeFailed", ["outcome": outcome, "failure": failure]) }
+    static func lookupUseThisLabel(_ title: String) -> String { w("lookupUseThisLabel", ["label": w("lookupUseThis"), "title": title]) }
+    static func lookupCandidateTitle(_ title: String, version: String?) -> String {
+        version.map { w("lookupCandidateTitle", ["title": title, "version": $0]) } ?? title
+    }
+    static func lookupTickField(_ field: String) -> String { w("lookupTickField", ["field": field]) }
+    static func lookupTickBefore(_ before: String) -> String { w("lookupTickBefore", ["before": before]) }
+    static func lookupTickNote(_ note: String) -> String { w("lookupTickNoteMac", ["note": note]) }
+    static func toolSongTitle(_ number: Int?, _ title: String) -> String {
+        number.map { w("toolSongTitle", ["number": twoDigits($0), "title": title]) } ?? title
+    }
+    static func toolChangeNote(_ note: String) -> String { w("toolChangeNoteMac", ["note": note]) }
+    static func wallLabel(_ title: String, songs count: Int) -> String { w("wallLabel", ["title": title, "songs": songs(count)]) }
+    static func figureLabel(_ figure: String, _ text: String) -> String { w("figureLabel", ["figure": figure, "text": text]) }
+    static func keyWithDoubt(_ key: String, doubt: String) -> String { w("keyWithDoubt", ["key": key, "doubt": doubt]) }
+    static func askDiscNameBodyAfterTitle() -> String { w("askDiscNameBodyAfterTitle", ["body": w("askDiscNameBody")]) }
+    static func copyPlace(_ place: String) -> String { w("copyPlace", ["place": place]) }
+    static func rowKeyText(camelot: String, key: String?, scale: String?, notSure: Bool, help: String) -> String {
+        w("rowKeyText", ["camelot": camelot, "name": key.map { w("rowKeyName", ["key": $0, "scale": scale ?? ""]) } ?? "",
+                         "doubt": notSure ? keyNotSure : "", "help": help])
+    }
+    /// The tags field: the tags joined (the field splits what is typed at commas, so the join keeps one).
+    static func tagsField(_ tags: [String]) -> String { join("join.tags", tags) }
+    static func sectionAt(_ label: String, bar: Int) -> String { w("sectionAt", ["label": label, "bar": "\(bar)"]) }
+    static func damagedAt(_ seconds: Double) -> String { w("damagedAt", ["seconds": String(format: "%.1f", seconds)]) }
+    static func musicCDLength(_ seconds: Int) -> String { "\(seconds / 60):" + String(format: "%02d", seconds % 60) }
+
     // MARK: numbers in words
     static func duration(_ s: Double) -> String {
         let t = Int(s.rounded())
@@ -278,7 +333,7 @@ enum Words {
         perMinute >= 10 ? String(format: "%.0f", perMinute) : String(format: "%.1f", perMinute)
     }
     static func twoDigits(_ n: Int) -> String { String(format: "%02d", n) }
-    static func plusMore(_ n: Int) -> String { "+\(n)" }
+    static func plusMore(_ n: Int) -> String { w("sourceSongMore", ["n": "\(n)"]) }
     static func mmss(_ s: Double) -> String { String(format: "%d:%02d", Int(s) / 60, Int(s) % 60) }
     static func tempo(_ bpm: Double) -> String { String(format: "%.1f", bpm) }
     static func percent(_ v: Double) -> String { String(format: "%.0f%%", v * 100) }

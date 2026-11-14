@@ -747,6 +747,7 @@ public enum DeskWords {
         "join.sections": ", ",
         "join.signatures": ", ",
         "join.damagedFrames": ", ",
+        "join.tags": ", ",  // the Mac's tags field splits at commas: keep one
         "keyHelpFirst": "{camelot} {from}",
         "pendingLine": "{stopped} {putBack}",
         "firstBodyEngineMissing": "{body} {missing}",

@@ -21,7 +21,7 @@
   /// How tall a wave value (0 to 99) is drawn, from 0 to 1: one curve for every song (--wave-curve), so loud and
   /// quiet parts stand apart, and songs still compare.
   let curve = 1;
-  const readCurve = () => { curve = parseFloat(css("--wave-curve")) || 1; };
+  const readCurve = () => { curve = num("--wave-curve"); };
   const shape = (v) => Math.pow(Math.max(0, v) / 99, curve);
 
   // A CSS colour as red, green, blue and alpha (0 to 255), for drawing into image data.

@@ -89,31 +89,31 @@ struct SourcesPanel: View {
     var body: some View {
         let outline = model.sourceOutline
         VStack(spacing: 0) {
-            VStack(alignment: .leading, spacing: 2) {
-                Text(Words.sourcesTitle).font(.headline)
-                Text(Words.sourcesCaption).font(.caption).foregroundStyle(.secondary)
+            VStack(alignment: .leading, spacing: Look.Space.sourcesHead) {
+                Text(Words.sourcesTitle).font(Look.Fonts.panelTitle)
+                Text(Words.sourcesCaption).font(Look.Fonts.sourcesCaption).foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(.horizontal, 12).padding(.vertical, 8)
+            .padding(.horizontal, Look.Space.sourcesHeadH).padding(.vertical, Look.Space.sourcesHeadV)
             Divider()
             if outline.isEmpty {
-                VStack(spacing: 8) {
+                VStack(spacing: Look.Space.sourcesEmpty) {
                     Text(Words.nothingReadYet).foregroundStyle(.secondary)
                     Text(Words.sourcesEmptyBody)
-                        .font(.callout).foregroundStyle(.secondary).multilineTextAlignment(.center)
+                        .font(Look.Fonts.sourcesEmptyBody).foregroundStyle(.secondary).multilineTextAlignment(.center)
                     AddMusicMenu(label: Words.addMusicMore)
                 }
-                .padding(16).frame(maxHeight: .infinity)
+                .padding(Look.Space.sourcesEmptyPadding).frame(maxHeight: .infinity)
             } else {
                 List(selection: $model.sourceSelection) {
                     ForEach(outline, id: \.name) { s in
                         let count = s.folders.reduce(0) { $0 + $1.trackIds.count }
                         Label(Words.sourceLine(s.name, songs: count), systemImage: "externaldrive")
-                            .font(.body.bold()).tag(SourceItem.source(s.name))
+                            .font(Look.Fonts.sourceName).tag(SourceItem.source(s.name))
                         ForEach(s.folders, id: \.name) { f in
                             Label(f.name.isEmpty ? Words.topFolder : f.name, systemImage: "folder")
-                                .padding(.leading, 14).tag(SourceItem.folder(source: s.name, folder: f.name))
+                                .padding(.leading, Look.Space.sourcesFolderIndent).tag(SourceItem.folder(source: s.name, folder: f.name))
                             let rows = model.crate?.folderPlaces(disc: s.name, folder: f.name) ?? []
                             ForEach(rows.indices, id: \.self) { i in
                                 trackRow(rows[i].id, number: rows[i].number, source: s.name)
@@ -126,7 +126,7 @@ struct SourcesPanel: View {
                 .listStyle(.sidebar)
             }
             Divider()
-            actions.padding(10)
+            actions.padding(Look.Space.sourcesActions)
         }
         .alert(prompt?.title ?? "", isPresented: Binding(get: { prompt != nil }, set: { if !$0 { prompt = nil } })) {
             TextField(Words.nameField, text: $promptText)
@@ -140,21 +140,21 @@ struct SourcesPanel: View {
     private func trackRow(_ id: String, number: Int?, source: String) -> some View {
         let t = model.binding(for: id)
         let elsewhere = t.map { TrackTable.places($0).count - 1 } ?? 0
-        return HStack(spacing: 6) {
-            Text(number.map(Words.twoDigits) ?? Words.none).font(.callout.monospacedDigit()).foregroundStyle(.secondary)
+        return HStack(spacing: Look.Space.sourcesSong) {
+            Text(number.map(Words.twoDigits) ?? Words.none).font(Look.Fonts.sourcesSongNumber).foregroundStyle(.secondary)
             Text(t?.ident.title ?? id).foregroundStyle(.primary).lineLimit(1)
             if let a = t?.ident.artist { Text(a).foregroundStyle(.secondary).lineLimit(1) }
             if elsewhere > 0 {
-                Text(Words.plusMore(elsewhere)).font(.caption.monospacedDigit()).foregroundStyle(.secondary)
-                    .help(Words.alsoIn(t.map { TrackTable.places($0).joined(separator: ", ") } ?? ""))
+                Text(Words.plusMore(elsewhere)).font(Look.Fonts.sourcesSongMore).foregroundStyle(.secondary)
+                    .help(Words.alsoIn(t.map { Words.alsoInPlaces(TrackTable.places($0)) } ?? ""))
             }
         }
-        .padding(.leading, 30)
+        .padding(.leading, Look.Space.sourcesSongIndent)
     }
 
     @ViewBuilder private var actions: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text(Words.fixHint).font(.caption).foregroundStyle(.secondary)
+        VStack(alignment: .leading, spacing: Look.Space.sourcesActionsStack) {
+            Text(Words.fixHint).font(Look.Fonts.sourcesHint).foregroundStyle(.secondary)
             HStack {
                 switch model.sourceSelection {
                 case let .track(id, _, _)?:
@@ -217,7 +217,7 @@ struct AddMusicMenu: View {
 enum MusicCDItem {
     static func label(_ cd: MusicCDs.Found) -> String {
         let secs = Int(cd.seconds.rounded())
-        let name = Words.c("musicCDPlaceholder", cd.songs, ["length": "\(secs / 60):" + String(format: "%02d", secs % 60)])
+        let name = Words.c("musicCDPlaceholder", cd.songs, ["length": Words.musicCDLength(secs)])
         return Words.t("musicCDItem", ["name": name, "drive": cd.drive])
     }
 }

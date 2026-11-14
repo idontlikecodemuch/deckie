@@ -19,7 +19,7 @@ struct DeskApp: App {
 
     var body: some Scene {
         WindowGroup(Words.appName) {
-            ContentView().environmentObject(model).frame(minWidth: 900, minHeight: 560)
+            ContentView().environmentObject(model).frame(minWidth: Look.Size.windowMinWidth, minHeight: Look.Size.windowMinHeight)
                 .onAppear {
                     if let n = Headless.openOnLaunch { model.show(named: n) }
                     if let w = NamingWalk.request { NamingWalk.run(model: model, out: w.out, music: w.music) }
