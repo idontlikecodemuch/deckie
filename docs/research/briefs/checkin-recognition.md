@@ -2,6 +2,60 @@
 
 Branch `trial/own-recognition`. Newest entry first. Nothing here ships without the owner's decision.
 
+## Nov 14, 2026, 08:20 UTC: overnight, entry 1: the design is nearly decided; the real thing is half built
+
+**Received**: "Keep this going ... get that song recognition element complete." Nobody to ask until morning, so
+each decision is written here with its evidence. Newest entry first; this one will be replaced by the morning page.
+
+**Decisions so far**
+
+1. **The check is widened, and pairs inside a short list are dropped.** The first pass now hands the best two
+   proposals of each of its first 50 songs to the point-by-point check (it used to check its 12 fullest votes).
+   Evidence (eval half, 969 songs, 5 / 8 / 12 s): crowd at equal level 49 / 61 / 73 % becomes 56 / 68 / 76 %; crowd
+   10 dB under, 81 / 89 / 94 becomes 83 / 91 / 95; no wrong name and no absent song named. Matching the short list
+   again with two-point hashes took 0.7 s a query as built (re-hashing 50 whole songs) and the point check already
+   uses each point singly, so it was not pursued.
+2. **A thin index with a dense listen.** The microphone's side takes more points (a smaller neighbourhood, three per
+   slice); the songs' side keeps a fraction of its hashes.
+
+| What the booth holds (three-point hashes, wide check) | KB a song | 5,000 songs | room | crowd 10 dB under | crowd at equal level |
+|---|---|---|---|---|---|
+| the trial's index and check, for reference | 261 | 1.3 GB | 89 / 95 / 98 | 78 / 89 / 93 | 48 / 60 / 72 |
+| every hash, wide check | 162 | 0.8 GB | 90 / 95 / 98 | 83 / 91 / 95 | 56 / 68 / 76 |
+| 1 hash in 4, dense listen, wide check | 40 | 200 MB | 81 / 90 / 95 | 72 / 83 / 90 | 46 / 58 / 69 |
+| 1 hash in 8, dense listen, wide check | 20 | 100 MB | 72 / 83 / 90 | 61 / 74 / 83 | 34 / 49 / 58 |
+
+3. **Four points do not win a place, on the evidence so far.** Same benchmark, same check, equal memory:
+
+| First pass | KB a song | room | crowd 10 dB under | crowd at equal level | 8 s query, ms |
+|---|---|---|---|---|---|
+| threes, 1 hash in 4 | 40 | 81 / 90 / 95 | 72 / 83 / 90 | 46 / 58 / 69 | 110 |
+| fours, ratio form, one a point | 40 | 69 / 79 / 85 | 59 / 68 / 76 | 34 / 43 / 50 | 27 |
+| threes, 1 hash in 8 | 20 | 72 / 83 / 90 | 61 / 74 / 83 | 34 / 49 / 58 | 109 |
+| fours, ratio form, stronger half of points | 20 | 60 / 69 / 80 | 53 / 63 / 71 | 29 / 37 / 46 | 22 |
+
+   Fours are four times faster (no speed search) and that is all they buy; threes at half the memory beat them in
+   every noisy cell. Since speed is no longer the constraint, threes stay. Rows still to come: fours hashed like
+   threes, two fours a point, thin pairs.
+
+**Built tonight** (branch `recog/size`, merged into `recog/core`)
+- The index as one file, opened in place from storage; built once per crate file and made again only when the
+  songs change.
+- The listener: fed sound at any rate in any pieces, it gives a reading a second (song, place, speed, key lock,
+  confidence, or "nothing yet"), gathers evidence across two listens, follows a named song with one cheap check a
+  second and searches the crate every other second to notice a new song. A wrapper for an app never blocks the
+  caller. `deckie-listen` plays any recording through it and prints each second.
+- First mix played through it: first song named at 3 s, the next song named one second after the first ended, read
+  at +8.39 % with key lock on (label: +8.3 %); 10 ms a reading while following, 60 to 90 ms when it searches.
+- **The fingerprint is in the crate file and every builder writes it** (`recog/core`): `prints/<id>.dkl` beside
+  `signatures/`, a `print` key on the record with its own version number, reader, writer, validator, the single-file
+  form, Desk's shared store (a file is fingerprinted once), `deckie-build`, `deckie-make`; "can't be recognised yet"
+  now counts songs with neither a fingerprint nor a signature. 121 + 77 + 40 + 6 + 35 tests pass on Linux; both
+  workflows are running on the branch.
+
+**Next, in order**: finish the decision table; choose the listener's thresholds on the dev half; run the whole
+benchmark and the generated mixes through the listener; letter W4; the morning page.
+
 ## Nov 14, 2026, 07:05 UTC: size study, first results; letter AB and the four-point question taken up
 
 **Received**: letter AB (merged and read; its order (a) to (e) is the order I am following), and the owner's

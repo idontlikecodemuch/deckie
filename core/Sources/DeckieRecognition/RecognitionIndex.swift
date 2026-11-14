@@ -119,6 +119,8 @@ public struct RecognitionIndex: Sendable {
     public let landmark: LandmarkConfig
     public let pairing: PairingConfig
     public let ids: [String]
+    /// A mark of which songs the index was made from (see `stamp(of:)`); empty when the maker gave none.
+    public let stamp: String
 
     /// Frames of padding before each song on the one long timeline all songs are laid on, and the longest query (in
     /// frames) that padding allows at the fastest candidate speed.
@@ -151,7 +153,8 @@ public struct RecognitionIndex: Sendable {
     public var pointCount: Int { pointFrame.count }
 
     public init(songs: [(id: String, landmarks: Landmarks)], landmark: LandmarkConfig = LandmarkConfig(),
-                pairing: PairingConfig = PairingConfig()) {
+                pairing: PairingConfig = PairingConfig(), stamp: String = "") {
+        self.stamp = stamp
         var pairing = pairing
         if pairing.triples {
             let share = [1.0, 0.75, 0.5, 0.25][max(0, min(3, pairing.minAnchorLevel))]   // the levels are quartiles
