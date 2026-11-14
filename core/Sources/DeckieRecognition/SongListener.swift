@@ -63,7 +63,7 @@ public struct ListenSettings: Sendable, Equatable {
     public var sure = 3.0
     /// Two searches in a row that put the same song on the same line (place and speed agreeing to `agreeSeconds`)
     /// are taken together when each reaches this.
-    public var fair = 2.3
+    public var fair = 2.6
     public var agreeSeconds = 0.5
     /// A song being followed is still there when its points agree this far above chance...
     public var holdScore = 6.0

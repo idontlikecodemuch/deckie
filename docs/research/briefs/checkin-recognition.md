@@ -2,6 +2,58 @@
 
 Branch `trial/own-recognition`. Newest entry first. Nothing here ships without the owner's decision.
 
+## Nov 14, 2026, 11:20 UTC: overnight, entry 2: the design is decided and built; the last measurements are running
+
+This entry replaces what entry 1 said about the design: a late row changed the choice from three-point to
+two-point hashes. The morning page will replace this one.
+
+**The design, decided** (every figure: eval half, 969 outside songs, right song named and accepted, percent at
+5 / 8 / 12 s; noise levels nominal, in band the crowd is 0.5 dB worse)
+
+| What the booth holds | KB a song (at 5,000 songs) | clean | room | crowd 10 dB under | crowd at equal level |
+|---|---|---|---|---|---|
+| **Chosen: two-point hashes, the strongest half of the points round each as anchors, 3 hashes an anchor, wide check** | 47 (41) | 99 / 99 / 100 | 88 / 93 / 98 | 81 / 91 / 95 | 58 / 71 / 79 |
+| **Small setting: the strongest quarter** | 28 (21) | 99 / 98 / 99 | 79 / 89 / 95 | 69 / 84 / 90 | 50 / 62 / 73 |
+| the strongest eighth (where it starts to break) | 18 (11) | 95 / 99 / 99 | 66 / 80 / 89 | 58 / 74 / 84 | 38 / 52 / 63 |
+| threes, 1 hash in 4, dense listen, wide check | 40 | 100 / 100 / 100 | 81 / 90 / 95 | 72 / 83 / 90 | 46 / 58 / 69 |
+| fours, ratio form, wide check | 40 | 99 / 100 / 100 | 69 / 79 / 85 | 59 / 68 / 76 | 34 / 43 / 50 |
+| fours, hashed like threes, 1 in 4, wide check | 40 | 100 / 100 / 100 | 58 / 70 / 79 | 44 / 56 / 63 | 22 / 32 / 39 |
+| the first trial (W2), for reference | 261 | 100 / 100 / 100 | 89 / 95 / 98 | 78 / 89 / 93 | 48 / 60 / 72 |
+
+- **Twos beat threes beat fours at equal memory, in every noisy cell.** A hash survives only if all its points do;
+  in noise that decides it. What made twos too slow in the first trial was the size of their index, and a thin one
+  is fast enough: 62 ms for an 8 s listen here.
+- **Fours do not win a place.** Their one gain is speed (the ratio form needs no speed search: 27 ms), which is no
+  longer the constraint. They are in the code, off.
+- **The small setting matches the first trial at a twelfth of its memory** and meets the 100 MB line for 5,000
+  songs (105 MB). **The chosen setting beats the first trial in every noisy cell at a sixth of its memory** (205 MB
+  for 5,000 songs). I chose the larger as the default because the index is a file opened in place, which Apple
+  describes as not charged to the app, and noise is the first worry in D35; the small one is one word in the code
+  (`PairingConfig.boothSmall`) if the device says otherwise.
+- **A flaw found and fixed on the way**: choosing anchors by fixed loudness levels left some passages with no
+  anchors, and 11 clean listens in 500 were missed. Anchors are now the strongest share of the points within a
+  second either side, so every passage keeps its share.
+- **Fuzzy lookup and a denser listen**: the denser listen helped thin threes and did nothing for twos at three
+  times the time; off. Fuzzy lookup was built as an option and its row was not run after the choice moved to twos;
+  not measured.
+
+**Copies of one recording** (the real-room test's main finding). Songs that hold the same sound are found when the
+index is built, from the crate file's own keys and from the fingerprints (a second file of a recording; a long
+file that contains a song), and never counted against each other. The test asked for, on the benchmark: with every
+song present twice and 20 long files of six songs each joined end to end, the index scores 100 / 100 / 100 clean,
+90 / 95 / 99 room, 84 / 92 / 96 crowd 10 dB under, 60 / 72 / 80 at equal level: the same as without them. With the
+search switched off the same index drops to 89 clean and 82 room at 8 s.
+
+**Built and green.** Branch `recog/core` (cut from `main`, `main` merged in since): the fingerprint in the crate
+file with its own version number, every builder writing it, the index file opened in place, the listener and its
+non-blocking wrapper, `deckie-listen`. Both workflows are green on it: `core-linux` run 43585502813 and
+`core-windows` run 43585500581 (which also compares a Windows-built crate file with a Linux-built one,
+fingerprints included). Three earlier runs each failed on a different Desk engine-process test before I made the
+fingerprint quicker in unoptimised builds; I did not prove that was the cause.
+
+**Running now**: the generated mixes and the whole eval half through the finished listener; time, memory and false
+names at 1,000 to 10,000 songs. **Then**: letter W4 and the morning page.
+
 ## Nov 14, 2026, 08:20 UTC: overnight, entry 1: the design is nearly decided; the real thing is half built
 
 **Received**: "Keep this going ... get that song recognition element complete." Nobody to ask until morning, so
