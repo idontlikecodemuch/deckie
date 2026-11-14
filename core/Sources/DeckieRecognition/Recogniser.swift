@@ -353,12 +353,35 @@ public final class Recogniser {
         return (found, [])
     }
 
+    /// A song's points for the check: from the index when it holds them, else through its `pointSource` (the crate
+    /// file's own fingerprint), kept for the last few hundred songs read. The frames are on the index's timeline;
+    /// `lo` and `hi` bound the song's points in the buffers handed over.
+    func withPoints<R>(_ ix: RecognitionIndex, _ s: Int,
+                       _ body: (UnsafeBufferPointer<Int32>, UnsafeBufferPointer<UInt16>, _ lo: Int, _ hi: Int) -> R) -> R? {
+        if ix.holdsPoints {
+            return ix.pointFrame.withUnsafeBufferPointer { pf in
+                ix.pointPitch.withUnsafeBufferPointer { pp in body(pf, pp, ix.pointStart[s], ix.pointStart[s + 1]) }
+            }
+        }
+        if readPoints[s] == nil {
+            guard let m = ix.pointSource?(s) else { return nil }
+            if readOrder.count >= 256 { readPoints[readOrder.removeFirst()] = nil }
+            let start = Int32(ix.songStart[s])
+            readPoints[s] = (m.frames.map { start + Int32($0) }, (0..<m.count).map { m.pitch($0) })
+            readOrder.append(s)
+        }
+        guard let kept = readPoints[s] else { return nil }
+        return kept.frames.withUnsafeBufferPointer { pf in kept.pitches.withUnsafeBufferPointer { pp in body(pf, pp, 0, pf.count) } }
+    }
+    private var readPoints: [Int: (frames: [Int32], pitches: [UInt16])] = [:]
+    private var readOrder: [Int] = []
+
     /// Lines the query's points up with one song's from a starting offset, speed and pitch shift; refits the three
     /// from the points that pair up (a straight line through their times, the median of their pitch differences) with
     /// the tolerances narrowing; and counts the pairs at the final tolerances.
     private func verify(in ix: RecognitionIndex, qt: [Double], qp: [Double], song s: Int, offset: Double, speed: Double, shift: Double) -> RecognitionMatch? {
-        let lo = ix.pointStart[s], hi = ix.pointStart[s + 1]
-        guard hi > lo else { return nil }
+        guard ix.pointStart[s + 1] > ix.pointStart[s] else { return nil }
+        let pointCount = ix.pointStart[s + 1] - ix.pointStart[s]
         let start = Double(ix.songStart[s])
         var o = offset, v = speed, sh = shift
         var matched = 0
@@ -366,8 +389,8 @@ public final class Recogniser {
         var pairs: [(tq: Double, tr: Double, dp: Double)] = []
         for (round, (tt, pt)) in rounds.enumerated() {
             pairs.removeAll(keepingCapacity: true)
-            ix.pointFrame.withUnsafeBufferPointer { pf in
-                ix.pointPitch.withUnsafeBufferPointer { pp in
+            let read: Void? = withPoints(ix, s) { pf, pp, lo, hi in
+                do {
                     for i in 0..<qt.count {
                         let tr = start + o + v * qt[i], pr = qp[i] - sh
                         // The first song point at or after tr - tt.
@@ -392,6 +415,7 @@ public final class Recogniser {
                     }
                 }
             }
+            if read == nil { return nil }        // the song's points could not be read
             matched = pairs.count
             if round == rounds.count - 1 { break }
             guard pairs.count >= 4 else { return nil }
@@ -409,7 +433,7 @@ public final class Recogniser {
         // What an unrelated song would give: each query point finds a song point in its window with probability
         // (the song's points per frame and pitch unit) x (the window's area).
         let frames = Double(ix.songStart[s + 1] - RecognitionIndex.padding - ix.songStart[s])
-        let density = Double(hi - lo) / (max(1, frames) * ix.landmark.octaves * Landmarks.pitchUnitsPerOctave)
+        let density = Double(pointCount) / (max(1, frames) * ix.landmark.octaves * Landmarks.pitchUnitsPerOctave)
         let chance = min(0.5, density * (2 * timeTolerance + 1) * (2 * pitchTolerance + 1))
         let nq = Double(qt.count)
         let score = (Double(matched) - nq * chance) / (nq * chance * (1 - chance) + 1).squareRoot()

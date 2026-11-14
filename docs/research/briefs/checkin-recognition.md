@@ -2,6 +2,52 @@
 
 Branch `trial/own-recognition`. Newest entry first. Nothing here ships without the owner's decision.
 
+## Nov 14, 2026, 16:20 UTC: `recog/fast`, stage 1: the index is built in a fixed memory, and need not copy the songs' points
+
+**Received**: the owner's reading of the morning page (a name sooner; size may grow if it buys something; no
+target number until he has seen the spread), the second real-room run (W3, section 13), and the order: the
+bounded-memory build first, then the distributions and the size curve, then the listener, then "coming in".
+Branch `recog/fast`, cut from `main`. This entry is stage 1; the table the owner asked for comes with stage 2.
+
+**Stage 1: building the index** (the real-room run measured a peak of 0.88 GB to build his library's index on a
+Mac, which on an iPad would get the booth closed)
+
+| Songs (outside set's lengths, 3.4 min on average; padded past 969) | Peak memory of the whole process while building | Time, one core | Index file |
+|---|---|---|---|
+| 2,000 | 73 MB | 17 s | 87 MB |
+| 5,000 | 73 MB | 72 s | 205 MB |
+| 10,000 | 73 MB | 4.3 min | 403 MB |
+| 2,000, with the search for copies | 131 MB (58 of it the finished index's own pages, read in place) | 72 s | 87 MB |
+
+- **How**: one song is held at a time, with the table's counters and a 32 MB buffer of entries; the entries are
+  written a run of the table at a time, every song hashed again for each run. A larger crate takes more passes,
+  not more memory (so the time grows faster than the crate; a 64 MB buffer halves the passes). The file is byte for
+  byte the one the first builder wrote: a test compares them.
+- **The songs' points are no longer copied.** Half of the index file was a copy of every song's points for the
+  final check. Given the crate file's `prints/` folder, the index now leaves them out and reads a song's own
+  fingerprint when it checks that song (the last 256 songs read are kept). The file is then the table alone.
+- **Sizes by music, not by song** (the real library averaged 4.2 minutes a song, the outside set 3.4):
+
+| Per minute of music | `booth` | `boothSmall` | Grows with a larger index setting? |
+|---|---|---|---|
+| Fingerprint in the crate file | 5.8 KB | 5.8 KB | no |
+| Index on the iPad's storage, opened in place | 12.2 KB | 6.3 KB | yes, in step |
+| (the copy of the points, now left out) | (11.5 KB) | (11.5 KB) | no |
+| The app's own memory while listening | 0.5 KB | 0.5 KB | no |
+
+  So for songs of 4.2 minutes: 2,000 songs are a 103 MB index (53 MB small) and 4 MB in the app; 5,000 songs are
+  257 MB (133 MB small) and 10 MB in the app.
+- **The search for copies is the slow part** on a large crate (55 s for 2,000 songs; it grows faster than the
+  crate, *[inference]* about 6 minutes for 5,000 and 25 for 10,000 on this core). It needs no key in the crate
+  file, which is how all 355 groups in the owner's library were found. The index can be used before the search
+  has run; doing the search afterwards in the background is a small change in the app's order of calls and is
+  not built.
+- Tests: 13 recognition tests and the crate tests pass on Linux. Not yet run on the two workflows for this branch.
+
+**Next**: stage 2, the spread of seconds to a name (hard cut, blend, by how loud the room is) at each index size.
+The 30 s clips for it are made (1,720 on the eval half: starts in six conditions, hard cuts, songs not in the
+index) and the baseline is running. **Carry on.**
+
 ## Nov 14, 2026, 12:45 UTC: THE MORNING PAGE: song recognition is complete in the shared core
 
 The full account is `docs/research/w4-recognition-complete.md`. Everything is on `main` except this page, the

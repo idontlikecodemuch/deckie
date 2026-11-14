@@ -23,7 +23,15 @@ struct Block<T>: @unchecked Sendable {
     var bytes: Int { count * MemoryLayout<T>.stride }
 }
 
-struct FileSettings: Codable { var landmark: LandmarkConfig; var pairing: PairingConfig; var stamp: String }
+struct FileSettings: Codable {
+    var landmark: LandmarkConfig; var pairing: PairingConfig; var stamp: String
+    /// As JSON with its keys in order, so that two builders write the same bytes.
+    func encoded() -> Data {
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = [.sortedKeys]
+        return (try? encoder.encode(self)) ?? Data()
+    }
+}
 
 public struct IndexFileError: Error, CustomStringConvertible {
     public var description: String
@@ -46,7 +54,7 @@ extension RecognitionIndex {
     /// entries, their tags, and the pairs of songs that hold the same sound. Numbers are little-endian, as on every system Deckie runs on.
     public func fileData() -> Data {
         precondition(1.littleEndian == 1)
-        let settings = (try? JSONEncoder().encode(FileSettings(landmark: landmark, pairing: pairing, stamp: stamp))) ?? Data()
+        let settings = FileSettings(landmark: landmark, pairing: pairing, stamp: stamp).encoded()
         var parts: [Data] = [settings, Data(ids.joined(separator: "\n").utf8),
                              songStart.map(Int64.init).withUnsafeBufferPointer { Data(buffer: $0) },
                              pointStart.map(Int64.init).withUnsafeBufferPointer { Data(buffer: $0) }]
@@ -128,7 +136,8 @@ extension RecognitionIndex {
             }
         }
         related = sets
-        guard pointFrame.count == pointPitch.count, pointFrame.count == (pointStart.last ?? 0), offsets.count == (1 << pairing.tableBits) + 1 else {
+        guard pointFrame.count == pointPitch.count, pointFrame.count == (pointStart.last ?? 0) || pointFrame.count == 0,
+              offsets.count == (1 << pairing.tableBits) + 1 else {
             throw fail("the parts do not fit together")
         }
     }
@@ -153,11 +162,49 @@ extension RecognitionIndex {
     /// file's fingerprints), writes it to `url`, and opens that. So the building happens once per crate file, the
     /// first time the booth sees it, and what is used afterwards is always the mapped file.
     public static func cached(at url: URL, stamp: String, sameRecording: [String?] = [], pairing: PairingConfig = .booth,
-                              songs: () -> [(id: String, landmarks: Landmarks)]) throws -> RecognitionIndex {
-        if let kept = try? RecognitionIndex(contentsOf: url), kept.stamp == stamp, kept.settingsMatch(pairing) { return kept }
-        let built = RecognitionIndex(songs: songs(), pairing: pairing, stamp: stamp, sameRecording: sameRecording)
-        try built.write(to: url)
-        return try RecognitionIndex(contentsOf: url)
+                              printsFolder: URL? = nil, songs: () -> [(id: String, landmarks: Landmarks)]) throws -> RecognitionIndex {
+        if let kept = kept(at: url, stamp: stamp, pairing: pairing, printsFolder: printsFolder) { return kept }
+        let all = songs()
+        return try cached(at: url, stamp: stamp, count: all.count, sameRecording: sameRecording, pairing: pairing, printsFolder: printsFolder) { all[$0] }
+    }
+
+    /// The same, asking for one song at a time, so that neither the songs nor the index are ever all in memory: the
+    /// index is built by `build(to:…)` in a fixed working memory. With `printsFolder` (a crate file's `prints/`
+    /// folder) the index file leaves the songs' points out and reads them there when it checks a song; without, it
+    /// keeps its own copy of them.
+    public static func cached(at url: URL, stamp: String, count: Int, sameRecording: [String?] = [], pairing: PairingConfig = .booth,
+                              printsFolder: URL? = nil, findCopies: Bool = true,
+                              song: (Int) -> (id: String, landmarks: Landmarks)) throws -> RecognitionIndex {
+        func open() throws -> RecognitionIndex { try opened(at: url, printsFolder: printsFolder) }
+        if let kept = kept(at: url, stamp: stamp, pairing: pairing, printsFolder: printsFolder) { return kept }
+        if pairing.triples {
+            // The other kinds of hash are for study only and are built whole in memory.
+            let built = RecognitionIndex(songs: (0..<count).map { song($0) }, pairing: pairing, stamp: stamp, sameRecording: sameRecording, findCopies: findCopies)
+            try built.write(to: url)
+            return try open()
+        }
+        try build(to: url, count: count, pairing: pairing, stamp: stamp, embedPoints: printsFolder == nil, song: song)
+        var pairs: [(Int, Int)] = []
+        var byKey: [String: [Int]] = [:]
+        for (i, key) in sameRecording.enumerated() where i < count { if let key { byKey[key, default: []].append(i) } }
+        for group in byKey.values where group.count > 1 { for a in group { for b in group where a < b { pairs.append((a, b)) } } }
+        if findCopies { pairs += SameRecording.find(in: try open()) }
+        if !pairs.isEmpty { try setRelated(pairs, inFileAt: url) }
+        return try open()
+    }
+
+    private static func opened(at url: URL, printsFolder: URL?) throws -> RecognitionIndex {
+        var index = try RecognitionIndex(contentsOf: url)
+        if let printsFolder, !index.holdsPoints { index.pointSource = pointSource(printsFolder: printsFolder, ids: index.ids) }
+        return index
+    }
+
+    /// The index file at `url` if it is there and is the one wanted: made from these songs, with these settings,
+    /// and holding its points or not as asked.
+    private static func kept(at url: URL, stamp: String, pairing: PairingConfig, printsFolder: URL?) -> RecognitionIndex? {
+        guard let kept = try? opened(at: url, printsFolder: printsFolder), kept.stamp == stamp, kept.settingsMatch(pairing),
+              kept.holdsPoints == (printsFolder == nil) else { return nil }
+        return kept
     }
 
     /// Whether this index was built with these settings (the table's size aside, which the index sets itself).

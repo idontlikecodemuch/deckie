@@ -16,7 +16,8 @@ import DeckieRecognition
 //       rate on each line; every reading of every clip goes to readings.tsv with the clip's name in front.
 //
 // A reading: seconds heard, state (nothingYet, named, held), the song's id, the place in it (s), the deck's speed
-// (percent), key lock (yes, no, ?), confidence, milliseconds taken. At the end: the time readings took and the
+// (percent), key lock (yes, no, ?), confidence, milliseconds taken; then a second song heard coming in under the one
+// followed, if any: its id, place, speed and confidence. At the end: the time readings took and the
 // most memory the process held.
 
 func fail(_ message: String) -> Never { FileHandle.standardError.write(Data((message + "\n").utf8)); exit(2) }
@@ -61,34 +62,74 @@ func line(_ r: ListenReading) -> String {
            r.positionSeconds.map { String(format: "%.2f", $0) } ?? "-", r.speedPercent.map { String(format: "%+.2f", $0) } ?? "-",
            r.keyLock.map { $0 ? "yes" : "no" } ?? "?", r.confidence, r.milliseconds)
         + (trace ? "\t" + (r.searched.map { String(format: "%@\t%.3f\t%@", $0.id, $0.confidence, $0.agrees ? "agrees" : "-") } ?? "-\t0\t-") : "")
+        + "\t" + (r.incoming.map { String(format: "%@\t%.2f\t%+.2f\t%.2f", $0.id, $0.positionSeconds, $0.speedPercent, $0.confidence) } ?? "-\t-\t-\t0")
 }
 
 // The index: opened in place, or built from fingerprints.
 let index: RecognitionIndex
 let t0 = DispatchTime.now().uptimeNanoseconds
 if let path = values["--index"] {
-    do { index = try RecognitionIndex(contentsOf: URL(fileURLWithPath: path), mapped: !flags.contains("--in-memory")) } catch { fail("\(error)") }
+    do {
+        var opened = try RecognitionIndex(contentsOf: URL(fileURLWithPath: path), mapped: !flags.contains("--in-memory"))
+        // An index without the songs' points reads them from the fingerprints: --prints-folder DIR.
+        if !opened.holdsPoints, let dir = values["--prints-folder"] {
+            opened.pointSource = RecognitionIndex.pointSource(printsFolder: URL(fileURLWithPath: dir), ids: opened.ids)
+        }
+        index = opened
+    } catch { fail("\(error)") }
 } else if let dir = values["--prints"] {
-    var songs: [(id: String, landmarks: Landmarks)] = []
-    for name in ((try? FileManager.default.contentsOfDirectory(atPath: dir)) ?? []).filter({ $0.hasSuffix(".dkl") }).sorted() {
-        guard let d = FileManager.default.contents(atPath: dir + "/" + name), let m = Landmarks(encoded: d) else { fail("bad fingerprint \(name)") }
-        songs.append((String(name.dropLast(4)), m))
-    }
-    // --leave-out FILE: ids not to index (the benchmark's "not in the crate" songs). --keep-one-in N: another thinning
-    // than the booth's, for the size study.
+    // --leave-out FILE: ids not to index (the benchmark's "not in the crate" songs). --small, --fast, --anchor-share,
+    // --fan-out: another index than the booth's. --pad N: fill the index up to N songs with altered copies of the
+    // real fingerprints (time reversed, pitches moved round the band), to try a larger crate than there is music
+    // for. --no-points: leave the songs' points out of the index file and read them from the fingerprints in DIR.
+    // --no-copy-finding: skip the search for songs that hold the same sound. --working-mb N: the builder's buffer.
+    // The index is built in a fixed working memory: each fingerprint is read from DIR when it is wanted, not kept.
+    var names = ((try? FileManager.default.contentsOfDirectory(atPath: dir)) ?? []).filter { $0.hasSuffix(".dkl") }.sorted()
     if let path = values["--leave-out"], let text = try? String(contentsOfFile: path, encoding: .utf8) {
-        let out = Set(text.split(separator: "\n").map { String($0.split(separator: "\t").first ?? "") })
-        songs.removeAll { out.contains($0.id) }
+        let out = Set(text.split(separator: "\n").map { String($0.split(separator: "\t").first ?? "") + ".dkl" })
+        names.removeAll { out.contains($0) }
     }
+    guard !names.isEmpty else { fail("no fingerprints in \(dir)") }
     var pairing = PairingConfig.booth
     if flags.contains("--small") { pairing = PairingConfig.boothSmall }
-    if let keep = values["--keep-one-in"].flatMap(Int.init) { pairing.keepOneIn = keep }
-    index = RecognitionIndex(songs: songs, pairing: pairing, findCopies: !flags.contains("--no-copy-finding"))
-    if let save = values["--save-index"] { do { try index.write(to: URL(fileURLWithPath: save)) } catch { fail("\(error)") } }
+    if flags.contains("--fast") { pairing = PairingConfig.boothFast }
+    if let v = values["--anchor-share"].flatMap(Double.init) { pairing.anchorShare = v }
+    if let v = values["--fan-out"].flatMap(Int.init) { pairing.fanOut = v }
+    let count = max(names.count, values["--pad"].flatMap(Int.init) ?? 0)
+    let top = UInt16(LandmarkConfig().octaves * Landmarks.pitchUnitsPerOctave)
+    let real = names.count
+    func song(_ i: Int) -> (id: String, landmarks: Landmarks) {
+        let name = names[i % real]
+        guard let d = FileManager.default.contents(atPath: dir + "/" + name), let m = Landmarks(encoded: d) else { fail("bad fingerprint \(name)") }
+        if i < real { return (String(name.dropLast(4)), m) }
+        let turn = UInt16(((i / real) * 997 + 311) % Int(top))
+        var frames: [UInt32] = [], packed: [UInt16] = []
+        for k in stride(from: m.count - 1, through: 0, by: -1) {
+            frames.append(UInt32(m.frameCount - 1) - min(UInt32(m.frameCount - 1), m.frames[k]))
+            packed.append((m.pitch(k) + turn) % top | UInt16(m.level(k)) << 14)
+        }
+        return ("pad\(i)", Landmarks(frames: frames, pitches: packed, frameCount: m.frameCount))
+    }
+    let file = values["--save-index"] ?? (NSTemporaryDirectory() + "deckie-listen-\(ProcessInfo.processInfo.processIdentifier).dkx")
+    let url = URL(fileURLWithPath: file)
+    do {
+        try? FileManager.default.removeItem(at: url)
+        index = try RecognitionIndex.cached(at: url, stamp: "", count: count, pairing: pairing,
+                                            printsFolder: flags.contains("--no-points") ? URL(fileURLWithPath: dir) : nil,
+                                            findCopies: !flags.contains("--no-copy-finding"), song: song)
+    } catch { fail("\(error)") }
+    if values["--save-index"] == nil { try? FileManager.default.removeItem(at: url) }
 } else { fail("give --index FILE or --prints DIR") }
 FileHandle.standardError.write(Data(String(format: "index: %d songs, %.1f MB (%.1f KB a song), ready in %.0f ms\n", index.songCount,
                                             Double(index.fileBytes) / 1e6, Double(index.fileBytes) / 1e3 / Double(max(1, index.songCount)),
                                             Double(DispatchTime.now().uptimeNanoseconds - t0) / 1e6).utf8))
+if flags.contains("--build-only") {
+    // Only the building: how long it took is above; here, the most memory it held.
+    FileHandle.standardError.write(Data(String(format: "built: %d songs, %d hashes, %d that hold the same sound as another; peak memory of the process %@\n", index.songCount,
+                                                index.hashCount, index.related.filter { !$0.isEmpty }.count,
+                                                peakMemory().map { String(format: "%.0f MB", Double($0) / 1e6) } ?? "unknown").utf8))
+    exit(0)
+}
 let chunkSeconds = Double(values["--chunk"] ?? "") ?? 0.1
 let settings: ListenSettings = {
     var s = ListenSettings()
@@ -102,6 +143,12 @@ let settings: ListenSettings = {
     if let v = values["--hold-window"].flatMap(Double.init) { s.holdWindow = v }
     if flags.contains("--plain-query") { s.denseQuery = false }
     if flags.contains("--no-follow") { s.follow = false }
+    if let v = values["--least-window"].flatMap(Double.init) { s.leastWindow = v }
+    if let v = values["--long-window"].flatMap(Double.init) { s.longWindow = v }
+    if let v = values["--follow-search-window"].flatMap(Double.init) { s.followSearchWindow = v }
+    if let v = values["--incoming-bar"].flatMap(Double.init) { s.incomingBar = v }
+    if flags.contains("--fuzzy") { s.fuzzy = true }
+    if flags.contains("--fast") { s = ListenSettings.fast }
     return s
 }()
 
@@ -153,7 +200,7 @@ if let list = values["--list"] {
     }
     let listener = SongListener(index: index, settings: settings)
     var times: [Double] = []
-    print("seconds\tstate\tsong\tplace\tspeed\tkey lock\tconfidence\tms")
+    print("seconds\tstate\tsong\tplace\tspeed\tkey lock\tconfidence\tms\tcoming in\tplace\tspeed\tconfidence")
     play(samples, rate: rate, into: listener) { print(line($0)); times.append($0.milliseconds) }
     times.sort()
     let summary = String(format: "%d readings over %.0f s of sound; a reading took %.0f ms at the median, %.0f at the 95th percentile, %.0f at most; the listener's own memory %.1f MB",

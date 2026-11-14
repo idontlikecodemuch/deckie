@@ -26,19 +26,22 @@ enum SameRecording {
         recogniser.judgeCopies = false
         let stretch = 500                       // frames: 8 s
         var pairs: Set<[Int]> = []
-        index.pointFrame.withUnsafeBufferPointer { frames in
-            index.pointPitch.withUnsafeBufferPointer { pitches in
+        do {
+            do {
                 for s in 0..<index.songCount {
-                    let lo = index.pointStart[s], hi = index.pointStart[s + 1]
                     let length = index.songStart[s + 1] - RecognitionIndex.padding - index.songStart[s]
-                    guard length >= 3 * stretch, hi - lo >= 60 else { continue }
+                    guard length >= 3 * stretch, index.pointStart[s + 1] - index.pointStart[s] >= 60 else { continue }
                     var seen: [Int: [Double]] = [:]     // other song -> the shifts it answered at (frames)
                     for share in [0.2, 0.5, 0.8] {
                         let from = index.songStart[s] + Int(Double(length - stretch) * share)
                         var f: [UInt32] = [], p: [UInt16] = []
-                        var i = lo
-                        while i < hi && Int(frames[i]) < from { i += 1 }
-                        while i < hi && Int(frames[i]) < from + stretch { f.append(UInt32(Int(frames[i]) - from)); p.append(pitches[i]); i += 1 }
+                        _ = recogniser.withPoints(index, s) { frames, pitches, lo, hi in
+                            // The song's points are in time order: step to the stretch by halving, then take it.
+                            var a = lo, b = hi
+                            while a < b { let mid = (a + b) / 2; if Int(frames[mid]) < from { a = mid + 1 } else { b = mid } }
+                            var i = a
+                            while i < hi && Int(frames[i]) < from + stretch { f.append(UInt32(Int(frames[i]) - from)); p.append(pitches[i]); i += 1 }
+                        }
                         guard f.count >= 20 else { continue }
                         let probe = Landmarks(frames: f, pitches: p, frameCount: stretch)
                         for m in recogniser.match(probe) where m.songIndex != s && abs(m.tempoRatio - 1) < 0.005 && m.matched * 2 >= m.queryPoints {

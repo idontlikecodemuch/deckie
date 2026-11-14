@@ -94,8 +94,21 @@ def load_songs(work):
     return out
 
 
+_paths = {}
+
+
 def pcm(work, sid, start, count):
-    m = np.memmap(os.path.join(work, "pcm", sid + ".s16"), dtype="<i2", mode="r")
+    cache = os.path.join(work, "pcm", sid + ".s16")
+    if not os.path.exists(cache):
+        # No decoded copy kept (it takes 7 GB for the outside set): decode just this stretch from the song's file.
+        if not _paths:
+            for line in open(os.path.join(work, "songs.tsv")):
+                f = line.rstrip("\n").split("\t"); _paths[f[0]] = f[1]
+        raw = subprocess.run(["ffmpeg", "-v", "error", "-nostdin", "-ss", f"{max(0, start) / SR:.3f}", "-t", f"{count / SR + 0.1:.3f}",
+                              "-i", _paths[sid], "-ac", "1", "-ar", str(SR), "-f", "s16le", "-"], capture_output=True).stdout
+        x = np.frombuffer(raw, dtype="<i2").astype(np.float32)[:int(count)] / 32768
+        return np.pad(x, (0, int(count) - len(x)))
+    m = np.memmap(cache, dtype="<i2", mode="r")
     a = max(0, int(start)); b = min(len(m), a + int(count))
     x = np.asarray(m[a:b], dtype=np.float32) / 32768
     return np.pad(x, (0, int(count) - len(x)))
@@ -203,11 +216,16 @@ BOOTH_SPEEDS = [("vinyl", 0), ("vinyl", 12), ("vinyl", -6), ("tempo", 12), ("tem
 def make_clip(args):
     data, work, spec = args
     rng = np.random.default_rng(spec["seed"])
-    n = int(CLIP * SR)
+    clip = spec.get("seconds", CLIP)
     c = CONDITIONS[spec["condition"]]
-    x = at_speed(work, spec["song"], spec["s0"], spec["percent"], spec["mode"], CLIP)
+    x = at_speed(work, spec["song"], spec["s0"], spec["percent"], spec["mode"], clip)
+    if "before" in spec:
+        # A hard cut: another song first, then this one from the cut on, at matched loudness.
+        a = at_speed(work, spec["before"], spec["before_s0"], spec["before_percent"], "tempo", spec["cut_at"])
+        x = np.concatenate([a * (rms(x) / rms(a)), x])
+    n = len(x)
     if "blend" in c:
-        other = at_speed(work, spec["second"], spec["second_s0"], spec["second_percent"], "tempo", CLIP)
+        other = at_speed(work, spec["second"], spec["second_s0"], spec["second_percent"], "tempo", clip)
         x = x + other * (rms(x) / rms(other)) * 10 ** (-c["blend"] / 20)
     if "band" in c:
         x = band(x, *c["band"])
@@ -279,9 +297,72 @@ def plan(songs, n_eval, n_dev, only):
     return specs
 
 
+FAST_CONDITIONS = ["clean", "room", "room+crowd+10", "room+crowd0", "room+crowd-5", "booth(speaker+room+crowd0)"]
+
+
+def plan_fast(songs, n_eval, n_dev):
+    """The speed study's clips (docs/research/w5-recognition-by-five-seconds.md): 30 s from a song's start of play in
+    six conditions at the five speeds; songs that are not in the index and noise alone; and hard cuts, 15 s of one
+    song and then 30 s of another."""
+    rng = np.random.default_rng(20261114)
+    by_role = {r: [s for s in songs if s["role"] == r] for r in ("dev", "eval", "absent")}
+    present = by_role["dev"] + by_role["eval"]
+    specs = []
+
+    def one(cell, role, pool, condition, mode, percent, seconds=30.0, **extra):
+        s = pool[rng.integers(len(pool))]
+        span = seconds * (1 + percent / 100) + 1.5
+        spec = dict(cell=cell, role=role, condition=condition, mode=mode, percent=percent, song=s["id"], bucket=s["bucket"], seconds=seconds,
+                    s0=round(float(rng.uniform(2, max(2.1, s["sec"] - span - 2))), 3), seed=int(rng.integers(1 << 31)), **extra)
+        specs.append(spec)
+        return spec
+
+    for role, count in (("eval", n_eval), ("dev", n_dev)):
+        for condition in FAST_CONDITIONS:
+            for mode, p in BOOTH_SPEEDS:
+                for _ in range(count):
+                    one("start", role, by_role[role], condition, mode, p)
+    ab = by_role["absent"]
+    for i, split in enumerate(("dev", "eval")):
+        for condition in ("clean", "room+crowd0"):
+            for mode, p in BOOTH_SPEEDS:
+                for _ in range(n_eval // 2):
+                    one("absent", "absent", ab[i::2], condition, mode, p, split=split)
+        for k in range(n_eval // 2):
+            specs.append(dict(cell="absent", role="absent", split=split, condition="clean", mode="vinyl", percent=0, song=ab[0]["id"], bucket="noise",
+                              seconds=30.0, s0=2.0, seed=int(rng.integers(1 << 31)), noise_only="crowd" if k % 2 else "pink"))
+    for condition in ("clean", "room+crowd+10", "room+crowd0"):
+        for mode, p in BOOTH_SPEEDS:
+            for _ in range(n_eval // 2):
+                spec = one("cut", "eval", by_role["eval"], condition, mode, p)
+                o = present[rng.integers(len(present))]
+                while o["id"] == spec["song"]:
+                    o = present[rng.integers(len(present))]
+                sp = int(rng.integers(-6, 7))
+                spec.update(before=o["id"], before_percent=sp, cut_at=15.0,
+                            before_s0=round(float(rng.uniform(2, max(2.1, o["sec"] - 15 * (1 + sp / 100) - 3.5))), 3))
+    return specs
+
+
+def queries_fast(data, work, n_eval, n_dev, jobs):
+    os.makedirs(os.path.join(work, "fast"), exist_ok=True)
+    specs = plan_fast(load_songs(work), n_eval, n_dev)
+    shards = [specs[i:i + 50] for i in range(0, len(specs), 50)]
+    with Pool(jobs) as pool:
+        done = pool.map(write_shard, [(data, work, k, s, "fast") for k, s in enumerate(shards)], chunksize=1)
+    qid = 0
+    with open(os.path.join(work, "fast", "clips.tsv"), "w") as q, open(os.path.join(work, "fast", "truth.jsonl"), "w") as t:
+        for path, rows in done:
+            for spec, at, n in rows:
+                q.write(f"f{qid:05d}\t{path}\t{at}\t{n}\t{OUT_SR}\n")
+                t.write(json.dumps(dict(spec, qid=f"f{qid:05d}")) + "\n")
+                qid += 1
+    print("clips:", qid)
+
+
 def write_shard(args):
-    data, work, k, specs = args
-    path = os.path.join(work, "queries", f"shard{k:04d}.s16")
+    data, work, k, specs = args[:4]
+    path = os.path.join(os.path.abspath(work), args[4] if len(args) > 4 else "queries", f"shard{k:04d}.s16")
     rows = []
     with open(path + ".part", "wb") as f:
         at = 0
@@ -315,7 +396,7 @@ def queries(data, work, n_eval, n_dev, jobs, only):
 
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()
-    ap.add_argument("command", choices=["prepare", "queries"])
+    ap.add_argument("command", choices=["prepare", "queries", "fast"])
     ap.add_argument("data"); ap.add_argument("work")
     ap.add_argument("--n", type=int, default=100)
     ap.add_argument("--dev-n", type=int, default=40)
@@ -323,7 +404,9 @@ if __name__ == "__main__":
     ap.add_argument("--only", choices=["grid", "booth", "absent"])
     ap.add_argument("--music", help="a folder of music to use as the catalogue instead of the fetched songs")
     a = ap.parse_args()
-    if a.command == "prepare":
+    if a.command == "fast":
+        queries_fast(a.data, a.work, a.n, a.dev_n, a.jobs)
+    elif a.command == "prepare":
         prepare(a.data, a.work, a.jobs, a.music)
     else:
         queries(a.data, a.work, a.n, a.dev_n, a.jobs, a.only)

@@ -266,4 +266,45 @@ import DeckieRecognition
         try index.write(to: url)
         #expect(try RecognitionIndex(contentsOf: url).related == index.related)
     }
+
+    // MARK: The index built in a fixed working memory
+
+    @Test func theBoundedBuilderWritesTheSameIndexAndCanLeaveThePointsToTheCrateFile() throws {
+        let dir = Self.temporaryFile("x").deletingLastPathComponent()
+        defer { try? FileManager.default.removeItem(at: dir) }
+        let songs = (0..<8).map { (id: "song\($0)", landmarks: Landmarks(mono: Self.song(seed: UInt64(100 + $0)), sampleRate: Self.rate)) }
+        let whole = RecognitionIndex(songs: songs, pairing: .booth, findCopies: false)
+        // Built a song at a time, with a buffer so small that the entries take many passes: the same bytes.
+        let url = dir.appendingPathComponent("built.dkx")
+        var asked = 0
+        try RecognitionIndex.build(to: url, count: songs.count, pairing: .booth, workingBytes: 4096) { asked += 1; return songs[$0] }
+        #expect(try Data(contentsOf: url) == whole.fileData())
+        #expect(asked > 3 * songs.count)
+        // Without the points in the file: smaller by six bytes a point, and the same answers once it is told where they are.
+        let prints = dir.appendingPathComponent("prints")
+        try FileManager.default.createDirectory(at: prints, withIntermediateDirectories: true)
+        for s in songs { try s.landmarks.encoded().write(to: prints.appendingPathComponent(s.id + ".dkl")) }
+        let lean = dir.appendingPathComponent("lean.dkx")
+        let stamp = RecognitionIndex.stamp(of: songs.map { ($0.id, $0.landmarks.count, $0.landmarks.frameCount) })
+        let index = try RecognitionIndex.cached(at: lean, stamp: stamp, count: songs.count, printsFolder: prints, findCopies: false) { songs[$0] }
+        #expect(!index.holdsPoints)
+        let size = { (u: URL) in (try? FileManager.default.attributesOfItem(atPath: u.path)[.size] as? Int) ?? 0 }
+        let points = songs.reduce(0) { $0 + $1.landmarks.count }
+        #expect(abs(size(url) - size(lean) - points * 6) < 64)
+        let q = Landmarks(mono: Self.excerpt(Self.song(seed: 105, tempo: 1.07), from: 9, seconds: 6), sampleRate: Self.rate)
+        let full = try #require(Recogniser(index: whole).match(q).first)
+        #expect(full.id == "song5" && abs(full.speedPercent - 7) < 0.3)
+        #expect(Recogniser(index: index).match(q).first == full)
+        // Opened again it is the kept file, and the points are found again.
+        let again = try RecognitionIndex.cached(at: lean, stamp: stamp, count: songs.count, printsFolder: prints, findCopies: false) { _ in
+            Issue.record("the kept index was built again"); return songs[0]
+        }
+        #expect(Recogniser(index: again).match(q).first == full)
+        // Copies are found through the crate file's fingerprints too.
+        var twice = songs
+        twice.append((id: "song3 again", landmarks: songs[3].landmarks))
+        try songs[3].landmarks.encoded().write(to: prints.appendingPathComponent("song3 again.dkl"))
+        let copies = try RecognitionIndex.cached(at: dir.appendingPathComponent("copies.dkx"), stamp: "x", count: twice.count, printsFolder: prints) { twice[$0] }
+        #expect(copies.isRelated(3, 8) && !copies.isRelated(2, 8))
+    }
 }

@@ -39,7 +39,17 @@ public struct ListenReading: Sendable, Equatable {
     /// For measuring: what this reading's search of the whole crate found, whether or not it was taken as a name
     /// (nil when no search ran, or it found nothing): the song's id, its confidence, and whether it lies on the
     /// same line as the search before.
-    public var searched: Searched?
+    public var searched: Searched? = nil
+    /// A second song heard under the one being followed: the next song coming in during a blend, before the
+    /// listener switches to it. Shown to the DJ as "coming in"; it is not a name yet.
+    public var incoming: Incoming?
+    public struct Incoming: Sendable, Equatable {
+        public var songIndex: Int
+        public var id: String
+        public var positionSeconds: Double
+        public var speedPercent: Double
+        public var confidence: Double
+    }
     public struct Searched: Sendable, Equatable {
         public var id: String
         public var confidence: Double
@@ -79,9 +89,20 @@ public struct ListenSettings: Sendable, Equatable {
     /// 64 ms and 8 %, not 96 ms and 12 %) and three points are taken per slice, not two. It helped a thin index of
     /// three-point hashes; with the booth's two-point index it gained nothing and tripled the time, so it is off.
     public var denseQuery = false
+    /// While a song is followed, the whole-crate search looks at the last this many seconds only (the newest sound
+    /// is where the next song is), and a second song found there with at least `incomingBar` confidence is reported
+    /// as coming in.
+    public var followSearchWindow = 8.0
+    public var incomingBar = 2.6
+    /// Whether each hash of a listen is also looked up with its time difference a step either side (plus 2 to 3
+    /// points in noise for twice the search time; docs/research/w4-recognition-complete.md, 3.6).
+    public var fuzzy = false
     /// Whether a named song is followed (false, for measuring only: every reading is a fresh search and nothing is named).
     public var follow = true
     public init() {}
+
+    /// The listener's settings for an earlier name (the speed study); until it reports, the defaults.
+    public static var fast: ListenSettings { ListenSettings() }
 }
 
 /// Listens to a stream of sound and names the song. Not thread-safe: one caller at a time (see `BoothRecogniser`).
@@ -109,6 +130,7 @@ public final class SongListener {
         recogniser = Recogniser(index: index)
         recogniser.checkSongs = settings.checkSongs
         if settings.denseQuery { recogniser.queryPerSlice = 3 }
+        recogniser.fuzzyGaps = settings.fuzzy
         var c = index.landmark
         if settings.denseQuery { c.timeReach = 4; c.frequencyReach = 0.08 }
         queryConfig = c
@@ -182,9 +204,16 @@ public final class SongListener {
         // if nothing is named and there is more sound to go on, once more over the longer window.
         sinceSearch += 1
         var tries: [(Landmarks, Double)] = []
+        var incoming: ListenReading.Incoming?
+        let followed = misses == 0 ? following?.song : nil      // the song held at this reading, if any
         if following == nil || misses > 0 || sinceSearch >= settings.searchEvery {
             sinceSearch = 0
-            tries.append((marks, start))
+            if followed != nil, have > settings.followSearchWindow {
+                tries.append((marks.suffix(fromSeconds: have - settings.followSearchWindow, frameSeconds: queryConfig.frameSeconds),
+                              now - settings.followSearchWindow))
+            } else {
+                tries.append((marks, start))
+            }
         }
         var tried = 0
         while tried < tries.count {
@@ -197,7 +226,8 @@ public final class SongListener {
                 }
             }
             if tried == 2, state == .named { break }
-            if let best = recogniser.match(marks).first {
+            let found = recogniser.match(marks)
+            if let best = found.first {
                 let line = (song: best.songIndex, intercept: best.offsetSeconds - best.tempoRatio * start, tempo: best.tempoRatio)
                 let agrees = pending.map { $0.song == line.song && abs(($0.intercept + $0.tempo * now) - (line.intercept + line.tempo * now)) <= settings.agreeSeconds } ?? false
                 searched = ListenReading.Searched(id: index.ids[best.songIndex], confidence: best.confidence, agrees: agrees)
@@ -206,6 +236,12 @@ public final class SongListener {
                 if take, following?.song != best.songIndex || misses > 0 {
                     following = (best.songIndex, line.intercept, best.tempoRatio, best.pitchRatio)
                     misses = 0; state = .named; confidence = best.confidence
+                } else if let followed, state == .held,
+                          let other = found.first(where: { !index.isRelated($0.songIndex, followed) }), other.confidence >= settings.incomingBar {
+                    // Another song under the one being followed: coming in.
+                    incoming = ListenReading.Incoming(songIndex: other.songIndex, id: index.ids[other.songIndex],
+                                                      positionSeconds: other.offsetSeconds + other.tempoRatio * (now - start),
+                                                      speedPercent: (other.tempoRatio - 1) * 100, confidence: other.confidence)
                 }
             } else { pending = nil }
         }
@@ -216,7 +252,8 @@ public final class SongListener {
         }
         let lock: Bool? = abs(f.tempo - 1) < 0.01 ? nil : !(abs(log(f.pitch) - log(f.tempo)) < abs(log(f.pitch)))
         return ListenReading(time: now, state: state, songIndex: f.song, id: index.ids[f.song], positionSeconds: f.intercept + f.tempo * now,
-                             speedPercent: (f.tempo - 1) * 100, keyLock: lock, confidence: confidence, milliseconds: ms, searched: searched)
+                             speedPercent: (f.tempo - 1) * 100, keyLock: lock, confidence: confidence, milliseconds: ms, searched: searched,
+                             incoming: incoming)
     }
 }
 
@@ -274,10 +311,10 @@ public final class BoothRecogniser: @unchecked Sendable {
 /// Apple's systems such memory otherwise waits for the thread's own pool, which a long-lived thread may never empty:
 /// measured on a Mac, a tool's memory grew with every query (docs/research/w3-recognition-real-room.md). Elsewhere
 /// there is no such pool and this only runs `body`.
-@inline(__always) public func pooled<T>(_ body: () -> T) -> T {
+@inline(__always) public func pooled<T>(_ body: () throws -> T) rethrows -> T {
     #if canImport(ObjectiveC)
-    return autoreleasepool(invoking: body)
+    return try autoreleasepool(invoking: body)
     #else
-    return body()
+    return try body()
     #endif
 }

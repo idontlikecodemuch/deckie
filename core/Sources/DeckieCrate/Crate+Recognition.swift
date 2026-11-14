@@ -17,8 +17,11 @@ extension Crate {
 
         /// The booth's index for these songs, kept at `url`: opened in place when the file there was made from these
         /// songs with `pairing`, else built, written there and opened (`RecognitionIndex.cached`).
-        public func index(cachedAt url: URL, pairing: PairingConfig = .booth) throws -> RecognitionIndex {
-            try RecognitionIndex.cached(at: url, stamp: stamp, sameRecording: sameRecording, pairing: pairing) { songs }
+        /// The index is built in a fixed working memory (`RecognitionIndex.build`). With `printsFolder` (the crate
+        /// file's own `prints/` folder, when the crate is a folder on storage) the index file leaves the songs'
+        /// points out, at about half the size, and reads them there when it checks a song.
+        public func index(cachedAt url: URL, pairing: PairingConfig = .booth, printsFolder: URL? = nil) throws -> RecognitionIndex {
+            try RecognitionIndex.cached(at: url, stamp: stamp, sameRecording: sameRecording, pairing: pairing, printsFolder: printsFolder) { songs }
         }
     }
 

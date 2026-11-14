@@ -69,6 +69,9 @@ public struct PairingConfig: Sendable, Equatable, Codable {
         p.fanOut = 3
         return p
     }
+    /// A larger index for an earlier name (the speed study, docs/research/w5-recognition-by-five-seconds.md): set
+    /// by that study; until it reports, the same as `booth`.
+    public static var boothFast: PairingConfig { booth }
     /// The same with the strongest quarter as anchors: about 21 KB a song, for a crate of several thousand songs
     /// on a device short of storage or memory. It gives up about eight points in noise.
     public static var boothSmall: PairingConfig {
@@ -150,6 +153,11 @@ public struct RecognitionIndex: Sendable {
     /// (a continuous mix kept as one track) that contains it, or one it contains. Such songs are never counted
     /// against each other when a match is judged (see `Recogniser`, and SameRecording.swift for how they are found).
     public internal(set) var related: [[Int32]] = []
+    /// Where a song's points are read from when the index file does not hold them (an index built with
+    /// `embedPoints: false`): by the song's number, its fingerprint as the crate file keeps it. Set after opening.
+    public var pointSource: (@Sendable (Int) -> Landmarks?)?
+    /// Whether the songs' points are in the index itself.
+    public var holdsPoints: Bool { pointFrame.count > 0 || pointStart.last == 0 }
     public func isRelated(_ a: Int, _ b: Int) -> Bool { a == b || (a < related.count && related[a].contains(Int32(b))) }
 
     /// Frames of padding before each song on the one long timeline all songs are laid on, and the longest query (in
