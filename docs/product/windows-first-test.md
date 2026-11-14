@@ -146,7 +146,8 @@ already read, in two folders called "Deckie Desk" and "Deckie" under your Window
 ## For whoever hands this to a tester
 
 - The zip is the artifact `Deckie-Desk-for-Windows-first-test` of a run of the workflow `pc-package` on the branch
-  `pc/package-desk`. It is not a release. The check-in names the run, the zip's size and its SHA-256.
+  `pc/package-desk`. It is not a release. The check-in names the run, the zip's size and its SHA-256; when this
+  page was written that was run 43581053583, 128,981,732 bytes.
 - **What is proven, and where.** On GitHub's Windows machine (Windows Server, not a DJ's Windows 10 or 11), from
   the unzipped folder with nothing on the path but Windows: Deckie Desk starts, its window is made, the page shows
   the engine's words, a small generated music folder is added through the page, the run finishes, and the exported

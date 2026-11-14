@@ -341,7 +341,17 @@ run, the zip's size and hash, every decision and what failed on the way. In shor
   (the owner's question still).
 - **One file on export**: `DeskSession.export` writes the single-file form on Windows and Linux.
 
-**[runner]** RUNNER_FACTS
+**[runner]** `pc-package` run 43581053583 (commit `c964f6c`; the other three workflows green on the same commit),
+on Windows Server 2025 with WebView2 Runtime 156.0.4314.58. The zip is 128,981,732 bytes (SHA-256
+`65c94acef23ff8d1fe983ff40004a436415f22bdfc9c88fbd7f626e2dd3ccb97`). Unzipped by Windows' own tool into a folder
+with a space in its name, PATH cut down to Windows itself, started through `Deckie Desk.exe` with nothing to write
+to, as a double click starts it: the window is made and carries the icon; the page draws the first screen in the
+engine's words **0.54 and 0.47 s** after the start (the very first start on the account, when the web view makes its
+storage, took 3 to 9 s over four runs); the test music folder is added through the page's own buttons, the run
+finishes (4 songs, 2 files not in, in 9.0 s), and the exported crate file is one file of 27,239 bytes that the
+core's validator reads. With the registry values that say where the WebView2 Runtime is renamed for a moment, the
+program's own detection says no, and it ends with its code 4 and the plain words (on standard error there; in a
+message box on a PC). The program files say the starter, the window and the engine open no console window.
 
 **[not proven]** Everything a person must see: a real double click and that no console window shows, the blue
 "Windows protected your PC" box, antivirus, the icon in Explorer and on the taskbar, the message box on a PC that
