@@ -62,18 +62,17 @@ public enum CrateWriter {
         }
         if !missing.isEmpty { throw CrateError(missing) }
 
-        try fm.createDirectory(at: package, withIntermediateDirectories: true)
+        try DeckieFiles.createDirectory(package)
         for folder in [CrateFormat.barsFolder, CrateFormat.styleFolder] {
             let dir = package.appendingPathComponent(folder)
             guard let names = try? fm.contentsOfDirectory(atPath: dir.path) else { continue }
             for name in names where name.hasSuffix(".bin") && files["\(folder)/\(name)"] == nil {
-                try fm.removeItem(at: dir.appendingPathComponent(name))
+                try DeckieFiles.remove(dir.appendingPathComponent(name))
             }
         }
         for path in files.keys.sorted() {
             let url = package.appendingPathComponent(path)
-            try fm.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
-            try files[path]!.write(to: url, options: .atomic)
+            try DeckieFiles.write(files[path]!, to: url)
         }
     }
 }

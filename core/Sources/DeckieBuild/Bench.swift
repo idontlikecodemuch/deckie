@@ -2,6 +2,7 @@ import Foundation
 import DeckieCore
 import DeckieEngine
 import DeckieLab
+import DeckieCrate
 
 /// What the bench is asked to do (`deckie-build bench <folder> --features ... --candidates ...`).
 public struct BenchOptions: Sendable {
@@ -213,7 +214,7 @@ public enum Bench {
             }
             jobs.append(Job(row: row, url: url, rel: rel, lab: lab))
         }
-        if let records = o.records { try FileManager.default.createDirectory(at: records, withIntermediateDirectories: true) }
+        if let records = o.records { try DeckieFiles.createDirectory(records) }
         if analyser == nil && !jobs.isEmpty { try Builder.checkEngine() }
         let engine = jobs.isEmpty ? nil : try analyser ?? Builder.makeAnalyser(jobs: min(o.jobs, jobs.count))
         let label = Builder.engineLabel
@@ -248,7 +249,7 @@ public enum Bench {
                     let a = try engine!.analyse(url: job.url, options: AnalysisOptions(bpmTag: tag, title: job.row.title))
                     seconds = Date().timeIntervalSince(t)
                     let data = a.labJSONData()
-                    if let kept { try data.write(to: kept, options: .atomic) }
+                    if let kept { try DeckieFiles.write(data, to: kept) }
                     engineData = data
                 }
                 let mine = try decoder.decode(BenchRecord.self, from: engineData!)
@@ -283,7 +284,7 @@ public enum Bench {
         if let out = o.output {
             var data = report.json().data
             data.append(0x0A)
-            try data.write(to: out, options: .atomic)
+            try DeckieFiles.write(data, to: out)
         }
         return report
     }

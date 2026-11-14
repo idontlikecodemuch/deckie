@@ -1,4 +1,5 @@
 import Foundation
+import DeckieCrate
 import DeckieCore
 
 /// The DJ programs whose own library a desk reads for keys and names (D30). The raw value is the name the crate file
@@ -85,12 +86,12 @@ public struct DJLibrary: Sendable {
         let fm = FileManager.default
         let written = (try? fm.attributesOfItem(atPath: url.path))?[.modificationDate] as? Date
         let folder = fm.temporaryDirectory.appendingPathComponent("deckie-library-" + UUID().uuidString, isDirectory: true)
-        defer { try? fm.removeItem(at: folder) }
+        defer { try? DeckieFiles.remove(folder) }
         let data: Data
         do {
-            try fm.createDirectory(at: folder, withIntermediateDirectories: true)
+            try DeckieFiles.createDirectory(folder)
             let copy = folder.appendingPathComponent("library")
-            try fm.copyItem(at: url, to: copy)
+            try DeckieFiles.copy(url, to: copy)
             data = try Data(contentsOf: copy)
         } catch {
             throw ReadError(file: url.path, message: "could not be copied to read (\(error.localizedDescription))")
