@@ -1,4 +1,5 @@
 import Foundation
+import DeckieCore
 
 // The crate in memory (docs/architecture/crate-format.md). Swift names are the format's names in camel case; the
 // coding keys carry the format's own. Every optional is written as null, never left out (CrateWriter), except the
@@ -416,6 +417,31 @@ public struct CrateTrack: Codable, Equatable, Sendable {
         }
     }
 
+    /// The home note of a song whose mode the reader left open (D36, Nov 14, 2026; crate-format.md, "The home note"):
+    /// present only when the record has no `key` block, and left out of crate.json when absent.
+    public struct KeyHome: Codable, Equatable, Sendable {
+        /// The method that found it (`three-answer`).
+        public var source: String
+        /// The home note as `key.key` spells it (`A`, `C#`).
+        public var note: String
+        /// 0 to 11, C = 0.
+        public var pitchClass: Int
+        /// The two Camelot codes on that home note, minor first (`["8A", "11B"]`).
+        public var camelot: [String]
+
+        public init(source: String, note: String, pitchClass: Int, camelot: [String]) {
+            self.source = source; self.note = note; self.pitchClass = pitchClass; self.camelot = camelot
+        }
+        /// The block for a home note, with its two codes worked out.
+        public init(source: String, pitchClass: Int) {
+            self.init(source: source, note: Self.noteNames[pitchClass], pitchClass: pitchClass,
+                      camelot: [Camelot.code(pitchClass: pitchClass, major: false), Camelot.code(pitchClass: pitchClass, major: true)])
+        }
+        /// The note names, C first, as the engine spells a key's home note.
+        public static let noteNames = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"]
+        enum CodingKeys: String, CodingKey { case source, note, camelot, pitchClass = "pitch_class" }
+    }
+
     public struct Key: Codable, Equatable, Sendable {
         public struct Change: Codable, Equatable, Sendable {
             public var startBar: Int
@@ -665,6 +691,9 @@ public struct CrateTrack: Codable, Equatable, Sendable {
     /// null, so the records of engines that do not make them keep their bytes.
     public var vocalStructure: VocalStructure?
     public var hooks: Hooks?
+    /// The home note alone, when the reader found it and left the mode open (D36); only without a `key` block. Left
+    /// out of crate.json when nil, as the two above are.
+    public var keyHome: KeyHome?
     /// The per-bar series (`bars/<id>.bin`), not part of crate.json.
     public var bars: BarSeries? = nil
 
@@ -674,7 +703,8 @@ public struct CrateTrack: Codable, Equatable, Sendable {
                 ends: Ends? = nil, loudness: Loudness? = nil, vocal: Vocal? = nil, onsetPattern16: [Double]? = nil,
                 flags: [String] = [], style: Style? = nil, signatures: [String: Signature] = [:],
                 bars: BarSeries? = nil, imported: Imported? = nil, vocalStructure: VocalStructure? = nil,
-                hooks: Hooks? = nil) {
+                hooks: Hooks? = nil, keyHome: KeyHome? = nil) {
+        self.keyHome = keyHome
         self.id = id; self.schema = schema; self.file = file; self.ident = ident; self.analysis = analysis
         self.engine = engine; self.grid = grid; self.tempoSegments = tempoSegments; self.key = key
         self.phrase = phrase; self.sections = sections; self.mixIn = mixIn; self.mixOut = mixOut; self.ends = ends
@@ -701,6 +731,7 @@ public struct CrateTrack: Codable, Equatable, Sendable {
         if style != nil { f.append(F.style) }
         if vocalStructure != nil { f.append(F.vocalStructure) }
         if hooks != nil { f.append(F.hooks) }
+        if keyHome != nil { f.append(F.keyHome) }
         if let bars { f += bars.names.map(F.bars) }
         return f.sorted(by: byteOrder)
     }
@@ -709,7 +740,7 @@ public struct CrateTrack: Codable, Equatable, Sendable {
         case id, schema, file, ident, analysis, engine, grid, key, phrase, sections, ends, loudness, vocal, flags
         case style, signatures, imported, hooks
         case tempoSegments = "tempo_segments", mixIn = "mix_in", mixOut = "mix_out", onsetPattern16 = "onset_pattern_16"
-        case vocalStructure = "vocal_structure"
+        case vocalStructure = "vocal_structure", keyHome = "key_home"
     }
     enum ListKeys: String, CodingKey { case featuresPresent = "features_present" }
 
@@ -739,6 +770,7 @@ public struct CrateTrack: Codable, Equatable, Sendable {
         // Left out when nil (crate-format.md, "Additions proposed with the vocal fields").
         if let vocalStructure { try c.encode(vocalStructure, forKey: .vocalStructure) }
         if let hooks { try c.encode(hooks, forKey: .hooks) }
+        if let keyHome { try c.encode(keyHome, forKey: .keyHome) }
         var l = encoder.container(keyedBy: ListKeys.self)
         try l.encode(featuresPresent, forKey: .featuresPresent)
     }

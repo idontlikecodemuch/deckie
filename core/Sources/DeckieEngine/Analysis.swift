@@ -19,7 +19,7 @@ public struct Analysis: Sendable {
     /// R's whitened HPCP (`HPCPKey`), which changes keys: `key.source` `hpcp-whitened`, its three profiles' keys and
     /// the STFT estimate in `key.votes`, research R's sure rule as the confidence (`KeyConfidence`), and the method's
     /// detail in `deckie.key`.
-    public static let engineVersion = "0.5.0"
+    public static let engineVersion = "0.6.0"
     /// The lab's feature-file schema the JSON follows (`schema`).
     public static let labSchema = 1
     /// The rate everything is analysed at: the lab decodes at 44.1 kHz and resamples other files to it first (`sr`).
