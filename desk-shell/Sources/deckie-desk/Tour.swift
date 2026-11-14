@@ -162,7 +162,7 @@ enum Tour {
         }
         var steps = [Step(name: "r01-first-screen", delay: 1.5), Step(name: nil, js: click("#add-button"), delay: 0.8),
                      Step(name: "r02-first-song", js: "[...document.querySelectorAll('#add-menu [role=menuitem]')].pop().click();",
-                          event: "run.songs", delay: 0.5)]
+                          event: "run.progress", eventTest: done(1), delay: 1.0)]
         var seen = Set<Int>()
         for (i, n) in [3, total / 4, total / 2, total * 3 / 4, total * 9 / 10].enumerated() where n > 0 && seen.insert(n).inserted {
             steps.append(Step(name: "r0\(i + 3)-\(n)-songs", event: "run.progress", eventTest: done(n), delay: 1.2))
