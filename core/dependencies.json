@@ -48,6 +48,22 @@
       "licence": "Apache 2.0 (section 8)",
       "training_sets": "AudioSet: labels CC BY 4.0, clips are their YouTube uploaders'; trained by Google (section 8)",
       "replacement_path": "vocal fields absent, record flagged vocal_unknown (section 8)"
+    },
+    {
+      "id": "webview",
+      "name": "webview (Desk's window on Windows and Linux)",
+      "version": "0.12.0",
+      "licence": "MIT (section 9)",
+      "training_sets": null,
+      "replacement_path": null
+    },
+    {
+      "id": "webview2-sdk",
+      "name": "Microsoft WebView2 SDK header (Desk's window on Windows)",
+      "version": "1.0.4191.47",
+      "licence": "BSD 3-clause (section 10)",
+      "training_sets": null,
+      "replacement_path": null
     }
   ]
 }
