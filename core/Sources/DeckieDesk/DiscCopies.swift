@@ -35,6 +35,11 @@ public enum DiscCopies {
         public var titles: [Int: String]
         public var performers: [Int: String]
         public var isrcs: [Int: String]
+        /// The rest of what CD-Text carries (D34), by song number (0 is the disc); nil in a record made before.
+        public var composers: [Int: String]?
+        public var songwriters: [Int: String]?
+        public var messages: [Int: String]?
+        public var barcode: String?
         /// The songs copied whole: number, file name and the sectors that were silence.
         public var copied: [Copied]
         public var fileExtension: String
@@ -53,12 +58,13 @@ public enum DiscCopies {
             titles = (b?.titles ?? [:]).filter { $0.key > 0 }
             performers = (b?.performers ?? [:]).filter { $0.key > 0 }
             isrcs = b?.isrcs ?? [:]
+            composers = b?.composers; songwriters = b?.songwriters; messages = b?.messages; barcode = b?.barcode
             copied = []
             self.fileExtension = fileExtension
         }
 
         enum CodingKeys: String, CodingKey {
-            case toc, text, titles, performers, isrcs, copied
+            case toc, text, titles, performers, isrcs, copied, composers, songwriters, messages, barcode
             case textDetail = "text_detail", discTitle = "disc_title", discPerformer = "disc_performer"
             case fileExtension = "file_extension"
         }

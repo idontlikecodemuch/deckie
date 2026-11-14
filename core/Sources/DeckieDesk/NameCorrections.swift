@@ -1,8 +1,8 @@
 import Foundation
 import DeckieCrate
 
-/// A DJ's fix to one entry's names: each field fixed holds the DJ's value, and a field not fixed is nil, so a re-read
-/// can take a new tag for the rest. Artist and version can be fixed to nothing (`Text(nil)`).
+/// A DJ's fix to one entry's names and facts: each field fixed holds the DJ's value, and a field not fixed is nil, so
+/// a re-read can take a new tag for the rest. Artist and version can be fixed to nothing (`Text(nil)`).
 public struct NameCorrection: Codable, Equatable, Sendable {
     public struct Text: Codable, Equatable, Sendable {
         public var value: String?
@@ -16,13 +16,17 @@ public struct NameCorrection: Codable, Equatable, Sendable {
     /// `pattern` (the file names read by a pattern the DJ set), `playlist` (a playlist the DJ chose), `checked`
     /// (Desk's guess, which the DJ looked at and kept). By field name.
     public var from: [String: String]?
+    /// The DJ's facts (D34), by `SongFacts` name: the values the DJ gave, or an empty list for a fact the DJ cleared
+    /// (so the file's own value is not shown either). The same store as the names, so a re-read keeps both.
+    public var facts: [String: [String]]?
 
     public init(title: String? = nil, artist: Text? = nil, version: Text? = nil, tags: [String]? = nil,
-                from: [String: String]? = nil) {
+                from: [String: String]? = nil, facts: [String: [String]]? = nil) {
         self.title = title; self.artist = artist; self.version = version; self.tags = tags; self.from = from
+        self.facts = facts
     }
 
-    public var isEmpty: Bool { title == nil && artist == nil && version == nil && tags == nil }
+    public var isEmpty: Bool { title == nil && artist == nil && version == nil && tags == nil && (facts ?? [:]).isEmpty }
 }
 
 /// The DJ's name fixes for one crate (`corrections.json`), by entry id. Reading a source or folder again writes the
@@ -46,6 +50,18 @@ public struct NameCorrections: Codable, Equatable, Sendable {
         if a.artist != b.artist { c.artist = .init(a.artist); how["artist"] = "user" }
         if a.version != b.version { c.version = .init(a.version); how["version"] = "user" }
         if a.tags != b.tags { c.tags = a.tags }
+        // Facts (D34): one the DJ set (`from: user`) or took away.
+        var facts = c.facts ?? [:]
+        for name in Set(a.facts.keys).union(b.facts.keys) where a.facts[name] != b.facts[name] {
+            if let f = a.facts[name] {
+                guard f.from == SongFacts.Origin.user else { continue }
+                facts[name] = f.values
+            } else {
+                facts[name] = []
+            }
+            how[name] = "user"
+        }
+        c.facts = facts.isEmpty ? nil : facts
         c.from = how.isEmpty ? nil : how
         byId[after.id] = c.isEmpty ? nil : c
     }
@@ -70,6 +86,10 @@ public struct NameCorrections: Codable, Equatable, Sendable {
             if let v = c.version { id.version = v.value }
             if let t = c.tags { id.tags = t }
             if c.title != nil || c.artist != nil || c.version != nil { id.source = "user" }
+            // The DJ's facts go back over whatever the reading found; a cleared one is taken out.
+            for (name, values) in c.facts ?? [:] {
+                id.facts[name] = values.isEmpty ? nil : CrateTrack.Fact(values, from: SongFacts.Origin.user)
+            }
             crate.tracks[i].ident = id
             if crate.tracks[i] != before { changed += 1 }
         }
