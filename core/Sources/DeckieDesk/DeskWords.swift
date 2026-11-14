@@ -1,0 +1,363 @@
+import Foundation
+
+/// Every word Deckie Desk shows, on every computer, in one list (D28, D32): the Mac's window reads it through
+/// `desk-app/Desk/Sources/Words.swift`, and the Windows and Linux window's pages receive it from the engine program in
+/// its first message (docs/architecture/desk-protocol.md). So the copy audit changes this table only.
+///
+/// The table is data: a name, then the words. `{name}` in the words is filled in by whoever shows them, with numbers
+/// already written out (the Mac with Swift's formatting, the pages with JavaScript's). Words that change with a count
+/// have one entry per form: `name.one` for 1, `name.other` for any other count, and `name.zero` where 0 reads
+/// differently; `{n}` is the count. Words that depend on a code from the engine (where a key came from, why a file did
+/// not go in) have one entry per code, `name.<code>`, and `name.other` for a code with no words of its own.
+///
+/// These are placeholders until the copy audit. Where `docs/product/desk.md` section 3 has a "Should be", it is used;
+/// otherwise the wording Desk had before; words no one had written yet were marked "new" in Words.swift. D31 (a folder
+/// is a source too) changed five: addMusicHelp, sourcesHelp, nothingReadYet, sourcesEmptyBody, chooseSourceMessage.
+/// The rules: a crate is the songs, a crate file is the file (D21); a source is shown by its own name (D26); sentence
+/// case, "songs" not "tracks", no "AI" (voice.md).
+public enum DeskWords {
+    /// The table's format; the pages check it.
+    public static let version = 1
+
+    public static let table: [String: String] = [
+        // the app
+        "appName": "Deckie Desk",
+        "ok": "OK",
+        "cancel": "Cancel",
+        "done": "Done",
+        "nameField": "Name",
+
+        // the first screen
+        "firstTitle": "Your crate starts here.",
+        "firstBody": "Add your music. Desk reads the tempo, key and bars of every song and writes a crate file, a small file you send to your iPad. Your music never leaves this Mac.",
+        // new (D32): the same sentence on Windows and Linux, where "this Mac" is wrong.
+        "firstBodyComputer": "Add your music. Desk reads the tempo, key and bars of every song and writes a crate file, a small file you send to your iPad. Your music never leaves this computer.",
+        "addMusic": "Add music",
+        "addMusicTo": "Add music to {crate}",
+        "addMusicMore": "Add music…",
+        "withRekordbox": "With a rekordbox collection…",
+        "withRekordboxMenu": "Add music with a rekordbox collection…",
+        "importCrateFile": "Import crate file…",
+        "exportCrateFile": "Export crate file…",
+        "sendToIPad": "Send to iPad",
+
+        // Add music
+        "noDriveFound": "No CD or drive found. Put one in, or choose a folder.",
+        "chooseFolder": "Choose a folder…",
+        "addMusicHelp": "Read a CD, a USB stick, an SD card or a folder as it is: its name, its folders and the order of its songs",
+        "chooseSourceMessage": "Choose a CD, a drive or a folder. Whatever you choose is a source, named after it; Deckie reads its folders and the order of its songs as they are.",
+        "chooseSourcePrompt": "Add",
+        "rekordboxMessage": "Choose the collection you exported from rekordbox (File > Export Collection in xml format). Deckie takes names, tempos, keys, cues and playlists from it; nothing is sent anywhere.",
+        "rekordboxFolderMessage": "Choose the folder of music. Deckie reads every song below it and writes a crate file; the music stays where it is.",
+        "start": "Start",
+        // new (D32): drag and drop onto the window.
+        "dropHere": "Drop a folder here to add it",
+
+        // while it works
+        "runTitle": "Reading your crate",
+        "runReading": "Adding {read} to {crate}",
+        "songsOf.one": "{done} of {total} song",
+        "songsOf.other": "{done} of {total} songs",
+        "timeLeftUnderMinute": "Less than a minute left",
+        "timeLeft.one": "About 1 minute left",
+        "timeLeft.other": "About {n} minutes left",
+        "stageReading": "Reading tempo, key and bars",
+        "stageFinishing": "Making fingerprints and finding copies",
+        "stageSaving": "Saving",
+        "lineStarted.one": "{n} audio file found; {unchanged} unchanged since last time; {queued} to read.",
+        "lineStarted.other": "{n} audio files found; {unchanged} unchanged since last time; {queued} to read.",
+        "lineRead": "{rel}  ({seconds} s)",
+        "lineReadBefore": "{rel}  (read before)",
+        "lineNotRead": "{rel}  didn't go in: {reason}",
+
+        // the finished screen
+        "finishedTitle": "{read} is in {crate}",
+        "wentIn.one": "1 song went in.",
+        "wentIn.other": "{n} songs went in.",
+        "everySongWentIn": "Every song went in.",
+        "didntGoIn.one": "1 file didn't go in:",
+        "didntGoIn.other": "{n} files didn't go in:",
+        "foldersLeftOut.one": "1 folder was left out, as its name starts with _.",
+        "foldersLeftOut.other": "{n} folders were left out, as their names start with _.",
+        "took": "Took {duration}, {rate} songs a minute.",
+        "nextStep": "Next, send the crate file to your iPad.",
+        "seeSongs": "See the songs",
+        "whatDidntGoIn": "What didn't go in",
+        "keysLine": "Keys: {counts}.",
+        "keysCount": "{n} {from}",
+        "keysNone.one": "1 song has no key yet.",
+        "keysNone.other": "{n} songs have no key yet.",
+        "keysDisagree.one": "On 1 song your programs give different keys; the newest program's is shown.",
+        "keysDisagree.other": "On {n} songs your programs give different keys; the newest program's is shown.",
+        "needName.one": "1 song still needs a name.",
+        "needName.other": "{n} songs still need a name.",
+        "everySongHasAName": "Every song has a name.",
+        "showThem": "Show them",
+        "rekordboxLocked": "rekordbox keeps its own library locked. To bring its keys in, export your collection from rekordbox (File > Export Collection in xml format) and choose it with File > Choose a DJ library…",
+        "rekordboxExportNotRead": "This music has a rekordbox USB export, which Desk doesn't read yet.",
+        "librariesRead": "Read from {names}.",
+        "couldntReadLibrary": "Couldn't read a DJ library. {detail}",
+        // new (D32): "Send to iPad" on Windows and Linux, until the booth takes a crate file another way.
+        "exportedTo": "The crate file is in {folder}.",
+        "toIPadTitle": "To get it to your iPad",
+        "toIPadStick": "A USB stick or SD card: export the crate file onto it, plug it into the iPad and open it from the Files app.",
+        "toIPadICloud": "iCloud Drive: with iCloud for Windows, export the crate file into your iCloud Drive folder; it shows in Files on the iPad.",
+        "toIPadCable": "A cable: connect the iPad, open Apple Devices, choose the iPad, then Files, and drag the crate file onto Deckie Booth.",
+        "openFolder": "Show the folder",
+
+        // a run that stopped
+        "stoppedReading": "Desk stopped before it finished reading {read}. Songs already read are kept.",
+        "carryOn": "Carry on",
+        "putBack": "Put {read} back in to carry on.",
+
+        // the crate menu
+        "crateMenuHelp": "The crate that is showing",
+        "newCrate": "New crate",
+        "renameCrate": "Rename crate…",
+        "deleteCrate": "Delete crate…",
+        "renameTitle": "Rename {name}",
+        "deleteCrateTitle": "Delete {name}?",
+        "deleteCrateBody": "The crate and your name fixes go to the Trash. Your music is not touched, and a crate file you sent is not touched.",
+        // new (D32): where there is no Trash Desk can use, the crate is deleted for good.
+        "deleteCrateBodyForGood": "The crate and your name fixes are deleted. Your music is not touched, and a crate file you sent is not touched.",
+        "delete": "Delete",
+
+        // the toolbar
+        "sources": "Sources",
+        "hideSources": "Hide sources",
+        "showSourcesMenu": "Show sources",
+        "sourcesHelp": "What was read from each CD, drive or folder, by its own name",
+        "sendHelp": "Opens the share sheet, so AirDrop to your iPad is one click",
+        "undo": "Undo",
+        "redo": "Redo",
+        "undoNamed": "Undo {action}",
+        "redoNamed": "Redo {action}",
+
+        // the bottom line
+        "songs.one": "1 song",
+        "songs.other": "{n} songs",
+        "cantBeRecognised": "{n} can't be recognised yet",
+        "filesDidntGoIn.one": "1 file didn't go in",
+        "filesDidntGoIn.other": "{n} files didn't go in",
+        "needNameCount.one": "1 needs a name",
+        "needNameCount.other": "{n} need a name",
+        "showAllSongs": "Show all songs",
+        "onlyNeedName": "Showing the songs that need a name",
+
+        // the table
+        "colTitle": "Title",
+        "colArtist": "Artist",
+        "colTempo": "Tempo",
+        "colKey": "Key",
+        "colBars": "Bars",
+        "colLength": "Length",
+        "colVocals": "Vocals",
+        "colWhere": "Where",
+        "colNotes": "Notes",
+        "colKeyFrom": "Key from",
+        "notSureOfKey": "Not sure of the key",
+        "needsNameNote": "needs a name",
+        "topOfMusicFolder": "the top of the music folder",
+        "damagedFrames.one": "1 damaged frame",
+        "damagedFrames.other": "{n} damaged frames",
+        "gridUnsure": "beat grid unsure",
+        "vocalsNotRead": "vocals not read",
+        "signed": "signed",
+        "none": "–",
+
+        // the inspector
+        "names": "Names",
+        "title": "Title",
+        "artist": "Artist",
+        "version": "Version",
+        "tags": "Tags",
+        "whereLabel": "Where",
+        "whereWithPlaces": "Where ({n} places)",
+        "alsoInYourCrateAs": "Also in your crate as",
+        "whatDeskFound": "What Desk found",
+        "rowFile": "File",
+        "rowTempo": "Tempo",
+        "tempoValue": "{bpm}, {bars} bars, bar 1 at {downbeat} s",
+        "rowTempoChanges": "Tempo changes",
+        "segments": "{n} segments",
+        "rowKey": "Key",
+        "keyNotSure": ", not sure",
+        "rowNameFrom": "Name from",
+        "keyNotRead": "Key not read on this computer yet",
+        "keySays": "{program} says {camelot}",
+        "keyFrom.rekordbox-xml": "from rekordbox",
+        "keyFrom.traktor": "from Traktor",
+        "keyFrom.engine-dj": "from Engine DJ",
+        "keyFrom.serato": "from Serato",
+        "keyFrom.virtualdj": "from VirtualDJ",
+        "keyFrom.tag": "from the file's tag",
+        "keyFrom.tag-comment": "from the file's comment",
+        "keyFrom.tag-title": "from the file's title",
+        "keyFrom.apple-mu": "read by Apple's Music Understanding",
+        "keyFrom.deckie": "read by Deckie",
+        "keyFrom.votes": "read by Deckie",
+        "keyFrom.hpcp-whitened": "read by Deckie",
+        "keyFrom.stft-edma": "read by Deckie",
+        "keyFrom.other": "from {code}",
+        "programName.rekordbox-xml": "rekordbox",
+        "programName.traktor": "Traktor",
+        "programName.engine-dj": "Engine DJ",
+        "programName.serato": "Serato",
+        "programName.virtualdj": "VirtualDJ",
+        "programName.tag": "the file's tag",
+        "programName.tag-comment": "the file's comment",
+        "programName.tag-title": "the file's title",
+        "programName.apple-mu": "Apple",
+        "programName.deckie": "Deckie",
+        "programName.votes": "Deckie",
+        "programName.hpcp-whitened": "Deckie",
+        "programName.stft-edma": "Deckie",
+        "programName.other": "{code}",
+        "nameFromPart.tag": "the file's tags",
+        "nameFromPart.filename": "the file name",
+        "nameFromPart.folder": "the folder",
+        "nameFromPart.cue": "a cue sheet",
+        "nameFromPart.m3u": "a playlist",
+        "nameFromPart.tracklist": "a tracklist",
+        "nameFromPart.copy": "a copy of the same recording",
+        "nameFromPart.user": "you",
+        "nameFromPart.lab": "the lab",
+        "nameFromJoin": " and ",
+        "rowKeyChanges": "Key changes",
+        "keyFromBar": "{camelot} from bar {bar}",
+        "rowLoudness": "Loudness",
+        "loudnessValue": "{lufs} LUFS, peak {peak} dB",
+        "rowMixWindows": "Mix windows",
+        "mixWindows": "in: bars {inFrom} to {inTo}; out: bars {outFrom} to {outTo}",
+        "rowSections": "Sections",
+        "rowVocals": "Vocals",
+        "vocalsValue": "{percent} of bars",
+        "vocalsHeavy": ", vocal-heavy",
+        "rowEngine": "Engine",
+        "engineOn": "{engine} on {device}",
+        "rowSignatures": "Signatures",
+        "noneYet": "none yet",
+        "rowDamagedFrames": "Damaged frames",
+        "selectSong": "Select a song to see and fix its names.",
+        "songsSelected": "{n} songs selected.",
+        "musicAt": "Music: {path}",
+        "whereIsThisMusic": "Where is this music?",
+        "musicFolderMessage": "Where the music for this crate is on this Mac (needed to make recognition signatures).",
+
+        // the Sources panel
+        "sourcesTitle": "Sources",
+        "nothingReadYet": "Nothing read from a CD, a drive or a folder yet.",
+        "sourcesEmptyBody": "Add music from a CD, a USB stick, an SD card or a folder, and its name, its folders and the order of its songs show here, as your player shows them.",
+        "sourceLine.one": "{name}  ·  1 song",
+        "sourceLine.other": "{name}  ·  {n} songs",
+        "topFolder": "(top)",
+        "alsoIn": "Also in {places}",
+        "fixHint": "Desk shows what it read. Fix a name, or an order it read wrongly.",
+        "moveUp": "Move up",
+        "moveDown": "Move down",
+        "rename": "Rename…",
+        "renameFolderTitle": "Rename the folder {folder}",
+        "removeFromCrate": "Remove from crate…",
+        "removeTitle": "Remove {source} from {crate}?",
+        "removeBody.zero": "No songs go: every song on it is somewhere else in the crate too.",
+        "removeBody.one": "1 song goes from the crate. Songs that are somewhere else too stay.",
+        "removeBody.other": "{n} songs go from the crate. Songs that are somewhere else too stay.",
+        "remove": "Remove",
+        "musicFolderName": "The music folder",
+        "removeMusicFolder": "Remove the music folder…",
+
+        // what didn't go in
+        "readOn": "Read on {by} at {at}: {seen} files seen, {songs} songs in the crate.",
+        "noRecord": "No record of what didn't go in.",
+        "reasonCount": "{reason} ({n})",
+        "reason.unsupported": "File type not supported",
+        "reason.protected": "Protected, cannot be read",
+        "reason.damaged_frames": "Damaged frames, played as silence",
+        "reason.duplicate": "The same file as another",
+        "reason.damaged": "Damaged",
+        "reason.decode_error": "Could not be decoded",
+        "reason.analysis_error": "Analysis failed",
+        "reason.skipped": "Folder left out",
+
+        // keys and names from this computer (D30)
+        "lookAgain": "Look again for keys and names",
+        "chooseLibrary": "Choose a DJ library…",
+        "chooseLibraryMessage": "Choose a library a DJ program keeps: a rekordbox collection export (XML), Traktor's collection.nml, Engine DJ's m.db, Serato's database V2 or VirtualDJ's database.xml. Desk only reads it, and reads it again on every run.",
+        "libraryChosen": "Desk will read {program} for keys and names on every run. Look again to read it now.",
+        "undoLookAgain": "Look again",
+
+        // undo (shown after "Undo")
+        "undoNameFix": "Name fix",
+        "undoRename": "Rename",
+        "undoMove": "Move",
+        "undoRemove": "Remove",
+
+        // messages and errors
+        "couldntOpen": "Couldn't open that crate file. {detail}",
+        "couldntSave": "Couldn't save the crate file. {detail}",
+        "runStopped": "Desk stopped before it finished. {detail} Songs already read are kept.",
+        "couldntExport": "Couldn't write the crate file. {detail}",
+        "couldntRename": "Couldn't rename the crate. {detail}",
+        "couldntDelete": "Couldn't delete the crate. {detail}",
+        "nothingToSendYet": "This crate has no songs yet, so there is no crate file to send. Add music first.",
+        "exportMessage": "Where the crate file goes. Desk keeps its own; this is a copy.",
+        "importMessage": "Choose a crate file (a .deckiecrate package). Desk keeps a copy; the file you choose is not changed.",
+        // new (D32): the engine program could not be started or stopped answering.
+        "engineGone": "Desk's engine stopped. Close Desk and open it again; songs already read are kept.",
+        // new (D32): this computer has no beat tracker's runtime or model, so music cannot be read.
+        "engineMissing": "Desk can't read music on this computer yet: a part it needs is missing. {detail}",
+
+        // numbers in words
+        "seconds.one": "1 second",
+        "seconds.other": "{n} seconds",
+        "minutes.one": "1 minute",
+        "minutes.other": "{n} minutes",
+        "durationJoin": "{minutes} {seconds}",
+    ]
+
+    /// The words named `key` with `{name}` filled from `values`; the key itself when there are none, so a missing word
+    /// shows as its name rather than as nothing.
+    public static func text(_ key: String, _ values: [String: String] = [:]) -> String {
+        fill(table[key] ?? key, values)
+    }
+
+    /// The form of `key` for the count `n` (`key.zero` when n is 0 and there is one, `key.one` for 1, else
+    /// `key.other`), with `{n}` and `values` filled in.
+    public static func count(_ key: String, _ n: Int, _ values: [String: String] = [:]) -> String {
+        let form = n == 0 && table[key + ".zero"] != nil ? "zero" : (n == 1 ? "one" : "other")
+        var v = values
+        v["n"] = v["n"] ?? String(n)
+        return fill(table[key + "." + form] ?? table[key + ".other"] ?? key, v)
+    }
+
+    /// The words of `key` for the engine's code `code` (`key.<code>`), else `key.other` with `{code}` filled in.
+    public static func coded(_ key: String, _ code: String) -> String {
+        if let t = table[key + "." + code] { return t }
+        return fill(table[key + ".other"] ?? code, ["code": code])
+    }
+
+    static func fill(_ template: String, _ values: [String: String]) -> String {
+        guard template.contains("{"), !values.isEmpty else { return template }
+        var out = ""
+        var rest = Substring(template)
+        while let open = rest.firstIndex(of: "{") {
+            out += rest[..<open]
+            let after = rest[rest.index(after: open)...]
+            if let close = after.firstIndex(of: "}"), let v = values[String(after[..<close])] {
+                out += v
+                rest = after[after.index(after: close)...]
+            } else {
+                out += "{"
+                rest = after
+            }
+        }
+        return out + rest
+    }
+
+    /// The table as JSON with its keys sorted, as the engine sends it to the pages.
+    public static var json: Data {
+        let e = JSONEncoder()
+        e.outputFormatting = [.sortedKeys]
+        return (try? e.encode(table)) ?? Data("{}".utf8)
+    }
+}
