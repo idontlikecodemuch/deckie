@@ -8,42 +8,7 @@ import DeckieDesk
 // step Desk is on, from the one word list. Drawing is throttled and stops while the window is hidden; under reduced
 // motion nothing moves.
 
-/// The run screen's look: every colour, size and time it uses, named, for the design pass to change in one place
-/// (desk-web/desk.css's run-screen variables are the same values).
-enum RunLook {
-    static let accent = Color(red: 0.706, green: 0.565, blue: 1.0)          // #b490ff: the site's and the booth's lavender
-    static let amber = Color(red: 1.0, green: 0.753, blue: 0.251)           // #ffc040: a tempo reading, as the booth's pitch line
-    static let wave = NSColor(red: 0.706, green: 0.565, blue: 1.0, alpha: 0.82)
-    static let waveQuiet = NSColor(red: 0.706, green: 0.565, blue: 1.0, alpha: 0.28)
-    static let waveNew = NSColor(red: 0.925, green: 0.894, blue: 1.0, alpha: 1)
-    static let wavePick = NSColor(red: 1.0, green: 0.753, blue: 0.251, alpha: 1)
-    static let waveNone = NSColor(white: 0.5, alpha: 0.25)
-    static let tick = Color.primary.opacity(0.22), tickStrong = Color.primary.opacity(0.45)
-    static let wheelEmpty = Color.primary.opacity(0.07)
-    static let wheelHome = Color.secondary
-    static let card = Color.primary.opacity(0.045)
-    static let cardRadius: CGFloat = 16
-    static let gap: CGFloat = 14
-    static let cardPadding: CGFloat = 14
-    static let stageHeight: CGFloat = 120
-    static let figureHeight: CGFloat = 70
-    static let wallHeight: CGFloat = 200
-    /// Points a wall line needs to be drawn as a wave, the narrowest column of waves, of brightness lines.
-    static let wallWaveMin: CGFloat = 6, wallColMin: CGFloat = 150, wallDenseColMin: CGFloat = 18
-    /// Points a brightness line aims for, before the columns run out (then lines thin to a pixel).
-    static let wallDenseLine: CGFloat = 3
-    /// How loudness becomes height, the same for every song (the pages' --wave-curve).
-    static let waveCurve = 2.2
-    static let bigFont = Font.system(size: 26, weight: .bold).monospacedDigit()
-    static let stageFont = Font.system(size: 17, weight: .semibold)
-    static let labelFont = Font.caption2
-    /// Seconds: a wave drawing in; a song on stage with nothing waiting, and with many; a fade; each quiet line; a
-    /// moment; the wall's quickest redraw.
-    static let draw = 0.9, hold = 3.2, holdMin = 0.3, holdStill = 2.0, fade = 0.42, saying = 7.0, moment = 1.6, wallEvery = 0.25
-    /// Songs waiting for the stage before the oldest go straight to the wall.
-    static let queueMax = 24
-    static let frame = 1.0 / 30
-}
+// The run screen's look is RunLook, in Look.swift.
 
 /// What the run screen shows, kept as the run goes: the songs, the totals, the song on stage and those waiting, the
 /// quiet line, and the moments.
@@ -125,8 +90,8 @@ final class RunWatch: ObservableObject {
         var hold = max(RunLook.holdMin, RunLook.hold / Double(1 + queue.count))
         // Under reduced motion a song stays at least `holdStill`, so the stage changes as a still picture would.
         if reduceMotion { hold = max(hold, RunLook.holdStill) }
-        let ticker = reduceMotion || hold < 0.9
-        staged = Staged(song: song, at: Date(), hold: hold, draw: ticker ? 0 : min(RunLook.draw, hold * 0.45))
+        let ticker = reduceMotion || hold < RunLook.ticker
+        staged = Staged(song: song, at: Date(), hold: hold, draw: ticker ? 0 : min(RunLook.draw, hold * RunLook.drawShare))
         if queue.isEmpty && skipped > 0 { stageTimerFire(after: hold) { [weak self] in self?.skipped = 0 } }
         drawing = staged!.draw > 0 && visible
         drawTimer?.invalidate()
@@ -247,9 +212,9 @@ final class RunWatch: ObservableObject {
         case .none: return DeskWords.text("keyNotSureValue")
         case .home: return DeskWords.text("homeNoteValue", ["note": k.name ?? ""])
         case .key:
-            return DeskWords.text("keyValue", ["camelot": k.camelot ?? "", "note": k.name ?? "",
-                                               "mode": DeskWords.text(k.minor == true ? "mode.minor" : "mode.major")])
-                + (k.uncertain ? DeskWords.text("keyNotSure") : "")
+            let key = DeskWords.text("keyValue", ["camelot": k.camelot ?? "", "note": k.name ?? "",
+                                                  "mode": DeskWords.text(k.minor == true ? "mode.minor" : "mode.major")])
+            return k.uncertain ? Words.keyWithDoubt(key, doubt: DeskWords.text("keyNotSure")) : key
         }
     }
     static func clock(_ s: Double) -> String { RunTally.clock(s) }
@@ -259,7 +224,7 @@ final class RunWatch: ObservableObject {
     static func line(_ s: RunSong) -> String {
         let name = s.artist.map { DeskWords.text("wallSongBy", ["number": "\(s.number)", "title": s.title, "artist": $0]) }
             ?? DeskWords.text("wallSong", ["number": "\(s.number)", "title": s.title])
-        return [name, bpm(s), key(s.key), clock(s.seconds), whereLine(s)].joined(separator: "  ·  ")
+        return Words.wallSong([name, bpm(s), key(s.key), clock(s.seconds), whereLine(s)])
     }
 }
 
@@ -271,8 +236,8 @@ struct RunCard<Content: View>: View {
     var body: some View {
         content.padding(RunLook.cardPadding).frame(maxWidth: .infinity, alignment: .leading)
             .background(RunLook.card, in: RoundedRectangle(cornerRadius: RunLook.cardRadius))
-            .overlay(RoundedRectangle(cornerRadius: RunLook.cardRadius).stroke(RunLook.accent.opacity(moment ? 0.6 : 0), lineWidth: 2))
-            .animation(.easeOut(duration: RunLook.moment / 2), value: moment)
+            .overlay(RoundedRectangle(cornerRadius: RunLook.cardRadius).stroke(RunLook.accent.opacity(moment ? RunLook.momentRingOpacity : 0), lineWidth: RunLook.momentRingWidth))
+            .animation(.easeOut(duration: RunLook.momentFlash), value: moment)
     }
 }
 
@@ -284,7 +249,7 @@ struct StageView: View {
     var body: some View {
         RunCard(moment: watch.moment == "first") {
             if let s = watch.staged {
-                HStack(alignment: .center, spacing: 20) {
+                HStack(alignment: .center, spacing: RunLook.stageGap) {
                     TimelineView(.animation(minimumInterval: RunLook.frame, paused: reduce || !watch.drawing || !watch.visible)) { tl in
                         Canvas { gc, size in
                             let p = s.draw > 0 ? min(1, tl.date.timeIntervalSince(s.at) / s.draw) : 1
@@ -306,43 +271,43 @@ struct StageView: View {
     }
 
     private func facts(_ s: RunSong) -> some View {
-        VStack(alignment: .leading, spacing: 8) {
-            HStack(spacing: 6) {
+        VStack(alignment: .leading, spacing: RunLook.stageFactsGap) {
+            HStack(spacing: RunLook.stageNameGap) {
                 Text(s.title).font(RunLook.stageFont).lineLimit(1)
                 if let a = s.artist { Text(a).foregroundStyle(.secondary).lineLimit(1) }
                 if s.before {
-                    Text(DeskWords.text("stageBefore")).font(.caption2.weight(.semibold)).foregroundStyle(.secondary)
-                        .padding(.horizontal, 8).padding(.vertical, 1).background(.quaternary, in: Capsule())
+                    Text(DeskWords.text("stageBefore")).font(RunLook.chipFont).foregroundStyle(.secondary)
+                        .padding(.horizontal, RunLook.chipPaddingH).padding(.vertical, RunLook.chipPaddingV).background(.quaternary, in: Capsule())
                 }
             }
-            HStack(alignment: .top, spacing: 22) {
+            HStack(alignment: .top, spacing: RunLook.stageFactsRowGap) {
                 fact("stageTempo", RunWatch.bpm(s), color: RunLook.amber)
                 fact("stageKey", RunWatch.key(s.key), color: s.key.kind == .key ? .primary : .secondary)
                 fact("stageBars", s.bars.map(String.init) ?? DeskWords.text("none"))
                 fact("stageLength", RunWatch.clock(s.seconds))
             }
             fact("stageWhere", RunWatch.whereLine(s))
-            if watch.skipped > 0 { Text(DeskWords.count("stageMore", watch.skipped)).font(.caption).foregroundStyle(.tertiary) }
-            else if s.wave.isEmpty { Text(DeskWords.text("stageNoWave")).font(.caption).foregroundStyle(.tertiary) }
+            if watch.skipped > 0 { Text(DeskWords.count("stageMore", watch.skipped)).font(RunLook.stageNoteFont).foregroundStyle(.tertiary) }
+            else if s.wave.isEmpty { Text(DeskWords.text("stageNoWave")).font(RunLook.stageNoteFont).foregroundStyle(.tertiary) }
         }
     }
 
     private func fact(_ label: String, _ value: String, color: Color = .primary) -> some View {
-        VStack(alignment: .leading, spacing: 1) {
+        VStack(alignment: .leading, spacing: RunLook.stageFactGap) {
             Text(DeskWords.text(label)).font(RunLook.labelFont).foregroundStyle(.tertiary)
-            Text(value).fontWeight(.semibold).monospacedDigit().foregroundStyle(color).lineLimit(1)
+            Text(value).fontWeight(RunLook.stageValueWeight).monospacedDigit().foregroundStyle(color).lineLimit(1)
         }
         .accessibilityElement(children: .combine)
     }
 
     static func draw(_ s: RunSong, progress p: Double, in gc: inout GraphicsContext, size: CGSize) {
-        let w = size.width, markH = (size.height * 0.12).rounded(), h = size.height - markH, mid = h / 2, edge = p * w
-        gc.fill(Path(CGRect(x: 0, y: mid.rounded(), width: edge, height: 1)), with: .color(Color(nsColor: RunLook.waveNone)))
+        let w = size.width, markH = (size.height * RunLook.stageMarkShare).rounded(), h = size.height - markH, mid = h / 2, edge = p * w
+        gc.fill(Path(CGRect(x: 0, y: mid.rounded(), width: edge, height: RunLook.stageLine)), with: .color(Color(nsColor: RunLook.waveNone)))
         let n = RunSong.waveLength, slot = w / CGFloat(n)
         if !s.wave.isEmpty {
             // The wave: mirrored, through the middle of each stretch, drawn in from the left as far as `p`.
             let shown = min(n, Int((p * Double(n)).rounded(.up)))
-            func half(_ i: Int) -> CGFloat { max(1, CGFloat(pow(Double(s.wave[i]) / 99, RunLook.waveCurve)) * h * 0.48) }
+            func half(_ i: Int) -> CGFloat { max(RunLook.stageWaveMin, CGFloat(pow(Double(s.wave[i]) / 99, RunLook.waveCurve)) * h * RunLook.stageWaveRoom) }
             var path = Path()
             path.move(to: CGPoint(x: 0, y: mid - half(0)))
             for i in 0..<shown { path.addLine(to: CGPoint(x: min(edge, (CGFloat(i) + 0.5) * slot), y: mid - half(i))) }
@@ -361,9 +326,9 @@ struct StageView: View {
                 if x > edge { break }
                 let strong = b % 32 == 0
                 gc.blendMode = .clear
-                gc.fill(Path(CGRect(x: x, y: 0, width: strong ? 2 : 1, height: h)), with: .color(.black))
+                gc.fill(Path(CGRect(x: x, y: 0, width: strong ? RunLook.stageTickStrongWidth : RunLook.stageTickWidth, height: h)), with: .color(.black))
                 gc.blendMode = .normal
-                gc.fill(Path(CGRect(x: x, y: h + 2, width: 1, height: strong ? markH - 2 : (markH - 2) / 2)),
+                gc.fill(Path(CGRect(x: x, y: h + RunLook.stageTickGap, width: RunLook.stageTickWidth, height: strong ? markH - RunLook.stageTickGap : (markH - RunLook.stageTickGap) * RunLook.stageTickShort)),
                         with: .color(strong ? RunLook.tickStrong : RunLook.tick))
                 b += 8
             }
@@ -378,35 +343,35 @@ struct FiguresView: View {
 
     var body: some View {
         let f = watch.figures
-        HStack(alignment: .top, spacing: 10) {
+        HStack(alignment: .top, spacing: RunLook.figuresGap) {
             RunCard(moment: watch.moment == "hour") {
-                VStack(alignment: .leading, spacing: 6) {
+                VStack(alignment: .leading, spacing: RunLook.figureGap) {
                     label("figMusic")
                     Text(RunWatch.musicTime(f.seconds)).font(RunLook.bigFont)
                 }
-            }.frame(maxWidth: 180)
+            }.frame(maxWidth: RunLook.musicFigureWidth)
             RunCard {
-                VStack(alignment: .leading, spacing: 6) {
+                VStack(alignment: .leading, spacing: RunLook.figureGap) {
                     label("figTempos")
                     Canvas { gc, size in FiguresView.histogram(f, latest: watch.latestBin, in: &gc, size: size) }
                         .frame(height: RunLook.figureHeight)
-                    Text(temposText(f)).font(.caption).foregroundStyle(.secondary).lineLimit(2)
+                    Text(temposText(f)).font(RunLook.figureTextFont).foregroundStyle(.secondary).lineLimit(2)
                 }
-                .accessibilityElement(children: .ignore).accessibilityLabel(DeskWords.text("figTempos") + ": " + temposText(f))
+                .accessibilityElement(children: .ignore).accessibilityLabel(Words.figureLabel(DeskWords.text("figTempos"), temposText(f)))
             }
             RunCard {
-                VStack(alignment: .leading, spacing: 6) {
+                VStack(alignment: .leading, spacing: RunLook.figureGap) {
                     label("figKeys")
                     Canvas { gc, size in FiguresView.wheel(f, in: &gc, size: size) }
                         .frame(width: RunLook.figureHeight, height: RunLook.figureHeight).frame(maxWidth: .infinity)
-                        .rotationEffect(.degrees(watch.moment == "wheel" && !reduce ? 360 : 0))
+                        .rotationEffect(.degrees(watch.moment == "wheel" && !reduce ? RunLook.wheelTurn : 0))
                         .animation(watch.moment == "wheel" && !reduce ? .easeInOut(duration: RunLook.moment) : nil, value: watch.moment)
-                    Text(keysText(f)).font(.caption).foregroundStyle(.secondary).lineLimit(2)
+                    Text(keysText(f)).font(RunLook.figureTextFont).foregroundStyle(.secondary).lineLimit(2)
                 }
-                .accessibilityElement(children: .ignore).accessibilityLabel(DeskWords.text("figKeys") + ": " + keysText(f))
+                .accessibilityElement(children: .ignore).accessibilityLabel(Words.figureLabel(DeskWords.text("figKeys"), keysText(f)))
             }
             RunCard {
-                VStack(alignment: .leading, spacing: 4) {
+                VStack(alignment: .leading, spacing: RunLook.figureListGap) {
                     row("figNeedName", f.needName.formatted())
                     row("figSameFile", f.sameFile.formatted())
                     row("figCopies", f.copies.map { $0.formatted() } ?? DeskWords.text("figCopiesLater"))
@@ -417,9 +382,9 @@ struct FiguresView: View {
         .fixedSize(horizontal: false, vertical: true)
     }
 
-    private func label(_ k: String) -> some View { Text(DeskWords.text(k)).font(.caption.weight(.semibold)).foregroundStyle(.tertiary) }
+    private func label(_ k: String) -> some View { Text(DeskWords.text(k)).font(RunLook.figureLabelFont).foregroundStyle(.tertiary) }
     private func row(_ k: String, _ v: String) -> some View {
-        HStack { Text(DeskWords.text(k)).foregroundStyle(.secondary); Spacer(); Text(v).bold().monospacedDigit() }.font(.callout)
+        HStack { Text(DeskWords.text(k)).foregroundStyle(.secondary); Spacer(); Text(v).fontWeight(RunLook.figureValueWeight).monospacedDigit() }.font(RunLook.figureListFont)
             .accessibilityElement(children: .combine)
     }
 
@@ -436,14 +401,14 @@ struct FiguresView: View {
         let homes = f.home.reduce(0, +)
         if homes > 0 { parts.append(DeskWords.count("figHomeOnly", homes)) }
         if f.noKey > 0 { parts.append(DeskWords.count("figNoKey", f.noKey)) }
-        return parts.joined(separator: ", ")
+        return Words.keysFigure(parts)
     }
 
     static func histogram(_ f: RunFigures, latest: Int, in gc: inout GraphicsContext, size: CGSize) {
-        let most = max(1, f.tempos.max() ?? 1), slot = size.width / CGFloat(f.tempos.count), barW = max(1, slot - 1)
-        gc.fill(Path(CGRect(x: 0, y: size.height - 1, width: size.width, height: 1)), with: .color(Color(nsColor: RunLook.waveNone)))
+        let most = max(1, f.tempos.max() ?? 1), slot = size.width / CGFloat(f.tempos.count), barW = max(RunLook.histBarMinWidth, slot - RunLook.histBarGap)
+        gc.fill(Path(CGRect(x: 0, y: size.height - RunLook.histBaseline, width: size.width, height: RunLook.histBaseline)), with: .color(Color(nsColor: RunLook.waveNone)))
         for (i, c) in f.tempos.enumerated() where c > 0 {
-            let bh = max(2, CGFloat(c) / CGFloat(most) * (size.height - 2))
+            let bh = max(RunLook.histBarMin, CGFloat(c) / CGFloat(most) * (size.height - RunLook.histTop))
             gc.fill(Path(CGRect(x: CGFloat(i) * slot, y: size.height - bh, width: barW, height: bh)),
                     with: .color(Color(nsColor: i == latest ? RunLook.waveNew : RunLook.wave)))
         }
@@ -453,21 +418,21 @@ struct FiguresView: View {
     /// for a song whose home note alone Desk found.
     static let fifths = [0, 7, 2, 9, 4, 11, 6, 1, 8, 3, 10, 5]
     static func wheel(_ f: RunFigures, in gc: inout GraphicsContext, size: CGSize) {
-        let s = min(size.width, size.height) / 120, c = CGPoint(x: size.width / 2, y: size.height / 2)
+        let s = min(size.width, size.height) / RunLook.wheelBox, c = CGPoint(x: size.width / 2, y: size.height / 2)
         let most = max(1, max(f.major.max() ?? 0, f.minor.max() ?? 0))
         for (i, pc) in fifths.enumerated() {
-            let a0 = Angle.degrees(Double(i) * 30 - 105 + 1.7), a1 = Angle.degrees(Double(i) * 30 - 75 - 1.7)
-            for (counts, r0, r1) in [(f.major, 43.0, 58.0), (f.minor, 27.0, 41.0)] {
+            let a0 = Angle.degrees(Double(i) * 30 - 105 + RunLook.wheelCellGap), a1 = Angle.degrees(Double(i) * 30 - 75 - RunLook.wheelCellGap)
+            for (counts, r0, r1) in [(f.major, RunLook.wheelMajorIn, RunLook.wheelMajorOut), (f.minor, RunLook.wheelMinorIn, RunLook.wheelMinorOut)] {
                 var p = Path()
                 p.addArc(center: c, radius: r1 * s, startAngle: a0, endAngle: a1, clockwise: false)
                 p.addArc(center: c, radius: r0 * s, startAngle: a1, endAngle: a0, clockwise: true)
                 p.closeSubpath()
                 let n = counts[pc]
-                gc.fill(p, with: .color(n > 0 ? RunLook.accent.opacity(0.35 + 0.65 * Double(n) / Double(most)) : RunLook.wheelEmpty))
+                gc.fill(p, with: .color(n > 0 ? RunLook.accent.opacity(RunLook.wheelFillMin + RunLook.wheelFillRange * Double(n) / Double(most)) : RunLook.wheelEmpty))
             }
             if f.home[pc] > 0 {
-                let am = (Double(i) * 30 - 90) * .pi / 180, r = min(5, 1.8 + Double(f.home[pc]).squareRoot()) * s
-                let at = CGPoint(x: c.x + 18 * s * cos(am), y: c.y + 18 * s * sin(am))
+                let am = (Double(i) * 30 - 90) * .pi / 180, r = min(RunLook.wheelDotMax, RunLook.wheelDotBase + Double(f.home[pc]).squareRoot()) * s
+                let at = CGPoint(x: c.x + RunLook.wheelHomeR * s * cos(am), y: c.y + RunLook.wheelHomeR * s * sin(am))
                 gc.fill(Path(ellipseIn: CGRect(x: at.x - r, y: at.y - r, width: r * 2, height: r * 2)), with: .color(RunLook.wheelHome))
             }
         }
@@ -486,11 +451,11 @@ struct WallView: View {
 
     var body: some View {
         RunCard(moment: watch.moment == "disc") {
-            VStack(alignment: .leading, spacing: 8) {
-                HStack(alignment: .firstTextBaseline, spacing: 12) {
-                    Text(title).font(.headline)
+            VStack(alignment: .leading, spacing: RunLook.wallCardGap) {
+                HStack(alignment: .firstTextBaseline, spacing: RunLook.wallHeadGap) {
+                    Text(title).font(RunLook.wallTitleFont)
                     Text(pick.flatMap { watch.songs.indices.contains($0) ? RunWatch.line(watch.songs[$0]) : nil } ?? "")
-                        .font(.callout).foregroundStyle(.secondary).lineLimit(1)
+                        .font(RunLook.wallNameFont).foregroundStyle(.secondary).lineLimit(1)
                 }
                 GeometryReader { geo in
                     let picture = WallPicture.make(watch.songs, version: watch.wallVersion, size: geo.size, scale: scale, pick: pick)
@@ -510,9 +475,9 @@ struct WallView: View {
                     move(press.key); return .handled
                 }
                 .accessibilityElement(children: .ignore)
-                .accessibilityLabel(watch.songs.isEmpty ? DeskWords.text("wallEmpty") : title + ", " + Words.songs(watch.songs.count))
+                .accessibilityLabel(watch.songs.isEmpty ? DeskWords.text("wallEmpty") : Words.wallLabel(title, songs: watch.songs.count))
                 .accessibilityValue(pick.flatMap { watch.songs.indices.contains($0) ? RunWatch.line(watch.songs[$0]) : nil } ?? "")
-                Text(DeskWords.text("wallHelp")).font(.caption).foregroundStyle(.tertiary)
+                Text(DeskWords.text("wallHelp")).font(RunLook.wallHelpFont).foregroundStyle(.tertiary)
             }
         }
     }
@@ -559,14 +524,14 @@ enum WallPicture {
                                           bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)!.makeImage()!
 
     static func plan(_ count: Int, w: CGFloat, h: CGFloat, scale: CGFloat) -> Plan {
-        let gap = (6 * scale).rounded(), maxCols = max(1, Int((w + gap) / (RunLook.wallColMin * scale + gap)))
+        let gap = (RunLook.wallGap * scale).rounded(), maxCols = max(1, Int((w + gap) / (RunLook.wallColMin * scale + gap)))
         for cols in 1...maxCols {
             let rows = Int((Double(count) / Double(cols)).rounded(.up))
             if h / CGFloat(rows) >= RunLook.wallWaveMin * scale {
                 return Plan(wave: true, cols: cols, rows: rows, lh: h / CGFloat(rows), gap: gap, cw: (w - gap * CGFloat(cols - 1)) / CGFloat(cols), scale: scale)
             }
         }
-        let dgap = max(1, (2 * scale).rounded())
+        let dgap = max(1, (RunLook.wallDenseGap * scale).rounded())
         let maxDense = max(1, Int((w + dgap) / (RunLook.wallDenseColMin * scale + dgap)))
         let line = max(1, RunLook.wallDenseLine * scale)
         var cols = min(maxDense, max(1, Int((Double(count) / Double(max(1, (h / line).rounded(.down)))).rounded(.up))))
@@ -616,12 +581,12 @@ enum WallPicture {
             for x in x0..<x1 {
                 let v = pow(Double(s.wave[min(n - 1, Int(Double(x - x0) / cw * Double(n)))]) / 99, RunLook.waveCurve)
                 if L.wave {
-                    let mid = Double(y0 + y1 - 1) / 2, half = max(0.5, v * Double(y1 - y0) * 0.46)
+                    let mid = Double(y0 + y1 - 1) / 2, half = max(RunLook.wallWaveMinHalf, v * Double(y1 - y0) * RunLook.wallWaveRoom)
                     var y = max(y0, Int((mid - half).rounded()))
                     while y <= min(y1 - 1, Int((mid + half).rounded())) { put(x, y, c, 1); y += 1 }
                 } else {
-                    let cc = (c == cWave) ? (v < 0.5 ? cQuiet : cWave) : c
-                    for y in y0..<y1 { put(x, y, cc, 0.25 + 0.75 * v) }
+                    let cc = (c == cWave) ? (v < RunLook.wallDenseQuiet ? cQuiet : cWave) : c
+                    for y in y0..<y1 { put(x, y, cc, RunLook.wallDenseDim + RunLook.wallDenseBright * v) }
                 }
             }
         }

@@ -30,6 +30,21 @@ The post-build step copies the runtime into `Contents/Frameworks` and the models
 the app points the engine at them on launch (environment variables set in-process, which a developer's own
 `DECKIE_*` variables override). Code signing is ad hoc for now.
 
+## Words and design values (D36)
+
+- **Words**: every word the window shows is in `DeskWords` (`core/Sources/DeckieDesk/DeskWords.swift`), the one list
+  for Desk on every computer; `Desk/Sources/Words.swift` gives each a Swift name and fills its blanks. Words built
+  from parts are templates with named blanks there (`"lookupCandidateTitle": "{title} ({version})"`), and the
+  separators between items are words too (`join.*`), so no view joins words of its own.
+- **Design values**: every colour, font, weight, space, size, corner, opacity, line and time is a named constant in
+  `Desk/Sources/Look.swift`, grouped by role (`Look.Colour`, `Look.Fonts`, `Look.Space`, `Look.Size`,
+  `Look.Shape`), with the run screen's in `RunLook` and the lookup's in `LookupStyle`, in the same file. Left in
+  the views: the system's own named roles (`.secondary`, `.quaternary`, `.bar`, `.tint`, control styles, SF Symbol
+  names) and the drawings' own arithmetic.
+- **To change one**: a word, in DeskWords' table; a design value, in Look.swift. Nothing else changes.
+- **The rule**: views hold neither words nor design values. The core's `VariablesTests` read the views' source and
+  fail when one creeps back in (what they can and cannot catch is written there).
+
 ## Where Desk keeps things (D28)
 
 Desk never asks where to save. Everything it makes is in `~/Library/Application Support/Deckie Desk/`, or in the

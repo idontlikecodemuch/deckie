@@ -114,16 +114,7 @@ enum LookupWalk {
 /// and apply as the Windows and Linux window, all DeckieDesk's (`DeskLookup`, `DeskLookupRun`); this file only shows
 /// them. The step that uses the internet is marked everywhere by its own colour and the globe, never Desk's accent.
 
-/// The lookup's design values, named in one place for the design pass (D36).
-enum LookupStyle {
-    static let net = Color(red: 0.435, green: 0.839, blue: 0.788)
-    static let band = net.opacity(0.14)
-    static let fits = Color(red: 0.56, green: 0.89, blue: 0.64)
-    static let off = Color.orange
-    static let icon = "globe"
-    static let sheetWidth: CGFloat = 860
-    static let sheetHeight: CGFloat = 640
-}
+// The lookup's look is LookupStyle, in Look.swift.
 
 /// The sheet's state: which step, the plan, the count while it goes, the review and what the DJ chose.
 struct LookupSheetState {
@@ -241,15 +232,15 @@ struct LookupSheet: View {
     @EnvironmentObject var model: DeskModel
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            HStack(spacing: 8) {
+        VStack(alignment: .leading, spacing: Look.Space.lookupSheet) {
+            HStack(spacing: Look.Space.lookupBand) {
                 Image(systemName: LookupStyle.icon)
                 Text(Words.t("lookupKindLine"))
             }
-            .font(.callout.weight(.medium)).foregroundStyle(LookupStyle.net)
-            .padding(.horizontal, 12).padding(.vertical, 8)
+            .font(LookupStyle.bandFont).foregroundStyle(LookupStyle.net)
+            .padding(.horizontal, LookupStyle.bandPaddingH).padding(.vertical, LookupStyle.bandPaddingV)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .background(LookupStyle.band, in: RoundedRectangle(cornerRadius: 10))
+            .background(LookupStyle.band, in: RoundedRectangle(cornerRadius: LookupStyle.bandRadius))
             if let L = model.lookup {
                 switch L.step {
                 case .ask: ask(L)
@@ -258,7 +249,7 @@ struct LookupSheet: View {
                 }
             }
         }
-        .padding(20)
+        .padding(Look.Space.sheetPadding)
         .frame(width: LookupStyle.sheetWidth, height: LookupStyle.sheetHeight, alignment: .topLeading)
     }
 
@@ -269,16 +260,16 @@ struct LookupSheet: View {
     var options: [Option] {
         var out: [Option] = []
         let need = model.needingNames.count
-        if need > 0 { out.append(Option(key: "need", label: Words.t("lookupChoice.needsName") + " (\(need))", scope: "songs")) }
+        if need > 0 { out.append(Option(key: "need", label: Words.lookupScopeNeed(need), scope: "songs")) }
         let sel = Array(model.selection)
         if sel.count == 1, let t = model.binding(for: sel[0]) {
-            out.append(Option(key: "song:" + t.id, label: Words.t("lookupChoice.song") + ": " + t.ident.title, scope: "song", ids: sel))
+            out.append(Option(key: "song:" + t.id, label: Words.lookupScopeSong(t.ident.title), scope: "song", ids: sel))
         } else if sel.count > 1 {
-            out.append(Option(key: "selection", label: Words.t("lookupChoice.selection") + " (\(sel.count))", scope: "songs", ids: sel))
+            out.append(Option(key: "selection", label: Words.lookupScopeSelection(sel.count), scope: "songs", ids: sel))
         }
         for src in model.crate?.discPlan ?? [] {
             if model.current?.discs[src.name] != nil {
-                out.append(Option(key: "disc:" + src.name, label: Words.t("lookupDisc").replacingOccurrences(of: "…", with: "") + ": " + src.name,
+                out.append(Option(key: "disc:" + src.name, label: Words.lookupScopeDisc(src.name),
                                   scope: "disc", source: src.name))
             } else {
                 out.append(Option(key: "source:" + src.name, label: src.name, scope: "songs", source: src.name))
@@ -296,7 +287,7 @@ struct LookupSheet: View {
     }
 
     @ViewBuilder func ask(_ L: LookupSheetState) -> some View {
-        Text(Words.t("lookupSheetTitle")).font(.title2.bold())
+        Text(Words.t("lookupSheetTitle")).font(Look.Fonts.lookupTitle)
         let opts = options
         if opts.count > 1 || L.scope != "song" {
             Picker(Words.t("lookupSongsFrom"), selection: Binding(get: { key(L) }, set: { k in
@@ -304,15 +295,15 @@ struct LookupSheet: View {
             })) {
                 ForEach(opts, id: \.key) { Text($0.label).tag($0.key) }
             }
-            .frame(maxWidth: 520)
+            .frame(maxWidth: LookupStyle.scopePickerWidth)
         }
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: Look.Space.lookupSentence) {
             ForEach(Array((L.plan?.summary.sentence ?? []).enumerated()), id: \.offset) { i, line in
-                Text(line).font(i == 0 ? .title3 : .body).foregroundStyle(i == 0 ? .primary : .secondary)
+                Text(line).font(i == 0 ? Look.Fonts.lookupSentenceFirst : Look.Fonts.lookupSentence).foregroundStyle(i == 0 ? .primary : .secondary)
                     .fixedSize(horizontal: false, vertical: true)
             }
         }
-        .padding(.top, 4)
+        .padding(.top, Look.Space.lookupSentenceAbove)
         Spacer()
         HStack {
             Button(Words.t("lookupSentLink")) { model.showSent = true }.buttonStyle(.link).foregroundStyle(LookupStyle.net)
@@ -327,10 +318,10 @@ struct LookupSheet: View {
     // MARK: the count
 
     @ViewBuilder func progress(_ L: LookupSheetState) -> some View {
-        Text(Words.t("lookupProgressTitle")).font(.title2.bold())
+        Text(Words.t("lookupProgressTitle")).font(Look.Fonts.lookupTitle)
         ProgressView(value: Double(L.done), total: Double(max(1, L.total))).tint(LookupStyle.net)
-        Text(Words.c("lookupProgress", L.total, ["done": "\(L.done)"]) + " · " + Words.c("lookupProgressFound", L.found))
-            .font(.headline).monospacedDigit()
+        Text(Words.lookupCountLine(Words.c("lookupProgress", L.total, ["done": "\(L.done)"]), found: Words.c("lookupProgressFound", L.found)))
+            .font(Look.Fonts.lookupCount).monospacedDigit()
         Text(Words.t("lookupProgressHelp")).foregroundStyle(.secondary)
         Spacer()
         HStack { Spacer(); Button(Words.t("lookupStop")) { model.stopLookup() }.keyboardShortcut(.cancelAction) }
@@ -339,19 +330,19 @@ struct LookupSheet: View {
     // MARK: the review
 
     @ViewBuilder func review(_ L: LookupSheetState) -> some View {
-        Text(Words.t("lookupReviewTitle")).font(.title2.bold())
+        Text(Words.t("lookupReviewTitle")).font(Look.Fonts.lookupTitle)
         if let f = L.failure {
-            Text(DeskWords.text("lookupFailure." + f)).font(.headline)
+            Text(DeskWords.text("lookupFailure." + f)).font(Look.Fonts.lookupSummary)
         } else if let r = L.review {
-            Text(DeskLookup.summaryLine(r)).font(.headline)
+            Text(DeskLookup.summaryLine(r)).font(Look.Fonts.lookupSummary)
             if r.scope == "disc" { Text(DeskWords.coded("lookupDiscMatch", r.discMatch ?? "none")).foregroundStyle(.secondary) }
             Text(Words.t("lookupReviewHelp")).foregroundStyle(.secondary)
             ScrollView {
-                VStack(alignment: .leading, spacing: 10) {
+                VStack(alignment: .leading, spacing: Look.Space.lookupSongs) {
                     ForEach(r.songs, id: \.song) { s in SongCard(song: s, single: r.scope == "song") }
                 }
             }
-            Text(Words.t("lookupGenreNote")).font(.caption).foregroundStyle(.secondary)
+            Text(Words.t("lookupGenreNote")).font(Look.Fonts.lookupGenreNote).foregroundStyle(.secondary)
         }
         Spacer(minLength: 0)
         HStack {
@@ -371,9 +362,9 @@ struct SongCard: View {
     let single: Bool
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 6) {
+        VStack(alignment: .leading, spacing: Look.Space.lookupSong) {
             HStack(alignment: .firstTextBaseline) {
-                Text(song.title).font(.headline)
+                Text(song.title).font(Look.Fonts.lookupSongTitle)
                 Text(Words.t("lookupYourSong", ["length": Words.mmss(song.seconds)])).foregroundStyle(.secondary)
             }
             if song.outcome != "found" {
@@ -382,24 +373,24 @@ struct SongCard: View {
                 if song.several { Text(Words.t("lookupSeveral")).foregroundStyle(.secondary) }
                 else if song.chosen == nil { Text(Words.t("lookupNoneFits")).foregroundStyle(.secondary) }
                 let choice = model.lookup?.choices[song.song] ?? (-1, [])
-                Grid(alignment: .leading, horizontalSpacing: 10, verticalSpacing: 4) {
+                Grid(alignment: .leading, horizontalSpacing: Look.Space.lookupGridH, verticalSpacing: Look.Space.lookupGridV) {
                     GridRow {
                         Text("")
                         Text(Words.t("colTitle")); Text(Words.t("colArtist")); Text(Words.t("colRelease"))
                         Text(Words.t("colYear")); Text(Words.t("label")); Text(Words.t("colLength"))
                     }
-                    .font(.caption).foregroundStyle(.secondary)
+                    .font(Look.Fonts.lookupHeader).foregroundStyle(.secondary)
                     ForEach(Array(song.candidates.enumerated()), id: \.offset) { i, c in
                         GridRow {
                             Button { model.pick(song.song, i) } label: {
                                 Image(systemName: choice.candidate == i ? "largecircle.fill.circle" : "circle")
                             }
                             .buttonStyle(.plain).foregroundStyle(LookupStyle.net)
-                            .accessibilityLabel(Words.t("lookupUseThis") + ": " + c.title)
-                            VStack(alignment: .leading, spacing: 1) {
-                                Text(c.title + (c.version.map { " (\($0))" } ?? "")).lineLimit(2)
+                            .accessibilityLabel(Words.lookupUseThisLabel(c.title))
+                            VStack(alignment: .leading, spacing: Look.Space.lookupCandidate) {
+                                Text(Words.lookupCandidateTitle(c.title, version: c.version)).lineLimit(2)
                                 if !c.notes.isEmpty {
-                                    Text(c.notes.map { DeskWords.coded("lookupNote", $0) }.joined(separator: ", ")).font(.caption).foregroundStyle(.secondary)
+                                    Text(Words.lookupNotes(c.notes.map { DeskWords.coded("lookupNote", $0) })).font(Look.Fonts.lookupNotes).foregroundStyle(.secondary)
                                 }
                             }
                             Text(c.artist ?? "").lineLimit(1)
@@ -416,10 +407,10 @@ struct SongCard: View {
                         Text(Words.t("lookupNoneOfThese")).foregroundStyle(.secondary).gridCellColumns(6)
                     }
                 }
-                .font(.callout)
+                .font(Look.Fonts.lookupGrid)
                 if choice.candidate >= 0, choice.candidate < song.candidates.count {
                     let c = song.candidates[choice.candidate]
-                    VStack(alignment: .leading, spacing: 2) {
+                    VStack(alignment: .leading, spacing: Look.Space.lookupTicks) {
                         ForEach(c.changes, id: \.field) { ch in
                             Toggle(isOn: Binding(get: { model.lookup?.choices[song.song]?.fields.contains(ch.field) == true && !ch.locked },
                                                  set: { on in
@@ -427,26 +418,26 @@ struct SongCard: View {
                                                      if on { cur.fields.insert(ch.field) } else { cur.fields.remove(ch.field) }
                                                      model.lookup?.choices[song.song] = cur
                                                  })) {
-                                (Text(Words.t(ch.field) + ": ") + Text(ch.before.map { $0 + " → " } ?? "").foregroundColor(.secondary)
+                                (Text(Words.lookupTickField(Words.t(ch.field))) + Text(ch.before.map { Words.lookupTickBefore($0) } ?? "").foregroundColor(.secondary)
                                     + Text(ch.after ?? "")
-                                    + Text(ch.note.map { "  (" + DeskWords.coded("changeNote", $0) + ")" } ?? "").foregroundColor(.secondary))
+                                    + Text(ch.note.map { Words.lookupTickNote(DeskWords.coded("changeNote", $0)) } ?? "").foregroundColor(.secondary))
                             }
                             .toggleStyle(.checkbox).disabled(ch.locked)
                         }
                     }
-                    .padding(.top, 4)
+                    .padding(.top, Look.Space.lookupTicksAbove)
                 }
             }
         }
-        .padding(12)
+        .padding(Look.Space.lookupSongPadding)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(.quaternary.opacity(0.5), in: RoundedRectangle(cornerRadius: 12))
+        .background(.quaternary.opacity(LookupStyle.songCardOpacity), in: RoundedRectangle(cornerRadius: LookupStyle.songCardRadius))
     }
 
     var outcome: String {
         if song.outcome == "nothing" && single { return Words.t("lookupNothingOne") }
         var s = DeskWords.coded("lookupOutcome", song.outcome)
-        if song.outcome == "failed", let f = song.failure { s += ": " + DeskWords.text("lookupFailure." + f) }
+        if song.outcome == "failed", let f = song.failure { s = Words.lookupOutcomeFailed(s, failure: DeskWords.text("lookupFailure." + f)) }
         return s
     }
 
@@ -467,19 +458,19 @@ struct SentSheet: View {
 
     var body: some View {
         let sent = Array(model.lookupLog.sent.reversed())
-        VStack(alignment: .leading, spacing: 10) {
-            Text(Words.t("lookupSentTitle")).font(.title2.bold())
+        VStack(alignment: .leading, spacing: Look.Space.sentSheet) {
+            Text(Words.t("lookupSentTitle")).font(Look.Fonts.lookupTitle)
             Text(Words.t("lookupSentIntro")).foregroundStyle(.secondary)
             if sent.isEmpty {
                 Text(Words.t("lookupSentEmpty")).foregroundStyle(.secondary)
             }
             List(Array(sent.enumerated()), id: \.offset) { _, r in
-                VStack(alignment: .leading, spacing: 2) {
+                VStack(alignment: .leading, spacing: Look.Space.sentItem) {
                     Text(Words.t("lookupSentLine", ["kind": DeskWords.coded("sentKind", r.kind),
-                                                    "fields": r.fields.map { DeskWords.fill(DeskWords.coded("sentField", $0.first ?? ""), ["value": $0.last ?? ""]) }.joined(separator: ", ")]))
+                                                    "fields": Words.sentFields(r.fields.map { DeskWords.fill(DeskWords.coded("sentField", $0.first ?? ""), ["value": $0.last ?? ""]) })]))
                     Text(Words.t("lookupSentAnswer", ["time": r.at.formatted(date: .abbreviated, time: .standard),
-                                                      "answer": DeskWords.coded("sentAnswer", r.answer)])).font(.caption).foregroundStyle(.secondary)
-                    Text(r.address).font(.caption2).foregroundStyle(.tertiary).textSelection(.enabled)
+                                                      "answer": DeskWords.coded("sentAnswer", r.answer)])).font(Look.Fonts.sentAnswer).foregroundStyle(.secondary)
+                    Text(r.address).font(Look.Fonts.sentAddress).foregroundStyle(.tertiary).textSelection(.enabled)
                 }
             }
             HStack {
@@ -488,6 +479,6 @@ struct SentSheet: View {
                 Button(Words.done) { dismiss() }.keyboardShortcut(.defaultAction)
             }
         }
-        .padding(20).frame(width: 760, height: 560)
+        .padding(Look.Space.sheetPadding).frame(width: Look.Size.sentSheetWidth, height: Look.Size.sentSheetHeight)
     }
 }
