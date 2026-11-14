@@ -116,6 +116,98 @@ public enum DeskWords {
         "carryOn": "Carry on",
         "putBack": "Put {read} back in to carry on.",
 
+        // new (D37): the run screen, what Desk is doing and what it found. All placeholders until the copy audit.
+        // Lists are numbered from 1 (`saying.reading.1`, `.2`, ...): a window takes them all (`DeskWords.list`), so the
+        // copy audit adds, removes or rewrites lines here and nowhere else.
+        "leaveRunning": "You can leave this running. If Desk is closed, you can carry on from here next time.",
+        "stageFirstSoon": "The first songs are being read.",
+        "stageTempo": "Tempo",
+        "stageKey": "Key",
+        "stageBars": "Bars",
+        "stageLength": "Length",
+        "stageWhere": "Where",
+        "bpmValue": "{bpm} BPM",
+        "keyValue": "{camelot}  ·  {note} {mode}",
+        "mode.major": "major",
+        "mode.minor": "minor",
+        "homeNoteValue": "Home note {note}",
+        "keyNotSureValue": "Not sure",
+        "stageBefore": "Read before",
+        "stageNoWave": "No beat grid, so no bars to draw",
+        "stageMore.one": "1 more song joined the crate",
+        "stageMore.other": "{n} more songs joined the crate",
+        "stageWaveLabel": "The loudness of {title}, bar by bar",
+        "figMusic": "Music read",
+        "figHoursMinutes": "{h} h {m} min",
+        "figMinutes": "{m} min",
+        "figTempos": "Tempos",
+        "figTemposText": "{songs}, from {low} to {high} BPM, most around {mode}",
+        "figTemposNone": "No tempos yet",
+        "figKeys": "Keys",
+        "figKeysText": "{n} of the 24 keys",
+        "figHomeOnly.one": "1 with the home note only",
+        "figHomeOnly.other": "{n} with the home note only",
+        "figNoKey.one": "1 not sure",
+        "figNoKey.other": "{n} not sure",
+        "figNeedName": "Need a name",
+        "figSameFile": "In two places",
+        "figCopies": "Copies of one recording",
+        "figCopiesLater": "found while saving",
+        "figNotIn": "Didn't go in",
+        "wallTitle": "The crate so far",
+        "wallTitleDone": "{read}, one line a song",
+        "wallHelp": "One line a song, as they joined. Point at a line, or use the arrow keys, to see which.",
+        "wallEmpty": "Songs join here as they are read.",
+        "wallSong": "{number}. {title}",
+        "wallSongBy": "{number}. {title}, {artist}",
+        "runListTitle": "Every file, as it goes",
+        "announceProgress": "{songs}. {left}",
+        // The quiet line under the progress: lines for the step Desk is on, then lines that say something true
+        // Desk just found (fact.<code>, filled from the songs) and the marks of real events (moment.<code>).
+        "saying.reading.1": "Finding bar one of every song.",
+        "saying.reading.2": "Counting the bars, one downbeat at a time.",
+        "saying.reading.3": "Working out the tempo from the beat itself.",
+        "saying.reading.4": "Listening for the home note under the chords.",
+        "saying.reading.5": "A key goes on a song only when Desk is sure of it.",
+        "saying.reading.6": "Marking where each song can be mixed in and out.",
+        "saying.reading.7": "Splitting each song into its intro, main parts, breaks and outro.",
+        "saying.reading.8": "Your music stays on {thisComputer}. Only what Desk finds goes in the crate file.",
+        "saying.reading.9": "What Desk works out is kept, so the next run is quicker.",
+        "saying.reading.10": "Noting any part of a file that won't play.",
+        "saying.finishing.1": "Looking for the same recording under two names.",
+        "saying.finishing.2": "Comparing how the songs sound, not what they're called.",
+        "saying.finishing.3": "A remix or an edit is its own song. Only the same recording counts as a copy.",
+        "saying.finishing.4": "Copies of one recording keep every place they're in.",
+        "saying.disc.1": "Reading the disc one song at a time. None of it is kept.",
+        "saying.disc.2": "A part that won't read is tried a second time.",
+        "saying.disc.3": "On a disc, the drive sets the pace.",
+        "saying.disc.4": "The songs keep the order the disc has them in.",
+        "saying.saving.1": "Writing the crate file: what Desk found, never the audio.",
+        "saying.saving.2": "Putting back any names you fixed before.",
+        "saying.saving.3": "Looking for keys and names your DJ programs already have on {thisComputer}.",
+        "fact.slowest": "Slowest so far: {title}, at {bpm} BPM.",
+        "fact.fastest": "Fastest so far: {title}, at {bpm} BPM.",
+        "fact.tempoRun.other": "{n} in a row at {bpm} BPM.",
+        "fact.commonTempo.other": "{n} of the {songs} so far sit at {bpm} BPM.",
+        "fact.newKey": "First song in {key}, {note} {mode}: {title}.",
+        "fact.keysFound.other": "{n} of the 24 keys so far.",
+        "fact.homeNote": "{title}: the home note is {note}. Major or minor is left open.",
+        "fact.notSure": "Not sure of the key on {title}, so it gets none rather than a guess.",
+        "fact.longest": "Longest so far: {title}, {length}.",
+        "fact.shortest": "Shortest so far: {title}, {length}.",
+        "fact.longestIntro": "Longest intro so far: {bars} bars, on {title}.",
+        "fact.twoPlaces": "{title} is in two places. It's one song in the crate file, with both places kept.",
+        "fact.needName": "{title} came in without a full name. You can name it when this is done.",
+        "fact.copies.other": "{n} songs turned out to be copies of one recording. Each keeps its own place.",
+        "moment.first": "First one in: {title}.",
+        "moment.songs.other": "{n} songs in.",
+        "moment.hour.one": "An hour of music read.",
+        "moment.hour.other": "{n} hours of music read.",
+        "moment.wheel": "Every key on the wheel has turned up.",
+        "moment.disc": "The whole disc is read.",
+        "moment.finished.one": "That's the lot: 1 song, {duration} of music.",
+        "moment.finished.other": "That's the lot: {n} songs, {duration} of music.",
+
         // the crate menu
         "crateMenuHelp": "The crate that is showing",
         "newCrate": "New crate",
@@ -521,6 +613,15 @@ public enum DeskWords {
     public static func coded(_ key: String, _ code: String) -> String {
         if let t = table[key + "." + code] { return t }
         return fill(table[key + ".other"] ?? code, ["code": code])
+    }
+
+    /// A numbered list of words (`prefix.1`, `prefix.2`, ... up to the first gap), in order, with `{thisComputer}`
+    /// filled: the run screen's sayings (D37).
+    public static func list(_ prefix: String) -> [String] {
+        var out: [String] = []
+        var i = 1
+        while let w = table["\(prefix).\(i)"] { out.append(fill(w, withComputer([:]))); i += 1 }
+        return out
     }
 
     static func fill(_ template: String, _ values: [String: String]) -> String {
