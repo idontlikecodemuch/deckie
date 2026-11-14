@@ -56,6 +56,8 @@ def run(work, bench, name, args):
     if "--prints" in args:
         i = args.index("--prints"); prints = args[i + 1]; args = args[:i] + args[i + 2:]
     t0 = time.time()
+    if "--join" in args:
+        args = args + ["--join-map", os.path.join(out, name + ".join")]
     subprocess.run([bench, "match", "--prints", os.path.join(work, prints), "--queries", os.path.join(work, "q_size.tsv"),
                     "--leave-out", os.path.join(work, "absent.txt"), "--out", res, "--memory-out", mem,
                     "--jobs", str(os.cpu_count())] + args, check=True, stderr=subprocess.DEVNULL)
@@ -69,11 +71,19 @@ def metrics(work, name, prints="prints"):
     out = os.path.join(work, "size")
     res = os.path.join(out, name + ".tsv"); mem = os.path.join(out, name + ".mem")
     truth = load_truth(work)
+    # With the copies test (--duplicate-all, --join), a song's copy or a joined file that contains it is the song.
+    joined = {}
+    if os.path.exists(os.path.join(out, name + ".join")):
+        for l in open(os.path.join(out, name + ".join")):
+            f = l.rstrip("\n").split("\t"); joined[f[0]] = set(f[1:])
+    def same(answer, song):
+        return answer == song or answer == song + "~copy" or song in joined.get(answer, ())
     rows = []
     for l in open(res):
         f = l.rstrip("\n").split("\t")
         if len(f) >= 18:
-            rows.append((truth[f[0].split("_")[0]], f[0].split("_")[1], f[4], float(f[16]), float(f[3])))
+            t = truth[f[0].split("_")[0]]
+            rows.append((t, f[0].split("_")[1], t["song"] if same(f[4], t["song"]) else f[4], float(f[16]), float(f[3])))
     neg = sorted(r[3] for r in rows if r[0]["role"] == "absent" and r[0].get("split") == "dev")
     T = float(np.quantile(neg, 0.999)) + 1e-6
     songs, memory, points, hashes = (int(x) for x in open(mem).read().split())
