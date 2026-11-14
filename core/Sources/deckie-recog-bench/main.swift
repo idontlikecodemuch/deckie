@@ -163,6 +163,12 @@ case "match":
     pairing.entriesPerSlot = o.int("--entries-per-slot", pairing.entriesPerSlot)
     pairing.keepOneIn = o.int("--keep-one-in", pairing.keepOneIn)
     pairing.minAnchorLevel = o.int("--min-anchor-level", pairing.minAnchorLevel)
+    // Four points: --points 4 (hashed like triples, with the speed search), or --ratio-quads (no speed search).
+    pairing.points = o.int("--points", pairing.points)
+    if o.flags.contains("--ratio-quads") { pairing.ratio = true }
+    pairing.ratioFar = o.int("--ratio-far", pairing.ratioFar)
+    pairing.queryRatioFar = o.int("--query-ratio-far", pairing.queryRatioFar)
+    pairing.queryRatioInner = o.int("--query-ratio-inner", pairing.queryRatioInner)
     pairing.maxGap = o.int("--max-gap", pairing.maxGap)
     let verified = o.int("--verified", 12)
     pairing.queryPerSlice = o.int("--query-per-slice", pairing.queryPerSlice)
@@ -271,7 +277,7 @@ case "match":
         row += String(format: "\t%.3f\t%.3f", found.first?.confidence ?? 0, found.count > 1 ? found[1].confidence : 0)
         if proposalCount > 0 {
             // --proposals K: one more column, the first pass's K proposed songs, best first.
-            row += "\t" + pool[w].proposals(marks, count: proposalCount).map { index.ids[$0] }.joined(separator: ",")
+            row += "\t" + pool[w].proposals(marks, count: proposalCount).map { index.ids[$0] }.joined(separator: "\u{1F}")
         }
         rows.set(i, row)
     }

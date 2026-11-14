@@ -53,7 +53,7 @@ def table(work):
         for c in CONDS:
             sel = [r for r in rows if truth[r[0].split("_")[0]]["condition"] == c and len(r) >= 19]
             def rec(rs, k):
-                return 100 * sum(1 for r in rs if truth[r[0].split("_")[0]]["song"] in r[18].split(",")[:k]) / max(1, len(rs))
+                return 100 * sum(1 for r in rs if truth[r[0].split("_")[0]]["song"] in r[18].split("\x1f")[:k]) / max(1, len(rs))
             eight = [r for r in sel if r[0].endswith("_8")]
             cells.append(" / ".join(f"{rec(sel, k):.0f}" for k in KS) + f" ({rec(eight, 50):.0f})")
         print(f"| {name} | {memory / 1e3 / songs:.0f} | " + " | ".join(cells) + " |")

@@ -53,6 +53,32 @@ public struct PairingConfig: Sendable, Equatable {
 
     /// The slices whose points join the anchor in triple k: each slice with the next, the last with the first.
     @inline(__always) func slicePair(_ k: Int) -> (Int, Int) { k + 1 < fanOut ? (k, k + 1) : (0, k) }
+    // Four points (the owner's question, Nov 14: "Can we use 4 points?"), in two forms; both keep `triples` true,
+    // which only means "not pairs": a folded hash with a tag.
+    /// Points in a hash made the way pairs and triples are: 3, or 4 (the anchor with the points of three
+    /// neighbouring slices: three pitch differences and three time differences, tried at every candidate speed).
+    public var points = 3
+    /// The ratio form, after Sonnleitner and Widmer's quad fingerprint (written from the paper's description, on
+    /// this module's logarithmic pitch axis): see RatioQuads.swift. No speed search.
+    public var ratio = false
+    /// Ratio form: the far points tried per anchor in a song, and in a query; the inner points tried per far point
+    /// in a query (a song uses its two strongest).
+    public var ratioFar = 1
+    public var queryRatioFar = 3
+    public var queryRatioInner = 5
+    /// Quads per anchor in the plain form: one for every slice from four slices up (each with the next two).
+    var quadCount: Int { fanOut >= 4 ? fanOut : (fanOut == 3 ? 1 : 0) }
+    @inline(__always) func sliceTriple(_ k: Int) -> (Int, Int, Int) {
+        let a = k, b = (k + 1) % fanOut, c = (k + 2) % fanOut
+        return (min(a, b, c), a + b + c - min(a, b, c) - max(a, b, c), max(a, b, c))
+    }
+    /// A quad's 49 bits folded like a triple's.
+    @inline(__always) func hash(anchorBin a: Int, bin1: Int, gap1: Int, bin2: Int, gap2: Int, bin3: Int, gap3: Int) -> Int {
+        let raw = UInt64(a) | UInt64(bin1 - a + maxPitchBins) << 7 | UInt64(bin2 - a + maxPitchBins) << 14
+            | UInt64(bin3 - a + maxPitchBins) << 21 | UInt64(gap1 / gapStep) << 28 | UInt64(gap2 / gapStep) << 35
+            | UInt64(gap3 / gapStep) << 42
+        return Int((raw &* 0x9E37_79B9_7F4A_7C15) >> 24)
+    }
     /// Triples per anchor: one for every slice from three slices up (each with the next, the last with the first);
     /// with two slices there is only the one pairing.
     var tripleCount: Int { fanOut >= 3 ? fanOut : (fanOut == 2 ? 1 : 0) }
@@ -107,6 +133,8 @@ public struct RecognitionIndex: Sendable {
     /// The hash table: the anchors (their frames on the timeline) of hash h are entries[offsets[h]..<offsets[h + 1]].
     let offsets: [UInt32]
     let entries: [UInt32]
+    /// Ratio quads only: each entry's anchor pitch step (7 bits) and tag (9 bits).
+    let extra: [UInt16]
     /// Each entry's tag (three-point hashes only; empty otherwise).
     let tags: [UInt8]
 
@@ -114,7 +142,7 @@ public struct RecognitionIndex: Sendable {
     public var hashCount: Int { entries.count }
     /// Bytes the matcher must hold in memory to propose songs: the entries, their tags when kept apart, the table,
     /// and 16 bytes a song (where it starts on the timeline and among the points).
-    public var memoryBytes: Int { entries.count * 4 + tags.count + offsets.count * 4 + ids.count * 16 }
+    public var memoryBytes: Int { entries.count * 4 + tags.count + extra.count * 2 + offsets.count * 4 + ids.count * 16 }
     /// Bytes of the songs' points, which only the final check of a dozen or so songs reads: they can stay on storage.
     public var pointBytes: Int { pointFrame.count * 6 }
     public var pointCount: Int { pointFrame.count }
@@ -124,7 +152,8 @@ public struct RecognitionIndex: Sendable {
         var pairing = pairing
         if pairing.triples {
             let share = [1.0, 0.75, 0.5, 0.25][max(0, min(3, pairing.minAnchorLevel))]   // the levels are quartiles
-            let entries = Int(Double(songs.reduce(0) { $0 + $1.landmarks.count } * pairing.tripleCount) * share) / max(1, pairing.keepOneIn)
+            let perAnchor = pairing.ratio ? pairing.ratioFar : (pairing.points == 4 ? pairing.quadCount : pairing.tripleCount)
+            let entries = Int(Double(songs.reduce(0) { $0 + $1.landmarks.count } * perAnchor) * share) / max(1, pairing.keepOneIn)
             var bits = 12
             while bits < 26 && (1 << bits) * pairing.entriesPerSlot < entries { bits += 1 }
             pairing.tableBits = bits
@@ -161,7 +190,7 @@ public struct RecognitionIndex: Sendable {
             for s in 0..<songs.count {
                 let lo = pointStart[s], hi = pointStart[s + 1]
                 for i in lo..<hi {
-                    if p.triples && Int(pointLevel[i]) < p.minAnchorLevel { continue }
+                    if Int(pointLevel[i]) < p.minAnchorLevel { continue }
                     let a = Int(pointPitch[i]) / unit, ta = Int(pointFrame[i])
                     var filled = 0   // bit k set once slice k has its point
                     var j = i + 1
@@ -184,7 +213,16 @@ public struct RecognitionIndex: Sendable {
                             body(p.hash(anchorBin: a, targetBin: slotBin[k], gap: slotGap[k]), ta)
                         }
                     }
-                    if p.triples {
+                    if p.triples && p.points == 4 {
+                        for k in 0..<p.quadCount {
+                            let (k1, k2, k3) = p.sliceTriple(k)
+                            if filled & (1 << k1) != 0 && filled & (1 << k2) != 0 && filled & (1 << k3) != 0 {
+                                let h = p.hash(anchorBin: a, bin1: slotBin[k1], gap1: slotGap[k1], bin2: slotBin[k2], gap2: slotGap[k2],
+                                               bin3: slotBin[k3], gap3: slotGap[k3])
+                                if p.kept(h) { body(h, ta) }
+                            }
+                        }
+                    } else if p.triples {
                         for k in 0..<p.tripleCount {
                             let (k1, k2) = p.slicePair(k)
                             if filled & (1 << k1) != 0 && filled & (1 << k2) != 0 {
@@ -195,6 +233,14 @@ public struct RecognitionIndex: Sendable {
                     }
                 }
             }
+        }
+        if p.ratio {
+            let built = RatioQuads.build(p, songCount: songs.count, pointStart: pointStart, pointFrame: pointFrame,
+                                         pointPitch: pointPitch, pointLevel: pointLevel)
+            self.songStart = songStart; self.pointStart = pointStart
+            self.pointFrame = pointFrame; self.pointPitch = pointPitch
+            offsets = built.offsets; entries = built.entries; extra = built.extra; tags = []
+            return
         }
         forEachPair { h, _ in counts[p.slot(h) + 1] += 1 }
         for h in 0..<size { counts[h + 1] += counts[h] }
@@ -213,7 +259,7 @@ public struct RecognitionIndex: Sendable {
             }
             next[p.slot(h)] += 1
         }
-        self.tags = tags
+        self.tags = tags; extra = []
         self.songStart = songStart; self.pointStart = pointStart
         self.pointFrame = pointFrame; self.pointPitch = pointPitch
         offsets = counts; self.entries = entries

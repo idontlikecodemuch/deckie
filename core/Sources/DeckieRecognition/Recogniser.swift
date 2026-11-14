@@ -92,15 +92,15 @@ public final class Recogniser {
     static let binFrames = 8
     /// The least the third-best song's score is taken to be, when there are fewer than three or it is tiny.
     static let leastYardstick = 5.0
-    private var votes: [UInt8]
-    private var touched: [Int32] = []
+    var votes: [UInt8]
+    var touched: [Int32] = []
 
     public init(index: RecognitionIndex, grid: SpeedGrid = SpeedGrid()) {
         self.index = index; self.grid = grid
         votes = [UInt8](repeating: 0, count: index.timelineFrames / Self.binFrames + 2)
     }
 
-    private struct Vote { var count: Int; var bin: Int; var speed: Double; var vinyl: Bool }
+    struct Vote { var count: Int; var bin: Int; var speed: Double; var vinyl: Bool }
 
     /// The songs found in `query`, best first, one entry a song. Empty when nothing lined up at all; whether the best
     /// is a true match is for the caller to decide from its `score`.
@@ -148,7 +148,8 @@ public final class Recogniser {
         var slotStrength = [Float](repeating: 0, count: p.fanOut * per)
         // The candidate's lookups, gathered first so that the table reads (each a cache miss) run back to back.
         var hashes: [Int] = [], shifts: [Double] = [], spans: [(Int, Int)] = []
-        for cand in grid.candidates {
+        if p.ratio { best = ratioVotes(ix, qt: qt, qp: qp, qs: qs, keep: 40) }
+        for cand in (p.ratio ? [] : grid.candidates) {
             let v = cand.speed
             let shift = cand.vinyl ? log2(v) * Landmarks.pitchUnitsPerOctave : 0
             for i in 0..<n {
@@ -187,6 +188,22 @@ public final class Recogniser {
                     for k in 0..<p.fanOut {
                         for x in 0..<taken[k] {
                             hashes.append(p.hash(anchorBin: a, targetBin: slotBin[k * per + x], gap: slotGap[k * per + x])); shifts.append(shiftT)
+                        }
+                    }
+                } else if p.points == 4 {
+                    for k in 0..<p.quadCount {
+                        let (k1, k2, k3) = p.sliceTriple(k)
+                        for x in 0..<taken[k1] {
+                            for y in 0..<taken[k2] {
+                                for z in 0..<taken[k3] {
+                                    let h = p.hash(anchorBin: a, bin1: slotBin[k1 * per + x], gap1: slotGap[k1 * per + x],
+                                                   bin2: slotBin[k2 * per + y], gap2: slotGap[k2 * per + y],
+                                                   bin3: slotBin[k3 * per + z], gap3: slotGap[k3 * per + z])
+                                    if !p.kept(h) { continue }
+                                    hashes.append(h)
+                                    shifts.append(shiftT)
+                                }
+                            }
                         }
                     }
                 } else {
