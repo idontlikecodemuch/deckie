@@ -56,6 +56,7 @@ let package = Package(
         .library(name: "DeckieBuild", targets: ["DeckieBuild"]),
         .library(name: "DeckieDesk", targets: ["DeckieDesk"]),
         .library(name: "DeckieDisc", targets: ["DeckieDisc"]),
+        .library(name: "DeckieLookup", targets: ["DeckieLookup"]),
         .executable(name: "deckie-build", targets: ["deckie-build"]),
         .executable(name: "deckie-desk-engine", targets: ["deckie-desk-engine"]),
         .executable(name: "deckie-make", targets: ["deckie-make"]),
@@ -83,8 +84,16 @@ let package = Package(
         .executableTarget(name: "deckie-build", dependencies: ["DeckieBuild", "DeckieCrate"]),
         .target(name: "CDiscDrive"),
         .target(name: "DeckieDisc", dependencies: ["CDiscDrive", "DeckieCrate"]),
+        // DeckieLookup: the only code that uses the network (D36): MusicBrainz's web service, when the DJ asks. Foundation
+        // only; only DeckieDesk depends on it (NetworkIsolationTests checks no other source names a networking API).
+        .target(name: "DeckieLookup"),
         .target(name: "DeckieDesk", dependencies: ["DeckieBuild", "DeckieEngine", "DeckieCrate", "DeckieCore", "DeckieDecode",
-                                                   "DeckieDisc"]),
+                                                   "DeckieDisc", "DeckieLookup"]),
+        // deckie-lookup-trial: the lookup measured on a folder of music with its tags hidden from it (a development tool,
+        // run only with the owner's say-so on his own music).
+        .executableTarget(name: "deckie-lookup-trial", dependencies: ["DeckieDesk", "DeckieLookup", "DeckieBuild", "DeckieDecode",
+                                                                      "DeckieCrate"]),
+        .testTarget(name: "DeckieLookupTests", dependencies: ["DeckieLookup"], exclude: ["Fixtures"]),
         // deckie-desk-engine: Desk's engine for the Windows and Linux window (D32), DeskProtocol over standard input
         // and output (docs/architecture/desk-protocol.md).
         .executableTarget(name: "deckie-desk-engine", dependencies: ["DeckieDesk", "DeckieEngine"]),
@@ -115,7 +124,7 @@ let package = Package(
         .testTarget(name: "DeckieDiscTests", dependencies: ["DeckieDisc", "DeckieCrate", "DeckieTestSupport"]),
         .testTarget(name: "DeckieDeskTests",
                     dependencies: ["DeckieDesk", "DeckieDisc", "DeckieBuild", "DeckieEngine", "DeckieCrate", "DeckieCore", "DeckieAudio",
-                                   "DeckieDecode", "DeckieInference", "DeckieTestSupport", "deckie-desk-engine"]),
+                                   "DeckieDecode", "DeckieInference", "DeckieTestSupport", "deckie-desk-engine", "DeckieLookup"]),
     ]
 )
 
