@@ -93,21 +93,27 @@
       case "hello":
         hello = m; W = m.words || {}; computer = m.computer || "other";
         applyWords(document);
-        if (m.protocol !== 1) message([`Protocol ${m.protocol} is not one this window knows (1).`]);
+        if (m.protocol !== 2) message([`Protocol ${m.protocol} is not one this window knows (2).`]);
         break;
-      case "state": state = m; break;
+      case "state":
+        if (undoLine && state && m.undo !== state.undo && m.undo !== "undoNames" && m.undo !== "undoCheck") undoLine = null;
+        if (state && state.current && (!m.current || m.current.id !== state.current.id)) { stopListening(); selected = null; undoLine = null; }
+        state = m; break;
       case "songs": songs = m; break;
       case "run.started":
-        finished = null; exportedPath = null;
-        run = { read: m.read, crateName: m.crateName, done: 0, total: 0, stage: "reading", remaining: null, lines: [] };
+        finished = null; exportedPath = null; stopListening(); $("run-log").replaceChildren();
+        run = { read: m.read, crateName: m.crateName, done: 0, total: 0, stage: m.musicCD ? "copying" : "reading", remaining: null, lines: [] };
+        askDisc(m.askName);
         break;
+      case "audio.chunk":
+        audioChunk(m); return;
       case "run.progress":
         if (!run) break;
         Object.assign(run, { done: m.done, total: m.total, stage: m.stage, remaining: m.remaining });
         if (m.line) addLine(m.line);
         updateRun(); return;
       case "run.finished":
-        run = null; finished = m.report; announce(t("finishedTitle", { read: m.report.read, crate: m.report.crate }));
+        run = null; finished = m.report; $("disc-ask").hidden = true; announce(t("finishedTitle", { read: m.report.read, crate: m.report.crate }));
         setTimeout(nextDrop, 0);
         break;
       case "run.failed":
@@ -132,6 +138,7 @@
     else if (l.kind === "read") s = t("lineRead", { rel: l.rel, seconds: Number(l.seconds).toFixed(1) });
     else if (l.kind === "reused") s = t("lineReadBefore", { rel: l.rel });
     else if (l.kind === "notRead") s = t("lineNotRead", { rel: l.rel, reason: reason(l.reason).toLowerCase() });
+    else if (l.kind === "copied") s = t(l.damaged > 0 ? "lineCopiedDamaged" : "lineCopied", { number: l.number, of: l.of });
     if (!s) return;
     run.lines.push(s);
     if (run.lines.length > 400) run.lines.shift();
@@ -155,7 +162,7 @@
     } else {
       bar.classList.add("waiting"); bar.removeAttribute("aria-valuenow"); $("run-count").textContent = "";
     }
-    $("run-stage").textContent = t({ reading: "stageReading", finishing: "stageFinishing", saving: "stageSaving" }[run.stage] || "stageReading");
+    $("run-stage").textContent = t({ copying: "stageCopying", reading: "stageReading", finishing: "stageFinishing", saving: "stageSaving" }[run.stage] || "stageReading");
     $("run-left").textContent = run.remaining != null ? timeLeft(run.remaining) : "";
   }
 
@@ -192,7 +199,7 @@
     const p = state.pending;
     $("pending").hidden = !p || busy;
     if (p) {
-      $("pending-text").textContent = t("stoppedReading", { read: p.name }) + (p.here ? "" : " " + t("putBack", { read: p.name }));
+      $("pending-text").textContent = t("stoppedReading", { read: p.name }) + (p.here ? "" : " " + t(p.musicCD ? "putDiscBack" : "putBack", { read: p.name }));
       $("carry-on").hidden = !p.here;
     }
 
@@ -225,9 +232,18 @@
       if (counts.length) line(t("keysLine", { counts: counts.map(([k, c]) => t("keysCount", { n: c, from: keyFrom(k) })).join(", ") }));
       if (rep.keys_not_read > 0) line(n("keysNone", rep.keys_not_read));
       if (rep.keys_disagree > 0) line(n("keysDisagree", rep.keys_disagree));
-      const named = el("p", { text: rep.need_name ? n("needName", rep.need_name) + " " : t("everySongHasAName") });
-      if (rep.need_name) named.append(el("button", { class: "link", text: t("showThem"), on: { click: () => { onlyNeedName = true; finished = null; render(); } } }));
+      // The count is the list's (letter AA, 3.2): no title, no artist, or Desk's guess.
+      const need = songs && songs.crate === (current() && current().id) ? songs.songs.filter((x) => x.needsName).length : rep.need_name;
+      const d = r.disc;
+      if (d && d.text !== "names") line(t(d.text === "none" ? "discNoNames" : "discDriveNoNames"));
+      if (d && d.named > 0) line(n("discNamed", d.named));
+      const named = el("p", { text: need ? n("needName", need) + " " : t("everySongHasAName") });
+      if (need) named.append(el("button", { class: "link", text: t(d && d.text !== "names" ? "nameThem" : "showThem"),
+        on: { click: () => { onlyNeedName = true; finished = null; render(); } } }));
       box.append(named);
+      if (need) line(t("needNameHelp"), "mut");
+      if (d && d.damaged_sectors > 0) line(t("discDamaged"), "mut");
+      if (d && d.bytes) line(t("discCopyRoom", { size: megabytes(d.bytes) }), "mut");
       if ((local.libraries || []).length) line(t("librariesRead", { names: local.libraries.map((l) => programName(l.program)).join(", ") }), "mut");
       for (const f of local.failed || []) line(t("couldntReadLibrary", { detail: f }), "mut");
       if (local.rekordbox_locked) line(t("rekordboxLocked"), "mut");
@@ -240,11 +256,14 @@
   }
 
   const parentOf = (p) => p.replace(/[\\/][^\\/]*[\\/]?$/, "") || p;
+  const megabytes = (b) => (b >= 1e9 ? (b / 1e9).toFixed(1) + " GB" : Math.max(1, Math.round(b / 1e6)) + " MB");
 
   // ---- the songs table
   const columns = [
-    { key: "title", word: "colTitle", get: (s) => s.title, edit: "title" },
-    { key: "artist", word: "colArtist", get: (s) => s.artist || "", edit: "artist" },
+    { key: "listen", word: "listen", get: () => "", cell: listenCell, label: true, nosort: true },
+    { key: "why", word: "colWhy", get: (s) => (s.nameReason ? t("nameReason." + s.nameReason) : ""), cls: "why", onlyNeed: true },
+    { key: "title", word: "colTitle", get: (s) => s.title, edit: "title", guess: "title" },
+    { key: "artist", word: "colArtist", get: (s) => s.artist || "", edit: "artist", guess: "artist" },
     { key: "bpm", word: "colTempo", get: (s) => s.bpm, show: (s) => (s.bpm != null ? s.bpm.toFixed(1) : t("none")), num: true },
     { key: "key", word: "colKey", get: (s) => (s.key ? s.key.camelot : ""), cell: keyCell },
     { key: "keyFrom", word: "colKeyFrom", get: (s) => (s.key ? programName(s.key.from) : ""), title: keyHelp, cls: "mut" },
@@ -270,13 +289,16 @@
       gridUnsure: t("gridUnsure"), vocalsNotRead: t("vocalsNotRead"), signed: t("signed") }[c] || c)).join(", ");
   }
 
+  const shownColumns = () => columns.filter((c) => !c.onlyNeed || onlyNeedName);
+
   function drawCrate() {
     const c = current();
     // the header, once per draw (cheap)
     const head = $("songs-head");
-    head.replaceChildren(...columns.map((col) => {
+    head.replaceChildren(...shownColumns().map((col) => {
       const th = el("th", { scope: "col", "aria-sort": sort.key === col.key ? (sort.dir > 0 ? "ascending" : "descending") : "none" });
-      th.append(el("button", { text: t(col.word), on: { click: () => { sort = { key: col.key, dir: sort.key === col.key ? -sort.dir : 1 }; drawCrate(); } } }));
+      if (col.label) th.append(el("span", { class: "sr", text: t(col.word) }));
+      else th.append(el("button", { text: t(col.word), on: { click: () => { sort = { key: col.key, dir: sort.key === col.key ? -sort.dir : 1 }; drawCrate(); } } }));
       return th;
     }));
     let list = songs.songs.slice();
@@ -297,6 +319,7 @@
     $("songs-caption").textContent = c.name + ", " + n("songs", songs.songs.length);
     $("songs-empty").hidden = list.length > 0;
     $("songs-empty").textContent = list.length ? "" : t("everySongHasAName");
+    visibleOrder = list.map((x) => x.id);
     if (focusId) { const td = body.querySelector(`tr[data-id="${CSS.escape(focusId[0])}"] td[data-col="${focusId[1]}"]`); if (td) td.focus(); }
 
     // the line at the bottom
@@ -315,13 +338,18 @@
 
     $("side").hidden = !showSources;
     if (showSources) drawSources();
+    drawNeedBar(list);
+    drawNames();
+    drawPlayer();
+    drawUndoLine();
   }
 
   function songRow(s) {
     const tr = el("tr", { "data-id": s.id, "aria-selected": String(selected === s.id) });
-    tr.addEventListener("click", () => { selected = s.id; for (const r of $("songs-body").children) r.setAttribute("aria-selected", String(r.dataset.id === s.id)); });
-    for (const col of columns) {
-      const td = el("td", { "data-col": col.key, class: [col.num ? "num" : "", col.cls || "", col.edit ? "editable" : ""].join(" ").trim() || null });
+    tr.addEventListener("click", () => select(s.id));
+    for (const col of shownColumns()) {
+      const guess = col.guess && s.names && s.names[col.guess] && s.names[col.guess].guess;
+      const td = el("td", { "data-col": col.key, class: [col.num ? "num" : "", col.cls || "", col.edit ? "editable" : "", guess ? "guess" : ""].join(" ").trim() || null });
       if (col.cell) col.cell(s, td);
       else td.textContent = col.show ? col.show(s) : col.get(s);
       if (col.title) td.title = col.title(s);
@@ -369,6 +397,380 @@
     });
     input.addEventListener("blur", () => finish(true));
   }
+
+  // ---- naming a song (research AA, route A): the panel for one song, Listen, the list and its tools
+  let visibleOrder = [];
+  let undoLine = null;      // { text } after a batch of names, until the next change
+  let offer = null;         // { song, text, split } while "Split into artist, title and version?" is asked
+
+  function select(id) {
+    if (selected !== id) { offer = null; if (listening && listening.song !== id) stopListening(); }
+    selected = id;
+    for (const r of $("songs-body").children) r.setAttribute("aria-selected", String(r.dataset.id === id));
+    drawNames();
+  }
+  const songById = (id) => (songs && songs.songs.find((x) => x.id === id)) || null;
+  const factFrom = (code) => coded("factFrom", code);
+
+  /// The small line under a fact: where it came from; a guess says so; nothing found says so.
+  function fromLine(f) {
+    if (!f || f.value == null) return { text: t("factNotFound"), guess: false };
+    const from = f.from ? factFrom(f.from) : t("factNotFound");
+    if (f.checked) return { text: t("factChecked", { from }), guess: false };
+    if (f.guess) return { text: t("factGuess", { from }), guess: true };
+    return { text: from, guess: false };
+  }
+
+  function drawNames() {
+    const panel = $("names");
+    const s = selected && songById(selected);
+    panel.hidden = !s || !hasSongs();
+    if (panel.hidden) return;
+    const body = $("names-body");
+    const keep = document.activeElement && document.activeElement.dataset && document.activeElement.dataset.field;
+    body.replaceChildren();
+    const fields = [["title", "title"], ["artist", "artist"], ["version", "version"]];
+    fields.forEach(([field, word], i) => {
+      const f = s.names ? s.names[field] : { value: s[field], from: s.nameFrom };
+      const line = fromLine(f);
+      const id = "fact-" + field;
+      const input = el("input", { type: "text", id, "data-field": field, autocomplete: "off", spellcheck: "false",
+        class: line.guess ? "guess" : null, placeholder: field === "title" ? s.file.replace(/\.[^.]+$/, "") : null });
+      input.value = field === "title" && offer && offer.song === s.id ? offer.text : (f && f.value != null ? f.value : "");
+      input.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") { e.preventDefault(); commitFact(s, field, input, i === fields.length - 1); }
+        else if (e.key === "Escape") { e.preventDefault(); input.value = f && f.value != null ? f.value : ""; input.blur(); }
+      });
+      input.addEventListener("change", () => commitFact(s, field, input, false, true));
+      const box = el("div", { class: "fact" }, el("label", { for: id, text: t(word) }), input,
+        el("p", { class: "from" + (line.guess ? " guess" : ""), text: line.text }));
+      if (field === "title" && offer && offer.song === s.id) {
+        box.append(el("div", { class: "offer", role: "group" }, el("p", { text: t("splitOffer") }),
+          el("button", { class: "small main", text: t("split"), on: { click: () => {
+            const o = offer; offer = null;
+            const fix = { song: o.song, title: o.split.title };
+            if (o.split.artist) fix.artist = o.split.artist;
+            if (o.split.version) fix.version = o.split.version;
+            request("song.fix", fix, { errorWord: "couldntSave" });
+          } } }),
+          el("button", { class: "small", text: t("keepAsTyped"), on: { click: () => {
+            const o = offer; offer = null; request("song.fix", { song: o.song, title: o.text }, { errorWord: "couldntSave" });
+          } } })));
+      }
+      body.append(box);
+    });
+    const rel = s.names && s.names.release;
+    body.append(el("div", { class: "fact" }, el("label", { text: t("release") }),
+      el("p", { class: "value", text: rel && rel.value ? rel.value : t("none") }),
+      el("p", { class: "from", text: rel && rel.value ? factFrom(rel.from) : t("factNotFound") })));
+    body.append(el("div", { class: "fact" }, el("label", { text: t("whereLabel") }),
+      ...placeLines(s).map((l, i) => el("p", { class: i ? "mut" : "value", text: l }))));
+    body.append(el("p", { class: "facts-line", text: t("lengthLine", { length: mmss(s.seconds) }) }));
+    body.append(el("p", { class: "facts-line", text: t("fileLine", { file: s.file }) }));
+    const foot = el("div", { class: "foot" });
+    foot.append(el("button", { class: "main small", text: listening && listening.song === s.id ? t("stopListening") : t("listen"),
+      on: { click: () => (listening && listening.song === s.id ? stopListening() : listen(s)) } }));
+    if (s.nameReason === "guess") {
+      foot.append(el("button", { class: "small", text: t("looksRight"), title: t("looksRightHelp"),
+        on: { click: () => checkSongs([s.id]) } }));
+    }
+    // LOOK UP SONG VIA ... GOES HERE (the note on D30): the one explicit lookup, by sound, beside Listen. Not built:
+    // route A sends nothing anywhere. Its button, its sentence before anything is sent, and "What Desk has sent"
+    // will sit in this row.
+    body.append(foot);
+    if (keep) { const k = body.querySelector(`[data-field="${keep}"]`); if (k) k.focus(); }
+  }
+
+  /// Return on a fact: a change is the DJ's name (one step of undo); Return on Desk's guess as it is checks it; Return
+  /// on the last field moves to the next song in the list, so twenty songs can be named without the mouse.
+  async function commitFact(s, field, input, last, quiet) {
+    const v = input.value.trim();
+    const f = s.names ? s.names[field] : null;
+    const before = f && f.value != null ? f.value : "";
+    if (v !== before && !(field === "title" && !v)) {
+      if (field === "title") {
+        const sp = await request("name.split", { text: v }, { quiet: true });
+        if (sp.ok && sp.split) { offer = { song: s.id, text: v, split: sp }; drawNames(); return; }
+      }
+      await request("song.fix", { song: s.id, [field]: v }, { errorWord: "couldntSave" });
+    } else if (!quiet && f && f.guess && v === before) {
+      await request("song.check", { songs: [s.id], field }, { errorWord: "couldntSave" });
+    }
+    if (last && !quiet) {
+      const i = visibleOrder.indexOf(s.id);
+      const next = visibleOrder[i + 1] || (onlyNeedName ? visibleOrder.find((x) => x !== s.id) : null);
+      if (next) { select(next); const ti = $("fact-title"); if (ti) ti.focus(); }
+    }
+  }
+
+  function checkSongs(ids) {
+    request("song.check", { songs: ids }, { errorWord: "couldntSave" }).then((r) => {
+      if (r.ok && r.songs) { undoLine = { text: n("namesChecked", r.songs) }; render(); }
+    });
+  }
+
+  function drawNeedBar(list) {
+    $("need-bar").hidden = !onlyNeedName;
+    if (!onlyNeedName) return;
+    $("need-title").textContent = t("needsNameFilter", { n: list.length });
+    const guesses = list.filter((x) => x.nameReason === "guess").map((x) => x.id);
+    const b = $("need-check");
+    b.hidden = !guesses.length;
+    b.textContent = n("looksRightAll", guesses.length);
+    b.onclick = () => checkSongs(guesses);
+  }
+
+  function drawUndoLine() {
+    const u = $("undo-line");
+    u.hidden = !undoLine || !state.undo;
+    if (!u.hidden) $("undo-line-text").textContent = undoLine.text;
+  }
+
+  // ---- Listen (D33). The page is never told where a file is: the engine sends the song's sound over the same
+  // channel as every other message, in chunks, and it is played from a blob: address only this page can open.
+  let listening = null;    // { song, title, token, chunks: [], of, type, kind, decoded, url, start, ready }
+  const audio = $("audio");
+
+  async function listen(s, decoded) {
+    stopListening();
+    const me = { song: s.id, title: s.title, chunks: [], ready: false, decoded: !!decoded };
+    listening = me;
+    drawPlayer(); drawNames(); markListening();
+    const r = await request("song.audio", { song: s.id, decoded: !!decoded }, { quiet: true });
+    if (listening !== me) return;
+    if (!r.ok) {
+      stopListening();
+      const e = r.error || {};
+      if (e.code === "not_here") message([t("listenPutBack", { source: e.detail || "" })]);
+      else if (e.code === "cannot_decode") message([t("listenCantPlay", { kind: e.detail || "" })]);
+      else message([t("listenCouldntPlay", { title: s.title, detail: e.detail || "" })]);
+      return;
+    }
+    Object.assign(me, { token: r.token, of: r.chunks, type: r.type, kind: r.kind, start: r.start });
+    // A type this web view says it cannot play: ask for it turned into WAV, which every web view plays.
+    if (!decoded && !audio.canPlayType(r.type)) { me.token = null; listen(s, true); return; }
+    me.chunks.length = r.chunks;
+    for (const c of pendingChunks.splice(0)) audioChunk(c);
+  }
+  const pendingChunks = [];
+
+  function audioChunk(m) {
+    const me = listening;
+    if (!me) return;
+    if (!me.token) { pendingChunks.push(m); return; }
+    if (m.token !== me.token) return;
+    const bin = atob(m.data);
+    const bytes = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+    me.chunks[m.index] = bytes;
+    if (me.chunks.filter(Boolean).length < me.of) { drawPlayer(); return; }
+    me.url = URL.createObjectURL(new Blob(me.chunks, { type: me.type }));
+    me.chunks = [];
+    audio.src = me.url;
+    audio.onloadedmetadata = () => {
+      if (listening !== me) return;
+      me.ready = true;
+      try { audio.currentTime = Math.min(me.start || 0, Math.max(0, (audio.duration || 0) - 1)); } catch (e) {}
+      audio.play().catch(() => {});
+      drawPlayer();
+    };
+    audio.onerror = () => {
+      if (listening !== me) return;
+      const s = songById(me.song);
+      if (!me.decoded && s) listen(s, true);
+      else { stopListening(); message([t("listenCantPlay", { kind: me.kind || "" })]); }
+    };
+  }
+
+  function stopListening() {
+    if (!listening) return;
+    const was = listening;
+    listening = null;
+    audio.pause();
+    audio.removeAttribute("src");
+    audio.load();
+    if (was.url) URL.revokeObjectURL(was.url);
+    pendingChunks.length = 0;
+    drawPlayer(); markListening();
+    if (selected === was.song) drawNames();
+  }
+
+  function markListening() {
+    for (const b of document.querySelectorAll("td.listen button")) {
+      b.setAttribute("aria-pressed", String(!!listening && b.closest("tr").dataset.id === listening.song));
+    }
+  }
+
+  function listenCell(s, td) {
+    td.classList.add("listen");
+    td.append(el("button", { text: "▶", title: t("listenTo", { title: s.title }), "aria-label": t("listenTo", { title: s.title }),
+      "aria-pressed": String(!!listening && listening.song === s.id),
+      on: { click: (e) => { e.stopPropagation(); select(s.id); listening && listening.song === s.id ? stopListening() : listen(s); } } }));
+  }
+
+  function drawPlayer() {
+    const p = $("player");
+    p.hidden = !listening;
+    if (!listening) return;
+    const me = listening;
+    const ready = me.ready && isFinite(audio.duration);
+    $("player-title").textContent = me.title;
+    $("player-play").disabled = !ready;
+    $("player-play").textContent = !ready || audio.paused ? t("play") : t("pause");
+    $("player-back").disabled = !ready;
+    $("player-forward").disabled = !ready;
+    const scrub = $("player-scrub");
+    scrub.disabled = !ready;
+    scrub.setAttribute("aria-label", t("listenPosition", { title: me.title }));
+    if (ready) {
+      if (!scrubbing) scrub.value = String(Math.round((audio.currentTime / audio.duration) * 1000));
+      const time = t("listenTime", { position: mmss(audio.currentTime), length: mmss(audio.duration) });
+      $("player-time").textContent = time;
+      scrub.setAttribute("aria-valuetext", time);
+    } else {
+      $("player-time").textContent = t("listenGettingReady", { title: me.title });
+    }
+  }
+  let scrubbing = false;
+  $("player-play").addEventListener("click", () => { if (audio.paused) audio.play().catch(() => {}); else audio.pause(); });
+  $("player-back").addEventListener("click", () => { audio.currentTime = Math.max(0, audio.currentTime - 30); });
+  $("player-forward").addEventListener("click", () => { audio.currentTime = Math.min(audio.duration || 0, audio.currentTime + 30); });
+  $("player-stop").addEventListener("click", stopListening);
+  $("player-scrub").addEventListener("input", (e) => {
+    scrubbing = true;
+    if (isFinite(audio.duration)) audio.currentTime = (Number(e.target.value) / 1000) * audio.duration;
+  });
+  $("player-scrub").addEventListener("change", () => { scrubbing = false; });
+  for (const ev of ["timeupdate", "play", "pause", "ended", "durationchange"]) audio.addEventListener(ev, () => drawPlayer());
+  $("names-close").addEventListener("click", () => { stopListening(); selected = null; render(); });
+
+  // ---- naming many songs at once: a preview with a tick per field, then one step of undo (letter AA, 3.6)
+  let tool = null;   // { kind, preview, ticks: Set, path }
+
+  function toolMenu(list, close) {
+    const go = (kind) => () => { close(true); openTool(kind); };
+    list.append(item(t("pasteList"), go("paste")));
+    list.append(item(t("namesFromFileNames"), go("pattern")));
+    list.append(item(t("namesFromPlaylist"), go("playlist")));
+  }
+  menu($("tools-button"), $("tools-menu"), toolMenu);
+
+  function openTool(kind) {
+    if (!hasSongs()) return;
+    const sources = songs.sources.map((x) => x.name);
+    const sel = selected && songById(selected);
+    const first = (sel && sel.places[0] && sel.places[0].source) ||
+      (songs.songs.find((x) => x.needsName && x.places[0] && x.places[0].source) || {}).places?.[0]?.source || sources[0];
+    tool = { kind, preview: null, ticks: new Set(), path: null };
+    $("tool-title").textContent = t({ paste: "pasteList", pattern: "namesFromFileNames", playlist: "namesFromPlaylist" }[kind]).replace(/…$/, "");
+    const src = $("tool-source");
+    src.replaceChildren(...sources.map((x) => el("option", { value: x, text: x, selected: x === first })));
+    $("tool-paste").hidden = kind !== "paste";
+    $("tool-pattern").hidden = kind !== "pattern";
+    $("tool-playlist").hidden = kind !== "playlist";
+    $("tool-text").value = "";
+    $("tool-file").textContent = "";
+    $("tool-empty").checked = true;
+    $("tool-preview").tBodies[0].replaceChildren();
+    $("tool-problem").textContent = "";
+    updateApply();
+    const d = $("tool");
+    d.returnValue = "";
+    d.onclose = () => {
+      if (d.returnValue === "ok" && tool && tool.preview && !tool.preview.problem) {
+        const ticks = [...tool.ticks];
+        request("names.apply", { ticks }, { errorWord: "couldntSave" }).then((r) => {
+          if (r.ok && r.songs) { undoLine = { text: n("namesAdded", r.songs) }; render(); }
+        });
+      }
+      tool = null;
+    };
+    d.showModal();
+    if (kind === "paste") $("tool-text").focus();
+    if (kind === "pattern") { $("tool-pattern-input").value = ""; refreshTool().then(() => $("tool-pattern-input").focus()); }
+  }
+
+  let toolTimer = null;
+  const refreshSoon = () => { clearTimeout(toolTimer); toolTimer = setTimeout(refreshTool, 250); };
+  async function refreshTool() {
+    if (!tool) return;
+    const fields = { tool: tool.kind, source: $("tool-source").value, onlyEmpty: $("tool-empty").checked };
+    if (tool.kind === "paste") fields.text = $("tool-text").value;
+    if (tool.kind === "pattern") fields.pattern = $("tool-pattern-input").value || undefined;
+    if (tool.kind === "playlist") { if (!tool.path) { drawPreview(null); return; } fields.path = tool.path; }
+    const me = tool;
+    const r = await request("names.preview", fields, { errorWord: "couldntOpen" });
+    if (tool !== me || !r.ok) return;
+    if (tool.kind === "pattern" && r.patterns) {
+      $("tool-patterns").replaceChildren(...r.patterns.map((p) => el("option", { value: p })));
+      if (!$("tool-pattern-input").value) $("tool-pattern-input").value = r.patterns[0];
+    }
+    tool.preview = r.preview;
+    tool.ticks = new Set(r.preview.changes.map((c, i) => (c.tick ? i : -1)).filter((i) => i >= 0));
+    drawPreview(r.preview);
+  }
+
+  function drawPreview(p) {
+    const body = $("tool-preview").tBodies[0];
+    body.replaceChildren();
+    const prob = $("tool-problem");
+    prob.textContent = "";
+    prob.classList.toggle("mut", !(p && p.problem));
+    if (p) {
+      if (p.problem === "counts") prob.textContent = t("countsDiffer", { songs: n("songs", p.songs), lines: n("lines", p.lines) });
+      else if (p.problem === "empty") prob.textContent = t("listEmpty");
+      else if (p.problem === "noMatch") prob.textContent = t("patternFitsNone");
+      else if (p.tool === "pattern") prob.textContent = t("patternFits", { fits: p.lines, songs: p.songs });
+      else if (p.tool === "playlist") prob.textContent = p.lengthsDiffer == null ? t("playlistNoLengths") : (p.lengthsDiffer === 0 ? t("lengthsAllMatch") : n("lengthsDiffer", p.lengthsDiffer));
+      if (!p.problem && !p.changes.length) prob.textContent = t("nothingToChange");
+      const songTitle = (id) => { const s = songById(id); if (!s) return id; const pl = s.places[0]; return (pl && pl.number != null ? two(pl.number) + "  " : "") + s.title; };
+      p.changes.forEach((c, i) => {
+        const box = el("input", { type: "checkbox", "aria-label": t(c.field) + ": " + (c.after || ""), disabled: c.locked });
+        box.checked = tool.ticks.has(i);
+        box.addEventListener("change", () => { if (box.checked) tool.ticks.add(i); else tool.ticks.delete(i); updateApply(); });
+        body.append(el("tr", null, el("td", null, box), el("td", { text: songTitle(c.song) }), el("td", { text: t(c.field) }),
+          el("td", { class: c.locked ? "locked" : null, text: c.before || t("none") }),
+          el("td", { class: c.locked ? "locked" : null, text: c.after || "" },
+            c.note ? el("span", { class: "note", text: "  (" + t("changeNote." + c.note) + ")" }) : null)));
+      });
+    }
+    updateApply();
+  }
+
+  function updateApply() {
+    const b = $("tool-apply");
+    const count = tool && tool.preview && !tool.preview.problem ? tool.ticks.size : 0;
+    b.disabled = count === 0;
+    b.textContent = n("useNames", count);
+  }
+
+  $("tool-text").addEventListener("input", refreshSoon);
+  $("tool-pattern-input").addEventListener("input", refreshSoon);
+  $("tool-source").addEventListener("change", refreshTool);
+  $("tool-empty").addEventListener("change", refreshTool);
+  $("tool-choose").addEventListener("click", async () => {
+    const f = await request("shell.chooseFile", { purpose: "playlist", message: t("choosePlaylistMessage") }, { quiet: true });
+    if (!f.ok || !f.path || !tool) return;
+    tool.path = f.path;
+    $("tool-file").textContent = f.path.replace(/^.*[\\/]/, "");
+    refreshTool();
+  });
+  $("undo-line-button").addEventListener("click", () => { undoLine = null; request("edit.undo"); });
+
+  // ---- a music CD with no name of its own: asked once, in passing
+  let discAsked = null;
+  function askDisc(name) {
+    discAsked = name || null;
+    const f = $("disc-ask");
+    f.hidden = !name;
+    if (name) { $("disc-ask-input").value = name; }
+  }
+  $("disc-ask").addEventListener("submit", (e) => {
+    e.preventDefault();
+    const v = $("disc-ask-input").value.trim();
+    $("disc-ask").hidden = true;
+    if (v && discAsked && v !== discAsked) request("run.nameDisc", { source: discAsked, name: v }, { errorWord: "couldntSave" });
+  });
 
   // ---- the sources panel
   function drawSources() {
@@ -530,7 +932,13 @@
   async function buildAddMenu(list, close) {
     const r = await request("drives.list", {}, { quiet: true });
     const drives = (r.ok && r.drives) || [];
-    if (!drives.length) list.append(el("li", { role: "none", class: "note", text: t("noDriveFound") }));
+    const cds = (r.ok && r.musicCDs) || [];
+    if (!drives.length && !cds.length) list.append(el("li", { role: "none", class: "note", text: t("noDriveFound") }));
+    for (const cd of cds) {
+      const secs = Math.round(cd.seconds);
+      const name = n("musicCDPlaceholder", cd.songs, { length: Math.floor(secs / 60) + ":" + two(secs % 60) });
+      list.append(item(t("musicCDItem", { name, drive: cd.drive }), () => { close(true); request("run.addMusicCD", { location: cd.location }, { errorWord: "runStopped" }); }));
+    }
     for (const d of drives) list.append(item(d.name, () => { close(true); addMusic(d.path, d.name); }));
     list.append(sep());
     list.append(item(t("chooseFolder"), () => { close(true); chooseAndAdd(); }));
@@ -551,6 +959,10 @@
       const r = await request("library.choose", { path: f.path }, { errorWord: "couldntReadLibrary" });
       if (r.ok) message([t("libraryChosen", { program: programName(r.program) })]);
     }));
+    list.append(sep());
+    list.append(item(t("pasteList"), () => { close(true); openTool("paste"); }, { disabled: !songsHere }));
+    list.append(item(t("namesFromFileNames"), () => { close(true); openTool("pattern"); }, { disabled: !songsHere }));
+    list.append(item(t("namesFromPlaylist"), () => { close(true); openTool("playlist"); }, { disabled: !songsHere }));
     list.append(sep());
     list.append(item(t("importCrateFile"), () => { close(true); importCrate(); }));
     list.append(item(t("exportCrateFile"), () => { close(true); exportCrate(); }, { disabled: !songsHere }));
@@ -622,7 +1034,14 @@
 
   // Undo and redo from the keyboard, except while typing.
   document.addEventListener("keydown", (e) => {
-    const typing = e.target && (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA");
+    const typing = e.target && (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA" || e.target.tagName === "SELECT");
+    if (!typing && e.key === " " && !e.ctrlKey && !e.metaKey && selected && hasSongs() && !document.querySelector("dialog[open]")
+        && !(e.target && e.target.tagName === "BUTTON")) {
+      e.preventDefault();
+      const s = songById(selected);
+      if (s) (listening && listening.song === s.id ? stopListening() : listen(s));
+      return;
+    }
     if (typing || !(e.ctrlKey || e.metaKey) || document.querySelector("dialog[open]")) return;
     const k = e.key.toLowerCase();
     if (k === "z" && !e.shiftKey && !$("undo").disabled) { e.preventDefault(); request("edit.undo"); }

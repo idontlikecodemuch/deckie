@@ -15,6 +15,8 @@ final class Desk: @unchecked Sendable {
         /// a folder for export.
         var addMusicAnswer: String?
         var exportAnswer: String?
+        /// An answer for the file chooser when it asks for a playlist (the naming tool's "Choose a playlist…").
+        var playlistAnswer: String?
     }
 
     let window: Window
@@ -108,7 +110,8 @@ final class Desk: @unchecked Sendable {
             let path = preset ?? window.chooseFolder(message: m["message"] as? String ?? "")
             reply(id, path.map { ["path": $0] } ?? ["cancelled": true])
         case "shell.chooseFile":
-            let path = window.chooseFile(message: m["message"] as? String ?? "")
+            let preset = m["purpose"] as? String == "playlist" ? options.playlistAnswer : nil
+            let path = preset ?? window.chooseFile(message: m["message"] as? String ?? "")
             reply(id, path.map { ["path": $0] } ?? ["cancelled": true])
         case "shell.openFolder":
             if let p = m["path"] as? String { Window.openFolder(p) }

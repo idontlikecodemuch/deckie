@@ -155,7 +155,9 @@ public struct DiscReport: Codable, Equatable, Sendable {
     public var damagedSectors: Int
     /// Whether the disc's own title named the source; when not, the window asks for the name written on it.
     public var titled: Bool
-    enum CodingKeys: String, CodingKey { case text, songs, named, titled, damagedSectors = "damaged_sectors" }
+    /// The room Desk's copy of the disc's songs takes, in bytes.
+    public var bytes: Int64 = 0
+    enum CodingKeys: String, CodingKey { case text, songs, named, titled, bytes, damagedSectors = "damaged_sectors" }
 }
 
 /// The names step after keys and names were gathered from the computer (D30) and before the DJ's own names go back:

@@ -217,7 +217,8 @@ struct MusicCDRunTests {
         let (c, report) = try await CPUTurns.exclusive { try run(request) }
         s.runEnded(info.id)
         #expect(report.wentIn == 2)
-        #expect(report.disc == DiscReport(text: "names", songs: 2, named: 2, damagedSectors: 0, titled: true))
+        #expect(report.disc?.text == "names" && report.disc?.songs == 2 && report.disc?.named == 2)
+        #expect(report.disc?.damagedSectors == 0 && report.disc?.titled == true && (report.disc?.bytes ?? 0) > 0)
         let sorted = c.tracks.sorted { ($0.ident.track ?? 0) < ($1.ident.track ?? 0) }
         #expect(sorted.map(\.ident.track) == [1, 2])
         #expect(sorted.allSatisfy { $0.ident.disc == "Friday night" })
@@ -265,6 +266,7 @@ struct MusicCDRunTests {
         #expect(report.disc?.text == "none" && report.disc?.titled == false)
         s.runEnded(info.id)
         #expect(s.crate?.discPlan.map(\.name) == ["Friday night"])
+        #expect(s.current?.name == "Friday night")   // the crate made from the disc follows its name
         #expect(s.undoName == "undoRename")
         #expect(s.rows.allSatisfy { $0.nameReason == "noTitle" })
         // Each song's file name is Track NN, its place the source and its number.

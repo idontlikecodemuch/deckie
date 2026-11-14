@@ -16,13 +16,15 @@ enum Tour {
         var event: String?
         var eventTest: (([String: Any]) -> Bool)?
         var delay: Double = 0.8
+
+        func with(js: String) -> Step { var s = self; s.js = js; return s }
     }
 
     static func arm(_ desk: Desk, out: URL) {
         #if os(macOS)
         try? FileManager.default.createDirectory(at: out, withIntermediateDirectories: true)
         let click = { (selector: String) in "document.querySelector(\(js(selector))).click();" }
-        let steps: [Step] = [
+        let tourSteps: [Step] = [
             Step(name: "01-first-screen", delay: 2.0),
             Step(name: "02-add-music-menu", js: click("#add-button"), delay: 1.0),
             Step(name: "03-run", js: "[...document.querySelectorAll('#add-menu [role=menuitem]')].pop().click();",
@@ -53,6 +55,7 @@ enum Tour {
             Step(name: "16-undo-named", js: click("#side-close"), delay: 0.6),
             Step(name: "17-new-crate", js: "desk.request('crate.new');", event: "state", delay: 1.0),
         ]
+        let steps = ProcessInfo.processInfo.arguments.contains("--naming") ? namingSteps(click) : tourSteps
         var events: [[String: Any]] = []
         let lock = NSLock()
         desk.watchers.append { line in
@@ -97,6 +100,53 @@ enum Tour {
         FileHandle.standardError.write(Data("deckie-desk: --tour takes pictures on the Mac only\n".utf8))
         exit(1)
         #endif
+    }
+
+    /// The naming screens (research AA): the list of songs that need a name, one song's panel with a guess and the
+    /// offer to split typed words, Listen with its scrub bar, the tools with their previews, a music CD with no names
+    /// (asked for its name while it is read, then named from a playlist) and one with CD-Text. Needs the generated
+    /// songs as `--music`, stand-in discs D (CD-Text) and E (none) in DECKIE_DESK_MUSIC_CD, and `--playlist`.
+    static func namingSteps(_ click: (String) -> String) -> [Step] {
+        let row = { (title: String) in "[...document.querySelectorAll('#songs-body td[data-col=title]')].find(function (c) { return c.textContent === \(js(title)); }).click();" }
+        let menuItem = { (menu: String, i: Int) in "document.querySelectorAll('#\(menu) [role=menuitem]')[\(i)].click();" }
+        let enter = "dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));"
+        let songsEvent: (String) -> Step = { name in Step(name: name, event: "songs", delay: 1.0) }
+        return [
+            Step(name: "n01-first-screen", delay: 2.0),
+            Step(name: nil, js: click("#add-button"), delay: 0.8),
+            Step(name: "n02-run", js: "[...document.querySelectorAll('#add-menu [role=menuitem]')].pop().click();",
+                 event: "run.progress", eventTest: { (($0["done"] as? NSNumber)?.intValue ?? 0) >= 1 }, delay: 0.3),
+            Step(name: "n03-finished-names", event: "run.finished", delay: 1.5),
+            Step(name: "n04-needs-a-name-list", js: click("#finished-summary button.link"), delay: 1.0),
+            Step(name: "n05-names-panel-guess", js: row("Sunrise"), delay: 0.8),
+            Step(name: "n06-split-offer", js: row("Night Drive") + " setTimeout(function () { var i = document.getElementById('fact-title'); i.value = 'Artist K - Night Drive (Extended mix)'; i.\(enter) }, 300);", delay: 1.4),
+            songsEvent("n07-split-applied").with(js: click("#names .offer button.main")),
+            Step(name: "n08-listen", js: row("Low Tide (Dub)") + " setTimeout(function () { document.querySelector('#names .foot button.main').click(); }, 300);", delay: 4.0),
+            Step(name: "n09-listen-scrubbed", js: "var r = document.getElementById('player-scrub'); r.value = '700'; r.dispatchEvent(new Event('input', { bubbles: true })); r.dispatchEvent(new Event('change', { bubbles: true }));", delay: 1.2),
+            Step(name: nil, js: click("#player-stop"), delay: 0.4),
+            Step(name: "n10-tools-menu", js: click("#tools-button"), delay: 0.8),
+            Step(name: "n11-paste-counts-differ", js: menuItem("tools-menu", 0) + " setTimeout(function () { var x = document.getElementById('tool-text'); x.value = 'Artist A - Sunrise\\nArtist L - Night Drive'; x.dispatchEvent(new Event('input')); }, 300);", delay: 1.6),
+            Step(name: "n12-paste-preview", js: "var x = document.getElementById('tool-text'); x.value = ['Artist A - Sunrise', 'Artist K - Night Drive (Extended mix)', 'Artist B - Low Tide (Dub)', 'Artist M - Harbour lights', 'Artist N - Slow Bloom', 'Artist O - Morning'].join('\\n'); x.dispatchEvent(new Event('input'));", delay: 1.6),
+            songsEvent("n13-names-added").with(js: click("#tool-apply")),
+            Step(name: nil, js: click("#tools-button"), delay: 0.5),
+            Step(name: "n14-pattern-tool", js: menuItem("tools-menu", 1), delay: 1.6),
+            Step(name: nil, js: "document.getElementById('tool').close('cancel');", delay: 0.4),
+            Step(name: nil, js: "desk.request('crate.new');", event: "state", delay: 0.8),
+            Step(name: "n15-add-menu-music-cds", js: click("#add-button"), delay: 1.4),
+            Step(name: "n16-copying-asks-disc-name", js: "[...document.querySelectorAll('#add-menu [role=menuitem]')].find(function (b) { return / E$/.test(b.textContent); }).click();",
+                 event: "run.started", delay: 0.6),
+            Step(name: nil, js: "var i = document.getElementById('disc-ask-input'); i.value = 'Friday late'; document.getElementById('disc-ask').requestSubmit();", delay: 0.3),
+            Step(name: "n17-disc-no-names-finished", event: "run.finished", delay: 1.8),
+            Step(name: "n18-disc-songs-need-names", js: click("#finished-summary button.link"), delay: 1.0),
+            Step(name: nil, js: click("#tools-button"), delay: 0.5),
+            Step(name: "n19-playlist-preview", js: menuItem("tools-menu", 2) + " setTimeout(function () { document.getElementById('tool-choose').click(); }, 300);", delay: 1.8),
+            songsEvent("n20-playlist-applied").with(js: click("#tool-apply")),
+            Step(name: nil, js: "desk.request('crate.new');", event: "state", delay: 0.8),
+            Step(name: nil, js: click("#add-button"), delay: 1.2),
+            Step(name: "n21-disc-with-names-finished", js: "[...document.querySelectorAll('#add-menu [role=menuitem]')].find(function (b) { return / D$/.test(b.textContent); }).click();",
+                 event: "run.finished", delay: 1.8),
+            Step(name: "n22-disc-names-panel", js: click("#finished-songs") + " setTimeout(function () { document.querySelector('#songs-body tr td[data-col=title]').click(); }, 400);", delay: 1.2),
+        ]
     }
 
     static func js(_ s: String) -> String {

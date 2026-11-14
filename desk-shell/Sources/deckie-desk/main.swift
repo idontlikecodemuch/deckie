@@ -6,7 +6,8 @@
 //                                       first screen and asks it one thing through the page; exits 0 when it did
 //   deckie-desk --tour <folder> --music <folder> --export-to <folder>
 //                                       the Mac only: walks every screen with the music given and writes a picture
-//                                       of each into <folder> (Tour.swift)
+//                                       of each into <folder> (Tour.swift); `--naming` walks the naming screens
+//                                       instead (a music CD from DECKIE_DESK_MUSIC_CD, `--playlist <file.m3u>`)
 // Options: --engine <path to deckie-desk-engine>, --pages <folder of desk-web>, --debug (the web inspector). By
 // default both are looked for beside this program (deckie-desk-engine, desk-web/), then in the checkout.
 import Foundation
@@ -52,6 +53,7 @@ guard let pages, FileManager.default.fileExists(atPath: pages.appendingPathCompo
 var options = Desk.Options(engine: engine, pages: pages.standardizedFileURL, debug: args.contains("--debug"))
 options.addMusicAnswer = option("--music")
 options.exportAnswer = option("--export-to")
+options.playlistAnswer = option("--playlist")
 
 guard let desk = Desk(options: options) else {
     FileHandle.standardError.write(Data("deckie-desk: no window; the system's web view (\(Window.engineName)) could not be started\n".utf8))

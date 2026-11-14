@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; media-src blob:; connect-src 'none'">
 <title>Deckie Desk</title>
 <link rel="stylesheet" href="desk.css">
 </head>
@@ -56,6 +56,11 @@
     <div class="run">
       <h1 id="run-title" data-w="runTitle"></h1>
       <p id="run-reading" class="mut"></p>
+      <!-- A music CD with no name of its own: asked once, in passing; the run never waits for it (letter AA, 2.5). -->
+      <form id="disc-ask" class="disc-ask card" hidden>
+        <label for="disc-ask-input"><b data-w="askDiscNameTitle"></b> <span class="mut" data-w="askDiscNameBody"></span></label>
+        <div class="row"><input id="disc-ask-input" type="text" autocomplete="off" spellcheck="false"><button class="main" data-w="ok"></button></div>
+      </form>
       <div id="run-bar" class="progress waiting" role="progressbar" aria-labelledby="run-title" aria-valuemin="0" aria-valuemax="100"><div></div></div>
       <div class="run-line" aria-live="polite" aria-atomic="true">
         <span id="run-count"></span>
@@ -93,6 +98,17 @@
 
   <!-- The crate: its songs, and the sources panel. -->
   <section id="crate" class="screen crate" hidden>
+    <div class="table-col">
+    <!-- The list of songs that need a name (letter AA, 3.3), with the tools that name many at once (3.6). -->
+    <div id="need-bar" class="need-bar" hidden>
+      <h2 id="need-title"></h2>
+      <span class="grow"></span>
+      <button id="need-check" class="small" data-w-title="looksRightHelp"></button>
+      <div class="menu-wrap">
+        <button id="tools-button" class="small" aria-haspopup="menu" aria-expanded="false"><span data-w="nameTools"></span><span class="chev" aria-hidden="true">▾</span></button>
+        <ul id="tools-menu" class="menu right" role="menu" hidden></ul>
+      </div>
+    </div>
     <div class="table-wrap">
       <table id="songs" aria-rowcount="0">
         <caption class="sr" id="songs-caption"></caption>
@@ -101,6 +117,22 @@
       </table>
       <p id="songs-empty" class="empty-filter" hidden></p>
     </div>
+    <!-- Listen (D33): play, pause, back and forward, a scrub bar, the position and the length. -->
+    <div id="player" class="player" role="region" hidden>
+      <button id="player-play" class="small play"></button>
+      <button id="player-back" class="small" data-w-label="back30" data-w-title="back30">−30</button>
+      <input id="player-scrub" type="range" min="0" max="1000" value="0" step="1">
+      <button id="player-forward" class="small" data-w-label="forward30" data-w-title="forward30">+30</button>
+      <span id="player-time" class="mut time"></span>
+      <span id="player-title" class="title"></span>
+      <button id="player-stop" class="small" data-w="stopListening"></button>
+    </div>
+    </div>
+    <!-- One song's names (letter AA, 3.4): each fact with where it came from; a guess looks like a guess. -->
+    <aside id="names" class="side names" aria-labelledby="names-title" hidden>
+      <header><h2 id="names-title" data-w="names"></h2><button id="names-close" class="small" data-w="done"></button></header>
+      <div class="scroll" id="names-body"></div>
+    </aside>
     <aside id="side" class="side" aria-labelledby="side-title" hidden>
       <header><h2 id="side-title" data-w="sourcesTitle"></h2><button id="side-close" class="small" data-w="hideSources"></button></header>
       <div class="scroll"><ul id="tree" class="tree"></ul>
@@ -121,6 +153,7 @@
   <span id="status-only" hidden data-w="onlyNeedName"></span>
   <button id="status-notin" class="link" hidden></button>
   <span class="grow"></span>
+  <span id="undo-line" role="status" hidden><span id="undo-line-text"></span> <button id="undo-line-button" class="link" data-w="undo"></button></span>
 </footer>
 
 <div id="drop" class="drop" hidden><span data-w="dropHere"></span></div>
@@ -157,6 +190,27 @@
   </form>
 </dialog>
 
+<!-- A batch tool: what it works on, its input, and a preview with a tick per field before anything changes. -->
+<dialog id="tool" class="wide tool" aria-labelledby="tool-title">
+  <form method="dialog">
+    <h2 id="tool-title"></h2>
+    <div class="tool-top">
+      <label><span data-w="toolSongsFrom"></span> <select id="tool-source"></select></label>
+      <label class="check"><input id="tool-empty" type="checkbox" checked> <span data-w="onlyEmpty"></span></label>
+    </div>
+    <div id="tool-paste"><p class="mut" data-w="pasteHelp"></p><textarea id="tool-text" rows="6" spellcheck="false"></textarea></div>
+    <div id="tool-pattern"><label for="tool-pattern-input" class="mut" data-w="patternLabel"></label>
+      <input id="tool-pattern-input" type="text" list="tool-patterns" autocomplete="off" spellcheck="false"><datalist id="tool-patterns"></datalist>
+      <p class="mut small-print" data-w="patternHelp"></p></div>
+    <div id="tool-playlist"><p class="mut" data-w="choosePlaylistMessage"></p><button id="tool-choose" type="button" data-w="choosePlaylist"></button> <span id="tool-file" class="mut"></span></div>
+    <h3 data-w="previewTitle" class="preview-title"></h3>
+    <p id="tool-problem" class="problem" role="status"></p>
+    <div class="preview-wrap"><table id="tool-preview"><thead><tr><th></th><th data-w="colSong"></th><th data-w="colField"></th><th data-w="colNow"></th><th data-w="colBecomes"></th></tr></thead><tbody></tbody></table></div>
+    <div class="buttons"><button value="cancel" data-w="cancel"></button><button id="tool-apply" value="ok" class="main"></button></div>
+  </form>
+</dialog>
+
+<audio id="audio" preload="auto" hidden></audio>
 <div id="announce" class="sr" aria-live="assertive"></div>
 <script src="desk.js"></script>
 </body>

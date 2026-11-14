@@ -121,6 +121,8 @@ public final class DeskSession {
         if let (source, name) = discName, current?.id == id {
             discName = nil
             try? renameSource(source, to: name)
+            // A crate made from this disc took the placeholder too: it follows.
+            if let c = current, c.name == source { try? rename(c.id, to: name) }
         }
     }
 
@@ -204,10 +206,17 @@ public final class DeskSession {
             if let artist { t.ident.artist = artist.isEmpty ? nil : artist }
             if let version { t.ident.version = version.isEmpty ? nil : version }
             if let tags { t.ident.tags = tags.map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty } }
-            guard t != before else { return }
-            t.ident.source = "user"
-            crate!.tracks[i] = t
-            corrections.note(before: before, after: t)
+            if t != before {
+                t.ident.source = "user"
+                crate!.tracks[i] = t
+                corrections.note(before: before, after: t)
+            }
+            // A field the DJ gave as it already was (a split that kept the title, Return on a guess) is the DJ's too.
+            for (field, given, now) in [("title", title, t.ident.title), ("artist", artist, t.ident.artist ?? ""),
+                                        ("version", version, t.ident.version ?? "")]
+                where given != nil && !given!.isEmpty && given == now && corrections.byId[id]?.from?[field] == nil {
+                corrections.give(id, field: field, value: given, how: "user")
+            }
         }
     }
 
