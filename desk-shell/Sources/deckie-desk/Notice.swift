@@ -2,8 +2,9 @@ import Foundation
 
 /// What the shell itself says, to a developer and to a DJ.
 ///
-/// Lines for a developer or a check (`say`) go to standard error and, with `--check-log <file>`, to that file as
-/// well: a program of the "windows" kind started the way a double click starts it has no standard error to read.
+/// Lines for a developer or a check (`say`) go to standard error, when there is one, and, with `--check-log
+/// <file>`, to that file as well: a program of the "windows" kind started the way a double click starts it has no
+/// standard error at all, and nothing is written to it then.
 ///
 /// The few things a DJ must be told before there is a window to tell them in (`tell`, `ask`) are said in a message
 /// box on Windows. These are the only words the shell holds; every word in the window is the engine's
@@ -64,6 +65,8 @@ enum Notice {
     // MARK: saying
 
     static let started = Date()
+    /// Asked once, before anything is written: a program started by a double click on Windows has no standard error.
+    private static let standardError: FileHandle? = Window.hasStandardError ? FileHandle.standardError : nil
     private static let lock = NSLock()
     nonisolated(unsafe) private static var log: FileHandle?
     /// No message boxes: a check with no one at the keyboard must not wait for a click (`--check`, `--self-test`,
@@ -80,7 +83,7 @@ enum Notice {
     static func say(_ line: String) {
         let data = Data((line + "\n").utf8)
         lock.lock()
-        FileHandle.standardError.write(data)
+        standardError?.write(data)
         log?.write(data)
         lock.unlock()
     }
@@ -88,7 +91,7 @@ enum Notice {
     /// The engine's own lines for a developer (its standard error), passed on as they come.
     static func pass(_ data: Data) {
         lock.lock()
-        FileHandle.standardError.write(data)
+        standardError?.write(data)
         log?.write(data)
         lock.unlock()
     }

@@ -26,7 +26,6 @@
 // cannot be taken away.
 import Foundation
 
-Window.prepareProcess()
 _ = Notice.started
 
 var args = Array(CommandLine.arguments.dropFirst())
@@ -37,6 +36,12 @@ func option(_ name: String) -> String? {
 let env = ProcessInfo.processInfo.environment
 if let log = option("--check-log") { Notice.keepLog(at: log) }
 Notice.quiet = args.contains("--check") || args.contains("--self-test") || args.contains("--tour") || env["DECKIE_NO_BOXES"] != nil
+
+// A check never waits for ever: its time limit starts now, before the window is made.
+if args.contains("--check") {
+    Check.limit(seconds: Double(env["DECKIE_CHECK_SECONDS"] ?? "") ?? (option("--music") == nil ? 90 : 900))
+    Notice.say("[check] started; looking for the engine and the pages beside \(CommandLine.arguments[0])")
+}
 
 if args.contains("--self-test") {
     SelfTest.run(seconds: Double(env["DECKIE_SELF_TEST_SECONDS"] ?? "") ?? 60)
@@ -77,6 +82,7 @@ options.exportAnswer = option("--export-to")
 options.playlistAnswer = option("--playlist")
 
 let pretendNoWebView = Window.engineName == "WebView2" && env["DECKIE_DESK_NO_WEBVIEW2"] != nil
+if args.contains("--check") { Notice.say("[check] making the window (\(Window.engineName)); engine \(engine.path); pages \(pages.path)") }
 guard !pretendNoWebView, let desk = Desk(options: options) else {
     Notice.say("deckie-desk: no window; the system's web view (\(Window.engineName)) could not be started")
     guard Window.engineName == "WebView2" else { exit(1) }
@@ -92,8 +98,7 @@ guard !pretendNoWebView, let desk = Desk(options: options) else {
 
 if args.contains("--check") {
     let music = option("--music"), exportTo = option("--export-to")
-    Check.arm(desk, seconds: Double(env["DECKIE_CHECK_SECONDS"] ?? "") ?? (music == nil ? 90 : 900),
-              music: music, exportTo: exportTo)
+    Check.arm(desk, music: music, exportTo: exportTo)
 }
 if let out = option("--tour") { Tour.arm(desk, out: URL(fileURLWithPath: out, isDirectory: true)) }
 

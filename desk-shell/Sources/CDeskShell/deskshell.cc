@@ -10,6 +10,7 @@
 #include <string>
 
 #if defined(_WIN32)
+#include <io.h>
 #include <shobjidl.h>
 #include <shellapi.h>
 #endif
@@ -358,20 +359,19 @@ void *deskshell_native_view(deskshell_t s) {
 #endif
 }
 
-void deskshell_prepare_process(void) {
+int deskshell_has_standard_error(void) {
 #if defined(_WIN32)
-  const DWORD which[] = {STD_INPUT_HANDLE, STD_OUTPUT_HANDLE, STD_ERROR_HANDLE};
-  for (DWORD w : which) {
-    HANDLE h = GetStdHandle(w);
-    if (h != nullptr && h != INVALID_HANDLE_VALUE) {
-      // A number that names nothing in this program (left over from whoever started it) is no better than none.
-      SetLastError(NO_ERROR);
-      if (GetFileType(h) != FILE_TYPE_UNKNOWN || GetLastError() == NO_ERROR) continue;
-    }
-    HANDLE nul = CreateFileW(L"NUL", GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE, nullptr,
-                             OPEN_EXISTING, 0, nullptr);
-    if (nul != INVALID_HANDLE_VALUE) SetStdHandle(w, nul);
-  }
+  // Both must be there: Windows' own handle, and the C runtime's file number 2 made from it when the program
+  // started (which is what Foundation writes through; -2 is the runtime's word for "no such stream").
+  HANDLE h = GetStdHandle(STD_ERROR_HANDLE);
+  if (h == nullptr || h == INVALID_HANDLE_VALUE) return 0;
+  intptr_t c = _get_osfhandle(2);
+  if (c == -1 || c == -2) return 0;
+  // A number that names nothing in this program (left over from whoever started it) is no better than none.
+  SetLastError(NO_ERROR);
+  return (GetFileType(reinterpret_cast<HANDLE>(c)) != FILE_TYPE_UNKNOWN || GetLastError() == NO_ERROR) ? 1 : 0;
+#else
+  return 1;
 #endif
 }
 
