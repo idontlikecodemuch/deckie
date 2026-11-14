@@ -27,7 +27,8 @@ public enum CrateReader {
     }
 
     /// Reads a crate from its files, keyed by their path inside the package (as `CrateWriter.encode` gives them, plus
-    /// any signature files).
+    /// any signature files). A file no record lists (a sidecar or a fingerprint left behind) is ignored, like every
+    /// file the reader does not know.
     public static func decode(_ files: [String: Data]) throws -> Crate {
         try decode(file: { files[$0] }, exists: { files[$0] != nil })
     }
@@ -98,6 +99,15 @@ public enum CrateReader {
             for variant in t.signatures.keys.sorted(by: byteOrder) where isFileSafe(variant, also: ["-", "_", "+"]) {
                 let path = CrateFormat.signaturePath(t.id, variant)
                 if !exists(path) { add(tf, "tracks[\(i)].signatures.\(variant)", "\(path) is not in the package") }
+            }
+            // The fingerprint (D35): the record lists it, so its file must be there; what is in it is checked with
+            // the record (`CrateTrack.check`). One reported missing is not checked again as empty.
+            if t.fingerprint != nil {
+                let path = CrateFormat.printPath(t.id)
+                if let data = file(path) { t.fingerprint?.data = data } else {
+                    add(tf, "tracks[\(i)].print", "\(path) is not in the package")
+                    t.fingerprint = nil
+                }
             }
             // The cover (D36): its thumbnail must be in the crate file, a JPEG, within the size a cover may take.
             if let cover = t.file.cover, CrateIDs.isSHA256(cover) {

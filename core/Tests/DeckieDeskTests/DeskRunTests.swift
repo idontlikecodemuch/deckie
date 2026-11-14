@@ -48,6 +48,15 @@ struct DeskRunTests {
         #expect(one.report.signaturesMade == 2 && one.report.printsMade == 2)
         #expect(one.crate.tracks.allSatisfy { $0.signatures["o"] != nil })
         #expect(fm.fileExists(atPath: home.shelf.package(night.id).appendingPathComponent("signatures/\(idX)_o.shazamsignature").path))
+        // Each song is fingerprinted for recognition (D35) with its analysis: the crate file carries it, and the
+        // desk's store keeps it by the file's id for every other crate.
+        #expect(one.report.fingerprinted == 2 && one.report.songsWithFingerprint == 2)
+        for t in one.crate.tracks {
+            let print = try #require(t.fingerprint)
+            #expect(print.points > 100 && print.madeBy == "Mac15,6" && home.store.fingerprint(t.id) == print)
+            #expect(try Data(contentsOf: home.shelf.package(night.id).appendingPathComponent("prints/\(t.id).dkl")) == print.data)
+        }
+        #expect(try CrateReader.read(from: home.shelf.package(night.id)).tracks.allSatisfy(\.canBeRecognised))
         #expect(DeskRun.pending(home: home, crateId: night.id) == nil)
         #expect(DeskRun.runs(home: home, crateId: night.id).count == 1)
         #expect(one.report.songsPerMinute > 0)
@@ -63,6 +72,7 @@ struct DeskRunTests {
         try fixes.save(to: home.shelf.file(DeskRun.correctionsFile, of: night.id))
         let two = try await CPUTurns.exclusive { try run(night, b, "B") }
         #expect(two.report.analysed == 0 && two.report.signaturesMade == 0 && two.report.printsMade == 0)
+        #expect(two.report.fingerprinted == 0 && two.report.songsWithFingerprint == 2)
         let x2 = try #require(two.crate.tracks.first { $0.id == idX })
         #expect(x2.ident.title == "Song X (fixed)")
         #expect(x2.ident.allPlaces.compactMap(\.disc).sorted() == ["A", "B"])
@@ -84,6 +94,14 @@ struct DeskRunTests {
         #expect(four.report.analysed == 0 && four.report.reused == 1)
         #expect(four.report.signaturesMade == 0 && four.report.signaturesKept == 1 && four.report.printsMade == 0)
         #expect(four.crate.tracks.map(\.id) == [idY])
+        // Nor fingerprinted again: the second crate's file carries the one the store kept from the first.
+        #expect(four.report.fingerprinted == 0)
+        #expect(four.crate.tracks[0].fingerprint == one.crate.tracks.first { $0.id == idY }?.fingerprint)
+        #expect(four.crate.tracks[0].fingerprint != nil)
+        // A crate file sent out carries the fingerprints.
+        let sent = root.appendingPathComponent("Other.deckiecrate")
+        try home.shelf.exportCopy(other.id, to: sent)
+        #expect(try CrateReader.read(from: sent).tracks.map(\.fingerprint) == four.crate.tracks.map(\.fingerprint))
         #expect(home.shelf.mostRecent?.id == other.id)
 
         // 5. A run that was stopped (its pending note left behind) is carried on.

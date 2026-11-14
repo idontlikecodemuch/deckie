@@ -50,6 +50,13 @@ import DeckieRecognition
         #expect(Landmarks(encoded: marks.encoded()) == marks)
         #expect(marks.encoded().count < 4 * marks.count + 12)
         #expect(Landmarks(encoded: Data([1, 2, 3])) == nil)
+        // Damaged bytes are refused, never a reason to stop: a count the bytes cannot hold, and frame gaps that add
+        // up past the largest frame number (a crate file's reader takes these bytes from a file it did not write).
+        let head = Data("DKL2".utf8) + Data([0, 0, 0, 0])
+        #expect(Landmarks(encoded: head + Data([0xFF, 0xFF, 0xFF, 0xFF, 1, 2, 3])) == nil)
+        let farGap: [UInt8] = [0xFF, 0xFF, 0xFF, 0xFF, 0x0F, 0, 0]
+        #expect(Landmarks(encoded: head + Data([2, 0, 0, 0] + farGap + farGap)) == nil)
+        #expect(Landmarks(encoded: head + Data([1, 0, 0, 0] + farGap))?.frames == [UInt32.max])
     }
 
     @Test func anExcerptIsFoundWithItsPlace() throws {
@@ -116,5 +123,147 @@ import DeckieRecognition
         let a = Self.excerpt(Self.song(seed: 102), from: 12, seconds: 8), b = Self.excerpt(Self.song(seed: 107), from: 25, seconds: 8)
         let found = Recogniser(index: Self.index).match(Landmarks(mono: zip(a, b).map { $0 + $1 }, sampleRate: Self.rate))
         #expect(Set(found.prefix(2).map(\.id)) == ["song2", "song7"])
+    }
+
+    // MARK: The index as a file, and the listener
+
+    static func temporaryFile(_ name: String) -> URL {
+        let dir = FileManager.default.temporaryDirectory.appendingPathComponent("deckie-recognition-tests-\(UUID().uuidString)")
+        try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        return dir.appendingPathComponent(name)
+    }
+
+    @Test func anIndexOpenedFromItsFileAnswersAsTheOneBuilt() throws {
+        let url = Self.temporaryFile("crate.dkx")
+        defer { try? FileManager.default.removeItem(at: url.deletingLastPathComponent()) }
+        try Self.index.write(to: url)
+        let q = Landmarks(mono: Self.excerpt(Self.song(seed: 104), from: 9, seconds: 6), sampleRate: Self.rate)
+        let built = try #require(Recogniser(index: Self.index).match(q).first)
+        for mapped in [true, false] {
+            let opened = try RecognitionIndex(contentsOf: url, mapped: mapped)
+            #expect(opened.ids == Self.index.ids)
+            let again = try #require(Recogniser(index: opened).match(q).first)
+            #expect(again == built)
+        }
+        // A file that is not an index is refused, not read.
+        try Data("not an index".utf8).write(to: url)
+        #expect(throws: IndexFileError.self) { try RecognitionIndex(contentsOf: url) }
+    }
+
+    @Test func theCachedIndexIsBuiltOnceAndMadeAgainWhenTheSongsChange() throws {
+        let url = Self.temporaryFile("crate.dkx")
+        defer { try? FileManager.default.removeItem(at: url.deletingLastPathComponent()) }
+        let songs = (0..<3).map { (id: "song\($0)", landmarks: Landmarks(mono: Self.song(seed: UInt64(300 + $0), seconds: 20), sampleRate: Self.rate)) }
+        let stamp = RecognitionIndex.stamp(of: songs.map { ($0.id, $0.landmarks.count, $0.landmarks.frameCount) })
+        var builds = 0
+        let first = try RecognitionIndex.cached(at: url, stamp: stamp) { builds += 1; return songs }
+        let second = try RecognitionIndex.cached(at: url, stamp: stamp) { builds += 1; return songs }
+        #expect(builds == 1)
+        #expect(first.ids == second.ids && second.songCount == 3)
+        let fewer = Array(songs.prefix(2))
+        let other = RecognitionIndex.stamp(of: fewer.map { ($0.id, $0.landmarks.count, $0.landmarks.frameCount) })
+        #expect(other != stamp)
+        let third = try RecognitionIndex.cached(at: url, stamp: other) { builds += 1; return fewer }
+        #expect(builds == 2 && third.songCount == 2)
+    }
+
+    /// Song 2 from 10 s in for 20 s, then song 6 (at +6 %, key held) from 5 s in for 20 s, fed in tenths of a second.
+    static let set: [Float] = {
+        let a = excerpt(song(seed: 102), from: 10, seconds: 20)
+        let b = excerpt(song(seed: 106, tempo: 1.06), from: 5 / 1.06, seconds: 20)
+        return a + b
+    }()
+
+    @Test func theListenerNamesFollowsAndNoticesTheNextSong() throws {
+        let listener = SongListener(index: Self.index)
+        var readings: [ListenReading] = []
+        var at = 0
+        while at < Self.set.count {
+            let end = min(Self.set.count, at + Self.rate / 10)
+            readings += listener.hear(Array(Self.set[at..<end]), sampleRate: Self.rate)
+            at = end
+        }
+        #expect(readings.count == 38)                               // one a second from the third second on
+        let first = try #require(readings.first)
+        #expect(first.time == 3 && first.state == .named && first.id == "song2")
+        // The first song: held, at the right place, at zero.
+        for r in readings where r.time >= 4 && r.time <= 20 {
+            #expect(r.id == "song2" && r.state == .held)
+            #expect(abs((r.positionSeconds ?? 0) - (10 + r.time)) < 0.15)
+            #expect(abs(r.speedPercent ?? 9) < 0.3)
+        }
+        // The second: named within a few seconds of starting, then at the right place, speed and key lock.
+        let change = try #require(readings.first { $0.id == "song6" })
+        #expect(change.time <= 26)
+        for r in readings where r.time >= 30 {
+            #expect(r.id == "song6")
+            #expect(abs((r.positionSeconds ?? 0) - (5 + (r.time - 20) * 1.06)) < 0.2)
+            #expect(abs((r.speedPercent ?? 0) - 6) < 0.3)
+            #expect(r.keyLock == true)
+        }
+        // Sound that is no song of the crate: nothing is named.
+        listener.reset()
+        let none = listener.hear(Self.excerpt(Self.song(seed: 999), from: 0, seconds: 12), sampleRate: Self.rate)
+        #expect(none.allSatisfy { $0.state == .nothingYet })
+    }
+
+    @Test func theBoothRecogniserTakesSoundWithoutWaitingAndReadsItInOrder() throws {
+        final class Box: @unchecked Sendable { let lock = NSLock(); var readings: [ListenReading] = [] }
+        let box = Box()
+        let booth = BoothRecogniser(index: Self.index) { r in box.lock.lock(); box.readings.append(r); box.lock.unlock() }
+        // Stereo at 44.1 kHz, as a microphone might deliver it, a quarter of a second at a time.
+        let stereo = Resampler.resample(Array(Self.set.prefix(12 * Self.rate)), from: Self.rate, to: 44100).flatMap { [$0, $0] }
+        var at = 0
+        while at < stereo.count {
+            let end = min(stereo.count, at + 2 * 11025)
+            booth.feed(Array(stereo[at..<end]), channels: 2, sampleRate: 44100)
+            at = end
+        }
+        // Feeding did not wait for the readings: when the last piece has been handed over, readings are still to come.
+        box.lock.lock(); let seenWhenFed = box.readings.count; box.lock.unlock()
+        booth.finish()
+        #expect(seenWhenFed < box.readings.count)
+        #expect(box.readings.count == 10)                           // one a second from the third second of twelve
+        #expect(box.readings.map(\.time) == box.readings.map(\.time).sorted())
+        #expect(box.readings.last?.id == "song2")
+        #expect(booth.latest == box.readings.last)
+    }
+
+    // MARK: Songs that hold the same sound
+
+    @Test func aSecondFileOfARecordingAndAFileThatContainsItDoNotCountAgainstIt() throws {
+        // The eight songs, a second file of song 3 (the same recording, quieter and at another rate), and a long file
+        // that is songs 1 and 2 end to end, as a continuous mix kept as one track is.
+        var songs = (0..<8).map { (id: "song\($0)", landmarks: Landmarks(mono: Self.song(seed: UInt64(100 + $0)), sampleRate: Self.rate)) }
+        let again = Resampler.resample(Self.song(seed: 103).map { $0 * 0.5 }, from: Self.rate, to: 11025)
+        songs.append((id: "song3 again", landmarks: Landmarks(mono: again, sampleRate: 11025)))
+        songs.append((id: "the mix", landmarks: Landmarks(mono: Self.song(seed: 101) + Self.song(seed: 102), sampleRate: Self.rate)))
+        songs.append((id: "song3 a third time", landmarks: Landmarks(mono: Self.song(seed: 103).map { $0 * 0.8 }, sampleRate: Self.rate)))
+        let index = RecognitionIndex(songs: songs)
+        #expect(index.isRelated(3, 8) && index.isRelated(8, 3) && index.isRelated(3, 10) && index.isRelated(8, 10))
+        #expect(index.isRelated(1, 9) && index.isRelated(2, 9))
+        #expect(!index.isRelated(1, 2) && !index.isRelated(3, 4) && !index.isRelated(0, 9))
+        // Without the search the three files of song 3 stand against each other (a match is judged against the
+        // third best) and the match looks unsure.
+        let plain = RecognitionIndex(songs: songs, findCopies: false)
+        let q3 = Landmarks(mono: Self.excerpt(Self.song(seed: 103), from: 17.3, seconds: 5), sampleRate: Self.rate)
+        let alone = try #require(Recogniser(index: Self.index).match(q3).first)
+        let unsure = try #require(Recogniser(index: plain).match(q3).first)
+        let sure = try #require(Recogniser(index: index).match(q3).first)
+        #expect(["song3", "song3 again", "song3 a third time"].contains(sure.id))
+        #expect(sure.copies.count == 2)
+        #expect(sure.confidence > 0.6 * alone.confidence && sure.confidence > 3)
+        #expect(unsure.confidence < 0.5 * sure.confidence)
+        // A song inside the long file: named as the song or as the file, surely either way.
+        let q2 = Landmarks(mono: Self.excerpt(Self.song(seed: 102), from: 8, seconds: 5), sampleRate: Self.rate)
+        let inMix = try #require(Recogniser(index: index).match(q2).first)
+        #expect(["song2", "the mix"].contains(inMix.id) && inMix.confidence > 3)
+        // The crate file's own keys do the same with no search, and the index file keeps what was found.
+        let keyed = RecognitionIndex(songs: songs, sameRecording: [nil, nil, nil, "k", nil, nil, nil, nil, "k", nil, nil], findCopies: false)
+        #expect(keyed.isRelated(3, 8) && !keyed.isRelated(1, 9))
+        let url = Self.temporaryFile("copies.dkx")
+        defer { try? FileManager.default.removeItem(at: url.deletingLastPathComponent()) }
+        try index.write(to: url)
+        #expect(try RecognitionIndex(contentsOf: url).related == index.related)
     }
 }

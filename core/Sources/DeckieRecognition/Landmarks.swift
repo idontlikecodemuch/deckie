@@ -1,8 +1,10 @@
 import Foundation
 import DeckieCore
 
-// TRIAL (docs/research/w2-own-recognition-trial.md). Song recognition that Deckie owns: nothing here ships without the
-// owner's decision, and nothing outside this folder calls it.
+// Song recognition that Deckie owns (docs/research/w2-own-recognition-trial.md; D35 chose it, Nov 14, 2026). The
+// fingerprint below (`Landmarks`) is what a crate file carries for each song (docs/architecture/crate-format.md,
+// "Addition with D35"): the engine makes it and DeckieCrate checks it. The index and the matcher in this folder are
+// still the trial's.
 //
 // The method is the one published by Wang, "An Industrial-Strength Audio Search Algorithm" (ISMIR 2003), written from
 // the paper: a song is reduced to its "constellation", the points of the spectrogram (time against frequency) that are
@@ -14,7 +16,7 @@ import DeckieCore
 
 /// The numbers the front end runs on. None is fitted to any library: each is from the paper, a first principle, or is
 /// one of a few stated options chosen on half of an outside set (the research letter says which).
-public struct LandmarkConfig: Sendable, Equatable {
+public struct LandmarkConfig: Sendable, Equatable, Codable {
     /// The analysis rate. 8 kHz keeps what a telephone keeps (to 4 kHz), which is the band a small speaker and a room
     /// pass reliably, and makes the transform cheap.
     public var sampleRate = 8000
@@ -92,25 +94,38 @@ public struct Landmarks: Sendable, Equatable {
         var buf = [Double](repeating: 0, count: N)
         var re = [Double](repeating: 0, count: fft.bins), im = [Double](repeating: 0, count: fft.bins)
         var loudest: Float = -200
+        // Pointers and `while` throughout, so that a debug build (where Swift checks every array access) still makes
+        // a song's constellation in about a second: the builders' tests run the engine unoptimised.
         x.withUnsafeBufferPointer { xs in
-            for t in 0..<frameCount {
-                let start = t * H - N / 2
-                for i in 0..<N {
-                    let j = start + i
-                    buf[i] = j >= 0 && j < xs.count ? Double(xs[j]) * window[i] : 0
-                }
-                buf.withUnsafeBufferPointer { b in
+            window.withUnsafeBufferPointer { w in
+                buf.withUnsafeMutableBufferPointer { b in
                     re.withUnsafeMutableBufferPointer { r in
-                        im.withUnsafeMutableBufferPointer { m in fft.forward(b.baseAddress!, real: r.baseAddress!, imag: m.baseAddress!) }
-                    }
-                }
-                spec.withUnsafeMutableBufferPointer { s in
-                    let row = s.baseAddress! + t * nb
-                    for k in b0...b1 {
-                        let p = re[k] * re[k] + im[k] * im[k]
-                        let d = Float(10 * log10(p + 1e-20))
-                        row[k - b0] = d
-                        if d > loudest { loudest = d }
+                        im.withUnsafeMutableBufferPointer { m in
+                            spec.withUnsafeMutableBufferPointer { s in
+                                let count = xs.count
+                                var t = 0
+                                while t < frameCount {
+                                    let start = t * H - N / 2
+                                    var i = 0
+                                    while i < N {
+                                        let j = start + i
+                                        b[i] = j >= 0 && j < count ? Double(xs[j]) * w[i] : 0
+                                        i += 1
+                                    }
+                                    fft.forward(UnsafePointer(b.baseAddress!), real: r.baseAddress!, imag: m.baseAddress!)
+                                    let row = s.baseAddress! + t * nb
+                                    var k = b0
+                                    while k <= b1 {
+                                        let p = r[k] * r[k] + m[k] * m[k]
+                                        let d = Float(10 * log10(p + 1e-20))
+                                        row[k - b0] = d
+                                        if d > loudest { loudest = d }
+                                        k += 1
+                                    }
+                                    t += 1
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -173,6 +188,15 @@ public struct Landmarks: Sendable, Equatable {
         self.strengths = strengths
     }
 
+    /// The points from `seconds` on, with time starting again there (the newest part of a window of sound).
+    public func suffix(fromSeconds seconds: Double, frameSeconds: Double) -> Landmarks {
+        let first = UInt32(max(0, (seconds / frameSeconds).rounded()))
+        let at = frames.firstIndex { $0 >= first } ?? frames.count
+        var out = Landmarks(frames: frames[at...].map { $0 - first }, pitches: Array(packed[at...]), frameCount: max(0, frameCount - Int(first)))
+        if strengths.count == count { out.strengths = Array(strengths[at...]) }
+        return out
+    }
+
     // MARK: On disk
 
     /// The bytes kept for a song: "DKL2", the frame count and point count (little-endian UInt32 each), then for each
@@ -200,6 +224,8 @@ public struct Landmarks: Sendable, Equatable {
         guard b.count >= 12, Array(b[0..<4]) == Array("DKL2".utf8) else { return nil }
         func get32(_ at: Int) -> UInt32 { (0..<4).reduce(UInt32(0)) { $0 | UInt32(b[at + $1]) << (8 * UInt32($1)) } }
         let frameCount = Int(get32(4)), n = Int(get32(8))
+        // A point is three bytes or more, so a count the bytes cannot hold is refused before anything is set aside.
+        guard n <= (b.count - 12) / 3 else { return nil }
         var frames: [UInt32] = [], pitches: [UInt16] = []
         frames.reserveCapacity(n); pitches.reserveCapacity(n)
         var i = 12
@@ -214,7 +240,10 @@ public struct Landmarks: Sendable, Equatable {
                 shift += 7
             }
             guard i + 1 < b.count else { return nil }
-            last += delta
+            // A frame number past UInt32 is not a constellation's (damaged bytes); it must not stop the program.
+            let (frame, overflow) = last.addingReportingOverflow(delta)
+            guard !overflow else { return nil }
+            last = frame
             frames.append(last)
             pitches.append(UInt16(b[i]) | UInt16(b[i + 1]) << 8)
             i += 2

@@ -3,7 +3,9 @@ import Testing
 import DeckieBuild
 import DeckieCore
 import DeckieCrate
+import DeckieDecode
 import DeckieEngine
+import DeckieRecognition
 import DeckieTestSupport
 
 /// A vocal tagger for the tests: singing over the middle half of the bars, and a style vector.
@@ -102,6 +104,16 @@ struct BuildTests {
             #expect(two.ident.title == "Track Two" && two.ident.source == "filename")
         }
         #expect(two.imported == nil && two.file.tagBpm == nil)
+        // Each song carries its fingerprint for recognition (D35), made with its analysis from the same decoded
+        // audio; the reader checked each file against its record when the crate was read.
+        #expect(first.fingerprinted == 2)
+        for t in crate.tracks {
+            let print = try #require(t.fingerprint)
+            #expect(print.format == "DKL2" && print.version == 1 && print.madeBy == options.device)
+            #expect(print.madeAt == t.analysis.analysedAt)
+            #expect(print.points > 100 && print.landmarks?.count == print.points)
+            #expect(try Data(contentsOf: crateURL.appendingPathComponent("prints/\(t.id).dkl")) == print.data)
+        }
 
         // Second run: everything unchanged, nothing analysed, the same records.
         options.fresh = false
@@ -109,7 +121,7 @@ struct BuildTests {
         let second = try Builder(options: options, analyser: analyser).run(progress: { events2.add($0) })
         print(second.summary)
         #expect(events2.started.map { [$0.files, $0.unchanged, $0.queued] } == [4, 4, 0])
-        #expect(second.analysed == 0 && second.reused == 2)
+        #expect(second.analysed == 0 && second.reused == 2 && second.fingerprinted == 0)
         // The same records, the rekordbox entry's imported_at included: it was imported unchanged.
         #expect(try CrateReader.read(from: crateURL).tracks == crate.tracks)
         #expect(try CrateReader.read(from: crateURL).manifest.crateId == crate.manifest.crateId)
@@ -121,7 +133,7 @@ struct BuildTests {
         let third = try Builder(options: options, analyser: analyser).run(progress: { events3.add($0) })
         #expect(events3.started.map { [$0.unchanged, $0.queued] } == [3, 1])
         #expect(events3.outcomes[Fixture.firstTrack] == .reused)
-        #expect(third.analysed == 0 && third.reused == 2)
+        #expect(third.analysed == 0 && third.reused == 2 && third.fingerprinted == 0)
 
         // With --bpm-tags the MP3's own tempo tag steers its analysis, so it alone is analysed again.
         if Available.ffmpeg != nil {
@@ -167,6 +179,55 @@ struct BuildTests {
             #expect(third.analysed == 1)
             #expect(try CrateReader.read(from: out).tracks.first?.vocal == nil)
         }
+    }
+
+    /// A work folder and a crate file made before the fingerprint (D35), stood in for by taking the fingerprint out
+    /// of both: the next run gives the song its fingerprint from one decode, with no second analysis, and the run
+    /// after that makes nothing.
+    @Test func aRecordFromBeforeTheFingerprintGainsItWithoutASecondAnalysis() async throws {
+        let music = try await Fixture.shared.music()
+        let analyser = try await Fixture.shared.analyser()
+        let folder = try temporaryFolder("print-music")
+        try? FileManager.default.removeItem(at: folder.appendingPathComponent("one.wav"))
+        try FileManager.default.copyItem(at: music.appendingPathComponent(Fixture.firstTrack),
+                                         to: folder.appendingPathComponent("one.wav"))
+        let out = try temporaryFolder("print-build").appendingPathComponent("Print.deckiecrate")
+        var options = BuildOptions(folder: folder, output: out, jobs: 1, fresh: true)
+        let first = try await CPUTurns.exclusive { try Builder(options: options, analyser: analyser).run() }
+        #expect(first.analysed == 1 && first.fingerprinted == 1)
+        let made = try #require(first.crate.tracks.first?.fingerprint)
+        let id = first.crate.tracks[0].id
+        // The same constellation as the file's own audio, the channels averaged at the file's rate.
+        let buffer = try AudioDecoder.decode(folder.appendingPathComponent("one.wav"))
+        #expect(made.landmarks == Landmarks(mono: buffer.mono(), sampleRate: buffer.sampleRate))
+
+        // As an older deckie-build left them: no `print` in the record, the line or the crate file, and no bytes.
+        let records = options.workFolder.appendingPathComponent("records")
+        let recordURL = records.appendingPathComponent("\(id).json")
+        var record = try JSONSerialization.jsonObject(with: Data(contentsOf: recordURL)) as! [String: Any]
+        var track = record["track"] as! [String: Any]
+        track["print"] = nil
+        record["track"] = track
+        try JSONSerialization.data(withJSONObject: record).write(to: recordURL)
+        try FileManager.default.removeItem(at: WorkRecords.fingerprintURL(id, in: records))
+        let lines = options.workFolder.appendingPathComponent("files.jsonl")
+        try Data(try String(contentsOf: lines, encoding: .utf8).replacingOccurrences(of: #""print":true,"#, with: "").utf8)
+            .write(to: lines)
+        var old = try CrateReader.read(from: out)
+        old.tracks[0].fingerprint = nil
+        try CrateWriter.write(old, to: out)
+        #expect(!FileManager.default.fileExists(atPath: out.appendingPathComponent("prints/\(id).dkl").path))
+
+        options.fresh = false
+        let second = try Builder(options: options, analyser: analyser).run()
+        #expect(second.analysed == 0 && second.reused == 1 && second.fingerprinted == 1)
+        let again = try #require(try CrateReader.read(from: out).tracks.first)
+        #expect(again.fingerprint?.data == made.data && again.analysis == first.crate.tracks[0].analysis)
+        #expect(WorkRecords.fingerprint(id, in: records)?.data == made.data)
+
+        let third = try Builder(options: options, analyser: analyser).run()
+        #expect(third.analysed == 0 && third.reused == 1 && third.fingerprinted == 0)
+        #expect(try CrateReader.read(from: out).tracks.first?.fingerprint == again.fingerprint)
     }
 
     /// A file with a damaged MP3 frame (the test track's MP3, one frame near 30 s damaged on purpose, `MP3Damage`) is

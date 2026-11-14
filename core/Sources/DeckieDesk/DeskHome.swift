@@ -17,6 +17,7 @@ import DeckieCrate
 ///       runs.jsonl                   one line per finished run: counts and timings
 ///     Files/                         what was worked out for each file, by the file's id (its content's hash)
 ///       records/<id>.json            the analysis (the builder's work record)
+///       records/<id>.dkl             the song's fingerprint for recognition (D35), kept with its analysis
 ///       signatures/<id>_<v>.*        a recognition signature and who made it when
 ///       prints/<id>.print            the print that finds copies of the same recording
 ///       discs/<disc id>.json         what was learned from a music CD: its table, its CD-Text, each song's id

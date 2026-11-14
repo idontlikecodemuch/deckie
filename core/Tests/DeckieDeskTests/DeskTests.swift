@@ -3,6 +3,7 @@ import Testing
 import DeckieCore
 import DeckieCrate
 import DeckieBuild
+import DeckieRecognition
 @testable import DeckieDesk
 
 /// A fresh, empty folder for one test.
@@ -99,6 +100,28 @@ func crate(_ tracks: [CrateTrack], name: String = "Night") -> Crate {
         try store.savePrint(p, id: "abc")
         #expect(store.print("abc") == p)
         #expect(FileStore.decodePrint(Data("DKP1".utf8)) == nil)
+    }
+
+    /// The fingerprint for recognition (D35) is kept with the file's analysis, by the file's id, and comes back as
+    /// it went in; a file with no analysis yet keeps none.
+    @Test func theFingerprintIsKeptWithTheFilesAnalysis() throws {
+        let store = FileStore(folder: try scratch("store-fingerprint"))
+        let id = "aaaaaaaaaaaaaaaa"
+        let landmarks = Landmarks(frames: [0, 3, 3, 900, 901], pitches: [1, 0x4500, 0x8ABC, 0xC001, 13000], frameCount: 1000)
+        let print = CrateTrack.Fingerprint(landmarks, madeBy: "Mac15,6", madeAt: "2026-11-14T00:00:00Z")
+        #expect(store.fingerprint(id) == nil)
+        #expect(try !store.saveFingerprint(print, id: id))
+        // The analysis as the builder keeps it: the record, made before the fingerprint.
+        try FileManager.default.createDirectory(at: store.records, withIntermediateDirectories: true)
+        let track = try JSONSerialization.jsonObject(with: JSONEncoder().encode(entry(id, "Song", disc: nil, folder: nil, track: nil, rel: "Song.mp3")))
+        try JSONSerialization.data(withJSONObject: ["engine": "deckie-test", "track": track])
+            .write(to: store.records.appendingPathComponent("\(id).json"))
+        #expect(store.hasRecord(id) && store.fingerprint(id) == nil)
+        #expect(try store.saveFingerprint(print, id: id))
+        #expect(store.fingerprint(id) == print && store.fingerprint(id)?.landmarks == landmarks)
+        #expect(try Data(contentsOf: store.records.appendingPathComponent("\(id).dkl")) == landmarks.encoded())
+        // It is not the print that finds copies, which is kept apart.
+        #expect(store.print(id) == nil)
     }
 }
 

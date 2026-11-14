@@ -1,11 +1,13 @@
 import Foundation
 import DeckieCore
 import DeckieCrate
+import DeckieBuild
 
 /// What a desk worked out for each file, kept once and used by every crate (`Files/` in `DeskHome`), keyed by the
 /// file's id (the SHA-256 of its bytes, as an entry's id is): the analysis (the builder's records, through
-/// `BuildOptions.sharedRecords`), the recognition signatures and the print that finds copies. A song read for one
-/// crate is not read again for another: only its bytes are hashed, to know which song it is.
+/// `BuildOptions.sharedRecords`) with the song's fingerprint beside it (D35), the recognition signatures and the print
+/// that finds copies. A song read for one crate is not read again for another: only its bytes are hashed, to know
+/// which song it is.
 public struct FileStore: Sendable {
     public let folder: URL
     public init(folder: URL) { self.folder = folder }
@@ -24,6 +26,20 @@ public struct FileStore: Sendable {
     /// Whether the analysis of `id` is kept.
     public func hasRecord(_ id: String) -> Bool {
         FileManager.default.fileExists(atPath: records.appendingPathComponent("\(id).json").path)
+    }
+
+    // MARK: fingerprints
+
+    /// The song's fingerprint, by which a booth names it from its sound (D35; the crate file's `print` and
+    /// `prints/<id>.dkl`), or nil. The builder makes it with the analysis, from the same decoded audio, and keeps it
+    /// beside the record (`records/<id>.dkl`), so a file is fingerprinted once however many crates it is in. Not the
+    /// print below, which finds copies of one recording.
+    public func fingerprint(_ id: String) -> CrateTrack.Fingerprint? { WorkRecords.fingerprint(id, in: records) }
+
+    /// Keeps a fingerprint with the file's analysis; false, and nothing kept, when the file has no analysis yet.
+    @discardableResult
+    public func saveFingerprint(_ f: CrateTrack.Fingerprint, id: String) throws -> Bool {
+        try WorkRecords.keep(f, id: id, in: records)
     }
 
     // MARK: signatures

@@ -252,6 +252,8 @@ func check(_ file: URL, pc: Bool = false, source: String? = nil) {
         expect(t.file.sha256?.hasPrefix(t.id) ?? false, "\(rel): the id is not the start of the file's SHA-256")
         expect(t.signatures.isEmpty, "\(rel): has recognition signatures, which this builder cannot make")
         expect(t.bars != nil, "\(rel): no per-bar series")
+        // The song's fingerprint for recognition (D35), which every builder makes; the reader has checked its file.
+        expect((t.fingerprint?.points ?? 0) > 0, "\(rel): no fingerprint for recognition")
     }
     let log = crate.manifest.importLog
     let entries = (log?.entries ?? []).map { "\($0.rel): \($0.reason)" }.sorted()

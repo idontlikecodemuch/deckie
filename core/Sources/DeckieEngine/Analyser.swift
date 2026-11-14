@@ -3,6 +3,7 @@ import DeckieAudio
 import DeckieCore
 import DeckieCrate
 import DeckieDecode
+import DeckieRecognition
 import DeckieInference
 
 /// What the engine cannot read from the audio file.
@@ -46,7 +47,8 @@ public enum AnalyserError: Error, Equatable, CustomStringConvertible {
 ///   hash       SHA-256 of the file's bytes (`CrateIDs`), whose first 16 hex characters are the record's id
 ///   decode     `AudioDecoder` (WAV, AIFF, MP3, FLAC), damaged MP3 frames silenced and listed (`damagedFrames`); not
 ///              44.1 kHz: `Resampler` to 44.1 kHz, as the lab resamples with soxr; mono is the channels' mean
-///              (`AudioBuffer.mono`)
+///              (`AudioBuffer.mono`); and the song's fingerprint (`Landmarks`, D35), made here from the audio at
+///              the file's own rate while it is in hand, so no builder decodes a song a second time for it
 ///   resample   the mono mix to 22,050 Hz (`Decimator.halve`, soxr's filter): what Beat This!, the STFT key estimator
 ///              and the spectral features all read (the lab resamples it once for the spectral features and Beat This!
 ///              again inside its package; the samples are the same)
@@ -141,6 +143,9 @@ public final class Analyser: Sendable {
             damagedFrames = decoded.damagedFrames
             startUncertain = decoded.startUncertain
         }
+        // The fingerprint (D35) from the audio as the file has it, before any resampling: `Landmarks` brings it to
+        // its own 8 kHz itself. About a tenth of a second for a minute of music.
+        let landmarks = Landmarks(mono: buffer.mono(), sampleRate: buffer.sampleRate)
         let sourceRate = buffer.sampleRate, sourceChannels = buffer.channelCount
         if buffer.sampleRate != SR { buffer = Resampler(from: buffer.sampleRate, to: SR).process(buffer) }
         let mono = buffer.mono()
@@ -306,7 +311,7 @@ public final class Analyser: Sendable {
         lap("windows")
 
         let path = url.path
-        return Analysis(
+        var analysis = Analysis(
             id: CrateIDs.id(forSHA256: sha), title: options.title ?? url.deletingPathExtension().lastPathComponent,
             version: options.version,
             source: .init(path: path, name: url.lastPathComponent, bytes: bytes, sha256: sha,
@@ -321,5 +326,7 @@ public final class Analyser: Sendable {
                           vocalProb: vocal?.perBar),
             onsetPattern16: pattern, vocal: vocal, vocalModel: vocal == nil ? nil : vocalTagger?.modelName,
             vocalStructure: vocalStructure, hooks: hooks, flags: flags, localTempo: localTempo, timings: timings)
+        analysis.landmarks = landmarks
+        return analysis
     }
 }

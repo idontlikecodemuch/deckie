@@ -7,6 +7,9 @@ import DeckieCrate
 ///
 ///   records/<id>.json   one finished record per file content (the id is the file's SHA-256, as in the crate),
 ///                       written whole or not at all
+///   records/<id>.dkl    that file's fingerprint (D35), the bytes the crate file carries as `prints/<id>.dkl`; the
+///                       record's `print` says who made it when, so a record lists a fingerprint only once its bytes
+///                       are kept
 ///   files.jsonl         one line per finished file, appended as it finishes: its path below the folder, size and
 ///                       modification time, the engine that ran, the tag tempo given, the record's id or why it
 ///                       failed, and which picture it has for a cover; the last line for a path wins, and a line cut short by an interruption is ignored
@@ -36,11 +39,14 @@ final class WorkStore: @unchecked Sendable {
         /// Why it failed, when `failed`.
         var reason: String?
         var message: String?
+        /// Whether the record had its fingerprint when the line was written. A line from before the fingerprint
+        /// (D35) has none, so its file is looked at once more, and fingerprinted from one decode.
+        var fingerprint: Bool? = nil
         /// The file's cover as last found (`CoverNote`), so it is not looked for again; nil until it has been.
         var cover: CoverNote?
 
         enum CodingKeys: String, CodingKey {
-            case rel, size, modified, status, engine, id, tags, reason, message, cover, bpmTag = "bpm_tag"
+            case rel, size, modified, status, engine, id, tags, reason, message, cover, bpmTag = "bpm_tag", fingerprint = "print"
         }
     }
 
@@ -114,17 +120,10 @@ final class WorkStore: @unchecked Sendable {
     func recordURL(_ id: String) -> URL { recordsFolder.appendingPathComponent("\(id).json") }
 
     /// The finished record for `id`, or nil.
-    func record(_ id: String) -> Record? {
-        guard let data = try? Data(contentsOf: recordURL(id)) else { return nil }
-        return try? JSONDecoder().decode(Record.self, from: data)
-    }
+    func record(_ id: String) -> Record? { WorkRecords.record(id, in: recordsFolder) }
 
     /// Keeps a finished record, whole or not at all.
-    func save(_ record: Record) throws {
-        let encoder = JSONEncoder()
-        encoder.outputFormatting = [.sortedKeys]
-        try DeckieFiles.write(try encoder.encode(record), to: recordURL(record.track.id))
-    }
+    func save(_ record: Record) throws { try WorkRecords.save(record, in: recordsFolder) }
 
     /// Notes a finished file (after its record is saved).
     func append(_ line: FileLine) throws {
@@ -141,5 +140,50 @@ final class WorkStore: @unchecked Sendable {
         if log == nil { log = try DeckieFiles.openForAppending(linesFile) }
         try log!.seekToEnd()
         try log!.write(contentsOf: data)
+    }
+}
+
+/// The finished records of a records folder, for the work folder and for a caller that shares the folder with it
+/// (Deckie Desk's store of what it worked out for each file, `BuildOptions.sharedRecords`).
+public enum WorkRecords {
+    static func recordURL(_ id: String, in records: URL) -> URL { records.appendingPathComponent("\(id).json") }
+    /// Where a record's fingerprint is kept: `<id>.dkl` beside `<id>.json`.
+    public static func fingerprintURL(_ id: String, in records: URL) -> URL { records.appendingPathComponent("\(id).dkl") }
+
+    /// The finished record for `id` with its fingerprint's bytes in place, or nil. A record that lists a fingerprint
+    /// whose bytes are gone or damaged reads as having none, so the builder makes it again.
+    static func record(_ id: String, in records: URL) -> WorkStore.Record? {
+        guard let data = try? Data(contentsOf: recordURL(id, in: records)),
+              var record = try? JSONDecoder().decode(WorkStore.Record.self, from: data) else { return nil }
+        if let listed = record.track.fingerprint {
+            let kept = (try? Data(contentsOf: fingerprintURL(id, in: records)))
+                .flatMap { CrateTrack.Fingerprint(data: $0, madeBy: listed.madeBy, madeAt: listed.madeAt) }
+            record.track.fingerprint = kept?.points == listed.points ? kept : nil
+        }
+        return record
+    }
+
+    /// Keeps a record: its fingerprint's bytes first, then the record that lists them.
+    static func save(_ record: WorkStore.Record, in records: URL) throws {
+        let id = record.track.id
+        if let f = record.track.fingerprint { try DeckieFiles.write(f.data, to: fingerprintURL(id, in: records)) }
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = [.sortedKeys]
+        try DeckieFiles.write(try encoder.encode(record), to: recordURL(id, in: records))
+    }
+
+    /// The fingerprint kept for the file `id`, or nil when it has no record or its record has none.
+    public static func fingerprint(_ id: String, in records: URL) -> CrateTrack.Fingerprint? {
+        record(id, in: records)?.track.fingerprint
+    }
+
+    /// Keeps `fingerprint` with the record of the file `id`, replacing the one it had; false, and nothing kept, when
+    /// the file has no record yet (a fingerprint is kept with the analysis it belongs to).
+    @discardableResult
+    public static func keep(_ fingerprint: CrateTrack.Fingerprint, id: String, in records: URL) throws -> Bool {
+        guard var r = record(id, in: records) else { return false }
+        r.track.fingerprint = fingerprint
+        try save(r, in: records)
+        return true
     }
 }

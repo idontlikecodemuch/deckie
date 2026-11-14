@@ -334,7 +334,8 @@ struct StatusBar: View {
         HStack(spacing: Look.Space.statusBar) {
             if let c = model.crate {
                 Text(Words.songs(c.tracks.count)).fontWeight(Look.Fonts.statusSongsWeight)
-                let unsigned = c.tracks.filter { $0.signatures.isEmpty }.count
+                // Neither a fingerprint (D35) nor a signature: the booth cannot name the song from its sound.
+                let unsigned = c.tracks.filter { !$0.canBeRecognised }.count
                 if unsigned > 0 { Text(Words.cantBeRecognised(unsigned)).foregroundStyle(.secondary) }
                 let unnamed = model.needingNames.count
                 if unnamed > 0 || model.onlyNeedName {
