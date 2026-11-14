@@ -207,7 +207,7 @@ public final class DeskSession {
     /// as a correction, so reading the song again keeps it.
     public func fixName(_ id: String, title: String? = nil, artist: String? = nil, version: String? = nil,
                         tags: [String]? = nil) throws {
-        guard let i = crate?.tracks.firstIndex(where: { $0.id == id }) else { throw DeskError("no song \(id)") }
+        guard let i = crate?.tracks.firstIndex(where: { $0.id == id }) else { throw DeskError(DeskWords.text("error.noSong", ["id": id])) }
         try change("undoNameFix") {
             let before = crate!.tracks[i]
             book.keep(before)
@@ -233,7 +233,7 @@ public final class DeskSession {
     /// A DJ's facts for one song (D34): release, year, label, genre or any other known fact, by name, as text ("" clears
     /// one); kept as corrections beside the names, so reading the song again keeps them. One step of undo.
     public func fixFacts(_ id: String, _ given: [String: String]) throws {
-        guard let i = crate?.tracks.firstIndex(where: { $0.id == id }) else { throw DeskError("no song \(id)") }
+        guard let i = crate?.tracks.firstIndex(where: { $0.id == id }) else { throw DeskError(DeskWords.text("error.noSong", ["id": id])) }
         guard !given.isEmpty else { return }
         try change("undoNameFix") {
             var t = crate!.tracks[i]
@@ -281,7 +281,7 @@ public final class DeskSession {
     /// "Look again for keys and names" (D30) for the crate showing, without reading its music again. One step of
     /// undo.
     public func lookAgain(environment: [String: String] = ProcessInfo.processInfo.environment) throws -> LocalFactsSummary {
-        guard let info = current, crate != nil else { throw DeskError("no crate with songs is showing") }
+        guard let info = current, crate != nil else { throw DeskError(DeskWords.text("error.noCrateShowing")) }
         try save()
         let (c, summary) = try DeskLocalFacts.lookAgain(home: home, crateId: info.id, environment: environment)
         let read = NameBook.load(from: shelf.file(DeskRun.namesFile, of: info.id))
@@ -333,12 +333,12 @@ public final class DeskSession {
         case "paste": p = DeskNaming.pasteList(text ?? "", songs: songs, onlyEmpty: onlyEmpty)
         case "pattern": p = DeskNaming.fromFileNames(pattern: pattern ?? DeskNaming.patterns[0], songs: songs, onlyEmpty: onlyEmpty)
         case "playlist":
-            guard let playlist else { throw DeskError("no playlist given") }
+            guard let playlist else { throw DeskError(DeskWords.text("error.noPlaylist")) }
             let data = try Data(contentsOf: playlist)
             let text = String(data: data, encoding: .utf8) ?? String(decoding: data, as: UTF8.self)
             p = DeskNaming.fromPlaylist(DeskNaming.readPlaylist(text), songs: songs, onlyEmpty: onlyEmpty)
         case "check": p = DeskNaming.looksRight(songs: songs)
-        default: throw DeskError("no tool \(tool)")
+        default: throw DeskError(DeskWords.text("error.noTool", ["tool": tool]))
         }
         preview = p
         return p
@@ -348,8 +348,8 @@ public final class DeskSession {
     /// undo. Returns how many songs changed.
     @discardableResult
     public func applyPreview(ticks: Set<Int>?) throws -> Int {
-        guard let p = preview, crate != nil else { throw DeskError("there is nothing to apply") }
-        guard p.problem == nil else { throw DeskError("the list does not match the songs yet") }
+        guard let p = preview, crate != nil else { throw DeskError(DeskWords.text("error.nothingToApply")) }
+        guard p.problem == nil else { throw DeskError(DeskWords.text("error.listDoesNotMatch")) }
         var n = 0
         try change(p.tool == "check" ? "undoCheck" : "undoNames") {
             for t in crate!.tracks where p.changes.contains(where: { $0.song == t.id }) { book.keep(t) }
@@ -381,7 +381,7 @@ public final class DeskSession {
     /// The plan for a lookup, shown as its sentence before anything is sent: `scope` `disc` for the music CD added as
     /// `source`; otherwise the songs given (`ids`), a source's songs (`source`), or the songs that need a name.
     public func lookupPlan(scope: String, ids: [String]? = nil, source: String? = nil) throws -> DeskLookup.Plan {
-        guard let c = crate else { throw DeskError("no crate with songs is showing") }
+        guard let c = crate else { throw DeskError(DeskWords.text("error.noCrateShowing")) }
         return try DeskLookup.plan(scope: scope, ids: ids, source: source, crate: c, info: current, paths: placePaths,
                                    home: home, facts: facts)
     }
@@ -393,7 +393,7 @@ public final class DeskSession {
     /// songs changed. The review stays, so the window can show what was used.
     @discardableResult
     public func applyLookup(_ choices: [DeskLookup.Choice]?) throws -> Int {
-        guard let r = review, crate != nil else { throw DeskError("there is no lookup to use") }
+        guard let r = review, crate != nil else { throw DeskError(DeskWords.text("error.noLookupToUse")) }
         var n = 0
         try change("undoLookup") {
             n = DeskLookup.apply(r, choices ?? DeskLookup.defaultChoices(r), to: &crate!, corrections: &corrections, book: &book)
@@ -430,7 +430,7 @@ public final class DeskSession {
     /// source's name when none is (so the window can say "Put Friday night back in to listen").
     public func audio(_ id: String, open: (String) throws -> MusicCD = { try MusicCDs.open($0) },
                       musicCDs: () -> [MusicCDs.Found] = { MusicCDs.list() }) throws -> DeskAudio.Sound {
-        guard let t = crate?.tracks.first(where: { $0.id == id }) else { throw DeskError("no song \(id)") }
+        guard let t = crate?.tracks.first(where: { $0.id == id }) else { throw DeskError(DeskWords.text("error.noSong", ["id": id])) }
         return try DeskAudio.find(t, info: current, paths: placePaths, open: open, musicCDs: musicCDs)
     }
 
@@ -461,7 +461,7 @@ public final class DeskSession {
     /// Windows and Linux hands a crate file out: when the single-file form of a crate file is ready (being built on the
     /// branch pc/windows-builder), the export switches to it here.
     public func export(into folder: URL) throws -> URL {
-        guard let info = current, crate != nil else { throw DeskError("the crate has no songs yet, so there is no crate file to write") }
+        guard let info = current, crate != nil else { throw DeskError(DeskWords.text("error.noSongsNoCrateFile")) }
         try save()
         let safe = info.name.map { "/\\:*?\"<>|".contains($0) ? "-" : $0 }
         let dest = folder.appendingPathComponent(String(safe) + "." + CrateFormat.packageExtension, isDirectory: true)

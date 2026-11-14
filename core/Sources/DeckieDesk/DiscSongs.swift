@@ -212,7 +212,7 @@ final class DiscSongFiles: BuildFiles, @unchecked Sendable {
     }
 
     func fetch(_ f: SourceFile) throws -> URL {
-        guard let s = song(f) else { throw DeskError("no song \(f.rel) on the disc") }
+        guard let s = song(f) else { throw DeskError(DeskWords.text("error.noSongOnDisc", ["rel": f.rel])) }
         if let own = cd.file(of: s) {
             lock.lock(); fetched[CratePath.lastName(f.rel)] = (own, 0, false); lock.unlock()
             return own

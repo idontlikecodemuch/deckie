@@ -141,7 +141,7 @@ public enum DeskLookup {
                             paths: PlacePaths, home: DeskHome, facts: (CrateTrack) -> DeskNaming.Facts) throws -> Plan {
         if scope == "disc" {
             guard let source, let discId = info?.discs[source], let record = DiscRecords.record(home, disc: discId) else {
-                throw DeskError("\(source ?? "that source") is not a music CD Desk has read")
+                throw DeskError(DeskWords.text("error.notAMusicCD", ["source": source ?? DeskWords.text("error.thatSource")]))
             }
             var numbers: [String: Int] = [:]
             var songs: [DeskNaming.Song] = []
