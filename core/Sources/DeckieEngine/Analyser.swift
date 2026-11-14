@@ -276,12 +276,13 @@ public final class Analyser: Sendable {
         }
 
         // ------------------------------------------------------------------ key: confidence, the two windows, segments
-        // The song key is the HPCP method's (`HPCPKey`); the windows are judged against it, as the lab judged them
-        // against the product's song key. mixer/key_light.py reads the windows from the feature file, rounded to 3
+        // The mix windows are judged against the reader's answer (`ThreeAnswerKey`; engine 0.6.0): its key, either
+        // key on its home note, or nothing when it was not sure, as the lab judged them against the product's song
+        // key (until 0.5.0 that was the plain HPCP method's key, whatever the record's key was). mixer/key_light.py reads the windows from the feature file, rounded to 3
         // decimals.
         let key = KeyEstimator.estimate(chroma, mixIn: (Py.round(mixIn.startS, 3), Py.round(mixIn.endS, 3)),
                                         mixOut: (Py.round(mixOut.startS, 3), Py.round(mixOut.endS, 3)),
-                                        songKey: hpcpKey.decision.camelot)
+                                        songKeys: Analysis.songKeys(threeAnswer.answer))
         let keyConfidence = KeyConfidence.hpcp(hpcpKey.decision)
 
         // ------------------------------------------------------------------ local tempo, from the rounded record

@@ -176,6 +176,44 @@ public enum KeyEstimator {
             segments: segments(chroma, profile: profile))
     }
 
+    /// The key results with the mix windows judged against the three-answer reader's answer (engine 0.6.0), not one
+    /// given key: `songKeys` holds the reader's key (one code), the two keys on its home note when it left the mode
+    /// open, or nothing when it was not sure. A window is then judged against whichever of those keys fits it best
+    /// (`windowKey(_:start:end:side:songKeys:profile:gap:)`); with nothing to judge against it is only read.
+    /// `songKey` in the result is the codes joined by "/" ("8A", "8A/11B", or "").
+    public static func estimate(_ chroma: Chromagram, mixIn: (start: Double, end: Double)? = nil,
+                                mixOut: (start: Double, end: Double)? = nil, songKeys: [String],
+                                profile: KeyProfile = .edma, gap: Double = 0.08) -> KeyResult {
+        let whole = bestKey(meanChroma(chroma, frames: 0..<chroma.frames), profile: profile)
+        return KeyResult(
+            whole: whole, songKey: songKeys.joined(separator: "/"),
+            mixIn: windowKey(chroma, start: mixIn?.start ?? 0, end: mixIn?.end ?? 0, side: .mixIn, songKeys: songKeys,
+                             profile: profile, gap: gap),
+            mixOut: windowKey(chroma, start: mixOut?.start ?? 0, end: mixOut?.end ?? 0, side: .mixOut, songKeys: songKeys,
+                              profile: profile, gap: gap),
+            segments: segments(chroma, profile: profile))
+    }
+
+    /// `windowKey` against several possible song keys. One key: exactly `windowKey(...songKey:)`. Several (a home
+    /// note's two keys): `songKeyR` is the best fit among them, and the window is flagged only when its own key is far
+    /// (wheel cost 2 or more) from every one of them and fits better than the best by the gap. None: the window is
+    /// read and not judged (`songKeyR` its own fit, gain 0, never flagged).
+    public static func windowKey(_ chroma: Chromagram, start: Double, end: Double, side: MixEnd, songKeys: [String],
+                                 profile: KeyProfile = .edma, gap: Double = 0.08) -> WindowKey? {
+        if songKeys.count == 1 {
+            return windowKey(chroma, start: start, end: end, side: side, songKey: songKeys[0], profile: profile, gap: gap)
+        }
+        // Read the window against its own key, then judge.
+        guard let own = windowKey(chroma, start: start, end: end, side: side, songKey: "", profile: profile, gap: gap,
+                                  judged: false) else { return nil }
+        guard !songKeys.isEmpty else { return own }
+        let cm = meanChroma(chroma, frames: own.frames)
+        let here = songKeys.map { correlation(cm, camelot: $0, profile: profile) }.max()!
+        let far = songKeys.allSatisfy { Camelot.wheelCost(own.estimate.camelot, $0) >= 2 }
+        return WindowKey(frames: own.frames, estimate: own.estimate, songKeyR: here, gain: own.estimate.r - here,
+                         flag: far && (own.estimate.r - here) >= gap)
+    }
+
     // MARK: - The lab's functions
 
     /// The mean of each pitch class over `frames`, as numpy's `C[:, a:b].mean(axis=1)` gives it for the lab's chroma
@@ -274,7 +312,7 @@ public enum KeyEstimator {
     /// window better than the song key does by at least `gap`. Nil when the window holds no frames (the lab would
     /// compute with an empty mean, which is NaN).
     public static func windowKey(_ chroma: Chromagram, start: Double, end: Double, side: MixEnd, songKey: String,
-                                 profile: KeyProfile = .edma, gap: Double = 0.08) -> WindowKey? {
+                                 profile: KeyProfile = .edma, gap: Double = 0.08, judged: Bool = true) -> WindowKey? {
         let fps = framesPerSecond, n = chroma.frames
         var a = Int(start * fps), b = Int(end * fps)
         if b - a < Int(8 * fps) {
@@ -287,6 +325,7 @@ public enum KeyEstimator {
         if frames.isEmpty { return nil }
         let cm = meanChroma(chroma, frames: frames)
         let e = bestKey(cm, profile: profile)
+        if !judged { return WindowKey(frames: frames, estimate: e, songKeyR: e.r, gain: 0, flag: false) }
         let here = correlation(cm, camelot: songKey, profile: profile)
         let far = Camelot.wheelCost(e.camelot, songKey) >= 2
         return WindowKey(frames: frames, estimate: e, songKeyR: here, gain: e.r - here, flag: far && (e.r - here) >= gap)

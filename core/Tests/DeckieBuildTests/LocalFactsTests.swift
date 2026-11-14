@@ -437,10 +437,11 @@ import DeckieCrate
 
     /// Each branch of `LocalFacts.decideKey`, on its own.
     @Test func everyBranchOfTheKeyDecision() {
-        func decide(_ t: CrateTrack, _ readings: [(String, String)], own: CrateTrack.Key?) -> (CrateTrack, LocalFacts.Report) {
+        func decide(_ t: CrateTrack, _ readings: [(String, String)], own: CrateTrack.Key?,
+                    home: CrateTrack.KeyHome? = nil) -> (CrateTrack, LocalFacts.Report) {
             var t = t, r = LocalFacts.Report()
             LocalFacts.decideKey(&t, readings.enumerated().map { .init(origin: $0.element.0, camelot: $0.element.1, written: nil, order: $0.offset) },
-                                 own: own, &r)
+                                 own: own, ownHome: home ?? own.flatMap { _ in LocalFacts.ownHome(t) }, &r)
             return (t, r)
         }
         let deckie = Self.track("x", title: "x", rel: "a.mp3", key: Self.engineKey)
@@ -468,23 +469,81 @@ import DeckieCrate
         let sure = Self.track("x", title: "x", rel: "a.mp3", key: three(1.0))
         let (kept, r6) = decide(sure, [], own: three(1.0))
         #expect(kept == sure && r6.keysFrom == ["deckie": 1] && r6.keysNotRead == 0)
-        // 7. Home note with the mode open (0.45) and not sure (0.2): no key is shown, the flag goes, and each is counted.
-        var open = Self.track("x", title: "x", rel: "a.mp3", key: three(0.45)); open.flags = ["key_uncertain"]
-        let (o, r7) = decide(open, [], own: three(0.45))
-        #expect(o.key == nil && o.flags.isEmpty && r7.keysNotRead == 1 && r7.keysModeOpen == 1 && r7.keysNotSure == 0)
-        let (n, r8) = decide(open, [], own: three(0.2))
-        #expect(n.key == nil && r8.keysNotRead == 1 && r8.keysNotSure == 1 && r8.keysModeOpen == 0 && r8.keysFrom.isEmpty)
-        // 8. A DJ's key beside a reading Deckie was not sure of: the DJ's key, and no "deckie" vote from a guess;
-        // beside a key it was sure of, the vote stays.
-        let (djOnly, _) = decide(open, [("tag", "8A")], own: three(0.2))
-        #expect(djOnly.key?.source == "tag" && djOnly.key?.votes == ["tag": "8A"])
+        // 7. The home note alone (D36). As engine 0.6.0 writes it: no key block, a `key_home` block. It stays, the
+        // record has no key, and it is counted as a home note, not as "no key".
+        let homeE = CrateTrack.KeyHome(source: LocalFacts.threeAnswerSource, pitchClass: 4)
+        #expect(homeE.note == "E" && homeE.camelot == ["9A", "12B"])
+        var open = Self.track("x", title: "x", rel: "a.mp3"); open.keyHome = homeE
+        let (o, r7) = decide(open, [], own: nil, home: homeE)
+        #expect(o.key == nil && o.keyHome == homeE && o.flags.isEmpty)
+        #expect(r7.keysHomeNote == 1 && r7.keysNotRead == 0 && r7.keysNotSure == 0 && r7.keysFrom.isEmpty)
+        #expect(o.featuresPresent.contains("key_home") && !o.featuresPresent.contains("key"))
+        // As engine 0.5.0 wrote it (a key block at 0.45, its code a guess): the home note is taken from the block,
+        // the guessed key is not shown, and the flag goes.
+        var open5 = Self.track("x", title: "x", rel: "a.mp3", key: three(0.45)); open5.flags = ["key_uncertain"]
+        #expect(LocalFacts.ownHome(open5) == homeE)
+        let (o5, r75) = decide(open5, [], own: three(0.45))
+        #expect(o5.key == nil && o5.keyHome == homeE && o5.flags.isEmpty && r75.keysHomeNote == 1 && r75.keysNotRead == 0)
+        // Not sure (0.2): neither a key nor a home note; counted as no key and as not sure.
+        var unsure = Self.track("x", title: "x", rel: "a.mp3", key: three(0.2)); unsure.flags = ["key_uncertain"]
+        #expect(LocalFacts.ownHome(unsure) == nil)
+        let (n, r8) = decide(unsure, [], own: three(0.2))
+        #expect(n.key == nil && n.keyHome == nil && n.flags.isEmpty)
+        #expect(r8.keysNotRead == 1 && r8.keysNotSure == 1 && r8.keysHomeNote == 0 && r8.keysFrom.isEmpty)
+        // 8. A DJ's key takes the place of a home note (the block goes) and of a reading Deckie was not sure of,
+        // with no "deckie" vote from either; beside a key Deckie was sure of, the vote stays.
+        let (djHome, rdj) = decide(open, [("tag", "8A")], own: nil, home: homeE)
+        #expect(djHome.key?.source == "tag" && djHome.key?.votes == ["tag": "8A"] && djHome.keyHome == nil && rdj.keysHomeNote == 0)
+        let (djOnly, _) = decide(unsure, [("tag", "8A")], own: three(0.2))
+        #expect(djOnly.key?.source == "tag" && djOnly.key?.votes == ["tag": "8A"] && djOnly.keyHome == nil)
         let (djBoth, _) = decide(sure, [("tag", "8A")], own: three(1.0))
         #expect(djBoth.key?.votes == ["tag": "8A", "deckie": "9A"])
-        // 9. An older report (no counts for the two) still reads.
+        // The DJ's key gone again: the home note comes back.
+        let (again, _) = decide(djHome, [], own: nil, home: homeE)
+        #expect(again.key == nil && again.keyHome == homeE)
+        // Apple's reading: never a home note beside it.
+        var appleT = Self.track("x", title: "x", family: "apple-mu", rel: "a.mp3", key: Self.engineKey); appleT.keyHome = homeE
+        let (ap, _) = decide(appleT, [], own: nil, home: homeE)
+        #expect(ap.key == Self.engineKey && ap.keyHome == nil)
+        // 9. Older reports still read: one from before the counts, and one with the name the count had for a day.
         let old = try! JSONDecoder().decode(LocalFacts.Report.self, from: Data(#"{"keys_from":{"tag":2},"keys_not_read":1,"keys_disagree":0,"names_from":{},"need_name":0}"#.utf8))
-        #expect(old.keysFrom == ["tag": 2] && old.keysNotRead == 1 && old.keysNotSure == 0 && old.keysModeOpen == 0)
+        #expect(old.keysFrom == ["tag": 2] && old.keysNotRead == 1 && old.keysNotSure == 0 && old.keysHomeNote == 0)
+        let day = try! JSONDecoder().decode(LocalFacts.Report.self, from: Data(#"{"keys_from":{},"keys_not_read":3,"keys_disagree":0,"names_from":{},"need_name":0,"keys_not_sure":2,"keys_mode_open":1}"#.utf8))
+        #expect(day.keysNotRead == 3 && day.keysNotSure == 2 && day.keysHomeNote == 0)
         // Deckie's own reading as the record has it, never a DJ's block.
         #expect(LocalFacts.ownReading(deckie) == Self.engineKey && LocalFacts.ownReading(dj) == nil)
+    }
+
+    /// `ownKeysOnly` (what `deckie-make` runs): the when-sure rule over a crate of the engine's records, nothing else.
+    @Test func theWhenSureRuleAloneOverACrate() throws {
+        func three(_ c: Double, _ code: String) -> CrateTrack.Key {
+            .init(source: LocalFacts.threeAnswerSource, confidence: c, camelot: code, key: nil, scale: nil, votes: [:], changes: nil)
+        }
+        var home = Self.track("b", title: "b", rel: "b.mp3"); home.keyHome = .init(source: LocalFacts.threeAnswerSource, pitchClass: 2)
+        var unsure = Self.track("c", title: "c", rel: "c.mp3", key: three(0.2, "5A")); unsure.flags = ["key_uncertain"]
+        let dj = Self.track("d", title: "d", rel: "d.mp3",
+                            key: .init(source: "tag", confidence: 1, camelot: "8A", key: "A", scale: "minor", votes: ["tag": "8A"], changes: nil))
+        var crate = Crate(manifest: CrateManifest(crateId: "k", name: "k", createdAt: "2026-11-14T00:00:00Z", devicesSeen: []),
+                          tracks: [Self.track("a", title: "a", rel: "a.mp3", key: three(1.0, "9A")), home, unsure, dj,
+                                   Self.track("e", title: "e title", rel: "e.mp3")])
+        let before = crate
+        let r = LocalFacts.ownKeysOnly(&crate)
+        #expect(crate.tracks[0] == before.tracks[0] && crate.tracks[1] == before.tracks[1] && crate.tracks[3] == before.tracks[3])
+        #expect(crate.tracks[2].key == nil && crate.tracks[2].keyHome == nil && crate.tracks[2].flags.isEmpty)
+        #expect(crate.tracks.map(\.ident) == before.tracks.map(\.ident))
+        #expect(r.keysFrom == ["deckie": 1] && r.keysHomeNote == 1 && r.keysNotSure == 1 && r.keysNotRead == 2)
+        // The helper's records say engine 0.4.0, from before the reader that reads every song: no key there is "not
+        // read". The same record from engine 0.5.0 on is "not sure"; Apple's with no key is "not read".
+        #expect(crate.tracks.map(\.keyState) == [.key, .homeNote, .notRead, .key, .notRead])
+        var six = crate.tracks[2]; six.engine.version = "0.6.0"
+        var five = crate.tracks[2]; five.engine.version = "0.5.0"
+        var one = crate.tracks[2]; one.engine.version = "1.0.0"
+        var apple = crate.tracks[2]; apple.engine.family = "apple-mu"; apple.engine.version = "27.0"
+        #expect(six.keyState == .notSure && five.keyState == .notSure && one.keyState == .notSure && apple.keyState == .notRead)
+        #expect(crate.problems().isEmpty, "\(crate.problems())")
+        // The summary's line for a terminal names all three.
+        let s = LocalFactsSummary(report: r, libraries: [], failed: [], rekordboxLocked: false, rekordboxExport: false)
+        #expect(s.text.contains("no key: 2 (Deckie not sure: 1); home note only: 1"))
     }
 
     @Test func deckiesOwnReadingComesBackFromTheRecords() throws {
