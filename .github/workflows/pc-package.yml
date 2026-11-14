@@ -349,7 +349,7 @@ jobs:
           $said = if (Test-Path $log) { Get-Content $log | Out-String } else { "" }
           $said
           if ($code -ne 4) { Write-Error "expected Deckie Desk to end with 4 (no WebView2 Runtime), got $code"; exit 1 }
-          foreach ($want in "Microsoft's WebView2 Runtime", "https://developer.microsoft.com/microsoft-edge/webview2/", "Make Crate File", "WebView2 Runtime by the registry: not installed") {
+          foreach ($want in "Microsoft's WebView2 Runtime", "https://developer.microsoft.com/microsoft-edge/webview2/consumer/", "Make Crate File", "WebView2 Runtime by the registry: not installed") {
             if (-not $said.Contains($want)) { Write-Error "the message does not say: $want"; exit 1 }
           }
           "## Deckie Desk: a PC without the WebView2 Runtime" >> $env:GITHUB_STEP_SUMMARY
@@ -357,15 +357,19 @@ jobs:
           '```' >> $env:GITHUB_STEP_SUMMARY
           $said >> $env:GITHUB_STEP_SUMMARY
           '```' >> $env:GITHUB_STEP_SUMMARY
-          # And with the values back, the window opens again.
+          # And with the values back, the window opens again. This start is also the one with nothing set for it:
+          # Desk keeps its crates where it would on a DJ's PC, and the log says where that is.
           $env:DECKIE_NO_BOXES = $null
           $env:DECKIE_DESK_NO_WEBVIEW2 = $null
+          $env:DECKIE_DESK_HOME = $null
+          $env:DECKIE_DJ_HOME = $null
           $env:PATH = "$env:SystemRoot\System32;$env:SystemRoot"
           $again = Join-Path $work "after.log"
           $p = Start-Process -FilePath $desk -ArgumentList "--check --check-log `"$again`"" -PassThru
           $handle = $p.Handle
           if (-not $p.WaitForExit(180000)) { $p.Kill(); Write-Error "Deckie Desk did not start again after the runtime was put back"; exit 1 }
-          Get-Content $again | Select-Object -Last 3
+          Get-Content $again
+          if (-not ((Get-Content $again | Out-String) -match "storage .*Deckie Desk")) { Write-Error "the engine did not say where it keeps its crates"; exit 1 }
           if ($p.ExitCode -ne 0) { Write-Error "after the runtime was put back the check ended with code $($p.ExitCode)"; exit 1 }
       # Time per song on this runner, on songs of a real length: four synthesised four-minute songs (two WAV, two
       # FLAC), read with the program's own default for songs at once. The log's numbers go into the summary.

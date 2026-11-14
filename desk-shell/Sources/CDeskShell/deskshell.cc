@@ -201,12 +201,13 @@ void set_icon(deskshell *s) {
   HWND window = static_cast<HWND>(webview_get_window(s->w));
   if (!window) return;
   HINSTANCE program = GetModuleHandleW(nullptr);
-  HANDLE large = LoadImageW(program, MAKEINTRESOURCEW(1), IMAGE_ICON, GetSystemMetrics(SM_CXICON),
-                            GetSystemMetrics(SM_CYICON), LR_DEFAULTCOLOR | LR_SHARED);
-  HANDLE small = LoadImageW(program, MAKEINTRESOURCEW(1), IMAGE_ICON, GetSystemMetrics(SM_CXSMICON),
-                            GetSystemMetrics(SM_CYSMICON), LR_DEFAULTCOLOR | LR_SHARED);
-  if (large) SendMessageW(window, WM_SETICON, ICON_BIG, reinterpret_cast<LPARAM>(large));
-  if (small) SendMessageW(window, WM_SETICON, ICON_SMALL, reinterpret_cast<LPARAM>(small));
+  // (Not named "small": a Windows header defines that word as something else.)
+  HANDLE large_icon = LoadImageW(program, MAKEINTRESOURCEW(1), IMAGE_ICON, GetSystemMetrics(SM_CXICON),
+                                 GetSystemMetrics(SM_CYICON), LR_DEFAULTCOLOR | LR_SHARED);
+  HANDLE small_icon = LoadImageW(program, MAKEINTRESOURCEW(1), IMAGE_ICON, GetSystemMetrics(SM_CXSMICON),
+                                 GetSystemMetrics(SM_CYSMICON), LR_DEFAULTCOLOR | LR_SHARED);
+  if (large_icon) SendMessageW(window, WM_SETICON, ICON_BIG, reinterpret_cast<LPARAM>(large_icon));
+  if (small_icon) SendMessageW(window, WM_SETICON, ICON_SMALL, reinterpret_cast<LPARAM>(small_icon));
 }
 
 // One value of text from the registry's 32-bit side (where Edge's updater keeps its notes on every Windows), or "".
