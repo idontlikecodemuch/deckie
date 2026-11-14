@@ -24,8 +24,8 @@ Branch `trial/own-recognition`. Newest entry first. Nothing here ships without t
   each, clean) at nine times the cost. Dropped.
 - **A deeper second pass** gains 3 to 10 points in noise at up to five times the time on hard queries. Kept as an
   option, off by default.
-- Both workflows were green on Linux and Windows on an earlier commit of the branch and were run again on the last
-  code commit (results in the next entry or the letter's hand-over note).
+- Both workflows (`core-linux`, `core-windows`) are green on the last commit that changes Swift code (9b3c75b; runs
+  43546500230 and 43546502845). Later commits change only scripts and documents.
 
 | The trial in one table (eval half, 969 songs, 8 s unless said) | Result |
 |---|---|
