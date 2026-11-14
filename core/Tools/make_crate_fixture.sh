@@ -6,6 +6,7 @@
 #   04c326848f  Eiffel 65 - Blue (Da Ba Dee)          fade-out; the end of its steady beat is clamped to the grid
 #   334614c3a0  Drake - NOKIA                         tempo change (a transition edit, 12 percent drift)
 #   08e45fb8ca  Drake - Rich Baby Daddy               the shortest, 44 bars
+# and core/fixtures/example-single.deckiecrate, the same crate file in its single-file form (one uncompressed zip).
 # The crate id and the dates are fixed, so every run gives the same bytes; DeckieCrateTests checks the committed
 # files are exactly what the converter makes today. Needs Swift; run from anywhere in the repository.
 set -e
@@ -13,4 +14,5 @@ cd "$(dirname "$0")/.."
 rm -rf fixtures/example.deckiecrate
 swift run crate-from-lab --out fixtures/example.deckiecrate --name Example --crate-id example \
     --created-at 2026-10-26T00:00:00Z --analysed-at 2026-10-26T00:00:00Z \
-    --ids 0327cf1c94,0692b134c9,04c326848f,334614c3a0,08e45fb8ca
+    --ids 0327cf1c94,0692b134c9,04c326848f,334614c3a0,08e45fb8ca \
+    --single fixtures/example-single.deckiecrate

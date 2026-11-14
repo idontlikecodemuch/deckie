@@ -4,11 +4,19 @@ import Foundation
 /// not know are ignored; anything wrong in what it knows is reported, every problem at once where it can, each
 /// naming the file, the field path and the track.
 public enum CrateReader {
-    /// Reads the package folder at `package`.
+    /// Reads the crate file at `package`, in either form: the package folder, or the single-file form (`CrateArchive`:
+    /// the same files in one uncompressed zip, as a PC writes it). One call for every reader, so an app that opens
+    /// crate files this way opens both.
     public static func read(from package: URL) throws -> Crate {
         var isFolder: ObjCBool = false
-        guard FileManager.default.fileExists(atPath: package.path, isDirectory: &isFolder), isFolder.boolValue else {
-            throw problem(package.lastPathComponent, "", "is not a crate package folder")
+        guard FileManager.default.fileExists(atPath: package.path, isDirectory: &isFolder) else {
+            throw problem(package.lastPathComponent, "", "is not there")
+        }
+        if !isFolder.boolValue {
+            guard CrateArchive.isArchive(package) else {
+                throw problem(package.lastPathComponent, "", "is not a crate file (neither a crate package folder nor the single-file form)")
+            }
+            return try decode(try CrateArchive.read(package))
         }
         return try decode(file: { try? Data(contentsOf: package.appendingPathComponent($0)) },
                           exists: { FileManager.default.fileExists(atPath: package.appendingPathComponent($0).path) })

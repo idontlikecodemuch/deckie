@@ -473,6 +473,63 @@ reading in `Builder.swift`.
 **What the reader checks** for it: each place has a `disc` or a `folder` (it says some place); a `disc` is not empty; a
 `folder` is not an absolute path; a `track` is 1 or more; no place is listed twice or repeats the entry's own.
 
+## Addition (Nov 13, 2026, with D29): the single-file form **proposed**
+
+A crate file as one file, for the platforms where a package folder is only a folder. On a Mac a `.deckiecrate` is a
+package: Finder, Files and AirDrop show and move it as one document. On Windows it is a plain folder, awkward to
+email or to put on an iPad. The single-file form is the same crate file in one archive. **Nothing inside changes**:
+the same files, with the same names and the same bytes, so everything above this section holds for both forms, and
+`schema` and `min_reader` stay 1. Code: `CrateArchive` (`core/Sources/DeckieCrate/CrateArchive.swift`), with its tests
+in `core/Tests/DeckieCrateTests/ArchiveTests.swift`; example: `core/fixtures/example-single.deckiecrate`, the
+example crate above as one file (21,416 bytes against the package's 20,626: 790 bytes of archive tables).
+
+- **What it is.** A zip archive in which every file is stored, not compressed (zip's method 0). The package's files
+  sit in it under their paths inside the package, with "/" between names: `manifest.json`, `crate.json`,
+  `bars/<id>.bin`, `style/<id>.bin`, `signatures/...`, and the apps' own files (`prefs.json`, `history/`) when the
+  package had them. Names that start with a dot (`.DS_Store`) are left out.
+- **Why a plain zip, stored, written by our own code.** No new dependency: writing and reading a stored zip is
+  about 250 lines of Swift with a CRC-32 table, the same on macOS, Linux and Windows. Nothing is gained by
+  compressing (the sidecars are binary and small; `crate.json` is 4 KB a song) and a decompressor would be the only
+  hard part of a zip reader. Any zip tool opens it, so a crate file is never a black box: `unzip`, Python's
+  `zipfile`, Windows Explorer and the Files app all list what is inside. Weighed and passed over: a tar file (no
+  checksum of the contents, and Windows users cannot look inside), a compressed zip (needs a decompressor, ours to
+  write or a dependency), a new container of our own (nothing else could open it).
+- **The same name.** The file is called `<name>.deckiecrate`, like the package. A DJ has one thing called a crate
+  file whichever computer made it. A reader tells the two apart by looking: a folder is the package; a file that
+  starts with the zip signature (`PK`, bytes 50 4B 03 04) is the single-file form.
+- **Written canonically**, like the rest of the format: `manifest.json` first, `crate.json` second, then every other
+  file sorted by the bytes of its path; every time stamp is the zip format's zero (Jan 1, 1980, 00:00); the "name is
+  UTF-8" flag set; no extra fields, no comments, no entries for folders. So the same contents give the same bytes on
+  every platform: the committed example is rebuilt byte for byte by the test on Linux, Windows and macOS.
+- **Damage is detected.** Zip keeps a CRC-32 checksum of every file (a 4-byte fingerprint of its bytes), checked on
+  reading; the archive's tables at its end are checked against the headers in front of each file. A file cut short
+  (a download that stopped) has no end table and is refused as "cut short"; a changed byte in a file's contents
+  names that file; a damaged table is refused as damaged. The records' own checks ("What the reader checks", above)
+  then run as for a package.
+- **Read strictly, but not only our own writing.** A zip made by another tool reads when its entries are stored
+  (folder entries, time stamps, extra fields and a comment are accepted and ignored). An entry that is compressed
+  or encrypted is refused in words ("is compressed, so another program has rewritten this crate file; make it again
+  with Deckie"), never guessed at. A path that would leave the package (`..`, a leading `/`, a drive letter, a
+  backslash) is refused, when writing and when reading.
+- **Sizes.** The zip64 extension is written and read for the count of files, which passes plain zip's 65,535 at
+  about 20,000 songs with signatures. An archive of 4 GB or more is refused; a crate file is about 4 KB a song.
+- **One call to read either form.** `CrateReader.read(from:)` takes a package folder or a single file and returns
+  the same crate. `CrateArchive.pack(package:to:)` writes a package as one file; `CrateArchive.unpack(_:to:)` turns
+  one file back into a package folder, for an app that keeps crates as packages and writes its own files into them.
+- **Who writes which.** The Mac keeps writing packages (D28: Desk keeps its crates in its own storage, as packages).
+  The PC builder writes the single-file form next to the music folder. Either may be sent to an iPad.
+
+**What the iPad app needs** (not built here; this track cannot build that app). (1) Its reads already go through
+`CrateReader.read(from:)` (`deck-app/Deck/Sources/CrateLibrary.swift`), which now takes both forms, so reading needs
+no change once the app builds against this core. (2) Where it imports a crate file as a copy into its own storage,
+it copies a folder today; for a single file it should call `CrateArchive.unpack(_:to:)` into the package folder it
+would have copied to, so everything after the import (its `prefs.json`, `history/`, signatures made on the device)
+works on a package as now. (3) Its declared document type for `.deckiecrate` says "package"; the declaration must
+also accept a plain file with that extension, or Files and the share sheet will not offer Deckie Booth for a
+PC-made crate file. Whether one declared type can cover both a package and a flat file with one extension has not
+been tried on a device; if it cannot, the single file takes a second extension (say `.deckiecratefile`) and nothing
+else here changes. That is the one open point, and it needs an iPad to settle.
+
 ## The proposals in one list, for the main session
 
 1. Track L's additions: the `engine` block beside `analysis` (which keeps its label); the `features_present` names;
@@ -498,3 +555,6 @@ reading in `Builder.swift`.
     their decimals.
 11. Accepted Nov 13, 2026 (D27, the owner's yes). `ident.other_places`: the entry's other places, each `disc`, `folder`
     and `track`, left out when empty; no version raised.
+12. Proposed Nov 13, 2026 (with D29). The single-file form: the same files in one uncompressed zip under the same
+    name, written and read by `CrateArchive`; `CrateReader.read(from:)` takes either form. Nothing inside changes;
+    no version raised. Open: whether the iPad's document type can cover both forms with one extension.
