@@ -112,14 +112,15 @@ let package = Package(
                                    "DeckieLab", "DeckieAudio", "DeckieTestSupport"]),
         .testTarget(name: "DeckieBuildTests",
                     dependencies: ["DeckieBuild", "DeckieEngine", "DeckieCrate", "DeckieLab", "DeckieCore", "DeckieInference",
-                                   "DeckieDecode", "DeckieAudio", "DeckieTestSupport"],
+                                   "DeckieDecode", "DeckieAudio", "DeckieRecognition", "DeckieTestSupport"],
                     exclude: ["Fixtures"]),
         .testTarget(name: "DeckiePCTests",
                     dependencies: ["DeckiePC", "DeckieBuild", "DeckieCrate", "DeckieAudio", "DeckieTestSupport"]),
         .testTarget(name: "DeckieDiscTests", dependencies: ["DeckieDisc", "DeckieCrate", "DeckieTestSupport"]),
         .testTarget(name: "DeckieDeskTests",
                     dependencies: ["DeckieDesk", "DeckieDisc", "DeckieBuild", "DeckieEngine", "DeckieCrate", "DeckieCore", "DeckieAudio",
-                                   "DeckieDecode", "DeckieInference", "DeckieTestSupport", "deckie-desk-engine"]),
+                                   "DeckieDecode", "DeckieInference", "DeckieRecognition", "DeckieTestSupport",
+                                   "deckie-desk-engine"]),
     ]
 )
 

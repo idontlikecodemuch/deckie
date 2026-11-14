@@ -64,7 +64,8 @@ extension Analysis {
     /// three profiles' own keys (`hpcp_edma`, `hpcp_bgate`, `hpcp_braw`) and the STFT estimator's key (`stft_edma`),
     /// none of which decides. The key's changes are the STFT estimator's segments placed on bars. The lab's EffNet
     /// embedding is never written. With a tagger the record also carries the proposed `vocal_structure` and `hooks`
-    /// blocks (`crateVocalStructure()`, `crateHooks()`); without one it has neither.
+    /// blocks (`crateVocalStructure()`, `crateHooks()`); without one it has neither. The song's fingerprint (D35) is
+    /// the record's `print`.
     public func crateTrack(options: CrateOptions) -> CrateTrack {
         let n = bars.nBars
         let r3 = { (x: Double) in Py.round(x, 3) }
@@ -130,7 +131,9 @@ extension Analysis {
             onsetPattern16: onsetPattern16.map { Py.round($0, 4) },
             flags: crateFlags,
             style: vocal.flatMap { v in v.style.map { CrateTrack.Style(model: v.styleModel ?? vocalModel ?? "vocal-tagger", values: $0) } },
-            bars: BarSeries(series), vocalStructure: crateVocalStructure(), hooks: crateHooks())
+            bars: BarSeries(series), vocalStructure: crateVocalStructure(), hooks: crateHooks(),
+            // Made by the device that analysed the song, at the time the record carries.
+            fingerprint: landmarks.map { .init($0, madeBy: options.device, madeAt: options.analysedAt) })
     }
 
     /// `x` rounded to the decimals the crate writes the field `name` with (`CrateFormat.decimals`), so the record read
