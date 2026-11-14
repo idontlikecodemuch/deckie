@@ -85,6 +85,20 @@ import DeckieCore
         #expect(t.featuresPresent.contains("key_home") && !oldBlocks.contains("key_home"))
     }
 
+    /// For the by-hand proof with the previous reader: with DECKIE_KEYHOME_OUT set to a folder, the crate with the
+    /// block is written there as a package, to be checked by a reader built from an earlier commit
+    /// (`swift run deckie-e2e check <folder>`).
+    @Test func writesACrateForAnOlderReaderToCheck() throws {
+        guard let out = ProcessInfo.processInfo.environment["DECKIE_KEYHOME_OUT"], !out.isEmpty else { return }
+        let c = Self.crateWithHome()
+        let dir = URL(fileURLWithPath: out)
+        try? FileManager.default.removeItem(at: dir)
+        try FileManager.default.createDirectory(at: dir.appendingPathComponent("signatures"), withIntermediateDirectories: true)
+        for t in c.tracks { for v in t.signatures.keys { try Data([0]).write(to: dir.appendingPathComponent("signatures/\(t.id)_\(v).shazamsignature")) } }
+        try CrateWriter.write(c, to: dir)
+        #expect(try CrateReader.read(from: dir) == c)
+    }
+
     @Test func theValidatorNamesWhatIsWrong() throws {
         // Beside a key: refused.
         var c = sampleCrate()
