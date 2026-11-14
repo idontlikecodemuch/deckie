@@ -55,7 +55,7 @@ struct UpNextPanel: View {
                                 } else {
                                     let hits = sug.rest.filter { o in
                                         guard let t = Library.shared.track(o.id) else { return false }
-                                        return t.song.localizedStandardContains(q) || t.artist.localizedStandardContains(q)
+                                        return t.matches(q)
                                     }
                                     if hits.isEmpty {
                                         Text("Nothing in More matches \u{201C}\(q)\u{201D}.").font(.system(size: 17)).foregroundStyle(Theme.dim).padding(.vertical, 20)
@@ -275,7 +275,7 @@ struct NextRow: View {
                     Text(also).font(.system(size: m.smallSize, design: .rounded)).foregroundStyle(Theme.dim).lineLimit(1).minimumScaleFactor(0.8)
                 }
                 Text(target.numberedSong).font(.system(size: m.titleSize, weight: .semibold)).foregroundStyle(Theme.tx).lineLimit(1).minimumScaleFactor(0.75)
-                Text(target.artist).font(.system(size: m.lineSize)).foregroundStyle(Theme.dim).lineLimit(1)
+                Text(target.secondLine).font(.system(size: m.lineSize)).foregroundStyle(Theme.dim).lineLimit(1)
                 Text(bpmLine(ji)).font(.system(size: m.bpmSize, weight: .regular, design: .rounded)).foregroundStyle(Theme.amber.opacity(0.85)).lineLimit(1).padding(.top, m.simple ? 3 : 1)
                 Text(smallLine(ji)).font(.system(size: m.smallSize + 1)).foregroundStyle(Theme.mut).lineLimit(1).minimumScaleFactor(0.8)
             }
@@ -330,7 +330,7 @@ struct NextRow: View {
 
     private func detail(_ ji: JoinInfo) -> some View {
         VStack(alignment: .leading, spacing: 10) {
-            Text("\(target.artist) – \(target.song)").font(.system(size: 18, weight: .bold))
+            Text(target.hasName ? (target.artist.isEmpty ? target.song : "\(target.artist) – \(target.song)") : target.oneLine).font(.system(size: 18, weight: .bold))
             if !target.ver.isEmpty { Text(target.ver).foregroundStyle(.secondary) }
             Text("Key \(target.key ?? "?") · \(ji.keyText) \(ji.verdict)").font(.system(size: 15))
             Text("Pitch: set the incoming deck's pitch fader to \(ji.pitch.map { signed1($0) + "%" } ?? "n/a") so the tempos match.").font(.system(size: 15))
@@ -501,7 +501,7 @@ struct JoinView: View {
             c.fill(Path(CGRect(x: X(0) - 1, y: laneA.0 - 2, width: 2, height: laneB.1 - laneA.0 + 4)), with: .color(.white))
         }
         .frame(height: height)
-        .accessibilityLabel("Join: end of \(a.song) over \(b.song) from \(fmtTime(startB))")
+        .accessibilityLabel("Join: end of \(a.oneLine) over \(b.oneLine) from \(fmtTime(startB))")
     }
 
     static func bar(at t: Double, of tr: Track) -> Int {

@@ -1,11 +1,14 @@
 import SwiftUI
 import UIKit
+import UniformTypeIdentifiers
+import DeckieCrate
 
 @main
 struct DeckApp: App {
     @State private var rec = Recognizer()
     @State private var sug = SuggestState()
     @State private var tab = 0
+    @State private var choosing = false
     @Environment(\.scenePhase) private var phase
 
     var body: some Scene {
@@ -15,6 +18,8 @@ struct DeckApp: App {
                 CrateTabView(tab: $tab).tabItem { Label(CrateTabView.title, systemImage: "square.stack") }.tag(1)
                 MixMapView().tabItem { Label("Mix map", systemImage: "point.3.connected.trianglepath.dotted") }.tag(2)
             }
+            // The library is not observed: another crate file open redraws every tab from it.
+            .id(sug.crateVersion)
             .overlay(alignment: .topLeading) { MinimalToggle().padding(.leading, 20).padding(.top, 2) }
             .tint(Theme.orange)
             .environment(rec)
@@ -22,17 +27,66 @@ struct DeckApp: App {
             .preferredColorScheme(.dark)
             .onAppear {
                 UIApplication.shared.isIdleTimerDisabled = true      // stays on next to the decks
+                // What the system makes of the extension, as a folder (package) and as a plain file (data).
+                for (label, base) in [("as a folder", UTType.package), ("as a file", UTType.data)] {
+                    if let t = UTType(filenameExtension: CrateFormat.packageExtension, conformingTo: base) {
+                        rec.note("type for .deckiecrate \(label): \(t.identifier), package \(t.conforms(to: .package)), data \(t.conforms(to: .data)), declared \(t.isDeclared)")
+                    }
+                }
                 // test hook without the "Open in Deck?" prompt: simctl launch <dev> io.christophershannon.deck -deckURL 'deck://...'
                 if let u = UserDefaults.standard.string(forKey: "deckURL"), let url = URL(string: u) {
                     for part in u.components(separatedBy: " ; ") { if let x = URL(string: part) { handle(x) } }
                     _ = url
                 } else if rec.source == .idle { rec.startMic() }
             }
-            .onOpenURL { handle($0) }
+            .onOpenURL { url in url.isFileURL ? openCrate(url) : handle(url) }
+            .onChange(of: sug.tabRequest) { _, t in if let t { tab = t; sug.tabRequest = nil } }
+            .onChange(of: sug.chooseCrateFile) { _, on in if on { choosing = true; sug.chooseCrateFile = false } }
+            .fileImporter(isPresented: $choosing, allowedContentTypes: CrateFileType.importable) { r in
+                if case .success(let url) = r { openCrate(url) }
+            }
+            .alert(sug.openProblem?.title ?? "", isPresented: Binding(get: { sug.openProblem != nil }, set: { if !$0 { sug.openProblem = nil } }),
+                   presenting: sug.openProblem) { _ in
+                Button("OK", role: .cancel) {}
+            } message: { p in
+                Text(p.why + "\n\n" + p.detail)
+            }
+            .overlay(alignment: .top) {
+                if let note = sug.openedNote {
+                    Text(note).font(.system(size: 16, weight: .semibold)).foregroundStyle(Theme.tx)
+                        .padding(.horizontal, 18).frame(minHeight: 40)
+                        .background(Capsule().fill(Theme.card2)).overlay(Capsule().stroke(Theme.line, lineWidth: 1))
+                        .padding(.top, 8)
+                        .task(id: note) { try? await Task.sleep(for: .seconds(5)); if sug.openedNote == note { sug.openedNote = nil } }
+                        .accessibilityAddTraits(.isStaticText)
+                }
+            }
             .onChange(of: phase) { _, p in
                 // the audio session can be interrupted (lock, Control Centre, another app): restart listening on return
                 if p == .active && rec.source == .mic { rec.startMic() }
             }
+        }
+    }
+
+    /// Opens a crate file handed to the app (Files, AirDrop, iCloud Drive, "Open in", the chooser, a test hook), in
+    /// either form, and starts on it: listening when it has fingerprints, otherwise waiting for a song set by hand.
+    /// A crate file that cannot be opened leaves the one open now as it was, and says why in plain words.
+    private func openCrate(_ url: URL, listen: Bool = true) {
+        rec.note("opening \(url.lastPathComponent)")
+        do {
+            let r = try Library.shared.open(crateFile: url)
+            rec.forgetSongs(); rec.rebuildCatalog(); sug.pinned = nil; sug.target = LibraryFilter(); sug.moreQuery = ""
+            sug.reroll(rec); sug.crateVersion += 1
+            let secs = Library.shared.crate.map { String(format: "%.1f", $0.poolSecs) } ?? "?"
+            rec.note("crate loaded (\(r.wasSingleFile ? "single file, unpacked" : "package, copied")): \(Library.shared.data.tracks.count) tracks, "
+                     + "\(Library.shared.crate?.signatures.count ?? 0) with fingerprints; picks are scored per song (timbre list \(secs) s)")
+            sug.openedNote = Words.opened(r.crate.manifest.name, songs: Library.shared.songCount)
+            tab = 0
+            // Listening starts again (with no fingerprints it only says "not listening"); a test hook leaves the mic off.
+            if listen { rec.startMic() } else if !Library.shared.canRecognise { rec.status = Words.notListening }
+        } catch {
+            rec.note("crate failed: \(error)")
+            sug.openProblem = OpenProblem(title: Words.couldNotOpen(url.lastPathComponent), why: Words.whyNotOpened(error), detail: Words.detail(error))
         }
     }
 
@@ -75,15 +129,14 @@ struct DeckApp: App {
             }
             sug.reroll(rec)
         case "startpt": let n = Int(v("i") ?? "1") ?? 1; let want = v("id"); DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { if let id = want ?? sug.pinned ?? sug.options.first?.id { sug.startIdx[id] = n } }
-        case "crate":
-            // deck://crate?path=/abs/x.deckiecrate: use that crate (tracks, picks, signatures) instead of the bundled data
+        case "crate", "open":
+            // deck://crate?path=/abs/x.deckiecrate: open that crate file (either form) as "Open in" would, instead
+            // of the bundled data or the crate file open now
             guard let p = v("path") else { return }
-            do {
-                try Library.shared.load(crate: URL(fileURLWithPath: p))
-                rec.stop(); rec.rebuildCatalog(); sug.reroll(rec)
-                let secs = Library.shared.crate.map { String(format: "%.1f", $0.poolSecs) } ?? "?"
-                rec.note("crate loaded: \(Library.shared.data.tracks.count) tracks; picks are scored per song (timbre list \(secs) s)")
-            } catch { rec.note("crate failed: \(error)") }
+            openCrate(URL(fileURLWithPath: p), listen: false)
+        case "choose":
+            // deck://choose: the Open crate file chooser (the system's document picker)
+            choosing = true
         case "after":
             // deck://after?s=<seconds>&u=<url-encoded deck:// hook>: run that hook later (a scripted walk-through;
             // several hooks in one -deckURL are separated by " ; ")
@@ -128,6 +181,11 @@ struct DeckApp: App {
     /// the search over More's titles and artists (test hook: search?q=); not remembered between launches
     var moreQuery = ""
     var scrollRequest: String?     // test hook: scroll the picks to an anchor
+    var tabRequest: Int?           // a view asking for another tab (the Listen page's "Choose a song")
+    var chooseCrateFile = false    // the Crate tab's "Open crate file" asking for the chooser
+    var openProblem: OpenProblem?  // why the last crate file handed to the app could not be opened
+    var openedNote: String?        // "Friday night is open: 12 songs.", shown for a few seconds
+    var crateVersion = 0           // raised when another crate file opens, so every view is drawn from it again
     var rolledFor: String?
     var rolledShuffle: Double?     // the dial setting the current picks were rolled with
     private var rng = SystemRandomNumberGenerator()
@@ -159,6 +217,28 @@ struct DeckApp: App {
     func pin(_ id: String, _ rec: Recognizer) {
         pinned = (pinned == id) ? nil : id
         reroll(rec)
+    }
+}
+
+/// A crate file that could not be opened: the alert's title, the plain sentence and the reader's own words.
+struct OpenProblem: Identifiable, Equatable {
+    let id = UUID()
+    let title: String
+    let why: String
+    let detail: String
+}
+
+/// The crate file's document type (declared in project.yml: `UTExportedTypeDeclarations` and
+/// `CFBundleDocumentTypes`). One type, `.deckiecrate`, covers both forms: the package a Mac writes and the single file
+/// a PC writes (deck-app/README.md, "Crate files from a PC", for the evidence).
+enum CrateFileType {
+    static let identifier = "io.christophershannon.deckie.crate"
+    static let crate = UTType(exportedAs: identifier)
+    static let crateFile = UTType(exportedAs: identifier + "-file")
+    /// What the chooser offers: the declared type, and any type the system gives the extension (should another app
+    /// declare `.deckiecrate` differently, a crate file still shows).
+    static var importable: [UTType] {
+        [crate, crateFile]
     }
 }
 
