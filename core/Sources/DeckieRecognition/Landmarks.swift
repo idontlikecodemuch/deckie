@@ -175,6 +175,15 @@ public struct Landmarks: Sendable, Equatable {
         self.strengths = strengths
     }
 
+    /// The points from `seconds` on, with time starting again there (the newest part of a window of sound).
+    public func suffix(fromSeconds seconds: Double, frameSeconds: Double) -> Landmarks {
+        let first = UInt32(max(0, (seconds / frameSeconds).rounded()))
+        let at = frames.firstIndex { $0 >= first } ?? frames.count
+        var out = Landmarks(frames: frames[at...].map { $0 - first }, pitches: Array(packed[at...]), frameCount: max(0, frameCount - Int(first)))
+        if strengths.count == count { out.strengths = Array(strengths[at...]) }
+        return out
+    }
+
     // MARK: On disk
 
     /// The bytes kept for a song: "DKL2", the frame count and point count (little-endian UInt32 each), then for each

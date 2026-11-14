@@ -67,8 +67,10 @@ public struct ListenSettings: Sendable, Equatable {
     public var agreeSeconds = 0.5
     /// A song being followed is still there when its points agree this far above chance...
     public var holdScore = 6.0
+    /// ...over the last this many seconds of sound only, so that a song that has ended stops being shown soon...
+    public var holdWindow = 5.0
     /// ...and is given up after this many readings in a row without that.
-    public var lostAfter = 3
+    public var lostAfter = 2
     /// While following, the whole crate is searched again every this many readings, to notice a new song early.
     public var searchEvery = 2
     /// Songs whose first proposals are checked point by point in a search.
@@ -163,9 +165,12 @@ public final class SongListener {
 
         // Follow the song already named: one check, at the place and speed it should be at.
         if let f = following {
-            if let m = recogniser.check(marks, song: f.song, offsetSeconds: f.intercept + f.tempo * start, tempoRatio: f.tempo, pitchRatio: f.pitch),
+            // The check looks at the newest sound only: the points of the window's last `holdWindow` seconds.
+            let recent = have > settings.holdWindow ? marks.suffix(fromSeconds: have - settings.holdWindow, frameSeconds: queryConfig.frameSeconds) : marks
+            let from = now - min(have, settings.holdWindow)
+            if let m = recogniser.check(recent, song: f.song, offsetSeconds: f.intercept + f.tempo * from, tempoRatio: f.tempo, pitchRatio: f.pitch),
                m.score >= settings.holdScore {
-                following = (f.song, m.offsetSeconds - m.tempoRatio * start, m.tempoRatio, m.pitchRatio)
+                following = (f.song, m.offsetSeconds - m.tempoRatio * from, m.tempoRatio, m.pitchRatio)
                 misses = 0; state = .held; confidence = m.score
             } else {
                 misses += 1
