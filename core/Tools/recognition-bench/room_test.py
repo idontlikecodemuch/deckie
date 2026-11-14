@@ -780,6 +780,19 @@ class Key:
                     self.kinds[(key[0], m, lead)] = "live"
             self.at[key] = out
         self.mix = set()      # kept for older callers: no group is "the mix" as a whole
+        # Files with the same title and artist and a length within a second are copies of one recording too, whether
+        # or not the key happened to follow each of them.
+        cat = json.load(open(os.path.join(work, "catalogue.json")))
+        same_name = collections.defaultdict(list)
+        for k, v in cat.items():
+            same_name[(norm(v["title"]), norm(v["artist"]))].append(k)
+        for g, ids in self.sids.items():
+            more = set()
+            for k in ids:
+                v = cat.get(k)
+                if v:
+                    more |= {o for o in same_name[(norm(v["title"]), norm(v["artist"]))] if abs(cat[o]["seconds"] - v["seconds"]) < 1}
+            ids |= more
         self.feat = {rid: {float(m): v for m, v in fs.items()} for rid, fs in tr["features"].items()}
         self.floor, self.beat_mark = tr["floor"], tr["beat_mark"]
         self.state = {}
