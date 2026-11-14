@@ -159,12 +159,21 @@ case "match":
     pairing.fanOut = o.int("--fan-out", pairing.fanOut)
     if o.flags.contains("--pairs") { pairing.triples = false }
     if o.flags.contains("--first-in-time") { pairing.byStrength = false }
+    if o.flags.contains("--wide-entries") { pairing.compact = false }
+    pairing.entriesPerSlot = o.int("--entries-per-slot", pairing.entriesPerSlot)
+    pairing.keepOneIn = o.int("--keep-one-in", pairing.keepOneIn)
+    pairing.maxGap = o.int("--max-gap", pairing.maxGap)
     let verified = o.int("--verified", 12)
     pairing.queryPerSlice = o.int("--query-per-slice", pairing.queryPerSlice)
     let t0 = now()
     let index = RecognitionIndex(songs: songs, landmark: config, pairing: pairing)
-    FileHandle.standardError.write(Data(String(format: "index: %d songs, %d points, %d hashes, %.0f ms\n", index.songCount,
-                                                index.pointCount, index.hashCount, now() - t0).utf8))
+    FileHandle.standardError.write(Data(String(format: "index: %d songs, %d points, %d hashes, %.0f ms; memory %.1f MB (%.1f KB a song), points on storage %.1f MB\n",
+                                                index.songCount, index.pointCount, index.hashCount, now() - t0,
+                                                Double(index.memoryBytes) / 1e6, Double(index.memoryBytes) / 1e3 / Double(max(1, index.songCount)),
+                                                Double(index.pointBytes) / 1e6).utf8))
+    if let path = o.values["--memory-out"] {
+        try? String(format: "%d\t%d\t%d\t%d\n", index.songCount, index.memoryBytes, index.pointBytes, index.hashCount).write(toFile: path, atomically: true, encoding: .utf8)
+    }
     if o.flags.contains("--stats") {
         for k in [50, 100, 200, 400, 800, 1600] {
             FileHandle.standardError.write(Data(String(format: "hashes in buckets over %d: %.1f %%\n", k, 100 * index.shareInBuckets(largerThan: k)).utf8))
@@ -189,6 +198,16 @@ case "match":
         var pairs = pairing; pairs.triples = false
         return RecognitionIndex(songs: songs, landmark: config, pairing: pairs) }() : nil
     for r in recognisers { r.verified = verified; r.fallback = fallback; r.fallbackBelow = o.double("--fallback-below", r.fallbackBelow) }
+    // --shortlist K [--detail pairs]: the index only proposes K songs; those are hashed in full (three-point hashes,
+    // or two-point with --detail pairs) from their constellations, which here stand in for files on storage.
+    let shortlist = o.int("--shortlist", 0)
+    if shortlist > 0 {
+        nonisolated(unsafe) let all = songs
+        var full = PairingConfig()
+        full.entriesPerSlot = 4
+        if o.values["--detail"] == "pairs" { full.triples = false }
+        for r in recognisers { r.shortlistSize = shortlist; r.detailPairing = full; r.detail = { all[$0].landmarks } }
+    }
     nonisolated(unsafe) let pool = recognisers
     parallel(queries.count, jobs: jobs) { i, w in
         let q = queries[i]

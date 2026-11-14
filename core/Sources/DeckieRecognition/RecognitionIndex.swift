@@ -33,10 +33,27 @@ public struct PairingConfig: Sendable, Equatable {
     /// rather than its first in time.
     public var byStrength = true
 
+    // What the index holds in memory (three-point hashes only). These are the knobs of the size study
+    // (docs/research/ac-recognition-size.md).
+    /// Whether an entry is one 32-bit word: the anchor's place on the timeline in steps of 8 frames (128 ms, the
+    /// width of a vote bin, which is all the vote uses) in 25 bits, and a 7-bit tag. Otherwise, as in the first
+    /// trial, a 32-bit frame and a separate 8-bit tag: five bytes.
+    public var compact = true
+    /// Entries per table slot the table is sized for. A slot's entries are read in a row and told apart by their
+    /// tags, so a long slot costs a little time and no accuracy; a short one costs memory (4 bytes a slot).
+    public var entriesPerSlot = 32
+    /// Keep one hash in this many (a power of two), chosen by the hash's own low bits, so a song and a query drop
+    /// the same ones.
+    public var keepOneIn = 1
+
     public init() {}
 
     /// The slices whose points join the anchor in triple k: each slice with the next, the last with the first.
     @inline(__always) func slicePair(_ k: Int) -> (Int, Int) { k + 1 < fanOut ? (k, k + 1) : (0, k) }
+    /// Triples per anchor: one for every slice from three slices up (each with the next, the last with the first);
+    /// with two slices there is only the one pairing.
+    var tripleCount: Int { fanOut >= 3 ? fanOut : (fanOut == 2 ? 1 : 0) }
+    @inline(__always) func kept(_ h: Int) -> Bool { keepOneIn <= 1 || h & (keepOneIn - 1) == 0 }
     /// The table's size as a power of two: for pairs the hash's own 21 bits; for triples set by the index to the
     /// catalogue (about one slot for every four entries, from 2^20 to 2^26 slots), so that a slot stays a few entries long.
     public internal(set) var tableBits = 24
@@ -51,7 +68,9 @@ public struct PairingConfig: Sendable, Equatable {
     }
     /// The table slot and the tag of a hash value (a pair's hash is its own slot, with no tag).
     @inline(__always) func slot(_ h: Int) -> Int { triples ? h >> (40 - tableBits) : h }
-    @inline(__always) func tag(_ h: Int) -> UInt8 { triples ? UInt8((h >> (32 - tableBits)) & 0xff) : 0 }
+    @inline(__always) func tag(_ h: Int) -> UInt8 {
+        triples ? (compact ? UInt8((h >> (33 - tableBits)) & 0x7f) : UInt8((h >> (32 - tableBits)) & 0xff)) : 0
+    }
 
     var pitchBinUnits: Int { Int(Landmarks.pitchUnitsPerOctave) / pitchBinsPerOctave }
     func pitchBins(octaves: Double) -> Int { Int((octaves * Double(pitchBinsPerOctave)).rounded(.up)) }
@@ -90,15 +109,20 @@ public struct RecognitionIndex: Sendable {
 
     public var songCount: Int { ids.count }
     public var hashCount: Int { entries.count }
+    /// Bytes the matcher must hold in memory to propose songs: the entries, their tags when kept apart, the table,
+    /// and 16 bytes a song (where it starts on the timeline and among the points).
+    public var memoryBytes: Int { entries.count * 4 + tags.count + offsets.count * 4 + ids.count * 16 }
+    /// Bytes of the songs' points, which only the final check of a dozen or so songs reads: they can stay on storage.
+    public var pointBytes: Int { pointFrame.count * 6 }
     public var pointCount: Int { pointFrame.count }
 
     public init(songs: [(id: String, landmarks: Landmarks)], landmark: LandmarkConfig = LandmarkConfig(),
                 pairing: PairingConfig = PairingConfig()) {
         var pairing = pairing
         if pairing.triples {
-            let entries = songs.reduce(0) { $0 + $1.landmarks.count } * pairing.fanOut
-            var bits = 20
-            while bits < 26 && (1 << bits) * 4 < entries { bits += 1 }
+            let entries = songs.reduce(0) { $0 + $1.landmarks.count } * pairing.tripleCount / max(1, pairing.keepOneIn)
+            var bits = 12
+            while bits < 26 && (1 << bits) * pairing.entriesPerSlot < entries { bits += 1 }
             pairing.tableBits = bits
         } else {
             pairing.tableBits = PairingConfig.hashBits
@@ -156,10 +180,11 @@ public struct RecognitionIndex: Sendable {
                         }
                     }
                     if p.triples {
-                        for k in 0..<p.fanOut {
+                        for k in 0..<p.tripleCount {
                             let (k1, k2) = p.slicePair(k)
                             if filled & (1 << k1) != 0 && filled & (1 << k2) != 0 {
-                                body(p.hash(anchorBin: a, bin1: slotBin[k1], gap1: slotGap[k1], bin2: slotBin[k2], gap2: slotGap[k2]), ta)
+                                let h = p.hash(anchorBin: a, bin1: slotBin[k1], gap1: slotGap[k1], bin2: slotBin[k2], gap2: slotGap[k2])
+                                if p.kept(h) { body(h, ta) }
                             }
                         }
                     }
@@ -170,11 +195,17 @@ public struct RecognitionIndex: Sendable {
         for h in 0..<size { counts[h + 1] += counts[h] }
         var entries = [UInt32](repeating: 0, count: Int(counts[size]))
         var next = counts
-        var tags = [UInt8](repeating: 0, count: p.triples ? entries.count : 0)
+        let packed = p.triples && p.compact
+        precondition(!packed || timelineFrames / 8 < 1 << 25, "too long a timeline for 25-bit entries")
+        var tags = [UInt8](repeating: 0, count: p.triples && !packed ? entries.count : 0)
         forEachPair { h, frame in
             let at = Int(next[p.slot(h)])
-            entries[at] = UInt32(frame)
-            if p.triples { tags[at] = p.tag(h) }
+            if packed {
+                entries[at] = UInt32(frame / 8) << 7 | UInt32(p.tag(h))
+            } else {
+                entries[at] = UInt32(frame)
+                if p.triples { tags[at] = p.tag(h) }
+            }
             next[p.slot(h)] += 1
         }
         self.tags = tags

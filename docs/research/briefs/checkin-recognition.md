@@ -2,6 +2,33 @@
 
 Branch `trial/own-recognition`. Newest entry first. Nothing here ships without the owner's decision.
 
+## Nov 14, 2026, 06:05 UTC: the size study has started (branch `recog/size`)
+
+**Received**: D35 (a fingerprint of our own; speed is fine if a song is named in a few seconds; size is the large
+problem, smaller first and crate splitting second; noise waits for letter AB). This entry and the ones above it
+are on the new branch `recog/size`, cut from `main`.
+
+**The figure being brought down** is what the booth must hold in memory to match: 0.3 MB a song in the trial.
+
+**Target, and why.** A 5,000-song crate matched in under 100 MB of memory: 20 KB a song, about the size of the
+fingerprint on disk (19 KB for the outside set's average 3.4-minute song). The booth iPad is also drawing the
+screen, listening and scoring picks, and an app that holds hundreds of megabytes is the first one the system closes
+when memory is short. The same line puts 2,000 songs at 40 MB and 10,000 at 200 MB.
+
+**How it is being measured.** The same benchmark, eval half only: 12,600 queries (clean, room, room with crowd 10 dB
+under and at equal level, and songs not in the index, at 5, 8 and 12 s), each configuration with its own threshold
+set on the dev half's no-right-answer clips as before. Memory is counted by the index itself (entries, table, 16
+bytes a song). The songs' points are no longer counted as memory: only the final check of a dozen songs reads them,
+so they can stay on storage (19 KB a song, read as needed).
+
+**First row**: the trial's configuration holds 261 KB a song by this count and scores as it did (room 95 % at 8 s).
+
+**Being tried, in this order**: 4-byte entries and a smaller table (should lose nothing); fewer hashes per point;
+keeping one hash in 2, 4, 8, 16; fewer and stronger points in the songs; and a two-step matcher in which a small
+index in memory only proposes a short list of songs and those are matched in full from their points on storage.
+
+**Carry on.**
+
 ## Nov 14, 2026, 03:50 UTC: all measurements in; the letter is written
 
 **The report is `docs/research/w2-own-recognition-trial.md`.** Read its section 1 first.

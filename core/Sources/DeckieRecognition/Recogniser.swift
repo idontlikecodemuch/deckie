@@ -79,6 +79,11 @@ public final class Recogniser {
 
     /// A second index of the same songs to turn to when the first finds nothing sure (in the trial: pairs, slower and
     /// better in noise, behind triples), and the confidence under which it is turned to.
+    /// The two-step way (see `match`): how many songs the index in memory proposes (0: one step), how a proposed
+    /// song's constellation is fetched, and how the fetched songs are hashed.
+    public var shortlistSize = 0
+    public var detail: ((Int) -> Landmarks)?
+    public var detailPairing = PairingConfig()
     public var fallback: RecognitionIndex?
     public var fallbackBelow = 3.0
 
@@ -100,17 +105,28 @@ public final class Recogniser {
     /// The songs found in `query`, best first, one entry a song. Empty when nothing lined up at all; whether the best
     /// is a true match is for the caller to decide from its `score`.
     public func match(_ query: Landmarks) -> [RecognitionMatch] {
-        let first = run(index, query)
+        if shortlistSize > 0, let detail {
+            // Two steps. The index held in memory only proposes songs: the `shortlistSize` whose votes pile highest.
+            // Those songs' constellations are then fetched (from storage, in a booth), hashed in full here and now,
+            // and the query is matched against that small index alone.
+            let songs = run(index, query, shortlist: shortlistSize).1
+            guard !songs.isEmpty else { return [] }
+            let small = RecognitionIndex(songs: songs.map { (index.ids[$0], detail($0)) }, landmark: index.landmark, pairing: detailPairing)
+            var found = run(small, query).0
+            for i in found.indices { found[i].songIndex = songs[found[i].songIndex] }
+            return found
+        }
+        let first = run(index, query).0
         guard let fallback, (first.first?.confidence ?? 0) < fallbackBelow else { return first }
-        let second = run(fallback, query)
+        let second = run(fallback, query).0
         return (second.first?.confidence ?? 0) > (first.first?.confidence ?? 0) ? second : first
     }
 
-    private func run(_ ix: RecognitionIndex, _ query: Landmarks) -> [RecognitionMatch] {
+    private func run(_ ix: RecognitionIndex, _ query: Landmarks, shortlist: Int? = nil) -> ([RecognitionMatch], [Int]) {
         let p = ix.pairing
         let unit = Double(p.pitchBinUnits)
         let n = min(query.count, query.frames.firstIndex { $0 >= UInt32(RecognitionIndex.maxQueryFrames) } ?? query.count)
-        guard n >= 4 else { return [] }
+        guard n >= 4 else { return ([], []) }
         let qt = (0..<n).map { Double(query.frames[$0]) }, qp = (0..<n).map { Double(query.pitch($0)) }
         // Strength for choosing a slice's points: as measured when the query was made from audio, else its level.
         let qs: [Float] = p.byStrength ? (0..<n).map { query.strengths.count == query.count ? query.strengths[$0] : Float(query.level($0)) }
@@ -168,12 +184,14 @@ public final class Recogniser {
                         }
                     }
                 } else {
-                    for k in 0..<p.fanOut {
+                    for k in 0..<p.tripleCount {
                         let (k1, k2) = p.slicePair(k)
                         for x in 0..<taken[k1] {
                             for y in 0..<taken[k2] {
-                                hashes.append(p.hash(anchorBin: a, bin1: slotBin[k1 * per + x], gap1: slotGap[k1 * per + x],
-                                                     bin2: slotBin[k2 * per + y], gap2: slotGap[k2 * per + y]))
+                                let h = p.hash(anchorBin: a, bin1: slotBin[k1 * per + x], gap1: slotGap[k1 * per + x],
+                                               bin2: slotBin[k2 * per + y], gap2: slotGap[k2 * per + y])
+                                if !p.kept(h) { continue }
+                                hashes.append(h)
                                 shifts.append(shiftT)
                             }
                         }
@@ -187,14 +205,16 @@ public final class Recogniser {
                             spans.removeAll(keepingCapacity: true)
                             for h in hashes { let slot = p.slot(h); spans.append((Int(offsets[slot]), Int(offsets[slot + 1]))) }
                             ix.tags.withUnsafeBufferPointer { tags in
-                                let tagged = p.triples
+                                let tagged = p.triples, packed = p.triples && p.compact
                                 for (x, span) in spans.enumerated() where span.1 > span.0 {
                                     let shiftT = shifts[x]
                                     let tag = p.tag(hashes[x])
                                     var e = span.0
                                     while e < span.1 {
-                                        if !tagged || tags[e] == tag {
-                                            let bin = Int(Double(entries[e]) - shiftT) / Self.binFrames
+                                        let entry = entries[e]
+                                        if packed ? UInt8(entry & 0x7f) == tag : (!tagged || tags[e] == tag) {
+                                            let frame = packed ? Double((entry >> 7) * 8 + 4) : Double(entry)
+                                            let bin = Int(frame - shiftT) / Self.binFrames
                                             if bin >= 0 {
                                                 if votes[bin] == 0 { touched.append(Int32(bin)) }
                                                 if votes[bin] < .max { votes[bin] += 1 }
@@ -225,6 +245,14 @@ public final class Recogniser {
         }
 
         best.sort { $0.count > $1.count }
+        if let shortlist {
+            var songs: [Int] = []
+            for vote in best {
+                let s = ix.song(atTimelineFrame: (vote.bin + 1) * Self.binFrames)
+                if !songs.contains(s) { songs.append(s); if songs.count == shortlist { break } }
+            }
+            return ([], songs)
+        }
         var bySong: [Int: RecognitionMatch] = [:]
         var checked = 0
         for vote in best {
@@ -242,7 +270,7 @@ public final class Recogniser {
         // Each song's score over the third-best song's: two songs may truly be playing, the third never is.
         let yardstick = max(Self.leastYardstick, found.count >= 3 ? found[2].score : 0)
         for i in found.indices { found[i].confidence = found[i].score / yardstick }
-        return found
+        return (found, [])
     }
 
     /// Lines the query's points up with one song's from a starting offset, speed and pitch shift; refits the three
