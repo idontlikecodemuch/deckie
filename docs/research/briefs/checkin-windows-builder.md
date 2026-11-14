@@ -1,10 +1,154 @@
-# Check-ins: the Windows builder (branches `pc/windows-builder`, `pc/m4a`, `pc/package-desk`)
+# Check-ins: the Windows builder (branches `pc/windows-builder`, `pc/m4a`, `pc/package-desk`, `pc/package-main`)
 
 Newest entry first. Each entry: when, what is done, what failed and why, what is next, and one plain line.
 
-**Newest zip, Deckie Desk with its window: `pc-package` run 43581053583** (branch `pc/package-desk`, commit
-`c964f6c`), artifact `Deckie-Desk-for-Windows-first-test` (id 14108458447): **128,981,732 bytes**, SHA-256
-`65c94acef23ff8d1fe983ff40004a436415f22bdfc9c88fbd7f626e2dd3ccb97`. It supersedes every zip named further down.
+**Newest zip, Deckie Desk with its window, built from `main` as it is now: `pc-package` run 43591315233**
+(branch `pc/package-main`, commit `718e90a`), artifact `Deckie-Desk-for-Windows-first-test` (id 14112921578, kept
+to Dec 14, 2026). The zip inside is **130,071,397 bytes**, SHA-256
+`7387ad511b6156e96562977ec6ff2f54efae3b8f97293d439c8097d20b1baa9d` (what GitHub hands over wraps it once more:
+130,071,587 bytes, SHA-256 `d7ff00679acb251ea2d855799e6336fe9870546583161b50d8273cdc7d57dd48`). It supersedes every
+zip named further down, including run 43581053583, which was built before `main` took covers, the home note, the
+lookup and the run screen.
+
+## Nov 14, 2026, 12:00 UTC: the zip from `main`, checked on the runner; the engine that "did not leave" explained and fixed; all four workflows green on `718e90a`
+
+Branch `pc/package-main`, cut from `main` at `03947ef`. Green on `718e90a`: `pc-package` 43591315233, `desk-window`
+43591315226, `core-windows` 43591315240, `core-linux` 43591315221. No release, tag or pull request.
+
+### 1. The engine test that failed on Windows
+
+**It was not about covers, and not the engine's fault.** Two different tests had failed the same way on `main`
+(`coversThroughTheProtocol` in `desk-window` 43580534712, `namesAndListenThroughTheProtocol` in `core-windows`
+43579829138): the engine not gone 20 seconds after its input was closed.
+
+**The cause.** On Windows, Foundation in Swift 6.4.1 makes a pipe's handles *inheritable* (a child program is given
+a copy), and a child is given every inheritable handle its parent holds when it starts. The tests start engines in
+several suites side by side. An engine started while another was alive held a copy of the writing end of the other's
+input, so closing that input in the test did not reach the first engine: it went on waiting for a line, correctly,
+until the later engine left. Read in Foundation's source at the tag `swift-6.4.1-RELEASE` (`FileHandle.swift`,
+`Pipe.init`: `bInheritHandle: true`; `Process.swift`: `CreateProcessW` with handles inherited); Foundation's current
+source no longer does this.
+
+**The fix** is where the fault is, in the code that starts an engine, not in the engine and not in the 20-second
+limit: the ends of the pipes that the starting program keeps are marked as its own before anything is started, and
+the tests make their pipes and start engines one at a time (`EngineProcess` in `EngineProcessTests.swift`). The
+window program marks its ends the same way (`desk-shell`, `Engine.swift`), so the web view's own programs cannot
+hold the engine's input open. Deckie Desk starts one engine, so a DJ's PC was not exposed to the test's failure.
+
+**Shown.** A new test, `EngineStartsTests`, starts 48 engines from six threads and requires each to be seen to
+leave within 20 seconds of its input closing.
+
+| Run (Windows) | State of the fix | Engines not seen to leave |
+|---|---|---|
+| `desk-window` 43587977104 | starts one at a time only (my first, wrong fix) | 13 of 48 |
+| the same run, pipes left as Foundation makes them | none | 7 of 48 |
+| `desk-window` 43589518060 | pipes marked | 0 of 48 |
+| `core-windows` 43589518057 | pipes marked | 0 of 48 |
+| `desk-window` 43591315226 | pipes marked | 0 of 48 |
+| `core-windows` 43591315240 | pipes marked | 0 of 48 |
+
+| `desk-window` 43592484669 (by hand) | pipes marked | 0 of 48 |
+
+So: the engines were seen to leave in five Windows runs running, on two commits, and every engine-process test
+passed in each. Two of those five runs were still red, for the other reason below. **Not as clean as it looks in
+one respect:** the report-only step that leaves the pipes unmarked showed the
+fault in two runs (7 and 3 of 48) and not in two others (0 of 48), so it shows the fault only some of the time.
+
+**A second Windows failure, seen twice, and my first fix for it was wrong.** In `core-windows` 43589518057 and
+again in `desk-window` 43592484669 (the fifth run, started by hand on `718e90a`), exporting a crate file over an
+earlier export of the same name was refused: Win32 error 32, the file in use. I first blamed an inheritable
+`FileHandle` in `CrateArchive.isArchive` and changed it (commit `718e90a`); the failure came back with that change
+in, so that was not it. What the error itself shows: it is raw, not the "another program kept the file open" that
+`DeckieFiles` gives after waiting, so it came from the one step that did not wait: `CrateArchive.pack` writing the
+file straight after the old one was deleted. On Windows a file just deleted or just read can be held for a moment
+(by what, the runner does not say; a virus scanner is the usual holder), and the write that replaces it is refused.
+`pack` now tries again for about five seconds, as a delete does. **This one matters on a DJ's PC:** exporting twice
+to the same stick is ordinary. Which program held the file is not known. It is the likeliest cause of the two
+crate deletes that failed in eight runs last night as well.
+
+### 2. The zip from `main`
+
+**The first zip built from `main` did not work.** `package.sh` copied three named page files, and `main`'s run
+screen added a fourth (`run.js`). The window was made, the engine said hello, and the page never drew (run
+43586695700). The script now copies every `.html`, `.css` and `.js` and stops if `index.html` names a file that is
+not in the zip. Nothing but this run would have caught it before the owner did.
+
+**What the runner showed on the zip of run 43591315233** (Windows Server 2025, WebView2 Runtime 156.0.4314.58;
+unzipped by Windows' own tool into "A DJ's PC", PATH cut to Windows itself):
+
+- **Started as a double click starts it** (`Deckie Desk.exe`, nothing to write to): window made with its icon, page
+  drew "Your crate starts here." / "Add music". Start-up 0.54 to 0.74 s over five starts; the first ever start on
+  the account 3.05 s.
+- **A music folder added through the page's own buttons**; the run finished in 18.2 s (4 of 6 files went in, as the
+  folder is built to give). The run screen is what showed meanwhile: the check now ends on anything the page
+  throws (an `error` or an unhandled promise), and nothing was thrown. The finished screen came: "4 songs went in.
+  2 files didn't go in ... Keys: 4 read by Deckie. 3 songs still need a name."
+- **Export**: one file, 32,463 bytes, which the core's validator reads as the single-file form with 4 songs.
+- **Covers**: the test folder has a picture inside one song's tags (a FLAC) and one beside another; the exported
+  file holds both thumbnails (2 songs with a cover, 2 distinct covers, 4,558 bytes) and names them in the records.
+- **The lookup**: asked for as a DJ would (the crate's songs, the More menu, "Look up songs via MusicBrainz", the
+  dialog's own button). The page showed its sentence about what would be sent, then: "Looking up isn't built for
+  this computer yet. Everything else works." Nothing was sent; it did not fail.
+- **No WebView2 Runtime** (the registry values renamed for a moment): ended with code 4 and the words naming
+  Microsoft's page and `Make Crate File`; after they were put back it started again.
+- `Make Crate File` passed what it passed before.
+
+**Not shown, as before:** the message box itself and its Yes button; Windows 10 or 11; an account that is not an
+administrator; Explorer's own double click; drag and drop; a music CD; Listen; the crate file on an iPad. The check
+does not look at the run screen's pictures, only that the page threw nothing and reached the finished screen.
+
+### 3. What to do first with it on a real PC
+
+1. Download the artifact of run 43591315233, unzip it with "Extract All"; note what the browser and antivirus say.
+2. Double-click "Deckie Desk". At the blue "Windows protected your PC" box: "More info", "Run anyway".
+3. Watch for a black console window (there should be none) and time how long the window takes.
+4. "Add music", "Choose a folder…", pick 20 to 50 real songs, some of them `.m4a`, some with covers.
+5. Watch the run screen to its end; note anything that looks wrong or stalls.
+6. Open the crate's songs: do the covers show, do the names and keys look right, does Listen play an MP3 and an M4A?
+7. More menu, "Look up songs via MusicBrainz": it should say it isn't built for this computer yet.
+8. "Export crate file…" to a USB stick or iCloud Drive, and open it on the iPad.
+9. Close Desk in the middle of a second run, start it again, "Carry on".
+10. Say which of these surprised you. The longer list (other PCs, no WebView2, small screens) is in the entry below.
+
+### If the lookup should work on Windows and Linux too
+
+Not built; this is what it would be. The lookup already has one seam: `LookupTransport` in
+`core/Sources/DeckieLookup/LookupTransport.swift` (`send(_ request:) throws -> LookupResponse`, and `available`).
+On Windows and Linux `LookupTransports.system` returns `Unavailable`. Everything above it (what is sent, one request
+a second, the review, the log of what Desk has sent) is shared and already runs there against recorded answers.
+
+- **Windows: WinHTTP**, which is part of Windows (`winhttp.dll`, in every version Desk runs on), so nothing ships
+  and nothing joins the allowlist. A small C file beside the Media Foundation one (`WinHttpOpen`, `Connect`,
+  `OpenRequest`, `AddRequestHeaders`, `SendRequest`, `ReceiveResponse`, `QueryHeaders`, `ReadData`; HTTPS by
+  Windows' own certificate store; the PC's proxy settings by `WINHTTP_ACCESS_TYPE_AUTOMATIC_PROXY`; no cookies, no
+  cache, a 20-second limit, as the Mac's), and a Swift `WinHTTPTransport`. About 150 lines of C, 60 of Swift, 100
+  of tests against a small server on the runner itself (never the real service from a workflow). About a day,
+  with the workflow.
+- **Linux: libsoup 3**, which WebKitGTK already needs, so every PC that can show Desk's window has it. Opened at
+  run time as ONNX Runtime is (`libsoup-3.0.so.0`: `soup_session_new`, `soup_message_new`, the request headers,
+  `soup_session_send_and_read`); if it cannot be opened the lookup stays "not on this computer". About 120 lines of
+  C, 50 of Swift, the same tests. Half a day more. It would need a line in `DEPENDENCIES.md` (LGPL, used and not
+  shipped, like WebKitGTK itself) and the owner's yes for that line.
+- **Before either ships**: `READ ME FIRST.txt` and `docs/product/windows-first-test.md` say "Nothing is looked up on
+  the internet in this version" and "It works with no internet"; the first sentence would change, and the firewall
+  question a DJ may be asked the first time is worth one line.
+
+**Decisions made here, each with its reason**
+
+1. The fix went into the code that starts engines, not the engine: the engine was waiting for an input that had not
+   closed, which is what it should do.
+2. The tests still start engines one at a time as well as marking the pipes: without it, a start can fall between
+   another's pipes being made and marked.
+3. The first-start check of the zip also asks for a lookup and fails on any page error, because both are what a
+   merge from another branch can break without any test of mine noticing (as `run.js` showed).
+4. The earlier merges on `pc/covers` (of `pc/package-desk`, then of `main`) are superseded: `main` took both
+   branches itself. `pc/covers` is left as it is and need not be merged.
+5. Covers: nothing more built. A song from a music CD has no picture to take a cover from without the lookup, and
+   the thumbnails left in a work folder are a few kilobytes each; both are written down, neither is done.
+
+**Next:** nothing is running that needs watching, beyond the fifth run named above. The branch is ready to merge.
+
+**Carry on.**
 
 ## Nov 14, 2026, 10:00 UTC: Deckie Desk for Windows is packaged and tried on the runner; all four workflows green
 

@@ -21,7 +21,7 @@
 #     app/deckie-desk.exe          Desk's window (desk-shell), marked as a program that opens no console window
 #     app/deckie-desk-engine.exe   Desk's engine (core/Sources/deckie-desk-engine), marked the same way, so that no
 #                                  console window opens when the window starts it
-#     app/desk-web/                the pages the window shows (desk-web/: index.html, desk.css, desk.js)
+#     app/desk-web/                the pages the window shows (desk-web/: every .html, .css and .js)
 #     app/deckie-make.exe          the program without a window (core/Sources/deckie-make), a console program
 #     app/*.dll                    Swift's runtime libraries, exactly those the three programs need (read from the
 #                                  program files' own import tables by pe_imports.py), and onnxruntime.dll
@@ -90,7 +90,12 @@ cp "$exe" "$app/deckie-make.exe"
 cp "$engine" "$app/deckie-desk-engine.exe"
 cp "$window" "$app/deckie-desk.exe"
 mkdir -p "$app/desk-web"
-cp "$pages/index.html" "$pages/desk.css" "$pages/desk.js" "$app/desk-web/"
+# Every page file, whatever is added later (the run screen's run.js was once left out, and the window drew nothing).
+cp "$pages"/*.html "$pages"/*.css "$pages"/*.js "$app/desk-web/"
+# Every file index.html names must be in the zip.
+for f in $(grep -o -E '(src|href)="[^"#:]+"' "$pages/index.html" | sed -E 's/^[a-z]+="//; s/"$//'); do
+  [ -f "$app/desk-web/$f" ] || die "the pages name $f, which is not in the zip"
+done
 # The window and its engine open no console window (pe_kind.py); deckie-make stays a console program.
 "$py" "$here/pe_kind.py" --set window "$app/deckie-desk.exe" "$app/deckie-desk-engine.exe" >/dev/null
 cp "$ort/lib/onnxruntime.dll" "$app/onnxruntime.dll"

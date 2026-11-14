@@ -1,4 +1,7 @@
 import Foundation
+#if os(Windows)
+import WinSDK
+#endif
 
 /// Every write, replace, move, copy and delete Deckie does to its own files goes through here: Desk's storage, the
 /// crate file writer, the builder's work folder, export and import.
@@ -132,6 +135,11 @@ public enum DeckieFiles {
             let fm = FileManager.default
             if !fm.fileExists(atPath: url.path) { _ = fm.createFile(atPath: url.path, contents: nil) }
             let h = try FileHandle(forWritingTo: url)
+            #if os(Windows)
+            // Not one a child program inherits (Foundation in Swift 6.4.1 makes it so): a child that held it would
+            // keep the file from being deleted or replaced for as long as it ran.
+            SetHandleInformation(h._handle, DWORD(HANDLE_FLAG_INHERIT), 0)
+            #endif
             try h.seekToEnd()
             return h
         }

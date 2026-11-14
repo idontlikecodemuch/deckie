@@ -84,9 +84,32 @@ enum Check {
                 let there = FileManager.default.fileExists(atPath: path, isDirectory: &isFolder)
                 let size = ((try? FileManager.default.attributesOfItem(atPath: path))?[.size] as? NSNumber)?.intValue ?? -1
                 say("crate file exported: \(path) (\(there ? (isFolder.boolValue ? "a folder" : "one file, \(size) bytes") : "NOT THERE"))")
-                say(there ? "PASSED: music added through the page, the run finished, and the crate file was exported"
-                          : "FAILED: the engine named a crate file that is not there")
-                end(there ? 0 : 3)
+                guard there else {
+                    say("FAILED: the engine named a crate file that is not there")
+                    end(3)
+                }
+                // Last, the lookup, as a DJ would reach it: the crate's songs, the More menu's "Look up songs via
+                // MusicBrainz" (the first of its items that use the internet), then the dialog's own button once
+                // its sentence is there. On Windows and Linux nothing is sent: the page should say so in words.
+                seen.exportAsked = false
+                eval("document.getElementById('finished-songs').click();")
+                evalWhen("document.getElementById('finished').hidden && !document.getElementById('more-button').disabled",
+                         "document.getElementById('more-button').click();")
+                evalWhen("!document.getElementById('more-menu').hidden && document.querySelector('#more-menu .net-item')",
+                         "document.querySelector('#more-menu .net-item').click();")
+                evalWhen("""
+                    document.getElementById('lookup').open && !document.getElementById('lookup-ask').hidden
+                      && document.getElementById('lookup-sentence').textContent && !document.getElementById('lookup-go').disabled
+                    """, """
+                    var sentence = document.getElementById('lookup-sentence').innerText;
+                    document.getElementById('lookup-go').click();
+                    (function look() {
+                      var review = document.getElementById('lookup-review'), progress = document.getElementById('lookup-progress');
+                      if (review.hidden && progress.hidden) { setTimeout(look, 25); return; }
+                      deckieShell.send(JSON.stringify({ type: 'shell.checkLookup', sentence: sentence, sending: !progress.hidden,
+                        says: document.getElementById('lookup-summary').innerText }));
+                    })();
+                    """)
             }
         }
         desk.pageWatchers.append { m in
@@ -95,6 +118,11 @@ enum Check {
                 // The page has loaded and listens. As soon as it has drawn a screen in the engine's words (they
                 // arrive in the engine's first message), it says what it shows.
                 say("page loaded")
+                // From here on, anything the page throws on its own ends the check.
+                eval("""
+                    window.addEventListener('error', function (e) { deckieShell.send(JSON.stringify({ type: 'shell.checkError', detail: 'the page: ' + (e.message || e) })); });
+                    window.addEventListener('unhandledrejection', function (e) { deckieShell.send(JSON.stringify({ type: 'shell.checkError', detail: 'the page (a promise): ' + String(e.reason) })); });
+                    """)
                 // (The first screen, a run and its end have a heading; a crate's own screen has none.)
                 evalWhen("""
                     document.querySelector('main > section:not([hidden])') && document.getElementById('add-label').textContent
@@ -133,6 +161,18 @@ enum Check {
                 let summary = (m["summary"] as? String ?? "").split(whereSeparator: \.isNewline).map { $0.trimmingCharacters(in: .whitespaces) }
                     .filter { !$0.isEmpty }.joined(separator: " | ")
                 say("the finished screen says: \(summary)")
+            case "shell.checkLookup":
+                let one = { (v: Any?) in (v as? String ?? "").split(whereSeparator: \.isNewline).joined(separator: " ") }
+                say("the lookup's sentence: \(one(m["sentence"]))")
+                if m["sending"] as? Bool == true {
+                    say("the lookup started sending (this computer can look songs up); stopped here")
+                } else {
+                    say("the lookup says: \(one(m["says"]))")
+                }
+                let plain = m["sending"] as? Bool == true || !one(m["says"]).isEmpty
+                say(plain ? "PASSED: music added through the page, the run finished, the crate file was exported, and the lookup answered in words"
+                          : "FAILED: the lookup said nothing")
+                end(plain ? 0 : 3)
             case "shell.checkError":
                 say("FAILED: a step in the page threw: \(m["detail"] ?? "?")")
                 end(3)
