@@ -177,7 +177,7 @@
         nextDrop();
         break;
       case "add.counting":
-        if (adding && adding.path === m.path) { adding.songs = m.songs; drawCounting(); }
+        if (adding && samePath(adding.path, m.path || "")) { adding.songs = m.songs; drawCounting(); }
         return;
       case "add.counted":
         counted(m); return;
@@ -1513,7 +1513,10 @@
     };
     d.showModal();
   }
-  const samePath = (a, b) => a.replace(/[\\/]+$/, "").toLowerCase() === b.replace(/[\\/]+$/, "").toLowerCase();
+  /// Two paths for the same folder, whichever way the slashes lean (Windows' choosers give backslashes, Foundation
+  /// forward slashes) and with or without a slash at the end.
+  const pathKey = (p) => p.replace(/\\/g, "/").replace(/\/+$/, "").toLowerCase();
+  const samePath = (a, b) => pathKey(a) === pathKey(b);
 
   /// Counts the songs first; the count shows rising once it takes longer than a moment. Above the line Desk asks,
   /// with the count and about how long reading takes, before reading anything (research AE, finding 3).
@@ -1546,7 +1549,7 @@
   }
   function counted(m) {
     const a = adding;
-    if (!a || a.path !== m.path) return;
+    if (!a || !samePath(a.path, m.path || "")) return;
     a.done = true; a.name = a.name || m.name;
     const d = $("askread");
     if (m.stopped) { adding = null; if (d.open) d.close("cancel"); return; }

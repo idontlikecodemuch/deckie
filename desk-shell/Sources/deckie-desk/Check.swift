@@ -55,6 +55,9 @@ enum Check {
             case "hello":
                 seen.hello = true
                 say("engine said hello: protocol \(m["protocol"] ?? "?"), platform \(m["platform"] ?? "?"), analysis \(m["analysis"] ?? "?")")
+            case "add.counted":
+                // Add folder counts the songs first (research AE); the page goes on to read them, or asks first.
+                say("counted before reading: \(m["songs"] ?? "?") songs in \"\(m["path"] ?? "?")\" (ask first: \(m["ask"] ?? "?"))")
             case "run.started":
                 say("run started: reading \"\(m["read"] ?? "?")\" into crate \"\(m["crateName"] ?? "?")\"")
             case "run.failed":
@@ -151,7 +154,16 @@ enum Check {
                     end(ok ? 0 : 3)
                 }
                 say("the window started the engine, showed the pages and passed messages both ways; now Add music, as a DJ would")
-                // Add music: the bar's button opens a menu whose last item is "Choose a folder…".
+                // The first screen's name field: the new crate is named as a DJ would name it, after the music
+                // folder (a new crate is otherwise "My crate"; research AE). The exported file takes this name.
+                let crateName = music.map { String($0.split(whereSeparator: { $0 == "/" || $0 == "\\" }).last ?? "") } ?? ""
+                say("names the new crate \"\(crateName)\" in the first screen's field")
+                eval("""
+                    var f = document.getElementById('first-name'); f.value = \(Tour.js(crateName));
+                    f.dispatchEvent(new Event('input')); f.dispatchEvent(new Event('change'));
+                    """)
+                // Add music: the bar's button opens a menu of the three ways (DeskAddMusic.ways); the last is
+                // Add folder, whose chooser answers with the music folder. The songs are counted, then read.
                 eval("document.getElementById('add-button').click();")
                 evalWhen("!document.getElementById('add-menu').hidden && document.querySelector('#add-menu [role=menuitem]')", """
                     var items = document.querySelectorAll('#add-menu [role=menuitem]');

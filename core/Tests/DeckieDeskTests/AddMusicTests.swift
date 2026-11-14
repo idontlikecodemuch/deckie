@@ -150,6 +150,31 @@ import DeckieTestSupport
         #expect(out.wait { $0["event"] as? String == "state" && $0["newName"] as? String == "Gig Friday" } != nil)
     }
 
+    /// The count's events carry the folder back exactly as the page sent it, which is how the page knows they are its
+    /// own. Here it is sent with a slash at the end (and, on Windows, with backslashes, as Windows' choosers give it);
+    /// Foundation's own form of the path differs in both, and a page waiting for its string never heard the count end.
+    @Test func theCountsEventsCarryThePathAsThePageSentIt() throws {
+        let root = try scratch("engine-count-path")
+        let music = root.appendingPathComponent("Stick 3")
+        try FileManager.default.createDirectory(at: music, withIntermediateDirectories: true)
+        for i in 1...3 { try Data(count: 10).write(to: music.appendingPathComponent("\(i).mp3")) }
+        var sent = music.path + "/"
+        #if os(Windows)
+        sent = sent.replacingOccurrences(of: "/", with: "\\")
+        #endif
+        let out = Lines()
+        let p = DeskProtocol(home: DeskHome(root: root.appendingPathComponent("home")), output: out.add, makeRun: Self.noRun,
+                             analysisCheck: {})
+        p.start()
+        let line = try JSONSerialization.data(withJSONObject: ["id": 1, "type": "add.count", "path": sent])
+        p.handle(line: String(decoding: line, as: UTF8.self))
+        let counted = try #require(out.wait { $0["event"] as? String == "add.counted" })
+        #expect(counted["path"] as? String == sent)
+        #expect((counted["songs"] as? NSNumber)?.intValue == 3 && counted["name"] as? String == "Stick 3")
+        let reply = try #require(out.wait { ($0["re"] as? NSNumber)?.intValue == 1 })
+        #expect(reply["path"] as? String == sent)
+    }
+
     static let noRun: DeskProtocol.RunMaker = { home, id, request in
         DeskRun(home: home, crateId: id, request: request, jobs: 1, device: "test", signer: nil, printer: DeskRun.portablePrint)
     }

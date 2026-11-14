@@ -47,6 +47,17 @@ if args.contains("--check") {
     Notice.say("[check] started; looking for the engine and the pages beside \(CommandLine.arguments[0])")
 }
 
+#if canImport(Darwin)
+// A check sends nothing over the internet. On the Mac the engine can look songs up (on Windows and Linux it says it
+// cannot yet), so unless recorded answers are given, the engine it starts answers from an empty set of them: every
+// lookup it is asked for gets "no connection", and nothing leaves this computer.
+if args.contains("--check"), (env["DECKIE_LOOKUP_RECORDED"] ?? "").isEmpty {
+    let none = FileManager.default.temporaryDirectory.appendingPathComponent("deckie-check-no-lookups-\(getpid())", isDirectory: true)
+    try? FileManager.default.createDirectory(at: none, withIntermediateDirectories: true)
+    setenv("DECKIE_LOOKUP_RECORDED", none.path, 1)
+}
+#endif
+
 if args.contains("--self-test") {
     SelfTest.run(seconds: Double(env["DECKIE_SELF_TEST_SECONDS"] ?? "") ?? 60)
 }

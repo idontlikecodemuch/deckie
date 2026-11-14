@@ -268,7 +268,7 @@ public final class DeskProtocol: @unchecked Sendable {
             guard FileManager.default.fileExists(atPath: path, isDirectory: &isDir), isDir.boolValue else {
                 throw RequestError(code: "bad_request", detail: "\(path) is not a folder")
             }
-            startCount(URL(fileURLWithPath: path, isDirectory: true), name: obj["name"] as? String, id)
+            startCount(URL(fileURLWithPath: path, isDirectory: true), given: path, name: obj["name"] as? String, id)
         case "add.countStop":
             counting?.set(); reply(id)
         case "crate.delete":
@@ -429,11 +429,14 @@ public final class DeskProtocol: @unchecked Sendable {
 
     /// Called with the lock held. Counts the songs below `folder` on a thread of its own, sending `add.counting` as
     /// the count rises and `add.counted` at the end: the count, the estimate in words, and whether to ask first.
-    func startCount(_ folder: URL, name: String?, _ id: Any?) {
+    /// `given` is the path exactly as the page sent it, and the events carry it back unchanged: the page matches them
+    /// to its question by that string. (`folder.path` is not the same string on Windows, where a chooser gives
+    /// backslashes and Foundation gives forward slashes back, so the page never heard its count end.)
+    func startCount(_ folder: URL, given: String, name: String?, _ id: Any?) {
         counting?.set()
         let stop = DeskAddMusic.CountStop()
         counting = stop
-        let home = session.home, env = environment, path = folder.path
+        let home = session.home, env = environment, path = given
         let shown = name ?? DeskDrives.sourceName(of: folder)
         reply(id, ["path": path])
         let thread = Thread { [self] in
