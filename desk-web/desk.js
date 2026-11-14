@@ -19,6 +19,12 @@
   };
 
   // ---- words (DeskWords' rules: {name} blanks, name.zero/one/other by count, name.<code> by code)
+  // The only words the pages hold: they show when the engine's words are not there (the pages opened in a browser) or
+  // may not be the words this page knows (another protocol). Every other word is DeskWords', from the engine.
+  const PAGE_WORDS = {
+    notInShell: "Deckie Desk's pages open inside Deckie Desk's window (deckie-desk), which starts the engine.",
+    protocol: "Protocol {protocol} is not one this window knows ({known}).",
+  };
   let W = {};
   const fill = (tpl, v) => tpl.replace(/\{(\w+)\}/g, (m, k) => (v && v[k] != null ? String(v[k]) : m));
   // {thisComputer} in any word: "this Mac" or "this computer", by the kind the engine says this computer is.
@@ -44,6 +50,10 @@
   const two = (x) => String(x).padStart(2, "0");
   const timeLeft = (s) => (s < 45 ? t("timeLeftUnderMinute") : n("timeLeft", Math.max(1, Math.round(s / 60))));
 
+  /// The words of a chooser's buttons, for the shell (where the system's chooser takes them: Linux's GTK).
+  const chooserWords = (folders) => ({ accept: t(folders ? "shell.choose" : "shell.open"), cancel: t("shell.cancel") });
+  /// Items joined by the word named `key` (DeskWords' join.*): the separators are words too.
+  const join = (key, items) => items.join(t(key));
   // A numbered list of words (name.1, name.2, ... to the first gap), as DeskWords.list.
   const list = (prefix) => { const out = []; for (let i = 1; W[prefix + "." + i] != null; i++) out.push(t(prefix + "." + i)); return out; };
 
@@ -52,6 +62,12 @@
     for (const e of root.querySelectorAll("[data-w-label]")) e.setAttribute("aria-label", t(e.dataset.wLabel));
     for (const e of root.querySelectorAll("[data-w-title]")) e.title = t(e.dataset.wTitle);
     document.title = t("appName");
+    // The marks desk.css draws with `content` (a menu's tick, a folder, the sort arrows) are words too: handed to the
+    // CSS as custom properties, so the style sheet holds none.
+    for (const [prop, key] of [["--glyph-checked", "glyph.checked"], ["--glyph-folder", "glyph.folder"],
+                               ["--glyph-sort-up", "glyph.sortUp"], ["--glyph-sort-down", "glyph.sortDown"]]) {
+      document.documentElement.style.setProperty(prop, JSON.stringify(t(key)));
+    }
   }
 
   // ---- what the engine said last; the page keeps nothing else beyond what is on screen
@@ -100,7 +116,7 @@
       case "hello":
         hello = m; W = m.words || {}; computer = m.computer || "other";
         applyWords(document);
-        if (m.protocol !== 2) message([`Protocol ${m.protocol} is not one this window knows (2).`]);
+        if (m.protocol !== 2) message([fill(PAGE_WORDS.protocol, { protocol: m.protocol, known: 2 })]);
         break;
       case "state":
         if (undoLine && state && m.undo !== state.undo && m.undo !== "undoNames" && m.undo !== "undoCheck" && m.undo !== "undoLookup") undoLine = null;
@@ -221,7 +237,8 @@
     const p = state.pending;
     $("pending").hidden = !p || busy;
     if (p) {
-      $("pending-text").textContent = t("stoppedReading", { read: p.name }) + (p.here ? "" : " " + t(p.musicCD ? "putDiscBack" : "putBack", { read: p.name }));
+      $("pending-text").textContent = p.here ? t("stoppedReading", { read: p.name })
+        : t("pendingLine", { stopped: t("stoppedReading", { read: p.name }), putBack: t(p.musicCD ? "putDiscBack" : "putBack", { read: p.name }) });
       $("carry-on").hidden = !p.here;
     }
 
@@ -231,7 +248,7 @@
     show("first");
     $("status").hidden = true;
     $("first-body").textContent = t("firstBody");
-    if (hello.analysis && !hello.analysis.ready) $("first-body").textContent += " " + t("engineMissing", { detail: "" });
+    if (hello.analysis && !hello.analysis.ready) $("first-body").textContent = t("firstBodyEngineMissing", { body: t("firstBody"), missing: t("engineMissing", { detail: "" }) });
   }
 
   function drawFinished() {
@@ -254,7 +271,7 @@
     if (local) {
       const rep = local.report || {};
       const counts = Object.entries(rep.keys_from || {}).sort((a, b) => b[1] - a[1] || (a[0] < b[0] ? -1 : 1));
-      if (counts.length) line(t("keysLine", { counts: counts.map(([k, c]) => t("keysCount", { n: c, from: keyFrom(k) })).join(", ") }));
+      if (counts.length) line(t("keysLine", { counts: join("join.keysCounts", counts.map(([k, c]) => t("keysCount", { n: c, from: keyFrom(k) }))) }));
       if (rep.keys_not_read > 0) line(n("keysNone", rep.keys_not_read));
       // Deckie's own reader (D33, D36): of the songs with no key, those it is not sure of; and those with a home note.
       if (rep.keys_not_sure > 0) line(n("keysNotSure", rep.keys_not_sure), "indent");
@@ -265,13 +282,13 @@
       const d = r.disc;
       if (d && d.text !== "names") line(t(d.text === "none" ? "discNoNames" : "discDriveNoNames"));
       if (d && d.named > 0) line(n("discNamed", d.named));
-      const named = el("p", { text: need ? n("needName", need) + " " : t("everySongHasAName") });
+      const named = el("p", { text: need ? t("needNameLead", { needName: n("needName", need) }) : t("everySongHasAName") });
       if (need) named.append(el("button", { class: "link", text: t(d && d.text !== "names" ? "nameThem" : "showThem"),
         on: { click: () => { onlyNeedName = true; finished = null; render(); } } }));
       box.append(named);
       if (need) line(t("needNameHelp"), "mut");
       if (d && d.damaged_sectors > 0) line(t("discDamaged"), "mut");
-      if ((local.libraries || []).length) line(t("librariesRead", { names: local.libraries.map((l) => programName(l.program)).join(", ") }), "mut");
+      if ((local.libraries || []).length) line(t("librariesRead", { names: join("join.libraries", local.libraries.map((l) => programName(l.program))) }), "mut");
       for (const f of local.failed || []) line(t("couldntReadLibrary", { detail: f }), "mut");
       if (local.rekordbox_locked) line(t("rekordboxLocked"), "mut");
       if (local.rekordbox_export) line(t("rekordboxExportNotRead"), "mut");
@@ -294,7 +311,7 @@
     { key: "key", word: "colKey", get: (s) => (s.key ? s.key.camelot : s.homeNote ? s.homeNote.camelot[0] : ""), cell: keyCell },
     { key: "keyFrom", word: "colKeyFrom", get: (s) => (s.key ? programName(s.key.from) : ""), title: keyHelp, cls: "mut" },
     { key: "seconds", word: "colLength", get: (s) => s.seconds, show: (s) => mmss(s.seconds), num: true },
-    { key: "where", word: "colWhere", get: (s) => placeLines(s).join(" · "), title: (s) => placeLines(s).join("\n") },
+    { key: "where", word: "colWhere", get: (s) => join("join.places", placeLines(s)), title: (s) => placeLines(s).join("\n") },
     { key: "notes", word: "colNotes", get: (s) => notes(s), cls: "mut" },
   ];
 
@@ -305,16 +322,16 @@
     // No key: the home note alone (D36), a song Deckie read and is not sure of (D33), or a key not read here.
     if (!s.key && s.homeNote) return t("homeNoteHelp", { minor: s.homeNote.camelot[0], major: s.homeNote.camelot[1] });
     if (!s.key) return t(s.keyState === "not_sure" ? "keyDeckieNotSure" : "keyNotRead");
-    return [s.key.camelot + " " + keyFrom(s.key.from)].concat(s.key.others.map((o) => t("keySays", { program: programName(o.from), camelot: o.camelot }))).join("; ");
+    return join("join.keyHelp", [t("keyHelpFirst", { camelot: s.key.camelot, from: keyFrom(s.key.from) })].concat(s.key.others.map((o) => t("keySays", { program: programName(o.from), camelot: o.camelot }))));
   }
   function keyCell(s, td) {
     td.textContent = s.key ? s.key.camelot : s.homeNote ? t("homeNote", { note: s.homeNote.note }) : t("none");
     td.title = keyHelp(s);
-    if (s.key && s.key.uncertain) td.append(" ", el("span", { class: "unsure", text: "?", title: t("notSureOfKey"), "aria-label": t("notSureOfKey") }));
+    if (s.key && s.key.uncertain) td.append(" ", el("span", { class: "unsure", text: t("glyph.notSure"), title: t("notSureOfKey"), "aria-label": t("notSureOfKey") }));
   }
   function notes(s) {
-    return s.notes.map((c) => ({ needsName: t("needsNameNote"), damagedFrames: n("damagedFrames", s.damagedFrames),
-      gridUnsure: t("gridUnsure"), vocalsNotRead: t("vocalsNotRead"), signed: t("signed") }[c] || c)).join(", ");
+    return join("join.notes", s.notes.map((c) => ({ needsName: t("needsNameNote"), damagedFrames: n("damagedFrames", s.damagedFrames),
+      gridUnsure: t("gridUnsure"), vocalsNotRead: t("vocalsNotRead"), signed: t("signed") }[c] || c)));
   }
 
   const shownColumns = () => columns.filter((c) => !c.onlyNeed || onlyNeedName);
@@ -344,7 +361,7 @@
       [document.activeElement.closest("tr").dataset.id, document.activeElement.closest("td").dataset.col] : null;
     body.replaceChildren(...list.map((s) => songRow(s)));
     $("songs").setAttribute("aria-rowcount", String(list.length + 1));
-    $("songs-caption").textContent = c.name + ", " + n("songs", songs.songs.length);
+    $("songs-caption").textContent = t("songsCaption", { crate: c.name, songs: n("songs", songs.songs.length) });
     $("songs-empty").hidden = list.length > 0;
     $("songs-empty").textContent = list.length ? "" : t("everySongHasAName");
     visibleOrder = list.map((x) => x.id);
@@ -383,7 +400,7 @@
       if (col.title) td.title = col.title(s);
       if (col.edit) {
         td.tabIndex = 0;
-        td.setAttribute("aria-label", t(col.word) + ": " + (col.get(s) || t("none")));
+        td.setAttribute("aria-label", t("cellLabel", { column: t(col.word), value: col.get(s) || t("none") }));
         td.addEventListener("dblclick", () => editCell(td, s, col));
         td.addEventListener("keydown", (e) => {
           if (e.key === "Enter" || e.key === "F2") { e.preventDefault(); editCell(td, s, col); }
@@ -506,15 +523,15 @@
     const others = (s.names && s.names.others) || [];
     if (others.length) {
       body.append(el("div", { class: "fact facts-list" }, el("label", { text: t("moreFacts") }),
-        ...others.map((o) => el("p", { class: "value", text: coded("factName", o.name) + ": " + o.value,
+        ...others.map((o) => el("p", { class: "value", text: t("moreFactLine", { name: coded("factName", o.name), value: o.value }),
           title: o.from ? factFrom(o.from) : null }))));
     }
     const tags = (s.names && s.names.fileTags) || [];
     const left = Object.keys((s.names && s.names.leftOut) || {});
     if (tags.length || left.length) {
       body.append(el("div", { class: "fact facts-list" }, el("label", { text: t("fileTagsHeading") }),
-        ...tags.map((o) => el("p", { class: "mut", text: o.name + ": " + o.value })),
-        ...(left.length ? [el("p", { class: "from", text: t("leftOutLine", { what: left.map((r) => coded("leftOut", r)).join(", ") }) })] : [])));
+        ...tags.map((o) => el("p", { class: "mut", text: t("fileTagLine", { name: o.name, value: o.value }) })),
+        ...(left.length ? [el("p", { class: "from", text: t("leftOutLine", { what: join("join.leftOut", left.map((r) => coded("leftOut", r))) }) })] : [])));
     }
     body.append(el("div", { class: "fact" }, el("label", { text: t("whereLabel") }),
       ...placeLines(s).map((l, i) => el("p", { class: i ? "mut" : "value", text: l }))));
@@ -533,7 +550,7 @@
     foot.append(netButton(t("lookupOne"), () => lookupSong(s)));
     const info = lookupInfo.get(s.id);
     if (info && info.explained && info.what && info.what.length) {
-      foot.append(el("p", { class: "lookup-under" }, t("lookupUnder", { what: info.what.map(([k, v]) => t("lookupWhat." + k, { value: v })).join(", ") }) + " ",
+      foot.append(el("p", { class: "lookup-under" }, t("lookupUnderLead", { under: t("lookupUnder", { what: join("join.lookupWhat", info.what.map(([k, v]) => t("lookupWhat." + k, { value: v }))) }) }),
         el("button", { class: "link", type: "button", text: t("lookupSentLink"), on: { click: showSent } })));
     } else if (!info) {
       lookupInfoFor(s.id);
@@ -648,7 +665,7 @@
   function globe() {
     const s = document.createElementNS(SVGNS, "svg");
     s.setAttribute("viewBox", "0 0 24 24"); s.setAttribute("fill", "none"); s.setAttribute("stroke", "currentColor");
-    s.setAttribute("stroke-width", "1.6"); s.setAttribute("aria-hidden", "true"); s.setAttribute("class", "net-icon");
+    s.setAttribute("aria-hidden", "true"); s.setAttribute("class", "net-icon");
     for (const d of ["M3 12h18", "M12 3c2.6 2.8 3.9 5.8 3.9 9s-1.3 6.2-3.9 9c-2.6-2.8-3.9-5.8-3.9-9S9.4 5.8 12 3z"]) {
       const p = document.createElementNS(SVGNS, "path"); p.setAttribute("d", d); s.append(p);
     }
@@ -686,19 +703,19 @@
   function lookupOptions(fields) {
     const out = [];
     const need = songs.songs.filter((x) => x.needsName).length;
-    if (need) out.push({ key: "need", label: t("lookupChoice.needsName") + " (" + need + ")", fields: { scope: "songs" } });
+    if (need) out.push({ key: "need", label: t("lookupScope.need", { label: t("lookupChoice.needsName"), n: need }), fields: { scope: "songs" } });
     const sel = selected && songById(selected);
-    if (sel) out.push({ key: "song:" + sel.id, label: t("lookupChoice.song") + ": " + sel.title, fields: { scope: "song", song: sel.id } });
+    if (sel) out.push({ key: "song:" + sel.id, label: t("lookupScope.song", { label: t("lookupChoice.song"), title: sel.title }), fields: { scope: "song", song: sel.id } });
     for (const src of songs.sources) {
       const disc = (state.discs || []).includes(src.name);
-      out.push({ key: (disc ? "disc:" : "source:") + src.name, label: disc ? t("lookupDisc").replace(/…$/, "") + ": " + src.name : src.name + " (" + n("songs", src.songs) + ")",
+      out.push({ key: (disc ? "disc:" : "source:") + src.name, label: disc ? t("lookupScope.disc", { label: t("lookupDisc").replace(/…$/, ""), source: src.name }) : t("lookupScope.source", { source: src.name, songs: n("songs", src.songs) }),
         fields: disc ? { scope: "disc", source: src.name } : { scope: "songs", source: src.name } });
     }
     const want = fields.scope === "song" ? "song:" + fields.song : fields.scope === "disc" ? "disc:" + fields.source
       : fields.source ? "source:" + fields.source : "need";
     if (!out.some((o) => o.key === want) && fields.scope === "song") {
       const s = songById(fields.song);
-      out.unshift({ key: want, label: t("lookupChoice.song") + ": " + (s ? s.title : ""), fields });
+      out.unshift({ key: want, label: t("lookupScope.song", { label: t("lookupChoice.song"), title: s ? s.title : "" }), fields });
     }
     return { out, want: out.some((o) => o.key === want) ? want : (out[0] && out[0].key) };
   }
@@ -788,7 +805,7 @@
       const bar = $("lookup-bar");
       bar.firstElementChild.style.width = pct + "%";
       bar.setAttribute("aria-valuenow", String(pct));
-      $("lookup-count").textContent = n("lookupProgress", p.total, { done: p.done }) + " · " + n("lookupProgressFound", p.found);
+      $("lookup-count").textContent = t("lookupCountLine", { progress: n("lookupProgress", p.total, { done: p.done }), found: n("lookupProgressFound", p.found) });
       go.hidden = true;
       cancel.textContent = t("lookupStop");
     } else {
@@ -817,7 +834,7 @@
       if (s.outcome !== "found") {
         let text = coded("lookupOutcome", s.outcome);
         if (s.outcome === "nothing" && single) text = t("lookupNothingOne");
-        if (s.outcome === "failed" && s.failure) text += ": " + fill(coded("lookupFailure", s.failure), withComputer());
+        if (s.outcome === "failed" && s.failure) text = t("lookupOutcomeFailed", { outcome: text, failure: fill(coded("lookupFailure", s.failure), withComputer()) });
         card.append(el("p", { class: "outcome", text }));
         box.append(card);
         continue;
@@ -837,13 +854,13 @@
       };
       s.candidates.forEach((c, i) => {
         const name = "pick-" + s.song;
-        const radio = el("input", { type: "radio", name, value: String(i), "aria-label": t("lookupUseThis") + ": " + c.title });
+        const radio = el("input", { type: "radio", name, value: String(i), "aria-label": t("lookupUseThisLabel", { label: t("lookupUseThis"), title: c.title }) });
         radio.checked = choice.candidate === i;
         radio.addEventListener("change", () => pick(i));
-        const notes = (c.notes || []).map((x) => coded("lookupNote", x)).join(", ");
+        const notes = join("join.lookupNotes", (c.notes || []).map((x) => coded("lookupNote", x)));
         const tr = el("tr", { class: [c.otherVersion ? "other" : "", choice.candidate === i ? "using" : ""].join(" ").trim() || null },
           el("td", null, radio),
-          el("td", null, c.title + (c.version ? " (" + c.version + ")" : ""), notes ? el("div", { class: "notes", text: notes }) : null),
+          el("td", null, c.version ? t("lookupCandidateTitle", { title: c.title, version: c.version }) : c.title, notes ? el("div", { class: "notes", text: notes }) : null),
           el("td", { text: c.artist || "" }), el("td", { text: c.release || "" }), el("td", { text: c.year || "" }),
           el("td", { text: c.label || "" }),
           el("td", { class: c.fit === "fits" ? "fits" : c.fit === "off" ? "off" : null, text: lengthWords(c) }));
@@ -862,9 +879,9 @@
           const box2 = el("input", { type: "checkbox", disabled: ch.locked });
           box2.checked = choice.fields.has(ch.field) && !ch.locked;
           box2.addEventListener("change", () => { if (box2.checked) choice.fields.add(ch.field); else choice.fields.delete(ch.field); drawLookup(); });
-          ticks.append(el("label", null, box2, el("span", { text: t(ch.field) + ": " }),
-            ch.before ? el("span", { class: "before", text: ch.before + " → " }) : null, el("span", { text: ch.after || "" }),
-            ch.note ? el("span", { class: "note", text: "(" + coded("changeNote", ch.note) + ")" }) : null));
+          ticks.append(el("label", null, box2, el("span", { text: t("lookupTickField", { field: t(ch.field) }) }),
+            ch.before ? el("span", { class: "before", text: t("lookupTickBefore", { before: ch.before }) }) : null, el("span", { text: ch.after || "" }),
+            ch.note ? el("span", { class: "note", text: t("lookupTickNote", { note: coded("changeNote", ch.note) }) }) : null));
         }
         if (c.changes.length) card.append(ticks);
       }
@@ -911,7 +928,7 @@
     const items = (r.sent || []).slice().reverse();
     list.replaceChildren(...items.map((x) => el("li", null,
       el("div", { text: t("lookupSentLine", { kind: coded("sentKind", x.kind),
-        fields: (x.fields || []).map(([k, v]) => fill(coded("sentField", k), { value: v })).join(", ") }) }),
+        fields: join("join.sentFields", (x.fields || []).map(([k, v]) => fill(coded("sentField", k), { value: v }))) }) }),
       el("div", { class: "mut", text: t("lookupSentAnswer", { time: new Date(x.at).toLocaleString(), answer: coded("sentAnswer", x.answer) }) }),
       el("div", { class: "addr", text: x.address }))));
     $("sent-empty").hidden = items.length > 0;
@@ -1007,7 +1024,7 @@
 
   function listenCell(s, td) {
     td.classList.add("listen");
-    td.append(el("button", { text: "▶", title: t("listenTo", { title: s.title }), "aria-label": t("listenTo", { title: s.title }),
+    td.append(el("button", { text: t("glyph.play"), title: t("listenTo", { title: s.title }), "aria-label": t("listenTo", { title: s.title }),
       "aria-pressed": String(!!listening && listening.song === s.id),
       on: { click: (e) => { e.stopPropagation(); select(s.id); listening && listening.song === s.id ? stopListening() : listen(s); } } }));
   }
@@ -1130,15 +1147,15 @@
       else if (p.tool === "pattern") prob.textContent = t("patternFits", { fits: p.lines, songs: p.songs });
       else if (p.tool === "playlist") prob.textContent = p.lengthsDiffer == null ? t("playlistNoLengths") : (p.lengthsDiffer === 0 ? t("lengthsAllMatch") : n("lengthsDiffer", p.lengthsDiffer));
       if (!p.problem && !p.changes.length) prob.textContent = t("nothingToChange");
-      const songTitle = (id) => { const s = songById(id); if (!s) return id; const pl = s.places[0]; return (pl && pl.number != null ? two(pl.number) + "  " : "") + s.title; };
+      const songTitle = (id) => { const s = songById(id); if (!s) return id; const pl = s.places[0]; return pl && pl.number != null ? t("toolSongTitle", { number: two(pl.number), title: s.title }) : s.title; };
       p.changes.forEach((c, i) => {
-        const box = el("input", { type: "checkbox", "aria-label": t(c.field) + ": " + (c.after || ""), disabled: c.locked });
+        const box = el("input", { type: "checkbox", "aria-label": t("toolTickLabel", { field: t(c.field), value: c.after || "" }), disabled: c.locked });
         box.checked = tool.ticks.has(i);
         box.addEventListener("change", () => { if (box.checked) tool.ticks.add(i); else tool.ticks.delete(i); updateApply(); });
         body.append(el("tr", null, el("td", null, box), el("td", { text: songTitle(c.song) }), el("td", { text: t(c.field) }),
           el("td", { class: c.locked ? "locked" : null, text: c.before || t("none") }),
           el("td", { class: c.locked ? "locked" : null, text: c.after || "" },
-            c.note ? el("span", { class: "note", text: "  (" + t("changeNote." + c.note) + ")" }) : null)));
+            c.note ? el("span", { class: "note", text: t("toolChangeNote", { note: t("changeNote." + c.note) }) }) : null)));
       });
     }
     updateApply();
@@ -1156,7 +1173,7 @@
   $("tool-source").addEventListener("change", refreshTool);
   $("tool-empty").addEventListener("change", refreshTool);
   $("tool-choose").addEventListener("click", async () => {
-    const f = await request("shell.chooseFile", { purpose: "playlist", message: t("choosePlaylistMessage") }, { quiet: true });
+    const f = await request("shell.chooseFile", Object.assign({ purpose: "playlist", message: t("choosePlaylistMessage") }, chooserWords(false)), { quiet: true });
     if (!f.ok || !f.path || !tool) return;
     tool.path = f.path;
     $("tool-file").textContent = f.path.replace(/^.*[\\/]/, "");
@@ -1210,12 +1227,12 @@
           const more = s ? s.places.length - 1 : 0;
           sl.append(el("li", { class: "song" }, el("div", { class: "row" },
             el("span", { class: "n", text: song.number != null ? two(song.number) : t("none") }),
-            el("span", { class: "name", title: more > 0 ? t("alsoIn", { places: placeLines(s).join(", ") }) : null }, title, s && s.artist ? el("span", { class: "artist", text: s.artist }) : null),
-            more > 0 ? el("span", { class: "dim", text: "+" + more }) : null,
+            el("span", { class: "name", title: more > 0 ? t("alsoIn", { places: join("join.alsoIn", placeLines(s)) }) : null }, title, s && s.artist ? el("span", { class: "artist", text: s.artist }) : null),
+            more > 0 ? el("span", { class: "dim", text: t("sourceSongMore", { n: more }) }) : null,
             el("span", { class: "tools" },
-              el("button", { class: "icon-btn", text: "↑", title: t("moveUp"), "aria-label": t("moveUp") + ": " + title, disabled: i === 0,
+              el("button", { class: "icon-btn", text: t("glyph.moveUp"), title: t("moveUp"), "aria-label": t("songActionLabel", { action: t("moveUp"), title }), disabled: i === 0,
                 on: { click: () => request("song.move", { song: song.id, source: src.name, folder: f.name, by: -1 }) } }),
-              el("button", { class: "icon-btn", text: "↓", title: t("moveDown"), "aria-label": t("moveDown") + ": " + title, disabled: i === f.songs.length - 1,
+              el("button", { class: "icon-btn", text: t("glyph.moveDown"), title: t("moveDown"), "aria-label": t("songActionLabel", { action: t("moveDown"), title }), disabled: i === f.songs.length - 1,
                 on: { click: () => request("song.move", { song: song.id, source: src.name, folder: f.name, by: 1 }) } })))));
         });
         fl.append(sl);
@@ -1363,7 +1380,7 @@
     }, { disabled: !songsHere }));
     list.append(item(t("chooseLibrary"), async () => {
       close(true);
-      const f = await request("shell.chooseFile", { purpose: "library", message: t("chooseLibraryMessage") }, { quiet: true });
+      const f = await request("shell.chooseFile", Object.assign({ purpose: "library", message: t("chooseLibraryMessage") }, chooserWords(false)), { quiet: true });
       if (!f.ok || !f.path) return;
       const r = await request("library.choose", { path: f.path }, { errorWord: "couldntReadLibrary" });
       if (r.ok) message([t("libraryChosen", { program: programName(r.program) })]);
@@ -1384,11 +1401,11 @@
     const rep = s.report || {};
     const out = [];
     const counts = Object.entries(rep.keys_from || {}).sort((a, b) => b[1] - a[1] || (a[0] < b[0] ? -1 : 1));
-    if (counts.length) out.push(t("keysLine", { counts: counts.map(([k, c]) => t("keysCount", { n: c, from: keyFrom(k) })).join(", ") }));
+    if (counts.length) out.push(t("keysLine", { counts: join("join.keysCounts", counts.map(([k, c]) => t("keysCount", { n: c, from: keyFrom(k) }))) }));
     if (rep.keys_not_read > 0) out.push(n("keysNone", rep.keys_not_read));
     if (rep.keys_disagree > 0) out.push(n("keysDisagree", rep.keys_disagree));
     out.push(rep.need_name ? n("needName", rep.need_name) : t("everySongHasAName"));
-    if ((s.libraries || []).length) out.push(t("librariesRead", { names: s.libraries.map((l) => programName(l.program)).join(", ") }));
+    if ((s.libraries || []).length) out.push(t("librariesRead", { names: join("join.libraries", s.libraries.map((l) => programName(l.program))) }));
     for (const f of s.failed || []) out.push(t("couldntReadLibrary", { detail: f }));
     if (s.rekordbox_locked) out.push(t("rekordboxLocked"));
     if (s.rekordbox_export) out.push(t("rekordboxExportNotRead"));
@@ -1402,17 +1419,17 @@
     request("run.add", fields, { errorWord: "runStopped" });
   }
   async function chooseAndAdd() {
-    const f = await request("shell.chooseFolder", { purpose: "addMusic", message: t("chooseSourceMessage") }, { quiet: true });
+    const f = await request("shell.chooseFolder", Object.assign({ purpose: "addMusic", message: t("chooseSourceMessage") }, chooserWords(true)), { quiet: true });
     if (f.ok && f.path) addMusic(f.path);
   }
   function nextDrop() { if (!run && !(state && state.running) && dropQueue.length) addMusic(dropQueue.shift()); }
   async function importCrate() {
-    const f = await request("shell.chooseFile", { purpose: "import", message: t("importMessage") }, { quiet: true });
+    const f = await request("shell.chooseFile", Object.assign({ purpose: "import", message: t("importMessage") }, chooserWords(false)), { quiet: true });
     if (f.ok && f.path) { finished = null; request("crate.import", { path: f.path }, { errorWord: "couldntOpen" }); }
   }
   async function exportCrate() {
     if (!hasSongs()) { message([t("nothingToSendYet")]); return; }
-    const f = await request("shell.chooseFolder", { purpose: "export", message: t("exportMessage") }, { quiet: true });
+    const f = await request("shell.chooseFolder", Object.assign({ purpose: "export", message: t("exportMessage") }, chooserWords(true)), { quiet: true });
     if (!f.ok || !f.path) return;
     const r = await request("crate.export", { folder: f.path }, { errorWord: "couldntExport" });
     if (!r.ok) return;
@@ -1420,7 +1437,7 @@
     if (finished) { render(); return; }
     const extra = el("div", null,
       el("p", null, el("button", { class: "link", text: t("openFolder"), on: { click: () => request("shell.openFolder", { path: parentOf(r.path) }, { quiet: true }) } })),
-      el("h3", { text: t("toIPadTitle"), style: "margin-top:14px" }),
+      el("h3", { class: "to-ipad-title", text: t("toIPadTitle") }),
       el("ul", { class: "mut" }, el("li", { text: t("toIPadStick") }), el("li", { text: t("toIPadICloud") }), el("li", { text: t("toIPadCable") })));
     message([t("exportedTo", { folder: parentOf(r.path) })], extra);
   }
@@ -1481,7 +1498,7 @@
   });
 
   if (!shell) {
-    document.body.textContent = "Deckie Desk's pages open inside Deckie Desk's window (deckie-desk), which starts the engine.";
+    document.body.textContent = PAGE_WORDS.notInShell;
     return;
   }
   shell.send(JSON.stringify({ type: "shell.ready" }));

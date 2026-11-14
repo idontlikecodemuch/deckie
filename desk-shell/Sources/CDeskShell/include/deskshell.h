@@ -50,11 +50,12 @@ void deskshell_terminate(deskshell_t s);
 void deskshell_destroy(deskshell_t s);
 
 /// The system's own folder chooser over the window; the folder's path as UTF-8 (free it with deskshell_free), or
-/// NULL when the DJ cancelled. `title` is the chooser's message. Not on the Mac: the Swift shell uses NSOpenPanel.
-char *deskshell_choose_folder(deskshell_t s, const char *title);
+/// NULL when the DJ cancelled. `title` is the chooser's message; `accept` and `cancel` its buttons' words (DeskWords'
+/// shell.*, from the pages; GTK draws them, Windows keeps its own). Not on the Mac: the Swift shell uses NSOpenPanel.
+char *deskshell_choose_folder(deskshell_t s, const char *title, const char *accept, const char *cancel);
 
 /// The system's own file chooser, for one file. As deskshell_choose_folder.
-char *deskshell_choose_file(deskshell_t s, const char *title);
+char *deskshell_choose_file(deskshell_t s, const char *title, const char *accept, const char *cancel);
 
 /// Opens a folder in the system's file manager (Explorer, the Linux desktop's own). Not on the Mac.
 void deskshell_open_folder(const char *path);

@@ -194,7 +194,7 @@ void listen_for_drops(deskshell *s) {
   view->Release();
 }
 
-char *choose(deskshell *s, const char *title, bool folders) {
+char *choose(deskshell *s, const char *title, bool folders, const char *, const char *) {
   IFileOpenDialog *dialog = nullptr;
   if (FAILED(CoCreateInstance(CLSID_FileOpenDialog, nullptr, CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&dialog)))) {
     return nullptr;
@@ -223,15 +223,15 @@ char *choose(deskshell *s, const char *title, bool folders) {
   return out;
 }
 #elif defined(WEBVIEW_GTK)
-char *choose(deskshell *s, const char *title, bool folders) {
+char *choose(deskshell *s, const char *title, bool folders, const char *accept, const char *cancel) {
   GtkWindow *owner = s ? static_cast<GtkWindow *>(webview_get_window(s->w)) : nullptr;
 #if GTK_MAJOR_VERSION >= 4
-  (void)owner; (void)title; (void)folders;
+  (void)owner; (void)title; (void)folders; (void)accept; (void)cancel;
   return nullptr; // GTK 4 has no blocking dialog; this build uses GTK 3 (webkit2gtk-4.1).
 #else
   GtkWidget *dialog = gtk_file_chooser_dialog_new(
-      title, owner, folders ? GTK_FILE_CHOOSER_ACTION_SELECT_FOLDER : GTK_FILE_CHOOSER_ACTION_OPEN, "_Cancel",
-      GTK_RESPONSE_CANCEL, folders ? "_Choose" : "_Open", GTK_RESPONSE_ACCEPT, nullptr);
+      title, owner, folders ? GTK_FILE_CHOOSER_ACTION_SELECT_FOLDER : GTK_FILE_CHOOSER_ACTION_OPEN, cancel,
+      GTK_RESPONSE_CANCEL, accept, GTK_RESPONSE_ACCEPT, nullptr);
   char *out = nullptr;
   if (gtk_dialog_run(GTK_DIALOG(dialog)) == GTK_RESPONSE_ACCEPT) {
     char *path = gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(dialog));
@@ -245,7 +245,7 @@ char *choose(deskshell *s, const char *title, bool folders) {
 #endif
 }
 #else
-char *choose(deskshell *, const char *, bool) { return nullptr; }
+char *choose(deskshell *, const char *, bool, const char *, const char *) { return nullptr; }
 #endif
 
 } // namespace
@@ -300,9 +300,13 @@ void deskshell_destroy(deskshell_t s) {
   delete s;
 }
 
-char *deskshell_choose_folder(deskshell_t s, const char *title) { return choose(s, title, true); }
+char *deskshell_choose_folder(deskshell_t s, const char *title, const char *accept, const char *cancel) {
+  return choose(s, title, true, accept, cancel);
+}
 
-char *deskshell_choose_file(deskshell_t s, const char *title) { return choose(s, title, false); }
+char *deskshell_choose_file(deskshell_t s, const char *title, const char *accept, const char *cancel) {
+  return choose(s, title, false, accept, cancel);
+}
 
 void deskshell_open_folder(const char *path) {
 #if defined(_WIN32)

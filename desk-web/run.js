@@ -5,13 +5,16 @@
 //
 // Drawing is throttled (the stage at most thirty frames a second and only while something moves, the wall at most
 // every --t-wall) and stops while the window is hidden. Under reduced motion nothing moves: the same pictures, still.
-// Colours, sizes and times are the CSS variables in desk.css's :root.
+// Colours, sizes, shares and times are the CSS variables in desk.css's :root; the numbers left here are the drawing's
+// own arithmetic (64 points a wave, a mark every 8 bars and a longer one every 32, twelve keys round the wheel).
 (function () {
   "use strict";
 
   const root = document.documentElement;
   const css = (name) => getComputedStyle(root).getPropertyValue(name).trim();
   const time = (name) => parseFloat(css(name)) || 0;
+  /// A number from desk.css's :root (a size in CSS pixels, a share, a count): every number the drawing uses is one.
+  const num = (name) => parseFloat(css(name));
   const reduceQuery = window.matchMedia ? matchMedia("(prefers-reduced-motion: reduce)") : { matches: false };
   const reduced = () => reduceQuery.matches;
   const WAVE = 64;
@@ -40,7 +43,7 @@
   function pulse(node, cls) {
     if (!node || reduced()) return;
     node.classList.remove(cls); void node.offsetWidth; node.classList.add(cls);
-    setTimeout(() => node.classList.remove(cls), time("--t-moment") + 50);
+    setTimeout(() => node.classList.remove(cls), time("--t-moment") + time("--t-moment-after"));
   }
 
   window.DeskRunScreen = function (env) {
@@ -53,12 +56,13 @@
     function keyText(k) {
       if (!k || k.kind === "none") return t("keyNotSureValue");
       if (k.kind === "home") return t("homeNoteValue", { note: k.name });
-      return t("keyValue", { camelot: k.camelot, note: k.name, mode: t(k.minor ? "mode.minor" : "mode.major") }) + (k.uncertain ? t("keyNotSure") : "");
+      const key = t("keyValue", { camelot: k.camelot, note: k.name, mode: t(k.minor ? "mode.minor" : "mode.major") });
+      return k.uncertain ? t("keyWithDoubt", { key, doubt: t("keyNotSure") }) : key;
     }
     const whereText = (s) => s.place || (s.folder ? s.folder : t("topOfMusicFolder"));
     function songLine(s) {
       const name = s.artist ? t("wallSongBy", { number: s.number, title: s.title, artist: s.artist }) : t("wallSong", { number: s.number, title: s.title });
-      return [name, bpmText(s), keyText(s.key), mmss(s.seconds), whereText(s)].join("  ·  ");
+      return [name, bpmText(s), keyText(s.key), mmss(s.seconds), whereText(s)].join(t("join.wallSong"));
     }
     function noteText(note) {
       const v = Object.assign({}, note.values || {});
@@ -82,7 +86,7 @@
       return Math.max(min, hold / (1 + waiting));
     }
     function nextSong(now) {
-      const max = time("--stage-queue-max") || 24;
+      const max = num("--stage-queue-max");
       if (queue.length > max) {
         // Falling behind: the oldest waiting go straight to the wall (they are on it already), and the stage says how many.
         const drop = queue.length - Math.floor(max / 2);
@@ -91,9 +95,9 @@
       }
       const song = queue.shift();
       // Under reduced motion a song stays at least --t-hold-still, so the stage changes as a still picture would.
-      const hold = reduced() ? Math.max(time("--t-hold-still") || 2000, holdFor(queue.length)) : holdFor(queue.length);
-      const ticker = reduced() || hold < 900;
-      onStage = { song, at: now, hold, draw: ticker ? 0 : Math.min(time("--t-draw"), hold * 0.45) };
+      const hold = reduced() ? Math.max(time("--t-hold-still"), holdFor(queue.length)) : holdFor(queue.length);
+      const ticker = reduced() || hold < num("--stage-ticker");
+      onStage = { song, at: now, hold, draw: ticker ? 0 : Math.min(time("--t-draw"), hold * num("--stage-draw-share")) };
       showFacts(song, ticker);
       $("stage-more").textContent = skipped > 0 ? n("stageMore", skipped) : (song.wave.length ? "" : t("stageNoWave"));
       if (queue.length === 0) skipped = 0;
@@ -117,7 +121,7 @@
       };
       if (quick || !facts.textContent.trim()) { fill(); return; }
       stage.classList.add("out");
-      setTimeout(fill, time("--t-fade") * 0.6);
+      setTimeout(fill, time("--t-fade") * num("--stage-swap-share"));
     }
     function drawStage(now) {
       if (!onStage || document.hidden) return;
@@ -126,13 +130,14 @@
       readCurve();
       const p = onStage.draw > 0 ? Math.min(1, (now - onStage.at) / onStage.draw) : 1;
       ctx.clearRect(0, 0, w, h);
-      const markH = Math.round(h * 0.12), waveH = h - markH, mid = waveH / 2, slot = w / WAVE, edge = p * w;
+      const markH = Math.round(h * num("--stage-mark-h")), waveH = h - markH, mid = waveH / 2, slot = w / WAVE, edge = p * w;
       ctx.fillStyle = css("--wave-none");
-      ctx.fillRect(0, Math.round(mid), Math.round(edge), 1);
+      ctx.fillRect(0, Math.round(mid), Math.round(edge), num("--stage-line-h"));
       if (wave.length) {
         // The wave: mirrored, through the middle of each stretch, drawn in from the left as far as `p`.
         const shown = Math.min(WAVE, Math.ceil(p * WAVE));
-        const half = (i) => Math.max(1, shape(wave[i]) * waveH * 0.48);
+        const least = num("--stage-wave-min"), room = num("--stage-wave-room");
+        const half = (i) => Math.max(least, shape(wave[i]) * waveH * room);
         ctx.beginPath();
         ctx.moveTo(0, mid - half(0));
         for (let i = 0; i < shown; i++) ctx.lineTo(Math.min(edge, (i + 0.5) * slot), mid - half(i));
@@ -147,13 +152,15 @@
       // Its bars marked: a cut through the wave every 8 bars and a mark below it, a longer one every 32.
       if (s.bars) {
         const dpr = Math.min(window.devicePixelRatio || 1, 2);
+        const tickW = num("--stage-tick-w") * dpr, strongW = num("--stage-tick-strong-w") * dpr, gap = num("--stage-tick-gap") * dpr;
+        const shortMark = num("--stage-tick-short");
         for (let b = 8; b < s.bars; b += 8) {
           const x = Math.round((b / s.bars) * w);
           if (x > edge) break;
           const strong = b % 32 === 0;
-          ctx.clearRect(x, 0, strong ? 2 * dpr : dpr, waveH);
+          ctx.clearRect(x, 0, strong ? strongW : tickW, waveH);
           ctx.fillStyle = strong ? css("--wave-tick-strong") : css("--wave-tick");
-          ctx.fillRect(x, waveH + 2 * dpr, dpr, strong ? markH - 2 * dpr : (markH - 2 * dpr) / 2);
+          ctx.fillRect(x, waveH + gap, tickW, strong ? markH - gap : (markH - gap) * shortMark);
         }
       }
     }
@@ -163,7 +170,7 @@
       if (!onStage || now - onStage.at >= onStage.hold) { if (queue.length) nextSong(now); }
       // At most thirty frames a second, and always the first and the last of a wave's drawing in.
       const last = onStage && !onStage.drawn && now - onStage.at >= onStage.draw;
-      if (now - lastFrame >= 33 || !onStage || now - onStage.at < 40 || last) { drawStage(now); lastFrame = now; if (last) onStage.drawn = true; }
+      if (now - lastFrame >= num("--stage-frame") || !onStage || now - onStage.at < num("--stage-first-frames") || last) { drawStage(now); lastFrame = now; if (last) onStage.drawn = true; }
       schedule(now);
     }
     /// Keeps the stage going only while something moves or waits: a frame while a wave draws in, else one timer.
@@ -188,11 +195,12 @@
       // Tempos: one bar a bin over the whole range, each as tall as its count against the fullest.
       const { ctx, w, h } = fit(histCanvas);
       ctx.clearRect(0, 0, w, h);
-      const most = Math.max(1, ...f.tempos), slot = w / f.tempos.length, barW = Math.max(1, slot - 1);
-      ctx.fillStyle = css("--wave-none"); ctx.fillRect(0, h - 1, w, 1);
+      const most = Math.max(1, ...f.tempos), slot = w / f.tempos.length, barW = Math.max(num("--hist-bar-min-w"), slot - num("--hist-bar-gap"));
+      const base = num("--hist-baseline"), least = num("--hist-bar-min"), headroom = num("--hist-top");
+      ctx.fillStyle = css("--wave-none"); ctx.fillRect(0, h - base, w, base);
       f.tempos.forEach((c, i) => {
         if (!c) return;
-        const bh = Math.max(2, (c / most) * (h - 2));
+        const bh = Math.max(least, (c / most) * (h - headroom));
         ctx.fillStyle = i === latestBin ? css("--wave-new") : css("--wave");
         ctx.fillRect(i * slot, h - bh, barW, bh);
       });
@@ -217,19 +225,23 @@
     // The wheel of the twelve home notes round the circle of fifths: the outer ring major, the inner minor, a dot inside
     // for a song whose home note alone Desk found. A key that has turned up is filled, brighter the more songs it has.
     const FIFTHS = [0, 7, 2, 9, 4, 11, 6, 1, 8, 3, 10, 5];
-    const NAMES = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
+    const noteName = (pc) => t("noteName." + (pc + 1));
     let wheelCells = null;
     function arc(r0, r1, a0, a1) {
-      const p = (r, a) => [60 + r * Math.cos(a), 60 + r * Math.sin(a)].map((v) => v.toFixed(2)).join(" ");
+      const c = num("--wheel-center");
+      const p = (r, a) => [c + r * Math.cos(a), c + r * Math.sin(a)].map((v) => v.toFixed(2)).join(" ");
       return `M${p(r1, a0)} A${r1} ${r1} 0 0 1 ${p(r1, a1)} L${p(r0, a1)} A${r0} ${r0} 0 0 0 ${p(r0, a0)} Z`;
     }
     function buildWheel() {
       const ns = "http://www.w3.org/2000/svg";
       wheel.replaceChildren();
+      const c = num("--wheel-center"), trim = num("--wheel-cell-gap"), homeR = num("--wheel-home-r");
+      wheel.setAttribute("viewBox", `0 0 ${2 * c} ${2 * c}`);
+      const rings = [["major", num("--wheel-major-in"), num("--wheel-major-out")], ["minor", num("--wheel-minor-in"), num("--wheel-minor-out")]];
       wheelCells = { major: [], minor: [], home: [] };
       FIFTHS.forEach((pc, i) => {
-        const a0 = ((i - 0.5) * 30 - 90) * Math.PI / 180 + 0.03, a1 = ((i + 0.5) * 30 - 90) * Math.PI / 180 - 0.03;
-        for (const [ring, r0, r1] of [["major", 43, 58], ["minor", 27, 41]]) {
+        const a0 = ((i - 0.5) * 30 - 90) * Math.PI / 180 + trim, a1 = ((i + 0.5) * 30 - 90) * Math.PI / 180 - trim;
+        for (const [ring, r0, r1] of rings) {
           const path = document.createElementNS(ns, "path");
           path.setAttribute("d", arc(r0, r1, a0, a1));
           const title = document.createElementNS(ns, "title");
@@ -239,7 +251,7 @@
         }
         const am = (i * 30 - 90) * Math.PI / 180;
         const dot = document.createElementNS(ns, "circle");
-        dot.setAttribute("cx", (60 + 18 * Math.cos(am)).toFixed(2)); dot.setAttribute("cy", (60 + 18 * Math.sin(am)).toFixed(2));
+        dot.setAttribute("cx", (c + homeR * Math.cos(am)).toFixed(2)); dot.setAttribute("cy", (c + homeR * Math.sin(am)).toFixed(2));
         wheel.append(dot);
         wheelCells.home[pc] = dot;
       });
@@ -247,24 +259,26 @@
     function drawWheel(f) {
       if (!wheelCells) buildWheel();
       const most = Math.max(1, ...f.major, ...f.minor);
+      const fillMin = num("--wheel-fill-min"), fillRange = num("--wheel-fill-range"), emptyOpacity = css("--wheel-empty-opacity");
+      const dotBase = num("--wheel-dot-base"), dotMax = num("--wheel-dot-max");
       for (const ring of ["major", "minor"]) {
         f[ring].forEach((c, pc) => {
           const cell = wheelCells[ring][pc];
           cell.setAttribute("fill", c ? css("--acc") : css("--wheel-empty"));
-          cell.setAttribute("fill-opacity", c ? (0.35 + 0.65 * (c / most)).toFixed(2) : "1");
-          cell.firstChild.textContent = NAMES[pc] + " " + t(ring === "major" ? "mode.major" : "mode.minor") + ": " + n("songs", c);
+          cell.setAttribute("fill-opacity", c ? (fillMin + fillRange * (c / most)).toFixed(2) : emptyOpacity);
+          cell.firstChild.textContent = t("wheelCell", { note: noteName(pc), mode: t(ring === "major" ? "mode.major" : "mode.minor"), songs: n("songs", c) });
         });
       }
       f.home.forEach((c, pc) => {
         const dot = wheelCells.home[pc];
-        dot.setAttribute("r", c ? String(Math.min(5, 1.8 + Math.sqrt(c))) : "0");
+        dot.setAttribute("r", c ? String(Math.min(dotMax, dotBase + Math.sqrt(c))) : "0");
         dot.setAttribute("fill", css("--wheel-home"));
       });
       const homes = f.home.reduce((a, b) => a + b, 0);
       const parts = [t("figKeysText", { n: f.keysFound })];
       if (homes) parts.push(n("figHomeOnly", homes));
       if (f.noKey) parts.push(n("figNoKey", f.noKey));
-      const text = parts.join(", ");
+      const text = parts.join(t("join.keysFigure"));
       $("fig-keys-text").textContent = text;
       wheel.setAttribute("aria-label", text);
     }
@@ -273,19 +287,19 @@
     function Wall(canvas, nameEl) {
       let layout = null, pick = -1, dirty = false, wtimer = 0, newest = -1;
       function plan(w, h, count, dpr) {
-        const waveMin = (parseFloat(css("--wall-wave-min")) || 6) * dpr;
-        const colMin = (parseFloat(css("--wall-col-min")) || 150) * dpr;
-        const denseMin = (parseFloat(css("--wall-dense-col-min")) || 18) * dpr;
-        const gap = Math.round((parseFloat(css("--wall-gap")) || 6) * dpr);
+        const waveMin = num("--wall-wave-min") * dpr;
+        const colMin = num("--wall-col-min") * dpr;
+        const denseMin = num("--wall-dense-col-min") * dpr;
+        const gap = Math.round(num("--wall-gap") * dpr);
         const maxCols = Math.max(1, Math.floor((w + gap) / (colMin + gap)));
         for (let cols = 1; cols <= maxCols; cols++) {
           const rows = Math.ceil(count / cols);
           if (h / rows >= waveMin) return { mode: "wave", cols, rows, lh: h / rows, gap, cw: (w - gap * (cols - 1)) / cols };
         }
         // Too many for waves: each song a line of brightness, as thin as one pixel; columns as narrow as --wall-dense-col-min.
-        const dgap = Math.max(1, Math.round((parseFloat(css("--wall-dense-gap")) || 2) * dpr));
+        const dgap = Math.max(1, Math.round(num("--wall-dense-gap") * dpr));
         const maxDense = Math.max(1, Math.floor((w + dgap) / (denseMin + dgap)));
-        const line = Math.max(1, (parseFloat(css("--wall-dense-line")) || 3) * dpr);
+        const line = Math.max(1, num("--wall-dense-line") * dpr);
         const cols = Math.min(maxDense, Math.max(1, Math.ceil(count / Math.max(1, Math.floor(h / line)))));
         const rows = Math.ceil(count / cols);
         return { mode: "dense", cols, rows, lh: Math.max(1, h / rows), gap: dgap, cw: (w - dgap * (cols - 1)) / cols, tall: rows > h };
@@ -308,6 +322,8 @@
         const img = ctx.createImageData(w, h), px = img.data;
         const cWave = rgba(css("--wave")), cQuiet = rgba(css("--wave-quiet")), cNew = rgba(css("--wave-new")),
               cPick = rgba(css("--wave-pick")), cNone = rgba(css("--wave-none"));
+        const room = num("--wall-wave-room"), leastHalf = num("--wall-wave-min-half"), quiet = num("--wall-dense-quiet");
+        const dim = num("--wall-dense-dim"), bright = num("--wall-dense-bright");
         const put = (x, y, c, a) => { const o = (y * w + x) * 4; px[o] = c[0]; px[o + 1] = c[1]; px[o + 2] = c[2]; px[o + 3] = Math.round(c[3] * a); };
         for (let i = 0; i < count; i++) {
           const s = songs[i], col = Math.floor(i / L.rows), row = i % L.rows;
@@ -318,17 +334,17 @@
           const cw = x1 - x0, wave = s.wave;
           if (!wave.length) { const y = Math.floor((y0 + y1) / 2); for (let x = x0; x < x1; x++) put(x, y, cNone, 1); continue; }
           if (L.mode === "wave") {
-            const mid = (y0 + y1 - 1) / 2, room = (y1 - y0) * 0.46;
+            const mid = (y0 + y1 - 1) / 2, lineRoom = (y1 - y0) * room;
             for (let x = x0; x < x1; x++) {
               const v = shape(wave[Math.min(WAVE - 1, Math.floor(((x - x0) / cw) * WAVE))]);
-              const half = Math.max(0.5, v * room);
+              const half = Math.max(leastHalf, v * lineRoom);
               for (let y = Math.max(y0, Math.round(mid - half)); y <= Math.min(y1 - 1, Math.round(mid + half)); y++) put(x, y, c, 1);
             }
           } else {
             for (let x = x0; x < x1; x++) {
               const v = shape(wave[Math.min(WAVE - 1, Math.floor(((x - x0) / cw) * WAVE))]);
-              const cc = c === cWave ? (v < 0.5 ? cQuiet : cWave) : c;
-              for (let y = y0; y < y1; y++) put(x, y, cc, 0.25 + 0.75 * v);
+              const cc = c === cWave ? (v < quiet ? cQuiet : cWave) : c;
+              for (let y = y0; y < y1; y++) put(x, y, cc, dim + bright * v);
             }
           }
         }
@@ -337,7 +353,7 @@
       function soon() {
         if (dirty) return;
         dirty = true;
-        if (!wtimer) wtimer = setTimeout(draw, time("--t-wall") || 250);
+        if (!wtimer) wtimer = setTimeout(draw, time("--t-wall"));
       }
       function at(ev) {
         if (!layout) return -1;
@@ -401,7 +417,7 @@
     function nextSaying() {
       let text = null, moment = false;
       if (pendingMoment) { text = pendingMoment; moment = true; pendingMoment = null; }
-      else if (fresh.length && !(saying.dataset.kind === "fact" && Math.random() < 0.35)) {
+      else if (fresh.length && !(saying.dataset.kind === "fact" && Math.random() < num("--saying-fact-skip"))) {
         text = noteText(fresh.shift());
         saying.dataset.kind = "fact";
       } else {
@@ -411,7 +427,7 @@
       }
       if (text && text !== lastSaid) say(text, moment);
       clearTimeout(sayTimer);
-      sayTimer = setTimeout(nextSaying, time("--t-saying") || 7000);
+      sayTimer = setTimeout(nextSaying, time("--t-saying"));
     }
     function say(text, moment) {
       lastSaid = text;
@@ -475,7 +491,7 @@
         }
         if ((m.songs || []).length) {
           runWall.added(songs.length - 1);
-          runWall.label(t("wallTitle") + ", " + n("songs", songs.length));
+          runWall.label(t("wallLabel", { title: t("wallTitle"), songs: n("songs", songs.length) }));
           kick();
         }
         drawFigures();
@@ -494,7 +510,7 @@
         $("done-wall-title").textContent = t("wallTitleDone", { read: report.read });
         $("done-moment").textContent = lastNote || "";
         $("done-moment").hidden = !lastNote;
-        doneWall.label(t("wallTitleDone", { read: report.read }) + ", " + n("songs", songs.length));
+        doneWall.label(t("wallLabel", { title: t("wallTitleDone", { read: report.read }), songs: n("songs", songs.length) }));
         requestAnimationFrame(() => { doneWall.now(); if (!card.dataset.settled) { card.dataset.settled = "1"; doneWall.settle(); } });
       },
 
