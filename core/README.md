@@ -168,15 +168,16 @@ score on the other half) says it clears the mark on this sheet without being a b
 real gain has to come from the key method research on the Mac (research R), measured per folder and held out. `KeyTests.swift` checks the vote against the lab's B.9 block, run from analyze.py's
 own source by `Tools/make_key_fixtures.py`, on the 68 test matrices, on made-up votes and on the lab's 373 tracks.
 
-**The key the record carries** (`Sources/DeckieCore/Key/ThreeAnswerKey.swift`, `NoteChroma.swift`), engine 0.5.0,
-D33: the three-answer reader of research X2 (`docs/research/x2-own-key-trial.md`, section 5.1). Two readings of the
+**The key the record carries** (`Sources/DeckieCore/Key/ThreeAnswerKey.swift`, `NoteChroma.swift`), engine 0.5.0
+(D33) and 0.6.0 (the home note, D36): the three-answer reader of research X2 (`docs/research/x2-own-key-trial.md`, section 5.1). Two readings of the
 song: the HPCP below with the overtones' share taken off each frame (research R's row A), and a note-transcription
 profile (row B: audio at 11,025 Hz, a log-frequency spectrum a third of a semitone fine, one tuning per song, and per
 frame a non-negative least-squares fit of 84 note templates, solved by Lawson and Hanson's method on the normal
 equations, no LAPACK). Each is matched to the 24 keys with the three profiles below. A **key** when both name the
 same home note and the same mode on it; the **home note with the mode open** when only the home note agrees; **not
 sure** otherwise. Nothing is trained, nothing fitted, no new dependency. The record's key block has `source`
-`three-answer` and the answer as its confidence (1.0, 0.45, 0.2); `LocalFacts.decideKey` shows a key only
+`three-answer` at confidence 1.0 for a key and 0.2 for not sure, and the home note alone is the `key_home` block with
+no key block; `LocalFacts.decideKey` (and `ownKeysOnly` for `deckie-make`) shows a key or a home note, never a guess
 (`docs/architecture/crate-format.md`). The plain HPCP reading stays in the lab-shaped JSON (`deckie.key`, for the
 bench against the lab's sheet) with the reader's result beside it (`deckie.key.three_answer`), and still gives the
 mix windows their song key.
@@ -455,7 +456,7 @@ record, counted by reason and extension, and the files in the crate with damaged
   (no reading at all); otherwise it hashes the file and takes the record of those bytes if there is one (a file that
   was moved, renamed or only touched), and analyses only what is left. An interrupted run (Ctrl-C) loses only the files
   that were being analysed, one per job. A record is reused only if it came from the same engine version with the same
-  tag tempo; the version (0.5.0) goes up whenever the record gains or changes fields, so a work folder made by an
+  tag tempo; the version (0.6.0) goes up whenever the record gains or changes fields, so a work folder made by an
   older version is analysed again. `--fresh` empties the work folder first; deleting it is always safe.
 - **Nothing left out silently** (decision P18). Every file that cannot be analysed is counted by reason and extension
   in the summary and listed in the manifest's `import_log` with its path below the folder and the reason in words:

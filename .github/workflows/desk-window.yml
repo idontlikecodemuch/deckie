@@ -10,7 +10,7 @@ name: desk-window
 
 on:
   push:
-    branches: [main, 'pc/**']
+    branches: [main, 'pc/**', 'key/**']
     paths: [desk-shell/**, desk-web/**, core/**, .github/workflows/desk-window.yml]
   workflow_dispatch:
 
