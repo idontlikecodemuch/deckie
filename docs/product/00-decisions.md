@@ -579,6 +579,26 @@ very close on our own work. I think we try to get there on our fingerprint."
   are never public, and nothing is fitted to them.
 - Nothing ships from the trial until it has passed that test and a test on the owner's whole library.
 
+### D36. Home note, covers, a lookup through MusicBrainz, and every value a variable (Nov 14)
+The owner's answers to the open list of Nov 14.
+
+- **The key reader's third answer is accepted into the crate file**, as the addition proposed with D33 (the home
+  note written when the mode is left open). On screen it is called the **home note**; "home note, mode open" was
+  "clunky": "maybe just home note?"
+- **Covers go into the crate file**: "lets add them". A small picture for each release, stored once, as an
+  addition. How the booth shows them waits for the design pass.
+- **"Look up songs via MusicBrainz" is built**: "lets build it. I like MusicBrainz. They are open source and we can
+  start there. We should test on our library." It is the lookup the note on D30 describes: asked for by the DJ,
+  never automatic, plainly a different kind of step, and it fills the same facts as everything else (D34) without
+  overwriting a DJ's own entry. It is the first thing in Deckie that uses the network; the public privacy line is
+  reworded before it reaches anyone outside.
+- **Deckie Desk is packaged for Windows once the core is complete**, not before.
+- **TestFlight waits** until more of the core is settled. The bundle id waits with it.
+- **The copy audit and the design audit are two separate passes, later.** Until then: "Lets just tag all values as
+  variables so we can change them later." Every word and every design value (colours, sizes, spacing, type) in
+  Desk's two windows and in the booth is a named variable in one place for each app. The Inter font in the Windows
+  and Linux window is a question for the design pass.
+
 ### Note on D19 (Nov 1): versions of a song stay separate rows
 Christopher, on two remixes of one song both showing in the picks: "we shouldn't merge them unless they are the same
 songs. DJs often have a bunch of versions of the same song". So the booth folds together only copies of the same
