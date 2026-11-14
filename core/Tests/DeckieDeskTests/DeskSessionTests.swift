@@ -30,6 +30,10 @@ import DeckieCrate
         #else
         #expect(DeskWords.text("firstBody").hasSuffix("this computer."))
         #endif
+        // The question before a large read, too (research AE).
+        let ask = DeskWords.table["askReadBody"]!
+        #expect(DeskWords.fill(ask, DeskWords.withComputer(["about": "9 hours"], kind: "mac")).hasPrefix("That's about 9 hours of reading on this Mac."))
+        #expect(DeskWords.fill(ask, DeskWords.withComputer(["about": "9 hours"], kind: "other")).hasPrefix("That's about 9 hours of reading on this computer."))
         // No other word names the Mac: Windows and Linux say "this computer".
         let mac = DeskWords.table.filter { $0.value.contains("Mac") }.map(\.key)
         #expect(mac == ["thisComputer.mac"], "\(mac)")
