@@ -54,6 +54,7 @@ Example.deckiecrate/
   bars/<id>.bin                            per-bar series, float16
   style/<id>.bin                           style vector, float16
   signatures/<id>_<variant>.shazamsignature   made on an Apple device; never written by this track
+  prints/<id>.dkl                          the song's fingerprint for recognition (D35, below)
   prefs.json, history/, catalog/, ...      the apps' own; read and written by them only
 ```
 
@@ -675,6 +676,75 @@ sets of research X2 this is 5 to 12 percent of songs, with the home note right o
 Not proposed, and why: allowing `key.camelot` to be null (changes a required field's type for every reader); a
 flag such as `key_mode_open` on a block that still carries a guessed code (old readers would show the guess).
 
+## Addition with D35 (Nov 14, 2026): a song's fingerprint
+
+D35, decided by the owner on Nov 14, 2026: recognising what is playing uses a fingerprint of Deckie's own, so the
+crate file carries one for every song, made by every builder on every computer. A **fingerprint** is a small summary
+of a song's sound from which a few seconds heard in a room can be matched to the song; Deckie's is the song's
+**constellation**, the points of its spectrogram (time against frequency) that are louder than everything around
+them, as the recognition trial describes (`docs/research/w2-own-recognition-trial.md`). Until now a crate file could
+be recognised from only through `signatures/`, which only an Apple device can make. Additive like D27 and D34: no
+field changes name or meaning, `schema` and `min_reader` stay 1, a crate file written before it reads with no
+fingerprints and writes back byte for byte, and a reader that does not know it (it ignores keys and files it does
+not know) opens a crate file that has it and shows every song as before. Code: `CrateTrack.Fingerprint`
+(`CrateModel.swift`), the constellation and its bytes in `Landmarks`
+(`core/Sources/DeckieRecognition/Landmarks.swift`), the making in the engine (`Analyser.swift`) and for older
+records in the builder (`Builder.fingerprint`); tests in `core/Tests/DeckieCrateTests/PrintTests.swift`.
+
+Two places, in the manner of `signatures`: a file per song, and a note of it on the record.
+
+- **`prints/<id>.dkl`**, beside `signatures/`: the song's fingerprint, exactly the bytes `Landmarks.encoded()` gives.
+  They start with the four letters `DKL2`; then the number of frames analysed (a frame is 16 ms of the song) and the
+  number of points, each a 32-bit little-endian integer; then each point in time order: the frames since the point
+  before, as a variable-length number (7 bits a byte, the low bits first, the top bit set on every byte but the
+  last), and two bytes, little-endian, holding the point's frequency in the low 14 bits (in 1/4096 of an octave
+  above 300 Hz) and its strength, 0 to 3, in the top two. About 3 bytes a point and 96 bytes for a second of music:
+  about 23 KB for a four-minute song, which is several times the rest of that song's record.
+- **`print`**, a key on the song's record, an object: `format` (the text `DKL2`, the file's first four letters);
+  `version` (a whole number, 1 now: the fingerprint's own version, apart from the crate format's `schema`, so the
+  way a song is fingerprinted can change without older crate files or older readers breaking); `points` (the number
+  of points in the file); `made_by` (the device that made it, a model label as a signature's `made_by` and
+  `analysis.device` are, never a user's name for the device); `made_at` (UTC, to the second). **Left out when the
+  song has no fingerprint, never written as null**, as `ident.other_places` is, so every record without one keeps
+  its bytes and the example crate is unchanged. It is not a feature: `features_present` does not list it.
+
+**A later version.** A reader that meets a `print` whose `version` is higher than the highest it knows ignores that
+print, whatever else it holds, and treats the song as having no fingerprint; it does not open the song's file in
+`prints/` and does not refuse the crate file. The song is still shown, and still recognised by a signature if it has
+one. A writer writes only versions it knows, so such a reader that writes the crate file again writes that song
+without a fingerprint.
+
+**Who makes it.** Every builder, once per file: the Windows and Linux engine makes the fingerprint in the analysis,
+from the audio it has just decoded (the channels averaged, at the file's own rate), so Deckie Desk's run,
+`deckie-build` and `deckie-make` all write it and no song is decoded a second time for it. The builder keeps it in
+its work folder beside the song's record (`records/<id>.dkl`), which in Deckie Desk is the store shared by every
+crate, so a file in several crates is fingerprinted once. A record made before the fingerprint gains it on the next
+run from one decode of the file, with no second analysis; that is why the engine's `version` did not go up with it.
+An entry kept from an earlier crate file has none until its file is read again, for this crate or, in Deckie Desk,
+for any other. Building a crate file again keeps a fingerprint it already has.
+
+**What a song can be recognised from.** A song with a fingerprint or a signature can be named from its sound; a song
+with neither cannot yet. That is the count Deckie Desk shows as "can't be recognised yet"
+(`CrateTrack.canBeRecognised`).
+
+**In the single-file form** the fingerprints sit in the archive under `prints/<id>.dkl`, like every other file of
+the package. **The writer** writes each fingerprint's file from the record's, and deletes the `.dkl` file of a song
+that has left the crate or no longer has a fingerprint, as it deletes the `.bin` sidecars of removed songs. A file
+in `prints/` that no record lists is treated as a sidecar left behind is: the reader ignores it, and the next write
+deletes it.
+
+**What the reader checks** for it: `format` is `DKL2`; `version` is 1 or more (and at most the reader's own, or the
+print is ignored, above); `made_by` and `made_at` are not empty; the listed file is in the package, starts with
+`DKL2`, and reads whole as a constellation (the count of points is one the file's length can hold, every point is
+complete, and nothing follows the last); and the points in it number exactly `points`. For example:
+`prints/0327cf1c94.dkl (track 0327cf1c94): holds 5112 points but tracks[2].print.points is 5113`.
+
+An example record's key (the rest of the record as above):
+
+```json
+"print": {"format": "DKL2", "made_at": "2026-11-14T09:00:00Z", "made_by": "linux-x86_64", "points": 5112, "version": 1}
+```
+
 ## The proposals in one list, for the main session
 
 1. Track L's additions: the `engine` block beside `analysis` (which keeps its label); the `features_present` names;
@@ -711,3 +781,7 @@ flag such as `key_mode_open` on a block that still carries a guessed code (old r
 14. Proposed Nov 14, 2026 (with D33). `key_home`: the home note with the mode left open, an optional block beside
     `key`, present only when there is no `key` block; nothing is written until it is accepted ("The mode left
     open", above).
+15. Decided Nov 14, 2026 (D35, a fingerprint of Deckie's own). `prints/<id>.dkl`, the song's fingerprint, and the
+    record's `print` (`format`, `version`, `points`, `made_by`, `made_at`), left out when there is none; a print of
+    a later `version` is ignored, not refused; no version of the crate format raised. The file's name and the
+    record's key are this format's choices, made with D35.
