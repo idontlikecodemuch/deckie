@@ -11,6 +11,11 @@ import DeckieRecognition
 //       crate file's prints/ folder holds), from which the index is built now and, with --save-index, kept.
 //       --audio: any file the core decodes (WAV, AIFF, MP3, FLAC), or raw 16-bit little-endian mono with --raw RATE.
 //       The sound is fed in pieces of --chunk seconds (0.1), as a microphone delivers it.
+//       --same-recording FILE: the crate file's own keys for copies (id <tab> key; ids without a line have none), passed
+//       to the index as a crate file's are. --build-only: make (and with --save-index, keep) the index and stop. Either
+//       way the copies the index knows are counted: groups from the keys alone, and all groups.
+//       --memory-every N: every N readings of a clip, a line on standard error with the readings' time and the
+//       process's memory footprint (the system's own figure: the clean pages of a file opened in place left out).
 //   deckie-listen --index crate.dkx --list clips.tsv --out readings.tsv [--jobs N]
 //       many recordings: clips.tsv has a name, a raw file (16-bit mono), its first sample, its sample count and its
 //       rate on each line; every reading of every clip goes to readings.tsv with the clip's name in front.
@@ -39,6 +44,21 @@ func peakMemory() -> Int? {
         return (Int(line.split(separator: " ", omittingEmptySubsequences: true).dropFirst().first ?? "") ?? 0) * 1024
     }
     return nil
+}
+
+/// The process's memory footprint now, in bytes, as the system counts it against an app (dirty and compressed pages;
+/// clean pages of a file opened in place are not in it). nil where the system does not say.
+func footprint() -> Int? {
+    #if canImport(Darwin)
+    var info = task_vm_info_data_t()
+    var count = mach_msg_type_number_t(MemoryLayout<task_vm_info_data_t>.size / MemoryLayout<natural_t>.size)
+    let kr = withUnsafeMutablePointer(to: &info) {
+        $0.withMemoryRebound(to: integer_t.self, capacity: Int(count)) { task_info(mach_task_self_, task_flavor_t(TASK_VM_INFO), $0, &count) }
+    }
+    return kr == KERN_SUCCESS ? Int(info.phys_footprint) : nil
+    #else
+    return nil
+    #endif
 }
 
 func rawSamples(_ path: String, first: Int = 0, count: Int? = nil) -> [Float] {
@@ -83,13 +103,49 @@ if let path = values["--index"] {
     var pairing = PairingConfig.booth
     if flags.contains("--small") { pairing = PairingConfig.boothSmall }
     if let keep = values["--keep-one-in"].flatMap(Int.init) { pairing.keepOneIn = keep }
-    index = RecognitionIndex(songs: songs, pairing: pairing, findCopies: !flags.contains("--no-copy-finding"))
+    var keys: [String?] = []
+    if let path = values["--same-recording"] {
+        guard let text = try? String(contentsOfFile: path, encoding: .utf8) else { fail("cannot read \(path)") }
+        var byId: [String: String] = [:]
+        for l in text.split(separator: "\n") {
+            let c = l.split(separator: "\t").map(String.init)
+            if c.count >= 2, !c[1].isEmpty { byId[c[0]] = c[1] }
+        }
+        keys = songs.map { byId[$0.id] }
+    }
+    index = RecognitionIndex(songs: songs, pairing: pairing, sameRecording: keys, findCopies: !flags.contains("--no-copy-finding"))
+    // Copies: connected groups of songs the index treats as one recording, from the keys alone and in all.
+    func groups(_ related: (Int) -> [Int]) -> (groups: Int, songs: Int) {
+        var seen = Set<Int>(), g = 0, n = 0
+        for s in 0..<songs.count where !seen.contains(s) {
+            var stack = [s], comp = 0
+            seen.insert(s)
+            while let x = stack.popLast() {
+                comp += 1
+                for y in related(x) where !seen.contains(y) { seen.insert(y); stack.append(y) }
+            }
+            if comp > 1 { g += 1; n += comp }
+        }
+        return (g, n)
+    }
+    var byKey: [String: [Int]] = [:]
+    for (i, k) in keys.enumerated() { if let k { byKey[k, default: []].append(i) } }
+    var keyRelated = [[Int]](repeating: [], count: songs.count)
+    for g in byKey.values where g.count > 1 { for a in g { keyRelated[a] = g.filter { $0 != a } } }
+    let fromKeys = groups { keyRelated[$0] }
+    let all = groups { index.related.count > $0 ? index.related[$0].map(Int.init) : [] }
+    FileHandle.standardError.write(Data(String(format: "copies: %d groups (%d songs) from the crate's keys; %d groups (%d songs) in all, keys and fingerprints\n",
+                                                fromKeys.groups, fromKeys.songs, all.groups, all.songs).utf8))
     if let save = values["--save-index"] { do { try index.write(to: URL(fileURLWithPath: save)) } catch { fail("\(error)") } }
 } else { fail("give --index FILE or --prints DIR") }
 FileHandle.standardError.write(Data(String(format: "index: %d songs, %.1f MB (%.1f KB a song), ready in %.0f ms\n", index.songCount,
                                             Double(index.fileBytes) / 1e6, Double(index.fileBytes) / 1e3 / Double(max(1, index.songCount)),
                                             Double(DispatchTime.now().uptimeNanoseconds - t0) / 1e6).utf8))
+FileHandle.standardError.write(Data(String(format: "index in memory: %.1f MB of table and entries, %.1f MB of the songs' points; footprint now %.0f MB\n",
+                                            Double(index.memoryBytes) / 1e6, Double(index.pointBytes) / 1e6, Double(footprint() ?? 0) / 1e6).utf8))
+if flags.contains("--build-only") { exit(0) }
 let chunkSeconds = Double(values["--chunk"] ?? "") ?? 0.1
+let memoryEvery = Int(values["--memory-every"] ?? "") ?? 0
 let settings: ListenSettings = {
     var s = ListenSettings()
     if let v = values["--window"].flatMap(Double.init) { s.window = v }
@@ -134,7 +190,15 @@ if let list = values["--list"] {
                 guard c.count >= 5, let first = Int(c[2]), let count = Int(c[3]), let rate = Int(c[4]) else { continue }
                 listener.reset()
                 var mine = ""
-                play(rawSamples(c[1], first: first, count: count), rate: rate, into: listener) { mine += c[0] + "\t" + line($0) + "\n" }
+                var n = 0
+                play(rawSamples(c[1], first: first, count: count), rate: rate, into: listener) {
+                    mine += c[0] + "\t" + line($0) + "\n"
+                    n += 1
+                    if memoryEvery > 0, n % memoryEvery == 0 {
+                        FileHandle.standardError.write(Data(String(format: "memory\t%@\t%.0f\t%.1f\t%.1f\n", c[0], $0.time,
+                                                                    Double(footprint() ?? 0) / 1e6, Double(listener.workingBytes) / 1e6).utf8))
+                    }
+                }
                 lock.lock(); rows[i] = mine; lock.unlock()
             }
             group.leave()
@@ -144,6 +208,7 @@ if let list = values["--list"] {
     }
     group.wait()
     guard (try? rows.joined().write(toFile: out, atomically: true, encoding: .utf8)) != nil else { fail("cannot write \(out)") }
+    FileHandle.standardError.write(Data(String(format: "footprint at the end %.0f MB\n", Double(footprint() ?? 0) / 1e6).utf8))
 } else if let audio = values["--audio"] {
     var samples: [Float]
     var rate: Int
