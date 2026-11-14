@@ -408,3 +408,10 @@ each GiantSteps clip (tools/mubench output; the longest key range), scores it ag
 stored row 3f (`key_outside_results.tsv`) and writes the per-clip sheet. The full run's sheet is committed
 (`key_outside_apple.tsv`, 1,270 clips; Apple gave no key on 5). The tables in letter R were computed from it with
 `key_parity.relation`, which names the fifth, relative and parallel classes the MIREX weighting needs.
+
+## The own-key trial (`keytrial/`)
+
+Research X2 (`docs/research/x2-own-key-trial.md`): a bench on three outside key sets, the mode experiments, learned
+profiles and a small convolutional model, all for evaluation only. Its own `keytrial/README.md` has the data
+sources, licences and commands. It reuses `key_parity.py` and `key_overtones.py` unchanged and needs its own
+environment (no madmom or Essentia).

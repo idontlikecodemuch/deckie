@@ -1,6 +1,6 @@
 # Research X2: the own-key trial
 
-Dated Nov 13, 2026. A trial with measurements, no decisions. It asks whether a key reader Deckie owns can be good
+Dated Nov 13 to 14, 2026. A trial with measurements, no decisions. It asks whether a key reader Deckie owns can be good
 enough to show, starting with the mode. Builds on letter R (every earlier key test), letter T (the options), letter X
 (the web research on the mode, read and merged during the trial) and on D5, D15, D16, D17 and D29. Bench and
 experiments: `mixer/keytrial/` (commands in its `README.md`); running notes: `docs/research/briefs/checkin-key.md`.
@@ -259,7 +259,7 @@ song's own chroma, and a second minor profile ("minor2") with a strong major thi
 - **The second minor template is the step that matters** (+9 exact on MTG, +5 on GiantSteps+ and GiantSteps Key over
   the two-profile start), and it works by answering minor more: the minor half rises 22 points on MTG and the major
   half falls 20. The gate does almost nothing.
-- **The 200 Hz cut hurt on every set** (10 to 11 points). My stand-in drops every spectral peak under 200 Hz, which is
+- **The 200 Hz cut hurt on every set** (9 to 11 points). My stand-in drops every spectral peak under 200 Hz, which is
   harsher than the published filter, so this row is **not a faithful replication** and the published 63.7 on this
   collection is not reproduced (45.9). Letter R had found the same direction on the lab's crate. [unverified against
   the authors' own pipeline.]
@@ -284,7 +284,7 @@ note is right.
   takes "mode right" from 80 to 93 percent. Agreement between rows A and B is weaker (83 at 86 percent named).
 - **The published "amodal" mark is not a mode signal.** It marks 7 to 10 percent of clips; 73 to 90 percent of them
   are labelled minor, and what it finds is clips where the home note is doubtful (home note right on 36 to 56 percent
-  of marked clips, against 72 to 80 overall). It belongs with "not sure", not with "mode open".
+  of marked clips, against 67 to 80 overall). It belongs with "not sure", not with "mode open".
 - **An open mode does not raise the share of exact keys.** It turns some wrong keys into honest half-answers. The
   exact rate over all clips falls as modes are left open (57.8 to 51.6 with the agreement rule on MTG); the gain is
   in what is shown, which section 4 measures.
@@ -567,9 +567,22 @@ On MTG, Apple is right on 69.9 percent of the clips this rule gives a key, 63.1 
 the not-sure clips: the rule finds the songs that are hard for everyone. On the not-sure clips row B's key would
 have been right on 37.0 percent, so declining them removes more wrong keys than right ones.
 
-A parameter-free rule for the trained model, "show a key when the model and row B name the same key", shows 61.9
-percent of MTG at 74.8 right (Apple on the same clips 71.9), 79.3 percent of GiantSteps+ at 90.6, and 77.3 percent of
-the 604 at 73.7.
+**The same three answers from the trained model** (evaluation only): a key when it gives one key a probability of
+one half or more; "home note, mode open" when it does not, but the two keys on one home note together reach one half;
+"not sure" otherwise. One half means "more likely than not"; it was not fitted.
+
+| Set | A key: share of songs | key right | within one step | Mode open: share | home note right | Not sure: share |
+|---|---:|---:|---:|---:|---:|---:|
+| MTG (out of fold) | 70.8 % | 76.4 | 85.7 | 9.4 % | 68.1 | 19.8 % |
+| GiantSteps+ | 78.8 % | 92.7 | 96.5 | 4.9 % | 69.6 | 16.2 % |
+| GiantSteps Key | 76.3 % | 76.1 | 86.3 | 4.5 % | 63.0 | 19.2 % |
+
+On MTG, Apple is right on 74.3 percent of the clips the model gives a key, 45.4 of its mode-open clips and 42.1 of its
+not-sure clips. So at the same share of songs shown (about 70 percent), the trained model's shown keys are right
+76.4 percent of the time against the untrained reader's 64.8.
+
+Another parameter-free rule, "show a key when the model and row B name the same key", shows 61.9 percent of MTG at
+74.8 right (Apple on the same clips 71.9), 79.3 percent of GiantSteps+ at 90.6, and 77.3 percent of the 604 at 73.7.
 
 ## 5. What could ship
 

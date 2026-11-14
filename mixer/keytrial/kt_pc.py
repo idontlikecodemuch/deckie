@@ -137,6 +137,15 @@ def main():
         print(f"| a key | {100 * key_s.sum() / sel.sum():.1f} | {100 * (kBA[key_s] == true[key_s]).mean():.1f} | the key (within one step: {100 * w1(kBA[key_s], true[key_s]).mean():.1f}; home note: {100 * (tB[key_s] == true[key_s] % 12).mean():.1f}) |")
         print(f"| home note, mode open | {100 * open_s.sum() / sel.sum():.1f} | {100 * (tB[open_s] == true[open_s] % 12).mean():.1f} | the home note |")
         print(f"| not sure | {100 * ns.sum() / sel.sum():.1f} | | (row B's key would have been right on {100 * (kB[ns] == true[ns]).mean():.1f}, its home note on {100 * (tB[ns] == true[ns] % 12).mean():.1f}) |")
+        if "cnn_lp12" in D:
+            pr = np.exp(D["cnn_lp12"]); pr /= pr.sum(1, keepdims=True); kC = pr.argmax(1); ph = pr[:, :12] + pr[:, 12:]; hC = ph.argmax(1)
+            k_s = sel & (pr.max(1) >= 0.5); o_s = sel & ~k_s & (ph.max(1) >= 0.5); n_s = sel & ~k_s & ~o_s
+            print(f"\n**Three answers, trained model (EVALUATION ONLY)** ({name}): a key when it gives one key a probability of one half or more; 'home note, mode open' when not, but the two keys on one home note together reach one half; 'not sure' otherwise. One half is 'more likely than not'; it was not fitted.\n")
+            print("| answer | percent of clips | right, of those | what 'right' means |\n|---|---:|---:|---|")
+            print(f"| a key | {100 * k_s.sum() / sel.sum():.1f} | {100 * (kC[k_s] == true[k_s]).mean():.1f} | the key (within one step: {100 * w1(kC[k_s], true[k_s]).mean():.1f}; home note: {100 * (kC[k_s] % 12 == true[k_s] % 12).mean():.1f}) |")
+            print(f"| home note, mode open | {100 * o_s.sum() / sel.sum():.1f} | {100 * (hC[o_s] == true[o_s] % 12).mean():.1f} | the home note |")
+            print(f"| not sure | {100 * n_s.sum() / sel.sum():.1f} | | (its key would have been right on {100 * (kC[n_s] == true[n_s]).mean():.1f}, its home note on {100 * (hC[n_s] == true[n_s] % 12).mean():.1f}) |")
+            if ap is not None: print(f"\nApple on the same clips: given a key {100 * (ap[k_s] == true[k_s]).mean():.1f} exact; mode open {100 * (ap[o_s] == true[o_s]).mean():.1f}; not sure {100 * (ap[n_s] == true[n_s]).mean():.1f}.")
         if ap is not None: print(f"\nApple on the clips given a key: {100 * (ap[key_s] == true[key_s]).mean():.1f} exact; on the mode-open clips {100 * (ap[open_s] == true[open_s]).mean():.1f}; on the not-sure clips {100 * (ap[ns] == true[ns]).mean():.1f}.")
     fh.close()
 

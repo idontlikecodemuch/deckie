@@ -5,7 +5,7 @@ minor). Exact = key right. Home note = home note right, whatever the mode. Mode 
 note is right, the share with the right mode. The bar (D16) = exact within five points of Apple on each half:
 36.5 on the major half, 70.6 on the minor half.
 
-## Nov 14, 2026, 00:35 UTC. Phase 3 done: a trained model of our own equals Apple (evaluation only)
+## Nov 14, 2026, 00:25 UTC. Phase 3 done: a trained model of our own equals Apple (evaluation only)
 
 **Done.** The small convolutional model trained on five artist-grouped folds (each clip scored by a model that never
 saw it or its artist), once on MTG for the two GiantSteps sets, and once the other way; learned profiles (49
