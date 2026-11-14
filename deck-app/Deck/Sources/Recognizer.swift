@@ -461,6 +461,7 @@ import DeckieRecognition
     /// (followed, but not heard in this second) is no new evidence and changes nothing.
     private func deckieReading(_ r: ListenReading, heard: Date) {
         guard listening == .deckie || listening == .both else { return }
+        defer { if Self.traceShown { trace(r) } }
         if r.state == .held && r.confidence == 0 { return }
         let speed = r.speedPercent
         let reading = Reading(from: .deckie, date: heard, audioTime: r.time, id: r.id, position: r.positionSeconds, speedPercent: speed,
@@ -474,6 +475,20 @@ import DeckieRecognition
         if listening == .both, r.id != nil { compared(comparison.heard(reading, at: recorder.isActive ? recorder.elapsed : r.time)) }
         take(reading)
     }
+
+    /// For measuring (launch argument `-traceShown YES`): after each of Deckie's readings, one line on the console with
+    /// the sound's time, what the reading said and what the screen shows. Not in the log the details sheet shows.
+    static let traceShown = UserDefaults.standard.bool(forKey: "traceShown")
+    private func trace(_ r: ListenReading) {
+        let lib = Library.shared
+        let line = String(format: "SHOWN heard %.1f reading %@ %@ conf %.1f agrees %@ | screen %@ pitch %+.1f %@ notHeard %@ paused %@\n",
+                          r.time, r.id.flatMap { lib.track($0)?.title } ?? "-", r.state.rawValue, r.confidence,
+                          r.searched.map { $0.agrees ? "yes" : "no" } ?? "-", current?.title ?? "-", pitchPct, pitchKind.rawValue.isEmpty ? "none" : pitchKind.rawValue,
+                          notHeardFlag ? "yes" : "no", paused ? "yes" : "no")
+        FileHandle.standardError.write(line.data(using: .utf8)!)
+    }
+    /// The trace's view of whether the playing song is marked as not heard just now (false before D35's letting go).
+    private var notHeardFlag: Bool { false }
 
     /// Compare mode: the comparison goes into the set's log when something new is in it (a song named, a
     /// disagreement), and every few seconds besides so its speeds and counts stay current.
