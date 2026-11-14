@@ -74,6 +74,10 @@ OMP_NUM_THREADS=1 venv/bin/python kt_x.py   # every reader on every set, four me
 OMP_NUM_THREADS=1 venv/bin/python kt_pc.py  # precision against coverage, confidence signals, calibration; pc_curves.tsv
 ```
 
+```bash
+OMP_NUM_THREADS=1 venv/bin/python kt_curve.py   # phase 4: learned profiles against the number of labelled songs; curve_results.tsv
+```
+
 ## Files
 
 | File | What |
@@ -82,7 +86,7 @@ OMP_NUM_THREADS=1 venv/bin/python kt_pc.py  # precision against coverage, confid
 | `kt_extract.py` | features (cached outside the repository) |
 | `kt_bench.py` | the bench: letter R's readers 3f, A and B, unchanged, from `../key_parity.py` and `../key_overtones.py` |
 | `kt_modefeats.py`, `kt_mode.py` | the mode alone |
-| `kt_prof.py` | learned key profiles: the smallest trained reader (25 to 169 numbers) |
+| `kt_prof.py`, `kt_curve.py` | learned key profiles: the smallest trained reader (25 to 169 numbers), and its learning curve |
 | `kt_cnn.py` | the small convolutional model |
 | `kt_x.py`, `kt_pc.py` | the scoring tables |
 | `*.tsv` | per-clip keys and per-reader scores (clip ids and keys only; no audio, no artist names) |

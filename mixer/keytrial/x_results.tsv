@@ -21,6 +21,9 @@ mtg:key	learned profiles on rows A and B, fitted on GiantSteps Key only (EVALUAT
 mtg:key	the same (rows A and B, GiantSteps Key only), major and minor weighed equally	1270.00	58.43	53.37	60.63	57.00	71.42	68.65	72.62	72.91	74.61	72.17	71.53	84.01	77.77	14.49	66.87
 mtg:key	learned profiles on seven chromas, fitted on GiantSteps Key only (EVALUATION ONLY)	1270.00	57.40	18.39	74.43	46.41	72.99	41.71	86.65	69.69	57.51	75.00	31.98	99.25	65.61	12.28	66.31
 mtg:key	the same (seven chromas, GiantSteps Key only), major and minor weighed equally	1270.00	57.24	51.30	59.84	55.57	70.63	67.62	71.95	71.34	71.76	71.15	71.48	84.10	77.79	14.09	65.70
+mtg:key	trained model, 5 artist-grouped folds (EVALUATION ONLY)	1270.00	63.94	41.97	73.53	57.75	79.21	58.29	88.35	74.65	72.28	75.68	58.06	97.16	77.61	10.71	72.58
+mtg:key	the same, 12 pitch shifts averaged	1270.00	65.91	44.04	75.45	59.75	79.53	57.51	89.14	77.01	75.39	77.71	58.42	97.09	77.75	11.10	74.10
+mtg:key	trained model, trained on GiantSteps Key only, 12 shifts (EVALUATION ONLY)	1270.00	57.01	3.89	80.20	42.04	73.62	32.90	91.40	70.63	48.70	80.20	7.98	100.00	53.99	13.62	66.29
 gsplus:key_modal	3f (letter R's first reader)	468.00	69.23	70.69	69.02	69.86	82.48	77.59	83.17	77.78	74.14	78.29	95.35	88.16	91.76	8.55	76.71
 gsplus:key_modal	A (harmonic discount)	468.00	70.94	63.79	71.95	67.87	85.90	77.59	87.07	75.00	75.86	74.88	84.09	96.09	90.09	4.06	77.95
 gsplus:key_modal	B (note transcription)	468.00	75.85	68.97	76.83	72.90	85.90	77.59	87.07	80.34	75.86	80.98	90.91	94.88	92.89	4.49	80.92
@@ -38,6 +41,8 @@ gsplus:key_modal	learned profiles on rows A and B, 49 numbers (EVALUATION ONLY)	
 gsplus:key_modal	the same (rows A and B), major and minor weighed equally in the fit	468.00	76.71	68.97	77.80	73.39	88.03	79.31	89.27	79.49	75.86	80.00	90.91	97.26	94.08	2.78	81.69
 gsplus:key_modal	learned profiles on seven chromas, 169 numbers (EVALUATION ONLY)	468.00	83.33	65.52	85.85	75.69	91.03	72.41	93.66	84.83	77.59	85.85	84.44	100.00	92.22	1.50	86.92
 gsplus:key_modal	the same (seven chromas), major and minor weighed equally in the fit	468.00	79.91	75.86	80.49	78.17	89.74	82.76	90.73	82.48	84.48	82.20	89.80	97.92	93.86	2.56	84.15
+gsplus:key_modal	trained model, trained on MTG only (EVALUATION ONLY)	468.00	81.62	51.72	85.85	68.79	90.17	63.79	93.90	84.62	74.14	86.10	69.77	99.72	84.74	2.99	85.64
+gsplus:key_modal	the same, 12 pitch shifts averaged	468.00	82.91	53.45	87.07	70.26	91.24	65.52	94.88	85.68	74.14	87.32	72.09	99.72	85.91	2.78	86.82
 gsplus:key	3f (letter R's first reader)	230.00	70.43	76.47	69.39	72.93	80.43	82.35	80.10	80.43	76.47	81.12	100.00	85.53	92.77	10.00	76.91
 gsplus:key	A (harmonic discount)	230.00	69.57	64.71	70.41	67.56	83.04	76.47	84.18	74.78	73.53	75.00	88.00	93.88	90.94	5.22	76.57
 gsplus:key	B (note transcription)	230.00	74.35	73.53	74.49	74.01	83.91	82.35	84.18	79.57	73.53	80.61	100.00	92.41	96.20	5.22	79.48
@@ -55,6 +60,8 @@ gsplus:key	learned profiles on rows A and B, 49 numbers (EVALUATION ONLY)	230.00
 gsplus:key	the same (rows A and B), major and minor weighed equally in the fit	230.00	76.96	67.65	78.57	73.11	86.52	82.35	87.24	79.13	67.65	81.12	100.00	96.86	98.43	2.17	81.39
 gsplus:key	learned profiles on seven chromas, 169 numbers (EVALUATION ONLY)	230.00	81.74	64.71	84.69	74.70	89.57	73.53	92.35	83.04	73.53	84.69	88.00	100.00	94.00	1.30	85.39
 gsplus:key	the same (seven chromas), major and minor weighed equally in the fit	230.00	78.70	73.53	79.59	76.56	87.83	82.35	88.78	82.17	79.41	82.65	92.59	96.30	94.44	3.48	82.91
+gsplus:key	trained model, trained on MTG only (EVALUATION ONLY)	230.00	80.00	50.00	85.20	67.60	87.39	61.76	91.84	83.48	70.59	85.71	70.83	99.40	85.12	3.48	83.70
+gsplus:key	the same, 12 pitch shifts averaged	230.00	81.74	50.00	87.24	68.62	89.57	64.71	93.88	85.22	70.59	87.76	70.83	99.42	85.13	3.48	85.65
 gs:key	3f (letter R's first reader)	604.00	54.47	44.09	56.36	50.22	71.52	64.52	72.80	65.40	54.84	67.32	80.39	83.72	82.06	10.93	63.79
 gs:key	A (harmonic discount)	604.00	57.12	41.94	59.88	50.91	75.99	59.14	79.06	63.41	60.22	63.99	69.64	93.58	81.61	6.29	66.19
 gs:key	B (note transcription)	604.00	59.93	43.01	63.01	53.01	76.16	58.06	79.45	67.05	60.22	68.30	71.43	92.26	81.85	7.12	67.98
@@ -72,3 +79,5 @@ gs:key	learned profiles on rows A and B, 49 numbers (EVALUATION ONLY)	604.00	66.
 gs:key	the same (rows A and B), major and minor weighed equally in the fit	604.00	62.09	45.16	65.17	55.16	78.64	59.14	82.19	67.55	62.37	68.49	72.41	95.14	83.78	5.46	69.74
 gs:key	learned profiles on seven chromas, 169 numbers (EVALUATION ONLY)	604.00	68.38	41.94	73.19	57.56	82.12	56.99	86.69	72.19	61.29	74.17	68.42	98.68	83.55	3.81	74.72
 gs:key	the same (seven chromas), major and minor weighed equally in the fit	604.00	64.74	50.54	67.32	58.93	80.63	63.44	83.76	70.36	67.74	70.84	74.60	95.03	84.82	5.63	71.95
+gs:key	trained model, trained on MTG only (EVALUATION ONLY)	604.00	67.72	35.48	73.58	54.53	80.46	51.61	85.71	72.52	62.37	74.36	56.90	98.95	77.92	4.80	73.79
+gs:key	the same, 12 pitch shifts averaged	604.00	68.71	35.48	74.76	55.12	81.79	50.54	87.48	73.01	59.14	75.54	60.00	98.96	79.48	4.30	74.78

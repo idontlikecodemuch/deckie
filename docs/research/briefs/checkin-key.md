@@ -5,6 +5,68 @@ minor). Exact = key right. Home note = home note right, whatever the mode. Mode 
 note is right, the share with the right mode. The bar (D16) = exact within five points of Apple on each half:
 36.5 on the major half, 70.6 on the minor half.
 
+## Nov 14, 2026, 00:35 UTC. Phase 3 done: a trained model of our own equals Apple (evaluation only)
+
+**Done.** The small convolutional model trained on five artist-grouped folds (each clip scored by a model that never
+saw it or its artist), once on MTG for the two GiantSteps sets, and once the other way; learned profiles (49
+numbers) as the smallest trained reader; precision against coverage, calibration and the four measures for all of
+them. Letter `docs/research/x2-own-key-trial.md` is drafted with every table.
+
+**Precision against coverage, MTG, the 1,270 clips Apple read** (key right among the songs shown; "Apple" = Apple
+on those same songs):
+
+| Songs shown | Nothing trained (B's home note, A's mode) | Apple | Learned profiles, 49 numbers | Apple | Trained model | Apple |
+|---:|---:|---:|---:|---:|---:|---:|
+| 100 % | 57.8 | 65.2 | 62.7 | 65.2 | **65.9** | 65.2 |
+| 90 % | 60.3 | 67.0 | 65.8 | 67.9 | 70.5 | 68.8 |
+| 80 % | 62.9 | 68.3 | 67.3 | 69.2 | **74.5** | 71.6 |
+| 70 % | 62.8 | 68.6 | 69.7 | 71.0 | 76.7 | 74.7 |
+| 60 % | 65.9 | 71.1 | 72.7 | 73.2 | 79.9 | 77.3 |
+| 50 % | 67.7 | 71.2 | 73.1 | 74.2 | 82.4 | 81.3 |
+| 40 % | 71.7 | 73.0 | 77.0 | 76.6 | 84.8 | 83.3 |
+
+Outside sets, trained on MTG only (key right / within one wheel step): GiantSteps+ 82.9 / 91.2 with every song shown,
+92.2 / 96.5 at 80 percent; GiantSteps Key (604) 68.7 / 81.8 and 74.9 / 86.7. Published on the 604: rekordbox 3 71.9,
+the madmom network 67.9, Mixed In Key 7 67.2, KeyFinder 45.4.
+
+| Reader (MTG, 1,270) | Exact: all | major | minor | Home note: all | major | minor | Mode given home: major | minor |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|
+| Apple | 65.2 | 41.5 | 75.6 | 76.4 | 70.7 | 78.8 | 58.6 | 95.8 |
+| The bar as written | | 36.5 | 70.6 | | | | | |
+| Nothing trained: B's home note + A's mode | 57.8 | 54.4 | 59.3 | 72.4 | 77.2 | 70.4 | 70.5 | 84.2 |
+| Learned profiles, 49 numbers (evaluation only) | 62.7 | 35.8 | 74.4 | 74.5 | 71.0 | 76.0 | 50.4 | 97.9 |
+| the same, major and minor weighed equally | 59.8 | 56.5 | 61.2 | 73.6 | 76.9 | 72.2 | 73.4 | 84.8 |
+| **Trained model, 12 shifts averaged (evaluation only)** | **65.9** | **44.0** | **75.5** | 77.0 | 75.4 | 77.7 | 58.4 | 97.1 |
+| Trained model, single read | 63.9 | 42.0 | 73.5 | 74.6 | 72.3 | 75.7 | 58.1 | 97.2 |
+
+**What it says.**
+- **The bar as written is passed** by the trained model on artists it never saw (major 44.0 against 36.5, minor
+  75.5 against 70.6). Song for song it is level with Apple (ahead on 104 clips, behind on 95, p 0.57). Per fold:
+  67.8, 63.1, 64.3, 67.5, 65.5; one training run each, so read it as 65.9 give or take 3.
+- **When it may decline it is ahead of Apple on the same songs**: 74.5 against 71.6 at 80 percent shown (p 0.01).
+  Its confidence can be trusted: stated probability and observed accuracy differ by 3 points on average; when it
+  says 90 percent or more it is right 94 percent of the time.
+- **It is small and cheap**: 236,006 numbers, 0.95 MB, 0.05 s a five-minute song on one CPU thread plus 0.35 s for
+  its spectrogram.
+- **It wins the way Apple wins**: a better home note than ours (77.0 against 72.4) and a lean toward minor (58
+  percent of major songs' modes right, 97 of minor). It hears the mode no better than the 80 percent ceiling of
+  phase 2. Trained on the 85-percent-minor 604-clip set instead, it reads 3.9 percent of MTG's major songs right:
+  the lean is copied from the training music. With major and minor weighed equally the 49-number profiles score
+  59.8 and fail the bar as written by 14 points on the minor half while reading 56 percent of major songs right
+  instead of 36.
+- **Forty-nine learned numbers get most of the way** (62.7; level with Apple song for song at every share shown) and
+  stop improving at about 400 labelled songs.
+- **None of it can ship**: trained on CC BY-SA labels and audio that is not ours.
+
+**Doing next.** Phase 4 is written into the letter (the Swift port of the untrained three-answer reader: 5 to 6
+days; the data that could legally back weights; what a commissioned set needs: 400 to 600 songs to fit, 300 to
+score, mixed styles, a third in major keys). Final read-through, then the branch is complete.
+
+**Carry on; one ruling would help.** The direction holds and the result is better than letter T's estimate. The
+ruling: D16's bar as written rewards leaning minor (it is how Apple and the trained readers pass it). If the bar
+stays as written, a trained reader should keep the lean; if it becomes "of the keys shown, as many right as Apple
+on the same songs" (my recommendation), the reader can be fitted without the lean and judged on what it shows.
+
 ## Nov 13, 2026, 22:45 UTC. Owner's direction taken up: precision against coverage, untrained readers first
 
 **Direction received** (relayed by the main session): the reader must stand on its own, work as well as the tools DJs
