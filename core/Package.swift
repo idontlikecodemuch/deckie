@@ -62,6 +62,7 @@ let package = Package(
         .library(name: "DeckieDecode", targets: ["DeckieDecode"]),
         .library(name: "DeckieInference", targets: ["DeckieInference"]),
         .library(name: "DeckieCrate", targets: ["DeckieCrate"]),
+        .library(name: "DeckieRecognition", targets: ["DeckieRecognition"]),
         .library(name: "DeckieEngine", targets: ["DeckieEngine"]),
         .library(name: "DeckieBuild", targets: ["DeckieBuild"]),
         .library(name: "DeckieDesk", targets: ["DeckieDesk"]),
