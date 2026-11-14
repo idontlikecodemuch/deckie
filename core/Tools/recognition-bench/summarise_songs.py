@@ -9,7 +9,7 @@ data, work = sys.argv[1], sys.argv[2]
 songs = [l.rstrip("\n").split("\t") for l in open(os.path.join(work, "songs.tsv"))]
 print("### Songs used\n")
 print("| bucket | songs | hours | median length | dev / eval / absent |\n|---|---|---|---|---|")
-for b in ("dance", "other", "gsplus"):
+for b in ("dance", "other", "gsplus", "library"):
     s = [x for x in songs if x[2] == b]
     if not s:
         continue
