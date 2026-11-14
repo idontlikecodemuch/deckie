@@ -3,11 +3,14 @@
 // stays where he puts it, and the only thing sent anywhere is what Desk's own lookup sends for a song with no tags
 // (the words of its file name, never its path), at MusicBrainz's one request a second.
 //
-//   deckie-lookup-trial <music folder> --out <results.json> [--limit N] [--use-tags]
+//   deckie-lookup-trial <music folder> --out <results.json> [--limit N] [--use-tags] [--labels]
 //
 // For each audio file below the folder: its tags (title, artist) and its length are read here; the lookup is given
 // only the file name, as if the file had no tags (with --use-tags, the tags as Desk would send them instead); the
-// candidate Desk would choose (or, when it chooses none, the first shown) is compared with the tags. Counts:
+// candidate Desk would choose (or, when it chooses none, the first shown) is compared with the tags. With --labels, the
+// label of the chosen candidate's release is asked for too (one more request a chosen song), as Desk itself does.
+// Each row also keeps what the file's tags say of release, year and label (FileFacts) beside the candidate's, so
+// what a lookup would fill can be compared with what the file already has. Counts:
 //   songs             audio files read
 //   noTags            files with no title tag (they cannot be judged; still looked up)
 //   nothingToSend     files whose name says nothing ("Track 04"): not looked up
@@ -28,7 +31,7 @@ import DeckieLookup
 func fail(_ s: String) -> Never { FileHandle.standardError.write(Data(("deckie-lookup-trial: " + s + "\n").utf8)); exit(2) }
 
 var args = Array(CommandLine.arguments.dropFirst())
-var out: String? = nil, limit = Int.max, useTags = false
+var out: String? = nil, limit = Int.max, useTags = false, labels = false
 var folder: String? = nil
 while !args.isEmpty {
     let a = args.removeFirst()
@@ -36,10 +39,11 @@ while !args.isEmpty {
     case "--out": out = args.isEmpty ? nil : args.removeFirst()
     case "--limit": limit = args.isEmpty ? limit : (Int(args.removeFirst()) ?? limit)
     case "--use-tags": useTags = true
+    case "--labels": labels = true
     default: folder = a
     }
 }
-guard let folder, let out else { fail("usage: deckie-lookup-trial <music folder> --out <results.json> [--limit N] [--use-tags]") }
+guard let folder, let out else { fail("usage: deckie-lookup-trial <music folder> --out <results.json> [--limit N] [--use-tags] [--labels]") }
 let root = URL(fileURLWithPath: (folder as NSString).expandingTildeInPath, isDirectory: true)
 let files = (try? AudioFiles.find(in: root)) ?? []
 guard !files.isEmpty else { fail("no audio files below \(root.path)") }
@@ -59,6 +63,17 @@ struct Row: Encodable {
     var fit: String?
     var chosen: Bool
     var verdict: String?
+    var askKind: String
+    var failure: String?
+    var several: Bool
+    var candidates: Int
+    var candidateRelease: String?
+    var candidateYear: String?
+    var candidateLabel: String?
+    var candidateNotes: [String]
+    var otherVersion: Bool?
+    /// What the file's own tags say (FileFacts): release, year, date, original year, label, compilation.
+    var tagFacts: [String: [String]]
 }
 
 FileHandle.standardError.write(Data("deckie-lookup-trial: \(chosenFiles.count) songs; about \(chosenFiles.count) seconds of lookups at one request a second, plus reading each file's length\n".utf8))
@@ -66,6 +81,8 @@ FileHandle.standardError.write(Data("deckie-lookup-trial: \(chosenFiles.count) s
 // The songs as Desk would have them with no tags: no title (so the file name is what is sent), the length read here.
 var tracks: [CrateTrack] = []
 var tags: [String: FileTags] = [:]
+var fileFacts: [String: [String: [String]]] = [:]
+let factNames = [SongFacts.release, SongFacts.year, SongFacts.date, SongFacts.originalYear, SongFacts.label, SongFacts.compilation]
 for (i, f) in chosenFiles.enumerated() {
     let t = FileTags.read(f.url)
     let seconds = (try? AudioDecoder.decode(f.url)).map { Double($0.frames) / Double(max(1, $0.sampleRate)) } ?? 0
@@ -80,6 +97,8 @@ for (i, f) in chosenFiles.enumerated() {
     }
     tracks.append(track)
     tags[id] = t
+    let ff = FileFacts.read(f.url).facts
+    fileFacts[id] = ff.filter { factNames.contains($0.key) }
 }
 
 let songs = tracks.map { DeskNaming.Song(track: $0, facts: DeskNaming.facts($0, book: NameBook(), corrections: NameCorrections())) }
@@ -87,7 +106,7 @@ let plan = DeskLookup.plan(songs)
 let sentLock = NSLock()
 nonisolated(unsafe) var sent: [SentRequest] = []
 let run = DeskLookupRun(plan: plan, client: DeskLookup.client(), sent: { r in sentLock.lock(); sent.append(r); sentLock.unlock() })
-run.fetchLabels = false
+run.fetchLabels = labels
 let started = Date()
 let review = run.run { p in
     if p.done % 10 == 0 || p.done == p.total {
@@ -127,7 +146,10 @@ for (i, s) in review.songs.enumerated() {
     rows.append(Row(file: chosenFiles[i].rel, seconds: s.seconds, tagTitle: t.title, tagArtist: t.artist,
                     sent: (ask.isrc.map { [["isrc", $0]] } ?? []) + (ask.query?.fields ?? []), outcome: s.outcome,
                     candidate: pick?.title, candidateArtist: pick?.artist, candidateVersion: pick?.version,
-                    candidateSeconds: pick?.seconds, fit: pick?.fit, chosen: s.chosen != nil, verdict: verdict))
+                    candidateSeconds: pick?.seconds, fit: pick?.fit, chosen: s.chosen != nil, verdict: verdict,
+                    askKind: ask.kind, failure: s.failure, several: s.several, candidates: s.candidates.count,
+                    candidateRelease: pick?.release, candidateYear: pick?.year, candidateLabel: pick?.label,
+                    candidateNotes: pick?.notes ?? [], otherVersion: pick?.otherVersion, tagFacts: fileFacts[s.song] ?? [:]))
 }
 counts["requests"] = sent.count
 
@@ -136,12 +158,13 @@ struct Results: Encodable {
     var when: Date
     var minutes: Double
     var tagsHidden: Bool
+    var labels: Bool
     var allowanceSeconds: Double
     var counts: [String: Int]
     var songs: [Row]
     var sent: [SentRequest]
 }
-let results = Results(folder: root.path, when: started, minutes: Date().timeIntervalSince(started) / 60, tagsHidden: !useTags,
+let results = Results(folder: root.path, when: started, minutes: Date().timeIntervalSince(started) / 60, tagsHidden: !useTags, labels: labels,
                       allowanceSeconds: DeskLookup.allowance, counts: counts, songs: rows, sent: sent)
 let e = JSONEncoder()
 e.outputFormatting = [.prettyPrinted, .sortedKeys, .withoutEscapingSlashes]
