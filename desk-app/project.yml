@@ -37,6 +37,8 @@ targets:
         product: DeckieDesk
       - package: DeckieCore
         product: DeckieDisc
+      - package: DeckieCore
+        product: DeckieLookup
       - sdk: ShazamKit.framework
       - sdk: AVFoundation.framework
     info:

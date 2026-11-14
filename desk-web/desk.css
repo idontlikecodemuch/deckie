@@ -15,6 +15,10 @@
   --r-card: 16px; --r-panel: 24px; --r-field: 12px; --r-pill: 999px;
   --body: "Inter", system-ui, -apple-system, "Segoe UI", "Cantarell", "Ubuntu", sans-serif;
   --warn: #ffb35c;
+  /* The lookup (D36), the one step that uses the internet: its own colour, never the accent, so it never looks like
+     the rest of Desk. Named values, for the design pass. */
+  --net: #6fd6c9; --net-ink: #08201d; --net-band: rgba(111, 214, 201, 0.12); --net-line: rgba(111, 214, 201, 0.45);
+  --fits: #8fe3a2; --off: var(--warn);
   color-scheme: dark;
 }
 * { box-sizing: border-box; }
@@ -207,3 +211,46 @@ td.listen button[aria-pressed=true] { background: var(--acc); color: var(--ink);
 .tool table td.locked { color: var(--dim); }
 .tool table td.note { color: var(--dim); font-size: 12px; }
 .tool .problem.mut { color: var(--mut); }
+
+/* "Look up songs via MusicBrainz" (D36): marked everywhere by its own colour and the globe, never the accent. */
+button.net { background: transparent; color: var(--net); box-shadow: inset 0 0 0 1px var(--net-line); }
+button.net:hover:not(:disabled) { background: var(--net-band); }
+button.main.net { background: var(--net); color: var(--net-ink); box-shadow: none; }
+button.main.net:hover:not(:disabled) { background: #8fe3d8; }
+button.net .net-icon { width: 14px; height: 14px; vertical-align: -2px; margin-right: 5px; }
+.net-band { display: flex; gap: 8px; align-items: center; background: var(--net-band); color: var(--net); border-radius: var(--r-field);
+            padding: 8px 12px; margin-bottom: 14px; font-size: 13px; font-weight: 550; }
+.net-band .net-icon { width: 18px; height: 18px; flex: none; }
+.menu .net-item { color: var(--net); }
+.names .lookup-under { width: 100%; font-size: 12px; color: var(--dim); }
+.names .lookup-under button.link { color: var(--net); font-size: 12px; }
+.lookup .buttons { align-items: center; }
+.lookup .buttons .grow, .sent .buttons .grow { flex: 1; }
+.lookup .sent-link { color: var(--net); font-size: 13px; }
+.lookup select { font: inherit; color: var(--tx); background: var(--field); border: 1px solid var(--hair); border-radius: var(--r-field); padding: 5px 9px; }
+.lookup .sentence { margin-top: 12px; display: grid; gap: 8px; }
+.lookup .sentence p:first-child { font-size: 15px; }
+.lookup .progress.net > div { background: var(--net); }
+.lookup .count { margin: 10px 0 4px; font-weight: 600; }
+.lookup .summary-line { font-size: 15px; font-weight: 600; margin-bottom: 4px; }
+.lookup .small-print { font-size: 12px; margin-top: 10px; }
+.lookup-songs { max-height: 52vh; overflow: auto; margin-top: 10px; display: grid; gap: 10px; }
+.lookup-song { background: var(--bg); border-radius: var(--r-card); padding: 12px 14px; }
+.lookup-song h3 { display: flex; gap: 10px; align-items: baseline; }
+.lookup-song h3 .len { font-weight: 450; color: var(--mut); font-size: 13px; }
+.lookup-song .outcome { color: var(--mut); font-size: 13px; margin-top: 4px; }
+.lookup-song table { width: 100%; border-collapse: collapse; margin-top: 8px; }
+.lookup-song th, .lookup-song td { text-align: left; padding: 4px 6px; font-size: 13px; vertical-align: top; }
+.lookup-song th { color: var(--dim); font-weight: 550; font-size: 12px; }
+.lookup-song tr.other td { color: var(--mut); }
+.lookup-song tr.using td { background: var(--net-band); }
+.lookup-song td.fits { color: var(--fits); }
+.lookup-song td.off { color: var(--off); }
+.lookup-song .notes { font-size: 12px; color: var(--dim); }
+.lookup-song .ticks { margin-top: 8px; display: grid; gap: 3px; }
+.lookup-song .ticks label { display: flex; gap: 8px; align-items: baseline; font-size: 13px; }
+.lookup-song .ticks .before { color: var(--dim); }
+.lookup-song .ticks .note { color: var(--dim); font-size: 12px; }
+.sent-list { list-style: none; margin: 12px 0 0; padding: 0; max-height: 50vh; overflow: auto; display: grid; gap: 6px; }
+.sent-list li { background: var(--bg); border-radius: var(--r-field); padding: 8px 12px; font-size: 13px; }
+.sent-list .addr { color: var(--dim); font-size: 11.5px; word-break: break-all; -webkit-user-select: text; user-select: text; }

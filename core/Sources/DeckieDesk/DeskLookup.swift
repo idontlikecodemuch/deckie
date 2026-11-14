@@ -135,6 +135,44 @@ public enum DeskLookup {
         return Plan(scope: scope, songs: songs, asks: asks, disc: nil, summary: s)
     }
 
+    /// The plan a window asks for (both windows use this): `scope` `disc` for the music CD added as `source`;
+    /// otherwise the songs given (`ids`), a source's songs (`source`), or, with neither, the songs that need a name.
+    public static func plan(scope: String, ids: [String]?, source: String?, crate c: Crate, info: CrateInfo?,
+                            paths: PlacePaths, home: DeskHome, facts: (CrateTrack) -> DeskNaming.Facts) throws -> Plan {
+        if scope == "disc" {
+            guard let source, let discId = info?.discs[source], let record = DiscRecords.record(home, disc: discId) else {
+                throw DeskError("\(source ?? "that source") is not a music CD Desk has read")
+            }
+            var numbers: [String: Int] = [:]
+            var songs: [DeskNaming.Song] = []
+            for t in DeskNaming.order(c, source: source, ids: nil) {
+                guard let p = t.ident.allPlaces.first(where: { $0.disc == source }),
+                      let n = DeskAudio.discNumber(t, at: p, paths: paths) else { continue }
+                numbers[t.id] = n
+                songs.append(DeskNaming.Song(track: t, facts: facts(t)))
+            }
+            // The disc's name: its own title (CD-Text), else the name the DJ gave the source, never the placeholder.
+            let placeholder = DeskSession.placeholderName(record.toc)
+            let name = record.discTitle ?? (source.hasPrefix(placeholder) ? nil : source)
+            return discPlan(source: source, record: record, songs: songs, numbers: numbers, name: name)
+        }
+        var songs: [DeskNaming.Song]
+        let song = { (t: CrateTrack) in DeskNaming.Song(track: t, facts: facts(t)) }
+        if let ids { songs = DeskNaming.order(c, source: nil, ids: ids).map(song) }
+        else if let source { songs = DeskNaming.order(c, source: source, ids: nil).map(song) }
+        else { songs = c.tracks.map(song).filter { DeskNaming.reason($0.track, $0.facts) != nil } }
+        // A music CD's own ISRCs (its sub-code), by song.
+        var isrcs: [String: String] = [:]
+        for s in songs {
+            for p in s.track.ident.allPlaces {
+                guard let d = p.disc, let id = info?.discs[d], let r = DiscRecords.record(home, disc: id),
+                      let n = DeskAudio.discNumber(s.track, at: p, paths: paths), let isrc = r.isrcs[n] else { continue }
+                isrcs[s.track.id] = isrc
+            }
+        }
+        return plan(songs, isrcs: isrcs)
+    }
+
     /// The plan for a music CD added as `source`: its table from what Desk keeps about the disc (`DiscRecords`), its
     /// name (the disc's own title, else the source's name when the DJ gave it one), its songs by number.
     public static func discPlan(source: String, record: DiscRecords.Record, songs: [DeskNaming.Song],
@@ -470,7 +508,7 @@ public enum DeskLookup {
 
     /// The review's summary line: "9 of 14 found. 5 not found: edits and bootlegs often aren't." (letter AA, 3.9).
     public static func summaryLine(_ r: Review) -> String {
-        if let f = r.failure { return DeskWords.coded("lookupFailure", f) }
+        if let f = r.failure { return DeskWords.fill(DeskWords.coded("lookupFailure", f), DeskWords.withComputer([:])) }
         let nothing = r.songs.filter { $0.outcome == "nothing" }.count
         if r.scope == "song", let s = r.songs.first {
             if s.outcome == "nothing" { return DeskWords.text("lookupNothingOne") }

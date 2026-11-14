@@ -161,8 +161,18 @@ struct Inspector: View {
                             model.listener.song == id ? model.listener.stop() : model.listen(t)
                         }.buttonStyle(.borderedProminent)
                         if model.reason(t) == "guess" { Button(Words.t("looksRight")) { model.check([id]) }.help(Words.t("looksRightHelp")) }
-                        // LOOK UP SONG VIA ... GOES HERE (the note on D30): the one explicit lookup, by sound, beside Listen.
-                        // Not built: route A sends nothing anywhere.
+                        // "Look up via MusicBrainz" (D36): the one step that uses the internet, in its own colour. A
+                        // lookup by sound (AcoustID) would sit beside it, feeding the same review (Lookup.swift).
+                        Button { model.lookUp(scope: "song", ids: [id]) } label: { Label(Words.t("lookupOne"), systemImage: LookupStyle.icon) }
+                            .buttonStyle(.bordered).tint(LookupStyle.net)
+                    }
+                    // After the sentence has been read once, it sits under the button (letter AA, 3.8).
+                    if model.lookupExplained, let what = DeskLookup.plan(model.toolSongs(source: nil, ids: [id])).summary.what, !what.isEmpty {
+                        HStack(spacing: 4) {
+                            Text(Words.t("lookupUnder", ["what": what.map { Words.t("lookupWhat." + $0[0], ["value": $0[1]]) }.joined(separator: ", ")]))
+                            Button(Words.t("lookupSentLink")) { model.showSent = true }.buttonStyle(.link)
+                        }
+                        .font(.caption).foregroundStyle(.secondary)
                     }
                     field(Words.tags, t.ident.tags.joined(separator: ", "), id: id) { v in
                         model.update(id) { $0.ident.tags = v.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty } }

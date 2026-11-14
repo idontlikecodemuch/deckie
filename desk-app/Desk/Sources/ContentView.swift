@@ -29,6 +29,11 @@ struct ContentView: View {
                         Divider()
                         Button(Words.t("looksRight")) { model.check(Array(model.selection)) }
                             .disabled(!model.selection.contains { id in model.crate?.tracks.first { $0.id == id }.map { model.reason($0) == "guess" } == true })
+                        Divider()
+                        // The lookup (D36), named for its service: the selection, or the songs that need a name.
+                        Button { model.selection.isEmpty ? model.lookUp(scope: "songs") : model.lookUp(scope: model.selection.count == 1 ? "song" : "songs", ids: Array(model.selection)) }
+                            label: { Label(Words.t("lookupMany"), systemImage: LookupStyle.icon) }
+                        Button(Words.t("lookupSentLink")) { model.showSent = true }
                     } label: { Label(Words.t("nameTools"), systemImage: "character.cursor.ibeam") }
                     .disabled(model.running)
                     Button { model.showSources.toggle() } label: {
@@ -243,6 +248,13 @@ struct CrateView: View {
         .sheet(isPresented: Binding(get: { model.tool != nil }, set: { if !$0 { model.tool = nil } })) {
             if let kind = model.tool { ToolSheet(kind: kind).environmentObject(model) }
         }
+        .sheet(isPresented: Binding(get: { model.lookup != nil }, set: { if !$0 { model.stopLookup(); model.lookup = nil } })) {
+            LookupSheet().environmentObject(model)
+                .sheet(isPresented: $model.showSent) { SentSheet().environmentObject(model) }
+        }
+        .sheet(isPresented: Binding(get: { model.showSent && model.lookup == nil }, set: { if !$0 { model.showSent = false } })) {
+            SentSheet().environmentObject(model)
+        }
     }
 }
 
@@ -260,6 +272,10 @@ struct StatusBar: View {
                         .buttonStyle(.link)
                 }
                 if model.onlyNeedName { Text(Words.onlyNeedName).foregroundStyle(.secondary) }
+                if model.onlyNeedName && unnamed > 0 {
+                    Button { model.lookUp(scope: "songs") } label: { Label(Words.c("lookupNeedsName", unnamed), systemImage: LookupStyle.icon) }
+                        .buttonStyle(.bordered).tint(LookupStyle.net).controlSize(.small)
+                }
                 if let log = c.manifest.importLog {
                     let out = log.entries.filter { $0.reason != CrateManifest.ImportLog.Reason.damagedFrames }.count
                     if out > 0 {

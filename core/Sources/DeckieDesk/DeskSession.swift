@@ -382,42 +382,8 @@ public final class DeskSession {
     /// `source`; otherwise the songs given (`ids`), a source's songs (`source`), or the songs that need a name.
     public func lookupPlan(scope: String, ids: [String]? = nil, source: String? = nil) throws -> DeskLookup.Plan {
         guard let c = crate else { throw DeskError("no crate with songs is showing") }
-        if scope == "disc" {
-            guard let source, let discId = current?.discs[source], let record = DiscRecords.record(home, disc: discId) else {
-                throw DeskError("\(source ?? "that source") is not a music CD Desk has read")
-            }
-            var numbers: [String: Int] = [:]
-            var songs: [DeskNaming.Song] = []
-            for t in DeskNaming.order(c, source: source, ids: nil) {
-                guard let p = t.ident.allPlaces.first(where: { $0.disc == source }),
-                      let n = DeskAudio.discNumber(t, at: p, paths: placePaths) else { continue }
-                numbers[t.id] = n
-                songs.append(DeskNaming.Song(track: t, facts: facts(t)))
-            }
-            // The disc's name: its own title (CD-Text), else the name the DJ gave the source, never the placeholder.
-            let placeholder = Self.placeholderName(record.toc)
-            let name = record.discTitle ?? (source.hasPrefix(placeholder) ? nil : source)
-            return DeskLookup.discPlan(source: source, record: record, songs: songs, numbers: numbers, name: name)
-        }
-        var songs: [DeskNaming.Song]
-        if let ids { songs = toolSongs(source: nil, ids: ids) }
-        else if let source { songs = toolSongs(source: source, ids: nil) }
-        else { songs = c.tracks.compactMap { t in let f = facts(t); return DeskNaming.reason(t, f) == nil ? nil : DeskNaming.Song(track: t, facts: f) } }
-        return DeskLookup.plan(songs, isrcs: discIsrcs(songs.map(\.track)))
-    }
-
-    /// The ISRCs a music CD's sub-code gave for these songs, by song id.
-    func discIsrcs(_ tracks: [CrateTrack]) -> [String: String] {
-        guard let info = current else { return [:] }
-        var out: [String: String] = [:]
-        for t in tracks {
-            for p in t.ident.allPlaces {
-                guard let d = p.disc, let id = info.discs[d], let r = DiscRecords.record(home, disc: id),
-                      let n = DeskAudio.discNumber(t, at: p, paths: placePaths), let isrc = r.isrcs[n] else { continue }
-                out[t.id] = isrc
-            }
-        }
-        return out
+        return try DeskLookup.plan(scope: scope, ids: ids, source: source, crate: c, info: current, paths: placePaths,
+                                   home: home, facts: facts)
     }
 
     /// Keeps a finished lookup's review for the window.
