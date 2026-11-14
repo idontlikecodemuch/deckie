@@ -26,7 +26,8 @@
 // (decoder, Beat This! through ONNX Runtime, DeckieCore's DSP); its record serialises to the lab's feature JSON and
 // converts to a crate track.
 // DeckieBuild: the crate builder's logic (the folder walk, the resumable work folder, the parallel analysis, the import
-// log, the rekordbox XML reader, the file tag reader and the yardstick bench); deckie-build: its command line.
+// log, the rekordbox XML reader, the file tag reader, each song's cover (D36) and the yardstick bench); deckie-build:
+// its command line.
 // DeckieDesk: what a desk does that is not about windows (D28): where its crates are kept and the list of them, the
 // store of what was worked out for each file (shared by every crate), the DJ's name fixes, where each place's file is,
 // taking a source out of a crate, and the one run that reads, fingerprints, links copies and saves.
@@ -85,7 +86,7 @@ let package = Package(
                 dependencies: ["DeckieDecode", "DeckieCore", "DeckieInference", "DeckieCrate", "DeckieAudio"]),
         .target(name: "DeckieBuild",
                 dependencies: ["DeckieEngine", "DeckieCrate", "DeckieDecode", "DeckieCore", "DeckieLab", "DeckieInference",
-                               "DeckieAudio"]),
+                               "DeckieAudio", "DeckieCovers"]),
         .executableTarget(name: "deckie-build", dependencies: ["DeckieBuild", "DeckieCrate"]),
         .target(name: "CDiscDrive"),
         .target(name: "DeckieDisc", dependencies: ["CDiscDrive", "DeckieCrate"]),
@@ -101,7 +102,8 @@ let package = Package(
         .testTarget(name: "DeckieRecognitionTests", dependencies: ["DeckieRecognition", "DeckieCore"]),
         .target(name: "DeckieTestSupport", dependencies: ["DeckieAudio", "DeckieCore", "DeckieDecode"],
                 path: "Tests/DeckieTestSupport"),
-        .executableTarget(name: "deckie-e2e", dependencies: ["DeckieCrate", "DeckieCore", "DeckieAudio", "DeckieTestSupport"]),
+        .executableTarget(name: "deckie-e2e",
+                          dependencies: ["DeckieCrate", "DeckieCore", "DeckieAudio", "DeckieCovers", "DeckieTestSupport"]),
         .testTarget(name: "DeckieCoreTests", dependencies: ["DeckieCore", "DeckieLab", "DeckieAudio", "DeckieTestSupport"],
                     exclude: ["Fixtures"]),
         .testTarget(name: "DeckieDecodeTests", dependencies: ["DeckieDecode", "DeckieCore", "DeckieTestSupport"],
@@ -114,11 +116,11 @@ let package = Package(
                                    "DeckieLab", "DeckieAudio", "DeckieTestSupport"]),
         .testTarget(name: "DeckieBuildTests",
                     dependencies: ["DeckieBuild", "DeckieEngine", "DeckieCrate", "DeckieLab", "DeckieCore", "DeckieInference",
-                                   "DeckieDecode", "DeckieAudio", "DeckieTestSupport"],
+                                   "DeckieDecode", "DeckieAudio", "DeckieCovers", "DeckieTestSupport"],
                     exclude: ["Fixtures"]),
         .testTarget(name: "DeckieCoversTests", dependencies: ["DeckieCovers", "DeckieCrate", "DeckieTestSupport"]),
         .testTarget(name: "DeckiePCTests",
-                    dependencies: ["DeckiePC", "DeckieBuild", "DeckieCrate", "DeckieAudio", "DeckieTestSupport"]),
+                    dependencies: ["DeckiePC", "DeckieBuild", "DeckieCrate", "DeckieAudio", "DeckieCovers", "DeckieTestSupport"]),
         .testTarget(name: "DeckieDiscTests", dependencies: ["DeckieDisc", "DeckieCrate", "DeckieTestSupport"]),
         .testTarget(name: "DeckieDeskTests",
                     dependencies: ["DeckieDesk", "DeckieDisc", "DeckieBuild", "DeckieEngine", "DeckieCrate", "DeckieCore", "DeckieAudio",

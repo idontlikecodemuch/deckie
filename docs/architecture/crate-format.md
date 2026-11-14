@@ -719,7 +719,8 @@ Example.deckiecrate/
 - **The single-file form** carries the folder as it carries every folder: `covers/<hash>.jpg` entries, stored, after
   `crate.json` in path order. Nothing new.
 - **Where the picture comes from**, in this order (the builder, `core/README.md`): the file's own front cover (ID3
-  `APIC`, FLAC `PICTURE`, MP4 `covr`); else a picture file beside the song (below).
+  `APIC`, FLAC `PICTURE`, MP4 `covr`); else a picture file beside the song, in its own folder: `cover`, `folder`,
+  `front`, `albumart` or `album`, as `.jpg`, `.jpeg` or `.png`, in that order, whatever the case of the name.
 - **Writing.** The thumbnail must be in the package before the records that name it are written; the writer refuses
   a record whose cover is missing, and **deletes every `covers/*.jpg` that no record names**, so taking the last
   song of a release out of a crate takes its cover out, as sidecars go with their songs.

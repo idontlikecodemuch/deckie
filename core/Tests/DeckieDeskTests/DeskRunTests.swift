@@ -134,4 +134,38 @@ struct DeskRunTests {
         let info = try #require(home.shelf.info(crate.id))
         #expect(info.sourceRoots["Music 2"] == music.path && info.musicFolder == nil)
     }
+
+    /// Covers (D36) come through Desk's run as through the builder it runs: a picture beside a song is in the crate
+    /// file under the record's `file.cover`, a second run makes none again, and it stays when Desk saves the crate.
+    @Test func aRunWritesCovers() async throws {
+        let root = try scratch("covers")
+        let fm = FileManager.default
+        let stick = root.appendingPathComponent("Stick")
+        try fm.createDirectory(at: stick.appendingPathComponent("House"), withIntermediateDirectories: true)
+        try TestTrack.wav(TestTrack.render()).write(to: stick.appendingPathComponent("House/01 Song X.wav"))
+        let picture = TestPicture.sleeve(side: 90, seed: 7)
+        try picture.write(to: stick.appendingPathComponent("House/cover.png"))
+        let name = CrateIDs.sha256(of: picture)   // a cover is named by the hash of the picture it was made from
+
+        let home = DeskHome(root: root.appendingPathComponent("home"))
+        let crate = try home.shelf.make(name: "Covers")
+        let analyser = try Builder.makeAnalyser(jobs: 1)
+        func run() throws -> (crate: Crate, report: RunReport) {
+            try DeskRun(home: home, crateId: crate.id, request: RunRequest(folder: stick, source: "Stick"), jobs: 1,
+                        device: "Mac15,6", analyser: analyser, signer: nil, printer: DeskRun.portablePrint).run()
+        }
+        let one = try await CPUTurns.exclusive { try run() }
+        #expect(one.crate.tracks.map(\.file.cover) == [name])
+        #expect(one.report.covers?.songs == 1 && one.report.covers?.distinct == 1 && one.report.covers?.made == 1)
+        let file = home.shelf.package(crate.id).appendingPathComponent("covers/\(name).jpg")
+        let jpeg = try Data(contentsOf: file)
+        #expect(jpeg.starts(with: [0xFF, 0xD8, 0xFF]) && one.report.covers?.bytes == jpeg.count)
+        #expect(try CrateReader.read(from: home.shelf.package(crate.id)).tracks.first?.file.cover == name)
+
+        let two = try await CPUTurns.exclusive { try run() }
+        #expect(two.report.analysed == 0 && two.report.covers?.made == 0 && two.report.covers?.picturesRead == 0)
+        #expect(two.crate.tracks.map(\.file.cover) == [name])
+        #expect(try Data(contentsOf: file) == jpeg)
+        #expect(DeskRun.runs(home: home, crateId: crate.id).last?.covers?.songs == 1)
+    }
 }

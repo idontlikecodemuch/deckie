@@ -158,6 +158,10 @@ public struct PCBuild: Sendable {
         /// Songs in the crate file whose start could not be placed to the sample (the record's flag
         /// `start_uncertain`: an AAC file that states its lead-in nowhere), by their path below the folder.
         public var startUncertain: [String] = []
+        /// Covers (D36): songs with one, distinct covers and their bytes, pictures that could not be used.
+        public var covers = CoverCounts()
+        /// The crate file's size in bytes, covers included.
+        public var crateFileBytes = 0
         public var seconds: Double
         public var jobs: Int
     }
@@ -265,12 +269,15 @@ public struct PCBuild: Sendable {
                        seconds: Date().timeIntervalSince(started), jobs: jobs)
         outcome.startUncertain = result.crate.tracks.filter { $0.flags.contains("start_uncertain") }
             .map { $0.file.rel ?? $0.file.name }.sorted()
+        outcome.covers = result.covers
+        outcome.crateFileBytes = ((try? fm.attributesOfItem(atPath: plan.crateFile.path))?[.size] as? NSNumber)?.intValue ?? 0
         return outcome
     }
 
     /// The closing words for a finished run.
     public static func summary(_ o: Outcome) -> String {
         var lines = ["", PCWords.done(songs: o.songs)]
+        if o.songs > 0 { lines.append(PCWords.covers(o.covers.songs, of: o.songs)) }
         let total = o.notAdded.reduce(0) { $0 + $1.count }
         if total > 0 {
             lines.append(PCWords.notAdded(total))
@@ -352,7 +359,12 @@ struct RunLog {
         typealias R = CrateManifest.ImportLog.Reason
         lines += ["", "result: finished",
                   "music files found: \(o.filesFound)", "songs in the crate file: \(o.songs)",
-                  "read in this run: \(o.readNow)", "whole run: \(String(format: "%.1f", o.seconds)) s"]
+                  "read in this run: \(o.readNow)", "whole run: \(String(format: "%.1f", o.seconds)) s",
+                  "songs with a cover: \(o.covers.songs)",
+                  "covers in the crate file: \(o.covers.distinct), \(o.covers.bytes) bytes together (\(o.covers.made) made in this run)",
+                  "crate file's size: \(o.crateFileBytes) bytes"]
+        let unusable = o.covers.unusable.keys.sorted().map { "\($0) \(o.covers.unusable[$0]!)" }
+        if !unusable.isEmpty { lines.append("pictures that could not be made into a cover: " + unusable.joined(separator: ", ")) }
         if !o.secondsPerSong.isEmpty {
             let s = o.secondsPerSong.sorted()
             lines.append("seconds per song (each song's own reading time): mean \(String(format: "%.1f", s.reduce(0, +) / Double(s.count))), "
