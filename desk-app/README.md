@@ -332,6 +332,9 @@ None of the music CD code has read a real disc on this Mac: there is no drive he
 - `TrackTable.swift`, `ImportLogView.swift`: the table with an inspector for names and what the analysis found;
   What didn't go in.
 - `SourcesPanel.swift`: the Sources panel (corrections, Remove from crate) and the Add music menu.
+- `RunScreen.swift`: the run screen (D37), the same as the Windows and Linux window's from the same data: the song
+  on stage with its wave and what Desk found, the figures so far, the wall of waves, the quiet line and the moments.
+  Its colours, sizes and times are `RunLook`'s named constants.
 - `Words.swift`: every word on screen, by name.
 - `Naming.swift`: the Listen bar, the naming tools' sheet with its preview, and the naming walk.
 - `HeadlessDesk.swift`: Desk's own crates from a terminal.

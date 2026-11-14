@@ -55,8 +55,11 @@ enum Tour {
             Step(name: "16-undo-named", js: click("#side-close"), delay: 0.6),
             Step(name: "17-new-crate", js: "desk.request('crate.new');", event: "state", delay: 1.0),
         ]
-        let a = ProcessInfo.processInfo.arguments
-        let steps = a.contains("--lookup") ? lookupSteps(click) : (a.contains("--naming") ? namingSteps(click) : tourSteps)
+        let arguments = ProcessInfo.processInfo.arguments
+        let steps = arguments.contains("--lookup") ? lookupSteps(click)
+            : arguments.contains("--naming") ? namingSteps(click)
+            : arguments.contains("--run-screen") ? runScreenSteps(click) : tourSteps
+        if arguments.contains("--record") { record(desk, out: out.appendingPathComponent("frames")) }
         var events: [[String: Any]] = []
         let lock = NSLock()
         desk.watchers.append { line in
@@ -194,6 +197,61 @@ enum Tour {
             Step(name: "l15-sentence-disc", js: scope("disc:"), delay: 1.2),
             Step(name: "l16-disc-not-known", js: click("#lookup-go"), event: "lookup.finished", delay: 1.0),
         ]
+    /// The run screen (D37): the run from the first screen to the finished one, with a picture at a few song counts
+    /// (`DECKIE_TOUR_SONGS`, the songs in `--music`, sets them), then a line of the wall pointed at and one chosen with
+    /// the keyboard.
+    static func runScreenSteps(_ click: (String) -> String) -> [Step] {
+        let total = ProcessInfo.processInfo.environment["DECKIE_TOUR_SONGS"].flatMap(Int.init) ?? 30
+        let done = { (n: Int) -> ([String: Any]) -> Bool in
+            { $0["event"] as? String == "run.progress" && (($0["done"] as? NSNumber)?.intValue ?? 0) >= n }
+        }
+        var steps = [Step(name: "r01-first-screen", delay: 1.5), Step(name: nil, js: click("#add-button"), delay: 0.8),
+                     Step(name: "r02-first-song", js: "[...document.querySelectorAll('#add-menu [role=menuitem]')].pop().click();",
+                          event: "run.progress", eventTest: done(1), delay: 1.0)]
+        var seen = Set<Int>()
+        for (i, n) in [3, total / 4, total / 2, total * 3 / 4, total * 9 / 10].enumerated() where n > 0 && seen.insert(n).inserted {
+            steps.append(Step(name: "r0\(i + 3)-\(n)-songs", event: "run.progress", eventTest: done(n), delay: 1.2))
+        }
+        steps.append(Step(name: "r08-finished", event: "run.finished", delay: 2.4))
+        steps.append(Step(name: "r09-wall-pointed", js: """
+            var c = document.getElementById('done-wall'), r = c.getBoundingClientRect();
+            c.dispatchEvent(new MouseEvent('mousemove', { clientX: r.left + r.width * 0.3, clientY: r.top + r.height * 0.42, bubbles: true }));
+            """, delay: 0.8))
+        steps.append(Step(name: "r10-wall-keyboard", js: """
+            var c = document.getElementById('done-wall'); c.focus();
+            c.dispatchEvent(new KeyboardEvent('keydown', { key: 'End', bubbles: true }));
+            c.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowUp', bubbles: true }));
+            """, delay: 0.8))
+        return steps
+    }
+
+    /// With `--record`: a picture of the window every half second from the moment a run starts until a few seconds
+    /// after it finishes, numbered in order, for a short film of the run screen (ffmpeg makes one from them).
+    static func record(_ desk: Desk, out: URL) {
+        #if os(macOS)
+        try? FileManager.default.createDirectory(at: out, withIntermediateDirectories: true)
+        let lock = NSLock()
+        var started = false, finishedAt: Date?
+        desk.watchers.append { line in
+            lock.lock(); defer { lock.unlock() }
+            if line.contains("\"event\":\"run.started\"") { started = true }
+            if line.contains("\"event\":\"run.finished\"") { finishedAt = Date() }
+        }
+        Thread.detachNewThread {
+            var frame = 0
+            while true {
+                Thread.sleep(forTimeInterval: 0.5)
+                lock.lock(); let go = started, end = finishedAt; lock.unlock()
+                if let end, Date().timeIntervalSince(end) > 4 { return }
+                guard go else { continue }
+                frame += 1
+                let url = out.appendingPathComponent(String(format: "%05d.png", frame))
+                let wait = DispatchSemaphore(value: 0)
+                desk.window.onWindowThread { snapshot(desk, to: url) { _ in wait.signal() } }
+                wait.wait()
+            }
+        }
+        #endif
     }
 
     static func js(_ s: String) -> String {

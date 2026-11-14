@@ -39,6 +39,9 @@ final class DeskModel: ObservableObject {
     @Published var runTotal = 0
     @Published var runRemaining: Double?
     @Published var runLines: [String] = []
+    /// The run screen's songs, figures, stage, quiet line and moments (D37, RunScreen.swift); kept for the finished
+    /// screen's wall until the next run.
+    let watch = RunWatch()
     /// The finished screen's report, until the DJ moves on.
     @Published var finished: RunReport?
 
@@ -262,6 +265,7 @@ final class DeskModel: ObservableObject {
         running = true; finished = nil; runRead = request.name; runStage = .reading
         listener.stop()
         runDone = 0; runTotal = 0; runRemaining = nil; runLines = []
+        watch.start(musicCD: request.musicCD != nil)
         if let note = Builder.vocalTaggerNote { runLines.append(note) }
         undoManager?.removeAllActions()
         let run = DeskRun(home: home, crateId: info.id, request: request, jobs: jobs, device: Device.modelLabel(),
@@ -271,6 +275,7 @@ final class DeskModel: ObservableObject {
             do {
                 let (crate, report) = try run.run { p in Task { @MainActor in model.handle(p) } }
                 await MainActor.run {
+                    model.watch.stop()
                     model.running = false
                     model.reloadCrates()
                     if let i = model.crates.first(where: { $0.id == info.id }) { model.show(i) }
@@ -280,6 +285,7 @@ final class DeskModel: ObservableObject {
                 }
             } catch {
                 await MainActor.run {
+                    model.watch.stop()
                     model.running = false
                     model.reloadCrates()
                     if let i = model.crates.first(where: { $0.id == info.id }) { model.show(i) }
@@ -292,6 +298,7 @@ final class DeskModel: ObservableObject {
 
     private func handle(_ p: RunProgress) {
         guard running else { return }
+        watch.take(p)
         runStage = p.stage; runDone = p.done; runTotal = p.total; runRemaining = p.remaining
         switch p.line {
         case let .started(files, unchanged, queued)?:

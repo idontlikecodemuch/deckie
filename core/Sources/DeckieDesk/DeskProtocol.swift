@@ -409,8 +409,11 @@ public final class DeskProtocol: @unchecked Sendable {
         runThreadDone = done
         let thread = Thread { [self] in
             let last = LastSent()
+            let screen = RunScreenOut { [weak self] m in self?.send(m) }
             do {
                 let (_, report) = try run.run { p in
+                    // The run screen's songs, notes and totals (D37), in batches at most four times a second.
+                    screen.offer(p)
                     // Every line goes out; bare progress at most ten times a second.
                     if p.line == nil && p.done < p.total && !last.due(every: 0.1) { return }
                     var m: [String: Any] = ["event": "run.progress", "stage": p.stage.rawValue, "done": p.done,
@@ -418,6 +421,7 @@ public final class DeskProtocol: @unchecked Sendable {
                     if let line = p.line { m["line"] = Self.line(line) }
                     self.send(m)
                 }
+                screen.flush()
                 self.lock.lock()
                 self.running = false
                 self.runningDisc = nil
@@ -426,6 +430,7 @@ public final class DeskProtocol: @unchecked Sendable {
                 self.sendState(); self.sendSongs()
                 self.lock.unlock()
             } catch {
+                screen.flush()
                 self.lock.lock()
                 self.running = false
                 self.runningDisc = nil
