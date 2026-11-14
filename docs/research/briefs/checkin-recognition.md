@@ -2,6 +2,54 @@
 
 Branch `trial/own-recognition`. Newest entry first. Nothing here ships without the owner's decision.
 
+## Nov 14, 2026, 22:45 UTC: `recog/fast`, stage 3 (first results): searching every second while following puts the new name up 3 s after a cut, with no more wrong names
+
+**Table** (`booth` index, eval half; the index is the same in every row, so its size is `booth`'s 11.5 KB a minute)
+
+| Listener | New song named by 5 s after a hard cut: clean / crowd 10 dB under / crowd equal | Seconds from cut to new name, clean: median / 75th / 90th | Old name still up 3 s after the cut, clean / crowd 10 under | A blend: seconds from the fade's middle to the name, median | Named by 5 s from silence: clean / room / crowd 10 under / crowd equal | Wrong song named | Song not in the index named | One reading, ms: median / 95th |
+|---|---|---|---|---|---|---|---|---|
+| as on `main` (searches every 2 s over 8 s) | 96 / 63 / 31 % | 5 / 5 / 5 | 99 / 95 % | 5 | 100 / 92 / 75 / 48 % | 4 of 1,200 clips | 0 of 217 | 58 / 204 |
+| **searches every second, over the last 4 s, while following** | **99 / 77 / 39 %** | **3 / 3 / 3** | **4 / 47 %** | **2 to 3** | 100 / 91 / 75 / 48 % | 4 of 1,200 | 0 of 217 | 39 / 207 |
+| the same, and lets go after one failed check of 3 s | 96 / 64 / 32 % | 4 / 5 / 5 | 53 / 80 % | 3 | 100 / 91 / 75 / 48 % | 4 of 1,200 | 0 of 217 | 39 / 207 |
+| the same, and a first look at 2 s | 96 / 64 / 32 % | 4 / 5 / 5 | 56 / 80 % | 3 | 100 / 92 / 76 / 49 % (clean: half the clips named at 2 s) | 4 of 1,200 | 0 of 217 | 39 / 211 |
+| the same (3 s first look), and fuzzy lookup | 97 / 62 / 39 % | 4 / 5 / 5 | 51 / 77 % | 3 | 100 / 90 / 79 / 52 % | 4 of 1,200 | 0 of 217 | 89 / 468 |
+| lower bars (2.8 sure, 2.3 fair twice) | running | | | | | | | |
+
+- **The change that works is the second row.** While a song is followed, the listener now looks through the whole
+  crate every second using only the last 4 s of sound. After a cut the new song is named 3 s later, which is as
+  fast as from silence, and the old name is gone by then. In a blend the name changes 2 to 3 s after the two songs
+  are equally loud (it was 5). It costs nothing measured: the same 4 wrong clips (the one pair of two releases
+  of a recording), no absent song named, and readings are no slower.
+- **Letting go sooner made it worse**, which was a surprise worth a line: once the listener lets go, it searched
+  its whole 8 s window, most of which was still the old song. That is now changed (after a failed check it
+  searches the newest sound only) and is being measured; it should help the loud-room columns, where the old
+  song is still up at 3 s in half the clips. A 3 s check also doubles the spread of the fader reading (0.04 to
+  0.08 of a point), so that part is dropped whatever the result.
+- **A 2 s first look** names half the clean clips a second sooner and changes nothing else. Cheap; kept as a
+  candidate.
+- **Fuzzy lookup** buys 3 or 4 points by 5 s under a crowd (7 behind a small speaker) for twice the search time.
+  A candidate for loud rooms only.
+- **Wrong names over whole mixes** (36,000 readings on the generated mixes): every name of a song not in the mix,
+  in every row, is one song the index itself lists as holding the same sound as a song that is in the mix. None
+  is a different song.
+
+**"Another song" in the owner's library (0.8 %)**. Nothing on the outside set reproduces it: every wrong name here
+is a second release or a listed copy. What the code says: a name can only *start* at the search's acceptance test
+(the follow step never changes song; it keeps or drops). So versions and edits get in at acceptance, because a
+remix or edit shares real passages with the original and passes honestly. The branch already treats two songs
+that share a passage as the same sound when the index is built. Whether that removes the owner's 0.8 % can only
+be seen on his library; the question for that run is how many of those seconds name a version of the right song.
+
+**The fader reading** (the real-room run: second-to-second spread 0.19 against 0.06). On the generated mixes a
+single reading is off by 0.04 of a point at the median and 0.14 at the 90th percentile. The middle value of the
+last five readings halves that (0.02 and 0.08; the worst 1 % from 0.76 to 0.35). So: the listener now offers
+both, `speedPercent` as before and `steadySpeedPercent` (middle of five, dropping to the last two when both sit
+0.3 to one side, so a real move of the fader shows within 2 s). The display should use the steady one; anything
+that reacts to the fader moving should use the raw one. Built; its own test is to come.
+
+**Next**: the fixed let-go and the lower bars (chosen on the dev half, reported on eval), then `boothFast`, then
+"coming in". **Carry on.**
+
 ## Nov 14, 2026, 18:10 UTC: `recog/fast`: Chromaprint measured as a baseline on the same bench
 
 **Answer**: tried, with numbers. It names a clean recording at exactly the recorded speed from 5 s, and fails on

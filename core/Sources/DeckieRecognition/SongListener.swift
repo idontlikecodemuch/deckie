@@ -28,6 +28,10 @@ public struct ListenReading: Sendable, Equatable {
     public var positionSeconds: Double?
     /// The deck's speed as the fader would show it, in percent.
     public var speedPercent: Double?
+    /// The same, steadied for a display: the middle value of this song's last five readings (the last two alone
+    /// once both stand more than 0.3 of a point to one side of it, which is the fader being moved). On the
+    /// generated mixes its error is about half the single reading's (w5, section on the fader).
+    public var steadySpeedPercent: Double? = nil
     /// Whether the deck seems to hold the key: true when the pitch has not moved with the speed, false when it has
     /// (a turntable, or key lock off), nil within 1 % of zero where the two cannot be told apart.
     public var keyLock: Bool?
@@ -120,6 +124,9 @@ public final class SongListener {
     /// and its pitch ratio.
     private var following: (song: Int, intercept: Double, tempo: Double, pitch: Double)?
     private var misses = 0
+    private var speeds: [Double] = []     // the followed song's last readings of the fader, for the steadied figure
+    private var steadyFor: Int?
+    private var missedSince: Double?      // when the followed song first failed its check, until a name is taken again
     private var sinceSearch = 0
     /// The last search's answer that was fair but not sure, waiting for a second to agree with it.
     private var pending: (song: Int, intercept: Double, tempo: Double)?
@@ -193,9 +200,10 @@ public final class SongListener {
             if let m = recogniser.check(recent, song: f.song, offsetSeconds: f.intercept + f.tempo * from, tempoRatio: f.tempo, pitchRatio: f.pitch),
                m.score >= settings.holdScore {
                 following = (f.song, m.offsetSeconds - m.tempoRatio * from, m.tempoRatio, m.pitchRatio)
-                misses = 0; state = .held; confidence = m.score
+                misses = 0; state = .held; confidence = m.score; missedSince = nil
             } else {
                 misses += 1
+                if missedSince == nil { missedSince = now }
                 if misses >= settings.lostAfter { following = nil }
                 else { state = .held; confidence = 0 }       // carried over a gap: still shown, on its last line
             }
@@ -211,7 +219,13 @@ public final class SongListener {
             if followed != nil, have > settings.followSearchWindow {
                 tries.append((marks.suffix(fromSeconds: have - settings.followSearchWindow, frameSeconds: queryConfig.frameSeconds),
                               now - settings.followSearchWindow))
+            } else if let since = missedSince, now - since < settings.window, have > settings.followSearchWindow + (now - since) {
+                // The song that was followed has just stopped fitting: what replaced it is in the newest sound, and
+                // the older part of the window still holds the song that has gone.
+                let span = settings.followSearchWindow + (now - since)
+                tries.append((marks.suffix(fromSeconds: have - span, frameSeconds: queryConfig.frameSeconds), now - span))
             } else {
+                if let since = missedSince, now - since >= settings.window { missedSince = nil }
                 tries.append((marks, start))
             }
         }
@@ -235,7 +249,7 @@ public final class SongListener {
                 pending = best.confidence >= settings.fair || !settings.follow ? line : nil
                 if take, following?.song != best.songIndex || misses > 0 {
                     following = (best.songIndex, line.intercept, best.tempoRatio, best.pitchRatio)
-                    misses = 0; state = .named; confidence = best.confidence
+                    misses = 0; state = .named; confidence = best.confidence; missedSince = nil
                 } else if let followed, state == .held,
                           let other = found.first(where: { !index.isRelated($0.songIndex, followed) }), other.confidence >= settings.incomingBar {
                     // Another song under the one being followed: coming in.
@@ -250,10 +264,20 @@ public final class SongListener {
             return ListenReading(time: now, state: .nothingYet, songIndex: nil, id: nil, positionSeconds: nil, speedPercent: nil,
                                  keyLock: nil, confidence: 0, milliseconds: ms, searched: searched)
         }
+        if steadyFor != f.song { steadyFor = f.song; speeds = [] }
+        if state == .named || confidence > 0 { speeds.append((f.tempo - 1) * 100) }
+        if speeds.count > 5 { speeds.removeFirst(speeds.count - 5) }
+        var steady = speeds.isEmpty ? (f.tempo - 1) * 100 : speeds.sorted()[speeds.count / 2]
+        if speeds.count >= 3 {
+            let a = speeds[speeds.count - 1] - steady, b = speeds[speeds.count - 2] - steady
+            if abs(a) > 0.3, abs(b) > 0.3, (a > 0) == (b > 0) { speeds = Array(speeds.suffix(2)); steady = (speeds[0] + speeds[1]) / 2 }
+        }
         let lock: Bool? = abs(f.tempo - 1) < 0.01 ? nil : !(abs(log(f.pitch) - log(f.tempo)) < abs(log(f.pitch)))
-        return ListenReading(time: now, state: state, songIndex: f.song, id: index.ids[f.song], positionSeconds: f.intercept + f.tempo * now,
+        var reading = ListenReading(time: now, state: state, songIndex: f.song, id: index.ids[f.song], positionSeconds: f.intercept + f.tempo * now,
                              speedPercent: (f.tempo - 1) * 100, keyLock: lock, confidence: confidence, milliseconds: ms, searched: searched,
                              incoming: incoming)
+        reading.steadySpeedPercent = steady
+        return reading
     }
 }
 

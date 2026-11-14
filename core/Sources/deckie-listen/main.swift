@@ -62,6 +62,7 @@ func line(_ r: ListenReading) -> String {
            r.positionSeconds.map { String(format: "%.2f", $0) } ?? "-", r.speedPercent.map { String(format: "%+.2f", $0) } ?? "-",
            r.keyLock.map { $0 ? "yes" : "no" } ?? "?", r.confidence, r.milliseconds)
         + (trace ? "\t" + (r.searched.map { String(format: "%@\t%.3f\t%@", $0.id, $0.confidence, $0.agrees ? "agrees" : "-") } ?? "-\t0\t-") : "")
+        + "\t" + (r.steadySpeedPercent.map { String(format: "%+.2f", $0) } ?? "-")
         + "\t" + (r.incoming.map { String(format: "%@\t%.2f\t%+.2f\t%.2f", $0.id, $0.positionSeconds, $0.speedPercent, $0.confidence) } ?? "-\t-\t-\t0")
 }
 
