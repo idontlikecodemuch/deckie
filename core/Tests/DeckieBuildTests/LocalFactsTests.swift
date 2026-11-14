@@ -460,6 +460,29 @@ import DeckieCrate
         // 5. Neither: no key.
         let (none, r5) = decide(Self.track("x", title: "x", rel: "a.mp3"), [], own: nil)
         #expect(none.key == nil && r5.keysNotRead == 1)
+        // 6. The three-answer reader's block (D33): a key (confidence 1.0) is shown.
+        func three(_ confidence: Double) -> CrateTrack.Key {
+            .init(source: LocalFacts.threeAnswerSource, confidence: confidence, camelot: "9A", key: "E", scale: "minor",
+                  votes: ["hpcp_discount": "9A", "note_transcription": "9A"], changes: nil)
+        }
+        let sure = Self.track("x", title: "x", rel: "a.mp3", key: three(1.0))
+        let (kept, r6) = decide(sure, [], own: three(1.0))
+        #expect(kept == sure && r6.keysFrom == ["deckie": 1] && r6.keysNotRead == 0)
+        // 7. Home note with the mode open (0.45) and not sure (0.2): no key is shown, the flag goes, and each is counted.
+        var open = Self.track("x", title: "x", rel: "a.mp3", key: three(0.45)); open.flags = ["key_uncertain"]
+        let (o, r7) = decide(open, [], own: three(0.45))
+        #expect(o.key == nil && o.flags.isEmpty && r7.keysNotRead == 1 && r7.keysModeOpen == 1 && r7.keysNotSure == 0)
+        let (n, r8) = decide(open, [], own: three(0.2))
+        #expect(n.key == nil && r8.keysNotRead == 1 && r8.keysNotSure == 1 && r8.keysModeOpen == 0 && r8.keysFrom.isEmpty)
+        // 8. A DJ's key beside a reading Deckie was not sure of: the DJ's key, and no "deckie" vote from a guess;
+        // beside a key it was sure of, the vote stays.
+        let (djOnly, _) = decide(open, [("tag", "8A")], own: three(0.2))
+        #expect(djOnly.key?.source == "tag" && djOnly.key?.votes == ["tag": "8A"])
+        let (djBoth, _) = decide(sure, [("tag", "8A")], own: three(1.0))
+        #expect(djBoth.key?.votes == ["tag": "8A", "deckie": "9A"])
+        // 9. An older report (no counts for the two) still reads.
+        let old = try! JSONDecoder().decode(LocalFacts.Report.self, from: Data(#"{"keys_from":{"tag":2},"keys_not_read":1,"keys_disagree":0,"names_from":{},"need_name":0}"#.utf8))
+        #expect(old.keysFrom == ["tag": 2] && old.keysNotRead == 1 && old.keysNotSure == 0 && old.keysModeOpen == 0)
         // Deckie's own reading as the record has it, never a DJ's block.
         #expect(LocalFacts.ownReading(deckie) == Self.engineKey && LocalFacts.ownReading(dj) == nil)
     }

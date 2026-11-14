@@ -169,7 +169,9 @@ public final class Analyser: Sendable {
         lap("beatthis")
 
         // ------------------------------------------------------------------ key (the windows' keys come later)
-        let hpcpKey = try HPCPKey.estimate(mono, sampleRate: SR)
+        // The three-answer reader (D33) reads the same frames as the plain HPCP method and carries its result.
+        let threeAnswer = try ThreeAnswerKey.read(mono, sampleRate: SR)
+        let hpcpKey = threeAnswer.hpcp
         let chroma = try KeyEstimator.chroma(m22, sampleRate: KeyEstimator.sampleRate)
         lap("key")
 
@@ -309,7 +311,7 @@ public final class Analyser: Sendable {
             grid: G, bars: bars, multiplierVsTag: multTag, tagDevPct: devTag, bpmAgree: bpmAgree,
             madmomWouldRun: madmomWouldRun, noveltyPeaks: novelty.peaks, phrase: phrase, boundariesBars: boundaries,
             sections: sections, firstSound: sound.firstSound, lastSound: ls, endLoudness: end, fade: fade,
-            mixIn: mixIn, mixOut: mixOut, key: key, hpcpKey: hpcpKey, keyConfidence: keyConfidence, loudness: loudness,
+            mixIn: mixIn, mixOut: mixOut, key: key, hpcpKey: hpcpKey, keyConfidence: keyConfidence, threeAnswer: threeAnswer, loudness: loudness,
             perBar: .init(lufsSt: lufs, lowDb: levels.lowDB, highDb: levels.highDB, onsetDensity: onsetDensity,
                           vocalProb: vocal?.perBar),
             onsetPattern16: pattern, vocal: vocal, vocalModel: vocal == nil ? nil : vocalTagger?.modelName,

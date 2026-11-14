@@ -212,12 +212,30 @@ extension Analysis {
             m("profiles", .object(h.decision.profileKeys.map {
                 m($0.name, .object([m("camelot", .string($0.camelot)), m("r", J.round($0.r, 3))]))
             })),
+            m("three_answer", threeAnswerBlock()),
             m("stft_edma", estimate(key.whole)),
             m("song_key", .string(key.songKey)), m("windows_estimator", .string("fft-chroma-edma")),
             m("mix_in", window(key.mixIn)), m("mix_out", window(key.mixOut)),
             m("segments", .array(key.segments.map {
                 .array([.number($0.start), .string($0.camelot), .number($0.meanR)])
             })),
+        ])
+    }
+
+    /// `deckie.key.three_answer` (engine 0.5.0, D33): the three-answer reader's result, which is the crate record's
+    /// key: `answer` (`key`, `home` or `none`), the key's `camelot` or null, the home note's pitch class (0 = C) or
+    /// null, each row's own best key (`hpcp_discount`, `note_transcription`), the reader's best guess, the tuning the
+    /// transcription found (semitones, 3 decimals), and the record's `confidence` and its rule.
+    func threeAnswerBlock() -> JSONValue {
+        typealias J = JSONValue
+        func m(_ k: String, _ v: J) -> J.Member { J.Member(k, v) }
+        func s(_ v: String?) -> J { v.map { .string($0) } ?? .null }
+        let t = threeAnswer, c = KeyConfidence.threeAnswer(t.answer)
+        return .object([
+            m("answer", .string(t.answer.name)), m("camelot", s(t.answer.camelot)),
+            m("home_pitch_class", t.answer.pitchClass.map { .int($0) } ?? .null),
+            m("hpcp_discount", s(t.camelotA)), m("note_transcription", s(t.camelotB)), m("guess", s(t.guess)),
+            m("tuning", J.round(t.tuning, 3)), m("confidence", .number(c.value)), m("confidence_rule", .string(c.rule)),
         ])
     }
 

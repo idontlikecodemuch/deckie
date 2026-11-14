@@ -168,7 +168,37 @@ score on the other half) says it clears the mark on this sheet without being a b
 real gain has to come from the key method research on the Mac (research R), measured per folder and held out. `KeyTests.swift` checks the vote against the lab's B.9 block, run from analyze.py's
 own source by `Tools/make_key_fixtures.py`, on the 68 test matrices, on made-up votes and on the lab's 373 tracks.
 
-**Key method** (`Sources/DeckieCore/Key/HPCPKey.swift`), the engine's key since 0.4.0: research R's recommended
+**The key the record carries** (`Sources/DeckieCore/Key/ThreeAnswerKey.swift`, `NoteChroma.swift`), engine 0.5.0,
+D33: the three-answer reader of research X2 (`docs/research/x2-own-key-trial.md`, section 5.1). Two readings of the
+song: the HPCP below with the overtones' share taken off each frame (research R's row A), and a note-transcription
+profile (row B: audio at 11,025 Hz, a log-frequency spectrum a third of a semitone fine, one tuning per song, and per
+frame a non-negative least-squares fit of 84 note templates, solved by Lawson and Hanson's method on the normal
+equations, no LAPACK). Each is matched to the 24 keys with the three profiles below. A **key** when both name the
+same home note and the same mode on it; the **home note with the mode open** when only the home note agrees; **not
+sure** otherwise. Nothing is trained, nothing fitted, no new dependency. The record's key block has `source`
+`three-answer` and the answer as its confidence (1.0, 0.45, 0.2); `LocalFacts.decideKey` shows a key only
+(`docs/architecture/crate-format.md`). The plain HPCP reading stays in the lab-shaped JSON (`deckie.key`, for the
+bench against the lab's sheet) with the reader's result beside it (`deckie.key.three_answer`), and still gives the
+mix windows their song key.
+
+Parity with the Python reference (`mixer/keytrial/kt_three.py`): `ThreeAnswerKeyTests` checks eight clips generated
+in whole-number arithmetic on both sides (no audio file) against `Fixtures/three_answer.json`: answers exactly, the
+24 scores of each reading within 1e-5. The full check, on the 2,091 recordings of the three outside key sets, is run
+by hand (the audio is not in the repository): the reference's answers are in
+`mixer/keytrial/three_answer_expected.tsv`, and
+
+```bash
+swift build -c release --product deckie-keyparity
+```
+
+```bash
+python mixer/keytrial/kt_three.py parity core/.build/release/deckie-keyparity
+```
+
+decodes each clip once and gives the same samples to the Swift reader on standard input (`mixer/keytrial/README.md`
+has the data set paths).
+
+**Key method** (`Sources/DeckieCore/Key/HPCPKey.swift`), the engine's key in 0.4.0 and a vote since: research R's recommended
 estimator (`docs/research/r-key-parity.md`, row 3f; 83.3 percent exact against the lab's 311 confident keys, 83.2 held
 out, where the STFT estimator gets 74.6 and the vote 76.2; 70.4 against Apple), ported from `mixer/key_parity.py`'s
 `recommended` with no parameter changed. A harmonic pitch-class profile (HPCP: how much of each of the twelve notes the
@@ -425,7 +455,7 @@ record, counted by reason and extension, and the files in the crate with damaged
   (no reading at all); otherwise it hashes the file and takes the record of those bytes if there is one (a file that
   was moved, renamed or only touched), and analyses only what is left. An interrupted run (Ctrl-C) loses only the files
   that were being analysed, one per job. A record is reused only if it came from the same engine version with the same
-  tag tempo; the version (0.4.0) goes up whenever the record gains or changes fields, so a work folder made by an
+  tag tempo; the version (0.5.0) goes up whenever the record gains or changes fields, so a work folder made by an
   older version is analysed again. `--fresh` empties the work folder first; deleting it is always safe.
 - **Nothing left out silently** (decision P18). Every file that cannot be analysed is counted by reason and extension
   in the summary and listed in the manifest's `import_log` with its path below the folder and the reason in words:

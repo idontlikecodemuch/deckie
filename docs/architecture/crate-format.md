@@ -127,9 +127,10 @@ memo Q's vocal fields, `vocal_structure` and `hooks`, are instead left out when 
   source, the engine is not; track L wrote `deckie-core`, which now names the code both engines share), `version`,
   `platform` (`macos-arm64`, `linux-x86_64`, `windows-x86_64`), `fidelity`, `models` (each `name`, `version` or null,
   `weights_sha256` or null), `decoder` (`name`, `version` or null) or null. An engine's `version` goes up whenever the
-  record it writes gains or changes fields (the Windows and Linux engine's is 0.4.0: 0.2.0 brought the vocal
+  record it writes gains or changes fields (the Windows and Linux engine's is 0.5.0: 0.2.0 brought the vocal
   blocks and `file.tag_bpm`, 0.3.0 the three-profile key vote, which changes keys, 0.3.1 `file.damaged_frames`, with
-  damaged MP3 frames silenced, 0.4.0 the whitened-HPCP key, which changes keys again), so a builder's work folder made
+  damaged MP3 frames silenced, 0.4.0 the whitened-HPCP key, which changes keys again, 0.5.0 the three-answer key
+  reader of D33, which changes the key block's source, confidence, code and votes), so a builder's work folder made
   by an older version is analysed again rather than reused.
   **proposed**: `fidelity` 0 means not benchmarked; n means the build passed benchmark tier n, tier 1 being the stage 1
   pass marks. A device with the audio re-analyses a record when its own fidelity is higher, or the record's level is a
@@ -139,8 +140,8 @@ memo Q's vocal fields, `vocal_structure` and `hooks`, are instead left out when 
 - `tempo_segments` *(tempo_segments)* **proposed** (spec 5.2's grid marker): a list of `start_bar`, `start_s`, `bpm`,
   `beats_per_bar`, `beat_in_bar` (1 when the segment starts on a downbeat, as rekordbox's `Battito`), `confidence`
   or null. One segment for a steady track.
-- `key` *(key)*: `source` (`hpcp-whitened` from engine 0.4.0, research R's method; `votes` from 0.3.0, `stft-edma`
-  before), `confidence`, `camelot`, `key` or null, `scale` or null, `votes` (source name to Camelot
+- `key` *(key)*: `source` (`three-answer` from engine 0.5.0, D33's reader, below; `hpcp-whitened` in 0.4.0, research
+  R's method; `votes` from 0.3.0, `stft-edma` before), `confidence`, `camelot`, `key` or null, `scale` or null, `votes` (source name to Camelot
   code), `changes` *(key_changes)*: a list of `start_bar`, `end_bar`, `camelot`, or null. **proposed**: objects
   rather than track A's three-element lists.
   **The DJ's own key** (D30, Nov 13, 2026; meaning only, no field added or changed): a record whose key is the DJ's
@@ -155,6 +156,19 @@ memo Q's vocal fields, `vocal_structure` and `hooks`, are instead left out when 
   wrote it (the note on D30 and D16 prefers a key; whether it is shown song by song waits for the key trial). A
   record read by Apple's framework (`engine.family` `apple-mu`) keeps that reading as `key.camelot`, with the DJ's
   keys added to `key.votes` under these names.
+  **Deckie's own reading from engine 0.5.0** (D33, Nov 14, 2026; meaning only, no field added or changed): the
+  three-answer reader (`ThreeAnswerKey` in DeckieCore; research X2) writes `key.source` `three-answer` and puts its
+  answer on the block's confidence scale: **1.0** a key (its two readings name the same home note and the same mode);
+  **0.45** the home note with the mode open (the same home note, different modes); **0.2** not sure (different home
+  notes). In the last two `key.camelot` is only the reader's best guess, both are under the 0.5 line that sets
+  `key_uncertain`, and the two are told apart by the value. `key.votes` gains `hpcp_discount` and
+  `note_transcription` (the two readings' own keys) and `hpcp_whitened` (the 0.4.0 method's key) beside the four
+  it had. That is the builder's record, as the engine wrote it. **What a crate file shows** is decided by
+  `LocalFacts.decideKey`: a three-answer reading is the record's key only at 1.0; at 0.45 or 0.2 the record has no
+  `key` block (unless a DJ's own key takes its place), and a reading under 0.5 is not kept as the vote `deckie`
+  beside a DJ's key. So a crate file made by Desk or `deckie-build` never carries a three-answer key the reader
+  was not sure of. "Home note known, mode open" cannot be said with the fields above, since `key.camelot` names a
+  mode: see "The mode left open", proposed, below.
 - `phrase` *(phrase)*: `source`, `confidence`, `lattice_phase_bar` (1 to 8), `boundaries_bars`. Its `source` is track
   L's `structure.source` and covers `sections` too.
 - `sections` *(sections)*: a list of `start_bar`, `end_bar`, `label` (`intro`, `main`, `break`, `outro`), `energy`.
@@ -530,6 +544,35 @@ PC-made crate file. Whether one declared type can cover both a package and a fla
 been tried on a device; if it cannot, the single file takes a second extension (say `.deckiecratefile`) and nothing
 else here changes. That is the one open point, and it needs an iPad to settle.
 
+## The mode left open **proposed** (Nov 14, 2026, with D33; waits for the owner's word)
+
+D33's reader has three answers: a key, the home note with the mode left open, and not sure. The first is a `key`
+block; the third is no `key` block, which every reader already understands as "key not read". The second cannot be
+written today: `key.camelot` is required text and a Camelot code always names a mode, and `key.key` with a null
+`key.scale` would still need a code beside it. Writing a guessed code with a low confidence would show a mode the
+reader did not find to every reader that ignores the confidence, which D16 rules out.
+
+**The smallest addition** that changes no existing field's meaning: one optional block beside `key`, left out when
+absent (as `vocal_structure` and `hooks` are, so existing records keep their bytes), with the feature name
+`key_home`:
+
+- `key_home` *(key_home)*: `source` (the method, `three-answer`), `note` (the home note as `key.key` spells it,
+  for example `A`), `pitch_class` (0 to 11, C = 0), `camelot` (the two codes on that home note, minor first, for
+  example `["8A", "11B"]`).
+
+Rules: a record has `key_home` only when it has no `key` block (a key, the DJ's or Deckie's, always replaces it);
+a reader that does not know the block ignores it and sees a song with no key, which is true as far as it goes; a
+reader that knows it may show the note ("A, mode open") or the two codes, and a scorer may treat the song as
+fitting either code. `schema` and `min_reader` stay 1.
+
+**Until it is accepted** nothing is written: `LocalFacts.decideKey` treats "home note, mode open" as no key and
+counts it apart (`keys_mode_open` in the run's report), and the builder's record keeps the reading (confidence
+0.45, the home note in `key.key`), so accepting this needs no second analysis of anyone's music. On the outside
+sets of research X2 this is 5 to 12 percent of songs, with the home note right on 61 to 82 percent of them.
+
+Not proposed, and why: allowing `key.camelot` to be null (changes a required field's type for every reader); a
+flag such as `key_mode_open` on a block that still carries a guessed code (old readers would show the guess).
+
 ## The proposals in one list, for the main session
 
 1. Track L's additions: the `engine` block beside `analysis` (which keeps its label); the `features_present` names;
@@ -558,3 +601,6 @@ else here changes. That is the one open point, and it needs an iPad to settle.
 12. Proposed Nov 13, 2026 (with D29). The single-file form: the same files in one uncompressed zip under the same
     name, written and read by `CrateArchive`; `CrateReader.read(from:)` takes either form. Nothing inside changes;
     no version raised. Open: whether the iPad's document type can cover both forms with one extension.
+13. Proposed Nov 14, 2026 (with D33). `key_home`: the home note with the mode left open, an optional block beside
+    `key`, present only when there is no `key` block; nothing is written until it is accepted ("The mode left
+    open", above).

@@ -113,8 +113,7 @@ extension Analysis {
                         inTrusted: lt.inTrusted, outTrusted: lt.outTrusted),
             tempoSegments: [.init(startBar: 1, startS: Py.round(bars.firstDownbeatS, 4), bpm: r3(bpm), beatsPerBar: 4,
                                   beatInBar: 1, confidence: r3(grid.confidence))],
-            key: .init(source: Analysis.keySource, confidence: keyConfidence.value, camelot: hpcpKey.decision.camelot,
-                       key: hpcpKey.decision.key, scale: hpcpKey.decision.mode, votes: keyVotes, changes: keyChanges()),
+            key: crateKey(),
             phrase: .init(source: "foote-novelty", confidence: r3(phrase.confidence),
                           latticePhaseBar: phrase.latticePhaseBar, boundariesBars: boundariesBars),
             sections: sections.map { .init(startBar: $0.startBar, endBar: $0.endBar, label: $0.label, energy: $0.energy) },
@@ -127,7 +126,7 @@ extension Analysis {
             vocal: vocal.map { .init(source: vocalModel ?? "vocal-tagger", confidence: nil,
                                      mean: Py.round($0.meanProbability, 4), heavy: $0.meanProbability > 0.75) },
             onsetPattern16: onsetPattern16.map { Py.round($0, 4) },
-            flags: flags,
+            flags: crateFlags,
             style: vocal.flatMap { v in v.style.map { CrateTrack.Style(model: v.styleModel ?? vocalModel ?? "vocal-tagger", values: $0) } },
             bars: BarSeries(series), vocalStructure: crateVocalStructure(), hooks: crateHooks())
     }
@@ -186,8 +185,31 @@ extension Analysis {
             })
     }
 
-    /// The crate's `key.source`: the method that decides the key.
-    public static let keySource = "hpcp-whitened"
+    /// The crate's `key.source`: the method that decides the key (engine 0.5.0: the three-answer reader, D33).
+    public static let keySource = "three-answer"
+
+    /// The record's key block: the three-answer reader's result on the block's documented scale
+    /// (`KeyConfidence.threeAnswer`). A key: that key, confidence 1.0. Home note with the mode open, and not sure:
+    /// the reader's best guess as `camelot` with confidence 0.45 and 0.2, both under the line that flags
+    /// `key_uncertain`; whether a reading is shown at all is `LocalFacts.decideKey`'s rule (it shows a key only).
+    /// No block when the audio has no pitch to read.
+    func crateKey() -> CrateTrack.Key? {
+        guard let guess = threeAnswer.guess, let spelled = Camelot.tonic(guess) else { return nil }
+        return .init(source: Analysis.keySource, confidence: KeyConfidence.threeAnswer(threeAnswer.answer).value,
+                     camelot: guess, key: KeyEstimator.pitchNames[spelled.pitchClass],
+                     scale: spelled.major ? "major" : "minor", votes: keyVotes, changes: keyChanges())
+    }
+
+    /// The record's flags: the analysis's, with `key_uncertain` following the record's key block (a block under 0.5;
+    /// no block, no flag).
+    var crateFlags: [String] {
+        var f = flags.filter { $0 != "key_uncertain" }
+        if let k = crateKey(), k.confidence < 0.5 {
+            let at = flags.firstIndex(of: "key_uncertain").map { min($0, f.count) } ?? f.count
+            f.insert("key_uncertain", at: at)
+        }
+        return f
+    }
 
     /// The crate's `key.votes`: each of the HPCP method's profiles' own key (`hpcp_edma`, `hpcp_bgate`, `hpcp_braw`)
     /// and the STFT estimator's whole-track key (`stft_edma`, the engine's key before 0.3.0), for comparison; none
@@ -197,6 +219,10 @@ extension Analysis {
             ("hpcp_" + $0.name, $0.camelot)
         })
         votes["stft_edma"] = key.whole.camelot
+        // The plain HPCP method's key (the engine's key from 0.4.0), and the three-answer reader's two readings.
+        votes["hpcp_whitened"] = hpcpKey.decision.camelot
+        if let a = threeAnswer.camelotA { votes["hpcp_discount"] = a }
+        if let b = threeAnswer.camelotB { votes["note_transcription"] = b }
         return votes
     }
 
