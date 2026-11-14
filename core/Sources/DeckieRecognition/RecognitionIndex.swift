@@ -52,7 +52,14 @@ public struct PairingConfig: Sendable, Equatable, Codable {
     public init() {}
 
     /// The settings the booth's index is built with (chosen in the size study; docs/research/w4-recognition-complete.md).
-    public static var booth: PairingConfig { PairingConfig() }
+    /// Three-point hashes from the strongest points, one hash kept in four, four bytes an entry: 40 KB a song in the
+    /// index (the size study's choice: a quarter of the full index for 3 to 6 points of accuracy, made up by the
+    /// listener's denser listen, wider check and longer look).
+    public static var booth: PairingConfig {
+        var p = PairingConfig()
+        p.keepOneIn = 4
+        return p
+    }
 
     /// The slices whose points join the anchor in triple k: each slice with the next, the last with the first.
     @inline(__always) func slicePair(_ k: Int) -> (Int, Int) { k + 1 < fanOut ? (k, k + 1) : (0, k) }
