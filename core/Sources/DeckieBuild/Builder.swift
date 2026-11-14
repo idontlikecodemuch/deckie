@@ -44,12 +44,16 @@ public struct BuildOptions: Sendable {
     /// crates (Deckie Desk's store of what it worked out for each file), so a file read for one crate is not analysed
     /// again for another. Records are keyed by the file's id, so sharing them is safe; `fresh` does not empty it.
     public var sharedRecords: URL?
+    /// Songs read one at a time from somewhere that is not a folder (a music CD read by sector), in place of walking
+    /// `folder`; `jobs` is then 1.
+    public var files: BuildFiles?
 
     public init(folder: URL, output: URL, rekordbox: URL? = nil, jobs: Int = defaultJobs, fileBPMTags: Bool = false,
                 fresh: Bool = false, name: String? = nil, device: String = Analysis.platform,
                 skipFolderPrefixes: [String] = ["_"], source: String? = nil, keepSources: Set<String> = [],
-                sharedRecords: URL? = nil) {
-        self.folder = folder; self.output = output; self.rekordbox = rekordbox; self.jobs = max(1, jobs)
+                sharedRecords: URL? = nil, files: BuildFiles? = nil) {
+        self.files = files
+        self.folder = folder; self.output = output; self.rekordbox = rekordbox; self.jobs = files == nil ? max(1, jobs) : 1
         self.fileBPMTags = fileBPMTags; self.fresh = fresh; self.name = name; self.device = device
         self.skipFolderPrefixes = source == nil ? skipFolderPrefixes : []
         self.source = source; self.keepSources = keepSources; self.sharedRecords = sharedRecords
@@ -253,10 +257,19 @@ public final class Builder: Sendable {
         let started = Date()
     }
 
+    /// The first error that stopped a build reading songs one at a time (`BuildFiles.fetch`).
+    private final class Stopped: @unchecked Sendable {
+        let lock = NSLock()
+        private(set) var error: Error?
+        var isSet: Bool { lock.lock(); defer { lock.unlock() }; return error != nil }
+        func set(_ e: Error) { lock.lock(); if error == nil { error = e }; lock.unlock() }
+    }
+
     /// Runs the build, reporting through `progress` (called from the jobs' threads, one call at a time).
     public func run(progress: @escaping @Sendable (BuildEvent) -> Void = { _ in }) throws -> BuildResult {
         let t0 = Date()
-        var (found, skippedFolders) = try AudioFiles.find(in: options.folder, skippingFolderPrefixes: options.skipFolderPrefixes)
+        var (found, skippedFolders) = try options.files.map { (try $0.list(), [AudioFiles.SkippedFolder]()) }
+            ?? AudioFiles.find(in: options.folder, skippingFolderPrefixes: options.skipFolderPrefixes)
         // A source's places come from every audio file on it, analysable or not, so the numbers are the player's.
         let places = options.source.map { SourceReading.places(source: $0, paths: found.map(\.rel)) } ?? [:]
         let prefix = options.logPrefix
@@ -311,15 +324,31 @@ public final class Builder: Sendable {
                           rekordbox: rbSummary))
 
         let results = Results()
+        let stopped = Stopped()
         let total = queue.count
         let queued = queue
         let engine = total == 0 ? nil : try analyser ?? Builder.makeAnalyser(jobs: min(options.jobs, total))
         runParallel(count: total, workers: options.jobs) { [self] k in
             let i = queued[k]
-            let f = files[i]
+            var f = files[i]
             var seconds: Double? = nil
-            let outcome = self.process(f, rekordbox: rekordboxOf[i], work: work, engine: engine!, label: label,
+            let outcome: Done
+            if let given = self.options.files {
+                // Songs read one at a time: one worked out before is not read; any other is fetched, read and let go.
+                if let id = given.knownId(f), let r = work.record(id), r.engine == label,
+                   r.bpmTag == self.tagTempo(rekordbox: rekordboxOf[i], tags: nil) {
+                    outcome = .ok(id: id, tags: nil)
+                } else {
+                    guard !stopped.isSet else { return }
+                    do { f.url = try given.fetch(f) } catch { given.release(f); stopped.set(error); return }
+                    outcome = self.process(f, rekordbox: rekordboxOf[i], work: work, engine: engine!, label: label,
+                                           seconds: &seconds)
+                }
+            } else {
+                outcome = self.process(f, rekordbox: rekordboxOf[i], work: work, engine: engine!, label: label,
                                        seconds: &seconds)
+            }
+            defer { self.options.files?.release(f) }
             results.lock.lock()
             defer { results.lock.unlock() }
             results.done[f.rel] = outcome
@@ -345,6 +374,7 @@ public final class Builder: Sendable {
             progress(.file(FileProgress(done: results.finished, total: total, rel: f.rel, outcome: reported,
                                         elapsed: elapsed, remaining: remaining, id: doneId)))
         }
+        if let e = stopped.error { throw e }
         done.merge(results.done) { _, new in new }
 
         // Places (D27): every file read now is a place of the entry for its bytes. A place belongs to this read when it

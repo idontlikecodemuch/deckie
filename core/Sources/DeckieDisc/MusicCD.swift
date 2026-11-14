@@ -37,18 +37,29 @@ public enum TextReading: Equatable, Sendable {
     }
 }
 
-/// A music CD in a drive, however this computer reaches it.
+/// A music CD in a drive, however this computer reaches it. Desk reads a disc's music to work it out and keeps none
+/// of it (the note on D33, Nov 14): on the Mac the system already shows each song as a file, read where it is; on
+/// Linux and Windows a song's sound is read by sector when it is needed and handed on as it comes.
 public protocol MusicCD: AnyObject {
     /// Where it is, as Add music gives it back: a device ("/dev/sr0", "\\.\E:"), a mounted volume (the Mac), or a
     /// stand-in folder.
     var location: String { get }
-    /// The file type its songs are copied as: "wav", or "aiff" on the Mac (the system's own files).
+    /// The file type a song's sound is: "wav", or "aiff" on the Mac (the system's own files).
     var fileExtension: String { get }
     func tableOfContents() throws -> DiscTOC
     func readText() -> TextReading
-    /// Copies one song into `url` (a new file); calls `progress(done, total)` in sectors. Returns the sectors that could
-    /// not be read even on a second try (they are silence in the copy).
-    func copy(_ song: DiscTOC.Song, to url: URL, progress: (Int, Int) -> Void) throws -> Int
+    /// The song's own file, when this computer shows the disc's songs as files (the Mac): read in place, never
+    /// copied. Nil when the sound is read by sector.
+    func file(of song: DiscTOC.Song) -> URL?
+    /// Reads one song's sound as a WAV file's bytes, handing them to `sink` in order as they come off the disc (the
+    /// header first), so nothing has to hold the whole song; `progress(done, total)` in sectors. Returns the sectors
+    /// that could not be read even on a second try (silence in what was handed on).
+    func read(_ song: DiscTOC.Song, into sink: (Data) throws -> Void, progress: (Int, Int) -> Void) throws -> Int
+}
+
+extension MusicCD {
+    /// The bytes `read` hands on for `song`: the WAV header and the sound.
+    public func wavBytes(_ song: DiscTOC.Song) -> Int { WAV.headerBytes + song.sectors * DiscTOC.bytesPerSector }
 }
 
 /// The three things a drive is asked for, below everything that is the same on every computer: the table, the
@@ -60,9 +71,9 @@ public protocol SectorDevice: AnyObject {
     func audio(from lba: Int, sectors: Int) throws -> [UInt8]
 }
 
-/// A music CD read by sector (Linux, Windows, the stand-in): the table first, then CD-Text, then each song cut exactly
-/// where the table says (letter AA, 2.6), with a second try on a part that fails, then one sector at a time; a sector
-/// that fails both is silence in the copy, and counted.
+/// A music CD read by sector (Linux, Windows, the stand-in): the table first, then CD-Text, then a song's sound cut
+/// exactly where the table says (letter AA, 2.6), with a second try on a part that fails, then one sector at a time; a
+/// sector that fails both is silence in what is handed on, and counted.
 public final class SectorMusicCD: MusicCD {
     public let location: String
     let device: SectorDevice
@@ -82,45 +93,45 @@ public final class SectorMusicCD: MusicCD {
         catch { return .unknown("\(error)") }
     }
 
-    public func copy(_ song: DiscTOC.Song, to url: URL, progress: (Int, Int) -> Void) throws -> Int {
-        let part = url.appendingPathExtension("part")
-        try DeckieFiles.remove(part)
-        let handle = try DeckieFiles.openForAppending(part)
+    public func file(of song: DiscTOC.Song) -> URL? { nil }
+
+    public func read(_ song: DiscTOC.Song, into sink: (Data) throws -> Void, progress: (Int, Int) -> Void) throws -> Int {
         var damaged = 0
-        do {
-            try handle.write(contentsOf: WAV.header(sectors: song.sectors))
-            var lba = song.start
-            while lba < song.end {
-                let n = min(Self.chunk, song.end - lba)
-                let bytes: [UInt8]
-                if let b = try? device.audio(from: lba, sectors: n) { bytes = b }
-                else if let b = try? device.audio(from: lba, sectors: n) { bytes = b }
-                else {
-                    var one: [UInt8] = []
-                    for s in lba..<(lba + n) {
-                        if let b = try? device.audio(from: s, sectors: 1) { one += b }
-                        else { one += [UInt8](repeating: 0, count: DiscTOC.bytesPerSector); damaged += 1 }
-                    }
-                    bytes = one
+        try sink(WAV.header(sectors: song.sectors))
+        var lba = song.start
+        while lba < song.end {
+            let n = min(Self.chunk, song.end - lba)
+            let bytes: [UInt8]
+            if let b = try? device.audio(from: lba, sectors: n) { bytes = b }
+            else if let b = try? device.audio(from: lba, sectors: n) { bytes = b }
+            else {
+                var one: [UInt8] = []
+                var failed = 0
+                for s in lba..<(lba + n) {
+                    if let b = try? device.audio(from: s, sectors: 1) { one += b }
+                    else { one += [UInt8](repeating: 0, count: DiscTOC.bytesPerSector); failed += 1 }
                 }
-                try handle.write(contentsOf: Data(bytes))
-                lba += n
-                progress(lba - song.start, song.sectors)
+                // Not one sector of the part came, and the drive no longer gives the table: the disc is out.
+                if failed == n, (try? device.tocBytes()) == nil { throw DiscError.out }
+                damaged += failed
+                bytes = one
             }
-            try handle.close()
-        } catch {
-            try? handle.close()
-            try? DeckieFiles.remove(part)
-            throw error
+            try sink(Data(bytes))
+            lba += n
+            progress(lba - song.start, song.sectors)
         }
-        try DeckieFiles.remove(url)
-        try DeckieFiles.move(part, to: url)
         return damaged
     }
 }
 
+extension DiscError {
+    /// The disc was taken out while it was being read.
+    public static let out = DiscError("the disc is no longer in the drive")
+}
+
 /// A canonical 44-byte WAV header for CD audio: 44,100 Hz, two channels, 16 bits.
 public enum WAV {
+    public static let headerBytes = 44
     public static func header(sectors: Int) -> Data {
         let dataBytes = UInt32(sectors * DiscTOC.bytesPerSector)
         var d = Data()
@@ -183,6 +194,8 @@ public final class SystemDrive: SectorDevice {
 ///     audio.pcm     the disc's sound from sector 0, 2352 bytes a sector
 ///     bad.txt       optional: sector numbers, one a line, that fail on the first try (to exercise the second try);
 ///                   a line "always N" fails every time
+///
+/// Taking the folder away (or its toc.bin) is taking the disc out: every request fails from then on.
 public final class StandInDrive: SectorDevice {
     public let folder: URL
     let pcm: FileHandle?
@@ -221,6 +234,10 @@ public final class StandInDrive: SectorDevice {
     }
 
     public func audio(from lba: Int, sectors: Int) throws -> [UInt8] {
+        // Taking the disc out is taking its folder (or its toc.bin) away.
+        guard FileManager.default.fileExists(atPath: folder.appendingPathComponent("toc.bin").path) else {
+            throw DiscError("no disc in the stand-in drive")
+        }
         reads += 1
         for s in lba..<(lba + sectors) {
             if broken.contains(s) { throw DiscError("sector \(s) cannot be read") }
@@ -239,7 +256,8 @@ public final class StandInDrive: SectorDevice {
 }
 
 /// A music CD on the Mac: the system shows it as a volume (its file system is `cddafs`) holding one AIFF file a song,
-/// "1 Audio Track.aiff" and so on, the sound read by the system. Desk copies those files. The table and CD-Text come
+/// "1 Audio Track.aiff" and so on, the sound read by the system. Desk reads those files where they are and copies
+/// nothing. The table and CD-Text come
 /// from the disc's raw device when the Mac lets Desk open it; when it does not, the table is made from the files'
 /// lengths (the songs and their order are right; the gaps are not known) and the text is unknown.
 public final class MacMusicCD: MusicCD {
@@ -284,15 +302,15 @@ public final class MacMusicCD: MusicCD {
         do { return TextReading.from(try d.cdTextBytes()) } catch { return .unknown("\(error)") }
     }
 
-    public func copy(_ song: DiscTOC.Song, to url: URL, progress: (Int, Int) -> Void) throws -> Int {
-        guard let file = files().first(where: { $0.number == song.number }) else {
+    public func file(of song: DiscTOC.Song) -> URL? { files().first { $0.number == song.number }?.url }
+
+    /// The system's file, in pieces (nothing on the Mac calls this: its songs are read as files where they are).
+    public func read(_ song: DiscTOC.Song, into sink: (Data) throws -> Void, progress: (Int, Int) -> Void) throws -> Int {
+        guard let url = file(of: song), let h = try? FileHandle(forReadingFrom: url) else {
             throw DiscError("song \(song.number) is not on the music CD at \(volume.path)")
         }
-        let part = url.appendingPathExtension("part")
-        try DeckieFiles.remove(part)
-        try DeckieFiles.copy(file.url, to: part)
-        try DeckieFiles.remove(url)
-        try DeckieFiles.move(part, to: url)
+        defer { try? h.close() }
+        while let d = try h.read(upToCount: 1 << 20), !d.isEmpty { try sink(d) }
         progress(song.sectors, song.sectors)
         return 0
     }
@@ -334,6 +352,9 @@ public enum MusicCDs {
         public var songs: Int
         public var seconds: Double
         public var discId: String
+        public init(location: String, drive: String, songs: Int, seconds: Double, discId: String) {
+            self.location = location; self.drive = drive; self.songs = songs; self.seconds = seconds; self.discId = discId
+        }
     }
 
     static func standIns(_ environment: [String: String]) -> [URL]? {
