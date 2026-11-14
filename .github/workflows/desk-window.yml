@@ -10,7 +10,7 @@ name: desk-window
 
 on:
   push:
-    branches: [pc/desk-window]
+    branches: [pc/desk-window, pc/naming]
     paths: [desk-shell/**, desk-web/**, core/**, .github/workflows/desk-window.yml]
   workflow_dispatch:
 
@@ -52,7 +52,7 @@ jobs:
         run: swift build --build-tests
       - name: The engine's tests (a child program, generated songs)
         working-directory: core
-        run: swift test --skip-build --filter "DeskWordsTests|DeskSessionTests|EngineProcessTests"
+        run: swift test --skip-build --filter "DeskWordsTests|DeskSessionTests|EngineProcessTests|EngineNamingTests|DeskNamingTests|DeskSessionNamingTests|MusicCDRunTests|DeckieDiscTests"
       # Desk's storage in a scratch folder, and no DJ libraries looked for in the runner's home folder.
       - name: The whole window, the engine and the pages together
         working-directory: desk-shell
@@ -111,7 +111,7 @@ jobs:
         run: swift build --build-tests
       - name: The engine's tests (a child program, generated songs)
         working-directory: core
-        run: swift test --skip-build --filter "DeskWordsTests|DeskSessionTests|EngineProcessTests"
+        run: swift test --skip-build --filter "DeskWordsTests|DeskSessionTests|EngineProcessTests|EngineNamingTests|DeskNamingTests|DeskSessionNamingTests|MusicCDRunTests|DeckieDiscTests"
       - name: The whole window, the engine and the pages together
         working-directory: desk-shell
         shell: pwsh
