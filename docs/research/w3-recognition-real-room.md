@@ -449,3 +449,184 @@ Live mixing in the evening, right percent at 3 / 5 / 8 / 12 s (wrong at most 2 %
 - **Time the bigger catalogue fairly**: another session's jobs were running when it was matched.
 - **Fold copies properly.** Variation A folds by name only; folding by recording (the crate's cut key, or the
   fingerprints themselves) was not built, since it changes the recogniser or the crate and this test changes neither.
+
+## 13. Second run, Nov 14: the finished listener
+
+The same recording, the same answer key (built from the first trial's matcher and the waveform check, sections 2
+and 3; not rebuilt from the new recogniser), the same three cautions: most of the 7.7 hours is not the party's
+music, part of the evening was a pre-mixed disc, and **it was a quiet house party, so this still does not answer the
+noise question.** What changed is the recogniser, now finished on `main` (letter W4): a booth index of thin
+two-point hashes (`PairingConfig.booth`, and `boothSmall`), the first 50 songs proposed checked point by point,
+copies of one recording found when the index is built and never counted against each other, and a listener that
+hears sound continuously, gathers evidence across seconds, follows a named song and notices the next.
+
+**How it was run.** Each recording, whole, through `deckie-listen --list` (the `SongListener` the booth uses), fed
+in pieces of 0.1 s, one reading a second: what the booth would show. A reading names a song (`named`), keeps one it
+follows (`held`), or shows nothing yet. The fingerprints are the first run's: the fingerprint is unchanged (three
+songs made again came out byte for byte the same). The crate file's own keys for copies were passed as the index asks
+(`--same-recording`, from the crate's `ident.cut_key`). Two recordings at a time, `nice -n 19`. Another session's
+jobs were running on this Mac at the same time (load average about 4 to 5 against my 2), so times here are a little
+slow. Total: 6 index builds, 6.5 minutes; 12 listening runs, 2 hours 6 minutes; scoring, minutes.
+
+### 13.1 The index
+
+| catalogue | songs | copies: groups from the crate's keys | groups from the fingerprints (songs in them) | file, `booth` | file, `boothSmall` | of which the songs' points | built in (`booth` / `boothSmall`) | peak memory while building (`booth`) |
+|---|---|---|---|---|---|---|---|---|
+| the discs | 92 | 0 | 1 (18) | 21.4 MB | 18.1 MB | 6.5 MB | 0.9 / 0.6 s | 71 MB |
+| the library | 2,327 | 0 | 355 (953) | 242.1 MB | 183.3 MB | 116.9 MB | 92 / 47 s | 878 MB |
+| the library and the added music | 3,396 | 0 | 383 (1,061) | 333.3 MB | 251.6 MB | 162.6 MB | 169 / 85 s | 1.20 GB |
+
+- **The crate's keys found nothing**: none of the 2,327 songs has a cut key (Desk does not fill it yet, letter U).
+  Every copy the index knows it found from the fingerprints. On the discs the one group is the pre-mixed disc and
+  17 of the songs inside it. In the library 953 files fall in 355 groups. (`boothSmall` finds one group fewer.)
+- **Size.** 104 KB a song for `booth` in the library against W4's 41: the owner's songs are longer than the outside
+  set's (4.2 minutes on average, and the 2 h 25 min mix), and the file holds a copy of the songs' points (48 % of
+  it). The table alone is 54 KB a song (`booth`), 28 KB (`boothSmall`).
+- **Memory while listening**, the listener's own (vote table, the last seconds of sound): 2.4 MB for the discs, 7.0
+  MB for the library, 9.0 MB with the added music, the same at the first reading and the last. The index file is
+  opened in place and is not in that figure.
+
+### 13.2 The headline: share of each known song's seconds with the right name on screen (the evening)
+
+Seconds where the key gives the sound to one song; right: that song or a copy of its recording on screen; wrong:
+another song on screen; nothing: no name shown. Percent of seconds.
+
+| catalogue, setting | live: seconds | right | wrong | nothing | pre-mixed disc: right / wrong / nothing | blends: either song on screen |
+|---|---|---|---|---|---|---|
+| discs, `booth` | 6,247 | 89.2 | 3.6 | 7.2 | 60.4 / 1.2 / 38.4 | 86.5 |
+| discs, `boothSmall` | 6,247 | 88.1 | 3.2 | 8.7 | 54.8 / 0.7 / 44.5 | 84.4 |
+| library, `booth` | 6,383 | 88.1 | 4.0 | 7.9 | 54.0 / 11.8 / 34.2 | 89.2 |
+| library, `boothSmall` | 6,383 | 86.9 | 3.7 | 9.5 | 50.1 / 6.4 / 43.5 | 85.1 |
+| library and added music, `booth` | 6,383 | 87.3 | 4.6 | 8.1 | 49.6 / 15.1 / 35.4 | 87.5 |
+| library and added music, `boothSmall` | 6,383 | 85.2 | 4.3 | 10.5 | 49.4 / 8.6 / 42.0 | 84.7 |
+
+(The pre-mixed disc: 591 seconds; blends: 288 seconds. The discs' row leaves out the 136 live seconds of songs not on
+the discs.)
+
+**What the wrong seconds are** (library, `booth`; one-song seconds, live and pre-mixed together, 325 in all):
+
+| named | seconds |
+|---|---|
+| the song that was playing just before, still on screen after the change | 91 |
+| the pre-mixed disc's track, at the place where it holds the playing song | 174 |
+| a copy or version of the playing song (same title) the index did not join | 2 |
+| another song | 59 (0.8 % of the 6,974 one-song seconds) |
+
+On the discs: 68 to 81 seconds of the song before, 121 to 162 of the mix's track, 3 of another song. With the added music
+(`booth`): 86 seconds of an added file, of which 8 where the waveform check confirms that file is really heard and 31
+more whose file name carries the playing song's title (another version or copy); the rest, 47 seconds (0.7 %), may
+be wrong. 35 seconds of another library song.
+
+**Names when the key has no song** (the evening; library, `booth`):
+
+| the key says | seconds | the song just before, still on screen | a steady run: 5 s or more, place advancing with the clock (of which the pre-mixed disc) | an added song the waveform confirms there | any other name |
+|---|---|---|---|---|---|
+| talk | 2,149 | 56 | 57 (21) | - | 2 |
+| silence | 168 | 15 | 3 (0) | - | 16 |
+| unknown | 7,898 | 232 | 250 (148) | - | 18 |
+
+A steady run on one song at a place advancing second by second is almost certainly that song really playing under
+the talk, below what the waveform check can see (section 2); most are the pre-mixed disc, which the first run already
+suspected of playing quietly under talk. Names that are neither held over nor steady: 36 seconds of 10,215 (0.4 %)
+against the library, 12 against the discs. With the added music the unknown stretches also show 391 seconds of added
+songs that the waveform check confirms (section 11, B).
+
+### 13.3 Old against new, side by side
+
+The first trial's matcher is scored by windows (one listen of 8 or 12 s, every 2 s); the listener by seconds on
+screen. They are not the same measure, but they answer the same question: when a song is playing, does the booth show
+it?
+
+| | the discs | the library |
+|---|---|---|
+| **evening, first trial**: right, 8 s / 12 s windows | 81.0 / 86.6 % | 41.9 / 41.5 % |
+| **evening, the finished listener** (`booth`): seconds with the right name | **89.2 %** | **88.1 %** |
+| evening, the finished listener (`boothSmall`) | 88.1 % | 86.9 % |
+| evening, first trial: a song first named (any window length): median / 90th percentile / never | 7 s / 23 s / 1 of 102 | 9 s / 27 s / 2 of 105 |
+| **evening, the finished listener** (`booth`): median / 90th percentile / never | **5 s / 21 s / 1 of 113** | **5 s / 25 s / 1 of 116** |
+| evening, the finished listener (`boothSmall`) | 5 s / 26 s / 2 of 113 | 5 s / 28 s / 4 of 116 |
+| evening, another song named (not a copy, not the mix, not the song before) | 2 windows of about 8,500 | first trial 2 windows; listener 59 s of 6,974 |
+| afternoon, first trial: 8 s / 12 s windows | 93.8 / 96.5 % | 51.3 / 49.6 % |
+| **afternoon, the finished listener** (`booth`): seconds right | **95.6 %** | **94.7 %** |
+| afternoon, time to name: median / 90th / never (`booth`) | 3 s / 10 s / 0 of 33 | 2 s / 19 s / 1 of 36 |
+
+The afternoon in every setting (seconds right, `booth` / `boothSmall`): discs 95.6 / 95.6 %, library 94.7 / 94.6 %,
+library and added music 94.6 / 94.4 %.
+
+**The copies problem is gone on the real library.** Against the 2,327-file library the listener shows the right
+song 88 % of the known songs' seconds, one point under the 92-song discs, where the first trial's matcher managed 42 %
+against 81 %. A thousand more songs (the added music) take off about one more point.
+
+### 13.4 Against ShazamKit that evening, with the new time to name
+
+Songs of the evening heard for 30 s or more (116), the listener against the library, `booth`:
+
+| | songs |
+|---|---|
+| both named it | 48 |
+| ShazamKit's log only | 0 |
+| the booth was already showing it from before | 29 |
+| ours only | 38 |
+| neither | 1 |
+
+Where both named it: ours a median 8 s after the song's start (90th percentile 24 s), the log 22 s (50 s); ours
+earlier by more than 2 s in 36, the log in 3, within 2 s in 9. (First trial: ours 11 s, the log 22 s.) Against the
+discs: ours 8 s (19 s). The same caution as section 5: the log is late by design in blends, and it is not truth.
+
+### 13.5 The fader
+
+The listener's reading on the seconds it shows the right song, per song (library, `booth`; 110 songs): from -7.4 to
++7.3 %, 30 songs over 2 % and 7 over 4 % (the first run: 29 and 7). Per song it agrees with the first run's
+12 s readings to 0.028 points at the median (90th percentile 0.074; one song differs by about 1 point), and with the
+booth's own logged pitch to 0.10 points (90th 0.80, 48 songs). Second by second it is noisier than a 12 s listen:
+the middle half of a song's readings spans 0.19 points at the median (0.06 for the first run's 12 s windows), 0.44
+at the 90th percentile. *[inf]* A booth showing the fader would want it smoothed over a few seconds.
+
+### 13.6 Time per reading and memory across the evening
+
+| catalogue, setting | a reading, ms: median / 95th / 99th | over 0.5 s | over 1 s (largest) |
+|---|---|---|---|
+| discs, `booth` | 45 / 57 / 73 | 3 | 3 (6.9 s) |
+| discs, `boothSmall` | 42 / 51 / 56 | 0 | 0 |
+| library, `booth` | 137 / 227 / 298 | 4 | 0 |
+| library, `boothSmall` | 85 / 126 / 154 | 0 | 0 |
+| library and added music, `booth` | 177 / 331 / 480 | 144 | 5 (1.5 s) |
+| library and added music, `boothSmall` | 104 / 160 / 215 | 5 | 2 (8.9 s) |
+
+17,515 readings each, two recordings at a time on this Mac's M5, with another session's work beside them. A reading
+while a song is followed takes about 7 ms (median, library); a reading that searches the whole crate (nothing on
+screen) 148 to 179 ms. The readings of several seconds came in pairs: in two runs both threads, on different
+recordings and at different places in them, stalled together for 6 to 9 s *[inf: the machine stalled, with another
+session's work and memory pressure on it, not the listener]*.
+
+**Over hours.** The process's memory footprint, read every 10 minutes through the 1 h 50 min recording, stayed flat
+in every run (1.14 to 1.18 GB, nearly all of it the two long recordings' sound, which the tool holds whole); the
+listener's own memory did not move. No growth. The time of a searching reading in that recording went 172, 158, 184 and 179 ms (median, by half hour;
+library, `booth`). To tell time from sound, the last hour was played again on its own, from a fresh start: the same
+half hours took 156 and 151 ms. So a reading's time follows the sound and how busy the machine is, not how long
+the listener has been running.
+
+### 13.7 What changed, what got worse, what I could not do
+
+- **Better**: the library now does as well as the discs, within a point or two; songs are named a little sooner
+  (median 5 s from 7 to 9); the comparison with ShazamKit's log moves further in our favour.
+- **Worse, or new**: (1) the song before stays on screen for a few seconds after a change (81 to 91 seconds in the
+  evening, about 1 % of known-song seconds); (2) "another song" rises from almost none to 59 seconds against the
+  library (0.8 %), mostly short spells; (3) the fader is noisier second by second than one 12 s listen; (4) a
+  reading that searches the library takes 137 ms at the median here, and 177 ms with the added music, against 20 to
+  33 ms for one 8 to 12 s query in the first run: the price of checking 50 songs; still well inside a second.
+- **The pre-mixed disc** stays the weak case: 50 to 60 % of its seconds right, the quietest music of the evening.
+- **Not done**: an iPad (the times here are this Mac's); a loud room; listening; tying the unknown 2.2 hours to
+  anything; testing the crate's keys (there are none to test); a timing on a quiet machine.
+
+**Running the second run.** With the work folder of the first:
+
+```bash
+deckie-listen --prints WORK/prints-all --same-recording keys.tsv --save-index lib.dkx --build-only   # add --small
+deckie-listen --index lib.dkx --list clips.tsv --out readings.tsv --jobs 2 --memory-every 600
+python3 core/Tools/recognition-bench/room_test.py listen-report WORK library=readings.tsv --mix WORK/subset-0.txt
+```
+
+`clips.tsv` lists each recording whole (name, the decoded file, 0, its sample count, 16000); `keys.tsv` is the
+crate's id and cut key on each line. `--same-recording`, `--build-only` and `--memory-every` were added to
+`deckie-listen` for this run; nothing in the recogniser was changed.

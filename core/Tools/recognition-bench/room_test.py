@@ -16,6 +16,8 @@ music, and every file it writes goes under WORK, which must be outside the repos
       more music to add to the catalogue as distractors (see extra()).
   room_test.py truth WORK RESULTS.tsv [RESULTS2.tsv ...] [--threshold 2.96] [--jobs 1]
       builds the answer key (see TRUTH below) into WORK/truth.json.
+  room_test.py listen-report WORK NAME=READINGS.tsv [...] [--mix ids.txt] [--catalogue-ids NAME=ids.txt]
+      scores the finished listener's readings (deckie-listen --list, one a second) against the same answer key.
   room_test.py report WORK NAME=RESULTS.tsv [NAME=RESULTS.tsv ...] [--threshold 2.96]
       writes WORK/report.md (aggregate numbers only: counts, percent, seconds, dB; songs are never named).
 
@@ -1302,6 +1304,246 @@ def report(a):
     print("\n".join(out))
 
 
+# ---------------------------------------------------------------- the listener's readings (deckie-listen)
+def read_readings(path):
+    """recording id -> list of (seconds heard, state, song id or None, place, speed percent or None, key lock, confidence, ms)."""
+    out = collections.defaultdict(list)
+    for line in open(path):
+        c = line.rstrip("\n").split("\t")
+        if len(c) < 9:
+            continue
+        on = c[2] in ("named", "held") and c[3] != "-"
+        out[c[0]].append((float(c[1]), c[2], c[3] if on else None, None if c[4] == "-" else float(c[4]),
+                          None if c[5] == "-" else float(c[5]), c[6], float(c[7]), float(c[8])))
+    for v in out.values():
+        v.sort()
+    return out
+
+
+def listen_report(a):
+    """Scores the listener's readings (one a second, what the booth would show) against the answer key."""
+    work = a.work
+    mix_ids = [l.strip() for l in open(a.mix)] if a.mix else []
+    key = Key(work, mix_ids)
+    cat = json.load(open(os.path.join(work, "catalogue.json")))
+    titles = {k: norm(v["title"]).split()[:3] for k, v in cat.items()}
+    cat_ids = {}
+    for spec in a.catalogue_ids or []:
+        n_, f_ = spec.split("=", 1)
+        cat_ids[n_] = {l.strip() for l in open(f_) if l.strip()}
+    verified = {}
+    if a.verified_extra:
+        verified = {tuple(k.split("|")): set(float(m) for m in v) for k, v in json.load(open(a.verified_extra)).items()}
+    out = []; w = out.append
+    w("# The finished listener against the answer key\n")
+
+    def moment(t):
+        return STEP * round(t / STEP)
+
+    def kind_of(sid, ok):
+        if sid in mix_ids:
+            return "the pre-mixed disc's track"
+        if sid in titles and any(titles.get(o) == titles[sid] for o in ok):
+            return "a copy or version of the playing song (same title)"
+        if sid not in titles:
+            return "a song from the added music"
+        return "another song"
+
+    for spec in a.readings:
+        name, path = spec.split("=", 1)
+        R = read_readings(path)
+        ids = cat_ids.get(name)
+        w("## %s\n" % name)
+        for part in ("set", "before"):
+            rows = collections.defaultdict(collections.Counter)
+            wrong = collections.Counter()
+            other = collections.Counter()
+            ms = []
+            for rid, rs in R.items():
+                if rid not in key.recs or key.recs[rid]["part"] != part:
+                    continue
+                # steady runs: the same song on screen for 5 readings or more with its place advancing with the clock
+                steady = set()
+                i = 0
+                while i < len(rs):
+                    j = i
+                    while (j + 1 < len(rs) and rs[j + 1][2] is not None and rs[j + 1][2] == rs[i][2] and rs[j + 1][3] is not None
+                           and rs[j][3] is not None and abs((rs[j + 1][3] - rs[j][3]) - (rs[j + 1][0] - rs[j][0])) < 1.0):
+                        j += 1
+                    if rs[i][2] is not None and j - i + 1 >= 5:
+                        steady.update(range(i, j + 1))
+                    i = j + 1
+                for ix, (t, st, sid, place, speed, lock, conf, took) in enumerate(rs):
+                    ms.append(took)
+                    m = moment(t)
+                    state = key.state.get((rid, m))
+                    d = key.at.get((rid, m), {})
+                    if state == "song":
+                        g = next(iter(d))
+                        if ids is not None and not (key.sids[g] & ids):
+                            continue
+                        k = key.kind(rid, m, g)
+                        c = rows[k]; c["n"] += 1
+                        if sid is None:
+                            c["none"] += 1
+                        elif sid in key.sids[g]:
+                            c["right"] += 1
+                        else:
+                            c["wrong"] += 1
+                            prev = any(sid in key.sids[h] for x in range(1, 16) for h in key.at.get((rid, m - x * STEP), {}))
+                            if any(abs(mm - m) <= 6 for mm in verified.get((rid, sid), ())):
+                                wrong["an added file the waveform confirms there (the same music)"] += 1
+                            else:
+                                wrong["the song before, still on screen" if prev and sid not in mix_ids else kind_of(sid, key.sids[g])] += 1
+                    elif state == "blend":
+                        c = rows["blend"]; c["n"] += 1
+                        ok = set().union(*(key.sids[g] for g in d))
+                        c["right" if sid in ok else ("none" if sid is None else "wrong")] += 1
+                    elif state in ("talk", "silence", "unknown"):
+                        c = other[state + ":n"]; other[state + ":n"] += 1
+                        if sid is not None:
+                            # held over from the song just before (the same name the key had within 30 s), or confirmed
+                            # by the waveform as an added song really heard there, or a fresh name
+                            before = any(sid in key.sids[g] for x in range(1, 16) for g in key.at.get((rid, m - x * STEP), {}))
+                            if before:
+                                other[state + ":held over"] += 1
+                            elif any(abs(mm - m) <= 6 for mm in verified.get((rid, sid), ())):
+                                other[state + ":confirmed added song"] += 1
+                            elif ix in steady:
+                                other[state + ":steady"] += 1
+                                if sid in mix_ids:
+                                    other[state + ":steady mix"] += 1
+                            else:
+                                other[state + ":named"] += 1
+            if not ms:
+                continue
+            w("### %s: share of seconds, percent\n" % part)
+            w("| what the key says | seconds | right name on screen | wrong name | nothing |")
+            w("|---|---|---|---|---|")
+            for k in ("live", "mix", "blend"):
+                c = rows[k]
+                if c["n"]:
+                    w("| %s | %d | %s | %s | %s |" % ({"live": "one song, live", "mix": "one song, the pre-mixed disc", "blend": "a blend (right: either song)"}[k],
+                                                     c["n"], pct(c["right"], c["n"]), pct(c["wrong"], c["n"]), pct(c["none"], c["n"])))
+            w("")
+            if wrong:
+                w("Wrong names on one-song seconds, by what was named: " + "; ".join("%s %d" % kv for kv in sorted(wrong.items())) + ".\n")
+            w("| key says | seconds | a name held over from the song before | an added song the waveform confirms there | a steady run (5 s or more, place advancing; of which the pre-mixed disc) | a name otherwise |")
+            w("|---|---|---|---|---|---|")
+            for st in ("talk", "silence", "unknown"):
+                n = other[st + ":n"]
+                if n:
+                    w("| %s | %d | %d | %d | %d (%d) | %d |" % (st, n, other[st + ":held over"], other[st + ":confirmed added song"],
+                                                            other[st + ":steady"], other[st + ":steady mix"], other[st + ":named"]))
+            w("")
+            ms.sort()
+            w("A reading took %.1f ms at the median, %.1f at the 95th percentile, %.1f at the 99th, %.0f at most (%d readings).\n" % (
+                quant(ms, .5), quant(ms, .95), quant(ms, .99), ms[-1], len(ms)))
+        # time to name, per stretch of 30 s or more
+        for part in ("set", "before"):
+            d = []; never = 0; n = 0; firsts = {}
+            for s in key.stretches:
+                if s["part"] != part or s["end"] - s["start"] < 30 or s["rid"] not in R:
+                    continue
+                if ids is not None and not (key.sids[s["g"]] & ids):
+                    continue
+                n += 1
+                hit = next((t for (t, st, sid, *_r) in R[s["rid"]] if s["start"] <= t <= s["end"] + 4 and sid in key.sids[s["g"]]), None)
+                firsts[(s["rid"], s["g"], s["start"])] = None if hit is None else hit - s["start"]
+                if hit is None:
+                    never += 1
+                else:
+                    d.append(hit - s["start"])
+            if n:
+                w("Time to name (%s, songs heard 30 s or more, %d): median %.0f s, 90th percentile %.0f s, slowest %.0f s, never %d.\n" % (
+                    part, n, quant(d, .5), quant(d, .9), max(d) if d else float("nan"), never))
+            if part == "set":
+                set_firsts = firsts
+        # the fader, per stretch: the listener's readings against the first run's (12 s windows) and the booth's log
+        fad = []
+        for s in key.stretches:
+            if s["part"] != "set" or s["end"] - s["start"] < 30 or s["rid"] not in R:
+                continue
+            v = [sp for (t, st, sid, place, sp, *_r) in R[s["rid"]] if s["start"] <= t <= s["end"] and sid in key.sids[s["g"]] and sp is not None]
+            if len(v) >= 5:
+                fad.append((s, statistics.median(v), quant(v, .75) - quant(v, .25)))
+        if fad:
+            w("The fader (set, %d songs): reading per song from %+.2f to %+.2f; spread within a song (25th to 75th percentile) "
+              "median %.3f points, 90th %.3f; songs over 2 %%: %d, over 4 %%: %d.\n" % (len(fad), min(f[1] for f in fad), max(f[1] for f in fad),
+              quant([f[2] for f in fad], .5), quant([f[2] for f in fad], .9), sum(abs(f[1]) > 2 for f in fad), sum(abs(f[1]) > 4 for f in fad)))
+            if a.old_results:
+                old = read_results(a.old_results)
+                byrid = collections.defaultdict(list)
+                for q in old.values():
+                    if q["L"] == 12:
+                        byrid[q["rid"]].append(q)
+                diffs = []
+                for s, med, _ in fad:
+                    v = [100 * (q["best"][4] - 1) for q in byrid[s["rid"]] if s["start"] <= q["t"] - q["L"] and q["t"] <= s["end"]
+                         and q["best"][6] >= a.threshold and q["best"][0] in key.sids[s["g"]]]
+                    if len(v) >= 3:
+                        diffs.append(abs(med - statistics.median(v)))
+                if diffs:
+                    w("Against the first run's reading of the same songs (%d): difference median %.3f points, 90th %.3f, largest %.2f.\n" % (
+                        len(diffs), quant(diffs, .5), quant(diffs, .9), max(diffs)))
+            bykey = collections.defaultdict(set)
+            for k, v in cat.items():
+                bykey[(norm(v["title"]), norm(v["artist"]))].add(k)
+            ld = []
+            for s, med, _ in fad:
+                for e in key.recs[s["rid"]]["entries"]:
+                    if set(log_ids(e, bykey)) & key.sids[s["g"]] and s["start"] - 10 <= float(e["at"]) <= s["end"] + 5:
+                        ld.append(abs(med - float(e.get("pitch", 0)))); break
+            if ld:
+                w("Against the booth's own logged pitch (%d songs): difference median %.2f points, 90th %.2f.\n" % (len(ld), quant(ld, .5), quant(ld, .9)))
+        # against the booth's log: time to name where both named
+        bykey = collections.defaultdict(set)
+        for k, v in cat.items():
+            bykey[(norm(v["title"]), norm(v["artist"]))].add(k)
+        both = []; ours_only = theirs_only = neither = already = 0
+        for s in key.stretches:
+            if s["part"] != "set" or s["end"] - s["start"] < 30 or s["rid"] not in R:
+                continue
+            if ids is not None and not (key.sids[s["g"]] & ids):
+                continue
+            ok = key.sids[s["g"]]; theirs = None; last = None
+            for e in sorted(key.recs[s["rid"]]["entries"], key=lambda e: float(e["at"])):
+                t = float(e["at"]); li = set(log_ids(e, bykey))
+                if t < s["start"] - 10:
+                    last = li
+                elif t <= s["end"] + 5 and li & ok:
+                    theirs = t - s["start"]; break
+            ours = set_firsts.get((s["rid"], s["g"], s["start"]))
+            if theirs is not None and ours is not None:
+                both.append((ours, theirs))
+            elif theirs is not None:
+                theirs_only += 1
+            elif last is not None and last & ok:
+                already += 1
+            elif ours is not None:
+                ours_only += 1
+            else:
+                neither += 1
+        w("Against the booth's log (set): both named %d; the log only %d; the booth already showing it %d; ours only %d; neither %d." % (
+            len(both), theirs_only, already, ours_only, neither))
+        if both:
+            w("Where both named it: ours a median %.0f s after the song's start (90th %.0f), the log %.0f s (90th %.0f); ours earlier "
+              "by more than 2 s in %d, the log in %d, within 2 s in %d.\n" % (quant([b[0] for b in both], .5), quant([b[0] for b in both], .9),
+              quant([b[1] for b in both], .5), quant([b[1] for b in both], .9), sum(b[0] < b[1] - 2 for b in both),
+              sum(b[1] < b[0] - 2 for b in both), sum(abs(b[0] - b[1]) <= 2 for b in both)))
+        # time per reading across the evening's hours (growth)
+        hours = collections.defaultdict(list)
+        for rid, rs in R.items():
+            if rid in key.recs and key.recs[rid]["part"] == "set":
+                for r in rs:
+                    hours[int(r[0] // 1800)].append(r[7])
+        if hours:
+            w("A reading's time by half hour into a recording (set; median / 95th ms): " + "; ".join(
+                "%g h: %.1f / %.1f" % (h / 2, quant(v, .5), quant(v, .95)) for h, v in sorted(hours.items())) + ".\n")
+    open(os.path.join(work, a.out), "w").write("\n".join(out) + "\n")
+    print("\n".join(out))
+
+
 def main():
     p = argparse.ArgumentParser()
     sub = p.add_subparsers(dest="cmd")
@@ -1315,12 +1557,16 @@ def main():
     q = sub.add_parser("truth"); q.add_argument("work"); q.add_argument("results", nargs="+")
     q.add_argument("--threshold", type=float, default=2.96); q.add_argument("--jobs", type=int, default=1)
     q.add_argument("--subset", default=""); q.add_argument("--only", default="", help="recordings to use (a test run)")
+    q = sub.add_parser("listen-report"); q.add_argument("work"); q.add_argument("readings", nargs="+")
+    q.add_argument("--mix", default=""); q.add_argument("--catalogue-ids", nargs="*"); q.add_argument("--verified-extra", default="")
+    q.add_argument("--old-results", default=""); q.add_argument("--threshold", type=float, default=2.96)
+    q.add_argument("--out", default="listen-report.md")
     q = sub.add_parser("report"); q.add_argument("work"); q.add_argument("results", nargs="+")
     q.add_argument("--threshold", type=float, default=2.96); q.add_argument("--mix", default="")
     q.add_argument("--catalogue-ids", nargs="*", help="NAME=ids.txt: the songs a catalogue holds (tables then leave out songs it lacks)")
     q.add_argument("--booth-catalogue", default="", help="the booth's own catalogue that night (JSON with tracks: song, artist, dur)")
     a = p.parse_args()
-    {"prepare": prepare, "catalogue": catalogue, "extra": extra, "truth": truth, "report": report}[a.cmd](a)
+    {"prepare": prepare, "catalogue": catalogue, "extra": extra, "truth": truth, "report": report, "listen-report": listen_report}[a.cmd](a)
 
 
 if __name__ == "__main__":
