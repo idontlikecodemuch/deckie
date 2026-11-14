@@ -1,4 +1,5 @@
 import SwiftUI
+import DeckieDisc
 import DeckieCrate
 
 // The Sources panel (D25, D26, D31). A source is the thing a DJ holds that the songs were read from: a burned CD, a USB
@@ -195,7 +196,10 @@ struct AddMusicMenu: View {
     var body: some View {
         Menu {
             let mounted = model.mountedSources
-            if mounted.isEmpty { Text(Words.noDriveFound) }
+            if mounted.isEmpty && model.musicCDs.isEmpty { Text(Words.noDriveFound) }
+            ForEach(model.musicCDs, id: \.location) { cd in
+                Button(MusicCDItem.label(cd)) { model.addMusicCD(cd) }
+            }
             ForEach(mounted, id: \.url) { m in
                 Button(m.name) { model.addSource(m.url, name: m.name) }
             }
@@ -206,5 +210,14 @@ struct AddMusicMenu: View {
         }
         .help(Words.addMusicHelp)
         .disabled(model.running)
+    }
+}
+
+/// A music CD as Add music lists it: "Music CD, 14 songs, 71:12  ·  music CD in Audio CD".
+enum MusicCDItem {
+    static func label(_ cd: MusicCDs.Found) -> String {
+        let secs = Int(cd.seconds.rounded())
+        let name = Words.c("musicCDPlaceholder", cd.songs, ["length": "\(secs / 60):" + String(format: "%02d", secs % 60)])
+        return Words.t("musicCDItem", ["name": name, "drive": cd.drive])
     }
 }

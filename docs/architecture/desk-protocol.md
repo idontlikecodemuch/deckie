@@ -1,11 +1,13 @@
-# Deckie Desk's messages: the window and the engine (protocol 1)
+# Deckie Desk's messages: the window and the engine (protocol 2)
 
 Desk on Windows and Linux (D32) is three parts: the pages (`desk-web/`, HTML, CSS and JavaScript, no Deckie logic),
 the window around them (`desk-shell/`, a small Swift program over the system's web view), and the engine
 (`deckie-desk-engine`, a Swift program in `core/` that drives `DeckieDesk`). This is everything they say to each
 other. The engine can be driven by a test with no window on all three systems (`core/Tests/DeckieDeskTests/EngineProcessTests.swift`).
 
-First written Nov 13, 2026, with the engine. Research letter Z, question 2 (way A) and question 4, is the why.
+First written Nov 13, 2026, with the engine. Protocol 2 (Nov 14, 2026): naming a song and music CDs (research AA, route
+A) and Listen (D33). It is a new number because `needsName` changed meaning: it now also holds a song named by Desk's
+guess that the DJ has not checked (`nameReason` says which). Research letter Z, question 2 (way A) and question 4, is the why.
 
 ## How messages travel
 
@@ -37,7 +39,7 @@ latest `state` and `songs` events are the truth.
 The engine's first line, before it reads anything:
 
 ```json
-{"event": "hello", "protocol": 1, "engine": "deckie-desk-engine", "platform": "windows",
+{"event": "hello", "protocol": 2, "engine": "deckie-desk-engine", "platform": "windows",
  "analysis": {"ready": true, "detail": null}, "deletesForGood": true,
  "wordsVersion": 1, "words": {"addMusic": "Add music", "...": "..."}, "computer": "other"}
 ```
@@ -67,9 +69,10 @@ Then the engine sends `state` and, when a crate with songs is showing, `songs`.
 
 - `crates`: every crate, the one opened most recently first. `current` is null on the first screen.
 - `pending`: a run of the crate showing that stopped; `here` says whether its folder or drive is there now (Carry on,
-  or "Put Stick 3 back in to carry on").
+  or "Put Stick 3 back in to carry on"); `musicCD` is true for a music CD, whose `here` is true when its songs are
+  all copied or the same disc is in a drive.
 - `undo` and `redo`: the name of the word for the step each would take (`undoNameFix`, `undoRename`, `undoMove`,
-  `undoRemove`, `undoLookAgain`), or null.
+  `undoRemove`, `undoLookAgain`, `undoNames`, `undoCheck`), or null.
 
 ### `songs`: the crate's songs, sources and what did not go in
 
@@ -92,6 +95,13 @@ Sent with `state` when the crate showing has songs and after every change to the
  "notIn": 1, "unsigned": 12}
 ```
 
+Each song also carries `nameReason` (`noTitle`, `noArtist`, `guess`, or null; words `nameReason.<code>`), and
+`needsName` is true when there is one. `names` is the panel's facts, each `{"value", "from", "guess", "checked"}`
+for `title`, `artist`, `version` and `release`: `from` is a code with words `factFrom.<code>` (`tag`, `filename`,
+`folder`, `cue`, `m3u`, `tracklist`, `cdtext` "from the disc", `disc` "the disc's own name", `copy`, a DJ program,
+`user` "you typed this", `pasted`, `pattern`, `playlist`); `guess` is Desk's guess, not yet checked; `checked` is a
+guess the DJ kept.
+
 Codes, each with its words in the list: a key's `from` (`keyFrom.<code>` and `programName.<code>`), `nameFrom` (codes
 joined by `+`, `nameFromPart.<code>`), `notes` (`needsName`, `damagedFrames`, `gridUnsure`, `vocalsNotRead`, `signed`)
 and an import log's `reason` (`reason.<code>`). A place with no `source` is in the music folder (`folder` "" is its
@@ -102,19 +112,24 @@ the booth cannot recognise yet.
 
 | Event | Fields |
 |---|---|
-| `run.started` | `crate` (id), `crateName`, `read` (the source's name), `carriedOn` |
-| `run.progress` | `stage` (`reading`, `finishing`, `saving`), `done`, `total` (songs done of songs found), `remaining` (seconds left, or null), `line` (or absent) |
+| `run.started` | `crate` (id), `crateName`, `read` (the source's name), `carriedOn`, `musicCD`, `askName` (a music CD with no title of its own: the placeholder name to offer when asking once for the name written on it; else null) |
+| `run.progress` | `stage` (`copying` for a music CD's songs, `reading`, `finishing`, `saving`), `done`, `total` (songs done of songs found), `remaining` (seconds left, or null), `line` (or absent) |
 | `run.finished` | `report`: the run's report (DeskRun's RunReport, as `runs.jsonl` holds it, with `local`, the keys and names taken from the computer) |
 | `run.failed` | `detail`: what stopped it, in a sentence. Songs already read are kept |
 
 A `line` is one of `{"kind": "started", "files": 40, "unchanged": 3, "queued": 37}`,
 `{"kind": "read", "rel": "Stick 3/House/04 Song X.mp3", "seconds": 2.1}`, `{"kind": "reused", "rel": "…"}`,
-`{"kind": "notRead", "rel": "…", "reason": "damaged"}`.
+`{"kind": "notRead", "rel": "…", "reason": "damaged"}`, `{"kind": "copied", "number": 3, "of": 14, "damaged": 0}`
+(a music CD's song copied off the disc; `damaged` sectors of 1/75 s could not be read and are silence).
+
+A run's `report` has `disc` for a music CD: `text` (`names`, `none` "this disc has no names on it", or `drive` "the
+drive gave none; the disc may have some"), `songs`, `named` (songs named from the disc's CD-Text),
+`damaged_sectors`, `titled` (the disc's own title named the source) and `bytes` (the room Desk's copy takes).
 
 ## Requests to the engine
 
-Every request gets a reply. While a run goes, only `state`, `drives.list`, `crate.songs` and `source.removeCount` are
-answered; the rest are refused with `busy`.
+Every request gets a reply. While a run goes, only `state`, `drives.list`, `crate.songs`, `source.removeCount`,
+`run.nameDisc`, `name.split` and `song.audio` are answered; the rest are refused with `busy`.
 
 | `type` | Fields | Reply carries | Then |
 |---|---|---|---|
@@ -127,6 +142,13 @@ answered; the rest are refused with `busy`.
 | `crate.songs` | | | `songs` |
 | `crate.export` | `folder` | `path` (the crate file written) | |
 | `drives.list` | | `drives`: `[{"name": "Stick 3", "path": "E:\\"}]` | |
+| `run.addMusicCD` | `location` (as `drives.list`'s `musicCDs` gave it) | `source`, `crate`, `askName` | as `run.add` |
+| `run.nameDisc` | `name`; `source` (optional while its run goes) | | applied when the run ends; after it, a rename (`state`, `songs`) |
+| `name.split` | `text` | `split` (bool), `artist`, `title`, `version` | |
+| `names.preview` | `tool` (`paste`, `pattern`, `playlist`, `check`); `source` or `songs` (ids); `text`, `pattern` or `path` (a playlist file); `onlyEmpty` (default true) | `preview` (below), `patterns` | |
+| `names.apply` | `ticks` (indexes into the last preview's `changes`; absent: its own ticks) | `songs` (how many changed) | `state`, `songs` |
+| `song.check` | `songs` (ids) or `song`; `field` (optional) | `songs` | `state`, `songs` |
+| `song.audio` | `song`; `decoded` (optional) | `type`, `bytes`, `chunks`, `token`, `seconds`, `start`, `kind` | `audio.chunk` events |
 | `run.add` | `path`; `name` (a drive's name, optional) | `source` (the source's name), `crate` | `run.started`, `run.progress`…, `run.finished` or `run.failed`, `state`, `songs` |
 | `run.carryOn` | | as `run.add` | as `run.add` |
 | `song.fix` | `song` (id); any of `title`, `artist`, `version` (text; "" clears artist or version), `tags` (list) | | `state`, `songs` |
@@ -151,14 +173,38 @@ branch `pc/windows-builder`), the export switches to it there and the pages do n
 
 Error codes: `bad_request` (not JSON, no `type`, a field missing), `unknown_type`, `busy` (a run is going),
 `no_crate` (nothing with songs is showing), `engine_missing` (this computer cannot read music yet), `failed` (the
-operation threw; `detail` says why in a sentence).
+operation threw; `detail` says why in a sentence), `not_here` and `cannot_decode` (Listen, below).
+
+`drives.list` also gives `musicCDs`: `[{"location": "\\\\.\\D:", "drive": "D:", "songs": 14, "seconds": 4272.0, "discId": "cd-…"}]`,
+the drives holding a music CD (DeckieDisc's `MusicCDs`; `DECKIE_DESK_MUSIC_CD` lists stand-in drives instead).
+
+A `preview` is `{"tool", "songs", "lines", "problem", "lengthsDiffer", "changes", "pairs"}`. `problem` stops it
+being applied: `counts` (the list and the songs differ in number), `noMatch` (the pattern fits no file name),
+`empty`. Each change is `{"song", "field", "before", "after", "tick", "locked", "note"}`: ticked by default only
+where the field is empty or Desk's guess; `locked` for a DJ's own name, never applied; `note` `filled`, `yours` or
+`lengthDiffers` (a playlist's length more than 3 s off). A version is never taken away. One apply is one undo step.
+
+### Listen: how a song's sound reaches the page
+
+The page is never told where a file is, and nothing listens on a network port. `song.audio` makes the engine find the
+song's file itself (by the song's id in the crate showing; the page cannot name any other file), and its reply is
+followed by `{"event": "audio.chunk", "token", "song", "index", "of", "data"}` events: the file's bytes in order, 768
+KB each, base64, on the engine's standard output like every other message. The shell passes them to the page as it
+passes everything; the page joins them into a `Blob` and plays it from a `blob:` address, which only that page can
+open and which it revokes when listening stops (the pages' content rules add `media-src blob:` and nothing else).
+Standard input and output are anonymous pipes between the shell and the engine it started; no other program or page
+can open them. When the web view says it cannot play the type (`canPlayType`), or fails to, the page asks again with
+`decoded: true` and the engine sends 16-bit WAV made by the shared decoder (WAV, AIFF, MP3, FLAC); when that fails
+too (`cannot_decode`: an AAC file, say, in a web view without that codec) the window says so in plain words.
+`not_here` (`detail`: the source's name) means no place of the song is plugged in. Listening starts a third of the
+way in (`start`).
 
 ## Requests the shell answers
 
 | `type` | Fields | Reply carries |
 |---|---|---|
 | `shell.chooseFolder` | `purpose`: `addMusic` or `export` | `path`, or `cancelled: true` |
-| `shell.chooseFile` | `purpose`: `import` or `library` | `path`, or `cancelled: true` |
+| `shell.chooseFile` | `purpose`: `import`, `library` or `playlist` | `path`, or `cancelled: true` |
 | `shell.openFolder` | `path` | |
 
 And one event from the shell: `{"event": "shell.dropped", "paths": ["…"]}` when the DJ drops folders on the window

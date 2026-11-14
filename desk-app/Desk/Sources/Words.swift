@@ -11,6 +11,27 @@ enum Words {
         DeskWords.count(key, count, values)
     }
 
+    // MARK: naming a song (research AA): the words by name, from the one list
+    /// A word of the list by its name, with blanks filled; for the naming screens, whose words are many and plain.
+    static func t(_ key: String, _ values: [String: String] = [:]) -> String { w(key, values) }
+    /// A word's form for a count.
+    static func c(_ key: String, _ count: Int, _ values: [String: String] = [:]) -> String { n(key, count, values) }
+    /// The small line under a fact: where it came from, Desk's guess, checked, or not found.
+    static func fromLine(_ f: DeskNaming.Fact) -> String {
+        guard f.value != nil else { return w("factNotFound") }
+        let from = f.from.map { DeskWords.coded("factFrom", $0) } ?? w("factNotFound")
+        if f.checked { return w("factChecked", ["from": from]) }
+        if f.guess { return w("factGuess", ["from": from]) }
+        return from
+    }
+    static let stageCopying = w("stageCopying")
+    static func lineCopied(_ number: Int, of: Int, damaged: Int) -> String {
+        w(damaged > 0 ? "lineCopiedDamaged" : "lineCopied", ["number": "\(number)", "of": "\(of)"])
+    }
+    static func megabytes(_ b: Int64) -> String {
+        b >= 1_000_000_000 ? String(format: "%.1f GB", Double(b) / 1e9) : "\(max(1, Int((Double(b) / 1e6).rounded()))) MB"
+    }
+
     // MARK: the app
     static let appName = w("appName")
     static let ok = w("ok")

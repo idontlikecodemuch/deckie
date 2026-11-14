@@ -6,6 +6,8 @@ import DeckieBuild
 import DeckieEngine
 import DeckieCore
 import DeckieDesk
+import DeckieDisc
+import AVFoundation
 
 /// What the window shows: the crate that is showing (one of the crates Desk keeps, D28), a run in progress, the
 /// finished screen after one, or the first screen when there is no crate yet. Desk saves as it goes: every change is
@@ -23,6 +25,8 @@ final class DeskModel: ObservableObject {
     @Published var onlyNeedName = false
     private(set) var corrections = NameCorrections()
     private(set) var placePaths = PlacePaths()
+    /// Where each name was read from, field by field, and each song's release (research AA; `names.json`).
+    @Published private(set) var book = NameBook()
     /// A run of the crate showing that stopped before it finished.
     @Published var pending: RunRequest?
 
@@ -47,6 +51,19 @@ final class DeskModel: ObservableObject {
     @Published var showSources = false
     @Published var sourceSelection: SourceItem?
     @Published var mountedSources: [MountedSource] = []
+    /// The music CDs in this Mac's drives (research AA), offered beside drives and folders.
+    @Published var musicCDs: [MusicCDs.Found] = []
+
+    // Naming (research AA): a batch tool's sheet, the line after a batch, a music CD's name asked during its run, and
+    // Listen.
+    @Published var tool: String?
+    /// Text a tool's sheet starts with (the naming walk).
+    var toolPrefill: String?
+    @Published var undoLine: String?
+    @Published var discAsk: String?
+    @Published var discAnswer = ""
+    private var discName: (source: String, name: String)?
+    let listener = Listener()
     private var watchers: [NSObjectProtocol] = []
 
     /// The window's undo manager, given by the window (ContentView).
@@ -56,10 +73,12 @@ final class DeskModel: ObservableObject {
 
     init() {
         mountedSources = MountedSource.all()
+        musicCDs = MusicCDs.list()
+        listener.onSong = { [weak self] in self?.objectWillChange.send() }
         let center = NSWorkspace.shared.notificationCenter
         for name in [NSWorkspace.didMountNotification, NSWorkspace.didUnmountNotification, NSWorkspace.didRenameVolumeNotification] {
             watchers.append(center.addObserver(forName: name, object: nil, queue: .main) { [weak self] _ in
-                MainActor.assumeIsolated { self?.mountedSources = MountedSource.all() }
+                MainActor.assumeIsolated { self?.mountedSources = MountedSource.all(); self?.musicCDs = MusicCDs.list() }
             })
         }
         watchers.append(NotificationCenter.default.addObserver(forName: NSApplication.willTerminateNotification, object: nil,
@@ -88,7 +107,9 @@ final class DeskModel: ObservableObject {
             ? (try? CrateReader.read(from: pkg)) : nil
         corrections = NameCorrections.load(from: shelf.file(DeskRun.correctionsFile, of: info.id))
         placePaths = PlacePaths.load(from: shelf.file(DeskRun.placesFile, of: info.id))
+        book = NameBook.load(from: shelf.file(DeskRun.namesFile, of: info.id))
         pending = DeskRun.pending(home: home, crateId: info.id)
+        listener.stop(); undoLine = nil
         selection = []; sourceSelection = nil; finished = nil; onlyNeedName = false
         reloadCrates()
     }
@@ -100,6 +121,7 @@ final class DeskModel: ObservableObject {
         saveNow()
         undoManager?.removeAllActions()
         current = nil; crate = nil; pending = nil; finished = nil; selection = []; sourceSelection = nil
+        book = NameBook(); listener.stop(); undoLine = nil
     }
 
     func rename(_ info: CrateInfo, to name: String) {
@@ -124,6 +146,7 @@ final class DeskModel: ObservableObject {
             } else {
                 try shelf.delete(info.id)
             }
+            DiscCopies.prune(home)
             reloadCrates()
             if current == nil { if let next = crates.first { show(next) } else { newCrate() } }
         } catch { errorText = Words.couldntDelete(error.localizedDescription) }
@@ -224,7 +247,8 @@ final class DeskModel: ObservableObject {
         do {
             if let c = current { info = c } else { info = try shelf.make(name: request.name); current = info }
         } catch { errorText = Words.runStopped(error.localizedDescription); return }
-        running = true; finished = nil; runRead = request.name; runStage = .reading
+        running = true; finished = nil; runRead = request.name; runStage = request.musicCD != nil ? .copying : .reading
+        listener.stop()
         runDone = 0; runTotal = 0; runRemaining = nil; runLines = []
         if let note = Builder.vocalTaggerNote { runLines.append(note) }
         undoManager?.removeAllActions()
@@ -240,12 +264,14 @@ final class DeskModel: ObservableObject {
                     if let i = model.crates.first(where: { $0.id == info.id }) { model.show(i) }
                     model.crate = crate
                     model.finished = report
+                    model.applyDiscName()
                 }
             } catch {
                 await MainActor.run {
                     model.running = false
                     model.reloadCrates()
                     if let i = model.crates.first(where: { $0.id == info.id }) { model.show(i) }
+                    model.applyDiscName()
                     model.errorText = Words.runStopped(error.localizedDescription)
                 }
             }
@@ -264,6 +290,8 @@ final class DeskModel: ObservableObject {
             case .reused: runLines.append(Words.lineReadBefore(rel))
             case let .failed(f): runLines.append(Words.lineNotRead(rel, reason: f.reason))
             }
+        case let .copied(number, of, damaged)?:
+            runLines.append(Words.lineCopied(number, of: of, damaged: damaged))
         case nil: break
         }
         if runLines.count > 400 { runLines.removeFirst(runLines.count - 400) }
@@ -277,12 +305,13 @@ final class DeskModel: ObservableObject {
         var corrections: NameCorrections
         var placePaths: PlacePaths
         var info: CrateInfo?
+        var book: NameBook
     }
-    private var state: State { State(crate: crate, corrections: corrections, placePaths: placePaths, info: current) }
+    private var state: State { State(crate: crate, corrections: corrections, placePaths: placePaths, info: current, book: book) }
 
     private func restore(_ s: State, name: String) {
         let now = state
-        crate = s.crate; corrections = s.corrections; placePaths = s.placePaths
+        crate = s.crate; corrections = s.corrections; placePaths = s.placePaths; book = s.book
         if let i = s.info, i.id == current?.id { current = i }
         scheduleSave()
         undoManager?.registerUndo(withTarget: self) { m in MainActor.assumeIsolated { m.restore(now, name: name) } }
@@ -293,7 +322,7 @@ final class DeskModel: ObservableObject {
     private func change(_ name: String, _ body: () -> Void) {
         let before = state
         body()
-        guard crate != before.crate || current != before.info else { return }
+        guard crate != before.crate || current != before.info || corrections != before.corrections else { return }
         undoManager?.registerUndo(withTarget: self) { m in MainActor.assumeIsolated { m.restore(before, name: name) } }
         undoManager?.setActionName(name)
         scheduleSave()
@@ -312,6 +341,7 @@ final class DeskModel: ObservableObject {
         guard let i = crate?.tracks.firstIndex(where: { $0.id == id }) else { return }
         change(Words.undoNameFix) {
             let before = crate!.tracks[i]
+            book.keep(before)
             var t = before
             edit(&t)
             guard t != before else { return }
@@ -337,6 +367,8 @@ final class DeskModel: ObservableObject {
             if let s = source { current?.sourceRoots[s] = nil } else { current?.musicFolder = nil }
         }
         sourceSelection = nil
+        saveNow()
+        DiscCopies.prune(home)
     }
 
     /// Corrects a source's name (D26), everywhere Desk keeps it: the crate, where it was read from, its paths.
@@ -370,6 +402,7 @@ final class DeskModel: ObservableObject {
             if let c = crate { try CrateWriter.write(c, to: shelf.package(info.id)) }
             try corrections.save(to: shelf.file(DeskRun.correctionsFile, of: info.id))
             try placePaths.save(to: shelf.file(DeskRun.placesFile, of: info.id))
+            try book.save(to: shelf.file(DeskRun.namesFile, of: info.id))
             try shelf.save(info)
         } catch { errorText = Words.couldntSave(error.localizedDescription) }
     }
@@ -387,7 +420,8 @@ final class DeskModel: ObservableObject {
             await MainActor.run {
                 switch result {
                 case .success(let (c, summary)):
-                    self.change(Words.undoLookAgain) { self.crate = c }
+                    let read = NameBook.load(from: self.shelf.file(DeskRun.namesFile, of: info.id))
+                    self.change(Words.undoLookAgain) { self.crate = c; self.book = read }
                     self.errorText = Words.lookedAgain(LocalLines.lines(summary))
                 case .failure(let error):
                     self.errorText = Words.runStopped(error.localizedDescription)
@@ -411,6 +445,111 @@ final class DeskModel: ObservableObject {
                 self.errorText = Words.libraryChosen(program.rawValue)
             } catch { self.errorText = Words.couldntReadLibrary(error.localizedDescription) }
         }
+    }
+
+    // MARK: naming a song (research AA, route A; the logic is DeckieDesk's DeskNaming)
+
+    func facts(_ t: CrateTrack) -> DeskNaming.Facts { DeskNaming.facts(t, book: book, corrections: corrections) }
+    func reason(_ t: CrateTrack) -> String? { DeskNaming.reason(t, facts(t)) }
+    var needingNames: [CrateTrack] { crate?.tracks.filter { reason($0) != nil } ?? [] }
+
+    func toolSongs(source: String?, ids: [String]?) -> [DeskNaming.Song] {
+        guard let c = crate else { return [] }
+        return DeskNaming.order(c, source: source, ids: ids).map { DeskNaming.Song(track: $0, facts: facts($0)) }
+    }
+
+    /// A tool's preview: `paste`, `pattern`, `playlist` (a file the DJ chose) or `check`.
+    func preview(_ kind: String, source: String?, text: String = "", pattern: String = "", playlist: URL? = nil,
+                 onlyEmpty: Bool = true) -> DeskNaming.Preview {
+        let songs = toolSongs(source: source, ids: nil)
+        switch kind {
+        case "paste": return DeskNaming.pasteList(text, songs: songs, onlyEmpty: onlyEmpty)
+        case "pattern": return DeskNaming.fromFileNames(pattern: pattern.isEmpty ? DeskNaming.patterns[0] : pattern, songs: songs, onlyEmpty: onlyEmpty)
+        case "playlist":
+            guard let playlist, let data = try? Data(contentsOf: playlist) else {
+                return DeskNaming.fromPlaylist([], songs: songs, onlyEmpty: onlyEmpty)
+            }
+            let text = String(data: data, encoding: .utf8) ?? String(decoding: data, as: UTF8.self)
+            return DeskNaming.fromPlaylist(DeskNaming.readPlaylist(text), songs: songs, onlyEmpty: onlyEmpty)
+        default: return DeskNaming.looksRight(songs: songs)
+        }
+    }
+
+    /// Applies a preview's ticked changes as one undo step.
+    func apply(_ p: DeskNaming.Preview, ticks: Set<Int>) {
+        guard crate != nil, p.problem == nil else { return }
+        var n = 0
+        change(p.tool == "check" ? Words.t("undoCheck") : Words.t("undoNames")) {
+            for t in crate!.tracks where p.changes.contains(where: { $0.song == t.id }) { book.keep(t) }
+            n = DeskNaming.apply(p, ticks: ticks, to: &crate!, corrections: &corrections)
+        }
+        if n > 0 { undoLine = p.tool == "check" ? Words.c("namesChecked", n) : Words.c("namesAdded", n) }
+    }
+
+    /// "Looks right" on songs, or Return on one guessed field: Desk's guesses become the DJ's, unchanged.
+    func check(_ ids: [String], field: String? = nil) {
+        var p = DeskNaming.looksRight(songs: toolSongs(source: nil, ids: ids))
+        if let field { p.changes = p.changes.filter { $0.field == field } }
+        guard !p.changes.isEmpty else { return }
+        apply(p, ticks: Set(p.changes.indices))
+    }
+
+    /// A split of what the DJ typed into the title: artist, title and version, as the DJ's.
+    func applySplit(_ id: String, artist: String?, title: String, version: String?) {
+        update(id) { t in
+            t.ident.title = title
+            if let artist { t.ident.artist = artist }
+            if let version { t.ident.version = version }
+        }
+        var given: [(String, String)] = [("title", title)]
+        if let artist { given.append(("artist", artist)) }
+        if let version { given.append(("version", version)) }
+        for (f, v) in given where corrections.byId[id]?.from?[f] == nil { corrections.give(id, field: f, value: v, how: "user") }
+        scheduleSave()
+    }
+
+    // MARK: a music CD (research AA)
+
+    func addMusicCD(_ cd: MusicCDs.Found) {
+        do {
+            let (request, ask) = try DeskSession.musicCDRequest(cd.location, home: home, current: current)
+            discAsk = ask; discAnswer = ask ?? ""
+            start(request)
+        } catch { errorText = Words.runStopped(error.localizedDescription) }
+    }
+
+    /// The name written on the disc, given while its run goes on; applied when the run ends.
+    func nameDisc() {
+        guard let source = discAsk else { return }
+        let n = discAnswer.trimmingCharacters(in: .whitespaces)
+        discAsk = nil
+        guard !n.isEmpty, n != source else { return }
+        if running { discName = (source, n) } else { renameDisc(source, to: n) }
+    }
+
+    func applyDiscName() {
+        discAsk = nil
+        guard let (source, name) = discName else { return }
+        discName = nil
+        renameDisc(source, to: name)
+    }
+
+    private func renameDisc(_ source: String, to name: String) {
+        renameSource(source, to: name)
+        sourceSelection = nil
+        if let c = current, c.name == source { rename(c, to: name) }
+        if var f = finished, f.read == source { f.read = name; if f.crate == source { f.crate = name }; finished = f }
+    }
+
+    // MARK: Listen (D33)
+
+    /// Plays a song from a third of the way in; says which source to put back when its file is not here.
+    func listen(_ t: CrateTrack) {
+        guard let url = audioURL(for: t) else {
+            errorText = Words.t("listenPutBack", ["source": t.ident.disc ?? musicFolder?.lastPathComponent ?? ""])
+            return
+        }
+        listener.play(url, id: t.id, title: t.ident.title, start: DeskListen.start(t.file.durationS))
     }
 
     // MARK: the music on this Mac
@@ -444,7 +583,8 @@ struct MountedSource: Hashable {
         return urls.compactMap { u in
             guard let v = try? u.resourceValues(forKeys: Set(keys)), v.volumeIsRootFileSystem != true,
                   v.volumeIsBrowsable != false,
-                  v.volumeIsRemovable == true || v.volumeIsEjectable == true || v.volumeIsInternal == false else { return nil }
+                  v.volumeIsRemovable == true || v.volumeIsEjectable == true || v.volumeIsInternal == false,
+                  !MusicCDs.isMacMusicCD(u) else { return nil }   // a music CD is offered as one
             return MountedSource(name: SourceReading.name(volumeName: v.volumeName, folderName: u.lastPathComponent), url: u)
         }
         .sorted { $0.name.localizedStandardCompare($1.name) == .orderedAscending }
@@ -476,5 +616,55 @@ enum Share {
         let picker = NSSharingServicePicker(items: [url])
         let y = v.isFlipped ? 1 : v.bounds.maxY - 1
         picker.show(relativeTo: NSRect(x: v.bounds.maxX - 140, y: y, width: 1, height: 1), of: v, preferredEdge: .minY)
+    }
+}
+
+/// Listen (D33): the system's player for one song at a time, with its position and length for the scrub bar. It
+/// stops when another song starts, when the panel closes, and when a run starts.
+@MainActor
+final class Listener: ObservableObject {
+    /// The song playing; a change tells the window (the position's ticks do not, so the table is not redrawn for them).
+    @Published private(set) var song: String? { didSet { if song != oldValue { onSong?() } } }
+    var onSong: (() -> Void)?
+    @Published private(set) var title = ""
+    @Published private(set) var position: Double = 0
+    @Published private(set) var length: Double = 0
+    @Published private(set) var playing = false
+    private var player: AVPlayer?
+    private var observer: Any?
+
+    func play(_ url: URL, id: String, title: String, start: Double) {
+        stop()
+        let p = AVPlayer(url: url)
+        player = p; song = id; self.title = title; position = start
+        observer = p.addPeriodicTimeObserver(forInterval: CMTime(seconds: 0.25, preferredTimescale: 600), queue: .main) { [weak self] t in
+            MainActor.assumeIsolated {
+                guard let self, let item = self.player?.currentItem else { return }
+                self.position = t.seconds
+                let d = item.duration.seconds
+                if d.isFinite { self.length = d }
+                self.playing = (self.player?.rate ?? 0) > 0
+            }
+        }
+        p.seek(to: CMTime(seconds: start, preferredTimescale: 600))
+        p.play()
+        playing = true
+    }
+
+    func toggle() {
+        guard let p = player else { return }
+        if p.rate > 0 { p.pause(); playing = false } else { p.play(); playing = true }
+    }
+
+    func seek(_ seconds: Double) {
+        position = max(0, length > 0 ? min(seconds, length) : seconds)
+        player?.seek(to: CMTime(seconds: position, preferredTimescale: 600))
+    }
+
+    func stop() {
+        if let o = observer { player?.removeTimeObserver(o) }
+        observer = nil
+        player?.pause(); player = nil
+        song = nil; playing = false; position = 0; length = 0
     }
 }

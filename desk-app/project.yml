@@ -35,6 +35,8 @@ targets:
         product: DeckieInference
       - package: DeckieCore
         product: DeckieDesk
+      - package: DeckieCore
+        product: DeckieDisc
       - sdk: ShazamKit.framework
       - sdk: AVFoundation.framework
     info:

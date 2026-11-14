@@ -1,6 +1,7 @@
 import SwiftUI
 import DeckieCrate
 import DeckieBuild
+import DeckieDesk
 
 struct TrackTable: View {
     @EnvironmentObject var model: DeskModel
@@ -8,10 +9,12 @@ struct TrackTable: View {
 
     var body: some View {
         let all = model.crate?.tracks ?? []
-        let tracks = (model.onlyNeedName ? all.filter(LocalFacts.needsName) : all).sorted(using: sortOrder)
+        let tracks = (model.onlyNeedName ? all.filter { model.reason($0) != nil } : all).sorted(using: sortOrder)
         Table(tracks, selection: $model.selection, sortOrder: $sortOrder) {
-            TableColumn(Words.colTitle, value: \.ident.title) { Text($0.ident.title) }
-            TableColumn(Words.colArtist, value: \.ident.artist, comparator: OptionalStringComparator()) { Text($0.ident.artist ?? "") }
+            TableColumn(Words.colTitle, value: \.ident.title) { (t: CrateTrack) in
+                HStack(spacing: 4) { ListenMark(on: model.listener.song == t.id); NameCell(track: t, field: "title") }
+            }
+            TableColumn(Words.colArtist, value: \.ident.artist, comparator: OptionalStringComparator()) { (t: CrateTrack) in NameCell(track: t, field: "artist") }
                 .width(min: 100, ideal: 160)
             TableColumn(Words.colTempo) { t in Text(t.grid.map { Words.tempo($0.bpm) } ?? Words.none) }.width(60)
             TableColumn(Words.colKey) { t in
@@ -28,7 +31,23 @@ struct TrackTable: View {
             TableColumn(Words.colVocals) { t in Text(t.vocal.map { Words.percent($0.mean) } ?? Words.none) }.width(56)
             TableColumn(Words.colWhere) { t in Text(Self.places(t).joined(separator: " · ")).lineLimit(1).help(Self.places(t).joined(separator: "\n")) }
                 .width(min: 80, ideal: 180)
-            TableColumn(Words.colNotes) { t in Text(Self.notes(t)).foregroundStyle(.secondary).lineLimit(1) }
+            TableColumn(Words.colNotes) { (t: CrateTrack) in NotesCell(track: t) }
+        }
+        .contextMenu(forSelectionType: String.self) { ids in
+            if let id = ids.first, ids.count == 1, let t = model.binding(for: id) {
+                Button(Words.t("listen")) { model.listen(t) }
+            }
+            if ids.contains(where: { id in model.binding(for: id).map { model.reason($0) == "guess" } ?? false }) {
+                Button(Words.t("looksRight")) { model.check(Array(ids)) }
+            }
+        }
+        .onKeyPress(.space) {
+            guard model.selection.count == 1, let id = model.selection.first, let t = model.binding(for: id) else { return .ignored }
+            if model.listener.song == id { model.listener.stop() } else { model.listen(t) }
+            return .handled
+        }
+        .onChange(of: model.selection) { _, sel in
+            if let s = model.listener.song, !sel.contains(s) { model.listener.stop() }
         }
     }
 
@@ -55,9 +74,9 @@ struct TrackTable: View {
         return ([k.camelot + " " + Words.keyFrom(k.source)] + others).joined(separator: "; ")
     }
 
-    static func notes(_ t: CrateTrack) -> String {
+    static func notes(_ t: CrateTrack, reason: String? = nil) -> String {
         var n: [String] = []
-        if LocalFacts.needsName(t) { n.append(Words.needsNameNote) }
+        if let reason { n.append(Words.t("nameReason." + reason)) } else if LocalFacts.needsName(t) { n.append(Words.needsNameNote) }
         if let d = t.file.damagedFrames, !d.isEmpty { n.append(Words.damagedFrames(d.count)) }
         if t.flags.contains("low_grid_confidence") { n.append(Words.gridUnsure) }
         if t.flags.contains("vocal_unknown") { n.append(Words.vocalsNotRead) }
@@ -93,9 +112,36 @@ struct Inspector: View {
             if model.selection.count == 1, let id = model.selection.first, let t = model.binding(for: id) {
                 VStack(alignment: .leading, spacing: 12) {
                     Text(Words.names).font(.headline)
-                    field(Words.title, t.ident.title, id: id) { v in model.update(id) { $0.ident.title = v } }
-                    field(Words.artist, t.ident.artist ?? "", id: id) { v in model.update(id) { $0.ident.artist = v.isEmpty ? nil : v } }
-                    field(Words.version, t.ident.version ?? "", id: id) { v in model.update(id) { $0.ident.version = v.isEmpty ? nil : v } }
+                    let f = model.facts(t)
+                    field(Words.title, t.ident.title, id: id, fact: f.title, field: "title") { v in
+                        if let sp = DeskNaming.split(v) { offer = (id, v, sp.artist, sp.title, sp.version) }
+                        else { model.update(id) { $0.ident.title = v } }
+                    }
+                    if let o = offer, o.id == id {
+                        VStack(alignment: .leading, spacing: 6) {
+                            Text(Words.t("splitOffer")).font(.callout)
+                            HStack {
+                                Button(Words.t("split")) { model.applySplit(id, artist: o.artist, title: o.title, version: o.version); offer = nil }
+                                    .buttonStyle(.borderedProminent)
+                                Button(Words.t("keepAsTyped")) { model.update(id) { $0.ident.title = o.text }; offer = nil }
+                            }
+                        }.padding(8).background(.quaternary, in: RoundedRectangle(cornerRadius: 6))
+                    }
+                    field(Words.artist, t.ident.artist ?? "", id: id, fact: f.artist, field: "artist") { v in model.update(id) { $0.ident.artist = v.isEmpty ? nil : v } }
+                    field(Words.version, t.ident.version ?? "", id: id, fact: f.version, field: "version") { v in model.update(id) { $0.ident.version = v.isEmpty ? nil : v } }
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(Words.t("release")).font(.caption).foregroundStyle(.secondary)
+                        Text(f.release.value ?? Words.none)
+                        Text(f.release.value == nil ? Words.t("factNotFound") : DeskWords.coded("factFrom", f.release.from ?? "")).font(.caption2).foregroundStyle(.secondary)
+                    }
+                    HStack {
+                        Button(model.listener.song == id ? Words.t("stopListening") : Words.t("listen")) {
+                            model.listener.song == id ? model.listener.stop() : model.listen(t)
+                        }.buttonStyle(.borderedProminent)
+                        if model.reason(t) == "guess" { Button(Words.t("looksRight")) { model.check([id]) }.help(Words.t("looksRightHelp")) }
+                        // LOOK UP SONG VIA ... GOES HERE (the note on D30): the one explicit lookup, by sound, beside Listen.
+                        // Not built: route A sends nothing anywhere.
+                    }
                     field(Words.tags, t.ident.tags.joined(separator: ", "), id: id) { v in
                         model.update(id) { $0.ident.tags = v.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty } }
                     }
@@ -147,10 +193,15 @@ struct Inspector: View {
         }
     }
 
-    @ViewBuilder func field(_ label: String, _ value: String, id: String, set: @escaping (String) -> Void) -> some View {
+    @State private var offer: (id: String, text: String, artist: String?, title: String, version: String?)?
+
+    @ViewBuilder func field(_ label: String, _ value: String, id: String, fact: DeskNaming.Fact? = nil, field name: String = "",
+                            set: @escaping (String) -> Void) -> some View {
         VStack(alignment: .leading, spacing: 2) {
             Text(label).font(.caption).foregroundStyle(.secondary)
-            CommitField(label: label, value: value, commit: set).id(id + label)
+            CommitField(label: label, value: value, commit: set, guess: fact?.guess ?? false,
+                        same: { if fact?.guess == true { model.check([id], field: name) } }).id(id + label)
+            if let fact { Text(Words.fromLine(fact)).font(.caption2).foregroundStyle(fact.guess ? .orange : .secondary) }
         }
     }
 
@@ -167,17 +218,63 @@ struct CommitField: View {
     let label: String
     let value: String
     let commit: (String) -> Void
+    /// Desk's guess: drawn lighter; Return on it as it is keeps it (`same`).
+    var guess = false
+    var same: () -> Void = {}
     @State private var text = ""
     @FocusState private var focused: Bool
 
     var body: some View {
         TextField(label, text: $text)
             .textFieldStyle(.roundedBorder)
+            .italic(guess && text == value)
+            .foregroundStyle(guess && text == value ? .secondary : .primary)
             .focused($focused)
             .onAppear { text = value }
             .onChange(of: value) { _, v in if !focused { text = v } }
             .onChange(of: focused) { _, f in if !f, text != value { commit(text) } }
-            .onSubmit { if text != value { commit(text) } }
+            .onSubmit { if text != value { commit(text) } else { same() } }
             .onDisappear { if text != value { commit(text) } }
+    }
+}
+
+/// The table's Listen button for a song.
+struct ListenCell: View {
+    @EnvironmentObject var model: DeskModel
+    let track: CrateTrack
+    var body: some View {
+        let on = model.listener.song == track.id
+        Button { on ? model.listener.stop() : model.listen(track) } label: { Image(systemName: on ? "stop.fill" : "play.fill") }
+            .buttonStyle(.borderless).help(Words.t("listenTo", ["title": track.ident.title]))
+    }
+}
+
+/// A title or an artist: lighter and slanted when it is Desk's guess.
+struct NameCell: View {
+    @EnvironmentObject var model: DeskModel
+    let track: CrateTrack
+    let field: String
+    var body: some View {
+        let f = model.facts(track).fact(field)
+        let text = field == "title" ? track.ident.title : (track.ident.artist ?? "")
+        Text(text).italic(f.guess).foregroundStyle(f.guess ? Color.secondary : Color.primary)
+    }
+}
+
+/// The notes, with why the song needs a name first.
+struct NotesCell: View {
+    @EnvironmentObject var model: DeskModel
+    let track: CrateTrack
+    var body: some View {
+        let why = model.reason(track)
+        Text(TrackTable.notes(track, reason: why)).foregroundStyle(why != nil ? Color.orange : Color.secondary).lineLimit(1)
+    }
+}
+
+/// A small speaker beside the title of the song playing (the table's Listen is its context menu and the space bar).
+struct ListenMark: View {
+    let on: Bool
+    var body: some View {
+        if on { Image(systemName: "speaker.wave.2.fill").foregroundStyle(.tint) }
     }
 }

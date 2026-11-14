@@ -42,7 +42,8 @@ real storage is never touched). The layout (`DeskHome`, `core/Sources/DeckieDesk
       crate.json                   its name, when it was made and last opened, where each source and the music folder were read from
       crate.deckiecrate/           the crate file itself (crate v1, unchanged), written as the DJ works
       crate.deckiebuild/           the builder's work folder (which file is which record), for a quick re-read
-      corrections.json             the DJ's name fixes, by entry id
+      corrections.json             the DJ's name fixes, by entry id, each field with how the DJ gave it
+      names.json                   where each name was read from, field by field, and each song's release
       places.json                  where each place's file was, below its source's top or the music folder
       pending.json                 a run that started and has not finished; gone when it finishes
       runs.jsonl                   one line per finished run: counts and timings
@@ -51,6 +52,7 @@ real storage is never touched). The layout (`DeskHome`, `core/Sources/DeckieDesk
       signatures/<id>_o.*          a recognition signature, and who made it when
       prints/<id>.print            the print that finds copies of one recording
     Outbox/<name>.deckiecrate      the last crate file handed to the share sheet
+    Discs/<disc id>/               a music CD's songs copied off it (disc.json, Track 01.aiff ...): see below
 
 Absolute paths (where a stick was mounted, the music folder) are only in `crate.json` and `places.json`, never in the
 crate file. Deleting a crate in the window moves its folder to the Trash (with `DECKIE_DESK_HOME` set, it is deleted);
@@ -118,8 +120,8 @@ and every DJ library is read from a copy, never written or locked.
   `.m3u`/`.m3u8` or numbered `.txt`/`.nfo` list beside it, the DJ programs' libraries, a named copy of the same
   recording. `ident.source` says where; the inspector's Name from row says it in words. A DJ's fix always wins.
 - *The finished screen* says how many keys came from where, how many songs have none, and how many still need a name
-  ("Show them" shows only those). The status bar's "n need a name" does the same at any time; naming one is the usual
-  name fix in the inspector. There is no listen button and no lookup that uses the network.
+  ("Show them" shows only those). The status bar's "n need a name" does the same at any time. Naming is below; there
+  is no lookup that uses the network.
 - *Again.* File > Look again for keys and names reads the tags and libraries again for the crate showing, without
   reading its music again (one undo step).
 - *Tests and manual runs* never look in a real home folder: a desk whose storage is not the standard one (a scratch
@@ -254,8 +256,47 @@ column and the inspector show every place of a song, the one that leads first ("
 Burned"; a folder on the Mac by its path, or "the top of the music folder"). Corrections are saved as they are made
 and undo with Command-Z. In the crate file the fields keep their names: `disc`, `folder`, `track`.
 
-Not here: audio CDs (no files to read; ripping is a later step), organising or planning sources in Desk, records
+Not here: organising or planning sources in Desk, records
 (nothing to read), icons for the kind of source (the format has no field for it).
+
+## Naming a song (research AA, route A: nothing leaves the Mac)
+
+The logic is the core's (`DeskNaming`, `DiscCopies`, `DeskNamesStep` in `core/Sources/DeckieDesk`; CD-Text and the
+drives in `core/Sources/DeckieDisc`), shared with the Windows and Linux window; this window only draws it.
+
+- **The list.** "n need a name" in the status bar (and "Show them" or "Name them" on the finished screen) shows the
+  songs with no title, no artist, or a name that is Desk's guess (from a file name, a folder, a list beside the
+  music or the disc) the DJ has not checked; the Notes column says which ("No title", "No artist", "Desk's guess").
+  The count on the finished screen is this list's.
+- **One song** (the inspector's Names): title, artist and version, each with a small line saying where it came from
+  ("from the file name", "from the disc", "you typed this", ...); a guess is lighter and slanted and says "Desk's
+  guess"; Return on a guess as it is keeps it; typing "Artist - Title (Version)" into the title offers to split it.
+  Release shows the file's album tag or the disc's own name. "Looks right" keeps the guesses of the songs selected
+  (also in the table's context menu). Where "Look up song via ..." will go is marked in the code and not built.
+- **Name songs** (toolbar): Paste a list…, Names from the file names… (a pattern), Names from a playlist… (an .m3u
+  made from these songs; each length is checked, 3 s either way). Each shows a preview with a tick per field before
+  anything changes: only empty fields and Desk's guesses are ticked at first, the DJ's own names are shown and never
+  changed, a version is never taken away, and a list whose count differs from the songs' is refused until fixed.
+  "Use n names" is one undo step; the status bar then says "Names added to n songs. Undo".
+- **Listen** (D33): the inspector's Listen, the table's context menu, or the space bar on a selected song. AVPlayer
+  plays from a third of the way in; the bar under the table has play and pause, back and forward 30 seconds, a scrub
+  bar, the position and the length. It stops when another song is chosen, a run starts, or the crate changes. A song
+  whose source is not plugged in says which to put back.
+- **A music CD.** Add music lists a music CD in the drive ("Music CD, 14 songs, 71:12 · music CD in Audio CD") beside
+  drives and folders; a music CD's volume (the system's `cddafs`) is no longer offered as a drive. The run first
+  copies its songs off: the system already shows them as `1 Audio Track.aiff` files, which Desk copies into
+  `Discs/<disc id>/Track 01.aiff` (the id is a hash of the table of contents, so the same disc is copied once). The
+  table and CD-Text are asked of the disc's raw device (DKIOCCDREADTOC, formats 2 and 5); if this Mac does not let
+  Desk open it, the table is made from the files' lengths and the names are unknown. Names from CD-Text are kept as
+  "from the disc" (a guess to glance at); the source takes the disc's own title, or "Music CD, n songs, m:ss" and the
+  run screen asks once, in passing, for the name written on the disc (the crate follows when it was made from the
+  disc). Each song's place is the source and its number. Room: 10.1 MB a minute of music (a full disc about 750 MB);
+  the copy is deleted when no crate has the disc as a source (Remove from crate, or deleting the crate).
+  `DECKIE_DESK_MUSIC_CD=<folder>` lists stand-in drives made from generated bytes instead of the real ones.
+- **Trying it with no one at the keyboard:** `"Deckie Desk" --naming-walk <out folder> <music folder>` (with
+  `DECKIE_DESK_MUSIC_CD` and `DECKIE_DESK_PLAYLIST`) walks the flow and writes a picture at each step.
+
+None of the music CD code has read a real disc on this Mac: there is no drive here.
 
 ## What is here
 
@@ -268,6 +309,7 @@ Not here: audio CDs (no files to read; ripping is a later step), organising or p
   What didn't go in.
 - `SourcesPanel.swift`: the Sources panel (corrections, Remove from crate) and the Add music menu.
 - `Words.swift`: every word on screen, by name.
+- `Naming.swift`: the Listen bar, the naming tools' sheet with its preview, and the naming walk.
 - `HeadlessDesk.swift`: Desk's own crates from a terminal.
 - `Snapshot.swift`: `--snapshot` steps through the window and writes PNGs.
 - `Signatures.swift`: AVFoundation into ShazamKit's signature generator, and into the print that finds copies.

@@ -2,6 +2,7 @@ import SwiftUI
 import DeckieCrate
 import DeckieDesk
 import DeckieBuild
+import DeckieDisc
 
 struct ContentView: View {
     @EnvironmentObject var model: DeskModel
@@ -21,6 +22,15 @@ struct ContentView: View {
             ToolbarItemGroup(placement: .primaryAction) {
                 AddMusicMenu()
                 if model.crate != nil {
+                    Menu {
+                        Button(Words.t("pasteList")) { model.tool = "paste" }
+                        Button(Words.t("namesFromFileNames")) { model.tool = "pattern" }
+                        Button(Words.t("namesFromPlaylist")) { model.tool = "playlist" }
+                        Divider()
+                        Button(Words.t("looksRight")) { model.check(Array(model.selection)) }
+                            .disabled(!model.selection.contains { id in model.crate?.tracks.first { $0.id == id }.map { model.reason($0) == "guess" } == true })
+                    } label: { Label(Words.t("nameTools"), systemImage: "character.cursor.ibeam") }
+                    .disabled(model.running)
                     Button { model.showSources.toggle() } label: {
                         Label(model.showSources ? Words.hideSources : Words.sources, systemImage: "externaldrive")
                     }
@@ -111,12 +121,12 @@ struct PendingBanner: View {
     @EnvironmentObject var model: DeskModel
     var body: some View {
         if let p = model.pending {
-            let here = FileManager.default.fileExists(atPath: p.folder)
+            let here = DeskRun.canCarryOn(p, home: model.home)
             HStack(spacing: 10) {
                 Image(systemName: "exclamationmark.circle").foregroundStyle(.orange)
                 Text(Words.stoppedReading(p.name))
                 if here { Button(Words.carryOn) { model.carryOn() } }
-                else { Text(Words.putBack(p.name)).foregroundStyle(.secondary) }
+                else { Text(p.musicCD != nil ? Words.t("putDiscBack", ["read": p.name]) : Words.putBack(p.name)).foregroundStyle(.secondary) }
             }
             .font(.callout).padding(8).background(.quaternary, in: RoundedRectangle(cornerRadius: 6))
         }
@@ -129,6 +139,16 @@ struct RunView: View {
         VStack(alignment: .leading, spacing: 10) {
             Text(Words.runTitle).font(.title2)
             Text(Words.runReading(model.runRead, into: model.current?.name ?? "")).foregroundStyle(.secondary)
+            if model.discAsk != nil {
+                // A music CD with no name of its own: asked once, in passing; the run never waits (letter AA, 2.5).
+                VStack(alignment: .leading, spacing: 6) {
+                    (Text(Words.t("askDiscNameTitle")).bold() + Text(" " + Words.t("askDiscNameBody")).foregroundColor(.secondary))
+                    HStack {
+                        TextField(Words.nameField, text: $model.discAnswer).textFieldStyle(.roundedBorder).onSubmit { model.nameDisc() }
+                        Button(Words.ok) { model.nameDisc() }.buttonStyle(.borderedProminent)
+                    }
+                }.padding(10).background(.quaternary, in: RoundedRectangle(cornerRadius: 8))
+            }
             if model.runTotal > 0 {
                 ProgressView(value: Double(model.runDone), total: Double(model.runTotal))
                 HStack {
@@ -146,6 +166,7 @@ struct RunView: View {
 
     private var stage: String {
         switch model.runStage {
+        case .copying: return Words.stageCopying
         case .reading: return Words.stageReading
         case .finishing: return Words.stageFinishing
         case .saving: return Words.stageSaving
@@ -173,12 +194,21 @@ struct FinishedView: View {
                 if report.foldersLeftOut > 0 { Text(Words.foldersLeftOut(report.foldersLeftOut)).foregroundStyle(.secondary) }
                 if let local = report.local {
                     ForEach(LocalLines.keyLines(local), id: \.self) { Text($0) }
+                    if let d = report.disc, d.text != "names" { Text(Words.t(d.text == "none" ? "discNoNames" : "discDriveNoNames")) }
+                    if let d = report.disc, d.named > 0 { Text(Words.c("discNamed", d.named)) }
+                    // The count is the list's (letter AA, 3.2): no title, no artist, or Desk's guess.
+                    let need = model.needingNames.count
                     HStack {
-                        Text(local.report.needName == 0 ? Words.everySongHasAName : Words.needName(local.report.needName))
-                        if local.report.needName > 0 {
-                            Button(Words.showThem) { model.onlyNeedName = true; model.finished = nil }.buttonStyle(.link)
+                        Text(need == 0 ? Words.everySongHasAName : Words.needName(need))
+                        if need > 0 {
+                            Button(report.disc.map { $0.text != "names" } == true ? Words.t("nameThem") : Words.showThem) {
+                                model.onlyNeedName = true; model.finished = nil
+                            }.buttonStyle(.link)
                         }
                     }
+                    if need > 0 { Text(Words.t("needNameHelp")).foregroundStyle(.secondary) }
+                    if let d = report.disc, d.damagedSectors > 0 { Text(Words.t("discDamaged")).foregroundStyle(.secondary) }
+                    if let d = report.disc, d.bytes > 0 { Text(Words.t("discCopyRoom", ["size": Words.megabytes(d.bytes)])).foregroundStyle(.secondary) }
                     ForEach(LocalLines.notes(local), id: \.self) { Text($0).foregroundStyle(.secondary) }
                 }
                 Text(Words.took(report.seconds, perMinute: report.songsPerMinute)).foregroundStyle(.secondary)
@@ -206,7 +236,15 @@ struct CrateView: View {
                 Inspector().frame(minWidth: 260, idealWidth: 300, maxWidth: 380)
             }
         }
-        .safeAreaInset(edge: .bottom) { StatusBar() }
+        .safeAreaInset(edge: .bottom) {
+            VStack(spacing: 0) {
+                if model.listener.song != nil { PlayerBar(listener: model.listener) }
+                StatusBar()
+            }
+        }
+        .sheet(isPresented: Binding(get: { model.tool != nil }, set: { if !$0 { model.tool = nil } })) {
+            if let kind = model.tool { ToolSheet(kind: kind).environmentObject(model) }
+        }
     }
 }
 
@@ -218,7 +256,7 @@ struct StatusBar: View {
                 Text(Words.songs(c.tracks.count)).bold()
                 let unsigned = c.tracks.filter { $0.signatures.isEmpty }.count
                 if unsigned > 0 { Text(Words.cantBeRecognised(unsigned)).foregroundStyle(.secondary) }
-                let unnamed = c.tracks.filter(LocalFacts.needsName).count
+                let unnamed = model.needingNames.count
                 if unnamed > 0 || model.onlyNeedName {
                     Button(model.onlyNeedName ? Words.showAllSongs : Words.needNameCount(unnamed)) { model.onlyNeedName.toggle() }
                         .buttonStyle(.link)
@@ -232,6 +270,10 @@ struct StatusBar: View {
                 }
             }
             Spacer()
+            if let u = model.undoLine, model.undoManager?.canUndo == true {
+                Text(u)
+                Button(Words.t("undo")) { model.undoLine = nil; model.undoManager?.undo() }.buttonStyle(.link)
+            }
         }
         .font(.callout).padding(.horizontal, 12).padding(.vertical, 6).background(.bar)
     }
