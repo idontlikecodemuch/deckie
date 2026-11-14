@@ -25,7 +25,8 @@ import Testing
         return u
     }()
     static func read(_ path: String) -> String {
-        (try? String(contentsOf: repo.appendingPathComponent(path), encoding: .utf8)) ?? ""
+        ((try? String(contentsOf: repo.appendingPathComponent(path), encoding: .utf8)) ?? "")
+            .replacingOccurrences(of: "\r\n", with: "\n")   // a Windows checkout's line ends
     }
     static func lines(_ path: String) -> [(Int, String)] {
         read(path).split(separator: "\n", omittingEmptySubsequences: false).enumerated().map { ($0.offset + 1, String($0.element)) }
