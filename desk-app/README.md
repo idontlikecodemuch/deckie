@@ -124,8 +124,8 @@ and every DJ library is read from a copy, never written or locked.
   `.m3u`/`.m3u8` or numbered `.txt`/`.nfo` list beside it, the DJ programs' libraries, a named copy of the same
   recording. `ident.source` says where; the inspector's Name from row says it in words. A DJ's fix always wins.
 - *The finished screen* says how many keys came from where, how many songs have none, and how many still need a name
-  ("Show them" shows only those). The status bar's "n need a name" does the same at any time. Naming is below; there
-  is no lookup that uses the network.
+  ("Show them" shows only those). The status bar's "n need a name" does the same at any time. Naming is below; the
+  one step that uses the network is "Look up songs via MusicBrainz", and only when the DJ asks (D36, below).
 - *Again.* File > Look again for keys and names reads the tags and libraries again for the crate showing, without
   reading its music again (one undo step).
 - *Tests and manual runs* never look in a real home folder: a desk whose storage is not the standard one (a scratch
@@ -276,7 +276,15 @@ drives in `core/Sources/DeckieDisc`), shared with the Windows and Linux window; 
   ("from the file name", "from the disc", "you typed this", ...); a guess is lighter and slanted and says "Desk's
   guess"; Return on a guess as it is keeps it; typing "Artist - Title (Version)" into the title offers to split it.
   Release shows the file's album tag or the disc's own name. "Looks right" keeps the guesses of the songs selected
-  (also in the table's context menu). Where "Look up song via ..." will go is marked in the code and not built.
+  (also in the table's context menu).
+- **Look up via MusicBrainz** (D36, `Lookup.swift`; the logic is DeckieDesk's `DeskLookup`): a button in the names
+  panel for one song, and "Look up songs via MusicBrainz…" in Name songs (the selection, or the songs that need a
+  name) and beside "n need a name". A sheet says first, in plain words, what will be sent and to whom (every time for
+  a batch or a disc; for one song the first time, then under the button), then counts while it goes (one request a
+  second; Stop keeps what was found), then shows each song's candidates side by side with their lengths and a tick
+  per field. What is used is marked "from MusicBrainz, when you looked it up" and is one undo step. "What Desk has
+  sent" lists every request. Marked by its own colour and the globe, never Desk's accent. The only code that uses the
+  network is `core/Sources/DeckieLookup` (Foundation's URL loading, on the Mac).
 - **Name songs** (toolbar): Paste a list…, Names from the file names… (a pattern), Names from a playlist… (an .m3u
   made from these songs; each length is checked, 3 s either way). Each shows a preview with a tick per field before
   anything changes: only empty fields and Desk's guesses are ticked at first, the DJ's own names are shown and never

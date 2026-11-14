@@ -74,7 +74,7 @@ Then the engine sends `state` and, when a crate with songs is showing, `songs`.
   or "Put Stick 3 back in to carry on"); `musicCD` is true for a music CD, whose `here` is true when the same disc
   is in a drive (Desk keeps none of a disc's music, so a stopped run carries on only with the disc).
 - `undo` and `redo`: the name of the word for the step each would take (`undoNameFix`, `undoRename`, `undoMove`,
-  `undoRemove`, `undoLookAgain`, `undoNames`, `undoCheck`), or null.
+  `undoRemove`, `undoLookAgain`, `undoNames`, `undoCheck`, `undoLookup`), or null.
 
 ### `songs`: the crate's songs, sources and what did not go in
 
@@ -216,6 +216,58 @@ On Windows and Linux the engine reads that song's sound off the disc when `song.
 holds it in memory only while the chunks go out, and writes nothing; reading takes as long as the drive needs, and
 the reply comes when it is read. On the Mac the song is the system's own file on the disc, sent like any file. The
 page joins and plays it the same way, so the scrub bar works on it as on any song.
+
+### Look up songs via MusicBrainz (D36, added Nov 14, 2026; no new protocol number: only fields, events and requests were added)
+
+The one step in Desk that uses the internet. **The engine does the lookup; the pages never touch the network** (their
+content rules keep `connect-src 'none'`), and the only code that does is `DeckieLookup` in the core. Nothing is sent
+until the DJ has read the sentence and pressed "Look it up"; nothing is changed until the DJ applies the review.
+
+`hello` carries `lookup: {"service": "MusicBrainz", "available": bool}`: false where this computer has no way to look up
+yet (Windows and Linux, today: Swift's networking there needs curl, which is not on the licence allowlist), and then
+the window says so in plain words (`lookupFailure.notOnThisComputer`). `state` carries `lookingUp` (a lookup is going;
+requests that change something are refused with `busy`, except `lookup.stop`) and `discs` (the sources that are music
+CDs, which can be looked up as a disc).
+
+| `type` | Fields | Reply carries | Then |
+|---|---|---|---|
+| `lookup.plan` | `scope`: `song` (with `song`), `songs` (with `songs` ids, or `source`, or neither for the songs that need a name), `disc` (with `source`) | `plan` (below), `explained` (the one-song sentence was shown once), `available` | nothing is sent anywhere |
+| `lookup.start` | | `songs`, `requests`, `seconds` (the most it can take at one request a second) | `lookup.started`, `lookup.progress`…, `lookup.finished`, `state` |
+| `lookup.stop` | | | the lookup ends after the request it is waiting on; `lookup.finished` with `stopped`, what was found kept |
+| `lookup.review` | | `review`, `summary` (the last one, or null) | |
+| `lookup.apply` | `choices`: `[{"song", "candidate", "fields": ["title", "year", …]}]` (absent: the ones Desk would make) | `songs` (how many changed) | `state` (`undo` is `undoLookup`), `songs` |
+| `lookup.close` | | | the review is let go |
+| `lookup.sent` | | `sent` ("What Desk has sent": every request, oldest first) | |
+| `lookup.clearSent` | | | |
+
+A `plan` is `{"scope", "songs", "byIsrc", "byWords", "byFileName", "nothingToSend", "requests", "seconds",
+"discName", "sentence", "what"}`: `sentence` is the lines to show before anything is sent, in Desk's words (what will be
+sent, to whom, what will not, how long); `what` (one song) is what it would send, as `[["title", "Blue Monday"],
+["artist", "New Order"]]` (words `lookupWhat.<name>`), for the line under the button once the sentence has been read.
+
+Events: `{"event": "lookup.started", "scope", "songs"}`; `{"event": "lookup.progress", "done", "total", "found"}` as
+each song is done; `{"event": "lookup.finished", "review", "summary"}`.
+
+A `review` is `{"scope", "source", "songs", "stopped", "failure", "requests", "discMatch"}`. `failure` (a code, words
+`lookupFailure.<code>`: `noConnection`, `busy`, `refused`, `badAnswer`, `notOnThisComputer`) ended the whole lookup.
+`discMatch` (a disc): `exact` (MusicBrainz knew it by its id), `fuzzy` (a disc like it, every song the same length),
+`byName`, or null (words `lookupDiscMatch.<code>`, `none` for null). Each song is `{"song", "title", "seconds", "ask",
+"outcome", "failure", "candidates", "chosen", "several"}`: `outcome` `found`, `nothing`, `failed`, `notAsked` (stopped
+first), `nothingToSend` (words `lookupOutcome.<code>`); `chosen` is the candidate Desk would use (exactly one fits by
+length and agrees), or null, with `several` when more than one different answer fits. Each candidate is `{"recording",
+"title", "version", "artist", "release", "releaseId", "year", "label", "seconds", "fit", "difference", "otherVersion",
+"notes", "agree", "changes"}`: `fit` `fits` (within 3 s of the song), `off` or `unknown`; `difference` its length less
+the song's; `otherVersion` plainly another version (shown, never preferred); `notes` codes (words `lookupNote.<code>`);
+`changes` the preview's changes (as `names.preview`'s, with `field` also `release`, `year`, `label`), `tick` meaning
+"ticked when this candidate is used", `locked` the DJ's own entry or the song's own version, `note` also `yourVersion`,
+`otherVersion`, `original` (words `changeNote.<code>`).
+
+A `sent` entry is `{"at" (ISO 8601), "service", "kind", "fields", "address", "answer"}`: `kind` `recordingSearch`,
+`isrcSearch`, `disc`, `releaseSearch`, `release` (words `sentKind.<kind>`); `fields` what it carried, as name and
+value (words `sentField.<name>`); `address` the whole address asked for; `answer` `ok`, `nothing`, `busy` and the
+failure codes (words `sentAnswer.<code>`). Kept in Desk's storage (`lookups.json`), clearable.
+
+What was applied has the origin `lookup:musicbrainz` (`factFrom.lookup:musicbrainz`), in `names` as in the crate file.
 
 ## Requests the shell answers
 
