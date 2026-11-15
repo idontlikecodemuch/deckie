@@ -2,6 +2,46 @@
 
 Branch `trial/own-recognition`. Newest entry first. Nothing here ships without the owner's decision.
 
+## Nov 15, 2026, 00:40 UTC: `recog/fast`, stages 3 and 4 done: `boothFast` is `booth`'s index with a faster listener; the letter is written
+
+The full account is `docs/research/w5-recognition-by-five-seconds.md` (with the size curve drawn).
+
+**The table asked for** (right name on screen by 5 s, % of clips; eval half, 969 songs)
+
+| Setting | Index | Clean | Room | Crowd 10 dB under | Crowd equal | Crowd 5 dB over | Small speaker, room, crowd equal | After a hard cut: clean / crowd 10 under / crowd equal | Wrong song named | Song not in the index named |
+|---|---|---|---|---|---|---|---|---|---|---|
+| `boothSmall` | 5.7 KB a minute | 99 | 84 | 65 | 44 | 22 | 66 | 93 / 59 / 31 | 4 of 1,200 clips | 1 of 217 |
+| `booth` (default, unchanged) | 11.5 | 100 | 92 | 73 | 47 | 24 | 68 | 96 / 63 / 31 | 4 of 1,200 | 0 of 217 |
+| **`boothFast`** | 11.5 | 100 | 91 | 74 | 48 | 24 | 68 | **100 / 82 / 48** | 4 of 1,200 | 0 of 217 |
+
+- **What `boothFast` is**: the same index as `booth` (a larger one did not bring the name sooner; the bend of the
+  size curve is at `booth`) and a listener that, while following a song, looks through the crate every second in
+  the newest 4 s, and takes its first look at 2 s. `ListenSettings.fast`, `PairingConfig.boothFast`, `--fast` in
+  the tool. The default is untouched.
+- **What it buys**: after a hard cut the new song is named at 3 s (was 5) and the old name is gone by then (still
+  up at 3 s in 4 % of clean clips, was 99 %). In a blend the name changes 2 to 3 s after the two songs are equally
+  loud (was 5). From silence, clean, the median is 2 s (was 3).
+- **What it does not buy**: anything in a loud crowd from silence. 48 in 100 by 5 s with the crowd as loud as the
+  music, at every index size and with every listener change that was safe.
+- **Wrong names**: unchanged. The 4 clips are one pair of releases of one recording, in every row. Over 33,490
+  named readings on the generated mixes, none names a song outside the mix.
+- **Chosen on the dev half**: the bars a name must reach. Lower bars (2.8 and 2.3) bought 3 to 5 points in noise and
+  named 5 not-in-the-index songs of 220 on dev where the default named 2; not taken. Fuzzy lookup: no clear gain,
+  twice the time; not taken. Exact about one thing: the dev half has no hard-cut clips, so the every-second search
+  was designed from its cause and its cut figures were seen on eval while it was built.
+- **"Coming in"** (stage 4): the field is on the reading. It is ahead of the name by 0 to 1 s; its own wrong
+  rate is 0 of 280 readings with the fast listener (3 of 422 with the default). It does not show a song before
+  the two are equally loud. One idea that might (search what is left after removing the followed song's points)
+  is not built and not measured.
+- **Fader**: `steadySpeedPercent` is built and tested (middle of five readings; halves the error).
+- **Tests**: 14 recognition tests pass on Linux here. The two workflows on this branch: see the line below.
+
+**Workflows on `recog/fast`**: WORKFLOWS
+
+**Consider changing direction, because** the remaining slowness is the loud room, and nothing in the index or the
+listener moved it: the next gain is more likely from where the microphone sits (or a line from the mixer) than
+from more work here. Otherwise this branch is ready for the owner to choose between `booth` and `boothFast`.
+
 ## Nov 14, 2026, 22:45 UTC: `recog/fast`, stage 3 (first results): searching every second while following puts the new name up 3 s after a cut, with no more wrong names
 
 **Table** (`booth` index, eval half; the index is the same in every row, so its size is `booth`'s 11.5 KB a minute)
