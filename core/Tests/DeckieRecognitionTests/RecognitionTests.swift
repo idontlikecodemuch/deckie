@@ -207,6 +207,38 @@ import DeckieRecognition
         #expect(none.allSatisfy { $0.state == .nothingYet })
     }
 
+    @Test func theFastListenerLooksSoonerNoticesTheNextSongSoonerAndSteadiesTheFader() throws {
+        func run(_ settings: ListenSettings) -> [ListenReading] {
+            let listener = SongListener(index: Self.index, settings: settings)
+            var readings: [ListenReading] = []
+            var at = 0
+            while at < Self.set.count {
+                let end = min(Self.set.count, at + Self.rate / 10)
+                readings += listener.hear(Array(Self.set[at..<end]), sampleRate: Self.rate)
+                at = end
+            }
+            return readings
+        }
+        let plain = run(ListenSettings()), fast = run(.fast)
+        #expect(ListenSettings.fast != ListenSettings())
+        // The first look is after two seconds, not three.
+        #expect(fast.first?.time == 2 && plain.first?.time == 3)
+        // The song that starts at 20 s is named no later than by the default listener, and within four seconds.
+        let change = try #require(fast.first { $0.id == "song6" })
+        let before = try #require(plain.first { $0.id == "song6" })
+        #expect(change.time <= before.time && change.time <= 24)
+        // Nothing but the two songs is ever named, and the first is not named again once the second is.
+        #expect(fast.allSatisfy { $0.id == nil || $0.id == "song2" || $0.id == "song6" })
+        #expect(fast.filter { $0.time > change.time }.allSatisfy { $0.id != "song2" })
+        // The steadied fader figure: present whenever a song is named, and close to the truth (0 and +6 %).
+        for r in fast where r.id != nil {
+            let steady = try #require(r.steadySpeedPercent)
+            if r.id == "song2", r.time >= 4, r.time <= 20 { #expect(abs(steady) < 0.3) }
+            if r.id == "song6", r.time >= 30 { #expect(abs(steady - 6) < 0.3) }
+        }
+        #expect(fast.filter { $0.id == nil }.allSatisfy { $0.steadySpeedPercent == nil })
+    }
+
     @Test func theBoothRecogniserTakesSoundWithoutWaitingAndReadsItInOrder() throws {
         final class Box: @unchecked Sendable { let lock = NSLock(); var readings: [ListenReading] = [] }
         let box = Box()

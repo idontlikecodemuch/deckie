@@ -72,7 +72,7 @@ def starts(work, path, label=None):
     absent = [0, 0]; ms = []; search_ms = []
     for q, rs in by.items():
         t = truth[q]
-        if t.get("split", t["role"]) != "eval":
+        if t.get("split", t["role"]) != os.environ.get("SPLIT", "eval") and t["role"] != "absent":
             continue
         ms += [float(f[8]) for f in rs]
         search_ms += [float(f[8]) for f in rs if f[2] == "nothingYet"]
@@ -133,7 +133,7 @@ def curve(work, names):
         cells = defaultdict(list); cuts = defaultdict(list); wrong = 0; total = 0; absent = [0, 0]; sm = []
         for q, rs in by.items():
             t = truth[q]
-            if t.get("split", t["role"]) != "eval":
+            if t.get("split", t["role"]) != os.environ.get("SPLIT", "eval") and t["role"] != "absent":
                 continue
             sm += [float(f[8]) for f in rs if f[2] == "nothingYet"]
             if t["role"] == "absent":
@@ -175,6 +175,7 @@ def blends(work, unmix, path):
         if len(f) >= 9:
             by[f[0]].append(f)
     rows = defaultdict(lambda: dict(start=[], middle=[], coming=[], n=0, wrong_coming=0, coming_readings=0))
+    totals = dict(named=0, outside=0)
     for lab in glob.glob(os.path.join(unmix, "**", "mixes", "*.labels.txt"), recursive=True):
         mix = os.path.basename(lab)[:-len(".labels.txt")]
         if mix not in by:
@@ -185,6 +186,9 @@ def blends(work, unmix, path):
         o = rows[(parts[1], parts[2])]
         inside = set(ids.values())
         for f in by[mix]:
+            if f[2] != "nothingYet":
+                totals["named"] += 1
+                totals["outside"] += not any(same(f[3], x) for x in inside)
             if len(f) > 9 and f[-4] != "-":
                 o["coming_readings"] += 1
                 o["wrong_coming"] += not any(same(f[-4], x) for x in inside)
@@ -212,6 +216,7 @@ def blends(work, unmix, path):
                 return f"{got[k]:.0f}" if k < len(got) else "never"
             return f"{q(0.5)} / {q(0.75)} / {q(0.9)}"
         print(f"| {key[0]} | {key[1]} | {o['n']} | {np.median(o['fade']):.0f} | {three(o['start'])} | {three(o['middle'])} | {three(o['coming'])} | {o['wrong_coming']} of {o['coming_readings']} |")
+    print(f"\nReadings that name a song: {totals['named']}; of them, naming a song that is not in the mix (copies of a song in the mix not counted): {totals['outside']}.")
 
 
 def linger(work, paths):

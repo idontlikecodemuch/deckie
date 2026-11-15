@@ -69,8 +69,9 @@ public struct PairingConfig: Sendable, Equatable, Codable {
         p.fanOut = 3
         return p
     }
-    /// A larger index for an earlier name (the speed study, docs/research/w5-recognition-by-five-seconds.md): set
-    /// by that study; until it reports, the same as `booth`.
+    /// The index for the earlier name (docs/research/w5-recognition-by-five-seconds.md). That study measured seven
+    /// sizes up to four times `booth`: a larger index bought at most 5 points by 5 s in noise and nothing clean, so
+    /// this is `booth`'s index, and the earlier name comes from the listener (`ListenSettings.fast`).
     public static var boothFast: PairingConfig { booth }
     /// The same with the strongest quarter as anchors: about 21 KB a song, for a crate of several thousand songs
     /// on a device short of storage or memory. It gives up about eight points in noise.

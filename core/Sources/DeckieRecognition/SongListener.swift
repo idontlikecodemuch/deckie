@@ -105,8 +105,17 @@ public struct ListenSettings: Sendable, Equatable {
     public var follow = true
     public init() {}
 
-    /// The listener's settings for an earlier name (the speed study); until it reports, the defaults.
-    public static var fast: ListenSettings { ListenSettings() }
+    /// The listener's settings for an earlier name (docs/research/w5-recognition-by-five-seconds.md): while a song
+    /// is followed the whole crate is searched every second, in the newest 4 s only, and the first search is made
+    /// after 2 s of sound. The bars a name must reach are the defaults': lowering them named more songs that are
+    /// not in the index.
+    public static var fast: ListenSettings {
+        var s = ListenSettings()
+        s.searchEvery = 1
+        s.followSearchWindow = 4
+        s.leastWindow = 2
+        return s
+    }
 }
 
 /// Listens to a stream of sound and names the song. Not thread-safe: one caller at a time (see `BoothRecogniser`).
