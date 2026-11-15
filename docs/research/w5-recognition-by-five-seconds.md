@@ -252,7 +252,7 @@ speed-changed cell. Its thresholds rest on 300 clips and are rough, which is why
 - One cell of the generated mixes ("resample" with the compressor) has never matched its labels in any letter
   and is still unexplained.
 - Nothing ran on an iPad. Reading times are from a shared Linux machine.
-- The two workflows' results for this branch are in the check-in file.
+- Both workflows (`core-linux`, `core-windows`) are green on the last commit that changes code.
 
 ## 11. The one command
 

@@ -34,9 +34,9 @@ The full account is `docs/research/w5-recognition-by-five-seconds.md` (with the 
   the two are equally loud. One idea that might (search what is left after removing the followed song's points)
   is not built and not measured.
 - **Fader**: `steadySpeedPercent` is built and tested (middle of five readings; halves the error).
-- **Tests**: 14 recognition tests pass on Linux here. The two workflows on this branch: see the line below.
+- **Tests**: 14 recognition tests pass on Linux here. The two workflows are green (line below).
 
-**Workflows on `recog/fast`**: WORKFLOWS
+**Workflows on `recog/fast`**: both green on commit `dc25271`, the last one that changes code (`core-linux` run 209, `core-windows` run 212; the commits after it change documents only).
 
 **Consider changing direction, because** the remaining slowness is the loud room, and nothing in the index or the
 listener moved it: the next gain is more likely from where the microphone sits (or a line from the mixer) than
