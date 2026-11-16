@@ -1,6 +1,6 @@
 # Deckie home page: copy document
 
-Fifth draft, Nov 12, 2026.
+Sixth draft, Nov 16, 2026.
 hero, then a few sections that each make one point with a short headline and a line or two, a row of feature
 panels, and a short about with a facts list at the end.
 
@@ -30,11 +30,13 @@ Marks used below: *italic* words are set in the script face (you, your, Deckie, 
 
 Nail the mix.
 
-An iPad beside the decks. It names the song, reads the pitch and shows what could come next.
+Deckie Desk reads your music: tempo, key, bars and vocals. Deckie Booth names what's playing, shows what could come next and how to mix it in.
 
-**[Help us beta test]**   Coming soon
+*Coming soon.*
 
-Layout: copy on the left, the film on the right, as in the app. "Nail the mix." is the larger line; the two sentences under it are small.
+**[Help us beta test]**
+
+Layout: copy on the left, the film on the right, as in the app. "Nail the mix." is the larger line; the sentences under it are small. "Coming soon." sits on its own line just under them, in italic at the same size, a shade quieter, not a pill (here the italic is the ordinary kind, not the script face). One button under it.
 
 ---
 
@@ -212,3 +214,12 @@ Christopher, Nov 12: "We need to resolve this cause it is on the website too. "D
 translated" "DJ lingo in plain words" Something like that". Resolved as "DJ speak, in plain words." It is the
 dictionary panel's line here, the dictionary page's lede, title and description, and the film's second dictionary
 caption.
+
+## Seventh change: the hero names the two parts
+
+At Christopher's request, Nov 16: the small lines under "Nail the mix." now say what each part does. Deckie Desk
+reads the music (tempo, key, bars, vocals); Deckie Booth, on the iPad, names what's playing and suggests what
+could come next and how to mix it in. Then, the same day: "reads", not "analyzes", as on the rest of the page;
+"things like" cut; ", on your iPad" cut from the hero; and "Coming soon" is no longer a pill beside the button
+but its own italic line under the paragraph. "Deckie", "Know Your Crate" and "Nail the mix." are unchanged. The page's
+descriptions, structured data and `llms.txt` were brought in step.
