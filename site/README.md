@@ -75,6 +75,10 @@ re-encoded at web weight (about 10 MB). It needs ffmpeg. An earlier build is set
 deleted. The script ends by listing every file with its size and fails if the home page points at a file that is
 not in the build.
 
+In the built pages, every link to a CSS or JS file carries `?v=` and the first 10 hex characters of that file's
+SHA-256, so a changed file gets a new address while an unchanged one keeps its stamp and the visitor's day-long cache.
+The pages in `site/` stay unstamped, so they still open straight from the repository.
+
 `site/dist/` is uploaded to the host over FTPS. The login is not in this repository and is never committed. After
 an upload, check the live pages, the film, the 404 page and both redirects, and compare file sizes with the build.
 
