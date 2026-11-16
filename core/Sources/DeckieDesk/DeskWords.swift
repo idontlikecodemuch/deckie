@@ -209,6 +209,13 @@ public enum DeskWords {
         "figCopies": "Copies of one recording",
         "figCopiesLater": "when saving",
         "figNotIn": "Didn't go in",
+        // new (letter AF): words only the trial layouts of the run screen show (DECKIE_RUN_LAYOUT; today's shows none
+        // of them). Placeholders until the owner picks a layout and the copy audit.
+        "figuresHead": "Found so far",
+        "figMusicTotal": "Total playing time",
+        "figMusicTotalHelp": "All the songs read so far, end to end",
+        "figTemposRange": "{songs}, from {low} to {high} BPM",
+        "keyNameValue": "{note} {mode}",
         "wallTitle": "The crate so far",
         "wallTitleDone": "{read}, one line a song",
         "wallHelp": "One line a song, as they joined. Point at a line, or use the arrow keys, to see which.",

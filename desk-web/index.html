@@ -101,6 +101,8 @@
       <p id="run-saying" class="saying"></p>
       <p class="leave dim" data-w="leaveRunning"></p>
 
+      <!-- The song and the figures: one after the other today; side by side in the trial layouts (letter AF). -->
+      <div class="run-body">
       <!-- The song on stage: its own wave, its bars marked, and what Desk found in it. -->
       <div id="stage" class="stage card">
         <canvas id="stage-wave" class="stage-wave" role="img"></canvas>
@@ -120,7 +122,8 @@
 
       <!-- What Desk has found so far: each a true count. -->
       <div class="figures">
-        <div id="fig-music" class="fig card"><h2 data-w="figMusic"></h2><p id="fig-music-value" class="big"></p></div>
+        <h2 class="figures-head lay-only" data-w="figuresHead"></h2>
+        <div id="fig-music" class="fig card"><h2 class="not-d" data-w="figMusic"></h2><h2 class="lay-only for-d" data-w="figMusicTotal" data-w-title="figMusicTotalHelp"></h2><p id="fig-music-value" class="big"></p></div>
         <div id="fig-tempos-card" class="fig card"><h2 data-w="figTempos"></h2><canvas id="fig-tempos" class="hist" role="img"></canvas><p id="fig-tempos-text" class="small mut"></p></div>
         <div id="fig-keys-card" class="fig card fig-keys"><h2 data-w="figKeys"></h2><svg id="fig-keys" class="wheel" role="img"></svg><p id="fig-keys-text" class="small mut"></p></div>
         <div class="fig card fig-list">
@@ -129,6 +132,7 @@
           <p><span data-w="figCopies"></span> <b id="fig-copies"></b></p>
           <p><span data-w="figNotIn"></span> <b id="fig-notin"></b></p>
         </div>
+      </div>
       </div>
 
       <!-- The crate filling up: one line a song. -->

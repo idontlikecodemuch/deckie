@@ -54,6 +54,9 @@ The engine's first line, before it reads anything:
   uses. `{name}` in a word is filled in by the page; `name.one`, `name.other` and `name.zero` are a word's forms by
   count; `name.<code>` the words for an engine code; `{thisComputer}` in any word takes `thisComputer.<computer>`
   ("this Mac" for `mac`, "this computer" for `other`, Windows and Linux). The pages hold no words of their own.
+- `runLayout` is the run screen's layout: `today`, or a trial one named by `DECKIE_RUN_LAYOUT` (`a-booth`,
+  `b-swapped`, `c-columns`, `d-plain`) for pictures to compare (research AF). The page sets it on `<html>` as
+  `data-run-layout`.
 
 Then the engine sends `state` and, when a crate with songs is showing, `songs`.
 

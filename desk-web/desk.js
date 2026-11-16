@@ -130,6 +130,8 @@
     switch (m.event) {
       case "hello":
         hello = m; W = m.words || {}; computer = m.computer || "other";
+        // The run screen's layout (letter AF): today's unless the engine names a trial one (DECKIE_RUN_LAYOUT).
+        document.documentElement.dataset.runLayout = m.runLayout || "today";
         applyWords(document);
         if (m.protocol !== 2) message([fill(PAGE_WORDS.protocol, { protocol: m.protocol, known: 2 })]);
         break;

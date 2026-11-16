@@ -58,6 +58,15 @@ public final class DeskProtocol: @unchecked Sendable {
         return max(1, min(ProcessInfo.processInfo.activeProcessorCount / 2, 4))
     }
 
+    /// The run screen's layouts to compare (letter AF): today's, and trial ones for pictures, chosen by
+    /// `DECKIE_RUN_LAYOUT` (`a-booth`, `b-swapped`, `c-columns`, `d-plain`). Anything else is today's.
+    public static let runLayouts = ["today", "a-booth", "b-swapped", "c-columns", "d-plain"]
+    public static let runLayoutVariable = "DECKIE_RUN_LAYOUT"
+    public static func runLayout(environment: [String: String] = ProcessInfo.processInfo.environment) -> String {
+        let asked = environment[runLayoutVariable] ?? ""
+        return runLayouts.contains(asked) ? asked : "today"
+    }
+
     // MARK: out
 
     func send(_ object: [String: Any]) {
@@ -140,6 +149,8 @@ public final class DeskProtocol: @unchecked Sendable {
               "analysis": ["ready": analysis.ready, "detail": analysis.detail ?? NSNull()] as [String: Any],
               "deletesForGood": true, "wordsVersion": DeskWords.version, "words": words,
               "computer": DeskWords.computerKind,
+              // The run screen's layout (letter AF): "today" unless DECKIE_RUN_LAYOUT names a trial one, for pictures.
+              "runLayout": Self.runLayout(environment: environment),
               // The three ways to add music, the same as the Mac's (DeskAddMusic.ways): each one's word, help and icon.
               "addWays": DeskAddMusic.ways.map { ["id": $0.id, "word": $0.word, "help": $0.help, "icon": $0.pageIcon] },
               "lookup": ["service": "MusicBrainz", "available": lookupClient.available] as [String: Any]])

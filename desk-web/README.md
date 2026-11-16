@@ -11,7 +11,9 @@ Plain HTML, CSS and JavaScript, no framework, no build step, nothing fetched fro
 - `run.js`: the run screen (D37): the song Desk just read on stage with its wave and what Desk found, the figures
   counted so far (music read, a tempo histogram, a wheel of keys), the crate as a wall of waves, the quiet line and
   the moments, from the engine's `run.songs`. Throttled, still while the window is hidden, and still under reduced
-  motion; its colours, sizes and times are `desk.css`'s run-screen variables.
+  motion; its colours, sizes and times are `desk.css`'s run-screen variables. `DECKIE_RUN_LAYOUT` (read by the
+  engine, sent in its hello) lays it out one of four trial ways to compare, `a-booth`, `b-swapped`, `c-columns` or
+  `d-plain` (research AF); without it, today's.
 - `desk.css`: the look of the site and the booth (`../site/site.css`'s tokens: flat dark page, rounded surfaces, one
   lavender accent), laid out as a desktop window; every value is a variable in its `:root` block.
 

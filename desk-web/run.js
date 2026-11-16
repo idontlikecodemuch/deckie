@@ -52,8 +52,14 @@
     let songs = [], figures = null, info = { read: "", musicCD: false }, step = "reading";
     let lastNote = null;          // the run's finished moment, for the finished screen
 
+    // ---- the layout (letter AF): today's, or a trial one to compare (DECKIE_RUN_LAYOUT, set on <html> by desk.js).
+    // Only D changes what is drawn as well as where: a whole tempo without its ".0", the key's code before its name,
+    // "most around" only when a tempo has more than one song, and the wheel of keys as the Camelot wheel.
+    const plain = () => root.dataset.runLayout === "d-plain";
+
     // ---- words for what Desk found
-    const bpmText = (s) => (s.bpm != null ? t("bpmValue", { bpm: s.bpm.toFixed(1) }) : t("none"));
+    const bpmNumber = (bpm) => (plain() && Number.isInteger(bpm) ? String(bpm) : bpm.toFixed(1));
+    const bpmText = (s) => (s.bpm != null ? t("bpmValue", { bpm: bpmNumber(s.bpm) }) : t("none"));
     function keyText(k) {
       if (!k || k.kind === "none") return t("keyNotSureValue");
       if (k.kind === "home") return t("homeNoteValue", { note: k.name });
@@ -114,7 +120,12 @@
         $("stage-before").hidden = !s.before;
         $("stage-tempo").textContent = bpmText(s);
         const key = $("stage-key");
-        key.textContent = keyText(s.key);
+        if (plain() && s.key.kind === "key") {
+          // D: the code a DJ mixes by, then the key's name, quieter, as a gloss.
+          const name = t("keyNameValue", { note: s.key.name, mode: t(s.key.minor ? "mode.minor" : "mode.major") });
+          key.replaceChildren(el("span", { text: s.key.camelot }), document.createTextNode(" "),
+            el("span", { class: "key-name", text: s.key.uncertain ? t("keyWithDoubt", { key: name, doubt: t("keyNotSure") }) : name }));
+        } else key.textContent = keyText(s.key);
         key.classList.toggle("quiet", s.key.kind !== "key");
         $("stage-bars").textContent = s.bars != null ? String(s.bars) : t("none");
         $("stage-length").textContent = mmss(s.seconds);
@@ -292,8 +303,10 @@
       });
       const withTempo = f.songs - f.noTempo;
       let top = 0; f.tempos.forEach((c, i) => { if (c > f.tempos[top]) top = i; });
+      // D says "most around" only when some tempo has more than one song; with every song alone it names the first.
+      const peak = !plain() || f.tempos[top] > 1;
       const text = withTempo > 0 && f.slowest != null
-        ? t("figTemposText", { songs: n("songs", withTempo), low: Math.round(f.slowest), high: Math.round(f.fastest),
+        ? t(peak ? "figTemposText" : "figTemposRange", { songs: n("songs", withTempo), low: Math.round(f.slowest), high: Math.round(f.fastest),
             mode: Math.round(f.tempoLow + top * f.tempoStep + f.tempoStep / 2) })
         : t("figTemposNone");
       $("fig-tempos-text").textContent = text;
@@ -322,12 +335,17 @@
       const ns = "http://www.w3.org/2000/svg";
       wheel.replaceChildren();
       const c = num("--wheel-center"), trim = num("--wheel-cell-gap"), homeR = num("--wheel-home-r");
-      wheel.setAttribute("viewBox", `0 0 ${2 * c} ${2 * c}`);
+      // D draws the Camelot wheel DJs know: each minor key inside the major key it shares its notes with (its relative,
+      // three semitones down), 12 at the top, and the numbers 12, 3, 6 and 9 round it. Today's: each home note's major
+      // and minor together, C at the top.
+      const camelot = plain(), turn = camelot ? -4 : 0, pad = camelot ? num("--wheel-pad") : 0;
+      wheel.setAttribute("viewBox", `${-pad} ${-pad} ${2 * (c + pad)} ${2 * (c + pad)}`);
       const rings = [["major", num("--wheel-major-in"), num("--wheel-major-out")], ["minor", num("--wheel-minor-in"), num("--wheel-minor-out")]];
       wheelCells = { major: [], minor: [], home: [] };
-      FIFTHS.forEach((pc, i) => {
-        const a0 = ((i - 0.5) * 30 - 90) * Math.PI / 180 + trim, a1 = ((i + 0.5) * 30 - 90) * Math.PI / 180 - trim;
+      FIFTHS.forEach((major, i) => {
+        const a0 = ((i + turn - 0.5) * 30 - 90) * Math.PI / 180 + trim, a1 = ((i + turn + 0.5) * 30 - 90) * Math.PI / 180 - trim;
         for (const [ring, r0, r1] of rings) {
+          const pc = ring === "minor" && camelot ? (major + 9) % 12 : major;
           const path = document.createElementNS(ns, "path");
           path.setAttribute("d", arc(r0, r1, a0, a1));
           const title = document.createElementNS(ns, "title");
@@ -335,7 +353,17 @@
           wheel.append(path);
           wheelCells[ring][pc] = path;
         }
-        const am = (i * 30 - 90) * Math.PI / 180;
+        const pc = major;
+        const am = ((i + turn) * 30 - 90) * Math.PI / 180;
+        const number = ((i + 7) % 12) + 1;   // C major is 8B
+        if (camelot && number % 3 === 0) {
+          const label = document.createElementNS(ns, "text"), r = num("--wheel-label-r");
+          label.setAttribute("x", (c + r * Math.cos(am)).toFixed(2)); label.setAttribute("y", (c + r * Math.sin(am)).toFixed(2));
+          label.setAttribute("text-anchor", "middle"); label.setAttribute("dominant-baseline", "central");
+          label.setAttribute("font-size", String(num("--wheel-label-size")));
+          label.textContent = String(number);
+          wheel.append(label);
+        }
         const dot = document.createElementNS(ns, "circle");
         dot.setAttribute("cx", (c + homeR * Math.cos(am)).toFixed(2)); dot.setAttribute("cy", (c + homeR * Math.sin(am)).toFixed(2));
         wheel.append(dot);

@@ -199,4 +199,13 @@ import DeckieBuild
         #expect(sent.map { $0["figures"] != nil } == [true, false, true])
         #expect(((sent.last?["figures"] as? [String: Any])?["songs"] as? NSNumber)?.intValue == 2)
     }
+
+    @Test func theLayoutIsTodaysUnlessATrialOneIsNamed() {
+        // Letter AF: a DJ sees today's run screen; DECKIE_RUN_LAYOUT names a trial one, for pictures to compare.
+        #expect(DeskProtocol.runLayout(environment: [:]) == "today")
+        #expect(DeskProtocol.runLayout(environment: ["DECKIE_RUN_LAYOUT": "something else"]) == "today")
+        for name in ["a-booth", "b-swapped", "c-columns", "d-plain"] {
+            #expect(DeskProtocol.runLayout(environment: ["DECKIE_RUN_LAYOUT": name]) == name)
+        }
+    }
 }

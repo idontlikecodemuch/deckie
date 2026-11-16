@@ -345,6 +345,39 @@
   --stage-queue-max: 24;                  /* songs waiting for the stage before the oldest go straight to the wall */
   --saying-fact-skip: 0.35;               /* after a fact, the chance the next line is about the step instead */
   --ease-turn: cubic-bezier(.3, 0, .2, 1);  /* the wheel's turn at a moment */
+
+  /* ---- the run screen's trial layouts (letter AF), chosen by DECKIE_RUN_LAYOUT; today's uses none of these.
+     A and B: the song on stage as the booth's playing panel, the figures as its list of picks; C: today's, with the
+     figures lined up in two rows of columns; D: A with the audit's changes. Placeholders until one is chosen. */
+  --lay-gap: 14px;                        /* between the song and the figures */
+  --lay-cols-a: minmax(0, 1.1fr) minmax(0, 1fr);   /* A: the song, the figures */
+  --lay-cols-b: minmax(0, 1fr) minmax(0, 1.1fr);   /* B: the figures, the song */
+  --lay-one-col: minmax(0, 1fr);          /* A, B and D in a narrow window, and their figures: one column */
+  --booth-cols: repeat(4, minmax(0, 1fr));  /* the song in the booth panel: its facts in four columns */
+  --booth-panel: linear-gradient(180deg, #2b2450 0%, #201a3a 100%);  /* the booth's playing panel */
+  --booth-pad: 26px 28px;
+  --booth-gap: 6px 18px;
+  --booth-wave-h: 140px;                  /* the song's wave, in the booth's panel */
+  --booth-wave-gap: 4px;                  /* above and below it */
+  --fs-booth-title: 30px; --lh-booth-title: 1.1; --fw-booth-title: 700; --ls-booth-title: -0.02em;
+  --fs-booth-artist: 18px;
+  --fs-booth-place: 15px; --fw-booth-place: 550;
+  --booth-place: #8f86e6;                 /* the place line above the name, as the booth's */
+  --fs-booth-value: 17px;
+  --fs-figures-head: 11.5px; --fw-figures-head: 700; --ls-figures-head: 0.12em;  /* "Found so far", as the booth's PICKS */
+  --pick-card-cols: minmax(0, 1fr) minmax(0, 46%);  /* a figure as a pick: words, then its picture */
+  --pick-card-gap: 4px 14px;
+  --fig-h-pick: 64px;                     /* a figure's picture, as a pick's */
+  --fig-cols-c: repeat(3, minmax(0, 1fr));        /* C: the three pictures, in columns */
+  --tile-cols: repeat(4, minmax(0, 1fr));         /* C: the four counts, in columns */
+  --tile-cols-narrow: repeat(2, minmax(0, 1fr));  /* and in a narrow window; D's always */
+  --tile-gap: 10px; --tile-pad: 10px 14px;
+  --fs-tile-value: 22px; --fw-tile-value: 700;
+  --fs-key-name: 13px; --fw-key-name: 500;        /* D: "E minor" beside the key's code, quieter */
+  --wheel-label: #978bb0; --wheel-label-size: 16; /* D: the Camelot numbers round the wheel, in its 120 by 120 box */
+  --wheel-label-r: 71;                    /* D: how far out they sit */
+  --wheel-pad: 20;                        /* D: room round the wheel's box for them */
+  --fig-h-wheel-d: 108px;                 /* D: the wheel, larger, so its numbers read */
 }
 * { box-sizing: border-box; }
 html, body { height: 100%; }
@@ -470,6 +503,79 @@ main { flex: 1; min-height: 0; display: flex; flex-direction: column; }
 .run-list .log { max-height: var(--run-list-max-h); margin-top: var(--run-list-gap); }
 .finished .wall-card { max-width: var(--finished-wall-max-w); width: 100%; }
 @media (max-width: 860px) { .figures { grid-template-columns: var(--figures-cols-narrow); } .stage { flex-direction: column; align-items: stretch; } .stage-wave { width: 100%; } }
+
+/* the run screen's trial layouts (letter AF): html[data-run-layout] from the engine's hello (DECKIE_RUN_LAYOUT).
+   Today's layout sets none of this: .run-body and the words marked .lay-only are there and do nothing. */
+.run-body { display: contents; }
+.lay-only { display: none; }
+/* A and B (and D): the song as the booth's playing panel beside the figures as its list of picks */
+[data-run-layout=a-booth] .run-body, [data-run-layout=b-swapped] .run-body, [data-run-layout=d-plain] .run-body {
+  display: grid; gap: var(--lay-gap); grid-template-columns: var(--lay-cols-a); grid-template-areas: "stage side"; align-items: stretch; }
+[data-run-layout=b-swapped] .run-body { grid-template-columns: var(--lay-cols-b); grid-template-areas: "side stage"; }
+:is([data-run-layout=a-booth], [data-run-layout=b-swapped], [data-run-layout=d-plain]) .stage {
+  grid-area: stage; display: grid; grid-template-columns: var(--booth-cols); align-content: center; gap: var(--booth-gap);
+  grid-template-areas: "where where where where" "name name name name" "tempo key key key" "wave wave wave wave" "bars length . ." "more more more more";
+  background: var(--booth-panel); border-radius: var(--r-panel); padding: var(--booth-pad); min-height: 0; }
+:is([data-run-layout=a-booth], [data-run-layout=b-swapped], [data-run-layout=d-plain]) :is(.stage-facts, .stage-dl) { display: contents; }
+:is([data-run-layout=a-booth], [data-run-layout=b-swapped], [data-run-layout=d-plain]) .stage-name { grid-area: name; white-space: normal; }
+:is([data-run-layout=a-booth], [data-run-layout=b-swapped], [data-run-layout=d-plain]) #stage-title { display: block; font-size: var(--fs-booth-title);
+  line-height: var(--lh-booth-title); font-weight: var(--fw-booth-title); letter-spacing: var(--ls-booth-title); }
+:is([data-run-layout=a-booth], [data-run-layout=b-swapped], [data-run-layout=d-plain]) #stage-artist { display: block; font-size: var(--fs-booth-artist); }
+:is([data-run-layout=a-booth], [data-run-layout=b-swapped], [data-run-layout=d-plain]) .stage-dl > div:nth-child(1) { grid-area: tempo; }
+:is([data-run-layout=a-booth], [data-run-layout=b-swapped], [data-run-layout=d-plain]) .stage-dl > div:nth-child(2) { grid-area: key; }
+:is([data-run-layout=a-booth], [data-run-layout=b-swapped], [data-run-layout=d-plain]) .stage-dl > div:nth-child(3) { grid-area: bars; }
+:is([data-run-layout=a-booth], [data-run-layout=b-swapped], [data-run-layout=d-plain]) .stage-dl > div:nth-child(4) { grid-area: length; }
+:is([data-run-layout=a-booth], [data-run-layout=b-swapped], [data-run-layout=d-plain]) .stage-dl > .where { grid-area: where; }
+:is([data-run-layout=a-booth], [data-run-layout=b-swapped], [data-run-layout=d-plain]) .stage-dl > .where dt { display: none; }
+:is([data-run-layout=a-booth], [data-run-layout=b-swapped], [data-run-layout=d-plain]) .stage-dl > .where dd { color: var(--booth-place);
+  font-size: var(--fs-booth-place); font-weight: var(--fw-booth-place); }
+:is([data-run-layout=a-booth], [data-run-layout=b-swapped], [data-run-layout=d-plain]) .stage-dl dd { font-size: var(--fs-booth-value); }
+:is([data-run-layout=a-booth], [data-run-layout=b-swapped], [data-run-layout=d-plain]) .stage-wave { grid-area: wave; width: 100%; height: var(--booth-wave-h);
+  margin: var(--booth-wave-gap) 0; }
+:is([data-run-layout=a-booth], [data-run-layout=b-swapped], [data-run-layout=d-plain]) #stage-more { grid-area: more; }
+/* the facts' fade, on each of them, since their box is gone */
+:is([data-run-layout=a-booth], [data-run-layout=b-swapped], [data-run-layout=d-plain]) :is(.stage-name, .stage-dl > div, #stage-more) {
+  transition: opacity var(--t-fade) var(--ease-fade); }
+:is([data-run-layout=a-booth], [data-run-layout=b-swapped], [data-run-layout=d-plain]) .stage.out :is(.stage-name, .stage-dl > div, #stage-more) { opacity: 0; }
+/* the figures as the booth's picks: a head, then one card each, words left and picture right */
+:is([data-run-layout=a-booth], [data-run-layout=b-swapped], [data-run-layout=d-plain]) .figures { grid-area: side; grid-template-columns: var(--lay-one-col);
+  align-content: start; }
+:is([data-run-layout=a-booth], [data-run-layout=b-swapped], [data-run-layout=d-plain]) .figures-head { display: block; font-size: var(--fs-figures-head);
+  font-weight: var(--fw-figures-head); letter-spacing: var(--ls-figures-head); text-transform: uppercase; color: var(--dim); }
+:is([data-run-layout=a-booth], [data-run-layout=b-swapped], [data-run-layout=d-plain]) .fig:not(.fig-list) { display: grid; grid-template-columns: var(--pick-card-cols);
+  gap: var(--pick-card-gap); align-items: center; grid-template-areas: "head pic" "text pic"; }
+:is([data-run-layout=a-booth], [data-run-layout=b-swapped], [data-run-layout=d-plain]) .fig > h2 { grid-area: head; align-self: end; }
+:is([data-run-layout=a-booth], [data-run-layout=b-swapped], [data-run-layout=d-plain]) .fig > :is(.big, .small) { grid-area: text; align-self: start; }
+:is([data-run-layout=a-booth], [data-run-layout=b-swapped], [data-run-layout=d-plain]) .fig > :is(.hist, .wheel) { grid-area: pic; height: var(--fig-h-pick); }
+:is([data-run-layout=a-booth], [data-run-layout=b-swapped], [data-run-layout=d-plain]) .fig > .wheel { width: var(--fig-h-pick); justify-self: end; }
+
+/* C: today's, with the figures in two rows of columns: the three pictures, each label over its picture over its words,
+   lined up; then the four counts, each label over its number */
+[data-run-layout=c-columns] .figures { grid-template-columns: var(--fig-cols-c); }
+[data-run-layout=c-columns] .fig:not(.fig-list) { display: grid; grid-template-rows: auto var(--fig-h) auto; align-content: start; }
+[data-run-layout=c-columns] .fig > .big { align-self: center; }
+[data-run-layout=c-columns] .fig-list, [data-run-layout=d-plain] .fig-list { grid-column: 1 / -1; display: grid; grid-template-columns: var(--tile-cols);
+  gap: var(--tile-gap); background: none; padding: 0; }
+[data-run-layout=d-plain] .fig-list { grid-template-columns: var(--tile-cols-narrow); }
+:is([data-run-layout=c-columns], [data-run-layout=d-plain]) .fig-list p { flex-direction: column; justify-content: flex-start; gap: var(--inner-gap-xs);
+  background: var(--surface); border-radius: var(--r-card); padding: var(--tile-pad); font-size: var(--fs-label); }
+:is([data-run-layout=c-columns], [data-run-layout=d-plain]) .fig-list b { font-size: var(--fs-tile-value); font-weight: var(--fw-tile-value); }
+:is([data-run-layout=c-columns], [data-run-layout=d-plain]) .fig-list b.later { font-size: var(--fs-note); }
+
+/* D: the audit's changes (the words that only D shows; the key's code first and its name quieter; the wheel larger,
+   its numbers round it) */
+[data-run-layout=d-plain] .lay-only.for-d { display: block; }
+[data-run-layout=d-plain] .not-d { display: none; }
+[data-run-layout=d-plain] #fig-music { grid-template-areas: "head head" "text text"; }
+[data-run-layout=d-plain] .fig > .wheel { width: var(--fig-h-wheel-d); height: var(--fig-h-wheel-d); }
+[data-run-layout=d-plain] .key-name { color: var(--mut); font-size: var(--fs-key-name); font-weight: var(--fw-key-name); }
+[data-run-layout=d-plain] .wheel text { fill: var(--wheel-label); }
+
+@media (max-width: 860px) {
+  :is([data-run-layout=a-booth], [data-run-layout=b-swapped], [data-run-layout=d-plain]) .run-body { grid-template-columns: var(--lay-one-col);
+    grid-template-areas: "stage" "side"; }
+  [data-run-layout=c-columns] .fig-list { grid-template-columns: var(--tile-cols-narrow); }
+}
 
 /* moments: a second or two of motion, never a pop-up (none at all under reduced motion) */
 @media (prefers-reduced-motion: no-preference) {
