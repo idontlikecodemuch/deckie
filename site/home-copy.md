@@ -30,11 +30,13 @@ Marks used below: *italic* words are set in the script face (you, your, Deckie, 
 
 Nail the mix.
 
-Deckie Desk reads your music: tempo, key, bars and vocals. Deckie Booth, on your iPad, names what's playing, shows what could come next and how to mix it in. Coming soon.
+Deckie Desk reads your music: tempo, key, bars and vocals. Deckie Booth names what's playing, shows what could come next and how to mix it in.
+
+*Coming soon.*
 
 **[Help us beta test]**
 
-Layout: copy on the left, the film on the right, as in the app. "Nail the mix." is the larger line; the sentences under it are small, and "Coming soon." ends them as plain text, a little brighter and in a medium weight, not a pill. One button under them.
+Layout: copy on the left, the film on the right, as in the app. "Nail the mix." is the larger line; the sentences under it are small. "Coming soon." sits on its own line just under them, in italic at the same size, a shade quieter, not a pill (here the italic is the ordinary kind, not the script face). One button under it.
 
 ---
 
@@ -218,5 +220,6 @@ caption.
 At Christopher's request, Nov 16: the small lines under "Nail the mix." now say what each part does. Deckie Desk
 reads the music (tempo, key, bars, vocals); Deckie Booth, on the iPad, names what's playing and suggests what
 could come next and how to mix it in. Then, the same day: "reads", not "analyzes", as on the rest of the page;
-"things like" cut; and "Coming soon" is no longer a pill beside the button but the paragraph's last sentence. "Deckie", "Know Your Crate" and "Nail the mix." are unchanged. The page's
+"things like" cut; ", on your iPad" cut from the hero; and "Coming soon" is no longer a pill beside the button
+but its own italic line under the paragraph. "Deckie", "Know Your Crate" and "Nail the mix." are unchanged. The page's
 descriptions, structured data and `llms.txt` were brought in step.
