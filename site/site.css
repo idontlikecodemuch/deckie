@@ -91,7 +91,7 @@ li, dd { text-wrap: pretty; }
 .for { font-size: clamp(1.25rem, 2vw, 1.6rem); font-weight: 600; line-height: 1.25; letter-spacing: -0.015em; color: var(--tx); margin-top: 22px; }
 .hero .lede { margin-top: 10px; font-size: 1.0625rem; color: #c3b8d8; max-width: 26rem; }
 .cta { display: flex; flex-wrap: wrap; gap: 12px 16px; margin-top: 28px; align-items: center; }
-.hero .lede .soon { color: var(--tx); font-weight: 500; white-space: nowrap; }
+.hero .soon { margin-top: 6px; font-size: 1.0625rem; font-style: italic; font-weight: 400; color: var(--mut); }
 #film { align-self: center; }
 .film { border-radius: var(--r-panel); overflow: hidden; background: #000; }
 .film video { width: 100%; aspect-ratio: 16 / 9; }
