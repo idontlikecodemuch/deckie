@@ -32,4 +32,9 @@ ErrorDocument 404 /404.html
   ExpiresByType image/png "access plus 30 days"
   ExpiresByType image/svg+xml "access plus 30 days"
   ExpiresByType image/x-icon "access plus 30 days"
+  # The built pages link CSS and JS with ?v=<hash of the file> (site/build.sh), so a changed file gets a new
+  # address and a day's cache cannot serve a returning visitor an old stylesheet or script.
+  ExpiresByType text/css "access plus 1 day"
+  ExpiresByType text/javascript "access plus 1 day"
+  ExpiresByType application/javascript "access plus 1 day"
 </IfModule>
