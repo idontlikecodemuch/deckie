@@ -1,6 +1,6 @@
 # Deckie home page: copy document
 
-Fifth draft, Nov 12, 2026.
+Sixth draft, Nov 16, 2026.
 hero, then a few sections that each make one point with a short headline and a line or two, a row of feature
 panels, and a short about with a facts list at the end.
 
@@ -30,7 +30,7 @@ Marks used below: *italic* words are set in the script face (you, your, Deckie, 
 
 Nail the mix.
 
-An iPad beside the decks. It names the song, reads the pitch and shows what could come next.
+Deckie Desk analyzes your music: things like tempo, key, bars and vocals. Deckie Booth, on your iPad, names what's playing, shows what could come next and how to mix it in.
 
 **[Help us beta test]**   Coming soon
 
@@ -212,3 +212,10 @@ Christopher, Nov 12: "We need to resolve this cause it is on the website too. "D
 translated" "DJ lingo in plain words" Something like that". Resolved as "DJ speak, in plain words." It is the
 dictionary panel's line here, the dictionary page's lede, title and description, and the film's second dictionary
 caption.
+
+## Seventh change: the hero names the two parts
+
+At Christopher's request, Nov 16: the small lines under "Nail the mix." now say what each part does. Deckie Desk
+analyzes the music (tempo, key, bars, vocals); Deckie Booth, on the iPad, names what's playing and suggests what
+could come next and how to mix it in. "Deckie", "Know Your Crate" and "Nail the mix." are unchanged. The page's
+descriptions, structured data and `llms.txt` were brought in step.
