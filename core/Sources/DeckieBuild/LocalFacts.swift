@@ -164,11 +164,29 @@ public enum LocalFacts {
         var tracklists: [String: LocalNames.Tracklists] = [:]
         var named: [String: Named] = [:]
 
+        // Each file's tags, read once, and what every file in a folder says of itself, so a folder is read with all
+        // its files (D39: the artist from a folder only when it is plainly one artist's album).
+        var tagsById: [String: FileTags] = [:]
+        var presentById: [String: FileRef] = [:]
+        var siblings: [String: [LocalNames.Sibling]] = [:]
+        for t in crate.tracks {
+            let refs = files[t.id] ?? []
+            guard let present = refs.first(where: { fileExists($0.url) }) else { continue }
+            presentById[t.id] = present
+            let tags = FileTags.read(present.url)
+            tagsById[t.id] = tags
+            let folder = present.url.deletingLastPathComponent().path
+            let facts = FileFacts.read(present.url).facts
+            siblings[folder, default: []].append(LocalNames.Sibling(
+                stem: (PathKey.lastName(present.rel) as NSString).deletingPathExtension, tagArtist: tags.artist,
+                compilationMark: facts[SongFacts.compilation]?.first == "1", releaseArtist: facts[SongFacts.releaseArtist]?.first))
+        }
+
         for i in crate.tracks.indices {
             var t = crate.tracks[i]
             let refs = files[t.id] ?? []
-            let present = refs.first { fileExists($0.url) }
-            let tags = present.map { FileTags.read($0.url) }
+            let present = presentById[t.id]
+            let tags = tagsById[t.id]
             let matches = matcher.match(paths: refs.map { PathKey.slashes($0.url.path) }, rels: refs.map(\.rel), size: t.file.bytes)
 
             // Keys: the libraries (newest first; rekordbox's import with them, dated when it was taken), then the tags.
@@ -199,8 +217,10 @@ public enum LocalFacts {
 
             // Names, part one: everything but a copy's.
             if t.ident.source != "user" && t.ident.source != DJProgram.rekordbox.rawValue {
+                let folderKey = (present ?? refs.first).map { $0.url.deletingLastPathComponent().path }
                 if let n = name(t, ref: present ?? refs.first, tags: tags, titleKey: titleKey, matches: matches.map(\.entry),
-                                libs: matches.map { libs[$0.library].program.rawValue }, tracklists: &tracklists) {
+                                libs: matches.map { libs[$0.library].program.rawValue }, tracklists: &tracklists,
+                                siblings: folderKey.flatMap { siblings[$0] } ?? []) {
                     named[t.id] = n
                 }
             }
@@ -334,7 +354,8 @@ public enum LocalFacts {
 
     /// The ladder for one song, or nil when its tags name it fully (nothing to change but a key taken off its title).
     static func name(_ t: CrateTrack, ref: FileRef?, tags: FileTags?, titleKey: (camelot: String, title: String)?,
-                     matches: [DJLibraryEntry], libs: [String], tracklists: inout [String: LocalNames.Tracklists]) -> Named? {
+                     matches: [DJLibraryEntry], libs: [String], tracklists: inout [String: LocalNames.Tracklists],
+                     siblings: [LocalNames.Sibling] = []) -> Named? {
         var title: (String, String)? = nil      // value, origin
         var artist: (String, String)? = nil
         var version: String? = nil
@@ -349,16 +370,24 @@ public enum LocalFacts {
         let fileName = ref.map { PathKey.lastName($0.rel) } ?? t.file.name
         let stem = (fileName as NSString).deletingPathExtension
         let number = ref?.place.track ?? tags?.trackNumber
-        let fromName = LocalNames.fromFileName(stem, number: number)
+        // The file name read the way a DJ means it (D39): the title part kept as written there, a version after a
+        // second dash kept as the song's version, the artist as credited.
+        let read = NameReading.readFileName(stem, number: number)
+        let fromName = (title: read.titleWritten, artist: read.artist.flatMap { LocalNames.isUsableArtist($0) ? $0 : nil })
         func done() -> Bool { title != nil && artist != nil }
 
         if !done() {
-            if title == nil, LocalNames.isUsableTitle(fromName.title) { title = (fromName.title, "filename") }
+            if title == nil, LocalNames.isUsableTitle(fromName.title) {
+                title = (fromName.title, "filename")
+                version = read.dashedVersion
+            }
             if artist == nil, let a = fromName.artist { artist = (a, "filename") }
         }
+        // The artist from the folder only when the folder is plainly one artist's album (AC 3.1).
         if artist == nil, let ref {
-            let folder = PathKey.lastName(CratePath.folder(of: ref.rel))
-            if !folder.isEmpty, let a = LocalNames.artist(fromFolder: folder, fileName: stem) { artist = (a, "folder") }
+            let folders = CratePath.folder(of: ref.rel).split(separator: "/").map(String.init)
+            let f = LocalNames.readFolder(folders, siblings: siblings.isEmpty ? [LocalNames.Sibling(stem: stem)] : siblings)
+            if f.kind == .artistAlbum, let a = f.artist { artist = (a, "folder") }
         }
         if !done(), let ref {
             let folderURL = ref.url.deletingLastPathComponent()
@@ -387,6 +416,24 @@ public enum LocalFacts {
             return nil
         }
         return n
+    }
+
+    /// The names Desk gives a song from its file name and its folder alone (no tags, no tracklist, no library): the
+    /// title part kept as written, a version after a second dash, the artist from the name, else from the folder when
+    /// it is plainly one artist's album. `ident.source` as `apply` writes it. For the lookup's trial with tags hidden.
+    public static func nameFromFile(rel: String, number: Int?, siblings: [LocalNames.Sibling])
+        -> (title: String, artist: String?, version: String?, source: String) {
+        let stem = (PathKey.lastName(rel) as NSString).deletingPathExtension
+        let read = NameReading.readFileName(stem, number: number)
+        var artist = read.artist.flatMap { LocalNames.isUsableArtist($0) ? $0 : nil }
+        var artistFrom = "filename"
+        if artist == nil {
+            let folders = CratePath.folder(of: rel).split(separator: "/").map(String.init)
+            let f = LocalNames.readFolder(folders, siblings: siblings.isEmpty ? [LocalNames.Sibling(stem: stem)] : siblings)
+            if f.kind == .artistAlbum, let a = f.artist { artist = a; artistFrom = "folder" }
+        }
+        let title = LocalNames.isUsableTitle(read.titleWritten) ? read.titleWritten : stem
+        return (title, artist, read.dashedVersion, artist == nil || artistFrom == "filename" ? "filename" : "filename+folder")
     }
 
     static func parseUTC(_ s: String) -> Date? {

@@ -121,6 +121,9 @@ struct PlayingPanel: View {
             VStack(alignment: .trailing, spacing: Look.Listen.cornerGap) {
                 corner
                 if let t = rec.current, !sug.minimal { Marks(track: t).padding(.trailing, Look.Listen.marksTrailing) }
+                // Clean or dirty, where the crate file says (D39). Choosing between a clean and a dirty copy is for a
+                // later design pass; the owner's first thought: show both, and a tap on one shows where it is.
+                if let t = rec.current, let l = t.lyrics.flatMap(Words.lyricsMark) { TinyChip(text: l).padding(.trailing, Look.Listen.marksTrailing) }
             }
             .padding(Look.Listen.cornerPadding)
         }
