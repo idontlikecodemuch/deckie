@@ -35,6 +35,9 @@ enum Words {
     // MARK: the first screen
     static let firstTitle = w("firstTitle")
     static let firstBody = w("firstBody")
+    /// Desk without the part that reads music (no ONNX Runtime or no beat model in the app): said at once.
+    static let engineMissing = w("engineMissing")
+    static let engineMissingHelp = w("engineMissingHelp")
     static let addMusic = w("addMusic")
     static func addMusicTo(_ crate: String) -> String { w("addMusicTo", ["crate": crate]) }
     static let addMusicMore = w("addMusicMore")
