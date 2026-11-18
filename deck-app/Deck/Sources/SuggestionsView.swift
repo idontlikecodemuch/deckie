@@ -333,6 +333,8 @@ struct NextRow: View {
             if kind == .pick, let t = tags.first(where: { $0 != Words.tagHalloween }) { TinyChip(text: t) }
             if target.hal { TinyChip(text: Words.pumpkin) }
             if target.isRemix { TinyChip(text: Words.remixMark) }
+            // Clean or dirty, where the crate file says (D39).
+            if let l = target.lyrics.flatMap(Words.lyricsMark) { TinyChip(text: l) }
         }
     }
 

@@ -372,6 +372,8 @@ struct SongCard: View {
             } else {
                 if song.several { Text(Words.t("lookupSeveral")).foregroundStyle(.secondary) }
                 else if song.chosen == nil { Text(Words.t("lookupNoneFits")).foregroundStyle(.secondary) }
+                // D39: the original of the DJ's own version: the version stays, the year and label are the original's.
+                else if song.mode == "original" { Text(Words.t("lookupOriginalLine")).foregroundStyle(.secondary) }
                 let choice = model.lookup?.choices[song.song] ?? (-1, [])
                 Grid(alignment: .leading, horizontalSpacing: Look.Space.lookupGridH, verticalSpacing: Look.Space.lookupGridV) {
                     GridRow {

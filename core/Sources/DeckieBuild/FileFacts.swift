@@ -216,6 +216,15 @@ public struct FileFacts: Equatable, Sendable {
         "TXX": "TXXX", "WAF": "WOAF", "WAR": "WOAR", "WAS": "WOAS", "WCM": "WCOM", "WCP": "WCOP", "WPB": "WPUB",
         "WXX": "WXXX", "COM": "COMM", "PIC": "APIC", "ULT": "USLT", "TCP": "TCMP", "GP1": "GRP1",
     ]
+    /// Clean or dirty stated as data (D39; research AC, section 4): iTunes' advisory (`ITUNESADVISORY`: 1 explicit,
+    /// 2 clean) and the `EXPLICIT` some taggers write, by the tag's name and its value.
+    static func advisory(_ name: String, _ value: String?) -> String? {
+        let n = name.uppercased().trimmingCharacters(in: .whitespaces)
+        guard ["ITUNESADVISORY", "EXPLICIT", "CONTENTADVISORY", "PARENTAL ADVISORY", "PARENTALADVISORY"].contains(n),
+              let v = value, let l = VersionWords.lyrics(advisory: v) else { return nil }
+        return l.rawValue
+    }
+
     /// Descriptions (lower case, by their start) of text that a program keeps for itself.
     static let privatePrefixes = ["itun", "serato", "traktor", "songs-db", "rekordbox", "musicmatch", "mediajukebox"]
     static func isPrivate(_ name: String) -> Bool {
@@ -276,6 +285,7 @@ public struct FileFacts: Equatable, Sendable {
         case "TPE1": c.artist = c.artist ?? textValues(data).first; return
         case "TXXX":
             guard let (d, vs) = described(data, skippingLanguage: false) else { return }
+            if let l = advisory(d, vs.first) { c.fact(SongFacts.lyrics, l); return }
             if isPrivate(d) { c.leave(SongFacts.LeftOut.private); return }
             let key = d.lowercased().trimmingCharacters(in: .whitespaces)
             if let name = describedFacts[key] { c.fact(name, vs) }
@@ -525,6 +535,7 @@ public struct FileFacts: Equatable, Sendable {
             let upper = key.uppercased()
             if upper == "METADATA_BLOCK_PICTURE" || upper == "COVERART" { c.leave(SongFacts.LeftOut.picture); continue }
             if upper == "COVERARTMIME" { continue }
+            if let l = advisory(upper, text(bytes[(eq + 1)...])) { c.fact(SongFacts.lyrics, l); continue }
             if isPrivate(upper) { c.leave(SongFacts.LeftOut.private); continue }
             let value = text(bytes[(eq + 1)...])
             switch upper {
@@ -729,6 +740,7 @@ public struct FileFacts: Equatable, Sendable {
                     if of > 0 { c.fact(cnt, String(of)) }
                 case "tmpo": if let n = number(d), n > 0 { c.fact(SongFacts.bpmText, String(n)) }
                 case "cpil": if let n = number(d) { c.fact(SongFacts.compilation, String(n)) }
+                case "rtng": if let n = number(d), let l = VersionWords.lyrics(advisory: String(n)) { c.fact(SongFacts.lyrics, l.rawValue) }
                 case "gnre": if let n = number(d), let g = id3v1Genre(n - 1) { c.fact(SongFacts.genre, g) }
                 default: c.leave(SongFacts.LeftOut.binary)
                 }
@@ -739,6 +751,7 @@ public struct FileFacts: Equatable, Sendable {
         guard !texts.isEmpty else { return }
         if name.hasPrefix("----:") {
             let short = String(name.split(separator: ":").last ?? "")
+            if let l = advisory(short, texts.first) { c.fact(SongFacts.lyrics, l); return }
             if isPrivate(short) || name.lowercased().contains("serato") || name.lowercased().contains("traktor") {
                 c.leave(SongFacts.LeftOut.private); return
             }

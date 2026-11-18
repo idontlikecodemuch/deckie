@@ -31,6 +31,10 @@ public struct DeskSongRow: Codable, Equatable, Sendable {
     public var title: String
     public var artist: String?
     public var version: String?
+    /// The title as shown: with its version in brackets, as DJs write it (D39), unless the title already carries it.
+    public var shown: String
+    /// Clean or dirty (D39): `clean`, `dirty`, or nil when not said.
+    public var lyrics: String?
     public var tags: [String]
     /// Where the name came from, as codes joined by "+" (`tag`, `filename`, `user`, ...).
     public var nameFrom: String?
@@ -69,6 +73,8 @@ public struct DeskSongRow: Codable, Equatable, Sendable {
         title = t.ident.title
         artist = t.ident.artist
         version = t.ident.version
+        shown = NameReading.shown(title: t.ident.title, version: t.ident.version)
+        lyrics = t.ident.facts[SongFacts.lyrics]?.values.first
         tags = t.ident.tags
         nameFrom = t.ident.source
         names = facts

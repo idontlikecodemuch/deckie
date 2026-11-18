@@ -30,7 +30,8 @@ import DeckieLookup
         #expect(asks[2].kind == "none")                                    // "Track 03" with a file name that says nothing
         #expect(asks[4].kind == "isrc" && asks[4].isrc == "GBDUW0600009" && asks[4].query == nil)
         #expect(asks[5] == .init(kind: "fileName", isrc: nil, query: RecordingQuery(title: "da funk", artist: "daft punk")))
-        #expect(asks[6].query?.title == "Around the World (Radio Edit)")   // the version as written goes with the title
+        // D39: the version is kept and shown, never sent: the bare title and the first credited artist go.
+        #expect(asks[6].query == RecordingQuery(title: "Around the World", artist: "Daft Punk"))
         // A release the song's tags gave goes too; nothing else of the song does (no path, no folder, no length).
         var t = LookupSongs.around
         t.ident.facts[SongFacts.release] = .init("Homework", from: "tag")
@@ -107,7 +108,8 @@ import DeckieLookup
         #expect(r.songs[0].candidates.allSatisfy { $0.fit != "fits" })
         #expect(r.songs[1].outcome == "nothing" && r.songs[1].candidates.isEmpty)
         #expect(r.songs[2].outcome == "nothingToSend")
-        #expect(DeskLookup.summaryLine(r) == "1 of 2 found. 1 not found: edits and bootlegs often aren't.")
+        // The song MusicBrainz knows nothing of was asked once more with free words (D39), and the line says so.
+        #expect(DeskLookup.summaryLine(r) == "1 of 2 found. 1 not found: edits and bootlegs often aren't. 1 was asked again with free words.")
         let single = review([LookupSongs.unknown])
         #expect(DeskLookup.summaryLine(single) == "MusicBrainz doesn't know this one. That's usual for edits and bootlegs. The name is yours to give.")
     }
@@ -321,12 +323,12 @@ import DeckieLookup
         engine.waitForLookup()
         #expect(lines.events("lookup.progress").count >= 2)
         let finished = try #require(lines.events("lookup.finished").first)
-        #expect(finished["summary"] as? String == "1 of 2 found. 1 not found: edits and bootlegs often aren't.")
+        #expect(finished["summary"] as? String == "1 of 2 found. 1 not found: edits and bootlegs often aren't. 1 was asked again with free words.")
         engine.handle(line: #"{"id":4,"type":"lookup.apply","choices":[{"song":"aaaa","candidate":0,"fields":["label"]}]}"#)
         #expect(lines.reply(4)?["songs"] as? Int == 1)
         engine.handle(line: #"{"id":5,"type":"lookup.sent"}"#)
         let sent = try #require(lines.reply(5)?["sent"] as? [[String: Any]])
-        #expect(sent.count == 3 && (sent[0]["at"] as? String)?.hasSuffix("Z") == true)
+        #expect(sent.count == 4 && (sent[0]["at"] as? String)?.hasSuffix("Z") == true)   // the second ask is the fourth
         engine.handle(line: #"{"id":6,"type":"lookup.plan","scope":"song","song":"aaaa"}"#)
         engine.handle(line: #"{"id":7,"type":"lookup.start"}"#)
         engine.waitForLookup()
