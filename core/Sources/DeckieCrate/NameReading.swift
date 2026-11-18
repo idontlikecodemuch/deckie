@@ -87,6 +87,10 @@ public struct ReadName: Equatable, Sendable {
     /// version when it names a song from its file name.
     public var titleWritten: String
     public var dashedVersion: String?
+    /// What was taken out of `titleWritten`, as written: an upload's or a download's marks ("(Official Video)",
+    /// "(320kbps)", "(siteName.com)"), and a part after a dash that is neither the title nor a version (an uploader's
+    /// or a channel's name). Nothing is thrown away: Desk keeps these as the song's `name_notes` fact.
+    public var marks: [String] = []
 
     public init(written: String, title: String) {
         self.written = written; self.title = title; notes = []; swapped = false; titleWritten = title
@@ -128,9 +132,7 @@ public enum NameReading {
             return .featured(raw)
         }
         let joined = words.joined(separator: " ")
-        if VersionWords.junkWords.contains(joined) || words.allSatisfy({ VersionWords.junkWords.contains($0) || Int($0) != nil }) && words.contains(where: { VersionWords.junkWords.contains($0) }) {
-            return .note
-        }
+        if isJunkRun(words) { return .note }
         if isYear(joined) || isKeyCode(raw) || isTempo(raw) || isBitrate(lower) { return .note }
         // "From" a film or a show ("from the film X", "Love Theme from X"): a note, kept as written (AC 5.5).
         if words.contains("from") && !hasKindWord(words) { return .note }
@@ -145,6 +147,86 @@ public enum NameReading {
 
     static func isWebsite(_ lower: String) -> Bool {
         lower.split(separator: " ").contains { w in VersionWords.websiteEndings.contains { w.hasSuffix($0) && w.count > $0.count } }
+    }
+
+    /// The junk phrases as words, longest first.
+    static let junkPhrases: [[String]] = VersionWords.junkWords.map { $0.split(separator: " ").map(String.init) }
+        .sorted { $0.count > $1.count }
+
+    /// Whether the words, folded, are made up wholly of the junk phrases (`VersionWords.junkWords`) and numbers, with
+    /// at least one phrase: "Official Video", "Official HD Video", "Lyrics Video HQ", "Audio 2019".
+    static func isJunkRun(_ words: [String]) -> Bool {
+        guard !words.isEmpty else { return false }
+        var i = 0, found = false
+        outer: while i < words.count {
+            for p in junkPhrases where i + p.count <= words.count && Array(words[i..<(i + p.count)]) == p {
+                i += p.count; found = true
+                continue outer
+            }
+            guard Int(words[i]) != nil else { return false }
+            i += 1
+        }
+        return found
+    }
+
+    /// Whether one bracket's or one dashed part's text is a mark an upload or a download left, never part of a song's
+    /// name: a website's name or address ("mp3.pm", "www.siteName.com"), a bitrate ("320kbps", "320 kbps", "320k"),
+    /// or the words an upload site or a download adds ("Official Video", "Official Audio", "Lyrics", "Visualizer",
+    /// "HD", "HQ", "Free Download"). A year, a key, a tempo or a scene group's tag is a note too, but not a mark: it
+    /// stays where the DJ or the file put it.
+    public static func isUploadMark(_ text: String) -> Bool {
+        let raw = text.trimmingCharacters(in: .whitespaces)
+        guard !raw.isEmpty else { return false }
+        let lower = raw.lowercased()
+        if lower.contains("www.") || isWebsite(lower) || isBitrate(lower) { return true }
+        return isJunkRun(VersionWords.fold(raw).split(separator: " ").map(String.init))
+    }
+
+    /// A title as written with its marks taken out (`isUploadMark`): every bracket group at the top level, anywhere in
+    /// it, that holds only a mark. The marks are returned as written, brackets and all, in order. A title that would
+    /// be left empty is returned as it was, with no marks.
+    public static func withoutMarks(_ written: String) -> (text: String, marks: [String]) {
+        var kept = "", marks: [String] = []
+        var i = written.startIndex
+        while i < written.endIndex {
+            let c = written[i]
+            if c == "(" || c == "[", let close = matchingClose(written, from: i) {
+                let group = String(written[i...close])
+                if isUploadMark(String(group.dropFirst().dropLast())) { marks.append(group); kept += " " } else { kept += group }
+                i = written.index(after: close)
+                continue
+            }
+            kept.append(c)
+            i = written.index(after: i)
+        }
+        let text = collapse(kept)
+        guard !marks.isEmpty, SongName.isUsableTitle(text) else { return (written.trimmingCharacters(in: .whitespaces), []) }
+        return (text, marks)
+    }
+
+    /// The index of the bracket that closes the one at `open`, or nil when it is never closed.
+    static func matchingClose(_ s: String, from open: String.Index) -> String.Index? {
+        let o = s[open], c: Character = o == "(" ? ")" : "]"
+        var depth = 0
+        var i = open
+        while i < s.endIndex {
+            if s[i] == o { depth += 1 } else if s[i] == c { depth -= 1; if depth == 0 { return i } }
+            i = s.index(after: i)
+        }
+        return nil
+    }
+
+    /// A title that starts with its own artist and a dash ("Marlo Dune - Night Drive" as the title tag of a song by
+    /// Marlo Dune): the title after it, or nil. The artist matches as the whole credit or as its first artist, by
+    /// whole words (`compareWords`).
+    public static func withoutArtistHead(_ title: String, artist: String?) -> String? {
+        guard let artist, SongName.isUsableArtist(artist) else { return nil }
+        let parts = dashes(collapse(title.replacingOccurrences(of: " – ", with: " - ").replacingOccurrences(of: " — ", with: " - ")))
+        guard parts.count >= 2 else { return nil }
+        let head = compareWords(parts[0])
+        guard !head.isEmpty, head == compareWords(artist) || head == compareWords(firstArtist(artist)) else { return nil }
+        let rest = parts.dropFirst().joined(separator: " - ").trimmingCharacters(in: .whitespaces)
+        return SongName.isUsableTitle(rest) ? rest : nil
     }
     /// A year alone ("1999").
     public static func isYearText(_ s: String) -> Bool { isYear(s.trimmingCharacters(in: .whitespaces)) }
@@ -163,7 +245,8 @@ public enum NameReading {
         return (60...200).contains(d) && (s.lowercased().contains("bpm") || t.contains(".") || t.count == 3)
     }
     static func isBitrate(_ lower: String) -> Bool {
-        lower.range(of: #"\b\d{2,3}\s*kbps\b"#, options: .regularExpression) != nil
+        lower.range(of: #"\b\d{2,3}\s*(kbps|kbit/?s|kb/s)\b"#, options: .regularExpression) != nil
+            || lower.range(of: #"^\d{2,3}\s?k$"#, options: .regularExpression) != nil
     }
     static func hasKindWord(_ words: [String]) -> Bool {
         let v = scan(words)
@@ -204,6 +287,16 @@ public enum NameReading {
                                            "intro", "outro", "redrum", "remaster", "remastered", "bootleg", "mashup", "vip", "edit",
                                            "reedit", "rework", "refix", "dubstrumental", "transition", "unplugged", "acoustic",
                                            "karaoke", "clapapella", "cutdown", "acappella", "accapella", "remake"]
+
+    /// Whether a text of three words or more ends with one of the strong version words written without brackets
+    /// ("... Ostro Rework", "... Extended"): a whole name run together, not an artist.
+    static func endsWithVersionWord(_ text: String) -> Bool {
+        let t = text.trimmingCharacters(in: .whitespaces)
+        guard let last = t.last, last != ")" && last != "]" else { return false }
+        let words = VersionWords.fold(t).split(separator: " ").map(String.init)
+        guard words.count >= 3, let w = words.last else { return false }
+        return strongWords.contains(w)
+    }
 
     /// A version's text read into its kinds, names, lyrics and tempos (AC 5.5, "Reading a version"): split on " - ",
     /// "/" and ","; in each piece, lyrics words, then kind words; the words left over are a name.
@@ -406,6 +499,8 @@ public enum NameReading {
             (#"^(\d{1,3})\)\s*"#, false),                   // "07) "
             (#"^(\d{1,3})\s+-\s+"#, true),                  // "07 - " (guarded: "112 - Only You")
             (#"^(\d{1,3})-(?=\S)"#, false),                  // "101-" a scene name
+            (#"^(\d{1,3})[-_]\s+"#, false),                  // "01- ", "01_ " a number with its separator, then a space
+            (#"^(\d{1,3})_(?=\S)"#, false),                  // "01_Night Drive"
             (#"^(\d{1,3})\s+"#, true),                      // "07 " (guarded: "50 Cent - ...")
         ]
         for (p, guarded) in patterns {
@@ -469,9 +564,29 @@ public enum NameReading {
                 }
             }
             var dashedVersion: VersionReading? = nil
-            // A version after a second dash: the last part, with no brackets and no number in front, reads as one.
-            if parts.count >= 3, let last = parts.last, !last.contains("("), !last.contains("["), !(last.first?.isNumber ?? false),
-               case let .version(v) = piece(last) {
+            // The last part after a second dash, with no brackets and no number in front, is read by the version
+            // vocabulary: a version is the song's version ("Artist - Title - DJ Ostro Remix"); a part of the title
+            // ("Part 2") stays in the title; anything else (an uploader's or a channel's name, "Official Video", a
+            // site) is a note, kept as written in `marks`, and is neither the title nor thrown away.
+            func plainLast() -> String? {
+                guard parts.count >= 3, let last = parts.last, !last.contains("("), !last.contains("["),
+                      !(last.first?.isNumber ?? false) else { return nil }
+                return last
+            }
+            if let last = plainLast() {
+                switch piece(last) {
+                case .version, .featured: break
+                case .titlePart:
+                    let first = VersionWords.fold(last).split(separator: " ").first.map(String.init) ?? ""
+                    if !VersionWords.titlePartWords.contains(first) { r.marks.append(parts.removeLast()) }
+                case .note:
+                    // A year, a key or a tempo after the dash is a note that stays out of the title as before; an
+                    // upload's mark or anything else is kept in `marks`.
+                    if isYear(last) || isKeyCode(last) || isTempo(last) { r.notes.append(parts.removeLast()) }
+                    else { r.marks.append(parts.removeLast()) }
+                }
+            }
+            if let last = plainLast(), case let .version(v) = piece(last) {
                 dashedVersion = v
                 parts.removeLast()
             }
@@ -484,8 +599,14 @@ public enum NameReading {
                 let a = parts[0], rest = parts.dropFirst().joined(separator: " - ")
                 // "Title (Remix) - Artist": the version belongs to the title.
                 let aRead = readTitle(a), restRead = readTitle(rest)
-                if aRead.version != nil && restRead.version == nil && !rest.contains("(") && !rest.contains("[") && parts.count == 2
-                    && SongName.isUsableArtist(rest) {
+                let restPlain = restRead.version == nil && !rest.contains("(") && !rest.contains("[")
+                if parts.count == 2, isUploadMark(rest) || (restPlain && endsWithVersionWord(a)) {
+                    // One dash, and what follows it is an upload's mark ("Night Drive - Official Video"), or the part
+                    // before it ends with a version word written without brackets ("Marlo Dune Night Drive Ostro
+                    // Rework - Channel Name"): the part before the dash is the song's whole name, run together, and
+                    // what follows is a note. Not "Artist - Title": no artist is read, so the song asks for a look.
+                    title = a; r.marks.append(rest)
+                } else if aRead.version != nil && restPlain && parts.count == 2 && SongName.isUsableArtist(rest) {
                     artist = rest; title = a; r.swapped = true
                 } else if SongName.isUsableArtist(a) && SongName.isUsableTitle(rest) {
                     artist = a; title = rest
@@ -497,7 +618,9 @@ public enum NameReading {
             }
             if let v = dashedVersion {
                 let t = readTitle(title)
-                r.titleWritten = title.trimmingCharacters(in: .whitespaces)
+                let cleaned = withoutMarks(title)
+                r.titleWritten = cleaned.text
+                r.marks = cleaned.marks + r.marks
                 r.dashedVersion = v.written
                 r.title = t.title
                 r.featured = t.featured
@@ -508,7 +631,9 @@ public enum NameReading {
             }
         }
         let t = readTitle(title)
-        r.titleWritten = title.trimmingCharacters(in: .whitespaces)
+        let cleaned = withoutMarks(title)
+        r.titleWritten = cleaned.text
+        r.marks = cleaned.marks + r.marks
         r.title = t.title
         r.featured = t.featured
         r.version = t.version
