@@ -14,6 +14,14 @@ extension LocalFacts {
     public static func gatherFacts(_ crate: inout Crate, files: [String: [FileRef]], libraries: [DJLibrary],
                                    fileExists: (URL) -> Bool = { FileManager.default.fileExists(atPath: $0.path) })
         -> [String: Int] {
+        gatherFacts(&crate, files: files, libraries: libraries, fileExists: fileExists, extras: [:])
+    }
+
+    /// `gatherFacts`, with what the names step took out of each title (`name_notes`) and an artist tag it read as the
+    /// remixer (`remixer`, when the tags give none).
+    static func gatherFacts(_ crate: inout Crate, files: [String: [FileRef]], libraries: [DJLibrary],
+                            fileExists: (URL) -> Bool = { FileManager.default.fileExists(atPath: $0.path) },
+                            extras: [String: NameExtras]) -> [String: Int] {
         var newest: [DJProgram: DJLibrary] = [:]
         for lib in libraries {
             if let have = newest[lib.program], (have.written ?? .distantPast) >= (lib.written ?? .distantPast) { continue }
@@ -42,6 +50,11 @@ extension LocalFacts {
                 let stem = (PathKey.lastName(present.rel) as NSString).deletingPathExtension
                 if let l = NameReading.readFileName(stem).lyrics {
                     t.ident.offer(SongFacts.lyrics, .init(l.rawValue, from: SongFacts.Origin.fileName))
+                }
+                // What the names step took out of the title, kept as written; and the remixer an artist tag held.
+                if let x = extras[t.id] {
+                    if !x.marks.isEmpty { t.ident.offer(SongFacts.nameNotes, .init(x.marks, from: x.marksFrom)) }
+                    if let r = x.remixer { t.ident.offer(SongFacts.remixer, .init(r, from: SongFacts.Origin.tag)) }
                 }
             }
             t.ident.dropFacts { readNow.contains($0) }

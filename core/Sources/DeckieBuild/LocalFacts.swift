@@ -123,7 +123,12 @@ public enum LocalFacts {
 
     /// Whether a song needs a name: its title is not usable, or it has no artist.
     public static func needsName(_ t: CrateTrack) -> Bool {
-        !LocalNames.isUsableTitle(t.ident.title) || !LocalNames.isUsableArtist(t.ident.artist)
+        !LocalNames.isUsableTitle(t.ident.title) || !LocalNames.isUsableArtist(t.ident.artist) || namesDisagree(t)
+    }
+
+    /// Whether the song's title tag and file name name different songs, and the DJ has not named it since.
+    public static func namesDisagree(_ t: CrateTrack) -> Bool {
+        t.flags.contains(nameDisagrees) && t.ident.source != "user"
     }
 
     struct Reading {
@@ -140,6 +145,25 @@ public enum LocalFacts {
         var artist: String?
         var artistFrom: String?
         var version: String?
+        /// What was taken out of the title as written (an upload's marks, an uploader's name after a dash), and where
+        /// from (`tag` or `filename`): kept as the song's `name_notes` fact.
+        var marks: [String] = []
+        var marksFrom = SongFacts.Origin.tag
+        /// The artist tag, when it named the remixer of the title's own version and the file name gave the artist.
+        var remixer: String? = nil
+        /// The title tag names another song than the file name (no word in common): a name for the DJ to look at.
+        var disagrees = false
+    }
+
+    /// The flag on a song whose title tag and file name name different songs (no word in common): the tag's reading
+    /// is kept and the song is in the "Needs a name" list until the DJ names it or says it looks right.
+    public static let nameDisagrees = "name_disagrees"
+
+    /// What the names step found beyond the name itself, by entry id, for the facts step.
+    struct NameExtras {
+        var marks: [String]
+        var marksFrom: String
+        var remixer: String?
     }
 
     /// Gathers the keys and names for every entry of `crate` from its files (`files`, by entry id; a file not there now
@@ -149,6 +173,14 @@ public enum LocalFacts {
                              own: (CrateTrack) -> CrateTrack.Key? = LocalFacts.ownReading,
                              ownHome: (CrateTrack) -> CrateTrack.KeyHome? = LocalFacts.ownHome,
                              fileExists: (URL) -> Bool = { FileManager.default.fileExists(atPath: $0.path) }) -> Report {
+        var extras: [String: NameExtras] = [:]
+        return apply(to: &crate, files: files, libraries: libraries, own: own, ownHome: ownHome, fileExists: fileExists,
+                     extras: &extras)
+    }
+
+    static func apply(to crate: inout Crate, files: [String: [FileRef]], libraries: [DJLibrary],
+                      own: (CrateTrack) -> CrateTrack.Key?, ownHome: (CrateTrack) -> CrateTrack.KeyHome?,
+                      fileExists: (URL) -> Bool, extras: inout [String: NameExtras]) -> Report {
         var report = Report()
         // One library per program: the most recently written.
         var newest: [DJProgram: DJLibrary] = [:]
@@ -222,6 +254,14 @@ public enum LocalFacts {
                                 libs: matches.map { libs[$0.library].program.rawValue }, tracklists: &tracklists,
                                 siblings: folderKey.flatMap { siblings[$0] } ?? []) {
                     named[t.id] = n
+                    if !n.marks.isEmpty || n.remixer != nil {
+                        extras[t.id] = NameExtras(marks: n.marks, marksFrom: n.marksFrom, remixer: n.remixer)
+                    }
+                }
+                // Read again each time: a disagreement the files no longer have goes.
+                if present != nil {
+                    t.flags.removeAll { $0 == nameDisagrees }
+                    if named[t.id]?.disagrees == true { t.flags.append(nameDisagrees); t.flags.sort() }
                 }
             }
             crate.tracks[i] = t
@@ -376,10 +416,34 @@ public enum LocalFacts {
         let fromName = (title: read.titleWritten, artist: read.artist.flatMap { LocalNames.isUsableArtist($0) ? $0 : nil })
         func done() -> Bool { title != nil && artist != nil }
 
+        var marks: [String] = []
+        var marksFrom = SongFacts.Origin.tag
+        var remixer: String? = nil
+        var disagrees = false
+        if let tt = title, tt.1 == "tag", tags != nil {
+            // An artist tag that holds the remixer of the title's own version, while the file name gives another
+            // artist ("Marlo Dune - Night Drive (Ostro Remix)" with the artist tag "Ostro"): the file name's artist,
+            // and the tag's kept as the remixer.
+            if let ta = artist, ta.1 == "tag", let fa = fromName.artist, artistIsRemixer(ta.0, title: tt.0, fileArtist: fa) {
+                remixer = ta.0
+                artist = (fa, "filename")
+            }
+            // The title tag as written, less the artist repeated at its head and an upload's marks.
+            var text = tt.0
+            if let rest = NameReading.withoutArtistHead(text, artist: artist?.0 ?? fromName.artist) { text = rest }
+            let cleaned = NameReading.withoutMarks(text)
+            marks = cleaned.marks
+            title = (cleaned.text, "tag")
+            // The tag names another song than the file name: keep the tag's reading, and ask the DJ to look.
+            disagrees = namesDisagree(tagTitle: cleaned.text, read: read, stem: stem)
+        }
+
         if !done() {
             if title == nil, LocalNames.isUsableTitle(fromName.title) {
                 title = (fromName.title, "filename")
                 version = read.dashedVersion
+                marks = read.marks
+                marksFrom = SongFacts.Origin.fileName
             }
             if artist == nil, let a = fromName.artist { artist = (a, "filename") }
         }
@@ -408,14 +472,45 @@ public enum LocalFacts {
         }
         let usable = title != nil
         let finalTitle = title ?? (tags == nil ? (t.ident.title, t.ident.source ?? "filename") : (fromName.title.isEmpty ? stem : fromName.title, "filename"))
-        let n = Named(title: finalTitle.0, titleFrom: finalTitle.1, titleUsable: usable, artist: artist?.0,
+        var n = Named(title: finalTitle.0, titleFrom: finalTitle.1, titleUsable: usable, artist: artist?.0,
                       artistFrom: artist?.1, version: version)
+        n.marks = marks; n.marksFrom = marksFrom; n.remixer = remixer; n.disagrees = disagrees
         // A song its tags name fully, unchanged: nothing to write.
         if n.titleFrom == "tag" && n.artistFrom == "tag" && n.title == t.ident.title && n.artist == t.ident.artist
-            && t.ident.source == "tag" && n.version == t.ident.version {
+            && t.ident.source == "tag" && n.version == t.ident.version && marks.isEmpty && !disagrees {
             return nil
         }
         return n
+    }
+
+    /// Words that say nothing about which song a title is, left out when a title tag and a file name are compared.
+    static let commonWords: Set<String> = ["the", "a", "an", "and", "of", "de", "la", "le", "el", "feat", "ft", "featuring", "vs", "x"]
+
+    /// Whether a title tag names another song than the file name: the file name reads as "Artist - Title", and the
+    /// tag's title (its version and notes aside) shares no word with the file name outside its artist. A tag in which
+    /// every word is a common one says nothing either way.
+    static func namesDisagree(tagTitle: String, read: ReadName, stem: String) -> Bool {
+        guard let fileArtist = read.artist, LocalNames.isUsableArtist(fileArtist), LocalNames.isUsableTitle(read.titleWritten)
+        else { return false }
+        let tagWords = Set(NameReading.compareWords(NameReading.readTitle(tagTitle).title)).subtracting(commonWords)
+        guard !tagWords.isEmpty else { return false }
+        let fileWords = Set(NameReading.compareWords(stem)).subtracting(NameReading.compareWords(fileArtist))
+        return tagWords.isDisjoint(with: fileWords)
+    }
+
+    /// Whether an artist tag names the remixer of the title's own version and not the song's artist: the title's
+    /// version names a remixer whose name stands whole in the artist tag (or the tag's in it), and the file name gives
+    /// an artist who is not that one.
+    static func artistIsRemixer(_ tagArtist: String, title: String, fileArtist: String) -> Bool {
+        let tagWords = NameReading.compareWords(tagArtist)
+        let fileWords = NameReading.compareWords(fileArtist)
+        guard !tagWords.isEmpty, !fileWords.isEmpty, tagWords != fileWords,
+              !NameReading.containsWhole(fileWords, in: tagWords), !NameReading.containsWhole(tagWords, in: fileWords),
+              let v = NameReading.readTitle(title).version, !v.core.isDisjoint(with: VersionCompare.named) else { return false }
+        return v.names.contains { name in
+            let w = NameReading.compareWords(name).filter { !["dj", "mc"].contains($0) }
+            return !w.isEmpty && (NameReading.containsWhole(w, in: tagWords) || NameReading.containsWhole(tagWords, in: w))
+        }
     }
 
     /// The names Desk gives a song from its file name and its folder alone (no tags, no tracklist, no library): the
@@ -512,9 +607,11 @@ extension LocalFacts {
             do { libs.append(try DJLibrary.read(f.program, at: f.url)) }
             catch { failed.append("\(f.program.rawValue): \(error)") }
         }
+        var extras: [String: NameExtras] = [:]
         var report = apply(to: &crate, files: files, libraries: libs, own: ownReading(records: records),
-                           ownHome: ownHome(records: records))
-        report.factsFrom = gatherFacts(&crate, files: files, libraries: libs)
+                           ownHome: ownHome(records: records), fileExists: { FileManager.default.fileExists(atPath: $0.path) },
+                           extras: &extras)
+        report.factsFrom = gatherFacts(&crate, files: files, libraries: libs, extras: extras)
         return LocalFactsSummary(report: report,
                                  libraries: libs.map { .init(program: $0.program, path: $0.file, songs: $0.entries.count) },
                                  failed: failed,

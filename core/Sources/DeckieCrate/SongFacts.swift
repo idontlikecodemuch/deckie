@@ -76,18 +76,23 @@ public enum SongFacts {
     /// The label the song first came out on (D39), beside `original_year`: what a lookup gives for a song on a
     /// compilation, or the original's for a DJ's edit, while `label` stays the copy's own.
     public static let originalLabel = "original_label"
+    /// What Desk took out of a song's title as written, kept as written (added Nov 18, 2026): an upload's or a
+    /// download's marks ("(Official Video)", "(320kbps)", "(siteName.com)") and a part after a dash that was neither
+    /// the title nor a version (an uploader's or a channel's name). From the title tag (`tag`) or the file name
+    /// (`filename`).
+    public static let nameNotes = "name_notes"
 
     /// Every fact name above, in the order a window lists them.
     public static let known = [release, releaseArtist, year, date, originalYear, originalDate, label, catalogNumber,
                                genre, trackNumber, trackCount, discNumber, discCount, composer, lyricist, remixer,
                                producer, originalArtist, isrc, barcode, bpmText, keyText, comment, grouping, mood,
-                               subtitle, compilation, copyright, language, lyrics, originalLabel]
+                               subtitle, compilation, copyright, language, lyrics, originalLabel, nameNotes]
 
     /// The facts a window shows as their own fields (release, year, label, genre); the rest are listed.
     public static let shown = [release, year, label, genre]
 
     /// Facts that may hold several values from one source; the others take the first value.
-    public static let several: Set<String> = [genre, composer, lyricist, remixer, producer, originalArtist, mood, comment]
+    public static let several: Set<String> = [genre, composer, lyricist, remixer, producer, originalArtist, mood, comment, nameNotes]
 
     // MARK: where a fact came from
 
