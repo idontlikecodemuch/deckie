@@ -274,8 +274,8 @@ func decodeFailure(_ data: Data) -> AudioDecodeError? {
     @Test func plainAACIsStillUnsupportedNotProtected() throws {
         let m4a = try fixtureBytes("tone.m4a")
         #expect(ProtectedMP4.check(m4a) == nil)
-        // On Windows it is read, by Windows' own decoder (MediaFoundationTests).
-        #if !os(Windows)
+        // On Windows it is read by Windows' own decoder (MediaFoundationTests), on a Mac by Core Audio (CoreAudioTests).
+        #if !os(Windows) && !canImport(AudioToolbox)
         let e = try #require(decodeFailure(m4a))
         #expect(e.kind == .unsupported && e.format == .aac)
         #expect(e.message.hasPrefix("AAC is not supported on this platform yet"), "\(e.message)")
@@ -328,12 +328,18 @@ func decodeFailure(_ data: Data) -> AudioDecodeError? {
             #expect(ProtectedMP4.check(bytes) == finding, "\(what)")
             // Through the decoder: protected, or the usual "AAC is not supported". On Windows a file that is not
             // protected goes to Windows' own decoder, which reads the real ones; what it cannot read is unsupported.
-            #if os(Windows)
+            // On a Mac, Core Audio reads the real ones; one it cannot read is damaged (AAC that does not decode) or
+            // unsupported (no AAC in it).
+            #if os(Windows) || canImport(AudioToolbox)
             if finding == nil, decodeFailure(bytes) == nil { continue }
             #endif
             let e = try #require(decodeFailure(bytes), "\(what)")
-            let kind: AudioDecodeError.Kind = finding == nil ? .unsupported : .protected
-            #expect(e.kind == kind && e.format == .aac, "\(what): \(e.kind)")
+            #if canImport(AudioToolbox)
+            let kinds: [AudioDecodeError.Kind] = finding == nil ? [.unsupported, .damaged] : [.protected]
+            #else
+            let kinds: [AudioDecodeError.Kind] = finding == nil ? [.unsupported] : [.protected]
+            #endif
+            #expect(kinds.contains(e.kind) && e.format == .aac, "\(what): \(e.kind)")
             if let finding { #expect(e.message == finding.message, "\(what)") }
         }
     }

@@ -306,9 +306,11 @@ renames, applied here: `import_log.built_by` is a device label, the block is `im
   own name for the device, by the same rule and with the same value as `analysis.device` (the builder writes its one
   device label, `Analysis.platform` on Windows and Linux, to both); the builder had proposed its program and version,
   which the records' `engine` blocks already give. Reasons: `unsupported` (a format this platform cannot decode: AAC
-  and WMA on Linux, Ogg, Opus), `protected` (copy protection: no decoder will ever read it), `damaged` (cut short or
-  corrupted), `decode_error` (could not be read, or failed otherwise while decoding), `analysis_error` (decoded, but no
-  beat grid, too few bars, or the model failed) and `duplicate` (the same bytes as another file, which has the record:
+  and Apple Lossless on Linux, WMA, Ogg, Opus), `protected` (copy protection: no decoder will ever read it), `damaged`
+  (cut short or corrupted; since Nov 18, 2026 also an MP3 cut short whose remaining audio is too little to read),
+  `decode_error` (could not be read, or failed otherwise while decoding), `analysis_error` (decoded, but the analysis
+  failed; before Nov 18, 2026 also no beat grid or too few bars), `no_beat` (added Nov 18, 2026: decoded, but too few
+  beats to fit a beat grid), `too_short` (added Nov 18, 2026: a beat, but too few whole bars) and `duplicate` (the same bytes as another file, which has the record:
   the id is the file's hash; since D27 only a second file in a place the entry already has, that is two copies in one
   folder on the Mac, which has no numbers: a file anywhere else adds a place, below). The log describes the last build; an app that later adds tracks leaves it as it is.
 - **`file.tag_bpm`**, a number or null: the tag tempo, the tempo written down for the file before it was analysed (the

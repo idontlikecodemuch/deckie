@@ -8,8 +8,9 @@
 // It reads each song's fingerprint with DeckieRecognition's `Landmarks`, to check it.
 // crate-from-lab: a command-line tool that writes a crate from the lab's feature files (core/Tools/make_crate_fixture.sh).
 // DeckieDecode: audio files to float samples for the analysers: WAV and AIFF in plain Swift; MP3 through dr_mp3
-// (CDrMp3) and FLAC through dr_flac (CDrFlac), vendored public-domain C files (DEPENDENCIES.md); AAC is recognised
-// and reported as not supported yet, a copy-protected MP4 as protected. It re-exports DeckieAudio.
+// (CDrMp3) and FLAC through dr_flac (CDrFlac), vendored public-domain C files (DEPENDENCIES.md); AAC and Apple
+// Lossless through the system's own decoder (Core Audio on Apple's, Media Foundation on Windows; not yet on Linux), a
+// copy-protected MP4 reported as protected. It re-exports DeckieAudio.
 // CDrMp3, CDrFlac: dr_mp3.h and dr_flac.h compiled as plain C, the same on Linux, Windows and macOS; nothing is
 // downloaded at build time.
 // CStbImage: stb_image and stb_image_write (vendored, public domain; DEPENDENCIES.md section 11) and the cover
