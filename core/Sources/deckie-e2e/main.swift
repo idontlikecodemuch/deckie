@@ -43,7 +43,7 @@
 //   .hidden folder/inside.wav             a hidden folder
 //   _old/parked.wav                       a folder left out by the builder's rule, with an import-log entry
 //
-// So a correct build has 3 songs, 2 files that did not go in (one analysis_error, one protected) and one left-out
+// So a correct build has 3 songs, 2 files that did not go in (one no_beat: a tone has no beat; one protected) and one left-out
 // folder; 2 of the songs have a cover, each its own, and `covers/` holds those two thumbnails and nothing else. No
 // picture is committed: both are made here by code (`TestPicture`), the same bytes on every system.
 
@@ -258,7 +258,7 @@ func check(_ file: URL, pc: Bool = false, source: String? = nil) {
     let log = crate.manifest.importLog
     let entries = (log?.entries ?? []).map { "\($0.rel): \($0.reason)" }.sorted()
     let under = source.map { $0 + "/" } ?? ""
-    let expected = (["\(under)\(lockedRel): protected", "\(under)\(toneRel): analysis_error"] + (pc ? [] : ["_old: skipped"])).sorted()
+    let expected = (["\(under)\(lockedRel): protected", "\(under)\(toneRel): no_beat"] + (pc ? [] : ["_old: skipped"])).sorted()
     if let source {
         expect(CrateArchive.isArchive(file), "Desk's crate file is not in the single-file form")
         expect(crate.tracks.allSatisfy { $0.ident.disc == source }, "not every song's source is \(source)")

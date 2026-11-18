@@ -168,7 +168,7 @@ struct MP4Trim: Equatable, Sendable {
         // One encoder block of slack either way: decoders round the end to whole blocks.
         let slack = frames(4096)
         if whole > 0, decoded > whole + slack || decoded < whole - lead - slack {
-            throw Refusal(message: "Windows decoded \(decoded) sample frames where the file holds \(whole); "
+            throw Refusal(message: "the decoder gave \(decoded) sample frames where the file holds \(whole); "
                           + "its start cannot be placed, so it is not read")
         }
         // The whole track came back (the measured behaviour: every block, so at least the track's own length) when

@@ -144,13 +144,20 @@ public final class Analyser: Sendable {
         // ------------------------------------------------------------------ decode (44.1 kHz, mono = channel mean)
         // A damaged MP3 frame comes out silent, and is listed (`damagedFrames`): everything below, the true peak
         // included, is measured on the audio as it plays, without the frame's burst.
-        var buffer: AudioBuffer, damagedFrames: [DamagedFrame], startUncertain: String?
+        var buffer: AudioBuffer, damagedFrames: [DamagedFrame], startUncertain: String?, cutShort: String?
         do {
             // In a block of its own, so the decoded samples are not held beyond `buffer` once it is resampled.
             let decoded = try AudioDecoder.decodeReporting(url)
             buffer = decoded.buffer
             damagedFrames = decoded.damagedFrames
             startUncertain = decoded.startUncertain
+            cutShort = decoded.cutShort
+        }
+        // A file cut short that leaves too little to find a beat in is damaged or incomplete, not a song with no beat.
+        func noBeat(_ e: AnalyserError) -> Error {
+            guard let cutShort else { return e }
+            return AudioDecodeError(kind: .damaged, file: url.path, format: format,
+                                    message: "the file is cut short (\(cutShort)), and too little of it is left to read")
         }
         // The fingerprint (D35) from the audio as the file has it, before any resampling: `Landmarks` brings it to
         // its own 8 kHz itself. About a tenth of a second for a minute of music.
@@ -170,7 +177,7 @@ public final class Analyser: Sendable {
         let tracked = try beatTracker.track(AudioBuffer(sampleRate: SpectralFeatures.sampleRate, channelCount: 1,
                                                         samples: m22))
         var beats = tracked.beats.beats, downbeats = tracked.beats.downbeats
-        guard var gridBT = BeatGrid.fit(beats: beats, downbeats: downbeats) else { throw AnalyserError.noGrid }
+        guard var gridBT = BeatGrid.fit(beats: beats, downbeats: downbeats) else { throw noBeat(AnalyserError.noGrid) }
         let tag = options.bpmTag.flatMap { $0 != 0 ? $0 : nil }
         var octaveFix: OctaveFix? = nil
         if tag != nil {
@@ -217,7 +224,7 @@ public final class Analyser: Sendable {
         guard let bars = BarGrid(gridDownbeat: G.firstDownbeat, beatS: P, firstSound: sound.firstSound,
                                  duration: duration) else {
             let fd = BarGrid.firstBar(gridDownbeat: G.firstDownbeat, beatS: P, firstSound: sound.firstSound)
-            throw AnalyserError.tooFewBars(BarGrid.barCount(firstBar: fd, beatS: P, duration: duration))
+            throw noBeat(AnalyserError.tooFewBars(BarGrid.barCount(firstBar: fd, beatS: P, duration: duration)))
         }
         let bpm = 60.0 / P
         var multTag = 1.0, devTag = 0.0, bpmAgree = false
