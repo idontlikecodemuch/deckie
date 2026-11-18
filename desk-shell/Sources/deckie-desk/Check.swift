@@ -134,7 +134,7 @@ enum Check {
                     var h1 = shown.querySelector('h1');
                     deckieShell.send(JSON.stringify({ type: 'shell.drawn', screen: shown.id,
                       heading: h1 ? h1.textContent : '', button: document.getElementById('add-label').textContent,
-                      engine: deckieShell.engine }));
+                      engine: deckieShell.engine, cannotRead: !document.getElementById('engine-missing').hidden }));
                     desk.request('drives.list', {}, { quiet: true }).then(function (r) {
                       deckieShell.send(JSON.stringify({ type: 'shell.checked', drives: r.ok ? r.drives.length : -1 }));
                     });
@@ -142,7 +142,8 @@ enum Check {
             case "shell.drawn":
                 seen.drawn = true
                 let now = Date()
-                say("page shows: screen \(m["screen"] ?? "?"), heading \"\(m["heading"] ?? "")\", button \"\(m["button"] ?? "")\", in \(m["engine"] ?? "?")")
+                say("page shows: screen \(m["screen"] ?? "?"), heading \"\(m["heading"] ?? "")\", button \"\(m["button"] ?? "")\", in \(m["engine"] ?? "?")"
+                    + ((m["cannotRead"] as? Bool) == true ? "; the banner says Desk cannot read music here" : ""))
                 say(String(format: "start-up: the page showed the engine's words %.2f s after the program started (at unix ms %.0f)",
                            now.timeIntervalSince(started), now.timeIntervalSince1970 * 1000))
             case "shell.checked":
@@ -164,11 +165,22 @@ enum Check {
                     """)
                 // Add music: the bar's button opens a menu of the three ways (DeskAddMusic.ways); the last is
                 // Add folder, whose chooser answers with the music folder. The songs are counted, then read.
-                eval("document.getElementById('add-button').click();")
+                // A Desk that cannot read music here has Add music off and says why at once: the check ends there,
+                // in the page's words, rather than waiting for a menu that never opens.
+                eval("""
+                    if (document.getElementById('add-button').disabled) {
+                      var banner = document.getElementById('engine-missing');
+                      deckieShell.send(JSON.stringify({ type: 'shell.checkCannotRead', says: banner && !banner.hidden ? banner.innerText : '' }));
+                    } else { document.getElementById('add-button').click(); }
+                    """)
                 evalWhen("!document.getElementById('add-menu').hidden && document.querySelector('#add-menu [role=menuitem]')", """
                     var items = document.querySelectorAll('#add-menu [role=menuitem]');
                     items[items.length - 1].click();
                     """)
+            case "shell.checkCannotRead":
+                let says = (m["says"] as? String ?? "").split(whereSeparator: \.isNewline).joined(separator: " ")
+                say("FAILED: Add music is off, as it should be when Desk cannot read music here; the page says: \(says.isEmpty ? "(nothing)" : says)")
+                end(3)
             case "shell.checkFinished":
                 let summary = (m["summary"] as? String ?? "").split(whereSeparator: \.isNewline).map { $0.trimmingCharacters(in: .whitespaces) }
                     .filter { !$0.isEmpty }.joined(separator: " | ")

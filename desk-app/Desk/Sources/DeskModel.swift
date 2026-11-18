@@ -242,10 +242,18 @@ final class DeskModel: ObservableObject {
 
     // MARK: Add music: the three ways in (research AE), then the one run
 
+    /// Whether this Mac's Desk is missing the part that reads music (ONNX Runtime or the beat model, which ship inside
+    /// the app): then no read is started, Add music is off, and the window says so at once. Looked at once, after
+    /// the app has pointed the engine at its own bundle.
+    lazy var cannotRead: Bool = {
+        do { try Builder.checkEngine(); return false } catch { return true }
+    }()
+
     /// One of the three ways (DeskAddMusic.ways): Add drive and Add CD show what is plugged in; Add folder is the
     /// system's folder chooser.
     func addWay(_ id: String) {
         guard !running else { return }
+        guard !cannotRead else { errorText = Words.engineMissing + " " + Words.engineMissingHelp; return }
         switch id {
         case "drive": drives = DeskDrives.list(); addStep = .drives
         case "cd": drives = DeskDrives.list(); musicCDs = MusicCDs.list(); addStep = .cds
@@ -321,6 +329,7 @@ final class DeskModel: ObservableObject {
     /// Counts the songs first (the count shows rising once it takes longer than a moment); above the line Desk asks,
     /// with the count and about how long reading takes, before reading anything (research AE, finding 3).
     func countThenAdd(_ url: URL, name: String) {
+        guard !cannotRead else { addStep = nil; errorText = Words.engineMissing + " " + Words.engineMissingHelp; return }
         countStop?.set()
         let stop = DeskAddMusic.CountStop()
         countStop = stop
@@ -398,6 +407,8 @@ final class DeskModel: ObservableObject {
     /// The one run: into the crate showing, or a new crate named after what is read.
     func start(_ request: RunRequest) {
         guard !running else { return }
+        // A read that cannot finish is never started (the part that reads music is missing).
+        guard !cannotRead else { errorText = Words.engineMissing + " " + Words.engineMissingHelp; return }
         saveNow()
         let info: CrateInfo
         do {

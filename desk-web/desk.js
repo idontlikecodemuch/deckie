@@ -119,7 +119,7 @@
   function showError(e, word) {
     if (e.code === "busy") return;
     let text;
-    if (e.code === "engine_missing") text = t("engineMissing", { detail: e.detail || "" });
+    if (e.code === "engine_missing") { sayCannotRead(); return; }
     else if (word) text = t(word, { detail: e.detail || "" });
     else text = e.detail || e.code || "";
     message([text]);
@@ -243,7 +243,8 @@
     $("run-name").textContent = shownName();
     $("crate-button").disabled = busy;
     $("add-label").textContent = t("addMusic");
-    $("add-button").disabled = busy || (hello.analysis && !hello.analysis.ready);
+    $("engine-missing").hidden = !cannotRead();
+    $("add-button").disabled = busy || cannotRead();
     drawWays($("first-ways"), true, $("add-button").disabled);
     $("run-stop").disabled = !!state.stopping;
     $("run-stopping").hidden = !state.stopping;
@@ -278,14 +279,18 @@
       show("crate"); drawCrate();
       $("crate-add").hidden = false;
       $("crate-add-label").textContent = t("addMoreMusicTo", { crate: shownName() });
-      drawWays($("crate-ways"), false, busy);
+      drawWays($("crate-ways"), false, busy || cannotRead());
       return;
     }
     show("first");
     $("status").hidden = true;
     $("first-body").textContent = t("firstBody");
-    if (hello.analysis && !hello.analysis.ready) $("first-body").textContent = t("firstBodyEngineMissing", { body: t("firstBody"), missing: t("engineMissing", { detail: "" }) });
   }
+
+  /// Whether this computer's Desk is missing the part that reads music (the engine's first message says analysis is
+  /// not ready: no ONNX Runtime or no beat model). Then nothing is read: the banner says so at once, on every screen.
+  function cannotRead() { return !!(hello && hello.analysis && !hello.analysis.ready); }
+  function sayCannotRead() { message([t("engineMissing"), t("engineMissingHelp")]); }
 
   function drawFinished() {
     const r = finished;
@@ -1477,6 +1482,7 @@
 
   function addWay(id) {
     if (run || (state && state.running)) return;
+    if (cannotRead()) { sayCannotRead(); return; }
     if (id === "folder") chooseAndAdd();
     else pickFrom(id);
   }
@@ -1538,6 +1544,7 @@
   /// Counts the songs first; the count shows rising once it takes longer than a moment. Above the line Desk asks,
   /// with the count and about how long reading takes, before reading anything (research AE, finding 3).
   async function countThenAdd(path, name) {
+    if (cannotRead()) { sayCannotRead(); return; }
     adding = { path, name, songs: 0, shown: false };
     const mine = adding;
     setTimeout(() => { if (adding === mine && !mine.done) { mine.shown = true; openCounting(); } }, num("--count-show-after"));
@@ -1594,6 +1601,7 @@
 
   // ---- what the DJ does
   function addMusic(path, name, crateName) {
+    if (cannotRead()) { sayCannotRead(); return; }
     const fields = { path };
     if (name) fields.name = name;
     // A new crate takes the first screen's name (or the one typed in the question), never the source's.
@@ -1691,6 +1699,7 @@
   document.addEventListener("drop", (e) => {
     e.preventDefault(); dragDepth = 0; $("drop").hidden = true;
     if (run || (state && state.running)) return;
+    if (cannotRead()) { sayCannotRead(); return; }
     const uris = (e.dataTransfer.getData("text/uri-list") || "").split(/\r?\n/).filter((u) => u.startsWith("file:"));
     if (uris.length) { request("shell.droppedUris", { uris }, { quiet: true }); return; }
     const wv = window.chrome && window.chrome.webview;

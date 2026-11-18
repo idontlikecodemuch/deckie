@@ -49,7 +49,7 @@ struct AddWayButtons: View {
                 }
             }
         }
-        .disabled(model.running)
+        .disabled(model.running || model.cannotRead)
     }
 }
 
@@ -75,7 +75,7 @@ struct AddMusicMenu: View {
                 .labelStyle(.titleAndIcon)
         }
         .help(Words.addMusicHelp)
-        .disabled(model.running)
+        .disabled(model.running || model.cannotRead)
     }
 }
 
