@@ -109,7 +109,7 @@ func crate(_ tracks: [CrateTrack], name: String = "Night") -> Crate {
         let old = try home.shelf.make(name: "Old crate")
         let oldFile = home.shelf.folder(old.id).appendingPathComponent("crate.deckiecrate")
         try CrateWriter.write(crate(one, name: "Old crate"), to: oldFile)
-        #expect(home.shelf.package(old.id) == oldFile)
+        #expect(home.shelf.package(old.id).standardizedFileURL.path == oldFile.standardizedFileURL.path)
         try home.shelf.rename(old.id, to: "Renamed")
         #expect(try CrateReader.read(from: oldFile).manifest.name == "Renamed", "written where it is")
         #expect(!fm.fileExists(atPath: home.shelf.folder(old.id).appendingPathComponent("crate.deckie").path))
