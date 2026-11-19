@@ -26,6 +26,9 @@ deskshell_t deskshell_create(int debug, const char *title, int width, int height
 /// Where the page's messages go. Set before deskshell_load.
 void deskshell_on_message(deskshell_t s, deskshell_message_fn fn, void *context);
 
+/// Runs `js` at the start of every page the window shows, before the page's own scripts. Before deskshell_load.
+void deskshell_init_script(deskshell_t s, const char *js);
+
 /// Shows the page at `url` (a file:// URL to the pages beside the program).
 void deskshell_load(deskshell_t s, const char *url);
 

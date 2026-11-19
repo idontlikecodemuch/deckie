@@ -72,6 +72,12 @@ enum Notice {
     /// No message boxes: a check with no one at the keyboard must not wait for a click (`--check`, `--self-test`,
     /// or DECKIE_NO_BOXES in the environment, which the starter reads too).
     nonisolated(unsafe) static var quiet = false
+    /// No boxes in the window either (`--check`, or DECKIE_NO_BOXES): the page's own boxes and questions are written
+    /// down instead of shown, and a chooser the check gave no answer for is not opened (Desk.swift). Every box the
+    /// shell can show, by kind: the message boxes here (`tell`, `ask`); the starter's (launcher.c, which reads
+    /// DECKIE_NO_BOXES itself); Windows' own boxes when a library is missing or the program stops (main.swift turns
+    /// them off); the folder and file choosers; the page's boxes and questions (desk.js `message`, `confirmIt`).
+    nonisolated(unsafe) static var noBoxes = false
 
     /// Also writes every line said from now on to `path` (made new).
     static func keepLog(at path: String) {

@@ -50,4 +50,9 @@ CI: `.github/workflows/desk-window.yml` builds and runs all of this on Linux (un
   Microsoft's page, offers to open it and points to `Make Crate File`, and ends with code 4 (`Notice.swift`,
   `main.swift`). `DECKIE_NO_BOXES` says it on standard error instead, for checks; `DECKIE_DESK_NO_WEBVIEW2` makes
   the shell behave as on such a PC.
+- **No boxes** (`DECKIE_NO_BOXES`, and every `--check`): no box opens anywhere, so nothing waits for a click. The
+  shell's message boxes and the starter's write their words down; Windows' own boxes for a missing library or a
+  program that stops are off; a chooser the check gave no answer for is not opened; the page writes its boxes and
+  questions down too (a question is answered No). A check fails with the words of any box but one that says
+  something went right (`Notice.noBoxes`).
 - The shell's own words to a DJ are the few in `Notice.swift`, since they must be said before there is a window.

@@ -42,8 +42,16 @@
   // {thisComputer} in any word: "this Mac" or "this computer", by the kind the engine says this computer is.
   let computer = "other";
   const withComputer = (v) => Object.assign({ thisComputer: W["thisComputer." + computer] ?? W["thisComputer.other"] ?? "" }, v || {});
-  const t = (key, v) => fill(W[key] ?? key, withComputer(v));
+  // Words that name the crate and what was added to it say the name once when the two are the same name: their
+  // `key.sameName` form is used then (DeskWords.sameName in the engine says the same).
+  const plainName = (s) => String(s).trim().toLowerCase();
+  const sameName = (v) => {
+    const added = v && (v.read ?? v.source);
+    return !!(v && v.crate != null && added != null && plainName(v.crate) !== "" && plainName(v.crate) === plainName(added));
+  };
+  const t = (key, v) => fill(W[sameName(v) && W[key + ".sameName"] != null ? key + ".sameName" : key] ?? key, withComputer(v));
   const n = (key, count, v) => {
+    if (sameName(v) && W[key + ".sameName.other"] != null) key = key + ".sameName";
     const form = count === 0 && W[key + ".zero"] != null ? "zero" : count === 1 ? "one" : "other";
     return fill(W[key + "." + form] ?? W[key + ".other"] ?? key, withComputer(Object.assign({ n: String(count) }, v || {})));
   };
@@ -1332,7 +1340,15 @@
     d.showModal();
     $("ask-input").select();
   }
+  /// With no one at the keyboard (a check, or DECKIE_NO_BOXES: the shell says so before the page loads), no box is
+  /// shown: its words go to the shell, which writes them down, and a check fails with them unless they only say a
+  /// thing went right (`fine`). A question is answered No, as the shell's own boxes answer it.
+  function noBoxes() { return !!window.__deckieNoBoxes; }
+  function sayInstead(lines, fine) {
+    if (shell) shell.send(JSON.stringify({ type: "shell.box", lines: lines, fine: !!fine }));
+  }
   function confirmIt(title, body, okWord) {
+    if (noBoxes()) { sayInstead([title, body]); return Promise.resolve(false); }
     return new Promise((resolve) => {
       const d = $("confirm");
       $("confirm-title").textContent = title;
@@ -1343,8 +1359,9 @@
       d.showModal();
     });
   }
-  /// A message: its lines, and any buttons beside OK.
-  function message(lines, extra) {
+  /// A message: its lines, and any buttons beside OK. `fine`: it only says that something went right.
+  function message(lines, extra, fine) {
+    if (noBoxes()) { sayInstead(lines, fine); return; }
     const d = $("message");
     const body = $("message-body");
     body.replaceChildren(...lines.map((l) => el("p", { text: l })));
@@ -1435,7 +1452,7 @@
       const f = await request("shell.chooseFile", Object.assign({ purpose: "library", message: t("chooseLibraryMessage") }, chooserWords(false)), { quiet: true });
       if (!f.ok || !f.path) return;
       const r = await request("library.choose", { path: f.path }, { errorWord: "couldntReadLibrary" });
-      if (r.ok) message([t("libraryChosen", { program: programName(r.program) })]);
+      if (r.ok) message([t("libraryChosen", { program: programName(r.program) })], null, true);
     }));
     list.append(sep());
     list.append(item(t("pasteList"), () => { close(true); openTool("paste"); }, { disabled: !songsHere }));
@@ -1647,7 +1664,7 @@
       el("p", null, el("button", { class: "link", text: t("openFolder"), on: { click: () => request("shell.openFolder", { path: parentOf(r.path) }, { quiet: true }) } })),
       el("h3", { class: "to-ipad-title", text: t("toIPadTitle") }),
       el("ul", { class: "mut" }, el("li", { text: t("toIPadStick") }), el("li", { text: t("toIPadICloud") }), el("li", { text: t("toIPadCable") })));
-    message([t("exportedTo", { folder: parentOf(r.path) })], extra);
+    message([t("exportedTo", { folder: parentOf(r.path) })], extra, true);
   }
 
   $("crate-name-button").addEventListener("click", renameShown);
