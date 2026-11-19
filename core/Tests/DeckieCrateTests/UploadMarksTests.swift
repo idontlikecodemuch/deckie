@@ -20,6 +20,57 @@ import Testing
         }
     }
 
+    @Test func aMarkIsTheWholeTextNotAPartOfIt() {
+        // Marks together are still a mark.
+        for mark in ["Official Video 320kbps", "Free Download www.siteName.com", "320 kbps siteName.pm", "HQ - 256 kbps"] {
+            #expect(NameReading.isUploadMark(mark), "\(mark)")
+        }
+        // A name with a mark in it, or beside it, is not a mark: the name is still there.
+        for text in ["Night Drive [320kbps]", "Night Drive 320kbps", "Night Drive (320 kbps)", "Night Drive www.siteName.com",
+                     "Night Drive (siteName.pm)", "Night Drive (Official Video)", "Lights Down 192 kbit/s"] {
+            #expect(!NameReading.isUploadMark(text), "\(text)")
+        }
+    }
+
+    @Test func aBitrateBareAtTheEndIsAMark() {
+        let cases: [(String, String, [String])] = [
+            ("Night Drive 320kbps", "Night Drive", ["320kbps"]),
+            ("Night Drive (Ostro Remix) - 320 kbps", "Night Drive (Ostro Remix)", ["320 kbps"]),
+            ("Night Drive [HD] 256kbps", "Night Drive", ["[HD]", "256kbps"]),
+            // A number that is no bitrate, or nothing left: as written.
+            ("Night Drive 320", "Night Drive 320", []),
+            ("320kbps", "320kbps", []),
+        ]
+        for (written, kept, marks) in cases {
+            let r = NameReading.withoutMarks(written)
+            #expect(r.text == kept, "\(written): \(r.text)")
+            #expect(r.marks == marks, "\(written): \(r.marks)")
+        }
+        let t = NameReading.readTitle("Night Drive (Ostro Remix) 320kbps")
+        #expect(t.title == "Night Drive" && t.version?.kinds == [.remix] && t.notes == ["320kbps"])
+    }
+
+    @Test func anArtistAndATitleWithAMarkAfterOneDash() {
+        // (stem, artist, title as kept, marks): the one-dash guard for a name run together does not take a title with a
+        // mark in it for a mark.
+        let cases: [(String, String?, String, [String])] = [
+            ("Marlo Dune - Night Drive [320kbps]", "Marlo Dune", "Night Drive", ["[320kbps]"]),
+            ("Marlo Dune - Night Drive (320 kbps)", "Marlo Dune", "Night Drive", ["(320 kbps)"]),
+            ("Marlo Dune - Night Drive 320kbps", "Marlo Dune", "Night Drive", ["320kbps"]),
+            ("Marlo Dune - Night Drive (Ostro Remix) [siteName.pm]", "Marlo Dune", "Night Drive (Ostro Remix)", ["[siteName.pm]"]),
+            ("Marlo Dune - Night Drive (Official Video) [320kbps]", "Marlo Dune", "Night Drive", ["(Official Video)", "[320kbps]"]),
+            // The run-together guard still holds: only marks after the one dash.
+            ("Marlo Dune Night Drive - 320kbps", nil, "Marlo Dune Night Drive", ["320kbps"]),
+            ("Marlo Dune Night Drive - Official Video [320kbps]", nil, "Marlo Dune Night Drive", ["Official Video [320kbps]"]),
+        ]
+        for (stem, artist, title, marks) in cases {
+            let r = NameReading.readFileName(stem)
+            #expect(r.artist == artist, "\(stem): artist \(String(describing: r.artist))")
+            #expect(r.titleWritten == title, "\(stem): title \(r.titleWritten)")
+            #expect(r.marks == marks, "\(stem): marks \(r.marks)")
+        }
+    }
+
     @Test func marksComeOutOfTheTitleAsWrittenAndAreKept() {
         let cases: [(String, String, [String])] = [
             ("Night Drive (Official Video)", "Night Drive", ["(Official Video)"]),
