@@ -376,7 +376,11 @@ final class EngineProcess: @unchecked Sendable {
         let token = try #require(audio["token"] as? String)
         let count = try #require((audio["chunks"] as? NSNumber)?.intValue)
         #expect(count == 3)
-        _ = e.wait(from: mark) { $0["event"] as? String == "audio.chunk" && ($0["index"] as? NSNumber)?.intValue == count - 1 }
+        // The last chunk, given time: with every other suite running beside it (core-windows), handing over a few MB
+        // of base64 took longer than the default 30 s, and the chunks were joined before the last had come.
+        _ = try #require(e.wait(from: mark, seconds: 300) {
+            $0["event"] as? String == "audio.chunk" && $0["token"] as? String == token && ($0["index"] as? NSNumber)?.intValue == count - 1
+        })
         let parts = e.received[mark...].filter { $0["event"] as? String == "audio.chunk" && $0["token"] as? String == token }
             .sorted { (($0["index"] as? NSNumber)?.intValue ?? 0) < (($1["index"] as? NSNumber)?.intValue ?? 0) }
         var back = Data()
@@ -572,7 +576,11 @@ final class EngineProcess: @unchecked Sendable {
         let bytes = try #require((audio["bytes"] as? NSNumber)?.intValue)
         let count = try #require((audio["chunks"] as? NSNumber)?.intValue)
         let token = try #require(audio["token"] as? String)
-        _ = e.wait(from: mark) { $0["event"] as? String == "audio.chunk" && ($0["index"] as? NSNumber)?.intValue == count - 1 }
+        // The last chunk, given time: with every other suite running beside it (core-windows), handing over a few MB
+        // of base64 took longer than the default 30 s, and the chunks were joined before the last had come.
+        _ = try #require(e.wait(from: mark, seconds: 300) {
+            $0["event"] as? String == "audio.chunk" && $0["token"] as? String == token && ($0["index"] as? NSNumber)?.intValue == count - 1
+        })
         let parts = e.received[mark...].filter { $0["event"] as? String == "audio.chunk" && $0["token"] as? String == token }
         let joined = parts.compactMap { ($0["data"] as? String).flatMap { Data(base64Encoded: $0) } }.reduce(Data(), +)
         #expect(joined.count == bytes && joined.prefix(4) == Data("RIFF".utf8))
