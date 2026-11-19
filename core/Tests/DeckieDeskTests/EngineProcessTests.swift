@@ -487,7 +487,7 @@ final class EngineProcess: @unchecked Sendable {
             #expect(Data(base64Encoded: got["data"] as? String ?? "") == pictureA)
             #expect(got["path"] == nil)
             let text = String(decoding: try JSONSerialization.data(withJSONObject: got), as: UTF8.self)
-            #expect(!text.contains(hashA) && !text.contains("deckiecrate") && !text.contains(root.lastPathComponent))
+            #expect(!text.contains(hashA) && !text.contains(".deckie") && !text.contains(root.lastPathComponent))
         }
         #expect(Data(base64Encoded: try e.request("song.cover", ["song": "cccc"])["data"] as? String ?? "") == pictureC)
 

@@ -50,7 +50,7 @@ import DeckieCrate
         let files = try sampleFiles()
         let tmp = try temporaryFolder()
         defer { try? FileManager.default.removeItem(at: tmp) }
-        let package = tmp.appendingPathComponent("Sample.deckiecrate")
+        let package = tmp.appendingPathComponent("Sample.deckie")
         for (path, data) in files {
             let url = package.appendingPathComponent(path)
             try FileManager.default.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
@@ -62,7 +62,7 @@ import DeckieCrate
         try Data("line\n".utf8).write(to: package.appendingPathComponent("history/ipad.jsonl"))
         try Data("x".utf8).write(to: package.appendingPathComponent(".DS_Store"))
 
-        let file = tmp.appendingPathComponent("Single.deckiecrate")
+        let file = tmp.appendingPathComponent("Single.deckie")
         try CrateArchive.pack(package: package, to: file)
         #expect(CrateArchive.isArchive(file))
         #expect(!CrateArchive.isArchive(package))
@@ -74,12 +74,12 @@ import DeckieCrate
         // The one call every reader makes takes either form and gives the same crate.
         #expect(try CrateReader.read(from: file) == CrateReader.read(from: package))
 
-        let again = tmp.appendingPathComponent("Again.deckiecrate")
+        let again = tmp.appendingPathComponent("Again.deckie")
         try CrateArchive.unpack(file, to: again)
         for (path, data) in expected {
             #expect(try Data(contentsOf: again.appendingPathComponent(path)) == data, "\(path)")
         }
-        let repacked = tmp.appendingPathComponent("Repacked.deckiecrate")
+        let repacked = tmp.appendingPathComponent("Repacked.deckie")
         try CrateArchive.pack(package: again, to: repacked)
         #expect(try Data(contentsOf: repacked) == Data(contentsOf: file))
     }
@@ -90,7 +90,7 @@ import DeckieCrate
         let committed = try Data(contentsOf: Self.single)
         let tmp = try temporaryFolder()
         defer { try? FileManager.default.removeItem(at: tmp) }
-        let made = tmp.appendingPathComponent("example-single.deckiecrate")
+        let made = tmp.appendingPathComponent("example-single.deckie")
         try CrateArchive.pack(package: Paths.example, to: made)
         #expect(try Data(contentsOf: made) == committed)
         #expect(try CrateReader.read(from: Self.single) == CrateReader.read(from: Paths.example))
@@ -130,7 +130,7 @@ import DeckieCrate
 
     func message(_ data: Data) -> String {
         do {
-            _ = try CrateArchive.decode(data, name: "Set.deckiecrate")
+            _ = try CrateArchive.decode(data, name: "Set.deckie")
             return "read without complaint"
         } catch { return "\(error)" }
     }
@@ -154,7 +154,7 @@ import DeckieCrate
         let start = 30 + "manifest.json".utf8.count
         var damaged = archive
         damaged[start + 5] ^= 0x01
-        #expect(message(damaged).contains("Set.deckiecrate: manifest.json: is damaged (its bytes do not match their checksum)"))
+        #expect(message(damaged).contains("Set.deckie: manifest.json: is damaged (its bytes do not match their checksum)"))
         #expect(b[start] == UInt8(ascii: "{"))
     }
 
@@ -201,9 +201,9 @@ import DeckieCrate
     @Test func readingSomethingThatIsNeitherFormSaysSo() throws {
         let tmp = try temporaryFolder()
         defer { try? FileManager.default.removeItem(at: tmp) }
-        let stray = tmp.appendingPathComponent("song.deckiecrate")
+        let stray = tmp.appendingPathComponent("song.deckie")
         try Data("not a crate file".utf8).write(to: stray)
         #expect(throws: CrateError.self) { try CrateReader.read(from: stray) }
-        #expect(throws: CrateError.self) { try CrateReader.read(from: tmp.appendingPathComponent("missing.deckiecrate")) }
+        #expect(throws: CrateError.self) { try CrateReader.read(from: tmp.appendingPathComponent("missing.deckie")) }
     }
 }

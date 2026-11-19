@@ -1,7 +1,7 @@
 // deckie-build: builds a crate (docs/architecture/crate-format.md) from a folder of music, and runs the yardstick
 // bench against the lab's feature files.
 //
-//   deckie-build <folder> --out <name>.deckiecrate [--rekordbox export.xml] [--jobs N] [--bpm-tags] [--name N]
+//   deckie-build <folder> --out <name>.deckie [--rekordbox export.xml] [--jobs N] [--bpm-tags] [--name N]
 //                [--fresh]
 //   deckie-build bench <folder> --features mixer/features --candidates mixer/candidates.json [--music-root path]
 //                [--out bench.json] [--records dir] [--jobs N] [--ids id,id,...] [--fresh]
@@ -18,7 +18,7 @@ import DeckieInference
 
 let usage = """
     usage:
-      deckie-build <folder> --out <name>.deckiecrate [--rekordbox export.xml] [--jobs N] [--bpm-tags] [--name N] [--fresh]
+      deckie-build <folder> --out <name>.deckie [--rekordbox export.xml] [--jobs N] [--bpm-tags] [--name N] [--fresh]
                    [--dj-home <folder> | --no-dj-home] [--library <file>]...
       deckie-build bench <folder> --features <dir> --candidates <file> [--music-root path] [--out bench.json]
                    [--records dir] [--jobs N] [--ids id,id,...] [--fresh]
@@ -137,9 +137,10 @@ do {
             } else { rest.append(a) }
         }
         let (folder, o) = parse(rest, flags: ["bpm-tags", "fresh", "no-dj-home"], values: ["out", "rekordbox", "jobs", "name", "dj-home"])
-        guard let out = o["out"] else { fail("--out <name>.deckiecrate is required\n\(usage)", code: 2) }
+        guard let out = o["out"] else { fail("--out <name>.deckie is required\n\(usage)", code: 2) }
         var output = url(out)
-        if output.pathExtension != "deckiecrate" { output = output.appendingPathExtension("deckiecrate") }
+        // A name ending in a crate file's extension (the current one or an earlier) is taken as it is; any other gets `.deckie`.
+        if !CrateFormat.isCrateExtension(output.pathExtension) { output = output.appendingPathExtension(CrateFormat.packageExtension) }
         let options = BuildOptions(folder: url(folder), output: output, rekordbox: o["rekordbox"].map(url), jobs: jobs(o),
                                    fileBPMTags: o["bpm-tags"] != nil, fresh: o["fresh"] != nil, name: o["name"])
         let builder = try Builder(options: options)

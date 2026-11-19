@@ -46,7 +46,7 @@ import DeckieRecognition
         let c = printed()
         let dir = try temporaryFolder()
         defer { try? FileManager.default.removeItem(at: dir) }
-        let package = dir.appendingPathComponent("Sample.deckiecrate")
+        let package = dir.appendingPathComponent("Sample.deckie")
         try FileManager.default.createDirectory(at: package.appendingPathComponent("signatures"), withIntermediateDirectories: true)
         try Data([1]).write(to: package.appendingPathComponent("signatures/a1_o.shazamsignature"))
         try CrateWriter.write(c, to: package)
@@ -54,11 +54,11 @@ import DeckieRecognition
         #expect(try CrateReader.read(from: package) == c)
 
         // As one file: the same files inside, the fingerprint among them.
-        let single = dir.appendingPathComponent("Single.deckiecrate")
+        let single = dir.appendingPathComponent("Single.deckie")
         try CrateArchive.pack(package: package, to: single)
         #expect(try CrateArchive.read(single)["prints/a1.dkl"] == Self.landmarks(200).encoded())
         #expect(try CrateReader.read(from: single) == c)
-        let unpacked = dir.appendingPathComponent("Unpacked.deckiecrate")
+        let unpacked = dir.appendingPathComponent("Unpacked.deckie")
         try CrateArchive.unpack(single, to: unpacked)
         #expect(try CrateReader.read(from: unpacked) == c)
 

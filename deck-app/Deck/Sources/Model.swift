@@ -379,11 +379,12 @@ final class Library {
         guard let p = UserDefaults.standard.string(forKey: "cratePath"), FileManager.default.fileExists(atPath: p) else { return nil }
         return URL(fileURLWithPath: p)
     }
-    /// The first .deckiecrate in the app's Documents folder (Files app > On My iPad > Deck).
+    /// The first crate file in the app's Documents folder (Files app > On My iPad > Deckie Booth): `.deckie`, or one
+    /// made earlier as `.deckiecrate`.
     static var crateInDocuments: URL? {
         guard let docs = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first,
               let names = try? FileManager.default.contentsOfDirectory(atPath: docs.path) else { return nil }
-        return names.filter { $0.hasSuffix(".deckiecrate") }.sorted().first.map { docs.appendingPathComponent($0) }
+        return names.filter { CrateFormat.hasCrateExtension($0) }.sorted().first.map { docs.appendingPathComponent($0) }
     }
 
     func track(_ id: String?) -> Track? { id.flatMap { byId[$0] } }

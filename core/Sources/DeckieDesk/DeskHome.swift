@@ -9,7 +9,9 @@ import DeckieCrate
 ///     desk.json                      the layout's format number
 ///     Crates/<id>/                   one folder per crate; <id> is a lowercase UUID made with the crate
 ///       crate.json                   the crate's name, when it was made and last opened, where its music was read
-///       crate.deckiecrate/           the crate file itself, written as the DJ works (crate v1, unchanged)
+///       crate.deckie/                the crate file itself, written as the DJ works (crate v1, unchanged); a crate
+///                                    made before the extension changed keeps `crate.deckiecrate/`, read and written
+///                                    where it is
 ///       crate.deckiebuild/           the builder's work folder: which file is which record, for a quick re-read
 ///       corrections.json             the DJ's name fixes, by entry id, put back after every read
 ///       places.json                  where each place's file was, below its source's top or the music folder
@@ -23,7 +25,7 @@ import DeckieCrate
 ///       discs/<disc id>.json         what was learned from a music CD: its table, its CD-Text, each song's id
 ///     Reading/<disc id>/Track 07.wav the one song being read off a music CD by sector (Linux, Windows), removed as
 ///                                    soon as that song is done; Desk never keeps a song's sound (`DiscSongs.swift`)
-///     Outbox/<name>.deckiecrate      the last crate file handed to the share sheet
+///     Outbox/<name>.deckie           the last crate file handed to the share sheet
 public struct DeskHome: Sendable, Equatable {
     /// Overrides the place (tests and manual runs use it so nothing touches the real app storage).
     public static let environmentVariable = "DECKIE_DESK_HOME"

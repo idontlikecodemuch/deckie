@@ -172,7 +172,7 @@ import DeckieCrate
         #expect(back.tracks.first { $0.id == "t0" }!.ident.track == 2)
         #expect(back.problems().isEmpty)
 
-        let dir = try temporaryFolder().appendingPathComponent("Labelled.deckiecrate")
+        let dir = try temporaryFolder().appendingPathComponent("Labelled.deckie")
         defer { try? FileManager.default.removeItem(at: dir.deletingLastPathComponent()) }
         try CrateWriter.write(c, to: dir)
         #expect(try CrateReader.read(from: dir).discPlan == c.discPlan)

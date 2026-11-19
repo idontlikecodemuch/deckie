@@ -26,5 +26,73 @@
 	<string>14.0</string>
 	<key>NSHumanReadableCopyright</key>
 	<string>App Hold Media LLC</string>
+	<key>UTExportedTypeDeclarations</key>
+	<array>
+		<dict>
+			<key>UTTypeConformsTo</key>
+			<array>
+				<string>com.apple.package</string>
+				<string>public.composite-content</string>
+			</array>
+			<key>UTTypeDescription</key>
+			<string>Deckie crate file</string>
+			<key>UTTypeIdentifier</key>
+			<string>io.deckie.crate</string>
+			<key>UTTypeTagSpecification</key>
+			<dict>
+				<key>public.filename-extension</key>
+				<array>
+					<string>deckie</string>
+					<string>deckiecrate</string>
+				</array>
+			</dict>
+		</dict>
+		<dict>
+			<key>UTTypeConformsTo</key>
+			<array>
+				<string>public.data</string>
+				<string>public.composite-content</string>
+			</array>
+			<key>UTTypeDescription</key>
+			<string>Deckie crate file</string>
+			<key>UTTypeIdentifier</key>
+			<string>io.deckie.crate-file</string>
+			<key>UTTypeTagSpecification</key>
+			<dict>
+				<key>public.filename-extension</key>
+				<array>
+					<string>deckie</string>
+					<string>deckiecrate</string>
+				</array>
+			</dict>
+		</dict>
+	</array>
+	<key>UTImportedTypeDeclarations</key>
+	<array>
+		<dict>
+			<key>UTTypeConformsTo</key>
+			<array>
+				<string>io.deckie.crate</string>
+				<string>com.apple.package</string>
+				<string>public.composite-content</string>
+			</array>
+			<key>UTTypeDescription</key>
+			<string>Deckie crate file</string>
+			<key>UTTypeIdentifier</key>
+			<string>io.example.deckie.crate</string>
+		</dict>
+		<dict>
+			<key>UTTypeConformsTo</key>
+			<array>
+				<string>io.deckie.crate-file</string>
+				<string>public.data</string>
+				<string>public.composite-content</string>
+			</array>
+			<key>UTTypeDescription</key>
+			<string>Deckie crate file</string>
+			<key>UTTypeIdentifier</key>
+			<string>io.example.deckie.crate-file</string>
+		</dict>
+	</array>
 </dict>
 </plist>

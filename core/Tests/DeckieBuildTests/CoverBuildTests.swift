@@ -58,7 +58,7 @@ struct CoverBuildTests {
         try write(Self.brokenJPEG, "Broken/cover.jpg")
         try write(TestTrack.wav(song(0.4)), "Plain/07.wav")
 
-        let package = root.appendingPathComponent("Covers.deckiecrate")
+        let package = root.appendingPathComponent("Covers.deckie")
         let options = BuildOptions(folder: music, output: package, jobs: 2, fresh: true)
         func cover(_ crate: Crate, _ rel: String) -> String? { crate.tracks.first { $0.file.rel == rel }?.file.cover }
         let shared = Cover.hash(of: Self.folderJPEG), own = Cover.hash(of: Self.ownPNG), wide = Cover.hash(of: Self.widePNG)

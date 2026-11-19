@@ -143,7 +143,7 @@ jobs:
           $code = $LASTEXITCODE
           $env:PATH = $saved
           if ($code -ne 0) { Write-Error "Make Crate File ended with code $code"; exit 1 }
-          $crate = Join-Path $env:RUNNER_TEMP "tester\My Müsic.deckiecrate"
+          $crate = Join-Path $env:RUNNER_TEMP "tester\My Müsic.deckie"
           $log = Join-Path $env:RUNNER_TEMP "tester\My Müsic Deckie log.txt"
           if (-not (Test-Path $crate -PathType Leaf)) { Write-Error "no crate file next to the music folder"; exit 1 }
           if (-not (Test-Path $log -PathType Leaf)) { Write-Error "no log next to the music folder"; exit 1 }
@@ -286,7 +286,7 @@ jobs:
           if (Test-Path $log) { Get-Content $log } else { "no log was written" }
           if ($r.Code -ne 0) { Show-WhatWindowsSaw -Since $r.Since; Write-Error "Deckie Desk's run ended with code $(Format-Code $r.Code)"; exit 1 }
           if (-not ((Get-Content $log | Out-String) -match "storage .*AppData.Local.Deckie Desk")) { Write-Error "Desk did not keep its crates under the account's local app data"; exit 1 }
-          $crate = Join-Path $out "My Müsic.deckiecrate"
+          $crate = Join-Path $out "My Müsic.deckie"
           if (-not (Test-Path $crate -PathType Leaf)) { Write-Error "the exported crate file is not one file at $crate"; exit 1 }
           "Exported:"; Get-ChildItem $out | Format-Table Name, Length
           # The core's validator: one file, the 4 songs of the test folder, each from the source "My Müsic".

@@ -4,8 +4,27 @@ public enum CrateFormat {
     /// The format version this build writes, and the highest `min_reader` it can read.
     public static let schema = 1
 
-    /// The package folder's extension (track A: `<name>.deckiecrate`).
-    public static let packageExtension = "deckiecrate"
+    /// The crate file's extension, in either form (the package folder and the single file): `<name>.deckie`. Every
+    /// crate file Deckie writes takes it.
+    public static let packageExtension = "deckie"
+    /// Extensions crate files had before, read for good and never written: `.deckiecrate` (until November 2026). A
+    /// crate file under one of them opens unchanged; it is never renamed or rewritten.
+    public static let earlierExtensions = ["deckiecrate"]
+    /// Every extension a crate file is read under: the one written, then the earlier ones.
+    public static let readExtensions = [packageExtension] + earlierExtensions
+
+    /// Whether `ext` (with or without its dot, any case) is a crate file's extension, the current one or an earlier.
+    public static func isCrateExtension(_ ext: String) -> Bool {
+        let e = (ext.hasPrefix(".") ? String(ext.dropFirst()) : ext).lowercased()
+        return readExtensions.contains(e)
+    }
+
+    /// Whether the file or folder name `name` ends in a crate file's extension (`Friday night.deckie`,
+    /// `Friday night.deckiecrate`).
+    public static func hasCrateExtension(_ name: String) -> Bool {
+        guard let dot = name.lastIndex(of: "."), dot != name.startIndex else { return false }
+        return isCrateExtension(String(name[name.index(after: dot)...]))
+    }
     public static let manifestFile = "manifest.json"
     public static let tracksFile = "crate.json"
     public static let barsFolder = "bars"

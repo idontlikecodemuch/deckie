@@ -5,7 +5,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
-	<string>Deck</string>
+	<string>Deckie Booth</string>
 	<key>CFBundleDocumentTypes</key>
 	<array>
 		<dict>
@@ -17,6 +17,8 @@
 			<string>Owner</string>
 			<key>LSItemContentTypes</key>
 			<array>
+				<string>io.deckie.crate</string>
+				<string>io.deckie.crate-file</string>
 				<string>io.example.deckie.crate</string>
 				<string>io.example.deckie.crate-file</string>
 			</array>
@@ -38,7 +40,7 @@
 	<array>
 		<dict>
 			<key>CFBundleURLName</key>
-			<string>io.example.deck</string>
+			<string>io.deckie.booth</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
 				<string>deck</string>
@@ -52,7 +54,7 @@
 	<key>LSSupportsOpeningDocumentsInPlace</key>
 	<true/>
 	<key>NSMicrophoneUsageDescription</key>
-	<string>Deck listens to the music to recognise which song is playing. Audio never leaves the iPad.</string>
+	<string>Deckie Booth listens to the music to recognise which song is playing. Audio never leaves the iPad.</string>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>audio</string>
@@ -88,11 +90,12 @@
 			<key>UTTypeDescription</key>
 			<string>Deckie crate file</string>
 			<key>UTTypeIdentifier</key>
-			<string>io.example.deckie.crate</string>
+			<string>io.deckie.crate</string>
 			<key>UTTypeTagSpecification</key>
 			<dict>
 				<key>public.filename-extension</key>
 				<array>
+					<string>deckie</string>
 					<string>deckiecrate</string>
 				</array>
 			</dict>
@@ -106,14 +109,42 @@
 			<key>UTTypeDescription</key>
 			<string>Deckie crate file</string>
 			<key>UTTypeIdentifier</key>
-			<string>io.example.deckie.crate-file</string>
+			<string>io.deckie.crate-file</string>
 			<key>UTTypeTagSpecification</key>
 			<dict>
 				<key>public.filename-extension</key>
 				<array>
+					<string>deckie</string>
 					<string>deckiecrate</string>
 				</array>
 			</dict>
+		</dict>
+	</array>
+	<key>UTImportedTypeDeclarations</key>
+	<array>
+		<dict>
+			<key>UTTypeConformsTo</key>
+			<array>
+				<string>io.deckie.crate</string>
+				<string>com.apple.package</string>
+				<string>public.composite-content</string>
+			</array>
+			<key>UTTypeDescription</key>
+			<string>Deckie crate file</string>
+			<key>UTTypeIdentifier</key>
+			<string>io.example.deckie.crate</string>
+		</dict>
+		<dict>
+			<key>UTTypeConformsTo</key>
+			<array>
+				<string>io.deckie.crate-file</string>
+				<string>public.data</string>
+				<string>public.composite-content</string>
+			</array>
+			<key>UTTypeDescription</key>
+			<string>Deckie crate file</string>
+			<key>UTTypeIdentifier</key>
+			<string>io.example.deckie.crate-file</string>
 		</dict>
 	</array>
 </dict>

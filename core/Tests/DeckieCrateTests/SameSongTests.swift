@@ -112,7 +112,7 @@ import DeckieCrate
         var cr = crate([("a", "One", nil, "CD1", "F", 1), ("b", "One copy", nil, "CD2", "F", 1)])
         let p = print(1, frames: 2000)
         cr.setCutKeys(prints: ["a": p, "b": p])
-        let dir = FileManager.default.temporaryDirectory.appendingPathComponent("samesong-\(UUID().uuidString).deckiecrate")
+        let dir = FileManager.default.temporaryDirectory.appendingPathComponent("samesong-\(UUID().uuidString).deckie")
         defer { try? FileManager.default.removeItem(at: dir) }
         try CrateWriter.write(cr, to: dir)
         let back = try CrateReader.read(from: dir)

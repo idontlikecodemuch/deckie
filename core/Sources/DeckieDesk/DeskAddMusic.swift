@@ -114,7 +114,7 @@ public enum DeskAddMusic {
                 if name.hasPrefix(".") { continue }
                 let url = dir.appendingPathComponent(name)
                 let ext = CratePath.fileExtension(of: name).lowercased()
-                if ext == CrateFormat.packageExtension || ext == Builder.workExtension { continue }
+                if CrateFormat.isCrateExtension(ext) || ext == Builder.workExtension { continue }
                 guard let attrs = try? fm.attributesOfItem(atPath: url.path), let type = attrs[.type] as? FileAttributeType else { continue }
                 if type == .typeDirectory { walk(url); if c.stopped { return }; continue }
                 guard AudioFiles.extensions.contains(ext) else { continue }

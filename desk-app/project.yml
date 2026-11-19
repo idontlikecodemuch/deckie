@@ -1,6 +1,6 @@
 name: Desk
 options:
-  bundleIdPrefix: io.example
+  bundleIdPrefix: io.deckie
   deploymentTarget:
     macOS: "14.0"
   createIntermediateGroups: true
@@ -50,9 +50,31 @@ targets:
         LSMinimumSystemVersion: "14.0"
         NSHumanReadableCopyright: "App Hold Media LLC"
         LSApplicationCategoryType: public.app-category.music
+        # The crate file, declared as the booth declares it (deck-app/project.yml), so the Mac shows a crate file as
+        # one file of the kind "Deckie crate file", not a plain folder: one extension, .deckie, and the earlier
+        # .deckiecrate; a type id for the package form and one for the single-file form; the earlier type ids kept
+        # importable. Desk declares no document type: a crate file comes in through Import crate file.
+        UTExportedTypeDeclarations:
+          - UTTypeIdentifier: io.deckie.crate
+            UTTypeDescription: Deckie crate file
+            UTTypeConformsTo: [com.apple.package, public.composite-content]
+            UTTypeTagSpecification:
+              public.filename-extension: [deckie, deckiecrate]
+          - UTTypeIdentifier: io.deckie.crate-file
+            UTTypeDescription: Deckie crate file
+            UTTypeConformsTo: [public.data, public.composite-content]
+            UTTypeTagSpecification:
+              public.filename-extension: [deckie, deckiecrate]
+        UTImportedTypeDeclarations:
+          - UTTypeIdentifier: io.example.deckie.crate
+            UTTypeDescription: Deckie crate file
+            UTTypeConformsTo: [io.deckie.crate, com.apple.package, public.composite-content]
+          - UTTypeIdentifier: io.example.deckie.crate-file
+            UTTypeDescription: Deckie crate file
+            UTTypeConformsTo: [io.deckie.crate-file, public.data, public.composite-content]
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: io.example.deckie.desk
+        PRODUCT_BUNDLE_IDENTIFIER: io.deckie.desk
         PRODUCT_NAME: Deckie Desk
         INFOPLIST_KEY_NSHumanReadableCopyright: "App Hold Media LLC"
     postBuildScripts:
