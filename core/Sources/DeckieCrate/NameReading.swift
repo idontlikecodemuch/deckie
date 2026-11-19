@@ -174,17 +174,45 @@ public enum NameReading {
     /// or the words an upload site or a download adds ("Official Video", "Official Audio", "Lyrics", "Visualizer",
     /// "HD", "HQ", "Free Download"). A year, a key, a tempo or a scene group's tag is a note too, but not a mark: it
     /// stays where the DJ or the file put it.
+    ///
+    /// The whole text must be marks: bitrates, websites and those words, nothing else. A text that only holds a mark
+    /// beside other words ("Night Drive [320kbps]", "Night Drive www.siteName.com") is not one, so a name with a
+    /// mark in it is never taken for a mark as a whole.
     public static func isUploadMark(_ text: String) -> Bool {
         let raw = text.trimmingCharacters(in: .whitespaces)
         guard !raw.isEmpty else { return false }
-        let lower = raw.lowercased()
-        if lower.contains("www.") || isWebsite(lower) || isBitrate(lower) { return true }
-        return isJunkRun(VersionWords.fold(raw).split(separator: " ").map(String.init))
+        var rest = raw.lowercased()
+        if rest.range(of: #"^\d{2,3}\s?k$"#, options: .regularExpression) != nil { return true }
+        var found = false
+        while let m = rest.range(of: bitratePattern, options: .regularExpression) { rest.replaceSubrange(m, with: " "); found = true }
+        let words = rest.split(separator: " ").map(String.init).filter { w in
+            let site = w.contains("www.") || isWebsite(w)
+            if site { found = true }
+            return !site
+        }
+        let left = VersionWords.fold(words.joined(separator: " ")).split(separator: " ").map(String.init)
+        return left.isEmpty ? found : isJunkRun(left)
+    }
+
+    /// A bitrate written anywhere in a text ("320kbps", "320 kbps", "192 kbit/s").
+    static let bitratePattern = #"\b\d{2,3}\s*(kbps|kbit/?s|kb/s)\b"#
+
+    /// A bitrate written bare at the very end of a title, after a space or a dash ("Night Drive 320kbps", "Night
+    /// Drive - 320 kbps"): the title before it and the bitrate as written, or nil. A title that would be left empty is
+    /// not one.
+    static func trailingBitrate(_ t: String) -> (rest: String, mark: String)? {
+        guard let m = t.range(of: #"(\s+-)?\s+\d{2,3}\s?(kbps|kbit/?s|kb/s)$"#, options: [.regularExpression, .caseInsensitive])
+        else { return nil }
+        let rest = String(t[..<m.lowerBound]).trimmingCharacters(in: .whitespaces)
+        let mark = String(t[m]).trimmingCharacters(in: CharacterSet.whitespaces.union(CharacterSet(charactersIn: "-")))
+        guard SongName.isUsableTitle(rest) else { return nil }
+        return (rest, mark)
     }
 
     /// A title as written with its marks taken out (`isUploadMark`): every bracket group at the top level, anywhere in
-    /// it, that holds only a mark. The marks are returned as written, brackets and all, in order. A title that would
-    /// be left empty is returned as it was, with no marks.
+    /// it, that holds only a mark, then a bitrate written bare at its very end (`trailingBitrate`). The marks are
+    /// returned as written, brackets and all, in order. A title that would be left empty is returned as it was, with
+    /// no marks.
     public static func withoutMarks(_ written: String) -> (text: String, marks: [String]) {
         var kept = "", marks: [String] = []
         var i = written.startIndex
@@ -199,7 +227,8 @@ public enum NameReading {
             kept.append(c)
             i = written.index(after: i)
         }
-        let text = collapse(kept)
+        var text = collapse(kept)
+        if let b = trailingBitrate(text) { text = b.rest; marks.append(b.mark) }
         guard !marks.isEmpty, SongName.isUsableTitle(text) else { return (written.trimmingCharacters(in: .whitespaces), []) }
         return (text, marks)
     }
@@ -395,6 +424,8 @@ public enum NameReading {
             r.notes.insert(String(last), at: 0)
             t = String(t.dropLast(last.count)).trimmingCharacters(in: .whitespaces)
         }
+        // A bitrate bare at the very end ("Night Drive 320kbps"): a note, like one in brackets.
+        if let b = trailingBitrate(t) { r.notes.insert(b.mark, at: 0); t = b.rest }
         // Brackets at the end, last first.
         peeling: while let (inner, square, rest) = lastBracket(t), !rest.isEmpty {
             switch piece(inner, square: square) {
