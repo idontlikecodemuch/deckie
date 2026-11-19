@@ -73,7 +73,7 @@ enum Words {
     static func bpmChange(_ from: Double, _ to: Double) -> String { String(format: "%.0f→%.0f BPM", from, to) }
     /// While nothing has been recognised yet.
     static let listeningTitle = "Listening…"
-    static let listeningHelp = "A song shows up after 5–10 seconds of music."
+    static let listeningHelp = "A song shows up after a few seconds of music."
     /// The panel's foot when a second song is heard under the first.
     static func alsoHearing(_ song: String) -> String { "also hearing: " + song }
     /// The set recording's corner badge, and its spoken button.
@@ -395,17 +395,17 @@ enum Words {
     /// The main button: the system's chooser for a crate file.
     static let openACrateFile = "Open a crate file"
     /// Only when a demo crate file comes with the app (DemoCrate).
-    static let tryTheDemo = "Try the demo"
-    /// Under the buttons, with the demo: what it needs.
-    static let tryTheDemoNote = phrases("No music of your own needed:", "the demo's songs play from deckie.io/demo",
+    static let tryTheDemo = "Try the demo crate"
+    /// Under the buttons, with the demo crate: what it needs.
+    static let tryTheDemoNote = phrases("No music of your own needed:", "the demo crate's songs play from deckie.io/demo",
                                         "on another device.")
-    /// The Listen page while the demo is open and no song is named yet.
+    /// The Listen page while the demo crate is open and no song is named yet.
     static let demoHow = phrases("This is the demo crate.", "On a phone or laptop, open deckie.io/demo,",
                                  "press play, and put it near this iPad.")
-    /// Back to the first-run screen, from the Listen page and the Crate tab while the demo is open.
-    static let leaveTheDemo = "Leave the demo"
-    /// The note after the demo opens.
-    static func demoOpened(songs: Int) -> String { "The demo is open: \(songs) songs. Play deckie.io/demo nearby." }
+    /// Back to the first-run screen, from the Listen page and the Crate tab while the demo crate is open.
+    static let leaveTheDemo = "Leave the demo crate"
+    /// The note after the demo crate opens.
+    static func demoOpened(songs: Int) -> String { "The demo crate is open: \(songs) songs. Play deckie.io/demo nearby." }
     /// The link to the site, and where it goes.
     static let siteLink = "deckie.io"
     static let siteSpoken = "Open deckie.io in Safari"
@@ -428,8 +428,8 @@ enum Words {
     /// An entry's version and licence: "1.2 · MIT".
     static func creditsLine(_ version: String, _ licence: String) -> String { version.isEmpty ? licence : version + " · " + licence }
     static let creditsLicenceText = "Licence"
-    /// The demo's songs (Credits.demoSongs), each with its artist, licence and where it came from.
-    static let creditsDemoSection = "Songs in the demo"
+    /// The demo crate's songs (Credits.demoSongs), each with its artist, licence and where it came from.
+    static let creditsDemoSection = "Songs in the demo crate"
     static let creditsDemoNote = phrases("The demo crate holds these songs' facts", "and fingerprints, never the songs.",
                                          "deckie.io/demo plays them.")
     static func creditsDemoLine(_ artist: String, _ licence: String) -> String { artist + " · " + licence }
