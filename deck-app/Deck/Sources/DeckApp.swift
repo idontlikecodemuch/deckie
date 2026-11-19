@@ -13,33 +13,55 @@ struct DeckApp: App {
 
     var body: some Scene {
         WindowGroup {
-            TabView(selection: $tab) {
-                ListenView().tabItem { Label(Words.tabListen, systemImage: "waveform") }.tag(0)
-                CrateTabView(tab: $tab).tabItem { Label(CrateTabView.title, systemImage: "square.stack") }.tag(1)
-                MixMapView().tabItem { Label(Words.tabMixMap, systemImage: "point.3.connected.trianglepath.dotted") }.tag(2)
+            Group {
+                // No crate file open: the first-run screen; a crate file open: the tabs, as before.
+                switch BoothScreen.current {
+                case .firstRun(let demo):
+                    FirstRunView(demo: demo, openCrateFile: { choosing = true },
+                                 openDemo: { if let u = DemoCrate.url() { openCrate(u) } })
+                case .crate:
+                    TabView(selection: $tab) {
+                        ListenView().tabItem { Label(Words.tabListen, systemImage: "waveform") }.tag(0)
+                        CrateTabView(tab: $tab).tabItem { Label(CrateTabView.title, systemImage: "square.stack") }.tag(1)
+                    }
+                    .overlay(alignment: .topLeading) { MinimalToggle().padding(.leading, Look.App.minimalLeading).padding(.top, Look.App.minimalTop) }
+                }
             }
-            // The library is not observed: another crate file open redraws every tab from it.
+            // The library is not observed: another crate file open redraws every screen from it.
             .id(sug.crateVersion)
-            .overlay(alignment: .topLeading) { MinimalToggle().padding(.leading, Look.App.minimalLeading).padding(.top, Look.App.minimalTop) }
             .tint(Theme.orange)
             .environment(rec)
             .environment(sug)
             .preferredColorScheme(.dark)
             .onAppear {
                 UIApplication.shared.isIdleTimerDisabled = true      // stays on next to the decks
-                // What the system makes of the extension, as a folder (package) and as a plain file (data).
-                for (label, base) in [("as a folder", UTType.package), ("as a file", UTType.data)] {
-                    if let t = UTType(filenameExtension: CrateFormat.packageExtension, conformingTo: base) {
-                        rec.note("type for .deckiecrate \(label): \(t.identifier), package \(t.conforms(to: .package)), data \(t.conforms(to: .data)), declared \(t.isDeclared)")
+                // What the system makes of each extension a crate file is read under (`.deckie`, the earlier
+                // `.deckiecrate`), as a folder (package) and as a plain file (data).
+                for ext in CrateFormat.readExtensions {
+                    for (label, base) in [("as a folder", UTType.package), ("as a file", UTType.data)] {
+                        if let t = UTType(filenameExtension: ext, conformingTo: base) {
+                            rec.note("type for .\(ext) \(label): \(t.identifier), package \(t.conforms(to: .package)), data \(t.conforms(to: .data)), declared \(t.isDeclared)")
+                        }
                     }
                 }
-                // test hook without the "Open in Deck?" prompt: simctl launch <dev> io.christophershannon.deck -deckURL 'deck://...'
-                if let u = UserDefaults.standard.string(forKey: "deckURL"), let url = URL(string: u) {
+                #if DEBUG
+                // test hook without the "Open in Deckie Booth?" prompt: simctl launch <dev> io.deckie.booth -deckURL 'deck://...'
+                // (Debug builds only, like every deck:// hook)
+                if let u = UserDefaults.standard.string(forKey: "deckURL"), URL(string: u) != nil {
                     for part in u.components(separatedBy: " ; ") { if let x = URL(string: part) { handle(x) } }
-                    _ = url
-                } else if rec.source == .idle { rec.startMic() }
+                    return
+                }
+                #endif
+                // With no crate file open there is nothing to listen for, and the microphone is not asked for.
+                if rec.source == .idle && Library.shared.crate != nil { rec.startMic() }
             }
-            .onOpenURL { url in url.isFileURL ? openCrate(url) : handle(url) }
+            .onOpenURL { url in
+                // A crate file from Files, AirDrop or "Open in" (every build); the deck:// test hooks (Debug only).
+                if url.isFileURL { openCrate(url); return }
+                #if DEBUG
+                handle(url)
+                #endif
+            }
             .onChange(of: sug.tabRequest) { _, t in if let t { tab = t; sug.tabRequest = nil } }
             .onChange(of: sug.chooseCrateFile) { _, on in if on { choosing = true; sug.chooseCrateFile = false } }
             .fileImporter(isPresented: $choosing, allowedContentTypes: CrateFileType.importable) { r in
@@ -90,7 +112,8 @@ struct DeckApp: App {
         }
     }
 
-    /// Test hooks: deck://test?path=/abs/file.mp3&start=60&render=r%2B4&loop=1 · deck://mic · deck://stop ·
+    #if DEBUG
+    /// Test hooks (Debug builds only; a tester's build has none): deck://test?path=/abs/file.mp3&start=60&render=r%2B4&loop=1 · deck://mic · deck://stop ·
     /// deck://lib?cd1=1&cd2=0&all=0 · deck://lib?disc=<name>&on=0|1 · deck://tab?i=1 · deck://set?id=<track id> · deck://mode?m=simple|full · deck://all?on=1 · deck://shuffle (re-roll) ·
     /// deck://shuffle?amt=0.3 (set the Shuffle dial, 0...1, then re-roll) · deck://pin?i=0 ·
     /// deck://search?q=love (search More's titles and artists; empty q clears) ·
@@ -134,8 +157,8 @@ struct DeckApp: App {
             sug.reroll(rec)
         case "startpt": let n = Int(v("i") ?? "1") ?? 1; let want = v("id"); DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { if let id = want ?? sug.pinned ?? sug.options.first?.id { sug.startIdx[id] = n } }
         case "crate", "open":
-            // deck://crate?path=/abs/x.deckiecrate: open that crate file (either form) as "Open in" would, instead
-            // of the bundled data or the crate file open now
+            // deck://crate?path=/abs/x.deckie (or an earlier x.deckiecrate): open that crate file (either form) as "Open in" would, in
+            // place of the crate file open now (or the first-run screen)
             guard let p = v("path") else { return }
             openCrate(URL(fileURLWithPath: p), listen: false)
         case "choose":
@@ -157,6 +180,7 @@ struct DeckApp: App {
         default: break
         }
     }
+    #endif
 }
 
 @MainActor @Observable final class SuggestState {
@@ -232,17 +256,31 @@ struct OpenProblem: Identifiable, Equatable {
     let detail: String
 }
 
-/// The crate file's document type (declared in project.yml: `UTExportedTypeDeclarations` and
-/// `CFBundleDocumentTypes`). One type, `.deckiecrate`, covers both forms: the package a Mac writes and the single file
-/// a PC writes (deck-app/README.md, "Crate files from a PC", for the evidence).
+/// The crate file's document types (declared in project.yml: `UTExportedTypeDeclarations`,
+/// `UTImportedTypeDeclarations` and `CFBundleDocumentTypes`). One extension, `.deckie`, for both forms; two type
+/// identifiers, because the system needs one for a folder and one for a plain file: `io.deckie.crate` for the package
+/// a Mac writes, `io.deckie.crate-file` for the single file a PC writes (deck-app/README.md, "Crate files from a PC",
+/// for the evidence). Both also take the earlier extension, `.deckiecrate`.
+///
+/// The type identifiers used before November 2026 (`io.christophershannon.deckie.crate` and `...crate-file`) are
+/// declared as imported types conforming to the new ones, so a file still tagged with one opens here too.
 enum CrateFileType {
-    static let identifier = "io.christophershannon.deckie.crate"
+    static let identifier = "io.deckie.crate"
     static let crate = UTType(exportedAs: identifier)
     static let crateFile = UTType(exportedAs: identifier + "-file")
-    /// What the chooser offers: the declared type, and any type the system gives the extension (should another app
-    /// declare `.deckiecrate` differently, a crate file still shows).
+    /// The earlier identifiers, kept importable for good.
+    static let earlierIdentifiers = ["io.christophershannon.deckie.crate", "io.christophershannon.deckie.crate-file"]
+    static let earlier: [UTType] = earlierIdentifiers.map { UTType(importedAs: $0) }
+    /// What the chooser offers: the declared types, the earlier ones, and any type the system gives either extension
+    /// (should another app declare `.deckie` differently, a crate file still shows).
     static var importable: [UTType] {
-        [crate, crateFile]
+        var all = [crate, crateFile] + earlier
+        for ext in CrateFormat.readExtensions {
+            for base in [UTType.package, UTType.data] {
+                if let t = UTType(filenameExtension: ext, conformingTo: base), !all.contains(t) { all.append(t) }
+            }
+        }
+        return all
     }
 }
 

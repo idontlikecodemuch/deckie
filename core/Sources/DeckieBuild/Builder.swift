@@ -6,11 +6,11 @@ import DeckieEngine
 import DeckieInference
 import DeckieRecognition
 
-/// What a build is asked to do (`deckie-build <folder> --out <name>.deckiecrate ...`).
+/// What a build is asked to do (`deckie-build <folder> --out <name>.deckie ...`).
 public struct BuildOptions: Sendable {
     /// The folder of music.
     public var folder: URL
-    /// The crate package to write (`<name>.deckiecrate`).
+    /// The crate package to write (`<name>.deckie`).
     public var output: URL
     /// A rekordbox collection export (XML) to take names, the DJ's tempo and key, cues and playlists from.
     public var rekordbox: URL?

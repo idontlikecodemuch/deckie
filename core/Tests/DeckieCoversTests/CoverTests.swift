@@ -72,7 +72,7 @@ import DeckieTestSupport
     }
 
     @Test func aCoverIsWrittenOnceIntoThePackage() throws {
-        let package = FileManager.default.temporaryDirectory.appendingPathComponent("deckie-cover-\(UUID().uuidString).deckiecrate")
+        let package = FileManager.default.temporaryDirectory.appendingPathComponent("deckie-cover-\(UUID().uuidString).deckie")
         defer { try? FileManager.default.removeItem(at: package) }
         let cover = try Cover.make(TestPicture.sleeve(side: 300))
         try cover.write(into: package)

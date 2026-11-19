@@ -8,7 +8,7 @@ lab's key for the 373 candidates (key_parity_keys.tsv), the era and kind labels,
 version groupings (cut_key). Deckie writes none of era, kind, Halloween or cut_key yet, so those columns are
 sprint-only and are reported as "no Deckie value".
 
-Usage: sprint_check.py <crate.deckiecrate> [--pool "<music folder>/_pool build"] [--out sprint_check]
+Usage: sprint_check.py <crate.deckie> [--pool "<music folder>/_pool build"] [--out sprint_check]
 Writes <out>.tsv (one row per sprint track found in the crate, columns prefixed fact. / early. / deckie.)
 and <out>.md (the summary, per bucket).
 """

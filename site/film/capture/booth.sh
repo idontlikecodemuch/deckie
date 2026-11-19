@@ -8,9 +8,9 @@ U=$1; C=$2; A=$3; OUT=$4; mkdir -p "$OUT"
 q() { python3 -c "import urllib.parse,sys;print(urllib.parse.quote(sys.argv[1]))" "$1"; }
 af() { echo "deck://after?s=$1&u=$(q "$2")"; }
 xcrun simctl status_bar $U override --time "9:41" --batteryState charged --batteryLevel 100 --wifiBars 3
-xcrun simctl terminate $U io.christophershannon.deck 2>/dev/null || true; sleep 1
+xcrun simctl terminate $U io.deckie.booth 2>/dev/null || true; sleep 1
 xcrun simctl io $U recordVideo --codec h264 --force "$OUT/booth_raw.mp4" & RP=$!; sleep 2
-xcrun simctl launch $U io.christophershannon.deck -deckURL "deck://crate?path=$(q "$C") ; deck://orient?o=landscape ; deck://shuffle?amt=0 ; deck://mode?m=simple ; $(af 5 "deck://test?path=$(q "$A")&start=40&loop=1&render=$(q 'r+3')") ; $(af 26 'deck://mode?m=full') ; $(af 32 'deck://shuffle?amt=0.6') ; $(af 40 'deck://pin?i=1') ; $(af 46 'deck://scroll?to=more') ; $(af 53 'deck://search?q=night') ; $(af 60 'deck://search?q=') ; $(af 62 'deck://tab?i=1')"
+xcrun simctl launch $U io.deckie.booth -deckURL "deck://crate?path=$(q "$C") ; deck://orient?o=landscape ; deck://shuffle?amt=0 ; deck://mode?m=simple ; $(af 5 "deck://test?path=$(q "$A")&start=40&loop=1&render=$(q 'r+3')") ; $(af 26 'deck://mode?m=full') ; $(af 32 'deck://shuffle?amt=0.6') ; $(af 40 'deck://pin?i=1') ; $(af 46 'deck://scroll?to=more') ; $(af 53 'deck://search?q=night') ; $(af 60 'deck://search?q=') ; $(af 62 'deck://tab?i=1')"
 sleep 70; kill -INT $RP; wait $RP
 # the recording only holds frames that changed and is sideways: make it 30 frames a second, upright
 nice -n 19 ffmpeg -hide_banner -loglevel error -y -i "$OUT/booth_raw.mp4" -vf "fps=30,transpose=2,scale=1600:-2" -c:v libx264 -crf 14 -pix_fmt yuv420p "$OUT/booth_cfr.mp4"

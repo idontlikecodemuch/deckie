@@ -17,9 +17,10 @@ public enum CrateImport {
         public let wasSingleFile: Bool
     }
 
-    /// Copies or unpacks the crate file at `source` into `folder` (made if missing), as `<crate id>.deckiecrate`, and
+    /// Copies or unpacks the crate file at `source` into `folder` (made if missing), as `<crate id>.deckie`, and
     /// reads it. A crate file with the same crate id already there is replaced, but only once the new copy has read
-    /// cleanly. Throws a `CrateError` saying what is wrong, in the reader's words, when `source` is not a crate file
+    /// cleanly; so is one stored under an earlier extension (`<crate id>.deckiecrate`), so the same crate is never
+    /// kept twice. Throws a `CrateError` saying what is wrong, in the reader's words, when `source` is not a crate file
     /// or is damaged; nothing is left behind in `folder` then.
     public static func copy(_ source: URL, into folder: URL) throws -> Result {
         let fm = FileManager.default
@@ -48,15 +49,27 @@ public enum CrateImport {
         let target = folder.appendingPathComponent(storedName(crate.manifest.crateId), isDirectory: true)
         if fm.fileExists(atPath: target.path) { try fm.removeItem(at: target) }
         try fm.moveItem(at: incoming, to: target)
+        for earlier in earlierStoredNames(crate.manifest.crateId) {
+            let old = folder.appendingPathComponent(earlier, isDirectory: true)
+            if fm.fileExists(atPath: old.path) { try? fm.removeItem(at: old) }
+        }
         return Result(package: target, crate: crate, wasSingleFile: !isFolder.boolValue)
     }
 
     /// The package's name in the app's storage: the crate id made safe for a file name, so the same crate sent twice
     /// replaces itself and two crates never share a name.
-    public static func storedName(_ crateId: String) -> String {
+    public static func storedName(_ crateId: String) -> String { storedStem(crateId) + "." + CrateFormat.packageExtension }
+
+    /// The names the same crate was stored under by earlier versions (`<crate id>.deckiecrate`): replaced, like the
+    /// current name, when the crate comes in again.
+    public static func earlierStoredNames(_ crateId: String) -> [String] {
+        CrateFormat.earlierExtensions.map { storedStem(crateId) + "." + $0 }
+    }
+
+    static func storedStem(_ crateId: String) -> String {
         let safe = String(crateId.unicodeScalars.map { s -> Character in
             CharacterSet.alphanumerics.contains(s) && s.isASCII || s == "-" || s == "_" ? Character(s) : "_"
         }).prefix(80)
-        return (safe.isEmpty ? "crate" : String(safe)) + "." + CrateFormat.packageExtension
+        return safe.isEmpty ? "crate" : String(safe)
     }
 }

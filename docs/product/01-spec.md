@@ -115,7 +115,7 @@ at all, recognition and the set log still work, picks are off. The app says whic
 
 ### 5.2 The crate file (decided with D11)
 
-A package folder, `<name>.deckiecrate`: a compact `crate.json` core (about 7 KB per track, 3 KB gzipped; no raw beat
+A package folder, `<name>.deckie` (until Nov 19, 2026 `<name>.deckiecrate`, still read; D40): a compact `crate.json` core (about 7 KB per track, 3 KB gzipped; no raw beat
 arrays, no 1280-d embedding), binary sidecars for per-bar series, a style vector, `prefs.json`, append-only
 per-device history logs, and an optional `signatures/` store. Budget about 10 KB per track without signatures, about
 145 KB with three pitch variants. Signatures are irreversible by Apple's statement, so carrying them does not breach

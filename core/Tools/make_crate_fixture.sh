@@ -7,6 +7,7 @@
 #   334614c3a0  Drake - NOKIA                         tempo change (a transition edit, 12 percent drift)
 #   08e45fb8ca  Drake - Rich Baby Daddy               the shortest, 44 bars
 # and core/fixtures/example-single.deckiecrate, the same crate file in its single-file form (one uncompressed zip).
+# Both keep the earlier extension, .deckiecrate, on purpose: every reader takes it for good, and the tests read it.
 # The crate id and the dates are fixed, so every run gives the same bytes; DeckieCrateTests checks the committed
 # files are exactly what the converter makes today. Needs Swift; run from anywhere in the repository.
 set -e

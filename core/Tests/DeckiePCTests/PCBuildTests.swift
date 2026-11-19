@@ -39,7 +39,7 @@ private final class Lines: @unchecked Sendable {
         try FileManager.default.createDirectory(at: music, withIntermediateDirectories: true)
         let plan = try PCBuild.plan(folder: music, workRoot: root.appendingPathComponent("work"))
         #expect(plan.name == "My M\u{fc}sic 2024")
-        #expect(plan.crateFile.lastPathComponent == "My M\u{fc}sic 2024.deckiecrate")
+        #expect(plan.crateFile.lastPathComponent == "My M\u{fc}sic 2024.deckie")
         #expect(plan.logFile.lastPathComponent == "My M\u{fc}sic 2024 Deckie log.txt")
         #expect(plan.crateFile.deletingLastPathComponent().standardizedFileURL.path == root.standardizedFileURL.path)
         #expect(!plan.elsewhere)
@@ -50,6 +50,19 @@ private final class Lines: @unchecked Sendable {
         let other = root.appendingPathComponent("elsewhere").appendingPathComponent("My M\u{fc}sic 2024")
         try FileManager.default.createDirectory(at: other, withIntermediateDirectories: true)
         #expect(try PCBuild.plan(folder: other, workRoot: root.appendingPathComponent("work")).work != plan.work)
+    }
+
+    /// The words packed with the program for Windows name the crate file as it is written now, `.deckie`, and the
+    /// earlier `.deckiecrate` only as the earlier one.
+    @Test func thePackagesWordsNameTheCrateFileAsWritten() throws {
+        let readMe = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent()
+            .deletingLastPathComponent().appendingPathComponent("Tools/windows/READ ME FIRST.txt")
+        let text = try String(contentsOf: readMe, encoding: .utf8)
+        #expect(text.contains("\"Friday night.deckie\""))
+        #expect(text.contains("\"My Music.deckie\""))
+        for line in text.components(separatedBy: "\n") where line.contains(".deckiecrate") {
+            #expect(line.contains("earlier") || line.contains("left as it was"), "\(line)")
+        }
     }
 
     @Test func aMissingFolderAndAFileAreSaidPlainly() throws {
@@ -131,7 +144,7 @@ struct PCBuildTests {
         }
         // Nothing else appears beside the music, and nothing inside it.
         let beside = try FileManager.default.contentsOfDirectory(atPath: root.path).sorted()
-        #expect(beside == ["Friday Set", "Friday Set Deckie log.txt", "Friday Set.deckiecrate", "storage"])
+        #expect(beside == ["Friday Set", "Friday Set Deckie log.txt", "Friday Set.deckie", "storage"])
         #expect(try FileManager.default.contentsOfDirectory(atPath: folder.path).sorted() == ["Warm up", "jingle.mp3", "locked.m4p", "old.opus"])
 
         // What did not go in, by reason and type, in plain words.
@@ -240,12 +253,62 @@ struct PCBuildTests {
         let folder = try music(root)
         let plan = try PCBuild.plan(folder: folder, workRoot: root.appendingPathComponent("storage"))
         try Data("my notes".utf8).write(to: plan.crateFile)
-        #expect(throws: PCError.inTheWay("Friday Set.deckiecrate")) {
+        #expect(throws: PCError.inTheWay("Friday Set.deckie")) {
             try PCBuild.run(plan, engine: engineFiles!, jobs: 1) { _ in }
         }
         #expect(try Data(contentsOf: plan.crateFile) == Data("my notes".utf8))
         // The log says why nothing was written.
         #expect(try String(contentsOf: plan.logFile, encoding: .utf8).contains("result: stopped without writing a crate file"))
+    }
+
+    /// A crate file an earlier version wrote as `<name>.deckiecrate`, with the program's storage gone (another PC): the
+    /// new run writes `<name>.deckie`, keeps the crate's id from the earlier file, and leaves that file as it was.
+    @Test func anEarlierCrateFileIsReadAndLeftAsItWas() throws {
+        let root = try scratch("earlier")
+        defer { try? FileManager.default.removeItem(at: root.deletingLastPathComponent()) }
+        let fm = FileManager.default
+        let folder = try music(root)
+        let plan = try PCBuild.plan(folder: folder, workRoot: root.appendingPathComponent("storage"))
+        #expect(plan.crateFile.pathExtension == "deckie")
+        _ = try PCBuild.run(plan, engine: engineFiles!, jobs: 2) { _ in }
+        let first = try CrateReader.read(from: plan.crateFile)
+
+        // As an earlier version left it: the crate file under the earlier extension, no storage.
+        let earlier = try #require(plan.earlierCrateFiles.first)
+        #expect(earlier.lastPathComponent == "Friday Set.deckiecrate")
+        try fm.moveItem(at: plan.crateFile, to: earlier)
+        try fm.removeItem(at: root.appendingPathComponent("storage"))
+        let before = try Data(contentsOf: earlier)
+
+        _ = try PCBuild.run(plan, engine: engineFiles!, jobs: 2) { _ in }
+        let again = try CrateReader.read(from: plan.crateFile)
+        #expect(again.manifest.crateId == first.manifest.crateId)
+        #expect(again.tracks.map(\.id).sorted() == first.tracks.map(\.id).sorted())
+        #expect(try Data(contentsOf: earlier) == before)
+        let beside = try fm.contentsOfDirectory(atPath: root.path).sorted()
+        #expect(beside == ["Friday Set", "Friday Set Deckie log.txt", "Friday Set.deckie", "Friday Set.deckiecrate", "storage"])
+    }
+
+    /// The program's storage from an earlier version holds the crate as `<name>.deckiecrate`: it is used where it is.
+    @Test func earlierStorageIsUsedWhereItIs() throws {
+        let root = try scratch("earlier-storage")
+        defer { try? FileManager.default.removeItem(at: root.deletingLastPathComponent()) }
+        let fm = FileManager.default
+        let folder = try music(root)
+        let plan = try PCBuild.plan(folder: folder, workRoot: root.appendingPathComponent("storage"))
+        _ = try PCBuild.run(plan, engine: engineFiles!, jobs: 2) { _ in }
+        let first = try CrateReader.read(from: plan.crateFile)
+        let current = plan.work.appendingPathComponent("Friday Set.deckie")
+        let earlier = plan.work.appendingPathComponent("Friday Set.deckiecrate")
+        #expect(fm.fileExists(atPath: current.appendingPathComponent(CrateFormat.manifestFile).path))
+        try fm.moveItem(at: current, to: earlier)
+        try fm.removeItem(at: plan.crateFile)
+
+        let second = try PCBuild.run(plan, engine: engineFiles!, jobs: 2) { _ in }
+        #expect(second.readNow == 0)
+        #expect(try CrateReader.read(from: plan.crateFile).manifest.crateId == first.manifest.crateId)
+        #expect(fm.fileExists(atPath: earlier.appendingPathComponent(CrateFormat.manifestFile).path))
+        #expect(!fm.fileExists(atPath: current.path))
     }
 
     @Test func aFolderWithNoMusicIsSaidPlainly() throws {

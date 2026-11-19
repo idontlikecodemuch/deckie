@@ -195,7 +195,7 @@ enum WindowCheck {
                 model.undoManager?.undo()
                 say("after undo again: \(model.crate?.tracks.count ?? 0) songs")
                 model.sendToIPad()
-                let box = model.home.outbox.appendingPathComponent((model.current?.name ?? "") + ".deckiecrate")
+                let box = model.home.outbox.appendingPathComponent((model.current?.name ?? "") + "." + CrateFormat.packageExtension)
                 say("send to iPad: \(FileManager.default.fileExists(atPath: box.path) ? "outbox has " + box.lastPathComponent : "no outbox copy")")
                 later(1.0) { Snapshot.capture("share", hold: 2) }
                 later(1.6) { model.saveNow(); Snapshot.finish() }

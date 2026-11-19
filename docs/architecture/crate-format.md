@@ -8,12 +8,13 @@ The main session accepted the format as v1 on Oct 28 with two changes, both appl
 engine's family is `deckie`, and a shipped engine makes a record's `id` from the SHA-256 hash of the file, kept whole
 in the new `file.sha256`.
 Code: `core/Sources/DeckieCrate` (reader, writer, checks), `core/Sources/DeckieLab/FeatureFile+Crate.swift` (the lab's
-feature files to crate records). Example: `core/fixtures/example.deckiecrate`.
+feature files to crate records). Example: `core/fixtures/example.deckiecrate` (the fixtures keep the earlier extension on
+purpose, so the tests read it; see "The extension", below).
 
 ## What the documents fix
 
-- **Container** (spec 5.2, "decided with D11"; track A section 5; overview): a package folder `<name>.deckiecrate`
-  (a folder that Finder, Files and AirDrop treat as one document) holding `manifest.json`, `crate.json` (one record
+- **Container** (spec 5.2, "decided with D11"; track A section 5; overview): a package folder `<name>.deckie`
+  (until November 2026 `<name>.deckiecrate`, still read; "The extension", below) (a folder that Finder, Files and AirDrop treat as one document) holding `manifest.json`, `crate.json` (one record
   per track), binary sidecars (small companion files) for the per-bar series and the style vector, `prefs.json`,
   append-only history logs per device, an optional `signatures/` store and a local-only `catalog/`.
 - **Encoding**: JSON for the manifest and the records; float16 (2-byte numbers, about three significant digits) for
@@ -48,7 +49,7 @@ sidecar (the apps own them; the reader leaves them alone).
 ## The package folder
 
 ```
-Example.deckiecrate/
+Example.deckie/
   manifest.json                            the crate as a whole
   crate.json                               {"tracks": [one record per track, sorted by id]}
   bars/<id>.bin                            per-bar series, float16
@@ -619,7 +620,7 @@ An example record's two places (the rest of the record as above):
 
 ## Addition (Nov 13, 2026, with D29): the single-file form **proposed**
 
-A crate file as one file, for the platforms where a package folder is only a folder. On a Mac a `.deckiecrate` is a
+A crate file as one file, for the platforms where a package folder is only a folder. On a Mac a `.deckie` is a
 package: Finder, Files and AirDrop show and move it as one document. On Windows it is a plain folder, awkward to
 email or to put on an iPad. The single-file form is the same crate file in one archive. **Nothing inside changes**:
 the same files, with the same names and the same bytes, so everything above this section holds for both forms, and
@@ -638,7 +639,7 @@ example crate above as one file (21,416 bytes against the package's 20,626: 790 
   `zipfile`, Windows Explorer and the Files app all list what is inside. Weighed and passed over: a tar file (no
   checksum of the contents, and Windows users cannot look inside), a compressed zip (needs a decompressor, ours to
   write or a dependency), a new container of our own (nothing else could open it).
-- **The same name.** The file is called `<name>.deckiecrate`, like the package. A DJ has one thing called a crate
+- **The same name.** The file is called `<name>.deckie` (earlier `<name>.deckiecrate`), like the package. A DJ has one thing called a crate
   file whichever computer made it. A reader tells the two apart by looking: a folder is the package; a file that
   starts with the zip signature (`PK`, bytes 50 4B 03 04) is the single-file form.
 - **Written canonically**, like the rest of the format: `manifest.json` first, `crate.json` second, then every other
@@ -672,10 +673,37 @@ example crate above as one file (21,416 bytes against the package's 20,626: 790 
 as before; the file the DJ gave is never changed. (3) The open point is settled, in the iPad simulator: one declared
 type cannot cover both forms, because a type that conforms to `com.apple.package` names folders only and the system
 gives a plain file with the same extension a dynamic type of its own (the chooser showed the single files greyed out).
-Two type identifiers with the **same extension** do cover both: `io.christophershannon.deckie.crate` (a package) and
-`io.christophershannon.deckie.crate-file` (a plain file), and the system picks one by whether the item is a folder or
-a file. So the single file keeps the name `<name>.deckiecrate`, and nothing in this format changes. Still to see on a
-real iPad: AirDrop, iCloud Drive and a cable.
+Two type identifiers with the **same extension** do cover both: one for a package and one for a plain file (then
+under an earlier prefix; now `io.deckie.crate` and `io.deckie.crate-file`, "The extension", below), and the system
+picks one by whether the item is a folder or a file. So the single file keeps the package's name, and nothing in this
+format changes. Still to see on a real iPad: AirDrop, iCloud Drive and a cable.
+
+## Addition (Nov 19, 2026): the extension `.deckie`, and the type ids
+
+The owner chose a shorter extension and type ids on the product's domain. **Nothing inside a crate file changes**:
+`schema` and `min_reader` stay 1, and only the name a crate file is given changes.
+
+- **Written:** `<name>.deckie`, in either form, by everything that writes a crate file: Desk on the Mac (Export,
+  Send to iPad, its Outbox), Desk on Windows and Linux (Export), Make Crate File on a PC, `deckie-build`,
+  `crate-from-lab`, and the booth's own stored copies. `CrateFormat.packageExtension` is `deckie`.
+- **Read, for good:** `.deckie` and the earlier `.deckiecrate` (`CrateFormat.readExtensions`,
+  `CrateFormat.isCrateExtension`). The reader never looked at the name and still does not; the extension matters only
+  where a program picks crate files out by name (the booth's Documents folder, the music-folder walks that leave
+  crate packages out) and to the system's file types. No crate file is renamed or rewritten because of its name:
+  - Desk keeps a crate made earlier as `Crates/<id>/crate.deckiecrate/` and reads and writes it there; a new crate's
+    is `crate.deckie/`. What leaves (Export, Send to iPad) is `<name>.deckie` either way.
+  - Make Crate File writes `<name>.deckie` next to the music folder. An earlier `<name>.deckiecrate` there is left as
+    it was; when the program's storage is gone it is read, so the crate keeps its id. Storage kept as
+    `<name>.deckiecrate` is used where it is.
+  - The booth stores `<crate id>.deckie`; a copy stored earlier as `<crate id>.deckiecrate` is replaced when the same
+    crate comes in again, as any copy of it is.
+- **Type ids.** Two forms need two ids, because the system's type for a package names folders only (above):
+  `io.deckie.crate` for the package a Mac writes, `io.deckie.crate-file` for the single file a PC writes. Both are
+  declared with the extensions `deckie` and `deckiecrate`, by the booth and now by Desk on the Mac too (so the Mac
+  shows a crate file as one file of the kind "Deckie crate file"). The earlier ids, under an earlier prefix
+  (listed under `UTImportedTypeDeclarations` in `deck-app/project.yml`), are declared as imported types that conform to the new
+  ones and claim no extension, so a file still tagged with one opens in the booth. For a DJ there is one thing,
+  "a crate file", one extension, `.deckie`.
 
 ## The home note (D36, Nov 14, 2026; decided)
 
@@ -732,7 +760,7 @@ Code: `CrateTrack.File.cover`, `CrateFormat.cover*` and the checks in `CrateRead
 `Cover` (DeckieCovers), which makes the thumbnail; tests in `CoversFormatTests` and `DeckieCoversTests`.
 
 ```
-Example.deckiecrate/
+Example.deckie/
   covers/<sha256 of the source picture>.jpg     one small JPEG for each distinct picture
 ```
 

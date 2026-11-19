@@ -252,7 +252,7 @@ any other folder takes its own name, and the folders inside it are its groups. T
 become "Name" and "Name 2". The run goes into the crate showing, or, on the first screen, into a new crate named after
 what is read.
 
-`crate.export` writes `<folder>/<crate name>.deckiecrate` as **one file**, the single-file form of a crate file
+`crate.export` writes `<folder>/<crate name>.deckie` as **one file**, the single-file form of a crate file
 (`docs/architecture/crate-format.md`: the same files with the same bytes in one uncompressed archive), replacing a
 crate file of that name in either form. This is where Desk on Windows and Linux hands a crate file out
 (`DeskSession.export`, switched Nov 14, 2026; the pages did not change). Deckie Booth opens both forms.

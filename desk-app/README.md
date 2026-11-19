@@ -30,6 +30,15 @@ The post-build step copies the runtime into `Contents/Frameworks` and the models
 the app points the engine at them on launch (environment variables set in-process, which a developer's own
 `DECKIE_*` variables override). Code signing is ad hoc for now.
 
+**Bundle id and the crate file's type.** The bundle id is `io.deckie.desk` (until November 2026 it was under an
+earlier prefix). Desk declares the crate file's type as the booth does (`project.yml`, `UTExportedTypeDeclarations`):
+`io.deckie.crate` for the package form, `io.deckie.crate-file` for the single-file form, both under the extension
+`.deckie` and the earlier `.deckiecrate`; the booth's earlier type ids are declared as imported types conforming to
+these. So the Mac shows a crate file as one file of the kind "Deckie crate file", not a plain folder. Desk declares no
+document type, so a double-click does not open Desk; a crate file comes in through File > Import crate file. What
+Desk keeps (`~/Library/Application Support/Deckie Desk`) does not depend on the bundle id, so a Desk with the new id
+finds every crate made before. Desk keeps no settings under its bundle id.
+
 ## Words and design values (D36)
 
 - **Words**: every word the window shows is in `DeskWords` (`core/Sources/DeckieDesk/DeskWords.swift`), the one list
@@ -55,7 +64,8 @@ real storage is never touched). The layout (`DeskHome`, `core/Sources/DeckieDesk
     libraries.json                 DJ libraries the DJ chose by hand (File > Choose a DJ library…), read on every run
     Crates/<id>/                   one folder per crate; <id> is a lowercase UUID made with the crate
       crate.json                   its name, when it was made and last opened, where each source and the music folder were read from
-      crate.deckiecrate/           the crate file itself (crate v1, unchanged), written as the DJ works
+      crate.deckie/                the crate file itself (crate v1, unchanged), written as the DJ works; a crate
+                                   made before November 2026 keeps `crate.deckiecrate/`, read and written there
       crate.deckiebuild/           the builder's work folder (which file is which record), for a quick re-read
       corrections.json             the DJ's name fixes, by entry id, each field with how the DJ gave it
       names.json                   where each name was read from, field by field, and each song's release
@@ -67,7 +77,7 @@ real storage is never touched). The layout (`DeskHome`, `core/Sources/DeckieDesk
       signatures/<id>_o.*          a recognition signature, and who made it when
       prints/<id>.print            the print that finds copies of one recording
       discs/<disc id>.json         what was learned from a music CD (its table, its CD-Text, each song's id); no sound
-    Outbox/<name>.deckiecrate      the last crate file handed to the share sheet
+    Outbox/<name>.deckie           the last crate file handed to the share sheet
     Reading/                       Windows and Linux only: the one song being read off a music CD, while it is worked
                                    out; removed when it is done, and at the next start after a stop (see below)
 
@@ -188,8 +198,8 @@ Desk's own crates, in the storage the window uses (`DECKIE_DESK_HOME` moves it),
     "Deckie Desk.app/Contents/MacOS/Deckie Desk" --remove-source <crate> <source, or - for the music folder>
     "Deckie Desk.app/Contents/MacOS/Deckie Desk" --rename-crate <crate> <new name>
     "Deckie Desk.app/Contents/MacOS/Deckie Desk" --delete-crate <crate>
-    "Deckie Desk.app/Contents/MacOS/Deckie Desk" --export <crate> <out.deckiecrate>
-    "Deckie Desk.app/Contents/MacOS/Deckie Desk" --import <file.deckiecrate>
+    "Deckie Desk.app/Contents/MacOS/Deckie Desk" --export <crate> <out.deckie>
+    "Deckie Desk.app/Contents/MacOS/Deckie Desk" --import <file.deckie>
     "Deckie Desk.app/Contents/MacOS/Deckie Desk" --libraries [crate]
     "Deckie Desk.app/Contents/MacOS/Deckie Desk" --choose-library <file>
     "Deckie Desk.app/Contents/MacOS/Deckie Desk" --look-again [crate]
@@ -205,11 +215,11 @@ through the window and writes PNGs (`Snapshot.swift`).
 Tools on crate files anywhere, for the developer (`DeskApp.swift`):
 
     "Deckie Desk.app/Contents/MacOS/Deckie Desk" --check-engine
-    "Deckie Desk.app/Contents/MacOS/Deckie Desk" --build <music folder> <out.deckiecrate> [jobs]
-    "Deckie Desk.app/Contents/MacOS/Deckie Desk" --add-source <crate.deckiecrate> <CD, drive or folder> [jobs]
-    "Deckie Desk.app/Contents/MacOS/Deckie Desk" --sign <crate.deckiecrate> <music folder>
-    "Deckie Desk.app/Contents/MacOS/Deckie Desk" --find-copies <crate.deckiecrate> <music folder>
-    "Deckie Desk.app/Contents/MacOS/Deckie Desk" --apply <crate.deckiecrate> <names.tsv>
+    "Deckie Desk.app/Contents/MacOS/Deckie Desk" --build <music folder> <out.deckie> [jobs]
+    "Deckie Desk.app/Contents/MacOS/Deckie Desk" --add-source <crate.deckie> <CD, drive or folder> [jobs]
+    "Deckie Desk.app/Contents/MacOS/Deckie Desk" --sign <crate.deckie> <music folder>
+    "Deckie Desk.app/Contents/MacOS/Deckie Desk" --find-copies <crate.deckie> <music folder>
+    "Deckie Desk.app/Contents/MacOS/Deckie Desk" --apply <crate.deckie> <names.tsv>
 
 `--build` and `--add-source` run the builder alone, with a `.deckiebuild` work folder beside the crate file. `--sign`
 makes one plain (`o`) signature per track into the crate file's `signatures/` folder; `--find-copies` sets `cut_key`.

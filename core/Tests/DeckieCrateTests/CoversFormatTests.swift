@@ -51,7 +51,7 @@ import DeckieCrate
     }
 
     @Test func theWriterNeedsTheCoverThereAndTakesOutCoversNoSongNames() throws {
-        let package = try temporaryFolder().appendingPathComponent("Covers.deckiecrate")
+        let package = try temporaryFolder().appendingPathComponent("Covers.deckie")
         defer { try? FileManager.default.removeItem(at: package.deletingLastPathComponent()) }
         let c = crate(covers: [Self.hash, Self.other])
         for (path, data) in withSignatureFiles([:], c) {
@@ -69,7 +69,7 @@ import DeckieCrate
         #expect(try CrateReader.read(from: package) == c)
 
         // The single-file form carries the folder as it is.
-        let single = package.deletingLastPathComponent().appendingPathComponent("Single.deckiecrate")
+        let single = package.deletingLastPathComponent().appendingPathComponent("Single.deckie")
         try CrateArchive.pack(package: package, to: single)
         #expect(try CrateArchive.read(single)["covers/\(Self.hash).jpg"] == Self.jpeg)
         #expect(try CrateReader.read(from: single) == c)
@@ -83,7 +83,7 @@ import DeckieCrate
     }
 
     @Test func aReaderAppGetsACoversBytesOnlyWhenTheyAreACover() throws {
-        let package = try temporaryFolder().appendingPathComponent("Shown.deckiecrate")
+        let package = try temporaryFolder().appendingPathComponent("Shown.deckie")
         defer { try? FileManager.default.removeItem(at: package.deletingLastPathComponent()) }
         let covers = package.appendingPathComponent("covers")
         try FileManager.default.createDirectory(at: covers, withIntermediateDirectories: true)

@@ -55,7 +55,7 @@ struct BuildTests {
         let out = try temporaryFolder("build")
         let xml = out.appendingPathComponent("collection.xml")
         try Data(rekordboxXML(for: music.appendingPathComponent(Fixture.firstTrack)).utf8).write(to: xml)
-        let crateURL = out.appendingPathComponent("Test.deckiecrate")
+        let crateURL = out.appendingPathComponent("Test.deckie")
         var options = BuildOptions(folder: music, output: crateURL, rekordbox: xml, jobs: 2, fresh: true)
 
         // First run: two records, two files logged with their reasons.
@@ -161,7 +161,7 @@ struct BuildTests {
         try? FileManager.default.removeItem(at: folder.appendingPathComponent("one.wav"))
         try FileManager.default.copyItem(at: music.appendingPathComponent(Fixture.firstTrack),
                                          to: folder.appendingPathComponent("one.wav"))
-        let out = try temporaryFolder("vocal-build").appendingPathComponent("Vocal.deckiecrate")
+        let out = try temporaryFolder("vocal-build").appendingPathComponent("Vocal.deckie")
         let tagged = try Analyser(beatTracker: base.beatTracker, vocalTagger: StyledStubTagger())
         let options = BuildOptions(folder: folder, output: out, jobs: 1, fresh: true)
         let first = try await CPUTurns.exclusive { try Builder(options: options, analyser: tagged).run() }
@@ -191,7 +191,7 @@ struct BuildTests {
         try? FileManager.default.removeItem(at: folder.appendingPathComponent("one.wav"))
         try FileManager.default.copyItem(at: music.appendingPathComponent(Fixture.firstTrack),
                                          to: folder.appendingPathComponent("one.wav"))
-        let out = try temporaryFolder("print-build").appendingPathComponent("Print.deckiecrate")
+        let out = try temporaryFolder("print-build").appendingPathComponent("Print.deckie")
         var options = BuildOptions(folder: folder, output: out, jobs: 1, fresh: true)
         let first = try await CPUTurns.exclusive { try Builder(options: options, analyser: analyser).run() }
         #expect(first.analysed == 1 && first.fingerprinted == 1)
@@ -241,7 +241,7 @@ struct BuildTests {
         let name = "Edit (damaged).mp3"
         let frame = try #require(try MP3Damage.damagedCopy(of: music.appendingPathComponent(Fixture.secondTrack),
                                                            nearSeconds: 30, to: folder.appendingPathComponent(name)))
-        let out = try temporaryFolder("damaged-build").appendingPathComponent("Damaged.deckiecrate")
+        let out = try temporaryFolder("damaged-build").appendingPathComponent("Damaged.deckie")
         let options = BuildOptions(folder: folder, output: out, jobs: 1, fresh: true)
         let first = try await CPUTurns.exclusive { try Builder(options: options, analyser: analyser).run() }
         print(first.summary)
@@ -270,7 +270,7 @@ struct BuildTests {
     /// An output that is not a crate is never overwritten.
     @Test func refusesToOverwriteSomethingElse() throws {
         let out = try temporaryFolder("not-a-crate")
-        let target = out.appendingPathComponent("Mine.deckiecrate")
+        let target = out.appendingPathComponent("Mine.deckie")
         try FileManager.default.createDirectory(at: target, withIntermediateDirectories: true)
         try Data("keep me".utf8).write(to: target.appendingPathComponent("notes.txt"))
         let music = try temporaryFolder("empty-music")

@@ -1742,11 +1742,11 @@
    "term": "Crate file",
    "group": "product",
    "aliases": [
-    ".deckiecrate"
+    ".deckie"
    ],
    "plain": "What Deckie Desk writes from a crate: one file that carries everything Deckie knows about your songs, but not the songs themselves.",
    "expert": "Like rekordbox's USB export without the music.",
-   "deckie": "Analysis, names and fingerprints, never audio. It moves by AirDrop, iCloud Drive or Files, with no server in between. Never called just \"the crate\": the crate is the songs.",
+   "deckie": "Analysis, names and fingerprints, never audio. Its name ends in .deckie (one made before November 2026 ends in .deckiecrate and still opens). It moves by AirDrop, iCloud Drive or Files, with no server in between. Never called just \"the crate\": the crate is the songs.",
    "related": [
     "crate",
     "library",
@@ -2710,17 +2710,18 @@
    "term": "Bundle id",
    "group": "business",
    "aliases": [
-    "io.christophershannon.deck"
+    "io.deckie.booth",
+    "io.deckie.desk"
    ],
    "plain": "The app's permanent internal name in Apple's systems.",
    "expert": "Not a DJ word.",
-   "deckie": "Still the sprint's id. Open: choose the final one under App Hold Media before the first TestFlight upload, because after that it is permanent.",
+   "deckie": "Chosen in November 2026, on the product's domain: io.deckie.booth for the booth, io.deckie.desk for Desk on the Mac, io.deckie.crate for the crate file's type. Permanent once the first TestFlight upload is made.",
    "related": [
     "testflight",
     "app-hold-media"
    ],
    "public": false,
-   "internal_note": "Internal, and its current value names the owner."
+   "internal_note": "Internal. The sprint's id named the owner; the November 2026 ids do not."
   },
   {
    "id": "testflight",

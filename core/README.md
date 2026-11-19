@@ -339,7 +339,8 @@ bash core/Tools/fetch-models.sh --beat-this --python /tmp/bt/bin/python   # expo
 ```
 
 **The crate file** (`Sources/DeckieCrate`; the format, with what the documents fix and what is proposed, is
-`docs/architecture/crate-format.md`) is the one file Deckie writes, never audio: a package folder `<name>.deckiecrate`
+`docs/architecture/crate-format.md`) is the one file Deckie writes, never audio: a package folder `<name>.deckie` (a crate file named with the earlier
+`.deckiecrate` is read for good; `CrateFormat.readExtensions`)
 holding `manifest.json`, `crate.json` (one record per track: grid and tempo segments, key with its votes, phrase,
 sections, mix windows, ends, loudness, vocal, onset pattern, flags, plus track L's engine record, `fidelity`, a
 `source` and confidence per block and `features_present`), float16 sidecars for the per-bar series and the style
@@ -352,9 +353,10 @@ checks a crate and writes it canonically (keys sorted, each number with its fiel
 the same crate always gives the same bytes; `CrateReader` checks the version, the required fields,
 `features_present`, every bar number and each sidecar's length against `n_bars`, and names the file, the field path
 and the track of every problem. `FeatureFile.crateTrack` (DeckieLab) makes a record from any committed feature file:
-all 373 convert, read back equal and write the same bytes again (`swift run crate-from-lab --out all.deckiecrate`
+all 373 convert, read back equal and write the same bytes again (`swift run crate-from-lab --out all.deckie`
 writes them, 1.5 MB, about 4 KB a track). The lab's EffNet embedding is left out (non-commercial, and the port plan
-keeps it out of every crate). `core/fixtures/example.deckiecrate` (20 KB, five varied tracks, rebuilt by
+keeps it out of every crate). `core/fixtures/example.deckiecrate` (named with the earlier extension on purpose, so
+the tests read it; 20 KB, five varied tracks, rebuilt by
 `Tools/make_crate_fixture.sh`) is the example for the Apple side; a test checks it byte for byte against the converter.
 
 **The engine** (`Sources/DeckieEngine`) is the Windows and Linux analyser, the charter's `DeckieEngineOSS` (its crate
@@ -448,7 +450,7 @@ swift test
 ## Building a crate: `deckie-build`
 
 ```
-deckie-build <folder> --out <name>.deckiecrate [--rekordbox export.xml] [--jobs N] [--bpm-tags] [--name N] [--fresh]
+deckie-build <folder> --out <name>.deckie [--rekordbox export.xml] [--jobs N] [--bpm-tags] [--name N] [--fresh]
 ```
 
 It finds every audio file below the folder by its extension (mp3, flac, wav, aif, aiff, aifc, m4a, mp4, aac, wma,
@@ -530,7 +532,7 @@ one-minute files takes about 10 s in a debug build.
 
 ## The crate file as one file: `CrateArchive`
 
-On Windows a `.deckiecrate` package is only a folder, so the PC builder writes the single-file form
+On Windows a `.deckie` package is only a folder, so the PC builder writes the single-file form
 (`docs/architecture/crate-format.md`, "the single-file form"): the same files, with the same names and bytes, in one
 uncompressed zip, written and read by `Sources/DeckieCrate/CrateArchive.swift` with no library. `CrateReader.read(from:)`
 takes either form; `CrateArchive.pack(package:to:)` and `unpack(_:to:)` go between them. The archive is canonical
@@ -546,8 +548,9 @@ deckie-make [<music folder> ...] [--no-wait] [--jobs N] [--work <folder>]
 
 What a non-technical DJ runs on Windows (as "Make Crate File.exe" in the zip, which starts it). Given a folder (what
 Windows passes when a folder is dropped on the program) it reads every audio file below it, hidden ones left out,
-and writes `<folder name>.deckiecrate`, the single-file form, next to the folder, never inside it, with
-`<folder name> Deckie log.txt` beside it. With no folder (a double click) it asks for one in the console. It prints
+and writes `<folder name>.deckie`, the single-file form, next to the folder, never inside it, with
+`<folder name> Deckie log.txt` beside it. An earlier `<folder name>.deckiecrate` there is left as it was, and read
+when the program's storage is gone, so the crate keeps its id. With no folder (a double click) it asks for one in the console. It prints
 a line per song (songs done of songs found, time left), ends with how many songs went in, how many did not and why,
 by reason and file type, in plain words, and waits for Enter. It is `Builder` with nothing changed inside. What it
 adds: the crate as a package and the builder's work folder are kept out of sight in the program's own storage

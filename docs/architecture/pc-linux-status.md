@@ -569,7 +569,7 @@ pinned-hash script, and the analyser runs without them with the vocal field abse
 and the per-track CPU time is reported like the other modules.
 
 **The crate (step 4).** The documents turned out to fix more than expected (spec section 5.2 with D11, research
-track A section 5, the overview, the port plan, track L): a package folder `<name>.deckiecrate` holding
+track A section 5, the overview, the port plan, track L): a package folder `<name>.deckie` (earlier `<name>.deckiecrate`, still read) holding
 `manifest.json`, `crate.json` and compact half-precision sidecars for the per-bar series; an integer schema with
 a minimum reader version and unknown keys ignored; tempo and key as segments; track L's engine record, fidelity,
 per-block source and confidence and `features_present`; no audio, no absolute paths, signatures from an Apple
@@ -737,7 +737,7 @@ so the release test covers macOS libraries as it does Linux and Windows ones.
 ## Oct 29, 2026: `deckie-build`, the crate builder, and `bench`, the yardstick (entry 13)
 
 **Where it landed.** A new module `DeckieBuild` and the program `deckie-build` turn a folder of music into a crate:
-`deckie-build <folder> --out <name>.deckiecrate` reads every audio file (several at a time, `--jobs`), runs the
+`deckie-build <folder> --out <name>.deckie` reads every audio file (several at a time, `--jobs`), runs the
 analyser on each and writes the crate. It is resumable: a work folder beside the crate keeps each file's record, a
 file with the same size and modification time is taken without reading it, a moved or renamed file is found again
 by its hash, and a record is reused only if the same engine version, the same vocal tagger and the same tag tempo

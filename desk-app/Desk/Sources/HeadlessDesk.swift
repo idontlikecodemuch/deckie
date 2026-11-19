@@ -16,8 +16,8 @@ import DeckieDesk
 ///   --remove-source <crate> <source>           takes a source out of the crate ("-" for the music folder)
 ///   --rename-crate <crate> <new name>          renames a crate
 ///   --delete-crate <crate>                     deletes a crate for good
-///   --export <crate> <out.deckiecrate>         writes a copy of its crate file
-///   --import <file.deckiecrate>                brings a crate file in as a copy
+///   --export <crate> <out.deckie>         writes a copy of its crate file
+///   --import <file.deckie>                brings a crate file in as a copy
 ///   --libraries [crate]                        the DJ libraries a run would read for keys and names (D30)
 ///   --choose-library <file>                    adds a DJ library to read on every run
 ///   --look-again [crate]                       Look again for keys and names, without reading the music again
@@ -171,13 +171,13 @@ enum HeadlessDesk {
             print("deleted \(info.name)")
 
         case "--export":
-            guard args.count >= 2 else { throw DeskError("--export <crate> <out.deckiecrate>") }
+            guard args.count >= 2 else { throw DeskError("--export <crate> <out.deckie>") }
             let info = try crate(args[0], home)
             try shelf.exportCopy(info.id, to: URL(fileURLWithPath: args[1]))
             print("wrote \(args[1])")
 
         case "--import":
-            guard let path = args.first else { throw DeskError("--import <file.deckiecrate>") }
+            guard let path = args.first else { throw DeskError("--import <file.deckie>") }
             let i = try shelf.importCopy(of: URL(fileURLWithPath: path))
             print("imported as \(i.name) (\(i.id))")
 
