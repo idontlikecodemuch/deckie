@@ -80,6 +80,43 @@ import DeckieBuild
         #expect(!c.tracks.contains { $0.flags.contains(LocalFacts.nameDisagrees) })
     }
 
+    @Test func anArtistAtTheHeadOfATitleTagWithABitrateAfterIt() throws {
+        // The bitrate in brackets or bare at the end; the artist from the artist tag, or from the file name with no
+        // artist tag; and the file name alone with no tags.
+        let c = try Self.gather([
+            ("a1.mp3", Self.file(title: "Marlo Dune - Night Drive [320kbps]", artist: "Marlo Dune")),
+            ("a2.mp3", Self.file(title: "Marlo Dune - Night Drive 320kbps", artist: "Marlo Dune")),
+            ("Marlo Dune - Night Drive [320kbps].mp3", Self.file(title: "Marlo Dune - Night Drive [320kbps]")),
+            ("Marlo Dune - Night Drive 320kbps.mp3", Self.file(title: "Marlo Dune - Night Drive 320kbps")),
+            ("Marlo Dune - Night Drive (320 kbps).mp3", Self.file()),
+            ("Marlo Dune - Night Drive 256kbps.mp3", Self.file()),
+        ])
+        let want: [(String, String, String)] = [("[320kbps]", "tag", "tag"), ("320kbps", "tag", "tag"),
+                                                ("[320kbps]", "tag", "tag+filename"), ("320kbps", "tag", "tag+filename"),
+                                                ("(320 kbps)", "filename", "filename"), ("256kbps", "filename", "filename")]
+        for (i, w) in want.enumerated() {
+            let t = c.tracks[i]
+            #expect(t.ident.title == "Night Drive" && t.ident.artist == "Marlo Dune", "\(t.file.name): \(t.ident.title) / \(String(describing: t.ident.artist))")
+            #expect(t.ident.source == w.2, "\(t.file.name): \(String(describing: t.ident.source))")
+            #expect(t.ident.facts[SongFacts.nameNotes] == CrateTrack.Fact([w.0], from: w.1), "\(t.file.name)")
+            #expect(!LocalFacts.needsName(t), "\(t.file.name)")
+        }
+    }
+
+    @Test func aGuestInBracketsBeforeVersionsIsReadAsTheCreditsAndTheTitleIsKeptAsWritten() throws {
+        // D39 and AC 5.5: a featured credit in a title's brackets is read as part of the credit, never as a version or
+        // the title; the title is compared without it; the name as written is kept.
+        for (written, guest) in [("Night Drive (Feat. Ansel Roe) [Fog Lines Remix] [Clean]", "Feat. Ansel Roe"),
+                                 ("Night Drive [Fog Lines Remix] (ft. Ansel Roe) [Clean]", "ft. Ansel Roe"),
+                                 ("Night Drive (featuring Ansel Roe) (Fog Lines Remix) (Clean)", "featuring Ansel Roe")] {
+            let r = NameReading.readTags(title: written, artist: "Marlo Dune")
+            #expect(r.title == "Night Drive" && r.featured == guest, "\(written): \(r.title) / \(String(describing: r.featured))")
+            #expect(r.version?.kinds == [.remix] && r.version?.names == ["fog lines"] && r.lyrics == .clean, "\(written)")
+        }
+        let c = try Self.gather([("x.mp3", Self.file(title: "Night Drive (Feat. Ansel Roe) [Fog Lines Remix] [Clean]", artist: "Marlo Dune"))])
+        #expect(c.tracks[0].ident.title == "Night Drive (Feat. Ansel Roe) [Fog Lines Remix] [Clean]" && c.tracks[0].ident.artist == "Marlo Dune")
+    }
+
     @Test func aTitleTagNamingAnotherSongIsKeptAndMarkedForALook() throws {
         let c = try Self.gather([
             ("Marlo Dune - Night Drive - Ostro Remix.mp3", Self.file(title: "Harbour Lights", artist: "Marlo Dune")),
