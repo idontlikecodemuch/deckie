@@ -480,7 +480,7 @@ public final class DeskProtocol: @unchecked Sendable {
             let last = LastSent()
             let screen = RunScreenOut { [weak self] m in self?.send(m) }
             do {
-                let (_, report) = try run.run { p in
+                let (saved, report) = try run.run { p in
                     // The run screen's songs, notes and totals (D37), in batches at most four times a second.
                     screen.offer(p)
                     // Every line goes out; bare progress at most ten times a second.
@@ -496,12 +496,16 @@ public final class DeskProtocol: @unchecked Sendable {
                 self.runningDisc = nil
                 self.currentRun = nil
                 self.stopping = false
-                self.session.runEnded(info.id)
+                self.session.runEnded(info.id, saved: saved)
                 // The crate's name as it is now: a name given while the run went is applied as it ends.
                 var shown = report
                 if let n = self.session.current?.name { shown.crate = n }
-                self.send(["event": "run.finished", "report": Self.plain(shown)])
+                // The crate as saved goes out before the run is said to have finished: a window shows its finished
+                // screen on run.finished, and what that screen offers (Export crate file, and the rest that needs
+                // songs) asks the last state and songs whether the crate has any. Sent after, a click between the
+                // messages was told the crate had no songs yet (a slow PC, Windows).
                 self.sendState(); self.sendSongs()
+                self.send(["event": "run.finished", "report": Self.plain(shown)])
                 self.lock.unlock()
             } catch {
                 screen.flush()
@@ -511,8 +515,8 @@ public final class DeskProtocol: @unchecked Sendable {
                 self.currentRun = nil
                 self.stopping = false
                 self.session.runEnded(info.id)
-                self.send(["event": "run.failed", "detail": (error as? LocalizedError)?.errorDescription ?? "\(error)"])
                 self.sendState(); self.sendSongs()
+                self.send(["event": "run.failed", "detail": (error as? LocalizedError)?.errorDescription ?? "\(error)"])
                 self.lock.unlock()
             }
             done.signal()
@@ -575,19 +579,16 @@ public final class DeskProtocol: @unchecked Sendable {
     /// disc now, as WAV, held only while it is sent (nothing is written). The page is never told a path. Called with
     /// the lock held.
     func sendAudio(_ song: String, decoded: Bool, _ id: Any?) throws {
-        let sound: DeskAudio.Sound
-        do { sound = try session.audio(song, open: openMusicCD, musicCDs: listMusicCDs) }
-        catch let e as DeskAudio.NotHere { throw RequestError(code: "not_here", detail: e.source) }
-        var data: Data
+        // The disc is let go of before a byte is sent: whoever has the last chunk may take the disc out at once, and
+        // on Windows a folder (a stand-in drive) or a drive cannot be moved or ejected while it is held open.
         let url: URL
-        switch sound {
-        case let .disc(cd, s):
-            do { data = try DeskAudio.read(cd, s) }
-            catch { throw RequestError(code: "not_here", detail: session.crate?.tracks.first { $0.id == song }?.ident.disc ?? "") }
+        switch try heard(song) {
+        case let .wav(data):
             try sendChunks(song, data: data, type: "audio/wav", kind: "WAV", id)
             return
         case let .file(u): url = u
         }
+        var data: Data
         var type = Self.mediaType(url.pathExtension)
         if decoded {
             do {
@@ -599,6 +600,22 @@ public final class DeskProtocol: @unchecked Sendable {
             data = try Data(contentsOf: url, options: [.mappedIfSafe])
         }
         try sendChunks(song, data: data, type: type, kind: url.pathExtension.uppercased(), id)
+    }
+
+    enum Heard { case wav(Data), file(URL) }
+
+    /// Where a song's sound is: its file, or (on a music CD) the sound itself, read off the disc as WAV. The disc is
+    /// closed when this returns, so nothing holds it while the sound is sent.
+    func heard(_ song: String) throws -> Heard {
+        let sound: DeskAudio.Sound
+        do { sound = try session.audio(song, open: openMusicCD, musicCDs: listMusicCDs) }
+        catch let e as DeskAudio.NotHere { throw RequestError(code: "not_here", detail: e.source) }
+        switch sound {
+        case let .file(u): return .file(u)
+        case let .disc(cd, s):
+            do { return .wav(try DeskAudio.read(cd, s)) }
+            catch { throw RequestError(code: "not_here", detail: session.crate?.tracks.first { $0.id == song }?.ident.disc ?? "") }
+        }
     }
 
     /// The reply for `song.audio`, then the sound in `audio.chunk` events.

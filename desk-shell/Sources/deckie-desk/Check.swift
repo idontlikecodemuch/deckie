@@ -198,6 +198,16 @@ enum Check {
                 say(plain ? "PASSED: music added through the page, the run finished, the crate file was exported, and the lookup answered in words"
                           : "FAILED: the lookup said nothing")
                 end(plain ? 0 : 3)
+            case "shell.box":
+                // A box the page (or a chooser the check gave no answer for) would have shown: there is no one to
+                // click it, so the check says its words and ends, unless they only say something went right.
+                let words = (m["lines"] as? [String] ?? []).flatMap { $0.split(whereSeparator: \.isNewline) }.joined(separator: " | ")
+                if m["fine"] as? Bool == true {
+                    say("the page says: \(words)")
+                } else {
+                    say("FAILED: the page would have shown a box: \(words)")
+                    end(3)
+                }
             case "shell.checkError":
                 say("FAILED: a step in the page threw: \(m["detail"] ?? "?")")
                 end(3)

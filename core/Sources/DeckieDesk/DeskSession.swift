@@ -145,10 +145,14 @@ public final class DeskSession {
 
     /// After a run of crate `id` (finished or stopped): shows it again as saved, then gives a music CD the name the DJ
     /// typed for it while it was read (one step of undo).
-    public func runEnded(_ id: String) {
+    /// `saved`: the crate the run wrote. It stands in for the crate file read back when that cannot be read at once
+    /// (on Windows another program, a virus scanner or the search indexer, can hold a file just written for a
+    /// moment): a crate whose songs were just saved is never shown as having none.
+    public func runEnded(_ id: String, saved: Crate? = nil) {
         let renamed = nameDuringRun
         nameDuringRun = nil
         _ = show(id)
+        if crate == nil, current?.id == id, let saved { crate = saved }
         if let renamed, current?.id == id { try? rename(id, to: renamed) }
         if let (source, name) = discName, current?.id == id {
             discName = nil

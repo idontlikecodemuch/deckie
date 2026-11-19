@@ -315,6 +315,8 @@ void deskshell_on_message(deskshell_t s, deskshell_message_fn fn, void *context)
   s->context = context;
 }
 
+void deskshell_init_script(deskshell_t s, const char *js) { webview_init(s->w, js); }
+
 void deskshell_load(deskshell_t s, const char *url) { webview_navigate(s->w, url); }
 
 void deskshell_set_html(deskshell_t s, const char *html) { webview_set_html(s->w, html); }

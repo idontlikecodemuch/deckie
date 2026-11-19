@@ -22,6 +22,28 @@ import DeckieCrate
         #expect(DeskWords.text("noSuchWord") == "noSuchWord")
     }
 
+    /// A crate named after the folder read into it ("F1 - Names is in F1 - Names", "Adding Stick 1 to Stick 1"): the
+    /// name is said once.
+    @Test func aNameSharedByTheCrateAndWhatWasAddedIsSaidOnce() {
+        #expect(DeskWords.text("finishedTitle", ["read": "F1 - Names", "crate": "F1 - Names"]) == "F1 - Names is in the crate")
+        #expect(DeskWords.text("runReading", ["read": "Stick 1", "crate": "Stick 1"]) == "Adding the songs in Stick 1")
+        #expect(DeskWords.count("stoppedTitle", 1, ["read": "Stick 1", "crate": "Stick 1"]) == "Stopped: 1 song from Stick 1 is in the crate")
+        #expect(DeskWords.count("stoppedTitle", 7, ["read": "Stick 1", "crate": "Stick 1"]) == "Stopped: 7 songs from Stick 1 are in the crate")
+        #expect(DeskWords.text("removeTitle", ["source": "Stick 1", "crate": "Stick 1"]) == "Remove Stick 1 from the crate?")
+        // Capitals and spaces at the ends aside, it is the same name.
+        #expect(DeskWords.text("finishedTitle", ["read": "stick 1 ", "crate": "Stick 1"]) == "stick 1  is in the crate")
+        // Different names are both said, as before.
+        #expect(DeskWords.text("finishedTitle", ["read": "Stick 3", "crate": "Friday"]) == "Stick 3 is in Friday")
+        #expect(DeskWords.text("runReading", ["read": "Stick 1", "crate": "Stick 10"]) == "Adding Stick 1 to Stick 10")
+        #expect(DeskWords.count("stoppedTitle", 2, ["read": "Stick 3", "crate": "Friday"]) == "Stopped: 2 songs from Stick 3 are in Friday")
+        // Every word that names both has its once-only form, and no form names the crate twice or says "track".
+        for key in ["finishedTitle", "runReading", "removeTitle"] { #expect(DeskWords.table[key + ".same"] != nil, "\(key)") }
+        for (key, words) in DeskWords.table where key.contains(".same") {
+            #expect(!words.contains("{crate}") && !words.lowercased().contains("track"), "\(key)")
+        }
+        #expect(!DeskWords.sameName(["read": "", "crate": ""]) && !DeskWords.sameName(["crate": "Friday"]))
+    }
+
     @Test func theComputerIsNamedByItsKind() {
         #expect(DeskWords.fill(DeskWords.table["firstBody"]!, DeskWords.withComputer([:], kind: "mac")).hasSuffix("never leaves this Mac."))
         #expect(DeskWords.fill(DeskWords.table["firstBody"]!, DeskWords.withComputer([:], kind: "other")).hasSuffix("never leaves this computer."))
@@ -103,6 +125,25 @@ import DeckieCrate
         // Nothing changed, nothing recorded.
         try s.fixName("bbbb", version: "Extended")
         #expect(s.undoName == "undoNameFix")
+    }
+
+    /// A run's crate file that cannot be read back the moment it is saved (on Windows a virus scanner or the indexer
+    /// can hold a file just written): the crate the run saved is shown, never a crate with no songs.
+    @Test func aRunsSavedCrateIsShownWhenItsFileCannotBeReadBackAtOnce() throws {
+        let (s, info) = try make("session-run-ended")
+        let saved = try #require(s.crate)
+        let manifest = s.shelf.package(info.id).appendingPathComponent(CrateFormat.manifestFile)
+        let good = try Data(contentsOf: manifest)
+        try Data("held by another program".utf8).write(to: manifest)
+        s.runEnded(info.id, saved: saved)
+        #expect(s.current?.id == info.id && s.crate?.tracks.count == 2)
+        // Read back alone, the crate would have had no songs.
+        s.runEnded(info.id)
+        #expect(s.crate == nil)
+        // Once the file can be read, it is what is shown.
+        try good.write(to: manifest)
+        s.runEnded(info.id)
+        #expect(s.crate?.tracks.count == 2)
     }
 
     @Test func removingASourceSaysHowManyGoAndUndoPutsThemBack() throws {

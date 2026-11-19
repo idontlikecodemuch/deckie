@@ -302,6 +302,93 @@ struct StopKeepsSongsTests {
     }
 }
 
+/// The end of a run as a window sees it. Seen on a slow Windows PC: after a run, the first Export crate file said
+/// "This crate has no songs yet" while the finished screen showed the songs; a second click exported. A window shows
+/// its finished screen on `run.finished` and asks the last `state` and `songs` it had whether the crate has songs
+/// (the page's `hasSongs()`), so the crate as saved must be in them by then.
+@Suite(.enabled(if: Engine.available, "needs ONNX Runtime and the Beat This! model"))
+struct RunEndsTests {
+    /// The messages as the page takes them: what its `hasSongs()` says at each `run.finished`, and the replies.
+    final class Page: @unchecked Sendable {
+        private let lock = NSLock()
+        private var state: [String: Any]?, songs: [String: Any]?
+        private var atFinish: [Bool] = []
+        private var replies: [Int: [String: Any]] = [:]
+        func add(_ d: Data) {
+            guard let m = try? JSONSerialization.jsonObject(with: d) as? [String: Any] else { return }
+            lock.lock(); defer { lock.unlock() }
+            if let re = (m["re"] as? NSNumber)?.intValue { replies[re] = m }
+            switch m["event"] as? String {
+            case "state": state = m
+            case "songs": songs = m
+            case "run.finished":
+                let current = state?["current"] as? [String: Any]
+                let id = current?["id"] as? String
+                atFinish.append(id != nil && current?["hasSongs"] as? Bool == true && songs?["crate"] as? String == id)
+            default: break
+            }
+        }
+        var hasSongsAtFinish: [Bool] { lock.lock(); defer { lock.unlock() }; return atFinish }
+        func reply(_ id: Int) -> [String: Any]? { lock.lock(); defer { lock.unlock() }; return replies[id] }
+        func replies(from id: Int) -> [[String: Any]] {
+            lock.lock(); defer { lock.unlock() }
+            return replies.filter { $0.key >= id }.map(\.value)
+        }
+    }
+
+    @Test func theSavedCrateIsSaidBeforeTheRunIsSaidToHaveFinished() async throws {
+        let root = try scratch("run-ends")
+        let music = root.appendingPathComponent("Stick 1/House")
+        try FileManager.default.createDirectory(at: music, withIntermediateDirectories: true)
+        let buffer = TestTrack.render()
+        for (i, gain) in [1.0, 0.5].enumerated() {
+            try TestTrack.wav(AudioBuffer(sampleRate: buffer.sampleRate, channelCount: buffer.channelCount,
+                                          samples: buffer.samples.map { $0 * Float(gain) }))
+                .write(to: music.appendingPathComponent("0\(i + 1) Song.wav"))
+        }
+        let out = try scratch("run-ends-out")
+        let page = Page()
+        // A slow end of the run, as on a slow PC: each song's print waits before it is made.
+        let p = DeskProtocol(home: DeskHome(root: root.appendingPathComponent("home")), output: page.add, makeRun: { home, id, request in
+            DeskRun(home: home, crateId: id, request: request, jobs: 1, device: "test", signer: nil, printer: { url in
+                Thread.sleep(forTimeInterval: 0.5)
+                return try DeskRun.portablePrint(url)
+            })
+        }, analysisCheck: {})
+        p.start()
+        func line(_ m: [String: Any]) -> String {
+            String(decoding: (try? JSONSerialization.data(withJSONObject: m)) ?? Data(), as: UTF8.self)
+        }
+        let ended: Bool = try await CPUTurns.exclusive {
+            _ = p.handle(line: line(["id": 1, "type": "run.add", "path": root.appendingPathComponent("Stick 1").path]))
+            // Export crate file, asked again and again from the run's start until it has ended, as an impatient DJ would.
+            var id = 100
+            let end = Date().addingTimeInterval(600)
+            while page.hasSongsAtFinish.isEmpty && Date() < end {
+                _ = p.handle(line: line(["id": id, "type": "crate.export", "folder": out.path]))
+                id += 1
+                try await Task.sleep(nanoseconds: 50_000_000)
+            }
+            return !page.hasSongsAtFinish.isEmpty
+        }
+        p.waitForRun()
+        #expect(ended)
+        #expect(page.hasSongsAtFinish == [true], "the finished screen would have said the crate had no songs yet")
+        // Asked the moment it finished: the crate file is written.
+        _ = p.handle(line: line(["id": 99, "type": "crate.export", "folder": out.path]))
+        let r = try #require(page.reply(99))
+        #expect(r["ok"] as? Bool == true && (r["path"] as? String)?.hasSuffix(".deckie") == true, "\(r)")
+        // Every export asked while the run went was refused as busy, or wrote the crate file; none was told the crate
+        // had no songs.
+        let asked = page.replies(from: 100)
+        #expect(!asked.isEmpty)
+        for a in asked {
+            let code = (a["error"] as? [String: Any])?["code"] as? String
+            #expect(a["ok"] as? Bool == true || code == "busy", "\(a)")
+        }
+    }
+}
+
 /// Collects the messages a protocol in this process sends.
 final class Lines: @unchecked Sendable {
     private let lock = NSLock()
