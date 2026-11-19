@@ -19,14 +19,24 @@ Booth carries one crate file of its own: the demo, `Deck/Demo/Demo.deckie` (a cr
 and fingerprints of seven public-domain songs, no audio), named in project.yml and copied whole into the app. With
 it bundled, the first-run screen shows "Try the demo crate" and a line saying the songs play from deckie.io/demo on another
 device. Tapping it opens the demo exactly as any crate file opens (copied into Application Support/Crates and
-remembered); the open note says "The demo crate is open: 7 songs. Play deckie.io/demo nearby." While it waits for a song
+remembered); the open note says "The demo crate is open: 7 songs. Play deckie.io/demo nearby." (any crate file's
+open note sits under the tabs for 5 s and lets every tap through to what is under it). While it waits for a song
 the Listen page says where the songs play from and has "Leave the demo crate"; the Crate tab has "Leave the demo crate" beside
 "Open crate file". Leaving closes the crate file (`Library.close`), forgets it for the next launch, and shows the
 first-run screen. `DemoCrate.isOpen` knows the demo by its crate id (the bundled manifest's `crate_id`).
 
 The songs, their licences and SHA-256s: `site/demo/CREDITS.md`; the Credits sheet lists them (`Credits.demoSongs`).
 deckie.io/demo (`site/demo/`) plays the same songs as 128 kbps MP3s. To rebuild the crate file, see CREDITS.md
-("How the files were made"); a new build gets a new crate id, which is fine.
+("How the files were made").
+
+**Its name and its id (Nov 19, 2026, `pc/booth-build-1`).** The Crate tab shows the crate file's own name, so the
+manifest's `name` is "Demo crate" (it was "Demo"). It was changed in `manifest.json` by hand, in place: the manifest is
+plain JSON with no checksum over it, and the bytes are exactly what the core's writer writes (DeckTests re-encode the
+crate and compare). The crate id is unchanged, `1a365511-96d6-4840-a9f3-e9b7a772179c`, and DeckTests hold it. To keep it
+on a rebuild, build into the existing package (`deckie-build <folder> --out deck-app/Deck/Demo/Demo.deckie`): the
+builder keeps an existing crate's id, name and created date (`Builder.swift`, `existing?.manifest.crateId`); a build
+to a new path makes a new id. The folder the songs sit in still shows as "Demo" on the picks and in the Crate tab:
+that is the songs' folder (`file.rel`), changed only by rebuilding from a folder of another name.
 
 ## Folder layout
 
@@ -187,8 +197,11 @@ built app's embedded.mobileprovision), so the app keeps working until then witho
   (one engine) to `Documents/Sets/Deck set <date time>.aac` (AAC, 128 kbps, ADTS so the file stays playable
   even if the app quits), with `<name> log.json` (timestamp, seconds into the recording, track id, title,
   artist, place (source / folder / number, or "in <folder>"), detected pitch, confidence; rewritten after every change) and
-  `<name> tracklist.txt` (one line per song, appended as it goes). The tiny "REC 0:12:34" on the status line
-  pauses / resumes it; the "…" sheet can switch recording off. Get the files with the Files app (On My iPad >
+  `<name> tracklist.txt` (one line per song, appended as it goes). The tiny REC chip on the status line says what
+  recording is doing ("REC 0:12:34", "REC paused", "REC on" while listening has not started, "REC off"); a tap opens
+  its menu, in every build: Pause / Resume recording, and "Record each set" (on by default, remembered between
+  launches as `recordSets`; off closes the recording in progress, on starts one at once if the microphone is
+  listening). The Debug details sheet's switch is the same setting. Get the files with the Files app (On My iPad >
   Deck > Sets) or Finder (iPad > Files > Deck). The app declares background audio, so capture should continue
   if the screen locks (the screen is kept on while the app is open anyway); not yet verified on the iPad.
 * **Crate** (the tab's name is provisional and is one constant, `CrateTabView.title`): first each source (the CD, stick
@@ -286,8 +299,11 @@ through it in real time, as the microphone would hear it; waits for Deckie's ind
 
 ## TestFlight (remote updates)
 
-`project.yml` sets `ITSAppUsesNonExemptEncryption = false` (no export-compliance prompt), version 1.0, build 1
-(raise `CFBundleVersion` for every later upload). Archive and upload:
+`project.yml` sets `ITSAppUsesNonExemptEncryption = false` (no export-compliance prompt), version 0.1.0, build 1
+(raise `CFBundleVersion` for every later upload). The fields to fill in App Store Connect are in
+`docs/product/testflight/app-store-connect-fields.md`. Archived on Nov 19, 2026 (`pc/booth-build-1`, signed with
+the development certificate): the app is 3.8 MB, holds no library data, and carries `Demo.deckie`,
+`PrivacyInfo.xcprivacy` and no `deck` URL scheme. Archive and upload:
 
 ```
 xcodebuild -project Deck.xcodeproj -scheme Deck -configuration Release -destination 'generic/platform=iOS' -archivePath build/Deck.xcarchive -allowProvisioningUpdates archive

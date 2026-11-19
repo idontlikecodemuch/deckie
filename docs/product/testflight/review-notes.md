@@ -7,7 +7,9 @@ and suggests what could come next and how to mix it in.
 what it hears against fingerprints in the DJ's own crate file (made on their computer by Deckie Desk), entirely on
 the iPad. No sound, fingerprint or result is sent anywhere; Booth makes no network requests. The same microphone
 input is saved as a recording of the DJ's set, on the iPad only, in the app's Documents folder (Files > On My iPad >
-Deckie Booth > Sets), so the DJ can keep their set.
+Deckie Booth > Sets), so the DJ can keep their set. The "REC" label at the top of the Listen tab shows whether it is
+recording; tapping it pauses the recording or turns set recording off (remembered between launches). Recognition
+works with recording off.
 
 **Why it keeps running in the background (UIBackgroundModes: audio).** A DJ often lets the iPad lock during a set.
 Background audio lets Booth keep listening and keep recording the set while the screen is locked, so the set's
@@ -27,7 +29,7 @@ public-domain songs (CC0), and https://deckie.io/demo plays the same songs out l
 3. On another device (a phone or a laptop), open https://deckie.io/demo, press play, and put that device near the
    iPad. Within a few seconds Booth names the song playing and shows picks for what could come next. The page plays
    the seven songs one after another; Booth follows each change.
-4. Without playing anything: in the Crate tab, tap any song to set it as playing by hand. The Listen tab then shows
+4. Without playing anything: in the Crate tab (headed "Crate  Demo crate"), tap any song to set it as playing by hand. The Listen tab then shows
    the song and its picks.
 5. "Leave the demo crate" (on the Listen tab while it waits for a song, and in the Crate tab) goes back to the first
    screen, where a DJ opens their own crate file.

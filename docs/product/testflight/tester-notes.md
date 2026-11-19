@@ -37,7 +37,14 @@ You only do this once per crate file. Booth remembers the last one you opened.
 
 Booth records each set from its microphone while it listens. The recordings stay on the iPad: open the Files app,
 then On My iPad > Deckie Booth > Sets. Each set has its recording (`.aac`), a list of the songs Booth named, and a
-log. Tap REC on the Listen screen to pause or resume recording.
+log.
+
+The small **REC** in the top corner of the Listen screen says what recording is doing: "REC 0:12:34" while it records,
+"REC paused", or "REC off". Tap it for its menu:
+
+- **Pause recording** or **Resume recording**, for this set.
+- **Record each set**, ticked when on. Untick it and Booth stops recording, until you tick it again; it remembers
+  your choice the next time you open it. Booth still names songs with recording off.
 
 ## Deckie Desk on a Windows PC
 

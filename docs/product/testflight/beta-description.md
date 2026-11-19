@@ -9,6 +9,7 @@ learns about your songs, never the songs themselves. Send the crate file to the 
 it in Booth.
 
 Everything happens on the iPad. The microphone's sound never leaves it, there is no account, and it works with no
-signal. Each set is recorded on the iPad for you to keep, in Files under Deckie Booth.
+signal. Each set is recorded on the iPad for you to keep, in Files under Deckie Booth; tap REC to turn
+recording off.
 
 This is an early beta. Tell us what it named right, what it missed, and which picks you would actually play.

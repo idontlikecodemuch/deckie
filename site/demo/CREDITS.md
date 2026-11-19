@@ -52,10 +52,14 @@ Page files total 16,706,689 bytes; the page loads one song at a time, when it pl
 - **The demo crate file**: each original's audio copied unchanged (no re-encoding) into a file with its pictures and
   other tags removed and only title, artist, release and a comment naming the licence and source set; then
   `deckie-build <folder> --out Demo.deckie --name Demo --no-dj-home` (engine deckie-0.7.0), with the songs in a folder
-  named Demo. The album pictures are left out because their licence is not stated. The crate file holds the songs'
+  named Demo. On Nov 19, 2026 the manifest's name was changed by hand to "Demo crate" (the name the Crate tab shows),
+  keeping the crate id; a rebuild into the existing `deck-app/Deck/Demo/Demo.deckie` keeps the id (pass
+  `--name "Demo crate"`, or leave `--name` out to keep the name). The album pictures are left out because their licence is not stated. The crate file holds the songs'
   facts, beat grids, keys, per-bar loudness and fingerprints: about 156 KB.
 - **The page files**: the same originals encoded with ffmpeg's LAME at 128 kbps, 44.1 kHz stereo, tags as above.
 - **Checked**: every page file, through Deckie's listener (`deckie-listen`) against the demo crate file's
   fingerprints, from its start, from its middle, and from its middle through a rough phone-speaker-in-a-room filter
   (250 Hz to 7 kHz, pink noise about 12 dB under the music), is named rightly at the first reading, 3 seconds in,
-  with no other song named.
+  with no other song named. Re-run on Nov 19, 2026 against the bundled crate file after its rename (fingerprints
+  unchanged): every song named rightly, no other song named, 3 seconds in for all from the start; from the middle and
+  through the filter 3 seconds for six songs and 4 seconds for Sweat Time !.
