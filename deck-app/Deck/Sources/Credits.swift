@@ -23,4 +23,34 @@ enum Credits {
     /// (DeckieCore, DeckieCrate, DeckieRecognition and DeckieAudio, which vendor nothing) and Apple's frameworks,
     /// which come with iPadOS; the built app embeds no library of anyone else's (checked with otool, Nov 19, 2026).
     static let booth: [Credit] = []
+
+    /// The songs in the demo crate file (DemoCrate), in the order deckie.io/demo plays them. The same table, with each
+    /// file's SHA-256 and the date it was fetched, is site/demo/CREDITS.md; the two are kept in step. Each song's licence
+    /// is the one its own page on the Free Music Archive states (checked Nov 19, 2026).
+    static let demoSongs: [DemoSong] = [
+        DemoSong(title: "Street of love", artist: "Loyalty Freak Music",
+                 source: "https://freemusicarchive.org/music/Loyalty_Freak_Music/POSITIVE_ATTITUDE_/Loyalty_Freak_Music_-_POSITIVE_ATTITUDE__-_06_Street_of_love/"),
+        DemoSong(title: "Everything is groovy (How to move your body)", artist: "Komiku",
+                 source: "https://freemusicarchive.org/music/Komiku/Helice_Awesome_Dance_Adventure_/everything-is-groovy-how-to-move-your-body/"),
+        DemoSong(title: "Dance Robot ACTIVATE", artist: "Loyalty Freak Music",
+                 source: "https://freemusicarchive.org/music/Loyalty_Freak_Music/ROLLER_DISCO_DANCE_DANCE/Loyalty_Freak_Music_-_ROLLER_DISCO_DANCE_DANCE_-_02_Dance_Robot_ACTIVATE/"),
+        DemoSong(title: "Can't Stop My Feet !", artist: "Loyalty Freak Music",
+                 source: "https://freemusicarchive.org/music/Loyalty_Freak_Music/ROLLER_DISCO_DANCE_DANCE/Loyalty_Freak_Music_-_ROLLER_DISCO_DANCE_DANCE_-_04_Cant_Stop_My_Feet_/"),
+        DemoSong(title: "Sweat Time !", artist: "Loyalty Freak Music",
+                 source: "https://freemusicarchive.org/music/Loyalty_Freak_Music/ROLLER_DISCO_DANCE_DANCE/Loyalty_Freak_Music_-_ROLLER_DISCO_DANCE_DANCE_-_07_Sweat_Time_/"),
+        DemoSong(title: "High Technologic Beat Explosion", artist: "Loyalty Freak Music",
+                 source: "https://freemusicarchive.org/music/Loyalty_Freak_Music/ROBOT_DANCE_/Loyalty_Freak_Music_-_ROBOT_DANCE__-_02_High_Technologic_Beat_Explosion/"),
+        DemoSong(title: "Disco Challenge", artist: "Komiku",
+                 source: "https://freemusicarchive.org/music/Komiku/Helice_Awesome_Dance_Adventure_/disco-challenge/"),
+    ]
+}
+
+/// One song in the demo crate file: its title and artist as its source names them, its licence, and its page.
+struct DemoSong: Identifiable, Hashable {
+    var id: String { source }
+    let title: String
+    let artist: String
+    var licence = "CC0 1.0 Universal (public domain dedication)"
+    var licenceURL = "https://creativecommons.org/publicdomain/zero/1.0/"
+    let source: String
 }

@@ -66,6 +66,12 @@ struct CrateTabView: View {
                         Button { sug.chooseCrateFile = true } label: {
                             Label(Words.openCrateFile, systemImage: "folder").font(Look.Crate.buttonFont).foregroundStyle(Theme.mut).frame(minHeight: Look.Crate.buttonMinHeight)
                         }
+                        // The demo (DemoCrate): back to the first-run screen.
+                        if DemoCrate.isOpen {
+                            Button { sug.leaveDemo = true } label: {
+                                Text(Words.leaveTheDemo).font(Look.Crate.buttonFont).foregroundStyle(Theme.mut).frame(minHeight: Look.Crate.buttonMinHeight)
+                            }
+                        }
                         Button { showCredits = true } label: {
                             Image(systemName: "info.circle").font(Look.Credits.crateButtonFont).foregroundStyle(Theme.mut).frame(minWidth: Look.Crate.buttonMinHeight, minHeight: Look.Crate.buttonMinHeight)
                         }
