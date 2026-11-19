@@ -1,6 +1,6 @@
 name: MUBench
 options:
-  bundleIdPrefix: io.example
+  bundleIdPrefix: io.deckie
   deploymentTarget:
     iOS: "27.0"
   createIntermediateGroups: true
@@ -25,6 +25,6 @@ targets:
         UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait, UIInterfaceOrientationLandscapeLeft, UIInterfaceOrientationLandscapeRight]
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: io.example.mubench
+        PRODUCT_BUNDLE_IDENTIFIER: io.deckie.mubench
         TARGETED_DEVICE_FAMILY: "1,2"
         INFOPLIST_KEY_UILaunchScreen_Generation: YES

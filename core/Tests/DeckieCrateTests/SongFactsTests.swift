@@ -57,9 +57,9 @@ import DeckieCrate
         defer { try? FileManager.default.removeItem(at: folder) }
         var unsigned = c
         for i in unsigned.tracks.indices { unsigned.tracks[i].signatures = [:] }
-        try CrateWriter.write(unsigned, to: folder.appendingPathComponent("F.deckiecrate"))
-        try CrateArchive.pack(package: folder.appendingPathComponent("F.deckiecrate"), to: folder.appendingPathComponent("one.deckiecrate"))
-        #expect(try CrateReader.read(from: folder.appendingPathComponent("one.deckiecrate")).tracks == unsigned.tracks)
+        try CrateWriter.write(unsigned, to: folder.appendingPathComponent("F.deckie"))
+        try CrateArchive.pack(package: folder.appendingPathComponent("F.deckie"), to: folder.appendingPathComponent("one.deckie"))
+        #expect(try CrateReader.read(from: folder.appendingPathComponent("one.deckie")).tracks == unsigned.tracks)
     }
 
     /// The reader as it was before D34: `ident` and `file` with the fields it knew and nothing else (Swift's decoding

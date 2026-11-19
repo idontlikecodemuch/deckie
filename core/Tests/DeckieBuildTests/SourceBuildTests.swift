@@ -36,7 +36,7 @@ struct SourceBuildTests {
         try x.write(to: stick.appendingPathComponent("House/01 First.wav"))
         try z.write(to: stick.appendingPathComponent("_old/Parked.wav"))
         try z.write(to: stick.appendingPathComponent(".hidden.wav"))
-        let crateURL = root.appendingPathComponent("Night.deckiecrate")
+        let crateURL = root.appendingPathComponent("Night.deckie")
         func id(_ d: Data) -> String { CrateIDs.id(forSHA256: CrateIDs.sha256(of: d)) }
 
         // 1. The Mac folder: one entry, no source.
@@ -127,7 +127,7 @@ struct SourceBuildTests {
         try y.write(to: friday.appendingPathComponent("Set/02 Y.wav"))
         try x.write(to: stick.appendingPathComponent("House/01 X.wav"))
         try x.write(to: stick.appendingPathComponent("Peak/01 X again.wav"))
-        let crateURL = root.appendingPathComponent("Night.deckiecrate")
+        let crateURL = root.appendingPathComponent("Night.deckie")
         let ix = CrateIDs.id(forSHA256: CrateIDs.sha256(of: x))
         func build(_ folder: URL, source: String? = nil, keep: Set<String> = []) async throws -> BuildResult {
             try await CPUTurns.exclusive {

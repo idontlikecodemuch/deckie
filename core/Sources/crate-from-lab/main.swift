@@ -1,6 +1,6 @@
 // crate-from-lab: writes a crate (docs/architecture/crate-format.md) from the lab's committed feature files.
 //
-//   swift run crate-from-lab --out <folder>.deckiecrate [--ids id,id,...] [--name N] [--crate-id X]
+//   swift run crate-from-lab --out <folder>.deckie [--ids id,id,...] [--name N] [--crate-id X]
 //                            [--created-at T] [--analysed-at T] [--repo <repository root>] [--single <file>]
 //
 // Without --ids it takes every file in mixer/features. The repository root is found from the current folder
@@ -26,7 +26,7 @@ while let arg = args.popFirst() {
 }
 let known: Set = ["out", "ids", "name", "crate-id", "created-at", "analysed-at", "repo", "single"]
 if let unknown = options.keys.first(where: { !known.contains($0) }) { fail("unknown option --\(unknown)") }
-guard let out = options["out"] else { fail("--out <folder>.deckiecrate is required") }
+guard let out = options["out"] else { fail("--out <folder>.deckie is required") }
 
 func repositoryRoot(_ repo: String?) -> URL {
     if let repo { return URL(fileURLWithPath: repo) }

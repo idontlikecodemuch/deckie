@@ -182,7 +182,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = io.example.mubench;
+				PRODUCT_BUNDLE_IDENTIFIER = io.deckie.mubench;
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
@@ -257,7 +257,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = io.example.mubench;
+				PRODUCT_BUNDLE_IDENTIFIER = io.deckie.mubench;
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};

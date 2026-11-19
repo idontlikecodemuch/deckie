@@ -417,7 +417,7 @@ struct EngineTests {
                           tracks: [t])
         let problems = crate.problems()
         #expect(problems.isEmpty, "\(problems)")
-        let folder = try temporaryFolder("crate").appendingPathComponent("engine.deckiecrate")
+        let folder = try temporaryFolder("crate").appendingPathComponent("engine.deckie")
         try? FileManager.default.removeItem(at: folder)
         try CrateWriter.write(crate, to: folder)
         let back = try CrateReader.read(from: folder)

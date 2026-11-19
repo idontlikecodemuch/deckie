@@ -65,7 +65,7 @@ func crate(_ tracks: [CrateTrack], name: String = "Night") -> Crate {
     @Test func importIsACopyAndExportWritesOne() throws {
         let root = try scratch("import")
         let home = DeskHome(root: root.appendingPathComponent("home"))
-        let original = root.appendingPathComponent("From a friend.deckiecrate")
+        let original = root.appendingPathComponent("From a friend.deckie")
         try CrateWriter.write(crate([entry("aaaaaaaaaaaaaaaa", "One", disc: nil, folder: nil, track: nil, rel: "One.wav")],
                                     name: "From a friend"), to: original)
         let manifest = original.appendingPathComponent("manifest.json")
@@ -79,13 +79,50 @@ func crate(_ tracks: [CrateTrack], name: String = "Night") -> Crate {
         #expect(try Data(contentsOf: manifest) == bytes, "the original is never changed")
         #expect(try FileManager.default.attributesOfItem(atPath: manifest.path)[.modificationDate] as? Date == stamp)
 
-        let out = root.appendingPathComponent("out/Mine.deckiecrate")
+        let out = root.appendingPathComponent("out/Mine.deckie")
         try home.shelf.exportCopy(first.id, to: out)
         #expect(try CrateReader.read(from: out).tracks.map(\.id) == ["aaaaaaaaaaaaaaaa"])
         let box = try home.shelf.outboxCopy(second.id)
-        #expect(box.lastPathComponent == "From a friend 2.deckiecrate")
+        #expect(box.lastPathComponent == "From a friend 2.deckie")
         let empty = try home.shelf.make(name: "Empty")
-        #expect(throws: DeskError.self) { try home.shelf.exportCopy(empty.id, to: root.appendingPathComponent("x.deckiecrate")) }
+        #expect(throws: DeskError.self) { try home.shelf.exportCopy(empty.id, to: root.appendingPathComponent("x.deckie")) }
+    }
+
+    /// A crate file from before the extension changed: one brought in as `.deckiecrate` opens, a new crate keeps its
+    /// crate file as `crate.deckie`, and a crate made by an earlier Desk keeps `crate.deckiecrate` where it is, read
+    /// and written there. Whatever is kept, what leaves is `<name>.deckie`.
+    @Test func earlierCrateFilesAndCratesKeepWorking() throws {
+        let root = try scratch("earlier")
+        let home = DeskHome(root: root.appendingPathComponent("home"))
+        let fm = FileManager.default
+        let one = [entry("aaaaaaaaaaaaaaaa", "One", disc: nil, folder: nil, track: nil, rel: "One.wav")]
+        let given = root.appendingPathComponent("From before.deckiecrate")
+        try CrateWriter.write(crate(one, name: "From before"), to: given)
+
+        let fresh = try home.shelf.importCopy(of: given)
+        #expect(home.shelf.package(fresh.id).lastPathComponent == "crate.deckie")
+        #expect(CrateShelf.packageName == "crate.deckie" && CrateShelf.earlierPackageNames == ["crate.deckiecrate"])
+        #expect(try CrateReader.read(from: home.shelf.package(fresh.id)).tracks.map(\.id) == ["aaaaaaaaaaaaaaaa"])
+        #expect(fm.fileExists(atPath: given.appendingPathComponent("manifest.json").path), "the file given is kept")
+
+        // As an earlier Desk left a crate: its crate file named crate.deckiecrate in the crate's folder.
+        let old = try home.shelf.make(name: "Old crate")
+        let oldFile = home.shelf.folder(old.id).appendingPathComponent("crate.deckiecrate")
+        try CrateWriter.write(crate(one, name: "Old crate"), to: oldFile)
+        #expect(home.shelf.package(old.id).standardizedFileURL.path == oldFile.standardizedFileURL.path)
+        try home.shelf.rename(old.id, to: "Renamed")
+        #expect(try CrateReader.read(from: oldFile).manifest.name == "Renamed", "written where it is")
+        #expect(!fm.fileExists(atPath: home.shelf.folder(old.id).appendingPathComponent("crate.deckie").path))
+        let box = try home.shelf.outboxCopy(old.id)
+        #expect(box.lastPathComponent == "Renamed.deckie")
+        #expect(try CrateReader.read(from: box).manifest.name == "Renamed")
+    }
+
+    /// Desk's words, the same on the Mac, Windows and Linux, name the crate file as it is written: `.deckie`.
+    @Test func theWordsNameTheCrateFileAsWritten() {
+        let m = DeskWords.text("importMessage")
+        #expect(m.contains(".deckie file"))
+        #expect(m.contains("earlier may end in .deckiecrate"))
     }
 }
 

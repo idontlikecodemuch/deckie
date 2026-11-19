@@ -1,6 +1,8 @@
 import SwiftUI
 import UniformTypeIdentifiers
 
+// The test and details sheet (the playing panel's "…"): Debug builds only. A tester's build has no test doors.
+#if DEBUG
 
 struct DebugSheet: View {
     @Environment(Recognizer.self) private var rec
@@ -100,3 +102,5 @@ struct LevelMeter: View {
         .accessibilityLabel(Words.inputLevel)
     }
 }
+
+#endif

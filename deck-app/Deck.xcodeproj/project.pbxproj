@@ -8,48 +8,61 @@
 
 /* Begin PBXBuildFile section */
 		05BCC8C1945690F7C9BD6C72 /* Recognizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = AD0D6A7A5D1690A64DABA356 /* Recognizer.swift */; };
-		0B29084E58A5B9AB321403C7 /* overview.json in Resources */ = {isa = PBXBuildFile; fileRef = 4447CC9085D9EB4279C04CF0 /* overview.json */; };
+		120249A14C64A91581F8E627 /* FirstRun.swift in Sources */ = {isa = PBXBuildFile; fileRef = 91245B27F7670CBE85D4D3C2 /* FirstRun.swift */; };
 		15077272C4ECBD996B12A98E /* DeckieCore in Frameworks */ = {isa = PBXBuildFile; productRef = 12304D4AEAAC6FCC6B163B1D /* DeckieCore */; };
+		1778618559864DFF430F7428 /* Credits.swift in Sources */ = {isa = PBXBuildFile; fileRef = DAE49CB7BC46C4CCB55D4005 /* Credits.swift */; };
 		42CBE67850ABEF9626F8760F /* SetRecorder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 001E556F1E189DBC15BA3038 /* SetRecorder.swift */; };
+		47FB34CF89295CD43DF8A8BB /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 4D87774439E98AE4851EF1BC /* PrivacyInfo.xcprivacy */; };
 		4B4016B134222CC851A98ED2 /* Model.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0323AAE739FAF03D4A3174D4 /* Model.swift */; };
 		4EEDFA8827370DA19CD94F81 /* DeckieRecognition in Frameworks */ = {isa = PBXBuildFile; productRef = DB6322FD4E9AC054C1C71F5B /* DeckieRecognition */; };
 		6041AA18AF863039125F90A1 /* OtherViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 21AD0C7E80EC8F7390973AC9 /* OtherViews.swift */; };
 		6D412B519593C96765D95340 /* SuggestionsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F33A59DF2EA4FB46DB59A0A /* SuggestionsView.swift */; };
 		817B4E4D74AE2997C7F966B6 /* Mixing.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E018A3260ABD70DED456CA5 /* Mixing.swift */; };
 		827B79B64A1E31FD990CA700 /* DeckieCrate in Frameworks */ = {isa = PBXBuildFile; productRef = B49D1D7567EBFBB382FD970D /* DeckieCrate */; };
-		82FB6E3B4B79F9ED651B7A58 /* deck_data.json in Resources */ = {isa = PBXBuildFile; fileRef = FCF6D813B16B533041BE8EC9 /* deck_data.json */; };
 		868CFC2D39BE590AE854F03D /* Listening.swift in Sources */ = {isa = PBXBuildFile; fileRef = CFF68CAE9CF7C52FEF8A465C /* Listening.swift */; };
+		92F4CA64942DF6C57E9879A0 /* BoothTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D92B4774934F007F10600D15 /* BoothTests.swift */; };
 		A363EF687A2B1A25437BA175 /* DeckApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A0CD63E51A2860949AEFB3B /* DeckApp.swift */; };
 		B530B20B2F40A10D5681F8B4 /* Words.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4EE148A8A234AAD6644DE7A /* Words.swift */; };
-		C14D34FFF4EB371C93C4BC9F /* mixmap.html in Resources */ = {isa = PBXBuildFile; fileRef = E92D407609A47C60440A7251 /* mixmap.html */; };
+		C35533EB4A9A3075F0393755 /* CreditsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5B615436E4FCBE368A4B10F7 /* CreditsView.swift */; };
 		CE3B6D0B375CF18CB83E44B5 /* DebugSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 549771412DCA2A83C4F58275 /* DebugSheet.swift */; };
 		CE6735A441831F16858ED4D2 /* Look.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5B731D63AEAD480AB55F2C2C /* Look.swift */; };
 		CEE3667911D1572F5C0F6754 /* ListenView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 51FCBBBC567C3AF3489222CD /* ListenView.swift */; };
-		DE19D92003CD73810706209C /* Deck.shazamcatalog in Resources */ = {isa = PBXBuildFile; fileRef = 2709C9CA316750E190590F23 /* Deck.shazamcatalog */; };
 		E38F5D0613A3EA31C4BA6F1B /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = C87E434C1DA957EE6100DE2C /* Assets.xcassets */; };
 		EE162494D55A34B7ACE5838A /* CrateLibrary.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEF7E88C03C4E70C553BFF09 /* CrateLibrary.swift */; };
 /* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		7F8607175A98ED817F2480FD /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = BDAD56553BA1FA8ECC4CDD4E /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = BD2DE4DA4C0021918D618C49;
+			remoteInfo = Deck;
+		};
+/* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
 		001E556F1E189DBC15BA3038 /* SetRecorder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SetRecorder.swift; sourceTree = "<group>"; };
 		0323AAE739FAF03D4A3174D4 /* Model.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Model.swift; sourceTree = "<group>"; };
 		0E018A3260ABD70DED456CA5 /* Mixing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Mixing.swift; sourceTree = "<group>"; };
 		21AD0C7E80EC8F7390973AC9 /* OtherViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OtherViews.swift; sourceTree = "<group>"; };
-		2709C9CA316750E190590F23 /* Deck.shazamcatalog */ = {isa = PBXFileReference; path = Deck.shazamcatalog; sourceTree = "<group>"; };
-		4447CC9085D9EB4279C04CF0 /* overview.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = overview.json; sourceTree = "<group>"; };
+		4D87774439E98AE4851EF1BC /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		51FCBBBC567C3AF3489222CD /* ListenView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListenView.swift; sourceTree = "<group>"; };
 		549771412DCA2A83C4F58275 /* DebugSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DebugSheet.swift; sourceTree = "<group>"; };
+		5B615436E4FCBE368A4B10F7 /* CreditsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CreditsView.swift; sourceTree = "<group>"; };
 		5B731D63AEAD480AB55F2C2C /* Look.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Look.swift; sourceTree = "<group>"; };
 		5F33A59DF2EA4FB46DB59A0A /* SuggestionsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SuggestionsView.swift; sourceTree = "<group>"; };
+		91245B27F7670CBE85D4D3C2 /* FirstRun.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FirstRun.swift; sourceTree = "<group>"; };
 		9768B101742C7EC94619E350 /* Deck.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Deck.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		9A0CD63E51A2860949AEFB3B /* DeckApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeckApp.swift; sourceTree = "<group>"; };
 		AD0D6A7A5D1690A64DABA356 /* Recognizer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Recognizer.swift; sourceTree = "<group>"; };
 		B4EE148A8A234AAD6644DE7A /* Words.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Words.swift; sourceTree = "<group>"; };
 		C87E434C1DA957EE6100DE2C /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		CFF68CAE9CF7C52FEF8A465C /* Listening.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Listening.swift; sourceTree = "<group>"; };
+		D92B4774934F007F10600D15 /* BoothTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BoothTests.swift; sourceTree = "<group>"; };
+		DAE49CB7BC46C4CCB55D4005 /* Credits.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Credits.swift; sourceTree = "<group>"; };
 		DEF7E88C03C4E70C553BFF09 /* CrateLibrary.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CrateLibrary.swift; sourceTree = "<group>"; };
-		E92D407609A47C60440A7251 /* mixmap.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = mixmap.html; sourceTree = "<group>"; };
-		FCF6D813B16B533041BE8EC9 /* deck_data.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = deck_data.json; sourceTree = "<group>"; };
+		EFDBAD9F2890C3D116BD26F2 /* DeckTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = DeckTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		FE51C304FBE843B7DC646F5B /* core */ = {isa = PBXFileReference; lastKnownFileType = folder; name = core; path = ../core; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
@@ -67,23 +80,15 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		1344B21C7D3B3D1D3EC00E6C /* Resources */ = {
-			isa = PBXGroup;
-			children = (
-				FCF6D813B16B533041BE8EC9 /* deck_data.json */,
-				2709C9CA316750E190590F23 /* Deck.shazamcatalog */,
-				E92D407609A47C60440A7251 /* mixmap.html */,
-				4447CC9085D9EB4279C04CF0 /* overview.json */,
-			);
-			path = Resources;
-			sourceTree = "<group>";
-		};
 		38CFBFD8D604A67DF5C6C94E /* Sources */ = {
 			isa = PBXGroup;
 			children = (
 				DEF7E88C03C4E70C553BFF09 /* CrateLibrary.swift */,
+				DAE49CB7BC46C4CCB55D4005 /* Credits.swift */,
+				5B615436E4FCBE368A4B10F7 /* CreditsView.swift */,
 				549771412DCA2A83C4F58275 /* DebugSheet.swift */,
 				9A0CD63E51A2860949AEFB3B /* DeckApp.swift */,
+				91245B27F7670CBE85D4D3C2 /* FirstRun.swift */,
 				CFF68CAE9CF7C52FEF8A465C /* Listening.swift */,
 				51FCBBBC567C3AF3489222CD /* ListenView.swift */,
 				5B731D63AEAD480AB55F2C2C /* Look.swift */,
@@ -102,7 +107,7 @@
 			isa = PBXGroup;
 			children = (
 				C87E434C1DA957EE6100DE2C /* Assets.xcassets */,
-				1344B21C7D3B3D1D3EC00E6C /* Resources */,
+				4D87774439E98AE4851EF1BC /* PrivacyInfo.xcprivacy */,
 				38CFBFD8D604A67DF5C6C94E /* Sources */,
 			);
 			path = Deck;
@@ -112,8 +117,17 @@
 			isa = PBXGroup;
 			children = (
 				9768B101742C7EC94619E350 /* Deck.app */,
+				EFDBAD9F2890C3D116BD26F2 /* DeckTests.xctest */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		8AA0671D39FC22CD38001957 /* DeckTests */ = {
+			isa = PBXGroup;
+			children = (
+				D92B4774934F007F10600D15 /* BoothTests.swift */,
+			);
+			path = DeckTests;
 			sourceTree = "<group>";
 		};
 		A790816E405651BC6937C5B9 /* Packages */ = {
@@ -128,6 +142,7 @@
 			isa = PBXGroup;
 			children = (
 				39AE5C464AB623FE18424D1F /* Deck */,
+				8AA0671D39FC22CD38001957 /* DeckTests */,
 				A790816E405651BC6937C5B9 /* Packages */,
 				5B4C6186FD2E4700749071F2 /* Products */,
 			);
@@ -143,6 +158,7 @@
 				8ED3620B64360147D46D3636 /* Sources */,
 				10C3C3BFA2C41D56C5FAE656 /* Resources */,
 				D1F93072562E51D291A702FC /* Frameworks */,
+				82678841CC470D55B026CFD9 /* Debug only, the deck:// scheme for the test hooks */,
 			);
 			buildRules = (
 			);
@@ -158,6 +174,24 @@
 			productReference = 9768B101742C7EC94619E350 /* Deck.app */;
 			productType = "com.apple.product-type.application";
 		};
+		F145E580916ACBD4BB32EE02 /* DeckTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 16F4851A9CB102750D6CC07A /* Build configuration list for PBXNativeTarget "DeckTests" */;
+			buildPhases = (
+				3CE24178E044F2922CC2CD45 /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				67562003B5E68F60B3BB69EB /* PBXTargetDependency */,
+			);
+			name = DeckTests;
+			packageProductDependencies = (
+			);
+			productName = DeckTests;
+			productReference = EFDBAD9F2890C3D116BD26F2 /* DeckTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -168,6 +202,10 @@
 				LastUpgradeCheck = 1430;
 				TargetAttributes = {
 					BD2DE4DA4C0021918D618C49 = {
+						DevelopmentTeam = 566NNM5HT8;
+						ProvisioningStyle = Automatic;
+					};
+					F145E580916ACBD4BB32EE02 = {
 						DevelopmentTeam = 566NNM5HT8;
 						ProvisioningStyle = Automatic;
 					};
@@ -191,6 +229,7 @@
 			projectRoot = "";
 			targets = (
 				BD2DE4DA4C0021918D618C49 /* Deck */,
+				F145E580916ACBD4BB32EE02 /* DeckTests */,
 			);
 		};
 /* End PBXProject section */
@@ -201,23 +240,54 @@
 			buildActionMask = 2147483647;
 			files = (
 				E38F5D0613A3EA31C4BA6F1B /* Assets.xcassets in Resources */,
-				DE19D92003CD73810706209C /* Deck.shazamcatalog in Resources */,
-				82FB6E3B4B79F9ED651B7A58 /* deck_data.json in Resources */,
-				C14D34FFF4EB371C93C4BC9F /* mixmap.html in Resources */,
-				0B29084E58A5B9AB321403C7 /* overview.json in Resources */,
+				47FB34CF89295CD43DF8A8BB /* PrivacyInfo.xcprivacy in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
 
+/* Begin PBXShellScriptBuildPhase section */
+		82678841CC470D55B026CFD9 /* Debug only, the deck:// scheme for the test hooks */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+				"$(TARGET_BUILD_DIR)/$(INFOPLIST_PATH)",
+			);
+			name = "Debug only, the deck:// scheme for the test hooks";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "set -e\n[ \"$CONFIGURATION\" = \"Debug\" ] || exit 0\nP=\"$TARGET_BUILD_DIR/$INFOPLIST_PATH\"\nB=/usr/libexec/PlistBuddy\n$B -c \"Delete :CFBundleURLTypes\" \"$P\" 2>/dev/null || true\n$B -c \"Add :CFBundleURLTypes array\" \"$P\"\n$B -c \"Add :CFBundleURLTypes:0 dict\" \"$P\"\n$B -c \"Add :CFBundleURLTypes:0:CFBundleURLName string io.deckie.booth\" \"$P\"\n$B -c \"Add :CFBundleURLTypes:0:CFBundleURLSchemes array\" \"$P\"\n$B -c \"Add :CFBundleURLTypes:0:CFBundleURLSchemes:0 string deck\" \"$P\"\n";
+		};
+/* End PBXShellScriptBuildPhase section */
+
 /* Begin PBXSourcesBuildPhase section */
+		3CE24178E044F2922CC2CD45 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				92F4CA64942DF6C57E9879A0 /* BoothTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		8ED3620B64360147D46D3636 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 				EE162494D55A34B7ACE5838A /* CrateLibrary.swift in Sources */,
+				1778618559864DFF430F7428 /* Credits.swift in Sources */,
+				C35533EB4A9A3075F0393755 /* CreditsView.swift in Sources */,
 				CE3B6D0B375CF18CB83E44B5 /* DebugSheet.swift in Sources */,
 				A363EF687A2B1A25437BA175 /* DeckApp.swift in Sources */,
+				120249A14C64A91581F8E627 /* FirstRun.swift in Sources */,
 				CEE3667911D1572F5C0F6754 /* ListenView.swift in Sources */,
 				868CFC2D39BE590AE854F03D /* Listening.swift in Sources */,
 				CE6735A441831F16858ED4D2 /* Look.swift in Sources */,
@@ -233,7 +303,32 @@
 		};
 /* End PBXSourcesBuildPhase section */
 
+/* Begin PBXTargetDependency section */
+		67562003B5E68F60B3BB69EB /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = BD2DE4DA4C0021918D618C49 /* Deck */;
+			targetProxy = 7F8607175A98ED817F2480FD /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
 /* Begin XCBuildConfiguration section */
+		4BD5A6A8DDFC4121BB6A7F22 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = io.deckie.booth.tests;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = 2;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Deck.app/Deck";
+			};
+			name = Debug;
+		};
 		B1535D4EF91D93F57962EDA0 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -245,7 +340,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = io.example.deck;
+				PRODUCT_BUNDLE_IDENTIFIER = io.deckie.booth;
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = 2;
 			};
@@ -374,6 +469,23 @@
 			};
 			name = Release;
 		};
+		FC934369AA35DC26C662B643 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = io.deckie.booth.tests;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = 2;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Deck.app/Deck";
+			};
+			name = Release;
+		};
 		FE883C8896FDF397E2EA6356 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -385,7 +497,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = io.example.deck;
+				PRODUCT_BUNDLE_IDENTIFIER = io.deckie.booth;
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = 2;
 			};
@@ -394,6 +506,15 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		16F4851A9CB102750D6CC07A /* Build configuration list for PBXNativeTarget "DeckTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				4BD5A6A8DDFC4121BB6A7F22 /* Debug */,
+				FC934369AA35DC26C662B643 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
 		2062413B14B800A606CA7BCC /* Build configuration list for PBXProject "Deck" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (

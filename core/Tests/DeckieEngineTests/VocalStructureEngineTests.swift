@@ -79,7 +79,7 @@ struct VocalStructureEngineTests {
                                                   createdAt: "2026-10-29T12:00:00Z", devicesSeen: [Analysis.platform]),
                           tracks: [t])
         #expect(crate.problems().isEmpty, "\(crate.problems())")
-        let folder = try temporaryFolder("crate").appendingPathComponent("vocal-structure.deckiecrate")
+        let folder = try temporaryFolder("crate").appendingPathComponent("vocal-structure.deckie")
         try? FileManager.default.removeItem(at: folder)
         try CrateWriter.write(crate, to: folder)
         let back = try CrateReader.read(from: folder)

@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+Deckie Booth's privacy manifest. No tracking, no tracking domains, no data collected: the microphone's sound is
+heard on the iPad and never leaves it, and there is no account.
+
+The APIs Apple asks a reason for, as Booth uses them (checked in deck-app/Deck/Sources and the core targets Booth
+links, DeckieCore, DeckieCrate, DeckieRecognition and DeckieAudio):
+- UserDefaults (CA92.1, the app's own settings): the crate file open, Minimal, the Shuffle dial, the recogniser
+  chosen, the Crate tab's Details switch.
+- File timestamps (C617.1, files inside the app's container): the modification date of Deckie's index beside the
+  crate file in Application Support, to tell whether it was made just now or reused (for the log). Reading a
+  cover checks its size and type the same way.
+- System boot time (35F9.1, time between events in the app): DispatchTime's uptime clock, to time how long one
+  reading of the recogniser takes.
+-->
+<plist version="1.0">
+<dict>
+	<key>NSPrivacyTracking</key>
+	<false/>
+	<key>NSPrivacyTrackingDomains</key>
+	<array/>
+	<key>NSPrivacyCollectedDataTypes</key>
+	<array/>
+	<key>NSPrivacyAccessedAPITypes</key>
+	<array>
+		<dict>
+			<key>NSPrivacyAccessedAPIType</key>
+			<string>NSPrivacyAccessedAPICategoryUserDefaults</string>
+			<key>NSPrivacyAccessedAPITypeReasons</key>
+			<array>
+				<string>CA92.1</string>
+			</array>
+		</dict>
+		<dict>
+			<key>NSPrivacyAccessedAPIType</key>
+			<string>NSPrivacyAccessedAPICategoryFileTimestamp</string>
+			<key>NSPrivacyAccessedAPITypeReasons</key>
+			<array>
+				<string>C617.1</string>
+			</array>
+		</dict>
+		<dict>
+			<key>NSPrivacyAccessedAPIType</key>
+			<string>NSPrivacyAccessedAPICategorySystemBootTime</string>
+			<key>NSPrivacyAccessedAPITypeReasons</key>
+			<array>
+				<string>35F9.1</string>
+			</array>
+		</dict>
+	</array>
+</dict>
+</plist>
