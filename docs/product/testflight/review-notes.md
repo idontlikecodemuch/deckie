@@ -17,15 +17,19 @@ The microphone indicator shows whenever it is listening, and the DJ can pause li
 **Data.** Nothing leaves the device. There is no account and no sign-in, no analytics, no advertising and no
 tracking. The privacy manifest declares no collected data.
 
-**How to see it work.**
+**How to see it work (no account, no music of your own needed).** Booth comes with a demo crate file of seven
+public-domain songs (CC0), and https://deckie.io/demo plays the same songs out loud.
 
-1. Open Booth. With no crate file open it shows a first screen explaining what it needs.
-2. Tap "Open a crate file" and choose the sample crate file [LINK OR ATTACHMENT TO BE ADDED: a crate file made
-   from music we own the rights to, saved to Files before review], or AirDrop it to the iPad and open it in Deckie
-   Booth.
-3. Allow the microphone. Play [THE SAMPLE'S MATCHING AUDIO, LINK TO BE ADDED] from another device near the iPad.
-   Within about 10 seconds Booth names the song and shows picks for the next one.
+1. Open Booth. With no crate file open it shows a first screen explaining what it needs, with "Open a crate file"
+   and "Try the demo".
+2. Tap "Try the demo". Booth opens the demo crate file and says "The demo is open: 7 songs." Allow the microphone
+   when asked.
+3. On another device (a phone or a laptop), open https://deckie.io/demo, press play, and put that device near the
+   iPad. Within a few seconds Booth names the song playing and shows picks for what could come next. The page plays
+   the seven songs one after another; Booth follows each change.
 4. Without playing anything: in the Crate tab, tap any song to set it as playing by hand. The Listen tab then shows
    the song and its picks.
+5. "Leave the demo" (on the Listen tab while it waits for a song, and in the Crate tab) goes back to the first
+   screen, where a DJ opens their own crate file.
 
 Contact for questions: [NAME, PHONE AND EMAIL GO IN THE FORM'S CONTACT FIELDS, NOT HERE]. Publisher: App Hold Media.

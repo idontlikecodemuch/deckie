@@ -1,4 +1,5 @@
 import SwiftUI
+import DeckieCrate
 
 /// What the booth shows: its first-run screen while no crate file is open, else its tabs. No song data ships inside
 /// the app, so with no crate file there is nothing to listen for and nothing to pick from.
@@ -15,13 +16,28 @@ enum BoothScreen: Equatable {
     static var current: BoothScreen { now(crateOpen: Library.shared.crate != nil, demoBundled: DemoCrate.url() != nil) }
 }
 
-/// A demo crate file that may come with the app, so a DJ can see the booth before making their own. None does yet:
-/// a later task adds one, made from generated sound and named in project.yml beside the privacy manifest. Until then
-/// `url()` is nil and the first-run screen leaves the button out.
+/// The demo crate file that comes with the app (Deck/Demo/Demo.deckie, named in project.yml), so a tester can see the
+/// booth work with no music of their own: seven public-domain songs (Credits.demoSongs, site/demo/CREDITS.md), whose
+/// facts and fingerprints only are in it. deckie.io/demo plays the same songs out loud from another device. It opens as
+/// any crate file opens (copied into the app's storage); `isOpen` says when the crate open is the demo.
 enum DemoCrate {
     static let resourceName = "Demo"
     static let resourceExtension = "deckie"
     static func url(in bundle: Bundle = .main) -> URL? { bundle.url(forResource: resourceName, withExtension: resourceExtension) }
+
+    /// The demo's crate id, from its manifest; nil when no demo comes with the app.
+    static func crateId(in bundle: Bundle = .main) -> String? {
+        guard let u = url(in: bundle), let d = try? Data(contentsOf: u.appendingPathComponent("manifest.json")),
+              let j = try? JSONSerialization.jsonObject(with: d) as? [String: Any] else { return nil }
+        return j["crate_id"] as? String
+    }
+    private static let bundledId = crateId()
+
+    /// Whether the crate open now is the demo: the app keeps an opened crate file under its crate id.
+    static var isOpen: Bool {
+        guard let id = bundledId, let u = Library.shared.crate?.url else { return false }
+        return u.lastPathComponent == CrateImport.storedName(id)
+    }
 }
 
 /// The first-run screen, shown whenever no crate file is open: what the booth does, the three steps to a crate file,
@@ -108,7 +124,7 @@ struct FirstRunView: View {
                     .background(Capsule().fill(Look.FirstRun.buttonFill))
                 }
                 .buttonStyle(.plain)
-                // Only when a demo crate file comes with the app (DemoCrate); none does yet.
+                // Only when a demo crate file comes with the app (DemoCrate).
                 if demo {
                     Button(action: openDemo) {
                         Text(Words.tryTheDemo).font(Look.FirstRun.buttonFont).foregroundStyle(Look.FirstRun.demoText)
@@ -117,6 +133,10 @@ struct FirstRunView: View {
                     }
                     .buttonStyle(.plain)
                 }
+            }
+            if demo {
+                Text(Words.tryTheDemoNote).font(Look.FirstRun.demoNoteFont).foregroundStyle(Look.FirstRun.demoNoteColor)
+                    .lineSpacing(Look.FirstRun.stepNoteLineSpacing).fixedSize(horizontal: false, vertical: true)
             }
             Link(destination: Words.siteURL) {
                 HStack(spacing: Look.FirstRun.buttonIconGap) {

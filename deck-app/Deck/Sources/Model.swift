@@ -287,6 +287,17 @@ final class Library {
         return r
     }
 
+    /// Puts the open crate file away (the demo's "Leave the demo"): nothing is open, so the booth shows its first-run
+    /// screen, and nothing is remembered for the next launch. The copy in the app's storage stays, as every opened
+    /// crate file's does.
+    func close() {
+        crate = nil; pendingFingerprints = nil
+        data = DeckData(generated: "", tracks: [], discs: [], pairs: [:], catalogVariants: nil)
+        byId = [:]; overview = [:]; copiesByCut = [:]
+        recentPicks = [:]; recentOrder = []
+        UserDefaults.standard.removeObject(forKey: "cratePath")
+    }
+
     /// Where the app keeps the crate files it has opened, as packages: Application Support/Crates, out of the DJ's
     /// way (not in the Files app).
     static var storeFolder: URL {

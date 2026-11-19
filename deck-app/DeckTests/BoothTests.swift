@@ -29,12 +29,55 @@ import Testing
         #expect(BoothScreen.now(crateOpen: true, demoBundled: false) == .crate)
     }
 
-    @Test func noDemoAndNoPartyDataShipInTheApp() {
-        #expect(DemoCrate.url() == nil)
+    @Test func theDemoShipsAndNoPartyDataDoes() {
+        #expect(DemoCrate.url() != nil)
+        #expect(BoothScreen.now(crateOpen: false, demoBundled: DemoCrate.url() != nil) == .firstRun(demo: true))
         for (name, ext) in [("deck_data", "json"), ("overview", "json"), ("mixmap", "html"), ("Deck", "shazamcatalog")] {
             #expect(Bundle.main.url(forResource: name, withExtension: ext) == nil, "\(name).\(ext) is in the app")
         }
         #expect(Bundle.main.url(forResource: "PrivacyInfo", withExtension: "xcprivacy") != nil)
+    }
+
+    // MARK: the demo
+
+    /// The bundled demo is a crate file like any other: facts and fingerprints of every song, no audio, and Booth can
+    /// name its songs. It opens as a crate file opens, Booth knows it is the demo, and leaving it shows the first-run
+    /// screen again.
+    @Test func theDemoOpensAsACrateFileAndLeavesAgain() throws {
+        let demo = try #require(DemoCrate.url())
+        let fm = FileManager.default
+        let files = try #require(fm.enumerator(at: demo, includingPropertiesForKeys: nil)?.allObjects as? [URL])
+        for f in files where !f.hasDirectoryPath {
+            #expect(["json", "bin", "dkl"].contains(f.pathExtension), "\(f.lastPathComponent) is in the demo")
+        }
+        let work = fm.temporaryDirectory.appendingPathComponent("booth-demo-\(UUID().uuidString)", isDirectory: true)
+        defer {
+            try? fm.removeItem(at: work)
+            Library.shared.close()
+        }
+        let r = try Library.shared.open(crateFile: demo, into: work)
+        #expect(DemoCrate.crateId() != nil)
+        #expect(r.crate.manifest.name == "Demo")
+        #expect(DemoCrate.isOpen)
+        #expect(Library.shared.songCount == Credits.demoSongs.count)
+        #expect(Library.shared.canRecognise)
+        #expect(Library.shared.crate?.deckieSongs == Credits.demoSongs.count)
+        // Every song in the crate is credited, by title and artist.
+        let named = Set(Library.shared.data.tracks.map { "\($0.song)|\($0.artist)" })
+        #expect(named == Set(Credits.demoSongs.map { "\($0.title)|\($0.artist)" }), "\(named.sorted())")
+        Library.shared.close()
+        #expect(!DemoCrate.isOpen)
+        #expect(BoothScreen.current == .firstRun(demo: true))
+    }
+
+    @Test func theDemoSongsAreCreditedWithAnOpenLicence() {
+        #expect(Credits.demoSongs.count >= 6)
+        for s in Credits.demoSongs {
+            #expect(!s.title.isEmpty && !s.artist.isEmpty)
+            #expect(s.licenceURL == "https://creativecommons.org/publicdomain/zero/1.0/")
+            #expect(URL(string: s.source)?.host == "freemusicarchive.org")
+        }
+        #expect(CreditsView().demoSongs == Credits.demoSongs)
     }
 
     // MARK: the words
@@ -43,7 +86,7 @@ import Testing
         let s = Words.phrases("Booth listens to the room,", "and how to mix it in.")
         #expect(s == "Booth listens to the\u{00A0}room,\nand how to mix it\u{00A0}in.")
         #expect(Words.keepLastTwo("Single") == "Single")
-        for line in (Words.firstRunWhat + "\n" + Words.firstRunSteps.map { $0.title + "\n" + $0.note }.joined(separator: "\n"))
+        for line in (Words.firstRunWhat + "\n" + Words.tryTheDemoNote + "\n" + Words.demoHow + "\n" + Words.creditsDemoNote + "\n" + Words.firstRunSteps.map { $0.title + "\n" + $0.note }.joined(separator: "\n"))
                 .split(separator: "\n") where line.contains(" ") || line.contains("\u{00A0}") {
             #expect(line.contains("\u{00A0}"), "\(line) can end on one word")
         }
@@ -51,7 +94,8 @@ import Testing
 
     @Test func theFirstRunWordsKeepToTheVocabulary() {
         let all = ([Words.firstRunWaiting, Words.firstRunWhat, Words.openACrateFile, Words.tryTheDemo, Words.firstRunPrivacy,
-                    Words.creditsNoneYet, Words.creditsPrivacy] + Words.firstRunSteps.flatMap { [$0.title, $0.note] })
+                    Words.creditsNoneYet, Words.creditsPrivacy, Words.tryTheDemoNote, Words.demoHow, Words.leaveTheDemo,
+                    Words.demoOpened(songs: 7), Words.creditsDemoSection, Words.creditsDemoNote] + Words.firstRunSteps.flatMap { [$0.title, $0.note] })
             .joined(separator: " ").lowercased()
         #expect(!all.contains("track"))
         #expect(!all.contains(" ai ") && !all.contains("ai."))

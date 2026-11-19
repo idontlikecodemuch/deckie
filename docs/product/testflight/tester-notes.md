@@ -6,6 +6,20 @@
 - Deckie Desk on your computer, from deckie.io: for Mac, or for Windows PC.
 - Some of your own music on that computer.
 
+## Try the demo first
+
+You can see Booth work before making a crate file of your own, with no music of your own.
+
+1. Open Deckie Booth and tap **Try the demo**. Allow the microphone when asked.
+2. On a phone or a laptop, open **deckie.io/demo** and press play. Put that device near the iPad, with the volume up.
+3. Within a few seconds Booth names the song playing and shows what could come next. The page plays seven songs, one
+   after another; Booth follows each change.
+4. When you are done, tap **Leave the demo** (on the Listen screen while it waits for a song, or in the Crate tab) to
+   go back to the first screen and open your own crate file.
+
+The demo's songs are dance music their artists have put in the public domain (CC0); the page and Booth's Credits list
+them.
+
 ## Make a crate file and get it onto the iPad
 
 1. Open Deckie Desk and add a folder of your music. Desk reads it and writes a crate file: what it learns about
