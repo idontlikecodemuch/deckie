@@ -43,15 +43,16 @@
   let computer = "other";
   const withComputer = (v) => Object.assign({ thisComputer: W["thisComputer." + computer] ?? W["thisComputer.other"] ?? "" }, v || {});
   // Words that name the crate and what was added to it say the name once when the two are the same name: their
-  // `key.sameName` form is used then (DeskWords.sameName in the engine says the same).
+  // `key.same` form is used then (DeskWords.sameName in the engine says the same).
   const plainName = (s) => String(s).trim().toLowerCase();
   const sameName = (v) => {
     const added = v && (v.read ?? v.source);
     return !!(v && v.crate != null && added != null && plainName(v.crate) !== "" && plainName(v.crate) === plainName(added));
   };
-  const t = (key, v) => fill(W[sameName(v) && W[key + ".sameName"] != null ? key + ".sameName" : key] ?? key, withComputer(v));
+  const t = (key, v) => fill(W[sameName(v) && W[key + ".same"] != null ? key + ".same" : key] ?? key, withComputer(v));
   const n = (key, count, v) => {
-    if (sameName(v) && W[key + ".sameName.other"] != null) key = key + ".sameName";
+    const once = key + ".same";
+    if (sameName(v) && W[once + ".other"] != null) key = once;
     const form = count === 0 && W[key + ".zero"] != null ? "zero" : count === 1 ? "one" : "other";
     return fill(W[key + "." + form] ?? W[key + ".other"] ?? key, withComputer(Object.assign({ n: String(count) }, v || {})));
   };
