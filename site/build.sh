@@ -16,6 +16,8 @@ for f in desk.jpg; do ffmpeg -hide_banner -loglevel error -y -i "assets/$f" -vf 
 # the film at web weight: same picture size and frame rate, smaller file, starts playing before it has all arrived
 nice -n 19 ffmpeg -hide_banner -loglevel error -y -i assets/deckie-explainer.mp4 -c:v libx264 -preset slow -crf 23 -pix_fmt yuv420p \
   -c:a aac -b:a 192k -movflags +faststart "$D/assets/deckie-explainer.mp4"
+# the demo page (deckie.io/demo): the player and the demo crate's songs as 128 kbps MP3s; CREDITS.md stays in the repository
+mkdir -p "$D/demo/audio"; cp demo/index.html demo/demo.css demo/demo.js "$D/demo/"; cp demo/audio/*.mp3 "$D/demo/audio/"
 if [ -f dictionary/index.html ]; then mkdir -p "$D/dictionary"; (cd dictionary && find . -type f ! -name "*.py" ! -name "*.md" ! -name ".*" | while read f; do mkdir -p "../$D/dictionary/$(dirname "$f")"; cp "$f" "../$D/dictionary/$f"; done); else echo "NOTE: site/dictionary/index.html is missing; the Dictionary tab will not resolve"; fi
 # version stamps: in every built page, each link to a local CSS or JS file gets ?v=<first 10 hex of the file's SHA-256>,
 # taken from the copy in dist/. The host may cache these files for a day; a new stamp makes a returning visitor fetch

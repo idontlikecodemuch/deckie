@@ -18,6 +18,7 @@ ErrorDocument 404 /404.html
 <IfModule mod_mime.c>
   AddType font/woff2 .woff2
   AddType video/mp4 .mp4
+  AddType audio/mpeg .mp3
   AddType image/svg+xml .svg
   AddCharset utf-8 .html .txt .xml .svg
 </IfModule>
@@ -28,6 +29,7 @@ ErrorDocument 404 /404.html
   ExpiresByType text/plain "access plus 10 minutes"
   ExpiresByType font/woff2 "access plus 1 year"
   ExpiresByType video/mp4 "access plus 30 days"
+  ExpiresByType audio/mpeg "access plus 30 days"
   ExpiresByType image/jpeg "access plus 30 days"
   ExpiresByType image/png "access plus 30 days"
   ExpiresByType image/svg+xml "access plus 30 days"
