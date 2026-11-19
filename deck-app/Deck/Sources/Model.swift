@@ -2,7 +2,7 @@ import Foundation
 import SwiftUI
 import DeckieCrate
 
-// MARK: - bundled data (Deck/Resources/deck_data.json, built by tools/prep_data.py)
+// MARK: - the crate's data as the booth reads it (CrateLibrary makes it from a crate file)
 
 struct Wave: Codable, Hashable {
     let t0: Double
@@ -21,7 +21,7 @@ struct Wave: Codable, Hashable {
     var values: [Int] { s.map { Wave.b64[$0] ?? 0 } }
 }
 
-/// whole-song waveform (Resources/overview.json, tools/overview_waves.py)
+/// whole-song waveform (made from the crate file's per-bar loudness, CrateLibrary)
 struct Overview: Codable {
     static let alphabet = Array("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/")
     let n: Int
@@ -77,20 +77,20 @@ struct Track: Codable, Identifiable, Hashable {
     let spb: Int?             // samples per beat of the snippets
     let steadyIn: Double?     // first steady-beat bar, seconds
     let bpmGrid: Double?
-    /// The entry's other places (D27): the same file found somewhere else. Nil in the bundled data.
+    /// The entry's other places (D27): the same file found somewhere else.
     var others: [TrackPlace]? = nil
     /// False when the crate file gives the song no usable title (`SongName`: empty, a number, "Track 07"); nil (named)
-    /// in the bundled data.
+    /// otherwise.
     var named: Bool? = nil
     /// The song's facts from the crate file (D34): release, year, label, genre and whatever else its file, its disc,
-    /// the DJ's programs or the DJ gave, by name, each with its values. Nil in the bundled data and in a crate file
+    /// the DJ's programs or the DJ gave, by name, each with its values. Nil in a crate file
     /// written before them.
     var facts: [String: [String]]? = nil
     /// The home note (D36: "A", "C#") of a song whose key reader found the home note and left major or minor open;
-    /// nil when the song has a key, and in the bundled data.
+    /// nil when the song has a key.
     var keyHome: String? = nil
     /// True when Deckie's reader read the song and was not sure of its key (D33), as distinct from a key that was
-    /// never read; nil otherwise and in the bundled data.
+    /// never read; nil otherwise.
     var keyNotSure: Bool? = nil
     /// The song's cover (D36): the hash that names `covers/<hash>.jpg` in the crate file; nil when it has none.
     var cover: String? = nil
@@ -136,7 +136,7 @@ struct Track: Codable, Identifiable, Hashable {
     var duration: Double { dur ?? secs ?? 240 }
     // Places (D26): a source (the CD, stick or card the song was read from) is shown by its own name, never by a
     // word of ours; a song with no source is shown by its folder.
-    /// The name of the source this song is on (its own name: "Stick 3", or the bundled data's "CD1 Singalongs").
+    /// The name of the source this song is on (its own name: "Stick 3").
     var sourceName: String? { disc.map { Library.shared.sourceName($0) } }
     /// "Stick 3 / House /": the source's name and the folder on it ("Stick 3 /" at its top). With no source: the
     /// file's own folder, which is how the DJ's software shows it.
@@ -215,7 +215,7 @@ struct Pair: Codable, Hashable {
     let mv: [String]?        // up to three moves, primary first (labels)
     let ks: Int?
     /// D36: true when either song has only a home note, so `ka` and `kb` are the codes the scoring compared it as
-    /// (the better fit of the two keys on the note), not keys that were read. Nil in the bundled data.
+    /// (the better fit of the two keys on the note), not keys that were read..
     var kh: Bool? = nil
 }
 
@@ -245,28 +245,21 @@ final class Library {
     private(set) var data: DeckData
     private(set) var byId: [String: Track]
     private(set) var overview: [String: Overview]
-    /// The crate in use, if the data came from one rather than the bundled deck_data.json.
+    /// The crate in use; nil until a crate file is opened, and the booth then shows its first-run screen
+    /// (FirstRun.swift). No song data ships inside the app.
     private(set) var crate: CrateLibrary?
 
     private init() {
         data = DeckData(generated: "", tracks: [], discs: [], pairs: [:], catalogVariants: nil)
         byId = [:]; overview = [:]
-        // A crate first: the one remembered (opened before, kept in the app's own storage), else one placed in the
-        // app's Documents folder (Files app, Finder), taken into the app's storage in either form; the bundled data
-        // otherwise.
+        // The crate file remembered (opened before, kept in the app's own storage), else one placed in the app's
+        // Documents folder (Files app, Finder), taken into the app's storage in either form; otherwise none.
         if let url = Library.rememberedCrate, let c = try? CrateLibrary.load(url) {
             apply(c)
         } else if let doc = Library.crateInDocuments, let r = try? CrateImport.copy(doc, into: Library.storeFolder),
                   let c = try? CrateLibrary.load(r.package) {
             apply(c)
             UserDefaults.standard.set(r.package.path, forKey: "cratePath")
-        } else if let url = Bundle.main.url(forResource: "deck_data", withExtension: "json"),
-                  let d = try? Data(contentsOf: url), let dd = try? JSONDecoder().decode(DeckData.self, from: d) {
-            data = dd
-            byId = Dictionary(uniqueKeysWithValues: dd.tracks.map { ($0.id, $0) })
-            indexCopies()
-            if let u = Bundle.main.url(forResource: "overview", withExtension: "json"), let d2 = try? Data(contentsOf: u),
-               let ov = try? JSONDecoder().decode([String: Overview].self, from: d2) { overview = ov }
         }
     }
 
@@ -280,13 +273,13 @@ final class Library {
     /// unpacked (a single file) into the app's own storage, read whole there, and only then used; the file the DJ
     /// gave is only read. A file from a file provider (iCloud Drive) is read through a file coordinator, so it is
     /// downloaded first when it is not on the iPad yet.
-    func open(crateFile url: URL) throws -> CrateImport.Result {
+    func open(crateFile url: URL, into store: URL = Library.storeFolder) throws -> CrateImport.Result {
         let scoped = url.startAccessingSecurityScopedResource()
         defer { if scoped { url.stopAccessingSecurityScopedResource() } }
         var result: Result<CrateImport.Result, Error> = .failure(CocoaError(.fileReadUnknown))
         var coordinationError: NSError?
         NSFileCoordinator().coordinate(readingItemAt: url, options: [], error: &coordinationError) { readable in
-            result = Result { try CrateImport.copy(readable, into: Library.storeFolder) }
+            result = Result { try CrateImport.copy(readable, into: store) }
         }
         if let coordinationError { throw coordinationError }
         let r = try result.get()
@@ -301,9 +294,10 @@ final class Library {
         return base.appendingPathComponent("Crates", isDirectory: true)
     }
 
-    /// Whether the booth can name what is playing: the bundled data's catalogue, or a crate file with fingerprints
-    /// (recognition signatures). A crate file made on a PC has none yet (D29); its songs are set by hand.
-    var canRecognise: Bool { crate.map { !$0.signatures.isEmpty || $0.deckieSongs > 0 } ?? true }
+    /// Whether the booth can name what is playing: a crate file with fingerprints (Deckie's, or Apple's recognition
+    /// signatures). A crate file made on a PC has none yet (D29); its songs are set by hand. With no crate file open,
+    /// there is nothing to name.
+    var canRecognise: Bool { crate.map { !$0.signatures.isEmpty || $0.deckieSongs > 0 } ?? false }
 
     /// The open crate file's fingerprints, handed once to Deckie's index and then let go (they are not needed again
     /// until another crate file opens, and a large crate's are many megabytes).
@@ -389,7 +383,7 @@ final class Library {
 
     func track(_ id: String?) -> Track? { id.flatMap { byId[$0] } }
 
-    /// A source's own name, from its label (the crate file's `disc`; the bundled data's labels are "S" and "M").
+    /// A source's own name, from its label (the crate file's `disc`).
     func sourceName(_ disc: String) -> String { data.discs.first { $0.disc == disc }?.name ?? disc }
 
     /// The songs with no source, by folder: the folders in the order a player walks them, each folder's songs by file
@@ -403,11 +397,11 @@ final class Library {
         }
     }
 
-    /// The picks for a song, the one place the views get them: the bundled data's list (its 80 best, made by
-    /// tools/prep_data.py), or for a crate every scored song, scored when the song is first asked for. The last few songs' lists are kept so going back and forth
+    /// The picks for a song, the one place the views get them: every scored song of the crate, scored when the song
+    /// is first asked for (none with no crate file open). The last few songs' lists are kept so going back and forth
     /// between songs does not score them again.
     func pairs(from id: String) -> [Pair] {
-        guard let crate else { return data.pairs[id] ?? [] }
+        guard let crate else { return [] }
         if let hit = recentPicks[id] { return hit }
         let t0 = Date()
         let list = crate.picks(from: id)

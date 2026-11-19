@@ -19,6 +19,11 @@ deck-app/*.xcarchive
 *.iso
 mixer/mixes/_work/
 deck-app/Deck/Resources/Deck.shazamcatalog
+# the party's data (tools/prep_data.py): private, never committed and never bundled (project.yml names each file the
+# app carries; nothing in Deck/Resources is among them)
+deck-app/Deck/Resources/deck_data.json
+deck-app/Deck/Resources/overview.json
+deck-app/Deck/Resources/mixmap.html
 # credentials
 .env
 *.p8

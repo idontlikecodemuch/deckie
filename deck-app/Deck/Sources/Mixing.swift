@@ -68,7 +68,7 @@ func joinInfo(_ a: Track, _ b: Track, _ p: Pair?, deckAPitch: Double) -> JoinInf
     let v = keyVerdict(ka, kb, p?.reasons ?? [], homeNote: p?.kh == true, notSure: a.keyNotSure == true || b.keyNotSure == true)
     let vk = v == "clash" ? 2 : (v.hasPrefix("pitch-shift") || v.contains("unsure") || v == Words.verdictHomeNote || v == Words.verdictKeyNotSure) ? 1 : 0
     let sB = bm ? k : ((a.bpm != nil && b.bpm != nil) ? a.bpm! / b.bpm! : 1)
-    // The keys as the songs show them (D36): a code, "Home note A", "not sure" or "?"; the bundled data's codes as before.
+    // The keys as the songs show them (D36): a code, "Home note A", "not sure" or "?".
     let keyText = p?.kh == true || a.keyShownIsWords || b.keyShownIsWords ? Words.keysArrow(a.keyShown, b.keyShown) : Words.keysArrow(ka, kb)
     return JoinInfo(beatMatch: bm, pitch: pitch, pitchText: pt, keyText: keyText, verdict: v, verdictKind: vk, scaleB: sB)
 }

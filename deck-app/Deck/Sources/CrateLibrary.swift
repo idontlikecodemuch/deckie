@@ -5,7 +5,7 @@ import DeckieCrate
 /// A crate file made by Deckie Desk, as the booth sees it: the tracks and their sources, the picks (scored here on the iPad with
 /// the shared scoring, one song at a time as it plays, so any DJ's crate works and the crate itself stays as Desk
 /// wrote it), the whole-song waves and the join lanes from the per-bar loudness, and where the recognition
-/// signatures are. The bundled deck_data.json is the other source of the same `DeckData`; a crate's `DeckData` has
+/// signatures are. The crate's `DeckData` has
 /// no pairs (`picks(from:)`).
 struct CrateLibrary {
     struct SignatureRef { let id: String; let title: String; let artist: String; let url: URL }
@@ -48,7 +48,7 @@ struct CrateLibrary {
             let deckName = (t.file.name as NSString).deletingPathExtension
             // The folder as the DJ's software shows it: the crate's own label, else the file's parent folder.
             let folder = t.ident.folder ?? ((t.file.rel ?? "") as NSString).deletingLastPathComponent.components(separatedBy: "/").last ?? ""
-            // One value per bar on the 0...63 scale, as the bundled overviews measure it: the bar's amplitude
+            // One value per bar on the 0...63 scale, as the whole-song waves measure it: the bar's amplitude
             // (10^(dB/20)) next to the song's loudest bar, so the loudest bar is 63 and a bar without a value is 0.
             let barVals: [Int]? = t.bars?[BarSeries.lufs].flatMap { lufs in
                 guard !lufs.isEmpty else { return nil }

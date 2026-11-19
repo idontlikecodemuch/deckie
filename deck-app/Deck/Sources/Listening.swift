@@ -8,7 +8,7 @@ import DeckieRecognition
 // The booth's two recognisers behind one small interface (D35). Each turns the sound it hears into readings; the
 // Recognizer (`take`) is the one place a reading becomes the playing song, the pitch shown and the set's log. Nothing
 // leaves the iPad with either: Deckie's matches against an index made from the crate file's fingerprints, Apple's
-// against a catalogue made from the crate file's signatures (or the bundled one), both on the iPad.
+// against a catalogue made from the crate file's signatures both on the iPad.
 
 /// Which recogniser names the playing song: Deckie's own, Apple's, or both at once (Deckie's on screen, the two
 /// compared in the set's log).
@@ -142,9 +142,16 @@ final class DeckieEar: Ear, @unchecked Sendable {
     private var waiting: [() -> Void] = []
 
     /// The setting the index is made with: `booth` (the default), or `boothSmall` when the launch argument
-    /// `-indexSmall YES` is given (for measuring).
-    static var pairing: PairingConfig { UserDefaults.standard.bool(forKey: "indexSmall") ? .boothSmall : .booth }
-    static var settingName: String { UserDefaults.standard.bool(forKey: "indexSmall") ? "boothSmall" : "booth" }
+    /// `-indexSmall YES` is given (for measuring; Debug builds only).
+    static var pairing: PairingConfig { small ? .boothSmall : .booth }
+    static var settingName: String { small ? "boothSmall" : "booth" }
+    private static var small: Bool {
+        #if DEBUG
+        UserDefaults.standard.bool(forKey: "indexSmall")
+        #else
+        false
+        #endif
+    }
 
     /// Where the index of the crate file kept at `package` lives: beside it, in the app's own storage.
     static func file(for package: URL) -> URL {
