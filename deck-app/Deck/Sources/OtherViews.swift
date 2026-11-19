@@ -1,5 +1,4 @@
 import SwiftUI
-import WebKit
 import DeckieCrate
 
 /// The Crate tab: the crate file's songs where they live. First each source (the CD, stick or card they were read
@@ -15,6 +14,7 @@ struct CrateTabView: View {
     @Binding var tab: Int
     @State private var shelf: String?
     @AppStorage("cdsDetails") private var details = false
+    @State private var showCredits = false
 
     /// One section of the tab: a source, or the folders of songs with no source.
     struct Shelf: Identifiable {
@@ -66,6 +66,10 @@ struct CrateTabView: View {
                         Button { sug.chooseCrateFile = true } label: {
                             Label(Words.openCrateFile, systemImage: "folder").font(Look.Crate.buttonFont).foregroundStyle(Theme.mut).frame(minHeight: Look.Crate.buttonMinHeight)
                         }
+                        Button { showCredits = true } label: {
+                            Image(systemName: "info.circle").font(Look.Credits.crateButtonFont).foregroundStyle(Theme.mut).frame(minWidth: Look.Crate.buttonMinHeight, minHeight: Look.Crate.buttonMinHeight)
+                        }
+                        .accessibilityLabel(Words.credits)
                     }
                     let pick = shelf ?? all.first?.id
                     let shown = landscape ? all : all.filter { $0.id == pick }
@@ -82,6 +86,7 @@ struct CrateTabView: View {
                 .padding(.horizontal, Look.Crate.sides).padding(.top, Look.Crate.top)
             }
         }
+        .sheet(isPresented: $showCredits) { CreditsView() }
     }
 
     /// A song's number in its folder: the player's (as read from the source), at the place of it in that folder (a
@@ -211,30 +216,6 @@ struct CrateTabView: View {
             .background(RoundedRectangle(cornerRadius: Look.Crate.rowRadius).fill(playing ? Theme.orange.opacity(Look.Crate.rowPlayingOpacity) : Look.Crate.rowFill))
         }
         .buttonStyle(.plain)
-    }
-}
-
-/// The bundled interactive mix map (self-contained HTML, offline).
-struct MixMapView: View {
-    var body: some View {
-        WebView().ignoresSafeArea(edges: .bottom).background(Theme.bg)
-    }
-    struct WebView: UIViewRepresentable {
-        func makeUIView(context: Context) -> WKWebView {
-            let cfg = WKWebViewConfiguration()
-            cfg.defaultWebpagePreferences.allowsContentJavaScript = true
-            let v = WKWebView(frame: .zero, configuration: cfg)
-            v.isOpaque = false
-            v.backgroundColor = Look.MixMap.background
-            if let url = Bundle.main.url(forResource: "mixmap", withExtension: "html") {
-                // the page has no charset declaration: load it as UTF-8 explicitly (file:// would guess Latin-1)
-                if let d = try? Data(contentsOf: url) {
-                    v.load(d, mimeType: "text/html", characterEncodingName: "utf-8", baseURL: url.deletingLastPathComponent())
-                }
-            }
-            return v
-        }
-        func updateUIView(_ v: WKWebView, context: Context) {}
     }
 }
 

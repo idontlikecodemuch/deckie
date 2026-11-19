@@ -50,11 +50,11 @@ import DeckieRecognition
             if source == .mic { startMic() }
         }
     }
-    /// Whether the open crate file (or the bundled data) carries each kind of fingerprint.
+    /// Whether the open crate file carries each kind of fingerprint.
     var hasDeckie: Bool { (Library.shared.crate?.deckieSongs ?? 0) > 0 }
     var hasApple: Bool { catalog != nil }
     /// The recogniser that will listen: the DJ's choice where the crate file allows it; Deckie's when it has only
-    /// Deckie's fingerprints; Apple's when it has only Apple's (a crate file made before D35) or for the bundled data;
+    /// Deckie's fingerprints; Apple's when it has only Apple's (a crate file made before D35);
     /// nil when it has neither.
     var hearing: Hearing? {
         switch (hasDeckie, hasApple) {
@@ -121,16 +121,16 @@ import DeckieRecognition
     init() { rebuildCatalog() }
 
     /// The recognition catalogues for the crate in use: Deckie's index from the crate file's fingerprints (made
-    /// ready off the main thread), and Apple's from its signatures (one plain signature per track, made on the Mac),
-    /// else, with no crate, the bundled catalog with its pitch variants.
+    /// ready off the main thread), and Apple's from its signatures (one plain signature per track, made on the Mac).
+    /// With no crate file open there is nothing to listen for (no catalogue ships inside the app).
     func rebuildCatalog() {
         let c = SHCustomCatalog()
         let sigs = Library.shared.crate?.signatures ?? []
         let deckieSongs = Library.shared.crate?.deckieSongs ?? 0
         deckie.prepare(Library.shared.takeFingerprints(), package: Library.shared.crate?.url) { [weak self] in self?.note($0) }
         if let crate = Library.shared.crate, sigs.isEmpty {
-            // No Apple signatures: Apple's has nothing to listen for (the bundled catalogue would name songs that are
-            // not in this crate). With no Deckie fingerprints either, songs are set by hand.
+            // No Apple signatures: Apple's has nothing to listen for. With no Deckie fingerprints either, songs are set
+            // by hand.
             catalog = nil
             note(deckieSongs > 0 ? "crate \(crate.name): Deckie's fingerprints for \(deckieSongs) songs, no Apple signatures"
                                  : "crate \(crate.name) has no fingerprints: songs are set by hand")
@@ -144,10 +144,7 @@ import DeckieRecognition
             }
             catalog = c
             note("catalog from the crate: \(n) of \(sigs.count) signatures; Deckie's fingerprints for \(deckieSongs) songs")
-        } else if let url = Bundle.main.url(forResource: "Deck", withExtension: "shazamcatalog") {
-            do { try c.add(from: url); catalog = c; note("catalog loaded (query \(c.minimumQuerySignatureDuration)-\(c.maximumQuerySignatureDuration) s)") }
-            catch { note("catalog error: \(error.localizedDescription)") }
-        } else { note("no crate and no bundled catalog") }
+        } else { catalog = nil; note("no crate file open: nothing to listen for") }
     }
 
     func note(_ s: String) {
@@ -284,7 +281,7 @@ import DeckieRecognition
         task = Task { [weak self] in
             let granted = await AVAudioApplication.requestRecordPermission()
             guard let self, !Task.isCancelled else { return }
-            if !granted { self.micDenied = true; self.status = "microphone access is off (Settings > Deck)"; self.note("mic denied"); return }
+            if !granted { self.micDenied = true; self.status = "microphone access is off (Settings > Deckie Booth)"; self.note("mic denied"); return }
             // own capture pipeline (instead of SHManagedSession) so the input level can be shown and checked
             let mic = self.mic
             self.audioClock = { mic.audioSeconds }
@@ -549,7 +546,12 @@ import DeckieRecognition
 
     /// For measuring (launch argument `-traceShown YES`): after each of Deckie's readings, one line on the console with
     /// the sound's time, what the reading said and what the screen shows. Not in the log the details sheet shows.
+    /// Debug builds only.
+    #if DEBUG
     static let traceShown = UserDefaults.standard.bool(forKey: "traceShown")
+    #else
+    static let traceShown = false
+    #endif
     private func trace(_ r: ListenReading) {
         let lib = Library.shared
         let line = String(format: "SHOWN heard %.1f reading %@ %@ conf %.1f agrees %@ raw %+.2f | screen %@ pitch %+.1f %@ notHeard %@ paused %@\n",

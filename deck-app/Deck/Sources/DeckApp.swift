@@ -13,14 +13,22 @@ struct DeckApp: App {
 
     var body: some Scene {
         WindowGroup {
-            TabView(selection: $tab) {
-                ListenView().tabItem { Label(Words.tabListen, systemImage: "waveform") }.tag(0)
-                CrateTabView(tab: $tab).tabItem { Label(CrateTabView.title, systemImage: "square.stack") }.tag(1)
-                MixMapView().tabItem { Label(Words.tabMixMap, systemImage: "point.3.connected.trianglepath.dotted") }.tag(2)
+            Group {
+                // No crate file open: the first-run screen; a crate file open: the tabs, as before.
+                switch BoothScreen.current {
+                case .firstRun(let demo):
+                    FirstRunView(demo: demo, openCrateFile: { choosing = true },
+                                 openDemo: { if let u = DemoCrate.url() { openCrate(u) } })
+                case .crate:
+                    TabView(selection: $tab) {
+                        ListenView().tabItem { Label(Words.tabListen, systemImage: "waveform") }.tag(0)
+                        CrateTabView(tab: $tab).tabItem { Label(CrateTabView.title, systemImage: "square.stack") }.tag(1)
+                    }
+                    .overlay(alignment: .topLeading) { MinimalToggle().padding(.leading, Look.App.minimalLeading).padding(.top, Look.App.minimalTop) }
+                }
             }
-            // The library is not observed: another crate file open redraws every tab from it.
+            // The library is not observed: another crate file open redraws every screen from it.
             .id(sug.crateVersion)
-            .overlay(alignment: .topLeading) { MinimalToggle().padding(.leading, Look.App.minimalLeading).padding(.top, Look.App.minimalTop) }
             .tint(Theme.orange)
             .environment(rec)
             .environment(sug)
@@ -36,13 +44,24 @@ struct DeckApp: App {
                         }
                     }
                 }
+                #if DEBUG
                 // test hook without the "Open in Deckie Booth?" prompt: simctl launch <dev> io.deckie.booth -deckURL 'deck://...'
-                if let u = UserDefaults.standard.string(forKey: "deckURL"), let url = URL(string: u) {
+                // (Debug builds only, like every deck:// hook)
+                if let u = UserDefaults.standard.string(forKey: "deckURL"), URL(string: u) != nil {
                     for part in u.components(separatedBy: " ; ") { if let x = URL(string: part) { handle(x) } }
-                    _ = url
-                } else if rec.source == .idle { rec.startMic() }
+                    return
+                }
+                #endif
+                // With no crate file open there is nothing to listen for, and the microphone is not asked for.
+                if rec.source == .idle && Library.shared.crate != nil { rec.startMic() }
             }
-            .onOpenURL { url in url.isFileURL ? openCrate(url) : handle(url) }
+            .onOpenURL { url in
+                // A crate file from Files, AirDrop or "Open in" (every build); the deck:// test hooks (Debug only).
+                if url.isFileURL { openCrate(url); return }
+                #if DEBUG
+                handle(url)
+                #endif
+            }
             .onChange(of: sug.tabRequest) { _, t in if let t { tab = t; sug.tabRequest = nil } }
             .onChange(of: sug.chooseCrateFile) { _, on in if on { choosing = true; sug.chooseCrateFile = false } }
             .fileImporter(isPresented: $choosing, allowedContentTypes: CrateFileType.importable) { r in
@@ -93,7 +112,8 @@ struct DeckApp: App {
         }
     }
 
-    /// Test hooks: deck://test?path=/abs/file.mp3&start=60&render=r%2B4&loop=1 · deck://mic · deck://stop ·
+    #if DEBUG
+    /// Test hooks (Debug builds only; a tester's build has none): deck://test?path=/abs/file.mp3&start=60&render=r%2B4&loop=1 · deck://mic · deck://stop ·
     /// deck://lib?cd1=1&cd2=0&all=0 · deck://lib?disc=<name>&on=0|1 · deck://tab?i=1 · deck://set?id=<track id> · deck://mode?m=simple|full · deck://all?on=1 · deck://shuffle (re-roll) ·
     /// deck://shuffle?amt=0.3 (set the Shuffle dial, 0...1, then re-roll) · deck://pin?i=0 ·
     /// deck://search?q=love (search More's titles and artists; empty q clears) ·
@@ -137,8 +157,8 @@ struct DeckApp: App {
             sug.reroll(rec)
         case "startpt": let n = Int(v("i") ?? "1") ?? 1; let want = v("id"); DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { if let id = want ?? sug.pinned ?? sug.options.first?.id { sug.startIdx[id] = n } }
         case "crate", "open":
-            // deck://crate?path=/abs/x.deckie (or an earlier x.deckiecrate): open that crate file (either form) as "Open in" would, instead
-            // of the bundled data or the crate file open now
+            // deck://crate?path=/abs/x.deckie (or an earlier x.deckiecrate): open that crate file (either form) as "Open in" would, in
+            // place of the crate file open now (or the first-run screen)
             guard let p = v("path") else { return }
             openCrate(URL(fileURLWithPath: p), listen: false)
         case "choose":
@@ -160,6 +180,7 @@ struct DeckApp: App {
         default: break
         }
     }
+    #endif
 }
 
 @MainActor @Observable final class SuggestState {

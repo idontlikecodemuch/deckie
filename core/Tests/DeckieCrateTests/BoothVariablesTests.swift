@@ -19,8 +19,8 @@ import Testing
         for _ in 0..<4 { u.deleteLastPathComponent() }   // Tests/DeckieCrateTests/<file> -> core -> repo
         return u
     }()
-    static let views = ["CrateLibrary", "DebugSheet", "DeckApp", "Listening", "ListenView", "Mixing", "Model", "OtherViews",
-                        "SuggestionsView"].map { "deck-app/Deck/Sources/\($0).swift" }   // SetRecorder writes files, not the screen
+    static let views = ["CrateLibrary", "CreditsView", "DebugSheet", "DeckApp", "FirstRun", "Listening", "ListenView", "Mixing",
+                        "Model", "OtherViews", "SuggestionsView"].map { "deck-app/Deck/Sources/\($0).swift" }   // SetRecorder writes files, not the screen
     static func lines(_ path: String) -> [(Int, String)] {
         let s = (try? String(contentsOf: repo.appendingPathComponent(path), encoding: .utf8)) ?? ""
         let text = s.replacingOccurrences(of: "\r\n", with: "\n")   // a Windows checkout's line ends

@@ -378,9 +378,77 @@ enum Look {
         static let rowFill = Color.white.opacity(0.03)
     }
 
-    /// The Mix map tab's page, behind its own drawing.
-    enum MixMap {
-        static let background = UIColor(red: 0.06, green: 0.04, blue: 0.09, alpha: 1)
+    /// new: the first-run screen, shown whenever no crate file is open. Placeholders until the design pass, in the
+    /// booth's own colours and type.
+    enum FirstRun {
+        static let background = Theme.backdrop
+        /// The page: its sides and top and bottom, the widest the text runs, the gap between the two columns in
+        /// landscape, and between the parts of a column.
+        static let sides: CGFloat = 40, ends: CGFloat = 36
+        static let columnMaxWidth: CGFloat = 460
+        static let portraitMaxWidth: CGFloat = 560
+        static let columnsGap: CGFloat = 56
+        static let partsGap: CGFloat = 28
+        /// The name, what the booth is waiting for, and the sentence on what it does.
+        static let nameFont = Font.system(size: 40, weight: .heavy)
+        static let nameColor = Theme.tx
+        static let waitingFont = Font.system(size: 15, weight: .semibold)
+        static let waitingColor = Theme.acc
+        static let headGap: CGFloat = 6
+        static let whatFont = Font.system(size: 21, weight: .regular)
+        static let whatColor = Theme.mut
+        static let whatLineSpacing: CGFloat = 4
+        /// The steps' card.
+        static let cardFill = Theme.card
+        static let cardLine = Theme.line
+        static let cardLineWidth: CGFloat = 1
+        static let cardRadius: CGFloat = 18
+        static let cardPadding: CGFloat = 24
+        static let stepsGap: CGFloat = 22
+        static let stepGap: CGFloat = 16
+        static let stepTextGap: CGFloat = 4
+        static let numberSize: CGFloat = 32
+        static let numberFont = Font.system(size: 16, weight: .bold, design: .rounded)
+        static let numberFill = Theme.accDim
+        static let numberColor = Theme.chipTx
+        static let stepTitleFont = Font.system(size: 18, weight: .semibold)
+        static let stepTitleColor = Theme.tx
+        static let stepNoteFont = Font.system(size: 15)
+        static let stepNoteColor = Theme.mut
+        static let stepNoteLineSpacing: CGFloat = 2
+        /// The main button (the app's accent, dark words on it), the demo's quieter one, and the link.
+        static let buttonFont = Font.system(size: 18, weight: .semibold)
+        static let buttonFill = Theme.orange
+        static let buttonText = Theme.bg
+        static let buttonHeight: CGFloat = 52
+        static let buttonSides: CGFloat = 28
+        static let buttonIconGap: CGFloat = 10
+        static let demoLine = Theme.line
+        static let demoText = Theme.tx
+        static let demoLineWidth: CGFloat = 1
+        static let buttonsGap: CGFloat = 14
+        static let linkFont = Font.system(size: 17, weight: .semibold)
+        static let linkColor = Theme.acc
+        static let linkMinHeight: CGFloat = 44
+        /// The foot: the privacy line and the Credits button.
+        static let footFont = Font.system(size: 13)
+        static let footColor = Theme.dim
+        static let footGap: CGFloat = 4
+        static let creditsFont = Font.system(size: 13, weight: .semibold)
+        static let creditsColor = Theme.mut
+        static let creditsMinHeight: CGFloat = 44
+    }
+
+    /// new: the Credits sheet. Placeholders until the design pass.
+    enum Credits {
+        static let makerFont = Font.system(size: 22, weight: .heavy)
+        static let versionFont = Font.system(size: 14)
+        static let headGap: CGFloat = 4
+        static let entryGap: CGFloat = 4
+        static let entryNameFont = Font.system(size: 16, weight: .semibold)
+        static let entryLineFont = Font.system(size: 13)
+        static let licenceFont = Font.system(size: 11, design: .monospaced)
+        static let crateButtonFont = Font.system(size: 17)
     }
 
     /// The test and details sheet.

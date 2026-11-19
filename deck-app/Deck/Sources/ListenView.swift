@@ -32,7 +32,9 @@ struct ListenView: View {
         .ignoresSafeArea(.keyboard)      // the search keyboard covers the screen's foot; nothing reflows
         .onChange(of: rec.currentId) { if sug.rolledFor != rec.currentId { sug.reroll(rec) } }   // a hook may have rolled already
         .onAppear { if sug.rolledFor != rec.currentId { sug.reroll(rec) } }
-        .sheet(isPresented: $showDebug) { DebugSheet() }
+        #if DEBUG
+        .sheet(isPresented: $showDebug) { DebugSheet() }   // the test and details sheet: Debug builds only
+        #endif
     }
 }
 
@@ -165,10 +167,13 @@ struct PlayingPanel: View {
                 }
                 .accessibilityLabel(rec.source == .mic ? Words.pauseListening : Words.listen)
             }
+            #if DEBUG
+            // The test and details sheet: Debug builds only (a tester's build has no test doors).
             Button { showDebug = true } label: {
                 Image(systemName: "ellipsis").font(Look.Listen.cornerIconFont).foregroundStyle(Theme.dim).frame(width: Look.Listen.cornerButton, height: Look.Listen.cornerButton)
             }
             .accessibilityLabel(Words.testWithFile)
+            #endif
         }
     }
 

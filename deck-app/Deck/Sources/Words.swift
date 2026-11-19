@@ -12,7 +12,6 @@ enum Words {
     static let tabListen = "Listen"
     /// The tab bar, and the Crate tab's heading. Provisional: the owner has been asked (D26).
     static let tabCrate = "Crate"
-    static let tabMixMap = "Mix map"
     /// The button that closes the "could not open" alert.
     static let ok = "OK"
     /// The switch in the app's upper-left corner (every tab): its label, its spoken name and value.
@@ -361,6 +360,64 @@ enum Words {
             + (disagreed == 0 ? "." : atChange == disagreed ? ", each as one song gave way to the next." : ", \(atChange) of them as one song gave way to the next.")
     }
     static let compareNotOn = "Choose both above to compare them on the next set."
+
+    // MARK: new: the first-run screen (FirstRun.swift), shown whenever no crate file is open
+
+    /// Lines are set by phrase (voice.md, "Line breaks"): each is one line of its own, and its last two words never
+    /// part, so no line ends with one word alone at any width the screen gives it.
+    static func phrases(_ lines: String...) -> String { lines.map(keepLastTwo).joined(separator: "\n") }
+    /// The last two words of a line joined by a space that does not break.
+    static func keepLastTwo(_ line: String) -> String {
+        guard let r = line.range(of: " ", options: .backwards) else { return line }
+        return line.replacingCharacters(in: r, with: "\u{00A0}")
+    }
+
+    /// The name at the top.
+    static let firstRunName = "Deckie Booth"
+    /// What the booth is waiting for.
+    static let firstRunWaiting = keepLastTwo("No crate file open yet")
+    /// What the booth does, in one sentence.
+    static let firstRunWhat = phrases("Booth listens to the room,", "names the song that's playing,",
+                                      "and shows what could come next", "and how to mix it in.")
+    /// The three steps: a heading each, and a note under it.
+    struct Step: Hashable { let title: String; let note: String }
+    static let firstRunSteps: [Step] = [
+        Step(title: keepLastTwo("Get Deckie Desk on your computer"),
+             note: phrases("For Mac or Windows PC,", "from deckie.io.")),
+        Step(title: keepLastTwo("Let it read your music"),
+             note: phrases("Desk writes a crate file:", "what it learns about your songs,", "never the songs themselves.")),
+        Step(title: keepLastTwo("Send the crate file to this iPad"),
+             note: phrases("By AirDrop, or save it to Files", "and open it here.")),
+    ]
+    /// A step's number, spoken with its heading.
+    static func stepNumber(_ n: Int) -> String { "\(n)" }
+    static func stepSpoken(_ n: Int, _ title: String, _ note: String) -> String { "Step \(n). \(title). \(note)" }
+    /// The main button: the system's chooser for a crate file.
+    static let openACrateFile = "Open a crate file"
+    /// Only when a demo crate file comes with the app (none does yet).
+    static let tryTheDemo = "Try the demo"
+    /// The link to the site, and where it goes.
+    static let siteLink = "deckie.io"
+    static let siteSpoken = "Open deckie.io in Safari"
+    static let siteURL = URL(string: "https://deckie.io")!
+    /// The privacy line at the foot.
+    static let firstRunPrivacy = phrases("Your music stays on your devices.", "No account. No upload.")
+
+    // MARK: new: Credits (CreditsView.swift; the first-run screen's foot and the Crate tab's info button)
+
+    static let credits = "Credits"
+    static let creditsMaker = "Deckie by App Hold Media"
+    static func creditsVersion(_ version: String, _ build: String) -> String { "Deckie Booth \(version) (\(build))" }
+    static let creditsOpenSourceSection = "Open-source software"
+    /// When Booth carries no one else's code (today): said plainly, and nothing listed.
+    static let creditsNoneYet = phrases("Deckie Booth is Deckie's own code,", "on the frameworks that come with iPadOS.",
+                                        "It carries no open-source parts from others yet,", "so there is nothing to list here.")
+    static let creditsPrivacySection = "Privacy"
+    static let creditsPrivacy = phrases("Booth hears the room on this iPad.", "The sound never leaves it,",
+                                        "and there is no account.")
+    /// An entry's version and licence: "1.2 · MIT".
+    static func creditsLine(_ version: String, _ licence: String) -> String { version.isEmpty ? licence : version + " · " + licence }
+    static let creditsLicenceText = "Licence"
 
     // MARK: new (D35, note of Nov 14): letting go. A placeholder pending the copy pass.
 
