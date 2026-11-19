@@ -71,7 +71,7 @@ public struct PCBuild: Sendable {
         public var folder: URL
         /// The crate's name: the folder's.
         public var name: String
-        /// The crate file, single-file form: next to the music folder, `<name>.deckiecrate`.
+        /// The crate file, single-file form: next to the music folder, `<name>.deckie`.
         public var crateFile: URL
         /// The log, beside the crate file: `<name> Deckie log.txt`.
         public var logFile: URL
@@ -80,7 +80,26 @@ public struct PCBuild: Sendable {
         /// True when the crate file could not go next to the music folder and went to `crateFile`'s folder instead.
         public var elsewhere: Bool
 
-        var package: URL { work.appendingPathComponent(name + "." + CrateFormat.packageExtension) }
+        /// The crate as a package in the program's storage. Storage made before the extension changed holds it as
+        /// `<name>.deckiecrate`; it is used where it is, so the crate keeps its id.
+        var package: URL {
+            for ext in CrateFormat.earlierExtensions {
+                let earlier = work.appendingPathComponent(name + "." + ext)
+                if FileManager.default.fileExists(atPath: earlier.appendingPathComponent(CrateFormat.manifestFile).path) {
+                    return earlier
+                }
+            }
+            return work.appendingPathComponent(name + "." + CrateFormat.packageExtension)
+        }
+
+        /// Crate files an earlier version wrote next to the music folder under an earlier extension
+        /// (`<name>.deckiecrate`). One is only read, when the program's storage is gone, so the crate keeps its id
+        /// and name; it is never changed, renamed or removed.
+        public var earlierCrateFiles: [URL] {
+            CrateFormat.earlierExtensions.map {
+                crateFile.deletingPathExtension().appendingPathExtension($0)
+            }
+        }
     }
 
     /// The jobs to run at once on this machine: research P's rule (docs/research/p-machine-estimates.md, summary 5),
@@ -217,6 +236,14 @@ public struct PCBuild: Sendable {
         // storage is gone but the crate file is there (another PC, a cleared profile), it is unpacked first.
         let hasPackage = fm.fileExists(atPath: plan.package.appendingPathComponent(CrateFormat.manifestFile).path)
         if !hasPackage, exists { try CrateArchive.unpack(plan.crateFile, to: plan.package) }
+        // No crate file under the current name, but one an earlier version wrote under an earlier extension: read
+        // from that, which stays as it is.
+        if !hasPackage, !exists, let earlier = plan.earlierCrateFiles.first(where: { u in
+            var f: ObjCBool = false
+            return fm.fileExists(atPath: u.path, isDirectory: &f) && !f.boolValue && (try? CrateReader.read(from: u)) != nil
+        }) {
+            try CrateArchive.unpack(earlier, to: plan.package)
+        }
         if hasPackage, (try? CrateReader.read(from: plan.package)) == nil { try? fm.removeItem(at: plan.package) }
 
         let options = BuildOptions(folder: plan.folder, output: plan.package, jobs: jobs, name: plan.name,

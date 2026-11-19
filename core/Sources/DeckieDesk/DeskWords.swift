@@ -466,7 +466,7 @@ public enum DeskWords {
         "couldntDelete": "Couldn't delete the crate. {detail}",
         "nothingToSendYet": "This crate has no songs yet, so there is no crate file to send. Add music first.",
         "exportMessage": "Where the crate file goes. Desk keeps its own; this is a copy.",
-        "importMessage": "Choose a crate file (a .deckiecrate package). Desk keeps a copy; the file you choose is not changed.",
+        "importMessage": "Choose a crate file (a .deckie file; one made earlier may end in .deckiecrate). Desk keeps a copy; the file you choose is not changed.",
         // new (D32): the engine program could not be started or stopped answering.
         "engineGone": "Desk's engine stopped. Close Desk and open it again; songs already read are kept.",
         // new (D32): this computer has no beat tracker's runtime or model, so music cannot be read.

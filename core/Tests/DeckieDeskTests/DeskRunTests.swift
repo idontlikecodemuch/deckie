@@ -99,7 +99,7 @@ struct DeskRunTests {
         #expect(four.crate.tracks[0].fingerprint == one.crate.tracks.first { $0.id == idY }?.fingerprint)
         #expect(four.crate.tracks[0].fingerprint != nil)
         // A crate file sent out carries the fingerprints.
-        let sent = root.appendingPathComponent("Other.deckiecrate")
+        let sent = root.appendingPathComponent("Other.deckie")
         try home.shelf.exportCopy(other.id, to: sent)
         #expect(try CrateReader.read(from: sent).tracks.map(\.fingerprint) == four.crate.tracks.map(\.fingerprint))
         #expect(home.shelf.mostRecent?.id == other.id)

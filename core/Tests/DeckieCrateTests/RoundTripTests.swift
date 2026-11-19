@@ -46,7 +46,7 @@ import DeckieCrate
 
     @Test func onDiskRoundTripLeavesOtherFilesAlone() throws {
         let crate = sampleCrate()
-        let dir = try temporaryFolder().appendingPathComponent("Sample.deckiecrate")
+        let dir = try temporaryFolder().appendingPathComponent("Sample.deckie")
         defer { try? FileManager.default.removeItem(at: dir.deletingLastPathComponent()) }
 
         // A listed signature must be in the package before the crate can be written.

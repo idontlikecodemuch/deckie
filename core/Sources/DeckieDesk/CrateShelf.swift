@@ -66,11 +66,24 @@ public struct CrateShelf: Sendable {
     public init(home: DeskHome) { self.home = home }
 
     public static let infoFile = "crate.json"
-    public static let packageName = "crate.deckiecrate"
+    /// The crate file's name in a crate's folder (`crate.deckie`).
+    public static let packageName = "crate." + CrateFormat.packageExtension
+    /// The names it had in crates made by earlier versions (`crate.deckiecrate`). Such a crate keeps its crate file
+    /// where it is: it is read and written there, never moved.
+    public static let earlierPackageNames = CrateFormat.earlierExtensions.map { "crate." + $0 }
 
     public func folder(_ id: String) -> URL { home.cratesFolder.appendingPathComponent(id, isDirectory: true) }
-    /// The crate file, kept in the crate's folder; it exists once music has been added.
-    public func package(_ id: String) -> URL { folder(id).appendingPathComponent(Self.packageName, isDirectory: true) }
+    /// The crate file, kept in the crate's folder; it exists once music has been added. A crate made by an earlier
+    /// version keeps its crate file under the earlier name (`crate.deckiecrate`); every other crate's is
+    /// `crate.deckie`.
+    public func package(_ id: String) -> URL {
+        let f = folder(id)
+        for name in Self.earlierPackageNames {
+            let earlier = f.appendingPathComponent(name, isDirectory: true)
+            if FileManager.default.fileExists(atPath: earlier.path) { return earlier }
+        }
+        return f.appendingPathComponent(Self.packageName, isDirectory: true)
+    }
     public func file(_ name: String, of id: String) -> URL { folder(id).appendingPathComponent(name) }
 
     /// Every crate, the one opened most recently first.
@@ -193,7 +206,7 @@ public struct CrateShelf: Sendable {
         }
     }
 
-    /// The crate file copied to the outbox under the crate's name (`Friday night.deckiecrate`), ready for the share
+    /// The crate file copied to the outbox under the crate's name (`Friday night.deckie`), ready for the share
     /// sheet; the outbox holds only the last one.
     public func outboxCopy(_ id: String) throws -> URL {
         guard let i = info(id) else { throw DeskError(DeskWords.text("error.noCrate", ["id": id])) }

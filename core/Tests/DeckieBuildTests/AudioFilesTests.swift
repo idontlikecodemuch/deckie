@@ -26,7 +26,8 @@ import Testing
         }
         // hidden folders, crate packages and work folders stay out, with everything below them
         try touch(".git/objects/x.mp3")
-        try touch("Out.deckiecrate/signatures/a.mp3")
+        try touch("Out.deckie/signatures/a.mp3")
+        try touch("Earlier.deckiecrate/signatures/a.mp3")
         try touch("Out.deckiebuild/records/b.mp3")
         try touch("Album/.Trash/c.mp3")
 

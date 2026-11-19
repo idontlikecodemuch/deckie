@@ -278,7 +278,7 @@ enum Words {
             return "This crate file was made by a newer Deckie. Update the booth to open it."
         }
         if said.contains("is not a crate file") || said.hasPrefix("manifest.json: is missing") {
-            return "This is not a crate file. A crate file is the .deckiecrate that Deckie makes."
+            return "This is not a crate file. A crate file is the .deckie file that Deckie makes."
         }
         if said.contains("is not there") || said.contains("could not be read") || error is CocoaError {
             return "This crate file could not be read. If it is in iCloud Drive, check that the iPad is online, then try again."
@@ -306,7 +306,7 @@ enum Words {
     static let chooseAudioFile = "Choose an audio file…"
     static let setRecording = "Set recording"
     static let recordWhileListening = "Record while listening"
-    static let setFilesWhere = "Files: Files app > On My iPad > Deck > Sets (or Finder > iPad > Files)."
+    static let setFilesWhere = "Files: Files app > On My iPad > Deckie Booth > Sets (or Finder > iPad > Files)."
     static let status = "Status"
     static let matches = "Matches"
     static let lastLatency = "Last match latency"

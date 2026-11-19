@@ -102,11 +102,13 @@ import DeckieTestSupport
         let fm = FileManager.default
         try fm.createDirectory(at: root.appendingPathComponent("Music/House/.hidden"), withIntermediateDirectories: true)
         try fm.createDirectory(at: root.appendingPathComponent("Music/Old.deckiecrate"), withIntermediateDirectories: true)
+        try fm.createDirectory(at: root.appendingPathComponent("Music/New.deckie"), withIntermediateDirectories: true)
         for i in 1...60 { try Data(count: 100).write(to: root.appendingPathComponent("Music/House/\(i).mp3")) }
         try Data(count: 100).write(to: root.appendingPathComponent("Music/cover.jpg"))
         try Data(count: 100).write(to: root.appendingPathComponent("Music/House/.hidden/x.mp3"))
         try Data(count: 100).write(to: root.appendingPathComponent("Music/.y.flac"))
         try Data(count: 100).write(to: root.appendingPathComponent("Music/Old.deckiecrate/z.wav"))
+        try Data(count: 100).write(to: root.appendingPathComponent("Music/New.deckie/z.wav"))
         try Data(count: 100).write(to: root.appendingPathComponent("Music/Song.FLAC"))
         var seen: [Int] = []
         let c = DeskAddMusic.count(root.appendingPathComponent("Music")) { seen.append($0) }

@@ -123,7 +123,7 @@ import DeckieCrate
         let out = try scratch("session-export-out")
         try s.rename(info.id, to: "Fri: late/early")
         let path = try s.export(into: out)
-        #expect(path.lastPathComponent == "Fri- late-early.deckiecrate")
+        #expect(path.lastPathComponent == "Fri- late-early.deckie")
         let c = try CrateReader.read(from: path)
         #expect(c.manifest.name == "Fri: late/early" && c.tracks.count == 2)
         // One file on Windows and Linux, the package on the Mac.

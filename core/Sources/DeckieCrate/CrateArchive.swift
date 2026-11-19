@@ -2,7 +2,7 @@ import Foundation
 
 /// A crate file as one file (docs/architecture/crate-format.md, "The single-file form").
 ///
-/// On a Mac a `.deckiecrate` is a package: a folder that Finder, Files and AirDrop show and move as one document. On
+/// On a Mac a `.deckie` (earlier `.deckiecrate`) is a package: a folder that Finder, Files and AirDrop show and move as one document. On
 /// Windows it is just a folder, awkward to send to an iPad. The single-file form is the same files, with the same
 /// names and the same bytes, in one archive: a plain zip in which nothing is compressed ("stored"), so it changes
 /// nothing inside, any zip tool can open it, and it is written and read by the few lines below with no library, the

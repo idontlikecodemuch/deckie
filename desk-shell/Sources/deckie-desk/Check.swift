@@ -82,7 +82,8 @@ enum Check {
                     say("FAILED: a request was refused: \(m["error"] ?? "?")")
                     end(3)
                 }
-                guard let path = m["path"] as? String, path.hasSuffix(".deckiecrate") else { return }
+                // The crate file is written as `<name>.deckie` (CrateFormat.packageExtension in the core).
+                guard let path = m["path"] as? String, path.hasSuffix(".deckie") else { return }
                 var isFolder: ObjCBool = false
                 let there = FileManager.default.fileExists(atPath: path, isDirectory: &isFolder)
                 let size = ((try? FileManager.default.attributesOfItem(atPath: path))?[.size] as? NSNumber)?.intValue ?? -1

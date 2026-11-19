@@ -119,18 +119,18 @@ jobs:
         run: swift run deckie-e2e make "${{ runner.temp }}\e2e\Music" --mp3 "${{ runner.temp }}\e2e-mp3\test_track.mp3"
       - name: "End to end: build the crate file"
         working-directory: core
-        run: swift run deckie-build "${{ runner.temp }}\e2e\Music" --out "${{ runner.temp }}\e2e\E2E.deckiecrate" --jobs 2
+        run: swift run deckie-build "${{ runner.temp }}\e2e\Music" --out "${{ runner.temp }}\e2e\E2E.deckie" --jobs 2
       - name: "End to end: validate it, as a folder and as one file"
         working-directory: core
         run: |
-          swift run deckie-e2e check "${{ runner.temp }}\e2e\E2E.deckiecrate"
-          swift run deckie-e2e pack "${{ runner.temp }}\e2e\E2E.deckiecrate" "${{ runner.temp }}\e2e\e2e-windows.deckiecrate"
-          swift run deckie-e2e check "${{ runner.temp }}\e2e\e2e-windows.deckiecrate"
+          swift run deckie-e2e check "${{ runner.temp }}\e2e\E2E.deckie"
+          swift run deckie-e2e pack "${{ runner.temp }}\e2e\E2E.deckie" "${{ runner.temp }}\e2e\e2e-windows.deckie"
+          swift run deckie-e2e check "${{ runner.temp }}\e2e\e2e-windows.deckie"
       - name: "End to end: a second run reads nothing again"
         working-directory: core
         shell: bash
         run: |
-          swift run deckie-build "$RUNNER_TEMP/e2e/Music" --out "$RUNNER_TEMP/e2e/E2E.deckiecrate" --jobs 2 | tee second.txt
+          swift run deckie-build "$RUNNER_TEMP/e2e/Music" --out "$RUNNER_TEMP/e2e/E2E.deckie" --jobs 2 | tee second.txt
           grep -q "5 unchanged since the last run; nothing to analyse" second.txt
           rm second.txt
       # AAC and Apple Lossless (.m4a), read on Windows only, through Windows' own decoder: the test track as both, and
@@ -141,13 +141,13 @@ jobs:
         working-directory: core
         run: |
           swift run deckie-e2e m4a-folder "${{ runner.temp }}\m4a\Music" --from "${{ runner.temp }}\e2e-mp3"
-          swift run deckie-build "${{ runner.temp }}\m4a\Music" --out "${{ runner.temp }}\m4a\M4A.deckiecrate" --jobs 2
-          swift run deckie-e2e check-m4a "${{ runner.temp }}\m4a\M4A.deckiecrate"
+          swift run deckie-build "${{ runner.temp }}\m4a\Music" --out "${{ runner.temp }}\m4a\M4A.deckie" --jobs 2
+          swift run deckie-e2e check-m4a "${{ runner.temp }}\m4a\M4A.deckie"
       - name: Keep the crate file for the comparison
         uses: actions/upload-artifact@v4
         with:
           name: e2e-crate-windows
-          path: ${{ runner.temp }}\e2e\e2e-windows.deckiecrate
+          path: ${{ runner.temp }}\e2e\e2e-windows.deckie
           retention-days: 30
           compression-level: 0
           if-no-files-found: error
@@ -194,14 +194,14 @@ jobs:
         working-directory: core
         run: |
           swift run deckie-e2e make /tmp/e2e/Music --mp3 /tmp/e2e-mp3/test_track.mp3
-          swift run deckie-build /tmp/e2e/Music --out /tmp/e2e/E2E.deckiecrate --jobs 2
-          swift run deckie-e2e check /tmp/e2e/E2E.deckiecrate
-          swift run deckie-e2e pack /tmp/e2e/E2E.deckiecrate /tmp/e2e/e2e-linux.deckiecrate
+          swift run deckie-build /tmp/e2e/Music --out /tmp/e2e/E2E.deckie --jobs 2
+          swift run deckie-e2e check /tmp/e2e/E2E.deckie
+          swift run deckie-e2e pack /tmp/e2e/E2E.deckie /tmp/e2e/e2e-linux.deckie
       - name: Keep the crate file for the comparison
         uses: actions/upload-artifact@v4
         with:
           name: e2e-crate-linux
-          path: /tmp/e2e/e2e-linux.deckiecrate
+          path: /tmp/e2e/e2e-linux.deckie
           retention-days: 30
           compression-level: 0
           if-no-files-found: error
@@ -220,5 +220,5 @@ jobs:
       - name: Compare the Windows crate file with the Linux one
         run: |
           echo "## The crate file built on Windows against the one built on Linux" >> "$GITHUB_STEP_SUMMARY"
-          python3 core/Tools/compare_crates.py crates/e2e-crate-linux/e2e-linux.deckiecrate \
-              crates/e2e-crate-windows/e2e-windows.deckiecrate --summary "$GITHUB_STEP_SUMMARY"
+          python3 core/Tools/compare_crates.py crates/e2e-crate-linux/e2e-linux.deckie \
+              crates/e2e-crate-windows/e2e-windows.deckie --summary "$GITHUB_STEP_SUMMARY"

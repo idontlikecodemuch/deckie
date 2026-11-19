@@ -2,7 +2,7 @@
 // Stage 1 benchmark harness (docs/architecture/analysis-port-plan.md). Launch arguments:
 //   -in <file> -out <json>                    one file
 //   -manifest <json> -outdir <dir> [-limit n] [-force]   batch: [{"id":..., "path":...}, ...] -> <dir>/<id>.mu.json + run.json
-// In the simulator, host paths are readable directly. Run with: xcrun simctl launch --console <udid> io.christophershannon.mubench <args>
+// In the simulator, host paths are readable directly. Run with: xcrun simctl launch --console <udid> io.deckie.mubench <args>
 import SwiftUI
 import AVFoundation
 import MusicUnderstanding

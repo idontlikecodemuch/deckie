@@ -45,7 +45,7 @@ public enum AudioFiles {
 
     /// The audio files below `folder`, sorted by path. Hidden files and folders (a name starting with a dot, and on
     /// Windows also anything Windows marks hidden) are left
-    /// out, and so are crate packages and builder work folders (`.deckiecrate`, `.deckiebuild`), so an output inside
+    /// out, and so are crate packages and builder work folders (`.deckie`, the earlier `.deckiecrate`, `.deckiebuild`), so an output inside
     /// the folder is never read as music. A link to a file counts as the file.
     public static func find(in folder: URL) throws -> [SourceFile] { try find(in: folder, skippingFolderPrefixes: []).files }
 
@@ -89,7 +89,7 @@ public enum AudioFiles {
             let isFolder = type == .typeDirectory
             if name.hasPrefix(".") || hiddenByWindows(url) { return false }
             let ext = CratePath.fileExtension(of: name).lowercased()
-            if ext == CrateFormat.packageExtension || ext == Builder.workExtension { return false }
+            if CrateFormat.isCrateExtension(ext) || ext == Builder.workExtension { return false }
             if isFolder { return !skipFolder(rel, name) }
             guard extensions.contains(ext) else { return false }
             var attrs: [FileAttributeKey: Any]
