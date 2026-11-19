@@ -13,6 +13,7 @@ and D23 in `docs/product/00-decisions.md`.
 | Home page | https://deckie.io/ | `index.html`, written from the copy document `home-copy.md` |
 | Dictionary | https://deckie.io/dictionary/ | `dictionary/build.py`, from `docs/vocabulary/terms.json` |
 | Film | The 76 second explainer in the home page's hero | `film/` (see `film/README.md`) |
+| Demo | https://deckie.io/demo/: plays the demo crate's songs out loud, for Deckie Booth's "Try the demo" | `demo/` (see `demo/CREDITS.md`) |
 
 ## What is here
 
@@ -39,6 +40,11 @@ and D23 in `docs/product/00-decisions.md`.
   `404.html`.
 - `.htaccess`: the 404 page, www to the bare address, http to https, file types and cache lifetimes.
 - `film/`: the film's source, shot list, sound and capture scripts.
+- `demo/`: the demo page (`index.html`, `demo.css`, `demo.js`: a player that plays the songs one after another, with
+  scripts off a list of links), the songs as 128 kbps MP3s in `audio/` (about 16.7 MB in all, loaded one song at a
+  time), and `CREDITS.md`, each song's artist, source, licence (all CC0 1.0), date fetched and SHA-256. Deckie Booth
+  carries the same songs' facts and fingerprints as its demo crate file and lists the same credits. Not in the
+  sitemap and marked noindex: it is a tool for testers, reached from Booth.
 
 ## Changing something
 
@@ -91,8 +97,9 @@ screenshots and contact sheets, and the rendered PNGs in `share/`. All are remad
 
 ## Rules that apply to the site
 
-- It names no person, with one exception: the credit, "Made by Christopher Shannon and App Hold Media".
-- No real song, artist or playlist appears. Screens show the demo crate file.
+- It names no person, with two exceptions: the home page's maker credit, and the demo page's song artists.
+- No real song, artist or playlist appears, with one exception: the demo page plays public-domain (CC0) songs and
+  credits their artists (`demo/CREDITS.md`). Screens show the demo crate file.
 - The film's music was made for the film. No DJ's music is in any public file.
 - Product copy does not say "AI". See `docs/product/voice.md`.
 - Line breaks in headlines and captions are set by phrase: no line of one word, and a new sentence never leaves its
