@@ -37,8 +37,8 @@ import DeckieCrate
         #expect(DeskWords.text("runReading", ["read": "Stick 1", "crate": "Stick 10"]) == "Adding Stick 1 to Stick 10")
         #expect(DeskWords.count("stoppedTitle", 2, ["read": "Stick 3", "crate": "Friday"]) == "Stopped: 2 songs from Stick 3 are in Friday")
         // Every word that names both has its once-only form, and no form names the crate twice or says "track".
-        for key in ["finishedTitle", "runReading", "removeTitle"] { #expect(DeskWords.table[key + ".sameName"] != nil, "\(key)") }
-        for (key, words) in DeskWords.table where key.contains(".sameName") {
+        for key in ["finishedTitle", "runReading", "removeTitle"] { #expect(DeskWords.table[key + ".same"] != nil, "\(key)") }
+        for (key, words) in DeskWords.table where key.contains(".same") {
             #expect(!words.contains("{crate}") && !words.lowercased().contains("track"), "\(key)")
         }
         #expect(!DeskWords.sameName(["read": "", "crate": ""]) && !DeskWords.sameName(["crate": "Friday"]))
