@@ -50,6 +50,9 @@ final class Window: @unchecked Sendable {
     /// Windows: whether the window carries Desk's own icon (the program was built with it).
     var hasIcon: Bool { deskshell_window_has_icon(handle) != 0 }
 
+    /// Runs `js` at the start of every page, before the page's own scripts. Before `load`.
+    func addScript(_ js: String) { deskshell_init_script(handle, js) }
+
     func load(_ url: URL) { deskshell_load(handle, url.absoluteString) }
     func setHTML(_ html: String) { deskshell_set_html(handle, html) }
 

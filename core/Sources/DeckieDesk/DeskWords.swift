@@ -106,12 +106,16 @@ public enum DeskWords {
         "stoppingRun": "Stopping once the songs being read are done…",
         "stoppedTitle.one": "Stopped: 1 song from {read} is in {crate}",
         "stoppedTitle.other": "Stopped: {n} songs from {read} are in {crate}",
+        // The same, when the crate has the name of what was added: the name said once (see `sameName`).
+        "stoppedTitle.same.one": "Stopped: 1 song from {read} is in the crate",
+        "stoppedTitle.same.other": "Stopped: {n} songs from {read} are in the crate",
         "stoppedBody": "The rest isn't read yet. Carry on whenever you like: the songs already read are not read again.",
         "takeBackOut": "Take this back out",
 
         // while it works
         "runTitle": "Reading your crate",
         "runReading": "Adding {read} to {crate}",
+        "runReading.same": "Adding the songs in {read}",
         "songsOf.one": "{done} of {total} song",
         "songsOf.other": "{done} of {total} songs",
         "timeLeftUnderMinute": "Less than a minute left",
@@ -128,6 +132,7 @@ public enum DeskWords {
 
         // the finished screen
         "finishedTitle": "{read} is in {crate}",
+        "finishedTitle.same": "{read} is in the crate",
         "wentIn.one": "1 song went in.",
         "wentIn.other": "{n} songs went in.",
         "everySongWentIn": "Every song went in.",
@@ -424,6 +429,7 @@ public enum DeskWords {
         "renameFolderTitle": "Rename the folder {folder}",
         "removeFromCrate": "Remove from crate…",
         "removeTitle": "Remove {source} from {crate}?",
+        "removeTitle.same": "Remove {source} from the crate?",
         "removeBody.zero": "No songs go: every song on it is somewhere else in the crate too.",
         "removeBody.one": "1 song goes from the crate. Songs that are somewhere else too stay.",
         "removeBody.other": "{n} songs go from the crate. Songs that are somewhere else too stay.",
@@ -913,7 +919,21 @@ public enum DeskWords {
     /// The words named `key` with `{name}` filled from `values`; the key itself when there are none, so a missing word
     /// shows as its name rather than as nothing.
     public static func text(_ key: String, _ values: [String: String] = [:]) -> String {
-        fill(table[key] ?? key, withComputer(values))
+        let same = key + sameNameSuffix
+        return fill(table[sameName(values) && table[same] != nil ? same : key] ?? key, withComputer(values))
+    }
+
+    /// Words that name the crate and what was added to it (`{crate}` with `{read}` or `{source}`) say the name once
+    /// when the two are the same name, as when a crate is named after its first folder: "F1 - Names is in the
+    /// crate", not "F1 - Names is in F1 - Names". Those words have a second form, `key.same` (for a count,
+    /// `key.same.one` and so on), used then. The pages do the same (desk.js `sameName`).
+    public static let sameNameSuffix = ".same"
+
+    /// Whether `values` name the crate and what was added with the same name (spaces at the ends and capitals aside).
+    public static func sameName(_ values: [String: String]) -> Bool {
+        guard let crate = values["crate"], let added = values["read"] ?? values["source"] else { return false }
+        func plain(_ s: String) -> String { s.trimmingCharacters(in: .whitespacesAndNewlines).lowercased() }
+        return !plain(crate).isEmpty && plain(crate) == plain(added)
     }
 
     /// The kind of computer this is, for `{thisComputer}`: "mac" on a Mac, "other" on Windows and Linux. The engine
@@ -942,6 +962,7 @@ public enum DeskWords {
     /// The form of `key` for the count `n` (`key.zero` when n is 0 and there is one, `key.one` for 1, else
     /// `key.other`), with `{n}` and `values` filled in.
     public static func count(_ key: String, _ n: Int, _ values: [String: String] = [:]) -> String {
+        let key = sameName(values) && table[key + sameNameSuffix + ".other"] != nil ? key + sameNameSuffix : key
         let form = n == 0 && table[key + ".zero"] != nil ? "zero" : (n == 1 ? "one" : "other")
         var v = values
         v["n"] = v["n"] ?? String(n)

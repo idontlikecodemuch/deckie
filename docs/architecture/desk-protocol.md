@@ -163,6 +163,9 @@ the running totals. It comes at most four times a second (DeskProtocol's `RunScr
 joined since the last one, in the order they joined; a burst (songs read before, which join together while
 finishing) is split into lines of at most 500 songs. `figures` comes at most once a second and is left out
 between; the page keeps the last it had. The last `run.songs` comes before `run.finished`, with the totals.
+When a run ends, `state` and `songs` with the crate as saved come first, then `run.finished` (or `run.failed`):
+a window shows its finished screen on `run.finished`, and anything there that needs the crate's songs (Export crate
+file) asks the last `state` and `songs` it had, so they must already say what the run saved.
 
 ```json
 {"event": "run.songs",
@@ -234,7 +237,7 @@ Every request gets a reply. While a run goes, only `state`, `drives.list`, `crat
 | `song.check` | `songs` (ids) or `song`; `field` (optional) | `songs` | `state`, `songs` |
 | `song.audio` | `song`; `decoded` (optional) | `type`, `bytes`, `chunks`, `token`, `seconds`, `start`, `kind` | `audio.chunk` events |
 | `song.cover` | `song` | `cover` (bool); with a cover: `type`, `bytes`, `data` | |
-| `run.add` | `path`; `name` (a drive's name, optional) | `source` (the source's name), `crate` | `run.started`, `run.progress`…, `run.finished` or `run.failed`, `state`, `songs` |
+| `run.add` | `path`; `name` (a drive's name, optional) | `source` (the source's name), `crate` | `run.started`, `run.progress`…, `state`, `songs`, then `run.finished` or `run.failed` |
 | `run.carryOn` | | as `run.add` | as `run.add` |
 | `song.fix` | `song` (id); any of `title`, `artist`, `version` (text; "" clears artist or version), `tags` (list); `facts` (D34: an object of fact name to text, any of the crate file's fact names; "" clears one; a genre may be several, split at "," or ";") | | `state`, `songs` |
 | `source.rename` | `source`, `name` | | `state`, `songs` |

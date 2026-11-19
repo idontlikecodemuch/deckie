@@ -25,10 +25,14 @@
 // start; 2 and 3 a check failed; 4 this PC has no WebView2 Runtime (Windows); 5 the runtime is there and the window
 // still could not be made. Before 1, 4 and 5 the DJ is told why in a message box on Windows (Notice.swift).
 //
-// For checks: DECKIE_NO_BOXES (any value) says those things on standard error only; DECKIE_DESK_NO_WEBVIEW2 (any
+// For checks: DECKIE_NO_BOXES (any value) says those things on standard error only, and no box opens in the window
+// either: the page's boxes are written down instead (Notice.noBoxes); DECKIE_DESK_NO_WEBVIEW2 (any
 // value) makes the program behave as on a PC without the WebView2 Runtime, to try that path where the runtime
 // cannot be taken away.
 import Foundation
+#if os(Windows)
+import WinSDK
+#endif
 
 _ = Notice.started
 
@@ -40,6 +44,12 @@ func option(_ name: String) -> String? {
 let env = ProcessInfo.processInfo.environment
 if let log = option("--check-log") { Notice.keepLog(at: log) }
 Notice.quiet = args.contains("--check") || args.contains("--self-test") || args.contains("--tour") || env["DECKIE_NO_BOXES"] != nil
+Notice.noBoxes = args.contains("--check") || env["DECKIE_NO_BOXES"] != nil
+#if os(Windows)
+// No box of Windows' own when a library is missing or a program stops (the engine inherits this): the code comes back
+// instead of a box nobody can click. The starter does the same when it starts Desk.
+if Notice.quiet { _ = SetErrorMode(UINT(SEM_FAILCRITICALERRORS) | UINT(SEM_NOGPFAULTERRORBOX) | UINT(SEM_NOOPENFILEERRORBOX)) }
+#endif
 
 // A check never waits for ever: its time limit starts now, before the window is made.
 if args.contains("--check") {

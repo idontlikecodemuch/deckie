@@ -52,7 +52,7 @@ jobs:
         run: swift build --build-tests
       - name: The engine's tests (a child program, generated songs)
         working-directory: core
-        run: swift test --skip-build --filter "DeskWordsTests|DeskSessionTests|EngineProcessTests|EngineNamingTests|DeskNamingTests|DeskSessionNamingTests|MusicCDRunTests|DeckieDiscTests|EngineStartsTests"
+        run: swift test --skip-build --filter "DeskWordsTests|DeskSessionTests|EngineProcessTests|EngineNamingTests|DeskNamingTests|DeskSessionNamingTests|MusicCDRunTests|DeckieDiscTests|EngineStartsTests|RunEndsTests"
       # Desk's storage in a scratch folder, and no DJ libraries looked for in the runner's home folder.
       - name: The whole window, the engine and the pages together
         working-directory: desk-shell
@@ -76,6 +76,11 @@ jobs:
         with:
           swift-version: swift-6.4.1-release
           swift-build: 6.4.1-RELEASE
+      # Swift's Clang 21 and the newest Microsoft C++ toolset (14.52, whose library wants Clang 22) do not go
+      # together: the C++ in desk-shell is compiled against the 14.51 toolset, named, not the newest one found.
+      - name: Pin the Microsoft C++ toolset Swift's clang can use
+        shell: pwsh
+        run: ./core/Tools/windows/pin-msvc.ps1
       - name: Is the WebView2 runtime here?
         shell: pwsh
         run: |
@@ -111,7 +116,7 @@ jobs:
         run: swift build --build-tests
       - name: The engine's tests (a child program, generated songs)
         working-directory: core
-        run: swift test --skip-build --filter "DeskWordsTests|DeskSessionTests|EngineProcessTests|EngineNamingTests|DeskNamingTests|DeskSessionNamingTests|MusicCDRunTests|DeckieDiscTests|EngineStartsTests"
+        run: swift test --skip-build --filter "DeskWordsTests|DeskSessionTests|EngineProcessTests|EngineNamingTests|DeskNamingTests|DeskSessionNamingTests|MusicCDRunTests|DeckieDiscTests|EngineStartsTests|RunEndsTests"
       # Report only: the same check with the pipes left as Foundation makes them, which shows the fault the tests'
       # engine helper guards against (Foundation in Swift 6.4.1 on Windows; EngineProcessTests.swift says how).
       - name: "Engines started together with their pipes left as Foundation makes them (report only)"
