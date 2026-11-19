@@ -146,20 +146,42 @@ struct PlayingPanel: View {
         HStack(spacing: Look.Listen.statusGap) {
             TimelineView(.periodic(from: .now, by: Look.Listen.statusTick)) { _ in Circle().fill(dotColor).frame(width: Look.Listen.statusDot, height: Look.Listen.statusDot) }
             Text(tinyStatus).font(Look.Listen.statusFont).foregroundStyle(Theme.dim).lineLimit(1)
-            if rec.recActive {
-                Button { rec.toggleRecPause() } label: {
+            // Set recording (every build): the chip says what it is doing; a tap opens a small menu to pause it, or to
+            // turn recording off and on (remembered between launches). Nothing to record without fingerprints.
+            if Library.shared.canRecognise {
+                Menu {
+                    if rec.recActive {
+                        Button(rec.recPaused ? Words.resumeRecording : Words.pauseRecording) { rec.toggleRecPause() }
+                    }
+                    Section(Words.recWhere) {
+                        Toggle(Words.recordSets, isOn: Binding(get: { rec.recordingOn }, set: { rec.setRecording($0) }))
+                    }
+                } label: {
                     TimelineView(.periodic(from: .now, by: Look.Listen.statusTick)) { _ in
                         HStack(spacing: Look.Listen.recGap) {
-                            Circle().fill(rec.recPaused ? Theme.dim : Theme.bad.opacity(Look.Listen.recDotOpacity)).frame(width: Look.Listen.recDot, height: Look.Listen.recDot)
-                            Text(rec.recPaused ? Words.recPaused : Words.recElapsed(hms(rec.recorder.elapsed)))
-                                .font(Look.Listen.recFont).foregroundStyle(Theme.dim)
+                            if rec.recordingOn {
+                                Circle().fill(rec.recActive && !rec.recPaused ? Theme.bad.opacity(Look.Listen.recDotOpacity) : Theme.dim)
+                                    .frame(width: Look.Listen.recDot, height: Look.Listen.recDot)
+                            } else {
+                                Circle().stroke(Theme.dim, lineWidth: Look.Listen.recOffLine).frame(width: Look.Listen.recDot, height: Look.Listen.recDot)
+                            }
+                            Text(recChip).font(Look.Listen.recFont).foregroundStyle(Theme.dim)
                         }
                         .padding(.horizontal, Look.Listen.recSides).frame(minHeight: Look.Listen.recMinHeight)
                     }
                 }
-                .accessibilityLabel(rec.recPaused ? Words.resumeRecording : Words.pauseRecording)
+                .accessibilityLabel(Words.setRecording)
+                .accessibilityValue(recChip)
             }
         }
+    }
+
+    /// The REC chip's words: "REC 0:12:34" while recording, "REC paused", "REC on" (on, waiting for listening to
+    /// start), "REC off".
+    private var recChip: String {
+        guard rec.recordingOn else { return Words.recOff }
+        guard rec.recActive else { return Words.recOn }
+        return rec.recPaused ? Words.recPaused : Words.recElapsed(hms(rec.recorder.elapsed))
     }
 
     /// top-right status corner: listening status, REC with elapsed time, mic, "…" (the top-left stays free for the

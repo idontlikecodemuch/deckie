@@ -13,6 +13,8 @@ Thanks for trying the first build. Please try these and tell us how each went:
 6. **Locked iPad.** Lock the iPad during a set and unlock it later. Did it keep listening, and is the set's
    recording complete in Files under Deckie Booth > Sets?
 7. **Setting a song by hand.** When the room is too loud, tap a song in the Crate tab. Do the picks follow?
+8. **Recording on and off.** Tap REC on the Listen screen and untick "Record each set". Does it say "REC off", and
+   does it stay off after you close and reopen Booth? Tick it again: does a new recording start?
 
 Known in this build:
 

@@ -76,11 +76,17 @@ enum Words {
     static let listeningHelp = "A song shows up after a few seconds of music."
     /// The panel's foot when a second song is heard under the first.
     static func alsoHearing(_ song: String) -> String { "also hearing: " + song }
-    /// The set recording's corner badge, and its spoken button.
+    /// The set recording's corner chip ("REC 0:12:34" while recording), spoken as "Set recording" with these as its
+    /// value. "REC on": recording is on and starts when listening does.
     static let recPaused = "REC paused"
     static func recElapsed(_ time: String) -> String { "REC " + time }
+    static let recOn = "REC on"
+    static let recOff = "REC off"
+    /// The chip's menu: pause or resume the recording in progress, and set recording on or off (remembered).
     static let resumeRecording = "Resume recording"
     static let pauseRecording = "Pause recording"
+    static let recordSets = "Record each set"
+    static let recWhere = phrases("Sets are kept on this iPad,", "in Files under Deckie Booth.")
     /// The corner's microphone and "…" buttons, spoken.
     static let pauseListening = "Pause listening"
     static let listen = "Listen"

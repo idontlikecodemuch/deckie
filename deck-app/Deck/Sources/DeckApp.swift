@@ -79,7 +79,10 @@ struct DeckApp: App {
                     Text(note).font(Look.App.noteFont).foregroundStyle(Theme.tx)
                         .padding(.horizontal, Look.App.noteSides).frame(minHeight: Look.App.noteMinHeight)
                         .background(Capsule().fill(Theme.card2)).overlay(Capsule().stroke(Theme.line, lineWidth: Look.App.noteLine))
-                        .padding(.top, Look.App.noteTop)
+                        // Below the tabs (since iPadOS 18 they sit at the top; before, at the foot), and never in the
+                        // way: a tap anywhere goes to what is under the note.
+                        .padding(.top, noteTop)
+                        .allowsHitTesting(false)
                         .task(id: note) { try? await Task.sleep(for: .seconds(Look.App.noteSeconds)); if sug.openedNote == note { sug.openedNote = nil } }
                         .accessibilityAddTraits(.isStaticText)
                 }
@@ -89,6 +92,12 @@ struct DeckApp: App {
                 if p == .active && rec.source == .mic { rec.startMic() }
             }
         }
+    }
+
+    /// The open note's distance from the top: under the tab bar where the tabs are at the top (iPadOS 18 and later).
+    private var noteTop: CGFloat {
+        if #available(iOS 18, *) { return Look.App.noteTopBelowTabs }
+        return Look.App.noteTop
     }
 
     /// Opens a crate file handed to the app (Files, AirDrop, iCloud Drive, "Open in", the chooser, a test hook), in

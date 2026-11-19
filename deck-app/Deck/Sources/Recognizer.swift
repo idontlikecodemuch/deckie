@@ -104,7 +104,12 @@ import DeckieRecognition
     private var ears: [Ear] = []
     private let mic = MicCapture()
     let recorder = SetRecorder()
-    var recordingOn = true          // record every listening session
+    /// Whether each listening session is recorded as a set (the REC chip's menu on the Listen page, and the details
+    /// sheet): on until the DJ turns it off, and remembered between launches.
+    var recordingOn: Bool = UserDefaults.standard.object(forKey: Recognizer.recordingKey) as? Bool ?? true {
+        didSet { UserDefaults.standard.set(recordingOn, forKey: Recognizer.recordingKey) }
+    }
+    static let recordingKey = "recordSets"
     var recActive = false
     var recPaused = false
     private var feeder: StreamFeeder?
@@ -341,6 +346,20 @@ import DeckieRecognition
         guard recordingOn else { return }
         do { try recorder.begin(format: format, hearing: listening?.rawValue); recActive = true; recPaused = false; note("recording to \(recorder.baseName ?? "?").aac") }
         catch { note("recording failed: \(error.localizedDescription)"); recActive = false }
+    }
+
+    /// Set recording on or off. Off closes the recording in progress (what was recorded stays in Files); on starts a
+    /// new one at once when the microphone is listening, otherwise with the next listening session.
+    func setRecording(_ on: Bool) {
+        guard on != recordingOn else { return }
+        recordingOn = on
+        if !on {
+            if recActive { recorder.finish(); recActive = false; recPaused = false }
+            note("set recording switched off")
+        } else {
+            note("set recording switched on")
+            if !recActive, source == .mic, let f = mic.format { beginRecording(f) }
+        }
     }
 
     func toggleRecPause() {
