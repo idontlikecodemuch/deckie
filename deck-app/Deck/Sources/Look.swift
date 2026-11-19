@@ -95,6 +95,10 @@ enum Look {
         static let byHandButtonTop: CGFloat = 6
         static let listeningGap: CGFloat = 10
         static let listeningHelpFont = Font.system(size: 18)
+        /// The demo's line under "Listening…" (where its songs play from).
+        static let demoHowFont = Font.system(size: 18, weight: .semibold)
+        static let demoHowLineSpacing: CGFloat = 3
+        static let demoHowTop: CGFloat = 8
         static let panelSides: CGFloat = 30, panelTop: CGFloat = 44, panelBottom: CGFloat = 10
         static let panelRadius: CGFloat = 24
         /// The panel's tint of the playing disc's colour: at its top left, and its bottom right.
@@ -426,6 +430,9 @@ enum Look {
         static let demoLine = Theme.line
         static let demoText = Theme.tx
         static let demoLineWidth: CGFloat = 1
+        /// The line under the buttons on what the demo needs (another device playing deckie.io/demo).
+        static let demoNoteFont = Font.system(size: 15)
+        static let demoNoteColor = Theme.mut
         static let buttonsGap: CGFloat = 14
         static let linkFont = Font.system(size: 17, weight: .semibold)
         static let linkColor = Theme.acc

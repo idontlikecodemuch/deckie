@@ -64,6 +64,7 @@ struct DeckApp: App {
             }
             .onChange(of: sug.tabRequest) { _, t in if let t { tab = t; sug.tabRequest = nil } }
             .onChange(of: sug.chooseCrateFile) { _, on in if on { choosing = true; sug.chooseCrateFile = false } }
+            .onChange(of: sug.leaveDemo) { _, on in if on { sug.leaveDemo = false; leaveDemo() } }
             .fileImporter(isPresented: $choosing, allowedContentTypes: CrateFileType.importable) { r in
                 if case .success(let url) = r { openCrate(url) }
             }
@@ -102,7 +103,8 @@ struct DeckApp: App {
             let secs = Library.shared.crate.map { String(format: "%.1f", $0.poolSecs) } ?? "?"
             rec.note("crate loaded (\(r.wasSingleFile ? "single file, unpacked" : "package, copied")): \(Library.shared.data.tracks.count) tracks, "
                      + "\(Library.shared.crate?.deckieSongs ?? 0) with Deckie's fingerprints, \(Library.shared.crate?.signatures.count ?? 0) with Apple's signatures; picks are scored per song (timbre list \(secs) s)")
-            sug.openedNote = Words.opened(r.crate.manifest.name, songs: Library.shared.songCount)
+            sug.openedNote = DemoCrate.isOpen ? Words.demoOpened(songs: Library.shared.songCount)
+                                              : Words.opened(r.crate.manifest.name, songs: Library.shared.songCount)
             tab = 0
             // Listening starts again (with no fingerprints it only says "not listening"); a test hook leaves the mic off.
             if listen { rec.startMic() } else if !Library.shared.canRecognise { rec.status = Words.notListening }
@@ -110,6 +112,17 @@ struct DeckApp: App {
             rec.note("crate failed: \(error)")
             sug.openProblem = OpenProblem(title: Words.couldNotOpen(url.lastPathComponent), why: Words.whyNotOpened(error), detail: Words.detail(error))
         }
+    }
+
+    /// "Leave the demo": the demo crate file is put away and the booth shows its first-run screen again, where the
+    /// DJ's own crate file is opened. Listening and the set's recording stop.
+    private func leaveDemo() {
+        rec.note("leaving the demo")
+        rec.forgetSongs()
+        Library.shared.close()
+        sug.pinned = nil; sug.target = LibraryFilter(); sug.moreQuery = ""; sug.openedNote = nil
+        sug.reroll(rec); sug.crateVersion += 1
+        tab = 0
     }
 
     #if DEBUG
@@ -211,6 +224,7 @@ struct DeckApp: App {
     var scrollRequest: String?     // test hook: scroll the picks to an anchor
     var tabRequest: Int?           // a view asking for another tab (the Listen page's "Choose a song")
     var chooseCrateFile = false    // the Crate tab's "Open crate file" asking for the chooser
+    var leaveDemo = false          // "Leave the demo" (the Listen page, the Crate tab) asking for the first-run screen
     var openProblem: OpenProblem?  // why the last crate file handed to the app could not be opened
     var openedNote: String?        // "Friday night is open: 12 songs.", shown for a few seconds
     var crateVersion = 0           // raised when another crate file opens, so every view is drawn from it again

@@ -18,11 +18,15 @@ targets:
     platform: iOS
     # Every file the app carries is named here, one by one. No folder is bundled whole, so nothing a developer keeps in
     # the checkout (the party's data in Deck/Resources, made by tools/prep_data.py and git-ignored) can ride along.
-    # A demo crate file, when one is added, is named here too, as Deck/Demo/Demo.deckie (FirstRun.swift, DemoCrate).
+    # The demo crate file is named here too: Deck/Demo/Demo.deckie, a crate package (facts and fingerprints of seven
+    # public-domain songs, no audio; FirstRun.swift, DemoCrate; site/demo/CREDITS.md), copied whole as a folder.
     sources:
       - path: Deck/Sources
       - path: Deck/Assets.xcassets
       - path: Deck/PrivacyInfo.xcprivacy
+        buildPhase: resources
+      - path: Deck/Demo/Demo.deckie
+        type: folder
         buildPhase: resources
     dependencies:
       - package: DeckieCore
