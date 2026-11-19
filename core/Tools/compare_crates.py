@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """compare_crates.py: compare two crate files made from the same music on two machines, field by field.
 
-    python3 core/Tools/compare_crates.py A.deckiecrate B.deckiecrate [--summary out.md]
+    python3 core/Tools/compare_crates.py A.deckie B.deckie [--summary out.md]
 
 Each crate file may be a package folder or the single-file form (one uncompressed zip, read here with Python's own
 zipfile module, so this is also a check that another program's zip reader opens Deckie's archive). Python's standard

@@ -1,7 +1,7 @@
 #!/bin/sh
 # The real-room test (room_test.py): Deckie's own matcher over a booth's recordings of a real set.
 #
-#   CRATE=/path/x.deckiecrate MUSIC=/path/music RECORDINGS=/path/sets WORK=/path/work \
+#   CRATE=/path/x.deckie MUSIC=/path/music RECORDINGS=/path/sets WORK=/path/work \
 #   SUBSETS="folder/prefix/ ..." MIX="folder/of/a/premixed/disc/" PART_FROM=2026-01-01T00:00:00Z \
 #   [BOOTH_CATALOGUE=/path/booth-catalogue.json] [EXTRA=/path/more/music] \
 #       core/Tools/recognition-bench/room_test.sh
