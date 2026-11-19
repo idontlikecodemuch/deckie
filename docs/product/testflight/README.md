@@ -14,6 +14,6 @@ Connect or one page for testers; copy it in once approved.
 The build: Deckie Booth 0.1.0 (1), bundle id `io.deckie.booth`, iPad only, iPadOS 17 or later, publisher App Hold
 Media. No account, no sign-in, no network use in Booth.
 
-Still to settle before the upload: deckie.io/demo published (the demo crate file is in the app since `pc/booth-demo`;
-the page that plays its songs is in `site/demo/`, built by `site/build.sh` and not yet uploaded), the contact details
-for the review form, and the privacy policy's address.
+Still to settle before the upload: deckie.io/demo and deckie.io/privacy published (the demo crate file is in the app
+since `pc/booth-demo`; the page that plays its songs is in `site/demo/`, the privacy page in `site/privacy/`, both
+built by `site/build.sh` and not yet uploaded), and the contact details for the review form.

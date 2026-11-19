@@ -73,7 +73,7 @@ Goal: outside testers can try Booth from TestFlight, and Desk from a download, o
 
 **Now-1. A demo inside Booth, and a page that plays it.** A small crate file of freely licensed songs bundled in
 Booth, and a page on deckie.io that plays those songs, so a tester or Apple's reviewer can see Booth name a song and
-suggest the next one with no Desk. Booth already shows "Try the demo" when a demo file is present
+suggest the next one with no Desk. Booth already shows "Try the demo crate" when a demo file is present
 (`deck-app/Deck/Sources/FirstRun.swift`).
 - *Why:* without it, nothing past the first screen can be seen, and the review notes have a gap where the sample goes.
 - *Depends on:* choosing songs whose licences allow bundling and playing them (CC0 or CC BY, credits shown); the owner

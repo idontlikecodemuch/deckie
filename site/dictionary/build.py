@@ -468,7 +468,7 @@ TEMPLATE = """<!doctype html>
 <footer class="wrap dx-foot">
   <p>{count} words, updated <time datetime="{updated_iso}">{updated_text}</time>. “On&nbsp;the&nbsp;decks” is how DJs say and use a&nbsp;word. “In&nbsp;Deckie”, last on each card, says what Deckie does with it; <span class="dx-planned">Planned</span> means designed and not yet&nbsp;built.</p>
   <p>Where a word comes from: heard from DJs on forums and in videos, taught in tutorials, or Deckie’s own phrase where DJs have no single&nbsp;word.</p>
-  <p><a href="https://deckie.io/">deckie.io</a> · Deckie. Know Your Crate · Deckie, as in deckhand. Made by Christopher Shannon and <a href="https://apphold.media">App Hold Media</a>. Coming&nbsp;soon.</p>
+  <p><a href="https://deckie.io/">deckie.io</a> · <a href="../privacy/">Privacy</a> · Deckie. Know Your Crate · Deckie, as in deckhand. Made by Christopher Shannon and <a href="https://apphold.media">App Hold Media</a>. Coming&nbsp;soon.</p>
 </footer>
 
 <script type="application/json" id="dx-redirect">{redirect}</script>

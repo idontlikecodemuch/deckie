@@ -17,10 +17,10 @@ script (project.yml). The paperwork for TestFlight is in `docs/product/testfligh
 
 Booth carries one crate file of its own: the demo, `Deck/Demo/Demo.deckie` (a crate package of about 156 KB: the facts
 and fingerprints of seven public-domain songs, no audio), named in project.yml and copied whole into the app. With
-it bundled, the first-run screen shows "Try the demo" and a line saying the songs play from deckie.io/demo on another
+it bundled, the first-run screen shows "Try the demo crate" and a line saying the songs play from deckie.io/demo on another
 device. Tapping it opens the demo exactly as any crate file opens (copied into Application Support/Crates and
-remembered); the open note says "The demo is open: 7 songs. Play deckie.io/demo nearby." While it waits for a song
-the Listen page says where the songs play from and has "Leave the demo"; the Crate tab has "Leave the demo" beside
+remembered); the open note says "The demo crate is open: 7 songs. Play deckie.io/demo nearby." While it waits for a song
+the Listen page says where the songs play from and has "Leave the demo crate"; the Crate tab has "Leave the demo crate" beside
 "Open crate file". Leaving closes the crate file (`Library.close`), forgets it for the next launch, and shows the
 first-run screen. `DemoCrate.isOpen` knows the demo by its crate id (the bundled manifest's `crate_id`).
 
