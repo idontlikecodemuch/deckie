@@ -367,7 +367,7 @@ struct RunEndsTests {
             while page.hasSongsAtFinish.isEmpty && Date() < end {
                 _ = p.handle(line: line(["id": id, "type": "crate.export", "folder": out.path]))
                 id += 1
-                Thread.sleep(forTimeInterval: 0.05)
+                try await Task.sleep(nanoseconds: 50_000_000)
             }
             return !page.hasSongsAtFinish.isEmpty
         }
