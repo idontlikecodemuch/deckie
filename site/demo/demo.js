@@ -23,7 +23,7 @@
     links.forEach(function (l, k) { if (k === i) l.setAttribute('aria-current', 'true'); else l.removeAttribute('aria-current'); });
     fill.style.width = '0'; clock.textContent = '0:00';
     if ('mediaSession' in navigator && window.MediaMetadata) {
-      navigator.mediaSession.metadata = new MediaMetadata({ title: a.dataset.title, artist: a.dataset.artist, album: 'The Deckie demo' });
+      navigator.mediaSession.metadata = new MediaMetadata({ title: a.dataset.title, artist: a.dataset.artist, album: 'The Deckie demo crate' });
     }
   }
   function load(n, go) {

@@ -10,6 +10,7 @@ Status, stated exactly: Deckie Desk builds crate files on a Mac and Deckie Booth
 
 - [Home](https://deckie.io/): what Deckie Booth does in the booth, what Deckie is not, how Deckie Desk prepares a crate file, a short about with a list of facts, and a film with a written description of what it shows
 - [Dictionary](https://deckie.io/dictionary/): DJ speak, in plain words. A dictionary for anyone, A to Z: each word in plain words, then how DJs use it, with a short note on what Deckie does with it
+- [Privacy](https://deckie.io/privacy/): the privacy policy. No account, no analytics, no tracking; Deckie Booth does not use the internet; Deckie Desk on a Mac sends a song's names to MusicBrainz only when the DJ asks it to look them up.
 
 ## Optional
 

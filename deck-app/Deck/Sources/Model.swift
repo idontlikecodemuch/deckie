@@ -287,7 +287,7 @@ final class Library {
         return r
     }
 
-    /// Puts the open crate file away (the demo's "Leave the demo"): nothing is open, so the booth shows its first-run
+    /// Puts the open crate file away (the demo's "Leave the demo crate"): nothing is open, so the booth shows its first-run
     /// screen, and nothing is remembered for the next launch. The copy in the app's storage stays, as every opened
     /// crate file's does.
     func close() {

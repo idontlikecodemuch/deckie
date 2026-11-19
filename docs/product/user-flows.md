@@ -96,7 +96,7 @@ Listen and pick (A/B rendered joins) stays out: it needs the Mac renderer.
 
 Landscape first; portrait stacks the two halves (ListenView).
 
-1. **Listening.** Sees: "Listening…", "A song shows up after 5–10 seconds of music"; top-left the "Minimal"
+1. **Listening.** Sees: "Listening…", "A song shows up after a few seconds of music"; top-left the "Minimal"
    switch; top-right a status dot, "listening", "REC 0:00:12", the mic, "…". Today: PlayingPanel, MinimalToggle.
 2. **Playing panel.** Sees: folder path ("CD1 / 6 - 125-129 /"), "06 · Lady", artist, "128 BPM" at the deck's
    pitch in amber, the whole-song wave with IN and SYNC, elapsed and remaining, "sync area in 0:37"; status

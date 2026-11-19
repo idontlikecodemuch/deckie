@@ -114,7 +114,7 @@ struct DeckApp: App {
         }
     }
 
-    /// "Leave the demo": the demo crate file is put away and the booth shows its first-run screen again, where the
+    /// "Leave the demo crate": the demo crate file is put away and the booth shows its first-run screen again, where the
     /// DJ's own crate file is opened. Listening and the set's recording stop.
     private func leaveDemo() {
         rec.note("leaving the demo")
@@ -224,7 +224,7 @@ struct DeckApp: App {
     var scrollRequest: String?     // test hook: scroll the picks to an anchor
     var tabRequest: Int?           // a view asking for another tab (the Listen page's "Choose a song")
     var chooseCrateFile = false    // the Crate tab's "Open crate file" asking for the chooser
-    var leaveDemo = false          // "Leave the demo" (the Listen page, the Crate tab) asking for the first-run screen
+    var leaveDemo = false          // "Leave the demo crate" (the Listen page, the Crate tab) asking for the first-run screen
     var openProblem: OpenProblem?  // why the last crate file handed to the app could not be opened
     var openedNote: String?        // "Friday night is open: 12 songs.", shown for a few seconds
     var crateVersion = 0           // raised when another crate file opens, so every view is drawn from it again

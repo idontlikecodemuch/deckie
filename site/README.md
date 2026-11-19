@@ -1,19 +1,21 @@
 # The Deckie site
 
-What is published at https://deckie.io: a coming-soon home page, a dictionary of DJ words, and the explainer film.
+What is published at https://deckie.io: a coming-soon home page, a dictionary of DJ words, the explainer film, the
+demo crate's page and the privacy policy.
 Plain HTML, CSS and JavaScript. No framework, no server code, nothing fetched from another site.
 
 The research behind every choice is `docs/research/v-explainer-video-and-page.md` (letter V). The decisions are D22
 and D23 in `docs/product/00-decisions.md`.
 
-## The three parts
+## The parts
 
 | Part | What a visitor sees | Where it is made |
 |---|---|---|
 | Home page | https://deckie.io/ | `index.html`, written from the copy document `home-copy.md` |
 | Dictionary | https://deckie.io/dictionary/ | `dictionary/build.py`, from `docs/vocabulary/terms.json` |
 | Film | The 76 second explainer in the home page's hero | `film/` (see `film/README.md`) |
-| Demo | https://deckie.io/demo/: plays the demo crate's songs out loud, for Deckie Booth's "Try the demo" | `demo/` (see `demo/CREDITS.md`) |
+| Demo | https://deckie.io/demo/: plays the demo crate's songs out loud, for Deckie Booth's "Try the demo crate" | `demo/` (see `demo/CREDITS.md`) |
+| Privacy | https://deckie.io/privacy/: the privacy policy, linked from every page's footer | `privacy/`, from `docs/product/testflight/privacy-policy.md` |
 
 ## What is here
 
@@ -45,6 +47,9 @@ and D23 in `docs/product/00-decisions.md`.
   time), and `CREDITS.md`, each song's artist, source, licence (all CC0 1.0), date fetched and SHA-256. Deckie Booth
   carries the same songs' facts and fingerprints as its demo crate file and lists the same credits. Not in the
   sitemap and marked noindex: it is a tool for testers, reached from Booth.
+- `privacy/`: the privacy policy (`index.html`, `privacy.css`), written from
+  `docs/product/testflight/privacy-policy.md`; change the two together. Every page's footer links to it, and it is in
+  the sitemap.
 
 ## Changing something
 
