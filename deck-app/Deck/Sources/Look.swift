@@ -49,6 +49,8 @@ enum Look {
         static let minimalLine: CGFloat = 1
         static let noteFont = Font.system(size: 16, weight: .semibold)
         static let noteSides: CGFloat = 18, noteMinHeight: CGFloat = 40, noteTop: CGFloat = 8
+        /// Where the tabs sit at the top (iPadOS 18 and later), the note sits this far down, under them.
+        static let noteTopBelowTabs: CGFloat = 64
         static let noteLine: CGFloat = 1
         /// How long "Friday night is open: 12 songs." stays, in seconds.
         static let noteSeconds = 5
@@ -117,6 +119,8 @@ enum Look {
         static let matchFresh = 20.0
         static let idleDotOpacity = 0.5
         static let recGap: CGFloat = 4, recDot: CGFloat = 6, recDotOpacity = 0.75
+        /// The ring that stands for the dot when set recording is off.
+        static let recOffLine: CGFloat = 1
         static let recFont = Font.system(size: 11, weight: .medium, design: .monospaced)
         static let recSides: CGFloat = 6, recMinHeight: CGFloat = 28
         static let cornerButtonsGap: CGFloat = 2
