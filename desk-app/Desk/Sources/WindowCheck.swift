@@ -54,6 +54,8 @@ enum WindowCheck {
             Snapshot.sizeWindow()
             say("showing \(model.current?.name ?? "the first screen"), \(model.crates.count) crates, undo manager \(model.undoManager == nil ? "missing" : "there")")
             say("header: \(model.shownName); the ways: \(DeskAddMusic.ways.map { Words.t($0.word) })")
+            say(model.cannotRead ? "this Desk cannot read music: the banner says \"\(Words.engineMissing) \(Words.engineMissingHelp)\" and Add music is off"
+                                 : "this Desk can read music (the runtime and the beat model are there)")
             Snapshot.capture("start", hold: 1.5)
             later(1.6) { ways() }
         }

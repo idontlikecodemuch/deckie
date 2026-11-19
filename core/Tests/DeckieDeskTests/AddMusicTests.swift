@@ -175,6 +175,31 @@ import DeckieTestSupport
         #expect(reply["path"] as? String == sent)
     }
 
+    /// An engine missing the part that reads music says so in its first message, and refuses to count or to read, at
+    /// once, with a code the windows put in words (a first run on test folders waited ten minutes without one).
+    @Test func anEngineThatCannotReadMusicSaysSoAndStartsNothing() throws {
+        let root = try scratch("engine-missing")
+        let music = root.appendingPathComponent("Stick 4")
+        try FileManager.default.createDirectory(at: music, withIntermediateDirectories: true)
+        try Data(count: 10).write(to: music.appendingPathComponent("1.mp3"))
+        struct Missing: Error {}
+        let out = Lines()
+        let p = DeskProtocol(home: DeskHome(root: root.appendingPathComponent("home")), output: out.add, makeRun: Self.noRun,
+                             analysisCheck: { throw Missing() })
+        p.start()
+        let hello = try #require(out.wait { $0["event"] as? String == "hello" })
+        #expect((hello["analysis"] as? [String: Any])?["ready"] as? Bool == false)
+        for (id, type) in [(1, "add.count"), (2, "run.add")] {
+            let line = try JSONSerialization.data(withJSONObject: ["id": id, "type": type, "path": music.path, "crateName": "Gig"])
+            p.handle(line: String(decoding: line, as: UTF8.self))
+            let reply = try #require(out.wait { ($0["re"] as? NSNumber)?.intValue == id })
+            #expect(reply["ok"] as? Bool == false && (reply["error"] as? [String: Any])?["code"] as? String == "engine_missing", "\(type)")
+        }
+        #expect(!out.all.contains { ["add.counted", "run.started"].contains($0["event"] as? String ?? "") })
+        // The words: what is wrong, and what to do.
+        #expect(DeskWords.text("engineMissing").contains("missing") && DeskWords.text("engineMissingHelp").contains("Reinstall"))
+    }
+
     static let noRun: DeskProtocol.RunMaker = { home, id, request in
         DeskRun(home: home, crateId: id, request: request, jobs: 1, device: "test", signer: nil, printer: DeskRun.portablePrint)
     }

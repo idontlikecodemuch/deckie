@@ -197,12 +197,22 @@ public enum VersionWords {
                                              "high quality", "promo", "promo only", "master", "final", "preview", "visualizer",
                                              "visualiser", "music video", "video", "full song", "out now", "premiere", "exclusive",
                                              "mp3", "flac", "wav", "kbps", "320", "320kbps", "256kbps", "192kbps", "128kbps",
-                                             "web", "vinyl", "bonus track", "hidden track", "unreleased"]
+                                             "web", "vinyl", "bonus track", "hidden track", "unreleased",
+                                             // What an upload site or a download adds (marks of where the file came
+                                             // from, never part of the song's name): read alone or run together
+                                             // ("Official HD Video", "Lyrics Video HQ").
+                                             "official", "official hd video", "official 4k video", "official visualizer",
+                                             "official visualiser", "official lyrics", "official lyric", "lyric", "with lyrics",
+                                             "lyrics on screen", "audio only", "4k", "1080p", "720p", "video oficial",
+                                             "clip officiel", "videoclip", "video clip", "full hd", "uhd"]
     /// Working notes a producer leaves at the end of a file name ("MASTER2", "final", "v3").
     public static let workingNote = #"^(master|mastered|final|finished|mixdown|bounce|print|v)\d*$"#
     /// A website's name: a word with a known ending, or "www".
     public static let websiteEndings = [".com", ".net", ".org", ".ru", ".info", ".io", ".co", ".uk", ".fm", ".me", ".to", ".cc",
-                                        ".biz", ".pl", ".de", ".fr", ".es", ".it", ".nl", ".club", ".xyz", ".tv", ".in", ".online"]
+                                        ".biz", ".pl", ".de", ".fr", ".es", ".it", ".nl", ".club", ".xyz", ".tv", ".in", ".online",
+                                        ".pm", ".su", ".ws", ".eu", ".ua", ".kz", ".by", ".cz", ".se", ".ch", ".pro", ".top",
+                                        ".site", ".live", ".link", ".music", ".audio", ".cloud", ".store", ".am", ".ly", ".gg",
+                                        ".lt", ".lv", ".ee", ".mobi", ".app"]
 
     // MARK: the words that join the names in a credit (AC, 5.5)
 

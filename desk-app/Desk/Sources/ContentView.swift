@@ -16,6 +16,7 @@ struct ContentView: View {
             else if model.crate != nil { CrateView() }
             else { EmptyCrateView() }
         }
+        .safeAreaInset(edge: .top) { EngineMissingBanner() }
         .navigationTitle(model.shownName)
         .toolbar {
             // The crate's icon and name, always; a click renames it (research AE). The menu beside it switches crates.
@@ -139,6 +140,27 @@ struct EmptyCrateView: View {
 }
 
 /// A run of this crate that stopped before it finished, and the way to carry it on.
+/// Desk without the part that reads music: said at once, at the top of every screen, with what to do. Add music is
+/// off meanwhile (AddWayButtons, AddMusicMenu).
+struct EngineMissingBanner: View {
+    @EnvironmentObject var model: DeskModel
+    var body: some View {
+        if model.cannotRead {
+            HStack(spacing: Look.Space.pendingBanner) {
+                Image(systemName: "exclamationmark.triangle").foregroundStyle(Look.Colour.warning)
+                VStack(alignment: .leading) {
+                    Text(Words.engineMissing)
+                    Text(Words.engineMissingHelp)
+                }
+            }
+            .font(Look.Fonts.banner).padding(Look.Space.bannerPadding)
+            .background(.quaternary, in: RoundedRectangle(cornerRadius: Look.Shape.banner))
+            .padding(Look.Space.bannerPadding)
+            .accessibilityElement(children: .combine)
+        }
+    }
+}
+
 struct PendingBanner: View {
     @EnvironmentObject var model: DeskModel
     var body: some View {

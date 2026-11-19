@@ -70,7 +70,7 @@ private final class Lines: @unchecked Sendable {
                    PCWords.partsMissing("x"), PCWords.inTheWay("x"), PCWords.noSongs("x"),
                    PCWords.covers(0, of: 1), PCWords.covers(0, of: 5), PCWords.covers(1, of: 1), PCWords.covers(5, of: 5),
                    PCWords.covers(1, of: 5), PCWords.covers(3, of: 5)]
-            + ["unsupported", "protected", "damaged", "decode_error", "analysis_error", "duplicate"].flatMap { r in
+            + ["unsupported", "protected", "damaged", "decode_error", "analysis_error", "no_beat", "too_short", "duplicate"].flatMap { r in
                 ["m4a", "wma", "ogg", "mp3"].map { PCWords.why(reason: r, ext: $0) }
             }
         for line in all {
@@ -136,7 +136,7 @@ struct PCBuildTests {
 
         // What did not go in, by reason and type, in plain words.
         let reasons = Dictionary(uniqueKeysWithValues: outcome.notAdded.map { ($0.ext, $0.reason) })
-        #expect(reasons == ["m4p": "protected", "mp3": "analysis_error", "opus": "unsupported"])
+        #expect(reasons == ["m4p": "protected", "mp3": "no_beat", "opus": "unsupported"])
         let summary = PCBuild.summary(outcome)
         #expect(summary.contains("Done. 2 songs are in the crate file."))
         #expect(summary.contains("3 files could not be added:"))

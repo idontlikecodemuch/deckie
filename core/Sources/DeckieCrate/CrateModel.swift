@@ -78,15 +78,19 @@ public struct CrateManifest: Codable, Equatable, Sendable {
             public static let damaged = "damaged"
             /// The file could not be read, or decoding failed in some other way.
             public static let decodeError = "decode_error"
-            /// Decoded, but the analysis failed (no beat grid, too few bars, the model failed).
+            /// Decoded, but the analysis failed (the model failed; before Nov 18, 2026 also no beat grid or too few bars).
             public static let analysisError = "analysis_error"
+            /// Decoded, but too few beats were found to fit a beat grid: no steady beat (added Nov 18, 2026).
+            public static let noBeat = "no_beat"
+            /// Decoded, with a beat, but too few whole bars on the grid to be read as a song (added Nov 18, 2026).
+            public static let tooShort = "too_short"
             /// The same bytes as another file of the folder, which has the record (the record id is the file's hash).
             public static let duplicate = "duplicate"
             /// A folder the build left out by its rule (a name starting with an underscore, such as `_old` or
             /// `_stale - safe to delete`); one entry per folder, saying how many audio files it holds.
             public static let skipped = "skipped"
             /// The reasons a file has no record of its own.
-            public static let all = [unsupported, protected, damaged, decodeError, analysisError, duplicate, skipped]
+            public static let all = [unsupported, protected, damaged, decodeError, analysisError, noBeat, tooShort, duplicate, skipped]
         }
 
         /// One file without a record of its own, or with damaged frames.

@@ -70,7 +70,7 @@ enum MP3Reader {
     /// The decoded, trimmed audio and the frames concealed in it.
     static func decodeReporting(_ data: Data, file: String) throws(AudioDecodeError) -> DecodedAudio {
         let u = try decodeUntrimmed(data, file: file)
-        return DecodedAudio(buffer: u.trimmed(), damagedFrames: u.damagedFrameTimes())
+        return DecodedAudio(buffer: u.trimmed(), damagedFrames: u.damagedFrameTimes(), cutShort: u.cutShort)
     }
 
     /// `MP3ConcealmentCheck`'s two decodes.
@@ -121,6 +121,9 @@ enum MP3Reader {
         /// The frames that failed the damaged-frame check (concealed, unless the decode was asked not to), as
         /// sample frames of `buffer`, in order.
         var damagedFrames: [Range<Int>] = []
+        /// Set when the file is cut short, in words: its last frame stops before the frame's own length, or its tag
+        /// frame counts more audio frames than are there. The audio that is there is decoded as usual.
+        var cutShort: String? = nil
 
         /// The frames the lab's decoder keeps; see the type's comment.
         var kept: Range<Int> {
@@ -251,6 +254,7 @@ enum MP3Reader {
         guard channels > 0, rate > 0 else { throw damaged("the first frame gives no channels or no sample rate") }
         var samples = [Float]()
         var damagedFrames: [Range<Int>] = []
+        var cutShort: String? = nil
         if driver == .pullReader {
             let chunk = 16 * 1152
             var buffer = [Float](repeating: 0, count: chunk * channels)
@@ -276,6 +280,8 @@ enum MP3Reader {
             var pcm = [Float](repeating: 0, count: 2 * 1152)
             var tagFrame = tagBytes != nil  // dr_mp3's opening found the tag in the first frame with output
             var pos = 0
+            // Where the bytes dr_mp3 last skipped as no frame began, while nothing has decoded after them.
+            var skippedFrom: Int? = nil
             while true {
                 var info = drmp3dec_frame_info()
                 var flagged: Int32 = 0
@@ -296,13 +302,29 @@ enum MP3Reader {
                 } else if info.frame_bytes == 0 {
                     break  // nothing more found
                 }
+                if n == 0 && info.layer == 0 { skippedFrom = skippedFrom ?? pos } else { skippedFrom = nil }
                 pos += Int(info.frame_bytes)  // a frame with no output (bit reservoir not filled yet) is skipped
+            }
+            // Cut short: the bytes dr_mp3 skipped at the end begin a frame header whose frame runs past the end.
+            if let at = skippedFrom, end - at >= 4, let h = FrameHeader(Array(UnsafeRawBufferPointer(start: bytes + at, count: 4))),
+               let length = h.length(freeFormatBytes: 0), length > end - at {
+                cutShort = "it ends in the middle of a frame, \(end - at) of its \(length) bytes there"
             }
         }
         guard !samples.isEmpty else { throw damaged("no audio frame could be decoded") }
+        let tag = tagBytes.flatMap { XingTag($0) }
+        // Or the tag frame counts more audio than there is (a few frames of slack for the bit reservoir's first ones).
+        let decodedFrames = samples.count / channels / max(1, first.samplesPerFrame)
+        if let count = tag?.frameCount, count > 0, decodedFrames + 4 < count {
+            func mmss(_ frames: Int) -> String {
+                let s = Int((Double(frames * first.samplesPerFrame) / Double(rate)).rounded())
+                return String(format: "%d:%02d", s / 60, s % 60)
+            }
+            cutShort = "it says it holds \(mmss(count)) of audio and only \(mmss(decodedFrames)) is there"
+        }
         return Untrimmed(buffer: AudioBuffer(sampleRate: rate, channelCount: channels, samples: samples),
                          firstFrameOffset: first.offset, samplesPerFrame: first.samplesPerFrame,
-                         tag: tagBytes.flatMap { XingTag($0) }, damagedFrames: damagedFrames)
+                         tag: tag, damagedFrames: damagedFrames, cutShort: cutShort)
     }
 
     /// Where the ID3v2 tags at the start end, one after another: "ID3", two version bytes, a flags byte, the size

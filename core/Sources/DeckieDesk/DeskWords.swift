@@ -439,7 +439,7 @@ public enum DeskWords {
         "reason.protected": "Protected, cannot be read",
         "reason.damaged_frames": "Damaged frames, played as silence",
         "reason.duplicate": "The same file as another",
-        "reason.damaged": "Damaged",
+        "reason.damaged": "Damaged or incomplete",
         "reason.decode_error": "Could not be decoded",
         "reason.analysis_error": "Analysis failed",
         "reason.skipped": "Folder left out",
@@ -470,7 +470,7 @@ public enum DeskWords {
         // new (D32): the engine program could not be started or stopped answering.
         "engineGone": "Desk's engine stopped. Close Desk and open it again; songs already read are kept.",
         // new (D32): this computer has no beat tracker's runtime or model, so music cannot be read.
-        "engineMissing": "Desk can't read music on this computer yet: a part it needs is missing. {detail}",
+        "engineMissing": "Desk can't read music on {thisComputer}: part of Desk is missing.",
 
         // naming a song (research AA, route A; D30, D33). All new, placeholders until the copy audit.
         // new: a music CD in Add music, and while it is read.
@@ -827,7 +827,6 @@ public enum DeskWords {
         "join.tags": ", ",  // the Mac's tags field splits at commas: keep one
         "keyHelpFirst": "{camelot} {from}",
         "pendingLine": "{stopped} {putBack}",
-        "firstBodyEngineMissing": "{body} {missing}",
         "needNameLead": "{needName} ",
         "songsCaption": "{crate}, {songs}",
         "cellLabel": "{column}: {value}",
@@ -898,6 +897,17 @@ public enum DeskWords {
         "minutes.one": "1 minute",
         "minutes.other": "{n} minutes",
         "durationJoin": "{minutes} {seconds}",
+
+        // new (Nov 18, 2026): a first run on test folders. Placeholders until the copy audit.
+        // A song whose title tag and file name name different songs (`name_disagrees`).
+        "nameReason.disagree": "Tag and file name differ",
+        // What Desk took out of a title as written (`name_notes`).
+        "factName.name_notes": "Taken out of the title",
+        // Why a file did not go in: decoded, but no steady beat, or too short to be a song.
+        "reason.no_beat": "No beat found",
+        "reason.too_short": "Too short",
+        // Desk without the part that reads music (no ONNX Runtime or no beat model): said at once, on every screen.
+        "engineMissingHelp": "Reinstall Desk to put it back. Your crates and crate files are safe.",
     ]
 
     /// The words named `key` with `{name}` filled from `values`; the key itself when there are none, so a missing word

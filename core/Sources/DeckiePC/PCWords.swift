@@ -112,9 +112,11 @@ public enum PCWords {
             default: return "this kind of file cannot be read by this version yet"
             }
         case R.protected: return "copy-protected (an old iTunes Store purchase or an Apple Music download); only Apple's own apps can play it"
-        case R.damaged: return "the file is damaged"
+        case R.damaged: return "the file is damaged or incomplete"
         case R.decodeError: return "the file could not be opened"
-        case R.analysisError: return "no steady beat was found, or it is too short to be a song"
+        case R.noBeat: return "no steady beat was found"
+        case R.tooShort: return "it is too short to be a song"
+        case R.analysisError: return "it could not be analysed; the log says why"
         case R.duplicate: return "an exact copy of another file in the same folder"
         default: return "left out"
         }

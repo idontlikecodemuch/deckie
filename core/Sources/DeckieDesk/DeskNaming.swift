@@ -102,7 +102,15 @@ public enum DeskNaming {
         if !LocalNames.isUsableTitle(t.ident.title) { return "noTitle" }
         if !LocalNames.isUsableArtist(t.ident.artist) { return "noArtist" }
         if [f.title, f.artist, f.version].contains(where: { $0.guess && $0.value != nil }) { return "guess" }
+        if LocalFacts.namesDisagree(t), !f.title.checked, !djOrigins.contains(f.title.from ?? "") { return "disagree" }
         return nil
+    }
+
+    /// `reason` for a song with no panel facts: from the crate file alone.
+    public static func reason(_ t: CrateTrack) -> String? {
+        if !LocalNames.isUsableTitle(t.ident.title) { return "noTitle" }
+        if !LocalNames.isUsableArtist(t.ident.artist) { return "noArtist" }
+        return LocalFacts.namesDisagree(t) ? "disagree" : nil
     }
 
     public static func facts(_ t: CrateTrack, book: NameBook, corrections: NameCorrections) -> Facts {
@@ -463,13 +471,15 @@ public enum DeskNaming {
         return p
     }
 
-    /// "Looks right" on a selection (letter AA, 3.3): every guess among those songs, checked as it is.
+    /// "Looks right" on a selection (letter AA, 3.3): every guess among those songs, checked as it is; and the title
+    /// of a song whose tags and file name name different songs, so the DJ's yes takes it out of the list.
     public static func looksRight(songs: [Song]) -> Preview {
         var p = Preview(tool: "check", songs: songs.count, lines: 0, changes: [], problem: nil, lengthsDiffer: nil, pairs: [])
         for s in songs {
+            let disagrees = reason(s.track, s.facts) == "disagree"
             for field in fields {
                 let f = s.facts.fact(field)
-                guard f.guess, let v = f.value else { continue }
+                guard f.guess || (disagrees && field == "title"), let v = f.value else { continue }
                 p.changes.append(Change(song: s.track.id, field: field, before: v, after: v, tick: true, locked: false, note: nil))
             }
         }
