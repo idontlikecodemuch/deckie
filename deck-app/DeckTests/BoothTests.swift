@@ -1,6 +1,7 @@
 import Foundation
 import Testing
 @testable import Deck
+import DeckieCrate
 
 /// The booth's own tests, run in the simulator with the app as their host:
 ///   nice -n 19 xcodebuild test -project Deck.xcodeproj -scheme Deck -destination 'platform=iOS Simulator,name=<an iPad>'
@@ -57,7 +58,14 @@ import Testing
         }
         let r = try Library.shared.open(crateFile: demo, into: work)
         #expect(DemoCrate.crateId() != nil)
-        #expect(r.crate.manifest.name == "Demo")
+        // Its name, as the Crate tab shows it, and its id, kept since it was first built (Nov 19, 2026): the name was
+        // changed in the manifest by hand, so the package must still be exactly what the writer would write.
+        #expect(r.crate.manifest.name == "Demo crate")
+        #expect(r.crate.manifest.crateId == "1a365511-96d6-4840-a9f3-e9b7a772179c")
+        let written = try CrateWriter.encode(r.crate)
+        for file in ["manifest.json", "crate.json"] {
+            #expect(written[file] == (try Data(contentsOf: demo.appendingPathComponent(file))), "\(file) is not as the writer writes it")
+        }
         #expect(DemoCrate.isOpen)
         #expect(Library.shared.songCount == Credits.demoSongs.count)
         #expect(Library.shared.canRecognise)
@@ -80,13 +88,30 @@ import Testing
         #expect(CreditsView().demoSongs == Credits.demoSongs)
     }
 
+    // MARK: set recording
+
+    /// Set recording is on until the DJ turns it off (the REC chip's menu), and the choice outlasts a relaunch.
+    @MainActor @Test func setRecordingIsOnByDefaultAndRemembered() {
+        let d = UserDefaults.standard, key = Recognizer.recordingKey
+        let before = d.object(forKey: key)
+        defer { if let before { d.set(before, forKey: key) } else { d.removeObject(forKey: key) } }
+        d.removeObject(forKey: key)
+        #expect(Recognizer().recordingOn)
+        let r = Recognizer()
+        r.setRecording(false)
+        #expect(!r.recordingOn && !r.recActive)
+        #expect(!Recognizer().recordingOn)
+        r.setRecording(true)
+        #expect(Recognizer().recordingOn)
+    }
+
     // MARK: the words
 
     @Test func phrasesKeepTheirLastTwoWordsTogether() {
         let s = Words.phrases("Booth listens to the room,", "and how to mix it in.")
         #expect(s == "Booth listens to the\u{00A0}room,\nand how to mix it\u{00A0}in.")
         #expect(Words.keepLastTwo("Single") == "Single")
-        for line in (Words.firstRunWhat + "\n" + Words.tryTheDemoNote + "\n" + Words.demoHow + "\n" + Words.creditsDemoNote + "\n" + Words.firstRunSteps.map { $0.title + "\n" + $0.note }.joined(separator: "\n"))
+        for line in (Words.firstRunWhat + "\n" + Words.tryTheDemoNote + "\n" + Words.demoHow + "\n" + Words.creditsDemoNote + "\n" + Words.recWhere + "\n" + Words.firstRunSteps.map { $0.title + "\n" + $0.note }.joined(separator: "\n"))
                 .split(separator: "\n") where line.contains(" ") || line.contains("\u{00A0}") {
             #expect(line.contains("\u{00A0}"), "\(line) can end on one word")
         }
@@ -95,7 +120,8 @@ import Testing
     @Test func theFirstRunWordsKeepToTheVocabulary() {
         let all = ([Words.firstRunWaiting, Words.firstRunWhat, Words.openACrateFile, Words.tryTheDemo, Words.firstRunPrivacy,
                     Words.creditsNoneYet, Words.creditsPrivacy, Words.tryTheDemoNote, Words.demoHow, Words.leaveTheDemo,
-                    Words.demoOpened(songs: 7), Words.creditsDemoSection, Words.creditsDemoNote] + Words.firstRunSteps.flatMap { [$0.title, $0.note] })
+                    Words.demoOpened(songs: 7), Words.creditsDemoSection, Words.creditsDemoNote,
+                    Words.recOn, Words.recOff, Words.recPaused, Words.recordSets, Words.recWhere, Words.pauseRecording, Words.resumeRecording] + Words.firstRunSteps.flatMap { [$0.title, $0.note] })
             .joined(separator: " ").lowercased()
         #expect(!all.contains("track"))
         #expect(!all.contains(" ai ") && !all.contains("ai."))
