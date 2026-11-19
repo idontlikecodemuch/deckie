@@ -4,7 +4,7 @@ import DeckieCrate
 /// What the booth shows: its first-run screen while no crate file is open, else its tabs. No song data ships inside
 /// the app, so with no crate file there is nothing to listen for and nothing to pick from.
 enum BoothScreen: Equatable {
-    /// No crate file open; `demo` when a demo crate file comes with the app (the "Try the demo" button shows then).
+    /// No crate file open; `demo` when a demo crate file comes with the app (the "Try the demo crate" button shows then).
     case firstRun(demo: Bool)
     /// A crate file is open: Listen and Crate, as before.
     case crate

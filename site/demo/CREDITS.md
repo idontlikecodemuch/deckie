@@ -1,6 +1,6 @@
-# The demo's songs
+# The demo crate's songs
 
-Seven songs for the demo: deckie.io/demo plays them out loud, and the demo crate file inside Deckie Booth
+Seven songs for the demo crate: deckie.io/demo plays them out loud, and the demo crate file inside Deckie Booth
 (`deck-app/Deck/Demo/Demo.deckie`) holds their facts and fingerprints, never the audio. Deckie Booth's Credits screen
 lists the same songs (`deck-app/Deck/Sources/Credits.swift`, `Credits.demoSongs`); keep the two in step.
 
