@@ -7,9 +7,12 @@ what we do not know yet. Standing principles from the sprint are at the end.
 ## Oct 26, 2026
 
 ### D1. Deckie is an App Hold Media LLC product
-The Apple developer team (566NNM5HT8) is already registered to the LLC. The bundle id is still
-`io.christophershannon.deck` and no App Store Connect record exists, so the final bundle id can still be chosen for
-free. Decide it under the LLC before the first TestFlight upload; after the record exists it is permanent.
+The Apple developer team (566NNM5HT8) is already registered to the LLC. The bundle id was then
+under a personal prefix and no App Store Connect record exists, so the final bundle id can still be chosen for free.
+Decide it under the LLC before the first TestFlight upload; after the record exists it is permanent. **Chosen Nov 19,
+2026**, on the product's domain: `io.deckie.booth` (the booth, shown as "Deckie Booth"), `io.deckie.desk` (Desk for
+Mac), and `io.deckie.crate` with `io.deckie.crate-file` for the crate file's two forms (`docs/architecture/crate-format.md`,
+"The extension `.deckie`").
 
 ### D2. Analysis runs in the iOS app and on the computer, sharing one analysis file
 - Two analysers: the iPad/iPhone app does what it can on device; the Mac (later any computer) does the deep work.
@@ -273,7 +276,7 @@ CD1 and CD2. Commit 4eac5da.
 The decision, in the owner's words: "we have been using crate to mean both the music and the crate file and we
 should separate them", and "Why don't we just call it the crate and the crate file". Three words, each with one
 meaning. The **library** is all the music a DJ owns. A **crate** is a group of songs from it, the way DJs already
-say it, and can be the whole library. A **crate file** is the `.deckiecrate` that Deckie Desk writes from a crate
+say it, and can be the whole library. A **crate file** is the `.deckie` (until D40 `.deckiecrate`) that Deckie Desk writes from a crate
 and the booth carries: tempo, key, bars, style and the fingerprints for recognition, never audio. The sentence that
 teaches it: "Desk reads your crate and writes a crate file." "Crate index" was weighed and passed over: an index only
 points at things, and it is our word, not a DJ's. Nothing in the format or the code is renamed; "crate v1" stays the
@@ -681,6 +684,15 @@ title."
 - **Changes to the lookup are judged on music it has not seen.** The music added on Nov 13 is split in two by whole
   folder: one half for this round, the other kept untouched for a later check. ("Let's talk half of it for this
   round so we have a fresh half later.")
+
+### D40. The crate file is `.deckie`; the ids are on the product's domain (Nov 19)
+Every crate file Deckie writes is now `<name>.deckie`, in either form (the package a Mac writes, the single file a
+PC writes). A crate file named `.deckiecrate`, the extension until now, is read for good and never renamed or
+rewritten; crate v1 does not change. The booth's bundle id is `io.deckie.booth` and its name under the icon "Deckie
+Booth"; Desk for Mac is `io.deckie.desk`; the crate file's type is `io.deckie.crate` (with `io.deckie.crate-file` for
+the single-file form, because the system needs one type for a folder and one for a plain file). Desk for Mac declares
+the type too, so a Mac shows a crate file as one file. The earlier type ids stay importable. The words stay as D21
+set them: library, crate, crate file. Details: `docs/architecture/crate-format.md`, "The extension `.deckie`".
 
 ### Note on D19 (Nov 1): versions of a song stay separate rows
 Christopher, on two remixes of one song both showing in the picks: "we shouldn't merge them unless they are the same

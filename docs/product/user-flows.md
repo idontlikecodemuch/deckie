@@ -16,7 +16,7 @@ the Mac, Import, Names, Editor, Discs. Internal names never appear; every label 
    two buttons, "Open a crate file" and "Build a crate file from files on this iPad"; one line naming the engine level (D11),
    such as "This iPad reads crate files analysed on a Mac". Today: none; Mike's data is compiled in, so the first
    screen is the Booth's "Listening…".
-2. **Open a crate file.** Sees: the Files picker filtered to `.deckiecrate`, iCloud Drive's Deckie folder first; or
+2. **Open a crate file.** Sees: the Files picker filtered to crate files (`.deckie`, and the earlier `.deckiecrate`), iCloud Drive's Deckie folder first; or
    AirDrop's "Open in Deckie". Continues at flow 3, step 3.
 3. **Build from files.** Sees: the Files picker for a folder or files; "Analysing 12 of 373"; "Plug in to
    continue" on battery (spec 5.3); progress survives leaving the app. Stores: `crate.json` (analysis, names from
@@ -49,7 +49,7 @@ the Mac, Import, Names, Editor, Discs. Internal names never appear; every label 
    or content hash. Stores: disc, folder and track location in `crate.json` (the primary identifier where discs
    exist); the manifest on the disc is a copy **[inf]**. Today: Desk's Discs panel makes discs and folders and puts
    songs in order (the shared core's operations, so every desk version has them); the CDs tab shows the result.
-7. **Done.** Sees: "`<name>.deckiecrate` · 373 tracks · 3.6 MB" and "Send to iPad".
+7. **Done.** Sees: "`<name>.deckie` · 373 tracks · 3.6 MB" and "Send to iPad".
 
 ## 3. Moving the crate file to the iPad
 

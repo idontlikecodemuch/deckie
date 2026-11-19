@@ -4,7 +4,8 @@ Written Oct 26, 2026, at the end of a one-week sprint that built these tools for
 This folder is a clean copy of everything that is code, data or documentation. It holds no music, no
 virtual environment, no build caches and no credentials. Read this file first, then `docs/competitive-analysis.md`,
 then the component READMEs. The product name is **Deckie** (chosen Oct 26, 2026, not yet trademark-cleared; Australian slang for a
-deckhand). "Deck" survives only as the code name in folder names, the Xcode target and the bundle id. The naming
+deckhand). "Deck" survives only as the code name in folder names, the Xcode target and the deck:// scheme (the bundle id
+is io.deckie.booth since Nov 19, 2026). The naming
 research, the names rejected on the way and the checks still owed are in `docs/naming/` (start with `00-shortlist.md`).
 
 ## 1. What this is, in one paragraph
@@ -232,7 +233,7 @@ percent tempo steps (2-3 d); loud-room recognition test and wider pitch variants
    key gate, the energy-curve planner and the dip fixes. Install Demucs and try drums-first blends on ten pairs.
 3. Deck: a loud-room recognition test with a real speaker at 0, +4, +8, +12 percent; the history strip; CUE export
    of the set log; then an internal TestFlight build (needs the App Store Connect app record for
-   io.christophershannon.deck).
+   io.deckie.booth).
 4. Write down the product hypothesis and the trial plan from the analysis's 30/60/90-day section, and decide the
    catalogue story (user-built from their own files, on device).
 

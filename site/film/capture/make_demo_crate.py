@@ -1,6 +1,6 @@
 """Demo crate file for the explainer captures: a COPY of a crate file with every title, artist, file name and folder
 replaced by invented ones, and disc / folder / track labels set. The analysis numbers are untouched. Never writes to
-the source. usage: make_demo_crate.py <src.deckiecrate> <dst.deckiecrate>"""
+the source. usage: make_demo_crate.py <src.deckie> <dst.deckie> (an earlier .deckiecrate is read too)"""
 import json, random, shutil, sys, os, re
 src, dst = sys.argv[1], sys.argv[2]
 assert not os.path.exists(dst)
@@ -36,7 +36,7 @@ for i, t in enumerate(tr):
     t["file"]["rel"] = f"{disc}/{folder}/{name}"
 json.dump(c, open(f"{dst}/crate.json", "w"), ensure_ascii=False)
 m = json.load(open(f"{dst}/manifest.json"))
-m["name"] = os.path.basename(dst).replace(".deckiecrate", "")
+m["name"] = re.sub(r"\.(deckie|deckiecrate)$", "", os.path.basename(dst))
 for e in m["import_log"]["entries"]:
     e["rel"] = "_old versions"
 json.dump(m, open(f"{dst}/manifest.json", "w"), ensure_ascii=False)

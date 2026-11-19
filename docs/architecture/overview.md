@@ -19,7 +19,7 @@ Three apps built from two shared Swift packages, one file format between devices
    naming editor, exports      one-tap tuning, How you mix           quick picks, crate viewer
    bulk analysis, signatures   set recording + export                 
 
-                        <name>.deckiecrate  (package folder; iCloud Drive, AirDrop, Files)
+                        <name>.deckie       (package folder; iCloud Drive, AirDrop, Files)
                         analysis + names + prefs + history + optional signatures; never audio
 
    Lab (Python, mixer/): ground truth for the 373 tracks, benchmarks, model experiments. Never ships.

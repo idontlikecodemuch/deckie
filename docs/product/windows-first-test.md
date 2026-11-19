@@ -67,7 +67,8 @@ moved or copied.
 ## Getting the crate file to your iPad
 
 Click "Export crate file…" and choose where it goes. You get one small file named after your crate, such as
-`Friday night.deckiecrate` (about 4 KB a song). Any of these work:
+`Friday night.deckie` (about 4 KB a song). A crate file made by an earlier test ends in `.deckiecrate`; it still
+opens. Any of these work:
 
 - A USB stick or SD card: export the crate file onto it, plug it into the iPad, and open it from the Files app.
 - iCloud Drive: with iCloud for Windows, export the crate file into your iCloud Drive folder. It shows in Files on
@@ -122,8 +123,9 @@ does not change your music.
 ## "Make Crate File", the other way
 
 The same folder holds a second program, "Make Crate File". It has no window of its own: drag your music folder
-onto it, and it reads the folder and writes the crate file next to it (`My Music.deckiecrate` for a folder called
-"My Music"), with a short log beside it. It needs nothing from Windows but Windows.
+onto it, and it reads the folder and writes the crate file next to it (`My Music.deckie` for a folder called
+"My Music"), with a short log beside it. It needs nothing from Windows but Windows. A crate file an earlier test
+wrote there (`My Music.deckiecrate`) is left as it was.
 
 Use it if Deckie Desk will not open on your PC, or if you prefer it. It makes a crate file from one folder. Deckie
 Desk does more: several sticks and folders in one crate, names, and listening to a song to name it.

@@ -355,7 +355,7 @@ pair and marked), 1 s of silence between clips, mastered like the mixes; list in
 3. `plan.py`, check the tracklists, then `render.py plan_mix1.json` / `plan_mix2.json` and `sampler.py`.
 
 ## sprint_check.py (Oct 29, 2026): a Deckie crate against the sprint's data
-`python3 sprint_check.py <crate.deckiecrate>` joins the sprint's pool (`<music folder>/_pool build/newfiles/pool.json`
+`python3 sprint_check.py <crate.deckie>` joins the sprint's pool (`<music folder>/_pool build/newfiles/pool.json`
 and `mixer/candidates.json`) with a crate by file path (files the build dropped as duplicates follow the import log
 to the file that has the record) and writes `sprint_check.tsv` and `sprint_check.md`. The sheet keeps the two kinds
 of sprint data apart, as the D5 note of Oct 29 asks: the `fact.` columns are the known facts (artist and song name,

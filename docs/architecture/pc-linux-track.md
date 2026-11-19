@@ -82,7 +82,7 @@ elsewhere.
    against the committed features.
 4. The crate reader and writer, with the engine-agnostic fields track L lists (engine record, benchmark-earned
    fidelity, per-block source and confidence, `features_present`); a fixture crate under `core/fixtures/`.
-5. `deckie-build <folder> [--rekordbox export.xml] --out name.deckiecrate`, with progress, resumable, and a
+5. `deckie-build <folder> [--rekordbox export.xml] --out name.deckie`, with progress, resumable, and a
    `bench` subcommand for the Mac.
 6. The Mac run of the yardstick, by the main session; fixes; a second run.
 7. Windows: from probe to a packaged build, if the probe held; otherwise the fallback decision.
