@@ -39,8 +39,7 @@ struct DebugSheet: View {
                     }
                 }
                 Section(Words.setRecording) {
-                    @Bindable var rec = rec
-                    Toggle(Words.recordWhileListening, isOn: $rec.recordingOn)
+                    Toggle(Words.recordWhileListening, isOn: Binding(get: { rec.recordingOn }, set: { rec.setRecording($0) }))
                     if rec.recActive { Button(rec.recPaused ? Words.resumeRecording : Words.pauseRecording) { rec.toggleRecPause() } }
                     Text(Words.setFilesWhere).font(Look.Debug.noteFont).foregroundStyle(.secondary)
                     ForEach(setFiles, id: \.self) { Text($0).font(Look.Debug.fileFont) }
