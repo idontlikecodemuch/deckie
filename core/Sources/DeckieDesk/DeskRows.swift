@@ -78,8 +78,7 @@ public struct DeskSongRow: Codable, Equatable, Sendable {
         tags = t.ident.tags
         nameFrom = t.ident.source
         names = facts
-        nameReason = facts.flatMap { DeskNaming.reason(t, $0) } ?? (LocalFacts.needsName(t) ? "noTitle" : nil)
-        if facts == nil && nameReason != nil && LocalNames.isUsableTitle(t.ident.title) { nameReason = "noArtist" }
+        nameReason = facts.map { DeskNaming.reason(t, $0) } ?? DeskNaming.reason(t)
         needsName = nameReason != nil
         bpm = t.grid?.bpm
         bars = t.grid?.nBars

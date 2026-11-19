@@ -186,7 +186,8 @@ What has to be true for each step to work, and what the DJ sees if it is not.
 | Step | Needs | If it is missing |
 |---|---|---|
 | Opening Desk | A Mac with Apple silicon, macOS 14 or later | **Today: does not open on another DJ's Mac at all** (section 5) |
-| Reading songs | Files Desk can read: MP3, WAV, AIFF, FLAC, AAC, Apple Lossless | Listed in "What didn't go in", counted by kind |
+| Reading songs | Files Desk can read: MP3, WAV, AIFF and FLAC everywhere; AAC and Apple Lossless (`.m4a`, `.mp4`, and AAC as `.aac`) on a Mac (Core Audio, since Nov 18, 2026) and on Windows (Media Foundation; not on a Windows "N" edition without Microsoft's Media Feature Pack); not on Linux. Not Ogg Vorbis, Opus or WMA | Listed in "What didn't go in", counted by kind: "File type not supported", "Damaged or incomplete" (a file cut short or broken), "No beat found", "Too short" |
+| | The part of Desk that reads music (ONNX Runtime and the beat model, inside the app) | Said at once, on every screen: Desk can't read music on this computer, part of Desk is missing, reinstall it. Add music is off |
 | | Not a rights-protected download from a streaming service | Listed, with the reason said plainly |
 | Tempo, bars, vocals | The two models inside the app | Nothing to install; they ship in it |
 | Fingerprints | The music still where it was when it was read | Today: asks "Where is this crate's music?" |

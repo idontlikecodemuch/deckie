@@ -200,7 +200,11 @@ memo Q's vocal fields, `vocal_structure` and `hooks`, are instead left out when 
   not place the start of the sound to the sample (an AAC file read on Windows that states its encoder's lead-in
   nowhere). Every time in such a record (the grid's first downbeat, the tempo segments, the ends) may be up to 48 ms
   late against the file as a player plays it. A reader shows the song as any other and may show its grid with
-  that caveat; a reader that does not know the name ignores it, as with every flag.
+  that caveat; a reader that does not know the name ignores it, as with every flag. One more added Nov 18, 2026,
+  with no field changed: **`name_disagrees`**, set by Desk when a song's title tag and its file name (read as "Artist
+  - Title") share no word, so they likely name different songs. The tag's reading is kept as the name; Desk lists the
+  song among those that need a name until the DJ names it or says it looks right (`ident.source` `user`), and a
+  reader treats it as any other song.
 - `style` *(style)* **proposed**: `model` and `dims`; the values are in `style/<id>.bin`. A reader compares style
   vectors only between records with the same `model`.
 - `signatures` **proposed** (track A had variant to `true`): variant name (`o`, `r-4`, `r+4`, as P11 settles) to
@@ -302,9 +306,11 @@ renames, applied here: `import_log.built_by` is a device label, the block is `im
   own name for the device, by the same rule and with the same value as `analysis.device` (the builder writes its one
   device label, `Analysis.platform` on Windows and Linux, to both); the builder had proposed its program and version,
   which the records' `engine` blocks already give. Reasons: `unsupported` (a format this platform cannot decode: AAC
-  and WMA on Linux, Ogg, Opus), `protected` (copy protection: no decoder will ever read it), `damaged` (cut short or
-  corrupted), `decode_error` (could not be read, or failed otherwise while decoding), `analysis_error` (decoded, but no
-  beat grid, too few bars, or the model failed) and `duplicate` (the same bytes as another file, which has the record:
+  and Apple Lossless on Linux, WMA, Ogg, Opus), `protected` (copy protection: no decoder will ever read it), `damaged`
+  (cut short or corrupted; since Nov 18, 2026 also an MP3 cut short whose remaining audio is too little to read),
+  `decode_error` (could not be read, or failed otherwise while decoding), `analysis_error` (decoded, but the analysis
+  failed; before Nov 18, 2026 also no beat grid or too few bars), `no_beat` (added Nov 18, 2026: decoded, but too few
+  beats to fit a beat grid), `too_short` (added Nov 18, 2026: a beat, but too few whole bars) and `duplicate` (the same bytes as another file, which has the record:
   the id is the file's hash; since D27 only a second file in a place the entry already has, that is two copies in one
   folder on the Mac, which has no numbers: a file anywhere else adds a place, below). The log describes the last build; an app that later adds tracks leaves it as it is.
 - **`file.tag_bpm`**, a number or null: the tag tempo, the tempo written down for the file before it was analysed (the
@@ -551,6 +557,7 @@ record without them keeps its bytes and the example crate is unchanged:
   | `copyright`, `language` | as written |
   | `lyrics` | added with D39 (Nov 14, 2026): `clean` or `dirty`, one value; no fact when not said, which is never shown as clean. From the song's name and tags (`tag`: the title, its version, the grouping, the comment, iTunes' advisory), its file name (`filename`) or the DJ (`user`); never from a lookup |
   | `original_label` | added with D39 (Nov 14, 2026): the label the song first came out on, beside `original_year`, while `label` stays the copy's own (a lookup's answer for a song on a compilation, or the original's for a DJ's edit) |
+  | `name_notes` | added Nov 18, 2026: what Desk took out of the song's title as written, each as written, one or more: an upload's or a download's marks (`(Official Video)`, `(Lyrics)`, `(320kbps)`, `(siteName.com)`) and a part after a dash that was neither the title nor a version (an uploader's or a channel's name). From the title tag (`tag`) or the file name (`filename`) |
 
   A name is lower-case letters, digits and `_`, starting with a letter; a reader ignores a name it does not know, so
   a later fact is added without a new version. The title, the artist and the version are never facts: they stay in

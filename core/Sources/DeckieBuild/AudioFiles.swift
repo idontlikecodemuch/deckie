@@ -162,7 +162,7 @@ public struct FileFailure: Sendable, Equatable {
 
     /// The import log's reason and text for an error thrown while decoding or analysing the file at `path`: the
     /// decoder's kinds (unsupported, protected, damaged; a file that cannot be read is a decode error), the analyser's
-    /// (no grid, too few bars) and the model's are analysis errors. The text never carries the file's absolute path.
+    /// (no beat grid: `no_beat`; too few bars: `too_short`), and the rest (the model's) are analysis errors. The text never carries the file's absolute path.
     public static func classify(_ error: Error, path: String) -> FileFailure {
         typealias R = CrateManifest.ImportLog.Reason
         if let e = error as? AudioDecodeError {
@@ -175,7 +175,13 @@ public struct FileFailure: Sendable, Equatable {
             }
             return FileFailure(reason: reason, message: scrub(e.message, path: path))
         }
-        if let e = error as? AnalyserError { return FileFailure(reason: R.analysisError, message: e.description) }
+        if let e = error as? AnalyserError {
+            switch e {
+            case .noGrid: return FileFailure(reason: R.noBeat, message: e.description)
+            case .tooFewBars: return FileFailure(reason: R.tooShort, message: e.description)
+            case .vocalBars: return FileFailure(reason: R.analysisError, message: e.description)
+            }
+        }
         if let e = error as? OnnxRuntimeError {
             return FileFailure(reason: R.analysisError, message: scrub("the beat model failed: \(e)", path: path))
         }

@@ -263,6 +263,8 @@ public final class DeskProtocol: @unchecked Sendable {
             stopping = true
             reply(id); sendState()
         case "add.count":
+            // Nothing is counted for a read that cannot finish: the part that reads music is missing.
+            guard analysis.ready else { throw RequestError(code: "engine_missing", detail: analysis.detail) }
             let path = try Self.string(obj, "path")
             var isDir: ObjCBool = false
             guard FileManager.default.fileExists(atPath: path, isDirectory: &isDir), isDir.boolValue else {

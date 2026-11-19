@@ -98,10 +98,16 @@ public struct DecodedAudio: Sendable {
     /// late. The reason, in words; nil for every file whose start is known.
     public var startUncertain: String?
 
-    public init(buffer: AudioBuffer, damagedFrames: [DamagedFrame] = [], startUncertain: String? = nil) {
+    /// Set when the file is cut short (MP3: its last frame stops part way, or its tag frame counts more audio than is
+    /// there), in words. What is there is decoded and analysed as usual; when too little is left to find a beat, the
+    /// file is reported as damaged or incomplete rather than as a song with no beat.
+    public var cutShort: String?
+
+    public init(buffer: AudioBuffer, damagedFrames: [DamagedFrame] = [], startUncertain: String? = nil, cutShort: String? = nil) {
         self.buffer = buffer
         self.damagedFrames = damagedFrames
         self.startUncertain = startUncertain
+        self.cutShort = cutShort
     }
 }
 
@@ -146,9 +152,10 @@ public struct MP3ConcealmentCheck: Sendable {
 }
 
 /// Turns an audio file into float samples at the file's own sample rate. It decodes WAV and AIFF in plain Swift, MP3
-/// through the vendored dr_mp3 and FLAC through the vendored dr_flac, the same on every platform; AAC is recognised
-/// but reports that it is not supported yet, and a copy-protected MP4 (an iTunes Store or Apple Music file) that it
-/// is protected.
+/// through the vendored dr_mp3 and FLAC through the vendored dr_flac, the same on every platform; AAC and Apple
+/// Lossless through the system's own decoder (Core Audio on Apple's systems, Media Foundation on Windows), and on
+/// Linux reports that they are not supported yet; a copy-protected MP4 (an iTunes Store or Apple Music file) it reports
+/// as protected everywhere.
 public enum AudioDecoder {
     /// Decodes the whole file into memory at its own sample rate (resampling is a later step). Mono stays mono,
     /// stereo stays stereo, more channels are cut to the first two.
@@ -185,9 +192,11 @@ public enum AudioDecoder {
             }
             #if os(Windows)
             return try mediaFoundation(url, data: data, format: format)
+            #elseif canImport(AudioToolbox)
+            return try coreAudio(url, data: data, format: format)
             #else
-            throw unsupported(path, format, "AAC is not supported on this platform yet: it will use the platform's "
-                              + "own decoder (AVFoundation on Apple, Media Foundation on Windows); Linux has no "
+            throw unsupported(path, format, "AAC is not supported on this platform yet: Desk reads it with the "
+                              + "system's own decoder (Core Audio on a Mac, Media Foundation on Windows); Linux has no "
                               + "licence-safe AAC decoder in a distribution package")
             #endif
         case .unknown:
@@ -216,6 +225,35 @@ public enum AudioDecoder {
             throw unsupported(path, format, "Windows could not decode it: \(error)")
         }
         let b = raw.buffer
+        let trim: MP4Trim
+        do {
+            trim = try MP4Trim.plan(info: info, decoded: b.samples.count / b.channelCount, rate: b.sampleRate)
+        } catch {
+            throw unsupported(path, format, error.message)
+        }
+        return DecodedAudio(buffer: AudioBuffer(sampleRate: b.sampleRate, channelCount: b.channelCount,
+                                                samples: trim.apply(b.samples, channels: b.channelCount)),
+                            startUncertain: trim.startUncertain)
+    }
+
+    /// AAC and Apple Lossless through Core Audio on Apple's systems (`AppleAudioReader`), checked against where the file
+    /// says its sound starts and ends (`MP4Trim`), as Windows' decoder is. Compiled everywhere; only Apple's systems
+    /// call it.
+    static func coreAudio(_ url: URL, data: Data, format: AudioFormat) throws(AudioDecodeError) -> DecodedAudio {
+        let path = url.path
+        let info = MP4AudioInfo.read(data)
+        let b: AudioBuffer
+        do {
+            b = try AppleAudioReader.decodeRaw(url)
+        } catch {
+            // AAC or Apple Lossless that does not decode is damaged; an MP4 holding no audio track, or another codec,
+            // is a kind of file not read.
+            let mp4 = data.count >= 8 && data[data.startIndex + 4..<data.startIndex + 8].elementsEqual("ftyp".utf8)
+            let ours = info.map { ["mp4a", "alac"].contains($0.codec) } ?? !mp4
+            throw AudioDecodeError(kind: ours ? .damaged : .unsupported, file: path, format: format,
+                                   message: ours ? error.message + "; the file may be cut short or damaged"
+                                       : "an MP4 with no AAC or Apple Lossless audio in it (\(info?.codec ?? "no audio track"))")
+        }
         let trim: MP4Trim
         do {
             trim = try MP4Trim.plan(info: info, decoded: b.samples.count / b.channelCount, rate: b.sampleRate)

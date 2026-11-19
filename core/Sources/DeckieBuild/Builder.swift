@@ -350,7 +350,10 @@ public final class Builder: Sendable {
                 }
                 if line.status == "failed", let reason = line.reason {
                     let failure = FileFailure(reason: reason, message: line.message ?? "")
-                    if failure.isLasting {
+                    // An AAC or Apple Lossless file a Mac could not read before Core Audio was used (Nov 18, 2026) is
+                    // read again; the engine's label did not change with it.
+                    let aacBefore = failure.reason == CrateManifest.ImportLog.Reason.unsupported && ["m4a", "mp4", "aac"].contains(f.ext)
+                    if failure.isLasting && !aacBefore {
                         done[f.rel] = .failed(failure)
                         continue
                     }
