@@ -107,6 +107,13 @@ struct PlayingPanel: View {
                 VStack(alignment: .leading, spacing: Look.Listen.listeningGap) {
                     Text(Words.listeningTitle).font(Look.Listen.titleFont).foregroundStyle(Theme.tx)
                     Text(Words.listeningHelp).font(Look.Listen.listeningHelpFont).foregroundStyle(Theme.dim)
+                    // The demo (DemoCrate): where its songs play from, and the way back to the first-run screen.
+                    if DemoCrate.isOpen {
+                        Text(Words.demoHow).font(Look.Listen.demoHowFont).foregroundStyle(Theme.mut)
+                            .lineSpacing(Look.Listen.demoHowLineSpacing).fixedSize(horizontal: false, vertical: true)
+                            .padding(.top, Look.Listen.demoHowTop)
+                        Button(Words.leaveTheDemo) { sug.leaveDemo = true }.buttonStyle(PillStyle()).padding(.top, Look.Listen.byHandButtonTop)
+                    }
                 }
             }
             Spacer(minLength: 0)

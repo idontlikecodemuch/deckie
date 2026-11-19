@@ -17,6 +17,10 @@ deck-app/*.xcarchive
 *.aac
 *.m4a
 *.iso
+# the one exception: the demo page's public-domain (CC0) songs, each listed with its licence in site/demo/CREDITS.md
+!site/demo/audio/*.mp3
+# the demo's downloads, before and after the licence check (site/demo/CREDITS.md says how to fetch them again)
+demo-downloads/
 mixer/mixes/_work/
 deck-app/Deck/Resources/Deck.shazamcatalog
 # the party's data (tools/prep_data.py): private, never committed and never bundled (project.yml names each file the
