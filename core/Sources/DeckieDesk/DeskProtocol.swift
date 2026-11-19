@@ -480,7 +480,7 @@ public final class DeskProtocol: @unchecked Sendable {
             let last = LastSent()
             let screen = RunScreenOut { [weak self] m in self?.send(m) }
             do {
-                let (_, report) = try run.run { p in
+                let (saved, report) = try run.run { p in
                     // The run screen's songs, notes and totals (D37), in batches at most four times a second.
                     screen.offer(p)
                     // Every line goes out; bare progress at most ten times a second.
@@ -496,12 +496,16 @@ public final class DeskProtocol: @unchecked Sendable {
                 self.runningDisc = nil
                 self.currentRun = nil
                 self.stopping = false
-                self.session.runEnded(info.id)
+                self.session.runEnded(info.id, saved: saved)
                 // The crate's name as it is now: a name given while the run went is applied as it ends.
                 var shown = report
                 if let n = self.session.current?.name { shown.crate = n }
-                self.send(["event": "run.finished", "report": Self.plain(shown)])
+                // The crate as saved goes out before the run is said to have finished: a window shows its finished
+                // screen on run.finished, and what that screen offers (Export crate file, and the rest that needs
+                // songs) asks the last state and songs whether the crate has any. Sent after, a click between the
+                // messages was told the crate had no songs yet (a slow PC, Windows).
                 self.sendState(); self.sendSongs()
+                self.send(["event": "run.finished", "report": Self.plain(shown)])
                 self.lock.unlock()
             } catch {
                 screen.flush()
@@ -511,8 +515,8 @@ public final class DeskProtocol: @unchecked Sendable {
                 self.currentRun = nil
                 self.stopping = false
                 self.session.runEnded(info.id)
-                self.send(["event": "run.failed", "detail": (error as? LocalizedError)?.errorDescription ?? "\(error)"])
                 self.sendState(); self.sendSongs()
+                self.send(["event": "run.failed", "detail": (error as? LocalizedError)?.errorDescription ?? "\(error)"])
                 self.lock.unlock()
             }
             done.signal()

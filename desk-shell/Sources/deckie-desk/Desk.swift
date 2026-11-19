@@ -36,6 +36,16 @@ final class Desk: @unchecked Sendable {
         window = w
         self.options = options
         window.onMessage = { [unowned self] text in self.fromPage(text) }
+        // No one at the keyboard: the page writes its boxes down instead of showing them (desk.js `message`).
+        if Notice.noBoxes { window.addScript("window.__deckieNoBoxes = true;") }
+    }
+
+    /// A box that was not shown (Notice.noBoxes): its words written down, and handed to a check, which fails with them
+    /// unless they only say something went right (`fine`).
+    private func boxNotShown(_ lines: [String], fine: Bool) {
+        let words = lines.flatMap { $0.split(whereSeparator: \.isNewline) }.joined(separator: " | ")
+        Notice.say("deckie-desk: a box, not shown (no boxes): \(words)")
+        for w in pageWatchers { w(["type": "shell.box", "lines": lines, "fine": fine]) }
     }
 
     /// Starts the engine, shows the pages, and runs until the window closes. Returns the window's exit code.
@@ -110,17 +120,29 @@ final class Desk: @unchecked Sendable {
         case "shell.chooseFolder":
             let purpose = m["purpose"] as? String
             let preset = purpose == "export" ? options.exportAnswer : options.addMusicAnswer
+            if preset == nil && Notice.noBoxes {
+                boxNotShown(["The folder chooser (\(purpose ?? "add music")): \(m["message"] as? String ?? "")"], fine: false)
+                reply(id, ["cancelled": true])
+                return
+            }
             let path = preset ?? window.chooseFolder(message: m["message"] as? String ?? "", accept: m["accept"] as? String ?? "",
                                                      cancel: m["cancel"] as? String ?? "", start: m["start"] as? String)
             reply(id, path.map { ["path": $0] } ?? ["cancelled": true])
         case "shell.chooseFile":
             let preset = m["purpose"] as? String == "playlist" ? options.playlistAnswer : nil
+            if preset == nil && Notice.noBoxes {
+                boxNotShown(["The file chooser (\(m["purpose"] as? String ?? "a file")): \(m["message"] as? String ?? "")"], fine: false)
+                reply(id, ["cancelled": true])
+                return
+            }
             let path = preset ?? window.chooseFile(message: m["message"] as? String ?? "", accept: m["accept"] as? String ?? "",
                                                    cancel: m["cancel"] as? String ?? "")
             reply(id, path.map { ["path": $0] } ?? ["cancelled": true])
         case "shell.openFolder":
             if let p = m["path"] as? String { Window.openFolder(p) }
             reply(id, [:])
+        case "shell.box":
+            boxNotShown(m["lines"] as? [String] ?? [], fine: m["fine"] as? Bool == true)
         case "shell.droppedUris":
             // WebKitGTK hands the page dropped files as file URIs; they become paths here.
             let paths = (m["uris"] as? [String] ?? []).compactMap { URL(string: $0) }.filter(\.isFileURL)
