@@ -17,7 +17,8 @@ import DeckieRecognition
 //       --memory-every N: every N readings of a clip, a line on standard error with the readings' time and the
 //       process's memory footprint (the system's own figure: the clean pages of a file opened in place left out).
 //   --listener main|fast|a|b|ab: which listener (main when left out); docs/research/faster-listening-proposals.md.
-//       --challenge-margin X, --challenge-window S (A), --cut-false-alarm S (B): its numbers, for choosing them.
+//       --challenge-margin X, --challenge-window S (A), --cut-false-alarm S, --cut-search-from S (B): its numbers,
+//       for choosing them on the dev half.
 //   deckie-listen --index crate.dkx --list clips.tsv --out readings.tsv [--jobs N]
 //       many recordings: clips.tsv has a name, a raw file (16-bit mono), its first sample, its sample count and its
 //       rate on each line; every reading of every clip goes to readings.tsv with the clip's name in front.
@@ -165,6 +166,7 @@ let settings: ListenSettings = {
     if let v = values["--challenge-margin"].flatMap(Double.init) { s.challengeMargin = v }
     if let v = values["--challenge-window"].flatMap(Double.init) { s.challengeWindow = v }
     if let v = values["--cut-false-alarm"].flatMap(Double.init) { s.cutFalseAlarmSeconds = v }
+    if let v = values["--cut-search-from"].flatMap(Double.init) { s.cutSearchFrom = v }
     if let v = values["--window"].flatMap(Double.init) { s.window = v }
     if let v = values["--sure"].flatMap(Double.init) { s.sure = v }
     if let v = values["--fair"].flatMap(Double.init) { s.fair = v }
