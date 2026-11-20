@@ -208,8 +208,8 @@
       const markH = Math.round(h * L.markH), waveH = h - markH, edge = m.front * w;
       if (waveH <= 0) return;
       ctx.fillStyle = L.none;
-      ctx.fillRect(0, waveH - L.lineH, w, L.lineH);
-      // The wave: a bar each, standing on the line, each growing or shrinking from the last song's height to this
+      ctx.fillRect(0, Math.round(waveH / 2 - L.lineH / 2), w, L.lineH);   // the centre line
+      // The wave: a bar each, mirrored about a centre line, each growing or shrinking from the last song's height to this
       // one's, then breathing with the song; the quiet ones in the quiet tone; the playhead a band of light.
       const H = onStage.heights, N = H.length;
       if (N) {
@@ -224,8 +224,8 @@
           const v = Math.max(L.least, base * ((1 + m.swell + lift) / norm) * waveH * L.room);
           const x = cx - barW / 2;
           ctx.fillStyle = isQuiet(H[i]) ? L.quiet : L.wave;
-          ctx.fillRect(x, waveH - L.lineH - v, barW, v);
-          if (d < 1) { ctx.globalAlpha = 1 - d; ctx.fillStyle = L.glow; ctx.fillRect(x, waveH - L.lineH - v, barW, v); ctx.globalAlpha = 1; }
+          ctx.fillRect(x, waveH / 2 - v / 2, barW, v);   // mirrored about the centre line
+          if (d < 1) { ctx.globalAlpha = 1 - d; ctx.fillStyle = L.glow; ctx.fillRect(x, waveH / 2 - v / 2, barW, v); ctx.globalAlpha = 1; }
         }
       }
       // Its bars marked as the sweep passes: a cut through the wave every 8 bars and a mark below it, a longer one every 32.
@@ -429,12 +429,12 @@
           ctx.fillText(fitText(ctx, rowName(s), nameW - gap), gap / 2, y0 + hRow / 2);
           const H = barHeights(s.wave, s.bars);
           const pad = num("--wall-row-pad"), room = hRow - 2 * pad;
-          if (!H.length) { ctx.fillStyle = cNone; ctx.fillRect(waveX, y0 + hRow - pad - 1, waveW - gap / 2, 1); continue; }
+          if (!H.length) { ctx.fillStyle = cNone; ctx.fillRect(waveX, y0 + hRow / 2, waveW - gap / 2, 1); continue; }
           const slot = (waveW - gap / 2) / H.length, barW = Math.max(1, slot * (1 - gapShare));
           for (let k = 0; k < H.length; k++) {
             const v = Math.max(1, H[k] * room);
             ctx.fillStyle = i === pick ? cPick : i === newest ? cNew : (H[k] < floor + (1 - floor) * num("--wave-quiet-share") ? cQuiet : cWave);
-            ctx.fillRect(waveX + k * slot + (slot - barW) / 2, y0 + hRow - pad - v, barW, v);
+            ctx.fillRect(waveX + k * slot + (slot - barW) / 2, y0 + hRow / 2 - v / 2, barW, v);   // mirrored about the row's middle
           }
         }
         ctx.restore();

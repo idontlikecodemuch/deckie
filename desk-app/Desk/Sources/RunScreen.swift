@@ -419,8 +419,8 @@ struct StageView: View {
         guard w > 0, h > 0 else { return }
         let m = StageMotion(bpm: s.bpm, elapsed: elapsed, sweep: st.draw, still: still)
         let edge = CGFloat(m.front) * w
-        gc.fill(Path(CGRect(x: 0, y: h - RunLook.stageLine, width: w, height: RunLook.stageLine)), with: .color(Color(nsColor: RunLook.waveNone)))
-        // The wave: a bar each, standing on the line, each growing or shrinking from the last song's height to this
+        gc.fill(Path(CGRect(x: 0, y: ((h - RunLook.stageLine) / 2).rounded(), width: w, height: RunLook.stageLine)), with: .color(Color(nsColor: RunLook.waveNone)))
+        // The wave: a bar each, mirrored about a centre line, each growing or shrinking from the last song's height to this
         // one's, then breathing with the song (StageMotion); the quiet ones in the quiet tone; the playhead a band of
         // light across them.
         let n = st.heights.count
@@ -433,7 +433,7 @@ struct StageView: View {
                 let distance = playX.map { Double(abs(cx - $0) / w) }
                 let lift = distance.map { m.lift(distance: $0) } ?? 0
                 let v = max(RunLook.stageWaveMin, CGFloat(base * m.scale(lift: lift)) * h * RunLook.stageWaveRoom)
-                let rect = CGRect(x: cx - barW / 2, y: h - RunLook.stageLine - v, width: barW, height: v)
+                let rect = CGRect(x: cx - barW / 2, y: h / 2 - v / 2, width: barW, height: v)
                 gc.fill(Path(rect), with: .color(Color(nsColor: RunWatch.isQuiet(st.heights[i]) ? RunLook.waveQuiet : RunLook.wave)))
                 if let d = distance.map({ $0 / RunLook.playheadWidth }), d < 1 {
                     let near = 1 - d    // the playhead's light, brightest at its middle
@@ -718,14 +718,14 @@ struct WallRow: View {
         let heights = RunWatch.bars(s), pad = RunLook.wallRowPad, room = size.height - 2 * pad
         guard size.width > 0, room > 0 else { return }
         if heights.isEmpty {
-            gc.fill(Path(CGRect(x: 0, y: size.height - pad - 1, width: size.width, height: 1)), with: .color(Color(nsColor: RunLook.waveNone)))
+            gc.fill(Path(CGRect(x: 0, y: size.height / 2, width: size.width, height: 1)), with: .color(Color(nsColor: RunLook.waveNone)))
             return
         }
         let slot = size.width / CGFloat(heights.count), barW = max(1, slot * (1 - RunLook.waveBarGapShare))
         for (k, h) in heights.enumerated() {
             let v = max(1, CGFloat(h) * room)
             let colour: NSColor = picked ? RunLook.wavePick : newest ? RunLook.waveNew : RunWatch.isQuiet(h) ? RunLook.waveQuiet : RunLook.wave
-            gc.fill(Path(CGRect(x: CGFloat(k) * slot + (slot - barW) / 2, y: size.height - pad - v, width: barW, height: v)), with: .color(Color(nsColor: colour)))
+            gc.fill(Path(CGRect(x: CGFloat(k) * slot + (slot - barW) / 2, y: size.height / 2 - v / 2, width: barW, height: v)), with: .color(Color(nsColor: colour)))
         }
     }
 }

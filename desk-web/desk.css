@@ -230,7 +230,7 @@
      the song; or several songs, a row each; and, quietly, a disc's next song while it is read ahead */
   --now-disc: 56px; --now-disc-turn: 2.4s; --now-gap: 18px; --now-bar-h: 4px; --now-bar-gap: 8px;
   --now-line-gap: 6px;                    /* between the song's name and its step line */
-  --now-rows-gap: 4px; --now-row-gap: 14px;  /* several songs: between rows, and a row's name and its step */
+  --now-rows-gap: 2px; --now-row-gap: 14px;  /* several songs: between rows, and a row's name and its step */
   --fs-now: 15px; --fw-now: 600;
   --now-shine: var(--acc);
   --stage-empty-opacity: 0.55;            /* the stage before its first song: an empty frame, quieter */
@@ -304,7 +304,7 @@
   --stage-h: 140px;                       /* the song on stage: its wave's height */
   --stage-wave-w: 46%;
   --fig-h: 58px;                          /* a figure's picture */
-  /* A song's wave, wherever it is drawn (the song info card, the walls): separate bars standing on a line, one a bar of
+  /* A song's wave, wherever it is drawn (the song info card, the walls): separate bars mirrored about a centre line, one a bar of
      music for a song with fewer than 64 bars, else one a stretch of the wave's 64; each song stretched to its own
      range (RunSong.barHeights): its tenth-quietest value in a hundred (and anything quieter) at --wave-bar-floor of the room, its loudest at the top; values within
      --wave-range-min (of the 0 to 99 scale, about 2 LU) of each other count as that range below the loudest. */
