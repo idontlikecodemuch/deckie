@@ -281,12 +281,12 @@ import DeckieRecognition
         guard let h = hearing else { if source != .manual { stop(); status = Words.notListening }; return }
         stop()
         if waitForDeckie(h, { [weak self] in self?.startMic() }) { return }
-        source = .mic; status = "listening…"; startedAt = Date()
+        source = .mic; status = "listening…"; startedAt = Date(); savedSet = nil
         comparison.reset()
         task = Task { [weak self] in
             let granted = await AVAudioApplication.requestRecordPermission()
             guard let self, !Task.isCancelled else { return }
-            if !granted { self.micDenied = true; self.status = "microphone access is off (Settings > Deckie Booth)"; self.note("mic denied"); return }
+            if !granted { self.micDenied = true; self.status = "microphone access is off (Settings > Deckie)"; self.note("mic denied"); return }
             // own capture pipeline (instead of SHManagedSession) so the input level can be shown and checked
             let mic = self.mic
             self.audioClock = { mic.audioSeconds }
@@ -310,7 +310,7 @@ import DeckieRecognition
         if waitForDeckie(h, { [weak self] in self?.startStream(url, start: start, render: render) }) { return }
         let v = TestVariant(render)
         source = .file(url.lastPathComponent + " (stream" + (render == "o" ? "" : " @\(render)") + ")")
-        status = "streaming test file"; startedAt = Date()
+        status = "streaming test file"; startedAt = Date(); savedSet = nil
         comparison.reset()
         note("stream \(url.lastPathComponent) from \(Int(start))s render \(render), recognising with \(h.rawValue)")
         let fd = StreamFeeder(); feeder = fd
@@ -368,6 +368,25 @@ import DeckieRecognition
         note(recPaused ? "recording paused" : "recording resumed")
     }
 
+    /// The set recording the DJ's Stop last ended and saved (its name in Files, Deckie > Sets); nil once listening
+    /// starts again, and when Stop found nothing recording.
+    private(set) var savedSet: String?
+
+    /// Whether a sound is being listened to now: the microphone, or a test file streamed as it would hear it.
+    var isListening: Bool {
+        switch source { case .mic, .file: return true; case .idle, .manual: return false }
+    }
+
+    /// The Listen page's Stop (`ListenControl`): the microphone off, and the set's recording, if one is running, ended
+    /// and saved (what was recorded stays in Files). The song on screen stays, so the picks are still there; listening
+    /// starts again only when the DJ asks (Start listening), not on the iPad's return from the lock screen.
+    func stopListening() {
+        let saved = recActive ? recorder.baseName : nil
+        stop()
+        savedSet = saved
+        note(saved.map { "stopped by the DJ: \($0) saved" } ?? "stopped by the DJ")
+    }
+
     func stop() {
         heartbeat?.cancel(); heartbeat = nil
         task?.cancel(); task = nil
@@ -387,6 +406,7 @@ import DeckieRecognition
         currentId = nil; currentPlace = nil; history = []; positionKnown = false; paused = false; frozenAt = nil
         alsoHearing = nil; events.removeAll(); hits.removeAll(); pendingId = nil; challengerId = nil
         notHeard = false; deckieRun = nil; byHand = false; leftId = nil; speeds = nil; incoming = nil
+        savedSet = nil
         comparison.reset()
     }
 

@@ -1,4 +1,4 @@
-# Deckie Booth (iPad)
+# Deckie for iPad (the app once called Deckie Booth)
 
 A native iPad app (SwiftUI, iPadOS 17+, iPad only) that sits beside the DJ's decks. It listens through the
 microphone, names which song of the DJ's crate is playing from the fingerprints in a crate file (`.deckie`, made by
@@ -15,7 +15,7 @@ script (project.yml). The paperwork for TestFlight is in `docs/product/testfligh
 
 ## The demo (Nov 19, 2026, `pc/booth-demo`)
 
-Booth carries one crate file of its own: the demo, `Deck/Demo/Demo.deckie` (a crate package of about 156 KB: the facts
+Booth carries one crate file of its own: the demo, `Deck/Demo/Demo.deckie` (a crate package of about 200 KB (156 KB before build 2): the facts
 and fingerprints of seven public-domain songs, no audio), named in project.yml and copied whole into the app. With
 it bundled, the first-run screen shows "Try the demo crate" and a line saying the songs play from deckie.io/demo on another
 device. Tapping it opens the demo exactly as any crate file opens (copied into Application Support/Crates and
@@ -35,8 +35,25 @@ plain JSON with no checksum over it, and the bytes are exactly what the core's w
 crate and compare). The crate id is unchanged, `1a365511-96d6-4840-a9f3-e9b7a772179c`, and DeckTests hold it. To keep it
 on a rebuild, build into the existing package (`deckie-build <folder> --out deck-app/Deck/Demo/Demo.deckie`): the
 builder keeps an existing crate's id, name and created date (`Builder.swift`, `existing?.manifest.crateId`); a build
-to a new path makes a new id. The folder the songs sit in still shows as "Demo" on the picks and in the Crate tab:
-that is the songs' folder (`file.rel`), changed only by rebuilding from a folder of another name.
+to a new path makes a new id.
+
+## Build 2 (Nov 19, 2026, `pc/booth-build-2`)
+
+- **The name.** On the home screen and wherever the app names itself it is "Deckie" (`CFBundleDisplayName`, the
+  microphone line, the first-run screen, Credits, the Files folder the sets are in). The bundle id stays
+  `io.deckie.booth`, and the code keeps its names (the Xcode target and scheme `Deck`, "booth" in comments and
+  types). "Booth" was never the name of a mode on screen (the tabs are Listen and Crate), so no "Booth" is left in
+  the app's words. Version 0.1.0, build 2.
+- **Stop.** The microphone button in the playing panel's corner is now one labelled control (`ListenControl`):
+  **Stop** while listening, which turns the microphone off and ends and saves the set's recording if one is running
+  (`Recognizer.stopListening`); **Start listening** (orange) while not. The song on screen stays, dimmed, with its
+  picks; the corner says "stopped", and the panel's foot says where the set was saved. With no song on screen the
+  panel says "Stopped", that Deckie is not listening and how to start again. Listening does not start again on its own
+  when the iPad comes back from the lock screen. The REC chip's menu only pauses the recording ("Pause recording,
+  keep listening") or turns set recording off; its note says that Stop ends the set and saves it.
+- **The demo crate's songs**, chosen again so most of them suit each other (`site/demo/CREDITS.md`); the crate id is
+  kept. They sit at the top of the folder the crate was built from, so no folder line shows above a song, and the
+  Crate tab shows no "/" heading for a crate whose songs are all at the top.
 
 ## Folder layout
 
@@ -135,7 +152,7 @@ The booth's own tests (the app as their host):
 nice -n 19 xcodebuild test -project Deck.xcodeproj -scheme Deck -destination 'platform=iOS Simulator,name=iPad Pro 11-inch (M5)' -derivedDataPath build/dd
 ```
 
-The app carries no DJ's song data, only the demo crate file, about 156 KB (until Nov 19, 2026 it carried the party's, about 59 MB).
+The app carries no DJ's song data, only the demo crate file, about 200 KB (until Nov 19, 2026 it carried the party's, about 59 MB).
 
 ## Install on the iPad (a paid developer account)
 
@@ -382,7 +399,7 @@ The words are placeholders in one list, `Deck/Sources/Words.swift` (D28).
 ## Crate files (Oct 29, 2026)
 
 The app can run from a crate file made by Deckie Desk instead of the bundled data: put a `.deckie` (either form; the earlier `.deckiecrate` too) in the
-app's Documents folder (Files app > On My iPad > Deckie Booth, or Finder > iPad > Files) and relaunch, or point a test launch at
+app's Documents folder (Files app > On My iPad > Deckie (Deckie Booth before build 2), or Finder > iPad > Files) and relaunch, or point a test launch at
 one with `deck://crate?path=/abs/x.deckie`. The crate file gives the tracks and their analysis, the whole-song wave
 (from the per-bar loudness), the recognition catalogue (one plain signature per track, made on the Mac) and the picks:
 the pair scores are computed on the iPad with the shared scoring in `core` (DeckieCore's PairScoring, the port of
