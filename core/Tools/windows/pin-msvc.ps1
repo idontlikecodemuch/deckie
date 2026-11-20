@@ -102,7 +102,9 @@ extern "C" int trial_length(void) { return (int)std::string("deckie").size(); }
 '@
 $env:VCToolsInstallDir = "$dir\"
 Push-Location $trial
-try { $out = (& swift build -v 2>&1 | Out-String); $code = $LASTEXITCODE } finally { Pop-Location }
+# The build writes a dependency file without system headers (-MMD); -sys-header-deps puts them in, so it names
+# the toolset folder the headers came from.
+try { $out = (& swift build -v -Xcxx -Xclang -Xcxx -sys-header-deps 2>&1 | Out-String); $code = $LASTEXITCODE } finally { Pop-Location }
 if ($code -ne 0) { throw "the trial C++ build failed with the $have toolset pinned:`n$out" }
 $deps = Get-ChildItem "$trial\.build" -Recurse -Filter "trial*.d" -ErrorAction SilentlyContinue | Select-Object -First 1
 if (-not $deps) { throw "the trial C++ build wrote no dependency file to check:`n$out" }
@@ -110,7 +112,7 @@ $listed = Get-Content -Raw $deps.FullName
 $used = [regex]::Matches($listed, '(?i)[\\/]MSVC[\\/](\d+\.\d+\.\d+)[\\/]include') | ForEach-Object { $_.Groups[1].Value } | Sort-Object -Unique
 "The trial compile took headers from MSVC " + ($used -join ", ")
 if ($used -notcontains $have -or @($used | Where-Object { $_ -ne $have }).Count -gt 0) {
-    throw "the trial compile did not take the pinned $have toolset only (it took: $($used -join ', '))`n$listed"
+    throw "the trial compile did not take the pinned $have toolset only (it took: $($used -join ', '))`n$listed`n$out"
 }
 Remove-Item -Recurse -Force $trial
 
