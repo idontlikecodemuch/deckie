@@ -202,6 +202,10 @@
   --icon-line: 1.5;                       /* the first and finished screens' drawings */
   --banner-dot: 8px;
   --run-max-w: 980px;
+  /* the song now (the waiting line of a music CD's run): a turning disc, one line, a thin bar within the song */
+  --now-disc: 30px; --now-disc-turn: 2.4s; --now-gap: 12px; --now-pad: 12px 16px; --now-bar-h: 4px; --now-bar-gap: 8px;
+  --fs-now: 15px; --fw-now: 600;
+  --now-shine: var(--acc);
   --progress-h: 10px;
   --waiting-w: 30%; --waiting-from: -30%; --waiting-to: 100%;  /* the bar that waits */
   --waiting-still-opacity: .35;           /* and the same bar, still, under reduced motion */
@@ -433,6 +437,15 @@ main { flex: 1; min-height: 0; display: flex; flex-direction: column; }
 .saying.out { opacity: 0; }
 .saying.moment { color: var(--tx); font-weight: var(--fw-saying-moment); }
 .leave { font-size: var(--fs-small); margin-top: var(--leave-pull); }
+.run-now { display: flex; align-items: center; gap: var(--now-gap); padding: var(--now-pad); background: var(--surface); border-radius: var(--r-card); }
+.run-now[hidden] { display: none; }
+.now-disc { flex: none; width: var(--now-disc); height: var(--now-disc); color: var(--mut); }
+.now-disc.turning { animation: turn var(--now-disc-turn) linear infinite; }
+.now-disc.still { visibility: hidden; }
+.now-text { flex: 1; min-width: 0; }
+.now-line { font-size: var(--fs-now); font-weight: var(--fw-now); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.now-bar { height: var(--now-bar-h); margin-top: var(--now-bar-gap); }
+@media (prefers-reduced-motion: reduce) { .now-disc.turning { animation: none; } }
 .chip { display: inline-block; font-size: var(--fs-label); font-weight: var(--fw-chip); color: var(--mut); background: var(--control); padding: var(--chip-pad); border-radius: var(--r-pill); vertical-align: var(--chip-raise); }
 .stage { display: flex; gap: var(--stage-gap); align-items: center; position: relative; min-height: calc(var(--stage-h) + var(--stage-name-room)); }
 .stage-wave { width: var(--stage-wave-w); height: var(--stage-h); flex: none; display: block; }

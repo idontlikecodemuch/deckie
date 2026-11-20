@@ -150,7 +150,8 @@
       case "run.started":
         dropCovers();
         finished = null; exportedPath = null; stopListening(); $("run-log").replaceChildren();
-        run = { read: m.read, crateName: m.crateName, done: 0, total: 0, stage: "reading", remaining: null, lines: [] };
+        run = { read: m.read, crateName: m.crateName, done: 0, total: 0, stage: "reading", remaining: null, lines: [],
+          musicCD: !!m.musicCD, now: null };
         askDisc(m.askName);
         screen.start(m);
         break;
@@ -169,7 +170,8 @@
         return;
       case "run.progress":
         if (!run) break;
-        Object.assign(run, { done: m.done, total: m.total, stage: m.stage, remaining: m.remaining });
+        // `now` (an addition to protocol 2): the song being read and its step; absent from an older engine.
+        Object.assign(run, { done: m.done, total: m.total, stage: m.stage, remaining: m.remaining, now: m.now || null });
         if (m.line) addLine(m.line);
         updateRun(); screen.progress(run); return;
       case "run.finished":
@@ -231,6 +233,35 @@
     }
     $("run-stage").textContent = t({ reading: "stageReading", finishing: "stageFinishing", saving: "stageSaving" }[run.stage] || "stageReading");
     $("run-left").textContent = run.remaining != null ? timeLeft(run.remaining) : "";
+    drawNow();
+  }
+
+  /// The song now (the waiting line): a turning disc for a music CD, one plain line saying what is happening to the
+  /// song, and a thin bar within it: the share read off the disc while it is read, then how many of its steps are
+  /// done. Only what the engine said is true: no song, no line.
+  const NOW_STEPS = ["hash", "decode", "resample", "beatthis", "key", "spectral", "structure", "loudness", "vocal", "windows"];
+  function drawNow() {
+    const box = $("run-now"), now = run && run.now;
+    box.hidden = !now;
+    if (!now) return;
+    const disc = $("run-now-disc");
+    disc.classList.toggle("turning", run.musicCD);
+    disc.classList.toggle("still", !run.musicCD);
+    const reading = now.step === "started" || now.step === "reading";
+    const number = now.number, total = run.total;
+    let line;
+    if (reading) line = number != null ? t("nowReadingDisc", { number, total }) : t("nowReading");
+    else {
+      const stage = coded("nowStage", now.step);
+      line = number != null ? t("nowStageOf", { number, total, stage }) : t("nowStageAlone", { stage });
+    }
+    $("run-now-line").textContent = line;
+    const bar = $("run-now-bar");
+    const step = NOW_STEPS.indexOf(now.step);
+    const share = reading ? (now.read != null ? now.read : 0) : step >= 0 ? (step + 1) / NOW_STEPS.length : 1;
+    const pct = Math.round(Math.max(0, Math.min(1, share)) * 100);
+    bar.firstElementChild.style.width = pct + "%";
+    bar.setAttribute("aria-valuenow", String(pct));
   }
 
   // ---- drawing
@@ -1520,8 +1551,9 @@
       el("span", { class: "pick-text" }, el("span", { text: name }), detail ? el("span", { class: "mut small", text: detail }) : null))));
     for (const cd of cds) {
       const secs = Math.round(cd.seconds);
-      const name = n("musicCDPlaceholder", cd.songs, { length: Math.floor(secs / 60) + ":" + two(secs % 60) });
-      row("disc", t("musicCDItem", { name, drive: cd.drive }), null,
+      // The disc's own title first (or "Music CD"), then its songs and length, once.
+      const label = n("musicCDRow", cd.songs, { title: cd.title || t("musicCDNoTitle"), length: Math.floor(secs / 60) + ":" + two(secs % 60) });
+      row("disc", label, null,
         () => request("run.addMusicCD", { location: cd.location }, { errorWord: "runStopped" }));
     }
     for (const x of drives) {

@@ -265,11 +265,11 @@ struct CrateAddRow: View {
     }
 }
 
-/// A music CD as Add CD lists it: "Music CD, 14 songs, 71:12  ·  music CD in Audio CD".
+/// A music CD as Add CD lists it: its own title first (or "Music CD"), then its songs and length, once:
+/// "Friday night, 14 songs, 71:12".
 enum MusicCDItem {
     static func label(_ cd: MusicCDs.Found) -> String {
         let secs = Int(cd.seconds.rounded())
-        let name = Words.c("musicCDPlaceholder", cd.songs, ["length": Words.musicCDLength(secs)])
-        return Words.t("musicCDItem", ["name": name, "drive": cd.drive])
+        return Words.c("musicCDRow", cd.songs, ["title": cd.title ?? Words.t("musicCDNoTitle"), "length": Words.musicCDLength(secs)])
     }
 }
