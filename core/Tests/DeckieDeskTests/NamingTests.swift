@@ -248,12 +248,11 @@ struct MusicCDRunTests {
         let seen = Seen()
         func run(_ r: RunRequest, crate: String) throws -> (crate: Crate, report: RunReport) {
             let run = DeskRun(home: home, crateId: crate, request: r, jobs: 4, device: "Mac15,6", analyser: analyser,
-                              signer: nil, printer: { url in
+                              signer: nil, printer: DeskRun.portablePrint, audioPrinter: { url, audio in
                                   seen.files.append(url)
-                                  // Only the song being read is there, nothing else of the disc.
-                                  #expect(musicFiles(under: home.root).map { URL(fileURLWithPath: $0).lastPathComponent }
-                                          == [url.lastPathComponent])
-                                  return try DeskRun.portablePrint(url)
+                                  // The song is in memory only: nothing of the disc is in Desk's storage, even now.
+                                  #expect(musicFiles(under: home.root).isEmpty)
+                                  return DeskRun.portableAudioPrint(url, audio)
                               })
             run.openMusicCD = open
             run.findMusicCDs = { [] }
@@ -274,7 +273,7 @@ struct MusicCDRunTests {
         let row = try #require(s.rows.first { $0.id == sorted[0].id })
         #expect(row.names?.title.from == "cdtext" && row.names?.title.guess == true && row.nameReason == "guess")
         #expect(row.names?.release.value == "Friday night")
-        // Read one song at a time, each removed when it was done: none of the music is in Desk's storage now.
+        // Read one song at a time, in memory: none of the music is in Desk's storage, then or now.
         #expect(seen.files.count == 2)
         #expect(seen.files.allSatisfy { $0.path.hasPrefix(DiscReading.folder(home).path) })
         #expect(musicFiles(under: home.root).isEmpty)
@@ -339,7 +338,8 @@ struct MusicCDRunTests {
         let analyser = try Builder.makeAnalyser(jobs: 1)
         func run(_ r: RunRequest) throws -> (crate: Crate, report: RunReport) {
             let run = DeskRun(home: home, crateId: info.id, request: r, jobs: 1, device: "Mac15,6", analyser: analyser,
-                              signer: nil, printer: DeskRun.portablePrint)
+                              signer: nil, printer: DeskRun.portablePrint,
+                              audioPrinter: DeskRun.portableAudioPrint)
             run.openMusicCD = open
             run.findMusicCDs = { [] }
             return try run.run()
@@ -381,7 +381,8 @@ struct MusicCDRunTests {
         // The DJ types the name while it is read; it is applied when the run ends, as one step of undo.
         try s.nameDisc(source: placeholder, to: "Friday night", running: true)
         let run = DeskRun(home: home, crateId: info.id, request: request, jobs: 1, device: "Mac15,6",
-                          analyser: try Builder.makeAnalyser(jobs: 1), signer: nil, printer: DeskRun.portablePrint)
+                          analyser: try Builder.makeAnalyser(jobs: 1), signer: nil, printer: DeskRun.portablePrint,
+                              audioPrinter: DeskRun.portableAudioPrint)
         run.openMusicCD = open
         run.findMusicCDs = { [] }
         let (_, report) = try await CPUTurns.exclusive { try run.run() }
