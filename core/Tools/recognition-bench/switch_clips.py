@@ -26,6 +26,8 @@ a song comes back where it would be by then.
   tonoise     20 s of a song, then 20 s of crowd (or pink) noise alone
   noise       30 s of crowd or pink noise alone
   speed       a cut with each song at its own fader setting (+-2, 6 or 8 %), turntable or key held
+  shared      60 s of a song through the passage that a made song shares with it (switch_clips.py versions first;
+              clean, room and crowd 10 dB under). Naming the made song is a wrong name.
 
 Conditions: clean; room (a measured room's response); room with crowd noise 10 dB under the music and at equal level;
 a small speaker (250 to 3000 Hz) in a room with crowd at equal level. The room and crowd need --rooms DATA: a folder
@@ -45,7 +47,7 @@ CONDITIONS = {
     "booth(speaker+room+crowd0)": dict(band=(250, 3000), room=True, snr=0),
 }
 ALT_CONDITIONS = ["clean", "room", "room+crowd+10"]
-KINDS = ["cut", "return", "alt12", "alt8", "alt5", "alt3", "long", "absent", "tonoise", "noise", "speed"]
+KINDS = ["cut", "return", "alt12", "alt8", "alt5", "alt3", "long", "absent", "tonoise", "noise", "speed", "shared"]
 AUDIO = (".mp3", ".flac", ".wav", ".aif", ".aiff", ".m4a", ".aac", ".ogg", ".opus", ".wma", ".alac", ".s16")
 
 
@@ -120,7 +122,11 @@ def pink(n, rng):
 def room(x, rooms, rng):
     files = sorted(f for f in glob.glob(os.path.join(rooms, "rir", "**", "*.wav"), recursive=True) if "noise" not in os.path.basename(f).lower())
     path = files[rng.integers(len(files))]
-    h = decode(path)
+    # One microphone of the recording, at random (some are arrays of up to 30), as make_queries.py does.
+    r = subprocess.run(["ffprobe", "-v", "error", "-show_entries", "stream=channels", "-of", "csv=p=0", path], capture_output=True, text=True)
+    ch = int(r.stdout.split()[0])
+    raw = subprocess.run(["ffmpeg", "-v", "error", "-nostdin", "-i", path, "-ar", str(SR), "-f", "f32le", "-"], capture_output=True).stdout
+    h = np.frombuffer(raw, dtype="<f4").reshape(-1, ch)[:, rng.integers(ch)].copy()
     peak = int(np.argmax(np.abs(h)))
     h = h[max(0, peak - 20):peak + int(1.5 * SR)]
     y = convolve(x, h)
@@ -188,7 +194,7 @@ def load_songs(work):
     return songs
 
 
-def plan(songs, role, n, kinds, conditions, seed, noises=("crowd", "pink")):
+def plan(songs, role, n, kinds, conditions, seed, noises=("crowd", "pink"), made=None):
     rng = np.random.default_rng(seed)
     pool = [s for s in songs if s["role"] == role]
     absent = [s for s in songs if s["role"] == "absent"]
@@ -263,6 +269,20 @@ def plan(songs, role, n, kinds, conditions, seed, noises=("crowd", "pink")):
                     if not a:
                         continue
                     pieces = [piece(a, 0, 20, float(rng.uniform(5, a["sec"] - 25))), dict(song=str(rng.choice(noises)), **{"from": 20.0, "to": 40.0})]
+                elif kind == "shared":
+                    # The source song played through the passage a made song shares with it: 20 s before it, on to 60 s.
+                    if not made or not os.path.exists(made) or cond not in ALT_CONDITIONS:
+                        continue
+                    rows = [l.rstrip("\n").split("\t") for l in open(made)]
+                    mid, _, src_id, vkind, at, length, _ = rows[k % len(rows)] if k < len(rows) else rows[0]
+                    if k >= len(rows):
+                        continue
+                    src = next((s for s in songs if s["id"] == src_id), None)
+                    if not src:
+                        continue
+                    start = max(2.0, float(at) - 20)
+                    pieces = [dict(piece(src, 0, 60, start), made=mid, made_kind=vkind)]
+                    pieces[0]["to"] = min(60.0, src["sec"] - start - 1)
                 elif kind == "noise":
                     if cond != "clean":
                         continue          # noise alone has no room or crowd to add
@@ -271,6 +291,63 @@ def plan(songs, role, n, kinds, conditions, seed, noises=("crowd", "pink")):
                     clip = f"{role}-{kind}-{cond}-{k:04d}".replace("+", "p").replace("(", "").replace(")", "")
                     specs.append(dict(clip=clip, kind=kind, condition=cond, role=role, seed=int(rng.integers(1 << 31)), pieces=pieces))
     return specs
+
+
+def make_versions(work, role, n, seed, jobs):
+    """Songs made to share a passage with a song of the crate, for the "shared" clips: from each source song of the
+    half, one of three kinds, written to WORK/made/<id>.wav (16 kHz mono) and listed in WORK/made.tsv (made id, path,
+    source id, kind, the source's shared stretch: from, seconds). They are added to the crate (fingerprint them with
+    the rest); the clips play the source through the shared stretch, so naming the made song is naming another song.
+      sample   another song of the half with 4 to 8 s of the source cut into it
+      mashup   another song with the source laid over it at equal level for 8 to 16 s
+      edit     the source with its middle cut and reordered: its stretches in another order, each 20 to 40 s"""
+    rng = np.random.default_rng(seed + (0 if role == "dev" else 1000))
+    songs = [s for s in load_songs(work) if s["role"] == role and (s["sec"] or 0) >= 150]
+    os.makedirs(os.path.join(work, "made"), exist_ok=True)
+    jobs_ = []
+    for k in range(n):
+        src, host = (songs[i] for i in rng.choice(len(songs), 2, replace=False))
+        kind = ("sample", "mashup", "edit")[k % 3]
+        mid = "v" + hashlib.sha1(f"{role}-{seed}-{k}".encode()).hexdigest()[:10]
+        if kind == "sample":
+            length = float(rng.uniform(4, 8)); at = float(rng.uniform(30, src["sec"] - 40)); put = float(rng.uniform(40, host["sec"] - 50))
+        elif kind == "mashup":
+            length = float(rng.uniform(8, 16)); at = float(rng.uniform(30, src["sec"] - 40)); put = float(rng.uniform(40, host["sec"] - 50))
+        else:
+            length = float(rng.uniform(20, 40)); at = float(rng.uniform(40, src["sec"] - 2 * length - 20)); put = 0.0
+        jobs_.append(dict(id=mid, kind=kind, source=src["id"], source_path=src["path"], host=host["id"], host_path=host["path"],
+                          at=at, length=length, put=put, path=os.path.join(work, "made", mid + ".wav")))
+    with ProcessPoolExecutor(jobs) as ex:
+        list(ex.map(write_version, jobs_))
+    with open(os.path.join(work, f"made-{role}.tsv"), "w") as f:
+        for j in jobs_:
+            f.write(f"{j['id']}\t{j['path']}\t{j['source']}\t{j['kind']}\t{j['at']:.2f}\t{j['length']:.2f}\t{role}\n")
+    print(f"{len(jobs_)} made songs for {role}", file=sys.stderr)
+
+
+def write_version(j):
+    if os.path.exists(j["path"]):
+        return
+    src = decode(j["source_path"])
+    a, b = int(j["at"] * SR), int((j["at"] + j["length"]) * SR)
+    if j["kind"] == "edit":
+        # The stretches after `at`, each `length` long, played as 0, 2, 1, 3: the shared passages are the stretches.
+        L = b - a
+        parts = [src[:a], src[a + 0 * L:a + 1 * L], src[a + 2 * L:a + 3 * L], src[a + 1 * L:a + 2 * L], src[a + 3 * L:]]
+        y = np.concatenate(parts)
+    else:
+        host = decode(j["host_path"])
+        put = int(j["put"] * SR)
+        piece = src[a:b] / rms(src[a:b]) * rms(host)
+        if j["kind"] == "sample":
+            y = np.concatenate([host[:put], piece, host[put:]])
+        else:
+            y = host.copy()
+            y[put:put + len(piece)] = y[put:put + len(piece)] + piece[:len(y) - put]
+    y = y * (0.7 / (np.max(np.abs(y)) + 1e-9))
+    pcm = (y * 32767).astype("<i2").tobytes()
+    subprocess.run(["ffmpeg", "-v", "error", "-y", "-f", "s16le", "-ar", str(SR), "-ac", "1", "-i", "-", j["path"] + ".tmp.wav"], input=pcm, check=True)
+    os.replace(j["path"] + ".tmp.wav", j["path"])
 
 
 def main():
@@ -282,6 +359,9 @@ def main():
     m.add_argument("--role", default="eval", choices=["dev", "eval"]); m.add_argument("--jobs", type=int, default=os.cpu_count())
     m.add_argument("--kinds", nargs="*", default=KINDS); m.add_argument("--conditions", nargs="*")
     m.add_argument("--n-long", type=int, help="clips a condition for long play (default --n)")
+    m.add_argument("--n-kind", nargs="*", default=[], help="clips a condition for some kinds, e.g. cut=40 alt5=10")
+    v = sub.add_parser("versions"); v.add_argument("work"); v.add_argument("--role", default="eval", choices=["dev", "eval"])
+    v.add_argument("--n", type=int, default=60); v.add_argument("--seed", type=int, default=11); v.add_argument("--jobs", type=int, default=os.cpu_count())
     a = ap.parse_args()
     if a.cmd == "songs":
         os.makedirs(a.work, exist_ok=True)
@@ -293,6 +373,9 @@ def main():
                         sid = "m" + hashlib.sha1(os.path.relpath(path, a.music).encode()).hexdigest()[:12]   # as make_queries.py names them
                         f.write(f"{sid}\t{path}\t-\t{seconds_of(path):.2f}\t{role_of(sid)}\n")
         return
+    if a.cmd == "versions":
+        make_versions(a.work, a.role, a.n, a.seed, a.jobs)
+        return
     songs = load_songs(a.work)
     for s in songs:
         if s["sec"] is None:
@@ -301,9 +384,13 @@ def main():
     out = os.path.join(a.work, "switch", a.role)
     os.makedirs(os.path.join(out, "pcm"), exist_ok=True)
     noises = ("crowd", "pink") if a.rooms else ("pink",)       # crowd recordings come with the rooms
-    specs = plan(songs, a.role, a.n, [k for k in a.kinds if k != "long"], conditions, a.seed, noises)
-    if "long" in a.kinds:
-        specs += plan(songs, a.role, a.n_long or a.n, ["long"], conditions, a.seed + 1, noises)
+    counts = dict(kv.split("=") for kv in a.n_kind)
+    if a.n_long:
+        counts.setdefault("long", a.n_long)
+    specs = []
+    for i, kind in enumerate(a.kinds):
+        specs += plan(songs, a.role, int(counts.get(kind, a.n)), [kind], conditions, a.seed + i, noises,
+                      made=os.path.join(a.work, f"made-{a.role}.tsv"))
     with ProcessPoolExecutor(a.jobs) as ex:
         done = list(ex.map(make_one, [(s, out, a.rooms) for s in specs], chunksize=4))
     with open(os.path.join(out, "clips.tsv"), "w") as f, open(os.path.join(out, "truth.jsonl"), "w") as t:
