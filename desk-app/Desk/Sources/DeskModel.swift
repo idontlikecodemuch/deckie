@@ -39,6 +39,9 @@ final class DeskModel: ObservableObject {
     @Published var runTotal = 0
     @Published var runRemaining: Double?
     @Published var runLines: [String] = []
+    /// The song being read now and its step (the waiting line), and whether the run reads a music CD.
+    @Published var runNow: RunNow?
+    @Published var runIsMusicCD = false
     /// The run screen's songs, figures, stage, quiet line and moments (D37, RunScreen.swift); kept for the finished
     /// screen's wall until the next run.
     let watch = RunWatch()
@@ -417,12 +420,15 @@ final class DeskModel: ObservableObject {
         } catch { errorText = Words.runStopped(error.localizedDescription); return }
         running = true; finished = nil; runRead = request.name; runStage = .reading
         listener.stop()
-        runDone = 0; runTotal = 0; runRemaining = nil; runLines = []
+        runDone = 0; runTotal = 0; runRemaining = nil; runLines = []; runNow = nil; runIsMusicCD = request.musicCD != nil
         watch.start(musicCD: request.musicCD != nil)
         if let note = Builder.vocalTaggerNote { runLines.append(note) }
         undoManager?.removeAllActions()
         let run = DeskRun(home: home, crateId: info.id, request: request, jobs: jobs, device: Device.modelLabel(),
-                          signer: { try Signatures.signature(of: $0) }, printer: { try Signatures.recordingPrint(of: $0) })
+                          signer: { try Signatures.signature(of: $0) }, printer: { try Signatures.recordingPrint(of: $0) },
+                          audioPrinter: { url, audio in
+                              Signatures.recordingPrint(fromAudio: audio.samples, channels: audio.channelCount, sampleRate: audio.sampleRate, of: url)
+                          })
         runHandle = run; stopping = false; nameDuringRun = nil
         let model = self
         Task.detached(priority: .userInitiated) {
@@ -465,7 +471,7 @@ final class DeskModel: ObservableObject {
     private func handle(_ p: RunProgress) {
         guard running else { return }
         watch.take(p)
-        runStage = p.stage; runDone = p.done; runTotal = p.total; runRemaining = p.remaining
+        runStage = p.stage; runDone = p.done; runTotal = p.total; runRemaining = p.remaining; runNow = p.now
         switch p.line {
         case let .started(files, unchanged, queued)?:
             runLines.append(Words.lineStarted(files: files, unchanged: unchanged, queued: queued))

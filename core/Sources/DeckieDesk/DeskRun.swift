@@ -66,6 +66,31 @@ public struct RunNow: Sendable, Equatable {
     public init(rel: String, number: Int?, step: String, read: Double? = nil) {
         self.rel = rel; self.number = number; self.step = step; self.read = read
     }
+
+    /// The analysis stages in the order they run (desk.js's NOW_STEPS says the same).
+    public static let analysisSteps = ["hash", "decode", "resample", "beatthis", "key", "spectral", "structure", "loudness",
+                                       "vocal", "windows"]
+
+    /// Whether the song's sound is still coming off the source.
+    public var isReading: Bool { step == "started" || step == "reading" }
+
+    /// How far through the song, 0 to 1: the share read while it is read, then its analysis steps done of all of them.
+    public var share: Double {
+        if isReading { return max(0, min(1, read ?? 0)) }
+        guard let i = Self.analysisSteps.firstIndex(of: step) else { return 1 }
+        return Double(i + 1) / Double(Self.analysisSteps.count)
+    }
+
+    /// The waiting line in Desk's words: "Reading song 2 of 6 from the disc", "Song 2 of 6: finding the beat", or for a
+    /// song not on a disc, "Reading the next song", "This song: finding the beat". `total` is the songs of the run.
+    public func line(total: Int) -> String {
+        if isReading {
+            return number.map { DeskWords.text("nowReadingDisc", ["number": "\($0)", "total": "\(total)"]) } ?? DeskWords.text("nowReading")
+        }
+        let stage = DeskWords.table["nowStage." + step] != nil ? DeskWords.text("nowStage." + step) : DeskWords.text("nowStage.other")
+        return number.map { DeskWords.text("nowStageOf", ["number": "\($0)", "total": "\(total)", "stage": stage]) }
+            ?? DeskWords.text("nowStageAlone", ["stage": stage])
+    }
 }
 
 /// One line of a run's list, as data; a desk says it in its own words.
