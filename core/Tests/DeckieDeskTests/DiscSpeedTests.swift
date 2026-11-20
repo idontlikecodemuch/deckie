@@ -267,7 +267,7 @@ struct OneReadSameResultTests {
         let (request, _) = try s.addMusicCDRequest(disc.path, open: open)
         let info = try s.crateForRun(request)
         let toc = try open(disc.path).tableOfContents()
-        final class Seen: @unchecked Sendable { var now: [RunNow] = []; var titles: [String] = []; var counts: [Int] = [] }
+        final class Seen: @unchecked Sendable { var now: [RunNow] = []; var titles: [String] = []; var counts: [Int] = []; var clash = 0 }
         let seen = Seen()
         let run = DeskRun(home: home, crateId: info.id, request: request, jobs: 1, device: "test",
                           analyser: try Builder.makeAnalyser(jobs: 1), signer: nil, printer: { (_: URL) throws -> RecordingPrint in
@@ -277,7 +277,8 @@ struct OneReadSameResultTests {
         run.findMusicCDs = { [] }
         let (c, report) = try await CPUTurns.exclusive {
             try run.run { p in
-                if let n = p.now { seen.now.append(n) }
+                if let n = p.now { seen.now.append(n); if p.working.first != n { seen.clash += 1 } }
+                if let a = p.ahead, a.rel == p.now?.rel { seen.clash += 1 }
                 if let t = p.song?.title { seen.titles.append(t) }
                 seen.counts.append(p.done)
             }
@@ -296,6 +297,10 @@ struct OneReadSameResultTests {
             #expect(Array(stages.prefix(4)) == ["hash", "decode", "resample", "beatthis"])
         }
         #expect(seen.counts == seen.counts.sorted())
+        // The song card names the song now by its CD-Text name from the moment it is taken; a read ahead is never it.
+        #expect(seen.now.first { $0.number == 1 }?.name == "Night drive")
+        #expect(seen.now.first { $0.number == 2 }?.name == "Café Ünder")
+        #expect(seen.clash == 0)
         // The run screen, the report and the crate all have the disc's names.
         #expect(Set(seen.titles) == ["Night drive", "Café Ünder"])
         #expect(report.local?.report.namesFrom["filename"] == nil && report.local?.report.namesFrom["cdtext"] == 2)

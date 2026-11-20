@@ -36,6 +36,8 @@ public enum DeskWords {
         // breaks between phrases at any width and leaves no word alone on a line.
         "firstTitle": "Your crate is the music Deckie knows.",
         "firstBody": "Add songs from your library. Deckie\u{00A0}Desk reads each\u{00A0}one’s tempo,\u{00A0}key\u{00A0}and\u{00A0}structure so Deckie can name what’s\u{00A0}playing and\u{00A0}what\u{00A0}might\u{00A0}come\u{00A0}next.",
+        // The first screen's quiet line under the body (back, Nov 20, 2026).
+        "firstNote": "Your music never leaves {thisComputer}.",
         "addMusic": "Add music",
         "addMusicTo": "Add music to {crate}",
         "addMusicMore": "Add music…",
@@ -72,6 +74,10 @@ public enum DeskWords {
         "noDriveIn": "No stick, card or drive is plugged in. Plug one in, or add a folder.",
         "driveSize": "{size}",
         "driveBigNote": "Big drive: you choose a folder in it",
+        // new (Nov 20, 2026): at the end of each row of Add CD's and Add drive's lists, the row being the one way to
+        // choose.
+        "pickReadCD": "Read this CD",
+        "pickReadDrive": "Read this drive",
         "chooseCDTitle": "Add a CD",
         "chooseCDBody": "Pick the CD to read. Desk reads it as it is, song by song, and keeps none of the music.",
         "noCDIn": "There's no CD in a drive. Put one in.",
@@ -120,15 +126,27 @@ public enum DeskWords {
         "runReading.same": "Adding the songs in {read}",
         "songsOf.one": "{done} of {total} song",
         "songsOf.other": "{done} of {total} songs",
+        // new (Nov 20, 2026): the run's count beside its bar, in words that cannot be read as the song card's number
+        // ("1 of 6 done" above "Song 2 of 6: finding the beat").
+        "doneOf.one": "{done} of {total} done",
+        "doneOf.other": "{done} of {total} done",
         "timeLeftUnderMinute": "Less than a minute left",
         "timeLeft.one": "About 1 minute left",
         "timeLeft.other": "About {n} minutes left",
         "stageReading": "Reading tempo, key and bars",
-        // new (Nov 20, 2026): the song now, the waiting line of a music CD's run (a turning disc and one plain line).
-        // `nowStage.<stage>` by the analysis stage the engine says (`RunNow.step`); `{stage}` in nowStageOf is one of
-        // them, so they start in lower case.
+        // The song card (Nov 20, 2026): the song being worked on, by name, and its step line. `nowStage.<stage>` by the
+        // analysis stage the engine says (`RunNow.step`); `{stage}` in nowStageOf is one of them, so they start in
+        // lower case. nowOpening is a song's step before its analysis, in a row of several.
         "nowReadingDisc": "Reading song {number} of {total} from the disc",
-        "nowReading": "Reading the next song",
+        "nowReading": "Reading this song",
+        "nowOpening": "opening it",
+        // Under the song card, quietly, only while the next song of a music CD comes off the disc.
+        "nowAheadDisc": "Reading the next song from the disc",
+        // The song card when a folder's songs are read several at once: this, then a row a song.
+        "workingOn.one": "Working on 1 song",
+        "workingOn.other": "Working on {n} songs",
+        // On the song card when nothing is being worked on (songs read before, the finishing steps): the last song in.
+        "stageJustIn": "Just in",
         "nowStageOf": "Song {number} of {total}: {stage}",
         "nowStageAlone": "This song: {stage}",
         "nowStage.hash": "reading it through",
@@ -197,14 +215,14 @@ public enum DeskWords {
         // new (D32): "Send to iPad" on Windows and Linux, until the booth takes a crate file another way.
         "exportedTo": "Saved “{file}” in {folder}.",
         "toIPadTitle": "To get it to your iPad",
-        "toIPadStick": "A USB stick or SD card: export the crate file onto it, plug it into the iPad and open it from the Files app.",
+        "toIPadStick": "A USB stick or SD card: copy the crate file onto it, plug it into the iPad and open it from the Files app.",
         "toIPadICloud": "iCloud Drive: with iCloud for Windows, export the crate file into your iCloud Drive folder; it shows in Files on the iPad.",
-        "toIPadCable": "A cable: connect the iPad, open Apple Devices, choose the iPad, then Files, and drag the crate file onto Deckie Booth.",
+        "toIPadCable": "A cable: connect the iPad, open Apple Devices, choose the iPad, then Files, and drag the crate file onto Deckie.",
         // new (Nov 20, 2026): the same on a Mac (the window says "this Mac" there) and on Linux; the three above are
         // Windows' steps (toIPadStick is everyone's).
         "toIPadAirDropMac": "AirDrop: in the Finder, choose the crate file, then Share > AirDrop, and choose the iPad.",
         "toIPadICloudMac": "iCloud Drive: export the crate file into iCloud Drive; it shows in Files on the iPad.",
-        "toIPadCableMac": "A cable: connect the iPad, choose it in the Finder's sidebar, then Files, and drag the crate file onto Deckie Booth.",
+        "toIPadCableMac": "A cable: connect the iPad, choose it in the Finder's sidebar, then Files, and drag the crate file onto Deckie.",
         "toIPadICloudLinux": "iCloud Drive: open icloud.com in a browser and upload the crate file to iCloud Drive; it shows in Files on the iPad.",
         "openFolder": "Show the folder",
 
@@ -542,7 +560,7 @@ public enum DeskWords {
         "lineDiscDamaged": "Song {number}: part of it couldn't be read off the disc and was read as silence",
         "putDiscBack": "Put {read} back in the drive to carry on.",
         // new: the finished screen (letter AA, 3.2).
-        "needNameHelp": "They work in the booth as they are. A name makes them easier to find.",
+        "needNameHelp": "They work in Deckie on your iPad as they are. A name makes them easier to find.",
         "discNoNames": "This disc has no names on it.",
         "discDriveNoNames": "The drive gave no names. The disc may have none, or this drive may not pass them on.",
         "discNamed.one": "1 song took its name from the disc.",
