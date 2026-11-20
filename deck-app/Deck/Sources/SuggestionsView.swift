@@ -277,7 +277,10 @@ struct NextRow: View {
                 CoverThumb(hash: c, size: m.simple ? Look.Picks.coverSimple : Look.Picks.cover, radius: Look.Picks.coverRadius, opacity: Look.Picks.coverOpacity)
             }
             VStack(alignment: .leading, spacing: m.simple ? Look.Picks.textGapSimple : Look.Picks.textGap) {
-                Text(target.folderPath).font(Look.Picks.placeFont(m.lineSize)).foregroundStyle(target.on ? target.discColor : Theme.mut).lineLimit(1)
+                // A song at the top of a crate with no sources (the demo crate) has no place line.
+                if !target.folderPath.isEmpty {
+                    Text(target.folderPath).font(Look.Picks.placeFont(m.lineSize)).foregroundStyle(target.on ? target.discColor : Theme.mut).lineLimit(1)
+                }
                 if let also = Library.shared.alsoOn(target, playingDisc: cur.disc) {
                     Text(also).font(Look.Picks.alsoFont(m.smallSize)).foregroundStyle(Theme.dim).lineLimit(1).minimumScaleFactor(Look.Picks.alsoShrink)
                 }

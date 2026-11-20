@@ -126,6 +126,10 @@ enum Look {
         static let cornerButtonsGap: CGFloat = 2
         static let cornerIconFont = Font.system(size: 14)
         static let cornerButton: CGFloat = 34
+        /// The one listening control (Stop / Start listening), a pill (`Controls.pill*`): the gap between its icon and
+        /// its word, and the icon's size. Placeholders until the design pass.
+        static let controlGap: CGFloat = 7
+        static let controlIconFont = Font.system(size: 13, weight: .bold)
     }
 
     /// The whole-song wave under the playing song, and its time readout.

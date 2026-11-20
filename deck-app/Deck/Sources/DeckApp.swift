@@ -157,7 +157,7 @@ struct DeckApp: App {
             if let h = v("with").flatMap(Hearing.init(rawValue:)) { rec.chosen = h }
         case "recpause": rec.toggleRecPause()
         case "mic": rec.startMic()
-        case "stop": rec.stop()
+        case "stop": rec.stopListening()
         case "tab": tab = Int(v("i") ?? "0") ?? 0
         case "set": if let id = v("id") { rec.setManual(id); sug.reroll(rec); tab = 0 }
         case "mode": sug.mode = v("m") == "simple" ? .simple : .full; sug.reroll(rec)

@@ -82,17 +82,29 @@ enum Words {
     static func recElapsed(_ time: String) -> String { "REC " + time }
     static let recOn = "REC on"
     static let recOff = "REC off"
-    /// The chip's menu: pause or resume the recording in progress, and set recording on or off (remembered).
+    /// The chip's menu: pause or resume the recording in progress (listening goes on), and set recording on or off
+    /// (remembered). Its note says that Stop, beside the chip, ends the set and saves it.
     static let resumeRecording = "Resume recording"
-    static let pauseRecording = "Pause recording"
+    static let pauseRecording = "Pause recording, keep listening"
     static let recordSets = "Record each set"
-    static let recWhere = phrases("Sets are kept on this iPad,", "in Files under Deckie Booth.")
-    /// The corner's microphone and "…" buttons, spoken.
-    static let pauseListening = "Pause listening"
-    static let listen = "Listen"
+    static let recWhere = phrases("Stop ends the set and saves it", "on this iPad, in Files under Deckie.")
+    /// The Listen page's one control for listening, in the playing panel's corner (`ListenControl`). Stop: the
+    /// microphone off, and the set's recording ended and saved; the song on screen stays. Start listening: the
+    /// microphone on again, and a new set recording when set recording is on.
+    static let stop = "Stop"
+    static let stopSpoken = "Stop listening and save the set"
+    static let startListening = "Start listening"
+    /// The playing panel after Stop, when no song is on screen: what happened, where the set is, how to go on.
+    static let stoppedTitle = "Stopped"
+    static let stoppedHelp = "Deckie is not listening."
+    static let stoppedSaved = phrases("The set is saved on this iPad,", "in Files under Deckie > Sets.")
+    static let stoppedHow = phrases("Tap Start listening", "to listen again.")
+    /// The playing panel's foot after Stop, when the song stays on screen.
+    static let setSavedFoot = "Stopped. The set is saved in Files under Deckie > Sets."
+    /// The corner's "…" button, spoken.
     static let testWithFile = "Test with file and details"
     /// The corner's tiny status.
-    static let statusPaused = "paused"
+    static let statusStopped = "stopped"
     static let statusListening = "listening"
     static let statusTestFile = "test file"
     static let statusByHand = "set by hand"
@@ -127,7 +139,7 @@ enum Words {
     // MARK: a crate file with no fingerprints (the playing panel)
 
     static let setByHandTitle = "Set the song by hand"
-    static let noFingerprints = "The booth cannot name what is playing from this crate file yet: it has no song fingerprints."
+    static let noFingerprints = "Deckie cannot name what is playing from this crate file yet: it has no song fingerprints."
     static let setByHandHow = "Tap a song in the Crate tab to set it as playing."
     static let chooseSong = "Choose a song"
     /// The status corner when nothing can be recognised.
@@ -280,7 +292,7 @@ enum Words {
             return "Another program has changed this crate file, so it cannot be opened. Make it again with Deckie and send that one."
         }
         if said.contains("min_reader") {
-            return "This crate file was made by a newer Deckie. Update the booth to open it."
+            return "This crate file was made by a newer Deckie. Update this app to open it."
         }
         if said.contains("is not a crate file") || said.hasPrefix("manifest.json: is missing") {
             return "This is not a crate file. A crate file is the .deckie file that Deckie makes."
@@ -311,7 +323,7 @@ enum Words {
     static let chooseAudioFile = "Choose an audio file…"
     static let setRecording = "Set recording"
     static let recordWhileListening = "Record while listening"
-    static let setFilesWhere = "Files: Files app > On My iPad > Deckie Booth > Sets (or Finder > iPad > Files)."
+    static let setFilesWhere = "Files: Files app > On My iPad > Deckie > Sets (or Finder > iPad > Files)."
     static let status = "Status"
     static let matches = "Matches"
     static let lastLatency = "Last match latency"
@@ -379,11 +391,11 @@ enum Words {
     }
 
     /// The name at the top.
-    static let firstRunName = "Deckie Booth"
-    /// What the booth is waiting for.
+    static let firstRunName = "Deckie"
+    /// What the app is waiting for.
     static let firstRunWaiting = keepLastTwo("No crate file open yet")
-    /// What the booth does, in one sentence.
-    static let firstRunWhat = phrases("Booth listens to the room,", "names the song that's playing,",
+    /// What the app does, in one sentence.
+    static let firstRunWhat = phrases("Deckie listens to the room,", "names the song that's playing,",
                                       "and shows what could come next", "and how to mix it in.")
     /// The three steps: a heading each, and a note under it.
     struct Step: Hashable { let title: String; let note: String }
@@ -423,13 +435,13 @@ enum Words {
 
     static let credits = "Credits"
     static let creditsMaker = "Deckie by App Hold Media"
-    static func creditsVersion(_ version: String, _ build: String) -> String { "Deckie Booth \(version) (\(build))" }
+    static func creditsVersion(_ version: String, _ build: String) -> String { "Deckie \(version) (\(build))" }
     static let creditsOpenSourceSection = "Open-source software"
-    /// When Booth carries no one else's code (today): said plainly, and nothing listed.
-    static let creditsNoneYet = phrases("Deckie Booth is Deckie's own code,", "on the frameworks that come with iPadOS.",
+    /// When the app carries no one else's code (today): said plainly, and nothing listed.
+    static let creditsNoneYet = phrases("This app is Deckie's own code,", "on the frameworks that come with iPadOS.",
                                         "It carries no open-source parts from others yet,", "so there is nothing to list here.")
     static let creditsPrivacySection = "Privacy"
-    static let creditsPrivacy = phrases("Booth hears the room on this iPad.", "The sound never leaves it,",
+    static let creditsPrivacy = phrases("Deckie hears the room on this iPad.", "The sound never leaves it,",
                                         "and there is no account.")
     /// An entry's version and licence: "1.2 · MIT".
     static func creditsLine(_ version: String, _ licence: String) -> String { version.isEmpty ? licence : version + " · " + licence }
