@@ -56,7 +56,8 @@ jobs:
           swift-version: swift-6.4.1-release
           swift-build: 6.4.1-RELEASE
       # Swift's Clang 21 and the newest Microsoft C++ toolset (14.52, whose library wants Clang 22) do not go
-      # together: the C++ in desk-shell is compiled against the 14.51 toolset, named, not the newest one found.
+      # together. Swift Build compiles C++ against the newest toolset it finds, whatever VCToolsInstallDir says, so
+      # the script sets aside the toolsets from 14.52 on and checks with a trial build (comments in the script).
       - name: Pin the Microsoft C++ toolset Swift's clang can use
         shell: pwsh
         run: ./core/Tools/windows/pin-msvc.ps1
