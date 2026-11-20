@@ -34,6 +34,28 @@ public protocol BuildFiles: AnyObject, Sendable {
     func fetch(_ f: SourceFile) throws -> URL
     /// Done with the song: read, and its progress reported. Called whether reading it worked or not.
     func release(_ f: SourceFile)
+    /// The song's bytes, when `fetch` read them into memory rather than making a file (a music CD read once, nothing
+    /// written to disk), handed over once: the builder hashes, tags and analyses these, and its `fetch` URL is only the
+    /// song's name. Nil: the builder reads the file at the URL `fetch` gave.
+    func bytes(_ f: SourceFile) -> Data?
+    /// The song the builder will ask for next, while it analyses the one it has (read ahead, so the next is ready).
+    /// A hint: it may be ignored.
+    func readAhead(_ f: SourceFile)
+}
+
+extension BuildFiles {
+    public func bytes(_ f: SourceFile) -> Data? { nil }
+    public func readAhead(_ f: SourceFile) {}
+}
+
+/// One step of the song a build is on, for a screen that says what is happening now (the run's waiting line).
+public enum SongStep: Sendable, Equatable {
+    /// The builder took the song, before anything of it is read.
+    case started
+    /// Its sound coming off the source, `done` of `total` parts (a music CD's sectors).
+    case reading(done: Int, total: Int)
+    /// An analysis stage starting, by the name `Analysis.timings` gives it ("decode", "beatthis", "key", ...).
+    case stage(String)
 }
 
 /// Finding the audio files of a folder.

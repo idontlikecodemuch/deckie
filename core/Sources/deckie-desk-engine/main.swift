@@ -26,9 +26,10 @@ let engine = DeskProtocol(home: home, output: { data in
     line.append(0x0A)
     stdout.write(line)
 }, makeRun: { home, crateId, request in
-    // No recognition signatures here: ShazamKit is Apple's only. The print that finds copies is the shared decoder's.
+    // No recognition signatures here: ShazamKit is Apple's only. The print that finds copies is the shared decoder's,
+    // made from the audio the analysis decoded (the same samples), so each song is read once.
     DeskRun(home: home, crateId: crateId, request: request, jobs: jobs, device: device,
-            signer: nil, printer: DeskRun.portablePrint)
+            signer: nil, printer: DeskRun.portablePrint, audioPrinter: DeskRun.portableAudioPrint)
 })
 
 FileHandle.standardError.write(Data("deckie-desk-engine: protocol \(DeskProtocol.version), storage \(home.root.path)\n".utf8))

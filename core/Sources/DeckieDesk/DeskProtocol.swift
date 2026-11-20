@@ -483,11 +483,15 @@ public final class DeskProtocol: @unchecked Sendable {
                 let (saved, report) = try run.run { p in
                     // The run screen's songs, notes and totals (D37), in batches at most four times a second.
                     screen.offer(p)
-                    // Every line goes out; bare progress at most ten times a second.
-                    if p.line == nil && p.done < p.total && !last.due(every: 0.1) { return }
+                    // Every line goes out, and every change of the song now or its step; bare progress at most ten
+                    // times a second.
+                    let stepChanged = last.changed(p.now.map { "\($0.rel)\u{0}\($0.step)" })
+                    if p.line == nil && !stepChanged && p.done < p.total && !last.due(every: 0.1) { return }
                     var m: [String: Any] = ["event": "run.progress", "stage": p.stage.rawValue, "done": p.done,
                                             "total": p.total, "remaining": p.remaining ?? NSNull()]
                     if let line = p.line { m["line"] = Self.line(line) }
+                    // An addition (protocol 2 still): the song being read now and its step, for the waiting line.
+                    if let now = p.now { m["now"] = Self.now(now) }
                     self.send(m)
                 }
                 screen.flush()
@@ -525,10 +529,18 @@ public final class DeskProtocol: @unchecked Sendable {
         thread.start()
     }
 
-    /// When bare progress was last sent; the run calls from more than one thread.
+    /// When bare progress was last sent, and the song step last seen; the run calls from more than one thread.
     final class LastSent: @unchecked Sendable {
         private let lock = NSLock()
         private var at = Date.distantPast
+        private var lastStep: String?
+        /// Whether `step` differs from the one seen last (and remembers it).
+        func changed(_ step: String?) -> Bool {
+            lock.lock(); defer { lock.unlock() }
+            guard step != lastStep else { return false }
+            lastStep = step
+            return true
+        }
         func due(every seconds: Double) -> Bool {
             lock.lock(); defer { lock.unlock() }
             let now = Date()
@@ -536,6 +548,13 @@ public final class DeskProtocol: @unchecked Sendable {
             at = now
             return true
         }
+    }
+
+    static func now(_ n: RunNow) -> [String: Any] {
+        var m: [String: Any] = ["rel": n.rel, "step": n.step]
+        if let number = n.number { m["number"] = number }
+        if let read = n.read { m["read"] = (read * 1000).rounded() / 1000 }
+        return m
     }
 
     static func line(_ l: RunLine) -> [String: Any] {

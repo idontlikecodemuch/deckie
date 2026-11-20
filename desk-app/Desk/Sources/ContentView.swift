@@ -250,6 +250,7 @@ struct RunProgressLine: View {
                 if let r = model.runRemaining { Text(Words.timeLeft(r)).foregroundStyle(.secondary) }
             }.font(Look.Fonts.runProgress)
         } else { ProgressView().controlSize(.small) }
+        if let now = model.runNow { NowLine(now: now, total: model.runTotal, disc: model.runIsMusicCD) }
     }
 
     private var stage: String {
@@ -258,6 +259,35 @@ struct RunProgressLine: View {
         case .finishing: return Words.stageFinishing
         case .saving: return Words.stageSaving
         }
+    }
+}
+
+/// The song now (a music CD's songs, one at a time): a turning disc and one plain line, "Reading song 2 of 6 from the
+/// disc", then the step it is on, with a thin bar within the song. The words and the share are the core's (`RunNow`).
+/// Still under reduced motion.
+struct NowLine: View {
+    let now: RunNow
+    let total: Int
+    let disc: Bool
+    @Environment(\.accessibilityReduceMotion) private var reduce
+    var body: some View {
+        HStack(spacing: RunLook.nowGap) {
+            if disc {
+                TimelineView(.animation(paused: reduce)) { context in
+                    Image(systemName: RunLook.nowDiscSymbol)
+                        .font(RunLook.nowDiscFont).foregroundStyle(.secondary)
+                        .rotationEffect(.degrees(reduce ? 0 : context.date.timeIntervalSinceReferenceDate
+                            .truncatingRemainder(dividingBy: RunLook.nowDiscTurn) / RunLook.nowDiscTurn * RunLook.wholeTurn))
+                }
+                .accessibilityHidden(true)
+            }
+            VStack(alignment: .leading, spacing: RunLook.nowBarGap) {
+                Text(now.line(total: total)).font(RunLook.nowFont).lineLimit(1)
+                ProgressView(value: now.share).tint(RunLook.accent)
+            }
+        }
+        .padding(RunLook.nowPad)
+        .background(RunLook.card, in: RoundedRectangle(cornerRadius: RunLook.nowCorner))
     }
 }
 

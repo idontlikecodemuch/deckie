@@ -47,7 +47,13 @@ public struct FileFacts: Equatable, Sendable {
     public static func read(_ url: URL) -> FileFacts {
         guard let handle = try? FileHandle(forReadingFrom: url) else { return FileFacts() }
         defer { try? handle.close() }
-        let file = TagFile(handle: handle)
+        return read(TagFile(handle: handle))
+    }
+
+    /// The facts in a file's bytes already in memory: the same as `read(url)` for the same bytes.
+    public static func read(bytes: Data) -> FileFacts { read(TagFile(bytes: bytes)) }
+
+    static func read(_ file: TagFile) -> FileFacts {
         guard let head = file.read(at: 0, count: 12), head.count >= 12 else { return FileFacts() }
         let b = [UInt8](head)
         func ascii(_ at: Int, _ s: String) -> Bool { Array(b[at..<(at + s.utf8.count)]) == Array(s.utf8) }
@@ -468,7 +474,7 @@ public struct FileFacts: Equatable, Sendable {
         "Black Metal", "Crossover", "Contemporary Christian", "Christian Rock", "Merengue", "Salsa", "Thrash Metal",
         "Anime", "JPop", "Synthpop", "Abstract", "Art Rock", "Baroque", "Bhangra", "Big Beat", "Breakbeat", "Chillout",
         "Downtempo", "Dub", "EBM", "Eclectic", "Electro", "Electroclash", "Emo", "Experimental", "Garage", "Global",
-        "IDM", "Illbient", "Industro-Goth", "Jam Band", "Krautrock", "[artist]", "Lounge", "Math Rock", "New Romantic",
+        "IDM", "Illbient", "Industro-Goth", "Jam Band", "Krautrock", "Leftfield", "Lounge", "Math Rock", "New Romantic",
         "Nu-Breakz", "Post-Punk", "Post-Rock", "Psytrance", "Shoegaze", "Space Rock", "Trop Rock", "World Music",
         "Neoclassical", "Audiobook", "Audio Theatre", "Neue Deutsche Welle", "Podcast", "Indie Rock", "G-Funk",
         "Dubstep", "Garage Rock", "Psybient",
