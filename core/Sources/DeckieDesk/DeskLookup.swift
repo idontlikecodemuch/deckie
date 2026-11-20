@@ -777,6 +777,8 @@ public enum DeskLookup {
     /// The review's summary line: "9 of 14 found. 5 not found: edits and bootlegs often aren't." (letter AA, 3.9).
     public static func summaryLine(_ r: Review) -> String {
         if let f = r.failure { return DeskWords.fill(DeskWords.coded("lookupFailure", f), DeskWords.withComputer([:])) }
+        // A disc MusicBrainz doesn't know: its own line says so (lookupDiscMatch.none); not a count of nothing too.
+        if r.scope == "disc", (r.discMatch ?? "none") == "none", r.found == 0 { return DeskWords.coded("lookupDiscMatch", "none") }
         let nothing = r.songs.filter { $0.outcome == "nothing" }.count
         if r.scope == "song", let s = r.songs.first {
             if s.outcome == "nothing" { return DeskWords.text("lookupNothingOne") }

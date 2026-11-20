@@ -95,6 +95,11 @@ import DeckieTestSupport
         let roomy = DeskDrives.list(environment: [DeskDrives.standInVariable: root.path,
                                                   DeskAddMusic.bigDriveVariable: String(Int64.max)])
         #expect(roomy.allSatisfy { !$0.big })
+        // Stand-ins share one volume: one can say its own size (a stick beside a big drive, for the tours).
+        try "16000000000\n".write(to: root.appendingPathComponent("Stick 3/" + DeskDrives.standInSizeFile), atomically: true, encoding: .utf8)
+        let sized = DeskDrives.list(environment: [DeskDrives.standInVariable: root.path])
+        #expect(sized.first { $0.name == "Stick 3" }?.bytes == 16_000_000_000)
+        #expect(sized.first { $0.name == "Stick 3" }?.big == false && sized.first { $0.name == "Stick 3" }?.size == "16 GB")
     }
 
     @Test func countingFindsWhatARunWouldAndAsksAboveTheLine() throws {
