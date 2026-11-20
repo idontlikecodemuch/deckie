@@ -225,3 +225,7 @@ is the larger part of the work and serves both.
 **One doubt for either.** On the real-room recordings the fast setting gained almost nothing. If the same holds
 for these, the gain is real in clean sound and small in a booth, and the honest result would be "no loss, little
 gain where it counts". Only a real-room run can settle that.
+
+## Stage 2
+
+Built and tested: `faster-listening-results.md`.
