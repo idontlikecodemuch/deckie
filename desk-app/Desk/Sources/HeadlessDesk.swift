@@ -83,7 +83,10 @@ enum HeadlessDesk {
             }
             print("adding \(request.name) to \(info.name), \(jobs) at a time")
             let run = DeskRun(home: home, crateId: info.id, request: request, jobs: jobs, device: Device.modelLabel(),
-                              signer: { try Signatures.signature(of: $0) }, printer: { try Signatures.recordingPrint(of: $0) })
+                              signer: { try Signatures.signature(of: $0) }, printer: { try Signatures.recordingPrint(of: $0) },
+                              audioPrinter: { url, audio in
+                                  Signatures.recordingPrint(fromAudio: audio.samples, channels: audio.channelCount, sampleRate: audio.sampleRate, of: url)
+                              })
             let lastPrinted = Locked(0.0)
             let (crate, r) = try run.run { p in
                 if case let .file(rel, outcome)? = p.line { print("  \(rel)  \(outcome)") }

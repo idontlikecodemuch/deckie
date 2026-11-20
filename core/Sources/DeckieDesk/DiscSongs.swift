@@ -131,7 +131,8 @@ public enum DiscRecords {
     }
 }
 
-/// The one song being read off a disc by sector (`<home>/Reading/`), and what is left there by a run that stopped.
+/// `<home>/Reading/`, where versions before Nov 20, 2026 wrote the song being read off a disc by sector; nothing is
+/// written there now, and what an older version left is removed.
 public enum DiscReading {
     public static let folderName = "Reading"
     public static func folder(_ home: DeskHome) -> URL { home.root.appendingPathComponent(folderName, isDirectory: true) }

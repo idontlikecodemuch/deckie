@@ -231,6 +231,13 @@ enum RunLook {
     static let wheelHome = Color.secondary
     static let card = Color.primary.opacity(0.045)
     /// A moment: the glow round the progress bar, and the ring round a card.
+    // the song now (the waiting line of a music CD's run)
+    static let nowGap: CGFloat = 12, nowBarGap: CGFloat = 6, nowPad: CGFloat = 12, nowCorner: CGFloat = 12
+    static let nowDiscSymbol = "opticaldisc"
+    static let nowDiscFont = Font.system(size: 26)
+    static let nowDiscTurn = 2.4                                            // seconds a turn
+    static let wholeTurn = 360.0
+    static let nowFont = Font.system(size: 14, weight: .semibold)
     static let momentGlowOpacity = 0.9
     static let momentGlowRadius: CGFloat = 6
     static let momentRingOpacity = 0.6
