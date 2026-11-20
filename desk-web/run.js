@@ -4,8 +4,11 @@
 // about the step Desk is on. The song on stage moves for the pleasure of it (letter AD): it pulses and breathes at its
 // own tempo, built from its own wave and bars. No words of its own: they are the engine's (DeskWords), passed in.
 //
-// Drawing is throttled (the stage at most thirty frames a second while the run goes, the wall at most every --t-wall)
-// and stops while the window is hidden. Under reduced motion nothing moves: the same pictures, still.
+// Drawing is throttled (the stage at most thirty frames a second while the run goes, the wall at most every --t-wall).
+// While the window is hidden, or behind others where the window gives no animation frames (a WKWebView or WebView2 not
+// in front), nothing moves, but what is shown never falls behind: the stage takes the latest song, still, the figures
+// and the wall are drawn as the songs come, so the window is right whenever it is looked at (a picture of it included).
+// No state waits for an animation frame. Under reduced motion nothing moves: the same pictures, still.
 // Colours, sizes, shares and times are the CSS variables in desk.css's :root; the numbers left here are the drawing's
 // own arithmetic (64 points a wave, a mark every 8 bars and a longer one every 32, twelve keys round the wheel).
 (function () {
@@ -68,7 +71,8 @@
     function noteText(note) {
       const v = Object.assign({}, note.values || {});
       if (v.mode) v.mode = t("mode." + v.mode);
-      if (v.n) v.n = Number(v.n).toLocaleString();
+      // A count is written by n(), grouped as this computer writes numbers ("1,000").
+      if (note.n != null) delete v.n;
       if (note.code === "finished") v.duration = musicTime(Number(v.seconds || 0));
       const key = (note.kind === "moment" ? "moment." : "fact.") + note.code;
       return note.n != null ? n(key, note.n, v) : t(key, v);
@@ -87,6 +91,8 @@
       return Math.max(min, hold / (1 + waiting));
     }
     function nextSong(now) {
+      // Hidden, or with no frames coming: straight to the latest song, still; the ones before it are on the wall.
+      if (document.hidden && queue.length > 1) { skipped += queue.length - 1; queue.splice(0, queue.length - 1); }
       const max = num("--stage-queue-max");
       if (queue.length > max) {
         // Falling behind: the oldest waiting go straight to the wall (they are on it already), and the stage says how many.
@@ -97,7 +103,7 @@
       const song = queue.shift();
       // Under reduced motion a song stays at least --t-hold-still, so the stage changes as a still picture would.
       const hold = reduced() ? Math.max(time("--t-hold-still"), holdFor(queue.length)) : holdFor(queue.length);
-      const ticker = reduced() || hold < num("--stage-ticker");
+      const ticker = reduced() || document.hidden || hold < num("--stage-ticker");
       // The song before it: its wave is where this one's grows or shrinks from.
       onStage = { song, at: now, hold, draw: ticker ? 0 : Math.min(time("--t-draw"), hold * num("--stage-draw-share")), from: onStage ? onStage.song.wave : [] };
       readLook();
@@ -184,10 +190,10 @@
       return Math.max(0, was + (target - was) * eased);
     }
     function drawStage(now) {
-      if (!onStage || document.hidden) return;
+      if (!onStage) return;
       if (!look) readLook();
       const L = look, { ctx, w, h, dpr } = fit(stageCanvas);
-      const s = onStage.song, still = reduced();
+      const s = onStage.song, still = reduced() || document.hidden;
       const m = motion(onStage, now, still, L);
       ctx.clearRect(0, 0, w, h);
       const markH = Math.round(h * L.markH), waveH = h - markH, mid = waveH / 2, slot = w / WAVE, edge = m.front * w;
@@ -246,8 +252,7 @@
     /// allowed. Under reduced motion it draws once a song.
     const moving = () => running && !!onStage && !document.hidden && !reduced() && stage.offsetParent !== null;
     function tick(now) {
-      raf = 0;
-      if (document.hidden) return;
+      raf = 0; clearTimeout(late); late = 0;
       if (!look) readLook();
       let changed = false;
       if (!onStage || now - onStage.at >= onStage.hold) { if (queue.length) { nextSong(now); changed = true; } }
@@ -261,22 +266,30 @@
       if (document.hidden || !onStage && !queue.length) return;
       if (moving()) {
         const wait = Math.max(0, look.frame - (now - lastFrame));
-        timer = setTimeout(() => { raf = raf || requestAnimationFrame(tick); }, wait);
+        timer = setTimeout(kick, wait);
         return;
       }
       if (queue.length) {
         const wait = onStage ? Math.max(0, onStage.at + onStage.hold - now) : 0;
-        timer = setTimeout(() => { raf = raf || requestAnimationFrame(tick); }, wait);
+        timer = setTimeout(kick, wait);
       }
     }
-    const kick = () => { if (!raf && !document.hidden) raf = requestAnimationFrame(tick); };
+    /// The next step: on the next animation frame, or, when none comes within --t-frame-late (the window hidden or
+    /// not in front), at once without one, so a song read is on the stage whether or not anything is drawing frames.
+    let late = 0;
+    function kick() {
+      if (raf) return;
+      raf = requestAnimationFrame(tick);
+      clearTimeout(late);
+      late = setTimeout(() => { if (raf) { cancelAnimationFrame(raf); raf = 0; tick(performance.now()); } }, time("--t-frame-late"));
+    }
 
     // ---- what Desk has found so far
     const histCanvas = $("fig-tempos"), wheel = $("fig-keys");
     let latestBin = -1;
     function drawFigures() {
       const f = figures;
-      if (!f || document.hidden) return;
+      if (!f) return;
       $("fig-music-value").textContent = musicTime(f.seconds);
       // Tempos: one bar a bin over the whole range, each as tall as its count against the fullest.
       const { ctx, w, h } = fit(histCanvas);
@@ -290,12 +303,7 @@
         ctx.fillStyle = i === latestBin ? css("--wave-new") : css("--wave");
         ctx.fillRect(i * slot, h - bh, barW, bh);
       });
-      const withTempo = f.songs - f.noTempo;
-      let top = 0; f.tempos.forEach((c, i) => { if (c > f.tempos[top]) top = i; });
-      const text = withTempo > 0 && f.slowest != null
-        ? t("figTemposText", { songs: n("songs", withTempo), low: Math.round(f.slowest), high: Math.round(f.fastest),
-            mode: Math.round(f.tempoLow + top * f.tempoStep + f.tempoStep / 2) })
-        : t("figTemposNone");
+      const text = temposText(f);
       $("fig-tempos-text").textContent = text;
       histCanvas.setAttribute("aria-label", text);
       drawWheel(f);
@@ -307,6 +315,16 @@
       const ni = $("run-notin");
       ni.hidden = !(f.notIn > 0);
       ni.textContent = n("filesDidntGoIn", f.notIn);
+    }
+    /// The tempos figure in words, as RunFigures.temposText says it on the Mac: one tempo once ("1 song, 118 BPM"); a
+    /// range alone when no tempo is shared; else the tempo most share (the engine counts it), held within the range.
+    function temposText(f) {
+      const withTempo = f.songs - f.noTempo;
+      if (!(withTempo > 0) || f.slowest == null) return t("figTemposNone");
+      const low = Math.round(f.slowest), high = Math.round(f.fastest), songs = n("songs", withTempo);
+      if (withTempo === 1 || low === high) return t("figTemposOne", { songs, bpm: low });
+      if (f.mostTempo == null) return t("figTemposRange", { songs, low, high });
+      return t("figTemposText", { songs, low, high, mode: Math.min(high, Math.max(low, f.mostTempo)) });
     }
     // The wheel of the twelve home notes round the circle of fifths: the outer ring major, the inner minor, a dot inside
     // for a song whose home note alone Desk found. A key that has turned up is filled, brighter the more songs it has.
@@ -392,7 +410,7 @@
       }
       function draw() {
         wtimer = 0; dirty = false;
-        if (document.hidden || !canvas.isConnected || canvas.offsetParent === null) return;
+        if (!canvas.isConnected || canvas.offsetParent === null) return;
         const { ctx, w, h, dpr } = fit(canvas);
         const count = songs.length;
         ctx.clearRect(0, 0, w, h);
@@ -597,10 +615,14 @@
         running = false;
         clearTimeout(sayTimer); clearTimeout(timer); queue = [];
         $("done-wall-title").textContent = t("wallTitleDone", { read: report.read });
-        $("done-moment").textContent = lastNote || "";
-        $("done-moment").hidden = !lastNote;
+        // "That's the lot" only for a run that read everything (the engine sends it only then).
+        const note = report.stopped === true ? null : lastNote;
+        $("done-moment").textContent = note || "";
+        $("done-moment").hidden = !note;
         doneWall.label(t("wallLabel", { title: t("wallTitleDone", { read: report.read }), songs: n("songs", songs.length) }));
-        requestAnimationFrame(() => { doneWall.now(); if (!card.dataset.settled) { card.dataset.settled = "1"; doneWall.settle(); } });
+        // Drawn now, not on an animation frame, which a window not in front may never give.
+        doneWall.now();
+        if (!card.dataset.settled) { card.dataset.settled = "1"; doneWall.settle(); }
       },
 
     };

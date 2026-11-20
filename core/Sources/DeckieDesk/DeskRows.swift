@@ -132,9 +132,13 @@ public struct DeskSourceRow: Codable, Equatable, Sendable {
             let folders = d.folders.map { f in
                 Folder(name: f.name, songs: crate.folderPlaces(disc: d.name, folder: f.name).map { Song(id: $0.id, number: $0.number) })
             }
-            return DeskSourceRow(name: d.name, songs: d.folders.reduce(0) { $0 + $1.trackIds.count }, folders: folders)
+            return DeskSourceRow(name: d.name, songs: songs(in: d), folders: folders)
         }
     }
+
+    /// The songs of a source, each once: a song in two of its folders is one song (its "+1" says where else), so the
+    /// source's line says the number the crate and the finished screen say.
+    public static func songs(in d: DiscPlan) -> Int { Set(d.folders.flatMap(\.trackIds)).count }
 }
 
 /// What did not go in (the crate's import log), grouped by reason code.

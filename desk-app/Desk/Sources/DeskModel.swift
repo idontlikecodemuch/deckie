@@ -240,7 +240,7 @@ final class DeskModel: ObservableObject {
         do {
             let info = try shelf.importCopy(of: url)
             reloadCrates(); show(info)
-        } catch { errorText = Words.couldntOpen(error.localizedDescription) }
+        } catch { errorText = Words.couldntImport(error.localizedDescription) }
     }
 
     // MARK: Add music: the three ways in (research AE), then the one run

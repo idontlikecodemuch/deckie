@@ -346,6 +346,7 @@
   --t-moment: 1600ms; --ease-moment: ease-out;
   --t-moment-after: 50ms;                 /* a moment's class is taken away this long after its motion */
   --t-wall: 250ms;                        /* the wall redraws at most this often */
+  --t-frame-late: 250ms;                  /* no animation frame by then (a window not in front): the stage steps without one */
   --stage-queue-max: 24;                  /* songs waiting for the stage before the oldest go straight to the wall */
   --saying-fact-skip: 0.35;               /* after a fact, the chance the next line is about the step instead */
   --ease-turn: cubic-bezier(.3, 0, .2, 1);  /* the wheel's turn at a moment */

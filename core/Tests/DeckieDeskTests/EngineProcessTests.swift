@@ -166,7 +166,7 @@ final class EngineProcess: @unchecked Sendable {
         defer { if e.process.isRunning { e.process.terminate() } }
         let hello = try #require(e.wait { $0["event"] as? String == "hello" })
         #expect((hello["protocol"] as? NSNumber)?.intValue == DeskProtocol.version)
-        #expect((hello["words"] as? [String: String])?["firstTitle"] == "Your crate starts here.")
+        #expect((hello["words"] as? [String: String])?["firstTitle"] == "Your crate is the music Deckie knows.")
         #expect(e.received.first?["event"] as? String == "hello")
         let state = try #require(e.wait { $0["event"] as? String == "state" })
         #expect((state["current"] as? [String: Any])?["name"] as? String == "Friday")
@@ -407,7 +407,7 @@ final class EngineProcess: @unchecked Sendable {
         a.ident.artist = "Artist A"
         a.ident.facts = ["release": .init("Friday Night", from: "tag"), "genre": .init(["House", "Garage"], from: "tag"),
                          "isrc": .init("USABC9900001", from: "tag")]
-        a.file.otherTags = .init(formats: ["id3v2.4"], tags: ["TSSE": ["LAME"]], leftOut: ["picture": 1])
+        a.file.otherTags = .init(formats: ["id3v2.4"], tags: ["TSSE": ["LAME"], "COMMENT": ["warm-up"]], leftOut: ["picture": 1])
         try CrateWriter.write(crate([a], name: "Friday"), to: home.shelf.package(info.id))
 
         let e = try EngineProcess(home: home.root)
@@ -418,7 +418,7 @@ final class EngineProcess: @unchecked Sendable {
         #expect((names["genre"] as? [String: Any])?["value"] as? String == "House, Garage")
         #expect((names["genre"] as? [String: Any])?["from"] as? String == "tag")
         #expect((names["others"] as? [[String: Any]])?.first?["name"] as? String == "isrc")
-        #expect((names["fileTags"] as? [[String: Any]])?.first?["name"] as? String == "TSSE")
+        #expect((names["fileTags"] as? [[String: Any]])?.map { $0["name"] as? String } == ["Comment"])
         #expect((names["leftOut"] as? [String: Any])?["picture"] as? NSNumber == 1)
 
         var mark = e.received.count

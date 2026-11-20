@@ -69,6 +69,10 @@ enum Tour {
         }
         func say(_ s: String) { Notice.say("[tour] " + s) }
 
+        // Where the step before started looking: a step with no script of its own looks from there, so an event that
+        // came while the step before was being pictured (the run finishing during the last song count's picture) is
+        // seen, not waited for until the tour gives up.
+        var lastMark = 0
         func run(_ i: Int) {
             guard i < steps.count else {
                 say("done: \(steps.compactMap(\.name).count) pictures in \(out.path)")
@@ -76,16 +80,19 @@ enum Tour {
                 exit(0)
             }
             let step = steps[i]
-            lock.lock(); let mark = events.count; lock.unlock()
+            lock.lock(); let mark = step.js == nil ? lastMark : events.count; lock.unlock()
+            lastMark = mark
             if let js = step.js { desk.window.eval("try { \(js) } catch (e) { console.error(e); }") }
             Thread.detachNewThread {
                 if let event = step.event {
                     let end = Date().addingTimeInterval(600)
+                    var seen = false
                     while Date() < end {
-                        lock.lock(); let seen = events[mark...].contains { $0["event"] as? String == event && (step.eventTest?($0) ?? true) }; lock.unlock()
+                        lock.lock(); seen = events[mark...].contains { $0["event"] as? String == event && (step.eventTest?($0) ?? true) }; lock.unlock()
                         if seen { break }
                         Thread.sleep(forTimeInterval: 0.05)
                     }
+                    if !seen { say("gave up waiting for \(event) at \(step.name ?? "step \(i + 1)")") }
                 }
                 Thread.sleep(forTimeInterval: step.delay)
                 desk.window.onWindowThread {
@@ -116,6 +123,7 @@ enum Tour {
         let menuItem = { (menu: String, i: Int) in "document.querySelectorAll('#\(menu) [role=menuitem]')[\(i)].click();" }
         let enter = "dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));"
         let songsEvent: (String) -> Step = { name in Step(name: name, event: "songs", delay: 1.0) }
+        let addCD = addCDItem, pickCD = pickMusicCD
         return [
             Step(name: "n01-first-screen", delay: 2.0),
             Step(name: nil, js: click("#add-button"), delay: 0.8),
@@ -137,9 +145,9 @@ enum Tour {
             Step(name: "n14-pattern-tool", js: menuItem("tools-menu", 1), delay: 1.6),
             Step(name: nil, js: "document.getElementById('tool').close('cancel');", delay: 0.4),
             Step(name: nil, js: "desk.request('crate.new');", event: "state", delay: 0.8),
-            Step(name: "n15-add-menu-music-cds", js: click("#add-button"), delay: 1.4),
-            Step(name: "n16-reading-asks-disc-name", js: "[...document.querySelectorAll('#add-menu [role=menuitem]')].find(function (b) { return / E$/.test(b.textContent); }).click();",
-                 event: "run.started", delay: 0.6),
+            Step(name: nil, js: click("#add-button"), delay: 0.8),
+            Step(name: "n15-add-cd-music-cds", js: addCD, delay: 1.4),
+            Step(name: "n16-reading-asks-disc-name", js: pickCD(1), event: "run.started", delay: 0.6),
             Step(name: nil, js: "var i = document.getElementById('disc-ask-input'); i.value = 'Friday late'; document.getElementById('disc-ask').requestSubmit();", delay: 0.3),
             Step(name: "n17-disc-no-names-finished", event: "run.finished", delay: 1.8),
             Step(name: "n18-disc-songs-need-names", js: click("#finished-summary button.link"), delay: 1.0),
@@ -147,9 +155,9 @@ enum Tour {
             Step(name: "n19-playlist-preview", js: menuItem("tools-menu", 2) + " setTimeout(function () { document.getElementById('tool-choose').click(); }, 300);", delay: 1.8),
             songsEvent("n20-playlist-applied").with(js: click("#tool-apply")),
             Step(name: nil, js: "desk.request('crate.new');", event: "state", delay: 0.8),
-            Step(name: nil, js: click("#add-button"), delay: 1.2),
-            Step(name: "n21-disc-with-names-finished", js: "[...document.querySelectorAll('#add-menu [role=menuitem]')].find(function (b) { return / D$/.test(b.textContent); }).click();",
-                 event: "run.finished", delay: 1.8),
+            Step(name: nil, js: click("#add-button"), delay: 0.8),
+            Step(name: nil, js: addCD, delay: 1.4),
+            Step(name: "n21-disc-with-names-finished", js: pickCD(0), event: "run.finished", delay: 1.8),
             Step(name: "n22-disc-names-panel", js: click("#finished-songs") + " setTimeout(function () { document.querySelector('#songs-body tr td[data-col=title]').click(); }, 400);", delay: 1.2),
         ]
     }
@@ -189,9 +197,9 @@ enum Tour {
             Step(name: "l14-what-desk-has-sent", js: menuText("more-menu", "What Desk has sent"), delay: 1.2),
             Step(name: nil, js: "document.getElementById('sent').close('ok');", delay: 0.4),
             Step(name: nil, js: "desk.request('crate.new');", event: "state", delay: 0.8),
-            Step(name: nil, js: click("#add-button"), delay: 1.2),
-            Step(name: nil, js: "[...document.querySelectorAll('#add-menu [role=menuitem]')].find(function (b) { return / E$/.test(b.textContent); }).click();",
-                 event: "run.finished", delay: 1.0),
+            Step(name: nil, js: click("#add-button"), delay: 0.8),
+            Step(name: nil, js: addCDItem, delay: 1.4),
+            Step(name: nil, js: pickMusicCD(0), event: "run.finished", delay: 1.0),
             Step(name: nil, js: click("#finished-songs"), delay: 1.0),
             Step(name: nil, js: click("#more-button"), delay: 0.6),
             Step(name: nil, js: menuText("more-menu", "Look up songs via MusicBrainz"), delay: 1.0),
@@ -207,7 +215,9 @@ enum Tour {
     /// choice, Add CD's list, the question before a large read with the new crate's name, the run renamed and
     /// stopped, Carry on, the finished screen's Add more music, the crate screen's row and the header's rename. Needs
     /// DECKIE_DESK_DRIVES with a "Stick 3" and a big "Big Drive" (DECKIE_DESK_BIG_DRIVE_BYTES) and
-    /// DECKIE_DESK_ASK_ABOVE_SONGS below the stick's songs.
+    /// DECKIE_DESK_ASK_ABOVE_SONGS below the stick's songs. Stand-ins in one folder share a volume, so give each its
+    /// size in a `.deckie-size` file inside it (DeskDrives.standInSizeFile: 16000000000 for the stick, 2000000000000
+    /// for the big drive), else the stick is as big as the big drive.
     static func addMusicSteps(_ click: (String) -> String) -> [Step] {
         let row = { (name: String) in "[...document.querySelectorAll('#pick-list .pick-row')].find(function (b) { return b.textContent.indexOf(\(js(name))) >= 0; }).click();" }
         return [
@@ -285,6 +295,11 @@ enum Tour {
         }
         #endif
     }
+
+    /// Add CD in the open Add music menu (the second of the three ways), and a music CD in its list by its place:
+    /// music CDs come first, in the order of the stand-ins' folders.
+    static let addCDItem = "document.querySelectorAll('#add-menu [role=menuitem]')[1].click();"
+    static func pickMusicCD(_ i: Int) -> String { "document.querySelectorAll('#pick-list .pick-row')[\(i)].click();" }
 
     static func js(_ s: String) -> String {
         let d = (try? JSONSerialization.data(withJSONObject: [s])) ?? Data("[\"\"]".utf8)

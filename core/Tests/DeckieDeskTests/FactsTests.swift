@@ -42,7 +42,8 @@ import DeckieTestSupport
         var row = try #require(s.rows.first)
         #expect(row.names?.release.value == "Friday Night" && row.names?.release.from == "tag")
         #expect(row.names?.genre.value == "House" && row.names?.label.value == "Tag Label")
-        #expect(row.names?.fileTags.map(\.name) == ["TSSE"])
+        // The encoder tag says nothing to a DJ: it stays in the file and the crate, not in the panel.
+        #expect(row.names?.fileTags.map(\.name) == [])
 
         try s.fixFacts("aaaa", ["label": "My Label", "genre": "House, Deep House", "year": "1999", "release": ""])
         #expect(s.undoName == "undoNameFix")

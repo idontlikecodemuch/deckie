@@ -335,7 +335,10 @@ struct LookupSheet: View {
             Text(DeskWords.text("lookupFailure." + f)).font(Look.Fonts.lookupSummary)
         } else if let r = L.review {
             Text(DeskLookup.summaryLine(r)).font(Look.Fonts.lookupSummary)
-            if r.scope == "disc" { Text(DeskWords.coded("lookupDiscMatch", r.discMatch ?? "none")).foregroundStyle(.secondary) }
+            // The disc's line, unless the summary already said it.
+            if r.scope == "disc", DeskWords.coded("lookupDiscMatch", r.discMatch ?? "none") != DeskLookup.summaryLine(r) {
+                Text(DeskWords.coded("lookupDiscMatch", r.discMatch ?? "none")).foregroundStyle(.secondary)
+            }
             Text(Words.t("lookupReviewHelp")).foregroundStyle(.secondary)
             ScrollView {
                 VStack(alignment: .leading, spacing: Look.Space.lookupSongs) {
@@ -439,7 +442,10 @@ struct SongCard: View {
     var outcome: String {
         if song.outcome == "nothing" && single { return Words.t("lookupNothingOne") }
         var s = DeskWords.coded("lookupOutcome", song.outcome)
-        if song.outcome == "failed", let f = song.failure { s = Words.lookupOutcomeFailed(s, failure: DeskWords.text("lookupFailure." + f)) }
+        // The whole review's failure is said once, above; a song says its own only when it differs.
+        if song.outcome == "failed", let f = song.failure, f != model.lookup?.review?.failure {
+            s = Words.lookupOutcomeFailed(s, failure: DeskWords.text("lookupFailure." + f))
+        }
         return s
     }
 
