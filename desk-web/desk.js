@@ -38,7 +38,10 @@
     protocol: "Protocol {protocol} is not one this window knows ({known}).",
   };
   let W = {};
-  const fill = (tpl, v) => tpl.replace(/\{(\w+)\}/g, (m, k) => (v && v[k] != null ? String(v[k]) : m));
+  /// A count as this computer's language writes it, its thousands grouped ("4,812" in English): every whole number a
+  /// word is given goes through here (DeskWords.number says the same for the Mac and the engine).
+  const grouped = (x) => (typeof x === "number" && Number.isInteger(x) ? x.toLocaleString() : String(x));
+  const fill = (tpl, v) => tpl.replace(/\{(\w+)\}/g, (m, k) => (v && v[k] != null ? grouped(v[k]) : m));
   // {thisComputer} in any word: "this Mac" or "this computer", by the kind the engine says this computer is.
   let computer = "other";
   const withComputer = (v) => Object.assign({ thisComputer: W["thisComputer." + computer] ?? W["thisComputer.other"] ?? "" }, v || {});
@@ -54,7 +57,7 @@
     const once = key + ".same";
     if (sameName(v) && W[once + ".other"] != null) key = once;
     const form = count === 0 && W[key + ".zero"] != null ? "zero" : count === 1 ? "one" : "other";
-    return fill(W[key + "." + form] ?? W[key + ".other"] ?? key, withComputer(Object.assign({ n: String(count) }, v || {})));
+    return fill(W[key + "." + form] ?? W[key + ".other"] ?? key, withComputer(Object.assign({ n: count }, v || {})));
   };
   const coded = (key, code) => W[key + "." + code] ?? fill(W[key + ".other"] ?? code, { code });
   const reason = (code) => W["reason." + code] ?? code.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
@@ -306,7 +309,9 @@
 
     // a run that stopped
     const p = state.pending;
-    $("pending").hidden = !p || busy;
+    // On the finished screen of a stopped run, its own Carry on is the one way on: the banner would say it twice.
+    const finishedCarriesOn = !!(finished && finished.stopped === true && p && p.here);
+    $("pending").hidden = !p || busy || finishedCarriesOn;
     if (p) {
       $("pending-text").textContent = p.here ? t("stoppedReading", { read: p.name })
         : t("pendingLine", { stopped: t("stoppedReading", { read: p.name }), putBack: t(p.musicCD ? "putDiscBack" : "putBack", { read: p.name }) });
@@ -337,7 +342,10 @@
     // The name the DJ gave the disc while it was read replaces the placeholder the report was written with.
     const named = (x) => (discRenamed && x === discRenamed.from ? discRenamed.to : x);
     const stopped = r.stopped === true;
-    $("finished-title").textContent = stopped ? n("stoppedTitle", r.went_in, { read: named(r.read), crate: named(r.crate) })
+    // Songs as the crate counts them: a song in two places once, as "That's the lot" and the sources say
+    // (RunReport.songsRead; went_in counts files). An engine before it gives files only.
+    const songsRead = r.songs_read != null ? r.songs_read : r.went_in;
+    $("finished-title").textContent = stopped ? n("stoppedTitle", songsRead, { read: named(r.read), crate: named(r.crate) })
       : t("finishedTitle", { read: named(r.read), crate: named(r.crate) });
     $("finished-stopped").hidden = !stopped;
     $("finished-carryon").hidden = !(stopped && state.pending && state.pending.here);
@@ -348,7 +356,11 @@
     box.replaceChildren();
     const line = (text, cls) => box.append(el("p", { text, class: cls }));
     const notIn = Object.values(r.not_in || {}).reduce((a, b) => a + b, 0);
-    line(notIn === 0 ? t("everySongWentIn") : n("wentIn", r.went_in));
+    // The first lines, as RunReport.summaryLines says them on the Mac: a stopped run says how far it got, never that
+    // every song went in; and when more files went in than songs, why.
+    if (stopped) line(r.files_found != null ? n("stoppedRead", r.files_found, { done: r.songs_seen, total: r.files_found }) : n("wentIn", songsRead));
+    else line(notIn === 0 ? t("everySongWentIn") : n("wentIn", songsRead));
+    if (r.went_in > songsRead) line(n("wentInAsSongs", r.went_in - songsRead, { files: r.went_in, songs: n("songs", songsRead) }));
     if (notIn > 0) {
       line(n("didntGoIn", notIn));
       for (const k of Object.keys(r.not_in).sort()) line(t("reasonCount", { reason: reason(k), n: r.not_in[k] }), "indent");
@@ -377,13 +389,27 @@
       if (d && d.damaged_sectors > 0) line(t("discDamaged"), "mut");
       if ((local.libraries || []).length) line(t("librariesRead", { names: join("join.libraries", local.libraries.map((l) => programName(l.program))) }), "mut");
       for (const f of local.failed || []) line(t("couldntReadLibrary", { detail: f }), "mut");
-      if (local.rekordbox_locked) line(t("rekordboxLocked"), "mut");
+      if (local.rekordbox_locked) line(rekordboxLocked(), "mut");
       if (local.rekordbox_export) line(t("rekordboxExportNotRead"), "mut");
     }
     line(t("took", { duration: duration(r.seconds), rate: rate(r.songs_per_minute) }), "mut");
     $("finished-log").hidden = !(notIn > 0 || r.damaged > 0);
+    $("to-ipad-steps").replaceChildren(...toIPadSteps());
     $("exported").hidden = !exportedPath;
     if (exportedPath) $("exported-text").textContent = t("exportedTo", { folder: parentOf(exportedPath) });
+  }
+
+  /// "...choose it with ⋯ > Choose a DJ library…": in this window the item is in the ⋯ menu (the Mac's app says File).
+  const rekordboxLocked = () => t("rekordboxLocked", { chooseLibraryAt: t("chooseLibraryAt.more") });
+
+  /// The steps that get a crate file to the iPad, for the computer this is: the Mac's (AirDrop, iCloud Drive, the
+  /// Finder), Windows' (iCloud for Windows, Apple Devices) or Linux's (a stick, or iCloud Drive in a browser).
+  function toIPadSteps() {
+    const system = String((hello && hello.platform) || "").split("-")[0];
+    const keys = computer === "mac" || system === "macos" ? ["toIPadAirDropMac", "toIPadICloudMac", "toIPadCableMac", "toIPadStick"]
+      : system === "linux" ? ["toIPadStick", "toIPadICloudLinux"]
+      : ["toIPadStick", "toIPadICloud", "toIPadCable"];
+    return keys.map((k) => el("li", { text: t(k) }));
   }
 
   const parentOf = (p) => p.replace(/[\\/][^\\/]*[\\/]?$/, "") || p;
@@ -1508,7 +1534,7 @@
     out.push(rep.need_name ? n("needName", rep.need_name) : t("everySongHasAName"));
     if ((s.libraries || []).length) out.push(t("librariesRead", { names: join("join.libraries", s.libraries.map((l) => programName(l.program))) }));
     for (const f of s.failed || []) out.push(t("couldntReadLibrary", { detail: f }));
-    if (s.rekordbox_locked) out.push(t("rekordboxLocked"));
+    if (s.rekordbox_locked) out.push(rekordboxLocked());
     if (s.rekordbox_export) out.push(t("rekordboxExportNotRead"));
     return out;
   }
@@ -1696,7 +1722,7 @@
     const extra = el("div", null,
       el("p", null, el("button", { class: "link", text: t("openFolder"), on: { click: () => request("shell.openFolder", { path: parentOf(r.path) }, { quiet: true }) } })),
       el("h3", { class: "to-ipad-title", text: t("toIPadTitle") }),
-      el("ul", { class: "mut" }, el("li", { text: t("toIPadStick") }), el("li", { text: t("toIPadICloud") }), el("li", { text: t("toIPadCable") })));
+      el("ul", { class: "mut" }, ...toIPadSteps()));
     message([t("exportedTo", { folder: parentOf(r.path) })], extra, true);
   }
 

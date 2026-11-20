@@ -154,6 +154,13 @@ public enum DeskWords {
         "wentIn.one": "1 song went in.",
         "wentIn.other": "{n} songs went in.",
         "everySongWentIn": "Every song went in.",
+        // new (Nov 20, 2026): when more files went in than songs, because a song is in two places (D24: one song in
+        // the crate, every place kept); `{n}` is the files more than songs, `{songs}` the songs ("8 songs").
+        "wentInAsSongs.one": "{files} files went in as {songs}: 1 song is in two places.",
+        "wentInAsSongs.other": "{files} files went in as {songs}: some songs are in more than one place.",
+        // new (Nov 20, 2026): a stopped run, how far it got (the files reached of the files found, as the run's count).
+        "stoppedRead.one": "{done} of 1 song read so far.",
+        "stoppedRead.other": "{done} of {total} songs read so far.",
         "didntGoIn.one": "1 file didn't go in:",
         "didntGoIn.other": "{n} files didn't go in:",
         "foldersLeftOut.one": "1 folder was left out, as its name starts with _.",
@@ -177,7 +184,11 @@ public enum DeskWords {
         "needName.other": "{n} songs still need a name.",
         "everySongHasAName": "Every song has a name.",
         "showThem": "Show them",
-        "rekordboxLocked": "rekordbox keeps its own library locked. To bring its keys in, export your collection from rekordbox (File > Export Collection in xml format) and choose it with File > Choose a DJ library…",
+        "rekordboxLocked": "rekordbox keeps its own library locked. To bring its keys in, export your collection from rekordbox (File > Export Collection in xml format) and choose it with {chooseLibraryAt}",
+        // Where "Choose a DJ library…" is, filled into rekordboxLocked by each window: the Mac's app has it in its File
+        // menu, the Windows and Linux window in its ⋯ menu.
+        "chooseLibraryAt.menu": "File > Choose a DJ library…",
+        "chooseLibraryAt.more": "⋯ > Choose a DJ library…",
         "rekordboxExportNotRead": "This music has a rekordbox USB export, which Desk doesn't read yet.",
         "librariesRead": "Read from {names}.",
         "couldntReadLibrary": "Couldn't read a DJ library. {detail}",
@@ -187,6 +198,12 @@ public enum DeskWords {
         "toIPadStick": "A USB stick or SD card: export the crate file onto it, plug it into the iPad and open it from the Files app.",
         "toIPadICloud": "iCloud Drive: with iCloud for Windows, export the crate file into your iCloud Drive folder; it shows in Files on the iPad.",
         "toIPadCable": "A cable: connect the iPad, open Apple Devices, choose the iPad, then Files, and drag the crate file onto Deckie Booth.",
+        // new (Nov 20, 2026): the same on a Mac (the window says "this Mac" there) and on Linux; the three above are
+        // Windows' steps (toIPadStick is everyone's).
+        "toIPadAirDropMac": "AirDrop: in the Finder, choose the crate file, then Share > AirDrop, and choose the iPad.",
+        "toIPadICloudMac": "iCloud Drive: export the crate file into iCloud Drive; it shows in Files on the iPad.",
+        "toIPadCableMac": "A cable: connect the iPad, choose it in the Finder's sidebar, then Files, and drag the crate file onto Deckie Booth.",
+        "toIPadICloudLinux": "iCloud Drive: open icloud.com in a browser and upload the crate file to iCloud Drive; it shows in Files on the iPad.",
         "openFolder": "Show the folder",
 
         // a run that stopped
@@ -220,6 +237,9 @@ public enum DeskWords {
         "figMinutes": "{m} min",
         "figTempos": "Tempos",
         "figTemposText": "{songs}, from {low} to {high} BPM, most around {mode}",
+        // new (Nov 20, 2026): the same when every song has one tempo, and when no tempo is shared (RunFigures.temposText).
+        "figTemposOne": "{songs}, {bpm} BPM",
+        "figTemposRange": "{songs}, from {low} to {high} BPM",
         "figTemposNone": "No tempos yet",
         "figKeys": "Keys",
         "figKeysText": "{n} of the 24 keys",
@@ -990,8 +1010,18 @@ public enum DeskWords {
         let key = sameName(values) && table[key + sameNameSuffix + ".other"] != nil ? key + sameNameSuffix : key
         let form = n == 0 && table[key + ".zero"] != nil ? "zero" : (n == 1 ? "one" : "other")
         var v = values
-        v["n"] = v["n"] ?? String(n)
+        v["n"] = v["n"] ?? number(n)
         return fill(table[key + "." + form] ?? table[key + ".other"] ?? key, withComputer(v))
+    }
+
+    /// A count as this computer's language writes it, with its thousands grouped ("4,812" in English): every count
+    /// a word is given goes through here on the Mac and in the engine (the pages do the same with toLocaleString).
+    public static func number(_ n: Int) -> String {
+        let f = NumberFormatter()
+        f.numberStyle = .decimal
+        f.locale = Locale.current
+        f.usesGroupingSeparator = true
+        return f.string(from: NSNumber(value: n)) ?? String(n)
     }
 
     /// A length of time in words, as the lookup's sentence says it: "40 seconds", "3 minutes" (rounded up).

@@ -95,7 +95,7 @@ enum Words {
     // MARK: while it works
     static let runTitle = w("runTitle")
     static func runReading(_ read: String, into crate: String) -> String { w("runReading", ["read": read, "crate": crate]) }
-    static func songsOf(_ done: Int, _ total: Int) -> String { n("songsOf", total, ["done": "\(done)", "total": "\(total)"]) }
+    static func songsOf(_ done: Int, _ total: Int) -> String { n("songsOf", total, ["done": DeskWords.number(done), "total": DeskWords.number(total)]) }
     static func timeLeft(_ seconds: Double) -> String {
         if seconds < 45 { return w("timeLeftUnderMinute") }
         return n("timeLeft", max(1, Int((seconds / 60).rounded())))
@@ -104,7 +104,7 @@ enum Words {
     static let stageFinishing = w("stageFinishing")
     static let stageSaving = w("stageSaving")
     static func lineStarted(files: Int, unchanged: Int, queued: Int) -> String {
-        n("lineStarted", files, ["unchanged": "\(unchanged)", "queued": "\(queued)"])
+        n("lineStarted", files, ["unchanged": DeskWords.number(unchanged), "queued": DeskWords.number(queued)])
     }
     static func lineRead(_ rel: String, seconds: Double) -> String { w("lineRead", ["rel": rel, "seconds": String(format: "%.1f", seconds)]) }
     static func lineReadBefore(_ rel: String) -> String { w("lineReadBefore", ["rel": rel]) }
@@ -127,7 +127,7 @@ enum Words {
 
     /// What the run took from what is already on this computer (D30).
     static func keysLine(_ counts: [(origin: String, n: Int)]) -> String {
-        w("keysLine", ["counts": join("join.keysCounts", counts.map { w("keysCount", ["n": "\($0.n)", "from": keyFrom($0.origin)]) })])
+        w("keysLine", ["counts": join("join.keysCounts", counts.map { w("keysCount", ["n": DeskWords.number($0.n), "from": keyFrom($0.origin)]) })])
     }
     static func keysNone(_ count: Int) -> String { n("keysNone", count) }
     /// new (D36): of the songs with no key, those Deckie read and is not sure of; and the songs with a home note.
@@ -137,7 +137,7 @@ enum Words {
     static func needName(_ count: Int) -> String { n("needName", count) }
     static let everySongHasAName = w("everySongHasAName")
     static let showThem = w("showThem")
-    static let rekordboxLocked = w("rekordboxLocked")
+    static let rekordboxLocked = w("rekordboxLocked", ["chooseLibraryAt": w("chooseLibraryAt.menu")])
     static let rekordboxExportNotRead = w("rekordboxExportNotRead")
     static func librariesRead(_ names: [String]) -> String { w("librariesRead", ["names": join("join.libraries", names)]) }
     static func couldntReadLibrary(_ detail: String) -> String { w("couldntReadLibrary", ["detail": detail]) }
@@ -166,7 +166,7 @@ enum Words {
 
     // MARK: the bottom line
     static func songs(_ count: Int) -> String { n("songs", count) }
-    static func cantBeRecognised(_ count: Int) -> String { w("cantBeRecognised", ["n": "\(count)"]) }
+    static func cantBeRecognised(_ count: Int) -> String { w("cantBeRecognised", ["n": DeskWords.number(count)]) }
     static func filesDidntGoIn(_ count: Int) -> String { n("filesDidntGoIn", count) }
     static func needNameCount(_ count: Int) -> String { n("needNameCount", count) }
     static let showAllSongs = w("showAllSongs")
@@ -254,7 +254,7 @@ enum Words {
     static let noneYet = w("noneYet")
     static let rowDamagedFrames = w("rowDamagedFrames")
     static let selectSong = w("selectSong")
-    static func songsSelected(_ count: Int) -> String { w("songsSelected", ["n": "\(count)"]) }
+    static func songsSelected(_ count: Int) -> String { w("songsSelected", ["n": DeskWords.number(count)]) }
     static func musicAt(_ path: String) -> String { w("musicAt", ["path": path]) }
     static let whereIsThisMusic = w("whereIsThisMusic")
     static let musicFolderMessage = w("musicFolderMessage")
@@ -281,11 +281,11 @@ enum Words {
 
     // MARK: what didn't go in
     static func readOn(_ by: String, _ at: String, seen: Int, songs: Int) -> String {
-        w("readOn", ["by": by, "at": at, "seen": "\(seen)", "songs": "\(songs)"])
+        w("readOn", ["by": by, "at": at, "seen": DeskWords.number(seen), "songs": DeskWords.number(songs)])
     }
     static let noRecord = w("noRecord")
     static func reasonCount(_ reason: String, _ count: Int) -> String {
-        w("reasonCount", ["reason": Words.reason(reason), "n": "\(count)"])
+        w("reasonCount", ["reason": Words.reason(reason), "n": DeskWords.number(count)])
     }
     static func reason(_ r: String) -> String {
         DeskWords.table["reason.\(r)"] ?? r.replacingOccurrences(of: "_", with: " ").capitalized
@@ -336,9 +336,9 @@ enum Words {
     static func damagedAtList(_ items: [String]) -> String { join("join.damagedFrames", items) }
     static func moreFactLine(_ name: String, _ value: String) -> String { w("moreFactLine", ["name": name, "value": value]) }
     static func fileTagLine(_ name: String, _ value: String) -> String { w("fileTagLine", ["name": name, "value": value]) }
-    static func lookupScopeNeed(_ n: Int) -> String { w("lookupScope.need", ["label": w("lookupChoice.needsName"), "n": "\(n)"]) }
+    static func lookupScopeNeed(_ n: Int) -> String { w("lookupScope.need", ["label": w("lookupChoice.needsName"), "n": DeskWords.number(n)]) }
     static func lookupScopeSong(_ title: String) -> String { w("lookupScope.song", ["label": w("lookupChoice.song"), "title": title]) }
-    static func lookupScopeSelection(_ n: Int) -> String { w("lookupScope.selection", ["label": w("lookupChoice.selection"), "n": "\(n)"]) }
+    static func lookupScopeSelection(_ n: Int) -> String { w("lookupScope.selection", ["label": w("lookupChoice.selection"), "n": DeskWords.number(n)]) }
     static func lookupScopeDisc(_ source: String) -> String {
         w("lookupScope.disc", ["label": w("lookupDisc").replacingOccurrences(of: "…", with: ""), "source": source])
     }

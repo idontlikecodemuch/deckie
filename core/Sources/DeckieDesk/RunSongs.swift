@@ -143,6 +143,24 @@ public struct RunFigures: Codable, Equatable, Sendable {
     public init() {}
 }
 
+extension RunFigures {
+    /// The tempos figure in words, the same rule in both windows (run.js says it the same way): "1 song, 118 BPM" when
+    /// every song with a tempo has the same one; "2 songs, from 96 to 198 BPM" when no tempo is shared; else with the
+    /// tempo most share, "most around 124", which is always within the range.
+    public func temposText(songs say: (Int) -> String = { DeskWords.count("songs", $0) }) -> String {
+        let with = songs - noTempo
+        guard with > 0, let slowest, let fastest else { return DeskWords.text("figTemposNone") }
+        let low = Int(slowest.rounded()), high = Int(fastest.rounded())
+        if with == 1 || low == high { return DeskWords.text("figTemposOne", ["songs": say(with), "bpm": "\(low)"]) }
+        let top = tempos.indices.max { tempos[$0] < tempos[$1] || (tempos[$0] == tempos[$1] && $0 > $1) } ?? 0
+        guard tempos[top] > 1 else {
+            return DeskWords.text("figTemposRange", ["songs": say(with), "low": "\(low)", "high": "\(high)"])
+        }
+        let most = min(high, max(low, Int((tempoLow + Double(top) * tempoStep + tempoStep / 2).rounded())))
+        return DeskWords.text("figTemposText", ["songs": say(with), "low": "\(low)", "high": "\(high)", "mode": "\(most)"])
+    }
+}
+
 /// Something true Desk just found (`fact`) or a real event worth a brief mark (`moment`, D37), as a code with its
 /// values; a window says it with the words `fact.<code>` or `moment.<code>` (forms by `n` where there is one).
 public struct RunNote: Codable, Equatable, Sendable {
@@ -171,6 +189,7 @@ public struct RunTally: Sendable {
     private var keysSeen = Set<String>()
     private var hours = 0
     private var wheelSaid = false
+    private var doneSaid = 0
 
     /// Round numbers of songs that are a moment: these, then every thousand.
     public static let milestones = [10, 50, 100, 500, 1000]
@@ -264,9 +283,6 @@ public struct RunTally: Sendable {
 
         // Moments.
         if f.songs == 1 { notes.append(RunNote(.moment, "first", song: song.id, title)) }
-        if Self.milestones.contains(f.songs) || (f.songs > 1000 && f.songs % 1000 == 0) {
-            notes.append(RunNote(.moment, "songs", n: f.songs, ["n": Self.grouped(f.songs)]))
-        }
         let h = Int(f.seconds / 3600)
         if h > hours { hours = h; notes.append(RunNote(.moment, "hour", n: h)) }
         f.keysFound = f.major.filter { $0 > 0 }.count + f.minor.filter { $0 > 0 }.count
@@ -275,6 +291,17 @@ public struct RunTally: Sendable {
         if k != figures.keysFound && Self.keysWorthSaying.contains(k) { notes.append(RunNote(.fact, "keysFound", n: k)) }
         figures = f
         return notes
+    }
+
+    /// The run's count of songs done (the progress bar's "9 of 12 songs") moved to `done`: a round number passed is a
+    /// moment ("10 songs in."), said with the same count the bar shows, so the two never disagree. A song joins the
+    /// screen as soon as it is read, a little before the count takes it (its signature and print come first), so the
+    /// moment follows the count, not the screen.
+    public mutating func done(_ done: Int) -> [RunNote] {
+        guard done > doneSaid else { return [] }
+        let passed = (doneSaid + 1...done).last { Self.milestones.contains($0) || ($0 > 1000 && $0 % 1000 == 0) }
+        doneSaid = done
+        return passed.map { [RunNote(.moment, "songs", n: $0, ["n": Self.grouped($0)])] } ?? []
     }
 
     /// A song already on the screen was found in another place of what is read: the same file twice.
