@@ -17,7 +17,19 @@ The Mac keeps its own Desk (`../desk-app/`); this builds on the Mac too, so the 
 
 It finds the engine and the pages beside itself, then in this checkout (`--engine`, `--pages` say otherwise). The
 engine in turn finds ONNX Runtime and the two models beside itself, then in the checkout. On Linux it needs
-`libwebkit2gtk-4.1-dev` to build; on Windows, the WebView2 runtime to run.
+`libwebkit2gtk-4.1-dev` to build; on Windows, the WebView2 runtime to run. In the checkout the window takes
+`core/.build/release/deckie-desk-engine` before `core/.build/debug/`, whichever window was built: an old release engine
+left there is the one that runs, so rebuild it or name the engine with `--engine`.
+
+**Timing tests use release builds.** A debug build analyses a song several times slower than a release build, so a
+time measured with one says nothing about what a DJ waits for. On the Mac, one command builds both in release, at low
+priority and at most 4 jobs (`DECKIE_BUILD_JOBS` changes that):
+
+    desk-shell/build-release-mac.sh
+    DECKIE_DESK_HOME=/tmp/desk DECKIE_DJ_HOME=/tmp/dj desk-shell/.build/release/deckie-desk
+
+Run from the command line on the Mac, the window has a menu bar of its own (Quit with Cmd+Q, Close Window with Cmd+W,
+Hide, and Cut, Copy, Paste and Select All for its text fields); Quit closes the window as its close button does.
 
 ## Checks
 

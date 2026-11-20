@@ -2,6 +2,7 @@ import Foundation
 import AVFoundation
 import ShazamKit
 import DeckieCore
+import DeckieDisc
 
 /// Recognition signatures on the Mac: the audio file is read with AVFoundation and streamed into ShazamKit's
 /// signature generator. Nothing but the signature (irreversible by Apple's statement) is kept.
@@ -51,6 +52,16 @@ enum Signatures {
             }
         }
         return RecordingPrint(mono: mono, sampleRate: Int(format.sampleRate.rounded()))
+    }
+
+    /// The same print from a music CD's song as the analysis decoded it, so the disc is not read again for it; nil for
+    /// any other file (made from the file with AVFoundation, as before). A music CD's songs are 16-bit PCM AIFF files
+    /// (cddafs), which AVFoundation and Desk's own decoder read to the same samples, bit for bit
+    /// (core's AppleReaderAgreementTests), and the mono mix and rate below are `recordingPrint(of:)`'s, so the print is
+    /// the same.
+    static func recordingPrint(fromAudio samples: [Float], channels: Int, sampleRate: Int, of url: URL) -> RecordingPrint? {
+        guard let volume = try? url.resourceValues(forKeys: [.volumeURLKey]).volume, MusicCDs.isMacMusicCD(volume) else { return nil }
+        return RecordingPrint(interleaved: samples, channels: channels, sampleRate: sampleRate)
     }
 
     static func utcNow() -> String {

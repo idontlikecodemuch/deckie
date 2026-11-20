@@ -449,6 +449,9 @@ swift test
 
 ## Building a crate: `deckie-build`
 
+Timing tests use release builds (`swift build -c release`): a debug build analyses a song several times slower. For
+Desk's window and engine on the Mac, `desk-shell/build-release-mac.sh` builds both in release.
+
 ```
 deckie-build <folder> --out <name>.deckie [--rekordbox export.xml] [--jobs N] [--bpm-tags] [--name N] [--fresh]
 ```
