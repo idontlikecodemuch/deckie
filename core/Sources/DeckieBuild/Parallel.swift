@@ -45,8 +45,21 @@ public var processorCount: Int { max(1, ProcessInfo.processInfo.activeProcessorC
 /// peaked at 1.9 GB and four at 5.5 GB, and a job was given 2 GB.) docs/research/p-machine-estimates.md estimates what
 /// this gives on DJs' machines.
 public var defaultJobs: Int {
-    let gb = Double(ProcessInfo.processInfo.physicalMemory) / Double(1 << 30)
-    return max(1, min(processorCount, Int(gb - 2)))
+    max(1, min(processorCount, JobMemory.jobsAllowed(physicalMemory: ProcessInfo.processInfo.physicalMemory)))
+}
+
+/// The jobs memory allows, the one rule `defaultJobs` (deckie-build) and Deckie Desk (`DeskJobs`) both use: a job is
+/// given `gigabytesPerJob` and `gigabytesKept` are left for the system and other programs (the figures measured
+/// above), never fewer than one job.
+public enum JobMemory {
+    public static let gigabytesPerJob = 1.0
+    public static let gigabytesKept = 2.0
+
+    /// The jobs `physicalMemory` bytes (`ProcessInfo.physicalMemory`) allow.
+    public static func jobsAllowed(physicalMemory: UInt64) -> Int {
+        let gb = Double(physicalMemory) / Double(1 << 30)
+        return max(1, Int((gb - gigabytesKept) / gigabytesPerJob))
+    }
 }
 
 /// Seconds as `0:04:07` (or `1:02:03:04` past a day, never needed).
