@@ -35,6 +35,7 @@ enum Words {
     // MARK: the first screen
     static let firstTitle = w("firstTitle")
     static let firstBody = w("firstBody")
+    static let firstNote = w("firstNote")
     /// Desk without the part that reads music (no ONNX Runtime or no beat model in the app): said at once.
     static let engineMissing = w("engineMissing")
     static let engineMissingHelp = w("engineMissingHelp")
@@ -95,6 +96,8 @@ enum Words {
     // MARK: while it works
     static let runTitle = w("runTitle")
     static func runReading(_ read: String, into crate: String) -> String { w("runReading", ["read": read, "crate": crate]) }
+    /// The run's count beside its bar: "1 of 6 done".
+    static func doneOf(_ done: Int, _ total: Int) -> String { n("doneOf", total, ["done": DeskWords.number(done), "total": DeskWords.number(total)]) }
     static func songsOf(_ done: Int, _ total: Int) -> String { n("songsOf", total, ["done": DeskWords.number(done), "total": DeskWords.number(total)]) }
     static func timeLeft(_ seconds: Double) -> String {
         if seconds < 45 { return w("timeLeftUnderMinute") }

@@ -39,11 +39,28 @@ struct AddWayButtons: View {
     @EnvironmentObject var model: DeskModel
     var prominent = false
     var body: some View {
-        HStack(spacing: Look.Add.waysGap) {
+        HStack(spacing: prominent ? Look.First.waysGap : Look.Add.waysGap) {
             ForEach(DeskAddMusic.ways, id: \.id) { w in
                 if prominent {
-                    Button { model.addWay(w.id) } label: { Label(w.title, systemImage: w.macSymbol) }
-                        .buttonStyle(.borderedProminent).help(w.helpText)
+                    // The first screen's: big (Look.First), and at XL a tile with its symbol above its word.
+                    Button { model.addWay(w.id) } label: {
+                        Group {
+                            if Look.First.tiles {
+                                VStack(spacing: Look.First.wayGap) {
+                                    Image(systemName: w.macSymbol).font(Look.First.wayIconFont)
+                                    Text(w.title)
+                                }.frame(minWidth: Look.First.tileMinWidth)
+                            } else {
+                                HStack(spacing: Look.First.wayGap) {
+                                    Image(systemName: w.macSymbol).font(Look.First.wayIconFont)
+                                    Text(w.title)
+                                }
+                            }
+                        }
+                        .font(Look.First.wayFont)
+                        .padding(.horizontal, Look.First.wayPadH).padding(.vertical, Look.First.wayPadV)
+                    }
+                    .buttonStyle(.borderedProminent).controlSize(.large).help(w.helpText)
                 } else {
                     Button { model.addWay(w.id) } label: { Label(w.title, systemImage: w.macSymbol) }.help(w.helpText)
                 }
@@ -130,19 +147,8 @@ struct AddStepSheet: View {
     }
 
     private func row(symbol: String, name: String, detail: [String], _ action: @escaping () -> Void) -> some View {
-        Button(action: action) {
-            HStack(spacing: Look.Add.rowGap) {
-                Image(systemName: symbol).frame(width: Look.Add.rowIcon)
-                VStack(alignment: .leading) {
-                    Text(name).font(Look.Add.rowName)
-                    if !detail.isEmpty { Text(Words.places(detail)).font(Look.Add.rowDetail).foregroundStyle(.secondary) }
-                }
-                Spacer()
-            }
-            .padding(.vertical, Look.Add.rowPaddingV)
-            .contentShape(Rectangle())
-        }
-        .buttonStyle(.plain)
+        PickRow(symbol: symbol, name: name, detail: detail, go: step == .cds ? Words.t("pickReadCD") : Words.t("pickReadDrive"),
+                action: action)
     }
 
     @ViewBuilder private func bigDrive(_ d: DeskDrives.Drive) -> some View {
@@ -177,6 +183,36 @@ struct AddStepSheet: View {
             Button(Words.askReadStart(check.songs)) { model.confirmAdd(url, name: name) }
                 .buttonStyle(.borderedProminent).keyboardShortcut(.defaultAction)
         }
+    }
+}
+
+/// A row of Add CD's or Add drive's list, and the one way to choose it: raised and outlined, brighter and ringed in the
+/// accent when pointed at, saying what it does at its end ("Read this CD"). A button, so Return, Space and VoiceOver
+/// work as on any button.
+struct PickRow: View {
+    let symbol: String, name: String, detail: [String], go: String
+    let action: () -> Void
+    @State private var hover = false
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: Look.Add.rowGap) {
+                Image(systemName: symbol).font(Look.Add.rowSymbol).foregroundStyle(RunLook.accent).frame(width: Look.Add.rowIcon)
+                VStack(alignment: .leading) {
+                    Text(name).font(Look.Add.rowName)
+                    if !detail.isEmpty { Text(Words.places(detail)).font(Look.Add.rowDetail).foregroundStyle(.secondary) }
+                }
+                Spacer(minLength: Look.Add.rowGap)
+                Text(go).font(Look.Add.rowGo).foregroundStyle(RunLook.accent)
+            }
+            .padding(.vertical, Look.Add.rowPaddingV).padding(.horizontal, Look.Add.rowPaddingH)
+            .background(Color.primary.opacity(hover ? Look.Add.rowFillHover : Look.Add.rowFill),
+                        in: RoundedRectangle(cornerRadius: Look.Add.rowCorner))
+            .overlay(RoundedRectangle(cornerRadius: Look.Add.rowCorner)
+                .stroke(hover ? RunLook.accent : Color.primary.opacity(Look.Add.rowLineOpacity), lineWidth: Look.Add.rowLine))
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .onHover { hover = $0 }
     }
 }
 

@@ -31,6 +31,15 @@ final class RunWatch: ObservableObject {
     /// Bumped at most every `RunLook.wallEvery` when songs joined: the wall redraws on it.
     @Published private(set) var wallVersion = 0
     @Published var visible = true { didSet { if visible && !oldValue { wallVersion += 1 } } }
+    /// The song card (RunProgress's `now`, `working` and `ahead`): the songs being worked on, whether one at a time,
+    /// the song read ahead, and whether the card shows (it stays `RunLook.nowLinger` when no song is worked on, so the
+    /// moment between two songs does not flicker; then the stage shows the last song in).
+    @Published private(set) var working: [RunNow] = []
+    @Published private(set) var oneAtATime = true
+    @Published private(set) var ahead: RunNow?
+    @Published private(set) var showNow = false
+    private var nowSeenAt = Date.distantPast
+    private var nowTimer: Timer?
     private(set) var finishedLine: String?
     private(set) var latestBin = -1
     var reduceMotion = NSWorkspace.shared.accessibilityDisplayShouldReduceMotion
@@ -49,6 +58,7 @@ final class RunWatch: ObservableObject {
         songs = []; figures = RunFigures(); staged = nil; skipped = 0; fresh = []; queue = []; finishedLine = nil
         self.musicCD = musicCD; step = .reading; lastSaid = ""; saying = ""; moment = nil; latestBin = -1
         spoken = (-1, .distantPast); wallVersion += 1
+        working = []; ahead = nil; showNow = false; nowTimer?.invalidate(); nowSeenAt = .distantPast
         nextSaying()
     }
 
@@ -71,11 +81,40 @@ final class RunWatch: ObservableObject {
             }
         }
         if p.stage != step { step = p.stage; nextSaying() }
+        takeNow(p)
         speak(p)
     }
 
+    /// The song card's songs from one progress call (the same rule as desk.js drawNow).
+    private func takeNow(_ p: RunProgress) {
+        let list = !p.working.isEmpty ? p.working : (p.now.map { [$0] } ?? [])
+        nowTimer?.invalidate(); nowTimer = nil
+        if !list.isEmpty {
+            if working != list { working = list }
+            oneAtATime = p.now != nil
+            if ahead != p.ahead { ahead = p.ahead }
+            showNow = true
+            nowSeenAt = Date()
+            return
+        }
+        ahead = nil
+        guard showNow else { return }
+        let left = RunLook.nowLinger - Date().timeIntervalSince(nowSeenAt)
+        if p.stage == .reading && left > 0 {
+            nowTimer = once(after: left) { [weak self] in self?.endNow() }
+        } else { endNow() }
+    }
+
+    /// No song is worked on: the stage shows again, straight to the last song in (the ones it skips are on the wall).
+    private func endNow() {
+        showNow = false; working = []
+        if queue.count > 1 { queue.removeFirst(queue.count - 1) }
+        if !queue.isEmpty { advance() }
+    }
+
     func stop() {
-        for t in [stageTimer, sayTimer, wallTimer] { t?.invalidate() }
+        for t in [stageTimer, sayTimer, wallTimer, nowTimer] { t?.invalidate() }
+        showNow = false; working = []; ahead = nil
         queue = []
     }
 
@@ -240,7 +279,69 @@ struct RunCard<Content: View>: View {
     }
 }
 
-/// The song on stage: its own wave drawing in with its bars marked, and what Desk found in it.
+/// The song card: the song being worked on by the name Desk has for it, its step line and a thin bar within the song,
+/// with a turning disc for a music CD's song (still under reduced motion); or, several at once, "Working on 4 songs"
+/// and a row a song with its step; under either, quietly, a disc's next song while it is read ahead. The words are
+/// the core's (`RunNow`), as the pages' are. When no song is worked on, the stage shows the last song in.
+struct NowCard: View {
+    @ObservedObject var watch: RunWatch
+    let total: Int
+    let disc: Bool
+    @Environment(\.accessibilityReduceMotion) private var reduce
+
+    var body: some View {
+        RunCard {
+            VStack(alignment: .leading, spacing: RunLook.nowBarGap) {
+                if watch.oneAtATime, let now = watch.working.first { one(now) } else { several }
+                if watch.ahead != nil {
+                    Text(RunNow.aheadLine).font(RunLook.nowAheadFont).foregroundStyle(.tertiary).lineLimit(1)
+                }
+            }
+            .frame(maxWidth: .infinity, minHeight: RunLook.stageHeight, alignment: .leading)
+        }
+    }
+
+    private func one(_ now: RunNow) -> some View {
+        HStack(spacing: RunLook.nowGap) {
+            if disc {
+                TimelineView(.animation(paused: reduce || !watch.visible)) { context in
+                    Image(systemName: RunLook.nowDiscSymbol)
+                        .font(RunLook.nowDiscFont).foregroundStyle(.secondary)
+                        .rotationEffect(.degrees(reduce ? 0 : context.date.timeIntervalSinceReferenceDate
+                            .truncatingRemainder(dividingBy: RunLook.nowDiscTurn) / RunLook.nowDiscTurn * RunLook.wholeTurn))
+                }
+                .accessibilityHidden(true)
+            }
+            VStack(alignment: .leading, spacing: RunLook.nowLineGap) {
+                HStack(spacing: RunLook.stageNameGap) {
+                    Text(now.name).font(RunLook.stageFont).lineLimit(1)
+                    if let a = now.artist { Text(a).foregroundStyle(.secondary).lineLimit(1) }
+                }
+                Text(now.line(total: total)).font(RunLook.nowFont).lineLimit(1)
+                ProgressView(value: now.share).tint(RunLook.accent)
+            }
+        }
+    }
+
+    private var several: some View {
+        VStack(alignment: .leading, spacing: RunLook.nowRowsGap) {
+            Text(RunNow.workingLine(watch.working.count)).font(RunLook.nowFont)
+            ForEach(watch.working, id: \.rel) { song in
+                HStack(alignment: .firstTextBaseline, spacing: RunLook.nowRowGap) {
+                    HStack(spacing: RunLook.stageNameGap) {
+                        Text(song.name).fontWeight(RunLook.stageValueWeight).lineLimit(1)
+                        if let a = song.artist { Text(a).foregroundStyle(.secondary).lineLimit(1) }
+                    }
+                    Spacer(minLength: 0)
+                    Text(song.stage).foregroundStyle(.secondary).lineLimit(1).layoutPriority(1)
+                }
+            }
+        }
+    }
+}
+
+/// The song on stage when no song is worked on: the last song in, its own wave drawing in with its bars marked, and
+/// what Desk found in it.
 struct StageView: View {
     @ObservedObject var watch: RunWatch
     @Environment(\.accessibilityReduceMotion) private var reduce
@@ -277,10 +378,8 @@ struct StageView: View {
             HStack(spacing: RunLook.stageNameGap) {
                 Text(s.title).font(RunLook.stageFont).lineLimit(1)
                 if let a = s.artist { Text(a).foregroundStyle(.secondary).lineLimit(1) }
-                if s.before {
-                    Text(DeskWords.text("stageBefore")).font(RunLook.chipFont).foregroundStyle(.secondary)
-                        .padding(.horizontal, RunLook.chipPaddingH).padding(.vertical, RunLook.chipPaddingV).background(.quaternary, in: Capsule())
-                }
+                if s.before { chip("stageBefore") }
+                chip("stageJustIn")
             }
             HStack(alignment: .top, spacing: RunLook.stageFactsRowGap) {
                 fact("stageTempo", RunWatch.bpm(s), color: RunLook.amber)
@@ -292,6 +391,11 @@ struct StageView: View {
             if watch.skipped > 0 { Text(DeskWords.count("stageMore", watch.skipped)).font(RunLook.stageNoteFont).foregroundStyle(.tertiary) }
             else if s.wave.isEmpty { Text(DeskWords.text("stageNoWave")).font(RunLook.stageNoteFont).foregroundStyle(.tertiary) }
         }
+    }
+
+    private func chip(_ key: String) -> some View {
+        Text(DeskWords.text(key)).font(RunLook.chipFont).foregroundStyle(.secondary)
+            .padding(.horizontal, RunLook.chipPaddingH).padding(.vertical, RunLook.chipPaddingV).background(.quaternary, in: Capsule())
     }
 
     private func fact(_ label: String, _ value: String, color: Color = .primary) -> some View {

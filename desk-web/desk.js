@@ -160,7 +160,8 @@
         dropCovers();
         finished = null; exportedPath = null; stopListening(); $("run-log").replaceChildren();
         run = { read: m.read, crateName: m.crateName, done: 0, total: 0, stage: "reading", remaining: null, lines: [],
-          musicCD: !!m.musicCD, now: null };
+          musicCD: !!m.musicCD, now: null, working: null, ahead: null };
+        nowSeenAt = 0;
         askDisc(m.askName);
         screen.start(m);
         break;
@@ -180,7 +181,9 @@
       case "run.progress":
         if (!run) break;
         // `now` (an addition to protocol 2): the song being read and its step; absent from an older engine.
-        Object.assign(run, { done: m.done, total: m.total, stage: m.stage, remaining: m.remaining, now: m.now || null });
+        // `working` and `ahead` (additions too): every song being worked on, and a disc's next song while it is read ahead.
+        Object.assign(run, { done: m.done, total: m.total, stage: m.stage, remaining: m.remaining, now: m.now || null,
+          working: m.working || null, ahead: m.ahead || null });
         if (m.line) addLine(m.line);
         updateRun(); screen.progress(run); return;
       case "run.finished":
@@ -235,8 +238,9 @@
       bar.classList.remove("waiting");
       bar.firstElementChild.style.width = pct + "%";
       bar.setAttribute("aria-valuenow", String(pct));
-      bar.setAttribute("aria-valuetext", n("songsOf", run.total, { done: run.done, total: run.total }));
-      $("run-count").textContent = n("songsOf", run.total, { done: run.done, total: run.total });
+      bar.setAttribute("aria-valuetext", n("doneOf", run.total, { done: run.done, total: run.total }));
+      // What is done, in words that cannot be read as the song card's number ("1 of 6 done").
+      $("run-count").textContent = n("doneOf", run.total, { done: run.done, total: run.total });
     } else {
       bar.classList.add("waiting"); bar.removeAttribute("aria-valuenow"); $("run-count").textContent = "";
     }
@@ -245,32 +249,75 @@
     drawNow();
   }
 
-  /// The song now (the waiting line): a turning disc for a music CD, one plain line saying what is happening to the
-  /// song, and a thin bar within it: the share read off the disc while it is read, then how many of its steps are
-  /// done. Only what the engine said is true: no song, no line.
+  /// The song card (RunNow in the core says the same words on the Mac). One song at a time (a music CD): that song by
+  /// the name Desk has for it, its step line ("Song 2 of 6: finding the beat") and a thin bar within the song (the
+  /// share read off the disc, then its steps done), with a turning disc. Several at once (a folder's jobs): "Working on
+  /// 4 songs" and a row a song with its step. Under either, quietly, the next song of a disc while it is read ahead.
+  /// Only what the engine said is true: when nothing is being worked on, the stage shows the last song in instead
+  /// (after --t-now-linger, so the moment between two songs does not flicker).
   const NOW_STEPS = ["hash", "decode", "resample", "beatthis", "key", "spectral", "structure", "loudness", "vocal", "windows"];
+  const nowReading = (x) => x.step === "started" || x.step === "reading";
+  /// The song's name as RunNow.name gives it: the name Desk has, else its file name without the ending.
+  function nowName(x) {
+    if (x.title) return x.title;
+    const last = String(x.rel || "").split("/").pop();
+    const dot = last.lastIndexOf(".");
+    return dot > 0 ? last.slice(0, dot) : last;
+  }
+  const nowStage = (x) => (nowReading(x) ? t("nowOpening") : coded("nowStage", x.step));
+  function nowLine(x, total) {
+    if (nowReading(x)) return x.number != null ? t("nowReadingDisc", { number: x.number, total }) : t("nowReading");
+    return x.number != null ? t("nowStageOf", { number: x.number, total, stage: nowStage(x) }) : t("nowStageAlone", { stage: nowStage(x) });
+  }
+  function nowShare(x) {
+    if (nowReading(x)) return x.read != null ? x.read : 0;
+    const i = NOW_STEPS.indexOf(x.step);
+    return i >= 0 ? (i + 1) / NOW_STEPS.length : 1;
+  }
+  /// The songs being worked on: `working` (an addition to protocol 2), else `now` alone (an engine before it).
+  const working = () => (!run ? [] : run.working && run.working.length ? run.working : run.now ? [run.now] : []);
+  let nowSeenAt = 0, nowTimer = 0;
   function drawNow() {
-    const box = $("run-now"), now = run && run.now;
-    box.hidden = !now;
-    if (!now) return;
-    const disc = $("run-now-disc");
-    disc.classList.toggle("turning", run.musicCD);
-    disc.classList.toggle("still", !run.musicCD);
-    const reading = now.step === "started" || now.step === "reading";
-    const number = now.number, total = run.total;
-    let line;
-    if (reading) line = number != null ? t("nowReadingDisc", { number, total }) : t("nowReading");
+    const card = $("now-card"), stage = $("stage");
+    const list = working();
+    clearTimeout(nowTimer); nowTimer = 0;
+    if (list.length) nowSeenAt = Date.now();
     else {
-      const stage = coded("nowStage", now.step);
-      line = number != null ? t("nowStageOf", { number, total, stage }) : t("nowStageAlone", { stage });
+      const linger = num("--t-now-linger");
+      const left = linger - (Date.now() - nowSeenAt);
+      if (run && run.stage === "reading" && !card.hidden && left > 0) { nowTimer = setTimeout(drawNow, left); return; }
+      const was = card.hidden;
+      card.hidden = true; stage.hidden = false;
+      if (!was) screen.stageShown();
+      return;
     }
-    $("run-now-line").textContent = line;
-    const bar = $("run-now-bar");
-    const step = NOW_STEPS.indexOf(now.step);
-    const share = reading ? (now.read != null ? now.read : 0) : step >= 0 ? (step + 1) / NOW_STEPS.length : 1;
-    const pct = Math.round(Math.max(0, Math.min(1, share)) * 100);
-    bar.firstElementChild.style.width = pct + "%";
-    bar.setAttribute("aria-valuenow", String(pct));
+    card.hidden = false; stage.hidden = true;
+    // One at a time when the engine names the song now (or names only it, an engine before `working`).
+    const one = !!run.now || !(run.working && run.working.length);
+    $("now-one").hidden = !one;
+    $("now-several").hidden = one;
+    if (one) {
+      const x = list[0];
+      const disc = $("now-disc");
+      disc.classList.toggle("turning", run.musicCD);
+      disc.toggleAttribute("hidden", !run.musicCD);   // an svg has no .hidden
+      $("now-title").textContent = nowName(x);
+      $("now-artist").textContent = x.artist || "";
+      $("now-line").textContent = nowLine(x, run.total);
+      const pct = Math.round(Math.max(0, Math.min(1, nowShare(x))) * 100);
+      const bar = $("now-bar");
+      bar.firstElementChild.style.width = pct + "%";
+      bar.setAttribute("aria-valuenow", String(pct));
+    } else {
+      $("now-several-title").textContent = n("workingOn", list.length);
+      const ul = $("now-list");
+      ul.replaceChildren(...list.map((x) => el("li", null,
+        el("span", { class: "now-name" }, el("b", { text: nowName(x) }), x.artist ? el("span", { class: "mut", text: " " + x.artist }) : null),
+        el("span", { class: "mut now-step", text: nowStage(x) }))));
+    }
+    const ahead = $("now-ahead");
+    ahead.hidden = !run.ahead;
+    ahead.textContent = run.ahead ? t("nowAheadDisc") : "";
   }
 
   // ---- drawing
@@ -1601,9 +1648,12 @@
     $("pick-body").textContent = t(id === "cd" ? "chooseCDBody" : "chooseDriveBody");
     const list = $("pick-list");
     list.replaceChildren();
+    // Each row is the one way to choose: a raised row, a button (click, Enter or Space), saying what it does at its end.
+    const go = t(id === "cd" ? "pickReadCD" : "pickReadDrive");
     const row = (iconName, name, detail, fn) => list.append(el("li", null, el("button", { class: "pick-row", type: "button",
       on: { click: () => { d.close("cancel"); fn(); } } }, icon(iconName, "pick-icon"),
-      el("span", { class: "pick-text" }, el("span", { text: name }), detail ? el("span", { class: "mut small", text: detail }) : null))));
+      el("span", { class: "pick-text" }, el("span", { class: "pick-name", text: name }), detail ? el("span", { class: "mut small", text: detail }) : null),
+      el("span", { class: "pick-go", text: go }))));
     for (const cd of cds) {
       const secs = Math.round(cd.seconds);
       // The disc's own title first (or "Music CD"), then its songs and length, once.
