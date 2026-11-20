@@ -1,3 +1,4 @@
+import AVFoundation
 import Foundation
 import Testing
 @testable import Deck
@@ -78,6 +79,36 @@ import DeckieCrate
         #expect(BoothScreen.current == .firstRun(demo: true))
     }
 
+    /// The demo crate shows the picks well (build 2): for every song most of the others are good next songs as the
+    /// picks show them (beat-matched, keys that are not a clash), the first song the page plays has at least five of
+    /// six, and one deliberate contrast of each kind still shows somewhere: a key clash and a "no beat-match".
+    @MainActor @Test func theDemoSongsMostlySuitEachOther() throws {
+        let demo = try #require(DemoCrate.url())
+        let work = FileManager.default.temporaryDirectory.appendingPathComponent("booth-demo-\(UUID().uuidString)", isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: work); Library.shared.close() }
+        _ = try Library.shared.open(crateFile: demo, into: work)
+        let lib = Library.shared
+        var clashes = 0, noBeatMatch = 0, good: [String: Int] = [:]
+        for cur in lib.data.tracks {
+            let pairs = Suggester().candidates(for: cur, target: LibraryFilter(), exclude: [])
+            #expect(pairs.count == lib.data.tracks.count - 1, "\(cur.song): \(pairs.count) picks")
+            for p in pairs {
+                let t = try #require(lib.track(p.b))
+                let ji = joinInfo(cur, t, p, deckAPitch: 0)
+                let beat = ji.beatMatch && p.tr != "brake_cut"
+                if ji.verdict == "clash" { clashes += 1 }
+                if !beat { noBeatMatch += 1 }
+                if beat && ji.verdict != "clash" { good[cur.song, default: 0] += 1 }
+            }
+        }
+        let others = lib.data.tracks.count - 1
+        for t in lib.data.tracks {
+            #expect(good[t.song, default: 0] * 2 > others, "\(t.song): \(good[t.song, default: 0]) of \(others)")
+        }
+        #expect(good[Credits.demoSongs[0].title, default: 0] >= others - 1)
+        #expect(clashes > 0 && noBeatMatch > 0)
+    }
+
     @Test func theDemoSongsAreCreditedWithAnOpenLicence() {
         #expect(Credits.demoSongs.count >= 6)
         for s in Credits.demoSongs {
@@ -105,13 +136,69 @@ import DeckieCrate
         #expect(Recognizer().recordingOn)
     }
 
+    // MARK: Stop and Start listening
+
+    /// The corner's one control: Stop while listening, Start listening while not, nothing with nothing to listen for
+    /// or while Deckie's index is made.
+    @Test func theListenControlSaysStopOrStartListening() {
+        #expect(ListenControl.now(listening: true, canRecognise: true, preparing: false) == .stop)
+        #expect(ListenControl.now(listening: false, canRecognise: true, preparing: false) == .start)
+        #expect(ListenControl.now(listening: false, canRecognise: false, preparing: false) == .hidden)
+        #expect(ListenControl.now(listening: false, canRecognise: true, preparing: true) == .hidden)
+    }
+
+    /// Stop ends the set's recording and saves it: the recording and its log are in Files (Documents/Sets), the booth
+    /// is no longer listening or recording, and it says which set it saved. Recording stays switched on, so the next
+    /// Start listening records a new set.
+    @MainActor @Test func stopEndsAndSavesTheSetRecording() throws {
+        let d = UserDefaults.standard, key = Recognizer.recordingKey
+        let before = d.object(forKey: key)
+        defer { if let before { d.set(before, forKey: key) } else { d.removeObject(forKey: key) } }
+        d.set(true, forKey: key)
+        let r = Recognizer()
+        let format = try #require(AVAudioFormat(standardFormatWithSampleRate: 44100, channels: 1))
+        r.beginRecording(format)
+        #expect(r.recActive)
+        let name = try #require(r.recorder.baseName)
+        let folder = SetRecorder.folder
+        defer { for ext in [".aac", " log.json", " tracklist.txt"] { try? FileManager.default.removeItem(at: folder.appendingPathComponent(name + ext)) } }
+        r.stopListening()
+        #expect(!r.recActive && !r.recorder.isActive)
+        #expect(!r.isListening && r.source == .idle)
+        #expect(r.savedSet == name)
+        #expect(r.recordingOn)
+        for ext in [".aac", " log.json"] {
+            #expect(FileManager.default.fileExists(atPath: folder.appendingPathComponent(name + ext).path), "\(name)\(ext) is not saved")
+        }
+    }
+
+    /// Stop with nothing recording (set recording off, or never started) stops listening and claims no saved set.
+    @MainActor @Test func stopWithNothingRecordingSavesNothing() {
+        let r = Recognizer()
+        r.stopListening()
+        #expect(r.savedSet == nil && !r.recActive && r.source == .idle)
+    }
+
+    // MARK: the app's name
+
+    /// The app calls itself Deckie wherever it names itself (D: build 2); "Booth" is no longer a word on screen.
+    @Test func theAppCallsItselfDeckie() {
+        #expect(Bundle.main.object(forInfoDictionaryKey: "CFBundleDisplayName") as? String == "Deckie")
+        #expect(Bundle.main.bundleIdentifier == "io.deckie.booth")
+        #expect(Words.firstRunName == "Deckie")
+        let shown = [Words.firstRunWhat, Words.creditsNoneYet, Words.creditsPrivacy, Words.creditsVersion("0.1.0", "2"), Words.recWhere,
+                     Words.noFingerprints, Words.setFilesWhere, Words.stoppedSaved, Words.stoppedHelp, Words.setSavedFoot].joined(separator: " ")
+        #expect(!shown.contains("Booth") && !shown.contains("booth"), "\(shown)")
+        #expect((Bundle.main.object(forInfoDictionaryKey: "NSMicrophoneUsageDescription") as? String)?.contains("Booth") == false)
+    }
+
     // MARK: the words
 
     @Test func phrasesKeepTheirLastTwoWordsTogether() {
-        let s = Words.phrases("Booth listens to the room,", "and how to mix it in.")
-        #expect(s == "Booth listens to the\u{00A0}room,\nand how to mix it\u{00A0}in.")
+        let s = Words.phrases("Deckie listens to the room,", "and how to mix it in.")
+        #expect(s == "Deckie listens to the\u{00A0}room,\nand how to mix it\u{00A0}in.")
         #expect(Words.keepLastTwo("Single") == "Single")
-        for line in (Words.firstRunWhat + "\n" + Words.tryTheDemoNote + "\n" + Words.demoHow + "\n" + Words.creditsDemoNote + "\n" + Words.recWhere + "\n" + Words.firstRunSteps.map { $0.title + "\n" + $0.note }.joined(separator: "\n"))
+        for line in (Words.firstRunWhat + "\n" + Words.tryTheDemoNote + "\n" + Words.demoHow + "\n" + Words.creditsDemoNote + "\n" + Words.recWhere + "\n" + Words.stoppedSaved + "\n" + Words.stoppedHow + "\n" + Words.firstRunSteps.map { $0.title + "\n" + $0.note }.joined(separator: "\n"))
                 .split(separator: "\n") where line.contains(" ") || line.contains("\u{00A0}") {
             #expect(line.contains("\u{00A0}"), "\(line) can end on one word")
         }
@@ -121,7 +208,7 @@ import DeckieCrate
         let all = ([Words.firstRunWaiting, Words.firstRunWhat, Words.openACrateFile, Words.tryTheDemo, Words.firstRunPrivacy,
                     Words.creditsNoneYet, Words.creditsPrivacy, Words.tryTheDemoNote, Words.demoHow, Words.leaveTheDemo,
                     Words.demoOpened(songs: 7), Words.creditsDemoSection, Words.creditsDemoNote,
-                    Words.recOn, Words.recOff, Words.recPaused, Words.recordSets, Words.recWhere, Words.pauseRecording, Words.resumeRecording] + Words.firstRunSteps.flatMap { [$0.title, $0.note] })
+                    Words.recOn, Words.recOff, Words.recPaused, Words.recordSets, Words.recWhere, Words.pauseRecording, Words.resumeRecording, Words.stop, Words.stopSpoken, Words.startListening, Words.stoppedTitle, Words.stoppedHelp, Words.stoppedSaved, Words.stoppedHow, Words.setSavedFoot] + Words.firstRunSteps.flatMap { [$0.title, $0.note] })
             .joined(separator: " ").lowercased()
         #expect(!all.contains("track"))
         #expect(!all.contains(" ai ") && !all.contains("ai."))

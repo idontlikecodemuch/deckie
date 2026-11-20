@@ -61,7 +61,8 @@ struct PlayingPanel: View {
                     VStack(alignment: .leading, spacing: Look.Listen.playingTitleGap) {
                         // A song with no name: its place leads, in the title's size (research AA, 3.13), so the
                         // small place line above is not repeated.
-                        if t.hasName {
+                        // A song at the top of a crate with no sources (the demo crate) has no place line.
+                        if t.hasName && !t.folderPath.isEmpty {
                             Text(t.folderPath).font(Look.Listen.placeFont).foregroundStyle(t.on ? t.discColor : Theme.dim).lineLimit(1)
                         }
                         if let also = Library.shared.alsoOn(t, playingDisc: t.disc) {
@@ -83,8 +84,9 @@ struct PlayingPanel: View {
                     }
                     }
                     // Not heard just now (Deckie's, D35): the song stays, its names dimmed.
-                    .opacity(rec.notHeard ? Look.Listen.notHeardOpacity : 1)
-                    .animation(.easeInOut(duration: Look.Listen.notHeardFade), value: rec.notHeard)
+                    // Stopped (the corner's Stop): the song stays with its picks, dimmed as when not heard.
+                    .opacity(rec.notHeard || rec.source == .idle ? Look.Listen.notHeardOpacity : 1)
+                    .animation(.easeInOut(duration: Look.Listen.notHeardFade), value: rec.notHeard || rec.source == .idle)
                     Text(Words.bpm(t.bpmShown * (rec.source == .manual ? 1 : rec.rate)))
                         .font(Look.Listen.bpmFont).foregroundStyle(Theme.rsn)
                     SongWave(track: t, height: waveHeight)
@@ -102,6 +104,20 @@ struct PlayingPanel: View {
                 VStack(alignment: .leading, spacing: Look.Listen.listeningGap) {
                     Text(Words.preparingTitle).font(Look.Listen.titleFont).foregroundStyle(Theme.tx)
                     Text(Words.preparingBody(n)).font(Look.Listen.listeningHelpFont).foregroundStyle(Theme.dim).fixedSize(horizontal: false, vertical: true)
+                }
+            } else if control == .start {
+                // Stopped by the DJ (Stop in the corner), with no song on screen: said plainly, with where the set is
+                // and the way back. The one button for it is the corner's Start listening.
+                VStack(alignment: .leading, spacing: Look.Listen.listeningGap) {
+                    Text(Words.stoppedTitle).font(Look.Listen.titleFont).foregroundStyle(Theme.tx)
+                    Text(Words.stoppedHelp).font(Look.Listen.listeningHelpFont).foregroundStyle(Theme.mut)
+                    if rec.savedSet != nil {
+                        Text(Words.stoppedSaved).font(Look.Listen.listeningHelpFont).foregroundStyle(Theme.dim).fixedSize(horizontal: false, vertical: true)
+                    }
+                    Text(Words.stoppedHow).font(Look.Listen.listeningHelpFont).foregroundStyle(Theme.dim).fixedSize(horizontal: false, vertical: true)
+                    if DemoCrate.isOpen {
+                        Button(Words.leaveTheDemo) { sug.leaveDemo = true }.buttonStyle(PillStyle()).padding(.top, Look.Listen.byHandButtonTop)
+                    }
                 }
             } else {
                 VStack(alignment: .leading, spacing: Look.Listen.listeningGap) {
@@ -138,7 +154,10 @@ struct PlayingPanel: View {
         }
         .overlay { HalloweenFX(trigger: rec.current?.hal == true ? rec.currentId : nil).allowsHitTesting(false).clipShape(RoundedRectangle(cornerRadius: Look.Listen.panelRadius)) }
         .overlay(alignment: .bottomLeading) {
-            if let h = rec.alsoHearing { Text(Words.alsoHearing(h)).font(Look.Listen.alsoHearingFont).foregroundStyle(Theme.dim).lineLimit(1).padding(.leading, Look.Listen.alsoHearingLeading).padding(.bottom, Look.Listen.alsoHearingBottom) }
+            // Stopped with the song still on screen: where the set that Stop saved is.
+            if rec.current != nil, rec.source == .idle, rec.savedSet != nil {
+                Text(Words.setSavedFoot).font(Look.Listen.alsoHearingFont).foregroundStyle(Theme.mut).lineLimit(1).padding(.leading, Look.Listen.alsoHearingLeading).padding(.bottom, Look.Listen.alsoHearingBottom)
+            } else if let h = rec.alsoHearing { Text(Words.alsoHearing(h)).font(Look.Listen.alsoHearingFont).foregroundStyle(Theme.dim).lineLimit(1).padding(.leading, Look.Listen.alsoHearingLeading).padding(.bottom, Look.Listen.alsoHearingBottom) }
         }
     }
 
@@ -184,17 +203,33 @@ struct PlayingPanel: View {
         return rec.recPaused ? Words.recPaused : Words.recElapsed(hms(rec.recorder.elapsed))
     }
 
-    /// top-right status corner: listening status, REC with elapsed time, mic, "…" (the top-left stays free for the
-    /// app's Minimal switch, so nothing collides in either orientation)
+    /// What the corner's one listening control shows now.
+    private var control: ListenControl {
+        ListenControl.now(listening: rec.isListening, canRecognise: Library.shared.canRecognise,
+                          preparing: rec.source == .idle && { if case .preparing = rec.deckie.state, rec.hearing != .apple { return true }; return false }())
+    }
+
+    /// top-right status corner: listening status, REC with elapsed time, Stop or Start listening, "…" (the top-left
+    /// stays free for the app's Minimal switch, so nothing collides in either orientation)
     private var corner: some View {
         HStack(spacing: Look.Listen.cornerButtonsGap) {
             status.padding(.trailing, Look.Listen.statusTrailing)
-            // Nothing to listen for in a crate file with no fingerprints, so no mic button.
-            if Library.shared.canRecognise {
-                Button { rec.source == .mic ? rec.stop() : rec.startMic() } label: {
-                    Image(systemName: rec.source == .mic ? "mic" : "mic.slash").font(Look.Listen.cornerIconFont).foregroundStyle(Theme.dim).frame(width: Look.Listen.cornerButton, height: Look.Listen.cornerButton)
+            // The one control for listening (it took the place of the microphone button): Stop turns the microphone
+            // off and ends and saves the set's recording; Start listening turns it on again. The REC chip's menu only
+            // pauses the recording or turns set recording off; listening goes on. Nothing to listen for in a crate
+            // file with no fingerprints, so no control there.
+            switch control {
+            case .stop:
+                Button { rec.stopListening() } label: {
+                    Label(Words.stop, systemImage: "stop.fill").labelStyle(ListenControlLabel())
                 }
-                .accessibilityLabel(rec.source == .mic ? Words.pauseListening : Words.listen)
+                .buttonStyle(PillStyle()).accessibilityLabel(Words.stopSpoken)
+            case .start:
+                Button { rec.startMic() } label: {
+                    Label(Words.startListening, systemImage: "mic.fill").labelStyle(ListenControlLabel())
+                }
+                .buttonStyle(PillStyle(prominent: true))
+            case .hidden: EmptyView()
             }
             #if DEBUG
             // The test and details sheet: Debug builds only (a tester's build has no test doors).
@@ -220,12 +255,12 @@ struct PlayingPanel: View {
         switch rec.source {
         case .idle:
             if case .preparing = rec.deckie.state, rec.hearing != .apple { s = Words.preparingStatus }
-            else { s = Library.shared.canRecognise ? Words.statusPaused : Words.notListening }
+            else { s = Library.shared.canRecognise ? Words.statusStopped : Words.notListening }
         case .mic: s = rec.lastMatch == nil ? Words.statusListening : Words.statusListening
         case .file: s = Words.statusTestFile
         case .manual: s = Words.statusByHand
         }
-        if rec.currentId != nil && rec.source != .manual {
+        if rec.currentId != nil && rec.isListening {   // stopped or set by hand: no "sure", no "paused"
             if rec.paused { s += Words.statusAlsoPaused }
             // Deckie's (D35): a song not heard for a few seconds is not called sure; in a quiet room "paused" says it.
             else if rec.notHeard { s += Words.statusNotHeard }
@@ -343,6 +378,27 @@ struct SongWave: View {
 
 func hms(_ s: Double) -> String { let t = Int(s); return String(format: "%d:%02d:%02d", t / 3600, t / 60 % 60, t % 60) }
 
+/// The Listen page's one control for listening, in the playing panel's corner: Stop while listening (the microphone
+/// or a test file), Start listening while not (stopped, or a song set by hand), nothing while Deckie's index is made
+/// or for a crate file with no fingerprints (nothing to listen for).
+enum ListenControl: Equatable {
+    case stop, start, hidden
+    static func now(listening: Bool, canRecognise: Bool, preparing: Bool) -> ListenControl {
+        guard canRecognise, !preparing else { return .hidden }
+        return listening ? .stop : .start
+    }
+}
+
+/// The control's icon and word side by side, the icon a little smaller.
+struct ListenControlLabel: LabelStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        HStack(spacing: Look.Listen.controlGap) {
+            configuration.icon.font(Look.Listen.controlIconFont)
+            configuration.title
+        }
+    }
+}
+
 // MARK: - shared bits
 
 struct IconStyle: ButtonStyle {
@@ -457,7 +513,7 @@ struct PlainPick: View {
                 Text(target.hasName ? target.numberedSong : target.oneLine.replacingOccurrences(of: Words.dotJoin + Words.noNameYetInRow, with: Words.twoLines("", Words.noNameYetInRow))).font(Look.Plain.titleFont(big)).foregroundStyle(Theme.tx).lineLimit(target.hasName ? 1 : 2).minimumScaleFactor(Look.Plain.titleShrink)
                 HStack(spacing: Look.Plain.lineGap) {
                     Text(target.secondLine).font(Look.Plain.lineFont(big)).foregroundStyle(Theme.dim).lineLimit(1)
-                    if target.hasName {
+                    if target.hasName && !target.folderPath.isEmpty {
                         Text(target.folderPath).font(Look.Plain.placeFont(big)).foregroundStyle(target.on ? target.discColor : Theme.dim).lineLimit(1)
                     }
                 }
