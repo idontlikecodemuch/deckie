@@ -18,7 +18,7 @@ enum Words {
     static func c(_ key: String, _ count: Int, _ values: [String: String] = [:]) -> String { n(key, count, values) }
     /// The small line under a fact: where it came from, Desk's guess, checked, or not found.
     static func fromLine(_ f: DeskNaming.Fact) -> String {
-        guard f.value != nil else { return w("factNotFound") }
+        guard f.value != nil else { return w("factEmpty") }
         let from = f.from.map { DeskWords.coded("factFrom", $0) } ?? w("factNotFound")
         if f.checked { return w("factChecked", ["from": from]) }
         if f.guess { return w("factGuess", ["from": from]) }
@@ -280,8 +280,15 @@ enum Words {
     static let removeMusicFolder = w("removeMusicFolder")
 
     // MARK: what didn't go in
+    /// "Read on 20 Nov 2026 at 18:28": the run's time as this Mac writes dates; which computer, and the exact time,
+    /// are in `readOnDetail` (a tooltip).
     static func readOn(_ by: String, _ at: String, seen: Int, songs: Int) -> String {
-        w("readOn", ["by": by, "at": at, "seen": DeskWords.number(seen), "songs": DeskWords.number(songs)])
+        let when = ISO8601DateFormatter().date(from: at)
+        return w("readOn", ["date": when?.formatted(date: .abbreviated, time: .omitted) ?? at,
+                            "time": when?.formatted(date: .omitted, time: .shortened) ?? "",
+                            "seen": DeskWords.number(seen), "songs": DeskWords.number(songs)])
+    }
+    static func readOnDetail(_ by: String, _ at: String) -> String { w("readOnDetail", ["by": by, "at": at])
     }
     static let noRecord = w("noRecord")
     static func reasonCount(_ reason: String, _ count: Int) -> String {
@@ -307,6 +314,7 @@ enum Words {
 
     // MARK: messages and errors
     static func couldntOpen(_ detail: String) -> String { w("couldntOpen", ["detail": detail]) }
+    static func couldntImport(_ detail: String) -> String { w("couldntImport", ["detail": detail]) }
     static func couldntSave(_ detail: String) -> String { w("couldntSave", ["detail": detail]) }
     static func runStopped(_ detail: String) -> String { w("runStopped", ["detail": detail]) }
     static func couldntExport(_ detail: String) -> String { w("couldntExport", ["detail": detail]) }

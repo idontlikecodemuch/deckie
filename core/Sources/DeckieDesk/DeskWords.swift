@@ -32,8 +32,10 @@ public enum DeskWords {
         "nameField": "Name",
 
         // the first screen
-        "firstTitle": "Your crate starts here.",
-        "firstBody": "Add your music. Desk reads the tempo, key and bars of every song and writes a crate file, a small file you send to your iPad. Your music never leaves {thisComputer}.",
+        // The owner's words (Nov 20, 2026). Phrases are held together with no-break spaces (u+00A0), so the body
+        // breaks between phrases at any width and leaves no word alone on a line.
+        "firstTitle": "Your crate is the music Deckie knows.",
+        "firstBody": "Add songs from your library. Deckie\u{00A0}Desk reads each\u{00A0}one’s tempo,\u{00A0}key\u{00A0}and\u{00A0}structure so Deckie can name what’s\u{00A0}playing and\u{00A0}what\u{00A0}might\u{00A0}come\u{00A0}next.",
         "addMusic": "Add music",
         "addMusicTo": "Add music to {crate}",
         "addMusicMore": "Add music…",
@@ -193,7 +195,7 @@ public enum DeskWords {
         "librariesRead": "Read from {names}.",
         "couldntReadLibrary": "Couldn't read a DJ library. {detail}",
         // new (D32): "Send to iPad" on Windows and Linux, until the booth takes a crate file another way.
-        "exportedTo": "The crate file is in {folder}.",
+        "exportedTo": "Saved “{file}” in {folder}.",
         "toIPadTitle": "To get it to your iPad",
         "toIPadStick": "A USB stick or SD card: export the crate file onto it, plug it into the iPad and open it from the Files app.",
         "toIPadICloud": "iCloud Drive: with iCloud for Windows, export the crate file into your iCloud Drive folder; it shows in Files on the iPad.",
@@ -315,7 +317,7 @@ public enum DeskWords {
         "deleteCrateTitle": "Delete {name}?",
         "deleteCrateBody": "The crate and your name fixes go to the Trash. Your music is not touched, and a crate file you sent is not touched.",
         // new (D32): where there is no Trash Desk can use, the crate is deleted for good.
-        "deleteCrateBodyForGood": "The crate and your name fixes are deleted. Your music is not touched, and a crate file you sent is not touched.",
+        "deleteCrateBodyForGood": "The crate and your name fixes are deleted, and this can't be undone. Your music is not touched, and a crate file you sent is not touched.",
         "delete": "Delete",
 
         // the toolbar
@@ -465,18 +467,22 @@ public enum DeskWords {
         "moveDown": "Move down",
         "rename": "Rename…",
         "renameFolderTitle": "Rename the folder {folder}",
+        // new (Nov 20, 2026): under the title when a source or a folder is renamed.
+        "renameNote": "Only the name in Desk changes. Your files and folders keep their names.",
         "removeFromCrate": "Remove from crate…",
         "removeTitle": "Remove {source} from {crate}?",
         "removeTitle.same": "Remove {source} from the crate?",
-        "removeBody.zero": "No songs go: every song on it is somewhere else in the crate too.",
-        "removeBody.one": "1 song goes from the crate. Songs that are somewhere else too stay.",
-        "removeBody.other": "{n} songs go from the crate. Songs that are somewhere else too stay.",
+        "removeBody.zero": "No songs go: every song on it is somewhere else in the crate too. Your music files are not touched.",
+        "removeBody.one": "1 song goes from the crate. Songs that are somewhere else too stay. Your music files are not touched.",
+        "removeBody.other": "{n} songs go from the crate. Songs that are somewhere else too stay. Your music files are not touched.",
         "remove": "Remove",
         "musicFolderName": "The music folder",
         "removeMusicFolder": "Remove the music folder…",
 
         // what didn't go in
-        "readOn": "Read on {by} at {at}: {seen} files seen, {songs} songs in the crate.",
+        // {date} and {time} as this computer writes them; which computer and the exact time are in the line's tooltip.
+        "readOn": "Read on {date} at {time}: {seen} files seen, {songs} songs in the crate.",
+        "readOnDetail": "{by}, {at}",
         "noRecord": "No record of what didn't go in.",
         "reasonCount": "{reason} ({n})",
         "reason.unsupported": "File type not supported",
@@ -487,6 +493,11 @@ public enum DeskWords {
         "reason.decode_error": "Could not be decoded",
         "reason.analysis_error": "Analysis failed",
         "reason.skipped": "Folder left out",
+        // new (Nov 20, 2026): the line under a file that didn't go in, in place of the decoder's own words (kept in the
+        // line's tooltip for a bug report). A reason with none shows its heading only.
+        "reasonDetail.damaged": "The file seems cut short or damaged.",
+        "reasonDetail.unsupported": "Desk can't read this type of file. It reads {types}.",
+        "reasonDetail.unsupportedPlain": "Desk can't read this type of file.",
 
         // keys and names from this computer (D30)
         "lookAgain": "Look again for keys and names",
@@ -503,17 +514,18 @@ public enum DeskWords {
 
         // messages and errors
         "couldntOpen": "Couldn't open that crate file. {detail}",
+        // new (Nov 20, 2026): Import crate file failed, with what to do next.
+        "couldntImport": "Couldn't open that crate file. {detail} Choose a .deckie file exported from Deckie Desk; one made by a newer Deckie Desk needs that version to open it.",
         "couldntSave": "Couldn't save the crate file. {detail}",
         "runStopped": "Desk stopped before it finished. {detail} Songs already read are kept.",
-        "couldntExport": "Couldn't write the crate file. {detail}",
+        "couldntExport": "Couldn't save the crate file. {detail} Choose another folder, or check that the drive isn't full or locked.",
         "couldntRename": "Couldn't rename the crate. {detail}",
         "couldntDelete": "Couldn't delete the crate. {detail}",
         "nothingToSendYet": "This crate has no songs yet, so there is no crate file to send. Add music first.",
         "exportMessage": "Where the crate file goes. Desk keeps its own; this is a copy.",
         "importMessage": "Choose a crate file (a .deckie file; one made earlier may end in .deckiecrate). Desk keeps a copy; the file you choose is not changed.",
         // new (D32): the engine program could not be started or stopped answering.
-        "engineGone": "Desk's engine stopped. Close Desk and open it again; songs already read are kept.",
-        // new (D32): this computer has no beat tracker's runtime or model, so music cannot be read.
+        "engineGone": "Part of Desk stopped working. Close Desk and open it again; songs already read are kept.",        // new (D32): this computer has no beat tracker's runtime or model, so music cannot be read.
         "engineMissing": "Desk can't read music on {thisComputer}: part of Desk is missing.",
 
         // naming a song (research AA, route A; D30, D33). All new, placeholders until the copy audit.
@@ -550,6 +562,8 @@ public enum DeskWords {
         // new: one song's names (letter AA, 3.4).
         "release": "Release",
         "factNotFound": "not found",
+        // new (Nov 20, 2026): under a field that is empty because the file has nothing there.
+        "factEmpty": "not in the file",
         "factGuess": "Desk's guess, {from}.",
         "factChecked": "{from}, checked by you",
         "factFrom.tag": "from the file's tags",
@@ -649,7 +663,7 @@ public enum DeskWords {
         "toolSongsFrom": "Songs from",
         "patternLabel": "Pattern",
         "patternHelp": "Use {artist}, {title}, {version} and {number} for the parts. Anything else must be in the file name as written.",
-        "pasteHelp": "Paste or type the songs in order, one to a line.",
+        "pasteHelp": "One line a song, in the songs' order: Artist - Title, with any version in brackets after it. A number at the start of a line is left out.",
         "choosePlaylistMessage": "Choose a playlist (.m3u or .m3u8) made from these songs, in the same order.",
         "choosePlaylist": "Choose a playlist…",
         "onlyEmpty": "Fill only what is empty",
@@ -806,8 +820,8 @@ public enum DeskWords {
         "lookupDiscMatch.byName": "Found by the disc's name: check each song before you use it.",
         "lookupDiscMatch.none": "MusicBrainz doesn't know this disc. A burned disc usually isn't known; the names are yours to give.",
         "undoLookup": "Look up",
-        "lookupSentLink": "What Desk has sent",
-        "lookupSentTitle": "What Desk has sent",
+        "lookupSentLink": "What Desk has sent online",
+        "lookupSentTitle": "What Desk has sent online",
         "lookupSentIntro": "Every request Desk has made, kept on {thisComputer}. MusicBrainz sees each request and your network address, as any site you visit does.",
         "lookupSentEmpty": "Desk hasn't sent anything. Nothing is sent unless you look something up.",
         "lookupSentClear": "Clear the list",
@@ -1022,6 +1036,22 @@ public enum DeskWords {
         f.locale = Locale.current
         f.usesGroupingSeparator = true
         return f.string(from: NSNumber(value: n)) ?? String(n)
+    }
+
+    /// The plain line under a file that didn't go in (`reasonDetail.<code>`), or nil where the heading says it all;
+    /// the decoder's own words (`raw`) are for a tooltip. A type not read names the types that are, as the decoder
+    /// listed them at the end of its words ("... (WAV, AIFF, MP3, FLAC, AAC)"). desk.js `reasonDetail` says the same.
+    public static func reasonDetail(_ code: String, raw: String) -> String? {
+        if code == "unsupported" {
+            if raw.hasSuffix(")"), let open = raw.lastIndex(of: "(") {
+                let types = raw[raw.index(after: open)..<raw.index(before: raw.endIndex)]
+                if !types.isEmpty, types.allSatisfy({ $0.isUppercase || $0.isNumber || $0 == "," || $0 == " " }) {
+                    return text("reasonDetail.unsupported", ["types": String(types)])
+                }
+            }
+            return text("reasonDetail.unsupportedPlain")
+        }
+        return table["reasonDetail." + code] != nil ? text("reasonDetail." + code) : nil
     }
 
     /// A length of time in words, as the lookup's sentence says it: "40 seconds", "3 minutes" (rounded up).

@@ -171,6 +171,7 @@ import DeckieLookup
             "lookupFailure.": [LookupFailure.noConnection, .busy, .refused(500), .badAnswer, .notOnThisComputer, .stopped].map(\.code),
             "changeNote.": ["filled", "yours", "lengthDiffers", "yourVersion", "otherVersion", "original", "catalogueWord",
                             "firstRelease", "disagree"],
+            "reasonDetail.": [],   // a code with none shows no line (desk.js reasonDetail checks first)
             "moment.": [], "fact.": [], "saying.": [],   // checked by RunScreenTests
         ]
         for prefix in built where DeskWords.table[prefix + "other"] == nil {

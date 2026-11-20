@@ -119,7 +119,11 @@ struct ToolSheet: View {
         .onChange(of: playlist) { _, _ in refresh() }
     }
 
-    var usable: Int { preview?.problem == nil ? ticks.count : 0 }
+    /// The songs that get a name, as "Names added to 6 songs." counts them after: not the fields ticked.
+    var usable: Int {
+        guard let p = preview, p.problem == nil else { return 0 }
+        return Set(ticks.compactMap { $0 < p.changes.count ? p.changes[$0].song : nil }).count
+    }
 
     var problemLine: String? {
         guard let p = preview else { return nil }

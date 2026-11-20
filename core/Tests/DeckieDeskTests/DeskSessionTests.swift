@@ -9,8 +9,8 @@ import DeckieCrate
     @Test func countsCodesAndBlanksFillAsTheMacHadThem() {
         #expect(DeskWords.count("wentIn", 1) == "1 song went in.")
         #expect(DeskWords.count("wentIn", 12) == "12 songs went in.")
-        #expect(DeskWords.count("removeBody", 0) == "No songs go: every song on it is somewhere else in the crate too.")
-        #expect(DeskWords.count("removeBody", 3) == "3 songs go from the crate. Songs that are somewhere else too stay.")
+        #expect(DeskWords.count("removeBody", 0) == "No songs go: every song on it is somewhere else in the crate too. Your music files are not touched.")
+        #expect(DeskWords.count("removeBody", 3) == "3 songs go from the crate. Songs that are somewhere else too stay. Your music files are not touched.")
         #expect(DeskWords.count("songsOf", 40, ["done": "12", "total": "40"]) == "12 of 40 songs")
         #expect(DeskWords.count("sourceLine", 1, ["name": "Stick 3"]) == "Stick 3  ·  1 song")
         #expect(DeskWords.text("finishedTitle", ["read": "Stick 3", "crate": "Friday"]) == "Stick 3 is in Friday")
@@ -45,12 +45,12 @@ import DeckieCrate
     }
 
     @Test func theComputerIsNamedByItsKind() {
-        #expect(DeskWords.fill(DeskWords.table["firstBody"]!, DeskWords.withComputer([:], kind: "mac")).hasSuffix("never leaves this Mac."))
-        #expect(DeskWords.fill(DeskWords.table["firstBody"]!, DeskWords.withComputer([:], kind: "other")).hasSuffix("never leaves this computer."))
+        #expect(DeskWords.fill(DeskWords.table["saying.reading.8"]!, DeskWords.withComputer([:], kind: "mac")).contains("stays on this Mac."))
+        #expect(DeskWords.fill(DeskWords.table["saying.reading.8"]!, DeskWords.withComputer([:], kind: "other")).contains("stays on this computer."))
         #if os(macOS)
-        #expect(DeskWords.text("firstBody").hasSuffix("this Mac."))
+        #expect(DeskWords.text("addFolderHelp").contains("on this Mac or"))
         #else
-        #expect(DeskWords.text("firstBody").hasSuffix("this computer."))
+        #expect(DeskWords.text("addFolderHelp").contains("on this computer or"))
         #endif
         // The question before a large read, too (research AE).
         let ask = DeskWords.table["askReadBody"]!
