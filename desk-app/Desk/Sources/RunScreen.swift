@@ -484,11 +484,7 @@ struct FiguresView: View {
     }
 
     private func temposText(_ f: RunFigures) -> String {
-        let with = f.songs - f.noTempo
-        guard with > 0, let lo = f.slowest, let hi = f.fastest else { return DeskWords.text("figTemposNone") }
-        let top = f.tempos.indices.max { f.tempos[$0] < f.tempos[$1] || (f.tempos[$0] == f.tempos[$1] && $0 > $1) } ?? 0
-        return DeskWords.text("figTemposText", ["songs": Words.songs(with), "low": "\(Int(lo.rounded()))", "high": "\(Int(hi.rounded()))",
-                                                "mode": "\(Int((f.tempoLow + Double(top) * f.tempoStep + f.tempoStep / 2).rounded()))"])
+        f.temposText(songs: Words.songs)
     }
 
     private func keysText(_ f: RunFigures) -> String {

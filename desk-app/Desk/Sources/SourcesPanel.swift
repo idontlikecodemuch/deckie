@@ -108,7 +108,7 @@ struct SourcesPanel: View {
             } else {
                 List(selection: $model.sourceSelection) {
                     ForEach(outline, id: \.name) { s in
-                        let count = s.folders.reduce(0) { $0 + $1.trackIds.count }
+                        let count = DeskSourceRow.songs(in: s)
                         Label(Words.sourceLine(s.name, songs: count), systemImage: "externaldrive")
                             .font(Look.Fonts.sourceName).tag(SourceItem.source(s.name))
                         ForEach(s.folders, id: \.name) { f in
