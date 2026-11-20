@@ -44,12 +44,13 @@ import DeckieBuild
         #expect(text([120, 120.2, 119.9]) == "3 songs, 120 BPM")
         // No tempo shared: the range alone, not "most around" one song's tempo.
         #expect(text([96, 198]) == "2 songs, from 96 to 198 BPM")
-        // Shared: the tempo most share, never outside the range (118.4 sits in the 118 to 120 bin, middle 119).
-        #expect(text([118.4, 118.2, 140]) == "3 songs, from 118 to 140 BPM, most around 119")
+        // Shared: the tempo most share, as the songs have it, never outside the range (a bin of the histogram, 118
+        // to 120, would have said 119 for songs at 118).
+        #expect(text([118.4, 118.2, 140]) == "3 songs, from 118 to 140 BPM, most around 118")
         #expect(text([117.6, 117.8]) == "2 songs, 118 BPM")
         let t = text([116.1, 116.3, 130])
-        #expect(t == "3 songs, from 116 to 130 BPM, most around 117")
-        #expect(text([118.1, 118.2, 116]) == "3 songs, from 116 to 118 BPM, most around 118", "held within the range")
+        #expect(t == "3 songs, from 116 to 130 BPM, most around 116")
+        #expect(text([118.1, 118.2, 116]) == "3 songs, from 116 to 118 BPM, most around 118")
         #expect(RunFigures().temposText() == DeskWords.text("figTemposNone"))
     }
 

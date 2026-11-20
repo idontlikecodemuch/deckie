@@ -120,6 +120,8 @@ public struct RunFigures: Codable, Equatable, Sendable {
     public var tempoStep = RunFigures.tempoBin
     public var tempos = [Int](repeating: 0, count: RunFigures.tempoBins)
     public var noTempo = 0
+    /// The tempo (rounded to a whole BPM) more songs share than any other, when at least two share it; nil before.
+    public var mostTempo: Int?
     public var slowest: Double?
     public var fastest: Double?
     /// Keys by home note (0 = C): major, minor, and the home note alone (mode left open); `noKey` not sure.
@@ -146,18 +148,16 @@ public struct RunFigures: Codable, Equatable, Sendable {
 extension RunFigures {
     /// The tempos figure in words, the same rule in both windows (run.js says it the same way): "1 song, 118 BPM" when
     /// every song with a tempo has the same one; "2 songs, from 96 to 198 BPM" when no tempo is shared; else with the
-    /// tempo most share, "most around 124", which is always within the range.
+    /// tempo most share (`mostTempo`, a tempo songs really have), "most around 124", always within the range.
     public func temposText(songs say: (Int) -> String = { DeskWords.count("songs", $0) }) -> String {
         let with = songs - noTempo
         guard with > 0, let slowest, let fastest else { return DeskWords.text("figTemposNone") }
         let low = Int(slowest.rounded()), high = Int(fastest.rounded())
         if with == 1 || low == high { return DeskWords.text("figTemposOne", ["songs": say(with), "bpm": "\(low)"]) }
-        let top = tempos.indices.max { tempos[$0] < tempos[$1] || (tempos[$0] == tempos[$1] && $0 > $1) } ?? 0
-        guard tempos[top] > 1 else {
+        guard let most = mostTempo else {
             return DeskWords.text("figTemposRange", ["songs": say(with), "low": "\(low)", "high": "\(high)"])
         }
-        let most = min(high, max(low, Int((tempoLow + Double(top) * tempoStep + tempoStep / 2).rounded())))
-        return DeskWords.text("figTemposText", ["songs": say(with), "low": "\(low)", "high": "\(high)", "mode": "\(most)"])
+        return DeskWords.text("figTemposText", ["songs": say(with), "low": "\(low)", "high": "\(high)", "mode": "\(min(high, max(low, most)))"])
     }
 }
 
@@ -227,6 +227,9 @@ public struct RunTally: Sendable {
             f.tempos[max(0, min(f.tempos.count - 1, i))] += 1
             let r = Int(bpm.rounded())
             rounded[r, default: 0] += 1
+            if let top = rounded.max(by: { $0.value != $1.value ? $0.value < $1.value : $0.key > $1.key }), top.value > 1 {
+                f.mostTempo = top.key
+            }
             let enough = f.songs >= Self.factsFrom
             if let s = f.slowest, bpm < s - 0.5, enough { fact("slowest", ["bpm": String(r)]) }
             if let s = f.fastest, bpm > s + 0.5, enough { fact("fastest", ["bpm": String(r)]) }
