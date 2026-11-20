@@ -8,13 +8,13 @@ is proven is in `docs/research/y-windows-builder.md` and the check-ins
 (`docs/research/briefs/checkin-windows-builder.md`).
 
 Words on this page that are ours, said once: a **crate file** is the one file Deckie writes about a DJ's songs
-(tempo, bars, key, style, vocals; never the songs). **Deckie Booth** is the iPad app that uses it beside the decks.
+(tempo, bars, key, style, vocals; never the songs). **Deckie** is also the name of the iPad app that uses it beside the decks (until Nov 20, 2026 called Deckie Booth).
 **Deckie Desk** is the program that makes the crate file. The **WebView2 Runtime** is a part of Windows, from
 Microsoft, that draws a web page inside a program's own window; Deckie Desk's window is drawn by it.
 
 ## What this is
 
-Deckie is a DJ booth companion. Deckie Booth, on an iPad, sits beside your decks. To do that it needs a crate
+Deckie is a DJ booth companion. Deckie, on an iPad, sits beside your decks. To do that it needs a crate
 file: everything Deckie knows about your songs, and never the songs themselves.
 
 Deckie Desk is the program that makes the crate file, from the music on your PC.
@@ -70,14 +70,14 @@ Click "Export crate file…" and choose where it goes. You get one small file na
 `Friday night.deckie` (about 4 KB a song). A crate file made by an earlier test ends in `.deckiecrate`; it still
 opens. Any of these work:
 
-- A USB stick or SD card: export the crate file onto it, plug it into the iPad, and open it from the Files app.
+- A USB stick or SD card: copy the crate file onto it, plug it into the iPad, and open it from the Files app.
 - iCloud Drive: with iCloud for Windows, export the crate file into your iCloud Drive folder. It shows in Files on
   the iPad.
 - A cable: connect the iPad, open the Apple Devices app, choose the iPad, then Files, and drag the crate file onto
-  Deckie Booth.
+  Deckie.
 - Email it to yourself, and open the attachment on the iPad.
 
-Deckie Booth opens the file as it is.
+Deckie on the iPad opens the file as it is.
 
 ## How long it takes
 
@@ -95,10 +95,10 @@ changed.
 
 ## What does not work yet
 
-- **Song recognition.** Deckie Booth names the song that is playing by a sound fingerprint of each song, kept in
-  the crate file. When this page was written (Nov 14, 2026), Deckie Desk for Windows did not write one yet, so with
-  a crate file made on a PC you pick the song in the booth yourself. It is being built. Your version tells you
-  which it is: if the line under your songs says some "can't be recognised yet", those have no fingerprint.
+- **Song recognition, not yet tried from a PC.** Deckie on the iPad names the song that is playing by a sound
+  fingerprint of each song, kept in the crate file. Deckie Desk for Windows writes that fingerprint, but a crate
+  file made on a PC has not yet been tried on an iPad. If the line under your songs says some "can't be recognised
+  yet", those have no fingerprint.
 - **Key, on some songs.** Deckie reads each song's key itself, and takes a key your files or your DJ program
   already hold. Where Deckie is sure, it shows the key. Where it found the home note but not whether the song is
   major or minor, it shows the home note. Where it is not sure, it shows no key and tells you how many songs that
@@ -164,6 +164,6 @@ already read, in two folders called "Deckie Desk" and "Deckie" under your Window
   was written; the page is worded so that it stays true when that lands (the window itself says which songs
   cannot be recognised). Key: Deckie's own reader gives a key, a home note or "not sure" on every computer (D33,
   D36), so the earlier page's "no key yet" no longer holds.
-- **The iPad.** Deckie Booth opens both forms of a crate file, the Mac's package and the one file a PC writes
+- **The iPad.** Deckie on the iPad opens both forms of a crate file, the Mac's package and the one file a PC writes
   (`docs/architecture/crate-format.md`, "The single-file form"). Opening one exported by Deckie Desk for Windows on
   a real iPad has not been tried in this work.
