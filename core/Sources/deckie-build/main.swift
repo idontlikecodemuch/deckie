@@ -25,7 +25,7 @@ let usage = """
       deckie-build mp3-check <folder> [--jobs N]
 
     build: analyses every audio file below <folder> (mp3, flac, wav, aif, aiff, aifc, m4a, mp4, aac, wma, ogg, opus,
-      m4p), N at a time (default: the processor count, fewer if memory is short, as a job needs about 1 GB: \(defaultJobs)
+      m4p), N at a time (default: the processor count, fewer if memory is short, as a job is given 1.5 GB: \(defaultJobs)
       here), and writes the crate. Finished files are kept in <name>.deckiebuild beside the crate, so a second run
       skips files that are unchanged; --fresh starts over.
       Files that cannot be analysed are counted in the summary and listed in the crate's manifest (import_log).
