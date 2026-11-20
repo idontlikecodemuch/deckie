@@ -15,7 +15,9 @@ What is counted (a reading at time t shows what the listener knew from sound up 
   alternation   each clip as: keeps up (8 turns in 10 named in their turn); lags (the other song shown on 4 readings in
                 10 or more); holds one (one song on 8 named readings in 10); flips late (the rest).
   wrong         clips with any reading naming a song that is in none of the clip's pieces (after the song is gone,
-                the old name held over is not wrong; a new name of another song is).
+                the old name held over is not wrong; a new name of another song is). Counted apart: a song of the
+                playing song's remix release ("version"), and in "shared" clips the made song that shares the passage
+                ("made").
   jumps         within a song's turn, after it has been named, the name changing to anything else; per hour of such
                 sound. Long play reported on its own.
   misses        turns of 10 s or more whose song is never named in them.
@@ -61,7 +63,7 @@ def score_arm(truth, readings):
                 if p["from"] < time <= p["to"] + 1e-6:
                     return p
             return pieces[-1]
-        wrong = version = False
+        wrong = version = made = False
         named_once = set()
         for k, p in enumerate(pieces):
             inside = [r for r in rs if p["from"] < r[0] <= p["to"] + 1e-6]
@@ -70,7 +72,9 @@ def score_arm(truth, readings):
             # Names during this piece of songs other than the one playing and the one before it.
             for r in inside:
                 if r[2] and not same(r[2], p["song"]) and not (prev and same(r[2], prev)) and not any(same(r[2], s) for s in songs):
-                    if not is_song:
+                    if p.get("made") and r[2] == p["made"]:
+                        made = True
+                    elif not is_song:
                         c["names for no crate song"].append(1)
                     elif GROUP.get(r[2]) and GROUP.get(r[2]) == GROUP.get(p["song"]):
                         version = True
@@ -120,6 +124,8 @@ def score_arm(truth, readings):
                     c["clips naming in noise or an absent song"].append(1)
         c["wrong clips"].append(1 if wrong else 0)
         c["version clips"].append(1 if version else 0)
+        if any(p.get("made") for p in pieces):
+            c["made named"].append(1 if made else 0)
         # On show, from 5 s on.
         shows = defaultdict(int)
         for r in rs:
@@ -172,6 +178,8 @@ def summary(cells, label):
         row["on show"] = {k: sum(c["show " + k]) / tot for k in ("playing", "other", "nothing", "another")}
         row["wrong clips"] = int(sum(c["wrong clips"]))
         row["version clips"] = int(sum(c["version clips"]))
+        if c["made named"]:
+            row["made song named"] = int(sum(c["made named"]))
         named_hours = sum(c["named seconds"]) / 3600
         row["jumps"] = int(sum(c["jumps"])); row["named hours"] = named_hours
         row["misses"] = int(sum(c["misses"])); row["turns 10s+"] = len(c["turns 10s+"])
@@ -218,7 +226,7 @@ def main():
         beh = " / ".join(f"{b[k]:.0%}" for k in ("keeps up", "lags", "holds one", "flips late")) if b else "-"
         jumps = f"{r['jumps']} ({r['jumps'] / r['named hours']:.1f})" if r["named hours"] else str(r["jumps"])
         print(f"| {r['kind']} | {r['condition']} | {r['arm']} | {r['clips']} | {cut} | {by} | {nt} | {r['on show']['playing']:.0%} | {r['wrong clips']} | "
-              f"{r['version clips']} | {jumps} | {r['misses']}/{r['turns 10s+']} | {r['clips naming in noise or an absent song']} | {beh} | {r['ms median']:.0f} / {r['ms p95']:.0f} |")
+              f"{r['version clips']}{' + made ' + str(r['made song named']) if 'made song named' in r else ''} | {jumps} | {r['misses']}/{r['turns 10s+']} | {r['clips naming in noise or an absent song']} | {beh} | {r['ms median']:.0f} / {r['ms p95']:.0f} |")
 
 
 if __name__ == "__main__":
