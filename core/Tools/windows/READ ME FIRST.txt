@@ -7,7 +7,7 @@ Thank you for trying this. It is an early version, made for testing.
 What this is
 ------------
 
-Deckie is a DJ booth companion. Deckie Booth, on an iPad, sits beside your decks.
+Deckie is a DJ booth companion. Deckie, on an iPad, sits beside your decks.
 To do that it needs a crate file: everything Deckie knows about your songs
 (tempo, bars, key, style, where the vocals are), and never the songs themselves.
 
@@ -91,15 +91,15 @@ A crate file made by an earlier test ends in ".deckiecrate"; it still opens.
 
 Any of these work:
 
-  - A USB stick or SD card: export the crate file onto it, plug it into the
+  - A USB stick or SD card: copy the crate file onto it, plug it into the
     iPad, and open it from the Files app.
   - iCloud Drive: with iCloud for Windows, export the crate file into your
     iCloud Drive folder. It shows in Files on the iPad.
   - A cable: connect the iPad, open the Apple Devices app, choose the iPad,
-    then Files, and drag the crate file onto Deckie Booth.
+    then Files, and drag the crate file onto Deckie.
   - Email it to yourself, and open the attachment on the iPad.
 
-Deckie Booth opens the file as it is.
+Deckie on the iPad opens the file as it is.
 
 
 How long it takes
@@ -123,11 +123,10 @@ changed.
 What does not work yet
 ----------------------
 
-  - Song recognition. Deckie Booth names the song that is playing by a sound
-    fingerprint of each song, kept in the crate file. When this page was
-    written (Nov 14, 2026), Deckie Desk for Windows did not write one yet, so
-    with a crate file made on a PC you pick the song in the booth yourself.
-    It is being built. Your version tells you which it is: if the line under
+  - Song recognition, not yet tried from a PC. Deckie on the iPad names the
+    song that is playing by a sound fingerprint of each song, kept in the
+    crate file. Deckie Desk for Windows writes that fingerprint, but a crate
+    file made on a PC has not yet been tried on an iPad. If the line under
     your songs says some "can't be recognised yet", those have no fingerprint.
 
   - Key, on some songs. Deckie reads each song's key itself, and takes a key
