@@ -58,6 +58,9 @@ public struct RecognitionMatch: Sendable, Equatable {
     /// Other songs of the index that matched as well and hold the same sound (other files of this recording, or a
     /// long file that contains it): the same answer under other names.
     public var copies: [Int] = []
+    /// The share of the query's points an unrelated song would pair by chance (from the song's density of points):
+    /// what `score` is measured against.
+    public var chance: Double = 0
 
     /// The fader reading, in percent.
     public var speedPercent: Double { (tempoRatio - 1) * 100 }
@@ -107,6 +110,10 @@ public final class Recogniser {
     static let leastYardstick = 5.0
     var votes: [UInt8]
     var touched: [Int32] = []
+    /// For `check`: the query points (by their place in the query) that paired with the song in the last check's
+    /// final count, in time order.
+    public private(set) var lastPaired: [Int] = []
+    private var pairedNow: [Int] = []
 
     public init(index: RecognitionIndex, grid: SpeedGrid = SpeedGrid()) {
         self.index = index; self.grid = grid
@@ -143,8 +150,15 @@ public final class Recogniser {
         let n = min(query.count, query.frames.firstIndex { $0 >= UInt32(RecognitionIndex.maxQueryFrames) } ?? query.count)
         guard n >= 4, song >= 0, song < index.songCount else { return nil }
         let qt = (0..<n).map { Double(query.frames[$0]) }, qp = (0..<n).map { Double(query.pitch($0)) }
-        return verify(in: index, qt: qt, qp: qp, song: song, offset: offsetSeconds / index.landmark.frameSeconds,
-                      speed: tempoRatio, shift: log2(pitchRatio) * Landmarks.pitchUnitsPerOctave)
+        let m = verify(in: index, qt: qt, qp: qp, song: song, offset: offsetSeconds / index.landmark.frameSeconds,
+                       speed: tempoRatio, shift: log2(pitchRatio) * Landmarks.pitchUnitsPerOctave)
+        lastPaired = m == nil ? [] : pairedNow
+        return m
+    }
+
+    /// The number of the query's points a check or a match looks at (points past the longest query are left out).
+    public func usablePoints(_ query: Landmarks) -> Int {
+        min(query.count, query.frames.firstIndex { $0 >= UInt32(RecognitionIndex.maxQueryFrames) } ?? query.count)
     }
 
     /// The songs the index in memory proposes for a query, best first: those whose votes pile highest, before any
@@ -366,6 +380,7 @@ public final class Recogniser {
         var pairs: [(tq: Double, tr: Double, dp: Double)] = []
         for (round, (tt, pt)) in rounds.enumerated() {
             pairs.removeAll(keepingCapacity: true)
+            pairedNow.removeAll(keepingCapacity: true)
             ix.pointFrame.withUnsafeBufferPointer { pf in
                 ix.pointPitch.withUnsafeBufferPointer { pp in
                     for i in 0..<qt.count {
@@ -388,7 +403,7 @@ public final class Recogniser {
                             }
                             j += 1
                         }
-                        if bestJ >= 0 { pairs.append((qt[i], Double(pf[bestJ]) - start, qp[i] - Double(pp[bestJ]))) }
+                        if bestJ >= 0 { pairs.append((qt[i], Double(pf[bestJ]) - start, qp[i] - Double(pp[bestJ]))); pairedNow.append(i) }
                     }
                 }
             }
@@ -415,6 +430,6 @@ public final class Recogniser {
         let score = (Double(matched) - nq * chance) / (nq * chance * (1 - chance) + 1).squareRoot()
         return RecognitionMatch(songIndex: s, id: ix.ids[s], offsetSeconds: o * ix.landmark.frameSeconds,
                                 tempoRatio: v, pitchRatio: pow(2, sh / Landmarks.pitchUnitsPerOctave), matched: matched,
-                                queryPoints: qt.count, score: score, confidence: 0)
+                                queryPoints: qt.count, score: score, confidence: 0, chance: chance)
     }
 }
