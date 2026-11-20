@@ -269,7 +269,7 @@ enum RunLook {
     // the song card: the song being worked on (a turning disc for a music CD's), its step line and a thin bar within
     // the song; or several songs, a row each; and, quietly, a disc's next song while it is read ahead (desk.css --now-*)
     static let nowGap: CGFloat = 18, nowBarGap: CGFloat = 6, nowLineGap: CGFloat = 6
-    static let nowRowsGap: CGFloat = 4, nowRowGap: CGFloat = 14
+    static let nowRowsGap: CGFloat = 2, nowRowGap: CGFloat = 14
     static let nowDiscSymbol = "opticaldisc"
     static let nowDiscFont = Font.system(size: 48)
     static let nowAheadFont = Font.caption
