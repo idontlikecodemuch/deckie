@@ -16,6 +16,8 @@ import DeckieRecognition
 //       way the copies the index knows are counted: groups from the keys alone, and all groups.
 //       --memory-every N: every N readings of a clip, a line on standard error with the readings' time and the
 //       process's memory footprint (the system's own figure: the clean pages of a file opened in place left out).
+//   --listener main|fast|a|b|ab: which listener (main when left out); docs/research/faster-listening-proposals.md.
+//       --challenge-margin X, --challenge-window S (A), --cut-false-alarm S (B): its numbers, for choosing them.
 //   deckie-listen --index crate.dkx --list clips.tsv --out readings.tsv [--jobs N]
 //       many recordings: clips.tsv has a name, a raw file (16-bit mono), its first sample, its sample count and its
 //       rate on each line; every reading of every clip goes to readings.tsv with the clip's name in front.
@@ -147,7 +149,16 @@ if flags.contains("--build-only") { exit(0) }
 let chunkSeconds = Double(values["--chunk"] ?? "") ?? 0.1
 let memoryEvery = Int(values["--memory-every"] ?? "") ?? 0
 let settings: ListenSettings = {
+    // --listener main|fast|a|b|ab: the listeners of docs/research/faster-listening-proposals.md (main without it;
+    // --fast is the same as --listener fast). The settings below then change it further.
     var s = ListenSettings()
+    if let name = values["--listener"] {
+        guard let l = ListenSettings.Listener(rawValue: name) else { fail("--listener is one of \(ListenSettings.Listener.allCases.map(\.rawValue).joined(separator: ", "))") }
+        s = ListenSettings(l)
+    } else if flags.contains("--fast") { s = ListenSettings(.fast) }
+    if let v = values["--challenge-margin"].flatMap(Double.init) { s.challengeMargin = v }
+    if let v = values["--challenge-window"].flatMap(Double.init) { s.challengeWindow = v }
+    if let v = values["--cut-false-alarm"].flatMap(Double.init) { s.cutFalseAlarmSeconds = v }
     if let v = values["--window"].flatMap(Double.init) { s.window = v }
     if let v = values["--sure"].flatMap(Double.init) { s.sure = v }
     if let v = values["--fair"].flatMap(Double.init) { s.fair = v }
