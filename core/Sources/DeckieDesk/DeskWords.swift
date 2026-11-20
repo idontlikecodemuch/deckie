@@ -71,7 +71,7 @@ public enum DeskWords {
         "driveSize": "{size}",
         "driveBigNote": "Big drive: you choose a folder in it",
         "chooseCDTitle": "Add a CD",
-        "chooseCDBody": "The CDs in a drive now. Desk reads one as it is.",
+        "chooseCDBody": "Pick the CD to read. Desk reads it as it is, song by song, and keeps none of the music.",
         "noCDIn": "There's no CD in a drive. Put one in.",
         "dataCDItem": "{name}  ·  data CD",
         "sizeMB": "{n} MB",
@@ -122,6 +122,24 @@ public enum DeskWords {
         "timeLeft.one": "About 1 minute left",
         "timeLeft.other": "About {n} minutes left",
         "stageReading": "Reading tempo, key and bars",
+        // new (Nov 20, 2026): the song now, the waiting line of a music CD's run (a turning disc and one plain line).
+        // `nowStage.<stage>` by the analysis stage the engine says (`RunNow.step`); `{stage}` in nowStageOf is one of
+        // them, so they start in lower case.
+        "nowReadingDisc": "Reading song {number} of {total} from the disc",
+        "nowReading": "Reading the next song",
+        "nowStageOf": "Song {number} of {total}: {stage}",
+        "nowStageAlone": "This song: {stage}",
+        "nowStage.hash": "reading it through",
+        "nowStage.decode": "opening up the sound",
+        "nowStage.resample": "opening up the sound",
+        "nowStage.beatthis": "finding the beat",
+        "nowStage.key": "working out the key",
+        "nowStage.spectral": "finding the bars",
+        "nowStage.structure": "finding where the sections change",
+        "nowStage.loudness": "measuring how loud each bar is",
+        "nowStage.vocal": "listening for vocals",
+        "nowStage.windows": "finding where to mix in and out",
+        "nowStage.other": "working out tempo and key",
         "stageFinishing": "Making fingerprints and finding copies",
         "stageSaving": "Saving",
         "lineStarted.one": "{n} audio file found; {unchanged} unchanged since last time; {queued} to read.",
@@ -480,11 +498,15 @@ public enum DeskWords {
 
         // naming a song (research AA, route A; D30, D33). All new, placeholders until the copy audit.
         // new: a music CD in Add music, and while it is read.
-        "musicCDItem": "{name}  ·  music CD in {drive}",
+        // A music CD in the list: its own title (CD-Text, or what Desk learned of it before), else "Music CD"; then
+        // its songs and length, once.
+        "musicCDRow.one": "{title}, 1 song, {length}",
+        "musicCDRow.other": "{title}, {n} songs, {length}",
+        "musicCDNoTitle": "Music CD",
         "musicCDPlaceholder.one": "Music CD, 1 song, {length}",
         "musicCDPlaceholder.other": "Music CD, {n} songs, {length}",
-        "askDiscNameTitle": "What's written on this disc?",
-        "askDiscNameBody": "Desk names it after that. Reading carries on meanwhile, and you can change the name any time.",
+        "askDiscNameTitle": "What's written on the disc?",
+        "askDiscNameBody": "Type what's handwritten or printed on its label, such as \"Friday night\". That names the disc, not its songs. Reading carries on meanwhile, and you can change it any time.",
         "lineDiscDamaged": "Song {number}: part of it couldn't be read off the disc and was read as silence",
         "putDiscBack": "Put {read} back in the drive to carry on.",
         // new: the finished screen (letter AA, 3.2).
