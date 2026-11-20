@@ -317,16 +317,14 @@
       ni.textContent = n("filesDidntGoIn", f.notIn);
     }
     /// The tempos figure in words, as RunFigures.temposText says it on the Mac: one tempo once ("1 song, 118 BPM"); a
-    /// range alone when no tempo is shared; else the tempo most share, held within the range.
+    /// range alone when no tempo is shared; else the tempo most share (the engine counts it), held within the range.
     function temposText(f) {
       const withTempo = f.songs - f.noTempo;
       if (!(withTempo > 0) || f.slowest == null) return t("figTemposNone");
       const low = Math.round(f.slowest), high = Math.round(f.fastest), songs = n("songs", withTempo);
       if (withTempo === 1 || low === high) return t("figTemposOne", { songs, bpm: low });
-      let top = 0; f.tempos.forEach((c, i) => { if (c > f.tempos[top]) top = i; });
-      if (f.tempos[top] < 2) return t("figTemposRange", { songs, low, high });
-      const most = Math.min(high, Math.max(low, Math.round(f.tempoLow + top * f.tempoStep + f.tempoStep / 2)));
-      return t("figTemposText", { songs, low, high, mode: most });
+      if (f.mostTempo == null) return t("figTemposRange", { songs, low, high });
+      return t("figTemposText", { songs, low, high, mode: Math.min(high, Math.max(low, f.mostTempo)) });
     }
     // The wheel of the twelve home notes round the circle of fifths: the outer ring major, the inner minor, a dot inside
     // for a song whose home note alone Desk found. A key that has turned up is filled, brighter the more songs it has.
