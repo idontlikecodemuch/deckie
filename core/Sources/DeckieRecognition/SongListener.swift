@@ -172,6 +172,8 @@ public final class SongListener {
     /// The last search's answer that was fair but not sure, waiting for a second to agree with it.
     private var pending: (song: Int, intercept: Double, tempo: Double)?
     public private(set) var latest: ListenReading?
+    /// B, for measuring: each alarm raised since the last reset, as (the time it was raised, the moment it names).
+    public private(set) var alarms: [(raised: Double, moment: Double)] = []
 
     public init(index: RecognitionIndex, settings: ListenSettings = ListenSettings()) {
         self.index = index; self.settings = settings
@@ -191,7 +193,7 @@ public final class SongListener {
     public func reset() {
         sound.removeAll(keepingCapacity: true); heard = 0; nextReading = 0
         following = nil; pending = nil; misses = 0; sinceSearch = 0; latest = nil
-        missedSince = nil; watch = Watch(); floor = nil
+        missedSince = nil; watch = Watch(); floor = nil; alarms = []
     }
 
     /// Takes more sound (interleaved if more than one channel) and returns a reading for each second completed.
@@ -362,7 +364,11 @@ public final class SongListener {
         var paired = [Bool](repeating: false, count: n)
         if m != nil { for i in recogniser.lastPaired where i < n { paired[i] = true } }
         if let m { watch.chance = m.chance }
-        let fresh = (0..<n).filter { from + Double(recent.frames[$0]) * fs > watch.seenTo }
+        // A point within the fingerprint's reach in time of the window's end was chosen without the sound after it:
+        // it is often not the point the song has there, so it would count as unpaired. Those are left for the next
+        // reading, when the sound after them has been heard.
+        let edge = now - Double(queryConfig.timeReach) * fs
+        let fresh = (0..<n).filter { let t = from + Double(recent.frames[$0]) * fs; return t > watch.seenTo && t <= edge }
         if watch.seenTo.isFinite { watch.points += fresh.count; watch.seconds += settings.step }
         let perSecond = watch.seconds >= 3 ? Double(watch.points) / watch.seconds : 50
         let bar = log(settings.cutFalseAlarmSeconds * max(1, perSecond))
@@ -372,12 +378,12 @@ public final class SongListener {
             let hit = log(p0 / p1), miss = log((1 - p0) / (1 - p1))
             for i in fresh {
                 let t = from + Double(recent.frames[i]) * fs
+                if watch.sum == 0 { watch.lastZero = t }    // a change, if one is found, begins at this point or after
                 watch.sum = max(0, watch.sum + (paired[i] ? hit : miss))
-                if watch.sum == 0 { watch.lastZero = t }
-                if watch.sum > bar { watch.cut = watch.lastZero; break }
+                if watch.sum > bar { watch.cut = watch.lastZero; alarms.append((now, watch.lastZero)); break }
             }
         }
-        watch.seenTo = fresh.last.map { from + Double(recent.frames[$0]) * fs } ?? now
+        if let last = fresh.last { watch.seenTo = from + Double(recent.frames[last]) * fs }
         // The song's own rate, from readings it passes while the watch does not doubt it.
         if let m, m.score >= settings.holdScore, watch.cut == nil, watch.sum < 0.25 * bar, m.queryPoints > 0 {
             watch.rates.append(Double(m.matched) / Double(m.queryPoints))

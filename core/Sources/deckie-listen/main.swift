@@ -197,6 +197,8 @@ if let list = values["--list"] {
     let lock = NSLock()
     nonisolated(unsafe) var next = 0
     nonisolated(unsafe) var rows = [String](repeating: "", count: clips.count)
+    // --alarms-out FILE: B's alarms per clip (clip, time raised, the moment named), for measuring.
+    nonisolated(unsafe) var alarmRows = [String](repeating: "", count: clips.count)
     let group = DispatchGroup()
     for _ in 0..<max(1, jobs) {
         group.enter()
@@ -218,7 +220,8 @@ if let list = values["--list"] {
                                                                     Double(footprint() ?? 0) / 1e6, Double(listener.workingBytes) / 1e6).utf8))
                     }
                 }
-                lock.lock(); rows[i] = mine; lock.unlock()
+                let alarms = listener.alarms.map { String(format: "%@\t%.2f\t%.2f\n", c[0], $0.raised, $0.moment) }.joined()
+                lock.lock(); rows[i] = mine; alarmRows[i] = alarms; lock.unlock()
             }
             group.leave()
         }
@@ -227,6 +230,7 @@ if let list = values["--list"] {
     }
     group.wait()
     guard (try? rows.joined().write(toFile: out, atomically: true, encoding: .utf8)) != nil else { fail("cannot write \(out)") }
+    if let path = values["--alarms-out"] { try? alarmRows.joined().write(toFile: path, atomically: true, encoding: .utf8) }
     FileHandle.standardError.write(Data(String(format: "footprint at the end %.0f MB\n", Double(footprint() ?? 0) / 1e6).utf8))
 } else if let audio = values["--audio"] {
     var samples: [Float]
