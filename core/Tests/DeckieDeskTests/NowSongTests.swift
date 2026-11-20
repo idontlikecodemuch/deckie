@@ -96,6 +96,29 @@ import DeckieBuild
         #expect(RunNow.aheadLine == "Reading the next song from the disc")
     }
 
+    /// A wave as bars: stretched to the song's own range so peaks and valleys show; a level song at full height; one bar
+    /// a bar of music for a short song; nothing with no wave.
+    @Test func aWaveBecomesBarsStretchedToItsOwnRange() {
+        // A real song's shape (the demo crate's "Sweet They": loud body, quiet tail), loudest at the top, the quiet
+        // tail at the floor, the body's dips clearly below its peaks.
+        var wave = Array(repeating: 64, count: 64)
+        for i in stride(from: 0, to: 56, by: 8) { wave[i] = 50 }
+        for i in 58..<64 { wave[i] = 13 }
+        let h = RunSong.barHeights(wave, bars: 112, rangeMin: 8, floor: 0.12)
+        #expect(h.count == 64)
+        #expect(abs((h.max() ?? 0) - 1) < 1e-9)
+        #expect(abs(h[63] - 0.12) < 1e-9 && h[0] < 0.5)
+        // Without the tenth-quietest rule the silent tail would have squashed the body into the top of the room.
+        #expect(h[1] - h[0] > 0.5)
+        // A level song stands at full height.
+        let level = RunSong.barHeights(Array(repeating: 44, count: 64), bars: 20, rangeMin: 8, floor: 0.12)
+        #expect(level.count == 20 && level.allSatisfy { abs($0 - 1) < 1e-9 })
+        // A short song: one bar a bar of music, each its stretch's loudest.
+        let short = RunSong.barHeights((0..<64).map { $0 }, bars: 8, rangeMin: 8, floor: 0)
+        #expect(short.count == 8 && short.last == 1 && short == short.sorted())
+        #expect(RunSong.barHeights([], bars: 10, rangeMin: 8, floor: 0.12).isEmpty)
+    }
+
     /// The protocol's additions: `working` and `ahead` beside `now`, with each song's name; what changed is sent at
     /// once (songs, steps, names, the read ahead starting or ending), not how much is read.
     @Test func theProtocolCarriesTheSongsWorkedOnAndTheReadAhead() {

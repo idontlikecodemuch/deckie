@@ -136,7 +136,7 @@ struct EmptyCrateView: View {
                 Button(Words.withRekordbox) { model.askRekordbox() }
                 Button(Words.importCrateFile) { model.askImport() }
             }
-            .font(Look.First.importFont).controlSize(.large)
+            .font(Look.First.importFont)
             Text(Words.dropHere).foregroundStyle(.tertiary)
         }.padding(Look.Space.firstScreenPadding)
     }
@@ -235,13 +235,16 @@ struct RunView: View {
     }
 }
 
-/// The song card's place: the songs being worked on, or the last song in when none is (RunWatch.showNow).
+/// The song card's place: the songs being worked on (RunWatch.showNow), and under it, always, the last song in.
 struct SongCardSlot: View {
     @EnvironmentObject var model: DeskModel
     @ObservedObject var watch: RunWatch
     var body: some View {
-        if watch.showNow { NowCard(watch: watch, total: model.runTotal, disc: model.runIsMusicCD) }
-        else { StageView(watch: watch) }
+        VStack(alignment: .leading, spacing: RunLook.gap) {
+            if watch.showNow { NowCard(watch: watch, total: model.runTotal, disc: model.runIsMusicCD) }
+            // Always: the last song in, with its facts and its moving wave.
+            StageView(watch: watch)
+        }
     }
 }
 

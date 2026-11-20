@@ -42,31 +42,47 @@ struct AddWayButtons: View {
         HStack(spacing: prominent ? Look.First.waysGap : Look.Add.waysGap) {
             ForEach(DeskAddMusic.ways, id: \.id) { w in
                 if prominent {
-                    // The first screen's: big (Look.First), and at XL a tile with its symbol above its word.
+                    // The first screen's: a tile, the symbol the main thing (Look.First).
                     Button { model.addWay(w.id) } label: {
-                        Group {
-                            if Look.First.tiles {
-                                VStack(spacing: Look.First.wayGap) {
-                                    Image(systemName: w.macSymbol).font(Look.First.wayIconFont)
-                                    Text(w.title)
-                                }.frame(minWidth: Look.First.tileMinWidth)
-                            } else {
-                                HStack(spacing: Look.First.wayGap) {
-                                    Image(systemName: w.macSymbol).font(Look.First.wayIconFont)
-                                    Text(w.title)
-                                }
-                            }
+                        VStack(spacing: Look.First.wayGap) {
+                            Image(systemName: w.macSymbol).font(Look.First.wayIconFont).foregroundStyle(.tint)
+                            Text(w.title).font(Look.First.wayFont)
                         }
-                        .font(Look.First.wayFont)
-                        .padding(.horizontal, Look.First.wayPadH).padding(.vertical, Look.First.wayPadV)
                     }
-                    .buttonStyle(.borderedProminent).controlSize(.large).help(w.helpText)
+                    .buttonStyle(FirstWayStyle()).help(w.helpText)
                 } else {
                     Button { model.addWay(w.id) } label: { Label(w.title, systemImage: w.macSymbol) }.help(w.helpText)
                 }
             }
         }
         .disabled(model.running || model.cannotRead)
+    }
+}
+
+/// A first-screen tile: quiet at rest (a soft tint or an outline, the symbol in the accent, the word secondary), the
+/// full accent with dark symbol and word when pointed at, focused or pressed. Still reads as a button with no pointer.
+struct FirstWayStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View { Tile(configuration: configuration) }
+
+    struct Tile: View {
+        let configuration: ButtonStyleConfiguration
+        @State private var hover = false
+        @Environment(\.isFocused) private var focused
+        @Environment(\.isEnabled) private var enabled
+        var body: some View {
+            let on = enabled && (hover || focused || configuration.isPressed)
+            configuration.label
+                .foregroundStyle(on ? Look.First.onInk : Look.First.wordAtRest)
+                .symbolRenderingMode(.monochrome).tint(on ? Look.First.onInk : Look.First.drawingAtRest)
+                .padding(.horizontal, Look.First.wayPadH).padding(.top, Look.First.wayPadTop).padding(.bottom, Look.First.wayPadBottom)
+                .frame(minWidth: Look.First.tileMinWidth)
+                .background(on ? Look.First.on : Look.First.tileFill, in: RoundedRectangle(cornerRadius: Look.First.tileCorner))
+                .overlay(RoundedRectangle(cornerRadius: Look.First.tileCorner).stroke(on ? Look.First.on : Look.First.tileEdge, lineWidth: Look.First.tileLine))
+                .contentShape(RoundedRectangle(cornerRadius: Look.First.tileCorner))
+                .animation(.easeOut(duration: Look.First.fade), value: on)
+                .onHover { hover = $0 }
+                .opacity(enabled ? 1 : Look.First.disabledOpacity)
+        }
     }
 }
 

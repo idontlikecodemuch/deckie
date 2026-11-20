@@ -253,8 +253,8 @@
   /// the name Desk has for it, its step line ("Song 2 of 6: finding the beat") and a thin bar within the song (the
   /// share read off the disc, then its steps done), with a turning disc. Several at once (a folder's jobs): "Working on
   /// 4 songs" and a row a song with its step. Under either, quietly, the next song of a disc while it is read ahead.
-  /// Only what the engine said is true: when nothing is being worked on, the stage shows the last song in instead
-  /// (after --t-now-linger, so the moment between two songs does not flicker).
+  /// Only what the engine said is true: the card shows while songs are worked on (staying --t-now-linger after, so
+  /// the moment between two songs does not flicker). Under it, always, the stage: the last song in, with its facts.
   const NOW_STEPS = ["hash", "decode", "resample", "beatthis", "key", "spectral", "structure", "loudness", "vocal", "windows"];
   const nowReading = (x) => x.step === "started" || x.step === "reading";
   /// The song's name as RunNow.name gives it: the name Desk has, else its file name without the ending.
@@ -286,12 +286,11 @@
       const linger = num("--t-now-linger");
       const left = linger - (Date.now() - nowSeenAt);
       if (run && run.stage === "reading" && !card.hidden && left > 0) { nowTimer = setTimeout(drawNow, left); return; }
-      const was = card.hidden;
-      card.hidden = true; stage.hidden = false;
-      if (!was) screen.stageShown();
+      card.hidden = true; stage.classList.remove("now-shown");
       return;
     }
-    card.hidden = false; stage.hidden = true;
+    // The card on top; the last song in stays under it (its empty frame, quietly, until the first song is in).
+    card.hidden = false; stage.classList.add("now-shown");
     // One at a time when the engine names the song now (or names only it, an engine before `working`).
     const one = !!run.now || !(run.working && run.working.length);
     $("now-one").hidden = !one;

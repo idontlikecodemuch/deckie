@@ -195,31 +195,27 @@
   --crate-head-gap: 6px;
   --way-icon: 16px;                       /* a way's drawing on its button and menu item */
   --way-gap: 6px;                         /* between a way's drawing and its word */
-  /* The first screen's crate icon and its three ways (Add drive, Add CD, Add folder), big; Import crate file beside
-     them, secondary. Three sizes, M, L and XL (about 1.25, 1.6 and 2 times the earlier 16px icons, 14px words and
-     64px crate): the eight lines under "the size shown" pick one; change -l to -m or -xl in all eight to switch. At XL
-     each way is a tile, its drawing above its word. */
-  --first-crate-icon-m: 80px;  --first-crate-icon-l: 104px; --first-crate-icon-xl: 128px;
-  --first-way-icon-m: 20px;    --first-way-icon-l: 26px;    --first-way-icon-xl: 40px;
-  --first-way-fs-m: 17px;      --first-way-fs-l: 22px;      --first-way-fs-xl: 26px;
-  --first-way-pad-m: 11px 25px; --first-way-pad-l: 15px 32px; --first-way-pad-xl: 22px 30px;
-  --first-way-gap-m: 8px;      --first-way-gap-l: 10px;     --first-way-gap-xl: 12px;     /* drawing to word */
-  --first-ways-gap-m: 10px;    --first-ways-gap-l: 14px;    --first-ways-gap-xl: 16px;    /* between the ways */
-  --first-way-flow-m: row;     --first-way-flow-l: row;     --first-way-flow-xl: column;  /* drawing beside or above */
-  --first-way-min-w-m: 0px;    --first-way-min-w-l: 0px;    --first-way-min-w-xl: 168px;  /* a tile's least width */
-  --first-way-r-m: var(--r-pill); --first-way-r-l: var(--r-pill); --first-way-r-xl: var(--r-card);
-  --first-import-fs-m: 15px;   --first-import-fs-l: 16px;   --first-import-fs-xl: 17px;   /* Import crate file */
-  /* the size shown */
-  --first-crate-icon: var(--first-crate-icon-l);
-  --first-way-icon: var(--first-way-icon-l);
-  --first-way-fs: var(--first-way-fs-l);
-  --first-way-pad: var(--first-way-pad-l);
-  --first-way-gap: var(--first-way-gap-l);
-  --first-ways-gap: var(--first-ways-gap-l);
-  --first-way-flow: var(--first-way-flow-l);
-  --first-way-min-w: var(--first-way-min-w-l);
-  --first-way-r: var(--first-way-r-l);
-  --first-import-fs: var(--first-import-fs-l);
+  /* The first screen's crate icon and its three ways (Add drive, Add CD, Add folder) as tiles: the drawing is the main
+     thing, the word small under it. Quiet at rest, the full accent with dark drawing and word when pointed at, focused
+     or pressed (a short colour fade only). Two looks: (a) a soft tint of the accent, (b) an outline with no fill; the
+     four lines under "the look shown" pick one (change -a to -b in all four). Import crate file stays secondary. At
+     rest: the word (--mut) is 6.7:1 on the tint and 7.9:1 on the page; the drawing (--acc) 6.6:1; pointed at, the
+     ink on the accent 7.4:1. */
+  --first-crate-icon: 150px;
+  --first-way-icon: 112px;                /* about 2.8 times the earlier XL tile's 40px */
+  --first-way-fs: 13px; --fw-first-way: 500;
+  --first-way-pad: 20px 22px 16px; --first-way-gap: 8px; --first-ways-gap: 16px;
+  --first-way-min-w: 176px; --first-way-r: var(--r-card);
+  --first-way-line: 1.5px;
+  --first-way-bg-a: rgba(180, 144, 255, 0.12); --first-way-edge-a: transparent;
+  --first-way-bg-b: transparent;               --first-way-edge-b: rgba(180, 144, 255, 0.55);
+  --first-way-word: var(--mut); --first-way-drawing: var(--acc);
+  --first-way-on: var(--acc); --first-way-on-ink: var(--ink);   /* pointed at, focused, pressed */
+  --t-first-way: 120ms;                   /* the colour fade */
+  --first-import-fs: 13px;                /* Import crate file */
+  /* the look shown */
+  --first-way-bg: var(--first-way-bg-a);
+  --first-way-edge: var(--first-way-edge-a);
   --pick-icon: 22px;
   --pick-gap: 12px; --pick-pad: 12px 14px; --pick-rows-gap: 8px; --pick-line: 1px; --fw-pick-name: 600; --pick-list-above: 10px;
   --name-row-gap: 8px; --name-field-w: 260px;
@@ -237,6 +233,8 @@
   --now-rows-gap: 4px; --now-row-gap: 14px;  /* several songs: between rows, and a row's name and its step */
   --fs-now: 15px; --fw-now: 600;
   --now-shine: var(--acc);
+  --stage-empty-opacity: 0.55;            /* the stage before its first song: an empty frame, quieter */
+  --now-card-min-h: 112px;
   --t-now-linger: 900ms;                  /* the card stays this long when no song is worked on, before the stage */
   --progress-h: 10px;
   --waiting-w: 30%; --waiting-from: -30%; --waiting-to: 100%;  /* the bar that waits */
@@ -303,10 +301,23 @@
   --fs-small: 12.5px; --fs-big: 26px; --fs-stage: 17px; --fs-label: 11.5px; --fs-note: 13px; --fs-head: 14px;
   --stage-gap: 20px; --fact-gap: 6px 22px; --fig-gap: 10px; --fig-pad: 12px 14px; --r-wall: 8px;
   --inner-gap: 8px; --inner-gap-s: 6px; --inner-gap-xs: 4px;
-  --stage-h: 100px;                       /* the song on stage: its wave's height */
+  --stage-h: 140px;                       /* the song on stage: its wave's height */
   --stage-wave-w: 46%;
   --fig-h: 58px;                          /* a figure's picture */
-  --wall-h: 220px;                        /* the wall of waves */
+  /* A song's wave, wherever it is drawn (the song info card, the walls): separate bars standing on a line, one a bar of
+     music for a song with fewer than 64 bars, else one a stretch of the wave's 64; each song stretched to its own
+     range (RunSong.barHeights): its tenth-quietest value in a hundred (and anything quieter) at --wave-bar-floor of the room, its loudest at the top; values within
+     --wave-range-min (of the 0 to 99 scale, about 2 LU) of each other count as that range below the loudest. */
+  --wave-bar-floor: 0.12; --wave-range-min: 8;
+  --wave-bar-gap-share: 0.3;              /* of each bar's slot left empty between bars */
+  --wave-quiet-share: 0.35;               /* bars under this share of the room above the floor take --wave-quiet */
+  /* the walls: a row a song, its name always shown at the left, its bars beside it; the rows scroll in the card */
+  --wall-row-h: 44px; --wall-row-gap: 6px; --wall-row-pad: 6;  /* a row's height, between rows, above and below its bars */
+  --wall-max-h: 440px;                    /* the most the rows take before they scroll */
+  --wall-name-share: 0.32; --wall-name-max-w: 260; --wall-name-gap: 14;  /* the name's column: share, most px, gap */
+  --wall-row-font: 500 13px var(--body);
+  --wall-row-name: var(--mut); --wall-row-name-new: var(--tx);
+  --wall-row-bg: rgba(255, 255, 255, 0.025); --wall-row-pick: rgba(255, 192, 64, 0.08);
   --wave: rgba(180, 144, 255, 0.82);      /* a song's wave */
   --wave-quiet: rgba(180, 144, 255, 0.28);
   --wave-new: #ece4ff;                    /* the song that joined last */
@@ -314,9 +325,8 @@
   --wave-none: rgba(255, 255, 255, 0.10); /* a song with no beat grid: a line, no wave */
   --wave-tick: rgba(255, 255, 255, 0.22); /* a mark every 8 bars */
   --wave-tick-strong: rgba(255, 255, 255, 0.45); /* every 32 */
-  --wave-curve: 2.2;                      /* how loudness becomes height, the same for every song */
   --stage-mark-h: 0.12;                   /* the song on stage: the share of its height under the wave for the bar marks */
-  --stage-wave-room: 0.48;                /* half the wave's height at full loudness, as a share of the wave's height */
+  --stage-wave-room: 0.94;                /* the tallest bar at full swell, as a share of the wave's height */
   --stage-wave-min: 1;                    /* px: the thinnest half-wave drawn */
   --stage-line-h: 1;                      /* px: the line a song with no wave, and the wave's middle, is drawn as */
   --stage-tick-w: 1;                      /* px (times the screen's scale): a bar mark, and the cut every 8 bars */
@@ -360,15 +370,6 @@
   --wheel-cell-gap: 0.03;                 /* radians trimmed from each side of a key's cell */
   --wheel-fill-min: 0.35; --wheel-fill-range: 0.65;  /* a key's cell: opacity with one song, plus this much at the most */
   --wheel-dot-base: 1.8; --wheel-dot-max: 5;     /* a home-note dot: its radius, plus the square root of its songs, up to this */
-  --wall-wave-min: 6;                     /* px a line needs to be drawn as a wave; thinner lines are drawn as brightness */
-  --wall-col-min: 150;                    /* px the narrowest column of waves */
-  --wall-dense-col-min: 18;               /* px the narrowest column of brightness lines */
-  --wall-gap: 6; --wall-dense-gap: 2;     /* px between columns */
-  --wall-dense-line: 3;                   /* px a brightness line aims for, before columns run out */
-  --wall-wave-room: 0.46;                 /* half a wave's height at full loudness, as a share of its line */
-  --wall-wave-min-half: 0.5;              /* px: the thinnest half-wave on the wall */
-  --wall-dense-dim: 0.25; --wall-dense-bright: 0.75;  /* a brightness line: its least, and how much loudness adds */
-  --wall-dense-quiet: 0.5;                /* below this loudness a brightness line takes --wave-quiet */
   --t-draw: 900ms;                        /* a wave sweeping in */
   --t-hold: 3200ms;                       /* a song on stage, with nothing waiting */
   --t-hold-min: 300ms;                    /* a song on stage, with many waiting */
@@ -474,7 +475,7 @@ main { flex: 1; min-height: 0; display: flex; flex-direction: column; }
 .saying.out { opacity: 0; }
 .saying.moment { color: var(--tx); font-weight: var(--fw-saying-moment); }
 .leave { font-size: var(--fs-small); margin-top: var(--leave-pull); }
-.now-card { min-height: calc(var(--stage-h) + var(--stage-name-room)); display: flex; flex-direction: column; justify-content: center; gap: var(--now-bar-gap); }
+.now-card { min-height: var(--now-card-min-h); display: flex; flex-direction: column; justify-content: center; gap: var(--now-bar-gap); }
 .now-card[hidden], .now-card [hidden], .stage[hidden] { display: none; }
 .now-one { display: flex; align-items: center; gap: var(--now-gap); }
 .now-disc { flex: none; width: var(--now-disc); height: var(--now-disc); color: var(--mut); }
@@ -503,6 +504,9 @@ main { flex: 1; min-height: 0; display: flex; flex-direction: column; }
 .stage-dl dd.quiet { color: var(--mut); font-weight: var(--fw-stage-quiet); }
 .stage-empty { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; }
 .stage.has-song .stage-empty { display: none; }
+/* the song card above it: before the first song is in, the stage is a quiet empty frame, with no words of its own */
+.stage.now-shown:not(.has-song) .stage-empty { visibility: hidden; }
+.stage:not(.has-song) { opacity: var(--stage-empty-opacity); }
 .stage:not(.has-song) .stage-wave, .stage:not(.has-song) .stage-facts { visibility: hidden; }
 .figures { display: grid; grid-template-columns: var(--figures-cols); gap: var(--fig-gap); }
 .fig { padding: var(--fig-pad); display: flex; flex-direction: column; gap: var(--inner-gap-s); min-width: 0; }
@@ -519,7 +523,8 @@ main { flex: 1; min-height: 0; display: flex; flex-direction: column; }
 .wall-head { display: flex; align-items: baseline; gap: var(--fig-gap); min-width: 0; }
 .wall-head h2 { font-size: var(--fs-head); flex: none; }
 .wall-name { font-size: var(--fs-note); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
-.wall { width: 100%; height: var(--wall-h); display: block; border-radius: var(--r-wall); cursor: crosshair; }
+.wall-scroll { position: relative; overflow-y: auto; overscroll-behavior: contain; border-radius: var(--r-wall); }
+.wall { width: 100%; display: block; position: sticky; top: 0; border-radius: var(--r-wall); cursor: crosshair; }
 .wall:focus-visible { outline: var(--focus-ring) solid var(--acc); outline-offset: var(--wall-focus-offset); }
 .run-list summary { cursor: pointer; color: var(--mut); font-size: var(--fs-note); padding: var(--run-list-pad); }
 .run-list .log { max-height: var(--run-list-max-h); margin-top: var(--run-list-gap); }
@@ -716,11 +721,18 @@ dialog.wide.lookup { max-width: min(var(--lookup-wide-max-w), var(--lookup-wide-
 .crate-icon { width: var(--crate-icon); height: var(--crate-icon); color: var(--acc); stroke-width: var(--icon-line); flex: none; }
 .crate-name { font-weight: var(--fw-crate-button); font-size: var(--fs-crate-button); background: none; padding: var(--space-crate-button); }
 .crate-name:hover:not(:disabled) { background: var(--control); }
-.icon.crate-big { width: var(--first-crate-icon); height: var(--first-crate-icon); }
-#first-ways { gap: var(--first-ways-gap); }
-#first-ways .way { font-size: var(--first-way-fs); padding: var(--first-way-pad); gap: var(--first-way-gap); flex-direction: var(--first-way-flow);
-                   min-width: var(--first-way-min-w); justify-content: center; border-radius: var(--first-way-r); }
-#first-ways .way-icon { width: var(--first-way-icon); height: var(--first-way-icon); }
+.icon.crate-big { width: var(--first-crate-icon); height: var(--first-crate-icon); flex: none; }
+#first-ways { gap: var(--first-ways-gap); justify-content: center; }
+#first-ways .way { font-size: var(--first-way-fs); font-weight: var(--fw-first-way); padding: var(--first-way-pad); gap: var(--first-way-gap);
+                   flex-direction: column; min-width: var(--first-way-min-w); justify-content: center; border-radius: var(--first-way-r);
+                   background: var(--first-way-bg); color: var(--first-way-word); border: var(--first-way-line) solid var(--first-way-edge);
+                   transition: background-color var(--t-first-way), color var(--t-first-way), border-color var(--t-first-way); }
+#first-ways .way-icon { width: var(--first-way-icon); height: var(--first-way-icon); color: var(--first-way-drawing);
+                        transition: color var(--t-first-way); }
+#first-ways .way:hover:not(:disabled), #first-ways .way:focus-visible, #first-ways .way:active:not(:disabled), #first-ways .way.on {
+  background: var(--first-way-on); color: var(--first-way-on-ink); border-color: var(--first-way-on); }
+#first-ways .way:hover:not(:disabled) .way-icon, #first-ways .way:focus-visible .way-icon, #first-ways .way:active:not(:disabled) .way-icon, #first-ways .way.on .way-icon {
+  color: var(--first-way-on-ink); }
 #first-import { font-size: var(--first-import-fs); }
 .ways { display: inline-flex; flex-wrap: wrap; gap: var(--actions-gap); }
 .way, .menu [role=menuitem] { display: inline-flex; align-items: center; gap: var(--way-gap); }
