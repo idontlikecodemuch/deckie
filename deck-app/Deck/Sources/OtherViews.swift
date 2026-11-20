@@ -26,9 +26,13 @@ struct CrateTabView: View {
         /// Whether the songs carry a player's number (on a source) or not (in a folder).
         let numbered: Bool
         let groups: [DiscFolder]
-        /// A folder's heading: "Stick 3 / House /", or for a folder with no source, "House /".
+        /// A folder's heading: "Stick 3 / House /", or for a folder with no source, "House /" ("/" at the top, and
+        /// nothing for the top when it is the only folder: the demo crate's songs sit there, with nothing to tell
+        /// apart).
         func heading(_ folder: String) -> String {
-            numbered ? (folder.isEmpty ? Words.sourceTop(name) : Words.sourceFolder(name, folder)) : (folder.isEmpty ? Words.folderTop : Words.folderOnly(folder))
+            if numbered { return folder.isEmpty ? Words.sourceTop(name) : Words.sourceFolder(name, folder) }
+            if folder.isEmpty { return groups.count == 1 ? "" : Words.folderTop }
+            return Words.folderOnly(folder)
         }
     }
 
@@ -144,7 +148,7 @@ struct CrateTabView: View {
         VStack(alignment: .leading, spacing: 0) {
             ForEach(segs.indices, id: \.self) { si in
                 let f = segs[si]
-                Text(s.heading(f.folder) + ((f.rows.first?.index ?? 0) > 0 ? Words.continued : "")).font(Look.Crate.denseFolderFont).foregroundStyle(col.opacity(Look.Crate.denseFolderOpacity))
+                Text(s.heading(f.folder) + ((f.rows.first?.index ?? 0) > 0 && !s.heading(f.folder).isEmpty ? Words.continued : "")).font(Look.Crate.denseFolderFont).foregroundStyle(col.opacity(Look.Crate.denseFolderOpacity))
                     .padding(.top, Look.Crate.denseFolderTop).frame(height: Look.Crate.denseFolderHeight, alignment: .bottomLeading)
                 ForEach(f.rows.indices, id: \.self) { k in
                     let r = f.rows[k]

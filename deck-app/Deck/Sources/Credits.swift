@@ -26,22 +26,23 @@ enum Credits {
 
     /// The songs in the demo crate file (DemoCrate), in the order deckie.io/demo plays them. The same table, with each
     /// file's SHA-256 and the date it was fetched, is site/demo/CREDITS.md; the two are kept in step. Each song's licence
-    /// is the one its own page on the Free Music Archive states (checked Nov 19, 2026).
+    /// is the one its own page on the Free Music Archive states (checked Nov 19, 2026; the set chosen again that day so
+    /// that most songs suit each other, `pc/booth-build-2`).
     static let demoSongs: [DemoSong] = [
-        DemoSong(title: "Street of love", artist: "Loyalty Freak Music",
-                 source: "https://freemusicarchive.org/music/Loyalty_Freak_Music/POSITIVE_ATTITUDE_/Loyalty_Freak_Music_-_POSITIVE_ATTITUDE__-_06_Street_of_love/"),
+        DemoSong(title: "Roller Fever", artist: "Loyalty Freak Music",
+                 source: "https://freemusicarchive.org/music/Loyalty_Freak_Music/ROLLER_DISCO_DANCE_DANCE/Loyalty_Freak_Music_-_ROLLER_DISCO_DANCE_DANCE_-_01_Roller_Fever/"),
+        DemoSong(title: "La montagne", artist: "Komiku",
+                 source: "https://freemusicarchive.org/music/Komiku/Its_time_for_adventure_/Komiku_-_Its_time_for_adventure_-_07_La_montagne/"),
         DemoSong(title: "Everything is groovy (How to move your body)", artist: "Komiku",
                  source: "https://freemusicarchive.org/music/Komiku/Helice_Awesome_Dance_Adventure_/everything-is-groovy-how-to-move-your-body/"),
-        DemoSong(title: "Dance Robot ACTIVATE", artist: "Loyalty Freak Music",
-                 source: "https://freemusicarchive.org/music/Loyalty_Freak_Music/ROLLER_DISCO_DANCE_DANCE/Loyalty_Freak_Music_-_ROLLER_DISCO_DANCE_DANCE_-_02_Dance_Robot_ACTIVATE/"),
-        DemoSong(title: "Can't Stop My Feet !", artist: "Loyalty Freak Music",
-                 source: "https://freemusicarchive.org/music/Loyalty_Freak_Music/ROLLER_DISCO_DANCE_DANCE/Loyalty_Freak_Music_-_ROLLER_DISCO_DANCE_DANCE_-_04_Cant_Stop_My_Feet_/"),
-        DemoSong(title: "Sweat Time !", artist: "Loyalty Freak Music",
-                 source: "https://freemusicarchive.org/music/Loyalty_Freak_Music/ROLLER_DISCO_DANCE_DANCE/Loyalty_Freak_Music_-_ROLLER_DISCO_DANCE_DANCE_-_07_Sweat_Time_/"),
-        DemoSong(title: "High Technologic Beat Explosion", artist: "Loyalty Freak Music",
-                 source: "https://freemusicarchive.org/music/Loyalty_Freak_Music/ROBOT_DANCE_/Loyalty_Freak_Music_-_ROBOT_DANCE__-_02_High_Technologic_Beat_Explosion/"),
-        DemoSong(title: "Disco Challenge", artist: "Komiku",
-                 source: "https://freemusicarchive.org/music/Komiku/Helice_Awesome_Dance_Adventure_/disco-challenge/"),
+        DemoSong(title: "Sweet You", artist: "Loyalty Freak Music",
+                 source: "https://freemusicarchive.org/music/Loyalty_Freak_Music/MELODIES_WITH_A_BEAT/Loyalty_Freak_Music_-_MELODIES_WITH_A_BEAT_-_01_Sweet_You/"),
+        DemoSong(title: "Captain Glouglou contest", artist: "Komiku",
+                 source: "https://freemusicarchive.org/music/Komiku/Helice_Awesome_Dance_Adventure_/captain-glouglou-contest/"),
+        DemoSong(title: "Sweet They", artist: "Loyalty Freak Music",
+                 source: "https://freemusicarchive.org/music/Loyalty_Freak_Music/MELODIES_WITH_A_BEAT/Loyalty_Freak_Music_-_MELODIES_WITH_A_BEAT_-_14_Sweet_They/"),
+        DemoSong(title: "Street of love", artist: "Loyalty Freak Music",
+                 source: "https://freemusicarchive.org/music/Loyalty_Freak_Music/POSITIVE_ATTITUDE_/Loyalty_Freak_Music_-_POSITIVE_ATTITUDE__-_06_Street_of_love/"),
     ]
 }
 

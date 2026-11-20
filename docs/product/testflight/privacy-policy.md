@@ -1,12 +1,12 @@
 # Privacy policy (for deckie.io/privacy)
 
 The words of `site/privacy/index.html`, published as https://deckie.io/privacy. Change them here and on the page
-together. Checked against the code on Nov 19, 2026: Deckie Booth (`deck-app`) names no networking API and its
+together. Checked against the code on Nov 19, 2026: Deckie (`deck-app`) names no networking API and its
 privacy manifest declares no collected data; the only network code is `core/Sources/DeckieLookup`, MusicBrainz on
 the Mac only (not built on Windows and Linux); what a lookup sends is `MusicBrainz.swift` and the `lookupSend*`
 lines in `DeskWords.swift`. AcoustID is in no app a tester gets and is not named.
 
-**Deckie Booth and Deckie Desk, by App Hold Media. Effective November 19, 2026.**
+**Deckie on the iPad (until build 2 called Deckie Booth) and Deckie Desk, by App Hold Media. Effective November 19, 2026.**
 
 Your music. Your mix. Deckie is made so that your music, and what you play, stay on your own devices. The one
 exception is a lookup you ask for, said in full below.
@@ -15,11 +15,11 @@ exception is a lookup you ask for, said in full below.
 tracking. We do not receive your music, your crate files, your set recordings or anything about how you use the
 apps.
 
-**Deckie Booth, on the iPad.** Booth does not use the internet at all. It uses the iPad's microphone to recognise
-which of your songs is playing. The sound is worked on, on the iPad, and never leaves it. Booth also records each set
-from the microphone, so you can keep it. The recording, the list of songs Booth named and a log are saved on the
-iPad, in the Files app under Deckie Booth, and nowhere else. You can delete them there at any time. The links in
-Booth, to deckie.io and to where the demo crate's songs came from, open in Safari when you tap them.
+**Deckie, on the iPad.** Deckie does not use the internet at all. It uses the iPad's microphone to recognise
+which of your songs is playing. The sound is worked on, on the iPad, and never leaves it. Deckie also records each set
+from the microphone, so you can keep it. The recording, the list of songs Deckie named and a log are saved on the
+iPad, in the Files app under Deckie, and nowhere else. You can delete them there at any time. The links in
+Deckie, to deckie.io and to where the demo crate's songs came from, open in Safari when you tap them.
 
 **Deckie Desk, on your computer.** Desk reads your music on your computer and writes a crate file: what it learns
 about your songs, never the songs. The crate file goes only where you send it, such as to your iPad by AirDrop or
