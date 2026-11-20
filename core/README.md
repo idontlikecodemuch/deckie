@@ -465,8 +465,9 @@ record, counted by reason and extension, and the files in the crate with damaged
 
 - **Jobs.** `--jobs N` files at once; the default is the processor count, or fewer when memory is short, as one
   analysis of a four-minute track peaks at about 1.1 GB (0.2 GB of it the models, shared; each further job adds
-  about 1 GB, almost all the beat model's working memory for one 30-second chunk), so each job is given 1 GB and
-  2 GB are left for the rest (`defaultJobs`; `deckie-memprobe` below measures it). The jobs share one analyser: its ONNX Runtime session may be run from several threads at once,
+  about 1 GB, almost all the beat model's working memory for one 30-second chunk), and Desk's runs peak at 1.1 GB a
+  job on Windows and 1.6 to 1.8 GB on the Mac, so each job is given 1.5 GB and 2 GB are left for the rest (4 GB: 1
+  job, 8 GB: 4; `JobMemory`, which Desk shares; `deckie-memprobe` below measures it). The jobs share one analyser: its ONNX Runtime session may be run from several threads at once,
   and each run gets the processor count over the jobs in threads of its own.
 - **Resumable.** A work folder beside the crate, `<name>.deckiebuild`, keeps every finished file as it finishes:
   `records/<id>.json` (the engine's record, by the file's SHA-256 id, written whole or not at all), `records/<id>.dkl`

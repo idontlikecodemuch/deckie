@@ -399,7 +399,10 @@ public final class Builder: Sendable {
                     do { f.url = try given.fetch(f) } catch { given.release(f); stopped.set(error); return }
                     // The next song is read while this one is analysed (one job: the queue goes in order).
                     if k + 1 < total, self.options.stop?.isSet != true { given.readAhead(files[queued[k + 1]]) }
-                    outcome = self.process(f, bytes: given.bytes(f), rekordbox: rekordboxOf[i], work: work, engine: engine!,
+                    // The bytes go straight into the box the analyser empties once they are decoded: nothing here
+                    // keeps another hold on them through the analysis.
+                    let box = given.bytes(f).map { FileBytes($0) }
+                    outcome = self.process(f, bytes: box, rekordbox: rekordboxOf[i], work: work, engine: engine!,
                                            label: label, seconds: &seconds, fingerprinted: &fingerprinted)
                 }
             } else {
@@ -662,14 +665,20 @@ public final class Builder: Sendable {
 
     /// One queued file: tags, hash, then the work folder's record for those bytes or a fresh analysis. The file is
     /// read once: its bytes (`bytes`, when the source handed them over in memory, else read here) give the tags, the
-    /// id and the analysis, and the analyser lets them go once they are decoded.
-    private func process(_ f: SourceFile, bytes inHand: Data?, rekordbox: RekordboxCollection.Track?, work: WorkStore,
+    /// id and the analysis, and the analyser lets them go once they are decoded. The box is the only hold on bytes
+    /// handed over in memory, so they go when the analyser empties it, not when this returns.
+    private func process(_ f: SourceFile, bytes inHand: FileBytes?, rekordbox: RekordboxCollection.Track?, work: WorkStore,
                          engine: Analyser, label: String, seconds: inout Double?, fingerprinted: inout Bool) -> Done {
         typealias R = CrateManifest.ImportLog.Reason
         // A song in memory: its tags, and the facts `dressed` reads later, from those bytes (its file may be gone, or
         // on a disc, by then).
-        let tags = inHand.map { FileTags.read(bytes: $0) } ?? FileTags.read(f.url)
-        if let inHand { factsInHand.set(f.rel, FileFacts.read(bytes: inHand)) }
+        let tags: FileTags
+        if let d = inHand?.data {
+            tags = FileTags.read(bytes: d)
+            factsInHand.set(f.rel, FileFacts.read(bytes: d))
+        } else {
+            tags = FileTags.read(f.url)
+        }
         let tag = tagTempo(rekordbox: rekordbox, tags: tags)
         // The song's name as Desk first has it (rekordbox's, its tags', else its file name), for the screen now.
         if let tell = options.onStep {
@@ -688,7 +697,7 @@ public final class Builder: Sendable {
 
         let box: FileBytes
         if let inHand {
-            box = FileBytes(inHand)
+            box = inHand
         } else {
             do {
                 box = FileBytes(try Data(contentsOf: f.url))

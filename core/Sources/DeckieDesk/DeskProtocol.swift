@@ -52,10 +52,9 @@ public final class DeskProtocol: @unchecked Sendable {
         do { try analysisCheck(); analysis = (true, nil) } catch { analysis = (false, "\(error)") }
     }
 
-    /// The jobs a run uses: half the cores, at most 4, or `DECKIE_DESK_JOBS`.
+    /// The jobs a run uses: half the cores, at most 4, fewer when memory is short, or `DECKIE_DESK_JOBS` (`DeskJobs`).
     public static func jobs(environment: [String: String] = ProcessInfo.processInfo.environment) -> Int {
-        if let j = environment["DECKIE_DESK_JOBS"].flatMap(Int.init), j > 0 { return j }
-        return max(1, min(ProcessInfo.processInfo.activeProcessorCount / 2, 4))
+        DeskJobs.current(environment: environment).count
     }
 
     // MARK: out
