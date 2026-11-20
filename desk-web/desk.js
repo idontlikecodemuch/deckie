@@ -34,11 +34,16 @@
   // The only words the pages hold: they show when the engine's words are not there (the pages opened in a browser) or
   // may not be the words this page knows (another protocol). Every other word is DeskWords', from the engine.
   const PAGE_WORDS = {
-    notInShell: "Deckie Desk's pages open inside Deckie Desk's window (deckie-desk), which starts the engine.",
-    protocol: "Protocol {protocol} is not one this window knows ({known}).",
+    notInShell: "These are Deckie Desk's pages. To use them, open Deckie Desk.",
+    protocol: "This window and the rest of Deckie Desk are different versions. Reinstall Deckie Desk to put them back in step.",
+    // The numbers, for a bug report: in the sentence's tooltip, not the sentence.
+    protocolDetail: "Protocol {protocol}; this window knows {known}.",
   };
   let W = {};
-  const fill = (tpl, v) => tpl.replace(/\{(\w+)\}/g, (m, k) => (v && v[k] != null ? String(v[k]) : m));
+  /// A count as this computer's language writes it, its thousands grouped ("4,812" in English): every whole number a
+  /// word is given goes through here (DeskWords.number says the same for the Mac and the engine).
+  const grouped = (x) => (typeof x === "number" && Number.isInteger(x) ? x.toLocaleString() : String(x));
+  const fill = (tpl, v) => tpl.replace(/\{(\w+)\}/g, (m, k) => (v && v[k] != null ? grouped(v[k]) : m));
   // {thisComputer} in any word: "this Mac" or "this computer", by the kind the engine says this computer is.
   let computer = "other";
   const withComputer = (v) => Object.assign({ thisComputer: W["thisComputer." + computer] ?? W["thisComputer.other"] ?? "" }, v || {});
@@ -54,7 +59,7 @@
     const once = key + ".same";
     if (sameName(v) && W[once + ".other"] != null) key = once;
     const form = count === 0 && W[key + ".zero"] != null ? "zero" : count === 1 ? "one" : "other";
-    return fill(W[key + "." + form] ?? W[key + ".other"] ?? key, withComputer(Object.assign({ n: String(count) }, v || {})));
+    return fill(W[key + "." + form] ?? W[key + ".other"] ?? key, withComputer(Object.assign({ n: count }, v || {})));
   };
   const coded = (key, code) => W[key + "." + code] ?? fill(W[key + ".other"] ?? code, { code });
   const reason = (code) => W["reason." + code] ?? code.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
@@ -140,7 +145,11 @@
       case "hello":
         hello = m; W = m.words || {}; computer = m.computer || "other";
         applyWords(document);
-        if (m.protocol !== 2) message([fill(PAGE_WORDS.protocol, { protocol: m.protocol, known: 2 })]);
+        if (m.protocol !== 2) {
+          message([PAGE_WORDS.protocol]);
+          const first = $("message-body").firstElementChild;
+          if (first) first.title = fill(PAGE_WORDS.protocolDetail, { protocol: m.protocol, known: 2 });
+        }
         break;
       case "state":
         if (undoLine && state && m.undo !== state.undo && m.undo !== "undoNames" && m.undo !== "undoCheck" && m.undo !== "undoLookup") undoLine = null;
@@ -306,7 +315,9 @@
 
     // a run that stopped
     const p = state.pending;
-    $("pending").hidden = !p || busy;
+    // On the finished screen of a stopped run, its own Carry on is the one way on: the banner would say it twice.
+    const finishedCarriesOn = !!(finished && finished.stopped === true && p && p.here);
+    $("pending").hidden = !p || busy || finishedCarriesOn;
     if (p) {
       $("pending-text").textContent = p.here ? t("stoppedReading", { read: p.name })
         : t("pendingLine", { stopped: t("stoppedReading", { read: p.name }), putBack: t(p.musicCD ? "putDiscBack" : "putBack", { read: p.name }) });
@@ -337,7 +348,10 @@
     // The name the DJ gave the disc while it was read replaces the placeholder the report was written with.
     const named = (x) => (discRenamed && x === discRenamed.from ? discRenamed.to : x);
     const stopped = r.stopped === true;
-    $("finished-title").textContent = stopped ? n("stoppedTitle", r.went_in, { read: named(r.read), crate: named(r.crate) })
+    // Songs as the crate counts them: a song in two places once, as "That's the lot" and the sources say
+    // (RunReport.songsRead; went_in counts files). An engine before it gives files only.
+    const songsRead = r.songs_read != null ? r.songs_read : r.went_in;
+    $("finished-title").textContent = stopped ? n("stoppedTitle", songsRead, { read: named(r.read), crate: named(r.crate) })
       : t("finishedTitle", { read: named(r.read), crate: named(r.crate) });
     $("finished-stopped").hidden = !stopped;
     $("finished-carryon").hidden = !(stopped && state.pending && state.pending.here);
@@ -348,7 +362,11 @@
     box.replaceChildren();
     const line = (text, cls) => box.append(el("p", { text, class: cls }));
     const notIn = Object.values(r.not_in || {}).reduce((a, b) => a + b, 0);
-    line(notIn === 0 ? t("everySongWentIn") : n("wentIn", r.went_in));
+    // The first lines, as RunReport.summaryLines says them on the Mac: a stopped run says how far it got, never that
+    // every song went in; and when more files went in than songs, why.
+    if (stopped) line(r.files_found != null ? n("stoppedRead", r.files_found, { done: r.songs_seen, total: r.files_found }) : n("wentIn", songsRead));
+    else line(notIn === 0 ? t("everySongWentIn") : n("wentIn", songsRead));
+    if (r.went_in > songsRead) line(n("wentInAsSongs", r.went_in - songsRead, { files: r.went_in, songs: n("songs", songsRead) }));
     if (notIn > 0) {
       line(n("didntGoIn", notIn));
       for (const k of Object.keys(r.not_in).sort()) line(t("reasonCount", { reason: reason(k), n: r.not_in[k] }), "indent");
@@ -377,15 +395,32 @@
       if (d && d.damaged_sectors > 0) line(t("discDamaged"), "mut");
       if ((local.libraries || []).length) line(t("librariesRead", { names: join("join.libraries", local.libraries.map((l) => programName(l.program))) }), "mut");
       for (const f of local.failed || []) line(t("couldntReadLibrary", { detail: f }), "mut");
-      if (local.rekordbox_locked) line(t("rekordboxLocked"), "mut");
+      if (local.rekordbox_locked) line(rekordboxLocked(), "mut");
       if (local.rekordbox_export) line(t("rekordboxExportNotRead"), "mut");
     }
     line(t("took", { duration: duration(r.seconds), rate: rate(r.songs_per_minute) }), "mut");
     $("finished-log").hidden = !(notIn > 0 || r.damaged > 0);
+    $("to-ipad-steps").replaceChildren(...toIPadSteps());
     $("exported").hidden = !exportedPath;
-    if (exportedPath) $("exported-text").textContent = t("exportedTo", { folder: parentOf(exportedPath) });
+    if (exportedPath) { $("exported-text").textContent = savedLine(exportedPath); $("exported-text").title = exportedPath; }
   }
 
+  /// "...choose it with ⋯ > Choose a DJ library…": in this window the item is in the ⋯ menu (the Mac's app says File).
+  const rekordboxLocked = () => t("rekordboxLocked", { chooseLibraryAt: t("chooseLibraryAt.more") });
+
+  /// The steps that get a crate file to the iPad, for the computer this is: the Mac's (AirDrop, iCloud Drive, the
+  /// Finder), Windows' (iCloud for Windows, Apple Devices) or Linux's (a stick, or iCloud Drive in a browser).
+  function toIPadSteps() {
+    const system = String((hello && hello.platform) || "").split("-")[0];
+    const keys = computer === "mac" || system === "macos" ? ["toIPadAirDropMac", "toIPadICloudMac", "toIPadCableMac", "toIPadStick"]
+      : system === "linux" ? ["toIPadStick", "toIPadICloudLinux"]
+      : ["toIPadStick", "toIPadICloud", "toIPadCable"];
+    return keys.map((k) => el("li", { text: t(k) }));
+  }
+
+  /// "Saved “Friday night.deckie” in Exports.": the file and its folder by name (the whole path in the tooltip).
+  const savedLine = (path) => t("exportedTo", { file: nameOf(path), folder: nameOf(parentOf(path)) || parentOf(path) });
+  const nameOf = (p) => String(p).replace(/[\\/]+$/, "").replace(/^.*[\\/]/, "");
   const parentOf = (p) => p.replace(/[\\/][^\\/]*[\\/]?$/, "") || p;
 
   // ---- the songs table
@@ -547,7 +582,7 @@
 
   /// The small line under a fact: where it came from; a guess says so; nothing found says so.
   function fromLine(f) {
-    if (!f || f.value == null) return { text: t("factNotFound"), guess: false };
+    if (!f || f.value == null) return { text: t("factEmpty"), guess: false };
     const from = f.from ? factFrom(f.from) : t("factNotFound");
     if (f.checked) return { text: t("factChecked", { from }), guess: false };
     if (f.guess) return { text: t("factGuess", { from }), guess: true };
@@ -915,7 +950,8 @@
       $("lookup-summary").textContent = L.failure ? fill(coded("lookupFailure", L.failure), withComputer()) : (L.summary || "");
       const r = L.review;
       $("lookup-disc").textContent = r && r.scope === "disc" && !r.failure ? coded("lookupDiscMatch", r.discMatch || "none") : "";
-      $("lookup-disc").hidden = !$("lookup-disc").textContent;
+      // The disc's line, unless the summary already said it.
+      $("lookup-disc").hidden = !$("lookup-disc").textContent || $("lookup-disc").textContent === $("lookup-summary").textContent;
       drawLookupSongs();
       const total = lookupTicked();
       go.textContent = n("lookupApply", total);
@@ -936,7 +972,8 @@
       if (s.outcome !== "found") {
         let text = coded("lookupOutcome", s.outcome);
         if (s.outcome === "nothing" && single) text = t("lookupNothingOne");
-        if (s.outcome === "failed" && s.failure) text = t("lookupOutcomeFailed", { outcome: text, failure: fill(coded("lookupFailure", s.failure), withComputer()) });
+        // The whole lookup's failure is said above once; a song says its own only when it differs.
+        if (s.outcome === "failed" && s.failure && s.failure !== (lookup.failure || r.failure)) text = t("lookupOutcomeFailed", { outcome: text, failure: fill(coded("lookupFailure", s.failure), withComputer()) });
         card.append(el("p", { class: "outcome", text }));
         box.append(card);
         continue;
@@ -1267,7 +1304,8 @@
 
   function updateApply() {
     const b = $("tool-apply");
-    const count = tool && tool.preview && !tool.preview.problem ? tool.ticks.size : 0;
+    // The songs that get a name, as "Names added to 6 songs." counts them after: not the fields ticked.
+    const count = tool && tool.preview && !tool.preview.problem ? new Set([...tool.ticks].map((i) => tool.preview.changes[i].song)).size : 0;
     b.disabled = count === 0;
     b.textContent = n("useNames", count);
   }
@@ -1312,7 +1350,7 @@
         el("span", { class: "name", text: n("sourceLine", src.songs, { name: src.name }) }),
         el("span", { class: "tools" },
           el("button", { class: "icon-btn", text: t("rename"), "aria-label": t("renameTitle", { name: src.name }),
-            on: { click: () => askName(t("renameTitle", { name: src.name }), src.name, (v) => request("source.rename", { source: src.name, name: v }, { errorWord: "couldntSave" })) } }),
+            on: { click: () => askName(t("renameTitle", { name: src.name }), src.name, (v) => request("source.rename", { source: src.name, name: v }, { errorWord: "couldntSave" }), t("renameNote")) } }),
           el("button", { class: "icon-btn danger", text: t("removeFromCrate"), "aria-label": t("removeTitle", { source: src.name, crate: current().name }),
             on: { click: () => askRemove(src.name) } }))));
       const ul = el("ul");
@@ -1323,7 +1361,7 @@
           el("span", { class: "name", text: fname }),
           el("span", { class: "tools" },
             f.name ? el("button", { class: "icon-btn", text: t("rename"), "aria-label": t("renameFolderTitle", { folder: f.name }),
-              on: { click: () => askName(t("renameFolderTitle", { folder: f.name }), f.name, (v) => request("folder.rename", { source: src.name, folder: f.name, name: v }, { errorWord: "couldntSave" })) } }) : null)));
+              on: { click: () => askName(t("renameFolderTitle", { folder: f.name }), f.name, (v) => request("folder.rename", { source: src.name, folder: f.name, name: v }, { errorWord: "couldntSave" }), t("renameNote")) } }) : null)));
         const sl = el("ul");
         f.songs.forEach((song, i) => {
           const s = byId.get(song.id);
@@ -1363,9 +1401,11 @@
   }
 
   // ---- dialogs
-  function askName(title, value, then) {
+  function askName(title, value, then, note) {
     const d = $("ask");
     $("ask-title").textContent = title;
+    $("ask-note").textContent = note || "";
+    $("ask-note").hidden = !note;
     $("ask-input").value = value;
     d.returnValue = "";
     d.onclose = () => { const v = $("ask-input").value.trim(); if (d.returnValue === "ok" && v && v !== value) then(v); };
@@ -1402,7 +1442,11 @@
   }
   function showLog() {
     const log = songs && songs.importLog;
-    $("log-read").textContent = log ? t("readOn", { by: log.builtBy, at: log.builtAt, seen: log.filesSeen, songs: log.songs }) : t("noRecord");
+    const when = log ? new Date(log.builtAt) : null;
+    const known = when && !isNaN(when);
+    $("log-read").textContent = log ? t("readOn", { date: known ? when.toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" }) : log.builtAt,
+      time: known ? when.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" }) : "", seen: log.filesSeen, songs: log.songs }) : t("noRecord");
+    $("log-read").title = log ? t("readOnDetail", { by: log.builtBy, at: log.builtAt }) : "";
     const groups = $("log-groups");
     groups.replaceChildren();
     if (log) {
@@ -1412,10 +1456,21 @@
       if (!keys.length) groups.append(el("p", { text: t("everySongWentIn") }));
       for (const k of keys) {
         groups.append(el("section", null, el("h3", { text: t("reasonCount", { reason: reason(k), n: by[k].length }) }),
-          el("ul", null, ...by[k].map((e) => el("li", null, el("code", { text: e.rel, title: e.rel }), el("span", { class: "mut", text: e.message }))))));
+          el("ul", null, ...by[k].map((e) => el("li", { title: e.message || null }, el("code", { text: e.rel, title: e.rel }),
+            reasonDetail(k, e.message) ? el("span", { class: "mut", text: reasonDetail(k, e.message) }) : null)))));
       }
     }
     $("log").showModal();
+  }
+  /// The plain line under a file that didn't go in (reasonDetail.<code>), or none where the heading says it all. The
+  /// decoder's own words stay in the line's tooltip for a bug report. A type not read names the types that are, as
+  /// the decoder listed them.
+  function reasonDetail(code, raw) {
+    if (code === "unsupported") {
+      const m = /\(([A-Z0-9][A-Z0-9, ]*)\)\s*$/.exec(raw || "");
+      return m ? t("reasonDetail.unsupported", { types: m[1] }) : t("reasonDetail.unsupportedPlain");
+    }
+    return W["reasonDetail." + code] != null ? t("reasonDetail." + code) : "";
   }
   function announce(text) { $("announce").textContent = ""; setTimeout(() => { $("announce").textContent = text; }, 30); }
 
@@ -1508,7 +1563,7 @@
     out.push(rep.need_name ? n("needName", rep.need_name) : t("everySongHasAName"));
     if ((s.libraries || []).length) out.push(t("librariesRead", { names: join("join.libraries", s.libraries.map((l) => programName(l.program))) }));
     for (const f of s.failed || []) out.push(t("couldntReadLibrary", { detail: f }));
-    if (s.rekordbox_locked) out.push(t("rekordboxLocked"));
+    if (s.rekordbox_locked) out.push(rekordboxLocked());
     if (s.rekordbox_export) out.push(t("rekordboxExportNotRead"));
     return out;
   }
@@ -1561,6 +1616,8 @@
       row(id === "cd" ? "disc" : "drive", id === "cd" ? t("dataCDItem", { name: x.name }) : x.name, detail, () => chooseDrive(x));
     }
     $("pick-empty").hidden = cds.length + drives.length > 0;
+    // Nothing plugged in: the empty line says so, not also the line about "the ones plugged in now".
+    $("pick-body").hidden = !$("pick-empty").hidden;
     $("pick-empty").textContent = t(id === "cd" ? "noCDIn" : "noDriveIn");
     d.showModal();
   }
@@ -1683,7 +1740,7 @@
   }
   async function importCrate() {
     const f = await request("shell.chooseFile", Object.assign({ purpose: "import", message: t("importMessage") }, chooserWords(false)), { quiet: true });
-    if (f.ok && f.path) { finished = null; request("crate.import", { path: f.path }, { errorWord: "couldntOpen" }); }
+    if (f.ok && f.path) { finished = null; request("crate.import", { path: f.path }, { errorWord: "couldntImport" }); }
   }
   async function exportCrate() {
     if (!hasSongs()) { message([t("nothingToSendYet")]); return; }
@@ -1696,8 +1753,9 @@
     const extra = el("div", null,
       el("p", null, el("button", { class: "link", text: t("openFolder"), on: { click: () => request("shell.openFolder", { path: parentOf(r.path) }, { quiet: true }) } })),
       el("h3", { class: "to-ipad-title", text: t("toIPadTitle") }),
-      el("ul", { class: "mut" }, el("li", { text: t("toIPadStick") }), el("li", { text: t("toIPadICloud") }), el("li", { text: t("toIPadCable") })));
-    message([t("exportedTo", { folder: parentOf(r.path) })], extra, true);
+      el("ul", { class: "mut" }, ...toIPadSteps()));
+    message([savedLine(r.path)], extra, true);
+    $("message-body").firstElementChild.title = r.path;
   }
 
   $("crate-name-button").addEventListener("click", renameShown);

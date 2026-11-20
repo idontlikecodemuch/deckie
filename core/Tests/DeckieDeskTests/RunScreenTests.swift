@@ -33,6 +33,53 @@ import DeckieBuild
         #expect(RunSong.wave([-.infinity, -4]).count == 64)
     }
 
+    @Test func theTemposFigureSaysOnlyWhatIsTrue() {
+        func text(_ bpms: [Double]) -> String {
+            var tally = RunTally()
+            for (i, b) in bpms.enumerated() { var s = song("t\(i)", bpm: b); _ = tally.add(&s) }
+            return tally.figures.temposText()
+        }
+        // One song, or one tempo: once, with no range.
+        #expect(text([118.4]) == "1 song, 118 BPM")
+        #expect(text([120, 120.2, 119.9]) == "3 songs, 120 BPM")
+        // No tempo shared: the range alone, not "most around" one song's tempo.
+        #expect(text([96, 198]) == "2 songs, from 96 to 198 BPM")
+        // Shared: the tempo most share, as the songs have it, never outside the range (a bin of the histogram, 118
+        // to 120, would have said 119 for songs at 118).
+        #expect(text([118.4, 118.2, 140]) == "3 songs, from 118 to 140 BPM, most around 118")
+        #expect(text([117.6, 117.8]) == "2 songs, 118 BPM")
+        let t = text([116.1, 116.3, 130])
+        #expect(t == "3 songs, from 116 to 130 BPM, most around 116")
+        #expect(text([118.1, 118.2, 116]) == "3 songs, from 116 to 118 BPM, most around 118")
+        #expect(RunFigures().temposText() == DeskWords.text("figTemposNone"))
+    }
+
+    @Test func theFinishedScreenCountsSongsOnceAndAStoppedRunSaysHowFarItGot() {
+        var r = RunReport(crate: "C", read: "Friday Set", startedAt: "", seconds: 1, buildSeconds: 1, finishSeconds: 0,
+                          songsSeen: 9, wentIn: 9, notIn: [:], foldersLeftOut: 0, damaged: 0, analysed: 9, reused: 0,
+                          signaturesMade: 0, signaturesKept: 0, signaturesFailed: 0, printsMade: 0, printsKept: 0, printsFailed: 0,
+                          copies: 0, songsInCrate: 8, songsPerMinute: 1, jobs: 1, device: "", engine: "", carriedOn: false)
+        r.songsRead = 8; r.filesFound = 9
+        #expect(r.summaryLines == ["Every song went in.", "9 files went in as 8 songs: 1 song is in two places."])
+        // Stopped after 4 of 12: never "Every song went in".
+        r = RunReport(crate: "C", read: "Gig", startedAt: "", seconds: 1, buildSeconds: 1, finishSeconds: 0,
+                      songsSeen: 4, wentIn: 4, notIn: [:], foldersLeftOut: 0, damaged: 0, analysed: 4, reused: 0,
+                      signaturesMade: 0, signaturesKept: 0, signaturesFailed: 0, printsMade: 0, printsKept: 0, printsFailed: 0,
+                      copies: 0, songsInCrate: 4, songsPerMinute: 1, jobs: 1, device: "", engine: "", carriedOn: false)
+        r.stopped = true; r.songsRead = 4; r.filesFound = 12
+        #expect(r.summaryLines == ["4 of 12 songs read so far."])
+        // The report travels with its new counts, by name.
+        let json = String(decoding: try! JSONEncoder().encode(r), as: UTF8.self)
+        #expect(json.contains("\"songs_read\":4") && json.contains("\"files_found\":12"))
+    }
+
+    @Test func countsAreWrittenWithTheirThousandsGrouped() {
+        let f = NumberFormatter(); f.numberStyle = .decimal; f.locale = .current
+        #expect(DeskWords.number(4812) == f.string(from: 4812))
+        #expect(DeskWords.count("askReadTitle", 4812, ["name": "Stick 3"]) == "Read \(DeskWords.number(4812)) songs from Stick 3?")
+        if Locale.current.groupingSeparator == "," { #expect(DeskWords.number(4812) == "4,812") }
+    }
+
     @Test func theKeyIsWhatDeskDecided() {
         func k(_ source: String, _ c: Double, _ camelot: String = "8A") -> CrateTrack.Key {
             .init(source: source, confidence: c, camelot: camelot, key: "A", scale: "minor", votes: [:], changes: nil)
@@ -80,7 +127,14 @@ import DeckieBuild
         }
         let moments = all.filter { $0.kind == .moment }
         #expect(moments.first?.code == "first" && moments.first?.values["title"] == "Song s0")
-        #expect(moments.filter { $0.code == "songs" }.map(\.n) == [10, 50])
+        // Round numbers of songs are said from the run's count (the bar's "9 of 12 songs"), not from the screen's,
+        // which runs a little ahead: the two never disagree.
+        #expect(moments.filter { $0.code == "songs" }.isEmpty)
+        var counted = RunTally()
+        var said: [Int?] = []
+        for done in [3, 9, 9, 10, 11, 49, 52, 52, 60] { said += counted.done(done).map(\.n) }
+        #expect(said == [10, 50])
+        #expect(counted.done(2000).map(\.n) == [2000])
         // 60 songs of 2:30 is two and a half hours: two hour marks.
         #expect(moments.filter { $0.code == "hour" }.map(\.n) == [1, 2])
         #expect(moments.filter { $0.code == "wheel" }.count == 1)

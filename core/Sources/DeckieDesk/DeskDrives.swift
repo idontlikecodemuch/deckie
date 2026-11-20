@@ -48,18 +48,23 @@ public enum DeskDrives {
     public static let standInVariable = "DECKIE_DESK_DRIVES"
     /// A stand-in folder whose name ends in this is listed as a data CD.
     public static let standInCDSuffix = " (CD)"
+    /// A file in a stand-in folder holding its size in bytes (a stand-in for a 16 GB stick: `16000000000`).
+    public static let standInSizeFile = ".deckie-size"
 
     public static func list(environment: [String: String] = ProcessInfo.processInfo.environment) -> [Drive] {
         if let stand = environment[standInVariable], !stand.isEmpty {
             let root = URL(fileURLWithPath: stand, isDirectory: true)
             let names = (try? FileManager.default.contentsOfDirectory(atPath: root.path)) ?? []
-            // A stand-in is a folder or a link to a mounted disk image; its size is the volume it is on, and a name
-            // ending in " (CD)" stands in for a data CD.
+            // A stand-in is a folder or a link to a mounted disk image; its size is the volume it is on, unless it
+            // holds a `standInSizeFile` saying its size (stand-ins in one folder share a volume, so a stick and a big
+            // drive would otherwise be the same size); a name ending in " (CD)" stands in for a data CD.
             return names.filter { !$0.hasPrefix(".") }.sorted().map { name in
                 let path = root.appendingPathComponent(name).resolvingSymlinksInPath().path
                 let cd = name.hasSuffix(standInCDSuffix)
+                let said = (try? String(contentsOfFile: path + "/" + standInSizeFile, encoding: .utf8))
+                    .flatMap { Int64($0.trimmingCharacters(in: .whitespacesAndNewlines)) }
                 return described(name: cd ? String(name.dropLast(standInCDSuffix.count)) : name, path: path,
-                                 kind: cd ? Kind.cd : Kind.drive, environment: environment)
+                                 kind: cd ? Kind.cd : Kind.drive, environment: environment, bytes: said)
             }
         }
         #if os(macOS)
@@ -103,8 +108,8 @@ public enum DeskDrives {
     }
 
     /// A drive with its size, as the system gives it, and whether it is big.
-    static func described(name: String, path: String, kind: String, environment: [String: String]) -> Drive {
-        let bytes = size(of: path)
+    static func described(name: String, path: String, kind: String, environment: [String: String], bytes said: Int64? = nil) -> Drive {
+        let bytes = said ?? size(of: path)
         return Drive(name: name, path: path, kind: kind, bytes: bytes,
                      big: kind == Kind.drive && DeskAddMusic.isBig(bytes: bytes, environment: environment))
     }

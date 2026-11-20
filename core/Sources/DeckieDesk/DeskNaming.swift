@@ -157,7 +157,9 @@ public enum DeskNaming {
             return Facts.Listed(name: n, value: f.text, from: f.from)
         }
         if let o = t.file.otherTags {
-            out.fileTags = o.tags.keys.sorted().map { Facts.Listed(name: $0, value: o.tags[$0]!.joined(separator: ", "), from: nil) }
+            out.fileTags = o.tags.keys.sorted().compactMap { k in
+                Self.fileTagLabel(k).map { Facts.Listed(name: $0, value: o.tags[k]!.joined(separator: ", "), from: nil) }
+            }
             out.leftOut = o.leftOut
         }
         return out
@@ -209,6 +211,28 @@ public enum DeskNaming {
         let (title, version) = splitVersion(rest)
         guard artist != nil || version != nil else { return nil }
         return (artist, title, version)
+    }
+
+    /// A file tag's name as the names panel shows it: a tag a DJ knows by a plain name gets the word Desk has for it
+    /// (ID3's COMM is "Comment", TPUB "Label"); one that only says how the file was made or stamped (the encoder,
+    /// iTunes' gapless and volume data, ReplayGain, MusicBrainz's and AcoustID's ids) is left out, nil; any other
+    /// keeps its own name. The tag itself is untouched and still goes to the iPad as it did.
+    public static func fileTagLabel(_ raw: String) -> String? {
+        var k = raw.uppercased()
+        for p in ["TXXX:", "----:COM.APPLE.ITUNES:", "©"] where k.hasPrefix(p) { k = String(k.dropFirst(p.count)) }
+        k = k.replacingOccurrences(of: " ", with: "_").replacingOccurrences(of: "-", with: "_")
+        let machine: Set<String> = ["TSSE", "TENC", "ENCODER", "ENCODEDBY", "ENCODED_BY", "ENCODING", "ENCODERSETTINGS",
+                                    "ENCODER_SETTINGS", "TOO", "ENC", "ITUNSMPB", "ITUNNORM", "ITUNPGAP", "ITUNES_CDDB_1",
+                                    "ITUNES_CDDB_IDS", "TLEN", "TDTG", "TFLT", "TDEN", "PCST", "CPIL_FLAG"]
+        if machine.contains(k) || ["REPLAYGAIN_", "MUSICBRAINZ_", "ACOUSTID_", "ITUNES_", "MEDIAJUKEBOX"].contains(where: k.hasPrefix) { return nil }
+        let plain: [String: String] = ["COMM": "comment", "COMMENT": "comment", "CMT": "comment", "TPUB": "label",
+                                       "PUBLISHER": "label", "TCOM": "composer", "WRT": "composer", "TCON": "genre",
+                                       "GEN": "genre", "TBPM": "bpm_text", "BPM": "bpm_text", "TKEY": "key_text",
+                                       "INITIALKEY": "key_text", "TIT1": "grouping", "GRP": "grouping", "TIT3": "subtitle",
+                                       "TLAN": "language", "TCOP": "copyright", "CPRT": "copyright", "TSRC": "isrc",
+                                       "TMOO": "mood", "TEXT": "lyricist", "TPE4": "remixer", "TOPE": "original_artist"]
+        let code = plain[k] ?? raw.lowercased()
+        return DeskWords.table["factName." + code] ?? raw
     }
 
     /// A version in brackets at the end of a title: "Night drive (Extended mix)" is "Night drive" and "Extended mix".

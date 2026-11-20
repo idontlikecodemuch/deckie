@@ -193,11 +193,8 @@
       <p id="exported" class="exported" role="status" hidden><span id="exported-text"></span> <button id="exported-open" class="link" data-w="openFolder"></button></p>
       <div class="to-ipad card">
         <h2 data-w="toIPadTitle"></h2>
-        <ul>
-          <li data-w="toIPadStick"></li>
-          <li data-w="toIPadICloud"></li>
-          <li data-w="toIPadCable"></li>
-        </ul>
+        <!-- The steps for this computer (desk.js toIPadSteps): the Mac's, Windows' or Linux's. -->
+        <ul id="to-ipad-steps"></ul>
       </div>
     </div>
   </section>
@@ -278,6 +275,7 @@
 <dialog id="ask" aria-labelledby="ask-title">
   <form method="dialog">
     <h2 id="ask-title"></h2>
+    <p id="ask-note" class="mut" hidden></p>
     <label class="sr" for="ask-input" data-w="nameField"></label>
     <input id="ask-input" type="text" autocomplete="off" spellcheck="false">
     <div class="buttons"><button value="cancel" data-w="cancel"></button><button value="ok" class="main" data-w="renameButton"></button></div>

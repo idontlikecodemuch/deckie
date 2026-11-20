@@ -158,6 +158,11 @@ public struct RunReport: Codable, Equatable, Sendable {
     /// The DJ stopped the run (Stop) before every song was read: the songs read are in the crate, and the run is kept
     /// to carry on (`pending.json` stays). Nil in a line written before Stop.
     public var stopped: Bool? = nil
+    /// Songs this run read, each once however many places it is in (the run screen's count, and "That's the lot"),
+    /// where `wentIn` counts files: a song in two folders is two files and one song. And the audio files found in what
+    /// was read, reached or not: a stopped run read `songsSeen` of them. Nil in a line written before them.
+    public var songsRead: Int? = nil
+    public var filesFound: Int? = nil
 
     enum CodingKeys: String, CodingKey {
         case crate, read, seconds, analysed, reused, copies, jobs, device, engine, damaged
@@ -167,10 +172,30 @@ public struct RunReport: Codable, Equatable, Sendable {
         case printsMade = "prints_made", printsKept = "prints_kept", printsFailed = "prints_failed"
         case songsInCrate = "songs_in_crate", songsPerMinute = "songs_per_minute", carriedOn = "carried_on"
         case local, disc, covers, fingerprinted, songsWithFingerprint = "songs_with_fingerprint", stopped
+        case songsRead = "songs_read", filesFound = "files_found"
     }
 
     /// Songs that did not go in.
     public var notInCount: Int { notIn.values.reduce(0, +) }
+
+    /// The finished screen's first lines, in Desk's words (desk.js `drawFinished` says the same): the songs that went
+    /// in, counted as the crate counts them (a song in two places once, as "That's the lot" and the sources say); for
+    /// a stopped run, how many of the songs found it read instead, never "Every song went in"; and, when more files
+    /// went in than songs, why.
+    public var summaryLines: [String] {
+        let songs = songsRead ?? wentIn
+        var out: [String] = []
+        if stopped == true {
+            out.append(filesFound.map { DeskWords.count("stoppedRead", $0, ["done": DeskWords.number(songsSeen), "total": DeskWords.number($0)]) }
+                       ?? DeskWords.count("wentIn", songs))
+        } else {
+            out.append(notInCount == 0 ? DeskWords.text("everySongWentIn") : DeskWords.count("wentIn", songs))
+        }
+        if wentIn > songs {
+            out.append(DeskWords.count("wentInAsSongs", wentIn - songs, ["files": DeskWords.number(wentIn), "songs": DeskWords.count("songs", songs)]))
+        }
+        return out
+    }
 }
 
 /// The one run (D28, desk.md section 2): everything a crate needs from what was added, in one go. The builder reads
@@ -317,7 +342,8 @@ public final class DeskRun: @unchecked Sendable {
             state.lock.lock()
             var p = RunProgress(stage: stage, done: min(state.done, state.total), total: state.total, remaining: estimate(),
                                 line: line)
-            p.song = song; p.notes = notes; p.figures = state.tally.figures; p.now = stage == .reading ? state.now : nil
+            p.song = song; p.notes = notes + state.tally.done(p.done); p.figures = state.tally.figures
+            p.now = stage == .reading ? state.now : nil
             state.lock.unlock()
             progress(p)
         }
@@ -573,15 +599,19 @@ public final class DeskRun: @unchecked Sendable {
                 DiscReport(text: r.text, songs: r.toc.songs.count, named: request.source.flatMap { discNamed[$0] } ?? 0,
                            damagedSectors: r.damagedSectors, titled: r.discTitle != nil, textDetail: r.textDetail)
             }, covers: result.covers,
-            fingerprinted: result.fingerprinted, songsWithFingerprint: crate.tracks.filter { $0.fingerprint != nil }.count)
+            fingerprinted: result.fingerprinted, songsWithFingerprint: crate.tracks.filter { $0.fingerprint != nil }.count,
+            songsRead: state.tally.figures.songs, filesFound: max(state.total, result.filesSeen))
         state.lock.unlock()
         var line = report
         line.stopped = result.stopped ? true : nil
         try Self.appendRun(line, to: shelf.file(Self.runsFile, of: crateId))
         // A stopped run stays pending, so Carry on reads the rest.
         if !result.stopped { try? DeckieFiles.remove(pendingURL) }
-        state.lock.lock(); let last = state.tally.finished(); state.lock.unlock()
-        emit(.saving, nil, notes: [last])
+        // "That's the lot" only when it is: a stopped run has more to read.
+        if !result.stopped {
+            state.lock.lock(); let last = state.tally.finished(); state.lock.unlock()
+            emit(.saving, nil, notes: [last])
+        }
         return (crate, line)
     }
 

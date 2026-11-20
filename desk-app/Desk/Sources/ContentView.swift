@@ -302,7 +302,7 @@ struct FinishedView: View {
         ScrollView {
         VStack(spacing: Look.Space.finishedScreen) {
             Image(systemName: stopped ? "pause.circle" : "checkmark.circle").font(Look.Fonts.finishedIcon).foregroundStyle(.secondary)
-            Text(stopped ? Words.stoppedTitle(report.wentIn, report.read, report.crate) : Words.finishedTitle(report.read, report.crate))
+            Text(stopped ? Words.stoppedTitle(report.songsRead ?? report.wentIn, report.read, report.crate) : Words.finishedTitle(report.read, report.crate))
                 .font(Look.Fonts.screenTitle)
             if stopped { Text(Words.stoppedBody).foregroundStyle(.secondary) }
             // The crate as sound (D37): the run's songs, one line each, as they joined, and the run's last moment.
@@ -314,7 +314,9 @@ struct FinishedView: View {
                 .frame(maxWidth: Look.Size.finishedWallWidth)
             }
             VStack(alignment: .leading, spacing: Look.Space.finishedSummary) {
-                Text(report.notInCount == 0 ? Words.everySongWentIn : Words.wentIn(report.wentIn))
+                // Songs as the crate counts them (a song in two places once), how far a stopped run got, and why
+                // files and songs differ when they do (RunReport.summaryLines, the pages say the same).
+                ForEach(report.summaryLines, id: \.self) { Text($0) }
                 if report.notInCount > 0 {
                     Text(Words.didntGoIn(report.notInCount))
                     ForEach(report.notIn.keys.sorted(), id: \.self) { r in

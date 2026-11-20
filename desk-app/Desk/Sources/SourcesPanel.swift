@@ -1,6 +1,7 @@
 import SwiftUI
 import DeckieDisc
 import DeckieCrate
+import DeckieDesk
 
 // The Sources panel (D25, D26, D31). A source is the thing a DJ holds that the songs were read from: a burned CD, a USB
 // stick, an SD card, or a folder the DJ added (named after that top folder, its folders inside as groups). Desk reads one as it is (Add music, DeskModel.addSource), so the panel shows what was read and is
@@ -108,7 +109,7 @@ struct SourcesPanel: View {
             } else {
                 List(selection: $model.sourceSelection) {
                     ForEach(outline, id: \.name) { s in
-                        let count = s.folders.reduce(0) { $0 + $1.trackIds.count }
+                        let count = DeskSourceRow.songs(in: s)
                         Label(Words.sourceLine(s.name, songs: count), systemImage: "externaldrive")
                             .font(Look.Fonts.sourceName).tag(SourceItem.source(s.name))
                         ForEach(s.folders, id: \.name) { f in
@@ -132,7 +133,7 @@ struct SourcesPanel: View {
             TextField(Words.nameField, text: $promptText)
             Button(Words.renameButton) { commit() }
             Button(Words.cancel, role: .cancel) { prompt = nil }
-        }
+        } message: { Text(Words.t("renameNote")) }
     }
 
     /// A song by the number it has in this folder (the player's, as read; numbered again after a move). A song that

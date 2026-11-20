@@ -102,8 +102,9 @@ struct AddStepSheet: View {
 
     @ViewBuilder private var drivesList: some View {
         Text(Words.chooseDriveTitle).font(Look.Fonts.sheetTitle)
-        Text(Words.chooseDriveBody).foregroundStyle(.secondary)
+        // Nothing plugged in: said once, by noDriveIn.
         if plugged.isEmpty { Text(Words.noDriveIn).foregroundStyle(.secondary) }
+        else { Text(Words.chooseDriveBody).foregroundStyle(.secondary) }
         VStack(alignment: .leading, spacing: Look.Add.rowsGap) {
             ForEach(plugged, id: \.path) { d in
                 row(symbol: d.big ? "externaldrive.fill" : "externaldrive", name: d.name,
@@ -115,8 +116,8 @@ struct AddStepSheet: View {
 
     @ViewBuilder private var cdsList: some View {
         Text(Words.chooseCDTitle).font(Look.Fonts.sheetTitle)
-        Text(Words.chooseCDBody).foregroundStyle(.secondary)
         if model.musicCDs.isEmpty && dataCDs.isEmpty { Text(Words.noCDIn).foregroundStyle(.secondary) }
+        else { Text(Words.chooseCDBody).foregroundStyle(.secondary) }
         VStack(alignment: .leading, spacing: Look.Add.rowsGap) {
             ForEach(model.musicCDs, id: \.location) { cd in
                 row(symbol: "opticaldisc", name: MusicCDItem.label(cd), detail: []) { model.addStep = nil; model.addMusicCD(cd) }
