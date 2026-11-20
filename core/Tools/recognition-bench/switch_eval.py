@@ -88,6 +88,8 @@ def score_arm(truth, readings):
             # (the listener a whole turn behind) is carried over, not found, until something else has been shown.
             before = [r for r in rs if r[0] <= p["from"] + 1e-6]
             carried = k > 0 and bool(before) and before[-1][2] is not None and same(before[-1][2], p["song"])
+            was_on_show = carried
+            shown_in_turn = any(r[2] and same(r[2], p["song"]) for r in inside)
             first = None
             for r in inside:
                 if r[2] and same(r[2], p["song"]):
@@ -98,7 +100,7 @@ def score_arm(truth, readings):
             dur = p["to"] - p["from"]
             if dur >= 10:
                 c["turns 10s+"].append(1)
-                if first is None:
+                if not shown_in_turn:
                     c["misses"].append(1)
             if first is not None:
                 after = [r for r in inside if r[0] > first]
@@ -107,6 +109,11 @@ def score_arm(truth, readings):
                 c["jumps"].append(jumps)
             if k:
                 kind = "return to the first song" if t["kind"] == "return" and k == 2 else "after a cut"
+                if was_on_show:
+                    # Its name was still up when its turn began (it never went, or the listener was a turn behind):
+                    # not a time to a name; counted apart.
+                    c[kind + ": already on show"].append(1)
+                    continue
                 if first is None:
                     c[kind + ": not in its turn"].append(1)
                 else:
@@ -168,10 +175,12 @@ def summary(cells, label):
         for key in ("after a cut", "return to the first song"):
             v = c[key]
             n = len(c[key + ": cuts"])
-            if n:
+            if n or c[key + ": already on show"]:
+                n = max(n, 1)
                 row[key] = dict(median=pct(v, 50) if v else None, p90=pct(v + [99] * len(c[key + ": not in its turn"]), 90),
                                 by3=sum(1 for x in v if x <= 3) / n, by4=sum(1 for x in v if x <= 4) / n, by5=sum(1 for x in v if x <= 5) / n,
-                                not_in_turn=len(c[key + ": not in its turn"]) / n, cuts=n)
+                                not_in_turn=len(c[key + ": not in its turn"]) / n, cuts=n,
+                                already_on_show=len(c[key + ": already on show"]))
         if c["old at 3"]:
             row["old up at 3 s"] = float(np.mean(c["old at 3"])); row["old up at 5 s"] = float(np.mean(c["old at 5"]))
         tot = sum(c["show all"]) or 1

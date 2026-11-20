@@ -97,7 +97,7 @@ public struct ListenSettings: Sendable, Equatable {
     /// followed song's.
     public var challenger = false
     public var challengeWindow = 4.0
-    public var challengeMargin = 2.0
+    public var challengeMargin = 2.0          // chosen on the dev half from 1.5, 2 and 3 (3 a second slower; 1.5 and 2 alike)
     /// Proposal B. The followed song's own points are watched for the moment they stop pairing (a CUSUM test, Page
     /// 1954): point by point, "still here" (paired at the rate this song has shown) against "gone" (paired at chance).
     /// Its bar is set so that a false alarm comes on average no more often than once in `cutFalseAlarmSeconds` of
@@ -105,6 +105,9 @@ public struct ListenSettings: Sendable, Equatable {
     /// After an alarm the crate is searched every reading in the sound since that moment only.
     public var cutWatch = false
     public var cutFalseAlarmSeconds = 3600.0
+    /// After an alarm, the least sound since its moment that is searched (nil: `leastWindow`, 3 s). B and A+B use 2,
+    /// chosen on the dev half against 3 (half a second sooner, no more wrong names or jumps than the default).
+    public var cutSearchFrom: Double? = nil
     public init() {}
 
     /// The listeners compared in docs/research/faster-listening-proposals.md, by the names the tools use.
@@ -115,8 +118,8 @@ public struct ListenSettings: Sendable, Equatable {
         case .main: break
         case .fast: self = .fast
         case .a: challenger = true; searchSinceMiss = challengeWindow
-        case .b: cutWatch = true
-        case .ab: challenger = true; searchSinceMiss = challengeWindow; cutWatch = true
+        case .b: cutWatch = true; cutSearchFrom = 2
+        case .ab: challenger = true; searchSinceMiss = challengeWindow; cutWatch = true; cutSearchFrom = 2
         }
     }
 
@@ -294,7 +297,7 @@ public final class SongListener {
         } else if let c = alarm {
             // B: every reading, in the sound since the song went only, once there is enough of it.
             sinceSearch = 0
-            if now - c >= settings.leastWindow { tries.append(since(c)) }
+            if now - c >= (settings.cutSearchFrom ?? settings.leastWindow) { tries.append(since(c)) }
         } else if following == nil || misses > 0 || sinceSearch >= settings.searchEvery {
             sinceSearch = 0
             if followed != nil, have > settings.followSearchWindow {
