@@ -38,7 +38,8 @@ struct DeskRunTests {
         let signer: DeskRun.SignatureMaker = { url in Data("sig of \(url.lastPathComponent)".utf8) }
         func run(_ crate: CrateInfo, _ folder: URL, _ source: String) throws -> (crate: Crate, report: RunReport) {
             try DeskRun(home: home, crateId: crate.id, request: RunRequest(folder: folder, source: source), jobs: 2,
-                        device: "Mac15,6", analyser: analyser, signer: signer, printer: DeskRun.portablePrint).run()
+                        device: "Mac15,6", analyser: analyser, signer: signer, printer: DeskRun.portablePrint,
+                        jobsBy: .memory).run()
         }
 
         // 1. A into a new crate: read, signed and printed in one run.
@@ -59,6 +60,9 @@ struct DeskRunTests {
         #expect(try CrateReader.read(from: home.shelf.package(night.id)).tracks.allSatisfy(\.canBeRecognised))
         #expect(DeskRun.pending(home: home, crateId: night.id) == nil)
         #expect(DeskRun.runs(home: home, crateId: night.id).count == 1)
+        // The run log says how many songs were read at once and why.
+        #expect(one.report.jobs == 2 && one.report.jobsBy == "memory")
+        #expect(DeskRun.runs(home: home, crateId: night.id).first?.jobsBy == "memory")
         #expect(one.report.songsPerMinute > 0)
         // A folder is read where it is: no song of it is copied into Desk's storage (the note on D33, Nov 14).
         #expect(musicFiles(under: home.root).isEmpty)

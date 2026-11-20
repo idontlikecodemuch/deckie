@@ -158,6 +158,9 @@ public struct RunReport: Codable, Equatable, Sendable {
     /// The DJ stopped the run (Stop) before every song was read: the songs read are in the crate, and the run is kept
     /// to carry on (`pending.json` stays). Nil in a line written before Stop.
     public var stopped: Bool? = nil
+    /// Why `jobs` is what it is (`DeskJobs.Reason`): `cores`, `memory`, `set` (DECKIE_DESK_JOBS), or `disc` (a music
+    /// CD, read one song at a time whatever `jobs` says). Nil when the caller did not say, and in a line written before it.
+    public var jobsBy: String? = nil
 
     enum CodingKeys: String, CodingKey {
         case crate, read, seconds, analysed, reused, copies, jobs, device, engine, damaged
@@ -167,6 +170,7 @@ public struct RunReport: Codable, Equatable, Sendable {
         case printsMade = "prints_made", printsKept = "prints_kept", printsFailed = "prints_failed"
         case songsInCrate = "songs_in_crate", songsPerMinute = "songs_per_minute", carriedOn = "carried_on"
         case local, disc, covers, fingerprinted, songsWithFingerprint = "songs_with_fingerprint", stopped
+        case jobsBy = "jobs_by"
     }
 
     /// Songs that did not go in.
@@ -193,6 +197,8 @@ public final class DeskRun: @unchecked Sendable {
     public let crateId: String
     public let request: RunRequest
     public let jobs: Int
+    /// Why `jobs` is what it is (`DeskJobs.Reason`), for the run log; nil when the caller did not say.
+    public let jobsBy: DeskJobs.Reason?
     public let device: String
     public let fileBPMTags: Bool
     let analyser: Analyser?
@@ -211,8 +217,9 @@ public final class DeskRun: @unchecked Sendable {
 
     public init(home: DeskHome, crateId: String, request: RunRequest, jobs: Int, device: String,
                 fileBPMTags: Bool = true, analyser: Analyser? = nil, signer: SignatureMaker?, printer: @escaping PrintMaker,
-                audioPrinter: AudioPrintMaker? = nil) {
+                audioPrinter: AudioPrintMaker? = nil, jobsBy: DeskJobs.Reason? = nil) {
         self.home = home; self.crateId = crateId; self.request = request; self.jobs = max(1, jobs); self.device = device
+        self.jobsBy = jobsBy
         self.fileBPMTags = fileBPMTags; self.analyser = analyser; self.signer = signer; self.printer = printer
         self.audioPrinter = audioPrinter
     }
@@ -557,7 +564,7 @@ public final class DeskRun: @unchecked Sendable {
         for e in mine where e.reason != Reason.damagedFrames && e.reason != Reason.skipped { notIn[e.reason, default: 0] += 1 }
         let seconds = Date().timeIntervalSince(t0)
         state.lock.lock()
-        let report = RunReport(
+        var report = RunReport(
             crate: info.name, read: request.name, startedAt: Self.utc(t0), seconds: seconds, buildSeconds: buildSeconds,
             finishSeconds: Date().timeIntervalSince(t1), songsSeen: result.filesSeen,
             wentIn: max(0, result.filesSeen - notIn.values.reduce(0, +)), notIn: notIn,
@@ -575,6 +582,7 @@ public final class DeskRun: @unchecked Sendable {
             }, covers: result.covers,
             fingerprinted: result.fingerprinted, songsWithFingerprint: crate.tracks.filter { $0.fingerprint != nil }.count)
         state.lock.unlock()
+        report.jobsBy = disc != nil ? DeskJobs.Reason.disc.rawValue : jobsBy?.rawValue
         var line = report
         line.stopped = result.stopped ? true : nil
         try Self.appendRun(line, to: shelf.file(Self.runsFile, of: crateId))
