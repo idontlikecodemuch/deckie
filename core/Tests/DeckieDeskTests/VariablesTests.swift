@@ -1,5 +1,6 @@
 import Foundation
 import Testing
+import DeckieLookup
 @testable import DeckieDesk
 
 /// D36: every word a person can see comes from DeskWords, by name, and every design value from the app's one file of
@@ -138,6 +139,44 @@ import Testing
         let asked = Set(Self.matches(#"\b(?:t|join)\("([A-Za-z][\w.]*)"\s*[,)]"#, js))
         let missing = asked.filter { DeskWords.table[$0] == nil }
         #expect(missing.isEmpty, "\(missing.sorted())")
+    }
+
+    /// A word asked for by a name built from a prefix and a code (`t("lookupWhat." + k)`), where the prefix has no
+    /// `.other` to fall back on, shows its raw name when the code has no word ("lookupWhat.version" did). Every such
+    /// prefix the windows and the core build is checked here against every code the code can give it.
+    @Test func everyBuiltNameHasItsWord() {
+        // The codes a lookup can send, field by field: every field of a recording search (found by reflection, so a
+        // new field fails here until it has its words), an ISRC, and a song's version.
+        let q = RecordingQuery(title: "t", artist: "a", release: "r", words: "w")
+        let labels = Mirror(reflecting: q).children.compactMap(\.label)
+        #expect(Set(q.fields.map { $0[0] }) == Set(labels), "a RecordingQuery field is not in its sent fields")
+        let sendable = Set(labels + ["isrc", "version"])
+        for code in sendable {
+            #expect(DeskWords.table["lookupWhat." + code] != nil, "lookupWhat.\(code)")
+            #expect(DeskWords.table["sentField." + code] != nil, "sentField.\(code)")
+        }
+        // Every prefix the pages, the Mac and the core build a name from at run time, with no `.other` to fall back
+        // on, is listed here with its codes; a new one fails until it is.
+        let js = Self.read("desk-web/desk.js") + Self.read("desk-web/run.js")
+        let swift = (Self.macViews + ["desk-app/Desk/Sources/Words.swift"]).map(Self.read).joined()
+            + ["DeskLookup", "DeskRun", "DeskWords", "RunSongs"].map { Self.read("core/Sources/DeckieDesk/\($0).swift") }.joined()
+        let built = Set(Self.matches(#"\b(?:t|w|n|text|count|DeskWords\.text|DeskWords\.count|Words\.t|Words\.c)\(\s*"([A-Za-z]+\.)"\s*\+"#, js + swift))
+        #expect(built.contains("lookupWhat."), "the scan finds the lookup's sentence")
+        let known: [String: [String]] = [
+            "lookupWhat.": Array(sendable),
+            "mode.": ["major", "minor"], "noteName.": (1...12).map(String.init),
+            "nameReason.": ["noTitle", "noArtist", "guess", "disagree"],
+            "lyrics.": ["clean", "dirty"], "thisComputer.": ["mac", "other"],
+            "nowStage.": RunNow.analysisSteps, "chooseLibraryAt.": ["menu", "more"],
+            "lookupFailure.": [LookupFailure.noConnection, .busy, .refused(500), .badAnswer, .notOnThisComputer, .stopped].map(\.code),
+            "changeNote.": ["filled", "yours", "lengthDiffers", "yourVersion", "otherVersion", "original", "catalogueWord",
+                            "firstRelease", "disagree"],
+            "moment.": [], "fact.": [], "saying.": [],   // checked by RunScreenTests
+        ]
+        for prefix in built where DeskWords.table[prefix + "other"] == nil {
+            guard let codes = known[prefix] else { Issue.record("\(prefix) is built from a code with no list of its codes here"); continue }
+            for c in codes { #expect(DeskWords.table[prefix + c] != nil, "\(prefix)\(c)") }
+        }
     }
 
     // MARK: the Mac's window (desk-app)

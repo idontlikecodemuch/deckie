@@ -702,6 +702,8 @@ public enum DeskWords {
         "lookupWhat.release": "the release “{value}”",
         "lookupWhat.isrc": "the ISRC {value}",
         "lookupWhat.words": "the words “{value}”",
+        // new (Nov 20, 2026): a song's version, should a lookup ever send it (every field a lookup can send has its words).
+        "lookupWhat.version": "the version “{value}”",
         "lookupProgressTitle": "Looking up via MusicBrainz",
         "lookupProgress.one": "{done} of {n} song",
         "lookupProgress.other": "{done} of {n} songs",
@@ -801,6 +803,7 @@ public enum DeskWords {
         "sentField.artist": "artist “{value}”",
         "sentField.release": "release “{value}”",
         "sentField.words": "words “{value}”",
+        "sentField.version": "version “{value}”",
         "sentField.isrc": "ISRC {value}",
         "sentField.discId": "disc id {value}",
         "sentField.toc": "song positions {value}",
