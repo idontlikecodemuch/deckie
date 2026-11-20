@@ -287,6 +287,8 @@ struct OneReadSameResultTests {
         // Each song off the disc once (reading the table and text is not reading sound).
         #expect(drive.sectorsRead == toc.songs.reduce(0) { $0 + $1.sectors })
         #expect(report.printsMade == 2 && report.printsFailed == 0 && report.wentIn == 2)
+        // A music CD is read one song at a time, and the run log says so.
+        #expect(report.jobsBy == "disc")
         // The song now: taken, read off the disc to the end, then each analysis stage, for song 1 then song 2.
         for number in [1, 2] {
             let mine = seen.now.filter { $0.number == number }

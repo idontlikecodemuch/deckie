@@ -40,13 +40,29 @@ public var processorCount: Int { max(1, ProcessInfo.processInfo.activeProcessorC
 /// The default number of jobs: the processor count, or fewer when memory is short. One analysis of a four-minute
 /// track peaks at about 1.1 GB, 0.2 GB of it the models, which the jobs share; each further job adds about 1 GB,
 /// almost all of it the beat model's working memory for one 30-second chunk (measured on Linux in a release build:
-/// deckie-build peaked at 1.09 GB for one job and 4.4 GB for four). So a job is given 1 GB and 2 GB are left for
-/// everything else. (Before the beat model shrank ONNX Runtime's arena after a track's first and last chunk, one job
+/// deckie-build peaked at 1.09 GB for one job and 4.4 GB for four). A job is given 1.5 GB and 2 GB are left for
+/// everything else (`JobMemory`, which says why 1.5). (Before the beat model shrank ONNX Runtime's arena after a track's first and last chunk, one job
 /// peaked at 1.9 GB and four at 5.5 GB, and a job was given 2 GB.) docs/research/p-machine-estimates.md estimates what
 /// this gives on DJs' machines.
 public var defaultJobs: Int {
-    let gb = Double(ProcessInfo.processInfo.physicalMemory) / Double(1 << 30)
-    return max(1, min(processorCount, Int(gb - 2)))
+    max(1, min(processorCount, JobMemory.jobsAllowed(physicalMemory: ProcessInfo.processInfo.physicalMemory)))
+}
+
+/// The jobs memory allows, the one rule `defaultJobs` (deckie-build) and Deckie Desk (`DeskJobs`) both use: a job is
+/// given `gigabytesPerJob` and `gigabytesKept` are left for the system and other programs, never fewer than one job:
+/// 4 GB gives 1 job, 6 GB 2, 8 GB 4. Why 1.5 GB a job and not the builder's 1 GB further a job measured above: Desk's
+/// own measured peaks a job are 1.1 GB on Windows (two music CD runs in a virtual machine, Nov 20 2026) and 1.6 to
+/// 1.8 GB on the Mac, for a four-minute song, growing about 37 MB a minute of song, so 1 GB a job leaves no margin.
+/// It is a safety allowance from those measurements, not tuned to any machine; deckie-build's default follows it.
+public enum JobMemory {
+    public static let gigabytesPerJob = 1.5
+    public static let gigabytesKept = 2.0
+
+    /// The jobs `physicalMemory` bytes (`ProcessInfo.physicalMemory`) allow.
+    public static func jobsAllowed(physicalMemory: UInt64) -> Int {
+        let gb = Double(physicalMemory) / Double(1 << 30)
+        return max(1, Int((gb - gigabytesKept) / gigabytesPerJob))
+    }
 }
 
 /// Seconds as `0:04:07` (or `1:02:03:04` past a day, never needed).
