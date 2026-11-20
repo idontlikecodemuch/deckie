@@ -46,15 +46,21 @@ public struct RunProgress: Sendable {
     public var song: RunSong? = nil
     public var notes: [RunNote] = []
     public var figures = RunFigures()
-    /// The song being read now and the step it is on, for the waiting line ("Reading song 2 of 6 from the disc",
-    /// then the analysis stage); nil between songs, and when several songs are read at once.
+    /// The song being worked on now and the step it is on, when songs are read one at a time (a music CD's songs, or
+    /// a folder read with one job): the run screen's song card names it and says its step. Nil between songs, and
+    /// when several songs are read at once (`working` says those).
     public var now: RunNow? = nil
+    /// Every song being worked on now, in the order they were taken, each with its step: the one song `now` names,
+    /// or the several a folder's jobs read at once. Empty between songs.
+    public var working: [RunNow] = []
+    /// The next song of a music CD while it is read ahead (its sound coming off the disc while `now` is analysed),
+    /// with the share read; nil when nothing is read ahead. Never the song `now` names.
+    public var ahead: RunNow? = nil
 }
 
-/// The song a run is reading now (a music CD's songs, or a folder read one song at a time), and what is happening to
-/// it: taken (`started`), its sound coming off the disc (`reading`, with the share read), or an analysis stage
-/// starting (`Analysis.timings`' names: "hash", "decode", "resample", "beatthis", "key", "spectral", "structure",
-/// "loudness", "vocal", "windows").
+/// A song a run is working on now, and what is happening to it: taken (`started`), its sound coming off the disc
+/// (`reading`, with the share read), or an analysis stage starting (`Analysis.timings`' names: "hash", "decode",
+/// "resample", "beatthis", "key", "spectral", "structure", "loudness", "vocal", "windows").
 public struct RunNow: Sendable, Equatable {
     /// The song's path as the run's lines name it (the source's name first).
     public var rel: String
@@ -63,8 +69,12 @@ public struct RunNow: Sendable, Equatable {
     public var step: String
     /// The share of the song read off the disc so far, 0 to 1, while it is read; nil otherwise.
     public var read: Double?
-    public init(rel: String, number: Int?, step: String, read: Double? = nil) {
-        self.rel = rel; self.number = number; self.step = step; self.read = read
+    /// The name Desk has for it so far: a music CD's CD-Text name, then rekordbox's or its tags' once they are read;
+    /// nil until there is one (`name` is then its file name).
+    public var title: String?
+    public var artist: String?
+    public init(rel: String, number: Int?, step: String, read: Double? = nil, title: String? = nil, artist: String? = nil) {
+        self.rel = rel; self.number = number; self.step = step; self.read = read; self.title = title; self.artist = artist
     }
 
     /// The analysis stages in the order they run (desk.js's NOW_STEPS says the same).
@@ -74,6 +84,12 @@ public struct RunNow: Sendable, Equatable {
     /// Whether the song's sound is still coming off the source.
     public var isReading: Bool { step == "started" || step == "reading" }
 
+    /// The song's name on the screen: the name Desk has for it, else its file name without the ending ("Track 02").
+    public var name: String {
+        if let t = title, !t.isEmpty { return t }
+        return (CratePath.lastName(rel) as NSString).deletingPathExtension
+    }
+
     /// How far through the song, 0 to 1: the share read while it is read, then its analysis steps done of all of them.
     public var share: Double {
         if isReading { return max(0, min(1, read ?? 0)) }
@@ -81,16 +97,78 @@ public struct RunNow: Sendable, Equatable {
         return Double(i + 1) / Double(Self.analysisSteps.count)
     }
 
-    /// The waiting line in Desk's words: "Reading song 2 of 6 from the disc", "Song 2 of 6: finding the beat", or for a
-    /// song not on a disc, "Reading the next song", "This song: finding the beat". `total` is the songs of the run.
+    /// The step line on the song card, in Desk's words: "Reading song 2 of 6 from the disc", "Song 2 of 6: finding
+    /// the beat", or for a song not on a disc, "Reading this song", "This song: finding the beat". `total` is the
+    /// songs of the run.
     public func line(total: Int) -> String {
         if isReading {
-            return number.map { DeskWords.text("nowReadingDisc", ["number": "\($0)", "total": "\(total)"]) } ?? DeskWords.text("nowReading")
+            return number.map { DeskWords.text("nowReadingDisc", ["number": DeskWords.number($0), "total": DeskWords.number(total)]) }
+                ?? DeskWords.text("nowReading")
         }
-        let stage = DeskWords.table["nowStage." + step] != nil ? DeskWords.text("nowStage." + step) : DeskWords.text("nowStage.other")
-        return number.map { DeskWords.text("nowStageOf", ["number": "\($0)", "total": "\(total)", "stage": stage]) }
+        return number.map { DeskWords.text("nowStageOf", ["number": DeskWords.number($0), "total": DeskWords.number(total), "stage": stage]) }
             ?? DeskWords.text("nowStageAlone", ["stage": stage])
     }
+
+    /// The step alone, as a part of a sentence ("finding the beat"): a row of the songs worked on at once.
+    public var stage: String {
+        if isReading { return DeskWords.text("nowOpening") }
+        return DeskWords.table["nowStage." + step] != nil ? DeskWords.text("nowStage." + step) : DeskWords.text("nowStage.other")
+    }
+
+    /// The quiet line under the song card while the next song is read ahead.
+    public static var aheadLine: String { DeskWords.text("nowAheadDisc") }
+
+    /// The heading of the song card when several songs are worked on at once: "Working on 4 songs".
+    public static func workingLine(_ n: Int) -> String { DeskWords.count("workingOn", n) }
+}
+
+/// The songs a run is working on, kept as their steps come (from the builder's jobs and the disc's read ahead, under
+/// the run's lock): which are in hand, in the order taken, each with its step and name, and the song read ahead.
+/// One rule makes the screen's words match what the drive and the analysis are doing: a read of a song in hand is
+/// that song's read; a read of any other song is the read ahead.
+struct RunWorking: Sendable, Equatable {
+    /// Songs read one at a time (`jobs` 1): `now` is the one song.
+    let oneAtATime: Bool
+    private(set) var songs: [RunNow] = []
+    private(set) var ahead: RunNow?
+    init(oneAtATime: Bool) { self.oneAtATime = oneAtATime }
+
+    var now: RunNow? { oneAtATime ? songs.first : nil }
+
+    /// The builder took a song: it is in hand (its read ahead, if it was being read ahead, is now its own read).
+    mutating func took(_ song: RunNow) {
+        if ahead?.rel == song.rel { ahead = nil }
+        songs.removeAll { $0.rel == song.rel }
+        songs.append(song)
+    }
+
+    /// A step of a song: its own when it is in hand; a read of a song not in hand is the read ahead (ended when it
+    /// has all been read). Steps of a song neither in hand nor being read are let go.
+    mutating func step(_ rel: String, step: String, read: Double? = nil) {
+        if let i = songs.firstIndex(where: { $0.rel == rel }) {
+            songs[i].step = step; songs[i].read = read
+            return
+        }
+        guard step == "reading" else { return }
+        if let r = read, r >= 1 { if ahead?.rel == rel { ahead = nil }; return }
+        if ahead?.rel == rel { ahead?.read = read } else {
+            ahead = RunNow(rel: rel, number: DiscSongFiles.number(of: rel), step: "reading", read: read)
+        }
+    }
+
+    /// The name Desk has for a song in hand (a name already given, a disc's CD-Text, stays when this gives none).
+    mutating func named(_ rel: String, title: String?, artist: String?) {
+        guard let i = songs.firstIndex(where: { $0.rel == rel }), let t = title, !t.isEmpty else { return }
+        songs[i].title = t; songs[i].artist = artist ?? songs[i].artist
+    }
+
+    /// A song is done (read, or not read): it leaves the songs in hand.
+    mutating func done(_ rel: String) { songs.removeAll { $0.rel == rel } }
+
+    /// The read ahead of `rel` ended (read whole, cancelled, or failed).
+    mutating func aheadEnded(_ rel: String) { if ahead?.rel == rel { ahead = nil } }
+
+    mutating func clear() { songs = []; ahead = nil }
 }
 
 /// One line of a run's list, as data; a desk says it in its own words.
@@ -163,6 +241,9 @@ public struct RunReport: Codable, Equatable, Sendable {
     /// was read, reached or not: a stopped run read `songsSeen` of them. Nil in a line written before them.
     public var songsRead: Int? = nil
     public var filesFound: Int? = nil
+    /// Why `jobs` is what it is (`DeskJobs.Reason`): `cores`, `memory`, `set` (DECKIE_DESK_JOBS), or `disc` (a music
+    /// CD, read one song at a time whatever `jobs` says). Nil when the caller did not say, and in a line written before it.
+    public var jobsBy: String? = nil
 
     enum CodingKeys: String, CodingKey {
         case crate, read, seconds, analysed, reused, copies, jobs, device, engine, damaged
@@ -173,6 +254,7 @@ public struct RunReport: Codable, Equatable, Sendable {
         case songsInCrate = "songs_in_crate", songsPerMinute = "songs_per_minute", carriedOn = "carried_on"
         case local, disc, covers, fingerprinted, songsWithFingerprint = "songs_with_fingerprint", stopped
         case songsRead = "songs_read", filesFound = "files_found"
+        case jobsBy = "jobs_by"
     }
 
     /// Songs that did not go in.
@@ -218,6 +300,8 @@ public final class DeskRun: @unchecked Sendable {
     public let crateId: String
     public let request: RunRequest
     public let jobs: Int
+    /// Why `jobs` is what it is (`DeskJobs.Reason`), for the run log; nil when the caller did not say.
+    public let jobsBy: DeskJobs.Reason?
     public let device: String
     public let fileBPMTags: Bool
     let analyser: Analyser?
@@ -236,8 +320,9 @@ public final class DeskRun: @unchecked Sendable {
 
     public init(home: DeskHome, crateId: String, request: RunRequest, jobs: Int, device: String,
                 fileBPMTags: Bool = true, analyser: Analyser? = nil, signer: SignatureMaker?, printer: @escaping PrintMaker,
-                audioPrinter: AudioPrintMaker? = nil) {
+                audioPrinter: AudioPrintMaker? = nil, jobsBy: DeskJobs.Reason? = nil) {
         self.home = home; self.crateId = crateId; self.request = request; self.jobs = max(1, jobs); self.device = device
+        self.jobsBy = jobsBy
         self.fileBPMTags = fileBPMTags; self.analyser = analyser; self.signer = signer; self.printer = printer
         self.audioPrinter = audioPrinter
     }
@@ -281,8 +366,8 @@ public final class DeskRun: @unchecked Sendable {
         var sigMade = 0, sigKept = 0, sigFailed = 0, printMade = 0, printKept = 0, printFailed = 0
         /// The run screen's songs and totals (D37).
         var tally = RunTally()
-        /// The song being read now (`RunProgress.now`).
-        var now: RunNow?
+        /// The songs being worked on now and the song read ahead (`RunProgress.now`, `working`, `ahead`).
+        var working = RunWorking(oneAtATime: true)
         /// Songs whose print was made from the analysis's audio in this run (counted as made, not kept).
         var printedInHand = Set<String>()
     }
@@ -338,12 +423,19 @@ public final class DeskRun: @unchecked Sendable {
             default: return nil
             }
         }
+        // Progress goes out one call at a time, in the order the state changed: the snapshot and the call are made
+        // under one lock, so a step reported on the analysing thread is never overtaken by a later snapshot from
+        // another thread (the disc's read ahead, the finishing queue, the screen's queue), nor folded into it.
+        let deliver = NSRecursiveLock()
         @Sendable func emit(_ stage: RunStage, _ line: RunLine?, song: RunSong? = nil, notes: [RunNote] = []) {
+            deliver.lock(); defer { deliver.unlock() }
             state.lock.lock()
             var p = RunProgress(stage: stage, done: min(state.done, state.total), total: state.total, remaining: estimate(),
                                 line: line)
             p.song = song; p.notes = notes + state.tally.done(p.done); p.figures = state.tally.figures
-            p.now = stage == .reading ? state.now : nil
+            if stage == .reading {
+                p.now = state.working.now; p.working = state.working.songs; p.ahead = state.working.ahead
+            }
             state.lock.unlock()
             progress(p)
         }
@@ -401,28 +493,43 @@ public final class DeskRun: @unchecked Sendable {
             state.lock.unlock()
         }
 
-        // The song now, step by step, for the waiting line: taken, coming off the disc, each analysis stage.
-        @Sendable func step(_ rel: String, _ now: RunNow) {
+        // The songs now, step by step, for the song card: taken, named, coming off the disc, each analysis stage; and
+        // the next song of a disc while it is read ahead (RunWorking tells the two apart).
+        state.working = RunWorking(oneAtATime: options.jobs == 1)
+        @Sendable func change(_ f: (inout RunWorking) -> Void) {
+            // The change and its progress together: every step of the song now is sent, in order.
+            deliver.lock(); defer { deliver.unlock() }
             state.lock.lock()
-            if now.step != "started", state.now?.rel != rel { state.lock.unlock(); return }   // a song read ahead
-            state.now = now
+            let was = state.working
+            f(&state.working)
+            let changed = state.working != was
             state.lock.unlock()
-            emit(.reading, nil)
+            if changed { emit(.reading, nil) }
         }
-        let isDisc = disc != nil
+        let base = disc?.base
+        /// A music CD's song by the name its CD-Text gives, where the builder has only its file name.
+        @Sendable func discName(_ rel: String, _ title: String?, _ artist: String?) -> (String?, String?) {
+            guard let base else { return (title, artist) }
+            return DiscSongFiles.shownName(rel: rel, title: title, artist: artist, record: base)
+        }
         options.onStep = { rel, s in
-            let number = isDisc ? DiscSongFiles.number(of: rel) : nil
+            let number = base != nil ? DiscSongFiles.number(of: rel) : nil
             switch s {
-            case .started: step(rel, RunNow(rel: rel, number: number, step: "started"))
+            case .started:
+                let (title, artist) = discName(rel, nil, nil)
+                change { $0.took(RunNow(rel: rel, number: number, step: "started", title: title, artist: artist)) }
+            case let .named(title, artist):
+                let (t, a) = discName(rel, title, artist)
+                change { $0.named(rel, title: t, artist: a) }
             case let .reading(done, total):
-                step(rel, RunNow(rel: rel, number: number, step: "reading", read: total > 0 ? Double(done) / Double(total) : nil))
-            case .stage(let name): step(rel, RunNow(rel: rel, number: number, step: name))
+                change { $0.step(rel, step: "reading", read: total > 0 ? Double(done) / Double(total) : nil) }
+            case .stage(let name): change { $0.step(rel, step: name) }
             }
         }
         disc?.onRead = { rel, done, total in
-            step(rel, RunNow(rel: rel, number: DiscSongFiles.number(of: rel), step: "reading",
-                             read: total > 0 ? min(1, Double(done) / Double(total)) : nil))
+            change { $0.step(rel, step: "reading", read: total > 0 ? min(1, Double(done) / Double(total)) : nil) }
         }
+        disc?.onAheadEnded = { rel in change { $0.aheadEnded(rel) } }
         // The print that finds copies, from the audio the analysis decoded: the song is not read again for it.
         if let audioPrinter {
             options.withAudio = { id, file, audio in
@@ -442,7 +549,7 @@ public final class DeskRun: @unchecked Sendable {
                 emit(.reading, .started(files: files, unchanged: unchanged, queued: queued))
             case let .file(p):
                 state.lock.lock()
-                if state.now?.rel == p.rel { state.now = nil }
+                state.working.done(p.rel)
                 state.builderRemaining = p.remaining; state.builderStamp = Date()
                 if p.id == nil { state.done += 1; state.tally.notIn() } else { state.waiting += 1 }
                 state.lock.unlock()
@@ -480,7 +587,7 @@ public final class DeskRun: @unchecked Sendable {
         }
         // Nothing more is read off the disc: a song read ahead that the builder did not take (Stop) is let go.
         disc?.cancelReadAhead()
-        state.lock.lock(); state.now = nil; state.lock.unlock()
+        state.lock.lock(); state.working.clear(); state.lock.unlock()
         queue.sync {}
         screen.sync {}
         if disc != nil { emit(.finishing, nil, notes: [state.tally.discRead()]) }
@@ -583,7 +690,7 @@ public final class DeskRun: @unchecked Sendable {
         for e in mine where e.reason != Reason.damagedFrames && e.reason != Reason.skipped { notIn[e.reason, default: 0] += 1 }
         let seconds = Date().timeIntervalSince(t0)
         state.lock.lock()
-        let report = RunReport(
+        var report = RunReport(
             crate: info.name, read: request.name, startedAt: Self.utc(t0), seconds: seconds, buildSeconds: buildSeconds,
             finishSeconds: Date().timeIntervalSince(t1), songsSeen: result.filesSeen,
             wentIn: max(0, result.filesSeen - notIn.values.reduce(0, +)), notIn: notIn,
@@ -602,6 +709,7 @@ public final class DeskRun: @unchecked Sendable {
             fingerprinted: result.fingerprinted, songsWithFingerprint: crate.tracks.filter { $0.fingerprint != nil }.count,
             songsRead: state.tally.figures.songs, filesFound: max(state.total, result.filesSeen))
         state.lock.unlock()
+        report.jobsBy = disc != nil ? DeskJobs.Reason.disc.rawValue : jobsBy?.rawValue
         var line = report
         line.stopped = result.stopped ? true : nil
         try Self.appendRun(line, to: shelf.file(Self.runsFile, of: crateId))

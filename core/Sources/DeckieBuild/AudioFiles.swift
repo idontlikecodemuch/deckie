@@ -48,10 +48,13 @@ extension BuildFiles {
     public func readAhead(_ f: SourceFile) {}
 }
 
-/// One step of the song a build is on, for a screen that says what is happening now (the run's waiting line).
+/// One step of a song a build is on, for a screen that says what is happening now (the run's song now).
 public enum SongStep: Sendable, Equatable {
     /// The builder took the song, before anything of it is read.
     case started
+    /// The song's name as the builder first has it (rekordbox's, its tags', else its file name), once its tags are
+    /// read: before its sound is worked on.
+    case named(title: String, artist: String?)
     /// Its sound coming off the source, `done` of `total` parts (a music CD's sectors).
     case reading(done: Int, total: Int)
     /// An analysis stage starting, by the name `Analysis.timings` gives it ("decode", "beatthis", "key", ...).
