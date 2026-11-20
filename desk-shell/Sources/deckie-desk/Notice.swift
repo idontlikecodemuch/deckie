@@ -13,6 +13,17 @@ import Foundation
 enum Notice {
     static let title = "Deckie Desk"
 
+    /// The Mac's menu bar, when the window runs on the Mac (the pages are looked at there; the Mac's own Desk is
+    /// desk-app): Quit and Close with their usual keys, and the editing keys a text field needs.
+    static let macQuit = "Quit Deckie Desk"
+    static let macHide = "Hide Deckie Desk"
+    static let macClose = "Close Window"
+    static let macEdit = "Edit"
+    static let macCut = "Cut"
+    static let macCopy = "Copy"
+    static let macPaste = "Paste"
+    static let macSelectAll = "Select All"
+
     /// Microsoft's own page for people who need the WebView2 Runtime (the one Microsoft's documentation says to send
     /// them to: "Distribute your app and the WebView2 Runtime", read Nov 14, 2026). It is named in the message and
     /// opened only when the DJ says yes. Nothing is downloaded by Deckie.

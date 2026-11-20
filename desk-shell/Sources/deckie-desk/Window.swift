@@ -23,7 +23,40 @@ final class Window: @unchecked Sendable {
             guard let list = try? JSONSerialization.jsonObject(with: data) as? [Any], let text = list.first as? String else { return }
             window.onMessage(text)
         }, Unmanaged.passUnretained(self).toOpaque())
+        #if os(macOS)
+        Window.installMacMenu()
+        #endif
     }
+
+    #if os(macOS)
+    /// The Mac's menu bar. Run from the command line the program has no app bundle, and the web view library makes it
+    /// an ordinary app (activation policy "regular") but gives it no menu, so Cmd+Q had nothing to answer it (the
+    /// system's beep, and the menu bar stayed Finder's). Quit closes the window, the way its close button does, so
+    /// the shell ends the engine as it always does.
+    static func installMacMenu() {
+        let app = NSApplication.shared
+        app.setActivationPolicy(.regular)
+        let bar = NSMenu()
+        let appItem = NSMenuItem()
+        bar.addItem(appItem)
+        let appMenu = NSMenu()
+        appMenu.addItem(withTitle: Notice.macHide, action: #selector(NSApplication.hide(_:)), keyEquivalent: "h")
+        appMenu.addItem(withTitle: Notice.macClose, action: #selector(NSWindow.performClose(_:)), keyEquivalent: "w")
+        appMenu.addItem(.separator())
+        appMenu.addItem(withTitle: Notice.macQuit, action: #selector(NSWindow.performClose(_:)), keyEquivalent: "q")
+        appItem.submenu = appMenu
+        let editItem = NSMenuItem()
+        bar.addItem(editItem)
+        let edit = NSMenu(title: Notice.macEdit)
+        edit.addItem(withTitle: Notice.macCut, action: #selector(NSText.cut(_:)), keyEquivalent: "x")
+        edit.addItem(withTitle: Notice.macCopy, action: #selector(NSText.copy(_:)), keyEquivalent: "c")
+        edit.addItem(withTitle: Notice.macPaste, action: #selector(NSText.paste(_:)), keyEquivalent: "v")
+        edit.addItem(withTitle: Notice.macSelectAll, action: #selector(NSText.selectAll(_:)), keyEquivalent: "a")
+        editItem.submenu = edit
+        app.mainMenu = bar
+        app.activate(ignoringOtherApps: true)
+    }
+    #endif
 
     deinit { deskshell_destroy(handle) }
 
