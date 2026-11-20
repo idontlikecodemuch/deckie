@@ -149,6 +149,10 @@ public final class SongListener {
     private var following: (song: Int, intercept: Double, tempo: Double, pitch: Double)?
     private var misses = 0
     private var missedSince: Double?      // when the followed song first failed its check, until a name is taken again
+    /// A and B: after a switch made early (a challenger, or a name found after an alarm), the moment before which the
+    /// sound is not searched again, for one window's length: it holds the song just left, which would otherwise be
+    /// found there and named back.
+    private var floor: Double?
     private var sinceSearch = 0
     /// B: the watch on the followed song's points. `sum` is the CUSUM, `lastZero` the time it last stood at 0 (the
     /// change's estimated moment), `seenTo` the newest point fed in, `rates` the song's pairing rate on its last
@@ -184,7 +188,7 @@ public final class SongListener {
     public func reset() {
         sound.removeAll(keepingCapacity: true); heard = 0; nextReading = 0
         following = nil; pending = nil; misses = 0; sinceSearch = 0; latest = nil
-        missedSince = nil; watch = Watch()
+        missedSince = nil; watch = Watch(); floor = nil
     }
 
     /// Takes more sound (interleaved if more than one channel) and returns a reading for each second completed.
@@ -236,6 +240,7 @@ public final class SongListener {
 
         // B: an alarm lasts until a window's length of sound has followed it.
         if let c = watch.cut, now - c >= settings.window { watch.restart() }
+        if let fl = floor, now - fl >= settings.window { floor = nil }
 
         // Follow the song already named: one check, at the place and speed it should be at.
         if let f = following {
@@ -275,6 +280,7 @@ public final class SongListener {
                     following = (other.songIndex, line.intercept, other.tempoRatio, other.pitchRatio)
                     state = .named; confidence = other.confidence; named = true
                     pending = nil; missedSince = nil; watch.restart()
+                    floor = at
                 }
             }
         }
@@ -303,11 +309,14 @@ public final class SongListener {
                 tries.append((marks, start))
             }
         }
+        if let fl = floor {
+            tries = tries.map { $0.1 >= fl ? $0 : since(fl) }
+        }
         var tried = 0
         while tried < tries.count {
             let (marks, start) = tries[tried]
             tried += 1
-            if tried == 1, following == nil, alarm == nil, settings.longWindow > settings.window {
+            if tried == 1, following == nil, alarm == nil, floor == nil, settings.longWindow > settings.window {
                 let longer = min(Double(sound.count) / Double(rate), settings.longWindow)
                 if longer >= have + 1 {
                     tries.append((Landmarks(mono: Array(sound.suffix(Int(longer * Double(rate)))), sampleRate: rate, config: queryConfig), now - longer))
@@ -323,6 +332,7 @@ public final class SongListener {
                 if take, following?.song != best.songIndex || misses > 0 {
                     following = (best.songIndex, line.intercept, best.tempoRatio, best.pitchRatio)
                     misses = 0; state = .named; confidence = best.confidence; missedSince = nil
+                    if let c = alarm { floor = c }          // B: named from the sound since the alarm
                     watch.restart()
                 } else if take, alarm != nil, following?.song == best.songIndex {
                     watch.restart()          // B: the same song again in the sound since the alarm: it was false
