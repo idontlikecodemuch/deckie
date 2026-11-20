@@ -34,7 +34,13 @@ public struct FileTags: Codable, Equatable, Sendable {
     public static func read(_ url: URL) -> FileTags {
         guard let handle = try? FileHandle(forReadingFrom: url) else { return FileTags() }
         defer { try? handle.close() }
-        let file = TagFile(handle: handle)
+        return read(TagFile(handle: handle))
+    }
+
+    /// The tags in a file's bytes already in memory: the same as `read(url)` for the same bytes.
+    public static func read(bytes: Data) -> FileTags { read(TagFile(bytes: bytes)) }
+
+    static func read(_ file: TagFile) -> FileTags {
         guard let head = file.read(at: 0, count: 12), head.count >= 12 else { return FileTags() }
         let b = [UInt8](head)
         func ascii(_ at: Int, _ s: String) -> Bool { Array(b[at..<(at + s.utf8.count)]) == Array(s.utf8) }
@@ -360,16 +366,29 @@ enum ID3 {
     }
 }
 
-/// Reads byte ranges of an open file; nil past the end or on an error.
+/// Reads byte ranges of an open file, or of a file's bytes already in memory (a song read once, off a music CD); nil
+/// past the end or on an error. The two give the same answers for the same bytes.
 struct TagFile {
-    let handle: FileHandle
+    let handle: FileHandle?
+    let bytes: Data?
+    init(handle: FileHandle) { self.handle = handle; bytes = nil }
+    init(bytes: Data) { handle = nil; self.bytes = bytes }
     /// The file's length in bytes, or nil when it cannot be told.
     var size: Int? {
-        guard let end = try? handle.seekToEnd() else { return nil }
+        if let bytes { return bytes.count }
+        guard let end = try? handle?.seekToEnd() else { return nil }
         return Int(end)
     }
     func read(at offset: Int, count: Int) -> Data? {
         guard offset >= 0, count >= 0, count <= ID3.maxTagBytes else { return nil }
+        if let bytes {
+            // As a file handle: nothing asked for is nothing, wherever; past the end is nil.
+            if count == 0 { return Data() }
+            guard offset <= bytes.count, count <= bytes.count - offset else { return nil }
+            let start = bytes.startIndex + offset
+            return Data(bytes[start..<(start + count)])
+        }
+        guard let handle else { return nil }
         do {
             try handle.seek(toOffset: UInt64(offset))
             let d = try handle.read(upToCount: count) ?? Data()

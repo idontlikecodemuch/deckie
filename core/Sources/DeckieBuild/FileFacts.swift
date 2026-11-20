@@ -47,7 +47,13 @@ public struct FileFacts: Equatable, Sendable {
     public static func read(_ url: URL) -> FileFacts {
         guard let handle = try? FileHandle(forReadingFrom: url) else { return FileFacts() }
         defer { try? handle.close() }
-        let file = TagFile(handle: handle)
+        return read(TagFile(handle: handle))
+    }
+
+    /// The facts in a file's bytes already in memory: the same as `read(url)` for the same bytes.
+    public static func read(bytes: Data) -> FileFacts { read(TagFile(bytes: bytes)) }
+
+    static func read(_ file: TagFile) -> FileFacts {
         guard let head = file.read(at: 0, count: 12), head.count >= 12 else { return FileFacts() }
         let b = [UInt8](head)
         func ascii(_ at: Int, _ s: String) -> Bool { Array(b[at..<(at + s.utf8.count)]) == Array(s.utf8) }

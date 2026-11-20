@@ -92,6 +92,25 @@ public enum TestTrack {
         return d
     }
 
+    /// A 16-bit big-endian PCM AIFF file of `buffer` at 44.1 kHz, as the Mac shows a music CD's songs (cddafs):
+    /// "FORM", "AIFF", a COMM chunk (the rate as an 80-bit extended number) and an SSND chunk.
+    public static func aiff16(_ buffer: AudioBuffer) -> Data {
+        precondition(buffer.sampleRate == 44100)
+        var d = Data()
+        func be32(_ v: Int) { var x = UInt32(v).bigEndian; d.append(Data(bytes: &x, count: 4)) }
+        func be16(_ v: Int) { var x = UInt16(v).bigEndian; d.append(Data(bytes: &x, count: 2)) }
+        let ch = buffer.channelCount, frames = buffer.samples.count / ch, sound = buffer.samples.count * 2
+        d.append(contentsOf: Array("FORM".utf8)); be32(4 + 26 + 16 + sound); d.append(contentsOf: Array("AIFF".utf8))
+        d.append(contentsOf: Array("COMM".utf8)); be32(18); be16(ch); be32(frames); be16(16)
+        d.append(contentsOf: [0x40, 0x0E, 0xAC, 0x44, 0, 0, 0, 0, 0, 0])   // 44,100 as an 80-bit extended number
+        d.append(contentsOf: Array("SSND".utf8)); be32(8 + sound); be32(0); be32(0)
+        for v in buffer.samples {
+            var x = Int16(max(-1, min(1, v)) * 32767).bigEndian
+            d.append(Data(bytes: &x, count: 2))
+        }
+        return d
+    }
+
     /// The ffmpeg program, if one is installed where programs usually are (used only to make MP3 test files).
     public static func findFFmpeg() -> String? {
         let dirs = (ProcessInfo.processInfo.environment["PATH"] ?? "").split(separator: ":").map(String.init)

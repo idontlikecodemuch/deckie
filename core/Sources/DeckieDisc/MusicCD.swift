@@ -304,14 +304,30 @@ public final class MacMusicCD: MusicCD {
 
     public func file(of song: DiscTOC.Song) -> URL? { files().first { $0.number == song.number }?.url }
 
-    /// The system's file, in pieces (nothing on the Mac calls this: its songs are read as files where they are).
+    /// The system's file, its bytes exactly as they are (the AIFF file, not a WAV), in pieces of 1 MB, with the
+    /// progress in the song's sectors by the share of the file read. Desk reads each song once this way, into
+    /// memory.
     public func read(_ song: DiscTOC.Song, into sink: (Data) throws -> Void, progress: (Int, Int) -> Void) throws -> Int {
         guard let url = file(of: song), let h = try? FileHandle(forReadingFrom: url) else {
             throw DiscError("song \(song.number) is not on the music CD at \(volume.path)")
         }
         defer { try? h.close() }
-        while let d = try h.read(upToCount: 1 << 20), !d.isEmpty { try sink(d) }
-        progress(song.sectors, song.sectors)
+        let size = ((try? FileManager.default.attributesOfItem(atPath: url.path))?[.size] as? Int) ?? 0
+        let total = max(1, song.sectors)
+        var got = 0
+        while true {
+            // The disc taken out, or the drive failing, while the song is read: said as the disc's, so the run asks
+            // for the disc again.
+            let piece: Data?
+            do { piece = try h.read(upToCount: 1 << 20) } catch {
+                throw DiscError("song \(song.number) could not be read from the music CD at \(volume.path) (\(error.localizedDescription))")
+            }
+            guard let d = piece, !d.isEmpty else { break }
+            try sink(d)
+            got += d.count
+            if size > 0 { progress(min(total, Int(Double(got) / Double(size) * Double(total))), total) }
+        }
+        progress(total, total)
         return 0
     }
 }
@@ -352,8 +368,11 @@ public enum MusicCDs {
         public var songs: Int
         public var seconds: Double
         public var discId: String
-        public init(location: String, drive: String, songs: Int, seconds: Double, discId: String) {
+        /// The disc's own title from its CD-Text, when the drive gives one (what the list shows first); nil otherwise.
+        public var title: String?
+        public init(location: String, drive: String, songs: Int, seconds: Double, discId: String, title: String? = nil) {
             self.location = location; self.drive = drive; self.songs = songs; self.seconds = seconds; self.discId = discId
+            self.title = title
         }
     }
 
@@ -387,7 +406,9 @@ public enum MusicCDs {
         func add(_ location: String, _ drive: String) {
             guard let cd = try? open(location, environment: environment), let toc = try? cd.tableOfContents(),
                   !toc.songs.isEmpty else { return }
-            out.append(Found(location: cd.location, drive: drive, songs: toc.songs.count, seconds: toc.audioSeconds, discId: toc.id))
+            let title = cd.readText().text?.main?.discTitle.flatMap { $0.trimmingCharacters(in: .whitespaces).isEmpty ? nil : $0 }
+            out.append(Found(location: cd.location, drive: drive, songs: toc.songs.count, seconds: toc.audioSeconds, discId: toc.id,
+                             title: title))
         }
         if let stands = standIns(environment) {
             for f in stands { add(f.path, f.lastPathComponent) }

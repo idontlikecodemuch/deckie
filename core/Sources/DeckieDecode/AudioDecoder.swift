@@ -174,6 +174,14 @@ public enum AudioDecoder {
             throw AudioDecodeError(kind: .cannotRead, file: path, format: .unknown,
                                    message: missing ? "no such file" : "could not be read (\(error))")
         }
+        return try decodeReporting(data: data, url: url)
+    }
+
+    /// `decodeReporting(url)` for the file's bytes already in memory (a song read once, off a music CD): the same
+    /// result for the same bytes. `url` names the file in errors; AAC and Apple Lossless are still read from it by
+    /// the system's decoder.
+    public static func decodeReporting(data: Data, url: URL) throws(AudioDecodeError) -> DecodedAudio {
+        let path = url.path
         let format = AudioFormat.sniff(data)
         // One backend per format. A new decoder is a new file with a function like WAVReader.decode and one line
         // here; the public API does not change.

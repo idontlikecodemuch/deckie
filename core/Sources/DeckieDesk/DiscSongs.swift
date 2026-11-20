@@ -11,16 +11,13 @@ import DeckieDisc
 ///                                         (`DiscTOC.id`): the table, what the drive said about CD-Text, and each
 ///                                         song's id once it is worked out, so the same disc put in again is known
 ///                                         and only what is new on it is read
-///     <home>/Reading/<disc id>/Track 07.wav
-///                                         Linux and Windows only: the one song being read off the disc by sector,
-///                                         there while it is analysed, fingerprinted and printed, and removed as soon
-///                                         as that is done, whether it worked or not. A stopped run leaves it, and the
-///                                         next run or the next launch removes it.
+///     <home>/Reading/                     written by versions before Nov 20, 2026 (the song being read by sector, as a
+///                                         WAV file); nothing is written there now, and anything found there is
+///                                         removed when a desk or a run starts.
 ///
-/// So the most disc space Desk uses for a disc's music at any moment is one song as CD audio: 10.1 MB a minute of
-/// that song (44,100 frames a second of two 16-bit channels), about 50 MB for a five-minute song, and at most the
-/// disc's longest song (a whole disc burned as one 80-minute track would be about 800 MB). On the Mac it is nothing:
-/// the system shows each song as a file on the disc (`MacMusicCD`), read where it is.
+/// So Desk uses no disc space for a disc's music, on any computer: each song is read once into memory
+/// (`DiscSongFiles`), 10.1 MB a minute of that song as CD audio (44,100 frames a second of two 16-bit channels), and
+/// let go as soon as it is decoded.
 public enum DiscRecords {
     public static func folder(_ home: DeskHome) -> URL { home.filesFolder.appendingPathComponent("discs", isDirectory: true) }
     public static func file(_ home: DeskHome, disc id: String) -> URL { folder(home).appendingPathComponent(id + ".json") }
@@ -164,26 +161,46 @@ public enum DiscReading {
     }
 }
 
-/// A music CD's songs for the builder (`BuildFiles`), one at a time. On the Mac each song is the system's own file
-/// on the disc, read where it is. Elsewhere each song is read by sector into `Reading/` just before the builder reads
-/// it and removed as soon as the run is done with it (`release`). A song whose id the disc's record has, with its
+/// A music CD's songs for the builder (`BuildFiles`), one at a time, each read once, into memory, and nothing of it
+/// written to disk: on the Mac from the system's own file on the disc (`MacMusicCD`), elsewhere by sector. The
+/// builder hashes, tags and analyses those bytes (`bytes`), and the print that finds copies is made from the audio
+/// the analysis decoded, so the drive reads each song one time. A song whose id the disc's record has, with its
 /// analysis and print in the store, is not read at all.
+///
+/// Read ahead: while the builder analyses a song, the next one it will ask for is read in the background
+/// (`readAhead`), into memory only, so the drive keeps reading instead of stopping and starting between songs. At
+/// most one song is read ahead, and none longer than `readAheadMostSeconds` of sound (a whole disc burned as one long
+/// song would otherwise sit in memory twice). Stop, the disc coming out, an error and the end of the run all cancel
+/// it (`clear`), and what it held goes with it. What is in memory at any moment: the song being analysed (its bytes
+/// until they are decoded, then its decoded sound) and the next song's bytes as they come off the disc, about 10 MB
+/// a minute of that song as CD audio. A crash leaves nothing behind: nothing of the music is ever on disk.
 final class DiscSongFiles: BuildFiles, @unchecked Sendable {
     let cd: MusicCD
     let home: DeskHome
     let store: FileStore
     let needsSignature: Bool
+    let stop: BuildStop?
     private let lock = NSLock()
     /// The disc as it was when the run began (its table and file type do not change); `record` gains the songs.
     let base: DiscRecords.Record
     private var record: DiscRecords.Record
-    private var fetched: [String: (url: URL, damaged: Int, temporary: Bool)] = [:]
+    private var fetched: [String: (url: URL, damaged: Int, bytes: Data?)] = [:]
+    private var ahead: Ahead?
+    /// Told as a song comes off the disc: the song (its path as the builder names it), and sectors read of its
+    /// sectors. At most once a percent. On the reading thread, or the read-ahead's.
+    var onRead: (@Sendable (_ rel: String, _ done: Int, _ total: Int) -> Void)?
 
-    init(cd: MusicCD, record: DiscRecords.Record, home: DeskHome, store: FileStore, needsSignature: Bool) {
-        self.cd = cd; self.base = record; self.record = record; self.home = home; self.store = store; self.needsSignature = needsSignature
+    /// No song longer than this is read ahead (15 minutes of sound, about 150 MB as CD audio).
+    static let readAheadMostSeconds = 15.0 * 60
+
+    init(cd: MusicCD, record: DiscRecords.Record, home: DeskHome, store: FileStore, needsSignature: Bool, stop: BuildStop? = nil) {
+        self.cd = cd; self.base = record; self.record = record; self.home = home; self.store = store
+        self.needsSignature = needsSignature; self.stop = stop
     }
 
     var current: DiscRecords.Record { lock.lock(); defer { lock.unlock() }; return record }
+    /// Where the song's name points on Linux and Windows (nothing is written there now: it names the song in
+    /// messages and in the analysis, as the file read by sector once did).
     var reading: URL { DiscReading.folder(home).appendingPathComponent(base.toc.id, isDirectory: true) }
 
     /// The same for the same disc and different for another, so the builder's "unchanged since last time" holds
@@ -211,30 +228,110 @@ final class DiscSongFiles: BuildFiles, @unchecked Sendable {
         return id
     }
 
+    /// A song being read ahead on a thread of its own.
+    final class Ahead: @unchecked Sendable {
+        let name: String
+        private let lock = NSLock()
+        private var cancelled = false
+        let finished = DispatchSemaphore(value: 0)
+        var result: Result<(data: Data, damaged: Int), Error> = .failure(Cancelled())
+        init(name: String) { self.name = name }
+        func cancel() { lock.lock(); cancelled = true; lock.unlock() }
+        var isCancelled: Bool { lock.lock(); defer { lock.unlock() }; return cancelled }
+    }
+    struct Cancelled: Error {}
+
+    /// Reads a song's bytes into memory, reporting as it goes; `cancelled` is asked before each piece is kept.
+    func read(_ s: DiscTOC.Song, rel: String, expected: Int, cancelled: @escaping () -> Bool) throws -> (data: Data, damaged: Int) {
+        var data = Data()
+        data.reserveCapacity(max(0, expected))
+        var said = -1
+        let tell = onRead
+        let damaged = try cd.read(s, into: { piece in
+            if cancelled() { throw Cancelled() }
+            data.append(piece)
+        }, progress: { done, total in
+            let pct = total > 0 ? done * 100 / total : 100
+            if pct != said { said = pct; tell?(rel, done, total) }
+        })
+        if cancelled() { throw Cancelled() }
+        return (data, damaged)
+    }
+
     func fetch(_ f: SourceFile) throws -> URL {
         guard let s = song(f) else { throw DeskError(DeskWords.text("error.noSongOnDisc", ["rel": f.rel])) }
-        if let own = cd.file(of: s) {
-            lock.lock(); fetched[CratePath.lastName(f.rel)] = (own, 0, false); lock.unlock()
-            return own
+        let name = CratePath.lastName(f.rel)
+        let url = cd.file(of: s) ?? reading.appendingPathComponent(base.fileName(s.number))
+        // The song read ahead, when it is this one (waiting for the rest of it); another read ahead is let go first,
+        // so only one read uses the drive.
+        lock.lock()
+        let a = ahead
+        ahead = nil
+        lock.unlock()
+        var got: (data: Data, damaged: Int)? = nil
+        if let a {
+            if a.name != name { a.cancel() }
+            a.finished.wait()
+            if a.name == name {
+                switch a.result {
+                case .success(let r):
+                    got = r
+                    // Read while the song before it was worked on: said as read, whole.
+                    onRead?(f.rel, s.sectors, s.sectors)
+                case .failure(let e) where !(e is Cancelled): throw e
+                case .failure: break
+                }
+            }
         }
-        let url = reading.appendingPathComponent(base.fileName(s.number))
-        try DeckieFiles.createDirectory(reading)
-        try DeckieFiles.remove(url)
-        let handle = try DeckieFiles.openForAppending(url)
-        let damaged: Int
-        do {
-            damaged = try cd.read(s, into: { try handle.write(contentsOf: $0) }, progress: { _, _ in })
-            try handle.close()
-        } catch {
-            try? handle.close()
-            try? DeckieFiles.remove(url)
-            throw error
-        }
-        lock.lock(); fetched[CratePath.lastName(f.rel)] = (url, damaged, true); lock.unlock()
+        // A song asked for is read to its end, as before: Stop lets the song being read finish.
+        let read = try got ?? read(s, rel: f.rel, expected: f.size, cancelled: { false })
+        lock.lock(); fetched[name] = (url, read.damaged, read.data); lock.unlock()
         return url
     }
 
-    /// The file of a song fetched and not yet let go (`rel` as the builder reports it, the source's name first).
+    func bytes(_ f: SourceFile) -> Data? {
+        lock.lock(); defer { lock.unlock() }
+        let name = CratePath.lastName(f.rel)
+        let d = fetched[name]?.bytes
+        fetched[name]?.bytes = nil
+        return d
+    }
+
+    func readAhead(_ f: SourceFile) {
+        guard let s = song(f), Double(s.sectors) / Double(DiscTOC.sectorsPerSecond) <= Self.readAheadMostSeconds,
+              stop?.isSet != true, knownId(f) == nil else { return }
+        let a = Ahead(name: CratePath.lastName(f.rel))
+        lock.lock()
+        guard ahead == nil else { lock.unlock(); return }
+        ahead = a
+        lock.unlock()
+        let stop = self.stop, rel = f.rel, expected = f.size
+        let thread = Thread { [self] in
+            do {
+                a.result = .success(try read(s, rel: rel, expected: expected, cancelled: { a.isCancelled || stop?.isSet == true }))
+            } catch {
+                a.result = .failure(error)
+            }
+            a.finished.signal()
+        }
+        thread.start()
+    }
+
+    /// The song being read ahead now, or nil (for tests).
+    var readingAhead: String? { lock.lock(); defer { lock.unlock() }; return ahead?.name }
+
+    /// Lets go of the song being read ahead, waiting for its read to stop.
+    func cancelReadAhead() {
+        lock.lock()
+        let a = ahead
+        ahead = nil
+        lock.unlock()
+        a?.cancel()
+        a?.finished.wait()
+    }
+
+    /// The URL a song fetched and not yet let go was read from (`rel` as the builder reports it, the source's name
+    /// first): the Mac's own file on the disc, or on Linux and Windows the name of a file that is not there.
     func file(rel: String) -> URL? {
         lock.lock(); defer { lock.unlock() }
         return fetched[CratePath.lastName(rel)]?.url
@@ -260,13 +357,14 @@ final class DiscSongFiles: BuildFiles, @unchecked Sendable {
 
     func release(_ f: SourceFile) {
         lock.lock()
-        let was = fetched.removeValue(forKey: CratePath.lastName(f.rel))
+        fetched.removeValue(forKey: CratePath.lastName(f.rel))
         lock.unlock()
-        if let was, was.temporary { try? DeckieFiles.remove(was.url) }
     }
 
-    /// Removes whatever is still in `Reading/` (the run ended, or stopped).
+    /// The run ended, or stopped: the read ahead is cancelled and waited for, everything held is let go, and whatever
+    /// an older version left in `Reading/` is removed.
     func clear() {
+        cancelReadAhead()
         lock.lock(); fetched = [:]; lock.unlock()
         try? DeckieFiles.remove(DiscReading.folder(home))
     }
@@ -317,6 +415,18 @@ public enum DeskAudio {
 }
 
 extension DiscSongFiles {
+    /// The name the run screen shows for a disc's song as it is read: the builder's first name (the file's tags, else
+    /// its file name), with the disc's CD-Text title and performer where the name is only the file's name ("Track 02"),
+    /// as the crate will hold it once the names step has run (`DeskNamesStep`).
+    static func shownName(rel: String, title: String?, artist: String?, record r: DiscRecords.Record) -> (title: String?, artist: String?) {
+        guard let n = number(of: rel) else { return (title, artist) }
+        let fileName = (CratePath.lastName(rel) as NSString).deletingPathExtension
+        let fromFileName = title == nil || title == fileName
+        let shown = fromFileName ? (r.titles[n] ?? title) : title
+        let by = artist ?? (fromFileName && r.titles[n] != nil ? r.performers[n] ?? r.discPerformer : nil)
+        return (shown, by)
+    }
+
     /// 7 for "Track 07.wav".
     static func number(of rel: String) -> Int? {
         let name = CratePath.lastName(rel)
@@ -335,7 +445,10 @@ public struct DiscReport: Codable, Equatable, Sendable {
     public var damagedSectors: Int
     /// Whether the disc's own title named the source; when not, the window asks for the name written on it.
     public var titled: Bool
-    enum CodingKeys: String, CodingKey { case text, songs, named, titled, damagedSectors = "damaged_sectors" }
+    /// When `text` is `drive`: what the drive said when asked for CD-Text (the system's error), so a run's line shows
+    /// whether a disc with no names was a refusal or a failure. Nil otherwise, and in a line written before it.
+    public var textDetail: String? = nil
+    enum CodingKeys: String, CodingKey { case text, songs, named, titled, damagedSectors = "damaged_sectors", textDetail = "text_detail" }
 }
 
 /// The names step after keys and names were gathered from the computer (D30) and before the DJ's own names go back:

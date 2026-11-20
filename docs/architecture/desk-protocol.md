@@ -146,7 +146,7 @@ signature. The field keeps its name from when only signatures counted.
 | Event | Fields |
 |---|---|
 | `run.started` | `crate` (id), `crateName`, `read` (the source's name), `carriedOn`, `musicCD`, `askName` (a music CD with no title of its own: the placeholder name to offer when asking once for the name written on it; else null) |
-| `run.progress` | `stage` (`reading`, `finishing`, `saving`; a music CD's songs are read in `reading`, one at a time), `done`, `total` (songs done of songs found), `remaining` (seconds left, or null), `line` (or absent) |
+| `run.progress` | `stage` (`reading`, `finishing`, `saving`; a music CD's songs are read in `reading`, one at a time), `done`, `total` (songs done of songs found), `remaining` (seconds left, or null), `line` (or absent), `now` (or absent; an addition of Nov 20, 2026, protocol still 2: the song being read when songs are read one at a time, `{"rel", "number" (its number on a music CD, or absent), "step", "read" (0 to 1, while its sound comes off the disc, or absent)}`; `step` is `started`, `reading`, or the analysis stage starting: `hash`, `decode`, `resample`, `beatthis`, `key`, `spectral`, `structure`, `loudness`, `vocal`, `windows`. Every change of song or step is sent, whatever the rate) |
 | `run.finished` | `report`: the run's report (DeskRun's RunReport, as `runs.jsonl` holds it, with `local`, the keys and names taken from the computer) |
 | `run.failed` | `detail`: what stopped it, in a sentence. Songs already read are kept |
 
@@ -264,8 +264,9 @@ Error codes: `bad_request` (not JSON, no `type`, a field missing), `unknown_type
 `no_crate` (nothing with songs is showing), `engine_missing` (this computer cannot read music yet), `failed` (the
 operation threw; `detail` says why in a sentence), `not_here` and `cannot_decode` (Listen, below).
 
-`drives.list` also gives `musicCDs`: `[{"location": "\\\\.\\D:", "drive": "D:", "songs": 14, "seconds": 4272.0, "discId": "cd-…"}]`,
-the drives holding a music CD (DeckieDisc's `MusicCDs`; `DECKIE_DESK_MUSIC_CD` lists stand-in drives instead).
+`drives.list` also gives `musicCDs`: `[{"location": "\\\\.\\D:", "drive": "D:", "songs": 14, "seconds": 4272.0, "discId": "cd-…", "title": "Friday night"}]`,
+the drives holding a music CD (DeckieDisc's `MusicCDs`; `DECKIE_DESK_MUSIC_CD` lists stand-in drives instead). `title`
+(an addition, Nov 20, 2026) is the disc's own title from its CD-Text, absent when it has none.
 
 A `preview` is `{"tool", "songs", "lines", "problem", "lengthsDiffer", "changes", "pairs"}`. `problem` stops it
 being applied: `counts` (the list and the songs differ in number), `noMatch` (the pattern fits no file name),

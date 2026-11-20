@@ -23,6 +23,18 @@ public struct AnalysisOptions: Sendable {
     }
 }
 
+/// A song file's bytes, read once into memory and handed to the analyser, which lets them go as soon as they are
+/// decoded (`take`), so the bytes and the decoded audio are not both held through the whole analysis.
+public final class FileBytes: @unchecked Sendable {
+    private let lock = NSLock()
+    private var bytes: Data?
+    public init(_ data: Data) { bytes = data }
+    /// The bytes, while they are held.
+    public var data: Data? { lock.lock(); defer { lock.unlock() }; return bytes }
+    /// The bytes, let go of here.
+    public func take() -> Data? { lock.lock(); defer { lock.unlock() }; let d = bytes; bytes = nil; return d }
+}
+
 /// Why a track could not be analysed (the decoder's own errors are `AudioDecodeError`, ONNX Runtime's
 /// `OnnxRuntimeError`).
 public enum AnalyserError: Error, Equatable, CustomStringConvertible {
@@ -113,6 +125,20 @@ public final class Analyser: Sendable {
 
     /// Analyses the audio file at `url`.
     public func analyse(url: URL, options: AnalysisOptions = AnalysisOptions()) throws -> Analysis {
+        try analyse(url: url, bytes: nil, options: options)
+    }
+
+    /// Analyses the audio file at `url`, from its bytes when they are already in memory (`bytes`: read once by the
+    /// caller, and let go here as soon as they are decoded; `sha256` their hash when the caller made it already), so a
+    /// song is read once, not three times. The result is the same as `analyse(url:)` for the same bytes.
+    ///
+    /// `onStage` is told the name of each stage as it starts (the names of `Analysis.timings`, from "hash" to
+    /// "windows"); `onDecoded` is handed the decoded audio at the file's own rate, before anything else is done with
+    /// it, so a caller can make what it needs from the same samples (the print that finds copies) without decoding
+    /// the file again. Both are called on the analysing thread.
+    public func analyse(url: URL, bytes given: FileBytes?, sha256 givenSHA: String? = nil,
+                        options: AnalysisOptions = AnalysisOptions(),
+                        onStage: ((String) -> Void)? = nil, onDecoded: ((AudioBuffer) -> Void)? = nil) throws -> Analysis {
         let SR = Analysis.sampleRate
         var timings: [Analysis.Timing] = []
         var started = Date()
@@ -121,12 +147,19 @@ public final class Analyser: Sendable {
             timings.append(Analysis.Timing(stage: stage, seconds: now.timeIntervalSince(started)))
             started = now
         }
+        func begin(_ stage: String) { onStage?(stage) }
 
         // ------------------------------------------------------------------ hash
         // The file's bytes are let go as soon as they are hashed (the decoder reads the file itself), so they are not
-        // held through the whole analysis: for a WAV that is as much memory again as the decoded audio.
+        // held through the whole analysis: for a WAV that is as much memory again as the decoded audio. Bytes given
+        // in memory are kept only until they are decoded, then let go.
+        begin("hash")
         let sha: String, format: AudioFormat, bytes: Int
-        do {
+        if let data = given?.data {
+            sha = givenSHA ?? CrateIDs.sha256(of: data)
+            format = AudioFormat.sniff(data)
+            bytes = data.count
+        } else {
             let data: Data
             do {
                 data = try Data(contentsOf: url)
@@ -144,15 +177,22 @@ public final class Analyser: Sendable {
         // ------------------------------------------------------------------ decode (44.1 kHz, mono = channel mean)
         // A damaged MP3 frame comes out silent, and is listed (`damagedFrames`): everything below, the true peak
         // included, is measured on the audio as it plays, without the frame's burst.
+        begin("decode")
         var buffer: AudioBuffer, damagedFrames: [DamagedFrame], startUncertain: String?, cutShort: String?
         do {
             // In a block of its own, so the decoded samples are not held beyond `buffer` once it is resampled.
-            let decoded = try AudioDecoder.decodeReporting(url)
+            let decoded: DecodedAudio
+            if let data = given?.take() {
+                decoded = try AudioDecoder.decodeReporting(data: data, url: url)
+            } else {
+                decoded = try AudioDecoder.decodeReporting(url)
+            }
             buffer = decoded.buffer
             damagedFrames = decoded.damagedFrames
             startUncertain = decoded.startUncertain
             cutShort = decoded.cutShort
         }
+        onDecoded?(buffer)
         // A file cut short that leaves too little to find a beat in is damaged or incomplete, not a song with no beat.
         func noBeat(_ e: AnalyserError) -> Error {
             guard let cutShort else { return e }
@@ -169,10 +209,12 @@ public final class Analyser: Sendable {
         lap("decode")
 
         // ------------------------------------------------------------------ the 22,050 Hz mono mix
+        begin("resample")
         let m22 = Decimator.halve(mono)
         lap("resample")
 
         // ------------------------------------------------------------------ first / last sound, beats, grid
+        begin("beatthis")
         let sound = SoundBounds(buffer)
         let tracked = try beatTracker.track(AudioBuffer(sampleRate: SpectralFeatures.sampleRate, channelCount: 1,
                                                         samples: m22))
@@ -191,6 +233,7 @@ public final class Analyser: Sendable {
         lap("beatthis")
 
         // ------------------------------------------------------------------ key (the windows' keys come later)
+        begin("key")
         // The three-answer reader (D33) reads the same frames as the plain HPCP method and carries its result.
         let threeAnswer = try ThreeAnswerKey.read(mono, sampleRate: SR)
         let hpcpKey = threeAnswer.hpcp
@@ -202,6 +245,7 @@ public final class Analyser: Sendable {
         lap("key")
 
         // ------------------------------------------------------------------ grid choice and bars
+        begin("spectral")
         func tagDev(_ g: GridFit) -> Double {
             guard let tag else { return 999.0 }
             return Tempo.closest(bpm: g.bpm, reference: tag, among: Tempo.octaveMultipliers).deviationPct
@@ -238,6 +282,7 @@ public final class Analyser: Sendable {
         lap("spectral")
 
         // ------------------------------------------------------------------ structure (Foote novelty)
+        begin("structure")
         let novelty = spectral.novelty(grid: bars)
         let phrase = Phrase(peaks: novelty.peaks)
         let boundaries = Phrase.boundaries(peaks: novelty.peaks, latticePhaseBar: phrase.latticePhaseBar,
@@ -245,6 +290,7 @@ public final class Analyser: Sendable {
         lap("structure")
 
         // ------------------------------------------------------------------ per-bar loudness, bands, onsets; loudness
+        begin("loudness")
         // The K-weighted running sum (8 bytes a sample) is needed only here, so it lives only in this block.
         let lufs: [Double], levels: BandSplit.Levels, loudness: Analysis.Loudness
         do {
@@ -262,6 +308,7 @@ public final class Analyser: Sendable {
         // ------------------------------------------------------------------ vocal probability (optional)
         var vocal: VocalActivity? = nil
         if let tagger = vocalTagger {
+            begin("vocal")
             let v = try tagger.vocalActivity(mono: mono, sampleRate: SR, barTimes: bars.barTimes)
             guard v.perBar.count == bars.nBars else { throw AnalyserError.vocalBars(got: v.perBar.count, bars: bars.nBars) }
             vocal = v
@@ -271,6 +318,7 @@ public final class Analyser: Sendable {
         let voc = vocal?.perBar ?? [Double](repeating: 0, count: bars.nBars)
 
         // ------------------------------------------------------------------ sections, fade-out, mix windows
+        begin("windows")
         let sections = Section.sections(boundariesBars: boundaries, lufsSt: lufs, vocalProb: voc)
         let ls = sound.lastSound
         let end = EndLoudness(t20: Loudness.shortTerm(buffer, endingAt: ls - 17.0),

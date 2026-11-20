@@ -52,6 +52,13 @@ public struct BuildOptions: Sendable {
     /// Stop asked for (Desk's Stop button): files not yet started are not read, the ones being read finish, and the
     /// crate is written with what was read. A stopped build's result says so (`BuildResult.stopped`).
     public var stop: BuildStop?
+    /// The song being read, step by step (`SongStep`), with its path as the progress names it: told only when files
+    /// are read one at a time (`jobs` 1), where "the song now" means one song. Called on the reading thread.
+    public var onStep: (@Sendable (_ rel: String, _ step: SongStep) -> Void)?
+    /// Handed each song's decoded audio as it is analysed (at the file's own rate, before anything else is done with
+    /// it), with its id and file, so a caller makes what it needs from the same samples instead of decoding the file
+    /// again (Desk's print that finds copies). Called on the analysing thread.
+    public var withAudio: (@Sendable (_ id: String, _ file: SourceFile, _ audio: AudioBuffer) -> Void)?
 
     public init(folder: URL, output: URL, rekordbox: URL? = nil, jobs: Int = defaultJobs, fileBPMTags: Bool = false,
                 fresh: Bool = false, name: String? = nil, device: String = Analysis.platform,
@@ -232,6 +239,8 @@ public final class Builder: Sendable {
     var keyModel: String? { analyser.map { $0.keyModel?.name } ?? KeyModel.defaultName }
 
     public let options: BuildOptions
+    /// The facts of songs whose bytes were in memory (`BuildFiles.bytes`), read from those bytes, for `dressed`.
+    let factsInHand = Kept<FileFacts>()
     /// The analyser given; nil makes one when there is something to analyse (`makeAnalyser`).
     public let analyser: Analyser?
 
@@ -386,12 +395,16 @@ public final class Builder: Sendable {
                     outcome = .ok(id: id, tags: nil)
                 } else {
                     guard !stopped.isSet else { return }
+                    if self.options.jobs == 1 { self.options.onStep?(f.rel, .started) }
                     do { f.url = try given.fetch(f) } catch { given.release(f); stopped.set(error); return }
-                    outcome = self.process(f, rekordbox: rekordboxOf[i], work: work, engine: engine!, label: label,
-                                           seconds: &seconds, fingerprinted: &fingerprinted)
+                    // The next song is read while this one is analysed (one job: the queue goes in order).
+                    if k + 1 < total, self.options.stop?.isSet != true { given.readAhead(files[queued[k + 1]]) }
+                    outcome = self.process(f, bytes: given.bytes(f), rekordbox: rekordboxOf[i], work: work, engine: engine!,
+                                           label: label, seconds: &seconds, fingerprinted: &fingerprinted)
                 }
             } else {
-                outcome = self.process(f, rekordbox: rekordboxOf[i], work: work, engine: engine!, label: label,
+                if self.options.jobs == 1 { self.options.onStep?(f.rel, .started) }
+                outcome = self.process(f, bytes: nil, rekordbox: rekordboxOf[i], work: work, engine: engine!, label: label,
                                        seconds: &seconds, fingerprinted: &fingerprinted)
             }
             defer { self.options.files?.release(f) }
@@ -647,11 +660,16 @@ public final class Builder: Sendable {
         }
     }
 
-    /// One queued file: tags, hash, then the work folder's record for those bytes or a fresh analysis.
-    private func process(_ f: SourceFile, rekordbox: RekordboxCollection.Track?, work: WorkStore, engine: Analyser,
-                         label: String, seconds: inout Double?, fingerprinted: inout Bool) -> Done {
+    /// One queued file: tags, hash, then the work folder's record for those bytes or a fresh analysis. The file is
+    /// read once: its bytes (`bytes`, when the source handed them over in memory, else read here) give the tags, the
+    /// id and the analysis, and the analyser lets them go once they are decoded.
+    private func process(_ f: SourceFile, bytes inHand: Data?, rekordbox: RekordboxCollection.Track?, work: WorkStore,
+                         engine: Analyser, label: String, seconds: inout Double?, fingerprinted: inout Bool) -> Done {
         typealias R = CrateManifest.ImportLog.Reason
-        let tags = FileTags.read(f.url)
+        // A song in memory: its tags, and the facts `dressed` reads later, from those bytes (its file may be gone, or
+        // on a disc, by then).
+        let tags = inHand.map { FileTags.read(bytes: $0) } ?? FileTags.read(f.url)
+        if let inHand { factsInHand.set(f.rel, FileFacts.read(bytes: inHand)) }
         let tag = tagTempo(rekordbox: rekordbox, tags: tags)
         func line(_ status: String, id: String? = nil, failure: FileFailure? = nil, fingerprint: Bool? = nil) -> WorkStore.FileLine {
             .init(rel: f.rel, size: f.size, modified: f.modified, status: status, engine: label, id: id,
@@ -663,18 +681,23 @@ public final class Builder: Sendable {
             return .failed(failure)
         }
 
-        let data: Data
-        do {
-            data = try Data(contentsOf: f.url)
-        } catch {
-            return failed(FileFailure(reason: R.decodeError, message: "could not be read (\(error.localizedDescription))"))
+        let box: FileBytes
+        if let inHand {
+            box = FileBytes(inHand)
+        } else {
+            do {
+                box = FileBytes(try Data(contentsOf: f.url))
+            } catch {
+                return failed(FileFailure(reason: R.decodeError, message: "could not be read (\(error.localizedDescription))"))
+            }
         }
-        let id = CrateIDs.id(forSHA256: CrateIDs.sha256(of: data))
+        let sha = CrateIDs.sha256(of: box.data ?? Data())
+        let id = CrateIDs.id(forSHA256: sha)
         if var record = work.record(id), record.engine == label, record.bpmTag == tag {
             // A record made before the fingerprint (D35) gains it from one decode of the file, not a whole analysis.
             // A file that cannot be decoded now keeps its record and is tried again on the next run.
             if record.track.fingerprint == nil,
-               let made = try? Builder.fingerprint(of: f.url, device: options.device, at: utcNow()) {
+               let made = try? Builder.fingerprint(of: f.url, bytes: box.data, device: options.device, at: utcNow()) {
                 record.track.fingerprint = made
                 if (try? work.save(record)) != nil { fingerprinted = true } else { record.track.fingerprint = nil }
             }
@@ -683,7 +706,11 @@ public final class Builder: Sendable {
         }
         do {
             let t0 = Date()
-            let analysis = try engine.analyse(url: f.url, options: AnalysisOptions(bpmTag: tag))
+            let step = options.jobs == 1 ? options.onStep : nil
+            let withAudio = options.withAudio
+            let analysis = try engine.analyse(url: f.url, bytes: box, sha256: sha, options: AnalysisOptions(bpmTag: tag),
+                                              onStage: step.map { tell in { tell(f.rel, .stage($0)) } },
+                                              onDecoded: withAudio.map { hand in { hand(id, f, $0) } })
             let elapsed = Date().timeIntervalSince(t0)
             var track = analysis.crateTrack(options: .init(analysedAt: utcNow(), device: options.device))
             track.file.rel = f.rel
@@ -709,7 +736,12 @@ public final class Builder: Sendable {
     /// analysis: the file decoded once by the engine's own decoder, the channels averaged, at the file's own rate
     /// (`Landmarks` brings it to its 8 kHz).
     public static func fingerprint(of url: URL, device: String, at madeAt: String) throws -> CrateTrack.Fingerprint {
-        let buffer = try AudioDecoder.decodeReporting(url).buffer
+        try fingerprint(of: url, bytes: nil, device: device, at: madeAt)
+    }
+
+    /// The same, from the file's bytes when they are in memory already.
+    static func fingerprint(of url: URL, bytes: Data?, device: String, at madeAt: String) throws -> CrateTrack.Fingerprint {
+        let buffer = try (bytes.map { try AudioDecoder.decodeReporting(data: $0, url: url) } ?? AudioDecoder.decodeReporting(url)).buffer
         return .init(Landmarks(mono: buffer.mono(), sampleRate: buffer.sampleRate), madeBy: device, madeAt: madeAt)
     }
 
@@ -759,7 +791,7 @@ public final class Builder: Sendable {
         }
         // Whatever the file's tags say beyond its names (D34), then what the rekordbox export adds.
         t.ident.facts = [:]
-        FileFacts.read(f.url).apply(to: &t)
+        (factsInHand.take(f.rel) ?? FileFacts.read(f.url)).apply(to: &t)
         for (name, values) in rb?.facts ?? [:] { t.ident.offer(name, .init(values, from: DJProgram.rekordbox.rawValue)) }
         // The DJ's own data under the name of the program it came from; null when nothing was imported.
         if let rb, let collection {
@@ -786,4 +818,12 @@ public final class Builder: Sendable {
               let r = try? JSONDecoder().decode(WorkStore.Record.self, from: data) else { return nil }
         return r.crateTrack
     }
+}
+
+/// Values by a file's path, from any thread; each taken once.
+final class Kept<Value>: @unchecked Sendable {
+    private let lock = NSLock()
+    private var values: [String: Value] = [:]
+    func set(_ key: String, _ v: Value) { lock.lock(); values[key] = v; lock.unlock() }
+    func take(_ key: String) -> Value? { lock.lock(); defer { lock.unlock() }; return values.removeValue(forKey: key) }
 }
