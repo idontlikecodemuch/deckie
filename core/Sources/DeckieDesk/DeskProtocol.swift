@@ -52,10 +52,9 @@ public final class DeskProtocol: @unchecked Sendable {
         do { try analysisCheck(); analysis = (true, nil) } catch { analysis = (false, "\(error)") }
     }
 
-    /// The jobs a run uses: half the cores, at most 4, or `DECKIE_DESK_JOBS`.
+    /// The jobs a run uses: half the cores, at most 4, fewer when memory is short, or `DECKIE_DESK_JOBS` (`DeskJobs`).
     public static func jobs(environment: [String: String] = ProcessInfo.processInfo.environment) -> Int {
-        if let j = environment["DECKIE_DESK_JOBS"].flatMap(Int.init), j > 0 { return j }
-        return max(1, min(ProcessInfo.processInfo.activeProcessorCount / 2, 4))
+        DeskJobs.current(environment: environment).count
     }
 
     // MARK: out
@@ -483,15 +482,19 @@ public final class DeskProtocol: @unchecked Sendable {
                 let (saved, report) = try run.run { p in
                     // The run screen's songs, notes and totals (D37), in batches at most four times a second.
                     screen.offer(p)
-                    // Every line goes out, and every change of the song now or its step; bare progress at most ten
-                    // times a second.
-                    let stepChanged = last.changed(p.now.map { "\($0.rel)\u{0}\($0.step)" })
+                    // Every line goes out, and every change of the songs worked on, their steps and names, and of the
+                    // song read ahead starting or ending; bare progress (a read's share) at most ten times a second.
+                    let stepChanged = last.changed(Self.workingKey(p))
                     if p.line == nil && !stepChanged && p.done < p.total && !last.due(every: 0.1) { return }
                     var m: [String: Any] = ["event": "run.progress", "stage": p.stage.rawValue, "done": p.done,
                                             "total": p.total, "remaining": p.remaining ?? NSNull()]
                     if let line = p.line { m["line"] = Self.line(line) }
                     // An addition (protocol 2 still): the song being read now and its step, for the waiting line.
                     if let now = p.now { m["now"] = Self.now(now) }
+                    // Additions (protocol 2 still): every song worked on now, several when a folder's jobs read at
+                    // once, and the next song of a disc while it is read ahead.
+                    if !p.working.isEmpty { m["working"] = p.working.map(Self.now) }
+                    if let ahead = p.ahead { m["ahead"] = Self.now(ahead) }
                     self.send(m)
                 }
                 screen.flush()
@@ -554,7 +557,17 @@ public final class DeskProtocol: @unchecked Sendable {
         var m: [String: Any] = ["rel": n.rel, "step": n.step]
         if let number = n.number { m["number"] = number }
         if let read = n.read { m["read"] = (read * 1000).rounded() / 1000 }
+        if let title = n.title { m["title"] = title }
+        if let artist = n.artist { m["artist"] = artist }
         return m
+    }
+
+    /// What, changed, is sent at once: the songs worked on, each one's step and name, and which song is read ahead
+    /// (not how much of a song is read: that rides with bare progress). Nil when nothing is worked on.
+    static func workingKey(_ p: RunProgress) -> String? {
+        guard !p.working.isEmpty || p.ahead != nil else { return nil }
+        let songs = p.working.map { [$0.rel, $0.step, $0.title ?? "", $0.artist ?? ""].joined(separator: "\u{1}") }
+        return (songs + ["ahead", p.ahead?.rel ?? ""]).joined(separator: "\u{0}")
     }
 
     static func line(_ l: RunLine) -> [String: Any] {

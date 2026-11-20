@@ -103,6 +103,30 @@ public struct RunSong: Codable, Equatable, Sendable {
         }
     }
 
+    /// The wave as separate bars to draw, each 0 to 1 of the room (the owner's, Nov 20, 2026: peaks and valleys seen,
+    /// space between the bars). One bar a bar of music when the song has fewer bars than the wave has values (the
+    /// loudest value in each bar's stretch), else one a value. Stretched to the song's own range: its tenth-quietest value
+    /// in a hundred (and anything quieter) at `floor`, its loudest at 1, in a straight line between; a song whose values lie within `rangeMin` of each
+    /// other is taken as that range below its loudest, so a level song stands at full height, not flat at the floor.
+    /// Empty with no wave. desk-web/run.js `barHeights` does the same.
+    public static func barHeights(_ wave: [Int], bars: Int?, rangeMin: Double, floor: Double) -> [Double] {
+        guard !wave.isEmpty else { return [] }
+        let n = wave.count
+        var values = wave.map { Double(max(0, min(99, $0))) }
+        if let b = bars, b > 0, b < n {
+            values = (0..<b).map { i in
+                let a = i * n / b, e = max(a + 1, (i + 1) * n / b)
+                return values[a..<min(e, n)].max() ?? 0
+            }
+        }
+        // The quiet end of the range is the song's tenth-quietest value in a hundred, not its quietest: a silent
+        // lead-in or tail would otherwise squash the rest of the song into the top of the room.
+        let hi = values.max() ?? 0, sorted = values.sorted()
+        let lo = min(sorted[sorted.count / 10], hi - max(rangeMin, 1e-9))
+        let f = max(0, min(1, floor))
+        return values.map { f + (1 - f) * max(0, min(1, ($0 - lo) / (hi - lo))) }
+    }
+
     static func introBars(_ sections: [CrateTrack.Section]?) -> Int? {
         guard let s = sections?.first, s.label == "intro" else { return nil }
         return s.endBar - s.startBar

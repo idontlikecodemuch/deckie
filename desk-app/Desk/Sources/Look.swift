@@ -30,6 +30,8 @@ enum Look {
         static let sheetTitle = Font.title2
         static let banner = Font.callout
         static let leaveRunning = Font.caption
+        /// The first screen's quiet line under the body.
+        static let firstNote = Font.caption
         static let runListLine = Font.system(.caption, design: .monospaced)
         static let runList = Font.callout
         static let runProgress = Font.callout
@@ -179,17 +181,21 @@ enum Look {
     enum Add {
         /// The gap between the three ways' buttons, and between a picker's rows.
         static let waysGap: CGFloat = 10
-        static let rowsGap: CGFloat = 4
+        static let rowsGap: CGFloat = 8
         static let sheetGap: CGFloat = 12
         static let rowGap: CGFloat = 10
-        static let rowPaddingV: CGFloat = 4
+        static let rowPaddingV: CGFloat = 10, rowPaddingH: CGFloat = 12
+        /// A picker's row, the one way to choose: its fill (brighter pointed at), outline, corners (desk.css .pick-row).
+        static let rowFill = 0.06, rowFillHover = 0.11, rowLineOpacity = 0.16
+        static let rowLine: CGFloat = 1, rowCorner: CGFloat = 8
+        static let rowSymbol = Font.title3
+        static let rowGo = Font.body.weight(.semibold)
         /// The pickers' and the question's width, a row's icon, the crate name field's width.
         static let sheetWidth: CGFloat = 460
         static let rowIcon: CGFloat = 24
         static let nameFieldWidth: CGFloat = 280
         /// The crate's icon: beside its name in the window's header and on the run screen, and on the first screen.
         static let crateIconHeader: CGFloat = 18
-        static let crateIconFirst: CGFloat = 64
         static let headerGap: CGFloat = 6
         static let renameWidth: CGFloat = 280
         static let renamePadding: CGFloat = 14
@@ -197,11 +203,40 @@ enum Look {
         static let crateRowH: CGFloat = 12, crateRowV: CGFloat = 6
         /// Seconds a count runs before Desk shows it (a stick is counted before the eye sees a sheet).
         static let showCountAfter = 0.4
-        static let rowName = Font.body
+        static let rowName = Font.body.weight(.semibold)
         static let rowDetail = Font.caption
         static let count = Font.title3.monospacedDigit()
         static let headerName = Font.headline
         static let crateRow = Font.callout
+    }
+
+    /// The first screen's crate icon and its three ways as tiles: the symbol is the main thing, the word small under it.
+    /// Quiet at rest, the full accent with dark symbol and word when pointed at, focused or pressed (a short colour fade).
+    /// Two looks, as the pages' desk.css: (a) a soft tint of the accent, (b) an outline with no fill; `look` picks one.
+    /// Import crate file stays secondary.
+    enum First {
+        enum TileLook { case a, b }
+        static let look: TileLook = .a
+        static let crateIcon: CGFloat = 150
+        static let wayIconFont = Font.system(size: 96, weight: .light)
+        static let wayFont = Font.system(size: 13, weight: .medium)
+        static let wayPadH: CGFloat = 22, wayPadTop: CGFloat = 20, wayPadBottom: CGFloat = 16
+        static let wayGap: CGFloat = 8, waysGap: CGFloat = 16
+        static let tileMinWidth: CGFloat = 176, tileCorner: CGFloat = 16, tileLine: CGFloat = 1.5
+        static var tileFill: Color { look == .a ? RunLook.accent.opacity(0.12) : .clear }
+        static var tileEdge: Color { look == .a ? .clear : RunLook.accent.opacity(0.55) }
+        static let wordAtRest = Color.secondary
+        static let drawingAtRest = RunLook.accent
+        static let on = RunLook.accent
+        static let onInk = Color(red: 0.086, green: 0.059, blue: 0.133)        // #160f22, the pages' --ink
+        static let fade = 0.12
+        static let importFont = Font.callout
+        static let disabledOpacity = 0.5
+    }
+
+    /// The window's toolbar: a step bigger than the system's usual (about 1.15 times).
+    enum Toolbar {
+        static let controlSize = ControlSize.large
     }
 
     /// Corners, in points.
@@ -231,10 +266,16 @@ enum RunLook {
     static let wheelHome = Color.secondary
     static let card = Color.primary.opacity(0.045)
     /// A moment: the glow round the progress bar, and the ring round a card.
-    // the song now (the waiting line of a music CD's run)
-    static let nowGap: CGFloat = 12, nowBarGap: CGFloat = 6, nowPad: CGFloat = 12, nowCorner: CGFloat = 12
+    // the song card: the song being worked on (a turning disc for a music CD's), its step line and a thin bar within
+    // the song; or several songs, a row each; and, quietly, a disc's next song while it is read ahead (desk.css --now-*)
+    static let nowGap: CGFloat = 18, nowBarGap: CGFloat = 6, nowLineGap: CGFloat = 6
+    static let nowRowsGap: CGFloat = 2, nowRowGap: CGFloat = 14
     static let nowDiscSymbol = "opticaldisc"
-    static let nowDiscFont = Font.system(size: 26)
+    static let nowDiscFont = Font.system(size: 48)
+    static let nowAheadFont = Font.caption
+    static let nowCardMinHeight: CGFloat = 100
+    /// The card stays this long when no song is worked on, before the stage shows the last song in (seconds).
+    static let nowLinger = 0.9
     static let nowDiscTurn = 2.4                                            // seconds a turn
     static let wholeTurn = 360.0
     static let nowFont = Font.system(size: 14, weight: .semibold)
@@ -275,15 +316,16 @@ enum RunLook {
     static let wallHeadGap: CGFloat = 12
 
     // size
-    static let stageHeight: CGFloat = 120
+    static let stageHeight: CGFloat = 160
+    /// The song info card before its first song: an empty frame, quieter (desk.css --stage-empty-opacity).
+    static let stageEmptyOpacity = 0.55
     static let figureHeight: CGFloat = 70
-    static let wallHeight: CGFloat = 200
     static let musicFigureWidth: CGFloat = 180
     /// The song on stage: the share of its height under the wave for the bar marks; half the wave's height at full
     /// loudness, as a share; the thinnest half-wave; the middle line; a bar mark's width, the cut every 32 bars, the
     /// gap between the wave and its marks (points); the mark every 8 bars as a share of the one every 32.
     static let stageMarkShare: CGFloat = 0.12
-    static let stageWaveRoom: CGFloat = 0.48
+    static let stageWaveRoom: CGFloat = 0.94
     static let stageWaveMin: CGFloat = 1
     static let stageLine: CGFloat = 1
     static let stageTickWidth: CGFloat = 1, stageTickStrongWidth: CGFloat = 2, stageTickGap: CGFloat = 2
@@ -301,18 +343,21 @@ enum RunLook {
     static let wheelFillMin = 0.35, wheelFillRange = 0.65
     static let wheelDotBase = 1.8, wheelDotMax = 5.0
     static let wheelTurn = 360.0
-    /// Points a wall line needs to be drawn as a wave, the narrowest column of waves, of brightness lines.
-    static let wallWaveMin: CGFloat = 6, wallColMin: CGFloat = 150, wallDenseColMin: CGFloat = 18
-    /// Points a brightness line aims for, before the columns run out (then lines thin to a pixel).
-    static let wallDenseLine: CGFloat = 3
-    /// Points between columns of waves, and of brightness lines.
-    static let wallGap: CGFloat = 6, wallDenseGap: CGFloat = 2
-    /// A wave on the wall: half its height at full loudness as a share of its line, and its thinnest half (pixels).
-    static let wallWaveRoom = 0.46, wallWaveMinHalf = 0.5
-    /// A brightness line: below this loudness it takes waveQuiet; its least brightness, and how much loudness adds.
-    static let wallDenseQuiet = 0.5, wallDenseDim = 0.25, wallDenseBright = 0.75
-    /// How loudness becomes height, the same for every song (the pages' --wave-curve).
-    static let waveCurve = 2.2
+    /// A song's wave, wherever it is drawn: separate bars standing on a line (RunSong.barHeights), each song stretched to
+    /// its own range: its quietest at `waveBarFloor` of the room, its loudest at the top; values within `waveRangeMin`
+    /// (of the 0 to 99 scale) count as that range below the loudest. The share of each bar's slot left empty, and the
+    /// share of the room above the floor under which a bar takes `waveQuiet` (desk.css --wave-*).
+    static let waveBarFloor = 0.12, waveRangeMin = 8.0
+    static let waveBarGapShare: CGFloat = 0.3
+    static let waveQuietShare = 0.35
+    /// The walls: a row a song, its name always shown at the left (a share of the width, at most `wallNameMaxWidth`),
+    /// its bars beside it; the rows scroll in the card past `wallMaxHeight` (desk.css --wall-*).
+    static let wallRowHeight: CGFloat = 44, wallRowGap: CGFloat = 6, wallRowPad: CGFloat = 6
+    static let wallMaxHeight: CGFloat = 440
+    static let wallNameShare: CGFloat = 0.32, wallNameMaxWidth: CGFloat = 260, wallNameGap: CGFloat = 14
+    static let wallRowFont = Font.system(size: 13, weight: .medium)
+    static let wallRowFill = Color.primary.opacity(0.025)
+    static let wallRowPick = Color(red: 1.0, green: 0.753, blue: 0.251).opacity(0.08)
 
     // motion
     /// Seconds: a wave drawing in; a song on stage with nothing waiting, and with many; a fade; each quiet line; a

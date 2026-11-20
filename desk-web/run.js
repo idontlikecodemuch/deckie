@@ -21,21 +21,30 @@
   const num = (name) => parseFloat(css(name));
   const reduceQuery = window.matchMedia ? matchMedia("(prefers-reduced-motion: reduce)") : { matches: false };
   const reduced = () => reduceQuery.matches;
-  const WAVE = 64;
-  /// How tall a wave value (0 to 99) is drawn, from 0 to 1: one curve for every song (--wave-curve), so loud and
-  /// quiet parts stand apart, and songs still compare.
-  let curve = 1;
-  const readCurve = () => { curve = num("--wave-curve"); };
-  const shape = (v) => Math.pow(Math.max(0, v) / 99, curve);
-
-  // A CSS colour as red, green, blue and alpha (0 to 255), for drawing into image data.
-  const probe = document.createElement("canvas"); probe.width = probe.height = 1;
-  const probeCtx = probe.getContext("2d", { willReadFrequently: true });
-  function rgba(color) {
-    probeCtx.clearRect(0, 0, 1, 1); probeCtx.fillStyle = "#000"; probeCtx.fillStyle = color; probeCtx.fillRect(0, 0, 1, 1);
-    const d = probeCtx.getImageData(0, 0, 1, 1).data;
-    return [d[0], d[1], d[2], d[3]];
+  /// A song's wave as separate bars, each 0 to 1 of the room (RunSong.barHeights in the core does the same): one bar
+  /// a bar of music when the song has fewer bars than the wave has values, else one a value; stretched to the song's
+  /// own range, its tenth-quietest value in a hundred at --wave-bar-floor and its loudest at the top, a level song (values within
+  /// --wave-range-min of each other) standing at full height. The quiet bars (under --wave-quiet-share of the room
+  /// above the floor) take the quiet tone, so breakdowns and intros stand apart.
+  function barHeights(wave, bars) {
+    if (!wave || !wave.length) return [];
+    const n = wave.length, floor = Math.max(0, Math.min(1, num("--wave-bar-floor"))), rangeMin = Math.max(num("--wave-range-min"), 1e-9);
+    let v = wave.map((x) => Math.max(0, Math.min(99, x)));
+    if (bars > 0 && bars < n) {
+      const all = v;
+      v = [];
+      for (let i = 0; i < bars; i++) {
+        const a = Math.floor((i * n) / bars), e = Math.max(a + 1, Math.floor(((i + 1) * n) / bars));
+        v.push(Math.max(...all.slice(a, Math.min(e, n))));
+      }
+    }
+    // The quiet end is the song's tenth-quietest value in a hundred: a silent lead-in or tail does not squash the rest.
+    const sorted = v.slice().sort((a, b) => a - b);
+    const hi = sorted[sorted.length - 1], lo = Math.min(sorted[Math.floor(sorted.length / 10)], hi - rangeMin);
+    return v.map((x) => floor + (1 - floor) * Math.max(0, Math.min(1, (x - lo) / (hi - lo))));
   }
+  const isQuiet = (hgt) => hgt < num("--wave-bar-floor") + (1 - num("--wave-bar-floor")) * num("--wave-quiet-share");
+
   /// A canvas sized to its box in device pixels; its context, width and height.
   function fit(canvas) {
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
@@ -105,7 +114,8 @@
       const hold = reduced() ? Math.max(time("--t-hold-still"), holdFor(queue.length)) : holdFor(queue.length);
       const ticker = reduced() || document.hidden || hold < num("--stage-ticker");
       // The song before it: its wave is where this one's grows or shrinks from.
-      onStage = { song, at: now, hold, draw: ticker ? 0 : Math.min(time("--t-draw"), hold * num("--stage-draw-share")), from: onStage ? onStage.song.wave : [] };
+      onStage = { song, at: now, hold, draw: ticker ? 0 : Math.min(time("--t-draw"), hold * num("--stage-draw-share")),
+        heights: barHeights(song.wave, song.bars), from: onStage ? onStage.heights : [] };
       readLook();
       showFacts(song, ticker);
       $("stage-more").textContent = skipped > 0 ? n("stageMore", skipped) : (song.wave.length ? "" : t("stageNoWave"));
@@ -135,12 +145,11 @@
     /// The stage's values, read from desk.css once a song rather than every frame.
     let look = null;
     function readLook() {
-      readCurve();
       look = {
         markH: num("--stage-mark-h"), least: num("--stage-wave-min"), room: num("--stage-wave-room"), lineH: num("--stage-line-h"),
         none: css("--wave-none"), wave: css("--wave"), tick: css("--wave-tick"), tickStrong: css("--wave-tick-strong"),
         tickW: num("--stage-tick-w"), strongW: num("--stage-tick-strong-w"), tickGap: num("--stage-tick-gap"), tickShort: num("--stage-tick-short"),
-        frame: num("--stage-frame"),
+        frame: num("--stage-frame"), gapShare: num("--wave-bar-gap-share"), quiet: css("--wave-quiet"),
         fastest: time("--t-beat-fastest"), slowest: time("--t-beat-slowest"), inBar: num("--stage-beats-in-bar"),
         pulse: num("--stage-pulse"), downbeat: num("--stage-pulse-downbeat"), fall: num("--stage-pulse-fall"),
         breath: num("--stage-breath"), breathBars: num("--stage-breath-bars"), breathNoTempo: time("--t-breath-no-tempo"),
@@ -159,10 +168,10 @@
       while (b > L.slowest && turns < 32) { b /= 2; turns++; }
       return b;
     }
-    function shapeAt(wave, i, n) {
-      if (!wave || !wave.length || n <= 0) return 0;
-      const j = Math.max(0, Math.min(wave.length - 1, Math.floor((i * wave.length) / n)));
-      return shape(Math.min(99, wave[j]));
+    /// Bar i of n's height in a song's bars (another song's bars, sampled to n), 0 with none.
+    function shapeAt(heights, i, n) {
+      if (!heights || !heights.length || n <= 0) return 0;
+      return heights[Math.max(0, Math.min(heights.length - 1, Math.floor((i * heights.length) / n)))];
     }
     function motion(st, now, still, L) {
       const e = isFinite(now - st.at) ? Math.max(0, now - st.at) : 0, sweep = Math.max(0, st.draw || 0);
@@ -196,42 +205,27 @@
       const s = onStage.song, still = reduced() || document.hidden;
       const m = motion(onStage, now, still, L);
       ctx.clearRect(0, 0, w, h);
-      const markH = Math.round(h * L.markH), waveH = h - markH, mid = waveH / 2, slot = w / WAVE, edge = m.front * w;
+      const markH = Math.round(h * L.markH), waveH = h - markH, edge = m.front * w;
       if (waveH <= 0) return;
       ctx.fillStyle = L.none;
-      ctx.fillRect(0, Math.round(mid), w, L.lineH);
-      // The wave: mirrored, through the middle of each stretch; each stretch moving from the last song's height to
-      // this one's, then breathing with the song.
-      const playX = m.playhead != null ? m.playhead * w : null;
-      const norm = 1 + L.downbeat + L.breath + L.lift;
-      const halves = [];
-      let any = false;
-      for (let i = 0; i < WAVE; i++) {
-        const base = heightAt(m, i, WAVE, onStage.from, s.wave, L);
-        const d = playX != null ? Math.abs((i + 0.5) * slot - playX) / w / L.playW : 1;
-        const lift = d < 1 ? L.lift * (1 - d) : 0;
-        const v = base * ((1 + m.swell + lift) / norm) * waveH * L.room;
-        if (v > 0) any = true;
-        halves.push(v);
-      }
-      if (any) {
-        const half = (i) => Math.max(L.least, halves[Math.max(0, Math.min(WAVE - 1, i))]);
-        ctx.beginPath();
-        ctx.moveTo(0, mid - half(0));
-        for (let i = 0; i < WAVE; i++) ctx.lineTo((i + 0.5) * slot, mid - half(i));
-        ctx.lineTo(w, mid - half(WAVE - 1));
-        ctx.lineTo(w, mid + half(WAVE - 1));
-        for (let i = WAVE - 1; i >= 0; i--) ctx.lineTo((i + 0.5) * slot, mid + half(i));
-        ctx.lineTo(0, mid + half(0));
-        ctx.closePath();
-        ctx.fillStyle = L.wave;
-        ctx.fill();
-        // The playhead: a soft band of light crossing the wave.
-        if (playX != null) {
-          const band = L.playW * w, g = ctx.createLinearGradient(playX - band, 0, playX + band, 0);
-          g.addColorStop(0, L.clear); g.addColorStop(0.5, L.glow); g.addColorStop(1, L.clear);
-          ctx.fillStyle = g;
-          ctx.fill();
+      ctx.fillRect(0, Math.round(waveH / 2 - L.lineH / 2), w, L.lineH);   // the centre line
+      // The wave: a bar each, mirrored about a centre line, each growing or shrinking from the last song's height to this
+      // one's, then breathing with the song; the quiet ones in the quiet tone; the playhead a band of light.
+      const H = onStage.heights, N = H.length;
+      if (N) {
+        const slot = w / N, barW = Math.max(1, slot * (1 - L.gapShare));
+        const playX = m.playhead != null ? m.playhead * w : null;
+        const norm = 1 + L.downbeat + L.breath + L.lift;
+        for (let i = 0; i < N; i++) {
+          const base = heightAt(m, i, N, onStage.from, H, L);
+          const cx = (i + 0.5) * slot;
+          const d = playX != null ? Math.abs(cx - playX) / w / L.playW : 1;
+          const lift = d < 1 ? L.lift * (1 - d) : 0;
+          const v = Math.max(L.least, base * ((1 + m.swell + lift) / norm) * waveH * L.room);
+          const x = cx - barW / 2;
+          ctx.fillStyle = isQuiet(H[i]) ? L.quiet : L.wave;
+          ctx.fillRect(x, waveH / 2 - v / 2, barW, v);   // mirrored about the centre line
+          if (d < 1) { ctx.globalAlpha = 1 - d; ctx.fillStyle = L.glow; ctx.fillRect(x, waveH / 2 - v / 2, barW, v); ctx.globalAlpha = 1; }
         }
       }
       // Its bars marked as the sweep passes: a cut through the wave every 8 bars and a mark below it, a longer one every 32.
@@ -242,7 +236,6 @@
           const x = Math.round((b / s.bars) * w);
           if (x > edge) break;
           const strong = b % 32 === 0;
-          ctx.clearRect(x, 0, strong ? strongW : tickW, waveH);
           ctx.fillStyle = strong ? L.tickStrong : L.tick;
           ctx.fillRect(x, waveH + gap, tickW, Math.max(0, strong ? markH - gap : (markH - gap) * L.tickShort));
         }
@@ -387,100 +380,96 @@
       wheel.setAttribute("aria-label", text);
     }
 
-    // ---- the crate filling up: one line a song, as they joined, top to bottom, then the next column
+    // ---- the crate filling up: a row a song, as they joined, top to bottom: its name (artist and title) always shown,
+    // and its wave as bars. The rows scroll inside the card; only the rows in view are drawn, on one canvas that stays
+    // in view (position: sticky), so a crate of thousands draws as fast as a dozen. Pointing at a row, or the arrow
+    // keys, says the song's whole line (tempo, key, length, where) beside the title.
     function Wall(canvas, nameEl) {
-      let layout = null, pick = -1, dirty = false, wtimer = 0, newest = -1;
-      function plan(w, h, count, dpr) {
-        const waveMin = num("--wall-wave-min") * dpr;
-        const colMin = num("--wall-col-min") * dpr;
-        const denseMin = num("--wall-dense-col-min") * dpr;
-        const gap = Math.round(num("--wall-gap") * dpr);
-        const maxCols = Math.max(1, Math.floor((w + gap) / (colMin + gap)));
-        for (let cols = 1; cols <= maxCols; cols++) {
-          const rows = Math.ceil(count / cols);
-          if (h / rows >= waveMin) return { mode: "wave", cols, rows, lh: h / rows, gap, cw: (w - gap * (cols - 1)) / cols };
-        }
-        // Too many for waves: each song a line of brightness, as thin as one pixel; columns as narrow as --wall-dense-col-min.
-        const dgap = Math.max(1, Math.round(num("--wall-dense-gap") * dpr));
-        const maxDense = Math.max(1, Math.floor((w + dgap) / (denseMin + dgap)));
-        const line = Math.max(1, num("--wall-dense-line") * dpr);
-        const cols = Math.min(maxDense, Math.max(1, Math.ceil(count / Math.max(1, Math.floor(h / line)))));
-        const rows = Math.ceil(count / cols);
-        return { mode: "dense", cols, rows, lh: Math.max(1, h / rows), gap: dgap, cw: (w - dgap * (cols - 1)) / cols, tall: rows > h };
+      const scroller = canvas.parentElement, space = scroller.querySelector(".wall-space");
+      let pick = -1, wtimer = 0, newest = -1, follow = true;
+      const pitch = () => num("--wall-row-h") + num("--wall-row-gap");
+      function rowName(s) { return s.artist ? t("wallRowName", { artist: s.artist, title: s.title }) : s.title; }
+      /// The text cut to fit, with an ellipsis.
+      function fitText(ctx, text, room) {
+        if (ctx.measureText(text).width <= room) return text;
+        const dots = t("glyph.ellipsis");
+        let lo = 0, hi = text.length;
+        while (lo < hi) { const mid = (lo + hi + 1) >> 1; if (ctx.measureText(text.slice(0, mid) + dots).width <= room) lo = mid; else hi = mid - 1; }
+        return text.slice(0, lo).trimEnd() + dots;
       }
       function draw() {
-        wtimer = 0; dirty = false;
+        wtimer = 0;
+        // Sized first, shown or not, so the card is the rows' height from the start (one empty row before any song).
+        const count = songs.length, P = pitch(), rowH = num("--wall-row-h");
+        const total = count * P;
+        const view = Math.min(num("--wall-max-h"), Math.max(rowH, total));
+        scroller.style.height = view + "px";
+        canvas.style.height = view + "px";
+        space.style.height = Math.max(0, total - view) + "px";
         if (!canvas.isConnected || canvas.offsetParent === null) return;
         const { ctx, w, h, dpr } = fit(canvas);
-        const count = songs.length;
         ctx.clearRect(0, 0, w, h);
-        if (!count) { layout = null; return; }
-        const L = plan(w, h, count, dpr);
-        if (L.tall) {
-          // More songs than pixel rows even at the narrowest columns: the wall grows taller, one pixel a song.
-          canvas.style.height = Math.ceil(L.rows / dpr) + "px";
-          return soon();
-        }
-        readCurve();
-        layout = Object.assign(L, { w, h, dpr });
-        const img = ctx.createImageData(w, h), px = img.data;
-        const cWave = rgba(css("--wave")), cQuiet = rgba(css("--wave-quiet")), cNew = rgba(css("--wave-new")),
-              cPick = rgba(css("--wave-pick")), cNone = rgba(css("--wave-none"));
-        const room = num("--wall-wave-room"), leastHalf = num("--wall-wave-min-half"), quiet = num("--wall-dense-quiet");
-        const dim = num("--wall-dense-dim"), bright = num("--wall-dense-bright");
-        const put = (x, y, c, a) => { const o = (y * w + x) * 4; px[o] = c[0]; px[o + 1] = c[1]; px[o + 2] = c[2]; px[o + 3] = Math.round(c[3] * a); };
-        for (let i = 0; i < count; i++) {
-          const s = songs[i], col = Math.floor(i / L.rows), row = i % L.rows;
-          const x0 = Math.round(col * (L.cw + L.gap)), x1 = Math.min(w, Math.round(col * (L.cw + L.gap) + L.cw));
-          const y0 = Math.floor(row * L.lh), y1 = Math.min(h, Math.max(y0 + 1, Math.floor((row + 1) * L.lh)));
-          if (y0 >= h) continue;
-          const c = i === pick ? cPick : i === newest ? cNew : cWave;
-          const cw = x1 - x0, wave = s.wave;
-          if (!wave.length) { const y = Math.floor((y0 + y1) / 2); for (let x = x0; x < x1; x++) put(x, y, cNone, 1); continue; }
-          if (L.mode === "wave") {
-            const mid = (y0 + y1 - 1) / 2, lineRoom = (y1 - y0) * room;
-            for (let x = x0; x < x1; x++) {
-              const v = shape(wave[Math.min(WAVE - 1, Math.floor(((x - x0) / cw) * WAVE))]);
-              const half = Math.max(leastHalf, v * lineRoom);
-              for (let y = Math.max(y0, Math.round(mid - half)); y <= Math.min(y1 - 1, Math.round(mid + half)); y++) put(x, y, c, 1);
-            }
-          } else {
-            for (let x = x0; x < x1; x++) {
-              const v = shape(wave[Math.min(WAVE - 1, Math.floor(((x - x0) / cw) * WAVE))]);
-              const cc = c === cWave ? (v < quiet ? cQuiet : cWave) : c;
-              for (let y = y0; y < y1; y++) put(x, y, cc, dim + bright * v);
-            }
+        if (!count) return;
+        const top = scroller.scrollTop;
+        const nameW = Math.min(num("--wall-name-max-w"), (w / dpr) * num("--wall-name-share"));
+        const gap = num("--wall-name-gap"), floor = num("--wave-bar-floor"), gapShare = num("--wave-bar-gap-share");
+        const cName = css("--wall-row-name"), cNameNew = css("--wall-row-name-new"), cPick = css("--wave-pick"), cWave = css("--wave"),
+              cQuiet = css("--wave-quiet"), cNew = css("--wave-new"), cNone = css("--wave-none"), cRow = css("--wall-row-bg"), cRowPick = css("--wall-row-pick");
+        ctx.save();
+        ctx.scale(dpr, dpr);
+        ctx.font = css("--wall-row-font");
+        ctx.textBaseline = "middle";
+        const first = Math.max(0, Math.floor(top / P)), last = Math.min(count - 1, Math.ceil((top + view) / P));
+        const waveX = nameW + gap, waveW = Math.max(1, w / dpr - waveX);
+        for (let i = first; i <= last; i++) {
+          const s = songs[i], y0 = i * P - top, hRow = rowH;
+          ctx.fillStyle = i === pick ? cRowPick : cRow;
+          ctx.fillRect(0, y0, w / dpr, hRow);
+          ctx.fillStyle = i === pick ? cPick : i === newest ? cNameNew : cName;
+          ctx.fillText(fitText(ctx, rowName(s), nameW - gap), gap / 2, y0 + hRow / 2);
+          const H = barHeights(s.wave, s.bars);
+          const pad = num("--wall-row-pad"), room = hRow - 2 * pad;
+          if (!H.length) { ctx.fillStyle = cNone; ctx.fillRect(waveX, y0 + hRow / 2, waveW - gap / 2, 1); continue; }
+          const slot = (waveW - gap / 2) / H.length, barW = Math.max(1, slot * (1 - gapShare));
+          for (let k = 0; k < H.length; k++) {
+            const v = Math.max(1, H[k] * room);
+            ctx.fillStyle = i === pick ? cPick : i === newest ? cNew : (H[k] < floor + (1 - floor) * num("--wave-quiet-share") ? cQuiet : cWave);
+            ctx.fillRect(waveX + k * slot + (slot - barW) / 2, y0 + hRow / 2 - v / 2, barW, v);   // mirrored about the row's middle
           }
         }
-        ctx.putImageData(img, 0, 0);
+        ctx.restore();
       }
-      function soon() {
-        if (dirty) return;
-        dirty = true;
-        if (!wtimer) wtimer = setTimeout(draw, time("--t-wall"));
-      }
+      function soon() { if (!wtimer) wtimer = setTimeout(draw, time("--t-wall")); }
       function at(ev) {
-        if (!layout) return -1;
         const r = canvas.getBoundingClientRect();
-        const x = (ev.clientX - r.left) * layout.dpr, y = (ev.clientY - r.top) * layout.dpr;
-        const col = Math.floor(x / (layout.cw + layout.gap)), row = Math.floor(y / layout.lh);
-        const i = col * layout.rows + row;
-        return col >= 0 && col < layout.cols && row >= 0 && row < layout.rows && i < songs.length ? i : -1;
+        const y = ev.clientY - r.top + scroller.scrollTop;
+        const i = Math.floor(y / pitch());
+        return i >= 0 && i < songs.length && (y - i * pitch()) < num("--wall-row-h") ? i : -1;
+      }
+      /// Keeps row i in view.
+      function reveal(i) {
+        const P = pitch(), view = scroller.clientHeight;
+        if (i * P < scroller.scrollTop) scroller.scrollTop = i * P;
+        else if ((i + 1) * P > scroller.scrollTop + view) scroller.scrollTop = (i + 1) * P - view;
       }
       function choose(i, say) {
         pick = i;
         nameEl.textContent = i >= 0 ? songLine(songs[i]) : "";
         if (say && i >= 0) env.announce(nameEl.textContent);
+        if (i >= 0) reveal(i);
         draw();
       }
+      scroller.addEventListener("scroll", () => {
+        follow = scroller.scrollTop + scroller.clientHeight >= scroller.scrollHeight - pitch();
+        draw();
+      }, { passive: true });
       canvas.addEventListener("mousemove", (e) => { const i = at(e); if (i !== pick) choose(i, false); });
       canvas.addEventListener("mouseleave", () => { if (document.activeElement !== canvas) choose(-1, false); });
       canvas.addEventListener("click", (e) => { canvas.focus(); choose(at(e), false); });
       canvas.addEventListener("blur", () => choose(-1, false));
       canvas.addEventListener("keydown", (e) => {
         if (!songs.length) return;
-        const rows = layout ? layout.rows : songs.length;
-        const moves = { ArrowDown: 1, ArrowUp: -1, ArrowRight: rows, ArrowLeft: -rows, PageDown: 10, PageUp: -10 };
+        const moves = { ArrowDown: 1, ArrowUp: -1, ArrowRight: 1, ArrowLeft: -1, PageDown: 10, PageUp: -10 };
         let i = pick < 0 ? (e.key === "End" ? songs.length - 1 : 0) : pick;
         if (e.key in moves) { if (pick >= 0) i = Math.max(0, Math.min(songs.length - 1, pick + moves[e.key])); }
         else if (e.key === "Home") i = 0;
@@ -492,11 +481,16 @@
       });
       window.addEventListener("resize", soon);
       return {
-        added(i) { newest = i; soon(); },
+        // A song joined: drawn soon, and, when the rows were at their end, the newest kept in view.
+        added(i) {
+          newest = i;
+          if (follow) { const P = pitch(); setTimeout(() => { scroller.scrollTop = Math.max(0, (i + 1) * P - scroller.clientHeight); draw(); }, 0); }
+          soon();
+        },
         now: draw, soon,
         label(text) { canvas.setAttribute("aria-label", text); },
         settle() { pulse(canvas, "settle"); },
-        reset() { pick = -1; newest = -1; nameEl.textContent = ""; layout = null; canvas.style.height = ""; },
+        reset() { pick = -1; newest = -1; follow = true; nameEl.textContent = ""; scroller.scrollTop = 0; },
       };
     }
     const runWall = Wall($("run-wall"), $("run-wall-name"));

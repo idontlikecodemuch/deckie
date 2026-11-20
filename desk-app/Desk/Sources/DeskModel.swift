@@ -405,7 +405,8 @@ final class DeskModel: ObservableObject {
     /// Carries on the run that stopped.
     func carryOn() { if let p = pending { start(p) } }
 
-    var jobs: Int { max(1, min(ProcessInfo.processInfo.activeProcessorCount / 2, 4)) }
+    /// Half the cores, at most 4, fewer when memory is short, or DECKIE_DESK_JOBS: the engine's rule (`DeskJobs`).
+    var jobs: DeskJobs { DeskJobs.current() }
 
     /// The one run: into the crate showing, or a new crate named after what is read.
     func start(_ request: RunRequest) {
@@ -424,11 +425,12 @@ final class DeskModel: ObservableObject {
         watch.start(musicCD: request.musicCD != nil)
         if let note = Builder.vocalTaggerNote { runLines.append(note) }
         undoManager?.removeAllActions()
-        let run = DeskRun(home: home, crateId: info.id, request: request, jobs: jobs, device: Device.modelLabel(),
+        let jobs = self.jobs
+        let run = DeskRun(home: home, crateId: info.id, request: request, jobs: jobs.count, device: Device.modelLabel(),
                           signer: { try Signatures.signature(of: $0) }, printer: { try Signatures.recordingPrint(of: $0) },
                           audioPrinter: { url, audio in
                               Signatures.recordingPrint(fromAudio: audio.samples, channels: audio.channelCount, sampleRate: audio.sampleRate, of: url)
-                          })
+                          }, jobsBy: jobs.reason)
         runHandle = run; stopping = false; nameDuringRun = nil
         let model = self
         Task.detached(priority: .userInitiated) {

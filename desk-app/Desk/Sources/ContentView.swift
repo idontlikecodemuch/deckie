@@ -20,9 +20,9 @@ struct ContentView: View {
         .navigationTitle(model.shownName)
         .toolbar {
             // The crate's icon and name, always; a click renames it (research AE). The menu beside it switches crates.
-            ToolbarItem(placement: .navigation) { HStack { CrateName(); CrateMenu() } }
+            ToolbarItem(placement: .navigation) { HStack { CrateName(); CrateMenu() }.controlSize(Look.Toolbar.controlSize) }
             ToolbarItemGroup(placement: .primaryAction) {
-                AddMusicMenu()
+                AddMusicMenu().controlSize(Look.Toolbar.controlSize)
                 if model.crate != nil {
                     Menu {
                         Button(Words.t("pasteList")) { model.tool = "paste" }
@@ -37,15 +37,15 @@ struct ContentView: View {
                             label: { Label(Words.t("lookupMany"), systemImage: LookupStyle.icon) }
                         Button(Words.t("lookupSentLink")) { model.showSent = true }
                     } label: { Label(Words.t("nameTools"), systemImage: "character.cursor.ibeam") }
-                    .disabled(model.running)
+                    .disabled(model.running).controlSize(Look.Toolbar.controlSize)
                     Button { model.showSources.toggle() } label: {
                         Label(model.showSources ? Words.hideSources : Words.sources, systemImage: "list.bullet.indent")
                     }
-                    .help(Words.sourcesHelp).disabled(model.running)
+                    .help(Words.sourcesHelp).disabled(model.running).controlSize(Look.Toolbar.controlSize)
                     Button { model.showImportLog = true } label: { Label(Words.whatDidntGoIn, systemImage: "list.bullet.rectangle") }
-                        .disabled(model.running)
+                        .disabled(model.running).controlSize(Look.Toolbar.controlSize)
                     Button { model.sendToIPad() } label: { Label(Words.sendToIPad, systemImage: "square.and.arrow.up") }
-                        .help(Words.sendHelp).disabled(model.running)
+                        .help(Words.sendHelp).disabled(model.running).controlSize(Look.Toolbar.controlSize)
                 }
             }
         }
@@ -122,10 +122,12 @@ struct EmptyCrateView: View {
     @EnvironmentObject var model: DeskModel
     var body: some View {
         VStack(spacing: Look.Space.firstScreen) {
-            CrateIcon(size: Look.Add.crateIconFirst).foregroundStyle(.secondary)
+            CrateIcon(size: Look.First.crateIcon).foregroundStyle(.secondary)
             Text(Words.firstTitle).font(Look.Fonts.screenTitle)
             Text(Words.firstBody)
                 .multilineTextAlignment(.center).foregroundStyle(.secondary).frame(maxWidth: Look.Size.firstBodyWidth)
+            // Quieter than the body: "Your music never leaves this Mac."
+            Text(Words.firstNote).font(Look.Fonts.firstNote).foregroundStyle(.tertiary).multilineTextAlignment(.center)
             PendingBanner()
             // The crate's name, filled in; then the three ways in, the same as everywhere music is added (research AE).
             NewCrateNameField()
@@ -134,6 +136,7 @@ struct EmptyCrateView: View {
                 Button(Words.withRekordbox) { model.askRekordbox() }
                 Button(Words.importCrateFile) { model.askImport() }
             }
+            .font(Look.First.importFont)
             Text(Words.dropHere).foregroundStyle(.tertiary)
         }.padding(Look.Space.firstScreenPadding)
     }
@@ -214,9 +217,10 @@ struct RunView: View {
                 }.padding(Look.Space.discAskPadding).background(.quaternary, in: RoundedRectangle(cornerRadius: Look.Shape.discAsk))
             }
             RunProgressLine(watch: model.watch)
+            // The song card: the song (or songs) being worked on; when none is, the last song in.
+            SongCardSlot(watch: model.watch)
             SayingLine(watch: model.watch)
             Text(DeskWords.text("leaveRunning")).font(Look.Fonts.leaveRunning).foregroundStyle(.tertiary)
-            StageView(watch: model.watch)
             FiguresView(watch: model.watch)
             WallView(watch: model.watch, title: DeskWords.text("wallTitle"))
             DisclosureGroup(DeskWords.text("runListTitle"), isExpanded: $showList) {
@@ -227,6 +231,19 @@ struct RunView: View {
                 }.frame(maxWidth: .infinity, alignment: .leading)
             }
             .font(Look.Fonts.runList).foregroundStyle(.secondary)
+        }
+    }
+}
+
+/// The song card's place: the songs being worked on (RunWatch.showNow), and under it, always, the last song in.
+struct SongCardSlot: View {
+    @EnvironmentObject var model: DeskModel
+    @ObservedObject var watch: RunWatch
+    var body: some View {
+        VStack(alignment: .leading, spacing: RunLook.gap) {
+            if watch.showNow { NowCard(watch: watch, total: model.runTotal, disc: model.runIsMusicCD) }
+            // Always: the last song in, with its facts and its moving wave.
+            StageView(watch: watch)
         }
     }
 }
@@ -243,14 +260,13 @@ struct RunProgressLine: View {
                 .shadow(color: RunLook.accent.opacity(watch.moment == "songs" && !reduce ? RunLook.momentGlowOpacity : 0), radius: RunLook.momentGlowRadius)
                 .animation(.easeOut(duration: RunLook.momentFlash), value: watch.moment)
             HStack {
-                Text(Words.songsOf(model.runDone, model.runTotal))
+                Text(Words.doneOf(model.runDone, model.runTotal))
                 Text(stage).foregroundStyle(.secondary)
                 if watch.figures.notIn > 0 { Text(Words.filesDidntGoIn(watch.figures.notIn)).foregroundStyle(Look.Colour.warning) }
                 Spacer()
                 if let r = model.runRemaining { Text(Words.timeLeft(r)).foregroundStyle(.secondary) }
             }.font(Look.Fonts.runProgress)
         } else { ProgressView().controlSize(.small) }
-        if let now = model.runNow { NowLine(now: now, total: model.runTotal, disc: model.runIsMusicCD) }
     }
 
     private var stage: String {
@@ -259,35 +275,6 @@ struct RunProgressLine: View {
         case .finishing: return Words.stageFinishing
         case .saving: return Words.stageSaving
         }
-    }
-}
-
-/// The song now (a music CD's songs, one at a time): a turning disc and one plain line, "Reading song 2 of 6 from the
-/// disc", then the step it is on, with a thin bar within the song. The words and the share are the core's (`RunNow`).
-/// Still under reduced motion.
-struct NowLine: View {
-    let now: RunNow
-    let total: Int
-    let disc: Bool
-    @Environment(\.accessibilityReduceMotion) private var reduce
-    var body: some View {
-        HStack(spacing: RunLook.nowGap) {
-            if disc {
-                TimelineView(.animation(paused: reduce)) { context in
-                    Image(systemName: RunLook.nowDiscSymbol)
-                        .font(RunLook.nowDiscFont).foregroundStyle(.secondary)
-                        .rotationEffect(.degrees(reduce ? 0 : context.date.timeIntervalSinceReferenceDate
-                            .truncatingRemainder(dividingBy: RunLook.nowDiscTurn) / RunLook.nowDiscTurn * RunLook.wholeTurn))
-                }
-                .accessibilityHidden(true)
-            }
-            VStack(alignment: .leading, spacing: RunLook.nowBarGap) {
-                Text(now.line(total: total)).font(RunLook.nowFont).lineLimit(1)
-                ProgressView(value: now.share).tint(RunLook.accent)
-            }
-        }
-        .padding(RunLook.nowPad)
-        .background(RunLook.card, in: RoundedRectangle(cornerRadius: RunLook.nowCorner))
     }
 }
 

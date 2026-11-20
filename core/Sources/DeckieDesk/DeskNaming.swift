@@ -106,6 +106,11 @@ public enum DeskNaming {
         return nil
     }
 
+    /// The songs in the "Needs a name" list: the count every line saying how many still need a name gives.
+    public static func needingName(_ crate: Crate, book: NameBook, corrections: NameCorrections) -> Int {
+        crate.tracks.filter { reason($0, facts($0, book: book, corrections: corrections)) != nil }.count
+    }
+
     /// `reason` for a song with no panel facts: from the crate file alone.
     public static func reason(_ t: CrateTrack) -> String? {
         if !LocalNames.isUsableTitle(t.ident.title) { return "noTitle" }
