@@ -111,8 +111,7 @@
       <!-- The song card (desk.js drawNow): the song being worked on, by the name Desk has for it, with its step line
            and a thin bar within the song (a turning disc for a music CD's song); or, when a folder's songs are read
            several at once, how many and a row a song with each one's step. Under it, quietly, the next song of a disc
-           while it is read ahead. When nothing is being worked on (songs read before, the finishing steps), the stage
-           below shows the last song in instead. -->
+           while it is read ahead. Shown while songs are worked on. -->
       <div id="now-card" class="now-card card" hidden>
         <div id="now-one" class="now-one">
           <svg id="now-disc" class="now-disc" aria-hidden="true"><use href="#icon-disc-turning"/></svg>
@@ -128,8 +127,8 @@
         </div>
         <p id="now-ahead" class="now-ahead dim small" hidden></p>
       </div>
-      <!-- The song on stage when nothing is being worked on: the last song in, its own wave, its bars marked, and what
-           Desk found in it. -->
+      <!-- The song info card, always under it: the last song in ("Just in"), its own wave, its bars marked, and what
+           Desk found in it; a quiet empty frame until the first song is in. -->
       <div id="stage" class="stage card">
         <canvas id="stage-wave" class="stage-wave" role="img"></canvas>
         <div class="stage-facts">
@@ -162,10 +161,10 @@
         </div>
       </div>
 
-      <!-- The crate filling up: one line a song. -->
+      <!-- The crate filling up: a row a song, its name and its wave as bars (run.js Wall). -->
       <div class="wall-card card">
         <div class="wall-head"><h2 id="run-wall-title" data-w="wallTitle"></h2><span id="run-wall-name" class="wall-name mut"></span></div>
-        <canvas id="run-wall" class="wall" tabindex="0" role="img" aria-describedby="run-wall-help"></canvas>
+        <div class="wall-scroll"><canvas id="run-wall" class="wall" tabindex="0" role="img" aria-describedby="run-wall-help"></canvas><div class="wall-space"></div></div>
         <p id="run-wall-help" class="dim small" data-w="wallHelp"></p>
       </div>
 
@@ -186,7 +185,7 @@
       <div id="done-wall-card" class="wall-card card done" hidden>
         <p id="done-moment" class="saying moment"></p>
         <div class="wall-head"><h2 id="done-wall-title"></h2><span id="done-wall-name" class="wall-name mut"></span></div>
-        <canvas id="done-wall" class="wall" tabindex="0" role="img" aria-describedby="done-wall-help"></canvas>
+        <div class="wall-scroll"><canvas id="done-wall" class="wall" tabindex="0" role="img" aria-describedby="done-wall-help"></canvas><div class="wall-space"></div></div>
         <p id="done-wall-help" class="dim small" data-w="wallHelp"></p>
       </div>
       <div id="finished-summary" class="summary card"></div>

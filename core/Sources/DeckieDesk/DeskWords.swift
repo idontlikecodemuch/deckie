@@ -273,8 +273,10 @@ public enum DeskWords {
         "figCopiesLater": "when saving",
         "figNotIn": "Didn't go in",
         "wallTitle": "The crate so far",
-        "wallTitleDone": "{read}, one line a song",
-        "wallHelp": "One line a song, as they joined. Point at a line, or use the arrow keys, to see which.",
+        "wallTitleDone": "{read}, a row a song",
+        "wallHelp": "A row a song, as they joined. Point at a row, or use the arrow keys, for its tempo, key and length.",
+        // A row's name on the walls, always shown (cut with glyph.ellipsis when it is too long).
+        "wallRowName": "{artist} – {title}",
         "wallEmpty": "Songs join here as they are read.",
         "wallSong": "{number}. {title}",
         "wallSongBy": "{number}. {title}, {artist}",
@@ -879,6 +881,7 @@ public enum DeskWords {
         // template with named blanks, each spelled exactly as the window showed it. Where the Mac's window and the
         // pages spelled one join differently, each keeps its own entry ("...Mac" is the Mac's).
         "glyph.menu": "▾",
+        "glyph.ellipsis": "…",
         "glyph.more": "⋯",
         "glyph.checked": "✓",
         "glyph.folder": "▸ ",

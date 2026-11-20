@@ -17,7 +17,7 @@ import DeckieDesk
 final class RunWatch: ObservableObject {
     /// The song on stage: when it went on, how long it stays at least, how long its sweep in takes (0: at once), and
     /// the wave of the song before it, which its own grows or shrinks from.
-    struct Staged: Equatable { var song: RunSong; var at: Date; var hold: Double; var draw: Double; var from: [Int] }
+    struct Staged: Equatable { var song: RunSong; var at: Date; var hold: Double; var draw: Double; var heights: [Double]; var from: [Double] }
 
     @Published private(set) var songs: [RunSong] = []
     @Published private(set) var figures = RunFigures()
@@ -105,12 +105,8 @@ final class RunWatch: ObservableObject {
         } else { endNow() }
     }
 
-    /// No song is worked on: the stage shows again, straight to the last song in (the ones it skips are on the wall).
-    private func endNow() {
-        showNow = false; working = []
-        if queue.count > 1 { queue.removeFirst(queue.count - 1) }
-        if !queue.isEmpty { advance() }
-    }
+    /// No song is worked on: the song card goes (the stage under it stays).
+    private func endNow() { showNow = false; working = [] }
 
     func stop() {
         for t in [stageTimer, sayTimer, wallTimer, nowTimer] { t?.invalidate() }
@@ -132,7 +128,8 @@ final class RunWatch: ObservableObject {
         // Under reduced motion a song stays at least `holdStill`, so the stage changes as a still picture would.
         if reduceMotion { hold = max(hold, RunLook.holdStill) }
         let ticker = reduceMotion || hold < RunLook.ticker
-        staged = Staged(song: song, at: Date(), hold: hold, draw: ticker ? 0 : min(RunLook.draw, hold * RunLook.drawShare), from: staged?.song.wave ?? [])
+        staged = Staged(song: song, at: Date(), hold: hold, draw: ticker ? 0 : min(RunLook.draw, hold * RunLook.drawShare),
+                        heights: RunWatch.bars(song), from: staged?.heights ?? [])
         if queue.isEmpty && skipped > 0 { stageTimerFire(after: hold) { [weak self] in self?.skipped = 0 } }
         scheduleStage()
     }
@@ -256,6 +253,15 @@ final class RunWatch: ObservableObject {
         }
     }
     static func clock(_ s: Double) -> String { RunTally.clock(s) }
+    /// A song's wave as the bars to draw (RunSong.barHeights with the look's values).
+    static func bars(_ s: RunSong) -> [Double] {
+        RunSong.barHeights(s.wave, bars: s.bars, rangeMin: RunLook.waveRangeMin, floor: RunLook.waveBarFloor)
+    }
+    static func isQuiet(_ h: Double) -> Bool { h < RunLook.waveBarFloor + (1 - RunLook.waveBarFloor) * RunLook.waveQuietShare }
+    /// A row's name on the walls: artist and title.
+    static func rowName(_ s: RunSong) -> String {
+        s.artist.map { DeskWords.text("wallRowName", ["artist": $0, "title": s.title]) } ?? s.title
+    }
     static func whereLine(_ s: RunSong) -> String {
         s.place ?? ((s.folder ?? "").isEmpty ? DeskWords.text("topOfMusicFolder") : s.folder!)
     }
@@ -297,7 +303,7 @@ struct NowCard: View {
                     Text(RunNow.aheadLine).font(RunLook.nowAheadFont).foregroundStyle(.tertiary).lineLimit(1)
                 }
             }
-            .frame(maxWidth: .infinity, minHeight: RunLook.stageHeight, alignment: .leading)
+            .frame(maxWidth: .infinity, minHeight: RunLook.nowCardMinHeight, alignment: .leading)
         }
     }
 
@@ -340,8 +346,8 @@ struct NowCard: View {
     }
 }
 
-/// The song on stage when no song is worked on: the last song in, its own wave drawing in with its bars marked, and
-/// what Desk found in it.
+/// The song info card, always on the run screen: the last song in ("Just in"), its own wave drawing in with its bars
+/// marked, and what Desk found in it.
 struct StageView: View {
     @ObservedObject var watch: RunWatch
     @Environment(\.accessibilityReduceMotion) private var reduce
@@ -367,10 +373,12 @@ struct StageView: View {
                 }
                 .animation(reduce || s.draw == 0 ? nil : .easeInOut(duration: RunLook.fade), value: s.song.id)
             } else {
-                Text(DeskWords.text("stageFirstSoon")).foregroundStyle(.secondary)
+                // Before the first song is in: a quiet empty frame under the song card, or the sentence with no card.
+                Text(watch.showNow ? "" : DeskWords.text("stageFirstSoon")).foregroundStyle(.secondary)
                     .frame(maxWidth: .infinity, minHeight: RunLook.stageHeight)
             }
         }
+        .opacity(watch.staged == nil ? RunLook.stageEmptyOpacity : 1)
     }
 
     private func facts(_ s: RunSong) -> some View {
@@ -407,37 +415,30 @@ struct StageView: View {
     }
 
     static func draw(_ st: RunWatch.Staged, elapsed: Double, still: Bool, in gc: inout GraphicsContext, size: CGSize) {
-        let s = st.song, w = size.width, markH = (size.height * RunLook.stageMarkShare).rounded(), h = size.height - markH, mid = h / 2
+        let s = st.song, w = size.width, markH = (size.height * RunLook.stageMarkShare).rounded(), h = size.height - markH
         guard w > 0, h > 0 else { return }
         let m = StageMotion(bpm: s.bpm, elapsed: elapsed, sweep: st.draw, still: still)
         let edge = CGFloat(m.front) * w
-        gc.fill(Path(CGRect(x: 0, y: mid.rounded(), width: w, height: RunLook.stageLine)), with: .color(Color(nsColor: RunLook.waveNone)))
-        let n = RunSong.waveLength, slot = w / CGFloat(n)
-        // The wave: mirrored, through the middle of each stretch; each stretch moving from the last song's height to
-        // this one's, then breathing with the song (StageMotion).
-        let playX = m.playhead.map { CGFloat($0) * w }
-        let halves: [CGFloat] = (0..<n).map { i in
-            let base = m.height(i, of: n, from: st.from, to: s.wave)
-            let x = (CGFloat(i) + 0.5) * slot
-            let lift = playX.map { m.lift(distance: Double(abs(x - $0) / w)) } ?? 0
-            return CGFloat(base * m.scale(lift: lift)) * h * RunLook.stageWaveRoom
-        }
-        if halves.contains(where: { $0 > 0 }) {
-            func half(_ i: Int) -> CGFloat { max(RunLook.stageWaveMin, halves[max(0, min(n - 1, i))]) }
-            var path = Path()
-            path.move(to: CGPoint(x: 0, y: mid - half(0)))
-            for i in 0..<n { path.addLine(to: CGPoint(x: (CGFloat(i) + 0.5) * slot, y: mid - half(i))) }
-            path.addLine(to: CGPoint(x: w, y: mid - half(n - 1)))
-            path.addLine(to: CGPoint(x: w, y: mid + half(n - 1)))
-            for i in stride(from: n - 1, through: 0, by: -1) { path.addLine(to: CGPoint(x: (CGFloat(i) + 0.5) * slot, y: mid + half(i))) }
-            path.addLine(to: CGPoint(x: 0, y: mid + half(0)))
-            path.closeSubpath()
-            gc.fill(path, with: .color(Color(nsColor: RunLook.wave)))
-            // The playhead: a soft band of light crossing the wave.
-            if let x = playX {
-                let band = CGFloat(RunLook.playheadWidth) * w
-                gc.fill(path, with: .linearGradient(Gradient(colors: [RunLook.playheadGlow.opacity(0), RunLook.playheadGlow, RunLook.playheadGlow.opacity(0)]),
-                                                    startPoint: CGPoint(x: x - band, y: 0), endPoint: CGPoint(x: x + band, y: 0)))
+        gc.fill(Path(CGRect(x: 0, y: h - RunLook.stageLine, width: w, height: RunLook.stageLine)), with: .color(Color(nsColor: RunLook.waveNone)))
+        // The wave: a bar each, standing on the line, each growing or shrinking from the last song's height to this
+        // one's, then breathing with the song (StageMotion); the quiet ones in the quiet tone; the playhead a band of
+        // light across them.
+        let n = st.heights.count
+        if n > 0 {
+            let slot = w / CGFloat(n), barW = max(1, slot * (1 - RunLook.waveBarGapShare))
+            let playX = m.playhead.map { CGFloat($0) * w }
+            for i in 0..<n {
+                let base = m.height(i, of: n, from: st.from, to: st.heights)
+                let cx = (CGFloat(i) + 0.5) * slot
+                let distance = playX.map { Double(abs(cx - $0) / w) }
+                let lift = distance.map { m.lift(distance: $0) } ?? 0
+                let v = max(RunLook.stageWaveMin, CGFloat(base * m.scale(lift: lift)) * h * RunLook.stageWaveRoom)
+                let rect = CGRect(x: cx - barW / 2, y: h - RunLook.stageLine - v, width: barW, height: v)
+                gc.fill(Path(rect), with: .color(Color(nsColor: RunWatch.isQuiet(st.heights[i]) ? RunLook.waveQuiet : RunLook.wave)))
+                if let d = distance.map({ $0 / RunLook.playheadWidth }), d < 1 {
+                    let near = 1 - d    // the playhead's light, brightest at its middle
+                    gc.fill(Path(rect), with: .color(RunLook.playheadGlow.opacity(near)))
+                }
             }
         }
         // Its bars marked as the sweep passes: a cut through the wave every 8 bars and a mark below it, a longer one
@@ -448,9 +449,6 @@ struct StageView: View {
                 let x = (CGFloat(b) / CGFloat(bars) * w).rounded()
                 if x > edge { break }
                 let strong = b % 32 == 0
-                gc.blendMode = .clear
-                gc.fill(Path(CGRect(x: x, y: 0, width: strong ? RunLook.stageTickStrongWidth : RunLook.stageTickWidth, height: h)), with: .color(.black))
-                gc.blendMode = .normal
                 gc.fill(Path(CGRect(x: x, y: h + RunLook.stageTickGap, width: RunLook.stageTickWidth, height: max(0, strong ? markH - RunLook.stageTickGap : (markH - RunLook.stageTickGap) * RunLook.stageTickShort))),
                         with: .color(strong ? RunLook.tickStrong : RunLook.tick))
                 b += 8
@@ -503,16 +501,15 @@ struct StageMotion {
         return b
     }
 
-    /// A wave's height at stretch `i` of `n`, 0 to 1 on the one curve every song shares; 0 with no wave.
-    static func shape(_ wave: [Int], _ i: Int, of n: Int) -> Double {
-        guard !wave.isEmpty, n > 0 else { return 0 }
-        let j = max(0, min(wave.count - 1, i * wave.count / n))
-        return pow(Double(max(0, min(99, wave[j]))) / 99, RunLook.waveCurve)
+    /// Bar `i` of `n`'s height in a song's bars (another song's bars, sampled to `n`); 0 with none.
+    static func shape(_ heights: [Double], _ i: Int, of n: Int) -> Double {
+        guard !heights.isEmpty, n > 0 else { return 0 }
+        return heights[max(0, min(heights.count - 1, i * heights.count / n))]
     }
 
     /// Stretch `i`'s height now, on its way from the last song's wave to this one's: each stretch starts in turn from
     /// the left and settles with a small overshoot.
-    func height(_ i: Int, of n: Int, from old: [Int], to new: [Int]) -> Double {
+    func height(_ i: Int, of n: Int, from old: [Double], to new: [Double]) -> Double {
         let target = Self.shape(new, i, of: n)
         guard !still, sweep > 0 else { return target }
         let start = Double(i) / Double(max(1, n - 1)) * sweep * RunLook.sweepStagger
@@ -634,15 +631,14 @@ struct FiguresView: View {
     }
 }
 
-/// The crate filling up: one line a song, as they joined, top to bottom then the next column. Hovering or choosing a
-/// line names the song; the arrow keys move along them.
+/// The crate filling up: a row a song, as they joined, top to bottom: its name (artist and title) always shown, and
+/// its wave as bars. The rows scroll in the card (lazily: a crate of thousands makes only the rows in view). Pointing at
+/// a row, or the arrow keys, says the song's whole line (tempo, key, length, where) beside the title.
 struct WallView: View {
     @ObservedObject var watch: RunWatch
     var title: String
     @State private var pick: Int?
-    @State private var size: CGSize = .zero
     @FocusState private var focused: Bool
-    @Environment(\.displayScale) private var scale
 
     var body: some View {
         RunCard(moment: watch.moment == "disc") {
@@ -652,19 +648,21 @@ struct WallView: View {
                     Text(pick.flatMap { watch.songs.indices.contains($0) ? RunWatch.line(watch.songs[$0]) : nil } ?? "")
                         .font(RunLook.wallNameFont).foregroundStyle(.secondary).lineLimit(1)
                 }
-                GeometryReader { geo in
-                    let picture = WallPicture.make(watch.songs, version: watch.wallVersion, size: geo.size, scale: scale, pick: pick)
-                    Image(decorative: picture.image ?? WallPicture.empty, scale: scale)
-                        .resizable().interpolation(.none)
-                        .onContinuousHover { phase in
-                            switch phase {
-                            case let .active(p): pick = picture.index(at: p)
-                            case .ended: if !focused { pick = nil }
+                ScrollViewReader { reader in
+                    ScrollView {
+                        LazyVStack(alignment: .leading, spacing: RunLook.wallRowGap) {
+                            ForEach(watch.songs.indices, id: \.self) { i in
+                                WallRow(song: watch.songs[i], picked: pick == i, newest: i == watch.songs.count - 1)
+                                    .id(i)
+                                    .onHover { inside in if inside { pick = i } else if pick == i && !focused { pick = nil } }
                             }
                         }
-                        .onChange(of: geo.size, initial: true) { _, s in size = s }
+                    }
+                    .frame(height: min(RunLook.wallMaxHeight, max(RunLook.wallRowHeight,
+                        CGFloat(watch.songs.count) * (RunLook.wallRowHeight + RunLook.wallRowGap))))
+                    .onChange(of: watch.songs.count) { _, n in if pick == nil, n > 0 { reader.scrollTo(n - 1, anchor: .bottom) } }
+                    .onChange(of: pick) { _, p in if let p { reader.scrollTo(p) } }
                 }
-                .frame(height: RunLook.wallHeight)
                 .focusable().focused($focused)
                 .onKeyPress(keys: [.upArrow, .downArrow, .leftArrow, .rightArrow, .home, .end]) { press in
                     move(press.key); return .handled
@@ -680,14 +678,11 @@ struct WallView: View {
     private func move(_ key: KeyEquivalent) {
         let n = watch.songs.count
         guard n > 0 else { return }
-        let rows = WallPicture.rows(n, size: size, scale: scale)
         var i = pick ?? (key == .end ? n - 1 : 0)
         if pick != nil {
             switch key {
-            case .downArrow: i += 1
-            case .upArrow: i -= 1
-            case .rightArrow: i += rows
-            case .leftArrow: i -= rows
+            case .downArrow, .rightArrow: i += 1
+            case .upArrow, .leftArrow: i -= 1
             case .home: i = 0
             case .end: i = n - 1
             default: break
@@ -698,101 +693,39 @@ struct WallView: View {
     }
 }
 
-/// The wall as a picture, drawn pixel by pixel as the pages draw it (one song a line: a wave where a line is tall
-/// enough, else a line of brightness), kept until the songs, the size or the song picked change.
-@MainActor
-enum WallPicture {
-    struct Plan { var wave: Bool; var cols: Int; var rows: Int; var lh: CGFloat; var gap: CGFloat; var cw: CGFloat; var scale: CGFloat
-        func index(at p: CGPoint, count: Int) -> Int? {
-            let x = p.x * scale, y = p.y * scale
-            let col = Int(x / (cw + gap)), row = Int(y / lh)
-            let i = col * rows + row
-            return col >= 0 && col < cols && row >= 0 && row < rows && i < count ? i : nil
-        }
-    }
-    struct Made { var image: CGImage?; var plan: Plan?; var count: Int
-        func index(at p: CGPoint) -> Int? { plan?.index(at: p, count: count) }
-    }
-    private static var cache: (key: String, made: Made)?
-    static let empty: CGImage = CGContext(data: nil, width: 1, height: 1, bitsPerComponent: 8, bytesPerRow: 4,
-                                          space: CGColorSpaceCreateDeviceRGB(),
-                                          bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)!.makeImage()!
-
-    static func plan(_ count: Int, w: CGFloat, h: CGFloat, scale: CGFloat) -> Plan {
-        let gap = (RunLook.wallGap * scale).rounded(), maxCols = max(1, Int((w + gap) / (RunLook.wallColMin * scale + gap)))
-        for cols in 1...maxCols {
-            let rows = Int((Double(count) / Double(cols)).rounded(.up))
-            if h / CGFloat(rows) >= RunLook.wallWaveMin * scale {
-                return Plan(wave: true, cols: cols, rows: rows, lh: h / CGFloat(rows), gap: gap, cw: (w - gap * CGFloat(cols - 1)) / CGFloat(cols), scale: scale)
+/// One row of a wall: the song's name, cut with an ellipsis, then its bars.
+struct WallRow: View {
+    let song: RunSong
+    let picked: Bool
+    let newest: Bool
+    var body: some View {
+        GeometryReader { geo in
+            let nameW = min(RunLook.wallNameMaxWidth, geo.size.width * RunLook.wallNameShare)
+            HStack(spacing: 0) {
+                Text(RunWatch.rowName(song)).font(RunLook.wallRowFont).lineLimit(1).truncationMode(.tail)
+                    .foregroundStyle(picked ? RunLook.amber : newest ? Color.primary : Color.secondary)
+                    .padding(.horizontal, RunLook.wallNameGap / 2)
+                    .frame(width: nameW, alignment: .leading)
+                Canvas { gc, size in WallRow.draw(song, picked: picked, newest: newest, in: &gc, size: size) }
+                    .padding(.trailing, RunLook.wallNameGap / 2)
             }
         }
-        let dgap = max(1, (RunLook.wallDenseGap * scale).rounded())
-        let maxDense = max(1, Int((w + dgap) / (RunLook.wallDenseColMin * scale + dgap)))
-        let line = max(1, RunLook.wallDenseLine * scale)
-        var cols = min(maxDense, max(1, Int((Double(count) / Double(max(1, (h / line).rounded(.down)))).rounded(.up))))
-        // More songs than pixel rows even at the narrowest columns: narrower columns, one pixel a song.
-        cols = max(cols, Int((Double(count) / Double(h)).rounded(.up)))
-        let rows = Int((Double(count) / Double(cols)).rounded(.up))
-        return Plan(wave: false, cols: cols, rows: rows, lh: max(1, h / CGFloat(rows)), gap: dgap, cw: (w - dgap * CGFloat(cols - 1)) / CGFloat(cols), scale: scale)
+        .frame(height: RunLook.wallRowHeight)
+        .background(picked ? RunLook.wallRowPick : RunLook.wallRowFill)
     }
 
-    static func rows(_ count: Int, size: CGSize, scale: CGFloat) -> Int {
-        plan(count, w: size.width * scale, h: size.height * scale, scale: scale).rows
-    }
-
-    static func make(_ songs: [RunSong], version: Int, size: CGSize, scale: CGFloat, pick: Int?) -> Made {
-        let key = "\(version) \(songs.count) \(Int(size.width))x\(Int(size.height)) \(scale) \(pick ?? -1)"
-        if let c = cache, c.key == key { return c.made }
-        let made = draw(songs, size: size, scale: scale, pick: pick)
-        cache = (key, made)
-        return made
-    }
-
-    private static func rgba(_ c: NSColor) -> (UInt8, UInt8, UInt8, Double) {
-        let s = c.usingColorSpace(.deviceRGB) ?? c
-        func part(_ v: CGFloat) -> UInt8 { UInt8(max(0, min(255, (v.isFinite ? v : 0) * 255))) }
-        return (part(s.redComponent), part(s.greenComponent), part(s.blueComponent), Double(max(0, min(1, s.alphaComponent))))
-    }
-
-    private static func draw(_ songs: [RunSong], size: CGSize, scale: CGFloat, pick: Int?) -> Made {
-        let w = max(1, Int(size.width * scale)), h = max(1, Int(size.height * scale))
-        guard !songs.isEmpty, size.width > 0 else { return Made(image: nil, plan: nil, count: 0) }
-        let L = plan(songs.count, w: CGFloat(w), h: CGFloat(h), scale: scale)
-        var px = [UInt8](repeating: 0, count: w * h * 4)
-        let cWave = rgba(RunLook.wave), cQuiet = rgba(RunLook.waveQuiet), cNew = rgba(RunLook.waveNew),
-            cPick = rgba(RunLook.wavePick), cNone = rgba(RunLook.waveNone)
-        func put(_ x: Int, _ y: Int, _ c: (UInt8, UInt8, UInt8, Double), _ a: Double) {
-            guard x >= 0, x < w, y >= 0, y < h else { return }
-            let o = (y * w + x) * 4, al = max(0, min(1, c.3 * a))
-            px[o] = UInt8(Double(c.0) * al); px[o + 1] = UInt8(Double(c.1) * al); px[o + 2] = UInt8(Double(c.2) * al); px[o + 3] = UInt8(255 * al)
+    static func draw(_ s: RunSong, picked: Bool, newest: Bool, in gc: inout GraphicsContext, size: CGSize) {
+        let heights = RunWatch.bars(s), pad = RunLook.wallRowPad, room = size.height - 2 * pad
+        guard size.width > 0, room > 0 else { return }
+        if heights.isEmpty {
+            gc.fill(Path(CGRect(x: 0, y: size.height - pad - 1, width: size.width, height: 1)), with: .color(Color(nsColor: RunLook.waveNone)))
+            return
         }
-        let n = RunSong.waveLength, last = songs.count - 1
-        for (i, s) in songs.enumerated() {
-            let col = i / L.rows, row = i % L.rows
-            let x0 = Int((CGFloat(col) * (L.cw + L.gap)).rounded()), x1 = min(w, Int((CGFloat(col) * (L.cw + L.gap) + L.cw).rounded()))
-            let y0 = Int(CGFloat(row) * L.lh), y1 = min(h, max(y0 + 1, Int(CGFloat(row + 1) * L.lh)))
-            guard y0 < h, x1 > x0 else { continue }
-            let c = i == pick ? cPick : i == last ? cNew : cWave
-            let cw = Double(x1 - x0)
-            if s.wave.isEmpty { let y = (y0 + y1) / 2; for x in x0..<x1 { put(x, y, cNone, 1) }; continue }
-            for x in x0..<x1 {
-                let v = pow(Double(s.wave[max(0, min(n - 1, s.wave.count - 1, Int(Double(x - x0) / cw * Double(n))))]) / 99, RunLook.waveCurve)
-                if L.wave {
-                    let mid = Double(y0 + y1 - 1) / 2, half = max(RunLook.wallWaveMinHalf, v * Double(y1 - y0) * RunLook.wallWaveRoom)
-                    var y = max(y0, Int((mid - half).rounded()))
-                    while y <= min(y1 - 1, Int((mid + half).rounded())) { put(x, y, c, 1); y += 1 }
-                } else {
-                    let cc = (c == cWave) ? (v < RunLook.wallDenseQuiet ? cQuiet : cWave) : c
-                    for y in y0..<y1 { put(x, y, cc, RunLook.wallDenseDim + RunLook.wallDenseBright * v) }
-                }
-            }
+        let slot = size.width / CGFloat(heights.count), barW = max(1, slot * (1 - RunLook.waveBarGapShare))
+        for (k, h) in heights.enumerated() {
+            let v = max(1, CGFloat(h) * room)
+            let colour: NSColor = picked ? RunLook.wavePick : newest ? RunLook.waveNew : RunWatch.isQuiet(h) ? RunLook.waveQuiet : RunLook.wave
+            gc.fill(Path(CGRect(x: CGFloat(k) * slot + (slot - barW) / 2, y: size.height - pad - v, width: barW, height: v)), with: .color(Color(nsColor: colour)))
         }
-        let data = Data(px) as CFData
-        let image = CGDataProvider(data: data).flatMap {
-            CGImage(width: w, height: h, bitsPerComponent: 8, bitsPerPixel: 32, bytesPerRow: w * 4, space: CGColorSpaceCreateDeviceRGB(),
-                    bitmapInfo: CGBitmapInfo(rawValue: CGImageAlphaInfo.premultipliedLast.rawValue), provider: $0, decode: nil,
-                    shouldInterpolate: false, intent: .defaultIntent)
-        }
-        return Made(image: image, plan: L, count: songs.count)
     }
 }
