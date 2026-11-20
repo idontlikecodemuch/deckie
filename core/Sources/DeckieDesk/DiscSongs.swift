@@ -189,6 +189,9 @@ final class DiscSongFiles: BuildFiles, @unchecked Sendable {
     /// Told as a song comes off the disc: the song (its path as the builder names it), and sectors read of its
     /// sectors. At most once a percent. On the reading thread, or the read-ahead's.
     var onRead: (@Sendable (_ rel: String, _ done: Int, _ total: Int) -> Void)?
+    /// Told when a read ahead ends: read whole, cancelled or failed (the song as the builder names it). On the read
+    /// ahead's thread.
+    var onAheadEnded: (@Sendable (_ rel: String) -> Void)?
 
     /// No song longer than this is read ahead (15 minutes of sound, about 150 MB as CD audio).
     static let readAheadMostSeconds = 15.0 * 60
@@ -312,6 +315,8 @@ final class DiscSongFiles: BuildFiles, @unchecked Sendable {
             } catch {
                 a.result = .failure(error)
             }
+            // Said before the read is counted as over, so whoever waits for it hears of it first.
+            onAheadEnded?(rel)
             a.finished.signal()
         }
         thread.start()

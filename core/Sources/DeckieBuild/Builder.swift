@@ -52,8 +52,8 @@ public struct BuildOptions: Sendable {
     /// Stop asked for (Desk's Stop button): files not yet started are not read, the ones being read finish, and the
     /// crate is written with what was read. A stopped build's result says so (`BuildResult.stopped`).
     public var stop: BuildStop?
-    /// The song being read, step by step (`SongStep`), with its path as the progress names it: told only when files
-    /// are read one at a time (`jobs` 1), where "the song now" means one song. Called on the reading thread.
+    /// Each song being read, step by step (`SongStep`), with its path as the progress names it: with `jobs` above 1,
+    /// several songs' steps interleave (each names its song). Called on the reading threads.
     public var onStep: (@Sendable (_ rel: String, _ step: SongStep) -> Void)?
     /// Handed each song's decoded audio as it is analysed (at the file's own rate, before anything else is done with
     /// it), with its id and file, so a caller makes what it needs from the same samples instead of decoding the file
@@ -395,7 +395,7 @@ public final class Builder: Sendable {
                     outcome = .ok(id: id, tags: nil)
                 } else {
                     guard !stopped.isSet else { return }
-                    if self.options.jobs == 1 { self.options.onStep?(f.rel, .started) }
+                    self.options.onStep?(f.rel, .started)
                     do { f.url = try given.fetch(f) } catch { given.release(f); stopped.set(error); return }
                     // The next song is read while this one is analysed (one job: the queue goes in order).
                     if k + 1 < total, self.options.stop?.isSet != true { given.readAhead(files[queued[k + 1]]) }
@@ -403,7 +403,7 @@ public final class Builder: Sendable {
                                            label: label, seconds: &seconds, fingerprinted: &fingerprinted)
                 }
             } else {
-                if self.options.jobs == 1 { self.options.onStep?(f.rel, .started) }
+                self.options.onStep?(f.rel, .started)
                 outcome = self.process(f, bytes: nil, rekordbox: rekordboxOf[i], work: work, engine: engine!, label: label,
                                        seconds: &seconds, fingerprinted: &fingerprinted)
             }
@@ -671,6 +671,11 @@ public final class Builder: Sendable {
         let tags = inHand.map { FileTags.read(bytes: $0) } ?? FileTags.read(f.url)
         if let inHand { factsInHand.set(f.rel, FileFacts.read(bytes: inHand)) }
         let tag = tagTempo(rekordbox: rekordbox, tags: tags)
+        // The song's name as Desk first has it (rekordbox's, its tags', else its file name), for the screen now.
+        if let tell = options.onStep {
+            let name = Builder.firstName(rekordbox: rekordbox, tags: tags, rel: f.rel)
+            tell(f.rel, .named(title: name.title, artist: name.artist))
+        }
         func line(_ status: String, id: String? = nil, failure: FileFailure? = nil, fingerprint: Bool? = nil) -> WorkStore.FileLine {
             .init(rel: f.rel, size: f.size, modified: f.modified, status: status, engine: label, id: id,
                   bpmTag: status == "ok" ? tag : nil, tags: tags.isEmpty ? nil : tags, reason: failure?.reason,
@@ -706,7 +711,7 @@ public final class Builder: Sendable {
         }
         do {
             let t0 = Date()
-            let step = options.jobs == 1 ? options.onStep : nil
+            let step = options.onStep
             let withAudio = options.withAudio
             let analysis = try engine.analyse(url: f.url, bytes: box, sha256: sha, options: AnalysisOptions(bpmTag: tag),
                                               onStage: step.map { tell in { tell(f.rel, .stage($0)) } },
