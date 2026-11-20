@@ -103,6 +103,10 @@
   --focus-ring-offset: 2px;
   --td-focus-offset: -2px;                /* a song's title or artist, focused: its ring inside the cell */
   --bar-gap: 8px; --bar-pad: 10px 14px;
+  /* the bar's buttons and their drawings, a step bigger than other buttons (about 1.15 times) */
+  --fs-bar-button: 16px; --space-bar-button: 8px 17px; --space-bar-button-main: 10px 23px; --space-bar-button-small: 5px 13px;
+  --fs-bar-button-small: 15px;
+  --bar-row-gap: 6px;                     /* when a narrow window puts the bar's buttons on two lines */
   --space-crate-button: 6px 10px;
   --menu-drop: 6px;                       /* between a menu and its button */
   --menu-pad: 6px;
@@ -187,13 +191,37 @@
   --text-col: 34rem;                      /* the first screen's words */
   --icon-size: 56px;
   /* new (research AE): adding music, the crate's name and its icon. Placeholders until the design pass. */
-  --crate-icon: 18px;                     /* the crate's icon beside its name, in the bar and on the run screen */
-  --crate-icon-big: 64px;                 /* and on the first screen */
+  --crate-icon: 21px;                     /* the crate's icon beside its name, in the bar and on the run screen */
   --crate-head-gap: 6px;
   --way-icon: 16px;                       /* a way's drawing on its button and menu item */
   --way-gap: 6px;                         /* between a way's drawing and its word */
+  /* The first screen's crate icon and its three ways (Add drive, Add CD, Add folder), big; Import crate file beside
+     them, secondary. Three sizes, M, L and XL (about 1.25, 1.6 and 2 times the earlier 16px icons, 14px words and
+     64px crate): the eight lines under "the size shown" pick one; change -l to -m or -xl in all eight to switch. At XL
+     each way is a tile, its drawing above its word. */
+  --first-crate-icon-m: 80px;  --first-crate-icon-l: 104px; --first-crate-icon-xl: 128px;
+  --first-way-icon-m: 20px;    --first-way-icon-l: 26px;    --first-way-icon-xl: 40px;
+  --first-way-fs-m: 17px;      --first-way-fs-l: 22px;      --first-way-fs-xl: 26px;
+  --first-way-pad-m: 11px 25px; --first-way-pad-l: 15px 32px; --first-way-pad-xl: 22px 30px;
+  --first-way-gap-m: 8px;      --first-way-gap-l: 10px;     --first-way-gap-xl: 12px;     /* drawing to word */
+  --first-ways-gap-m: 10px;    --first-ways-gap-l: 14px;    --first-ways-gap-xl: 16px;    /* between the ways */
+  --first-way-flow-m: row;     --first-way-flow-l: row;     --first-way-flow-xl: column;  /* drawing beside or above */
+  --first-way-min-w-m: 0px;    --first-way-min-w-l: 0px;    --first-way-min-w-xl: 168px;  /* a tile's least width */
+  --first-way-r-m: var(--r-pill); --first-way-r-l: var(--r-pill); --first-way-r-xl: var(--r-card);
+  --first-import-fs-m: 15px;   --first-import-fs-l: 16px;   --first-import-fs-xl: 17px;   /* Import crate file */
+  /* the size shown */
+  --first-crate-icon: var(--first-crate-icon-l);
+  --first-way-icon: var(--first-way-icon-l);
+  --first-way-fs: var(--first-way-fs-l);
+  --first-way-pad: var(--first-way-pad-l);
+  --first-way-gap: var(--first-way-gap-l);
+  --first-ways-gap: var(--first-ways-gap-l);
+  --first-way-flow: var(--first-way-flow-l);
+  --first-way-min-w: var(--first-way-min-w-l);
+  --first-way-r: var(--first-way-r-l);
+  --first-import-fs: var(--first-import-fs-l);
   --pick-icon: 22px;
-  --pick-gap: 10px; --pick-pad: 8px 10px; --pick-rows-gap: 2px;
+  --pick-gap: 12px; --pick-pad: 12px 14px; --pick-rows-gap: 8px; --pick-line: 1px; --fw-pick-name: 600; --pick-list-above: 10px;
   --name-row-gap: 8px; --name-field-w: 260px;
   --crate-add-gap: 10px; --crate-add-pad: 6px 14px;
   --run-head-gap: 10px;
@@ -202,10 +230,14 @@
   --icon-line: 1.5;                       /* the first and finished screens' drawings */
   --banner-dot: 8px;
   --run-max-w: 980px;
-  /* the song now (the waiting line of a music CD's run): a turning disc, one line, a thin bar within the song */
-  --now-disc: 30px; --now-disc-turn: 2.4s; --now-gap: 12px; --now-pad: 12px 16px; --now-bar-h: 4px; --now-bar-gap: 8px;
+  /* the song card: the song being worked on (a turning disc for a music CD's), its step line and a thin bar within
+     the song; or several songs, a row each; and, quietly, a disc's next song while it is read ahead */
+  --now-disc: 56px; --now-disc-turn: 2.4s; --now-gap: 18px; --now-bar-h: 4px; --now-bar-gap: 8px;
+  --now-line-gap: 6px;                    /* between the song's name and its step line */
+  --now-rows-gap: 4px; --now-row-gap: 14px;  /* several songs: between rows, and a row's name and its step */
   --fs-now: 15px; --fw-now: 600;
   --now-shine: var(--acc);
+  --t-now-linger: 900ms;                  /* the card stays this long when no song is worked on, before the stage */
   --progress-h: 10px;
   --waiting-w: 30%; --waiting-from: -30%; --waiting-to: 100%;  /* the bar that waits */
   --waiting-still-opacity: .35;           /* and the same bar, still, under reduced motion */
@@ -385,7 +417,11 @@ input[type=text] { font: inherit; color: var(--tx); background: var(--field); bo
 input[type=text]:focus { border-color: var(--acc); outline: none; }
 
 /* the bar at the top: the crate menu, then what can be done */
-.bar { display: flex; align-items: center; gap: var(--bar-gap); padding: var(--bar-pad); border-bottom: var(--hair-line) solid var(--hair); flex: none; }
+.bar { display: flex; flex-wrap: wrap; align-items: center; gap: var(--bar-gap); row-gap: var(--bar-row-gap); padding: var(--bar-pad); border-bottom: var(--hair-line) solid var(--hair); flex: none; }
+.bar button { font-size: var(--fs-bar-button); padding: var(--space-bar-button); }
+.bar button.main { padding: var(--space-bar-button-main); }
+.bar button.small { font-size: var(--fs-bar-button-small); padding: var(--space-bar-button-small); }
+.bar .crate-button, .bar .crate-name { padding: var(--space-crate-button); }
 .bar .grow { flex: 1; }
 .crate-button { font-weight: var(--fw-crate-button); font-size: var(--fs-crate-button); background: none; padding: var(--space-crate-button); }
 .crate-button:hover:not(:disabled) { background: var(--control); }
@@ -438,14 +474,19 @@ main { flex: 1; min-height: 0; display: flex; flex-direction: column; }
 .saying.out { opacity: 0; }
 .saying.moment { color: var(--tx); font-weight: var(--fw-saying-moment); }
 .leave { font-size: var(--fs-small); margin-top: var(--leave-pull); }
-.run-now { display: flex; align-items: center; gap: var(--now-gap); padding: var(--now-pad); background: var(--surface); border-radius: var(--r-card); }
-.run-now[hidden] { display: none; }
+.now-card { min-height: calc(var(--stage-h) + var(--stage-name-room)); display: flex; flex-direction: column; justify-content: center; gap: var(--now-bar-gap); }
+.now-card[hidden], .now-card [hidden], .stage[hidden] { display: none; }
+.now-one { display: flex; align-items: center; gap: var(--now-gap); }
 .now-disc { flex: none; width: var(--now-disc); height: var(--now-disc); color: var(--mut); }
 .now-disc.turning { animation: turn var(--now-disc-turn) linear infinite; }
-.now-disc.still { visibility: hidden; }
-.now-text { flex: 1; min-width: 0; }
+.now-text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: var(--now-line-gap); }
 .now-line { font-size: var(--fs-now); font-weight: var(--fw-now); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.now-bar { height: var(--now-bar-h); margin-top: var(--now-bar-gap); }
+.now-bar { height: var(--now-bar-h); }
+.now-list { list-style: none; margin: var(--now-line-gap) 0 0; padding: 0; display: flex; flex-direction: column; gap: var(--now-rows-gap); }
+.now-list li { display: flex; gap: var(--now-row-gap); align-items: baseline; min-width: 0; }
+.now-list .now-name { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.now-list .now-step { flex: none; white-space: nowrap; }
+.now-ahead { margin: 0; }
 @media (prefers-reduced-motion: reduce) { .now-disc.turning { animation: none; } }
 .chip { display: inline-block; font-size: var(--fs-label); font-weight: var(--fw-chip); color: var(--mut); background: var(--control); padding: var(--chip-pad); border-radius: var(--r-pill); vertical-align: var(--chip-raise); }
 .stage { display: flex; gap: var(--stage-gap); align-items: center; position: relative; min-height: calc(var(--stage-h) + var(--stage-name-room)); }
@@ -675,17 +716,27 @@ dialog.wide.lookup { max-width: min(var(--lookup-wide-max-w), var(--lookup-wide-
 .crate-icon { width: var(--crate-icon); height: var(--crate-icon); color: var(--acc); stroke-width: var(--icon-line); flex: none; }
 .crate-name { font-weight: var(--fw-crate-button); font-size: var(--fs-crate-button); background: none; padding: var(--space-crate-button); }
 .crate-name:hover:not(:disabled) { background: var(--control); }
-.icon.crate-big { width: var(--crate-icon-big); height: var(--crate-icon-big); }
+.icon.crate-big { width: var(--first-crate-icon); height: var(--first-crate-icon); }
+#first-ways { gap: var(--first-ways-gap); }
+#first-ways .way { font-size: var(--first-way-fs); padding: var(--first-way-pad); gap: var(--first-way-gap); flex-direction: var(--first-way-flow);
+                   min-width: var(--first-way-min-w); justify-content: center; border-radius: var(--first-way-r); }
+#first-ways .way-icon { width: var(--first-way-icon); height: var(--first-way-icon); }
+#first-import { font-size: var(--first-import-fs); }
 .ways { display: inline-flex; flex-wrap: wrap; gap: var(--actions-gap); }
 .way, .menu [role=menuitem] { display: inline-flex; align-items: center; gap: var(--way-gap); }
 .way-icon { width: var(--way-icon); height: var(--way-icon); flex: none; }
 .name-row { display: inline-flex; align-items: center; gap: var(--name-row-gap); }
 .name-row input { width: var(--name-field-w); }
-.pick-list { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--pick-rows-gap); }
-.pick-row { display: flex; align-items: center; gap: var(--pick-gap); width: 100%; text-align: left; background: none; padding: var(--pick-pad); border-radius: var(--r-field); }
-.pick-row:hover, .pick-row:focus-visible { background: var(--control-hi); }
+.pick-list { list-style: none; margin: var(--pick-list-above) 0 0; padding: 0; display: grid; gap: var(--pick-rows-gap); }
+/* a row is the action: raised and outlined, brighter pointed at, ringed in the accent when focused */
+.pick-row { display: flex; align-items: center; gap: var(--pick-gap); width: 100%; text-align: left; background: var(--control);
+            border: var(--pick-line) solid var(--hair); padding: var(--pick-pad); border-radius: var(--r-field); white-space: normal; }
+.pick-row:hover:not(:disabled) { background: var(--control-hi); border-color: var(--acc); }
+.pick-row:focus-visible { border-color: var(--acc); }
 .pick-icon { width: var(--pick-icon); height: var(--pick-icon); flex: none; color: var(--acc); }
-.pick-text { display: flex; flex-direction: column; }
+.pick-text { display: flex; flex-direction: column; flex: 1; min-width: 0; }
+.pick-name { font-weight: var(--fw-pick-name); }
+.pick-go { flex: none; color: var(--acc); font-weight: var(--fw-button-main); white-space: nowrap; }
 .crate-add { display: flex; align-items: center; gap: var(--crate-add-gap); padding: var(--crate-add-pad); border-top: var(--hair-line) solid var(--hair); flex: none; }
 .crate-add .grow, .run-head .grow, dialog .buttons .grow { flex: 1; }
 .run-head { display: flex; align-items: center; gap: var(--run-head-gap); }

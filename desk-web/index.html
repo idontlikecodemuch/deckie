@@ -68,6 +68,7 @@
     <svg class="icon crate-big" aria-hidden="true"><use href="#icon-crate"/></svg>
     <h1 id="first-title" data-w="firstTitle"></h1>
     <p id="first-body" class="body"></p>
+    <p id="first-note" class="dim small" data-w="firstNote"></p>
     <!-- The crate's name, filled in; then the three ways in, the same as everywhere music is added (research AE). -->
     <label class="name-row"><span class="mut" data-w="intoNewCrate"></span> <input id="first-name" type="text" autocomplete="off" spellcheck="false" data-w-label="crateNameLabel"></label>
     <div id="first-ways" class="actions ways"></div>
@@ -107,23 +108,32 @@
         <span class="grow"></span>
         <span id="run-left" class="mut"></span>
       </div>
-      <!-- The song now (a music CD's songs, one at a time): a turning disc and one plain line, "Reading song 2 of 6 from
-           the disc", then the step it is on, with how much of the song is read, or how many of its steps are done. -->
-      <div id="run-now" class="run-now" hidden>
-        <svg id="run-now-disc" class="now-disc" aria-hidden="true"><use href="#icon-disc-turning"/></svg>
-        <div class="now-text">
-          <p id="run-now-line" class="now-line"></p>
-          <div id="run-now-bar" class="progress now-bar" role="progressbar" aria-labelledby="run-now-line" aria-valuemin="0" aria-valuemax="100"><div></div></div>
+      <!-- The song card (desk.js drawNow): the song being worked on, by the name Desk has for it, with its step line
+           and a thin bar within the song (a turning disc for a music CD's song); or, when a folder's songs are read
+           several at once, how many and a row a song with each one's step. Under it, quietly, the next song of a disc
+           while it is read ahead. When nothing is being worked on (songs read before, the finishing steps), the stage
+           below shows the last song in instead. -->
+      <div id="now-card" class="now-card card" hidden>
+        <div id="now-one" class="now-one">
+          <svg id="now-disc" class="now-disc" aria-hidden="true"><use href="#icon-disc-turning"/></svg>
+          <div class="now-text">
+            <p class="stage-name"><b id="now-title"></b> <span id="now-artist" class="mut"></span></p>
+            <p id="now-line" class="now-line"></p>
+            <div id="now-bar" class="progress now-bar" role="progressbar" aria-labelledby="now-line" aria-valuemin="0" aria-valuemax="100"><div></div></div>
+          </div>
         </div>
+        <div id="now-several" class="now-several" hidden>
+          <p id="now-several-title" class="now-line"></p>
+          <ul id="now-list" class="now-list"></ul>
+        </div>
+        <p id="now-ahead" class="now-ahead dim small" hidden></p>
       </div>
-      <p id="run-saying" class="saying"></p>
-      <p class="leave dim" data-w="leaveRunning"></p>
-
-      <!-- The song on stage: its own wave, its bars marked, and what Desk found in it. -->
+      <!-- The song on stage when nothing is being worked on: the last song in, its own wave, its bars marked, and what
+           Desk found in it. -->
       <div id="stage" class="stage card">
         <canvas id="stage-wave" class="stage-wave" role="img"></canvas>
         <div class="stage-facts">
-          <p class="stage-name"><b id="stage-title"></b> <span id="stage-artist" class="mut"></span> <span id="stage-before" class="chip" data-w="stageBefore" hidden></span></p>
+          <p class="stage-name"><b id="stage-title"></b> <span id="stage-artist" class="mut"></span> <span id="stage-before" class="chip" data-w="stageBefore" hidden></span> <span id="stage-justin" class="chip" data-w="stageJustIn"></span></p>
           <dl class="stage-dl">
             <div><dt data-w="stageTempo"></dt><dd id="stage-tempo" class="tempo"></dd></div>
             <div><dt data-w="stageKey"></dt><dd id="stage-key"></dd></div>
@@ -135,6 +145,9 @@
         </div>
         <p id="stage-empty" class="stage-empty mut" data-w="stageFirstSoon"></p>
       </div>
+
+      <p id="run-saying" class="saying"></p>
+      <p class="leave dim" data-w="leaveRunning"></p>
 
       <!-- What Desk has found so far: each a true count. -->
       <div class="figures">

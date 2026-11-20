@@ -607,6 +607,15 @@
         if (run.stage !== step) { step = run.stage; clearTimeout(sayTimer); nextSaying(); }
         speakProgress(run);
       },
+      /// The stage is showing again (the song card gave way to it: nothing is being worked on): straight to the last
+      /// song in, drawn now, then moving as before.
+      stageShown() {
+        // The songs it did not show are on the wall already.
+        if (queue.length > 1) queue.splice(0, queue.length - 1);
+        if (queue.length) nextSong(performance.now());
+        drawStage(performance.now());
+        kick();
+      },
       /// The finished screen: the run's songs as a wall of waves, and the run's last moment.
       finished(report) {
         const card = $("done-wall-card");

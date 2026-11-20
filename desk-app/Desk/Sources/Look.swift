@@ -30,6 +30,8 @@ enum Look {
         static let sheetTitle = Font.title2
         static let banner = Font.callout
         static let leaveRunning = Font.caption
+        /// The first screen's quiet line under the body.
+        static let firstNote = Font.caption
         static let runListLine = Font.system(.caption, design: .monospaced)
         static let runList = Font.callout
         static let runProgress = Font.callout
@@ -179,17 +181,21 @@ enum Look {
     enum Add {
         /// The gap between the three ways' buttons, and between a picker's rows.
         static let waysGap: CGFloat = 10
-        static let rowsGap: CGFloat = 4
+        static let rowsGap: CGFloat = 8
         static let sheetGap: CGFloat = 12
         static let rowGap: CGFloat = 10
-        static let rowPaddingV: CGFloat = 4
+        static let rowPaddingV: CGFloat = 10, rowPaddingH: CGFloat = 12
+        /// A picker's row, the one way to choose: its fill (brighter pointed at), outline, corners (desk.css .pick-row).
+        static let rowFill = 0.06, rowFillHover = 0.11, rowLineOpacity = 0.16
+        static let rowLine: CGFloat = 1, rowCorner: CGFloat = 8
+        static let rowSymbol = Font.title3
+        static let rowGo = Font.body.weight(.semibold)
         /// The pickers' and the question's width, a row's icon, the crate name field's width.
         static let sheetWidth: CGFloat = 460
         static let rowIcon: CGFloat = 24
         static let nameFieldWidth: CGFloat = 280
         /// The crate's icon: beside its name in the window's header and on the run screen, and on the first screen.
         static let crateIconHeader: CGFloat = 18
-        static let crateIconFirst: CGFloat = 64
         static let headerGap: CGFloat = 6
         static let renameWidth: CGFloat = 280
         static let renamePadding: CGFloat = 14
@@ -197,11 +203,35 @@ enum Look {
         static let crateRowH: CGFloat = 12, crateRowV: CGFloat = 6
         /// Seconds a count runs before Desk shows it (a stick is counted before the eye sees a sheet).
         static let showCountAfter = 0.4
-        static let rowName = Font.body
+        static let rowName = Font.body.weight(.semibold)
         static let rowDetail = Font.caption
         static let count = Font.title3.monospacedDigit()
         static let headerName = Font.headline
         static let crateRow = Font.callout
+    }
+
+    /// The first screen's crate icon and its three ways, big; Import crate file beside them, secondary. Three sizes,
+    /// M, L and XL (about 1.25, 1.6 and 2 times the earlier ones); `size` picks one (desk.css's "the size shown" lines
+    /// do the same for the pages). At XL each way is a tile, its symbol above its word.
+    enum First {
+        enum Size { case m, l, xl }
+        static let size: Size = .l
+        static var crateIcon: CGFloat { switch size { case .m: 80; case .l: 104; case .xl: 128 } }
+        static var wayIcon: CGFloat { switch size { case .m: 20; case .l: 26; case .xl: 40 } }
+        static var wayIconFont: Font { .system(size: wayIcon) }
+        static var wayFont: Font { .system(size: { switch size { case .m: 17; case .l: 22; case .xl: 26 } }(), weight: .semibold) }
+        static var wayPadH: CGFloat { switch size { case .m: 14; case .l: 20; case .xl: 22 } }
+        static var wayPadV: CGFloat { switch size { case .m: 4; case .l: 7; case .xl: 12 } }
+        static var wayGap: CGFloat { switch size { case .m: 8; case .l: 10; case .xl: 12 } }
+        static var waysGap: CGFloat { switch size { case .m: 10; case .l: 14; case .xl: 16 } }
+        static var tiles: Bool { size == .xl }
+        static let tileMinWidth: CGFloat = 168
+        static var importFont: Font { switch size { case .m: .title3; case .l: .title3; case .xl: .title2 } }
+    }
+
+    /// The window's toolbar: a step bigger than the system's usual (about 1.15 times).
+    enum Toolbar {
+        static let controlSize = ControlSize.large
     }
 
     /// Corners, in points.
@@ -231,10 +261,15 @@ enum RunLook {
     static let wheelHome = Color.secondary
     static let card = Color.primary.opacity(0.045)
     /// A moment: the glow round the progress bar, and the ring round a card.
-    // the song now (the waiting line of a music CD's run)
-    static let nowGap: CGFloat = 12, nowBarGap: CGFloat = 6, nowPad: CGFloat = 12, nowCorner: CGFloat = 12
+    // the song card: the song being worked on (a turning disc for a music CD's), its step line and a thin bar within
+    // the song; or several songs, a row each; and, quietly, a disc's next song while it is read ahead (desk.css --now-*)
+    static let nowGap: CGFloat = 18, nowBarGap: CGFloat = 6, nowLineGap: CGFloat = 6
+    static let nowRowsGap: CGFloat = 4, nowRowGap: CGFloat = 14
     static let nowDiscSymbol = "opticaldisc"
-    static let nowDiscFont = Font.system(size: 26)
+    static let nowDiscFont = Font.system(size: 48)
+    static let nowAheadFont = Font.caption
+    /// The card stays this long when no song is worked on, before the stage shows the last song in (seconds).
+    static let nowLinger = 0.9
     static let nowDiscTurn = 2.4                                            // seconds a turn
     static let wholeTurn = 360.0
     static let nowFont = Font.system(size: 14, weight: .semibold)
