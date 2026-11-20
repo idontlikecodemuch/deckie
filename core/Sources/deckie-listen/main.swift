@@ -145,6 +145,12 @@ FileHandle.standardError.write(Data(String(format: "index: %d songs, %.1f MB (%.
                                             Double(DispatchTime.now().uptimeNanoseconds - t0) / 1e6).utf8))
 FileHandle.standardError.write(Data(String(format: "index in memory: %.1f MB of table and entries, %.1f MB of the songs' points; footprint now %.0f MB\n",
                                             Double(index.memoryBytes) / 1e6, Double(index.pointBytes) / 1e6, Double(footprint() ?? 0) / 1e6).utf8))
+// --related-out FILE: the pairs of songs the index holds to be the same sound (id <tab> id), for scoring.
+if let path = values["--related-out"] {
+    var out = ""
+    for a in 0..<min(index.songCount, index.related.count) { for b in index.related[a] where Int(b) > a { out += index.ids[a] + "\t" + index.ids[Int(b)] + "\n" } }
+    guard (try? out.write(toFile: path, atomically: true, encoding: .utf8)) != nil else { fail("cannot write \(path)") }
+}
 if flags.contains("--build-only") { exit(0) }
 let chunkSeconds = Double(values["--chunk"] ?? "") ?? 0.1
 let memoryEvery = Int(values["--memory-every"] ?? "") ?? 0
