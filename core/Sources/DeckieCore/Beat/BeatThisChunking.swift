@@ -92,13 +92,17 @@ public enum BeatThisChunking {
 
     /// Splits the spectrogram, runs `model` on each chunk's input (rows x 128 values, and the number of rows; it
     /// returns that many beat and downbeat logits), and assembles the piece's logits (`split_predict_aggregate`).
+    /// `onChunk` is told, after each chunk's run, the chunks run so far and the piece's chunks in all (known before the
+    /// first runs): 1 of n, 2 of n, ... n of n. It only watches; the logits are the same with it or without.
     public static func run(_ spectrogram: BeatThisSpectrogram,
+                           onChunk: ((_ done: Int, _ total: Int) -> Void)? = nil,
                            model: (_ input: [Float], _ rows: Int) throws -> BeatThisLogits) rethrows -> BeatThisLogits {
         let chunks = split(frames: spectrogram.frames)
         var predictions: [BeatThisLogits] = []
         predictions.reserveCapacity(chunks.count)
         for chunk in chunks {
             predictions.append(try model(input(chunk, from: spectrogram), chunk.length))
+            onChunk?(predictions.count, chunks.count)
         }
         return aggregate(frames: spectrogram.frames, chunks: chunks, predictions: predictions)
     }

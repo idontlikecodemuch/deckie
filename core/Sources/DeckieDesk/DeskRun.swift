@@ -123,6 +123,10 @@ public struct RunNow: Sendable, Equatable {
     public var step: String
     /// The share of the song read off the disc so far, 0 to 1, while it is read; nil otherwise.
     public var read: Double?
+    /// How far through its analysis step it is, 0 to 1, from the work that step has done (the beat model's chunks
+    /// done of the song's chunks, for now: the beat step is most of a song's time); nil when the step does not say.
+    /// A new step starts at nil.
+    public var within: Double?
     /// The name Desk has for it so far: a music CD's CD-Text name, then rekordbox's or its tags' once they are read;
     /// nil until there is one (`name` is then its file name).
     public var title: String?
@@ -179,11 +183,35 @@ public struct RunNow: Sendable, Equatable {
         return (CratePath.lastName(rel) as NSString).deletingPathExtension
     }
 
-    /// How far through the song, 0 to 1: the share read while it is read, then its analysis steps done of all of them.
+    /// The beat step's share of the song's bar (run.js's NOW_BEAT_SHARE must say the same). Finding the beat is most of
+    /// a song's time (about 70% on the Windows pass), so with one tenth of the bar the bar sat still for most of each
+    /// song; with a wider share the bar's place is closer to how much of the wait is behind. Not all of it: the quick
+    /// steps still move the bar in small jumps, which the owner likes (his choice, Nov 21, 2026: a wider share, but not all of the bar). A display proportion only, the same on every machine and for every song; nothing measured.
+    public static let beatShare = 0.3
+
+    /// Each step's share of the song's bar, in `analysisSteps`' order: a step named in `ownShares` has its own; the
+    /// rest share what is left equally.
+    static let ownShares: [String: Double] = ["beatthis": beatShare]
+    public static let stepShares: [Double] = {
+        let others = analysisSteps.filter { ownShares[$0] == nil }.count
+        let left = 1 - ownShares.values.reduce(0, +)
+        return analysisSteps.map { ownShares[$0] ?? left / Double(others) }
+    }()
+
+    /// The steps that say how far through them the song is (`within`): only the beat step, for now.
+    public static let stepsThatSayHowFar: Set<String> = ["beatthis"]
+
+    /// How far through the song, 0 to 1: the share read while it is read, then its analysis steps, each its share of
+    /// the bar (`stepShares`). A step that says how far it is (`stepsThatSayHowFar`) moves the bar across its own share
+    /// in proportion to the work done: at its start until it says, at its end only when all its work is done. Any
+    /// other step shows its share as done from the moment it starts, as every step did before (when the shares were
+    /// tenths, step n of ten showed n tenths). run.js `nowShare` does the same.
     public var share: Double {
         if isReading { return max(0, min(1, read ?? 0)) }
         guard let i = Self.analysisSteps.firstIndex(of: step) else { return 1 }
-        return Double(i + 1) / Double(Self.analysisSteps.count)
+        let start = Self.stepShares[..<i].reduce(0, +)
+        let inStep = Self.stepsThatSayHowFar.contains(step) ? max(0, min(1, within ?? 0)) : 1
+        return min(1, start + inStep * Self.stepShares[i])
     }
 
     /// The step line on the song card, in Desk's words: "Reading song 2 of 6 from the disc", "Song 2 of 6: finding
@@ -212,12 +240,26 @@ public struct RunNow: Sendable, Equatable {
 
     /// The song the card shows (the owner's note, Nov 20, 2026: the card is the song being worked on): the one it
     /// shows already while it is still worked on; else, of the songs worked on, the furthest along (the one that will
-    /// finish next), the first taken when two are as far. desk.js `cardSong` does the same.
+    /// finish next): by its bar, and where two bars are level, the later step (a song starting the beat stands where a
+    /// song on its key stands, and is further on); the first taken when two are as far. run.js `cardSong` does the same.
     public static func cardSong(_ working: [RunNow], keeping current: String?) -> RunNow? {
         if let current, let kept = working.first(where: { $0.rel == current }) { return kept }
         var best: RunNow?
-        for n in working where best == nil || n.share > best!.share { best = n }
+        for n in working where best == nil || n.isFurther(than: best!) { best = n }
         return best
+    }
+
+    /// Where its step stands in the order: before every analysis step while it is read; after them all when unknown.
+    var stepRank: Int {
+        if isReading { return -1 }
+        return Self.analysisSteps.firstIndex(of: step) ?? Self.analysisSteps.count
+    }
+
+    /// Further along than `other`: a fuller bar, or as full a bar at a later step.
+    func isFurther(than other: RunNow) -> Bool {
+        let a = share, b = other.share
+        if abs(a - b) > 1e-9 { return a > b }
+        return stepRank > other.stepRank
     }
 
     /// The songs worked on other than the card's, in the order taken: the rows under the card.
@@ -248,7 +290,7 @@ struct RunWorking: Sendable, Equatable {
     /// has all been read). Steps of a song neither in hand nor being read are let go.
     mutating func step(_ rel: String, step: String, read: Double? = nil) {
         if let i = songs.firstIndex(where: { $0.rel == rel }) {
-            songs[i].step = step; songs[i].read = read
+            songs[i].step = step; songs[i].read = read; songs[i].within = nil
             return
         }
         guard step == "reading" else { return }
@@ -256,6 +298,14 @@ struct RunWorking: Sendable, Equatable {
         if ahead?.rel == rel { ahead?.read = read } else {
             ahead = RunNow(rel: rel, number: DiscSongFiles.number(of: rel), step: "reading", read: read)
         }
+    }
+
+    /// How far a song in hand is through its analysis step: `done` of `total` (the beat model's chunks). Never moves
+    /// back within the step, and says nothing of a song being read.
+    mutating func within(_ rel: String, done: Int, total: Int) {
+        guard total > 0, let i = songs.firstIndex(where: { $0.rel == rel }), !songs[i].isReading else { return }
+        let share = max(0, min(1, Double(done) / Double(total)))
+        songs[i].within = max(share, songs[i].within ?? 0)
     }
 
     /// A part of a song in hand, as it is worked out; where it is.
@@ -658,6 +708,8 @@ public final class DeskRun: @unchecked Sendable {
             case .stage(let name): change { $0.step(rel, step: name) }
             case .place(let p): change { $0.placed(rel, p) }
             case .part(let part): change { $0.part(rel, part) }
+            // One a chunk of the beat model (about 30 s of the song each): a few a song, each sent at once.
+            case let .within(done, total): change { $0.within(rel, done: done, total: total) }
             }
         }
         disc?.onRead = { rel, done, total in

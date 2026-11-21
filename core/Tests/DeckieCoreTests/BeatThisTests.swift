@@ -125,6 +125,31 @@ import DeckieTestSupport
             #expect(wrong == 0, "\(c.frames) frames: \(wrong) frames assembled differently from the package")
         }
     }
+
+    /// The report chunk by chunk (the run screen's bar within the beat step): told once after each chunk's run, 1 of
+    /// n up to n of n, n known before the first; and the logits are the same with it as without.
+    @Test func eachChunkIsToldAsItIsDoneAndChangesNothing() {
+        let bands = BeatThisSpectrogram.bands
+        for c in fx.chunking {
+            var values = [Float](repeating: 0, count: c.frames * bands)
+            for i in 0..<c.frames { values[i * bands] = Float(i) }
+            let spec = BeatThisSpectrogram(frames: c.frames, values: values)
+            var ran = 0
+            var told: [(Int, Int, Int)] = []  // done, total, chunks run when told
+            let model = { (input: [Float], rows: Int) -> BeatThisLogits in
+                ran += 1
+                return BeatThisLogits(beat: (0..<rows).map { input[$0 * bands] + Float($0) },
+                                      downbeat: (0..<rows).map { input[$0 * bands] - Float($0) })
+            }
+            let with = BeatThisChunking.run(spec, onChunk: { told.append(($0, $1, ran)) }, model: model)
+            let n = BeatThisChunking.split(frames: c.frames).count
+            #expect(told.map(\.0) == Array(1...n), "\(c.frames) frames")
+            #expect(told.allSatisfy { $0.1 == n && $0.2 == $0.0 }, "\(c.frames) frames: told before its chunk ran")
+            #expect(told.last?.0 == told.last?.1)
+            let without = BeatThisChunking.run(spec, model: model)
+            #expect(with == without)
+        }
+    }
 }
 
 @Suite struct BeatThisPostProcessorTests {

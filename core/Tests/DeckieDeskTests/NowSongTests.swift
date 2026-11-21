@@ -25,7 +25,8 @@ import DeckieBuild
         #expect(w.now?.name == "Night drive")
         w.step(one, step: "beatthis")
         #expect(w.now?.line(total: 6) == "Song 1 of 6: finding the beat")
-        #expect(w.now?.share == 0.5)   // the fifth step of ten since the key is read first (Nov 21, 2026)
+        // The fifth step since the key is read first; the beat step sits at its start until a chunk is done (Nov 21, 2026).
+        #expect(abs(w.now!.share - 4 * 0.7 / 9) < 1e-12)
         w.done(one)
         #expect(w.now == nil && w.songs.isEmpty)
     }
@@ -78,7 +79,9 @@ import DeckieBuild
         #expect(w.songs[0].stage == "working out the key" && w.songs[1].stage == "finding the beat")
         #expect(w.songs[2].stage == "opening it")
         #expect(w.songs[1].name == "Slow Bloom" && w.songs[1].artist == "Artist D")
-        // The card: the song furthest along, kept while it is worked on; the rest are rows, in the order taken.
+        // The card: the song furthest along, kept while it is worked on; the rest are rows, in the order taken. The
+        // song starting the beat has a bar as full as the one on its key (the beat step's start), and is further on.
+        #expect(abs(w.songs[0].share - w.songs[1].share) < 1e-12)
         #expect(RunNow.cardSong(w.songs, keeping: nil)?.rel == songs[1])
         #expect(RunNow.cardSong(w.songs, keeping: songs[2])?.rel == songs[2])
         #expect(RunNow.cardSong(w.songs, keeping: "gone.mp3")?.rel == songs[1])
@@ -140,5 +143,91 @@ import DeckieBuild
         #expect(k1 != k2 && DeskProtocol.workingKey(p) == k2)
         p.working[0].step = "spectral"
         #expect(DeskProtocol.workingKey(p) != k2)
+    }
+
+    /// The bar within the beat step (the Windows pass, Nov 21, 2026: the card sat still for most of each song): the
+    /// quick steps before it jump the bar to the beat step's start (seven ninths of 70%, about 31%); the beat model's
+    /// chunks carry it across the beat step's 30% to about 61%, never backwards; the steps after jump it to the end.
+    @Test func theBarMovesWithTheBeatModelsChunksAndNeverBack() {
+        let other = 0.7 / 9, beatStart = 4 * other, beatEnd = beatStart + 0.3
+        var w = RunWorking(oneAtATime: true)
+        w.took(RunNow(rel: one, number: nil, step: "started"))
+        var shares: [Double] = [w.now!.share]
+        func at(_ step: String) { w.step(one, step: step); shares.append(w.now!.share) }
+        at("hash"); at("decode"); at("resample"); at("key")
+        #expect(abs(w.now!.share - beatStart) < 1e-12)
+        at("beatthis")
+        // Before its first chunk is done the beat step sits at its start: where the key left the bar.
+        #expect(abs(w.now!.share - beatStart) < 1e-12 && w.now?.within == nil)
+        for done in 1...4 {
+            w.within(one, done: done, total: 4)
+            shares.append(w.now!.share)
+        }
+        #expect(abs(w.now!.share - beatEnd) < 1e-12 && w.now?.within == 1)
+        // A report out of order never moves the bar back.
+        w.within(one, done: 2, total: 4)
+        #expect(w.now?.within == 1)
+        at("spectral")
+        #expect(w.now?.within == nil && abs(w.now!.share - (beatEnd + other)) < 1e-12)
+        at("structure"); at("loudness"); at("vocal"); at("windows")
+        #expect(abs(w.now!.share - 1) < 1e-12)
+        #expect(zip(shares, shares.dropFirst()).allSatisfy { $0 <= $1 + 1e-12 }, "the bar went back: \(shares)")
+        // Within the beat step it moved by a quarter of the step's 30% a chunk.
+        let beat = Array(shares[5...9])
+        #expect(zip(beat, beat.dropFirst()).allSatisfy { abs(($1 - $0) - 0.075) < 1e-12 }, "\(beat)")
+        // A song still being read says nothing of a step's work.
+        w.took(RunNow(rel: two, number: nil, step: "started"))
+        w.done(one)
+        w.step(two, step: "reading", read: 0.3)
+        w.within(two, done: 1, total: 2)
+        #expect(w.now?.within == nil && w.now?.share == 0.3)
+    }
+
+    /// An entry without `within`: a step that does not say how far it is shows its share as done from its start, as
+    /// every step did when the shares were tenths; the beat step, which says, sits at its own start until it does.
+    /// The shares add up to the whole bar. The protocol sends `within` only when there is one, and a chunk done is
+    /// sent at once.
+    @Test func anEntryWithoutWithinGivesTheStepsPlace() {
+        #expect(abs(RunNow.stepShares.reduce(0, +) - 1) < 1e-12)
+        #expect(RunNow.stepShares[RunNow.analysisSteps.firstIndex(of: "beatthis")!] == RunNow.beatShare)
+        var end = 0.0
+        for (i, step) in RunNow.analysisSteps.enumerated() {
+            let n = RunNow(rel: one, number: nil, step: step)
+            let start = end
+            end += RunNow.stepShares[i]
+            #expect(abs(n.share - (step == "beatthis" ? start : end)) < 1e-12, "\(step)")
+            #expect(DeskProtocol.now(n)["within"] == nil)
+        }
+        var n = RunNow(rel: one, number: nil, step: "beatthis")
+        var p = RunProgress(stage: .reading, done: 0, total: 1, remaining: nil, line: nil)
+        p.now = n; p.working = [n]
+        let before = DeskProtocol.workingKey(p)
+        n.within = 1.0 / 3
+        p.now = n; p.working = [n]
+        #expect(DeskProtocol.now(n)["within"] as? Double == 0.333)
+        #expect(DeskProtocol.workingKey(p) != before)
+        // Out of range or a step not known: held to the song's bar.
+        n.within = 7
+        #expect(abs(n.share - (4 * 0.7 / 9 + 0.3)) < 1e-12)
+        // A step that does not say how far it is takes no notice of a `within`.
+        n.step = "spectral"
+        #expect(abs(n.share - (5 * 0.7 / 9 + 0.3)) < 1e-12)
+        n.step = "something new"
+        #expect(n.share == 1)
+    }
+
+    /// The page draws the same bar as the core: run.js says the same steps, the same beat share, and the same steps
+    /// that say how far they are.
+    @Test func thePageSharesTheBarAsTheCoreDoes() {
+        let js = VariablesTests.read("desk-web/run.js")
+        let steps = VariablesTests.matches(#"const NOW_STEPS = \[([^\]]*)\]"#, js).first ?? ""
+        #expect(VariablesTests.matches(#""([a-z]+)""#, steps) == RunNow.analysisSteps)
+        let beat = VariablesTests.matches(#"const NOW_BEAT_SHARE = ([0-9.]+);"#, js).first.flatMap(Double.init)
+        #expect(beat == RunNow.beatShare)
+        let saying = VariablesTests.matches(#"const NOW_SAYS_HOW_FAR = \[([^\]]*)\]"#, js).first ?? ""
+        #expect(Set(VariablesTests.matches(#""([a-z]+)""#, saying)) == RunNow.stepsThatSayHowFar)
+        // The page gives the beat step its own share by name, as the core's `ownShares` does.
+        #expect(RunNow.ownShares == ["beatthis": RunNow.beatShare])
+        #expect(js.contains(#"s === "beatthis" ? NOW_BEAT_SHARE"#))
     }
 }
