@@ -79,6 +79,11 @@ public final class DeskBooth: @unchecked Sendable {
         public var heardAt: Double
         /// Milliseconds the reading took to work out (a reading falls behind when this nears a second).
         public var milliseconds: Double
+        /// Added Nov 21, 2026 (step 3, the Booth screen): the song's wave as the crate has it (`RunSong.wave`: 64 values,
+        /// 0 to 99, of its per-bar loudness) and its bars, so the screen draws its place along it; nil when the crate has
+        /// none. Only the shown song (`Playing.song`) carries them.
+        public var wave: [Int]? = nil
+        public var bars: Int? = nil
     }
 
     /// What the shared switching rule puts on screen (added Nov 21, 2026, step 2): the song the iPad would show, or none.
@@ -118,6 +123,9 @@ public final class DeskBooth: @unchecked Sendable {
         public var moveLine: String
         public var keys: String
         public var score: Double?
+        /// Added Nov 21, 2026 (step 3): the two keys may clash (the join's verdict is a clash; `moveLine` says so in
+        /// words), so the screen can mark it.
+        public var keysClash: Bool = false
     }
 
     /// The picks for the song on screen (added Nov 21, 2026, step 2): the shortlist's size, how many more songs follow
@@ -128,7 +136,13 @@ public final class DeskBooth: @unchecked Sendable {
         public var more: Int
         public var shuffle: Double
         public var picks: [Pick]
+        /// Added Nov 21, 2026 (step 3): the iPad's More group as far as the shortlist goes: the rest of the shortlist after
+        /// `picks`, in the same order, at most `moreShown`. `more` still counts every song after `picks`.
+        public var morePicks: [Pick] = []
     }
+
+    /// The most of the shortlist's rest sent as `morePicks`.
+    public static let moreShown = 10
 
     public enum Event: Sendable {
         case status(Status)
@@ -168,7 +182,10 @@ public final class DeskBooth: @unchecked Sendable {
 
     // The shared brains (under `lock`): the crate as Booth sees it, the switching rule, its clock, and the picks.
     private let crate: Crate
-    private let shuffle: Double
+    /// The Shuffle dial (under `lock`): set at the start, and moved while listening (`setShuffle`).
+    private var shuffle: Double
+    /// Each song's wave and bars, for the song shown (built once, from the crate's per-bar loudness).
+    private let waves: [String: (wave: [Int], bars: Int?)]
     private var library: BoothLibrary?
     private var rule = BoothRule()
     private var listenedFrom = Date()
@@ -188,8 +205,14 @@ public final class DeskBooth: @unchecked Sendable {
         self.shuffle = shuffle.isFinite ? min(1, max(0, shuffle)) : 0.5
         fingerprints = crate.fingerprints()
         var r: [String: DeskSongRow] = [:]
-        for t in crate.tracks { r[t.id] = DeskSongRow(t) }
+        var w: [String: (wave: [Int], bars: Int?)] = [:]
+        for t in crate.tracks {
+            r[t.id] = DeskSongRow(t)
+            let wave = RunSong.wave(t.bars?[BarSeries.lufs])
+            if !wave.isEmpty { w[t.id] = (wave, t.grid?.nBars) }
+        }
         rows = r
+        waves = w
         indexURL = indexAt
         self.source = source
         self.settings = settings
@@ -378,7 +401,8 @@ public final class DeskBooth: @unchecked Sendable {
                          camelot: row?.key?.camelot, key: row?.key?.key, scale: row?.key?.scale, seconds: row?.seconds ?? 0,
                          place: rule.positionKnown ? rule.position(at: now) : 0, confidence: rule.confidence(now: now, source: .listening),
                          reading: "shown", speedPercent: rule.pitchPct, keyLock: rule.pitchKind == .masterTempo ? true : rule.pitchKind == .vinyl ? false : nil,
-                         heardAt: now.timeIntervalSince(listenedFrom), milliseconds: rule.lastLatencyMs)
+                         heardAt: now.timeIntervalSince(listenedFrom), milliseconds: rule.lastLatencyMs,
+                         wave: waves[id]?.wave, bars: waves[id]?.bars)
         }
         let also = rule.alsoHearingId.map { rows[$0]?.shown ?? lib.song($0)?.song ?? $0 }
         return Playing(song: song, pitch: rule.pitchPct, pitchKind: rule.pitchKind.rawValue, rate: rule.rate, notHeard: rule.notHeard,
@@ -401,16 +425,42 @@ public final class DeskBooth: @unchecked Sendable {
         guard let ranked else { return nil }
         let split = BoothPicks.split(ranked.list, shortlist: ranked.shortlist, full: true)
         let picks = BoothPicks(lib)
-        let shownPicks: [Pick] = split.shown.compactMap { op in
+        func words(_ op: BoothPick) -> Pick? {
             guard let target = lib.placed(op.id, playingDisc: cur.disc, among: picks.allowsPlace(BoothFilter())) else { return nil }
             let ji = BoothJoin(cur, target, op.pair, deckAPitch: pitch)
             let row = rows[op.id]
             return Pick(id: op.id, title: row?.shown ?? target.song, artist: row?.artist, bpm: target.bpm ?? target.bpmTag, key: target.keyShown,
                         kind: op.kind == .pinned ? "pinned" : "pick", tags: op.tags, bpmLine: BoothJoin.bpmLine(target, op.pair, ji),
-                        moveLine: BoothJoin.moveLine(op.pair, ji), keys: ji.keyText, score: op.pair?.s)
+                        moveLine: BoothJoin.moveLine(op.pair, ji), keys: ji.keyText, score: op.pair?.s, keysClash: ji.verdict == "clash")
         }
-        return Picks(forId: cur.id, shortlist: ranked.shortlist, more: split.more.count, shuffle: shuffle, picks: shownPicks)
+        let shownPicks = split.shown.compactMap(words)
+        // More, as far as the shortlist goes (the iPad's More before its "rest of the crate" marker).
+        let rest = split.more.prefix(min(max(0, split.restShortlist), Self.moreShown)).compactMap(words)
+        return Picks(forId: cur.id, shortlist: ranked.shortlist, more: split.more.count, shuffle: shuffle, picks: shownPicks,
+                     morePicks: rest)
     }
+
+    /// The Shuffle dial moved while listening (added Nov 21, 2026, step 3; the iPad's dial): the picks for the song on
+    /// screen are rolled again with it, as the iPad rolls them when the dial is let go, and said as `picks`. Before a song
+    /// is shown it is kept for the first roll. Out of 0...1 is held to it; not a number is ignored. Returns the dial as
+    /// kept.
+    @discardableResult
+    public func setShuffle(_ value: Double) -> Double {
+        lock.lock()
+        if value.isFinite { shuffle = min(1, max(0, value)) }
+        let kept = shuffle
+        var rolled: Picks?
+        if !stopped, let lib = library, rule.currentId != nil {
+            ranked = nil; picksPitch = nil
+            rolled = picksNow(lib)
+        }
+        lock.unlock()
+        if let rolled { out(.picks(rolled)) }
+        return kept
+    }
+
+    /// The dial as kept.
+    public var shuffleNow: Double { lock.lock(); defer { lock.unlock() }; return shuffle }
 
     /// The listener's times line, said once and kept in `timesFile` beside the index.
     private func tellTimes() {

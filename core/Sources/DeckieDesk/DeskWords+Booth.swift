@@ -59,9 +59,34 @@ extension DeskWords {
         "booth.alsoHearing": "Also hearing: {song}",
         // new (Nov 21, 2026, step 2): the picks for the song on screen, a plain first look until the Booth screen is
         // designed (step 3).
-        "booth.picksTitle": "Picks for this song (a first look)",
+        // The picks' group, as the iPad names it (step 3, Nov 21, 2026; was "Picks for this song (a first look)").
+        "booth.picksTitle": "Picks",
         "booth.picksNone": "No picks for this song in this crate yet.",
         "booth.picksMore": "{n} more in the crate",
+        // new (Nov 21, 2026, step 3): the designed Booth screen. Provisional, as the rest of the mode's words.
+        // The screen's heading is the mode's name, with the crate under it ("Listening with {crate}", above).
+        "booth.heading": "Booth",
+        "booth.nowPlaying": "Now playing",
+        // The song card before a song is named (the iPad's "Listening…" and its help line).
+        "booth.waitingTitle": "Listening…",
+        "booth.waitingHelp": "A song shows up after a few seconds of music.",
+        // Stopped by the DJ, still in the mode: the microphone is off until Start listening.
+        "booth.stopListening": "Stop listening",
+        "booth.startListening": "Start listening",
+        "booth.stoppedHelp": "The microphone is off. Start listening when the music is playing.",
+        // The song's pitch as the deck shows it ("Pitch +3.2%"), and the time left in it.
+        "booth.pitch": "Pitch {pitch}%",
+        "booth.left": "{time} left",
+        // The iPad's More group (the rest of the shortlist), and the picks' place before a song is on screen.
+        "booth.moreTitle": "More",
+        "booth.picksWait": "Picks for the song playing show up here.",
+        // The Shuffle dial (the iPad's): its name, its value, and what it does.
+        "booth.shuffle": "Shuffle",
+        "booth.percent": "{n}%",
+        "booth.shuffleHelp": "At 0% the best matches come in order; at 100% the shortlist is shuffled. Moving it rolls the picks again.",
+        // First use: a crate with no songs, and one with only a few.
+        "booth.emptyCrate": "There are no songs in {crate} yet. Add music to it, and Booth can name what is playing.",
+        "booth.fewSongs": "{crate} has only {n} songs, so there are few picks. Add more music for more to choose from.",
         // Between the parts of one line (a pick's facts, the song's notes): "120 BPM · 10B · blend".
         "booth.join": " · ",
         // The microphone permission sentence (provisional): the Mac shows it when it asks (NSMicrophoneUsageDescription

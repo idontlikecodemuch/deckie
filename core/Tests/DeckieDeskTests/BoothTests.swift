@@ -16,7 +16,8 @@ import DeckieTestSupport
 
     /// A crate of generated songs with fingerprints, kept in a desk's storage as a run would leave it.
     /// `scored`: each song also has what the picks' scoring needs (mix windows, loudness, a style vector).
-    static func home(_ name: String, songs: Int = 5, scored: Bool = false) throws -> (home: DeskHome, id: String, crate: Crate) {
+    /// `waves`: each song also has its per-bar loudness, so the song shown carries its wave (step 3).
+    static func home(_ name: String, songs: Int = 5, scored: Bool = false, waves: Bool = false) throws -> (home: DeskHome, id: String, crate: Crate) {
         let home = DeskHome(root: try scratch(name))
         try home.prepare()
         let info = try home.shelf.make(name: "Generated")
@@ -39,6 +40,7 @@ import DeckieTestSupport
                 t.loudness = .init(source: "test", confidence: nil, integratedLufs: -9, lra: 4, truePeakDb: -0.5)
                 t.style = .init(model: "test", values: (0..<16).map { sin(Double($0 + i)) })
             }
+            if waves { t.bars = BarSeries([BarSeries.lufs: (0..<20).map { -14 + 4 * sin(Double($0) / 3 + Double(i)) }]) }
             tracks.append(t)
         }
         let crate = Crate(manifest: CrateManifest(crateId: info.id, name: "Generated", createdAt: "2026-11-20T00:00:00Z",
@@ -240,6 +242,84 @@ import DeckieTestSupport
         #expect(times.count == 1 && times.first?.hasPrefix("listener: ") == true, "\(times)")
         let kept = try String(contentsOf: index.deletingLastPathComponent().appendingPathComponent(DeskBooth.timesFile), encoding: .utf8)
         #expect(kept.contains(times.first ?? "-"))
+    }
+
+    /// Step 3 (the Booth screen): the Shuffle dial moved while listening rolls the picks for the song on screen again,
+    /// at once, with the new dial (the iPad rolls them when the dial is let go); the dial is held to 0...1 and a value
+    /// that is not a number leaves it as it was. The song shown carries its wave and bars from the crate.
+    @Test func theShuffleDialMovedWhileListeningRollsThePicksAgain() throws {
+        let (home, id, crate) = try Self.home("booth-shuffle", songs: 5, scored: true, waves: true)
+        let events = Events()
+        let source = SampleSource(samples: Self.sound(song: 2, from: 5, seconds: 12), format: SoundFormat(rate: 48000, channels: 2))
+        let booth = DeskBooth(crate: crate, indexAt: home.shelf.file(DeskBooth.indexFile, of: id), source: source, shuffle: 0,
+                              out: events.add)
+        // Before listening starts the dial is only kept, for the first roll.
+        #expect(booth.setShuffle(0.25) == 0.25 && booth.shuffleNow == 0.25)
+        booth.start()
+        try #require(booth.waitUntilStarted(within: Self.started) && source.waitUntilPlayed(within: Self.started))
+        booth.finishReading()
+        func picks() -> [DeskBooth.Picks] { events.all.compactMap { if case let .picks(p) = $0 { return p }; return nil } }
+        let first = try #require(picks().last)
+        #expect(first.forId == "song2" && first.shuffle == 0.25)
+        let before = picks().count
+        #expect(booth.setShuffle(1) == 1)
+        let rolled = picks()
+        #expect(rolled.count == before + 1, "one roll, said at once")
+        let again = try #require(rolled.last)
+        #expect(again.forId == "song2" && again.shuffle == 1 && again.shortlist == first.shortlist)
+        // The same shortlist, in the dial's order; nothing beyond it, so More holds none of it.
+        #expect(Set(again.picks.map(\.id)) == Set(first.picks.map(\.id)) && again.morePicks.isEmpty)
+        #expect(again.picks.allSatisfy { !$0.keysClash }, "every song is in 8A")
+        #expect(booth.setShuffle(7) == 1 && booth.setShuffle(-1) == 0 && booth.setShuffle(.nan) == 0)
+        // The song shown carries the crate's wave (64 values, 0 to 99) and its bars.
+        let shown = try #require(events.all.compactMap { e -> DeskBooth.Heard? in if case let .playing(p) = e { return p.song }; return nil }.last)
+        let wave = try #require(shown.wave)
+        #expect(wave.count == RunSong.waveLength && wave.allSatisfy { (0...99).contains($0) } && Set(wave).count > 1)
+        #expect(shown.bars == 20)
+        booth.stop()
+        let after = picks().count
+        booth.setShuffle(0.5)
+        #expect(picks().count == after, "nothing rolled after stop")
+    }
+
+    /// Step 3's protocol addition: `booth.shuffle` while listening rolls the picks again (`booth.picks` with the new
+    /// dial); not listening, it is answered and nothing is rolled; not a number is a bad request. The picks carry
+    /// `keysClash` and `morePicks`, the song shown its `wave` and `bars`.
+    @Test func theProtocolMovesTheShuffleDialWhileListening() throws {
+        let (home, id, _) = try Self.home("booth-protocol-shuffle", songs: 5, scored: true, waves: true)
+        let out = Lines()
+        let p = DeskProtocol(home: home, output: out.add, makeRun: AddMusicTests.noRun, analysisCheck: {})
+        let sound = Self.sound(song: 3, from: 5, seconds: 9, rate: 44100, stereo: false)
+        p.makeSoundSource = { name in SampleSource(name: name ?? "Stand-in", samples: sound, format: SoundFormat(rate: 44100, channels: 1)) }
+        p.listSoundInputs = { SoundInputs.Listed(inputs: [SoundInput(name: "Stand-in", isDefault: true)], system: "stand-in") }
+        p.start()
+        #expect(out.wait { ($0["event"] as? String) == "state" } != nil)
+
+        p.handle(line: #"{"id": 1, "type": "booth.shuffle", "shuffle": 0.3}"#)
+        let idle = try #require(out.wait { ($0["re"] as? Int) == 1 })
+        #expect(idle["ok"] as? Bool == true && idle["listening"] as? Bool == false && (idle["shuffle"] as? NSNumber)?.doubleValue == 0.3)
+        p.handle(line: #"{"id": 2, "type": "booth.shuffle", "shuffle": "lots"}"#)
+        #expect(((out.wait { ($0["re"] as? Int) == 2 })?["error"] as? [String: Any])?["code"] as? String == "bad_request")
+
+        p.handle(line: #"{"id": 3, "type": "booth.listen", "input": "Stand-in", "crate": "\#(id)", "shuffle": 0}"#)
+        #expect(out.wait { ($0["re"] as? Int) == 3 }?["ok"] as? Bool == true)
+        let first = try #require(out.wait(seconds: 30) { ($0["event"] as? String) == "booth.picks" && $0["for"] as? String == "song3" })
+        #expect((first["shuffle"] as? NSNumber)?.doubleValue == 0 && first["morePicks"] is [[String: Any]])
+        let firstPicks = try #require(first["picks"] as? [[String: Any]])
+        #expect(!firstPicks.isEmpty && firstPicks.allSatisfy { $0["keysClash"] as? Bool == false })
+        let playing = try #require(out.all.last { ($0["event"] as? String) == "booth.playing" && $0["song"] is [String: Any] })
+        let song = try #require(playing["song"] as? [String: Any])
+        #expect((song["wave"] as? [Any])?.count == RunSong.waveLength && (song["bars"] as? NSNumber)?.intValue == 20)
+
+        p.handle(line: #"{"id": 4, "type": "booth.shuffle", "shuffle": 1}"#)
+        let moved = try #require(out.wait { ($0["re"] as? Int) == 4 })
+        #expect(moved["ok"] as? Bool == true && moved["listening"] as? Bool == true && (moved["shuffle"] as? NSNumber)?.doubleValue == 1)
+        let rolled = try #require(out.wait { ($0["event"] as? String) == "booth.picks" && ($0["shuffle"] as? NSNumber)?.doubleValue == 1 })
+        #expect(rolled["for"] as? String == "song3")
+        #expect(Set(((rolled["picks"] as? [[String: Any]]) ?? []).compactMap { $0["id"] as? String })
+                == Set(firstPicks.compactMap { $0["id"] as? String }))
+        p.handle(line: #"{"id": 5, "type": "booth.stop"}"#)
+        #expect(out.wait { ($0["re"] as? Int) == 5 }?["ok"] as? Bool == true)
     }
 
     @Test func theProtocolListsInputsListensSaysWhatItHearsAndStops() throws {
