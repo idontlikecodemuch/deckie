@@ -93,7 +93,7 @@
         <span id="run-stopping" class="mut" data-w="stoppingRun" hidden></span>
         <button id="run-stop" data-w="stopRun" data-w-title="stopRunHelp"></button>
       </div>
-      <h1 id="run-title" data-w="runTitle"></h1>
+      <h1 id="run-title"></h1>
       <p id="run-reading" class="mut"></p>
       <!-- A music CD with no name of its own: asked once, in passing; the run never waits for it (letter AA, 2.5). -->
       <form id="disc-ask" class="disc-ask card" hidden>
@@ -111,7 +111,8 @@
       <!-- The song card (desk.js drawNow): the song being worked on, by the name Desk has for it, with its step line
            and a thin bar within the song (a turning disc for a music CD's song); or, when a folder's songs are read
            several at once, how many and a row a song with each one's step. Under it, quietly, the next song of a disc
-           while it is read ahead. Shown while songs are worked on. -->
+           while it is read ahead. Shown the whole time songs are read, straight under the bar; between songs, the
+           step alone. -->
       <div id="now-card" class="now-card card" hidden>
         <div id="now-one" class="now-one">
           <svg id="now-disc" class="now-disc" aria-hidden="true"><use href="#icon-disc-turning"/></svg>
@@ -161,7 +162,7 @@
         </div>
       </div>
 
-      <!-- The crate filling up: a row a song, its name and its wave as bars (run.js Wall). -->
+      <!-- The crate filling up: a row a song, its wave across the row; pointed at, its name above (run.js Wall). -->
       <div class="wall-card card">
         <div class="wall-head"><h2 id="run-wall-title" data-w="wallTitle"></h2><span id="run-wall-name" class="wall-name mut"></span></div>
         <div class="wall-scroll"><canvas id="run-wall" class="wall" tabindex="0" role="img" aria-describedby="run-wall-help"></canvas><div class="wall-space"></div></div>
@@ -169,7 +170,7 @@
       </div>
 
       <details class="run-list"><summary data-w="runListTitle"></summary>
-        <ol id="run-log" class="log" role="log" aria-live="off" data-w-label="runTitle"></ol>
+        <ol id="run-log" class="log" role="log" aria-live="off"></ol>
       </details>
       <div id="run-announce" class="sr" aria-live="polite" aria-atomic="true"></div>
     </div>

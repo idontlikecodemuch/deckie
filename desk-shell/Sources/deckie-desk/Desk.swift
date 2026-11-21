@@ -125,8 +125,12 @@ final class Desk: @unchecked Sendable {
                 reply(id, ["cancelled": true])
                 return
             }
+            // Export opens in the folder a crate file was last exported to, else Documents: never where the chooser was
+            // last (the music folder just read), where a crate file would land among the songs.
+            let start = m["start"] as? String ?? (purpose == "export" ? Desk.exportStart() : nil)
             let path = preset ?? window.chooseFolder(message: m["message"] as? String ?? "", accept: m["accept"] as? String ?? "",
-                                                     cancel: m["cancel"] as? String ?? "", start: m["start"] as? String)
+                                                     cancel: m["cancel"] as? String ?? "", start: start)
+            if purpose == "export", preset == nil, let path { Desk.rememberExport(path) }
             reply(id, path.map { ["path": $0] } ?? ["cancelled": true])
         case "shell.chooseFile":
             let preset = m["purpose"] as? String == "playlist" ? options.playlistAnswer : nil
@@ -157,5 +161,31 @@ final class Desk: @unchecked Sendable {
             for w in pageWatchers { w(m) }
             if id != nil { reply(id, ["ok": false, "error": ["code": "unknown_type", "detail": type]]) }
         }
+    }
+}
+
+extension Desk {
+    /// Where the folder last chosen for an export is kept: a line of text in Desk's own folder (DECKIE_DESK_HOME when
+    /// set, as the engine's), so Export opens there next time.
+    static var exportFolderFile: URL? {
+        let env = ProcessInfo.processInfo.environment["DECKIE_DESK_HOME"]
+        let home = env.map { URL(fileURLWithPath: $0, isDirectory: true) }
+            ?? FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first?.appendingPathComponent("Deckie Desk")
+        return home?.appendingPathComponent("last-export-folder.txt")
+    }
+
+    /// The folder Export's chooser opens at: the last one exported to, while it is there, else the user's Documents.
+    static func exportStart() -> String? {
+        let fm = FileManager.default
+        var isFolder: ObjCBool = false
+        if let f = exportFolderFile, let last = try? String(contentsOf: f, encoding: .utf8).trimmingCharacters(in: .whitespacesAndNewlines),
+           !last.isEmpty, fm.fileExists(atPath: last, isDirectory: &isFolder), isFolder.boolValue { return last }
+        return fm.urls(for: .documentDirectory, in: .userDomainMask).first?.path
+    }
+
+    static func rememberExport(_ folder: String) {
+        guard let f = exportFolderFile else { return }
+        try? FileManager.default.createDirectory(at: f.deletingLastPathComponent(), withIntermediateDirectories: true)
+        try? Data(folder.utf8).write(to: f, options: .atomic)
     }
 }

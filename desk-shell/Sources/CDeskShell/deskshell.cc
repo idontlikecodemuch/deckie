@@ -287,6 +287,45 @@ char *choose(deskshell *s, const char *title, bool folders, const char *accept, 
 char *choose(deskshell *, const char *, bool, const char *, const char *, const char * = nullptr) { return nullptr; }
 #endif
 
+
+// The first window fits the screen it opens on (a 1024-pixel-wide screen had Stop off its right edge): no wider or
+// taller than the screen's work area (the taskbar left out) less a margin each side, and centred on it. A larger
+// screen keeps the size asked for. The Mac's is done in Window.swift (the shell there is for looking at the pages).
+const int kScreenMargin = 24;
+#if defined(_WIN32)
+void fit_to_screen(deskshell *s) {
+  HWND window = static_cast<HWND>(webview_get_window(s->w));
+  if (!window) return;
+  MONITORINFO info{};
+  info.cbSize = sizeof(info);
+  if (!GetMonitorInfoW(MonitorFromWindow(window, MONITOR_DEFAULTTONEAREST), &info)) return;
+  RECT r{}, work = info.rcWork;
+  if (!GetWindowRect(window, &r)) return;
+  const int margin = kScreenMargin;
+  int roomW = (work.right - work.left) - 2 * margin, roomH = (work.bottom - work.top) - 2 * margin;
+  int w = r.right - r.left, h = r.bottom - r.top;
+  if (roomW > 0 && w > roomW) w = roomW;
+  if (roomH > 0 && h > roomH) h = roomH;
+  int x = work.left + ((work.right - work.left) - w) / 2, y = work.top + ((work.bottom - work.top) - h) / 2;
+  SetWindowPos(window, nullptr, x, y, w, h, SWP_NOZORDER | SWP_NOACTIVATE);
+}
+#elif defined(WEBVIEW_GTK)
+void fit_to_screen(deskshell *s, int width, int height) {
+  GtkWindow *window = static_cast<GtkWindow *>(webview_get_window(s->w));
+  GdkDisplay *display = gdk_display_get_default();
+  if (!window || !display) return;
+  GdkMonitor *monitor = gdk_display_get_primary_monitor(display);
+  if (!monitor) monitor = gdk_display_get_monitor(display, 0);
+  if (!monitor) return;
+  GdkRectangle work;
+  gdk_monitor_get_workarea(monitor, &work);
+  int roomW = work.width - 2 * kScreenMargin, roomH = work.height - 2 * kScreenMargin;
+  int w = (roomW > 0 && width > roomW) ? roomW : width, h = (roomH > 0 && height > roomH) ? roomH : height;
+  gtk_window_resize(window, w, h);
+  gtk_window_set_position(window, GTK_WIN_POS_CENTER);
+}
+#endif
+
 } // namespace
 
 extern "C" {
@@ -298,6 +337,11 @@ deskshell_t deskshell_create(int debug, const char *title, int width, int height
   s->w = w;
   webview_set_title(w, title);
   webview_set_size(w, width, height, WEBVIEW_HINT_NONE);
+#if defined(_WIN32)
+  fit_to_screen(s);
+#elif defined(WEBVIEW_GTK)
+  fit_to_screen(s, width, height);
+#endif
   std::string init = kInit;
   std::string marker = "%ENGINE%";
   init.replace(init.find(marker), marker.size(), deskshell_engine_name());
