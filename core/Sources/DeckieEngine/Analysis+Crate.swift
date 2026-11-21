@@ -209,7 +209,16 @@ extension Analysis {
     /// No block when the audio is too short to read. **Without the learned reader**: the three-answer reader's result
     /// on its three levels (`KeyConfidence.threeAnswer`: 1.0 a key, 0.2 its guess when not sure).
     func crateKey() -> CrateTrack.Key? {
-        if case .home = keyAnswer { return nil }
+        guard var k = Analysis.recordKey(learnedKey: learnedKey, threeAnswer: threeAnswer) else { return nil }
+        k.votes = keyVotes; k.changes = keyChanges()
+        return k
+    }
+
+    /// The record's key block from the readers' answers alone, before its votes and changes (which need the whole
+    /// analysis): the same source, confidence, Camelot code, note and scale `crateKey` writes. Known when the key
+    /// stage ends, so a screen can show the song's key then (`Analyser.analyse`'s `onPart`), as the record will hold it.
+    public static func recordKey(learnedKey: LearnedKey.Result?, threeAnswer: ThreeAnswerKey.Result) -> CrateTrack.Key? {
+        if case .home = (learnedKey?.answer ?? threeAnswer.answer) { return nil }
         if let l = learnedKey {
             guard let best = l.best, let code = l.camelot else { return nil }
             // Rounding may not carry a guess over the line that shows it.
@@ -217,13 +226,13 @@ extension Analysis {
             if case .key = l.answer { shown = true } else { shown = false }
             let confidence = shown ? max(0.5, Py.round(l.keyProbability, 3)) : min(0.499, Py.round(l.keyProbability, 3))
             return .init(source: Analysis.learnedKeySource, confidence: confidence, camelot: code,
-                         key: KeyEstimator.pitchNames[best % 12], scale: best < 12 ? "major" : "minor", votes: keyVotes,
-                         changes: keyChanges())
+                         key: KeyEstimator.pitchNames[best % 12], scale: best < 12 ? "major" : "minor", votes: [:],
+                         changes: nil)
         }
         guard let guess = threeAnswer.guess, let spelled = Camelot.tonic(guess) else { return nil }
         return .init(source: Analysis.keySource, confidence: KeyConfidence.threeAnswer(threeAnswer.answer).value,
                      camelot: guess, key: KeyEstimator.pitchNames[spelled.pitchClass],
-                     scale: spelled.major ? "major" : "minor", votes: keyVotes, changes: keyChanges())
+                     scale: spelled.major ? "major" : "minor", votes: [:], changes: nil)
     }
 
     /// The record's `key_home` block (D36): the home note when the reader found it and left the mode open.

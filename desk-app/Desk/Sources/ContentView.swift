@@ -222,7 +222,7 @@ struct RunView: View {
             SayingLine(watch: model.watch)
             Text(DeskWords.text("leaveRunning")).font(Look.Fonts.leaveRunning).foregroundStyle(.tertiary)
             FiguresView(watch: model.watch)
-            WallView(watch: model.watch, title: DeskWords.text("wallTitle"))
+            WallView(watch: model.watch, songs: model.watch.wallSongs, title: DeskWords.text("wallTitle"))
             DisclosureGroup(DeskWords.text("runListTitle"), isExpanded: $showList) {
                 VStack(alignment: .leading, spacing: Look.Space.runList) {
                     ForEach(model.runLines.suffix(200).indices, id: \.self) { i in
@@ -235,15 +235,30 @@ struct RunView: View {
     }
 }
 
-/// The song card's place: the songs being worked on (RunWatch.showNow), and under it, always, the last song in.
+/// The song card's place: the song being worked on, its parts filling in; under it, the other songs worked on at
+/// once, a row each with its step.
 struct SongCardSlot: View {
     @EnvironmentObject var model: DeskModel
     @ObservedObject var watch: RunWatch
     var body: some View {
         VStack(alignment: .leading, spacing: RunLook.gap) {
-            if watch.showNow { NowCard(watch: watch, total: model.runTotal, disc: model.runIsMusicCD) }
-            // Always: the last song in, with its facts and its moving wave.
-            StageView(watch: watch)
+            RunSongCard(watch: watch, total: model.runTotal, disc: model.runIsMusicCD)
+            if !watch.rows.isEmpty {
+                VStack(alignment: .leading, spacing: RunLook.nowRowsGap) {
+                    Text(RunNow.alsoLine(watch.rows.count)).font(RunLook.nowAheadFont).foregroundStyle(.secondary)
+                    ForEach(watch.rows, id: \.rel) { song in
+                        HStack(alignment: .firstTextBaseline, spacing: RunLook.nowRowGap) {
+                            HStack(spacing: RunLook.stageNameGap) {
+                                Text(song.name).fontWeight(RunLook.stageValueWeight).lineLimit(1)
+                                if let a = song.artist { Text(a).foregroundStyle(.secondary).lineLimit(1) }
+                            }
+                            Spacer(minLength: 0)
+                            Text(song.stage).foregroundStyle(.secondary).lineLimit(1).layoutPriority(1)
+                        }
+                    }
+                }
+                .padding(.horizontal, RunLook.nowRowsInset)
+            }
         }
     }
 }
@@ -261,22 +276,11 @@ struct RunProgressLine: View {
                 .animation(.easeOut(duration: RunLook.momentFlash), value: watch.moment)
             HStack {
                 Text(Words.doneOf(model.runDone, model.runTotal))
-                // The step beside the bar only when there is no song card (finishing, saving): while songs are read,
-                // the song card under the bar says what is being done.
-                if model.runStage != .reading { Text(stage).foregroundStyle(.secondary) }
                 if watch.figures.notIn > 0 { Text(Words.filesDidntGoIn(watch.figures.notIn)).foregroundStyle(Look.Colour.warning) }
                 Spacer()
                 if let r = model.runRemaining { Text(Words.timeLeft(r)).foregroundStyle(.secondary) }
             }.font(Look.Fonts.runProgress)
         } else { ProgressView().controlSize(.small) }
-    }
-
-    private var stage: String {
-        switch model.runStage {
-        case .reading: return Words.stageReading
-        case .finishing: return Words.stageFinishing
-        case .saving: return Words.stageSaving
-        }
     }
 }
 
@@ -298,7 +302,7 @@ struct FinishedView: View {
             if !model.watch.songs.isEmpty {
                 VStack(alignment: .leading, spacing: Look.Space.finishedWall) {
                     if let line = model.watch.finishedLine { Text(line).fontWeight(Look.Fonts.finishedMomentWeight) }
-                    WallView(watch: model.watch, title: DeskWords.text("wallTitleDone", ["read": report.read]))
+                    WallView(watch: model.watch, songs: model.watch.songs, title: DeskWords.text("wallTitleDone", ["read": report.read]))
                 }
                 .frame(maxWidth: Look.Size.finishedWallWidth)
             }

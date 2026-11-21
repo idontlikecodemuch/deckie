@@ -136,9 +136,14 @@ public final class Analyser: Sendable {
     /// "windows"); `onDecoded` is handed the decoded audio at the file's own rate, before anything else is done with
     /// it, so a caller can make what it needs from the same samples (the print that finds copies) without decoding
     /// the file again. Both are called on the analysing thread.
+    ///
+    /// `onPart` is told each part of the record as soon as it is final (it never changes after): the length when the
+    /// song is decoded, the tempo when the beat is found, the bars when the bar grid is laid, the key when it is read,
+    /// the per-bar loudness when it is measured (`AnalysisPart`). Also on the analysing thread.
     public func analyse(url: URL, bytes given: FileBytes?, sha256 givenSHA: String? = nil,
                         options: AnalysisOptions = AnalysisOptions(),
-                        onStage: ((String) -> Void)? = nil, onDecoded: ((AudioBuffer) -> Void)? = nil) throws -> Analysis {
+                        onStage: ((String) -> Void)? = nil, onDecoded: ((AudioBuffer) -> Void)? = nil,
+                        onPart: ((AnalysisPart) -> Void)? = nil) throws -> Analysis {
         let SR = Analysis.sampleRate
         var timings: [Analysis.Timing] = []
         var started = Date()
@@ -207,6 +212,7 @@ public final class Analyser: Sendable {
         let mono = buffer.mono()
         let duration = Double(mono.count) / Double(SR)
         lap("decode")
+        onPart?(.length(seconds: Py.round(duration, 3)))
 
         // ------------------------------------------------------------------ the 22,050 Hz mono mix
         begin("resample")
@@ -231,6 +237,8 @@ public final class Analyser: Sendable {
             octaveFix = aligned.fix
         }
         lap("beatthis")
+        // The grid is the only candidate (the spectral stage keeps it as it is): its tempo is the record's.
+        onPart?(.tempo(bpm: Py.round(60.0 / gridBT.period, 3)))
 
         // ------------------------------------------------------------------ key (the windows' keys come later)
         begin("key")
@@ -243,6 +251,7 @@ public final class Analyser: Sendable {
         let keyAnswer = learnedKey?.answer ?? threeAnswer.answer
         let chroma = try KeyEstimator.chroma(m22, sampleRate: KeyEstimator.sampleRate)
         lap("key")
+        onPart?(.key(Analysis.recordKey(learnedKey: learnedKey, threeAnswer: threeAnswer)))
 
         // ------------------------------------------------------------------ grid choice and bars
         begin("spectral")
@@ -280,6 +289,7 @@ public final class Analyser: Sendable {
         // ------------------------------------------------------------------ spectral features (22.05 kHz)
         let spectral = SpectralFeatures(m22)
         lap("spectral")
+        onPart?(.bars(bars.nBars))
 
         // ------------------------------------------------------------------ structure (Foote novelty)
         begin("structure")
@@ -303,6 +313,8 @@ public final class Analyser: Sendable {
         }
         let onsetDensity = spectral.onsetDensity(grid: bars)
         lap("loudness")
+        // As the record rounds it (`crateTrack`'s per-bar series).
+        onPart?(.loudness(perBar: lufs.map { Py.round($0, 2) }))
         let pattern = spectral.onsetPattern(grid: bars, barLoudness: lufs)
 
         // ------------------------------------------------------------------ vocal probability (optional)
@@ -397,4 +409,20 @@ public final class Analyser: Sendable {
         analysis.landmarks = landmarks
         return analysis
     }
+}
+
+/// A part of a song's record, final as soon as its stage ends (`Analyser.analyse`'s `onPart`), with the record's own
+/// rounding: the run screen shows each as it comes, and the finished record holds the same values.
+public enum AnalysisPart: Sendable, Equatable {
+    /// The length in seconds (`file.duration_s`), when the song is decoded.
+    case length(seconds: Double)
+    /// The tempo (`grid.bpm`), when the beat is found.
+    case tempo(bpm: Double)
+    /// The key block as the record will hold it (without its votes and changes), or nil when the reader was not sure
+    /// or found the home note alone; when the key is read.
+    case key(CrateTrack.Key?)
+    /// The number of bars (`grid.n_bars`), when the bar grid is laid.
+    case bars(Int)
+    /// The loudness of each bar (`bars.lufs`), when it is measured.
+    case loudness(perBar: [Double])
 }

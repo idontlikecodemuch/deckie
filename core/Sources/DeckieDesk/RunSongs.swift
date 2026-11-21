@@ -53,6 +53,9 @@ public struct RunSong: Codable, Equatable, Sendable {
     public var introBars: Int?
     /// Worked out before (unchanged since the last run, or read for another crate): not read again now.
     public var before: Bool
+    /// The file it was read from, as the run's lines and the songs worked on (`RunNow.rel`) name it; nil when it
+    /// joined from the crate's record while saving. Lets a window hand the song card's song on to the wall.
+    public var rel: String? = nil
 
     /// 64 values a song: enough to show a song's shape (an intro, a break, a drop, the outro) at the width the stage
     /// draws it, two bars a value for a typical 128-bar song, and small enough that 5,000 songs are about 1 MB of
@@ -92,8 +95,10 @@ public struct RunSong: Codable, Equatable, Sendable {
     }
 
     /// `waveLength` values from a per-bar loudness series: the loudest bar of each stretch, on the fixed scale.
+    /// Each value is first taken as the crate's sidecar holds it (float16, `Half`), so a wave made from the analysis's
+    /// own numbers (the song card's, as the loudness is measured) and one made from the stored record are the same.
     public static func wave(_ lufs: [Double]?) -> [Int] {
-        guard let v = lufs?.filter({ $0.isFinite || $0 == -.infinity }), !v.isEmpty else { return [] }
+        guard let v = lufs?.filter({ $0.isFinite || $0 == -.infinity }).map({ Half.value(Half.bits($0)) }), !v.isEmpty else { return [] }
         let n = waveLength
         return (0..<n).map { i in
             let a = i * v.count / n, b = max(a + 1, (i + 1) * v.count / n)
@@ -309,7 +314,6 @@ public struct RunTally: Sendable {
         }
 
         // Moments.
-        if f.songs == 1 { notes.append(RunNote(.moment, "first", song: song.id, title)) }
         let h = Int(f.seconds / 3600)
         if h > hours { hours = h; notes.append(RunNote(.moment, "hour", n: h)) }
         f.keysFound = f.major.filter { $0 > 0 }.count + f.minor.filter { $0 > 0 }.count

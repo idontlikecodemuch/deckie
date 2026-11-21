@@ -126,7 +126,10 @@ import DeckieBuild
             all += tally.add(&s)
         }
         let moments = all.filter { $0.kind == .moment }
-        #expect(moments.first?.code == "first" && moments.first?.values["title"] == "Song s0")
+        // No moment names one song (the owner's note, Nov 20, 2026: the song card is the song being worked on, so
+        // "First one in" went); the moments are the run's.
+        #expect(moments.allSatisfy { $0.song == nil } && !moments.contains { $0.code == "first" })
+        #expect(DeskWords.table["moment.first"] == nil)
         // Round numbers of songs are said from the run's count (the bar's "9 of 12 songs"), not from the screen's,
         // which runs a little ahead: the two never disagree.
         #expect(moments.filter { $0.code == "songs" }.isEmpty)
@@ -176,7 +179,7 @@ import DeckieBuild
     @Test func everyNoteAndSayingHasWords() {
         let facts = ["slowest", "fastest", "tempoRun", "commonTempo", "newKey", "keysFound", "homeNote", "notSure", "longest",
                      "shortest", "longestIntro", "twoPlaces", "needName", "copies"]
-        let moments = ["first", "songs", "hour", "wheel", "disc", "finished"]
+        let moments = ["songs", "hour", "wheel", "disc", "finished"]
         for code in facts { #expect(DeskWords.table["fact.\(code)"] != nil || DeskWords.table["fact.\(code).other"] != nil, "\(code)") }
         for code in moments { #expect(DeskWords.table["moment.\(code)"] != nil || DeskWords.table["moment.\(code).other"] != nil, "\(code)") }
         for step in ["reading", "finishing", "disc", "saving"] { #expect(DeskWords.list("saying.\(step)").count >= 3, "\(step)") }

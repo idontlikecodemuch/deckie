@@ -92,66 +92,167 @@
       return h > 0 ? t("figHoursMinutes", { h, m }) : t("figMinutes", { m });
     }
 
-    // ---- the song on stage
-    const stage = $("stage"), stageCanvas = $("stage-wave");
-    let queue = [], onStage = null, skipped = 0, timer = 0, raf = 0, lastFrame = 0, running = false;
-
-    function holdFor(waiting) {
-      const hold = time("--t-hold"), min = time("--t-hold-min");
-      return Math.max(min, hold / (1 + waiting));
+    // ---- the song card (the owner's note, Nov 20, 2026): the song being worked on, its parts filling in as Desk
+    // works them out. Drawn from the engine's last `run.progress` (its `working`, each with its parts) and its
+    // `run.songs` (a song done). The card keeps its song while it is worked on; done, the song stays complete on the
+    // card --t-card-done, then goes to the wall and the card takes the next. Several at once: the card has the one
+    // furthest along, the rest are rows under it. Every name and fact on the card is its song's.
+    const stage = $("stage"), stageCanvas = $("stage-wave"), cardEl = $("song-card");
+    let onStage = null, timer = 0, raf = 0, lastFrame = 0, running = false;
+    let run = null;                 // the last run.progress, as desk.js keeps it
+    let card = { rel: null, done: null, doneUntil: 0, doneTimer: 0 };
+    const NOW_STEPS = ["hash", "decode", "resample", "beatthis", "key", "spectral", "structure", "loudness", "vocal", "windows"];
+    const nowReading = (x) => x.step === "started" || x.step === "reading";
+    /// The song's name as RunNow.name gives it: the name Desk has, else its file name without the ending.
+    function nowName(x) {
+      if (x.title) return x.title;
+      const last = String(x.rel || "").split("/").pop();
+      const dot = last.lastIndexOf(".");
+      return dot > 0 ? last.slice(0, dot) : last;
     }
-    function nextSong(now) {
-      // Hidden, or with no frames coming: straight to the latest song, still; the ones before it are on the wall.
-      if (document.hidden && queue.length > 1) { skipped += queue.length - 1; queue.splice(0, queue.length - 1); }
-      const max = num("--stage-queue-max");
-      if (queue.length > max) {
-        // Falling behind: the oldest waiting go straight to the wall (they are on it already), and the stage says how many.
-        const drop = queue.length - Math.floor(max / 2);
-        queue.splice(0, drop);
-        skipped += drop;
+    const nowStage = (x) => (nowReading(x) ? t("nowOpening") : env.coded("nowStage", x.step));
+    function nowLine(x, total) {
+      if (nowReading(x)) return x.number != null ? t("nowReadingDisc", { number: x.number, total }) : t("nowReading");
+      return x.number != null ? t("nowStageOf", { number: x.number, total, stage: nowStage(x) }) : t("nowStageAlone", { stage: nowStage(x) });
+    }
+    /// How far through the song, 0 to 1 (RunNow.share): the share read while it is read, then its steps done.
+    function nowShare(x) {
+      if (nowReading(x)) return x.read != null ? Math.max(0, Math.min(1, x.read)) : 0;
+      const i = NOW_STEPS.indexOf(x.step);
+      return i >= 0 ? (i + 1) / NOW_STEPS.length : 1;
+    }
+    const hasParts = (x) => x.seconds != null || x.bpm != null || x.bars != null || x.key != null || x.wave != null;
+    /// The songs being worked on: `working` (an addition to protocol 2), else `now` alone (an engine before it).
+    const workingList = () => (!run ? [] : run.working && run.working.length ? run.working : run.now ? [run.now] : []);
+    /// RunNow.cardSong: the card's song while it is worked on; else the furthest along, the first taken of equals.
+    function cardSong(list, keep) {
+      const kept = keep && list.find((x) => x.rel === keep);
+      if (kept) return kept;
+      let best = null;
+      for (const x of list) if (!best || nowShare(x) > nowShare(best)) best = x;
+      return best;
+    }
+    /// One fact in its place on the card: its words, or a quiet placeholder until it is worked out.
+    function fact(id, text, cls) {
+      const d = $(id);
+      d.classList.toggle("pending", text == null);
+      d.classList.toggle("quiet", !!cls && cls.quiet);
+      d.textContent = text == null ? "" : text;
+    }
+    /// The card for `x` (a song worked on, or a song done and still on the card): its name, step and parts.
+    function fillCard(x, done) {
+      cardEl.classList.remove("no-song");
+      cardEl.dataset.rel = x.rel || "";
+      // The name it had while it was worked on, done or not: the card's song does not change its name as it finishes.
+      $("now-title").textContent = nowName(x);
+      $("now-artist").textContent = x.artist || "";
+      const disc = $("now-disc");
+      disc.toggleAttribute("hidden", !run || !run.musicCD);   // an svg has no .hidden
+      disc.classList.toggle("turning", !!run && run.musicCD && !done);
+      $("now-line").textContent = nowLine(done ? Object.assign({}, x, { step: "windows" }) : x, run ? run.total : 0);
+      const pct = done ? 100 : Math.round(nowShare(x) * 100);
+      const bar = $("now-bar");
+      bar.firstElementChild.style.width = pct + "%";
+      bar.setAttribute("aria-valuenow", String(pct));
+      const f = done || x;
+      fact("stage-tempo", f.bpm != null ? bpmText(f) : (done ? t("none") : null));
+      fact("stage-key", f.key ? keyText(f.key) : (done ? keyText(null) : null), { quiet: f.key ? f.key.kind !== "key" : !!done });
+      fact("stage-bars", f.bars != null ? String(f.bars) : (done ? t("none") : null));
+      fact("stage-length", f.seconds != null ? mmss(f.seconds) : null);
+      fact("stage-where", f.place || f.folder != null ? whereText(f) : null);
+      $("stage-more").textContent = done && !(done.wave || []).length ? t("stageNoWave") : "";
+      stageCanvas.setAttribute("aria-label", t("stageWaveLabel", { title: nowName(x) }));
+      // The wave once its loudness is measured: swept in from the left, then moving with the song.
+      const wave = f.wave || [];
+      // Whose wave the canvas holds (a check reads it: the wave is always the card's song's).
+      stageCanvas.dataset.rel = wave.length ? x.rel || "" : "";
+      if (!wave.length) { onStage = null; waveSpace(); return; }
+      if (!onStage || onStage.rel !== x.rel || !onStage.heights.length) {
+        const now = performance.now(), still = reduced() || document.hidden;
+        onStage = { rel: x.rel, song: { bpm: f.bpm, bars: f.bars, wave }, at: now, hold: time("--t-hold"),
+          draw: still ? 0 : time("--t-draw"), heights: barHeights(wave, f.bars), from: [] };
+        readLook(); drawStage(now); lastFrame = now; kick();
       }
-      const song = queue.shift();
-      // Under reduced motion a song stays at least --t-hold-still, so the stage changes as a still picture would.
-      const hold = reduced() ? Math.max(time("--t-hold-still"), holdFor(queue.length)) : holdFor(queue.length);
-      const ticker = reduced() || document.hidden || hold < num("--stage-ticker");
-      // The song before it: its wave is where this one's grows or shrinks from.
-      onStage = { song, at: now, hold, draw: ticker ? 0 : Math.min(time("--t-draw"), hold * num("--stage-draw-share")),
-        heights: barHeights(song.wave, song.bars), from: onStage ? onStage.heights : [] };
-      readLook();
-      showFacts(song, ticker);
-      $("stage-more").textContent = skipped > 0 ? n("stageMore", skipped) : (song.wave.length ? "" : t("stageNoWave"));
-      if (queue.length === 0) skipped = 0;
-      stage.classList.add("has-song");
     }
-    /// The song the info card names now (its facts filled in): a line that names a song is said only while it is this
-    /// one, so nothing on the screen names a song the cards do not show (the owner's note, Nov 20, 2026).
-    let shownId = null;
-    function showFacts(s, quick) {
-      const facts = stage.querySelector(".stage-facts");
-      const fill = () => {
-        shownId = s.id;
-        // The quiet line about the song before it goes with it, at once: the next line takes its place.
-        if (saying.dataset.song && saying.dataset.song !== s.id) {
-          saying.textContent = ""; saying.dataset.song = ""; lastSaid = ""; clearTimeout(sayTimer); nextSaying();
-        }
-        $("stage-title").textContent = s.title;
-        $("stage-artist").textContent = s.artist || "";
-        $("stage-before").hidden = !s.before;
-        $("stage-tempo").textContent = bpmText(s);
-        const key = $("stage-key");
-        key.textContent = keyText(s.key);
-        key.classList.toggle("quiet", s.key.kind !== "key");
-        $("stage-bars").textContent = s.bars != null ? String(s.bars) : t("none");
-        $("stage-length").textContent = mmss(s.seconds);
-        $("stage-where").textContent = whereText(s);
-        stageCanvas.setAttribute("aria-label", t("stageWaveLabel", { title: s.title }));
-        stage.classList.remove("out");
-      };
-      // At once, so the info card names the last song in from the moment it is in (the cards and every line agree);
-      // the new facts fade in rather than the old ones fading out first.
-      fill();
-      if (quick) return;
-      stage.classList.add("out"); void facts.offsetWidth; stage.classList.remove("out");
+    /// The card with no song: the step alone (between songs, before the first, while the crate is finished and saved).
+    function emptyCard(word) {
+      cardEl.classList.add("no-song");
+      cardEl.dataset.rel = "";
+      $("now-title").textContent = ""; $("now-artist").textContent = "";
+      $("now-disc").toggleAttribute("hidden", !run || !run.musicCD);
+      $("now-disc").classList.remove("turning");
+      $("now-line").textContent = t(word);
+      for (const id of ["stage-tempo", "stage-key", "stage-bars", "stage-length", "stage-where"]) fact(id, null);
+      $("stage-more").textContent = "";
+      stageCanvas.dataset.rel = "";
+      onStage = null;
+      waveSpace();
+    }
+    /// The wave's place before its loudness is measured: the centre line alone, quietly.
+    function waveSpace() {
+      if (!look) readLook();
+      const { ctx, w, h } = fit(stageCanvas);
+      ctx.clearRect(0, 0, w, h);
+      if (cardEl.classList.contains("no-song")) return;
+      const waveH = h - Math.round(h * look.markH);
+      ctx.fillStyle = look.none;
+      ctx.fillRect(0, Math.round(waveH / 2 - look.lineH / 2), w, look.lineH);
+    }
+    function drawRows(list) {
+      const rows = $("now-rows");
+      rows.hidden = !list.length;
+      $("now-rows-title").textContent = list.length ? n("alsoWorkingOn", list.length) : "";
+      $("now-list").replaceChildren(...list.map((x) => el("li", { "data-rel": x.rel },
+        el("span", { class: "now-name" }, el("b", { text: nowName(x) }), x.artist ? el("span", { class: "mut", text: " " + x.artist }) : null),
+        el("span", { class: "mut now-step", text: nowStage(x) }))));
+    }
+    /// The song done on the card goes to the wall (its row lit a moment), and the card is free for the next.
+    function endDone() {
+      clearTimeout(card.doneTimer); card.doneTimer = 0;
+      if (!card.done) return;
+      onWall.push(card.done);
+      card.done = null; card.rel = null;
+      runWall.added(onWall.length - 1);
+      runWall.label(t("wallLabel", { title: t("wallTitle"), songs: n("songs", onWall.length) }));
+    }
+    /// The card and the rows, now.
+    function drawCard() {
+      if (!run) return;
+      const list = workingList();
+      if (run.stage !== "reading") { endDone(); emptyCard(run.stage === "saving" ? "stageSaving" : "stageFinishing"); drawRows([]); drawAhead(); return; }
+      if (card.done && performance.now() < card.doneUntil) {
+        // Called again when the moment is over (a timer may come a little early: it is set again for the rest).
+        clearTimeout(card.doneTimer);
+        card.doneTimer = setTimeout(drawCard, Math.max(0, card.doneUntil - performance.now()) + 1);
+        fillCard(card.now, card.done);
+        drawRows(list.filter((x) => x.rel !== card.rel));
+        drawAhead();
+        return;
+      }
+      endDone();
+      const x = cardSong(list, card.rel);
+      card.rel = x ? x.rel : null;
+      if (x) { card.number = x.number; card.now = x; fillCard(x, null); } else emptyCard("stageReading");
+      drawRows(list.filter((y) => !x || y.rel !== x.rel));
+      drawAhead();
+    }
+    function drawAhead() {
+      const ahead = $("now-ahead");
+      ahead.hidden = !(run && run.ahead && run.stage === "reading");
+      ahead.textContent = ahead.hidden ? "" : t("nowAheadDisc");
+    }
+    /// A song done (`run.songs`): the card's own song stays complete on the card a moment, then goes to the wall;
+    /// any other song (a row, or one worked out before) goes to the wall at once.
+    let onWall = [];
+    function songDone(s) {
+      const onCard = card.rel && s.rel === card.rel && card.now && hasParts(card.now) && !card.done;
+      if (onCard) {
+        card.done = s; card.doneUntil = performance.now() + time("--t-card-done");
+        drawCard();
+        return;
+      }
+      onWall.push(s);
+      runWall.added(onWall.length - 1);
     }
     /// The stage's values, read from desk.css once a song rather than every frame.
     let look = null;
@@ -258,25 +359,15 @@
     function tick(now) {
       raf = 0; clearTimeout(late); late = 0;
       if (!look) readLook();
-      let changed = false;
-      if (!onStage || now - onStage.at >= onStage.hold) { if (queue.length) { nextSong(now); changed = true; } }
-      // At most one frame every --stage-frame ms, and always the first of a song.
-      if (changed || now - lastFrame >= look.frame || now < lastFrame) { drawStage(now); lastFrame = now; }
+      // At most one frame every --stage-frame ms.
+      if (now - lastFrame >= look.frame || now < lastFrame) { drawStage(now); lastFrame = now; }
       schedule(now);
     }
-    /// Keeps the stage going: a frame every --stage-frame ms while it moves; else one timer for the next song.
+    /// Keeps the card's wave going: a frame every --stage-frame ms while it moves.
     function schedule(now) {
       clearTimeout(timer); timer = 0;
-      if (document.hidden || !onStage && !queue.length) return;
-      if (moving()) {
-        const wait = Math.max(0, look.frame - (now - lastFrame));
-        timer = setTimeout(kick, wait);
-        return;
-      }
-      if (queue.length) {
-        const wait = onStage ? Math.max(0, onStage.at + onStage.hold - now) : 0;
-        timer = setTimeout(kick, wait);
-      }
+      if (document.hidden || !onStage || !moving()) return;
+      timer = setTimeout(kick, Math.max(0, look.frame - (now - lastFrame)));
     }
     /// The next step: on the next animation frame, or, when none comes within --t-frame-late (the window hidden or
     /// not in front), at once without one, so a song read is on the stage whether or not anything is drawing frames.
@@ -286,18 +377,6 @@
       raf = requestAnimationFrame(tick);
       clearTimeout(late);
       late = setTimeout(() => { if (raf) { cancelAnimationFrame(raf); raf = 0; tick(performance.now()); } }, time("--t-frame-late"));
-    }
-
-    /// The last song in onto the info card now, whatever was there and however long: the cards and every line agree
-    /// on what was the last to finish. The ones that came with it are on the wall; the card says how many.
-    function showNewest() {
-      if (!queue.length) return;
-      skipped = queue.length - 1;
-      queue.splice(0, queue.length - 1);
-      const now = performance.now();
-      nextSong(now);
-      drawStage(now); lastFrame = now;
-      kick();
     }
 
     // ---- what Desk has found so far
@@ -408,15 +487,17 @@
     // rows scroll inside the card; only the rows in view are drawn, on one canvas that stays in view (position:
     // sticky), so a crate of thousands draws as fast as a dozen. Pointing at a row, a tap on it, or the arrow keys
     // light it up and say the song's line (its name, tempo, key, length, where) beside the title.
-    function Wall(canvas, nameEl) {
+    function Wall(canvas, nameEl, listOf) {
       const scroller = canvas.parentElement, space = scroller.querySelector(".wall-space");
-      let pick = -1, wtimer = 0, newest = -1, follow = true;
+      let pick = -1, wtimer = 0, newest = -1, newestTimer = 0, follow = true;
       const pitch = () => num("--wall-row-h") + num("--wall-row-gap");
+      /// The rows on this wall: the songs that have gone to it, in the order they went.
+      const count = () => listOf().length;
       function draw() {
         wtimer = 0;
         // Sized first, shown or not, so the card is the rows' height from the start (one empty row before any song).
-        const count = songs.length, P = pitch(), rowH = num("--wall-row-h");
-        const total = count * P;
+        const all = count(), P = pitch(), rowH = num("--wall-row-h");
+        const total = all * P;
         const view = Math.min(num("--wall-max-h"), Math.max(rowH, total));
         scroller.style.height = view + "px";
         canvas.style.height = view + "px";
@@ -424,16 +505,16 @@
         if (!canvas.isConnected || canvas.offsetParent === null) return;
         const { ctx, w, h, dpr } = fit(canvas);
         ctx.clearRect(0, 0, w, h);
-        if (!count) return;
+        if (!all) return;
         const top = scroller.scrollTop;
         const floor = num("--wave-bar-floor"), quietShare = num("--wave-quiet-share"), pad = num("--wall-row-pad") * dpr;
         const ring = Math.max(1, Math.round(num("--wall-pick-ring") * dpr));
         const cPick = css("--wave-pick"), cWave = css("--wave"), cQuiet = css("--wave-quiet"), cNew = css("--wave-new"),
               cNone = css("--wave-none"), cRow = css("--wall-row-bg"), cRowPick = css("--wall-row-pick"), cRing = css("--wall-pick-edge");
-        const first = Math.max(0, Math.floor(top / P)), last = Math.min(count - 1, Math.ceil((top + view) / P));
+        const first = Math.max(0, Math.floor(top / P)), last = Math.min(all - 1, Math.ceil((top + view) / P));
         // In device pixels, each bar from the end of the last to the start of the next: no gaps and no seams.
         for (let i = first; i <= last; i++) {
-          const s = songs[i], y0 = Math.round((i * P - top) * dpr), hRow = Math.round(rowH * dpr), mid = y0 + hRow / 2;
+          const s = listOf()[i], y0 = Math.round((i * P - top) * dpr), hRow = Math.round(rowH * dpr), mid = y0 + hRow / 2;
           ctx.fillStyle = i === pick ? cRowPick : cRow;
           ctx.fillRect(0, y0, w, hRow);
           const H = barHeights(s.wave, s.bars), room = hRow - 2 * pad;
@@ -453,7 +534,7 @@
         const r = canvas.getBoundingClientRect();
         const y = ev.clientY - r.top + scroller.scrollTop;
         const i = Math.floor(y / pitch());
-        return i >= 0 && i < songs.length && (y - i * pitch()) < num("--wall-row-h") ? i : -1;
+        return i >= 0 && i < count() && (y - i * pitch()) < num("--wall-row-h") ? i : -1;
       }
       /// Keeps row i in view.
       function reveal(i) {
@@ -463,7 +544,7 @@
       }
       function choose(i, say) {
         pick = i;
-        nameEl.textContent = i >= 0 ? songLine(songs[i]) : "";
+        nameEl.textContent = i >= 0 ? songLine(listOf()[i]) : "";
         if (say && i >= 0) env.announce(nameEl.textContent);
         if (i >= 0) reveal(i);
         draw();
@@ -477,12 +558,13 @@
       canvas.addEventListener("click", (e) => { canvas.focus(); choose(at(e), false); });
       canvas.addEventListener("blur", () => choose(-1, false));
       canvas.addEventListener("keydown", (e) => {
-        if (!songs.length) return;
+        const all = count();
+        if (!all) return;
         const moves = { ArrowDown: 1, ArrowUp: -1, ArrowRight: 1, ArrowLeft: -1, PageDown: 10, PageUp: -10 };
-        let i = pick < 0 ? (e.key === "End" ? songs.length - 1 : 0) : pick;
-        if (e.key in moves) { if (pick >= 0) i = Math.max(0, Math.min(songs.length - 1, pick + moves[e.key])); }
+        let i = pick < 0 ? (e.key === "End" ? all - 1 : 0) : pick;
+        if (e.key in moves) { if (pick >= 0) i = Math.max(0, Math.min(all - 1, pick + moves[e.key])); }
         else if (e.key === "Home") i = 0;
-        else if (e.key === "End") i = songs.length - 1;
+        else if (e.key === "End") i = all - 1;
         else if (e.key === "Escape") { choose(-1, false); return; }
         else return;
         e.preventDefault();
@@ -492,7 +574,10 @@
       return {
         // A song joined: drawn soon, and, when the rows were at their end, the newest kept in view.
         added(i) {
+          // The row lit a moment, so the eye sees where the song went.
           newest = i;
+          clearTimeout(newestTimer);
+          newestTimer = setTimeout(() => { newest = -1; draw(); }, time("--t-wall-new"));
           if (follow) { const P = pitch(); setTimeout(() => { scroller.scrollTop = Math.max(0, (i + 1) * P - scroller.clientHeight); draw(); }, 0); }
           soon();
         },
@@ -507,8 +592,8 @@
         },
       };
     }
-    const runWall = Wall($("run-wall"), $("run-wall-name"));
-    const doneWall = Wall($("done-wall"), $("done-wall-name"));
+    const runWall = Wall($("run-wall"), $("run-wall-name"), () => onWall);
+    const doneWall = Wall($("done-wall"), $("done-wall-name"), () => songs);
 
     // ---- the quiet line under the progress, and the moments
     const saying = $("run-saying");
@@ -528,30 +613,22 @@
     }
     function nextSaying() {
       let text = null, moment = false;
-      let song = null;
-      // A fact about a song is said only while that song is on the info card; one about a song gone by is let go.
-      fresh = fresh.filter((x) => !x.song || x.song === shownId || (onStage && x.song === onStage.song.id));
-      if (pendingMoment) { text = pendingMoment.text; song = pendingMoment.song; moment = true; pendingMoment = null; }
+      if (pendingMoment) { text = pendingMoment; moment = true; pendingMoment = null; }
       else if (fresh.length && !(saying.dataset.kind === "fact" && Math.random() < num("--saying-fact-skip"))) {
-        const note = fresh.shift();
-        text = noteText(note); song = note.song || null;
+        text = noteText(fresh.shift());
         saying.dataset.kind = "fact";
       } else {
         const list = stepList();
         if (list.length) text = fromBag(step + (info.musicCD ? "-disc" : ""), list);
         saying.dataset.kind = "step";
       }
-      if (text && text !== lastSaid) say(text, moment, song);
+      if (text && text !== lastSaid) say(text, moment);
       clearTimeout(sayTimer);
       sayTimer = setTimeout(nextSaying, time("--t-saying"));
     }
-    function say(text, moment, song) {
+    function say(text, moment) {
       lastSaid = text;
-      const set = () => {
-        // Its song gone from the info card meanwhile (another came in): not said, the line stays as it was.
-        if (song && song !== shownId) { saying.classList.remove("out"); return; }
-        saying.textContent = text; saying.dataset.song = song || ""; saying.classList.toggle("moment", !!moment); saying.classList.remove("out");
-      };
+      const set = () => { saying.textContent = text; saying.classList.toggle("moment", !!moment); saying.classList.remove("out"); };
       if (reduced() || !saying.textContent) { set(); return; }
       saying.classList.add("out");
       setTimeout(set, time("--t-fade"));
@@ -559,15 +636,14 @@
     function moment(note) {
       const text = noteText(note);
       if (note.code === "finished") { lastNote = text; return; }
-      // A moment about a song that is not the one on the info card (it came in with others) is not said.
-      const about = note.song || null;
-      if (!about || (onStage && onStage.song.id === about)) {
+      // A moment about one song is not said: the card is the song being worked on, not that one.
+      if (!note.song) {
         env.announce(text);
-        pendingMoment = { text, song: about };
+        pendingMoment = text;
+        clearTimeout(sayTimer);
+        nextSaying();
       }
-      clearTimeout(sayTimer);
-      nextSaying();
-      const motion = { first: stage, songs: $("run-bar"), hour: $("fig-music"), wheel: wheel, disc: $("run-wall") }[note.code];
+      const motion = { songs: $("run-bar"), hour: $("fig-music"), wheel: wheel, disc: $("run-wall") }[note.code];
       if (note.code === "disc") runWall.settle();
       else pulse(motion, "moment");
     }
@@ -593,54 +669,49 @@
     return {
       /// A run started: everything from the last one goes.
       start(m) {
-        songs = []; figures = null; queue = []; onStage = null; shownId = null; skipped = 0; fresh = []; lastNote = null; pendingMoment = null; running = true;
+        songs = []; figures = null; onStage = null; fresh = []; lastNote = null; pendingMoment = null; running = true;
+        onWall = []; clearTimeout(card.doneTimer); card = { rel: null, done: null, doneUntil: 0, doneTimer: 0 };
         info = { read: m.read, musicCD: !!m.musicCD }; step = "reading"; spoken = { done: -1, at: 0 };
-        stage.classList.remove("has-song", "out");
-        for (const id of ["stage-title", "stage-artist", "stage-tempo", "stage-key", "stage-bars", "stage-length", "stage-where", "stage-more"]) $(id).textContent = "";
+        run = { stage: "reading", total: 0, musicCD: !!m.musicCD, working: null, now: null, ahead: null };
         saying.textContent = ""; lastSaid = ""; $("done-wall-card").dataset.settled = "";
         runWall.reset(); doneWall.reset(); runWall.now();
         $("run-wall-name").textContent = "";
         runWall.label(t("wallEmpty"));
+        drawCard();
         nextSaying();
       },
-      /// The engine's `run.songs`.
+      /// The engine's `run.songs`: songs done. The card's own song stays on it a moment; the rest go to the wall.
       songs(m) {
         for (const s of m.songs || []) {
           songs.push(s);
-          queue.push(s);
           if (s.bpm != null && figures) latestBin = Math.max(0, Math.min(figures.tempos.length - 1, Math.floor((s.bpm - figures.tempoLow) / figures.tempoStep)));
+          songDone(s);
         }
         if (m.figures) figures = m.figures;
-        // The newest on the info card before any line about it is said.
-        if ((m.songs || []).length) { showNewest(); queue = []; }
+        // Facts about one song are not said (the card is the song being worked on); facts about the run are.
         for (const note of m.notes || []) {
           if (note.kind === "moment") moment(note);
-          else { fresh = fresh.filter((x) => x.code !== note.code); fresh.push(note); if (fresh.length > 6) fresh.shift(); }
+          else if (!note.song) { fresh = fresh.filter((x) => x.code !== note.code); fresh.push(note); if (fresh.length > 6) fresh.shift(); }
         }
-        // The info card is the last song in, at once: the songs that came with it are on the wall, and it says how
-        // many. A second place of a song already in (a note) puts that song back on it: it is the file just read.
-        const again = (m.notes || []).filter((x) => x.code === "twoPlaces" && x.song).map((x) => songs.find((s) => s.id === x.song)).filter(Boolean);
-        if ((m.songs || []).length || again.length) {
-          if (!(m.songs || []).length) { queue.push(again[again.length - 1]); showNewest(); }
-        }
-        if ((m.songs || []).length) {
-          runWall.added(songs.length - 1);
-          runWall.label(t("wallLabel", { title: t("wallTitle"), songs: n("songs", songs.length) }));
-        }
+        if (onWall.length) runWall.label(t("wallLabel", { title: t("wallTitle"), songs: n("songs", onWall.length) }));
         drawFigures();
       },
-      /// A `run.progress`: the step Desk is on, and the plain progress for screen readers.
-      progress(run) {
-        if (run.stage !== step) { step = run.stage; clearTimeout(sayTimer); nextSaying(); }
-        speakProgress(run);
+      /// A `run.progress` (desk.js's `run`): the card and the rows, the step Desk is on, and the plain progress for
+      /// screen readers.
+      progress(r) {
+        run = r;
+        drawCard();
+        if (r.stage !== step) { step = r.stage; clearTimeout(sayTimer); nextSaying(); }
+        speakProgress(r);
       },
       /// The finished screen: the run's songs as a wall of waves, and the run's last moment.
       finished(report) {
-        const card = $("done-wall-card");
-        card.hidden = !songs.length;
+        const wallCard = $("done-wall-card");
+        wallCard.hidden = !songs.length;
         if (!songs.length) return;
         running = false;
-        clearTimeout(sayTimer); clearTimeout(timer); queue = [];
+        clearTimeout(sayTimer); clearTimeout(timer); clearTimeout(card.doneTimer);
+        card.done = null; card.doneTimer = 0; onWall = songs.slice();
         $("done-wall-title").textContent = t("wallTitleDone", { read: report.read });
         // "That's the lot" only for a run that read everything (the engine sends it only then).
         const note = report.stopped === true ? null : lastNote;
@@ -649,7 +720,7 @@
         doneWall.label(t("wallLabel", { title: t("wallTitleDone", { read: report.read }), songs: n("songs", songs.length) }));
         // Drawn now, not on an animation frame, which a window not in front may never give.
         doneWall.now();
-        if (!card.dataset.settled) { card.dataset.settled = "1"; doneWall.settle(); }
+        if (!wallCard.dataset.settled) { wallCard.dataset.settled = "1"; doneWall.settle(); }
       },
 
     };
