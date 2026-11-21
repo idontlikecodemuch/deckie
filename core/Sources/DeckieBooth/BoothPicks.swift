@@ -235,7 +235,7 @@ public struct BoothJoin: Sendable, Equatable {
             + (pair.map { $0.m != "1" ? BoothWords.t("pick.tempoMultiple", ["m": $0.m]) : "" } ?? "")
     }
 
-    /// The move: "blend", "echo out · key clash", "no beat-match · brake".
+    /// The move: "blend", "echo out · keys may clash", "no beat-match · brake".
     public static func moveLine(_ pair: BoothPair?, _ ji: BoothJoin) -> String {
         let W = BoothWords.self
         var parts: [String] = []

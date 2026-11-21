@@ -305,6 +305,15 @@ enum RunLook {
     /// The song's name in the row pointed at, and its weight (desk.css --fs-note, --fw-wall-name).
     static let wallNameFont = Font.callout
     static let wallNameWeight = Font.Weight.medium
+    /// The tempo, key and length after that name, on the gold highlight: a lighter weight than the name, and a colour
+    /// that reads on the gold and the faded wave (desk.css --wall-pick-facts, --fw-wall-facts). Warm light in dark
+    /// mode, warm dark in light mode; the grey secondary colour was about 2:1 where a bar is behind it.
+    static let wallFactsWeight = Font.Weight.regular
+    static let wallPickFacts = Color(nsColor: NSColor(name: nil) { look in
+        look.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
+            ? NSColor(red: 0.910, green: 0.875, blue: 0.816, alpha: 1)    // #e8dfd0
+            : NSColor(red: 0.302, green: 0.231, blue: 0.090, alpha: 1)    // #4d3b17
+    })
     static let wallHelpFont = Font.caption
 
     // space and shape

@@ -113,7 +113,7 @@ public final class DeskBooth: @unchecked Sendable {
         public var kind: String
         /// What is unexpected about it ("half time", "to CD2", "deep cut", ...).
         public var tags: [String]
-        /// "128 BPM · pitch +3.2%", "blend · key clash", "8A → 9A".
+        /// "128 BPM · pitch +3.2%", "blend · keys may clash", "8A → 9A".
         public var bpmLine: String
         public var moveLine: String
         public var keys: String

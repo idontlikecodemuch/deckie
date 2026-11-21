@@ -188,6 +188,29 @@ import DeckieCrate
         #expect(message(climbing).contains("does not stay inside"))
     }
 
+    /// A zip64 table of contents whose numbers are near the top of the range (an offset that would overflow when 56
+    /// is added, an offset and a size whose sum would overflow) is refused with the usual words, never a crash.
+    @Test func aZip64EndWithHugeNumbersIsRefused() throws {
+        func le16(_ v: Int) -> [UInt8] { [UInt8(v & 0xFF), UInt8(v >> 8 & 0xFF)] }
+        func le32(_ v: UInt32) -> [UInt8] { (0..<4).map { UInt8(v >> UInt32(8 * $0) & 0xFF) } }
+        func le64(_ v: UInt64) -> [UInt8] { (0..<8).map { UInt8(v >> UInt64(8 * $0) & 0xFF) } }
+        // The plain end record, saying "see the zip64 record": counts 0xFFFF, size and offset 0xFFFFFFFF.
+        let plainEnd = [0x50, 0x4B, 0x05, 0x06] + le16(0) + le16(0) + le16(0xFFFF) + le16(0xFFFF)
+            + le32(0xFFFF_FFFF) + le32(0xFFFF_FFFF) + le16(0)
+        func locator(_ z: UInt64) -> [UInt8] { [0x50, 0x4B, 0x06, 0x07] + le32(0) + le64(z) + le32(1) }
+
+        // The locator points at a zip64 record far past the end of the file.
+        let farAway = Data(locator(UInt64(Int.max - 8)) + plainEnd)
+        #expect(message(farAway).contains("is damaged (its table of contents cannot be found)"))
+
+        // A zip64 record whose table of contents starts and runs far past the end.
+        let huge = UInt64(1) << 62
+        let record = [0x50, 0x4B, 0x06, 0x06] + le64(44) + le16(45) + le16(45) + le32(0) + le32(0)
+            + le64(1) + le64(1) + le64(huge) + le64(huge)
+        let tooBig = Data(record + locator(0) + plainEnd)
+        #expect(message(tooBig).contains("is damaged (its table of contents does not fit the file)"))
+    }
+
     @Test func moreFilesThanAPlainZipCountsStillRoundTrip() throws {
         // Past 65,535 files the archive carries the zip64 count (about 20,000 songs with signatures).
         var files: [String: Data] = ["manifest.json": Data("{}\n".utf8)]

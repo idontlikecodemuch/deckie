@@ -9,10 +9,11 @@ extension DeskWords {
         .merging(BoothWords.table) { desk, _ in desk }
 
     /// The listening mode's words (research booth-in-desk, step 1), kept apart so the two lists change without
-    /// meeting. All provisional: the owner decides the names (the mode's, the input's label, the nothing-heard line and
-    /// the microphone sentence especially). Sentence case, "songs" not "tracks", no "AI".
+    /// meeting. The mode's name, "Booth", is decided (D43, Nov 21, 2026); the rest is provisional until the owner decides
+    /// (the input's label, the nothing-heard line and the microphone sentence especially). Sentence case, "songs" not
+    /// "tracks", no "AI".
     static let boothTable: [String: String] = [
-        // The switch in the top bar into the mode and out of it (provisional name).
+        // The switch in the top bar into the mode and out of it. The name is decided: "Booth" (D43).
         "booth.mode": "Booth",
         "booth.modeHelp": "Listen to the music playing and name each song from this crate",
         "booth.leave": "Back to songs",

@@ -23,11 +23,13 @@ deck-app/*.xcarchive
 demo-downloads/
 mixer/mixes/_work/
 deck-app/Deck/Resources/Deck.shazamcatalog
-# the party's data (tools/prep_data.py): private, never committed and never bundled (project.yml names each file the
-# app carries; nothing in Deck/Resources is among them)
+# the party's data (tools/prep_data.py): private, no longer in the tree (earlier commits held it) and never bundled
+# (project.yml names each file the app carries; nothing in Deck/Resources is among them)
 deck-app/Deck/Resources/deck_data.json
 deck-app/Deck/Resources/overview.json
 deck-app/Deck/Resources/mixmap.html
+# catalogtool's compiled program, made beside its source by tools/prep_data.py when needed
+deck-app/tools/catalogtool/catalogtool
 # credentials
 .env
 *.p8

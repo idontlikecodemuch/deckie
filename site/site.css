@@ -1,5 +1,5 @@
 /* Deckie: one stylesheet for the home page and the dictionary.
-   The look comes from Deckie Booth's Simple view (deck-app, Theme and SuggestionsView):
+   The look comes from the iPad app's Simple view (deck-app, Theme and SuggestionsView):
    a flat near-black page, soft filled surfaces with no outline, large radii, pill controls,
    and one accent used sparingly. The token table is in docs/research/v-explainer-video-and-page.md, 7i. */
 @font-face { font-family: "Pacifico"; src: url(fonts/pacifico.woff2) format("woff2"); font-weight: 400; font-display: swap; }
@@ -78,7 +78,7 @@ li, dd { text-wrap: pretty; }
 .btn.quiet { background: var(--control); color: var(--tx); }
 .btn.quiet:hover { background: var(--control-hi); }
 
-/* home: the top. Deckie Booth's Listen view: the playing panel on the left at 42 percent of the width, a gap of
+/* home: the top. The iPad app's Listen view: the playing panel on the left at 42 percent of the width, a gap of
    52, the picks on the right. The panel is the app's: radius 24, the accent at 24 to 8 percent over Theme.card,
    padded 30 at the sides. Here it holds the name and the copy; the film sits where the picks are. */
 .hero { padding-block: clamp(20px, 3vw, 40px) 0; display: grid; gap: 28px; grid-template-columns: 1fr; align-items: start; }
@@ -271,7 +271,7 @@ footer .planned { font-size: 0.75rem; }
 .lost .cta { margin-top: 28px; }
 
 /* ---------------------------------------------------------------- round twelve: tiles in the manner of a pick */
-/* Deckie Booth's pick card: white at 4.5 percent, radius 16, padded 20 by 14; a small top line in the disc's colour,
+/* The iPad app's pick card: white at 4.5 percent, radius 16, padded 20 by 14; a small top line in the disc's colour,
    the title semibold, the tempo and pitch line in amber, the move in the muted grey; a pinned card has a bar at its left. */
 .pick { background: var(--surface); border-radius: var(--r-card); padding: 18px 20px 20px; position: relative; }
 .pick .top { font-size: 0.875rem; font-weight: 600; color: #a394d6; margin: 0 0 4px; }

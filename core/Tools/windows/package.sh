@@ -7,6 +7,7 @@
 #   bash core/Tools/windows/icon.sh <icon folder>         (the icon, as files a linker takes: icon.sh)
 #   swift build -c release --product deckie-make          (in core/)
 #   swift build -c release --product deckie-desk-engine   (in core/)
+#   swift build -c release --product deckie-listen        (in core/)
 #   swift build -c release -Xlinker <icon folder>/desk.res   (in desk-shell/: deckie-desk, with its icon linked in)
 #   bash core/Tools/fetch-onnxruntime.sh --deckie         (Deckie's own build of ONNX Runtime, no reporting client)
 #   bash core/Tools/fetch-models.sh --no-export           (the two pinned models)
@@ -23,7 +24,9 @@
 #                                  console window opens when the window starts it
 #     app/desk-web/                the pages the window shows (desk-web/: every .html, .css and .js)
 #     app/deckie-make.exe          the program without a window (core/Sources/deckie-make), a console program
-#     app/*.dll                    Swift's runtime libraries, exactly those the three programs need (read from the
+#     app/deckie-listen.exe        the command-line listening tool (core/Sources/deckie-listen), a console program, for
+#                                  troubleshooting a tester's microphone: its inputs (--inputs), and a crate heard live
+#     app/*.dll                    Swift's runtime libraries, exactly those the four programs need (read from the
 #                                  program files' own import tables by pe_imports.py), and onnxruntime.dll
 #     app/models/                  beat_this_final0.onnx, yamnet.onnx, and the learned key reader's
 #                                  deckie-key-<version>.f16 when core/.models has it (optional)
@@ -72,6 +75,8 @@ exe="$core/.build/release/deckie-make.exe"
 [ -f "$exe" ] || die "build first: swift build -c release --product deckie-make (looked for $exe)"
 engine="$core/.build/release/deckie-desk-engine.exe"
 [ -f "$engine" ] || die "build first: swift build -c release --product deckie-desk-engine (looked for $engine)"
+listen="$core/.build/release/deckie-listen.exe"
+[ -f "$listen" ] || die "build first: swift build -c release --product deckie-listen (looked for $listen)"
 window="$repo/desk-shell/.build/release/deckie-desk.exe"
 [ -f "$window" ] || die "build first, in desk-shell: swift build -c release -Xlinker <icon folder>/desk.res (looked for $window)"
 pages="$repo/desk-web"
@@ -91,6 +96,7 @@ mkdir -p "$app/models" "$app/licences"
 cp "$exe" "$app/deckie-make.exe"
 cp "$engine" "$app/deckie-desk-engine.exe"
 cp "$window" "$app/deckie-desk.exe"
+cp "$listen" "$app/deckie-listen.exe"
 mkdir -p "$app/desk-web"
 # Every page file, whatever is added later (the run screen's run.js was once left out, and the window drew nothing).
 cp "$pages"/*.html "$pages"/*.css "$pages"/*.js "$app/desk-web/"
@@ -98,7 +104,7 @@ cp "$pages"/*.html "$pages"/*.css "$pages"/*.js "$app/desk-web/"
 for f in $(grep -o -E '(src|href)="[^"#:]+"' "$pages/index.html" | sed -E 's/^[a-z]+="//; s/"$//'); do
   [ -f "$app/desk-web/$f" ] || die "the pages name $f, which is not in the zip"
 done
-# The window and its engine open no console window (pe_kind.py); deckie-make stays a console program.
+# The window and its engine open no console window (pe_kind.py); deckie-make and deckie-listen stay console programs.
 "$py" "$here/pe_kind.py" --set window "$app/deckie-desk.exe" "$app/deckie-desk-engine.exe" >/dev/null
 cp "$ort/lib/onnxruntime.dll" "$app/onnxruntime.dll"
 cp "$core/.models/beat_this_final0.onnx" "$core/.models/yamnet.onnx" "$app/models/"
@@ -127,7 +133,7 @@ for d in "${dirs[@]}"; do
 done
 [ ${#closure[@]} -gt 0 ] || die "Swift's runtime libraries (swiftCore.dll) are not on PATH"
 "$py" "$here/pe_imports.py" "${closure[@]}" "$app/deckie-make.exe" "$app/deckie-desk.exe" "$app/deckie-desk-engine.exe" \
-    "$app/onnxruntime.dll" | tr -d '\r' > "$out/imports.txt"
+    "$app/deckie-listen.exe" "$app/onnxruntime.dll" | tr -d '\r' > "$out/imports.txt"
 ship_vc="${DECKIE_SHIP_VC_RUNTIME:-1}"
 vc_names='^(msvcp140|vcruntime140|concrt140)'
 if [ "$ship_vc" != 1 ]; then
@@ -163,10 +169,10 @@ starter "Deckie Desk.exe" "$icon/desk.res" windows -DDECKIE_DESK
 # What each program is, checked: Deckie Desk, its window and its engine open no console window; the two starters
 # and the window carry the icon.
 "$py" "$here/pe_kind.py" "$root/Deckie Desk.exe" "$root/Make Crate File.exe" "$app/deckie-desk.exe" \
-    "$app/deckie-desk-engine.exe" "$app/deckie-make.exe" | tr -d '\r' > "$out/kinds.txt"
+    "$app/deckie-desk-engine.exe" "$app/deckie-make.exe" "$app/deckie-listen.exe" | tr -d '\r' > "$out/kinds.txt"
 cat "$out/kinds.txt"
 for want in "Deckie Desk.exe: window icon" "Make Crate File.exe: console icon" "deckie-desk.exe: window icon" \
-            "deckie-desk-engine.exe: window" "deckie-make.exe: console"; do
+            "deckie-desk-engine.exe: window" "deckie-make.exe: console" "deckie-listen.exe: console"; do
     grep -q -F "$want" "$out/kinds.txt" || die "expected \"$want\" (see above); deckie-desk must be built with -Xlinker <icon folder>/desk.res"
 done
 
@@ -275,6 +281,7 @@ PY
     fi
     echo "| The pages | \`app/desk-web\`, $(du -sb "$app/desk-web" | cut -f1) bytes |"
     echo "| The program without a window | \`app/deckie-make.exe\`, $(wc -c < "$app/deckie-make.exe") bytes |"
+    echo "| The listening tool (for a microphone that will not listen) | \`app/deckie-listen.exe\`, $(wc -c < "$app/deckie-listen.exe") bytes |"
     echo "| The starters | \`Deckie Desk.exe\`, $(wc -c < "$root/Deckie Desk.exe") bytes; \`Make Crate File.exe\`, $(wc -c < "$root/Make Crate File.exe") bytes |"
     echo "| Console window or not, icon or not | $(tr '\n' ';' < "$out/kinds.txt" | sed 's/;$//; s/;/; /g') |"
     echo "| The icon | \`deckie.ico\`, $(wc -c < "$icon/deckie.ico") bytes, SHA-256 \`$(sha256sum "$icon/deckie.ico" | cut -d' ' -f1)\` (made in this run, not committed) |"

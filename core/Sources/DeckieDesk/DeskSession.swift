@@ -513,7 +513,7 @@ public final class DeskSession {
 
     /// Whether this computer hands a crate file out as one file (docs/architecture/crate-format.md, "The single-file
     /// form"): true on Windows and Linux, where a package is only a folder and awkward to send to an iPad; false on
-    /// the Mac, where Finder and AirDrop move a package as one document. Deckie Booth opens both forms.
+    /// the Mac, where Finder and AirDrop move a package as one document. The iPad app opens both forms.
     public static var exportsSingleFile: Bool {
         #if os(Windows) || os(Linux)
         return true

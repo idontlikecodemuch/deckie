@@ -69,7 +69,7 @@
     new IntersectionObserver(function (es) { root.classList.toggle('past-wordmark', !es[0].isIntersecting); }, { rootMargin: '-64px 0px 0px 0px' }).observe(big);
   }
 
-  // 3. A faint waveform, fixed behind the page: mirrored bars, as Deckie Booth draws a song. It is made from
+  // 3. A faint waveform, fixed behind the page: mirrored bars, as the iPad app draws a song. It is made from
   //    arithmetic, not from any recording. It drifts slowly; it stands still under reduced motion and stops while
   //    the tab is hidden.
   var c = document.createElement('canvas'); c.id = 'wave'; c.setAttribute('aria-hidden', 'true');

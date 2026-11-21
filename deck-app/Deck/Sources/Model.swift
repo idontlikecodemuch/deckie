@@ -355,7 +355,7 @@ final class Library {
         guard let p = UserDefaults.standard.string(forKey: "cratePath"), FileManager.default.fileExists(atPath: p) else { return nil }
         return URL(fileURLWithPath: p)
     }
-    /// The first crate file in the app's Documents folder (Files app > On My iPad > Deckie Booth): `.deckie`, or one
+    /// The first crate file in the app's Documents folder (Files app > On My iPad > Deckie; the folder is the app's own and keeps its files whatever the app is called): `.deckie`, or one
     /// made earlier as `.deckiecrate`.
     static var crateInDocuments: URL? {
         guard let docs = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first,

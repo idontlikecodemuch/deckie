@@ -176,7 +176,7 @@ enum Words {
     static func pitchMultiple(_ m: String) -> String { b("pick.pitch.multiple", ["m": m]) }
     static let pitchNA = b("pick.pitch.na")
     static func pitchAside(_ pitch: String) -> String { b("pick.pitch.aside", ["pitch": pitch]) }
-    /// A pick's move line: "blend", "echo out · key clash", "no beat-match · brake".
+    /// A pick's move line: "blend", "echo out · keys may clash", "no beat-match · brake".
     static let noBeatMatch = b("pick.noBeatMatch")
     static let keyClash = b("pick.keyClash")
     /// The brake move's label, and the shorter word the move line uses for it.
@@ -241,7 +241,7 @@ enum Words {
         case "neighbour": return "neighbour key"
         case "relative": return "relative key"
         case "boost": return "key boost"
-        case "clash": return "keys clash"
+        case "clash": return "keys may clash"
         case "key unsure": return "key unsure"
         default: return v
         }

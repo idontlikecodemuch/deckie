@@ -1,6 +1,6 @@
 import Foundation
 
-/// One part of someone else's work inside Deckie Booth, as the Credits sheet shows it: its name, version and licence
+/// One part of someone else's work inside Deckie (the iPad app), as the Credits sheet shows it: its name, version and licence
 /// as the licence names itself, the licence's own text, and for a model what it was trained on.
 ///
 /// An entry is added here when the part ships in Booth's binary, with the same name, version and licence as its row in

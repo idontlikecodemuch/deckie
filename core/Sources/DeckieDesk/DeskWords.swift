@@ -121,7 +121,8 @@ public enum DeskWords {
         "takeBackOut": "Take this back out",
 
         // while it works
-        "runTitle": "Reading your crate",
+        // The reading screen's title names what is read (the owner's choice, Nov 21, 2026): "Reading Stick 3".
+        "runTitle": "Reading {read}",
         "runReading": "Adding {read} to {crate}",
         "runReading.same": "Adding the songs in {read}",
         "songsOf.one": "{done} of {total} song",
@@ -446,6 +447,8 @@ public enum DeskWords {
         "nameFromPart.user": "you",
         "nameFromPart.lab": "the lab",
         "nameFromJoin": " and ",
+        // Not shown for now (Nov 21, 2026): the Mac's song info hides its key changes, an older analysis that
+        // contradicts the song's key on about a quarter of songs. Kept for when a key-change reading is trusted.
         "rowKeyChanges": "Key changes",
         "keyFromBar": "{camelot} from bar {bar}",
         "rowLoudness": "Loudness",

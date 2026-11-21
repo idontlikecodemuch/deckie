@@ -149,7 +149,7 @@ func pickBPMLine(_ t: Track, _ pair: Pair?, _ ji: JoinInfo) -> String {
     guard let s = Library.shared.song(t) else { return Words.bpm(t.bpmShown) }
     return BoothJoin.bpmLine(s, pair, ji)
 }
-/// the move: "blend", "echo out · key clash", "no beat-match · brake" (the core's `BoothJoin.moveLine`)
+/// the move: "blend", "echo out · keys may clash", "no beat-match · brake" (the core's `BoothJoin.moveLine`)
 func pickMoveLine(_ pair: Pair?, _ ji: JoinInfo) -> String { BoothJoin.moveLine(pair, ji) }
 
 struct PickControls: View {

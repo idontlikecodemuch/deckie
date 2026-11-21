@@ -197,3 +197,5 @@ What is in this folder
     app                   the parts they need; leave them where they are
     app\licences          the licences of the parts Deckie uses that others
                           made, and the acknowledgements
+    app\deckie-listen     a tool for checking a microphone, run from a command
+                          window if the person helping you asks for it

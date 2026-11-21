@@ -156,7 +156,9 @@ public enum CrateArchive {
         if count == 0xFFFF || centralSize == 0xFFFF_FFFF || centralOffset == 0xFFFF_FFFF {
             // zip64: the locator sits just before the end record and points at the zip64 end record.
             let locator = end - 20
-            guard locator >= 0, u32(locator) == 0x0706_4B50, let z = Int(exactly: u64(locator + 8)), z >= 0, z + 56 <= locator,
+            // Offsets read from the file are compared by subtraction, never added, so a crafted value near the top of
+            // the range is refused rather than overflowing.
+            guard locator >= 0, u32(locator) == 0x0706_4B50, let z = Int(exactly: u64(locator + 8)), z >= 0, z <= locator - 56,
                   u32(z) == 0x0606_4B50, let n = Int(exactly: u64(z + 32)), let size = Int(exactly: u64(z + 40)),
                   let offset = Int(exactly: u64(z + 48)) else {
                 throw fail("is damaged (its table of contents cannot be found)")
@@ -164,7 +166,8 @@ public enum CrateArchive {
             (count, centralSize, centralOffset) = (n, size, offset)
             end = z
         }
-        guard centralOffset >= 0, centralSize >= 0, centralOffset + centralSize <= end, count <= centralSize / 46 + 1 else {
+        guard centralOffset >= 0, centralSize >= 0, centralOffset <= end, centralSize <= end - centralOffset,
+              count <= centralSize / 46 + 1 else {
             throw fail("is damaged (its table of contents does not fit the file)")
         }
 

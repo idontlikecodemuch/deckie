@@ -533,20 +533,26 @@
       let pickAt = 0, fadeRaf = 0;   // when the row was pointed at, for its wave's fade
       /// How far the pointed-at row's wave has faded, 0 to 1: at once under reduced motion.
       const faded = () => (reduced() ? 1 : Math.min(1, (performance.now() - pickAt) / Math.max(1, time("--t-fade"))));
-      /// The pointed-at row's words, centred: the name, then its facts in the quieter colour when the whole line fits;
-      /// else the name alone, shortened with an ellipsis if it must be.
+      /// The pointed-at row's words, centred: the name, then its facts in a lighter weight and a colour that reads on
+      /// the highlight (--wall-pick-facts) when the whole line fits; else the name alone, shortened with an ellipsis if
+      /// it must be.
       function drawRowName(ctx, s, w, mid, dpr) {
         const name = rowName(s), sep = t("join.wallSong"), rest = sep + rowFacts(s).join(sep);
         const room = w - 2 * num("--wall-name-pad") * dpr;
         if (room <= 0) return;
-        ctx.font = `${css("--fw-wall-name")} ${num("--fs-note") * dpr}px ${css("--body")}`;
+        const size = `${num("--fs-note") * dpr}px ${css("--body")}`;
+        const nameFont = `${css("--fw-wall-name")} ${size}`, factsFont = `${css("--fw-wall-facts")} ${size}`;
         ctx.textBaseline = "middle";
         ctx.textAlign = "left";
-        const wName = ctx.measureText(name).width, wRest = ctx.measureText(rest).width;
+        ctx.font = factsFont;
+        const wRest = ctx.measureText(rest).width;
+        ctx.font = nameFont;
+        const wName = ctx.measureText(name).width;
         if (wName + wRest <= room) {
           const x = Math.round((w - wName - wRest) / 2);
           ctx.fillStyle = css("--tx"); ctx.fillText(name, x, mid);
-          ctx.fillStyle = css("--mut"); ctx.fillText(rest, x + wName, mid);
+          ctx.font = factsFont;
+          ctx.fillStyle = css("--wall-pick-facts"); ctx.fillText(rest, x + wName, mid);
           return;
         }
         let text = name;

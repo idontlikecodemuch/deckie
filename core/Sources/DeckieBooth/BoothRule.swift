@@ -399,8 +399,8 @@ public struct BoothRule: Sendable {
         events.append(ev)
         if events.count > 12 { events.removeFirst(events.count - 12) }
 
-        // hysteresis: a new song takes over only after it has out-matched the current one for ~10 s (the first party's DJ blends for
-        // long stretches); while both are heard the current one stays, with a note.
+        // hysteresis: a new song takes over only after it has out-matched the current one for ~10 s (the first party's DJ
+        // blends for long stretches); while both are heard the current one stays, with a note.
         if id != currentId {
             if currentId == nil {
                 lastCurrentMatch = now

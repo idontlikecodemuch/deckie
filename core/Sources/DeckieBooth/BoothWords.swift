@@ -34,9 +34,9 @@ public enum BoothWords {
         "pick.bpmChange": "{from}→{to} BPM",
         "pick.pitchAfterBPM": "{bpm} · pitch {pitch}%",
         "pick.tempoMultiple": " (x{m})",
-        // A pick's move line: "blend", "echo out · key clash", "no beat-match · brake".
+        // A pick's move line: "blend", "echo out · keys may clash", "no beat-match · brake".
         "pick.noBeatMatch": "no beat-match",
-        "pick.keyClash": "key clash",
+        "pick.keyClash": "keys may clash",
         "pick.brake": "brake",
         "pick.movesJoin": " / ",
         "pick.moveLineJoin": " · ",

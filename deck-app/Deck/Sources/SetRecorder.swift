@@ -2,7 +2,7 @@ import AVFoundation
 import Foundation
 
 /// Records the set while the app listens: the same audio buffers that feed recognition (one engine, one tap)
-/// are encoded to AAC (128 kbps) in Documents/Sets/"Deck set <start>.aac", plus a running log of what was
+/// are encoded to AAC (128 kbps) in Documents/Sets/"Deckie set <start>.aac" ("Deck set" before Nov 21, 2026; nothing reads the name back), plus a running log of what was
 /// recognised: "<name> log.json" (rewritten atomically after every change, always valid) and
 /// "<name> tracklist.txt" (one line appended per song). ADTS .aac is used instead of .m4a because an .m4a is
 /// unreadable until it is closed properly; an ADTS stream keeps everything up to the last buffer if the app quits.
@@ -53,7 +53,7 @@ final class SetRecorder: @unchecked Sendable {
     func begin(format: AVAudioFormat, hearing: String? = nil) throws {
         finish()
         let f = DateFormatter(); f.dateFormat = "yyyy-MM-dd HH-mm-ss"
-        let name = "Deck set \(f.string(from: Date()))"
+        let name = "Deckie set \(f.string(from: Date()))"
         let url = SetRecorder.folder.appendingPathComponent(name + ".aac")
         let ch = min(2, Int(format.channelCount))
         let settings: [String: Any] = [AVFormatIDKey: kAudioFormatMPEG4AAC, AVSampleRateKey: format.sampleRate,
@@ -65,7 +65,7 @@ final class SetRecorder: @unchecked Sendable {
             log = Log(started: iso.string(from: Date()), audioFile: name + ".aac", entries: [], hearing: hearing)
         }
         writeLog()
-        let header = "Deck set recorded \(iso.string(from: Date()))\naudio: \(name).aac\n\n"
+        let header = "Deckie set recorded \(iso.string(from: Date()))\naudio: \(name).aac\n\n"
         try? header.write(to: SetRecorder.folder.appendingPathComponent(name + " tracklist.txt"), atomically: true, encoding: .utf8)
     }
 

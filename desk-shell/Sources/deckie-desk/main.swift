@@ -80,17 +80,27 @@ let engineName = "deckie-desk-engine.exe"
 #else
 let engineName = "deckie-desk-engine"
 #endif
-/// The checkout this was built in (desk-shell/.build/<config>/deckie-desk), for running from a build folder.
-let checkout = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent()
-    .deletingLastPathComponent().deletingLastPathComponent()
-func firstThere(_ candidates: [URL]) -> URL? { candidates.first { FileManager.default.fileExists(atPath: $0.path) } }
+/// A checkout to run from a build folder (desk-shell/.build/<config>/deckie-desk): the one DECKIE_CHECKOUT names (the
+/// repository's top folder); else, in a debug build, the one this was built in, from this file's path at build time.
+/// A release build carries no path of the machine that built it: without the variable it finds the engine and the
+/// pages beside itself, as the Windows zip lays them out (desk-shell/build-release-mac.sh sets the variable).
+let checkout: URL? = {
+    if let top = env["DECKIE_CHECKOUT"], !top.isEmpty { return URL(fileURLWithPath: top, isDirectory: true) }
+    #if DEBUG
+    return URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent()
+        .deletingLastPathComponent().deletingLastPathComponent()
+    #else
+    return nil
+    #endif
+}()
+func firstThere(_ candidates: [URL?]) -> URL? { candidates.compactMap { $0 }.first { FileManager.default.fileExists(atPath: $0.path) } }
 
 let engine = option("--engine").map { URL(fileURLWithPath: $0) } ?? env["DECKIE_DESK_ENGINE"].map { URL(fileURLWithPath: $0) }
     ?? firstThere([here.appendingPathComponent(engineName),
-                   checkout.appendingPathComponent("core/.build/release").appendingPathComponent(engineName),
-                   checkout.appendingPathComponent("core/.build/debug").appendingPathComponent(engineName)])
+                   checkout?.appendingPathComponent("core/.build/release").appendingPathComponent(engineName),
+                   checkout?.appendingPathComponent("core/.build/debug").appendingPathComponent(engineName)])
 let pages = option("--pages").map { URL(fileURLWithPath: $0, isDirectory: true) }
-    ?? firstThere([here.appendingPathComponent("desk-web", isDirectory: true), checkout.appendingPathComponent("desk-web", isDirectory: true)])
+    ?? firstThere([here.appendingPathComponent("desk-web", isDirectory: true), checkout?.appendingPathComponent("desk-web", isDirectory: true)])
 
 guard let engine, FileManager.default.fileExists(atPath: engine.path) else {
     Notice.say("deckie-desk: the engine program (\(engineName)) was not found; give it with --engine")
