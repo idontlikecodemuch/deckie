@@ -24,15 +24,17 @@ struct ContentView: View {
             // The crate's icon and name, always; a click renames it (research AE). The menu beside it switches crates.
             ToolbarItem(placement: .navigation) { HStack { CrateName(); CrateMenu() }.controlSize(Look.Toolbar.controlSize) }
             // The listening mode's switch (Booth.swift), for a crate with songs.
+            // Lit while Booth shows (its ground's colour), as the pages' switch.
             ToolbarItem(placement: .navigation) {
                 if model.crate != nil {
-                    Toggle(isOn: $model.boothOn) { Label(Words.t("booth.mode"), systemImage: "ear") }
-                        .toggleStyle(.button).help(Words.t("booth.modeHelp")).controlSize(Look.Toolbar.controlSize)
+                    Toggle(isOn: $model.boothOn) { Label(Words.t("booth.mode"), systemImage: model.boothOn ? "dot.radiowaves.left.and.right" : "ear") }
+                        .toggleStyle(.button).tint(BoothLook.ground.on).help(Words.t("booth.modeHelp")).controlSize(Look.Toolbar.controlSize)
                 }
             }
+            // The crate's editing buttons leave the toolbar while Booth shows, as on the pages.
             ToolbarItemGroup(placement: .primaryAction) {
-                AddMusicMenu().controlSize(Look.Toolbar.controlSize)
-                if model.crate != nil {
+                if !model.boothOn { AddMusicMenu().controlSize(Look.Toolbar.controlSize) }
+                if model.crate != nil && !model.boothOn {
                     Menu {
                         Button(Words.t("pasteList")) { model.tool = "paste" }
                         Button(Words.t("namesFromFileNames")) { model.tool = "pattern" }
@@ -58,6 +60,10 @@ struct ContentView: View {
                 }
             }
         }
+        // Booth's ground reaches the toolbar too (the owner's, Nov 21, 2026: obvious which mode is showing).
+        .toolbarBackground(model.boothOn ? BoothLook.ground.bar : Color.clear, for: .windowToolbar)
+        .toolbarBackground(model.boothOn ? .visible : .automatic, for: .windowToolbar)
+        .toolbarColorScheme(model.boothOn ? .dark : nil, for: .windowToolbar)
         .onAppear { model.undoManager = undoManager }
         .onChange(of: undoManager) { _, u in model.undoManager = u }
         .sheet(isPresented: $model.showImportLog) { ImportLogView() }

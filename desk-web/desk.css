@@ -11,16 +11,120 @@
    percentages that place a keyframe, and the marks drawn with `content`, which are words (desk.js hands them in from
    DeskWords as --glyph-*). */
 :root {
-  /* ---- the listening mode (booth.css; research booth-in-desk, step 1): kept together here, apart from the rest */
-  --booth-pad: 32px 40px; --booth-gap: 20px; --booth-max-w: 880px;
-  --booth-song-size: 44px; --booth-song-lh: 1.1; --booth-artist-size: 22px; --booth-facts-size: 18px;
-  --booth-fact-gap: 28px; --booth-card-pad: 32px 36px; --booth-card-min-h: 180px; --booth-empty-opacity: 0.45;
-  --booth-meter-w: 260px; --booth-meter-h: 10px; --booth-meter-r: 999px;
-  --booth-meter-bg: rgba(255, 255, 255, 0.08); --booth-meter-fill: #b490ff; --booth-meter-clip: #ffb35c;
-  --booth-meter-time: 120ms; --booth-input-gap: 10px; --booth-select-pad: 6px 12px; --booth-select-r: 12px;
+  /* ---- Booth, the listening mode (booth.css, booth.js; the designed screen, step 3, D44): kept together here, apart
+     from the rest. Mirrored on the Mac in Look.swift's BoothLook.
+
+     The ground. While Booth shows, the whole window takes Booth's ground, the page and the bar at the top, so listening
+     is never taken for the crate side (the owner's decision, Nov 21, 2026: the background changes between the two modes); the heading saying Booth and the lit switch say it too, so it never rests on colour alone. Three grounds,
+     for the owner to choose; the lines under "the ground shown" pick one (change -a to -b or -c in all of them):
+       a, violet (the one recommended): the window floods with a deep violet, the accent's own colour, the bar a
+          brighter band of it; a soft glow behind the song follows the level while listening.
+       b, on air: a deep warm red, like a studio's ON AIR light, the switch lit coral.
+       c, stage: darker than the crate side, nearly black, with the song's card lit like a stage.
+     On each ground, checked by hand: the text (--tx) 13:1 or more on the page and 10:1 on the bar; the quiet text
+     (--booth-mut) 8:1 on the page and 6.5:1 on the song's card; the dimmest (--booth-dim) 5.9:1; the switch's ink on
+     its light 6.7:1 or more. */
+  --booth-ground-a: linear-gradient(180deg, #2c1762 0%, #1d0f45 100%);
+  --booth-bar-a: #3a2180; --booth-bar-line-a: rgba(180, 144, 255, 0.5);
+  --booth-card-a: rgba(255, 255, 255, 0.09); --booth-card-edge-a: rgba(196, 168, 255, 0.35);
+  --booth-surface-a: rgba(255, 255, 255, 0.07);
+  --booth-glow-a: rgba(180, 144, 255, 0.55);
+  --booth-on-a: #b490ff; --booth-on-ink-a: #160f22; --booth-live-a: #8fe3a2;
+  --booth-mut-a: #c8bce4; --booth-dim-a: #a89cc8;
+  --booth-wave-played-a: #ddd0ff; --booth-wave-ahead-a: rgba(180, 144, 255, 0.55); --booth-wave-quiet-a: rgba(180, 144, 255, 0.25);
+  --booth-playhead-a: #ffffff;
+  --booth-ground-b: linear-gradient(180deg, #3a0f14 0%, #24080b 100%);
+  --booth-bar-b: #4a1219; --booth-bar-line-b: rgba(255, 107, 90, 0.55);
+  --booth-card-b: rgba(255, 255, 255, 0.08); --booth-card-edge-b: rgba(255, 138, 120, 0.4);
+  --booth-surface-b: rgba(255, 255, 255, 0.06);
+  --booth-glow-b: rgba(255, 90, 70, 0.5);
+  --booth-on-b: #ff6b5a; --booth-on-ink-b: #250607; --booth-live-b: #ffd0c8;
+  --booth-mut-b: #e0c2c0; --booth-dim-b: #c4a2a0;
+  --booth-wave-played-b: #ffd8cf; --booth-wave-ahead-b: rgba(255, 138, 120, 0.55); --booth-wave-quiet-b: rgba(255, 138, 120, 0.25);
+  --booth-playhead-b: #ffffff;
+  --booth-ground-c: radial-gradient(ellipse at 28% 40%, #171226 0%, #050307 62%);
+  --booth-bar-c: #000000; --booth-bar-line-c: rgba(255, 255, 255, 0.14);
+  --booth-card-c: #2a2244; --booth-card-edge-c: rgba(236, 228, 255, 0.5);
+  --booth-surface-c: rgba(255, 255, 255, 0.045);
+  --booth-glow-c: rgba(236, 228, 255, 0.32);
+  --booth-on-c: #f2edf9; --booth-on-ink-c: #0f0a17; --booth-live-c: #8fe3a2;
+  --booth-mut-c: #b3a8c8; --booth-dim-c: #978bb0;
+  --booth-wave-played-c: #ece4ff; --booth-wave-ahead-c: rgba(180, 144, 255, 0.6); --booth-wave-quiet-c: rgba(180, 144, 255, 0.25);
+  --booth-playhead-c: #ffc040;
+  /* the ground shown */
+  --booth-ground: var(--booth-ground-a);
+  --booth-bar: var(--booth-bar-a); --booth-bar-line: var(--booth-bar-line-a);
+  --booth-card: var(--booth-card-a); --booth-card-edge: var(--booth-card-edge-a);
+  --booth-surface: var(--booth-surface-a);
+  --booth-glow: var(--booth-glow-a);
+  --booth-on: var(--booth-on-a); --booth-on-ink: var(--booth-on-ink-a); --booth-live: var(--booth-live-a);
+  --booth-mut: var(--booth-mut-a); --booth-dim: var(--booth-dim-a);
+  --booth-wave-played: var(--booth-wave-played-a); --booth-wave-ahead: var(--booth-wave-ahead-a); --booth-wave-quiet: var(--booth-wave-quiet-a);
+  --booth-playhead: var(--booth-playhead-a);
+  /* colours the grounds share: a pick's tempo line (the iPad's amber), the move when keys may clash, an input
+     giving no sound */
+  --booth-tempo: var(--amber); --booth-clash: var(--warn); --booth-note-warn: var(--warn);
   --booth-error: #ffb4c4;
-  /* the picks' first look (step 2; the designed screen is step 3) */
-  --booth-pick-gap: 10px; --booth-pick-pad: 12px 16px; --booth-pick-size: 16px;
+  --booth-meter-bg: rgba(255, 255, 255, 0.1); --booth-meter-fill: var(--booth-on); --booth-meter-clip: #ffb35c;
+
+  /* the layout: a head (the name, what it is doing, the way back), the song and its picks side by side (one above the
+     other in a window narrower than 860px), and the foot */
+  --booth-pad: 20px 32px 16px; --booth-gap: 18px; --booth-max-w: 1320px;
+  --booth-cols: minmax(0, 1.05fr) minmax(0, 1fr); --booth-col-gap: 28px;
+  --booth-cols-narrow: minmax(0, 1fr); --booth-card-min-h-narrow: 0;
+  --booth-head-gap: 14px; --booth-heading-gap: 14px; --booth-sub-above: 2px;
+  --fs-booth-heading: 34px; --fs-booth-sub: 15px;
+  --booth-live-pad: 4px 12px; --booth-live-gap: 8px; --fs-booth-live: 13px; --fw-booth-live: 650;
+  --booth-live-dot: 10px; --booth-live-bg: rgba(255, 255, 255, 0.08);
+  --fs-booth-leave: 16px; --booth-leave-pad: 9px 20px;
+  /* the switch in the bar, lit while Booth shows: its dot */
+  --booth-button-dot: 9px; --booth-button-dot-gap: 8px; --booth-button-dot-off: rgba(255, 255, 255, 0.35);
+  /* now playing */
+  --booth-card-pad: 28px 32px 24px; --booth-card-r: var(--r-panel); --booth-card-line: 1px;
+  --booth-card-min-h: 360px; --booth-card-gap: 10px;
+  --fs-booth-group: 12px; --fw-booth-group: 650; --ls-booth-group: 0.08em;
+  --fs-booth-song: 46px; --lh-booth-song: 1.08; --booth-song-lines: 3;
+  --fs-booth-artist: 22px;
+  --booth-facts-gap: 12px 26px; --booth-facts-above: 8px;
+  --fs-booth-tempo: 30px; --fw-booth-tempo: 700;
+  --fs-booth-key: 24px; --fw-booth-key: 650;
+  --fs-booth-pitch: 18px; --fw-booth-pitch: 600;
+  --fs-booth-note: 16px;
+  --booth-quiet-opacity: 0.55;            /* not heard just now, paused or stopped: the song's names dimmed */
+  --booth-wave-h: 96px; --booth-wave-above: 14px; --booth-wave-room: 0.92;
+  --booth-playhead-w: 2;                  /* px (times the screen's scale) */
+  --fs-booth-times: 14px;
+  --fs-booth-wait: 30px; --fs-booth-state: 17px; --booth-wait-gap: 12px; --booth-wait-w: 34rem;
+  --booth-glow-size: 70%; --booth-glow-floor: 0.35; --booth-glow-range: 0.65; --booth-glow-blur: 60px;
+  --booth-glow-spread: 6%;                /* how far the glow reaches past the card */
+  --booth-level: 0;                       /* set by booth.js from the level, 0 to 1, while listening */
+  --t-booth-level: 200ms;                 /* the glow following it */
+  /* the picks */
+  --booth-picks-head-gap: 12px; --booth-list-gap: 8px; --booth-more-above: 10px;
+  --booth-pick-pad: 12px 16px; --booth-pick-r: var(--r-card); --booth-pick-gap: 14px; --booth-pick-lines: 2px;
+  --fs-booth-pick: 16px; --fw-booth-pick: 650; --fs-booth-pick-small: 14px;
+  --fs-booth-pick-line: 13.5px; --fs-booth-pick-keys: 14px; --fw-booth-pick-keys: 600;
+  --booth-tags-gap: 4px; --booth-line-gap: 14px;
+  --fs-booth-quiet: 14px;
+  --booth-dial-gap: 10px; --booth-dial-w: 180px; --fs-booth-dial: 13px; --booth-dial-value-w: 3.2em;
+  --booth-shuffle-start: 0.5;             /* the iPad's own start */
+  --booth-shuffle-step: 0.05;             /* the iPad's step */
+  --booth-few-songs: 10;                  /* fewer songs than this that can be named: the picks are few, and it says so */
+  --booth-pitch-shown: 0.25;              /* percent: a pitch this far from zero is shown (the iPad's) */
+  /* the foot */
+  --booth-foot-gap: 6px 18px; --booth-foot-pad: 12px 0 0;
+  --booth-input-gap: 10px; --booth-select-pad: 6px 12px; --booth-select-r: 12px;
+  --booth-meter-w: 220px; --booth-meter-h: 8px; --booth-meter-r: 999px;
+  --booth-meter-time: 0s;                 /* the level jumps (five times a second): a window not in front gives no frames */
+  --fs-booth-privacy: 12.5px;
+  /* motion: a new song rises in, new picks fade in one after another (none under reduced motion) */
+  --t-booth-arrive: 600ms; --booth-rise: 10px; --ease-booth: cubic-bezier(.2, .7, .2, 1);
+  --t-booth-pick: 360ms; --booth-t-stagger: 40ms;
+  --booth-t-arrive: 600;                  /* milliseconds, for booth.js: how long the arrival's class stays */
+  --booth-t-enter-done: 1200;             /* milliseconds, for booth.js: the picks' fade-in class goes after this */
+  --booth-tick: 250;                     /* milliseconds between moves of the song's place */
+  --t-booth-live: 1.6s;                   /* the live dot's slow beat */
+  --booth-live-dim: 0.45;
 
   /* ---- colour */
   --bg: #0f0a17;
@@ -548,6 +652,9 @@ main { flex: 1; min-height: 0; display: flex; flex-direction: column; }
 .run-list .log { max-height: var(--run-list-max-h); margin-top: var(--run-list-gap); }
 .finished .wall-card { max-width: var(--finished-wall-max-w); width: 100%; }
 @media (max-width: 860px) { .figures { grid-template-columns: var(--figures-cols-narrow); } .stage { flex-direction: column; align-items: stretch; } .stage-wave { width: 100%; } }
+/* Booth (booth.css) in a narrow window: the song above its picks, the whole screen scrolling (one step more specific
+   than booth.css's rules, which load after this file). */
+@media (max-width: 860px) { .screen.booth { overflow: auto; } .booth .booth-body { flex: none; grid-template-columns: var(--booth-cols-narrow); } .booth .booth-picks { overflow: visible; } .booth .booth-card { min-height: var(--booth-card-min-h-narrow); } }
 
 /* moments: a second or two of motion, never a pop-up (none at all under reduced motion) */
 @media (prefers-reduced-motion: no-preference) {

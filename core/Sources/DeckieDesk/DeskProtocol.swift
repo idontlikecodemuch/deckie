@@ -222,7 +222,7 @@ public final class DeskProtocol: @unchecked Sendable {
         lock.lock(); defer { lock.unlock() }
         let readOnly: Set<String> = ["state", "drives.list", "crate.songs", "source.removeCount", "run.nameDisc", "name.split",
                                      "song.audio", "song.cover", "lookup.sent", "run.stop", "crate.rename", "add.countStop",
-                                     "booth.inputs", "booth.stop"]
+                                     "booth.inputs", "booth.stop", "booth.shuffle"]
         if running && !readOnly.contains(type) { fail(id, "busy", "a run is going"); return true }
         if lookingUp && !readOnly.contains(type) && type != "lookup.stop" { fail(id, "busy", "a lookup is going"); return true }
         do {
@@ -268,7 +268,7 @@ public final class DeskProtocol: @unchecked Sendable {
         switch type {
         case "state":
             reply(id); sendState(); sendSongs()
-        case "booth.inputs", "booth.listen", "booth.stop":
+        case "booth.inputs", "booth.listen", "booth.stop", "booth.shuffle":
             try boothRequest(type, obj, id)
         case "crate.show":
             stopBooth()
