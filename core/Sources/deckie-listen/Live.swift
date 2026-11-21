@@ -6,11 +6,12 @@ import DeckieCapture
 
 // deckie-listen --inputs
 //     the inputs this computer has, the system's default marked (opens nothing, asks no permission).
-// deckie-listen --live --crate <crate file> [--input NAME] [--seconds N] [--sound FILE] [--log FILE]
+// deckie-listen --live --crate <crate file> [--input NAME] [--seconds N] [--sound FILE] [--log FILE] [--record FILE]
 //     listens to an input (the system's default, or the one named) with the booth's listener and the crate's songs,
 //     and prints once a second: seconds heard, the input's level (average and loudest, dB below full scale), samples at
 //     full scale, and the song named (or "-"), with its place, how sure and the reading's milliseconds. The index is
 //     kept in the system's temporary folder by the crate's songs, so the second run opens at once.
+//     --record FILE: keeps exactly what was heard (32-bit float WAV at the input's own rate and channels), for replay.
 //     --sound FILE: a recording played as if heard, at the speed of sound, in place of an input (a check with no
 //     microphone). --log FILE: every reading and level, tab-separated, for measuring. Stops with Ctrl+C or after
 //     --seconds. The song shown is the listener's current named song (the iPad's switching rule is not applied).
@@ -86,9 +87,13 @@ func runLive(_ values: [String: String], _ flags: Set<String>) -> Never {
                            Date().timeIntervalSince(wall0)))
     }
     let capture = LiveCapture(source)
+    let recorder = values["--record"].map { Recorder(path: $0) }
     let format: SoundFormat
     do {
-        format = try capture.start(sound: { samples, f in booth.feed(samples, channels: f.channels, sampleRate: f.rate) },
+        format = try capture.start(sound: { samples, f in
+                                       recorder?.add(samples, f)
+                                       booth.feed(samples, channels: f.channels, sampleRate: f.rate)
+                                   },
                                    level: { l in
                                        state.lock.lock(); state.level = l; state.clippedSince += l.clipped; state.lock.unlock()
                                        state.write(String(format: "level\t%.2f\t\t\t\t\t\t%.1f\t%.1f\t%d\t%.2f", l.seconds, l.rmsDB, l.peakDB, l.clipped,
@@ -117,5 +122,41 @@ func runLive(_ values: [String: String], _ flags: Set<String>) -> Never {
     }
     capture.stop()
     booth.finish()
+    recorder?.queue.sync {}
     exit(0)
+}
+
+/// --record FILE: exactly what the listener was fed, as a 32-bit float WAV at the input's own rate and channels, for
+/// replaying a real room through other listeners. Written on a queue of its own; the header's sizes are kept right
+/// after every block, so a run stopped by a signal still leaves a whole file.
+final class Recorder: @unchecked Sendable {
+    let handle: FileHandle?
+    let queue = DispatchQueue(label: "deckie-listen.record")
+    var bytes: UInt32 = 0
+    var started = false
+    init(path: String) {
+        FileManager.default.createFile(atPath: path, contents: nil)
+        handle = FileHandle(forWritingAtPath: path)
+    }
+    func add(_ samples: [Float], _ f: SoundFormat) {
+        queue.async { [self] in
+            guard let h = handle else { return }
+            if !started {
+                started = true
+                var d = Data()
+                func u32(_ v: UInt32) { withUnsafeBytes(of: v.littleEndian) { d.append(contentsOf: $0) } }
+                func u16(_ v: UInt16) { withUnsafeBytes(of: v.littleEndian) { d.append(contentsOf: $0) } }
+                d.append(contentsOf: Array("RIFF".utf8)); u32(36); d.append(contentsOf: Array("WAVE".utf8))
+                d.append(contentsOf: Array("fmt ".utf8)); u32(16); u16(3); u16(UInt16(f.channels)); u32(UInt32(f.rate))
+                u32(UInt32(f.rate * f.channels * 4)); u16(UInt16(f.channels * 4)); u16(32)
+                d.append(contentsOf: Array("data".utf8)); u32(0)
+                h.write(d)
+            }
+            samples.withUnsafeBufferPointer { h.write(Data(buffer: $0)) }
+            bytes &+= UInt32(samples.count * 4)
+            func patch(_ at: UInt64, _ v: UInt32) { h.seek(toFileOffset: at); withUnsafeBytes(of: v.littleEndian) { h.write(Data($0)) } }
+            patch(4, 36 &+ bytes); patch(40, bytes)
+            h.seekToEndOfFile()
+        }
+    }
 }
