@@ -2,9 +2,10 @@ import Testing
 import Foundation
 import DeckieCore
 import DeckieLab
+import DeckieTestSupport
 
 // Parity of the structure port (Sources/DeckieCore/Structure) with the lab: every port runs on the inputs a committed
-// feature file holds and is compared with the outputs the same file holds, for all 373 tracks.
+// feature file holds and is compared with the outputs the same file holds, for every track of the lab's data (LabData).
 //
 // The files are rounded (times to 3 or 4 decimals, the grid period to 5, loudness to 2, probabilities to 3 or 4,
 // novelty to 3), so each tolerance below is the one that rounding allows, worked out per value. Where the lab compared
@@ -444,13 +445,13 @@ extension StructureTests {
         }
     }
 
-    // MARK: the 373 tracks
+    // MARK: every track of the lab's data
 
     @Test func barGridMatchesTheLab() {
         var t = Tally()
         for d in Self.tracks { Self.checkBars(d, &t) }
         t.report()
-        #expect(Self.tracks.count == 373)
+        #expect(!Self.tracks.isEmpty && Self.tracks.count == LabData.trackCount)
     }
 
     @Test func phraseLatticeMatchesTheLab() {

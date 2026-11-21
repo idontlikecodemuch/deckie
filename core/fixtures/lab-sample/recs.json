@@ -1,0 +1,6580 @@
+{
+ "sample-01": {
+  "title": "The Placeholders - Grid Fit Groove",
+  "on_disc": true,
+  "disc": {
+   "out": [
+    {
+     "id": "sample-08",
+     "title": "Dummy Data - Two Cuts Extended Mix",
+     "score": 0.8685,
+     "reasons": [
+      "-1.6% stretch on B (124.0 end -> 126.0 start)",
+      "energy steady (-1.3 LU)",
+      "no vocal clash",
+      "8-bar window (short of a 16-bar phrase)",
+      "longer cut"
+     ],
+     "suggested_transition": "bass_swap_8",
+     "stretch_pct": 1.61,
+     "multiplier": "1",
+     "camelot_a": "8A",
+     "camelot_b": "8A"
+    },
+    {
+     "id": "sample-10",
+     "title": "Nobody In Particular - Neighbour Keys",
+     "score": 0.8493,
+     "reasons": [
+      "-1.0% stretch on B (124.0 end -> 125.2 start)",
+      "energy steady (-1.1 LU)",
+      "B has a clean 16-bar intro",
+      "8-bar window (short of a 16-bar phrase)",
+      "longer cut"
+     ],
+     "suggested_transition": "bass_swap_8",
+     "stretch_pct": 0.97,
+     "multiplier": "1",
+     "camelot_a": "8A",
+     "camelot_b": "7A"
+    },
+    {
+     "id": "sample-04",
+     "title": "Fictional Four - Fade Away Test",
+     "score": 0.7635,
+     "reasons": [
+      "energy steady (-1.0 LU)",
+      "B has a clean 16-bar intro",
+      "matching groove (r=0.95)",
+      "8-bar window (short of a 16-bar phrase)",
+      "longer cut"
+     ],
+     "suggested_transition": "bass_swap_8",
+     "stretch_pct": 3.71,
+     "multiplier": "1",
+     "camelot_a": "8A",
+     "camelot_b": "6A"
+    },
+    {
+     "id": "sample-05",
+     "title": "Sample Club - Tempo Ramp Transition Edit",
+     "score": 0.6007,
+     "reasons": [
+      "B has a clean 16-bar intro",
+      "B enters +2.0 LU louder",
+      "related style",
+      "tempo change x4/3 (124 -> 100): transition track or brake, no blend",
+      "8-bar window (short of a 16-bar phrase)",
+      "groove not comparable at x4/3"
+     ],
+     "suggested_transition": "brake_cut",
+     "stretch_pct": 7.53,
+     "multiplier": "4/3",
+     "camelot_a": "8A",
+     "camelot_b": "8B"
+    },
+    {
+     "id": "sample-03",
+     "title": "Made-Up Collective - Octave Swap",
+     "score": 0.5361,
+     "reasons": [
+      "energy steady (-1.0 LU)",
+      "no vocal clash",
+      "8A -> 11A (pitch-shift B by -2 st)",
+      "tempo change x4/3 (124 -> 89): transition track or brake, no blend",
+      "8-bar window (short of a 16-bar phrase)",
+      "groove not comparable at x4/3"
+     ],
+     "suggested_transition": "brake_cut",
+     "stretch_pct": 4.3,
+     "multiplier": "4/3",
+     "camelot_a": "8A",
+     "camelot_b": "11A"
+    },
+    {
+     "id": "sample-12",
+     "title": "Stand-In Singers - Every Word Sung",
+     "score": 0.4038,
+     "reasons": [
+      "energy steady (-0.8 LU)",
+      "no vocal clash",
+      "similar sound (closer than 55% of pairs)",
+      "tempo change x4/3 (124 -> 105): transition track or brake, no blend",
+      "8A -> 12B (clash), key unsure",
+      "8-bar window (short of a 16-bar phrase)",
+      "groove not comparable at x4/3",
+      "different style"
+     ],
+     "suggested_transition": "brake_cut",
+     "stretch_pct": 12.9,
+     "multiplier": "4/3",
+     "camelot_a": "8A",
+     "camelot_b": "12B"
+    }
+   ],
+   "in": [
+    {
+     "id": "sample-08",
+     "title": "Dummy Data - Two Cuts Extended Mix",
+     "score": 0.8684,
+     "reasons": [
+      "+1.6% stretch on B (126.0 end -> 124.0 start)",
+      "energy steady (-0.8 LU)",
+      "no vocal clash",
+      "8-bar window (short of a 16-bar phrase)",
+      "longer cut"
+     ],
+     "suggested_transition": "bass_swap_8",
+     "stretch_pct": 1.59,
+     "multiplier": "1",
+     "camelot_a": "8A",
+     "camelot_b": "8A"
+    },
+    {
+     "id": "sample-10",
+     "title": "Nobody In Particular - Neighbour Keys",
+     "score": 0.8463,
+     "reasons": [
+      "+1.0% stretch on B (125.2 end -> 124.0 start)",
+      "energy steady (-0.9 LU)",
+      "no vocal clash",
+      "8-bar window (short of a 16-bar phrase)",
+      "longer cut"
+     ],
+     "suggested_transition": "bass_swap_8",
+     "stretch_pct": 0.96,
+     "multiplier": "1",
+     "camelot_a": "7A",
+     "camelot_b": "8A"
+    },
+    {
+     "id": "sample-04",
+     "title": "Fictional Four - Fade Away Test",
+     "score": 0.7311,
+     "reasons": [
+      "matching groove (r=0.95)",
+      "+3.6% stretch on B (128.6 end -> 124.0 start)",
+      "no vocal clash",
+      "8-bar window (short of a 16-bar phrase)",
+      "longer cut"
+     ],
+     "suggested_transition": "bass_swap_8",
+     "stretch_pct": 3.58,
+     "multiplier": "1",
+     "camelot_a": "6A",
+     "camelot_b": "8A"
+    },
+    {
+     "id": "sample-05",
+     "title": "Sample Club - Tempo Ramp Transition Edit",
+     "score": 0.6141,
+     "reasons": [
+      "no vocal clash",
+      "matching groove (r=0.97)",
+      "related style",
+      "-10.7% stretch on B (112.0 end -> 124.0 start)",
+      "8-bar window (short of a 16-bar phrase)"
+     ],
+     "suggested_transition": "ramped_blend",
+     "stretch_pct": 10.73,
+     "multiplier": "1",
+     "camelot_a": "8B",
+     "camelot_b": "8A"
+    },
+    {
+     "id": "sample-03",
+     "title": "Made-Up Collective - Octave Swap",
+     "score": 0.5346,
+     "reasons": [
+      "energy steady (-0.8 LU)",
+      "no vocal clash",
+      "11A -> 8A (pitch-shift B by +2 st)",
+      "tempo change x3/4 (89 -> 124): transition track or brake, no blend",
+      "8-bar window (short of a 16-bar phrase)",
+      "groove not comparable at x3/4"
+     ],
+     "suggested_transition": "brake_cut",
+     "stretch_pct": 4.5,
+     "multiplier": "3/4",
+     "camelot_a": "11A",
+     "camelot_b": "8A"
+    },
+    {
+     "id": "sample-12",
+     "title": "Stand-In Singers - Every Word Sung",
+     "score": 0.4198,
+     "reasons": [
+      "energy steady (-0.9 LU)",
+      "no vocal clash",
+      "similar sound (closer than 55% of pairs)",
+      "tempo change x3/4 (105 -> 124): transition track or brake, no blend",
+      "12B -> 8A (clash), key unsure",
+      "8-bar window (short of a 16-bar phrase)",
+      "groove not comparable at x3/4",
+      "different style"
+     ],
+     "suggested_transition": "brake_cut",
+     "stretch_pct": 11.43,
+     "multiplier": "3/4",
+     "camelot_a": "12B",
+     "camelot_b": "8A"
+    }
+   ]
+  },
+  "folder": "5 - 120-124",
+  "bpm": 124.001,
+  "camelot": "8A",
+  "pool": {
+   "out": [
+    {
+     "id": "sample-08",
+     "title": "Dummy Data - Two Cuts Extended Mix",
+     "score": 0.8685,
+     "reasons": [
+      "-1.6% stretch on B (124.0 end -> 126.0 start)",
+      "energy steady (-1.3 LU)",
+      "no vocal clash",
+      "8-bar window (short of a 16-bar phrase)",
+      "longer cut"
+     ],
+     "suggested_transition": "bass_swap_8",
+     "stretch_pct": 1.61,
+     "multiplier": "1",
+     "camelot_a": "8A",
+     "camelot_b": "8A"
+    },
+    {
+     "id": "sample-02",
+     "title": "Test Pattern - Low Confidence",
+     "score": 0.8548,
+     "reasons": [
+      "energy steady (-1.0 LU)",
+      "B has a clean 16-bar intro",
+      "matching groove (r=0.96)",
+      "8-bar window (short of a 16-bar phrase)",
+      "longer cut"
+     ],
+     "suggested_transition": "bass_swap_8",
+     "stretch_pct": 4.44,
+     "multiplier": "1",
+     "camelot_a": "8A",
+     "camelot_b": "9A"
+    },
+    {
+     "id": "sample-10",
+     "title": "Nobody In Particular - Neighbour Keys",
+     "score": 0.8493,
+     "reasons": [
+      "-1.0% stretch on B (124.0 end -> 125.2 start)",
+      "energy steady (-1.1 LU)",
+      "B has a clean 16-bar intro",
+      "8-bar window (short of a 16-bar phrase)",
+      "longer cut"
+     ],
+     "suggested_transition": "bass_swap_8",
+     "stretch_pct": 0.97,
+     "multiplier": "1",
+     "camelot_a": "8A",
+     "camelot_b": "7A"
+    },
+    {
+     "id": "sample-11",
+     "title": "Example Ensemble - Steady Hands Club Mix",
+     "score": 0.7898,
+     "reasons": [
+      "+1.6% stretch on B (124.0 end -> 122.0 start)",
+      "energy steady (-0.9 LU)",
+      "B has a clean 16-bar intro",
+      "8A -> 9B (clash)",
+      "8-bar window (short of a 16-bar phrase)",
+      "longer cut"
+     ],
+     "suggested_transition": "bass_swap_8",
+     "stretch_pct": 1.61,
+     "multiplier": "1",
+     "camelot_a": "8A",
+     "camelot_b": "9B"
+    },
+    {
+     "id": "sample-04",
+     "title": "Fictional Four - Fade Away Test",
+     "score": 0.7635,
+     "reasons": [
+      "energy steady (-1.0 LU)",
+      "B has a clean 16-bar intro",
+      "matching groove (r=0.95)",
+      "8-bar window (short of a 16-bar phrase)",
+      "longer cut"
+     ],
+     "suggested_transition": "bass_swap_8",
+     "stretch_pct": 3.71,
+     "multiplier": "1",
+     "camelot_a": "8A",
+     "camelot_b": "6A"
+    },
+    {
+     "id": "sample-06",
+     "title": "Synthetic Soul - Short One",
+     "score": 0.7073,
+     "reasons": [
+      "energy steady (+0.9 LU)",
+      "no vocal clash",
+      "matching groove (r=0.93)",
+      "8-bar window (short of a 16-bar phrase)",
+      "different style"
+     ],
+     "suggested_transition": "bass_swap_8",
+     "stretch_pct": 4.84,
+     "multiplier": "1",
+     "camelot_a": "8A",
+     "camelot_b": "10B"
+    },
+    {
+     "id": "sample-05",
+     "title": "Sample Club - Tempo Ramp Transition Edit",
+     "score": 0.6007,
+     "reasons": [
+      "B has a clean 16-bar intro",
+      "B enters +2.0 LU louder",
+      "related style",
+      "tempo change x4/3 (124 -> 100): transition track or brake, no blend",
+      "8-bar window (short of a 16-bar phrase)",
+      "groove not comparable at x4/3"
+     ],
+     "suggested_transition": "brake_cut",
+     "stretch_pct": 7.53,
+     "multiplier": "4/3",
+     "camelot_a": "8A",
+     "camelot_b": "8B"
+    },
+    {
+     "id": "sample-03",
+     "title": "Made-Up Collective - Octave Swap",
+     "score": 0.5361,
+     "reasons": [
+      "energy steady (-1.0 LU)",
+      "no vocal clash",
+      "8A -> 11A (pitch-shift B by -2 st)",
+      "tempo change x4/3 (124 -> 89): transition track or brake, no blend",
+      "8-bar window (short of a 16-bar phrase)",
+      "groove not comparable at x4/3"
+     ],
+     "suggested_transition": "brake_cut",
+     "stretch_pct": 4.3,
+     "multiplier": "4/3",
+     "camelot_a": "8A",
+     "camelot_b": "11A"
+    }
+   ],
+   "in": [
+    {
+     "id": "sample-08",
+     "title": "Dummy Data - Two Cuts Extended Mix",
+     "score": 0.8684,
+     "reasons": [
+      "+1.6% stretch on B (126.0 end -> 124.0 start)",
+      "energy steady (-0.8 LU)",
+      "no vocal clash",
+      "8-bar window (short of a 16-bar phrase)",
+      "longer cut"
+     ],
+     "suggested_transition": "bass_swap_8",
+     "stretch_pct": 1.59,
+     "multiplier": "1",
+     "camelot_a": "8A",
+     "camelot_b": "8A"
+    },
+    {
+     "id": "sample-02",
+     "title": "Test Pattern - Low Confidence",
+     "score": 0.847,
+     "reasons": [
+      "energy steady (-1.1 LU)",
+      "no vocal clash",
+      "matching groove (r=0.96)",
+      "8-bar window (short of a 16-bar phrase)",
+      "longer cut"
+     ],
+     "suggested_transition": "bass_swap_8",
+     "stretch_pct": 4.64,
+     "multiplier": "1",
+     "camelot_a": "9A",
+     "camelot_b": "8A"
+    },
+    {
+     "id": "sample-10",
+     "title": "Nobody In Particular - Neighbour Keys",
+     "score": 0.8463,
+     "reasons": [
+      "+1.0% stretch on B (125.2 end -> 124.0 start)",
+      "energy steady (-0.9 LU)",
+      "no vocal clash",
+      "8-bar window (short of a 16-bar phrase)",
+      "longer cut"
+     ],
+     "suggested_transition": "bass_swap_8",
+     "stretch_pct": 0.96,
+     "multiplier": "1",
+     "camelot_a": "7A",
+     "camelot_b": "8A"
+    },
+    {
+     "id": "sample-11",
+     "title": "Example Ensemble - Steady Hands Club Mix",
+     "score": 0.786,
+     "reasons": [
+      "-1.6% stretch on B (122.0 end -> 124.0 start)",
+      "energy steady (-0.7 LU)",
+      "matching groove (r=0.97)",
+      "9B -> 8A (clash)",
+      "8-bar window (short of a 16-bar phrase)",
+      "longer cut"
+     ],
+     "suggested_transition": "bass_swap_8",
+     "stretch_pct": 1.64,
+     "multiplier": "1",
+     "camelot_a": "9B",
+     "camelot_b": "8A"
+    },
+    {
+     "id": "sample-04",
+     "title": "Fictional Four - Fade Away Test",
+     "score": 0.7311,
+     "reasons": [
+      "matching groove (r=0.95)",
+      "+3.6% stretch on B (128.6 end -> 124.0 start)",
+      "no vocal clash",
+      "8-bar window (short of a 16-bar phrase)",
+      "longer cut"
+     ],
+     "suggested_transition": "bass_swap_8",
+     "stretch_pct": 3.58,
+     "multiplier": "1",
+     "camelot_a": "6A",
+     "camelot_b": "8A"
+    },
+    {
+     "id": "sample-06",
+     "title": "Synthetic Soul - Short One",
+     "score": 0.7103,
+     "reasons": [
+      "energy steady (-1.6 LU)",
+      "no vocal clash",
+      "matching groove (r=0.93)",
+      "8-bar window (short of a 16-bar phrase)",
+      "different style"
+     ],
+     "suggested_transition": "bass_swap_8",
+     "stretch_pct": 4.61,
+     "multiplier": "1",
+     "camelot_a": "10B",
+     "camelot_b": "8A"
+    },
+    {
+     "id": "sample-05",
+     "title": "Sample Club - Tempo Ramp Transition Edit",
+     "score": 0.6141,
+     "reasons": [
+      "no vocal clash",
+      "matching groove (r=0.97)",
+      "related style",
+      "-10.7% stretch on B (112.0 end -> 124.0 start)",
+      "8-bar window (short of a 16-bar phrase)"
+     ],
+     "suggested_transition": "ramped_blend",
+     "stretch_pct": 10.73,
+     "multiplier": "1",
+     "camelot_a": "8B",
+     "camelot_b": "8A"
+    },
+    {
+     "id": "sample-03",
+     "title": "Made-Up Collective - Octave Swap",
+     "score": 0.5346,
+     "reasons": [
+      "energy steady (-0.8 LU)",
+      "no vocal clash",
+      "11A -> 8A (pitch-shift B by +2 st)",
+      "tempo change x3/4 (89 -> 124): transition track or brake, no blend",
+      "8-bar window (short of a 16-bar phrase)",
+      "groove not comparable at x3/4"
+     ],
+     "suggested_transition": "brake_cut",
+     "stretch_pct": 4.5,
+     "multiplier": "3/4",
+     "camelot_a": "11A",
+     "camelot_b": "8A"
+    }
+   ]
+  }
+ },
+ "sample-02": {
+  "title": "Test Pattern - Low Confidence",
+  "on_disc": false,
+  "disc": {
+   "out": [
+    {
+     "id": "sample-01",
+     "title": "The Placeholders - Grid Fit Groove",
+     "score": 0.847,
+     "reasons": [
+      "energy steady (-1.1 LU)",
+      "no vocal clash",
+      "matching groove (r=0.96)",
+      "8-bar window (short of a 16-bar phrase)",
+      "longer cut"
+     ],
+     "suggested_transition": "bass_swap_8",
+     "stretch_pct": 4.64,
+     "multiplier": "1",
+     "camelot_a": "9A",
+     "camelot_b": "8A"
+    },
+    {
+     "id": "sample-10",
+     "title": "Nobody In Particular - Neighbour Keys",
+     "score": 0.7574,
+     "reasons": [
+      "energy steady (-1.3 LU)",
+      "B has a clean 16-bar intro",
+      "matching groove (r=0.98)",
+      "8-bar window (short of a 16-bar phrase)",
+      "longer cut"
+     ],
+     "suggested_transition": "bass_swap_8",
+     "stretch_pct": 5.65,
+     "multiplier": "1",
+     "camelot_a": "9A",
+     "camelot_b": "7A"
+    },
+    {
+     "id": "sample-08",
+     "title": "Dummy Data - Two Cuts Extended Mix",
+     "score": 0.7569,
+     "reasons": [
+      "energy steady (-1.5 LU)",
+      "no vocal clash",
+      "matching groove (r=0.96)",
+      "8-bar window (short of a 16-bar phrase)",
+      "longer cut"
+     ],
+     "suggested_transition": "ramped_blend",
+     "stretch_pct": 6.33,
+     "multiplier": "1",
+     "camelot_a": "9A",
+     "camelot_b": "8A"
+    },
+    {
+     "id": "sample-04",
+     "title": "Fictional Four - Fade Away Test",
+     "score": 0.602,
+     "reasons": [
+      "energy steady (-1.2 LU)",
+      "B has a clean 16-bar intro",
+      "matching groove (r=0.95)",
+      "8-bar window (short of a 16-bar phrase)",
+      "different style",
+      "longer cut"
+     ],
+     "suggested_transition": "ramped_blend",
+     "stretch_pct": 8.52,
+     "multiplier": "1",
+     "camelot_a": "9A",
+     "camelot_b": "6A"
+    },
+    {
+     "id": "sample-03",
+     "title": "Made-Up Collective - Octave Swap",
+     "score": 0.4712,
+     "reasons": [
+      "energy steady (-1.3 LU)",
+      "no vocal clash",
+      "9A -> 11A (+2 energy boost)",
+      "tempo change x4/3 (118 -> 89): transition track or brake, no blend",
+      "8-bar window (short of a 16-bar phrase)",
+      "different sound (closer than only 30% of pairs)",
+      "groove not comparable at x4/3",
+      "different style"
+     ],
+     "suggested_transition": "brake_cut",
+     "stretch_pct": 0.14,
+     "multiplier": "4/3",
+     "camelot_a": "9A",
+     "camelot_b": "11A"
+    },
+    {
+     "id": "sample-05",
+     "title": "Sample Club - Tempo Ramp Transition Edit",
+     "score": 0.4443,
+     "reasons": [
+      "energy steady (+1.8 LU)",
+      "B has a clean 16-bar intro",
+      "related style",
+      "tempo change x4/3 (118 -> 100): transition track or brake, no blend",
+      "9A -> 8B (clash)",
+      "8-bar window (short of a 16-bar phrase)",
+      "different sound (closer than only 11% of pairs)",
+      "groove not comparable at x4/3"
+     ],
+     "suggested_transition": "brake_cut",
+     "stretch_pct": 12.52,
+     "multiplier": "4/3",
+     "camelot_a": "9A",
+     "camelot_b": "8B"
+    },
+    {
+     "id": "sample-12",
+     "title": "Stand-In Singers - Every Word Sung",
+     "score": 0.4081,
+     "reasons": [
+      "energy steady (-1.1 LU)",
+      "matching groove (r=0.96)",
+      "no vocal clash",
+      "+11.4% stretch on B (118.5 end -> 105.0 start)",
+      "9A -> 12B (clash), key unsure",
+      "8-bar window (short of a 16-bar phrase)",
+      "different sound (closer than only 15% of pairs)",
+      "different style"
+     ],
+     "suggested_transition": "ramped_blend",
+     "stretch_pct": 11.39,
+     "multiplier": "1",
+     "camelot_a": "9A",
+     "camelot_b": "12B"
+    }
+   ],
+   "in": [
+    {
+     "id": "sample-01",
+     "title": "The Placeholders - Grid Fit Groove",
+     "score": 0.8548,
+     "reasons": [
+      "energy steady (-1.0 LU)",
+      "B has a clean 16-bar intro",
+      "matching groove (r=0.96)",
+      "8-bar window (short of a 16-bar phrase)",
+      "longer cut"
+     ],
+     "suggested_transition": "bass_swap_8",
+     "stretch_pct": 4.44,
+     "multiplier": "1",
+     "camelot_a": "8A",
+     "camelot_b": "9A"
+    },
+    {
+     "id": "sample-10",
+     "title": "Nobody In Particular - Neighbour Keys",
+     "score": 0.8483,
+     "reasons": [
+      "energy steady (-1.0 LU)",
+      "B has a clean 16-bar intro",
+      "16-bar phrases both sides",
+      "longer cut"
+     ],
+     "suggested_transition": "bass_swap_16",
+     "stretch_pct": 5.35,
+     "multiplier": "1",
+     "camelot_a": "7A",
+     "camelot_b": "9A"
+    },
+    {
+     "id": "sample-08",
+     "title": "Dummy Data - Two Cuts Extended Mix",
+     "score": 0.7686,
+     "reasons": [
+      "energy steady (-0.9 LU)",
+      "B has a clean 16-bar intro",
+      "matching groove (r=0.96)",
+      "8-bar window (short of a 16-bar phrase)",
+      "longer cut"
+     ],
+     "suggested_transition": "bass_swap_8",
+     "stretch_pct": 5.95,
+     "multiplier": "1",
+     "camelot_a": "8A",
+     "camelot_b": "9A"
+    },
+    {
+     "id": "sample-04",
+     "title": "Fictional Four - Fade Away Test",
+     "score": 0.6689,
+     "reasons": [
+      "B has a clean 16-bar intro",
+      "16-bar phrases both sides",
+      "matching groove (r=0.95)",
+      "different style",
+      "longer cut"
+     ],
+     "suggested_transition": "ramped_blend",
+     "stretch_pct": 7.85,
+     "multiplier": "1",
+     "camelot_a": "6A",
+     "camelot_b": "9A"
+    },
+    {
+     "id": "sample-05",
+     "title": "Sample Club - Tempo Ramp Transition Edit",
+     "score": 0.5808,
+     "reasons": [
+      "B has a clean 16-bar intro",
+      "matching groove (r=0.97)",
+      "related style",
+      "8B -> 9A (clash)",
+      "8-bar window (short of a 16-bar phrase)",
+      "different sound (closer than only 11% of pairs)"
+     ],
+     "suggested_transition": "bass_swap_8",
+     "stretch_pct": 5.81,
+     "multiplier": "1",
+     "camelot_a": "8B",
+     "camelot_b": "9A"
+    },
+    {
+     "id": "sample-03",
+     "title": "Made-Up Collective - Octave Swap",
+     "score": 0.4693,
+     "reasons": [
+      "energy steady (-0.9 LU)",
+      "B has a clean 16-bar intro",
+      "11A -> 9A (pitch-shift B by +2 st)",
+      "tempo change x3/4 (89 -> 118): transition track or brake, no blend",
+      "8-bar window (short of a 16-bar phrase)",
+      "different sound (closer than only 30% of pairs)",
+      "groove not comparable at x3/4",
+      "different style"
+     ],
+     "suggested_transition": "brake_cut",
+     "stretch_pct": 0.14,
+     "multiplier": "3/4",
+     "camelot_a": "11A",
+     "camelot_b": "9A"
+    },
+    {
+     "id": "sample-12",
+     "title": "Stand-In Singers - Every Word Sung",
+     "score": 0.4058,
+     "reasons": [
+      "energy steady (-1.1 LU)",
+      "B has a clean 16-bar intro",
+      "matching groove (r=0.96)",
+      "-12.9% stretch on B (105.0 end -> 118.5 start)",
+      "12B -> 9A (clash), key unsure",
+      "8-bar window (short of a 16-bar phrase)",
+      "different sound (closer than only 15% of pairs)",
+      "different style"
+     ],
+     "suggested_transition": "ramped_blend",
+     "stretch_pct": 12.86,
+     "multiplier": "1",
+     "camelot_a": "12B",
+     "camelot_b": "9A"
+    }
+   ]
+  },
+  "folder": "4 - 110-119",
+  "bpm": 118.5,
+  "camelot": "9A",
+  "pool": {
+   "out": [
+    {
+     "id": "sample-11",
+     "title": "Example Ensemble - Steady Hands Club Mix",
+     "score": 0.8733,
+     "reasons": [
+      "-3.0% stretch on B (118.5 end -> 122.0 start)",
+      "energy steady (-1.2 LU)",
+      "B has a clean 16-bar intro",
+      "8-bar window (short of a 16-bar phrase)",
+      "longer cut"
+     ],
+     "suggested_transition": "bass_swap_8",
+     "stretch_pct": 2.95,
+     "multiplier": "1",
+     "camelot_a": "9A",
+     "camelot_b": "9B"
+    },
+    {
+     "id": "sample-01",
+     "title": "The Placeholders - Grid Fit Groove",
+     "score": 0.847,
+     "reasons": [
+      "energy steady (-1.1 LU)",
+      "no vocal clash",
+      "matching groove (r=0.96)",
+      "8-bar window (short of a 16-bar phrase)",
+      "longer cut"
+     ],
+     "suggested_transition": "bass_swap_8",
+     "stretch_pct": 4.64,
+     "multiplier": "1",
+     "camelot_a": "9A",
+     "camelot_b": "8A"
+    },
+    {
+     "id": "sample-10",
+     "title": "Nobody In Particular - Neighbour Keys",
+     "score": 0.7574,
+     "reasons": [
+      "energy steady (-1.3 LU)",
+      "B has a clean 16-bar intro",
+      "matching groove (r=0.98)",
+      "8-bar window (short of a 16-bar phrase)",
+      "longer cut"
+     ],
+     "suggested_transition": "bass_swap_8",
+     "stretch_pct": 5.65,
+     "multiplier": "1",
+     "camelot_a": "9A",
+     "camelot_b": "7A"
+    },
+    {
+     "id": "sample-08",
+     "title": "Dummy Data - Two Cuts Extended Mix",
+     "score": 0.7569,
+     "reasons": [
+      "energy steady (-1.5 LU)",
+      "no vocal clash",
+      "matching groove (r=0.96)",
+      "8-bar window (short of a 16-bar phrase)",
+      "longer cut"
+     ],
+     "suggested_transition": "ramped_blend",
+     "stretch_pct": 6.33,
+     "multiplier": "1",
+     "camelot_a": "9A",
+     "camelot_b": "8A"
+    },
+    {
+     "id": "sample-04",
+     "title": "Fictional Four - Fade Away Test",
+     "score": 0.602,
+     "reasons": [
+      "energy steady (-1.2 LU)",
+      "B has a clean 16-bar intro",
+      "matching groove (r=0.95)",
+      "8-bar window (short of a 16-bar phrase)",
+      "different style",
+      "longer cut"
+     ],
+     "suggested_transition": "ramped_blend",
+     "stretch_pct": 8.52,
+     "multiplier": "1",
+     "camelot_a": "9A",
+     "camelot_b": "6A"
+    },
+    {
+     "id": "sample-06",
+     "title": "Synthetic Soul - Short One",
+     "score": 0.5206,
+     "reasons": [
+      "energy steady (+0.6 LU)",
+      "no vocal clash",
+      "matching groove (r=0.95)",
+      "9A -> 10B (clash)",
+      "8-bar window (short of a 16-bar phrase)",
+      "different style"
+     ],
+     "suggested_transition": "ramped_blend",
+     "stretch_pct": 9.7,
+     "multiplier": "1",
+     "camelot_a": "9A",
+     "camelot_b": "10B"
+    },
+    {
+     "id": "sample-03",
+     "title": "Made-Up Collective - Octave Swap",
+     "score": 0.4712,
+     "reasons": [
+      "energy steady (-1.3 LU)",
+      "no vocal clash",
+      "9A -> 11A (+2 energy boost)",
+      "tempo change x4/3 (118 -> 89): transition track or brake, no blend",
+      "8-bar window (short of a 16-bar phrase)",
+      "different sound (closer than only 30% of pairs)",
+      "groove not comparable at x4/3",
+      "different style"
+     ],
+     "suggested_transition": "brake_cut",
+     "stretch_pct": 0.14,
+     "multiplier": "4/3",
+     "camelot_a": "9A",
+     "camelot_b": "11A"
+    },
+    {
+     "id": "sample-07",
+     "title": "Imaginary Orchestra - Half Time Walk",
+     "score": 0.4701,
+     "reasons": [
+      "energy steady (-0.8 LU)",
+      "B has a clean 16-bar intro",
+      "9A -> 10A (+1 (fifth))",
+      "tempo change x4/3 (118 -> 86): transition track or brake, no blend",
+      "8-bar window (short of a 16-bar phrase)",
+      "different sound (closer than only 3% of pairs)",
+      "groove not comparable at x4/3",
+      "different style"
+     ],
+     "suggested_transition": "brake_cut",
+     "stretch_pct": 2.67,
+     "multiplier": "4/3",
+     "camelot_a": "9A",
+     "camelot_b": "10A"
+    }
+   ],
+   "in": [
+    {
+     "id": "sample-11",
+     "title": "Example Ensemble - Steady Hands Club Mix",
+     "score": 0.8733,
+     "reasons": [
+      "+2.9% stretch on B (122.0 end -> 118.5 start)",
+      "energy steady (-0.9 LU)",
+      "B has a clean 16-bar intro",
+      "8-bar window (short of a 16-bar phrase)",
+      "longer cut"
+     ],
+     "suggested_transition": "bass_swap_8",
+     "stretch_pct": 2.87,
+     "multiplier": "1",
+     "camelot_a": "9B",
+     "camelot_b": "9A"
+    },
+    {
+     "id": "sample-01",
+     "title": "The Placeholders - Grid Fit Groove",
+     "score": 0.8548,
+     "reasons": [
+      "energy steady (-1.0 LU)",
+      "B has a clean 16-bar intro",
+      "matching groove (r=0.96)",
+      "8-bar window (short of a 16-bar phrase)",
+      "longer cut"
+     ],
+     "suggested_transition": "bass_swap_8",
+     "stretch_pct": 4.44,
+     "multiplier": "1",
+     "camelot_a": "8A",
+     "camelot_b": "9A"
+    },
+    {
+     "id": "sample-10",
+     "title": "Nobody In Particular - Neighbour Keys",
+     "score": 0.8483,
+     "reasons": [
+      "energy steady (-1.0 LU)",
+      "B has a clean 16-bar intro",
+      "16-bar phrases both sides",
+      "longer cut"
+     ],
+     "suggested_transition": "bass_swap_16",
+     "stretch_pct": 5.35,
+     "multiplier": "1",
+     "camelot_a": "7A",
+     "camelot_b": "9A"
+    },
+    {
+     "id": "sample-08",
+     "title": "Dummy Data - Two Cuts Extended Mix",
+     "score": 0.7686,
+     "reasons": [
+      "energy steady (-0.9 LU)",
+      "B has a clean 16-bar intro",
+      "matching groove (r=0.96)",
+      "8-bar window (short of a 16-bar phrase)",
+      "longer cut"
+     ],
+     "suggested_transition": "bass_swap_8",
+     "stretch_pct": 5.95,
+     "multiplier": "1",
+     "camelot_a": "8A",
+     "camelot_b": "9A"
+    },
+    {
+     "id": "sample-04",
+     "title": "Fictional Four - Fade Away Test",
+     "score": 0.6689,
+     "reasons": [
+      "B has a clean 16-bar intro",
+      "16-bar phrases both sides",
+      "matching groove (r=0.95)",
+      "different style",
+      "longer cut"
+     ],
+     "suggested_transition": "ramped_blend",
+     "stretch_pct": 7.85,
+     "multiplier": "1",
+     "camelot_a": "6A",
+     "camelot_b": "9A"
+    },
+    {
+     "id": "sample-05",
+     "title": "Sample Club - Tempo Ramp Transition Edit",
+     "score": 0.5808,
+     "reasons": [
+      "B has a clean 16-bar intro",
+      "matching groove (r=0.97)",
+      "related style",
+      "8B -> 9A (clash)",
+      "8-bar window (short of a 16-bar phrase)",
+      "different sound (closer than only 11% of pairs)"
+     ],
+     "suggested_transition": "bass_swap_8",
+     "stretch_pct": 5.81,
+     "multiplier": "1",
+     "camelot_a": "8B",
+     "camelot_b": "9A"
+    },
+    {
+     "id": "sample-06",
+     "title": "Synthetic Soul - Short One",
+     "score": 0.5428,
+     "reasons": [
+      "energy steady (-1.7 LU)",
+      "B has a clean 16-bar intro",
+      "matching groove (r=0.95)",
+      "10B -> 9A (clash)",
+      "8-bar window (short of a 16-bar phrase)",
+      "different style"
+     ],
+     "suggested_transition": "ramped_blend",
+     "stretch_pct": 8.85,
+     "multiplier": "1",
+     "camelot_a": "10B",
+     "camelot_b": "9A"
+    },
+    {
+     "id": "sample-07",
+     "title": "Imaginary Orchestra - Half Time Walk",
+     "score": 0.4701,
+     "reasons": [
+      "energy steady (-1.0 LU)",
+      "B has a clean 16-bar intro",
+      "10A -> 9A (-1 (fifth))",
+      "tempo change x3/4 (86 -> 118): transition track or brake, no blend",
+      "8-bar window (short of a 16-bar phrase)",
+      "different sound (closer than only 3% of pairs)",
+      "groove not comparable at x3/4",
+      "different style"
+     ],
+     "suggested_transition": "brake_cut",
+     "stretch_pct": 2.75,
+     "multiplier": "3/4",
+     "camelot_a": "10A",
+     "camelot_b": "9A"
+    }
+   ]
+  }
+ },
+ "sample-03": {
+  "title": "Made-Up Collective - Octave Swap",
+  "on_disc": true,
+  "disc": {
+   "out": [
+    {
+     "id": "sample-04",
+     "title": "Fictional Four - Fade Away Test",
+     "score": 0.686,
+     "reasons": [
+      "energy steady (-1.0 LU)",
+      "B has a clean 16-bar intro",
+      "same style",
+      "tempo change x2/3 (89 -> 129): transition track or brake, no blend",
+      "8-bar window (short of a 16-bar phrase)",
+      "groove not comparable at x2/3",
+      "longer cut"
+     ],
+     "suggested_transition": "brake_cut",
+     "stretch_pct": 3.67,
+     "multiplier": "2/3",
+     "camelot_a": "11A",
+     "camelot_b": "6A"
+    },
+    {
+     "id": "sample-01",
+     "title": "The Placeholders - Grid Fit Groove",
+     "score": 0.5646,
+     "reasons": [
+      "energy steady (-0.8 LU)",
+      "no vocal clash",
+      "11A -> 8A (pitch-shift B by +2 st)",
+      "tempo change x3/4 (89 -> 124): transition track or brake, no blend",
+      "8-bar window (short of a 16-bar phrase)",
+      "groove not comparable at x3/4",
+      "longer cut"
+     ],
+     "suggested_transition": "brake_cut",
+     "stretch_pct": 4.5,
+     "multiplier": "3/4",
+     "camelot_a": "11A",
+     "camelot_b": "8A"
+    },
+    {
+     "id": "sample-12",
+     "title": "Stand-In Singers - Every Word Sung",
+     "score": 0.5264,
+     "reasons": [
+      "energy steady (-0.8 LU)",
+      "no vocal clash",
+      "related style",
+      "tempo change x3/4 (89 -> 105): transition track or brake, no blend",
+      "11A -> 12B (clash), key unsure",
+      "8-bar window (short of a 16-bar phrase)",
+      "groove not comparable at x3/4"
+     ],
+     "suggested_transition": "brake_cut",
+     "stretch_pct": 11.52,
+     "multiplier": "3/4",
+     "camelot_a": "11A",
+     "camelot_b": "12B"
+    },
+    {
+     "id": "sample-10",
+     "title": "Nobody In Particular - Neighbour Keys",
+     "score": 0.4877,
+     "reasons": [
+      "energy steady (-1.0 LU)",
+      "B has a clean 16-bar intro",
+      "11A -> 7A (pitch-shift B by -1 st)",
+      "tempo change x3/4 (89 -> 125): transition track or brake, no blend",
+      "8-bar window (short of a 16-bar phrase)",
+      "different sound (closer than only 9% of pairs)",
+      "groove not comparable at x3/4",
+      "different style",
+      "longer cut"
+     ],
+     "suggested_transition": "brake_cut",
+     "stretch_pct": 5.51,
+     "multiplier": "3/4",
+     "camelot_a": "11A",
+     "camelot_b": "7A"
+    },
+    {
+     "id": "sample-08",
+     "title": "Dummy Data - Two Cuts Extended Mix",
+     "score": 0.4648,
+     "reasons": [
+      "energy steady (-1.2 LU)",
+      "no vocal clash",
+      "11A -> 8A (pitch-shift B by +2 st)",
+      "tempo change x2/3 (89 -> 126): transition track or brake, no blend",
+      "8-bar window (short of a 16-bar phrase)",
+      "different sound (closer than only 5% of pairs)",
+      "groove not comparable at x2/3",
+      "different style",
+      "longer cut"
+     ],
+     "suggested_transition": "brake_cut",
+     "stretch_pct": 5.62,
+     "multiplier": "2/3",
+     "camelot_a": "11A",
+     "camelot_b": "8A"
+    },
+    {
+     "id": "sample-05",
+     "title": "Sample Club - Tempo Ramp Transition Edit",
+     "score": 0.4132,
+     "reasons": [
+      "B has a clean 16-bar intro",
+      "B enters +2.1 LU louder",
+      "matching groove (r=0.97)",
+      "-12.4% stretch on B (89.0 end -> 100.0 start)",
+      "11A -> 8B (clash)",
+      "8-bar window (short of a 16-bar phrase)",
+      "different sound (closer than only 14% of pairs)",
+      "different style"
+     ],
+     "suggested_transition": "ramped_blend",
+     "stretch_pct": 12.36,
+     "multiplier": "1",
+     "camelot_a": "11A",
+     "camelot_b": "8B"
+    }
+   ],
+   "in": [
+    {
+     "id": "sample-04",
+     "title": "Fictional Four - Fade Away Test",
+     "score": 0.6471,
+     "reasons": [
+      "same style",
+      "similar sound (closer than 98% of pairs)",
+      "no vocal clash",
+      "tempo change x3/2 (129 -> 89): transition track or brake, no blend",
+      "8-bar window (short of a 16-bar phrase)",
+      "groove not comparable at x3/2",
+      "longer cut"
+     ],
+     "suggested_transition": "brake_cut",
+     "stretch_pct": 3.81,
+     "multiplier": "3/2",
+     "camelot_a": "6A",
+     "camelot_b": "11A"
+    },
+    {
+     "id": "sample-01",
+     "title": "The Placeholders - Grid Fit Groove",
+     "score": 0.5661,
+     "reasons": [
+      "energy steady (-1.0 LU)",
+      "no vocal clash",
+      "8A -> 11A (pitch-shift B by -2 st)",
+      "tempo change x4/3 (124 -> 89): transition track or brake, no blend",
+      "8-bar window (short of a 16-bar phrase)",
+      "groove not comparable at x4/3",
+      "longer cut"
+     ],
+     "suggested_transition": "brake_cut",
+     "stretch_pct": 4.3,
+     "multiplier": "4/3",
+     "camelot_a": "8A",
+     "camelot_b": "11A"
+    },
+    {
+     "id": "sample-12",
+     "title": "Stand-In Singers - Every Word Sung",
+     "score": 0.5121,
+     "reasons": [
+      "energy steady (-1.1 LU)",
+      "no vocal clash",
+      "related style",
+      "tempo change x4/3 (105 -> 89): transition track or brake, no blend",
+      "12B -> 11A (clash), key unsure",
+      "8-bar window (short of a 16-bar phrase)",
+      "groove not comparable at x4/3"
+     ],
+     "suggested_transition": "brake_cut",
+     "stretch_pct": 13.02,
+     "multiplier": "4/3",
+     "camelot_a": "12B",
+     "camelot_b": "11A"
+    },
+    {
+     "id": "sample-10",
+     "title": "Nobody In Particular - Neighbour Keys",
+     "score": 0.4856,
+     "reasons": [
+      "energy steady (-1.1 LU)",
+      "no vocal clash",
+      "7A -> 11A (pitch-shift B by +1 st)",
+      "tempo change x4/3 (125 -> 89): transition track or brake, no blend",
+      "8-bar window (short of a 16-bar phrase)",
+      "different sound (closer than only 9% of pairs)",
+      "groove not comparable at x4/3",
+      "different style",
+      "longer cut"
+     ],
+     "suggested_transition": "brake_cut",
+     "stretch_pct": 5.22,
+     "multiplier": "4/3",
+     "camelot_a": "7A",
+     "camelot_b": "11A"
+    },
+    {
+     "id": "sample-08",
+     "title": "Dummy Data - Two Cuts Extended Mix",
+     "score": 0.4667,
+     "reasons": [
+      "energy steady (-1.0 LU)",
+      "no vocal clash",
+      "8A -> 11A (pitch-shift B by -2 st)",
+      "tempo change x3/2 (126 -> 89): transition track or brake, no blend",
+      "8-bar window (short of a 16-bar phrase)",
+      "different sound (closer than only 5% of pairs)",
+      "groove not comparable at x3/2",
+      "different style",
+      "longer cut"
+     ],
+     "suggested_transition": "brake_cut",
+     "stretch_pct": 5.95,
+     "multiplier": "3/2",
+     "camelot_a": "8A",
+     "camelot_b": "11A"
+    },
+    {
+     "id": "sample-05",
+     "title": "Sample Club - Tempo Ramp Transition Edit",
+     "score": 0.3677,
+     "reasons": [
+      "no vocal clash",
+      "B enters -3.9 LU quieter",
+      "tempo change x4/3 (112 -> 89): transition track or brake, no blend",
+      "8B -> 11A (clash)",
+      "8-bar window (short of a 16-bar phrase)",
+      "different sound (closer than only 14% of pairs)",
+      "groove not comparable at x4/3",
+      "different style"
+     ],
+     "suggested_transition": "brake_cut",
+     "stretch_pct": 5.96,
+     "multiplier": "4/3",
+     "camelot_a": "8B",
+     "camelot_b": "11A"
+    }
+   ]
+  },
+  "folder": "1 - under 90",
+  "bpm": 89.0,
+  "camelot": "11A",
+  "pool": {
+   "out": [
+    {
+     "id": "sample-07",
+     "title": "Imaginary Orchestra - Half Time Walk",
+     "score": 0.777,
+     "reasons": [
+      "+2.8% stretch on B (89.0 end -> 86.5 start)",
+      "energy steady (-0.6 LU)",
+      "B has a clean 16-bar intro",
+      "8-bar window (short of a 16-bar phrase)",
+      "different sound (closer than only 29% of pairs)"
+     ],
+     "suggested_transition": "bass_swap_8",
+     "stretch_pct": 2.81,
+     "multiplier": "1",
+     "camelot_a": "11A",
+     "camelot_b": "10A"
+    },
+    {
+     "id": "sample-04",
+     "title": "Fictional Four - Fade Away Test",
+     "score": 0.686,
+     "reasons": [
+      "energy steady (-1.0 LU)",
+      "B has a clean 16-bar intro",
+      "same style",
+      "tempo change x2/3 (89 -> 129): transition track or brake, no blend",
+      "8-bar window (short of a 16-bar phrase)",
+      "groove not comparable at x2/3",
+      "longer cut"
+     ],
+     "suggested_transition": "brake_cut",
+     "stretch_pct": 3.67,
+     "multiplier": "2/3",
+     "camelot_a": "11A",
+     "camelot_b": "6A"
+    },
+    {
+     "id": "sample-01",
+     "title": "The Placeholders - Grid Fit Groove",
+     "score": 0.5646,
+     "reasons": [
+      "energy steady (-0.8 LU)",
+      "no vocal clash",
+      "11A -> 8A (pitch-shift B by +2 st)",
+      "tempo change x3/4 (89 -> 124): transition track or brake, no blend",
+      "8-bar window (short of a 16-bar phrase)",
+      "groove not comparable at x3/4",
+      "longer cut"
+     ],
+     "suggested_transition": "brake_cut",
+     "stretch_pct": 4.5,
+     "multiplier": "3/4",
+     "camelot_a": "11A",
+     "camelot_b": "8A"
+    },
+    {
+     "id": "sample-06",
+     "title": "Synthetic Soul - Short One",
+     "score": 0.5608,
+     "reasons": [
+      "energy steady (+0.9 LU)",
+      "no vocal clash",
+      "similar sound (closer than 91% of pairs)",
+      "tempo change x2/3 (89 -> 130): transition track or brake, no blend",
+      "11A -> 10B (clash)",
+      "8-bar window (short of a 16-bar phrase)",
+      "groove not comparable at x2/3"
+     ],
+     "suggested_transition": "brake_cut",
+     "stretch_pct": 2.62,
+     "multiplier": "2/3",
+     "camelot_a": "11A",
+     "camelot_b": "10B"
+    },
+    {
+     "id": "sample-12",
+     "title": "Stand-In Singers - Every Word Sung",
+     "score": 0.5264,
+     "reasons": [
+      "energy steady (-0.8 LU)",
+      "no vocal clash",
+      "related style",
+      "tempo change x3/4 (89 -> 105): transition track or brake, no blend",
+      "11A -> 12B (clash), key unsure",
+      "8-bar window (short of a 16-bar phrase)",
+      "groove not comparable at x3/4"
+     ],
+     "suggested_transition": "brake_cut",
+     "stretch_pct": 11.52,
+     "multiplier": "3/4",
+     "camelot_a": "11A",
+     "camelot_b": "12B"
+    },
+    {
+     "id": "sample-02",
+     "title": "Test Pattern - Low Confidence",
+     "score": 0.4993,
+     "reasons": [
+      "energy steady (-0.9 LU)",
+      "B has a clean 16-bar intro",
+      "11A -> 9A (pitch-shift B by +2 st)",
+      "tempo change x3/4 (89 -> 118): transition track or brake, no blend",
+      "8-bar window (short of a 16-bar phrase)",
+      "different sound (closer than only 30% of pairs)",
+      "groove not comparable at x3/4",
+      "different style",
+      "longer cut"
+     ],
+     "suggested_transition": "brake_cut",
+     "stretch_pct": 0.14,
+     "multiplier": "3/4",
+     "camelot_a": "11A",
+     "camelot_b": "9A"
+    },
+    {
+     "id": "sample-10",
+     "title": "Nobody In Particular - Neighbour Keys",
+     "score": 0.4877,
+     "reasons": [
+      "energy steady (-1.0 LU)",
+      "B has a clean 16-bar intro",
+      "11A -> 7A (pitch-shift B by -1 st)",
+      "tempo change x3/4 (89 -> 125): transition track or brake, no blend",
+      "8-bar window (short of a 16-bar phrase)",
+      "different sound (closer than only 9% of pairs)",
+      "groove not comparable at x3/4",
+      "different style",
+      "longer cut"
+     ],
+     "suggested_transition": "brake_cut",
+     "stretch_pct": 5.51,
+     "multiplier": "3/4",
+     "camelot_a": "11A",
+     "camelot_b": "7A"
+    },
+    {
+     "id": "sample-11",
+     "title": "Example Ensemble - Steady Hands Club Mix",
+     "score": 0.4702,
+     "reasons": [
+      "energy steady (-0.9 LU)",
+      "B has a clean 16-bar intro",
+      "11A -> 9B (pitch-shift B by +2 st)",
+      "tempo change x3/4 (89 -> 122): transition track or brake, no blend",
+      "8-bar window (short of a 16-bar phrase)",
+      "different sound (closer than only 6% of pairs)",
+      "groove not comparable at x3/4",
+      "different style",
+      "longer cut"
+     ],
+     "suggested_transition": "brake_cut",
+     "stretch_pct": 2.81,
+     "multiplier": "3/4",
+     "camelot_a": "11A",
+     "camelot_b": "9B"
+    }
+   ],
+   "in": [
+    {
+     "id": "sample-07",
+     "title": "Imaginary Orchestra - Half Time Walk",
+     "score": 0.7749,
+     "reasons": [
+      "-2.9% stretch on B (86.5 end -> 89.0 start)",
+      "energy steady (-1.1 LU)",
+      "no vocal clash",
+      "8-bar window (short of a 16-bar phrase)",
+      "different sound (closer than only 29% of pairs)"
+     ],
+     "suggested_transition": "bass_swap_8",
+     "stretch_pct": 2.89,
+     "multiplier": "1",
+     "camelot_a": "10A",
+     "camelot_b": "11A"
+    },
+    {
+     "id": "sample-04",
+     "title": "Fictional Four - Fade Away Test",
+     "score": 0.6471,
+     "reasons": [
+      "same style",
+      "similar sound (closer than 98% of pairs)",
+      "no vocal clash",
+      "tempo change x3/2 (129 -> 89): transition track or brake, no blend",
+      "8-bar window (short of a 16-bar phrase)",
+      "groove not comparable at x3/2",
+      "longer cut"
+     ],
+     "suggested_transition": "brake_cut",
+     "stretch_pct": 3.81,
+     "multiplier": "3/2",
+     "camelot_a": "6A",
+     "camelot_b": "11A"
+    },
+    {
+     "id": "sample-01",
+     "title": "The Placeholders - Grid Fit Groove",
+     "score": 0.5661,
+     "reasons": [
+      "energy steady (-1.0 LU)",
+      "no vocal clash",
+      "8A -> 11A (pitch-shift B by -2 st)",
+      "tempo change x4/3 (124 -> 89): transition track or brake, no blend",
+      "8-bar window (short of a 16-bar phrase)",
+      "groove not comparable at x4/3",
+      "longer cut"
+     ],
+     "suggested_transition": "brake_cut",
+     "stretch_pct": 4.3,
+     "multiplier": "4/3",
+     "camelot_a": "8A",
+     "camelot_b": "11A"
+    },
+    {
+     "id": "sample-06",
+     "title": "Synthetic Soul - Short One",
+     "score": 0.5614,
+     "reasons": [
+      "energy steady (-1.8 LU)",
+      "no vocal clash",
+      "similar sound (closer than 91% of pairs)",
+      "tempo change x3/2 (130 -> 89): transition track or brake, no blend",
+      "10B -> 11A (clash)",
+      "8-bar window (short of a 16-bar phrase)",
+      "groove not comparable at x3/2"
+     ],
+     "suggested_transition": "brake_cut",
+     "stretch_pct": 2.69,
+     "multiplier": "3/2",
+     "camelot_a": "10B",
+     "camelot_b": "11A"
+    },
+    {
+     "id": "sample-12",
+     "title": "Stand-In Singers - Every Word Sung",
+     "score": 0.5121,
+     "reasons": [
+      "energy steady (-1.1 LU)",
+      "no vocal clash",
+      "related style",
+      "tempo change x4/3 (105 -> 89): transition track or brake, no blend",
+      "12B -> 11A (clash), key unsure",
+      "8-bar window (short of a 16-bar phrase)",
+      "groove not comparable at x4/3"
+     ],
+     "suggested_transition": "brake_cut",
+     "stretch_pct": 13.02,
+     "multiplier": "4/3",
+     "camelot_a": "12B",
+     "camelot_b": "11A"
+    },
+    {
+     "id": "sample-02",
+     "title": "Test Pattern - Low Confidence",
+     "score": 0.5012,
+     "reasons": [
+      "energy steady (-1.3 LU)",
+      "no vocal clash",
+      "9A -> 11A (+2 energy boost)",
+      "tempo change x4/3 (118 -> 89): transition track or brake, no blend",
+      "8-bar window (short of a 16-bar phrase)",
+      "different sound (closer than only 30% of pairs)",
+      "groove not comparable at x4/3",
+      "different style",
+      "longer cut"
+     ],
+     "suggested_transition": "brake_cut",
+     "stretch_pct": 0.14,
+     "multiplier": "4/3",
+     "camelot_a": "9A",
+     "camelot_b": "11A"
+    },
+    {
+     "id": "sample-10",
+     "title": "Nobody In Particular - Neighbour Keys",
+     "score": 0.4856,
+     "reasons": [
+      "energy steady (-1.1 LU)",
+      "no vocal clash",
+      "7A -> 11A (pitch-shift B by +1 st)",
+      "tempo change x4/3 (125 -> 89): transition track or brake, no blend",
+      "8-bar window (short of a 16-bar phrase)",
+      "different sound (closer than only 9% of pairs)",
+      "groove not comparable at x4/3",
+      "different style",
+      "longer cut"
+     ],
+     "suggested_transition": "brake_cut",
+     "stretch_pct": 5.22,
+     "multiplier": "4/3",
+     "camelot_a": "7A",
+     "camelot_b": "11A"
+    },
+    {
+     "id": "sample-11",
+     "title": "Example Ensemble - Steady Hands Club Mix",
+     "score": 0.4676,
+     "reasons": [
+      "energy steady (-0.9 LU)",
+      "no vocal clash",
+      "9B -> 11A (pitch-shift B by -2 st)",
+      "tempo change x4/3 (122 -> 89): transition track or brake, no blend",
+      "8-bar window (short of a 16-bar phrase)",
+      "different sound (closer than only 6% of pairs)",
+      "groove not comparable at x4/3",
+      "different style",
+      "longer cut"
+     ],
+     "suggested_transition": "brake_cut",
+     "stretch_pct": 2.73,
+     "multiplier": "4/3",
+     "camelot_a": "9B",
+     "camelot_b": "11A"
+    }
+   ]
+  }
+ },
+ "sample-04": {
+  "title": "Fictional Four - Fade Away Test",
+  "on_disc": true,
+  "disc": {
+   "out": [
+    {
+     "id": "sample-10",
+     "title": "Nobody In Particular - Neighbour Keys",
+     "score": 0.7761,
+     "reasons": [
+      "+2.6% stretch on B (128.6 end -> 125.2 start)",
+      "16-bar phrases both sides",
+      "matching groove (r=0.97)",
+      "different sound (closer than only 24% of pairs)",
+      "different style",
+      "longer cut"
+     ],
+     "suggested_transition": "bass_swap_16",
+     "stretch_pct": 2.64,
+     "multiplier": "1",
+     "camelot_a": "6A",
+     "camelot_b": "7A"
+    },
+    {
+     "id": "sample-01",
+     "title": "The Placeholders - Grid Fit Groove",
+     "score": 0.7311,
+     "reasons": [
+      "matching groove (r=0.95)",
+      "+3.6% stretch on B (128.6 end -> 124.0 start)",
+      "no vocal clash",
+      "8-bar window (short of a 16-bar phrase)",
+      "longer cut"
+     ],
+     "suggested_transition": "bass_swap_8",
+     "stretch_pct": 3.58,
+     "multiplier": "1",
+     "camelot_a": "6A",
+     "camelot_b": "8A"
+    },
+    {
+     "id": "sample-08",
+     "title": "Dummy Data - Two Cuts Extended Mix",
+     "score": 0.6742,
+     "reasons": [
+      "+2.0% stretch on B (128.6 end -> 126.0 start)",
+      "matching groove (r=0.96)",
+      "no vocal clash",
+      "8-bar window (short of a 16-bar phrase)",
+      "different sound (closer than only 39% of pairs)",
+      "different style",
+      "longer cut"
+     ],
+     "suggested_transition": "bass_swap_8",
+     "stretch_pct": 2.02,
+     "multiplier": "1",
+     "camelot_a": "6A",
+     "camelot_b": "8A"
+    },
+    {
+     "id": "sample-03",
+     "title": "Made-Up Collective - Octave Swap",
+     "score": 0.6171,
+     "reasons": [
+      "same style",
+      "similar sound (closer than 98% of pairs)",
+      "no vocal clash",
+      "tempo change x3/2 (129 -> 89): transition track or brake, no blend",
+      "8-bar window (short of a 16-bar phrase)",
+      "groove not comparable at x3/2"
+     ],
+     "suggested_transition": "brake_cut",
+     "stretch_pct": 3.81,
+     "multiplier": "3/2",
+     "camelot_a": "6A",
+     "camelot_b": "11A"
+    },
+    {
+     "id": "sample-12",
+     "title": "Stand-In Singers - Every Word Sung",
+     "score": 0.5426,
+     "reasons": [
+      "16-bar phrases both sides",
+      "similar sound (closer than 94% of pairs)",
+      "related style",
+      "tempo change x4/3 (129 -> 105): transition track or brake, no blend",
+      "6A -> 12B (clash), key unsure",
+      "vocals overlap 16 of 16 bars",
+      "groove not comparable at x4/3"
+     ],
+     "suggested_transition": "brake_cut",
+     "stretch_pct": 8.87,
+     "multiplier": "4/3",
+     "camelot_a": "6A",
+     "camelot_b": "12B"
+    },
+    {
+     "id": "sample-05",
+     "title": "Sample Club - Tempo Ramp Transition Edit",
+     "score": 0.5298,
+     "reasons": [
+      "energy steady (-1.0 LU)",
+      "B has a clean 16-bar intro",
+      "16-bar phrases both sides",
+      "tempo change x4/3 (129 -> 100): transition track or brake, no blend",
+      "different sound (closer than only 38% of pairs)",
+      "groove not comparable at x4/3",
+      "different style"
+     ],
+     "suggested_transition": "brake_cut",
+     "stretch_pct": 3.68,
+     "multiplier": "4/3",
+     "camelot_a": "6A",
+     "camelot_b": "8B"
+    }
+   ],
+   "in": [
+    {
+     "id": "sample-10",
+     "title": "Nobody In Particular - Neighbour Keys",
+     "score": 0.8098,
+     "reasons": [
+      "-2.7% stretch on B (125.2 end -> 128.6 start)",
+      "energy steady (-1.1 LU)",
+      "B has a clean 16-bar intro",
+      "different sound (closer than only 24% of pairs)",
+      "different style",
+      "longer cut"
+     ],
+     "suggested_transition": "bass_swap_16",
+     "stretch_pct": 2.71,
+     "multiplier": "1",
+     "camelot_a": "7A",
+     "camelot_b": "6A"
+    },
+    {
+     "id": "sample-01",
+     "title": "The Placeholders - Grid Fit Groove",
+     "score": 0.7635,
+     "reasons": [
+      "energy steady (-1.0 LU)",
+      "B has a clean 16-bar intro",
+      "matching groove (r=0.95)",
+      "8-bar window (short of a 16-bar phrase)",
+      "longer cut"
+     ],
+     "suggested_transition": "bass_swap_8",
+     "stretch_pct": 3.71,
+     "multiplier": "1",
+     "camelot_a": "8A",
+     "camelot_b": "6A"
+    },
+    {
+     "id": "sample-08",
+     "title": "Dummy Data - Two Cuts Extended Mix",
+     "score": 0.7148,
+     "reasons": [
+      "-2.1% stretch on B (126.0 end -> 128.6 start)",
+      "energy steady (-1.0 LU)",
+      "B has a clean 16-bar intro",
+      "8-bar window (short of a 16-bar phrase)",
+      "different sound (closer than only 39% of pairs)",
+      "different style",
+      "longer cut"
+     ],
+     "suggested_transition": "bass_swap_8",
+     "stretch_pct": 2.06,
+     "multiplier": "1",
+     "camelot_a": "8A",
+     "camelot_b": "6A"
+    },
+    {
+     "id": "sample-03",
+     "title": "Made-Up Collective - Octave Swap",
+     "score": 0.656,
+     "reasons": [
+      "energy steady (-1.0 LU)",
+      "B has a clean 16-bar intro",
+      "same style",
+      "tempo change x2/3 (89 -> 129): transition track or brake, no blend",
+      "8-bar window (short of a 16-bar phrase)",
+      "groove not comparable at x2/3"
+     ],
+     "suggested_transition": "brake_cut",
+     "stretch_pct": 3.67,
+     "multiplier": "2/3",
+     "camelot_a": "11A",
+     "camelot_b": "6A"
+    },
+    {
+     "id": "sample-12",
+     "title": "Stand-In Singers - Every Word Sung",
+     "score": 0.5538,
+     "reasons": [
+      "energy steady (-1.1 LU)",
+      "B has a clean 16-bar intro",
+      "similar sound (closer than 94% of pairs)",
+      "tempo change x3/4 (105 -> 129): transition track or brake, no blend",
+      "12B -> 6A (clash), key unsure",
+      "8-bar window (short of a 16-bar phrase)",
+      "groove not comparable at x3/4"
+     ],
+     "suggested_transition": "brake_cut",
+     "stretch_pct": 8.14,
+     "multiplier": "3/4",
+     "camelot_a": "12B",
+     "camelot_b": "6A"
+    },
+    {
+     "id": "sample-05",
+     "title": "Sample Club - Tempo Ramp Transition Edit",
+     "score": 0.4385,
+     "reasons": [
+      "B has a clean 16-bar intro",
+      "matching groove (r=0.96)",
+      "B enters -3.9 LU quieter",
+      "-14.8% stretch on B (112.0 end -> 128.6 start)",
+      "8-bar window (short of a 16-bar phrase)",
+      "different sound (closer than only 38% of pairs)",
+      "different style"
+     ],
+     "suggested_transition": "ramped_blend",
+     "stretch_pct": 14.83,
+     "multiplier": "1",
+     "camelot_a": "8B",
+     "camelot_b": "6A"
+    }
+   ]
+  },
+  "folder": "6 - 125-134",
+  "bpm": 128.599,
+  "camelot": "6A",
+  "pool": {
+   "out": [
+    {
+     "id": "sample-06",
+     "title": "Synthetic Soul - Short One",
+     "score": 0.7946,
+     "reasons": [
+      "-1.1% stretch on B (128.6 end -> 130.0 start)",
+      "B enters -2.2 LU quieter",
+      "similar sound (closer than 97% of pairs)",
+      "6A -> 10B (clash)"
+     ],
+     "suggested_transition": "bass_swap_8",
+     "stretch_pct": 1.09,
+     "multiplier": "1",
+     "camelot_a": "6A",
+     "camelot_b": "10B"
+    },
+    {
+     "id": "sample-10",
+     "title": "Nobody In Particular - Neighbour Keys",
+     "score": 0.7761,
+     "reasons": [
+      "+2.6% stretch on B (128.6 end -> 125.2 start)",
+      "16-bar phrases both sides",
+      "matching groove (r=0.97)",
+      "different sound (closer than only 24% of pairs)",
+      "different style",
+      "longer cut"
+     ],
+     "suggested_transition": "bass_swap_16",
+     "stretch_pct": 2.64,
+     "multiplier": "1",
+     "camelot_a": "6A",
+     "camelot_b": "7A"
+    },
+    {
+     "id": "sample-01",
+     "title": "The Placeholders - Grid Fit Groove",
+     "score": 0.7311,
+     "reasons": [
+      "matching groove (r=0.95)",
+      "+3.6% stretch on B (128.6 end -> 124.0 start)",
+      "no vocal clash",
+      "8-bar window (short of a 16-bar phrase)",
+      "longer cut"
+     ],
+     "suggested_transition": "bass_swap_8",
+     "stretch_pct": 3.58,
+     "multiplier": "1",
+     "camelot_a": "6A",
+     "camelot_b": "8A"
+    },
+    {
+     "id": "sample-08",
+     "title": "Dummy Data - Two Cuts Extended Mix",
+     "score": 0.6742,
+     "reasons": [
+      "+2.0% stretch on B (128.6 end -> 126.0 start)",
+      "matching groove (r=0.96)",
+      "no vocal clash",
+      "8-bar window (short of a 16-bar phrase)",
+      "different sound (closer than only 39% of pairs)",
+      "different style",
+      "longer cut"
+     ],
+     "suggested_transition": "bass_swap_8",
+     "stretch_pct": 2.02,
+     "multiplier": "1",
+     "camelot_a": "6A",
+     "camelot_b": "8A"
+    },
+    {
+     "id": "sample-02",
+     "title": "Test Pattern - Low Confidence",
+     "score": 0.6689,
+     "reasons": [
+      "B has a clean 16-bar intro",
+      "16-bar phrases both sides",
+      "matching groove (r=0.95)",
+      "different style",
+      "longer cut"
+     ],
+     "suggested_transition": "ramped_blend",
+     "stretch_pct": 7.85,
+     "multiplier": "1",
+     "camelot_a": "6A",
+     "camelot_b": "9A"
+    },
+    {
+     "id": "sample-11",
+     "title": "Example Ensemble - Steady Hands Club Mix",
+     "score": 0.6662,
+     "reasons": [
+      "16-bar phrases both sides",
+      "matching groove (r=0.98)",
+      "B has a clean 16-bar intro",
+      "6A -> 9B (clash)",
+      "different style",
+      "longer cut"
+     ],
+     "suggested_transition": "bass_swap_16",
+     "stretch_pct": 5.13,
+     "multiplier": "1",
+     "camelot_a": "6A",
+     "camelot_b": "9B"
+    },
+    {
+     "id": "sample-03",
+     "title": "Made-Up Collective - Octave Swap",
+     "score": 0.6171,
+     "reasons": [
+      "same style",
+      "similar sound (closer than 98% of pairs)",
+      "no vocal clash",
+      "tempo change x3/2 (129 -> 89): transition track or brake, no blend",
+      "8-bar window (short of a 16-bar phrase)",
+      "groove not comparable at x3/2"
+     ],
+     "suggested_transition": "brake_cut",
+     "stretch_pct": 3.81,
+     "multiplier": "3/2",
+     "camelot_a": "6A",
+     "camelot_b": "11A"
+    },
+    {
+     "id": "sample-07",
+     "title": "Imaginary Orchestra - Half Time Walk",
+     "score": 0.5734,
+     "reasons": [
+      "B has a clean 16-bar intro",
+      "related style",
+      "B enters -3.6 LU quieter",
+      "tempo change x3/2 (129 -> 86): transition track or brake, no blend",
+      "11-bar window (short of a 16-bar phrase)",
+      "groove not comparable at x3/2"
+     ],
+     "suggested_transition": "brake_cut",
+     "stretch_pct": 0.9,
+     "multiplier": "3/2",
+     "camelot_a": "6A",
+     "camelot_b": "10A"
+    }
+   ],
+   "in": [
+    {
+     "id": "sample-10",
+     "title": "Nobody In Particular - Neighbour Keys",
+     "score": 0.8098,
+     "reasons": [
+      "-2.7% stretch on B (125.2 end -> 128.6 start)",
+      "energy steady (-1.1 LU)",
+      "B has a clean 16-bar intro",
+      "different sound (closer than only 24% of pairs)",
+      "different style",
+      "longer cut"
+     ],
+     "suggested_transition": "bass_swap_16",
+     "stretch_pct": 2.71,
+     "multiplier": "1",
+     "camelot_a": "7A",
+     "camelot_b": "6A"
+    },
+    {
+     "id": "sample-06",
+     "title": "Synthetic Soul - Short One",
+     "score": 0.772,
+     "reasons": [
+      "+1.1% stretch on B (130.0 end -> 128.6 start)",
+      "energy steady (-1.8 LU)",
+      "B has a clean 16-bar intro",
+      "10B -> 6A (clash)",
+      "8-bar window (short of a 16-bar phrase)"
+     ],
+     "suggested_transition": "bass_swap_8",
+     "stretch_pct": 1.08,
+     "multiplier": "1",
+     "camelot_a": "10B",
+     "camelot_b": "6A"
+    },
+    {
+     "id": "sample-01",
+     "title": "The Placeholders - Grid Fit Groove",
+     "score": 0.7635,
+     "reasons": [
+      "energy steady (-1.0 LU)",
+      "B has a clean 16-bar intro",
+      "matching groove (r=0.95)",
+      "8-bar window (short of a 16-bar phrase)",
+      "longer cut"
+     ],
+     "suggested_transition": "bass_swap_8",
+     "stretch_pct": 3.71,
+     "multiplier": "1",
+     "camelot_a": "8A",
+     "camelot_b": "6A"
+    },
+    {
+     "id": "sample-08",
+     "title": "Dummy Data - Two Cuts Extended Mix",
+     "score": 0.7148,
+     "reasons": [
+      "-2.1% stretch on B (126.0 end -> 128.6 start)",
+      "energy steady (-1.0 LU)",
+      "B has a clean 16-bar intro",
+      "8-bar window (short of a 16-bar phrase)",
+      "different sound (closer than only 39% of pairs)",
+      "different style",
+      "longer cut"
+     ],
+     "suggested_transition": "bass_swap_8",
+     "stretch_pct": 2.06,
+     "multiplier": "1",
+     "camelot_a": "8A",
+     "camelot_b": "6A"
+    },
+    {
+     "id": "sample-03",
+     "title": "Made-Up Collective - Octave Swap",
+     "score": 0.656,
+     "reasons": [
+      "energy steady (-1.0 LU)",
+      "B has a clean 16-bar intro",
+      "same style",
+      "tempo change x2/3 (89 -> 129): transition track or brake, no blend",
+      "8-bar window (short of a 16-bar phrase)",
+      "groove not comparable at x2/3"
+     ],
+     "suggested_transition": "brake_cut",
+     "stretch_pct": 3.67,
+     "multiplier": "2/3",
+     "camelot_a": "11A",
+     "camelot_b": "6A"
+    },
+    {
+     "id": "sample-11",
+     "title": "Example Ensemble - Steady Hands Club Mix",
+     "score": 0.6126,
+     "reasons": [
+      "energy steady (-0.9 LU)",
+      "B has a clean 16-bar intro",
+      "matching groove (r=0.98)",
+      "9B -> 6A (clash)",
+      "8-bar window (short of a 16-bar phrase)",
+      "different style",
+      "longer cut"
+     ],
+     "suggested_transition": "bass_swap_8",
+     "stretch_pct": 5.41,
+     "multiplier": "1",
+     "camelot_a": "9B",
+     "camelot_b": "6A"
+    },
+    {
+     "id": "sample-02",
+     "title": "Test Pattern - Low Confidence",
+     "score": 0.602,
+     "reasons": [
+      "energy steady (-1.2 LU)",
+      "B has a clean 16-bar intro",
+      "matching groove (r=0.95)",
+      "8-bar window (short of a 16-bar phrase)",
+      "different style",
+      "longer cut"
+     ],
+     "suggested_transition": "ramped_blend",
+     "stretch_pct": 8.52,
+     "multiplier": "1",
+     "camelot_a": "9A",
+     "camelot_b": "6A"
+    },
+    {
+     "id": "sample-07",
+     "title": "Imaginary Orchestra - Half Time Walk",
+     "score": 0.571,
+     "reasons": [
+      "energy steady (-1.1 LU)",
+      "B has a clean 16-bar intro",
+      "related style",
+      "tempo change x2/3 (86 -> 129): transition track or brake, no blend",
+      "8-bar window (short of a 16-bar phrase)",
+      "groove not comparable at x2/3"
+     ],
+     "suggested_transition": "brake_cut",
+     "stretch_pct": 0.89,
+     "multiplier": "2/3",
+     "camelot_a": "10A",
+     "camelot_b": "6A"
+    }
+   ]
+  }
+ },
+ "sample-05": {
+  "title": "Sample Club - Tempo Ramp Transition Edit",
+  "on_disc": true,
+  "disc": {
+   "out": [
+    {
+     "id": "sample-01",
+     "title": "The Placeholders - Grid Fit Groove",
+     "score": 0.6441,
+     "reasons": [
+      "no vocal clash",
+      "matching groove (r=0.97)",
+      "related style",
+      "-10.7% stretch on B (112.0 end -> 124.0 start)",
+      "8-bar window (short of a 16-bar phrase)",
+      "longer cut"
+     ],
+     "suggested_transition": "ramped_blend",
+     "stretch_pct": 10.73,
+     "multiplier": "1",
+     "camelot_a": "8B",
+     "camelot_b": "8A"
+    },
+    {
+     "id": "sample-08",
+     "title": "Dummy Data - Two Cuts Extended Mix",
+     "score": 0.6378,
+     "reasons": [
+      "matching groove (r=0.98)",
+      "no vocal clash",
+      "related style",
+      "-12.5% stretch on B (112.0 end -> 126.0 start)",
+      "8-bar window (short of a 16-bar phrase)",
+      "longer cut"
+     ],
+     "suggested_transition": "ramped_blend",
+     "stretch_pct": 12.51,
+     "multiplier": "1",
+     "camelot_a": "8B",
+     "camelot_b": "8A"
+    },
+    {
+     "id": "sample-10",
+     "title": "Nobody In Particular - Neighbour Keys",
+     "score": 0.5999,
+     "reasons": [
+      "B has a clean 16-bar intro",
+      "similar sound (closer than 100% of pairs)",
+      "matching groove (r=0.96)",
+      "-11.8% stretch on B (112.0 end -> 125.2 start)",
+      "8B -> 7A (clash)",
+      "8-bar window (short of a 16-bar phrase)",
+      "longer cut"
+     ],
+     "suggested_transition": "ramped_blend",
+     "stretch_pct": 11.8,
+     "multiplier": "1",
+     "camelot_a": "8B",
+     "camelot_b": "7A"
+    },
+    {
+     "id": "sample-12",
+     "title": "Stand-In Singers - Every Word Sung",
+     "score": 0.571,
+     "reasons": [
+      "matching groove (r=0.97)",
+      "no vocal clash",
+      "B enters -3.7 LU quieter",
+      "8-bar window (short of a 16-bar phrase)",
+      "different sound (closer than only 23% of pairs)"
+     ],
+     "suggested_transition": "ramped_blend",
+     "stretch_pct": 6.24,
+     "multiplier": "1",
+     "camelot_a": "8B",
+     "camelot_b": "12B"
+    },
+    {
+     "id": "sample-04",
+     "title": "Fictional Four - Fade Away Test",
+     "score": 0.4685,
+     "reasons": [
+      "B has a clean 16-bar intro",
+      "matching groove (r=0.96)",
+      "B enters -3.9 LU quieter",
+      "-14.8% stretch on B (112.0 end -> 128.6 start)",
+      "8-bar window (short of a 16-bar phrase)",
+      "different sound (closer than only 38% of pairs)",
+      "different style",
+      "longer cut"
+     ],
+     "suggested_transition": "ramped_blend",
+     "stretch_pct": 14.83,
+     "multiplier": "1",
+     "camelot_a": "8B",
+     "camelot_b": "6A"
+    },
+    {
+     "id": "sample-03",
+     "title": "Made-Up Collective - Octave Swap",
+     "score": 0.3677,
+     "reasons": [
+      "no vocal clash",
+      "B enters -3.9 LU quieter",
+      "tempo change x4/3 (112 -> 89): transition track or brake, no blend",
+      "8B -> 11A (clash)",
+      "8-bar window (short of a 16-bar phrase)",
+      "different sound (closer than only 14% of pairs)",
+      "groove not comparable at x4/3",
+      "different style"
+     ],
+     "suggested_transition": "brake_cut",
+     "stretch_pct": 5.96,
+     "multiplier": "4/3",
+     "camelot_a": "8B",
+     "camelot_b": "11A"
+    }
+   ],
+   "in": [
+    {
+     "id": "sample-10",
+     "title": "Nobody In Particular - Neighbour Keys",
+     "score": 0.6571,
+     "reasons": [
+      "energy steady (+2.0 LU)",
+      "B has a clean 16-bar intro",
+      "similar sound (closer than 100% of pairs)",
+      "tempo change x4/3 (125 -> 100): transition track or brake, no blend",
+      "7A -> 8B (clash)",
+      "groove not comparable at x4/3",
+      "longer cut"
+     ],
+     "suggested_transition": "brake_cut",
+     "stretch_pct": 6.5,
+     "multiplier": "4/3",
+     "camelot_a": "7A",
+     "camelot_b": "8B"
+    },
+    {
+     "id": "sample-08",
+     "title": "Dummy Data - Two Cuts Extended Mix",
+     "score": 0.6524,
+     "reasons": [
+      "B has a clean 16-bar intro",
+      "B enters +2.0 LU louder",
+      "related style",
+      "tempo change x4/3 (126 -> 100): transition track or brake, no blend",
+      "8-bar window (short of a 16-bar phrase)",
+      "groove not comparable at x4/3",
+      "longer cut"
+     ],
+     "suggested_transition": "brake_cut",
+     "stretch_pct": 5.82,
+     "multiplier": "4/3",
+     "camelot_a": "8A",
+     "camelot_b": "8B"
+    },
+    {
+     "id": "sample-12",
+     "title": "Stand-In Singers - Every Word Sung",
+     "score": 0.6379,
+     "reasons": [
+      "energy steady (+1.9 LU)",
+      "matching groove (r=0.97)",
+      "B has a clean 16-bar intro",
+      "8-bar window (short of a 16-bar phrase)",
+      "different sound (closer than only 23% of pairs)"
+     ],
+     "suggested_transition": "bass_swap_8",
+     "stretch_pct": 4.76,
+     "multiplier": "1",
+     "camelot_a": "12B",
+     "camelot_b": "8B"
+    },
+    {
+     "id": "sample-01",
+     "title": "The Placeholders - Grid Fit Groove",
+     "score": 0.6307,
+     "reasons": [
+      "B has a clean 16-bar intro",
+      "B enters +2.0 LU louder",
+      "related style",
+      "tempo change x4/3 (124 -> 100): transition track or brake, no blend",
+      "8-bar window (short of a 16-bar phrase)",
+      "groove not comparable at x4/3",
+      "longer cut"
+     ],
+     "suggested_transition": "brake_cut",
+     "stretch_pct": 7.53,
+     "multiplier": "4/3",
+     "camelot_a": "8A",
+     "camelot_b": "8B"
+    },
+    {
+     "id": "sample-04",
+     "title": "Fictional Four - Fade Away Test",
+     "score": 0.5598,
+     "reasons": [
+      "energy steady (-1.0 LU)",
+      "B has a clean 16-bar intro",
+      "16-bar phrases both sides",
+      "tempo change x4/3 (129 -> 100): transition track or brake, no blend",
+      "different sound (closer than only 38% of pairs)",
+      "groove not comparable at x4/3",
+      "different style",
+      "longer cut"
+     ],
+     "suggested_transition": "brake_cut",
+     "stretch_pct": 3.68,
+     "multiplier": "4/3",
+     "camelot_a": "6A",
+     "camelot_b": "8B"
+    },
+    {
+     "id": "sample-03",
+     "title": "Made-Up Collective - Octave Swap",
+     "score": 0.4132,
+     "reasons": [
+      "B has a clean 16-bar intro",
+      "B enters +2.1 LU louder",
+      "matching groove (r=0.97)",
+      "-12.4% stretch on B (89.0 end -> 100.0 start)",
+      "11A -> 8B (clash)",
+      "8-bar window (short of a 16-bar phrase)",
+      "different sound (closer than only 14% of pairs)",
+      "different style"
+     ],
+     "suggested_transition": "ramped_blend",
+     "stretch_pct": 12.36,
+     "multiplier": "1",
+     "camelot_a": "11A",
+     "camelot_b": "8B"
+    }
+   ]
+  },
+  "folder": "3 - 100-109",
+  "bpm": 105.602,
+  "camelot": "8B",
+  "pool": {
+   "out": [
+    {
+     "id": "sample-11",
+     "title": "Example Ensemble - Steady Hands Club Mix",
+     "score": 0.6543,
+     "reasons": [
+      "B has a clean 16-bar intro",
+      "matching groove (r=0.98)",
+      "related style",
+      "8-bar window (short of a 16-bar phrase)",
+      "different sound (closer than only 32% of pairs)",
+      "longer cut"
+     ],
+     "suggested_transition": "ramped_blend",
+     "stretch_pct": 8.94,
+     "multiplier": "1",
+     "camelot_a": "8B",
+     "camelot_b": "9B"
+    },
+    {
+     "id": "sample-01",
+     "title": "The Placeholders - Grid Fit Groove",
+     "score": 0.6441,
+     "reasons": [
+      "no vocal clash",
+      "matching groove (r=0.97)",
+      "related style",
+      "-10.7% stretch on B (112.0 end -> 124.0 start)",
+      "8-bar window (short of a 16-bar phrase)",
+      "longer cut"
+     ],
+     "suggested_transition": "ramped_blend",
+     "stretch_pct": 10.73,
+     "multiplier": "1",
+     "camelot_a": "8B",
+     "camelot_b": "8A"
+    },
+    {
+     "id": "sample-08",
+     "title": "Dummy Data - Two Cuts Extended Mix",
+     "score": 0.6378,
+     "reasons": [
+      "matching groove (r=0.98)",
+      "no vocal clash",
+      "related style",
+      "-12.5% stretch on B (112.0 end -> 126.0 start)",
+      "8-bar window (short of a 16-bar phrase)",
+      "longer cut"
+     ],
+     "suggested_transition": "ramped_blend",
+     "stretch_pct": 12.51,
+     "multiplier": "1",
+     "camelot_a": "8B",
+     "camelot_b": "8A"
+    },
+    {
+     "id": "sample-02",
+     "title": "Test Pattern - Low Confidence",
+     "score": 0.6108,
+     "reasons": [
+      "B has a clean 16-bar intro",
+      "matching groove (r=0.97)",
+      "related style",
+      "8B -> 9A (clash)",
+      "8-bar window (short of a 16-bar phrase)",
+      "different sound (closer than only 11% of pairs)",
+      "longer cut"
+     ],
+     "suggested_transition": "bass_swap_8",
+     "stretch_pct": 5.81,
+     "multiplier": "1",
+     "camelot_a": "8B",
+     "camelot_b": "9A"
+    },
+    {
+     "id": "sample-10",
+     "title": "Nobody In Particular - Neighbour Keys",
+     "score": 0.5999,
+     "reasons": [
+      "B has a clean 16-bar intro",
+      "similar sound (closer than 100% of pairs)",
+      "matching groove (r=0.96)",
+      "-11.8% stretch on B (112.0 end -> 125.2 start)",
+      "8B -> 7A (clash)",
+      "8-bar window (short of a 16-bar phrase)",
+      "longer cut"
+     ],
+     "suggested_transition": "ramped_blend",
+     "stretch_pct": 11.8,
+     "multiplier": "1",
+     "camelot_a": "8B",
+     "camelot_b": "7A"
+    },
+    {
+     "id": "sample-12",
+     "title": "Stand-In Singers - Every Word Sung",
+     "score": 0.571,
+     "reasons": [
+      "matching groove (r=0.97)",
+      "no vocal clash",
+      "B enters -3.7 LU quieter",
+      "8-bar window (short of a 16-bar phrase)",
+      "different sound (closer than only 23% of pairs)"
+     ],
+     "suggested_transition": "ramped_blend",
+     "stretch_pct": 6.24,
+     "multiplier": "1",
+     "camelot_a": "8B",
+     "camelot_b": "12B"
+    },
+    {
+     "id": "sample-04",
+     "title": "Fictional Four - Fade Away Test",
+     "score": 0.4685,
+     "reasons": [
+      "B has a clean 16-bar intro",
+      "matching groove (r=0.96)",
+      "B enters -3.9 LU quieter",
+      "-14.8% stretch on B (112.0 end -> 128.6 start)",
+      "8-bar window (short of a 16-bar phrase)",
+      "different sound (closer than only 38% of pairs)",
+      "different style",
+      "longer cut"
+     ],
+     "suggested_transition": "ramped_blend",
+     "stretch_pct": 14.83,
+     "multiplier": "1",
+     "camelot_a": "8B",
+     "camelot_b": "6A"
+    },
+    {
+     "id": "sample-07",
+     "title": "Imaginary Orchestra - Half Time Walk",
+     "score": 0.4671,
+     "reasons": [
+      "B has a clean 16-bar intro",
+      "B enters -3.5 LU quieter",
+      "8B -> 10A (pitch-shift B by -2 st)",
+      "tempo change x4/3 (112 -> 86): transition track or brake, no blend",
+      "8-bar window (short of a 16-bar phrase)",
+      "groove not comparable at x4/3",
+      "different style"
+     ],
+     "suggested_transition": "brake_cut",
+     "stretch_pct": 2.99,
+     "multiplier": "4/3",
+     "camelot_a": "8B",
+     "camelot_b": "10A"
+    }
+   ],
+   "in": [
+    {
+     "id": "sample-10",
+     "title": "Nobody In Particular - Neighbour Keys",
+     "score": 0.6571,
+     "reasons": [
+      "energy steady (+2.0 LU)",
+      "B has a clean 16-bar intro",
+      "similar sound (closer than 100% of pairs)",
+      "tempo change x4/3 (125 -> 100): transition track or brake, no blend",
+      "7A -> 8B (clash)",
+      "groove not comparable at x4/3",
+      "longer cut"
+     ],
+     "suggested_transition": "brake_cut",
+     "stretch_pct": 6.5,
+     "multiplier": "4/3",
+     "camelot_a": "7A",
+     "camelot_b": "8B"
+    },
+    {
+     "id": "sample-08",
+     "title": "Dummy Data - Two Cuts Extended Mix",
+     "score": 0.6524,
+     "reasons": [
+      "B has a clean 16-bar intro",
+      "B enters +2.0 LU louder",
+      "related style",
+      "tempo change x4/3 (126 -> 100): transition track or brake, no blend",
+      "8-bar window (short of a 16-bar phrase)",
+      "groove not comparable at x4/3",
+      "longer cut"
+     ],
+     "suggested_transition": "brake_cut",
+     "stretch_pct": 5.82,
+     "multiplier": "4/3",
+     "camelot_a": "8A",
+     "camelot_b": "8B"
+    },
+    {
+     "id": "sample-12",
+     "title": "Stand-In Singers - Every Word Sung",
+     "score": 0.6379,
+     "reasons": [
+      "energy steady (+1.9 LU)",
+      "matching groove (r=0.97)",
+      "B has a clean 16-bar intro",
+      "8-bar window (short of a 16-bar phrase)",
+      "different sound (closer than only 23% of pairs)"
+     ],
+     "suggested_transition": "bass_swap_8",
+     "stretch_pct": 4.76,
+     "multiplier": "1",
+     "camelot_a": "12B",
+     "camelot_b": "8B"
+    },
+    {
+     "id": "sample-01",
+     "title": "The Placeholders - Grid Fit Groove",
+     "score": 0.6307,
+     "reasons": [
+      "B has a clean 16-bar intro",
+      "B enters +2.0 LU louder",
+      "related style",
+      "tempo change x4/3 (124 -> 100): transition track or brake, no blend",
+      "8-bar window (short of a 16-bar phrase)",
+      "groove not comparable at x4/3",
+      "longer cut"
+     ],
+     "suggested_transition": "brake_cut",
+     "stretch_pct": 7.53,
+     "multiplier": "4/3",
+     "camelot_a": "8A",
+     "camelot_b": "8B"
+    },
+    {
+     "id": "sample-11",
+     "title": "Example Ensemble - Steady Hands Club Mix",
+     "score": 0.6044,
+     "reasons": [
+      "B has a clean 16-bar intro",
+      "B enters +2.1 LU louder",
+      "related style",
+      "tempo change x4/3 (122 -> 100): transition track or brake, no blend",
+      "8-bar window (short of a 16-bar phrase)",
+      "different sound (closer than only 32% of pairs)",
+      "groove not comparable at x4/3",
+      "longer cut"
+     ],
+     "suggested_transition": "brake_cut",
+     "stretch_pct": 9.29,
+     "multiplier": "4/3",
+     "camelot_a": "9B",
+     "camelot_b": "8B"
+    },
+    {
+     "id": "sample-04",
+     "title": "Fictional Four - Fade Away Test",
+     "score": 0.5598,
+     "reasons": [
+      "energy steady (-1.0 LU)",
+      "B has a clean 16-bar intro",
+      "16-bar phrases both sides",
+      "tempo change x4/3 (129 -> 100): transition track or brake, no blend",
+      "different sound (closer than only 38% of pairs)",
+      "groove not comparable at x4/3",
+      "different style",
+      "longer cut"
+     ],
+     "suggested_transition": "brake_cut",
+     "stretch_pct": 3.68,
+     "multiplier": "4/3",
+     "camelot_a": "6A",
+     "camelot_b": "8B"
+    },
+    {
+     "id": "sample-06",
+     "title": "Synthetic Soul - Short One",
+     "score": 0.4743,
+     "reasons": [
+      "energy steady (+1.3 LU)",
+      "B has a clean 16-bar intro",
+      "10B -> 8B (pitch-shift B by +2 st)",
+      "tempo change x4/3 (130 -> 100): transition track or brake, no blend",
+      "8-bar window (short of a 16-bar phrase)",
+      "different sound (closer than only 18% of pairs)",
+      "groove not comparable at x4/3"
+     ],
+     "suggested_transition": "brake_cut",
+     "stretch_pct": 2.56,
+     "multiplier": "4/3",
+     "camelot_a": "10B",
+     "camelot_b": "8B"
+    },
+    {
+     "id": "sample-02",
+     "title": "Test Pattern - Low Confidence",
+     "score": 0.4743,
+     "reasons": [
+      "energy steady (+1.8 LU)",
+      "B has a clean 16-bar intro",
+      "related style",
+      "tempo change x4/3 (118 -> 100): transition track or brake, no blend",
+      "9A -> 8B (clash)",
+      "8-bar window (short of a 16-bar phrase)",
+      "different sound (closer than only 11% of pairs)",
+      "groove not comparable at x4/3",
+      "longer cut"
+     ],
+     "suggested_transition": "brake_cut",
+     "stretch_pct": 12.52,
+     "multiplier": "4/3",
+     "camelot_a": "9A",
+     "camelot_b": "8B"
+    }
+   ]
+  }
+ },
+ "sample-06": {
+  "title": "Synthetic Soul - Short One",
+  "on_disc": false,
+  "disc": {
+   "out": [
+    {
+     "id": "sample-04",
+     "title": "Fictional Four - Fade Away Test",
+     "score": 0.802,
+     "reasons": [
+      "+1.1% stretch on B (130.0 end -> 128.6 start)",
+      "energy steady (-1.8 LU)",
+      "B has a clean 16-bar intro",
+      "10B -> 6A (clash)",
+      "8-bar window (short of a 16-bar phrase)",
+      "longer cut"
+     ],
+     "suggested_transition": "bass_swap_8",
+     "stretch_pct": 1.08,
+     "multiplier": "1",
+     "camelot_a": "10B",
+     "camelot_b": "6A"
+    },
+    {
+     "id": "sample-08",
+     "title": "Dummy Data - Two Cuts Extended Mix",
+     "score": 0.7575,
+     "reasons": [
+      "+3.1% stretch on B (130.0 end -> 126.0 start)",
+      "B enters -2.1 LU quieter",
+      "no vocal clash",
+      "8-bar window (short of a 16-bar phrase)",
+      "different style",
+      "longer cut"
+     ],
+     "suggested_transition": "bass_swap_8",
+     "stretch_pct": 3.08,
+     "multiplier": "1",
+     "camelot_a": "10B",
+     "camelot_b": "8A"
+    },
+    {
+     "id": "sample-01",
+     "title": "The Placeholders - Grid Fit Groove",
+     "score": 0.7403,
+     "reasons": [
+      "energy steady (-1.6 LU)",
+      "no vocal clash",
+      "matching groove (r=0.93)",
+      "8-bar window (short of a 16-bar phrase)",
+      "different style",
+      "longer cut"
+     ],
+     "suggested_transition": "bass_swap_8",
+     "stretch_pct": 4.61,
+     "multiplier": "1",
+     "camelot_a": "10B",
+     "camelot_b": "8A"
+    },
+    {
+     "id": "sample-10",
+     "title": "Nobody In Particular - Neighbour Keys",
+     "score": 0.6226,
+     "reasons": [
+      "energy steady (-1.9 LU)",
+      "B has a clean 16-bar intro",
+      "matching groove (r=0.96)",
+      "10B -> 7A (clash)",
+      "8-bar window (short of a 16-bar phrase)",
+      "different sound (closer than only 20% of pairs)",
+      "different style",
+      "longer cut"
+     ],
+     "suggested_transition": "bass_swap_8",
+     "stretch_pct": 3.69,
+     "multiplier": "1",
+     "camelot_a": "10B",
+     "camelot_b": "7A"
+    },
+    {
+     "id": "sample-12",
+     "title": "Stand-In Singers - Every Word Sung",
+     "score": 0.5996,
+     "reasons": [
+      "energy steady (-1.6 LU)",
+      "same style",
+      "similar sound (closer than 88% of pairs)",
+      "tempo change x4/3 (130 -> 105): transition track or brake, no blend",
+      "8-bar window (short of a 16-bar phrase)",
+      "groove not comparable at x4/3"
+     ],
+     "suggested_transition": "brake_cut",
+     "stretch_pct": 7.69,
+     "multiplier": "4/3",
+     "camelot_a": "10B",
+     "camelot_b": "12B"
+    },
+    {
+     "id": "sample-03",
+     "title": "Made-Up Collective - Octave Swap",
+     "score": 0.5614,
+     "reasons": [
+      "energy steady (-1.8 LU)",
+      "no vocal clash",
+      "similar sound (closer than 91% of pairs)",
+      "tempo change x3/2 (130 -> 89): transition track or brake, no blend",
+      "10B -> 11A (clash)",
+      "8-bar window (short of a 16-bar phrase)",
+      "groove not comparable at x3/2"
+     ],
+     "suggested_transition": "brake_cut",
+     "stretch_pct": 2.69,
+     "multiplier": "3/2",
+     "camelot_a": "10B",
+     "camelot_b": "11A"
+    },
+    {
+     "id": "sample-05",
+     "title": "Sample Club - Tempo Ramp Transition Edit",
+     "score": 0.4743,
+     "reasons": [
+      "energy steady (+1.3 LU)",
+      "B has a clean 16-bar intro",
+      "10B -> 8B (pitch-shift B by +2 st)",
+      "tempo change x4/3 (130 -> 100): transition track or brake, no blend",
+      "8-bar window (short of a 16-bar phrase)",
+      "different sound (closer than only 18% of pairs)",
+      "groove not comparable at x4/3"
+     ],
+     "suggested_transition": "brake_cut",
+     "stretch_pct": 2.56,
+     "multiplier": "4/3",
+     "camelot_a": "10B",
+     "camelot_b": "8B"
+    }
+   ],
+   "in": [
+    {
+     "id": "sample-04",
+     "title": "Fictional Four - Fade Away Test",
+     "score": 0.8246,
+     "reasons": [
+      "-1.1% stretch on B (128.6 end -> 130.0 start)",
+      "B enters -2.2 LU quieter",
+      "similar sound (closer than 97% of pairs)",
+      "6A -> 10B (clash)",
+      "longer cut"
+     ],
+     "suggested_transition": "bass_swap_8",
+     "stretch_pct": 1.09,
+     "multiplier": "1",
+     "camelot_a": "6A",
+     "camelot_b": "10B"
+    },
+    {
+     "id": "sample-08",
+     "title": "Dummy Data - Two Cuts Extended Mix",
+     "score": 0.7569,
+     "reasons": [
+      "energy steady (+0.9 LU)",
+      "-3.2% stretch on B (126.0 end -> 130.0 start)",
+      "no vocal clash",
+      "8-bar window (short of a 16-bar phrase)",
+      "different style",
+      "longer cut"
+     ],
+     "suggested_transition": "bass_swap_8",
+     "stretch_pct": 3.17,
+     "multiplier": "1",
+     "camelot_a": "8A",
+     "camelot_b": "10B"
+    },
+    {
+     "id": "sample-01",
+     "title": "The Placeholders - Grid Fit Groove",
+     "score": 0.7373,
+     "reasons": [
+      "energy steady (+0.9 LU)",
+      "no vocal clash",
+      "matching groove (r=0.93)",
+      "8-bar window (short of a 16-bar phrase)",
+      "different style",
+      "longer cut"
+     ],
+     "suggested_transition": "bass_swap_8",
+     "stretch_pct": 4.84,
+     "multiplier": "1",
+     "camelot_a": "8A",
+     "camelot_b": "10B"
+    },
+    {
+     "id": "sample-10",
+     "title": "Nobody In Particular - Neighbour Keys",
+     "score": 0.6564,
+     "reasons": [
+      "energy steady (+0.8 LU)",
+      "no vocal clash",
+      "matching groove (r=0.96)",
+      "7A -> 10B (clash)",
+      "different sound (closer than only 20% of pairs)",
+      "different style",
+      "longer cut"
+     ],
+     "suggested_transition": "bass_swap_8",
+     "stretch_pct": 3.83,
+     "multiplier": "1",
+     "camelot_a": "7A",
+     "camelot_b": "10B"
+    },
+    {
+     "id": "sample-12",
+     "title": "Stand-In Singers - Every Word Sung",
+     "score": 0.5999,
+     "reasons": [
+      "energy steady (+0.8 LU)",
+      "same style",
+      "similar sound (closer than 88% of pairs)",
+      "tempo change x3/4 (105 -> 130): transition track or brake, no blend",
+      "12B -> 10B (pitch-shift B by +2 st), key unsure",
+      "8-bar window (short of a 16-bar phrase)",
+      "groove not comparable at x3/4"
+     ],
+     "suggested_transition": "brake_cut",
+     "stretch_pct": 7.14,
+     "multiplier": "3/4",
+     "camelot_a": "12B",
+     "camelot_b": "10B"
+    },
+    {
+     "id": "sample-03",
+     "title": "Made-Up Collective - Octave Swap",
+     "score": 0.5608,
+     "reasons": [
+      "energy steady (+0.9 LU)",
+      "no vocal clash",
+      "similar sound (closer than 91% of pairs)",
+      "tempo change x2/3 (89 -> 130): transition track or brake, no blend",
+      "11A -> 10B (clash)",
+      "8-bar window (short of a 16-bar phrase)",
+      "groove not comparable at x2/3"
+     ],
+     "suggested_transition": "brake_cut",
+     "stretch_pct": 2.62,
+     "multiplier": "2/3",
+     "camelot_a": "11A",
+     "camelot_b": "10B"
+    },
+    {
+     "id": "sample-05",
+     "title": "Sample Club - Tempo Ramp Transition Edit",
+     "score": 0.4506,
+     "reasons": [
+      "B enters -2.0 LU quieter",
+      "no vocal clash",
+      "8B -> 10B (+2 energy boost)",
+      "tempo change x3/4 (112 -> 130): transition track or brake, no blend",
+      "8-bar window (short of a 16-bar phrase)",
+      "different sound (closer than only 18% of pairs)",
+      "groove not comparable at x3/4"
+     ],
+     "suggested_transition": "brake_cut",
+     "stretch_pct": 12.94,
+     "multiplier": "3/4",
+     "camelot_a": "8B",
+     "camelot_b": "10B"
+    }
+   ]
+  },
+  "folder": "6 - 125-134",
+  "bpm": 130.0,
+  "camelot": "10B",
+  "pool": {
+   "out": [
+    {
+     "id": "sample-04",
+     "title": "Fictional Four - Fade Away Test",
+     "score": 0.802,
+     "reasons": [
+      "+1.1% stretch on B (130.0 end -> 128.6 start)",
+      "energy steady (-1.8 LU)",
+      "B has a clean 16-bar intro",
+      "10B -> 6A (clash)",
+      "8-bar window (short of a 16-bar phrase)",
+      "longer cut"
+     ],
+     "suggested_transition": "bass_swap_8",
+     "stretch_pct": 1.08,
+     "multiplier": "1",
+     "camelot_a": "10B",
+     "camelot_b": "6A"
+    },
+    {
+     "id": "sample-08",
+     "title": "Dummy Data - Two Cuts Extended Mix",
+     "score": 0.7575,
+     "reasons": [
+      "+3.1% stretch on B (130.0 end -> 126.0 start)",
+      "B enters -2.1 LU quieter",
+      "no vocal clash",
+      "8-bar window (short of a 16-bar phrase)",
+      "different style",
+      "longer cut"
+     ],
+     "suggested_transition": "bass_swap_8",
+     "stretch_pct": 3.08,
+     "multiplier": "1",
+     "camelot_a": "10B",
+     "camelot_b": "8A"
+    },
+    {
+     "id": "sample-01",
+     "title": "The Placeholders - Grid Fit Groove",
+     "score": 0.7403,
+     "reasons": [
+      "energy steady (-1.6 LU)",
+      "no vocal clash",
+      "matching groove (r=0.93)",
+      "8-bar window (short of a 16-bar phrase)",
+      "different style",
+      "longer cut"
+     ],
+     "suggested_transition": "bass_swap_8",
+     "stretch_pct": 4.61,
+     "multiplier": "1",
+     "camelot_a": "10B",
+     "camelot_b": "8A"
+    },
+    {
+     "id": "sample-11",
+     "title": "Example Ensemble - Steady Hands Club Mix",
+     "score": 0.7256,
+     "reasons": [
+      "energy steady (-1.7 LU)",
+      "B has a clean 16-bar intro",
+      "matching groove (r=0.97)",
+      "8-bar window (short of a 16-bar phrase)",
+      "different style",
+      "longer cut"
+     ],
+     "suggested_transition": "ramped_blend",
+     "stretch_pct": 6.15,
+     "multiplier": "1",
+     "camelot_a": "10B",
+     "camelot_b": "9B"
+    },
+    {
+     "id": "sample-10",
+     "title": "Nobody In Particular - Neighbour Keys",
+     "score": 0.6226,
+     "reasons": [
+      "energy steady (-1.9 LU)",
+      "B has a clean 16-bar intro",
+      "matching groove (r=0.96)",
+      "10B -> 7A (clash)",
+      "8-bar window (short of a 16-bar phrase)",
+      "different sound (closer than only 20% of pairs)",
+      "different style",
+      "longer cut"
+     ],
+     "suggested_transition": "bass_swap_8",
+     "stretch_pct": 3.69,
+     "multiplier": "1",
+     "camelot_a": "10B",
+     "camelot_b": "7A"
+    },
+    {
+     "id": "sample-07",
+     "title": "Imaginary Orchestra - Half Time Walk",
+     "score": 0.6067,
+     "reasons": [
+      "energy steady (-1.4 LU)",
+      "B has a clean 16-bar intro",
+      "related style",
+      "tempo change x3/2 (130 -> 86): transition track or brake, no blend",
+      "8-bar window (short of a 16-bar phrase)",
+      "groove not comparable at x3/2"
+     ],
+     "suggested_transition": "brake_cut",
+     "stretch_pct": 0.19,
+     "multiplier": "3/2",
+     "camelot_a": "10B",
+     "camelot_b": "10A"
+    },
+    {
+     "id": "sample-12",
+     "title": "Stand-In Singers - Every Word Sung",
+     "score": 0.5996,
+     "reasons": [
+      "energy steady (-1.6 LU)",
+      "same style",
+      "similar sound (closer than 88% of pairs)",
+      "tempo change x4/3 (130 -> 105): transition track or brake, no blend",
+      "8-bar window (short of a 16-bar phrase)",
+      "groove not comparable at x4/3"
+     ],
+     "suggested_transition": "brake_cut",
+     "stretch_pct": 7.69,
+     "multiplier": "4/3",
+     "camelot_a": "10B",
+     "camelot_b": "12B"
+    },
+    {
+     "id": "sample-02",
+     "title": "Test Pattern - Low Confidence",
+     "score": 0.5728,
+     "reasons": [
+      "energy steady (-1.7 LU)",
+      "B has a clean 16-bar intro",
+      "matching groove (r=0.95)",
+      "10B -> 9A (clash)",
+      "8-bar window (short of a 16-bar phrase)",
+      "different style",
+      "longer cut"
+     ],
+     "suggested_transition": "ramped_blend",
+     "stretch_pct": 8.85,
+     "multiplier": "1",
+     "camelot_a": "10B",
+     "camelot_b": "9A"
+    }
+   ],
+   "in": [
+    {
+     "id": "sample-04",
+     "title": "Fictional Four - Fade Away Test",
+     "score": 0.8246,
+     "reasons": [
+      "-1.1% stretch on B (128.6 end -> 130.0 start)",
+      "B enters -2.2 LU quieter",
+      "similar sound (closer than 97% of pairs)",
+      "6A -> 10B (clash)",
+      "longer cut"
+     ],
+     "suggested_transition": "bass_swap_8",
+     "stretch_pct": 1.09,
+     "multiplier": "1",
+     "camelot_a": "6A",
+     "camelot_b": "10B"
+    },
+    {
+     "id": "sample-08",
+     "title": "Dummy Data - Two Cuts Extended Mix",
+     "score": 0.7569,
+     "reasons": [
+      "energy steady (+0.9 LU)",
+      "-3.2% stretch on B (126.0 end -> 130.0 start)",
+      "no vocal clash",
+      "8-bar window (short of a 16-bar phrase)",
+      "different style",
+      "longer cut"
+     ],
+     "suggested_transition": "bass_swap_8",
+     "stretch_pct": 3.17,
+     "multiplier": "1",
+     "camelot_a": "8A",
+     "camelot_b": "10B"
+    },
+    {
+     "id": "sample-01",
+     "title": "The Placeholders - Grid Fit Groove",
+     "score": 0.7373,
+     "reasons": [
+      "energy steady (+0.9 LU)",
+      "no vocal clash",
+      "matching groove (r=0.93)",
+      "8-bar window (short of a 16-bar phrase)",
+      "different style",
+      "longer cut"
+     ],
+     "suggested_transition": "bass_swap_8",
+     "stretch_pct": 4.84,
+     "multiplier": "1",
+     "camelot_a": "8A",
+     "camelot_b": "10B"
+    },
+    {
+     "id": "sample-11",
+     "title": "Example Ensemble - Steady Hands Club Mix",
+     "score": 0.7132,
+     "reasons": [
+      "energy steady (+0.9 LU)",
+      "no vocal clash",
+      "matching groove (r=0.97)",
+      "8-bar window (short of a 16-bar phrase)",
+      "different style",
+      "longer cut"
+     ],
+     "suggested_transition": "ramped_blend",
+     "stretch_pct": 6.56,
+     "multiplier": "1",
+     "camelot_a": "9B",
+     "camelot_b": "10B"
+    },
+    {
+     "id": "sample-10",
+     "title": "Nobody In Particular - Neighbour Keys",
+     "score": 0.6564,
+     "reasons": [
+      "energy steady (+0.8 LU)",
+      "no vocal clash",
+      "matching groove (r=0.96)",
+      "7A -> 10B (clash)",
+      "different sound (closer than only 20% of pairs)",
+      "different style",
+      "longer cut"
+     ],
+     "suggested_transition": "bass_swap_8",
+     "stretch_pct": 3.83,
+     "multiplier": "1",
+     "camelot_a": "7A",
+     "camelot_b": "10B"
+    },
+    {
+     "id": "sample-07",
+     "title": "Imaginary Orchestra - Half Time Walk",
+     "score": 0.6033,
+     "reasons": [
+      "energy steady (+0.8 LU)",
+      "no vocal clash",
+      "related style",
+      "tempo change x2/3 (86 -> 130): transition track or brake, no blend",
+      "8-bar window (short of a 16-bar phrase)",
+      "groove not comparable at x2/3"
+     ],
+     "suggested_transition": "brake_cut",
+     "stretch_pct": 0.19,
+     "multiplier": "2/3",
+     "camelot_a": "10A",
+     "camelot_b": "10B"
+    },
+    {
+     "id": "sample-12",
+     "title": "Stand-In Singers - Every Word Sung",
+     "score": 0.5999,
+     "reasons": [
+      "energy steady (+0.8 LU)",
+      "same style",
+      "similar sound (closer than 88% of pairs)",
+      "tempo change x3/4 (105 -> 130): transition track or brake, no blend",
+      "12B -> 10B (pitch-shift B by +2 st), key unsure",
+      "8-bar window (short of a 16-bar phrase)",
+      "groove not comparable at x3/4"
+     ],
+     "suggested_transition": "brake_cut",
+     "stretch_pct": 7.14,
+     "multiplier": "3/4",
+     "camelot_a": "12B",
+     "camelot_b": "10B"
+    },
+    {
+     "id": "sample-03",
+     "title": "Made-Up Collective - Octave Swap",
+     "score": 0.5608,
+     "reasons": [
+      "energy steady (+0.9 LU)",
+      "no vocal clash",
+      "similar sound (closer than 91% of pairs)",
+      "tempo change x2/3 (89 -> 130): transition track or brake, no blend",
+      "11A -> 10B (clash)",
+      "8-bar window (short of a 16-bar phrase)",
+      "groove not comparable at x2/3"
+     ],
+     "suggested_transition": "brake_cut",
+     "stretch_pct": 2.62,
+     "multiplier": "2/3",
+     "camelot_a": "11A",
+     "camelot_b": "10B"
+    }
+   ]
+  }
+ },
+ "sample-07": {
+  "title": "Imaginary Orchestra - Half Time Walk",
+  "on_disc": false,
+  "disc": {
+   "out": [
+    {
+     "id": "sample-03",
+     "title": "Made-Up Collective - Octave Swap",
+     "score": 0.7749,
+     "reasons": [
+      "-2.9% stretch on B (86.5 end -> 89.0 start)",
+      "energy steady (-1.1 LU)",
+      "no vocal clash",
+      "8-bar window (short of a 16-bar phrase)",
+      "different sound (closer than only 29% of pairs)"
+     ],
+     "suggested_transition": "bass_swap_8",
+     "stretch_pct": 2.89,
+     "multiplier": "1",
+     "camelot_a": "10A",
+     "camelot_b": "11A"
+    },
+    {
+     "id": "sample-04",
+     "title": "Fictional Four - Fade Away Test",
+     "score": 0.601,
+     "reasons": [
+      "energy steady (-1.1 LU)",
+      "B has a clean 16-bar intro",
+      "related style",
+      "tempo change x2/3 (86 -> 129): transition track or brake, no blend",
+      "8-bar window (short of a 16-bar phrase)",
+      "groove not comparable at x2/3",
+      "longer cut"
+     ],
+     "suggested_transition": "brake_cut",
+     "stretch_pct": 0.89,
+     "multiplier": "2/3",
+     "camelot_a": "10A",
+     "camelot_b": "6A"
+    },
+    {
+     "id": "sample-01",
+     "title": "The Placeholders - Grid Fit Groove",
+     "score": 0.5449,
+     "reasons": [
+      "energy steady (-0.9 LU)",
+      "no vocal clash",
+      "similar sound (closer than 71% of pairs)",
+      "tempo change x2/3 (86 -> 124): transition track or brake, no blend",
+      "8-bar window (short of a 16-bar phrase)",
+      "groove not comparable at x2/3",
+      "different style",
+      "longer cut"
+     ],
+     "suggested_transition": "brake_cut",
+     "stretch_pct": 4.43,
+     "multiplier": "2/3",
+     "camelot_a": "10A",
+     "camelot_b": "8A"
+    },
+    {
+     "id": "sample-10",
+     "title": "Nobody In Particular - Neighbour Keys",
+     "score": 0.5425,
+     "reasons": [
+      "energy steady (-1.1 LU)",
+      "B has a clean 16-bar intro",
+      "10A -> 7A (pitch-shift B by +2 st)",
+      "tempo change x2/3 (86 -> 125): transition track or brake, no blend",
+      "8-bar window (short of a 16-bar phrase)",
+      "groove not comparable at x2/3",
+      "longer cut"
+     ],
+     "suggested_transition": "brake_cut",
+     "stretch_pct": 3.51,
+     "multiplier": "2/3",
+     "camelot_a": "10A",
+     "camelot_b": "7A"
+    },
+    {
+     "id": "sample-08",
+     "title": "Dummy Data - Two Cuts Extended Mix",
+     "score": 0.4998,
+     "reasons": [
+      "energy steady (-1.4 LU)",
+      "no vocal clash",
+      "10A -> 8A (pitch-shift B by +2 st)",
+      "tempo change x2/3 (86 -> 126): transition track or brake, no blend",
+      "8-bar window (short of a 16-bar phrase)",
+      "different sound (closer than only 33% of pairs)",
+      "groove not comparable at x2/3",
+      "different style",
+      "longer cut"
+     ],
+     "suggested_transition": "brake_cut",
+     "stretch_pct": 2.89,
+     "multiplier": "2/3",
+     "camelot_a": "10A",
+     "camelot_b": "8A"
+    },
+    {
+     "id": "sample-12",
+     "title": "Stand-In Singers - Every Word Sung",
+     "score": 0.4751,
+     "reasons": [
+      "energy steady (-0.9 LU)",
+      "no vocal clash",
+      "related style",
+      "tempo change x3/4 (86 -> 105): transition track or brake, no blend",
+      "10A -> 12B (pitch-shift B by -2 st), key unsure",
+      "8-bar window (short of a 16-bar phrase)",
+      "different sound (closer than only 2% of pairs)",
+      "groove not comparable at x3/4"
+     ],
+     "suggested_transition": "brake_cut",
+     "stretch_pct": 8.96,
+     "multiplier": "3/4",
+     "camelot_a": "10A",
+     "camelot_b": "12B"
+    },
+    {
+     "id": "sample-05",
+     "title": "Sample Club - Tempo Ramp Transition Edit",
+     "score": 0.4577,
+     "reasons": [
+      "energy steady (+2.0 LU)",
+      "B has a clean 16-bar intro",
+      "10A -> 8B (pitch-shift B by +2 st)",
+      "tempo change x3/4 (86 -> 100): transition track or brake, no blend",
+      "8-bar window (short of a 16-bar phrase)",
+      "groove not comparable at x3/4",
+      "different style"
+     ],
+     "suggested_transition": "brake_cut",
+     "stretch_pct": 13.29,
+     "multiplier": "3/4",
+     "camelot_a": "10A",
+     "camelot_b": "8B"
+    }
+   ],
+   "in": [
+    {
+     "id": "sample-03",
+     "title": "Made-Up Collective - Octave Swap",
+     "score": 0.777,
+     "reasons": [
+      "+2.8% stretch on B (89.0 end -> 86.5 start)",
+      "energy steady (-0.6 LU)",
+      "B has a clean 16-bar intro",
+      "8-bar window (short of a 16-bar phrase)",
+      "different sound (closer than only 29% of pairs)"
+     ],
+     "suggested_transition": "bass_swap_8",
+     "stretch_pct": 2.81,
+     "multiplier": "1",
+     "camelot_a": "11A",
+     "camelot_b": "10A"
+    },
+    {
+     "id": "sample-04",
+     "title": "Fictional Four - Fade Away Test",
+     "score": 0.6034,
+     "reasons": [
+      "B has a clean 16-bar intro",
+      "related style",
+      "B enters -3.6 LU quieter",
+      "tempo change x3/2 (129 -> 86): transition track or brake, no blend",
+      "11-bar window (short of a 16-bar phrase)",
+      "groove not comparable at x3/2",
+      "longer cut"
+     ],
+     "suggested_transition": "brake_cut",
+     "stretch_pct": 0.9,
+     "multiplier": "3/2",
+     "camelot_a": "6A",
+     "camelot_b": "10A"
+    },
+    {
+     "id": "sample-10",
+     "title": "Nobody In Particular - Neighbour Keys",
+     "score": 0.5721,
+     "reasons": [
+      "energy steady (-0.7 LU)",
+      "B has a clean 16-bar intro",
+      "7A -> 10A (pitch-shift B by -2 st)",
+      "tempo change x3/2 (125 -> 86): transition track or brake, no blend",
+      "11-bar window (short of a 16-bar phrase)",
+      "groove not comparable at x3/2",
+      "longer cut"
+     ],
+     "suggested_transition": "brake_cut",
+     "stretch_pct": 3.63,
+     "multiplier": "3/2",
+     "camelot_a": "7A",
+     "camelot_b": "10A"
+    },
+    {
+     "id": "sample-01",
+     "title": "The Placeholders - Grid Fit Groove",
+     "score": 0.553,
+     "reasons": [
+      "energy steady (-0.6 LU)",
+      "B has a clean 16-bar intro",
+      "similar sound (closer than 71% of pairs)",
+      "tempo change x3/2 (124 -> 86): transition track or brake, no blend",
+      "8-bar window (short of a 16-bar phrase)",
+      "groove not comparable at x3/2",
+      "different style",
+      "longer cut"
+     ],
+     "suggested_transition": "brake_cut",
+     "stretch_pct": 4.64,
+     "multiplier": "3/2",
+     "camelot_a": "8A",
+     "camelot_b": "10A"
+    },
+    {
+     "id": "sample-08",
+     "title": "Dummy Data - Two Cuts Extended Mix",
+     "score": 0.5076,
+     "reasons": [
+      "energy steady (-0.6 LU)",
+      "B has a clean 16-bar intro",
+      "8A -> 10A (+2 energy boost)",
+      "tempo change x3/2 (126 -> 86): transition track or brake, no blend",
+      "8-bar window (short of a 16-bar phrase)",
+      "different sound (closer than only 33% of pairs)",
+      "groove not comparable at x3/2",
+      "different style",
+      "longer cut"
+     ],
+     "suggested_transition": "brake_cut",
+     "stretch_pct": 2.98,
+     "multiplier": "3/2",
+     "camelot_a": "8A",
+     "camelot_b": "10A"
+    },
+    {
+     "id": "sample-12",
+     "title": "Stand-In Singers - Every Word Sung",
+     "score": 0.4844,
+     "reasons": [
+      "energy steady (-0.7 LU)",
+      "B has a clean 16-bar intro",
+      "related style",
+      "tempo change x4/3 (105 -> 86): transition track or brake, no blend",
+      "12B -> 10A (pitch-shift B by +2 st), key unsure",
+      "8-bar window (short of a 16-bar phrase)",
+      "different sound (closer than only 2% of pairs)",
+      "groove not comparable at x4/3"
+     ],
+     "suggested_transition": "brake_cut",
+     "stretch_pct": 9.84,
+     "multiplier": "4/3",
+     "camelot_a": "12B",
+     "camelot_b": "10A"
+    },
+    {
+     "id": "sample-05",
+     "title": "Sample Club - Tempo Ramp Transition Edit",
+     "score": 0.4671,
+     "reasons": [
+      "B has a clean 16-bar intro",
+      "B enters -3.5 LU quieter",
+      "8B -> 10A (pitch-shift B by -2 st)",
+      "tempo change x4/3 (112 -> 86): transition track or brake, no blend",
+      "8-bar window (short of a 16-bar phrase)",
+      "groove not comparable at x4/3",
+      "different style"
+     ],
+     "suggested_transition": "brake_cut",
+     "stretch_pct": 2.99,
+     "multiplier": "4/3",
+     "camelot_a": "8B",
+     "camelot_b": "10A"
+    }
+   ]
+  },
+  "folder": "1 - under 90",
+  "bpm": 86.5,
+  "camelot": "10A",
+  "pool": {
+   "out": [
+    {
+     "id": "sample-03",
+     "title": "Made-Up Collective - Octave Swap",
+     "score": 0.7749,
+     "reasons": [
+      "-2.9% stretch on B (86.5 end -> 89.0 start)",
+      "energy steady (-1.1 LU)",
+      "no vocal clash",
+      "8-bar window (short of a 16-bar phrase)",
+      "different sound (closer than only 29% of pairs)"
+     ],
+     "suggested_transition": "bass_swap_8",
+     "stretch_pct": 2.89,
+     "multiplier": "1",
+     "camelot_a": "10A",
+     "camelot_b": "11A"
+    },
+    {
+     "id": "sample-06",
+     "title": "Synthetic Soul - Short One",
+     "score": 0.6033,
+     "reasons": [
+      "energy steady (+0.8 LU)",
+      "no vocal clash",
+      "related style",
+      "tempo change x2/3 (86 -> 130): transition track or brake, no blend",
+      "8-bar window (short of a 16-bar phrase)",
+      "groove not comparable at x2/3"
+     ],
+     "suggested_transition": "brake_cut",
+     "stretch_pct": 0.19,
+     "multiplier": "2/3",
+     "camelot_a": "10A",
+     "camelot_b": "10B"
+    },
+    {
+     "id": "sample-04",
+     "title": "Fictional Four - Fade Away Test",
+     "score": 0.601,
+     "reasons": [
+      "energy steady (-1.1 LU)",
+      "B has a clean 16-bar intro",
+      "related style",
+      "tempo change x2/3 (86 -> 129): transition track or brake, no blend",
+      "8-bar window (short of a 16-bar phrase)",
+      "groove not comparable at x2/3",
+      "longer cut"
+     ],
+     "suggested_transition": "brake_cut",
+     "stretch_pct": 0.89,
+     "multiplier": "2/3",
+     "camelot_a": "10A",
+     "camelot_b": "6A"
+    },
+    {
+     "id": "sample-01",
+     "title": "The Placeholders - Grid Fit Groove",
+     "score": 0.5449,
+     "reasons": [
+      "energy steady (-0.9 LU)",
+      "no vocal clash",
+      "similar sound (closer than 71% of pairs)",
+      "tempo change x2/3 (86 -> 124): transition track or brake, no blend",
+      "8-bar window (short of a 16-bar phrase)",
+      "groove not comparable at x2/3",
+      "different style",
+      "longer cut"
+     ],
+     "suggested_transition": "brake_cut",
+     "stretch_pct": 4.43,
+     "multiplier": "2/3",
+     "camelot_a": "10A",
+     "camelot_b": "8A"
+    },
+    {
+     "id": "sample-10",
+     "title": "Nobody In Particular - Neighbour Keys",
+     "score": 0.5425,
+     "reasons": [
+      "energy steady (-1.1 LU)",
+      "B has a clean 16-bar intro",
+      "10A -> 7A (pitch-shift B by +2 st)",
+      "tempo change x2/3 (86 -> 125): transition track or brake, no blend",
+      "8-bar window (short of a 16-bar phrase)",
+      "groove not comparable at x2/3",
+      "longer cut"
+     ],
+     "suggested_transition": "brake_cut",
+     "stretch_pct": 3.51,
+     "multiplier": "2/3",
+     "camelot_a": "10A",
+     "camelot_b": "7A"
+    },
+    {
+     "id": "sample-02",
+     "title": "Test Pattern - Low Confidence",
+     "score": 0.5001,
+     "reasons": [
+      "energy steady (-1.0 LU)",
+      "B has a clean 16-bar intro",
+      "10A -> 9A (-1 (fifth))",
+      "tempo change x3/4 (86 -> 118): transition track or brake, no blend",
+      "8-bar window (short of a 16-bar phrase)",
+      "different sound (closer than only 3% of pairs)",
+      "groove not comparable at x3/4",
+      "different style",
+      "longer cut"
+     ],
+     "suggested_transition": "brake_cut",
+     "stretch_pct": 2.75,
+     "multiplier": "3/4",
+     "camelot_a": "10A",
+     "camelot_b": "9A"
+    },
+    {
+     "id": "sample-08",
+     "title": "Dummy Data - Two Cuts Extended Mix",
+     "score": 0.4998,
+     "reasons": [
+      "energy steady (-1.4 LU)",
+      "no vocal clash",
+      "10A -> 8A (pitch-shift B by +2 st)",
+      "tempo change x2/3 (86 -> 126): transition track or brake, no blend",
+      "8-bar window (short of a 16-bar phrase)",
+      "different sound (closer than only 33% of pairs)",
+      "groove not comparable at x2/3",
+      "different style",
+      "longer cut"
+     ],
+     "suggested_transition": "brake_cut",
+     "stretch_pct": 2.89,
+     "multiplier": "2/3",
+     "camelot_a": "10A",
+     "camelot_b": "8A"
+    },
+    {
+     "id": "sample-11",
+     "title": "Example Ensemble - Steady Hands Club Mix",
+     "score": 0.4935,
+     "reasons": [
+      "energy steady (-1.0 LU)",
+      "B has a clean 16-bar intro",
+      "similar sound (closer than 70% of pairs)",
+      "tempo change x3/4 (86 -> 122): transition track or brake, no blend",
+      "10A -> 9B (clash)",
+      "8-bar window (short of a 16-bar phrase)",
+      "groove not comparable at x3/4",
+      "different style",
+      "longer cut"
+     ],
+     "suggested_transition": "brake_cut",
+     "stretch_pct": 5.78,
+     "multiplier": "3/4",
+     "camelot_a": "10A",
+     "camelot_b": "9B"
+    }
+   ],
+   "in": [
+    {
+     "id": "sample-03",
+     "title": "Made-Up Collective - Octave Swap",
+     "score": 0.777,
+     "reasons": [
+      "+2.8% stretch on B (89.0 end -> 86.5 start)",
+      "energy steady (-0.6 LU)",
+      "B has a clean 16-bar intro",
+      "8-bar window (short of a 16-bar phrase)",
+      "different sound (closer than only 29% of pairs)"
+     ],
+     "suggested_transition": "bass_swap_8",
+     "stretch_pct": 2.81,
+     "multiplier": "1",
+     "camelot_a": "11A",
+     "camelot_b": "10A"
+    },
+    {
+     "id": "sample-06",
+     "title": "Synthetic Soul - Short One",
+     "score": 0.6067,
+     "reasons": [
+      "energy steady (-1.4 LU)",
+      "B has a clean 16-bar intro",
+      "related style",
+      "tempo change x3/2 (130 -> 86): transition track or brake, no blend",
+      "8-bar window (short of a 16-bar phrase)",
+      "groove not comparable at x3/2"
+     ],
+     "suggested_transition": "brake_cut",
+     "stretch_pct": 0.19,
+     "multiplier": "3/2",
+     "camelot_a": "10B",
+     "camelot_b": "10A"
+    },
+    {
+     "id": "sample-04",
+     "title": "Fictional Four - Fade Away Test",
+     "score": 0.6034,
+     "reasons": [
+      "B has a clean 16-bar intro",
+      "related style",
+      "B enters -3.6 LU quieter",
+      "tempo change x3/2 (129 -> 86): transition track or brake, no blend",
+      "11-bar window (short of a 16-bar phrase)",
+      "groove not comparable at x3/2",
+      "longer cut"
+     ],
+     "suggested_transition": "brake_cut",
+     "stretch_pct": 0.9,
+     "multiplier": "3/2",
+     "camelot_a": "6A",
+     "camelot_b": "10A"
+    },
+    {
+     "id": "sample-10",
+     "title": "Nobody In Particular - Neighbour Keys",
+     "score": 0.5721,
+     "reasons": [
+      "energy steady (-0.7 LU)",
+      "B has a clean 16-bar intro",
+      "7A -> 10A (pitch-shift B by -2 st)",
+      "tempo change x3/2 (125 -> 86): transition track or brake, no blend",
+      "11-bar window (short of a 16-bar phrase)",
+      "groove not comparable at x3/2",
+      "longer cut"
+     ],
+     "suggested_transition": "brake_cut",
+     "stretch_pct": 3.63,
+     "multiplier": "3/2",
+     "camelot_a": "7A",
+     "camelot_b": "10A"
+    },
+    {
+     "id": "sample-01",
+     "title": "The Placeholders - Grid Fit Groove",
+     "score": 0.553,
+     "reasons": [
+      "energy steady (-0.6 LU)",
+      "B has a clean 16-bar intro",
+      "similar sound (closer than 71% of pairs)",
+      "tempo change x3/2 (124 -> 86): transition track or brake, no blend",
+      "8-bar window (short of a 16-bar phrase)",
+      "groove not comparable at x3/2",
+      "different style",
+      "longer cut"
+     ],
+     "suggested_transition": "brake_cut",
+     "stretch_pct": 4.64,
+     "multiplier": "3/2",
+     "camelot_a": "8A",
+     "camelot_b": "10A"
+    },
+    {
+     "id": "sample-08",
+     "title": "Dummy Data - Two Cuts Extended Mix",
+     "score": 0.5076,
+     "reasons": [
+      "energy steady (-0.6 LU)",
+      "B has a clean 16-bar intro",
+      "8A -> 10A (+2 energy boost)",
+      "tempo change x3/2 (126 -> 86): transition track or brake, no blend",
+      "8-bar window (short of a 16-bar phrase)",
+      "different sound (closer than only 33% of pairs)",
+      "groove not comparable at x3/2",
+      "different style",
+      "longer cut"
+     ],
+     "suggested_transition": "brake_cut",
+     "stretch_pct": 2.98,
+     "multiplier": "3/2",
+     "camelot_a": "8A",
+     "camelot_b": "10A"
+    },
+    {
+     "id": "sample-02",
+     "title": "Test Pattern - Low Confidence",
+     "score": 0.5001,
+     "reasons": [
+      "energy steady (-0.8 LU)",
+      "B has a clean 16-bar intro",
+      "9A -> 10A (+1 (fifth))",
+      "tempo change x4/3 (118 -> 86): transition track or brake, no blend",
+      "8-bar window (short of a 16-bar phrase)",
+      "different sound (closer than only 3% of pairs)",
+      "groove not comparable at x4/3",
+      "different style",
+      "longer cut"
+     ],
+     "suggested_transition": "brake_cut",
+     "stretch_pct": 2.67,
+     "multiplier": "4/3",
+     "camelot_a": "9A",
+     "camelot_b": "10A"
+    },
+    {
+     "id": "sample-11",
+     "title": "Example Ensemble - Steady Hands Club Mix",
+     "score": 0.4935,
+     "reasons": [
+      "energy steady (-0.5 LU)",
+      "B has a clean 16-bar intro",
+      "similar sound (closer than 70% of pairs)",
+      "tempo change x4/3 (122 -> 86): transition track or brake, no blend",
+      "9B -> 10A (clash)",
+      "8-bar window (short of a 16-bar phrase)",
+      "groove not comparable at x4/3",
+      "different style",
+      "longer cut"
+     ],
+     "suggested_transition": "brake_cut",
+     "stretch_pct": 5.47,
+     "multiplier": "4/3",
+     "camelot_a": "9B",
+     "camelot_b": "10A"
+    }
+   ]
+  }
+ },
+ "sample-08": {
+  "title": "Dummy Data - Two Cuts Extended Mix",
+  "on_disc": true,
+  "disc": {
+   "out": [
+    {
+     "id": "sample-01",
+     "title": "The Placeholders - Grid Fit Groove",
+     "score": 0.8684,
+     "reasons": [
+      "+1.6% stretch on B (126.0 end -> 124.0 start)",
+      "energy steady (-0.8 LU)",
+      "no vocal clash",
+      "8-bar window (short of a 16-bar phrase)",
+      "longer cut"
+     ],
+     "suggested_transition": "bass_swap_8",
+     "stretch_pct": 1.59,
+     "multiplier": "1",
+     "camelot_a": "8A",
+     "camelot_b": "8A"
+    },
+    {
+     "id": "sample-10",
+     "title": "Nobody In Particular - Neighbour Keys",
+     "score": 0.8521,
+     "reasons": [
+      "+0.6% stretch on B (126.0 end -> 125.2 start)",
+      "energy steady (-1.1 LU)",
+      "B has a clean 16-bar intro",
+      "8-bar window (short of a 16-bar phrase)",
+      "longer cut"
+     ],
+     "suggested_transition": "bass_swap_8",
+     "stretch_pct": 0.63,
+     "multiplier": "1",
+     "camelot_a": "8A",
+     "camelot_b": "7A"
+    },
+    {
+     "id": "sample-04",
+     "title": "Fictional Four - Fade Away Test",
+     "score": 0.7148,
+     "reasons": [
+      "-2.1% stretch on B (126.0 end -> 128.6 start)",
+      "energy steady (-1.0 LU)",
+      "B has a clean 16-bar intro",
+      "8-bar window (short of a 16-bar phrase)",
+      "different sound (closer than only 39% of pairs)",
+      "different style",
+      "longer cut"
+     ],
+     "suggested_transition": "bass_swap_8",
+     "stretch_pct": 2.06,
+     "multiplier": "1",
+     "camelot_a": "8A",
+     "camelot_b": "6A"
+    },
+    {
+     "id": "sample-05",
+     "title": "Sample Club - Tempo Ramp Transition Edit",
+     "score": 0.6224,
+     "reasons": [
+      "B has a clean 16-bar intro",
+      "B enters +2.0 LU louder",
+      "related style",
+      "tempo change x4/3 (126 -> 100): transition track or brake, no blend",
+      "8-bar window (short of a 16-bar phrase)",
+      "groove not comparable at x4/3"
+     ],
+     "suggested_transition": "brake_cut",
+     "stretch_pct": 5.82,
+     "multiplier": "4/3",
+     "camelot_a": "8A",
+     "camelot_b": "8B"
+    },
+    {
+     "id": "sample-03",
+     "title": "Made-Up Collective - Octave Swap",
+     "score": 0.4367,
+     "reasons": [
+      "energy steady (-1.0 LU)",
+      "no vocal clash",
+      "8A -> 11A (pitch-shift B by -2 st)",
+      "tempo change x3/2 (126 -> 89): transition track or brake, no blend",
+      "8-bar window (short of a 16-bar phrase)",
+      "different sound (closer than only 5% of pairs)",
+      "groove not comparable at x3/2",
+      "different style"
+     ],
+     "suggested_transition": "brake_cut",
+     "stretch_pct": 5.95,
+     "multiplier": "3/2",
+     "camelot_a": "8A",
+     "camelot_b": "11A"
+    },
+    {
+     "id": "sample-12",
+     "title": "Stand-In Singers - Every Word Sung",
+     "score": 0.3807,
+     "reasons": [
+      "energy steady (-0.8 LU)",
+      "no vocal clash",
+      "tempo change x4/3 (126 -> 105): transition track or brake, no blend",
+      "8A -> 12B (clash), key unsure",
+      "8-bar window (short of a 16-bar phrase)",
+      "different sound (closer than only 17% of pairs)",
+      "groove not comparable at x4/3",
+      "different style"
+     ],
+     "suggested_transition": "brake_cut",
+     "stretch_pct": 11.11,
+     "multiplier": "4/3",
+     "camelot_a": "8A",
+     "camelot_b": "12B"
+    }
+   ],
+   "in": [
+    {
+     "id": "sample-01",
+     "title": "The Placeholders - Grid Fit Groove",
+     "score": 0.8685,
+     "reasons": [
+      "-1.6% stretch on B (124.0 end -> 126.0 start)",
+      "energy steady (-1.3 LU)",
+      "no vocal clash",
+      "8-bar window (short of a 16-bar phrase)",
+      "longer cut"
+     ],
+     "suggested_transition": "bass_swap_8",
+     "stretch_pct": 1.61,
+     "multiplier": "1",
+     "camelot_a": "8A",
+     "camelot_b": "8A"
+    },
+    {
+     "id": "sample-10",
+     "title": "Nobody In Particular - Neighbour Keys",
+     "score": 0.8494,
+     "reasons": [
+      "-0.6% stretch on B (125.2 end -> 126.0 start)",
+      "energy steady (-1.3 LU)",
+      "no vocal clash",
+      "8-bar window (short of a 16-bar phrase)",
+      "longer cut"
+     ],
+     "suggested_transition": "bass_swap_8",
+     "stretch_pct": 0.64,
+     "multiplier": "1",
+     "camelot_a": "7A",
+     "camelot_b": "8A"
+    },
+    {
+     "id": "sample-04",
+     "title": "Fictional Four - Fade Away Test",
+     "score": 0.6742,
+     "reasons": [
+      "+2.0% stretch on B (128.6 end -> 126.0 start)",
+      "matching groove (r=0.96)",
+      "no vocal clash",
+      "8-bar window (short of a 16-bar phrase)",
+      "different sound (closer than only 39% of pairs)",
+      "different style",
+      "longer cut"
+     ],
+     "suggested_transition": "bass_swap_8",
+     "stretch_pct": 2.02,
+     "multiplier": "1",
+     "camelot_a": "6A",
+     "camelot_b": "8A"
+    },
+    {
+     "id": "sample-05",
+     "title": "Sample Club - Tempo Ramp Transition Edit",
+     "score": 0.6078,
+     "reasons": [
+      "matching groove (r=0.98)",
+      "no vocal clash",
+      "related style",
+      "-12.5% stretch on B (112.0 end -> 126.0 start)",
+      "8-bar window (short of a 16-bar phrase)"
+     ],
+     "suggested_transition": "ramped_blend",
+     "stretch_pct": 12.51,
+     "multiplier": "1",
+     "camelot_a": "8B",
+     "camelot_b": "8A"
+    },
+    {
+     "id": "sample-03",
+     "title": "Made-Up Collective - Octave Swap",
+     "score": 0.4348,
+     "reasons": [
+      "energy steady (-1.2 LU)",
+      "no vocal clash",
+      "11A -> 8A (pitch-shift B by +2 st)",
+      "tempo change x2/3 (89 -> 126): transition track or brake, no blend",
+      "8-bar window (short of a 16-bar phrase)",
+      "different sound (closer than only 5% of pairs)",
+      "groove not comparable at x2/3",
+      "different style"
+     ],
+     "suggested_transition": "brake_cut",
+     "stretch_pct": 5.62,
+     "multiplier": "2/3",
+     "camelot_a": "11A",
+     "camelot_b": "8A"
+    },
+    {
+     "id": "sample-12",
+     "title": "Stand-In Singers - Every Word Sung",
+     "score": 0.3812,
+     "reasons": [
+      "energy steady (-1.4 LU)",
+      "no vocal clash",
+      "tempo change x3/4 (105 -> 126): transition track or brake, no blend",
+      "12B -> 8A (clash), key unsure",
+      "8-bar window (short of a 16-bar phrase)",
+      "different sound (closer than only 17% of pairs)",
+      "groove not comparable at x3/4",
+      "different style"
+     ],
+     "suggested_transition": "brake_cut",
+     "stretch_pct": 10.0,
+     "multiplier": "3/4",
+     "camelot_a": "12B",
+     "camelot_b": "8A"
+    }
+   ]
+  },
+  "folder": "6 - 125-134",
+  "bpm": 126.0,
+  "camelot": "8A",
+  "pool": {
+   "out": [
+    {
+     "id": "sample-01",
+     "title": "The Placeholders - Grid Fit Groove",
+     "score": 0.8684,
+     "reasons": [
+      "+1.6% stretch on B (126.0 end -> 124.0 start)",
+      "energy steady (-0.8 LU)",
+      "no vocal clash",
+      "8-bar window (short of a 16-bar phrase)",
+      "longer cut"
+     ],
+     "suggested_transition": "bass_swap_8",
+     "stretch_pct": 1.59,
+     "multiplier": "1",
+     "camelot_a": "8A",
+     "camelot_b": "8A"
+    },
+    {
+     "id": "sample-10",
+     "title": "Nobody In Particular - Neighbour Keys",
+     "score": 0.8521,
+     "reasons": [
+      "+0.6% stretch on B (126.0 end -> 125.2 start)",
+      "energy steady (-1.1 LU)",
+      "B has a clean 16-bar intro",
+      "8-bar window (short of a 16-bar phrase)",
+      "longer cut"
+     ],
+     "suggested_transition": "bass_swap_8",
+     "stretch_pct": 0.63,
+     "multiplier": "1",
+     "camelot_a": "8A",
+     "camelot_b": "7A"
+    },
+    {
+     "id": "sample-11",
+     "title": "Example Ensemble - Steady Hands Club Mix",
+     "score": 0.784,
+     "reasons": [
+      "energy steady (-0.9 LU)",
+      "B has a clean 16-bar intro",
+      "same style",
+      "8A -> 9B (clash)",
+      "8-bar window (short of a 16-bar phrase)",
+      "longer cut"
+     ],
+     "suggested_transition": "bass_swap_8",
+     "stretch_pct": 3.17,
+     "multiplier": "1",
+     "camelot_a": "8A",
+     "camelot_b": "9B"
+    },
+    {
+     "id": "sample-02",
+     "title": "Test Pattern - Low Confidence",
+     "score": 0.7686,
+     "reasons": [
+      "energy steady (-0.9 LU)",
+      "B has a clean 16-bar intro",
+      "matching groove (r=0.96)",
+      "8-bar window (short of a 16-bar phrase)",
+      "longer cut"
+     ],
+     "suggested_transition": "bass_swap_8",
+     "stretch_pct": 5.95,
+     "multiplier": "1",
+     "camelot_a": "8A",
+     "camelot_b": "9A"
+    },
+    {
+     "id": "sample-06",
+     "title": "Synthetic Soul - Short One",
+     "score": 0.7269,
+     "reasons": [
+      "energy steady (+0.9 LU)",
+      "-3.2% stretch on B (126.0 end -> 130.0 start)",
+      "no vocal clash",
+      "8-bar window (short of a 16-bar phrase)",
+      "different style"
+     ],
+     "suggested_transition": "bass_swap_8",
+     "stretch_pct": 3.17,
+     "multiplier": "1",
+     "camelot_a": "8A",
+     "camelot_b": "10B"
+    },
+    {
+     "id": "sample-04",
+     "title": "Fictional Four - Fade Away Test",
+     "score": 0.7148,
+     "reasons": [
+      "-2.1% stretch on B (126.0 end -> 128.6 start)",
+      "energy steady (-1.0 LU)",
+      "B has a clean 16-bar intro",
+      "8-bar window (short of a 16-bar phrase)",
+      "different sound (closer than only 39% of pairs)",
+      "different style",
+      "longer cut"
+     ],
+     "suggested_transition": "bass_swap_8",
+     "stretch_pct": 2.06,
+     "multiplier": "1",
+     "camelot_a": "8A",
+     "camelot_b": "6A"
+    },
+    {
+     "id": "sample-05",
+     "title": "Sample Club - Tempo Ramp Transition Edit",
+     "score": 0.6224,
+     "reasons": [
+      "B has a clean 16-bar intro",
+      "B enters +2.0 LU louder",
+      "related style",
+      "tempo change x4/3 (126 -> 100): transition track or brake, no blend",
+      "8-bar window (short of a 16-bar phrase)",
+      "groove not comparable at x4/3"
+     ],
+     "suggested_transition": "brake_cut",
+     "stretch_pct": 5.82,
+     "multiplier": "4/3",
+     "camelot_a": "8A",
+     "camelot_b": "8B"
+    },
+    {
+     "id": "sample-07",
+     "title": "Imaginary Orchestra - Half Time Walk",
+     "score": 0.4776,
+     "reasons": [
+      "energy steady (-0.6 LU)",
+      "B has a clean 16-bar intro",
+      "8A -> 10A (+2 energy boost)",
+      "tempo change x3/2 (126 -> 86): transition track or brake, no blend",
+      "8-bar window (short of a 16-bar phrase)",
+      "different sound (closer than only 33% of pairs)",
+      "groove not comparable at x3/2",
+      "different style"
+     ],
+     "suggested_transition": "brake_cut",
+     "stretch_pct": 2.98,
+     "multiplier": "3/2",
+     "camelot_a": "8A",
+     "camelot_b": "10A"
+    }
+   ],
+   "in": [
+    {
+     "id": "sample-01",
+     "title": "The Placeholders - Grid Fit Groove",
+     "score": 0.8685,
+     "reasons": [
+      "-1.6% stretch on B (124.0 end -> 126.0 start)",
+      "energy steady (-1.3 LU)",
+      "no vocal clash",
+      "8-bar window (short of a 16-bar phrase)",
+      "longer cut"
+     ],
+     "suggested_transition": "bass_swap_8",
+     "stretch_pct": 1.61,
+     "multiplier": "1",
+     "camelot_a": "8A",
+     "camelot_b": "8A"
+    },
+    {
+     "id": "sample-10",
+     "title": "Nobody In Particular - Neighbour Keys",
+     "score": 0.8494,
+     "reasons": [
+      "-0.6% stretch on B (125.2 end -> 126.0 start)",
+      "energy steady (-1.3 LU)",
+      "no vocal clash",
+      "8-bar window (short of a 16-bar phrase)",
+      "longer cut"
+     ],
+     "suggested_transition": "bass_swap_8",
+     "stretch_pct": 0.64,
+     "multiplier": "1",
+     "camelot_a": "7A",
+     "camelot_b": "8A"
+    },
+    {
+     "id": "sample-11",
+     "title": "Example Ensemble - Steady Hands Club Mix",
+     "score": 0.7781,
+     "reasons": [
+      "energy steady (-1.2 LU)",
+      "same style",
+      "-3.3% stretch on B (122.0 end -> 126.0 start)",
+      "9B -> 8A (clash)",
+      "8-bar window (short of a 16-bar phrase)",
+      "longer cut"
+     ],
+     "suggested_transition": "bass_swap_8",
+     "stretch_pct": 3.28,
+     "multiplier": "1",
+     "camelot_a": "9B",
+     "camelot_b": "8A"
+    },
+    {
+     "id": "sample-02",
+     "title": "Test Pattern - Low Confidence",
+     "score": 0.7569,
+     "reasons": [
+      "energy steady (-1.5 LU)",
+      "no vocal clash",
+      "matching groove (r=0.96)",
+      "8-bar window (short of a 16-bar phrase)",
+      "longer cut"
+     ],
+     "suggested_transition": "ramped_blend",
+     "stretch_pct": 6.33,
+     "multiplier": "1",
+     "camelot_a": "9A",
+     "camelot_b": "8A"
+    },
+    {
+     "id": "sample-06",
+     "title": "Synthetic Soul - Short One",
+     "score": 0.7275,
+     "reasons": [
+      "+3.1% stretch on B (130.0 end -> 126.0 start)",
+      "B enters -2.1 LU quieter",
+      "no vocal clash",
+      "8-bar window (short of a 16-bar phrase)",
+      "different style"
+     ],
+     "suggested_transition": "bass_swap_8",
+     "stretch_pct": 3.08,
+     "multiplier": "1",
+     "camelot_a": "10B",
+     "camelot_b": "8A"
+    },
+    {
+     "id": "sample-04",
+     "title": "Fictional Four - Fade Away Test",
+     "score": 0.6742,
+     "reasons": [
+      "+2.0% stretch on B (128.6 end -> 126.0 start)",
+      "matching groove (r=0.96)",
+      "no vocal clash",
+      "8-bar window (short of a 16-bar phrase)",
+      "different sound (closer than only 39% of pairs)",
+      "different style",
+      "longer cut"
+     ],
+     "suggested_transition": "bass_swap_8",
+     "stretch_pct": 2.02,
+     "multiplier": "1",
+     "camelot_a": "6A",
+     "camelot_b": "8A"
+    },
+    {
+     "id": "sample-05",
+     "title": "Sample Club - Tempo Ramp Transition Edit",
+     "score": 0.6078,
+     "reasons": [
+      "matching groove (r=0.98)",
+      "no vocal clash",
+      "related style",
+      "-12.5% stretch on B (112.0 end -> 126.0 start)",
+      "8-bar window (short of a 16-bar phrase)"
+     ],
+     "suggested_transition": "ramped_blend",
+     "stretch_pct": 12.51,
+     "multiplier": "1",
+     "camelot_a": "8B",
+     "camelot_b": "8A"
+    },
+    {
+     "id": "sample-07",
+     "title": "Imaginary Orchestra - Half Time Walk",
+     "score": 0.4698,
+     "reasons": [
+      "energy steady (-1.4 LU)",
+      "no vocal clash",
+      "10A -> 8A (pitch-shift B by +2 st)",
+      "tempo change x2/3 (86 -> 126): transition track or brake, no blend",
+      "8-bar window (short of a 16-bar phrase)",
+      "different sound (closer than only 33% of pairs)",
+      "groove not comparable at x2/3",
+      "different style"
+     ],
+     "suggested_transition": "brake_cut",
+     "stretch_pct": 2.89,
+     "multiplier": "2/3",
+     "camelot_a": "10A",
+     "camelot_b": "8A"
+    }
+   ]
+  }
+ },
+ "sample-09": {
+  "title": "Dummy Data - Two Cuts Radio Edit",
+  "on_disc": false,
+  "disc": {
+   "out": [
+    {
+     "id": "sample-01",
+     "title": "The Placeholders - Grid Fit Groove",
+     "score": 0.8327,
+     "reasons": [
+      "+1.6% stretch on B (126.0 end -> 124.0 start)",
+      "8A -> 8A",
+      "no vocal clash",
+      "8-bar window (short of a 16-bar phrase)",
+      "different sound (closer than only 35% of pairs)",
+      "longer cut"
+     ],
+     "suggested_transition": "bass_swap_8",
+     "stretch_pct": 1.58,
+     "multiplier": "1",
+     "camelot_a": "8A",
+     "camelot_b": "8A"
+    },
+    {
+     "id": "sample-10",
+     "title": "Nobody In Particular - Neighbour Keys",
+     "score": 0.7871,
+     "reasons": [
+      "+0.6% stretch on B (126.0 end -> 125.2 start)",
+      "B has a clean 16-bar intro",
+      "matching groove (r=0.95)",
+      "8-bar window (short of a 16-bar phrase)",
+      "different sound (closer than only 27% of pairs)",
+      "longer cut"
+     ],
+     "suggested_transition": "bass_swap_8",
+     "stretch_pct": 0.63,
+     "multiplier": "1",
+     "camelot_a": "8A",
+     "camelot_b": "7A"
+    },
+    {
+     "id": "sample-04",
+     "title": "Fictional Four - Fade Away Test",
+     "score": 0.7071,
+     "reasons": [
+      "-2.1% stretch on B (126.0 end -> 128.6 start)",
+      "B has a clean 16-bar intro",
+      "matching groove (r=0.96)",
+      "8-bar window (short of a 16-bar phrase)",
+      "different style",
+      "longer cut"
+     ],
+     "suggested_transition": "bass_swap_8",
+     "stretch_pct": 2.06,
+     "multiplier": "1",
+     "camelot_a": "8A",
+     "camelot_b": "6A"
+    },
+    {
+     "id": "sample-05",
+     "title": "Sample Club - Tempo Ramp Transition Edit",
+     "score": 0.6049,
+     "reasons": [
+      "energy steady (-0.2 LU)",
+      "B has a clean 16-bar intro",
+      "related style",
+      "tempo change x4/3 (126 -> 100): transition track or brake, no blend",
+      "8-bar window (short of a 16-bar phrase)",
+      "groove not comparable at x4/3"
+     ],
+     "suggested_transition": "brake_cut",
+     "stretch_pct": 5.82,
+     "multiplier": "4/3",
+     "camelot_a": "8A",
+     "camelot_b": "8B"
+    },
+    {
+     "id": "sample-03",
+     "title": "Made-Up Collective - Octave Swap",
+     "score": 0.4718,
+     "reasons": [
+      "no vocal clash",
+      "B enters -3.3 LU quieter",
+      "8A -> 11A (pitch-shift B by -2 st)",
+      "tempo change x3/2 (126 -> 89): transition track or brake, no blend",
+      "8-bar window (short of a 16-bar phrase)",
+      "different sound (closer than only 36% of pairs)",
+      "groove not comparable at x3/2",
+      "different style"
+     ],
+     "suggested_transition": "brake_cut",
+     "stretch_pct": 5.95,
+     "multiplier": "3/2",
+     "camelot_a": "8A",
+     "camelot_b": "11A"
+    },
+    {
+     "id": "sample-12",
+     "title": "Stand-In Singers - Every Word Sung",
+     "score": 0.3709,
+     "reasons": [
+      "no vocal clash",
+      "B enters -3.1 LU quieter",
+      "tempo change x4/3 (126 -> 105): transition track or brake, no blend",
+      "8A -> 12B (clash), key unsure",
+      "8-bar window (short of a 16-bar phrase)",
+      "different sound (closer than only 21% of pairs)",
+      "groove not comparable at x4/3",
+      "different style"
+     ],
+     "suggested_transition": "brake_cut",
+     "stretch_pct": 11.11,
+     "multiplier": "4/3",
+     "camelot_a": "8A",
+     "camelot_b": "12B"
+    }
+   ],
+   "in": [
+    {
+     "id": "sample-10",
+     "title": "Nobody In Particular - Neighbour Keys",
+     "score": 0.8841,
+     "reasons": [
+      "-0.6% stretch on B (125.2 end -> 126.0 start)",
+      "energy steady (+1.1 LU)",
+      "B has a clean 16-bar intro",
+      "different sound (closer than only 27% of pairs)",
+      "longer cut"
+     ],
+     "suggested_transition": "bass_swap_16",
+     "stretch_pct": 0.64,
+     "multiplier": "1",
+     "camelot_a": "7A",
+     "camelot_b": "8A"
+    },
+    {
+     "id": "sample-01",
+     "title": "The Placeholders - Grid Fit Groove",
+     "score": 0.8503,
+     "reasons": [
+      "-1.6% stretch on B (124.0 end -> 126.0 start)",
+      "8A -> 8A",
+      "energy steady (+1.2 LU)",
+      "8-bar window (short of a 16-bar phrase)",
+      "different sound (closer than only 35% of pairs)",
+      "longer cut"
+     ],
+     "suggested_transition": "bass_swap_8",
+     "stretch_pct": 1.61,
+     "multiplier": "1",
+     "camelot_a": "8A",
+     "camelot_b": "8A"
+    },
+    {
+     "id": "sample-04",
+     "title": "Fictional Four - Fade Away Test",
+     "score": 0.8034,
+     "reasons": [
+      "+2.0% stretch on B (128.6 end -> 126.0 start)",
+      "energy steady (-1.9 LU)",
+      "16-bar phrases both sides",
+      "different style",
+      "longer cut"
+     ],
+     "suggested_transition": "bass_swap_16",
+     "stretch_pct": 2.02,
+     "multiplier": "1",
+     "camelot_a": "6A",
+     "camelot_b": "8A"
+    },
+    {
+     "id": "sample-05",
+     "title": "Sample Club - Tempo Ramp Transition Edit",
+     "score": 0.6212,
+     "reasons": [
+      "energy steady (-1.7 LU)",
+      "B has a clean 16-bar intro",
+      "matching groove (r=0.97)",
+      "-12.5% stretch on B (112.0 end -> 126.0 start)",
+      "8-bar window (short of a 16-bar phrase)"
+     ],
+     "suggested_transition": "ramped_blend",
+     "stretch_pct": 12.51,
+     "multiplier": "1",
+     "camelot_a": "8B",
+     "camelot_b": "8A"
+    },
+    {
+     "id": "sample-03",
+     "title": "Made-Up Collective - Octave Swap",
+     "score": 0.4915,
+     "reasons": [
+      "energy steady (+1.2 LU)",
+      "B has a clean 16-bar intro",
+      "11A -> 8A (pitch-shift B by +2 st)",
+      "tempo change x2/3 (89 -> 126): transition track or brake, no blend",
+      "8-bar window (short of a 16-bar phrase)",
+      "different sound (closer than only 36% of pairs)",
+      "groove not comparable at x2/3",
+      "different style"
+     ],
+     "suggested_transition": "brake_cut",
+     "stretch_pct": 5.62,
+     "multiplier": "2/3",
+     "camelot_a": "11A",
+     "camelot_b": "8A"
+    },
+    {
+     "id": "sample-12",
+     "title": "Stand-In Singers - Every Word Sung",
+     "score": 0.3972,
+     "reasons": [
+      "energy steady (+1.1 LU)",
+      "B has a clean 16-bar intro",
+      "tempo change x3/4 (105 -> 126): transition track or brake, no blend",
+      "12B -> 8A (clash), key unsure",
+      "8-bar window (short of a 16-bar phrase)",
+      "different sound (closer than only 21% of pairs)",
+      "groove not comparable at x3/4",
+      "different style"
+     ],
+     "suggested_transition": "brake_cut",
+     "stretch_pct": 10.0,
+     "multiplier": "3/4",
+     "camelot_a": "12B",
+     "camelot_b": "8A"
+    }
+   ]
+  },
+  "folder": "6 - 125-134",
+  "bpm": 125.998,
+  "camelot": "8A",
+  "pool": {
+   "out": [
+    {
+     "id": "sample-01",
+     "title": "The Placeholders - Grid Fit Groove",
+     "score": 0.8327,
+     "reasons": [
+      "+1.6% stretch on B (126.0 end -> 124.0 start)",
+      "8A -> 8A",
+      "no vocal clash",
+      "8-bar window (short of a 16-bar phrase)",
+      "different sound (closer than only 35% of pairs)",
+      "longer cut"
+     ],
+     "suggested_transition": "bass_swap_8",
+     "stretch_pct": 1.58,
+     "multiplier": "1",
+     "camelot_a": "8A",
+     "camelot_b": "8A"
+    },
+    {
+     "id": "sample-10",
+     "title": "Nobody In Particular - Neighbour Keys",
+     "score": 0.7871,
+     "reasons": [
+      "+0.6% stretch on B (126.0 end -> 125.2 start)",
+      "B has a clean 16-bar intro",
+      "matching groove (r=0.95)",
+      "8-bar window (short of a 16-bar phrase)",
+      "different sound (closer than only 27% of pairs)",
+      "longer cut"
+     ],
+     "suggested_transition": "bass_swap_8",
+     "stretch_pct": 0.63,
+     "multiplier": "1",
+     "camelot_a": "8A",
+     "camelot_b": "7A"
+    },
+    {
+     "id": "sample-11",
+     "title": "Example Ensemble - Steady Hands Club Mix",
+     "score": 0.764,
+     "reasons": [
+      "B has a clean 16-bar intro",
+      "same style",
+      "+3.2% stretch on B (126.0 end -> 122.0 start)",
+      "8A -> 9B (clash)",
+      "8-bar window (short of a 16-bar phrase)",
+      "longer cut"
+     ],
+     "suggested_transition": "bass_swap_8",
+     "stretch_pct": 3.17,
+     "multiplier": "1",
+     "camelot_a": "8A",
+     "camelot_b": "9B"
+    },
+    {
+     "id": "sample-02",
+     "title": "Test Pattern - Low Confidence",
+     "score": 0.7564,
+     "reasons": [
+      "B has a clean 16-bar intro",
+      "matching groove (r=0.93)",
+      "B enters -3.2 LU quieter",
+      "8-bar window (short of a 16-bar phrase)",
+      "longer cut"
+     ],
+     "suggested_transition": "bass_swap_8",
+     "stretch_pct": 5.95,
+     "multiplier": "1",
+     "camelot_a": "8A",
+     "camelot_b": "9A"
+    },
+    {
+     "id": "sample-06",
+     "title": "Synthetic Soul - Short One",
+     "score": 0.743,
+     "reasons": [
+      "energy steady (-1.4 LU)",
+      "-3.2% stretch on B (126.0 end -> 130.0 start)",
+      "no vocal clash",
+      "8-bar window (short of a 16-bar phrase)",
+      "different style"
+     ],
+     "suggested_transition": "bass_swap_8",
+     "stretch_pct": 3.18,
+     "multiplier": "1",
+     "camelot_a": "8A",
+     "camelot_b": "10B"
+    },
+    {
+     "id": "sample-04",
+     "title": "Fictional Four - Fade Away Test",
+     "score": 0.7071,
+     "reasons": [
+      "-2.1% stretch on B (126.0 end -> 128.6 start)",
+      "B has a clean 16-bar intro",
+      "matching groove (r=0.96)",
+      "8-bar window (short of a 16-bar phrase)",
+      "different style",
+      "longer cut"
+     ],
+     "suggested_transition": "bass_swap_8",
+     "stretch_pct": 2.06,
+     "multiplier": "1",
+     "camelot_a": "8A",
+     "camelot_b": "6A"
+    },
+    {
+     "id": "sample-05",
+     "title": "Sample Club - Tempo Ramp Transition Edit",
+     "score": 0.6049,
+     "reasons": [
+      "energy steady (-0.2 LU)",
+      "B has a clean 16-bar intro",
+      "related style",
+      "tempo change x4/3 (126 -> 100): transition track or brake, no blend",
+      "8-bar window (short of a 16-bar phrase)",
+      "groove not comparable at x4/3"
+     ],
+     "suggested_transition": "brake_cut",
+     "stretch_pct": 5.82,
+     "multiplier": "4/3",
+     "camelot_a": "8A",
+     "camelot_b": "8B"
+    },
+    {
+     "id": "sample-03",
+     "title": "Made-Up Collective - Octave Swap",
+     "score": 0.4718,
+     "reasons": [
+      "no vocal clash",
+      "B enters -3.3 LU quieter",
+      "8A -> 11A (pitch-shift B by -2 st)",
+      "tempo change x3/2 (126 -> 89): transition track or brake, no blend",
+      "8-bar window (short of a 16-bar phrase)",
+      "different sound (closer than only 36% of pairs)",
+      "groove not comparable at x3/2",
+      "different style"
+     ],
+     "suggested_transition": "brake_cut",
+     "stretch_pct": 5.95,
+     "multiplier": "3/2",
+     "camelot_a": "8A",
+     "camelot_b": "11A"
+    }
+   ],
+   "in": [
+    {
+     "id": "sample-10",
+     "title": "Nobody In Particular - Neighbour Keys",
+     "score": 0.8841,
+     "reasons": [
+      "-0.6% stretch on B (125.2 end -> 126.0 start)",
+      "energy steady (+1.1 LU)",
+      "B has a clean 16-bar intro",
+      "different sound (closer than only 27% of pairs)",
+      "longer cut"
+     ],
+     "suggested_transition": "bass_swap_16",
+     "stretch_pct": 0.64,
+     "multiplier": "1",
+     "camelot_a": "7A",
+     "camelot_b": "8A"
+    },
+    {
+     "id": "sample-01",
+     "title": "The Placeholders - Grid Fit Groove",
+     "score": 0.8503,
+     "reasons": [
+      "-1.6% stretch on B (124.0 end -> 126.0 start)",
+      "8A -> 8A",
+      "energy steady (+1.2 LU)",
+      "8-bar window (short of a 16-bar phrase)",
+      "different sound (closer than only 35% of pairs)",
+      "longer cut"
+     ],
+     "suggested_transition": "bass_swap_8",
+     "stretch_pct": 1.61,
+     "multiplier": "1",
+     "camelot_a": "8A",
+     "camelot_b": "8A"
+    },
+    {
+     "id": "sample-04",
+     "title": "Fictional Four - Fade Away Test",
+     "score": 0.8034,
+     "reasons": [
+      "+2.0% stretch on B (128.6 end -> 126.0 start)",
+      "energy steady (-1.9 LU)",
+      "16-bar phrases both sides",
+      "different style",
+      "longer cut"
+     ],
+     "suggested_transition": "bass_swap_16",
+     "stretch_pct": 2.02,
+     "multiplier": "1",
+     "camelot_a": "6A",
+     "camelot_b": "8A"
+    },
+    {
+     "id": "sample-11",
+     "title": "Example Ensemble - Steady Hands Club Mix",
+     "score": 0.7776,
+     "reasons": [
+      "energy steady (+1.3 LU)",
+      "B has a clean 16-bar intro",
+      "same style",
+      "9B -> 8A (clash)",
+      "8-bar window (short of a 16-bar phrase)",
+      "longer cut"
+     ],
+     "suggested_transition": "bass_swap_8",
+     "stretch_pct": 3.28,
+     "multiplier": "1",
+     "camelot_a": "9B",
+     "camelot_b": "8A"
+    },
+    {
+     "id": "sample-02",
+     "title": "Test Pattern - Low Confidence",
+     "score": 0.7643,
+     "reasons": [
+      "energy steady (+0.9 LU)",
+      "B has a clean 16-bar intro",
+      "matching groove (r=0.93)",
+      "8-bar window (short of a 16-bar phrase)",
+      "longer cut"
+     ],
+     "suggested_transition": "ramped_blend",
+     "stretch_pct": 6.33,
+     "multiplier": "1",
+     "camelot_a": "9A",
+     "camelot_b": "8A"
+    },
+    {
+     "id": "sample-06",
+     "title": "Synthetic Soul - Short One",
+     "score": 0.748,
+     "reasons": [
+      "energy steady (+0.4 LU)",
+      "B has a clean 16-bar intro",
+      "+3.1% stretch on B (130.0 end -> 126.0 start)",
+      "8-bar window (short of a 16-bar phrase)",
+      "different style"
+     ],
+     "suggested_transition": "bass_swap_8",
+     "stretch_pct": 3.08,
+     "multiplier": "1",
+     "camelot_a": "10B",
+     "camelot_b": "8A"
+    },
+    {
+     "id": "sample-05",
+     "title": "Sample Club - Tempo Ramp Transition Edit",
+     "score": 0.6212,
+     "reasons": [
+      "energy steady (-1.7 LU)",
+      "B has a clean 16-bar intro",
+      "matching groove (r=0.97)",
+      "-12.5% stretch on B (112.0 end -> 126.0 start)",
+      "8-bar window (short of a 16-bar phrase)"
+     ],
+     "suggested_transition": "ramped_blend",
+     "stretch_pct": 12.51,
+     "multiplier": "1",
+     "camelot_a": "8B",
+     "camelot_b": "8A"
+    },
+    {
+     "id": "sample-03",
+     "title": "Made-Up Collective - Octave Swap",
+     "score": 0.4915,
+     "reasons": [
+      "energy steady (+1.2 LU)",
+      "B has a clean 16-bar intro",
+      "11A -> 8A (pitch-shift B by +2 st)",
+      "tempo change x2/3 (89 -> 126): transition track or brake, no blend",
+      "8-bar window (short of a 16-bar phrase)",
+      "different sound (closer than only 36% of pairs)",
+      "groove not comparable at x2/3",
+      "different style"
+     ],
+     "suggested_transition": "brake_cut",
+     "stretch_pct": 5.62,
+     "multiplier": "2/3",
+     "camelot_a": "11A",
+     "camelot_b": "8A"
+    }
+   ]
+  }
+ },
+ "sample-10": {
+  "title": "Nobody In Particular - Neighbour Keys",
+  "on_disc": true,
+  "disc": {
+   "out": [
+    {
+     "id": "sample-08",
+     "title": "Dummy Data - Two Cuts Extended Mix",
+     "score": 0.8494,
+     "reasons": [
+      "-0.6% stretch on B (125.2 end -> 126.0 start)",
+      "energy steady (-1.3 LU)",
+      "no vocal clash",
+      "8-bar window (short of a 16-bar phrase)",
+      "longer cut"
+     ],
+     "suggested_transition": "bass_swap_8",
+     "stretch_pct": 0.64,
+     "multiplier": "1",
+     "camelot_a": "7A",
+     "camelot_b": "8A"
+    },
+    {
+     "id": "sample-01",
+     "title": "The Placeholders - Grid Fit Groove",
+     "score": 0.8463,
+     "reasons": [
+      "+1.0% stretch on B (125.2 end -> 124.0 start)",
+      "energy steady (-0.9 LU)",
+      "no vocal clash",
+      "8-bar window (short of a 16-bar phrase)",
+      "longer cut"
+     ],
+     "suggested_transition": "bass_swap_8",
+     "stretch_pct": 0.96,
+     "multiplier": "1",
+     "camelot_a": "7A",
+     "camelot_b": "8A"
+    },
+    {
+     "id": "sample-04",
+     "title": "Fictional Four - Fade Away Test",
+     "score": 0.8098,
+     "reasons": [
+      "-2.7% stretch on B (125.2 end -> 128.6 start)",
+      "energy steady (-1.1 LU)",
+      "B has a clean 16-bar intro",
+      "different sound (closer than only 24% of pairs)",
+      "different style",
+      "longer cut"
+     ],
+     "suggested_transition": "bass_swap_16",
+     "stretch_pct": 2.71,
+     "multiplier": "1",
+     "camelot_a": "7A",
+     "camelot_b": "6A"
+    },
+    {
+     "id": "sample-05",
+     "title": "Sample Club - Tempo Ramp Transition Edit",
+     "score": 0.6271,
+     "reasons": [
+      "energy steady (+2.0 LU)",
+      "B has a clean 16-bar intro",
+      "similar sound (closer than 100% of pairs)",
+      "tempo change x4/3 (125 -> 100): transition track or brake, no blend",
+      "7A -> 8B (clash)",
+      "groove not comparable at x4/3"
+     ],
+     "suggested_transition": "brake_cut",
+     "stretch_pct": 6.5,
+     "multiplier": "4/3",
+     "camelot_a": "7A",
+     "camelot_b": "8B"
+    },
+    {
+     "id": "sample-12",
+     "title": "Stand-In Singers - Every Word Sung",
+     "score": 0.5157,
+     "reasons": [
+      "energy steady (-0.9 LU)",
+      "16-bar phrases both sides",
+      "no vocal clash",
+      "tempo change x4/3 (125 -> 105): transition track or brake, no blend",
+      "different sound (closer than only 26% of pairs)",
+      "groove not comparable at x4/3",
+      "different style"
+     ],
+     "suggested_transition": "brake_cut",
+     "stretch_pct": 11.82,
+     "multiplier": "4/3",
+     "camelot_a": "7A",
+     "camelot_b": "12B"
+    },
+    {
+     "id": "sample-03",
+     "title": "Made-Up Collective - Octave Swap",
+     "score": 0.4556,
+     "reasons": [
+      "energy steady (-1.1 LU)",
+      "no vocal clash",
+      "7A -> 11A (pitch-shift B by +1 st)",
+      "tempo change x4/3 (125 -> 89): transition track or brake, no blend",
+      "8-bar window (short of a 16-bar phrase)",
+      "different sound (closer than only 9% of pairs)",
+      "groove not comparable at x4/3",
+      "different style"
+     ],
+     "suggested_transition": "brake_cut",
+     "stretch_pct": 5.22,
+     "multiplier": "4/3",
+     "camelot_a": "7A",
+     "camelot_b": "11A"
+    }
+   ],
+   "in": [
+    {
+     "id": "sample-08",
+     "title": "Dummy Data - Two Cuts Extended Mix",
+     "score": 0.8521,
+     "reasons": [
+      "+0.6% stretch on B (126.0 end -> 125.2 start)",
+      "energy steady (-1.1 LU)",
+      "B has a clean 16-bar intro",
+      "8-bar window (short of a 16-bar phrase)",
+      "longer cut"
+     ],
+     "suggested_transition": "bass_swap_8",
+     "stretch_pct": 0.63,
+     "multiplier": "1",
+     "camelot_a": "8A",
+     "camelot_b": "7A"
+    },
+    {
+     "id": "sample-01",
+     "title": "The Placeholders - Grid Fit Groove",
+     "score": 0.8493,
+     "reasons": [
+      "-1.0% stretch on B (124.0 end -> 125.2 start)",
+      "energy steady (-1.1 LU)",
+      "B has a clean 16-bar intro",
+      "8-bar window (short of a 16-bar phrase)",
+      "longer cut"
+     ],
+     "suggested_transition": "bass_swap_8",
+     "stretch_pct": 0.97,
+     "multiplier": "1",
+     "camelot_a": "8A",
+     "camelot_b": "7A"
+    },
+    {
+     "id": "sample-04",
+     "title": "Fictional Four - Fade Away Test",
+     "score": 0.7761,
+     "reasons": [
+      "+2.6% stretch on B (128.6 end -> 125.2 start)",
+      "16-bar phrases both sides",
+      "matching groove (r=0.97)",
+      "different sound (closer than only 24% of pairs)",
+      "different style",
+      "longer cut"
+     ],
+     "suggested_transition": "bass_swap_16",
+     "stretch_pct": 2.64,
+     "multiplier": "1",
+     "camelot_a": "6A",
+     "camelot_b": "7A"
+    },
+    {
+     "id": "sample-05",
+     "title": "Sample Club - Tempo Ramp Transition Edit",
+     "score": 0.5699,
+     "reasons": [
+      "B has a clean 16-bar intro",
+      "similar sound (closer than 100% of pairs)",
+      "matching groove (r=0.96)",
+      "-11.8% stretch on B (112.0 end -> 125.2 start)",
+      "8B -> 7A (clash)",
+      "8-bar window (short of a 16-bar phrase)"
+     ],
+     "suggested_transition": "ramped_blend",
+     "stretch_pct": 11.8,
+     "multiplier": "1",
+     "camelot_a": "8B",
+     "camelot_b": "7A"
+    },
+    {
+     "id": "sample-03",
+     "title": "Made-Up Collective - Octave Swap",
+     "score": 0.4577,
+     "reasons": [
+      "energy steady (-1.0 LU)",
+      "B has a clean 16-bar intro",
+      "11A -> 7A (pitch-shift B by -1 st)",
+      "tempo change x3/4 (89 -> 125): transition track or brake, no blend",
+      "8-bar window (short of a 16-bar phrase)",
+      "different sound (closer than only 9% of pairs)",
+      "groove not comparable at x3/4",
+      "different style"
+     ],
+     "suggested_transition": "brake_cut",
+     "stretch_pct": 5.51,
+     "multiplier": "3/4",
+     "camelot_a": "11A",
+     "camelot_b": "7A"
+    },
+    {
+     "id": "sample-12",
+     "title": "Stand-In Singers - Every Word Sung",
+     "score": 0.4561,
+     "reasons": [
+      "energy steady (-1.2 LU)",
+      "B has a clean 16-bar intro",
+      "12B -> 7A (pitch-shift B by -1 st), key unsure",
+      "tempo change x3/4 (105 -> 125): transition track or brake, no blend",
+      "8-bar window (short of a 16-bar phrase)",
+      "different sound (closer than only 26% of pairs)",
+      "groove not comparable at x3/4",
+      "different style"
+     ],
+     "suggested_transition": "brake_cut",
+     "stretch_pct": 10.57,
+     "multiplier": "3/4",
+     "camelot_a": "12B",
+     "camelot_b": "7A"
+    }
+   ]
+  },
+  "folder": "6 - 125-134",
+  "bpm": 125.2,
+  "camelot": "7A",
+  "pool": {
+   "out": [
+    {
+     "id": "sample-11",
+     "title": "Example Ensemble - Steady Hands Club Mix",
+     "score": 0.8673,
+     "reasons": [
+      "+2.6% stretch on B (125.2 end -> 122.0 start)",
+      "energy steady (-1.0 LU)",
+      "B has a clean 16-bar intro",
+      "longer cut"
+     ],
+     "suggested_transition": "bass_swap_16",
+     "stretch_pct": 2.56,
+     "multiplier": "1",
+     "camelot_a": "7A",
+     "camelot_b": "9B"
+    },
+    {
+     "id": "sample-08",
+     "title": "Dummy Data - Two Cuts Extended Mix",
+     "score": 0.8494,
+     "reasons": [
+      "-0.6% stretch on B (125.2 end -> 126.0 start)",
+      "energy steady (-1.3 LU)",
+      "no vocal clash",
+      "8-bar window (short of a 16-bar phrase)",
+      "longer cut"
+     ],
+     "suggested_transition": "bass_swap_8",
+     "stretch_pct": 0.64,
+     "multiplier": "1",
+     "camelot_a": "7A",
+     "camelot_b": "8A"
+    },
+    {
+     "id": "sample-02",
+     "title": "Test Pattern - Low Confidence",
+     "score": 0.8483,
+     "reasons": [
+      "energy steady (-1.0 LU)",
+      "B has a clean 16-bar intro",
+      "16-bar phrases both sides",
+      "longer cut"
+     ],
+     "suggested_transition": "bass_swap_16",
+     "stretch_pct": 5.35,
+     "multiplier": "1",
+     "camelot_a": "7A",
+     "camelot_b": "9A"
+    },
+    {
+     "id": "sample-01",
+     "title": "The Placeholders - Grid Fit Groove",
+     "score": 0.8463,
+     "reasons": [
+      "+1.0% stretch on B (125.2 end -> 124.0 start)",
+      "energy steady (-0.9 LU)",
+      "no vocal clash",
+      "8-bar window (short of a 16-bar phrase)",
+      "longer cut"
+     ],
+     "suggested_transition": "bass_swap_8",
+     "stretch_pct": 0.96,
+     "multiplier": "1",
+     "camelot_a": "7A",
+     "camelot_b": "8A"
+    },
+    {
+     "id": "sample-04",
+     "title": "Fictional Four - Fade Away Test",
+     "score": 0.8098,
+     "reasons": [
+      "-2.7% stretch on B (125.2 end -> 128.6 start)",
+      "energy steady (-1.1 LU)",
+      "B has a clean 16-bar intro",
+      "different sound (closer than only 24% of pairs)",
+      "different style",
+      "longer cut"
+     ],
+     "suggested_transition": "bass_swap_16",
+     "stretch_pct": 2.71,
+     "multiplier": "1",
+     "camelot_a": "7A",
+     "camelot_b": "6A"
+    },
+    {
+     "id": "sample-05",
+     "title": "Sample Club - Tempo Ramp Transition Edit",
+     "score": 0.6271,
+     "reasons": [
+      "energy steady (+2.0 LU)",
+      "B has a clean 16-bar intro",
+      "similar sound (closer than 100% of pairs)",
+      "tempo change x4/3 (125 -> 100): transition track or brake, no blend",
+      "7A -> 8B (clash)",
+      "groove not comparable at x4/3"
+     ],
+     "suggested_transition": "brake_cut",
+     "stretch_pct": 6.5,
+     "multiplier": "4/3",
+     "camelot_a": "7A",
+     "camelot_b": "8B"
+    },
+    {
+     "id": "sample-06",
+     "title": "Synthetic Soul - Short One",
+     "score": 0.6264,
+     "reasons": [
+      "energy steady (+0.8 LU)",
+      "no vocal clash",
+      "matching groove (r=0.96)",
+      "7A -> 10B (clash)",
+      "different sound (closer than only 20% of pairs)",
+      "different style"
+     ],
+     "suggested_transition": "bass_swap_8",
+     "stretch_pct": 3.83,
+     "multiplier": "1",
+     "camelot_a": "7A",
+     "camelot_b": "10B"
+    },
+    {
+     "id": "sample-07",
+     "title": "Imaginary Orchestra - Half Time Walk",
+     "score": 0.5421,
+     "reasons": [
+      "energy steady (-0.7 LU)",
+      "B has a clean 16-bar intro",
+      "7A -> 10A (pitch-shift B by -2 st)",
+      "tempo change x3/2 (125 -> 86): transition track or brake, no blend",
+      "11-bar window (short of a 16-bar phrase)",
+      "groove not comparable at x3/2"
+     ],
+     "suggested_transition": "brake_cut",
+     "stretch_pct": 3.63,
+     "multiplier": "3/2",
+     "camelot_a": "7A",
+     "camelot_b": "10A"
+    }
+   ],
+   "in": [
+    {
+     "id": "sample-08",
+     "title": "Dummy Data - Two Cuts Extended Mix",
+     "score": 0.8521,
+     "reasons": [
+      "+0.6% stretch on B (126.0 end -> 125.2 start)",
+      "energy steady (-1.1 LU)",
+      "B has a clean 16-bar intro",
+      "8-bar window (short of a 16-bar phrase)",
+      "longer cut"
+     ],
+     "suggested_transition": "bass_swap_8",
+     "stretch_pct": 0.63,
+     "multiplier": "1",
+     "camelot_a": "8A",
+     "camelot_b": "7A"
+    },
+    {
+     "id": "sample-01",
+     "title": "The Placeholders - Grid Fit Groove",
+     "score": 0.8493,
+     "reasons": [
+      "-1.0% stretch on B (124.0 end -> 125.2 start)",
+      "energy steady (-1.1 LU)",
+      "B has a clean 16-bar intro",
+      "8-bar window (short of a 16-bar phrase)",
+      "longer cut"
+     ],
+     "suggested_transition": "bass_swap_8",
+     "stretch_pct": 0.97,
+     "multiplier": "1",
+     "camelot_a": "8A",
+     "camelot_b": "7A"
+    },
+    {
+     "id": "sample-11",
+     "title": "Example Ensemble - Steady Hands Club Mix",
+     "score": 0.7881,
+     "reasons": [
+      "-2.6% stretch on B (122.0 end -> 125.2 start)",
+      "energy steady (-1.0 LU)",
+      "B has a clean 16-bar intro",
+      "8-bar window (short of a 16-bar phrase)",
+      "longer cut"
+     ],
+     "suggested_transition": "bass_swap_8",
+     "stretch_pct": 2.62,
+     "multiplier": "1",
+     "camelot_a": "9B",
+     "camelot_b": "7A"
+    },
+    {
+     "id": "sample-04",
+     "title": "Fictional Four - Fade Away Test",
+     "score": 0.7761,
+     "reasons": [
+      "+2.6% stretch on B (128.6 end -> 125.2 start)",
+      "16-bar phrases both sides",
+      "matching groove (r=0.97)",
+      "different sound (closer than only 24% of pairs)",
+      "different style",
+      "longer cut"
+     ],
+     "suggested_transition": "bass_swap_16",
+     "stretch_pct": 2.64,
+     "multiplier": "1",
+     "camelot_a": "6A",
+     "camelot_b": "7A"
+    },
+    {
+     "id": "sample-02",
+     "title": "Test Pattern - Low Confidence",
+     "score": 0.7574,
+     "reasons": [
+      "energy steady (-1.3 LU)",
+      "B has a clean 16-bar intro",
+      "matching groove (r=0.98)",
+      "8-bar window (short of a 16-bar phrase)",
+      "longer cut"
+     ],
+     "suggested_transition": "bass_swap_8",
+     "stretch_pct": 5.65,
+     "multiplier": "1",
+     "camelot_a": "9A",
+     "camelot_b": "7A"
+    },
+    {
+     "id": "sample-06",
+     "title": "Synthetic Soul - Short One",
+     "score": 0.5926,
+     "reasons": [
+      "energy steady (-1.9 LU)",
+      "B has a clean 16-bar intro",
+      "matching groove (r=0.96)",
+      "10B -> 7A (clash)",
+      "8-bar window (short of a 16-bar phrase)",
+      "different sound (closer than only 20% of pairs)",
+      "different style"
+     ],
+     "suggested_transition": "bass_swap_8",
+     "stretch_pct": 3.69,
+     "multiplier": "1",
+     "camelot_a": "10B",
+     "camelot_b": "7A"
+    },
+    {
+     "id": "sample-05",
+     "title": "Sample Club - Tempo Ramp Transition Edit",
+     "score": 0.5699,
+     "reasons": [
+      "B has a clean 16-bar intro",
+      "similar sound (closer than 100% of pairs)",
+      "matching groove (r=0.96)",
+      "-11.8% stretch on B (112.0 end -> 125.2 start)",
+      "8B -> 7A (clash)",
+      "8-bar window (short of a 16-bar phrase)"
+     ],
+     "suggested_transition": "ramped_blend",
+     "stretch_pct": 11.8,
+     "multiplier": "1",
+     "camelot_a": "8B",
+     "camelot_b": "7A"
+    },
+    {
+     "id": "sample-07",
+     "title": "Imaginary Orchestra - Half Time Walk",
+     "score": 0.5125,
+     "reasons": [
+      "energy steady (-1.1 LU)",
+      "B has a clean 16-bar intro",
+      "10A -> 7A (pitch-shift B by +2 st)",
+      "tempo change x2/3 (86 -> 125): transition track or brake, no blend",
+      "8-bar window (short of a 16-bar phrase)",
+      "groove not comparable at x2/3"
+     ],
+     "suggested_transition": "brake_cut",
+     "stretch_pct": 3.51,
+     "multiplier": "2/3",
+     "camelot_a": "10A",
+     "camelot_b": "7A"
+    }
+   ]
+  }
+ },
+ "sample-11": {
+  "title": "Example Ensemble - Steady Hands Club Mix",
+  "on_disc": false,
+  "disc": {
+   "out": [
+    {
+     "id": "sample-10",
+     "title": "Nobody In Particular - Neighbour Keys",
+     "score": 0.7881,
+     "reasons": [
+      "-2.6% stretch on B (122.0 end -> 125.2 start)",
+      "energy steady (-1.0 LU)",
+      "B has a clean 16-bar intro",
+      "8-bar window (short of a 16-bar phrase)",
+      "longer cut"
+     ],
+     "suggested_transition": "bass_swap_8",
+     "stretch_pct": 2.62,
+     "multiplier": "1",
+     "camelot_a": "9B",
+     "camelot_b": "7A"
+    },
+    {
+     "id": "sample-01",
+     "title": "The Placeholders - Grid Fit Groove",
+     "score": 0.786,
+     "reasons": [
+      "-1.6% stretch on B (122.0 end -> 124.0 start)",
+      "energy steady (-0.7 LU)",
+      "matching groove (r=0.97)",
+      "9B -> 8A (clash)",
+      "8-bar window (short of a 16-bar phrase)",
+      "longer cut"
+     ],
+     "suggested_transition": "bass_swap_8",
+     "stretch_pct": 1.64,
+     "multiplier": "1",
+     "camelot_a": "9B",
+     "camelot_b": "8A"
+    },
+    {
+     "id": "sample-08",
+     "title": "Dummy Data - Two Cuts Extended Mix",
+     "score": 0.7781,
+     "reasons": [
+      "energy steady (-1.2 LU)",
+      "same style",
+      "-3.3% stretch on B (122.0 end -> 126.0 start)",
+      "9B -> 8A (clash)",
+      "8-bar window (short of a 16-bar phrase)",
+      "longer cut"
+     ],
+     "suggested_transition": "bass_swap_8",
+     "stretch_pct": 3.28,
+     "multiplier": "1",
+     "camelot_a": "9B",
+     "camelot_b": "8A"
+    },
+    {
+     "id": "sample-04",
+     "title": "Fictional Four - Fade Away Test",
+     "score": 0.6126,
+     "reasons": [
+      "energy steady (-0.9 LU)",
+      "B has a clean 16-bar intro",
+      "matching groove (r=0.98)",
+      "9B -> 6A (clash)",
+      "8-bar window (short of a 16-bar phrase)",
+      "different style",
+      "longer cut"
+     ],
+     "suggested_transition": "bass_swap_8",
+     "stretch_pct": 5.41,
+     "multiplier": "1",
+     "camelot_a": "9B",
+     "camelot_b": "6A"
+    },
+    {
+     "id": "sample-05",
+     "title": "Sample Club - Tempo Ramp Transition Edit",
+     "score": 0.5744,
+     "reasons": [
+      "B has a clean 16-bar intro",
+      "B enters +2.1 LU louder",
+      "related style",
+      "tempo change x4/3 (122 -> 100): transition track or brake, no blend",
+      "8-bar window (short of a 16-bar phrase)",
+      "different sound (closer than only 32% of pairs)",
+      "groove not comparable at x4/3"
+     ],
+     "suggested_transition": "brake_cut",
+     "stretch_pct": 9.29,
+     "multiplier": "4/3",
+     "camelot_a": "9B",
+     "camelot_b": "8B"
+    },
+    {
+     "id": "sample-03",
+     "title": "Made-Up Collective - Octave Swap",
+     "score": 0.4376,
+     "reasons": [
+      "energy steady (-0.9 LU)",
+      "no vocal clash",
+      "9B -> 11A (pitch-shift B by -2 st)",
+      "tempo change x4/3 (122 -> 89): transition track or brake, no blend",
+      "8-bar window (short of a 16-bar phrase)",
+      "different sound (closer than only 6% of pairs)",
+      "groove not comparable at x4/3",
+      "different style"
+     ],
+     "suggested_transition": "brake_cut",
+     "stretch_pct": 2.73,
+     "multiplier": "4/3",
+     "camelot_a": "9B",
+     "camelot_b": "11A"
+    },
+    {
+     "id": "sample-12",
+     "title": "Stand-In Singers - Every Word Sung",
+     "score": 0.3669,
+     "reasons": [
+      "energy steady (-0.8 LU)",
+      "no vocal clash",
+      "9B -> 12B (pitch-shift B by -2 st), key unsure",
+      "tempo change x4/3 (122 -> 105): transition track or brake, no blend",
+      "8-bar window (short of a 16-bar phrase)",
+      "different sound (closer than only 12% of pairs)",
+      "groove not comparable at x4/3",
+      "different style"
+     ],
+     "suggested_transition": "brake_cut",
+     "stretch_pct": 14.75,
+     "multiplier": "4/3",
+     "camelot_a": "9B",
+     "camelot_b": "12B"
+    }
+   ],
+   "in": [
+    {
+     "id": "sample-10",
+     "title": "Nobody In Particular - Neighbour Keys",
+     "score": 0.8673,
+     "reasons": [
+      "+2.6% stretch on B (125.2 end -> 122.0 start)",
+      "energy steady (-1.0 LU)",
+      "B has a clean 16-bar intro",
+      "longer cut"
+     ],
+     "suggested_transition": "bass_swap_16",
+     "stretch_pct": 2.56,
+     "multiplier": "1",
+     "camelot_a": "7A",
+     "camelot_b": "9B"
+    },
+    {
+     "id": "sample-01",
+     "title": "The Placeholders - Grid Fit Groove",
+     "score": 0.7898,
+     "reasons": [
+      "+1.6% stretch on B (124.0 end -> 122.0 start)",
+      "energy steady (-0.9 LU)",
+      "B has a clean 16-bar intro",
+      "8A -> 9B (clash)",
+      "8-bar window (short of a 16-bar phrase)",
+      "longer cut"
+     ],
+     "suggested_transition": "bass_swap_8",
+     "stretch_pct": 1.61,
+     "multiplier": "1",
+     "camelot_a": "8A",
+     "camelot_b": "9B"
+    },
+    {
+     "id": "sample-08",
+     "title": "Dummy Data - Two Cuts Extended Mix",
+     "score": 0.784,
+     "reasons": [
+      "energy steady (-0.9 LU)",
+      "B has a clean 16-bar intro",
+      "same style",
+      "8A -> 9B (clash)",
+      "8-bar window (short of a 16-bar phrase)",
+      "longer cut"
+     ],
+     "suggested_transition": "bass_swap_8",
+     "stretch_pct": 3.17,
+     "multiplier": "1",
+     "camelot_a": "8A",
+     "camelot_b": "9B"
+    },
+    {
+     "id": "sample-04",
+     "title": "Fictional Four - Fade Away Test",
+     "score": 0.6662,
+     "reasons": [
+      "16-bar phrases both sides",
+      "matching groove (r=0.98)",
+      "B has a clean 16-bar intro",
+      "6A -> 9B (clash)",
+      "different style",
+      "longer cut"
+     ],
+     "suggested_transition": "bass_swap_16",
+     "stretch_pct": 5.13,
+     "multiplier": "1",
+     "camelot_a": "6A",
+     "camelot_b": "9B"
+    },
+    {
+     "id": "sample-05",
+     "title": "Sample Club - Tempo Ramp Transition Edit",
+     "score": 0.6243,
+     "reasons": [
+      "B has a clean 16-bar intro",
+      "matching groove (r=0.98)",
+      "related style",
+      "8-bar window (short of a 16-bar phrase)",
+      "different sound (closer than only 32% of pairs)"
+     ],
+     "suggested_transition": "ramped_blend",
+     "stretch_pct": 8.94,
+     "multiplier": "1",
+     "camelot_a": "8B",
+     "camelot_b": "9B"
+    },
+    {
+     "id": "sample-03",
+     "title": "Made-Up Collective - Octave Swap",
+     "score": 0.4402,
+     "reasons": [
+      "energy steady (-0.9 LU)",
+      "B has a clean 16-bar intro",
+      "11A -> 9B (pitch-shift B by +2 st)",
+      "tempo change x3/4 (89 -> 122): transition track or brake, no blend",
+      "8-bar window (short of a 16-bar phrase)",
+      "different sound (closer than only 6% of pairs)",
+      "groove not comparable at x3/4",
+      "different style"
+     ],
+     "suggested_transition": "brake_cut",
+     "stretch_pct": 2.81,
+     "multiplier": "3/4",
+     "camelot_a": "11A",
+     "camelot_b": "9B"
+    },
+    {
+     "id": "sample-12",
+     "title": "Stand-In Singers - Every Word Sung",
+     "score": 0.4046,
+     "reasons": [
+      "energy steady (-1.0 LU)",
+      "B has a clean 16-bar intro",
+      "12B -> 9B (pitch-shift B by +2 st), key unsure",
+      "tempo change x3/4 (105 -> 122): transition track or brake, no blend",
+      "8-bar window (short of a 16-bar phrase)",
+      "different sound (closer than only 12% of pairs)",
+      "groove not comparable at x3/4",
+      "different style"
+     ],
+     "suggested_transition": "brake_cut",
+     "stretch_pct": 12.86,
+     "multiplier": "3/4",
+     "camelot_a": "12B",
+     "camelot_b": "9B"
+    }
+   ]
+  },
+  "folder": "5 - 120-124",
+  "bpm": 122.001,
+  "camelot": "9B",
+  "pool": {
+   "out": [
+    {
+     "id": "sample-02",
+     "title": "Test Pattern - Low Confidence",
+     "score": 0.8733,
+     "reasons": [
+      "+2.9% stretch on B (122.0 end -> 118.5 start)",
+      "energy steady (-0.9 LU)",
+      "B has a clean 16-bar intro",
+      "8-bar window (short of a 16-bar phrase)",
+      "longer cut"
+     ],
+     "suggested_transition": "bass_swap_8",
+     "stretch_pct": 2.87,
+     "multiplier": "1",
+     "camelot_a": "9B",
+     "camelot_b": "9A"
+    },
+    {
+     "id": "sample-10",
+     "title": "Nobody In Particular - Neighbour Keys",
+     "score": 0.7881,
+     "reasons": [
+      "-2.6% stretch on B (122.0 end -> 125.2 start)",
+      "energy steady (-1.0 LU)",
+      "B has a clean 16-bar intro",
+      "8-bar window (short of a 16-bar phrase)",
+      "longer cut"
+     ],
+     "suggested_transition": "bass_swap_8",
+     "stretch_pct": 2.62,
+     "multiplier": "1",
+     "camelot_a": "9B",
+     "camelot_b": "7A"
+    },
+    {
+     "id": "sample-01",
+     "title": "The Placeholders - Grid Fit Groove",
+     "score": 0.786,
+     "reasons": [
+      "-1.6% stretch on B (122.0 end -> 124.0 start)",
+      "energy steady (-0.7 LU)",
+      "matching groove (r=0.97)",
+      "9B -> 8A (clash)",
+      "8-bar window (short of a 16-bar phrase)",
+      "longer cut"
+     ],
+     "suggested_transition": "bass_swap_8",
+     "stretch_pct": 1.64,
+     "multiplier": "1",
+     "camelot_a": "9B",
+     "camelot_b": "8A"
+    },
+    {
+     "id": "sample-08",
+     "title": "Dummy Data - Two Cuts Extended Mix",
+     "score": 0.7781,
+     "reasons": [
+      "energy steady (-1.2 LU)",
+      "same style",
+      "-3.3% stretch on B (122.0 end -> 126.0 start)",
+      "9B -> 8A (clash)",
+      "8-bar window (short of a 16-bar phrase)",
+      "longer cut"
+     ],
+     "suggested_transition": "bass_swap_8",
+     "stretch_pct": 3.28,
+     "multiplier": "1",
+     "camelot_a": "9B",
+     "camelot_b": "8A"
+    },
+    {
+     "id": "sample-06",
+     "title": "Synthetic Soul - Short One",
+     "score": 0.6832,
+     "reasons": [
+      "energy steady (+0.9 LU)",
+      "no vocal clash",
+      "matching groove (r=0.97)",
+      "8-bar window (short of a 16-bar phrase)",
+      "different style"
+     ],
+     "suggested_transition": "ramped_blend",
+     "stretch_pct": 6.56,
+     "multiplier": "1",
+     "camelot_a": "9B",
+     "camelot_b": "10B"
+    },
+    {
+     "id": "sample-04",
+     "title": "Fictional Four - Fade Away Test",
+     "score": 0.6126,
+     "reasons": [
+      "energy steady (-0.9 LU)",
+      "B has a clean 16-bar intro",
+      "matching groove (r=0.98)",
+      "9B -> 6A (clash)",
+      "8-bar window (short of a 16-bar phrase)",
+      "different style",
+      "longer cut"
+     ],
+     "suggested_transition": "bass_swap_8",
+     "stretch_pct": 5.41,
+     "multiplier": "1",
+     "camelot_a": "9B",
+     "camelot_b": "6A"
+    },
+    {
+     "id": "sample-05",
+     "title": "Sample Club - Tempo Ramp Transition Edit",
+     "score": 0.5744,
+     "reasons": [
+      "B has a clean 16-bar intro",
+      "B enters +2.1 LU louder",
+      "related style",
+      "tempo change x4/3 (122 -> 100): transition track or brake, no blend",
+      "8-bar window (short of a 16-bar phrase)",
+      "different sound (closer than only 32% of pairs)",
+      "groove not comparable at x4/3"
+     ],
+     "suggested_transition": "brake_cut",
+     "stretch_pct": 9.29,
+     "multiplier": "4/3",
+     "camelot_a": "9B",
+     "camelot_b": "8B"
+    },
+    {
+     "id": "sample-07",
+     "title": "Imaginary Orchestra - Half Time Walk",
+     "score": 0.4635,
+     "reasons": [
+      "energy steady (-0.5 LU)",
+      "B has a clean 16-bar intro",
+      "similar sound (closer than 70% of pairs)",
+      "tempo change x4/3 (122 -> 86): transition track or brake, no blend",
+      "9B -> 10A (clash)",
+      "8-bar window (short of a 16-bar phrase)",
+      "groove not comparable at x4/3",
+      "different style"
+     ],
+     "suggested_transition": "brake_cut",
+     "stretch_pct": 5.47,
+     "multiplier": "4/3",
+     "camelot_a": "9B",
+     "camelot_b": "10A"
+    }
+   ],
+   "in": [
+    {
+     "id": "sample-02",
+     "title": "Test Pattern - Low Confidence",
+     "score": 0.8733,
+     "reasons": [
+      "-3.0% stretch on B (118.5 end -> 122.0 start)",
+      "energy steady (-1.2 LU)",
+      "B has a clean 16-bar intro",
+      "8-bar window (short of a 16-bar phrase)",
+      "longer cut"
+     ],
+     "suggested_transition": "bass_swap_8",
+     "stretch_pct": 2.95,
+     "multiplier": "1",
+     "camelot_a": "9A",
+     "camelot_b": "9B"
+    },
+    {
+     "id": "sample-10",
+     "title": "Nobody In Particular - Neighbour Keys",
+     "score": 0.8673,
+     "reasons": [
+      "+2.6% stretch on B (125.2 end -> 122.0 start)",
+      "energy steady (-1.0 LU)",
+      "B has a clean 16-bar intro",
+      "longer cut"
+     ],
+     "suggested_transition": "bass_swap_16",
+     "stretch_pct": 2.56,
+     "multiplier": "1",
+     "camelot_a": "7A",
+     "camelot_b": "9B"
+    },
+    {
+     "id": "sample-01",
+     "title": "The Placeholders - Grid Fit Groove",
+     "score": 0.7898,
+     "reasons": [
+      "+1.6% stretch on B (124.0 end -> 122.0 start)",
+      "energy steady (-0.9 LU)",
+      "B has a clean 16-bar intro",
+      "8A -> 9B (clash)",
+      "8-bar window (short of a 16-bar phrase)",
+      "longer cut"
+     ],
+     "suggested_transition": "bass_swap_8",
+     "stretch_pct": 1.61,
+     "multiplier": "1",
+     "camelot_a": "8A",
+     "camelot_b": "9B"
+    },
+    {
+     "id": "sample-08",
+     "title": "Dummy Data - Two Cuts Extended Mix",
+     "score": 0.784,
+     "reasons": [
+      "energy steady (-0.9 LU)",
+      "B has a clean 16-bar intro",
+      "same style",
+      "8A -> 9B (clash)",
+      "8-bar window (short of a 16-bar phrase)",
+      "longer cut"
+     ],
+     "suggested_transition": "bass_swap_8",
+     "stretch_pct": 3.17,
+     "multiplier": "1",
+     "camelot_a": "8A",
+     "camelot_b": "9B"
+    },
+    {
+     "id": "sample-06",
+     "title": "Synthetic Soul - Short One",
+     "score": 0.6956,
+     "reasons": [
+      "energy steady (-1.7 LU)",
+      "B has a clean 16-bar intro",
+      "matching groove (r=0.97)",
+      "8-bar window (short of a 16-bar phrase)",
+      "different style"
+     ],
+     "suggested_transition": "ramped_blend",
+     "stretch_pct": 6.15,
+     "multiplier": "1",
+     "camelot_a": "10B",
+     "camelot_b": "9B"
+    },
+    {
+     "id": "sample-04",
+     "title": "Fictional Four - Fade Away Test",
+     "score": 0.6662,
+     "reasons": [
+      "16-bar phrases both sides",
+      "matching groove (r=0.98)",
+      "B has a clean 16-bar intro",
+      "6A -> 9B (clash)",
+      "different style",
+      "longer cut"
+     ],
+     "suggested_transition": "bass_swap_16",
+     "stretch_pct": 5.13,
+     "multiplier": "1",
+     "camelot_a": "6A",
+     "camelot_b": "9B"
+    },
+    {
+     "id": "sample-05",
+     "title": "Sample Club - Tempo Ramp Transition Edit",
+     "score": 0.6243,
+     "reasons": [
+      "B has a clean 16-bar intro",
+      "matching groove (r=0.98)",
+      "related style",
+      "8-bar window (short of a 16-bar phrase)",
+      "different sound (closer than only 32% of pairs)"
+     ],
+     "suggested_transition": "ramped_blend",
+     "stretch_pct": 8.94,
+     "multiplier": "1",
+     "camelot_a": "8B",
+     "camelot_b": "9B"
+    },
+    {
+     "id": "sample-07",
+     "title": "Imaginary Orchestra - Half Time Walk",
+     "score": 0.4635,
+     "reasons": [
+      "energy steady (-1.0 LU)",
+      "B has a clean 16-bar intro",
+      "similar sound (closer than 70% of pairs)",
+      "tempo change x3/4 (86 -> 122): transition track or brake, no blend",
+      "10A -> 9B (clash)",
+      "8-bar window (short of a 16-bar phrase)",
+      "groove not comparable at x3/4",
+      "different style"
+     ],
+     "suggested_transition": "brake_cut",
+     "stretch_pct": 5.78,
+     "multiplier": "3/4",
+     "camelot_a": "10A",
+     "camelot_b": "9B"
+    }
+   ]
+  }
+ },
+ "sample-12": {
+  "title": "Stand-In Singers - Every Word Sung",
+  "on_disc": true,
+  "disc": {
+   "out": [
+    {
+     "id": "sample-05",
+     "title": "Sample Club - Tempo Ramp Transition Edit",
+     "score": 0.6379,
+     "reasons": [
+      "energy steady (+1.9 LU)",
+      "matching groove (r=0.97)",
+      "B has a clean 16-bar intro",
+      "8-bar window (short of a 16-bar phrase)",
+      "different sound (closer than only 23% of pairs)"
+     ],
+     "suggested_transition": "bass_swap_8",
+     "stretch_pct": 4.76,
+     "multiplier": "1",
+     "camelot_a": "12B",
+     "camelot_b": "8B"
+    },
+    {
+     "id": "sample-04",
+     "title": "Fictional Four - Fade Away Test",
+     "score": 0.5838,
+     "reasons": [
+      "energy steady (-1.1 LU)",
+      "B has a clean 16-bar intro",
+      "similar sound (closer than 94% of pairs)",
+      "tempo change x3/4 (105 -> 129): transition track or brake, no blend",
+      "12B -> 6A (clash), key unsure",
+      "8-bar window (short of a 16-bar phrase)",
+      "groove not comparable at x3/4",
+      "longer cut"
+     ],
+     "suggested_transition": "brake_cut",
+     "stretch_pct": 8.14,
+     "multiplier": "3/4",
+     "camelot_a": "12B",
+     "camelot_b": "6A"
+    },
+    {
+     "id": "sample-03",
+     "title": "Made-Up Collective - Octave Swap",
+     "score": 0.5121,
+     "reasons": [
+      "energy steady (-1.1 LU)",
+      "no vocal clash",
+      "related style",
+      "tempo change x4/3 (105 -> 89): transition track or brake, no blend",
+      "12B -> 11A (clash), key unsure",
+      "8-bar window (short of a 16-bar phrase)",
+      "groove not comparable at x4/3"
+     ],
+     "suggested_transition": "brake_cut",
+     "stretch_pct": 13.02,
+     "multiplier": "4/3",
+     "camelot_a": "12B",
+     "camelot_b": "11A"
+    },
+    {
+     "id": "sample-10",
+     "title": "Nobody In Particular - Neighbour Keys",
+     "score": 0.4861,
+     "reasons": [
+      "energy steady (-1.2 LU)",
+      "B has a clean 16-bar intro",
+      "12B -> 7A (pitch-shift B by -1 st), key unsure",
+      "tempo change x3/4 (105 -> 125): transition track or brake, no blend",
+      "8-bar window (short of a 16-bar phrase)",
+      "different sound (closer than only 26% of pairs)",
+      "groove not comparable at x3/4",
+      "different style",
+      "longer cut"
+     ],
+     "suggested_transition": "brake_cut",
+     "stretch_pct": 10.57,
+     "multiplier": "3/4",
+     "camelot_a": "12B",
+     "camelot_b": "7A"
+    },
+    {
+     "id": "sample-01",
+     "title": "The Placeholders - Grid Fit Groove",
+     "score": 0.4498,
+     "reasons": [
+      "energy steady (-0.9 LU)",
+      "no vocal clash",
+      "similar sound (closer than 55% of pairs)",
+      "tempo change x3/4 (105 -> 124): transition track or brake, no blend",
+      "12B -> 8A (clash), key unsure",
+      "8-bar window (short of a 16-bar phrase)",
+      "groove not comparable at x3/4",
+      "different style",
+      "longer cut"
+     ],
+     "suggested_transition": "brake_cut",
+     "stretch_pct": 11.43,
+     "multiplier": "3/4",
+     "camelot_a": "12B",
+     "camelot_b": "8A"
+    },
+    {
+     "id": "sample-08",
+     "title": "Dummy Data - Two Cuts Extended Mix",
+     "score": 0.4112,
+     "reasons": [
+      "energy steady (-1.4 LU)",
+      "no vocal clash",
+      "tempo change x3/4 (105 -> 126): transition track or brake, no blend",
+      "12B -> 8A (clash), key unsure",
+      "8-bar window (short of a 16-bar phrase)",
+      "different sound (closer than only 17% of pairs)",
+      "groove not comparable at x3/4",
+      "different style",
+      "longer cut"
+     ],
+     "suggested_transition": "brake_cut",
+     "stretch_pct": 10.0,
+     "multiplier": "3/4",
+     "camelot_a": "12B",
+     "camelot_b": "8A"
+    }
+   ],
+   "in": [
+    {
+     "id": "sample-04",
+     "title": "Fictional Four - Fade Away Test",
+     "score": 0.5726,
+     "reasons": [
+      "16-bar phrases both sides",
+      "similar sound (closer than 94% of pairs)",
+      "related style",
+      "tempo change x4/3 (129 -> 105): transition track or brake, no blend",
+      "6A -> 12B (clash), key unsure",
+      "vocals overlap 16 of 16 bars",
+      "groove not comparable at x4/3",
+      "longer cut"
+     ],
+     "suggested_transition": "brake_cut",
+     "stretch_pct": 8.87,
+     "multiplier": "4/3",
+     "camelot_a": "6A",
+     "camelot_b": "12B"
+    },
+    {
+     "id": "sample-05",
+     "title": "Sample Club - Tempo Ramp Transition Edit",
+     "score": 0.571,
+     "reasons": [
+      "matching groove (r=0.97)",
+      "no vocal clash",
+      "B enters -3.7 LU quieter",
+      "8-bar window (short of a 16-bar phrase)",
+      "different sound (closer than only 23% of pairs)"
+     ],
+     "suggested_transition": "ramped_blend",
+     "stretch_pct": 6.24,
+     "multiplier": "1",
+     "camelot_a": "8B",
+     "camelot_b": "12B"
+    },
+    {
+     "id": "sample-10",
+     "title": "Nobody In Particular - Neighbour Keys",
+     "score": 0.5457,
+     "reasons": [
+      "energy steady (-0.9 LU)",
+      "16-bar phrases both sides",
+      "no vocal clash",
+      "tempo change x4/3 (125 -> 105): transition track or brake, no blend",
+      "different sound (closer than only 26% of pairs)",
+      "groove not comparable at x4/3",
+      "different style",
+      "longer cut"
+     ],
+     "suggested_transition": "brake_cut",
+     "stretch_pct": 11.82,
+     "multiplier": "4/3",
+     "camelot_a": "7A",
+     "camelot_b": "12B"
+    },
+    {
+     "id": "sample-03",
+     "title": "Made-Up Collective - Octave Swap",
+     "score": 0.5264,
+     "reasons": [
+      "energy steady (-0.8 LU)",
+      "no vocal clash",
+      "related style",
+      "tempo change x3/4 (89 -> 105): transition track or brake, no blend",
+      "11A -> 12B (clash), key unsure",
+      "8-bar window (short of a 16-bar phrase)",
+      "groove not comparable at x3/4"
+     ],
+     "suggested_transition": "brake_cut",
+     "stretch_pct": 11.52,
+     "multiplier": "3/4",
+     "camelot_a": "11A",
+     "camelot_b": "12B"
+    },
+    {
+     "id": "sample-01",
+     "title": "The Placeholders - Grid Fit Groove",
+     "score": 0.4338,
+     "reasons": [
+      "energy steady (-0.8 LU)",
+      "no vocal clash",
+      "similar sound (closer than 55% of pairs)",
+      "tempo change x4/3 (124 -> 105): transition track or brake, no blend",
+      "8A -> 12B (clash), key unsure",
+      "8-bar window (short of a 16-bar phrase)",
+      "groove not comparable at x4/3",
+      "different style",
+      "longer cut"
+     ],
+     "suggested_transition": "brake_cut",
+     "stretch_pct": 12.9,
+     "multiplier": "4/3",
+     "camelot_a": "8A",
+     "camelot_b": "12B"
+    },
+    {
+     "id": "sample-08",
+     "title": "Dummy Data - Two Cuts Extended Mix",
+     "score": 0.4107,
+     "reasons": [
+      "energy steady (-0.8 LU)",
+      "no vocal clash",
+      "tempo change x4/3 (126 -> 105): transition track or brake, no blend",
+      "8A -> 12B (clash), key unsure",
+      "8-bar window (short of a 16-bar phrase)",
+      "different sound (closer than only 17% of pairs)",
+      "groove not comparable at x4/3",
+      "different style",
+      "longer cut"
+     ],
+     "suggested_transition": "brake_cut",
+     "stretch_pct": 11.11,
+     "multiplier": "4/3",
+     "camelot_a": "8A",
+     "camelot_b": "12B"
+    }
+   ]
+  },
+  "folder": "3 - 100-109",
+  "bpm": 105.0,
+  "camelot": "12B",
+  "pool": {
+   "out": [
+    {
+     "id": "sample-05",
+     "title": "Sample Club - Tempo Ramp Transition Edit",
+     "score": 0.6379,
+     "reasons": [
+      "energy steady (+1.9 LU)",
+      "matching groove (r=0.97)",
+      "B has a clean 16-bar intro",
+      "8-bar window (short of a 16-bar phrase)",
+      "different sound (closer than only 23% of pairs)"
+     ],
+     "suggested_transition": "bass_swap_8",
+     "stretch_pct": 4.76,
+     "multiplier": "1",
+     "camelot_a": "12B",
+     "camelot_b": "8B"
+    },
+    {
+     "id": "sample-06",
+     "title": "Synthetic Soul - Short One",
+     "score": 0.5999,
+     "reasons": [
+      "energy steady (+0.8 LU)",
+      "same style",
+      "similar sound (closer than 88% of pairs)",
+      "tempo change x3/4 (105 -> 130): transition track or brake, no blend",
+      "12B -> 10B (pitch-shift B by +2 st), key unsure",
+      "8-bar window (short of a 16-bar phrase)",
+      "groove not comparable at x3/4"
+     ],
+     "suggested_transition": "brake_cut",
+     "stretch_pct": 7.14,
+     "multiplier": "3/4",
+     "camelot_a": "12B",
+     "camelot_b": "10B"
+    },
+    {
+     "id": "sample-04",
+     "title": "Fictional Four - Fade Away Test",
+     "score": 0.5838,
+     "reasons": [
+      "energy steady (-1.1 LU)",
+      "B has a clean 16-bar intro",
+      "similar sound (closer than 94% of pairs)",
+      "tempo change x3/4 (105 -> 129): transition track or brake, no blend",
+      "12B -> 6A (clash), key unsure",
+      "8-bar window (short of a 16-bar phrase)",
+      "groove not comparable at x3/4",
+      "longer cut"
+     ],
+     "suggested_transition": "brake_cut",
+     "stretch_pct": 8.14,
+     "multiplier": "3/4",
+     "camelot_a": "12B",
+     "camelot_b": "6A"
+    },
+    {
+     "id": "sample-03",
+     "title": "Made-Up Collective - Octave Swap",
+     "score": 0.5121,
+     "reasons": [
+      "energy steady (-1.1 LU)",
+      "no vocal clash",
+      "related style",
+      "tempo change x4/3 (105 -> 89): transition track or brake, no blend",
+      "12B -> 11A (clash), key unsure",
+      "8-bar window (short of a 16-bar phrase)",
+      "groove not comparable at x4/3"
+     ],
+     "suggested_transition": "brake_cut",
+     "stretch_pct": 13.02,
+     "multiplier": "4/3",
+     "camelot_a": "12B",
+     "camelot_b": "11A"
+    },
+    {
+     "id": "sample-10",
+     "title": "Nobody In Particular - Neighbour Keys",
+     "score": 0.4861,
+     "reasons": [
+      "energy steady (-1.2 LU)",
+      "B has a clean 16-bar intro",
+      "12B -> 7A (pitch-shift B by -1 st), key unsure",
+      "tempo change x3/4 (105 -> 125): transition track or brake, no blend",
+      "8-bar window (short of a 16-bar phrase)",
+      "different sound (closer than only 26% of pairs)",
+      "groove not comparable at x3/4",
+      "different style",
+      "longer cut"
+     ],
+     "suggested_transition": "brake_cut",
+     "stretch_pct": 10.57,
+     "multiplier": "3/4",
+     "camelot_a": "12B",
+     "camelot_b": "7A"
+    },
+    {
+     "id": "sample-07",
+     "title": "Imaginary Orchestra - Half Time Walk",
+     "score": 0.4844,
+     "reasons": [
+      "energy steady (-0.7 LU)",
+      "B has a clean 16-bar intro",
+      "related style",
+      "tempo change x4/3 (105 -> 86): transition track or brake, no blend",
+      "12B -> 10A (pitch-shift B by +2 st), key unsure",
+      "8-bar window (short of a 16-bar phrase)",
+      "different sound (closer than only 2% of pairs)",
+      "groove not comparable at x4/3"
+     ],
+     "suggested_transition": "brake_cut",
+     "stretch_pct": 9.84,
+     "multiplier": "4/3",
+     "camelot_a": "12B",
+     "camelot_b": "10A"
+    },
+    {
+     "id": "sample-01",
+     "title": "The Placeholders - Grid Fit Groove",
+     "score": 0.4498,
+     "reasons": [
+      "energy steady (-0.9 LU)",
+      "no vocal clash",
+      "similar sound (closer than 55% of pairs)",
+      "tempo change x3/4 (105 -> 124): transition track or brake, no blend",
+      "12B -> 8A (clash), key unsure",
+      "8-bar window (short of a 16-bar phrase)",
+      "groove not comparable at x3/4",
+      "different style",
+      "longer cut"
+     ],
+     "suggested_transition": "brake_cut",
+     "stretch_pct": 11.43,
+     "multiplier": "3/4",
+     "camelot_a": "12B",
+     "camelot_b": "8A"
+    },
+    {
+     "id": "sample-02",
+     "title": "Test Pattern - Low Confidence",
+     "score": 0.4358,
+     "reasons": [
+      "energy steady (-1.1 LU)",
+      "B has a clean 16-bar intro",
+      "matching groove (r=0.96)",
+      "-12.9% stretch on B (105.0 end -> 118.5 start)",
+      "12B -> 9A (clash), key unsure",
+      "8-bar window (short of a 16-bar phrase)",
+      "different sound (closer than only 15% of pairs)",
+      "different style",
+      "longer cut"
+     ],
+     "suggested_transition": "ramped_blend",
+     "stretch_pct": 12.86,
+     "multiplier": "1",
+     "camelot_a": "12B",
+     "camelot_b": "9A"
+    }
+   ],
+   "in": [
+    {
+     "id": "sample-06",
+     "title": "Synthetic Soul - Short One",
+     "score": 0.5996,
+     "reasons": [
+      "energy steady (-1.6 LU)",
+      "same style",
+      "similar sound (closer than 88% of pairs)",
+      "tempo change x4/3 (130 -> 105): transition track or brake, no blend",
+      "8-bar window (short of a 16-bar phrase)",
+      "groove not comparable at x4/3"
+     ],
+     "suggested_transition": "brake_cut",
+     "stretch_pct": 7.69,
+     "multiplier": "4/3",
+     "camelot_a": "10B",
+     "camelot_b": "12B"
+    },
+    {
+     "id": "sample-04",
+     "title": "Fictional Four - Fade Away Test",
+     "score": 0.5726,
+     "reasons": [
+      "16-bar phrases both sides",
+      "similar sound (closer than 94% of pairs)",
+      "related style",
+      "tempo change x4/3 (129 -> 105): transition track or brake, no blend",
+      "6A -> 12B (clash), key unsure",
+      "vocals overlap 16 of 16 bars",
+      "groove not comparable at x4/3",
+      "longer cut"
+     ],
+     "suggested_transition": "brake_cut",
+     "stretch_pct": 8.87,
+     "multiplier": "4/3",
+     "camelot_a": "6A",
+     "camelot_b": "12B"
+    },
+    {
+     "id": "sample-05",
+     "title": "Sample Club - Tempo Ramp Transition Edit",
+     "score": 0.571,
+     "reasons": [
+      "matching groove (r=0.97)",
+      "no vocal clash",
+      "B enters -3.7 LU quieter",
+      "8-bar window (short of a 16-bar phrase)",
+      "different sound (closer than only 23% of pairs)"
+     ],
+     "suggested_transition": "ramped_blend",
+     "stretch_pct": 6.24,
+     "multiplier": "1",
+     "camelot_a": "8B",
+     "camelot_b": "12B"
+    },
+    {
+     "id": "sample-10",
+     "title": "Nobody In Particular - Neighbour Keys",
+     "score": 0.5457,
+     "reasons": [
+      "energy steady (-0.9 LU)",
+      "16-bar phrases both sides",
+      "no vocal clash",
+      "tempo change x4/3 (125 -> 105): transition track or brake, no blend",
+      "different sound (closer than only 26% of pairs)",
+      "groove not comparable at x4/3",
+      "different style",
+      "longer cut"
+     ],
+     "suggested_transition": "brake_cut",
+     "stretch_pct": 11.82,
+     "multiplier": "4/3",
+     "camelot_a": "7A",
+     "camelot_b": "12B"
+    },
+    {
+     "id": "sample-03",
+     "title": "Made-Up Collective - Octave Swap",
+     "score": 0.5264,
+     "reasons": [
+      "energy steady (-0.8 LU)",
+      "no vocal clash",
+      "related style",
+      "tempo change x3/4 (89 -> 105): transition track or brake, no blend",
+      "11A -> 12B (clash), key unsure",
+      "8-bar window (short of a 16-bar phrase)",
+      "groove not comparable at x3/4"
+     ],
+     "suggested_transition": "brake_cut",
+     "stretch_pct": 11.52,
+     "multiplier": "3/4",
+     "camelot_a": "11A",
+     "camelot_b": "12B"
+    },
+    {
+     "id": "sample-07",
+     "title": "Imaginary Orchestra - Half Time Walk",
+     "score": 0.4751,
+     "reasons": [
+      "energy steady (-0.9 LU)",
+      "no vocal clash",
+      "related style",
+      "tempo change x3/4 (86 -> 105): transition track or brake, no blend",
+      "10A -> 12B (pitch-shift B by -2 st), key unsure",
+      "8-bar window (short of a 16-bar phrase)",
+      "different sound (closer than only 2% of pairs)",
+      "groove not comparable at x3/4"
+     ],
+     "suggested_transition": "brake_cut",
+     "stretch_pct": 8.96,
+     "multiplier": "3/4",
+     "camelot_a": "10A",
+     "camelot_b": "12B"
+    },
+    {
+     "id": "sample-02",
+     "title": "Test Pattern - Low Confidence",
+     "score": 0.4381,
+     "reasons": [
+      "energy steady (-1.1 LU)",
+      "matching groove (r=0.96)",
+      "no vocal clash",
+      "+11.4% stretch on B (118.5 end -> 105.0 start)",
+      "9A -> 12B (clash), key unsure",
+      "8-bar window (short of a 16-bar phrase)",
+      "different sound (closer than only 15% of pairs)",
+      "different style",
+      "longer cut"
+     ],
+     "suggested_transition": "ramped_blend",
+     "stretch_pct": 11.39,
+     "multiplier": "1",
+     "camelot_a": "9A",
+     "camelot_b": "12B"
+    },
+    {
+     "id": "sample-01",
+     "title": "The Placeholders - Grid Fit Groove",
+     "score": 0.4338,
+     "reasons": [
+      "energy steady (-0.8 LU)",
+      "no vocal clash",
+      "similar sound (closer than 55% of pairs)",
+      "tempo change x4/3 (124 -> 105): transition track or brake, no blend",
+      "8A -> 12B (clash), key unsure",
+      "8-bar window (short of a 16-bar phrase)",
+      "groove not comparable at x4/3",
+      "different style",
+      "longer cut"
+     ],
+     "suggested_transition": "brake_cut",
+     "stretch_pct": 12.9,
+     "multiplier": "4/3",
+     "camelot_a": "8A",
+     "camelot_b": "12B"
+    }
+   ]
+  }
+ }
+}

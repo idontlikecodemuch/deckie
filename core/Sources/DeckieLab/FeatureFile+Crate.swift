@@ -3,12 +3,14 @@ import DeckieCore
 import DeckieCrate
 
 // The lab's feature files as crate records (docs/architecture/crate-format.md, "From the lab's feature files").
-// Every committed mixer/features/<id>.json converts; the numbers keep the lab's rounding, the per-bar series are
+// Every lab feature file (<lab data>/features/<id>.json) converts; the numbers keep the lab's rounding, the per-bar series are
 // rounded to float16 as the bars sidecar holds them, and nothing is analysed again.
 
 extension FeatureFile {
-    /// The folder the lab's `path`s start with (mixer/candidates.json); a record's `file.rel` is the path below it.
-    public static let labMusicRoot = "/Users/you/personal/[folder]/"
+    /// The folder the lab's `path`s start with, unless the converter is told another (crate-from-lab --music-root);
+    /// a record's `file.rel` is the path below it. The public sample of invented songs (core/fixtures/lab-sample)
+    /// uses this neutral one.
+    public static let labMusicRoot = "/path/to/music/"
 
     /// What a lab record cannot take from its feature file.
     public struct CrateOptions: Sendable {

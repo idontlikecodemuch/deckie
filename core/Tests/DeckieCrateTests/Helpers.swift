@@ -1,13 +1,17 @@
 import Foundation
 import DeckieCrate
+import DeckieTestSupport
 
-/// Where the lab's files and the example crate are, relative to this source file (core/Tests/DeckieCrateTests/).
+/// Where the lab's data (`LabData`: the private folder DECKIE_LAB_DATA names, else the public sample of invented
+/// songs) and the example crate are, relative to this source file (core/Tests/DeckieCrateTests/).
 enum Paths {
     static let testsDir = URL(fileURLWithPath: #filePath).deletingLastPathComponent()
     static let core = testsDir.deletingLastPathComponent().deletingLastPathComponent()
     static let root = core.deletingLastPathComponent()
-    static let features = root.appendingPathComponent("mixer/features")
-    static let candidates = root.appendingPathComponent("mixer/candidates.json")
+    static var features: URL { LabData.features }
+    static var candidates: URL { LabData.candidates }
+    /// The invented sample the example crate is made from, whatever LabData reads.
+    static let sample = LabData.sample
     static let example = core.appendingPathComponent("fixtures/example.deckiecrate")
     static let dependencies = core.appendingPathComponent("dependencies.json")
     static let dependenciesDoc = root.appendingPathComponent("DEPENDENCIES.md")

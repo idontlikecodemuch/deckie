@@ -1,0 +1,14 @@
+{
+"sample-01": {"beat_f": 0.997080291970803, "downbeat_f": 0.9970845481049563, "half_f": 0.6673170731707316, "key_rel": "exact", "pearson": 0.8796227476680727, "section_p": 0.3333333333333333, "section_r": 1.0},
+"sample-02": {"beat_f": 0.9753265602322206, "downbeat_f": 0.2492753623188406, "half_f": 0.6666666666666666, "key_rel": "neighbour", "pearson": 0.8754384554532553, "section_p": 0.2857142857142857, "section_r": 1.0},
+"sample-03": {"beat_f": 0.9972144846796658, "downbeat_f": 0.9944134078212291, "half_f": 0.6666666666666666, "key_rel": "exact", "pearson": 0.9379804363866073, "section_p": 0.3333333333333333, "section_r": 1.0},
+"sample-04": {"beat_f": 0.9992641648270787, "downbeat_f": 1.0, "half_f": 0.6666666666666666, "key_rel": "exact", "pearson": 0.6420005399724609, "section_p": 0.42857142857142855, "section_r": 1.0},
+"sample-05": {"beat_f": 0.29569892473118276, "downbeat_f": 0.06417112299465241, "half_f": 0.6678571428571428, "key_rel": "neighbour", "pearson": 0.91108933739359, "section_p": 0.375, "section_r": 1.0},
+"sample-06": {"beat_f": 0.9918256130790191, "downbeat_f": 0.989010989010989, "half_f": 0.6666666666666666, "key_rel": "exact", "pearson": 0.7945766247626133, "section_p": 0.5, "section_r": 1.0},
+"sample-07": {"beat_f": 0.9986789960369881, "downbeat_f": 1.0, "half_f": 0.6678383128295254, "key_rel": "exact", "pearson": 0.927505977487689, "section_p": 0.3333333333333333, "section_r": 1.0},
+"sample-08": {"beat_f": 0.9976218787158145, "downbeat_f": 0.997624703087886, "half_f": 0.6671961874503575, "key_rel": "neighbour", "pearson": 0.8035396976825393, "section_p": 0.42857142857142855, "section_r": 1.0},
+"sample-09": {"beat_f": 0.9954022988505747, "downbeat_f": 0.9953917050691244, "half_f": 0.6676923076923078, "key_rel": "exact", "pearson": 0.9252801088519352, "section_p": 0.25, "section_r": 1.0},
+"sample-10": {"beat_f": 1.0, "downbeat_f": 1.0, "half_f": 0.6666666666666666, "key_rel": "exact", "pearson": 0.8125219679948941, "section_p": 0.3333333333333333, "section_r": 1.0},
+"sample-11": {"beat_f": 0.9961928934010154, "downbeat_f": 0.9949238578680203, "half_f": 0.66723259762309, "key_rel": "neighbour", "pearson": 0.9122153428013025, "section_p": 0.375, "section_r": 1.0},
+"sample-12": {"beat_f": 1.0, "downbeat_f": 1.0, "half_f": 0.6666666666666666, "key_rel": "neighbour", "pearson": -0.13425079312745272, "section_p": 0.5, "section_r": 1.0}
+}

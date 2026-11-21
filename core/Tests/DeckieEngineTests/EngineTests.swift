@@ -300,7 +300,7 @@ struct EngineTests {
 
         // Keys against a committed lab feature file: the same, less the vocal block and the embedding, plus the
         // engine's own block.
-        let labURL = repositoryRoot.appendingPathComponent("mixer/features/[id].json")
+        let labURL = LabData.sample.appendingPathComponent("features/\(LabData.shapeReference).json")
         let lab = try #require(try JSONSerialization.jsonObject(with: Data(contentsOf: labURL)) as? [String: Any])
         let ours = try #require(try JSONSerialization.jsonObject(with: data) as? [String: Any])
         let absent: Set<String> = ["vocal", "embedding_effnet"]

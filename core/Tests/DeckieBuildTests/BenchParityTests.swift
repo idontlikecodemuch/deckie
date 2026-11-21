@@ -1,12 +1,13 @@
 import Foundation
 import Testing
 import DeckieBuild
+import DeckieTestSupport
 
 /// The bench's measures against mixer/bench_mu.py's own functions, run by core/Tools/make_bench_fixtures.py on pairs
-/// of series from every committed lab feature file (Fixtures/bench_parity.json); and every committed lab file read as
-/// a bench record and scored against itself.
+/// of series from every feature file of the lab's data (LabData: the private files, else the invented sample;
+/// bench_parity.json in its fixtures); and every one of those files read as a bench record and scored against itself.
 @Suite struct BenchParityTests {
-    static let features = repositoryRoot.appendingPathComponent("mixer/features")
+    static var features: URL { LabData.features }
 
     struct Expected: Decodable {
         var beat_f: Double?
@@ -24,9 +25,8 @@ import DeckieBuild
     }
 
     @Test func measuresMatchTheLabsOwnFunctions() throws {
-        let url = URL(fileURLWithPath: #filePath).deletingLastPathComponent().appendingPathComponent("Fixtures/bench_parity.json")
-        let expected = try JSONDecoder().decode([String: Expected].self, from: Data(contentsOf: url))
-        #expect(expected.count == 373)
+        let expected = try LabData.fixture("bench_parity.json", as: [String: Expected].self)
+        #expect(!expected.isEmpty && expected.count == LabData.trackCount)
         var compared = 0
         for (id, want) in expected.sorted(by: { $0.key < $1.key }) {
             let f = try Self.lab(id)
@@ -54,13 +54,13 @@ import DeckieBuild
                     "\(id) pearson")
             compared += 1
         }
-        #expect(compared == 373)
+        #expect(compared == expected.count)
     }
 
     /// Every committed lab file reads as a bench record and scores perfectly against itself.
     @Test func everyLabFileScoresPerfectlyAgainstItself() throws {
         let names = try FileManager.default.contentsOfDirectory(atPath: Self.features.path).filter { $0.hasSuffix(".json") }
-        #expect(names.count == 373)
+        #expect(!names.isEmpty && names.count == LabData.trackCount)
         var scores: [TrackScore] = []
         for name in names.sorted() {
             let r = try JSONDecoder().decode(BenchRecord.self, from: Data(contentsOf: Self.features.appendingPathComponent(name)))
@@ -72,9 +72,9 @@ import DeckieBuild
             scores.append(s)
         }
         let summary = BenchSummary(scores)
-        #expect(summary.tracks == 373 && summary.charterPass == true)
+        #expect(summary.tracks == names.count && summary.charterPass == true)
         // The lab's 311 confident keys, as stage 1 counts them.
-        #expect(summary.keyConfidentCount == 311)
+        if LabData.isPrivate { #expect(summary.keyConfidentCount == 311) }
         print("lab against itself: \(summary.vocalR.n) tracks with a vocal correlation, sections on "
               + "\(summary.sectionRecall.n), lab grids \(summary.gridByLabSource.mapValues { $0.beat.n })")
     }

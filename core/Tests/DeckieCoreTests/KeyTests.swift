@@ -81,7 +81,8 @@ struct KeyFixture: Decodable {
             camelot = try c.decode(String.self); r = try c.decode(Double.self); margin = try c.decode(Double.self)
         }
     }
-    /// One track of mixer/key_light_stft.tsv: the three votes, the lab's key and confidence, and the lab's B.9 result.
+    /// One track of the lab's key_light_stft.tsv (private: DECKIE_LAB_DATA/fixtures/key_sheet.json, written by
+    /// core/Tools/make_key_fixtures.py): the three votes, the lab's key and confidence, and the lab's B.9 result.
     struct SheetRow: Decodable {
         var id: String
         var votes: [SheetVote]
@@ -114,10 +115,9 @@ struct KeyFixture: Decodable {
     var wheelCost: [String: Int]
     var random: [Case]
     var hand: [Case]
-    var sheet: [SheetRow]
     var voteCases: [VoteCase]
     enum CodingKeys: String, CodingKey {
-        case numpy, relation, random, hand, sheet, wheelCost = "wheel_cost", voteCases = "vote_cases"
+        case numpy, relation, random, hand, wheelCost = "wheel_cost", voteCases = "vote_cases"
     }
 
     /// Every matrix with its chroma rebuilt (the random ones from their seeds, the hand-made ones from their blocks)
@@ -318,11 +318,12 @@ func randomChroma(seed: UInt64) -> Chromagram {
         }
     }
 
-    /// The lab's own run of the three profiles over its 373 tracks (mixer/key_light_stft.tsv, the real audio): the
+    /// The lab's own run of the three profiles over its 373 tracks (key_light_stft.tsv, the real audio): the
     /// vote equals the lab's rule on every track, and scores what core/Tools/key_vote_eval.py says it scores against
     /// the lab's confident keys: 237 of 311 exact, 280 exact or a Camelot neighbour, 7 tracks changed from the edma key.
-    @Test func theLabSheet() {
-        let rows = Self.fx.sheet
+    @Test(.enabled(if: LabData.isPrivate, "needs the lab's private data: set DECKIE_LAB_DATA (mixer/README.md)"))
+    func theLabSheet() throws {
+        let rows = try LabData.fixture("key_sheet.json", as: [KeyFixture.SheetRow].self)
         #expect(rows.count == 373)
         var exact = 0, near = 0, confident = 0, changed = 0, engineExact = 0
         var levels: [Double: Int] = [:]
@@ -839,14 +840,28 @@ func relativeDifference(_ got: [Double], _ want: [Double]) -> Double {
     }
 }
 
-/// mixer/key_parity_keys.tsv, research R's per-track keys (row 3f), read as the bench reads it.
+/// key_parity_keys.tsv, research R's per-track keys (row 3f), read as the bench reads it. The lab's own sheet is
+/// private (LabData); the reader and the parity rule are also checked on a made-up sheet in the same columns.
 @Suite struct KeyParitySheetTests {
+    /// A made-up sheet in the lab's columns: three invented tracks.
+    static let madeUp = "id\tkey_3f\tmargin\tagree\tsure\tlab\tlab_confident\tapple\n"
+        + "sample-01\t8A\t0.1234\t3\t1\t8A\t1\t8A\n"
+        + "sample-02\t9B\t0.0412\t2\t0\t9A\t0\t\n"
+        + "sample-03\t11A\t0.0800\t3\t1\t11A\t1\t10A\n"
+
+    static func write(_ text: String) throws -> URL {
+        let url = FileManager.default.temporaryDirectory.appendingPathComponent("deckie-sheet-\(UUID().uuidString).tsv")
+        try Data(text.utf8).write(to: url)
+        return url
+    }
+
     /// The sheet as regenerated on Oct 29, 2026 with the paper's edma value (0.32 at the major profile's minor sixth,
     /// key_parity.py's edma_paper): 373 rows; on the lab's 311 confident keys 259 exact (the memo's 83.3 percent),
     /// against Apple 262 of 372 (70.4); 218 sure; and the sure rule holds on every row (with the 0.31 transcription
     /// one row's margin rounded to 0.0800 from just under it; it no longer sits on the edge).
-    @Test func readsResearchRsPerTrackKeys() throws {
-        let rows = try KeyParitySheet.load(RepoPaths.mixer.appendingPathComponent(KeyParitySheet.fileName))
+    @Test(.enabled(if: LabData.isPrivate, "needs the lab's private data: set DECKIE_LAB_DATA (mixer/README.md)"))
+    func readsResearchRsPerTrackKeys() throws {
+        let rows = try KeyParitySheet.load(LabData.file(KeyParitySheet.fileName))
         #expect(rows.count == 373 && Set(rows.map(\.id)).count == 373)
         let confident = rows.filter(\.labConfident)
         #expect(confident.count == 311 && confident.filter { $0.key == $0.lab }.count == 259)
@@ -855,22 +870,36 @@ func relativeDifference(_ got: [Double], _ want: [Double]) -> Double {
         #expect(rows.filter(\.sure).count == 218)
         let off = rows.filter { $0.sure != ($0.agree == 3 && $0.margin >= HPCPKey.marginSure) }
         #expect(off.isEmpty, "\(off.map { "\($0.id) \($0.margin)" })")
-        // The parity rule: the same key, the margin within 1e-3, the same flag.
+    }
+
+    /// The reader on the made-up sheet, and the parity rule: the same key, the margin within 1e-3, the same flag.
+    @Test func readsASheetAndAppliesTheParityRule() throws {
+        let url = try Self.write(Self.madeUp)
+        defer { try? FileManager.default.removeItem(at: url) }
+        let rows = try KeyParitySheet.load(url)
+        #expect(rows.map(\.id) == ["sample-01", "sample-02", "sample-03"])
+        #expect(rows[0].key == "8A" && rows[0].margin == 0.1234 && rows[0].agree == 3 && rows[0].sure
+                && rows[0].labConfident && rows[0].apple == "8A")
+        #expect(rows[1].apple == nil && !rows[1].sure && !rows[1].labConfident && rows[1].agree == 2)
+        let off = rows.filter { $0.sure != ($0.agree == 3 && $0.margin >= HPCPKey.marginSure) }
+        #expect(off.isEmpty, "\(off.map { "\($0.id) \($0.margin)" })")
         let r = rows[0]
         #expect(r.differences(key: r.key, margin: r.margin + 0.0009, sure: r.sure) == nil)
         #expect(r.differences(key: r.key, margin: r.margin + 0.0011, sure: !r.sure)?.contains("sure") == true)
         #expect(r.differences(key: "1A", margin: r.margin, sure: r.sure)?.hasPrefix("key 1A, key_parity.py") == true)
+        let bad = try Self.write("id\tkey\n")
+        defer { try? FileManager.default.removeItem(at: bad) }
+        #expect(throws: (any Error).self) { try KeyParitySheet.load(bad) }
     }
 
     /// The sheet as a Windows checkout gives it, lines ending "\r\n" (the first Windows run read the whole file as
     /// one header line): the same rows.
     @Test func readsTheSheetWithWindowsLineEndings() throws {
-        let url = RepoPaths.mixer.appendingPathComponent(KeyParitySheet.fileName)
-        let lines = try String(contentsOf: url, encoding: .utf8).split(whereSeparator: \.isNewline).prefix(3)
-        let crlf = FileManager.default.temporaryDirectory.appendingPathComponent("deckie-crlf-\(UUID().uuidString).tsv")
-        try Data((lines.joined(separator: "\r\n") + "\r\n").utf8).write(to: crlf)
-        defer { try? FileManager.default.removeItem(at: crlf) }
-        let rows = try KeyParitySheet.load(crlf), first = Array(try KeyParitySheet.load(url).prefix(2))
-        #expect(rows.count == 2 && rows == first)
+        let url = try Self.write(Self.madeUp)
+        let crlf = try Self.write(Self.madeUp.replacingOccurrences(of: "\n", with: "\r\n"))
+        defer { try? FileManager.default.removeItem(at: url); try? FileManager.default.removeItem(at: crlf) }
+        let rows = try KeyParitySheet.load(crlf)
+        let plain = try KeyParitySheet.load(url)
+        #expect(rows.count == 3 && rows == plain)
     }
 }
