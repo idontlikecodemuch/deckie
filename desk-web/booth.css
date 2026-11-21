@@ -26,3 +26,10 @@ body.booth-on > main, body.booth-on > #crate-add, body.booth-on > #status { disp
 @media (prefers-reduced-motion: reduce) { .booth-meter-fill { transition: none; } }
 #booth-button[aria-pressed="true"] { background: var(--acc); color: var(--ink); }
 body.booth-on #sources-button, body.booth-on #log-button { display: none; }
+/* Step 2: the song's own lines (not heard just now, paused, also hearing) and the picks as a plain first look. */
+.booth-note { margin-top: 0; margin-bottom: 0; color: var(--mut); }
+.booth-picks { display: flex; flex-direction: column; gap: var(--booth-pick-gap); }
+.booth-picks h3 { margin: 0; }
+.booth-picks ol { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: var(--booth-pick-gap); }
+.booth-pick { padding: var(--booth-pick-pad); font-size: var(--booth-pick-size); }
+.booth-pick .mut { display: block; }

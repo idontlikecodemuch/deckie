@@ -441,4 +441,13 @@ enum BoothLook {
     static let error = Color.red
     static let silent = Color.orange
     static let inputWidth: CGFloat = 320
+    // The picks' first look (step 2; the designed screen is step 3).
+    static let picksTitle = Font.headline
+    static let pickGap: CGFloat = 8
+    static let pickLineGap: CGFloat = 2
+    static let pickPad: CGFloat = 12
+    static let pickRadius: CGFloat = 10
+    static let pickTitle = Font.body.weight(.semibold)
+    static let pickFacts = Font.callout
+    static let note = Font.title3
 }

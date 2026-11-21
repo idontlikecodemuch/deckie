@@ -262,7 +262,11 @@ enum Tour {
                 return true
             }, delay: 2.5),
             Step(name: "b04-after-cut", event: "booth.heard", eventTest: { m in heardId(m).map { $0 != first.id } ?? false }, delay: 2.0),
-            Step(name: "b05-left", js: click("#booth-leave"), event: "booth.state", eventTest: { $0["state"] as? String == "stopped" },
+            // Step 2: the shared switching rule has put the new song up, and its picks have come (the first look).
+            Step(name: "b05-shown-and-picks", event: "booth.picks", eventTest: { m in
+                (m["for"] as? String).map { $0 != first.id } ?? false
+            }, delay: 1.5),
+            Step(name: "b06-left", js: click("#booth-leave"), event: "booth.state", eventTest: { $0["state"] as? String == "stopped" },
                  delay: 1.0),
             // The window stays a few seconds after leaving, so whether the microphone was let go can be checked from
             // outside while it is still open.

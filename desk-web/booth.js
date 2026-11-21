@@ -6,7 +6,10 @@
 // desk.css's :root (read by booth.css). Leaving the mode stops the microphone; so does closing the window (the
 // engine's input closes).
 //
-// The song shown is the engine's current named song, reading by reading: not yet the iPad's switching rule.
+// The song shown is the iPad's (step 2): the engine runs every reading through the shared switching rule and says what
+// it shows as `booth.playing`, and the picks for that song as `booth.picks`, which this page lists plainly under the card
+// as a first look (the designed screen is step 3). An engine from before step 2 sends neither: the card then shows the
+// listener's raw `booth.heard`, as it did.
 //
 // While Desk reads music, listening waits: the mode says so and starts listening when the run ends; a run started from
 // the mode leaves it, so the run screen shows.
@@ -22,6 +25,8 @@
     let inputs = [];
     let status = null;       // the last booth.state
     let heard = null;        // the last booth.heard, while the state says a song is named
+    let playing = undefined; // the last booth.playing (undefined: the engine sends none, so the card follows booth.heard)
+    let picks = null;        // the last booth.picks, for the song playing shows
     let silent = false;
 
     // ---- the switch in the top bar, before the space that pushes the rest right
@@ -40,14 +45,20 @@
     const title = el("h2", { id: "booth-song", class: "booth-song" });
     const artist = el("p", { id: "booth-artist", class: "booth-artist mut" });
     const facts = el("p", { id: "booth-facts", class: "booth-facts" });
-    const card = el("div", { id: "booth-card", class: "card booth-card", "aria-live": "polite" }, title, artist, facts);
+    const note = el("p", { id: "booth-note", class: "booth-note", hidden: true });
+    const card = el("div", { id: "booth-card", class: "card booth-card", "aria-live": "polite" }, title, artist, facts, note);
+    // The picks' first look: a heading and a plain list (name, tempo, key, the move and what is unexpected).
+    const picksTitle = el("h3", { id: "booth-picks-title" });
+    const picksList = el("ol", { id: "booth-picks-list" });
+    const picksMore = el("p", { id: "booth-picks-more", class: "mut" });
+    const picksBox = el("div", { id: "booth-picks", class: "booth-picks", hidden: true }, picksTitle, picksList, picksMore);
     const heading = el("h1", { id: "booth-title" });
     const leaveButton = el("button", { id: "booth-leave", class: "small", on: { click: () => leave() } });
     const inputLabel = el("span", { class: "mut booth-input-label" });
     const section = el("section", { id: "booth", class: "screen booth", hidden: true, "aria-labelledby": "booth-title" },
       el("div", { class: "booth-top" }, heading, leaveButton),
       el("div", { class: "booth-input" }, el("label", { class: "booth-input-row" }, inputLabel, select), meter),
-      stateLine, silentLine, again, card);
+      stateLine, silentLine, again, card, picksBox);
     const main = document.querySelector("main");
     if (main && main.parentNode) main.parentNode.insertBefore(section, main.nextSibling);
 
@@ -71,7 +82,7 @@
     async function enter() {
       const c = d.current();
       if (!c) return;
-      crate = c.id; status = null; heard = null; silent = false;
+      crate = c.id; status = null; heard = null; playing = undefined; picks = null; silent = false;
       show(true); words(); draw();
       const r = await request("booth.inputs", null, { quiet: true });
       inputs = r.ok ? r.inputs || [] : [];
@@ -90,7 +101,7 @@
     }
 
     function listen() {
-      wanted = true; waiting = false; heard = null; silent = false; status = { state: "starting" };
+      wanted = true; waiting = false; heard = null; playing = undefined; picks = null; silent = false; status = { state: "starting" };
       draw();
       request("booth.listen", { input: select.value || "" }, { quiet: true }).then((r) => {
         if (!r.ok && on) { status = { state: "error", error: { code: r.error && r.error.code === "busy" ? "busy" : (r.error && r.error.detail) || "failed" } }; draw(); }
@@ -121,7 +132,35 @@
       } else if (m.event === "booth.heard") {
         heard = m;
         drawCard();
+      } else if (m.event === "booth.playing") {
+        playing = m;
+        if (!m.song) picks = null;
+        drawCard(); drawPicks();
+      } else if (m.event === "booth.picks") {
+        picks = m;
+        drawPicks();
       }
+    }
+
+    /// The input is on (the states the engine says it in).
+    function inputOn() {
+      return !!status && ["listening", "nothingHeard", "nothingNow", "noSound"].includes(status.state) && !waiting;
+    }
+
+    /// The picks' first look: the song on screen's picks, a line each, under the card.
+    function drawPicks() {
+      const shown = inputOn() && !!playing && !!playing.song && !!picks && picks.for === playing.song.id;
+      picksBox.hidden = !shown;
+      if (!shown) { picksList.replaceChildren(); return; }
+      picksTitle.textContent = t("booth.picksTitle");
+      const rows = (picks.picks || []).map((p) => {
+        const head = [p.title, p.artist].filter(Boolean).join(t("booth.join"));
+        const facts = [p.bpmLine, p.key, p.moveLine].concat(p.tags || []).filter(Boolean).join(t("booth.join"));
+        return el("li", { class: "card booth-pick" }, el("span", { text: head }), el("span", { class: "mut", text: facts }));
+      });
+      if (!rows.length) rows.push(el("li", { class: "mut", text: t("booth.picksNone") }));
+      picksList.replaceChildren(...rows);
+      picksMore.textContent = picks.more ? t("booth.picksMore", { n: picks.more }) : "";
     }
 
     function stateText() {
@@ -137,17 +176,28 @@
     }
 
     function drawCard() {
-      const named = !!heard && !!status && status.state === "listening";
-      card.classList.toggle("empty", !named);
-      if (!named) { title.textContent = ""; artist.textContent = ""; facts.textContent = ""; return; }
-      const s = heard.song || {};
+      // From an engine with the shared rule: its song, while the input is on (it stays while nothing is heard for a
+      // moment, as on the iPad). From an older engine: the raw reading, while the state says a song is named.
+      const shown = playing !== undefined ? (inputOn() && playing && playing.song ? playing : null)
+        : (!!heard && !!status && status.state === "listening" ? heard : null);
+      card.classList.toggle("empty", !shown);
+      if (!shown) { title.textContent = ""; artist.textContent = ""; facts.textContent = ""; note.hidden = true; return; }
+      const s = shown.song || {};
       title.textContent = s.title || "";
       artist.textContent = s.artist || "";
       const parts = [];
       if (s.bpm) parts.push(t("booth.tempo", { bpm: Math.round(s.bpm) }));
       if (s.camelot) parts.push(t("booth.key", { camelot: s.camelot }));
-      parts.push(t("booth.place", { place: mmss(Math.max(0, heard.place || 0)), length: mmss(s.seconds || 0) }));
+      parts.push(t("booth.place", { place: mmss(Math.max(0, shown.place || 0)), length: mmss(s.seconds || 0) }));
       facts.replaceChildren(...parts.map((p) => el("span", { class: "booth-fact", text: p })));
+      const notes = [];
+      if (shown === playing) {
+        if (playing.paused) notes.push(t("booth.paused"));
+        else if (playing.notHeard) notes.push(t("booth.notHeard"));
+        if (playing.alsoHearing) notes.push(t("booth.alsoHearing", { song: playing.alsoHearing }));
+      }
+      note.textContent = notes.join(t("booth.join"));
+      note.hidden = !notes.length;
     }
 
     function draw() {
@@ -162,7 +212,7 @@
       silentLine.hidden = !(silent && hearing && status.state !== "noSound");
       // The level shows only while the input is on.
       if (!hearing) { meterFill.style.width = "0%"; meter.setAttribute("aria-valuenow", "0"); meter.classList.remove("clipping"); }
-      drawCard();
+      drawCard(); drawPicks();
     }
 
     /// From desk.js's render: the switch shows for a crate with songs; another crate, or none, leaves the mode; a run

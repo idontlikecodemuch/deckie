@@ -6,7 +6,10 @@ import DeckieCapture
 // The listening mode of the Mac's Desk (research booth-in-desk, step 1: hearing): the same bare mode as the pages'
 // (desk-web/booth.js), on the same core: DeckieCapture's Microphone and DeckieDesk's DeskBooth, which builds or opens
 // the crate's index and feeds the shared listener. The same words (DeskWords' booth.*), values in Look.swift's
-// BoothLook. The song shown is the listener's current named song: not yet the iPad's switching rule (step 2).
+// BoothLook. The song shown is the iPad's (step 2): DeskBooth runs every reading through the shared switching rule
+// (DeckieBooth) and says what it shows as `playing`, with the picks for that song, listed plainly under the card as a
+// first look (the designed screen is step 3). When listening stops, the listener's times line is printed and kept
+// beside the crate's index (DeskBooth.timesFile).
 //
 // The view starts listening when it appears and stops when it goes: leaving the mode, another crate, a run (Desk's
 // run screen takes the window, so listening waits and starts again when the run ends), or the window closing.
@@ -17,6 +20,8 @@ final class BoothModel: ObservableObject, @unchecked Sendable {
     @Published var chosen: String = ""
     @Published var status: DeskBooth.Status?
     @Published var heard: DeskBooth.Heard?
+    @Published var playing: DeskBooth.Playing?
+    @Published var picks: DeskBooth.Picks?
     @Published var meter: Double = 0
     @Published var clipping = false
     @Published var silent = false
@@ -46,7 +51,7 @@ final class BoothModel: ObservableObject, @unchecked Sendable {
 
     func start(home: DeskHome, crateId: String, crate: Crate) {
         stop()
-        heard = nil; silent = false; meter = 0; status = DeskBooth.Status(state: "starting")
+        heard = nil; playing = nil; picks = nil; silent = false; meter = 0; status = DeskBooth.Status(state: "starting")
         let source = Microphone(SoundInputs.named(chosen, in: inputs))
         let b = DeskBooth(crate: crate, indexAt: home.shelf.file(DeskBooth.indexFile, of: crateId), source: source) { [weak self] e in
             DispatchQueue.main.async { self?.take(e) }
@@ -74,6 +79,15 @@ final class BoothModel: ObservableObject, @unchecked Sendable {
             meter = l.meter; clipping = l.clipped > 0; silent = l.silent
         case let .heard(h):
             heard = h
+        case let .playing(p):
+            playing = p
+            if p.song == nil { picks = nil }
+        case let .picks(p):
+            picks = p
+        case let .times(line):
+            // The Mac's log: standard output (Console, or the terminal Desk was started from); the line is also kept
+            // beside the crate's index (DeskBooth.timesFile).
+            print("Deckie Desk booth: \(line)")
         }
     }
 
@@ -130,7 +144,11 @@ struct BoothView: View {
             if booth.status?.state == "error" {
                 Button(Words.t("booth.tryAgain")) { start() }
             }
-            BoothSongCard(heard: booth.status?.state == "listening" ? booth.heard : nil)
+            // The song the shared switching rule shows, while the input is on (it stays while nothing is heard for a
+            // moment, as on the iPad), with its notes; then its picks.
+            let shown = booth.hearing ? booth.playing : nil
+            BoothSongCard(heard: shown?.song, note: shown.map(Self.note) ?? "")
+            if let s = shown?.song, let p = booth.picks, p.forId == s.id { BoothPicksList(picks: p) }
             Spacer()
         }
         .padding(BoothLook.pad)
@@ -139,6 +157,14 @@ struct BoothView: View {
         .onAppear { booth.listInputs { changed in if !changed { start() } } }
         .onDisappear { booth.stop() }
         .onChange(of: booth.chosen) { _, _ in start() }
+    }
+
+    /// "Not heard just now", "Paused", "Also hearing: ..." (DeskWords' booth.*).
+    static func note(_ p: DeskBooth.Playing) -> String {
+        var parts: [String] = []
+        if p.paused { parts.append(Words.t("booth.paused")) } else if p.notHeard { parts.append(Words.t("booth.notHeard")) }
+        if let a = p.alsoHearing { parts.append(Words.t("booth.alsoHearing", ["song": a])) }
+        return parts.joined(separator: Words.t("booth.join"))
     }
 
     private func start() {
@@ -161,8 +187,32 @@ private struct Meter: View {
     }
 }
 
+/// The picks' first look: a heading and a plain list, a line each (name, tempo, key, the move, what is unexpected).
+private struct BoothPicksList: View {
+    let picks: DeskBooth.Picks
+    var body: some View {
+        VStack(alignment: .leading, spacing: BoothLook.pickGap) {
+            Text(Words.t("booth.picksTitle")).font(BoothLook.picksTitle)
+            if picks.picks.isEmpty { Text(Words.t("booth.picksNone")).foregroundStyle(.secondary) }
+            ForEach(picks.picks, id: \.id) { p in
+                VStack(alignment: .leading, spacing: BoothLook.pickLineGap) {
+                    Text([p.title, p.artist].compactMap { $0 }.joined(separator: Words.t("booth.join"))).font(BoothLook.pickTitle)
+                    Text(([p.bpmLine, p.key, p.moveLine] + p.tags).filter { !$0.isEmpty }.joined(separator: Words.t("booth.join")))
+                        .font(BoothLook.pickFacts).foregroundStyle(.secondary)
+                }
+                .padding(BoothLook.pickPad)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(RoundedRectangle(cornerRadius: BoothLook.pickRadius).fill(BoothLook.card))
+                .accessibilityElement(children: .combine)
+            }
+            if picks.more > 0 { Text(Words.t("booth.picksMore", ["n": "\(picks.more)"])).foregroundStyle(.secondary) }
+        }
+    }
+}
+
 private struct BoothSongCard: View {
     let heard: DeskBooth.Heard?
+    var note: String = ""
     var body: some View {
         VStack(alignment: .leading, spacing: BoothLook.gap / 3) {
             if let h = heard {
@@ -174,6 +224,7 @@ private struct BoothSongCard: View {
                     Text(Words.t("booth.place", ["place": Self.mmss(h.place), "length": Self.mmss(h.seconds)]))
                 }
                 .font(BoothLook.facts)
+                if !note.isEmpty { Text(note).font(BoothLook.note).foregroundStyle(.secondary) }
             }
         }
         .padding(BoothLook.cardPad)

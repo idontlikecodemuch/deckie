@@ -1,9 +1,12 @@
 import Foundation
+import DeckieBooth
 
 extension DeskWords {
-    /// The one list: Desk's words (`baseTable`, DeskWords.swift) with the listening mode's beside them. A name in both
-    /// keeps Desk's.
+    /// The one list: Desk's words (`baseTable`, DeskWords.swift) with the listening mode's beside them, and the words
+    /// Booth says about what it hears and picks, shared with the iPad app (`BoothWords`, DeckieBooth, D42). A name in
+    /// two keeps Desk's.
     public static let table: [String: String] = baseTable.merging(boothTable) { desk, _ in desk }
+        .merging(BoothWords.table) { desk, _ in desk }
 
     /// The listening mode's words (research booth-in-desk, step 1), kept apart so the two lists change without
     /// meeting. All provisional: the owner decides the names (the mode's, the input's label, the nothing-heard line and
@@ -48,6 +51,18 @@ extension DeskWords {
         "booth.tempo": "{bpm} BPM",
         "booth.key": "Key {camelot}",
         "booth.place": "{place} of {length}",
+        // new (Nov 21, 2026, step 2): the song on screen is the iPad's (the shared switching rule), so it can stay while
+        // nothing is heard for a moment, and another song can be heard under it. Provisional, as the iPad's are.
+        "booth.notHeard": "Not heard just now",
+        "booth.paused": "Paused",
+        "booth.alsoHearing": "Also hearing: {song}",
+        // new (Nov 21, 2026, step 2): the picks for the song on screen, a plain first look until the Booth screen is
+        // designed (step 3).
+        "booth.picksTitle": "Picks for this song (a first look)",
+        "booth.picksNone": "No picks for this song in this crate yet.",
+        "booth.picksMore": "{n} more in the crate",
+        // Between the parts of one line (a pick's facts, the song's notes): "120 BPM · 10B · blend".
+        "booth.join": " · ",
         // The microphone permission sentence (provisional): the Mac shows it when it asks (NSMicrophoneUsageDescription
         // in desk-app/project.yml and desk-shell's Info.plist carry these words; BoothTests checks they agree).
         "booth.micPermission": "Deckie Desk listens through the microphone to name the song playing from your crate. Nothing it hears is kept or sent anywhere.",
