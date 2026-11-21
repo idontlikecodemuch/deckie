@@ -76,8 +76,8 @@ jobs:
         with:
           path: core/.models/yamnet.onnx
           key: yamnet-onnx-models-1-${{ hashFiles('core/Tools/fetch-vocal-models.sh', 'core/Tools/export_yamnet.py', 'core/Tools/yamnet-export-requirements.txt') }}
-      - name: Install curl (only when a cache missed)
-        if: steps.onnxruntime.outputs.cache-hit != 'true' || steps.model.outputs.cache-hit != 'true' || steps.yamnet.outputs.cache-hit != 'true'
+      # Always: the learned key reader's file is fetched on every run (below), whether or not the caches hit.
+      - name: Install curl
         run: |
           apt-get update
           apt-get install -y --no-install-recommends ca-certificates curl
@@ -151,10 +151,10 @@ jobs:
           compression-level: 0
           if-no-files-found: error
           include-hidden-files: true # the folder .models starts with a dot, which the action otherwise skips
-      # The learned key reader's file is optional: when the release has none, or it is not the pinned file, the
-      # engine reads keys with the untrained reader and the step still succeeds (core/Tools/fetch-key-model.sh).
-      - name: Fetch the learned key reader's file, when the release has it (checked by hash)
-        run: bash core/Tools/fetch-key-model.sh
+      # The learned key reader's file is required (--require), as in the Windows zip (pc-package.yml): the tests run
+      # with the reader that ships, and the step fails when the release does not give the pinned file.
+      - name: Fetch the learned key reader's file (checked by hash; required)
+        run: bash core/Tools/fetch-key-model.sh --require
       - name: Build
         working-directory: core
         run: swift build -v
