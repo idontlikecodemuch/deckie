@@ -49,6 +49,11 @@
 // deckie-recog-bench: the trial's measuring tool (core/Tools/recognition-bench).
 // deckie-listen: plays a recording through the booth's recogniser as the booth would hear it, and prints what it
 // would have shown second by second. A development tool.
+// CMiniaudio: miniaudio (vendored unmodified, public domain or MIT-0; DEPENDENCIES.md section 15) compiled with only
+// what capture needs, and a small C face on it (deckie_capture.h): the inputs listed, one opened, sound in, stopped.
+// WASAPI on Windows, Core Audio on the Mac (frameworks linked), PulseAudio and ALSA on Linux (opened at run time, so
+// nothing extra is needed to build). DeckieCapture: sound in from Swift: an input (`Microphone`), samples played as if
+// captured for tests (`SampleSource`), and `LiveCapture` (samples counted, a level a few times a second).
 // deckie-memprobe: measures the analyser's peak memory on audio files (and synthesises a test track), for tuning.
 // DeckieTestSupport: synthesised test audio (drums, chords, the engine's test track), the beat fixture and an MP3 frame
 // damaged on purpose (`MP3Damage`), shared by the test targets (not a product).
@@ -73,6 +78,7 @@ let package = Package(
         .executable(name: "deckie-desk-engine", targets: ["deckie-desk-engine"]),
         .executable(name: "deckie-make", targets: ["deckie-make"]),
         .library(name: "DeckieChroma", targets: ["DeckieChroma"]),
+        .library(name: "DeckieCapture", targets: ["DeckieCapture"]),
     ],
     targets: [
         .target(name: "DeckieAudio"),
@@ -104,7 +110,7 @@ let package = Package(
         // only; only DeckieDesk depends on it (NetworkIsolationTests checks no other source names a networking API).
         .target(name: "DeckieLookup"),
         .target(name: "DeckieDesk", dependencies: ["DeckieBuild", "DeckieEngine", "DeckieCrate", "DeckieCore", "DeckieDecode",
-                                                   "DeckieDisc", "DeckieLookup"]),
+                                                   "DeckieDisc", "DeckieLookup", "DeckieCapture", "DeckieRecognition"]),
         // deckie-lookup-trial: the lookup measured on a folder of music with its tags hidden from it (a development tool,
         // run only with the owner's say-so on his own music).
         .executableTarget(name: "deckie-lookup-trial", dependencies: ["DeckieDesk", "DeckieLookup", "DeckieBuild", "DeckieDecode",
@@ -117,7 +123,25 @@ let package = Package(
         .executableTarget(name: "deckie-make", dependencies: ["DeckiePC"]),
         .target(name: "DeckieRecognition", dependencies: ["DeckieCore"]),
         .executableTarget(name: "deckie-recog-bench", dependencies: ["DeckieRecognition", "DeckieDecode", "DeckieCore"]),
-        .executableTarget(name: "deckie-listen", dependencies: ["DeckieRecognition", "DeckieDecode"]),
+        .executableTarget(name: "deckie-listen", dependencies: ["DeckieRecognition", "DeckieDecode", "DeckieCapture", "DeckieCrate"]),
+        // Every line here that differs by system, for CI to prove: the Mac links three frameworks and turns miniaudio's
+        // run-time linking off; Linux links dl, pthread and m (PulseAudio and ALSA are opened at run time); Windows
+        // links ole32 (miniaudio also loads it, and avrt, itself).
+        .target(name: "CMiniaudio",
+                exclude: ["vendor/LICENSE"],
+                cSettings: [.define("MA_NO_RUNTIME_LINKING", .when(platforms: [.macOS]))],
+                linkerSettings: [
+                    .linkedFramework("CoreFoundation", .when(platforms: [.macOS])),
+                    .linkedFramework("CoreAudio", .when(platforms: [.macOS])),
+                    .linkedFramework("AudioToolbox", .when(platforms: [.macOS])),
+                    .linkedLibrary("dl", .when(platforms: [.linux])),
+                    .linkedLibrary("pthread", .when(platforms: [.linux])),
+                    .linkedLibrary("m", .when(platforms: [.linux])),
+                    .linkedLibrary("ole32", .when(platforms: [.windows])),
+                ]),
+        .target(name: "DeckieCapture", dependencies: ["CMiniaudio"]),
+        .testTarget(name: "DeckieCaptureTests",
+                    dependencies: ["DeckieCapture", "DeckieRecognition", "DeckieCrate", "DeckieCore", "DeckieTestSupport"]),
         .testTarget(name: "DeckieRecognitionTests", dependencies: ["DeckieRecognition", "DeckieCore"]),
         .target(name: "DeckieTestSupport", dependencies: ["DeckieAudio", "DeckieCore", "DeckieDecode"],
                 path: "Tests/DeckieTestSupport"),
@@ -144,7 +168,7 @@ let package = Package(
         .testTarget(name: "DeckieDeskTests",
                     dependencies: ["DeckieDesk", "DeckieDisc", "DeckieBuild", "DeckieEngine", "DeckieCrate", "DeckieCore", "DeckieAudio",
                                    "DeckieDecode", "DeckieInference", "DeckieRecognition", "DeckieTestSupport",
-                                   "deckie-desk-engine", "DeckieLookup"]),
+                                   "deckie-desk-engine", "DeckieLookup", "DeckieCapture"]),
         // DeckieChroma: a sound fingerprint in the form AcoustID reads (Chromaprint's algorithm 2, ported from its MIT
         // files; LICENSE-chromaprint), for "Look up songs by sound" (the note on D30). No network: DeckieLookup sends it.
         .target(name: "DeckieChroma", dependencies: ["DeckieCore", "DeckieDecode"], exclude: ["LICENSE-chromaprint"]),

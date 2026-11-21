@@ -16,6 +16,9 @@ import DeckieRecognition
 //       way the copies the index knows are counted: groups from the keys alone, and all groups.
 //       --memory-every N: every N readings of a clip, a line on standard error with the readings' time and the
 //       process's memory footprint (the system's own figure: the clean pages of a file opened in place left out).
+//   deckie-listen --live --crate <crate file> [--input NAME] [--seconds N] [--sound FILE] [--log FILE]
+//   deckie-listen --inputs
+//       live: the computer's microphone or another input, heard with a crate's songs (Live.swift).
 //   deckie-listen --index crate.dkx --list clips.tsv --out readings.tsv [--jobs N]
 //       many recordings: clips.tsv has a name, a raw file (16-bit mono), its first sample, its sample count and its
 //       rate on each line; every reading of every clip goes to readings.tsv with the clip's name in front.
@@ -82,6 +85,10 @@ func line(_ r: ListenReading) -> String {
            r.keyLock.map { $0 ? "yes" : "no" } ?? "?", r.confidence, r.milliseconds)
         + (trace ? "\t" + (r.searched.map { String(format: "%@\t%.3f\t%@", $0.id, $0.confidence, $0.agrees ? "agrees" : "-") } ?? "-\t0\t-") : "")
 }
+
+// Live: an input heard with a crate's songs (Live.swift), and the inputs listed.
+if flags.contains("--inputs") { listInputs() }
+if flags.contains("--live") { runLive(values, flags) }
 
 // The index: opened in place, or built from fingerprints.
 let index: RecognitionIndex

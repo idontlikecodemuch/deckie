@@ -34,6 +34,14 @@
       "replacement_path": null
     },
     {
+      "id": "miniaudio",
+      "name": "miniaudio (sound in, for listening inside Desk)",
+      "version": "0.11.26",
+      "licence": "public domain (the Unlicense) or MIT No Attribution, taken as public domain (section 15)",
+      "training_sets": null,
+      "replacement_path": null
+    },
+    {
       "id": "stb-image",
       "name": "stb_image and stb_image_write (covers)",
       "version": "2.32 and 1.18",
