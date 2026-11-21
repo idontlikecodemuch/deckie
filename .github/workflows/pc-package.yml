@@ -18,7 +18,8 @@ env:
 
 on:
   push:
-    branches: ['pc/**']
+    # main too, so the zip is built from what is merged, not only from work branches.
+    branches: [main, 'pc/**']
     paths:
       - core/**
       - desk-shell/**
