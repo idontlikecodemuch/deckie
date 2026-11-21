@@ -182,4 +182,38 @@ import DeckieTestSupport
         Thread.sleep(forTimeInterval: 0.5)
         #expect(!out.all.dropFirst(n).contains { ($0["event"] as? String)?.hasPrefix("booth.") == true }, "nothing heard after it stopped")
     }
+
+    // MARK: the words and the look
+
+    @Test func everyStateAndErrorHasItsWords() {
+        for s in ["starting", "index", "listening", "nothingHeard", "stopped"] { #expect(DeskWords.table["booth.state." + s] != nil, "\(s)") }
+        for c in ["noInput", "notAllowed", "busy", "gone", "noSystem", "noPrints", "index", "other"] {
+            #expect(DeskWords.table["booth.error." + c] != nil, "\(c)")
+        }
+        // The mode's words sit beside Desk's and take none of their names.
+        #expect(Set(DeskWords.boothTable.keys).isDisjoint(with: DeskWords.baseTable.keys))
+        #expect(DeskWords.boothTable.allSatisfy { !$0.value.contains("track") && !$0.value.contains("AI") })
+    }
+
+    @Test func theModesStyleSheetHoldsNoValuesAndReadsOnlyDesksVariables() {
+        let css = VariablesTests.read("desk-web/booth.css"), desk = VariablesTests.read("desk-web/desk.css")
+        #expect(!css.isEmpty)
+        let rules = css.replacingOccurrences(of: #"/\*[\s\S]*?\*/"#, with: "", options: .regularExpression)
+        let values = #"(#[0-9a-fA-F]{3,8}\b|rgba?\(|hsla?\(|(?<![\w.-])-?\d*\.?\d+(?:px|em|rem|vh|vw|ms|s|fr)\b)"#
+        var found: [String] = []
+        for line in rules.split(separator: "\n") {
+            let l = String(line).replacingOccurrences(of: #"var\([^)]*\)"#, with: "", options: .regularExpression)
+            found += VariablesTests.matches(values, l).map { "\($0) in \(line)" }
+        }
+        #expect(found.isEmpty, "\(found.joined(separator: "\n"))")
+        #expect(VariablesTests.matches(#"(?<![\w-])content:"#, rules).isEmpty)
+        let defined = Set(VariablesTests.matches(#"(--[\w-]+)\s*:"#, desk))
+        let used = Set(VariablesTests.matches(#"var\((--[\w-]+)\)"#, css))
+        #expect(!used.isEmpty && used.subtracting(defined).isEmpty, "\(used.subtracting(defined).sorted())")
+        // The pages name both files, the script before desk.js (which opens the mode).
+        let html = VariablesTests.read("desk-web/index.html")
+        #expect(html.contains(#"href="booth.css""#))
+        let b = html.range(of: #"src="booth.js""#), d = html.range(of: #"src="desk.js""#)
+        #expect(b != nil && d != nil && b!.lowerBound < d!.lowerBound)
+    }
 }

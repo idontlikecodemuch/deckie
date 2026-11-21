@@ -11,6 +11,15 @@
    percentages that place a keyframe, and the marks drawn with `content`, which are words (desk.js hands them in from
    DeskWords as --glyph-*). */
 :root {
+  /* ---- the listening mode (booth.css; research booth-in-desk, step 1): kept together here, apart from the rest */
+  --booth-pad: 32px 40px; --booth-gap: 20px; --booth-max-w: 880px;
+  --booth-song-size: 44px; --booth-song-lh: 1.1; --booth-artist-size: 22px; --booth-facts-size: 18px;
+  --booth-fact-gap: 28px; --booth-card-pad: 32px 36px; --booth-card-min-h: 180px; --booth-empty-opacity: 0.45;
+  --booth-meter-w: 260px; --booth-meter-h: 10px; --booth-meter-r: 999px;
+  --booth-meter-bg: rgba(255, 255, 255, 0.08); --booth-meter-fill: #b490ff; --booth-meter-clip: #ffb35c;
+  --booth-meter-time: 120ms; --booth-input-gap: 10px; --booth-select-pad: 6px 12px; --booth-select-r: 12px;
+  --booth-error: #ffb4c4;
+
   /* ---- colour */
   --bg: #0f0a17;
   --surface: #1a1420;

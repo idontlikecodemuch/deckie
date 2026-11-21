@@ -207,7 +207,7 @@ jobs:
           foreach ($want in "Deckie Desk.exe: window icon", "Make Crate File.exe: console icon", "deckie-desk.exe: window icon", "deckie-desk-engine.exe: window", "deckie-make.exe: console") {
             if (-not $said.Contains($want)) { Write-Error "expected: $want"; exit 1 }
           }
-          foreach ($f in "app\desk-web\index.html", "app\desk-web\desk.js", "app\desk-web\desk.css", "app\licences\webview-LICENSE.txt", "app\licences\Microsoft-WebView2-SDK-LICENSE.txt", "app\licences\ACKNOWLEDGEMENTS.txt", "READ ME FIRST.txt") {
+          foreach ($f in "app\desk-web\index.html", "app\desk-web\desk.js", "app\desk-web\desk.css", "app\desk-web\booth.js", "app\desk-web\booth.css", "app\licences\miniaudio-LICENSE.txt", "app\licences\webview-LICENSE.txt", "app\licences\Microsoft-WebView2-SDK-LICENSE.txt", "app\licences\ACKNOWLEDGEMENTS.txt", "READ ME FIRST.txt") {
             if (-not (Test-Path (Join-Path $root $f) -PathType Leaf)) { Write-Error "not in the zip: $f"; exit 1 }
           }
       # Every start below goes through core/Tools/windows/try-desk.ps1: PATH cut down to Windows itself, no message
