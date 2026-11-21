@@ -37,6 +37,14 @@ final class RunScreenOut: @unchecked Sendable {
         if wait <= 0 { sendHeld(force: false) } else { later(wait) }
     }
 
+    /// Sends the songs and notes waiting now, before a `run.progress` that names a song read (its line) or lets one go
+    /// of the song card: the song is on the screen first (RunOrder). The totals go with them only when due.
+    func sendSongs() {
+        lock.lock(); defer { lock.unlock() }
+        guard !songs.isEmpty || !notes.isEmpty else { return }
+        sendHeld(force: false)
+    }
+
     /// Sends whatever is waiting, the totals too (before the run's last event).
     func flush() {
         lock.lock(); defer { lock.unlock() }

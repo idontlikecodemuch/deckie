@@ -32,14 +32,11 @@ final class RunWatch: ObservableObject {
     @Published private(set) var wallVersion = 0
     @Published var visible = true { didSet { if visible && !oldValue { wallVersion += 1 } } }
     /// The song card (RunProgress's `now`, `working` and `ahead`): the songs being worked on, whether one at a time,
-    /// the song read ahead, and whether the card shows (it stays `RunLook.nowLinger` when no song is worked on, so the
-    /// moment between two songs does not flicker; then the stage shows the last song in).
+    /// the song read ahead, and whether the card shows (while songs are read).
     @Published private(set) var working: [RunNow] = []
     @Published private(set) var oneAtATime = true
     @Published private(set) var ahead: RunNow?
     @Published private(set) var showNow = false
-    private var nowSeenAt = Date.distantPast
-    private var nowTimer: Timer?
     private(set) var finishedLine: String?
     private(set) var latestBin = -1
     var reduceMotion = NSWorkspace.shared.accessibilityDisplayShouldReduceMotion
@@ -58,7 +55,7 @@ final class RunWatch: ObservableObject {
         songs = []; figures = RunFigures(); staged = nil; skipped = 0; fresh = []; queue = []; finishedLine = nil
         self.musicCD = musicCD; step = .reading; lastSaid = ""; saying = ""; moment = nil; latestBin = -1
         spoken = (-1, .distantPast); wallVersion += 1
-        working = []; ahead = nil; showNow = false; nowTimer?.invalidate(); nowSeenAt = .distantPast
+        working = []; ahead = nil; showNow = true
         nextSaying()
     }
 
@@ -70,10 +67,16 @@ final class RunWatch: ObservableObject {
                 latestBin = max(0, min(p.figures.tempos.count - 1, Int(((bpm - p.figures.tempoLow) / p.figures.tempoStep).rounded(.down))))
             }
             wallSoon()
-            if staged == nil || Date() >= staged!.at.addingTimeInterval(staged!.hold) { advance() } else { scheduleStage() }
+            // The info card is the last song in, at once (the cards and every line agree on the last to finish).
+            queue = [s]; advance()
         }
+        // A second place of a song already in puts that song back on the info card: it is the file just read.
+        if p.song == nil, let again = p.notes.last(where: { $0.code == "twoPlaces" })?.song,
+           let s = songs.first(where: { $0.id == again }) { queue = [s]; advance() }
         figures = p.figures
         for note in p.notes {
+            // A line about a song is said only while that song is on the info card.
+            if let about = note.song, about != staged?.song.id { continue }
             if note.kind == .moment { show(moment: note) } else {
                 fresh.removeAll { $0.code == note.code }
                 fresh.append(note)
@@ -85,31 +88,19 @@ final class RunWatch: ObservableObject {
         speak(p)
     }
 
-    /// The song card's songs from one progress call (the same rule as desk.js drawNow).
+    /// The song card from one progress call (the same rule as desk.js drawNow): exactly the songs the core says are
+    /// worked on, never one gone (a song's info card comes before the song is let go, RunOrder). The card keeps its
+    /// place the whole time songs are read; between songs it says the step with no song in it.
     private func takeNow(_ p: RunProgress) {
         let list = !p.working.isEmpty ? p.working : (p.now.map { [$0] } ?? [])
-        nowTimer?.invalidate(); nowTimer = nil
-        if !list.isEmpty {
-            if working != list { working = list }
-            oneAtATime = p.now != nil
-            if ahead != p.ahead { ahead = p.ahead }
-            showNow = true
-            nowSeenAt = Date()
-            return
-        }
-        ahead = nil
-        guard showNow else { return }
-        let left = RunLook.nowLinger - Date().timeIntervalSince(nowSeenAt)
-        if p.stage == .reading && left > 0 {
-            nowTimer = once(after: left) { [weak self] in self?.endNow() }
-        } else { endNow() }
+        if working != list { working = list }
+        oneAtATime = list.isEmpty || p.now != nil
+        if ahead != p.ahead { ahead = p.ahead }
+        showNow = p.stage == .reading
     }
 
-    /// No song is worked on: the song card goes (the stage under it stays).
-    private func endNow() { showNow = false; working = [] }
-
     func stop() {
-        for t in [stageTimer, sayTimer, wallTimer, nowTimer] { t?.invalidate() }
+        for t in [stageTimer, sayTimer, wallTimer] { t?.invalidate() }
         showNow = false; working = []; ahead = nil
         queue = []
     }
@@ -130,6 +121,8 @@ final class RunWatch: ObservableObject {
         let ticker = reduceMotion || hold < RunLook.ticker
         staged = Staged(song: song, at: Date(), hold: hold, draw: ticker ? 0 : min(RunLook.draw, hold * RunLook.drawShare),
                         heights: RunWatch.bars(song), from: staged?.heights ?? [])
+        // The quiet line about the song before it goes with it, at once.
+        if let about = sayingAbout, about != song.id { lastSaid = ""; saying = ""; sayingAbout = nil; nextSaying() }
         if queue.isEmpty && skipped > 0 { stageTimerFire(after: hold) { [weak self] in self?.skipped = 0 } }
         scheduleStage()
     }
@@ -177,16 +170,21 @@ final class RunWatch: ObservableObject {
         return w
     }
 
-    private func nextSaying(moment text: String? = nil) {
-        var line: String?
+    /// The song the quiet line names, if any: it goes when the info card moves on from that song.
+    private var sayingAbout: String?
+
+    private func nextSaying(moment text: String? = nil, about: String? = nil) {
+        var line: String?, song: String? = about
         if let text { line = text }
-        else if !fresh.isEmpty && !(lastWasFact && Bool.random()) {
-            line = Self.words(fresh.removeFirst()); lastWasFact = true
+        else if let i = fresh.firstIndex(where: { $0.song == nil || $0.song == staged?.song.id }), !(lastWasFact && Bool.random()) {
+            fresh.removeSubrange(..<i)
+            let note = fresh.removeFirst()
+            line = Self.words(note); song = note.song; lastWasFact = true
         } else {
             line = fromBag("\(step)\(musicCD ? "-disc" : "")", stepList()); lastWasFact = false
         }
         if let line, line != lastSaid {
-            lastSaid = line; saying = line; sayingIsMoment = text != nil
+            lastSaid = line; saying = line; sayingIsMoment = text != nil; sayingAbout = song
         }
         sayTimer?.invalidate()
         sayTimer = once(after: RunLook.saying) { [weak self] in self?.nextSaying() }
@@ -196,7 +194,7 @@ final class RunWatch: ObservableObject {
         let text = Self.words(note)
         if note.code == "finished" { finishedLine = text; return }
         announce(text)
-        nextSaying(moment: text)
+        nextSaying(moment: text, about: note.song)
         guard !reduceMotion else { return }
         moment = note.code; momentCount += 1
         let n = momentCount
@@ -258,7 +256,7 @@ final class RunWatch: ObservableObject {
         RunSong.barHeights(s.wave, bars: s.bars, rangeMin: RunLook.waveRangeMin, floor: RunLook.waveBarFloor)
     }
     static func isQuiet(_ h: Double) -> Bool { h < RunLook.waveBarFloor + (1 - RunLook.waveBarFloor) * RunLook.waveQuietShare }
-    /// A row's name on the walls: artist and title.
+    /// A song's name on the walls: artist and title.
     static func rowName(_ s: RunSong) -> String {
         s.artist.map { DeskWords.text("wallRowName", ["artist": $0, "title": s.title]) } ?? s.title
     }
@@ -266,9 +264,7 @@ final class RunWatch: ObservableObject {
         s.place ?? ((s.folder ?? "").isEmpty ? DeskWords.text("topOfMusicFolder") : s.folder!)
     }
     static func line(_ s: RunSong) -> String {
-        let name = s.artist.map { DeskWords.text("wallSongBy", ["number": "\(s.number)", "title": s.title, "artist": $0]) }
-            ?? DeskWords.text("wallSong", ["number": "\(s.number)", "title": s.title])
-        return Words.wallSong([name, bpm(s), key(s.key), clock(s.seconds), whereLine(s)])
+        Words.wallSong([rowName(s), bpm(s), key(s.key), clock(s.seconds), whereLine(s)])
     }
 }
 
@@ -298,7 +294,9 @@ struct NowCard: View {
     var body: some View {
         RunCard {
             VStack(alignment: .leading, spacing: RunLook.nowBarGap) {
-                if watch.oneAtATime, let now = watch.working.first { one(now) } else { several }
+                if watch.working.isEmpty {
+                    Text(Words.stageReading).font(RunLook.nowFont).lineLimit(1)
+                } else if watch.oneAtATime, let now = watch.working.first { one(now) } else { several }
                 if watch.ahead != nil {
                     Text(RunNow.aheadLine).font(RunLook.nowAheadFont).foregroundStyle(.tertiary).lineLimit(1)
                 }
@@ -631,9 +629,9 @@ struct FiguresView: View {
     }
 }
 
-/// The crate filling up: a row a song, as they joined, top to bottom: its name (artist and title) always shown, and
-/// its wave as bars. The rows scroll in the card (lazily: a crate of thousands makes only the rows in view). Pointing at
-/// a row, or the arrow keys, says the song's whole line (tempo, key, length, where) beside the title.
+/// The crate filling up: a row a song, as they joined, top to bottom, each its wave across the row. The rows scroll in
+/// the card (lazily: a crate of thousands makes only the rows in view). Pointing at a row, a click on it, or the arrow
+/// keys light it up and say the song's line (its name, tempo, key, length, where) beside the title.
 struct WallView: View {
     @ObservedObject var watch: RunWatch
     var title: String
@@ -655,6 +653,7 @@ struct WallView: View {
                                 WallRow(song: watch.songs[i], picked: pick == i, newest: i == watch.songs.count - 1)
                                     .id(i)
                                     .onHover { inside in if inside { pick = i } else if pick == i && !focused { pick = nil } }
+                                    .onTapGesture { focused = true; pick = i }
                             }
                         }
                     }
@@ -693,25 +692,17 @@ struct WallView: View {
     }
 }
 
-/// One row of a wall: the song's name, cut with an ellipsis, then its bars.
+/// One row of a wall: the song's wave as one continuous shape across the row, mirrored about its middle (the owner's
+/// note, Nov 20, 2026: no name column); the row pointed at or chosen lit and ringed.
 struct WallRow: View {
     let song: RunSong
     let picked: Bool
     let newest: Bool
     var body: some View {
-        GeometryReader { geo in
-            let nameW = min(RunLook.wallNameMaxWidth, geo.size.width * RunLook.wallNameShare)
-            HStack(spacing: 0) {
-                Text(RunWatch.rowName(song)).font(RunLook.wallRowFont).lineLimit(1).truncationMode(.tail)
-                    .foregroundStyle(picked ? RunLook.amber : newest ? Color.primary : Color.secondary)
-                    .padding(.horizontal, RunLook.wallNameGap / 2)
-                    .frame(width: nameW, alignment: .leading)
-                Canvas { gc, size in WallRow.draw(song, picked: picked, newest: newest, in: &gc, size: size) }
-                    .padding(.trailing, RunLook.wallNameGap / 2)
-            }
-        }
-        .frame(height: RunLook.wallRowHeight)
-        .background(picked ? RunLook.wallRowPick : RunLook.wallRowFill)
+        Canvas { gc, size in WallRow.draw(song, picked: picked, newest: newest, in: &gc, size: size) }
+            .frame(height: RunLook.wallRowHeight)
+            .background(picked ? RunLook.wallRowPick : RunLook.wallRowFill)
+            .overlay(Rectangle().strokeBorder(picked ? RunLook.amber : .clear, lineWidth: RunLook.wallPickRing))
     }
 
     static func draw(_ s: RunSong, picked: Bool, newest: Bool, in gc: inout GraphicsContext, size: CGSize) {
@@ -721,11 +712,13 @@ struct WallRow: View {
             gc.fill(Path(CGRect(x: 0, y: size.height / 2, width: size.width, height: 1)), with: .color(Color(nsColor: RunLook.waveNone)))
             return
         }
-        let slot = size.width / CGFloat(heights.count), barW = max(1, slot * (1 - RunLook.waveBarGapShare))
+        // Each bar from the end of the last to the start of the next: no gaps.
+        let n = CGFloat(heights.count)
         for (k, h) in heights.enumerated() {
             let v = max(1, CGFloat(h) * room)
+            let x0 = (CGFloat(k) * size.width / n).rounded(), x1 = (CGFloat(k + 1) * size.width / n).rounded()
             let colour: NSColor = picked ? RunLook.wavePick : newest ? RunLook.waveNew : RunWatch.isQuiet(h) ? RunLook.waveQuiet : RunLook.wave
-            gc.fill(Path(CGRect(x: CGFloat(k) * slot + (slot - barW) / 2, y: size.height / 2 - v / 2, width: barW, height: v)), with: .color(Color(nsColor: colour)))
+            gc.fill(Path(CGRect(x: x0, y: size.height / 2 - v / 2, width: x1 - x0, height: v)), with: .color(Color(nsColor: colour)))
         }
     }
 }

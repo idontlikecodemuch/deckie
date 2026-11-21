@@ -94,7 +94,8 @@ enum Words {
     static let dropHere = w("dropHere")
 
     // MARK: while it works
-    static let runTitle = w("runTitle")
+    /// The reading screen's title, one word, given the source's name (`{read}`) in case the owner's decision puts it in.
+    static func runTitle(_ read: String) -> String { w("runTitle", ["read": read]) }
     static func runReading(_ read: String, into crate: String) -> String { w("runReading", ["read": read, "crate": crate]) }
     /// The run's count beside its bar: "1 of 6 done".
     static func doneOf(_ done: Int, _ total: Int) -> String { n("doneOf", total, ["done": DeskWords.number(done), "total": DeskWords.number(total)]) }

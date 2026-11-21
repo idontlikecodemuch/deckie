@@ -274,8 +274,6 @@ enum RunLook {
     static let nowDiscFont = Font.system(size: 48)
     static let nowAheadFont = Font.caption
     static let nowCardMinHeight: CGFloat = 100
-    /// The card stays this long when no song is worked on, before the stage shows the last song in (seconds).
-    static let nowLinger = 0.9
     static let nowDiscTurn = 2.4                                            // seconds a turn
     static let wholeTurn = 360.0
     static let nowFont = Font.system(size: 14, weight: .semibold)
@@ -350,14 +348,13 @@ enum RunLook {
     static let waveBarFloor = 0.12, waveRangeMin = 8.0
     static let waveBarGapShare: CGFloat = 0.3
     static let waveQuietShare = 0.35
-    /// The walls: a row a song, its name always shown at the left (a share of the width, at most `wallNameMaxWidth`),
-    /// its bars beside it; the rows scroll in the card past `wallMaxHeight` (desk.css --wall-*).
+    /// The walls: a row a song, its wave across the whole row; the rows scroll in the card past `wallMaxHeight`; the
+    /// row pointed at lit and ringed (desk.css --wall-*).
     static let wallRowHeight: CGFloat = 44, wallRowGap: CGFloat = 6, wallRowPad: CGFloat = 6
     static let wallMaxHeight: CGFloat = 440
-    static let wallNameShare: CGFloat = 0.32, wallNameMaxWidth: CGFloat = 260, wallNameGap: CGFloat = 14
-    static let wallRowFont = Font.system(size: 13, weight: .medium)
+    static let wallPickRing: CGFloat = 2
     static let wallRowFill = Color.primary.opacity(0.025)
-    static let wallRowPick = Color(red: 1.0, green: 0.753, blue: 0.251).opacity(0.08)
+    static let wallRowPick = Color(red: 1.0, green: 0.753, blue: 0.251).opacity(0.14)
 
     // motion
     /// Seconds: a wave drawing in; a song on stage with nothing waiting, and with many; a fade; each quiet line; a
