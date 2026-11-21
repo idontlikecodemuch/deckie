@@ -117,7 +117,7 @@ func runLive(_ values: [String: String], _ flags: Set<String>) -> Never {
         print(String(format: "%.0f\t%.1f\t%.1f\t%d\t%@\t%@\t%.1f\t%.0f", l?.seconds ?? 0, l?.rmsDB ?? -120, l?.peakDB ?? -120, clipped,
                      song.map { names[$0] ?? $0 } ?? (l?.silent == true ? "- (no sound arriving)" : "-"),
                      song == nil ? "-" : place, song == nil ? 0 : (r?.confidence ?? 0), r?.milliseconds ?? 0))
-        fflush(stdout)
+        fflush(nil)   // every stream; naming `stdout` does not compile on Linux (shared mutable state)
         if (l?.seconds ?? 0) >= stopAfter || Date().timeIntervalSince(wall0) > stopAfter + 30 { break }
     }
     capture.stop()
