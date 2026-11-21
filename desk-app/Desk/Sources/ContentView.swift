@@ -12,6 +12,7 @@ struct ContentView: View {
     var body: some View {
         Group {
             if model.running { RunView() }
+            else if model.boothOn, let c = model.current, model.crate != nil { BoothView(booth: model.booth).id(c.id) }
             else if let r = model.finished { FinishedView(report: r) }
             else if model.crate != nil { CrateView() }
             else { EmptyCrateView() }
@@ -21,6 +22,13 @@ struct ContentView: View {
         .toolbar {
             // The crate's icon and name, always; a click renames it (research AE). The menu beside it switches crates.
             ToolbarItem(placement: .navigation) { HStack { CrateName(); CrateMenu() }.controlSize(Look.Toolbar.controlSize) }
+            // The listening mode's switch (Booth.swift), for a crate with songs.
+            ToolbarItem(placement: .navigation) {
+                if model.crate != nil {
+                    Toggle(isOn: $model.boothOn) { Label(Words.t("booth.mode"), systemImage: "ear") }
+                        .toggleStyle(.button).help(Words.t("booth.modeHelp")).controlSize(Look.Toolbar.controlSize)
+                }
+            }
             ToolbarItemGroup(placement: .primaryAction) {
                 AddMusicMenu().controlSize(Look.Toolbar.controlSize)
                 if model.crate != nil {

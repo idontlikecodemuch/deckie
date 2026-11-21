@@ -409,3 +409,30 @@ enum LookupStyle {
     static let sheetWidth: CGFloat = 860
     static let sheetHeight: CGFloat = 640
 }
+
+/// The listening mode's look (research booth-in-desk, step 1; Booth.swift), as the pages' --booth-* variables.
+/// Placeholders until the design pass.
+enum BoothLook {
+    static let pad: CGFloat = 32
+    static let gap: CGFloat = 18
+    static let maxWidth: CGFloat = 880
+    static let title = Font.title2.bold()
+    static let song = Font.system(size: 44, weight: .bold)
+    static let artist = Font.title2
+    static let facts = Font.title3
+    static let factGap: CGFloat = 28
+    static let cardPad: CGFloat = 32
+    static let cardMinHeight: CGFloat = 180
+    static let cardRadius: CGFloat = 16
+    static let card = Color.primary.opacity(0.06)
+    static let emptyOpacity = 0.45
+    static let meterWidth: CGFloat = 260
+    static let meterHeight: CGFloat = 10
+    static let meterTrack = Color.primary.opacity(0.08)
+    static let meterFill = Color.accentColor
+    static let meterClip = Color.orange
+    static let meterTime = 0.12
+    static let error = Color.red
+    static let silent = Color.orange
+    static let inputWidth: CGFloat = 320
+}
