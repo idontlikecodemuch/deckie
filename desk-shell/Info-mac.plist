@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!-- Linked into deckie-desk on the Mac (Package.swift, the __info_plist section), so macOS can ask for the
+     microphone for the listening mode when the window is started on its own (from Finder or `open`): the sentence is
+     DeskWords' booth.micPermission, word for word (BoothTests checks). Started from a terminal, macOS asks for the
+     terminal instead. -->
+<plist version="1.0">
+<dict>
+	<key>CFBundleIdentifier</key>
+	<string>io.deckie.desk.window</string>
+	<key>CFBundleName</key>
+	<string>Deckie Desk</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Deckie Desk listens through the microphone to name the song playing from your crate. Nothing it hears is kept or sent anywhere.</string>
+</dict>
+</plist>

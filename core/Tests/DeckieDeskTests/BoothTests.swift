@@ -195,6 +195,17 @@ import DeckieTestSupport
         #expect(DeskWords.boothTable.allSatisfy { !$0.value.contains("track") && !$0.value.contains("AI") })
     }
 
+    /// The Mac asks for the microphone with the words the app carries: the native Desk's (project.yml and the Info.plist
+    /// made from it) and the test window's (desk-shell/Info-mac.plist) are DeskWords' booth.micPermission.
+    @Test func theMicrophoneQuestionUsesTheWordsInTheList() {
+        let words = DeskWords.text("booth.micPermission")
+        #expect(VariablesTests.read("desk-app/project.yml").contains("NSMicrophoneUsageDescription: \"\(words)\""))
+        for plist in ["desk-app/Desk/Info.plist", "desk-shell/Info-mac.plist"] {
+            let text = VariablesTests.read(plist)
+            #expect(text.contains("<key>NSMicrophoneUsageDescription</key>\n\t<string>\(words)</string>"), "\(plist)")
+        }
+    }
+
     @Test func theModesStyleSheetHoldsNoValuesAndReadsOnlyDesksVariables() {
         let css = VariablesTests.read("desk-web/booth.css"), desk = VariablesTests.read("desk-web/desk.css")
         #expect(!css.isEmpty)

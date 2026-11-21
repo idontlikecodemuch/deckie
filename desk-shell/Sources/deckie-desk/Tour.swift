@@ -59,6 +59,7 @@ enum Tour {
         let steps = arguments.contains("--add-music") ? addMusicSteps(click)
             : arguments.contains("--lookup") ? lookupSteps(click)
             : arguments.contains("--naming") ? namingSteps(click)
+            : arguments.contains("--booth") ? boothSteps(click)
             : arguments.contains("--run-screen") ? runScreenSteps(click) : tourSteps
         if arguments.contains("--record") { record(desk, out: out.appendingPathComponent("frames")) }
         var events: [[String: Any]] = []
@@ -239,6 +240,30 @@ enum Tour {
             Step(name: nil, js: click("#finished-add"), delay: 0.3),
             Step(name: "a12-crate", js: click("#finished-songs"), delay: 1.2),
             Step(name: "a13-rename-header", js: click("#crate-name-button"), delay: 0.8),
+        ]
+    }
+
+    /// The listening mode (research booth-in-desk, step 1), for a real-room try: the crate file in DECKIE_TOUR_CRATE is
+    /// imported, the Booth switch pressed, and a picture taken when it listens, when it first names a song, when it
+    /// names another (play one song, then cut to another, from outside: afplay), and after Back to songs. It listens
+    /// through the system's default input, so macOS may ask for the microphone first.
+    static func boothSteps(_ click: (String) -> String) -> [Step] {
+        final class First: @unchecked Sendable { var id: String? }
+        let first = First()
+        let crate = ProcessInfo.processInfo.environment["DECKIE_TOUR_CRATE"] ?? ""
+        let heardId = { (m: [String: Any]) -> String? in m["event"] as? String == "booth.heard" ? (m["song"] as? [String: Any])?["id"] as? String : nil }
+        return [
+            Step(name: "b01-crate", js: "desk.request('crate.import', { path: \(js(crate)) });", event: "songs", delay: 1.0),
+            Step(name: "b02-listening", js: click("#booth-button"), event: "booth.state",
+                 eventTest: { $0["state"] as? String == "listening" }, delay: 2.5),
+            Step(name: "b03-named", event: "booth.heard", eventTest: { m in
+                guard let id = heardId(m) else { return false }
+                if first.id == nil { first.id = id }
+                return true
+            }, delay: 2.5),
+            Step(name: "b04-after-cut", event: "booth.heard", eventTest: { m in heardId(m).map { $0 != first.id } ?? false }, delay: 2.0),
+            Step(name: "b05-left", js: click("#booth-leave"), event: "booth.state", eventTest: { $0["state"] as? String == "stopped" },
+                 delay: 1.0),
         ]
     }
 

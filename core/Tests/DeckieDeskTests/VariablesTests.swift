@@ -184,7 +184,7 @@ import DeckieLookup
 
     /// Source files of the Mac's window that are views; the word list, the look and the headless tools are not.
     static let macViews = ["AddMusic", "ContentView", "DeskApp", "DeskModel", "ImportLogView", "Lookup", "Naming", "RunScreen",
-                           "SourcesPanel", "TrackTable"].map { "desk-app/Desk/Sources/\($0).swift" }
+                           "SourcesPanel", "TrackTable", "Booth"].map { "desk-app/Desk/Sources/\($0).swift" }
 
     static let swiftLit = #""(?:[^"\\]|\\.)*""#
 

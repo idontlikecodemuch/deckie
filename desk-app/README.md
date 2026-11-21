@@ -288,6 +288,15 @@ and undo with Command-Z. In the crate file the fields keep their names: `disc`, 
 Not here: organising or planning sources in Desk, records
 (nothing to read), icons for the kind of source (the format has no field for it).
 
+## Listening (Booth, research booth-in-desk, step 1)
+
+The Booth switch in the toolbar (a crate with songs) shows the listening mode (`Booth.swift`): an input chooser, a
+level, a state line and the song heard, the same bare mode as the pages' (`desk-web/booth.js`) on the same core
+(DeckieCapture's `Microphone`, DeckieDesk's `DeskBooth`). The view listens while it shows and stops when it goes:
+Back to songs, another crate, a run (listening waits; it starts again when the run ends) or the window closing.
+macOS asks for the microphone once, with `NSMicrophoneUsageDescription` (DeskWords' `booth.micPermission`). The song
+shown is the listener's current named song, not yet the iPad's switching rule.
+
 ## Naming a song (research AA, route A: nothing leaves the Mac)
 
 The logic is the core's (`DeskNaming`, `DiscSongs.swift`, `DeskNamesStep` in `core/Sources/DeckieDesk`; CD-Text and the

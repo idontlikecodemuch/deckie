@@ -31,6 +31,16 @@ priority and at most 4 jobs (`DECKIE_BUILD_JOBS` changes that):
 Run from the command line on the Mac, the window has a menu bar of its own (Quit with Cmd+Q, Close Window with Cmd+W,
 Hide, and Cut, Copy, Paste and Select All for its text fields); Quit closes the window as its close button does.
 
+## Listening (the Booth switch)
+
+The listening mode (research booth-in-desk, step 1) opens the microphone in the engine, never in the page. On the
+Mac, macOS asks once for the microphone, under the name of the program that started Desk's window: started from a
+terminal, it asks for the terminal (or whatever app the terminal runs inside); started on its own (`open`, Finder),
+it asks for Deckie Desk with the sentence in `Info-mac.plist`, which the build links into the program's
+`__info_plist` section. Windows asks nothing of a desktop program (its privacy switch for microphones can silence
+every program; the page then says no sound is arriving). On Linux nothing is asked. Closing the window ends the
+engine, which lets the microphone go.
+
 ## Checks
 
 - `deckie-desk --self-test`: the window alone; one message each way with a small page, then exits.

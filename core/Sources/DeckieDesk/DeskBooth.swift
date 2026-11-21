@@ -32,6 +32,11 @@ public final class DeskBooth: @unchecked Sendable {
         /// Whether the index was opened as kept (true) or made now (false), once ready.
         public var indexKept: Bool?
         public var error: CaptureError?
+        public init(state: String, percent: Int? = nil, songs: Int? = nil, input: String? = nil, rate: Int? = nil,
+                    channels: Int? = nil, indexKept: Bool? = nil, error: CaptureError? = nil) {
+            self.state = state; self.percent = percent; self.songs = songs; self.input = input; self.rate = rate
+            self.channels = channels; self.indexKept = indexKept; self.error = error
+        }
     }
 
     /// One reading that names a song: the song as the crate has it, where in it the sound is, and how sure.
