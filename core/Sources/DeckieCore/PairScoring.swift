@@ -228,7 +228,7 @@ public enum PairScoring {
         let (_, k, lab, r) = best!
         let s = abs(r - 1) * 100
         if s > 18 { return (0.0, k, lab, s, true) }
-        // the first party's DJ's club deck pitch range goes to +/-16 percent: free to 3, gentle to 10, usable to 16.
+        // The first party's DJ's club deck pitch range goes to +/-16 percent: free to 3, gentle to 10, usable to 16.
         var t = s <= 3 ? 1.0 : (s <= 10 ? 1 - (s - 3) / 7 * 0.6 : 0.4 - (s - 10) / 6 * 0.3)
         t = max(t, 0.05)
         if k == 0.5 || k == 2.0 {
@@ -281,7 +281,7 @@ public enum PairScoring {
             return s <= 8 ? "quick_blend_echo" : "brake_cut"
         }
         if s > 16 || (!(k == 1.0 || k == 0.5 || k == 2.0) && rhythm < 0.5) { return "brake_cut" }
-        // the first party's DJ mixes progressively: a blend is the default answer whenever the beats can be matched.
+        // The first party's DJ mixes progressively: a blend is the default answer whenever the beats can be matched.
         // The vocal detector over-reports singing, so only heavy overlap pushes a pair to an effect exit.
         if v >= 0.6 { return s <= 16 ? "quick_blend_echo" : "brake_cut" }
         if s > 6 { return "ramped_blend" }
@@ -292,7 +292,7 @@ public enum PairScoring {
         return Py.mean(Array(A.vocOut.suffix(L))) >= Py.mean(Array(B.vocIn.prefix(L))) ? "quick_blend_echo" : "filter_sweep"
     }
 
-    /// Ordered menu of plausible moves for the pair, primary first; the first party's DJ picks, the app only suggests.
+    /// Ordered menu of plausible moves for the pair, primary first; the DJ picks, the app only suggests.
     public static func moveOptions(_ A: Track, _ B: Track, s: Double, k: Double, v: Double, tr: String) -> [String] {
         var opts = [tr]
         let matchable = s <= 16 && (k == 1.0 || k == 0.5 || k == 2.0)
