@@ -43,8 +43,8 @@ struct BenchTests {
         ]
         try JSONSerialization.data(withJSONObject: rows).write(to: candidates)
         try Data("{}".utf8).write(to: features.appendingPathComponent("fake000002.json"))
-        // research R's per-track keys beside the features folder, as mixer/key_parity_keys.tsv sits beside
-        // mixer/features: the track's row holds the engine's own decision, so the column reads "same".
+        // research R's per-track keys beside the features folder, as key_parity_keys.tsv sits beside
+        // features/ in the lab's data folder: the track's row holds the engine's own decision, so the column reads "same".
         let p = analysis.hpcpKey.decision
         try Data(("id\tkey_3f\tmargin\tagree\tsure\tlab\tlab_confident\tapple\n"
                   + "\(Self.labID)\t\(p.camelot)\t\(String(format: "%.4f", p.margin))\t\(p.agree)\t\(p.sure ? 1 : 0)\t8A\t1\t\n"

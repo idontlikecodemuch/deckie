@@ -150,7 +150,7 @@ struct Track: Codable, Identifiable, Hashable {
         guard let s = sourceName else { return folder }
         return s + (folder.isEmpty ? "" : Words.placeJoin + folder) + (num.map { Words.placeNumber($0) } ?? "")
     }
-    /// "06 [song])": track number as in the file name on the deck. A song with no name reads
+    /// "06 Song A": track number as in the file name on the deck. A song with no name reads
     /// "06 · no name yet" (research AA, 3.13: the place leads, never a blank row or a placeholder title).
     var numberedSong: String { num.map { Words.numbered($0, songShown) } ?? songShown }
 

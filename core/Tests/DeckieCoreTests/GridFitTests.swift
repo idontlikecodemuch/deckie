@@ -2,9 +2,10 @@ import Testing
 import Foundation
 import DeckieCore
 import DeckieLab
+import DeckieTestSupport
 
-/// Fixtures/gridfit.json: per track, what the lab's current fit_grid and its IRLS path give for the committed
-/// detected beats (computed by core/Tools/make_fixtures.py with the lab's own Python).
+/// gridfit.json (LabData.fixtures): per track, what the lab's current fit_grid and its IRLS path give for the
+/// detected beats of the lab's data (computed by core/Tools/make_fixtures.py with the lab's own Python).
 struct GridRow: Decodable {
     struct Fit: Decodable {
         var bpm, period, t0, firstDownbeat, fitMadMs, inlierFrac, downbeatAgree, confidence: Double
@@ -27,7 +28,7 @@ struct GridRow: Decodable {
 }
 
 @Suite struct GridFitTests {
-    static let rows = try! RepoPaths.fixture("gridfit.json", as: [String: GridRow].self)
+    static let rows = try! LabData.fixture("gridfit.json", as: [String: GridRow].self)
 
     static func check(_ got: GridFit, _ want: GridRow.Fit, _ label: String) {
         #expect(near(got.bpm, want.bpm, 1e-6), "\(label) bpm \(got.bpm) vs \(want.bpm)")
@@ -42,7 +43,7 @@ struct GridRow: Decodable {
         #expect(near(got.confidence, want.confidence, 1e-6), "\(label) confidence \(got.confidence) vs \(want.confidence)")
     }
 
-    /// The full current fit (both estimators) lands on the lab's numbers for all 373 tracks.
+    /// The full current fit (both estimators) lands on the lab's numbers for every track.
     @Test func currentFitReproducesTheLabOnEveryTrack() throws {
         var methods: [String: Int] = [:]
         for (id, row) in Self.rows {
@@ -101,7 +102,7 @@ struct GridRow: Decodable {
             #expect(matches(full) || matches(irls),
                     "\(id): committed \(candBpm) BPM, \(candMad) ms, \(candConf); full \(full.bpm), \(full.fitMadMs), \(full.confidence); irls \(irls.bpm), \(irls.fitMadMs), \(irls.confidence)")
         }
-        #expect(n == 373)
+        #expect(n == Self.rows.count && n == LabData.trackCount)
         print("committed beatthis grids: \(n); reproduced by the current fit: \(byFull), by the IRLS path alone: \(byIRLS)")
     }
 

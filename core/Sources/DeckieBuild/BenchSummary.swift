@@ -51,7 +51,7 @@ public struct BenchSummary: Sendable {
     public var keyAll: [String: Double]
     public var keyConfident: [String: Double]
     public var keyConfidentCount: Int
-    /// The key against mixer/key_parity_keys.tsv (research R's key method as key_parity.py decided it): the tracks
+    /// The key against the lab's key_parity_keys.tsv (research R's key method as key_parity.py decided it): the tracks
     /// with both sides, how many are the same by the parity rule (`TrackScore.keyParity`), the others with their
     /// differences.
     public var keyParityTracks: Int
@@ -122,7 +122,7 @@ public struct BenchSummary: Sendable {
         }
         gridByLabSource = bySource
 
-        // The charter's pass marks: at least Apple's framework on beats and loudness (stage 1, 1a, mixer/mu_bench.tsv
+        // The charter's pass marks: at least Apple's framework on beats and loudness (stage 1, 1a, the lab's mu_bench.tsv
         // over 373 tracks) and the key estimator's measured 75 percent exact. Apple's other figures for reference.
         let apple = "Apple's framework, stage 1 (1a)"
         marks = [

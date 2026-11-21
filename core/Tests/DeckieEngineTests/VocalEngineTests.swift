@@ -69,7 +69,7 @@ struct VocalEngineTests {
     @Test func labJSONCarriesTheVocalBlock() async throws {
         let a = try await Shared.shared.run("yamnet").analysis
         let json = a.labJSON()
-        let labURL = repositoryRoot.appendingPathComponent("mixer/features/[id].json")
+        let labURL = LabData.sample.appendingPathComponent("features/\(LabData.shapeReference).json")
         let lab = try #require(try JSONSerialization.jsonObject(with: Data(contentsOf: labURL)) as? [String: Any])
         let ours = try #require(try JSONSerialization.jsonObject(with: json.data) as? [String: Any])
         #expect(Set(ours.keys) == Set(lab.keys).subtracting(["embedding_effnet"]).union(["deckie"]))

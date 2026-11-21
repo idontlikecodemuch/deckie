@@ -1,14 +1,15 @@
 import Foundation
+import DeckieTestSupport
 
-/// Where the lab's files and the fixtures are, relative to this source file (core/Tests/DeckieCoreTests/).
+/// Where the fixtures are, relative to this source file (core/Tests/DeckieCoreTests/), and the lab's data
+/// (`LabData`: the private folder DECKIE_LAB_DATA names, else the public sample of invented songs).
 enum RepoPaths {
     static let testsDir = URL(fileURLWithPath: #filePath).deletingLastPathComponent()
     static let fixtures = testsDir.appendingPathComponent("Fixtures")
     static let root = testsDir.deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
-    static let mixer = root.appendingPathComponent("mixer")
-    static let features = mixer.appendingPathComponent("features")
-    static let candidates = mixer.appendingPathComponent("candidates.json")
-    static let recs = mixer.appendingPathComponent("recs.json")
+    static var features: URL { LabData.features }
+    static var candidates: URL { LabData.candidates }
+    static var recs: URL { LabData.recs }
 
     static func fixture<T: Decodable>(_ name: String, as type: T.Type) throws -> T {
         try JSONDecoder().decode(T.self, from: Data(contentsOf: fixtures.appendingPathComponent(name)))

@@ -2,7 +2,7 @@ import Foundation
 import DeckieCore
 
 extension Analysis {
-    /// The record as a lab feature file (mixer/features/<id>.json): the keys of mixer/analyze.py's `out` dict, in its
+    /// The record as a lab feature file (features/<id>.json in the lab's data): the keys of mixer/analyze.py's `out` dict, in its
     /// order, rounded as it rounds them, bars 1-based, followed by `local_tempo` (as the lab appends it) and one block
     /// of the engine's own, `deckie`, which the lab's tools do not read. So the Mac can put an engine record beside the
     /// lab's file for the same track and compare them with the lab's own code.
@@ -32,7 +32,7 @@ extension Analysis {
     ///   `deckie.vocal` (`vocalBlock()`), null without a tagger, and the vocal structure and the hook candidates in
     ///   `deckie.vocal_structure` and `deckie.hooks` (the crate's proposed blocks, same fields and values), null
     ///   without a tagger. The lab's tools do not read the `deckie` block, so they read the file unchanged.
-    /// - `meta` (the pool's bookkeeping from mixer/candidates.json): every key null.
+    /// - `meta` (the pool's bookkeeping from the lab's candidates.json): every key null.
     /// - `beatthis_device`: `cpu`. `timing_s` has the engine's stages (`Analyser`), named as the lab's where a stage
     ///   matches one.
     /// - `loudness.integrated_lufs` of digital silence is minus infinity, which Python writes as `-Infinity`; this
@@ -180,7 +180,7 @@ extension Analysis {
     /// `deckie.key`: the key method's detail, then the STFT estimator's. The method (`HPCPKey`): `estimator`
     /// (`hpcp-whitened`), `whitening` (true: research R asked for it in the record), the frames read, the key as
     /// `camelot`, `key` and `scale`, the winner's mean correlation `r` (3 decimals), `margin` (4, as
-    /// mixer/key_parity_keys.tsv writes it), `agree` (how many of the three profiles pick it alone), `sure`, each
+    /// the lab's key_parity_keys.tsv writes it), `agree` (how many of the three profiles pick it alone), `sure`, each
     /// profile's own key and correlation under `profiles` and the profile numbers' source (`literature`, which is
     /// what mixer/key_parity.py decides with too, so the bench compares this decision with its per-track sheet; the
     /// `parity` member with key_light.py's numbers left after the Mac's 0.4.0 pass read the two equal on all 373
