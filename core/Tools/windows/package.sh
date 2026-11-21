@@ -168,6 +168,8 @@ if [ "$ship_vc" = 1 ]; then cp "$core/notices/microsoft-vc-runtime/NOTICE.txt" "
 vendor="$repo/desk-shell/Sources/CDeskShell/vendor"
 cp "$vendor/webview/LICENSE" "$lic/webview-LICENSE.txt"
 cp "$vendor/WebView2/LICENSE.txt" "$lic/Microsoft-WebView2-SDK-LICENSE.txt"
+# Sound in for listening inside Desk (DEPENDENCIES.md, section 15): miniaudio's licence, compiled into the engine.
+cp "$core/Sources/CMiniaudio/vendor/LICENSE" "$lic/miniaudio-LICENSE.txt"
 mkdir -p "$lic/eigen-patches"
 cp "$core/notices/eigen/"* "$lic/eigen-patches/"
 "$py" - "$core/dependencies.json" > "$lic/ACKNOWLEDGEMENTS.txt" <<'PY'
