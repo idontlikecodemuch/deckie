@@ -147,7 +147,7 @@ signature. The field keeps its name from when only signatures counted.
 |---|---|
 | `run.started` | `crate` (id), `crateName`, `read` (the source's name), `carriedOn`, `musicCD`, `askName` (a music CD with no title of its own: the placeholder name to offer when asking once for the name written on it; else null) |
 | `run.progress` | `stage` (`reading`, `finishing`, `saving`; a music CD's songs are read in `reading`, one at a time), `done`, `total` (songs done of songs found), `remaining` (seconds left, or null), `line` (or absent), `now` (or absent; an addition of Nov 20, 2026, protocol still 2: the song being read when songs are read one at a time, `{"rel", "number" (its number on a music CD, or absent), "step", "read" (0 to 1, while its sound comes off the disc, or absent)}`; `step` is `started`, `reading`, or the analysis stage starting: `hash`, `decode`, `resample`, `beatthis`, `key`, `spectral`, `structure`, `loudness`, `vocal`, `windows`. Every change of song or step is sent, whatever the rate; `now` also carries `title` and `artist` when Desk has a name for the song: a music CD's CD-Text name from the moment it is taken, then rekordbox's or its tags'), `working` (or absent; an addition of Nov 20, 2026, protocol still 2: every song being worked on now, in the order taken, each shaped as `now`; one song when songs are read one at a time, and then `now` is it; several when a folder's jobs read at once, and then `now` is absent), `ahead` (or absent; an addition of the same day: a music CD's next song while it is read ahead, shaped as `now` with `step` `reading`; never the song `now` names). Every change of the songs worked on, their steps and names, and of a read ahead starting or ending is sent at once; how much is read rides with bare progress. A page from before these sees `now` as before |
-| `run.finished` | `report`: the run's report (DeskRun's RunReport, as `runs.jsonl` holds it, with `local`, the keys and names taken from the computer) |
+| `run.finished` | `report`: the run's report (DeskRun's RunReport, as `runs.jsonl` holds it, with `local`, the keys and names taken from the computer). A run carried on after Stop: `seconds` is the whole reading time, the parts before Stop included and the pause between not, and `songs_per_minute` is reckoned from it; `seconds_before` (an addition of Nov 20, 2026) is the parts before |
 | `run.failed` | `detail`: what stopped it, in a sentence. Songs already read are kept |
 
 A `line` is one of `{"kind": "started", "files": 40, "unchanged": 3, "queued": 37}`,
@@ -163,6 +163,11 @@ the running totals. It comes at most four times a second (DeskProtocol's `RunScr
 joined since the last one, in the order they joined; a burst (songs read before, which join together while
 finishing) is split into lines of at most 500 songs. `figures` comes at most once a second and is left out
 between; the page keeps the last it had. The last `run.songs` comes before `run.finished`, with the totals.
+One order holds between the two (Nov 20, 2026, DeskRun's `RunOrder`): a song read comes in `run.songs` before any
+`run.progress` that leaves it out of `working` or `now`, and before the `run.progress` whose `line` names its file,
+so a window that draws each message as it comes never names a song its song info card has not shown. A song that
+did not go in is let go by its `notRead` line. On a run carried on after Stop, `done` starts at the files read
+before (`line.unchanged`), not at 0.
 When a run ends, `state` and `songs` with the crate as saved come first, then `run.finished` (or `run.failed`):
 a window shows its finished screen on `run.finished`, and anything there that needs the crate's songs (Export crate
 file) asks the last `state` and `songs` it had, so they must already say what the run saved.

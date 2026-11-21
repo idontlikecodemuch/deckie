@@ -274,12 +274,10 @@ public enum DeskWords {
         "figNotIn": "Didn't go in",
         "wallTitle": "The crate so far",
         "wallTitleDone": "{read}, a row a song",
-        "wallHelp": "A row a song, as they joined. Point at a row, or use the arrow keys, for its tempo, key and length.",
-        // A row's name on the walls, always shown (cut with glyph.ellipsis when it is too long).
+        "wallHelp": "A row a song, as they joined. Point at a row, or use the arrow keys, to see which song it is.",
+        // A song's name on the walls, said with its tempo, key and length when its row is pointed at or chosen.
         "wallRowName": "{artist} – {title}",
         "wallEmpty": "Songs join here as they are read.",
-        "wallSong": "{number}. {title}",
-        "wallSongBy": "{number}. {title}, {artist}",
         "runListTitle": "Every file, as it goes",
         "announceProgress": "{songs}. {left}",
         // The quiet line under the progress: lines for the step Desk is on, then lines that say something true
