@@ -25,7 +25,7 @@ import DeckieBuild
         #expect(w.now?.name == "Night drive")
         w.step(one, step: "beatthis")
         #expect(w.now?.line(total: 6) == "Song 1 of 6: finding the beat")
-        #expect(w.now?.share == 0.4)
+        #expect(w.now?.share == 0.5)   // the fifth step of ten since the key is read first (Nov 21, 2026)
         w.done(one)
         #expect(w.now == nil && w.songs.isEmpty)
     }
@@ -73,9 +73,9 @@ import DeckieBuild
         #expect(w.songs.map(\.rel) == songs)
         #expect(w.songs.map(\.name) == ["a", "b", "c", "d"])
         w.named(songs[1], title: "Slow Bloom", artist: "Artist D")
-        w.step(songs[0], step: "beatthis")
-        w.step(songs[1], step: "key")
-        #expect(w.songs[0].stage == "finding the beat" && w.songs[1].stage == "working out the key")
+        w.step(songs[0], step: "key")
+        w.step(songs[1], step: "beatthis")
+        #expect(w.songs[0].stage == "working out the key" && w.songs[1].stage == "finding the beat")
         #expect(w.songs[2].stage == "opening it")
         #expect(w.songs[1].name == "Slow Bloom" && w.songs[1].artist == "Artist D")
         // The card: the song furthest along, kept while it is worked on; the rest are rows, in the order taken.

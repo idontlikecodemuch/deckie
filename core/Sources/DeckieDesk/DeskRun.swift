@@ -165,8 +165,9 @@ public struct RunNow: Sendable, Equatable {
     /// Whether any part of it has been worked out (a song taken from what was worked out before has none).
     public var hasParts: Bool { seconds != nil || bpm != nil || bars != nil || key != nil || wave != nil }
 
-    /// The analysis stages in the order they run (desk.js's NOW_STEPS says the same).
-    public static let analysisSteps = ["hash", "decode", "resample", "beatthis", "key", "spectral", "structure", "loudness",
+    /// The analysis stages in the order they start (run.js's NOW_STEPS must say the same). The key is read before the
+    /// beat since Nov 21, 2026 (its chromagram, timed with it, is still made after).
+    public static let analysisSteps = ["hash", "decode", "resample", "key", "beatthis", "spectral", "structure", "loudness",
                                        "vocal", "windows"]
 
     /// Whether the song's sound is still coming off the source.
@@ -641,7 +642,14 @@ public final class DeskRun: @unchecked Sendable {
             switch s {
             case .started:
                 let (title, artist) = discName(rel, nil, nil)
-                change { $0.took(RunNow(rel: rel, number: number, step: "started", title: title, artist: artist)) }
+                var song = RunNow(rel: rel, number: number, step: "started", title: title, artist: artist)
+                // A music CD's song: its length from the disc's table, before its sound is read (the Windows pass,
+                // Nov 21, 2026). The same value the decoded sound gives (CD audio is 588 samples a sector at 44.1 kHz,
+                // and a sector that cannot be read comes in as silence), which replaces it when it comes.
+                if let base, let number, let toc = base.toc.songs.first(where: { $0.number == number }) {
+                    song.take(.length(seconds: toc.seconds))
+                }
+                change { $0.took(song) }
             case let .named(title, artist):
                 let (t, a) = discName(rel, title, artist)
                 change { $0.named(rel, title: t, artist: a) }
