@@ -144,7 +144,9 @@ enum Golden {
             try text.write(to: u, atomically: true, encoding: .utf8)
             return nil
         }
-        guard let kept = try? String(contentsOf: u, encoding: .utf8) else { return "\(name).txt is missing" }
+        guard let read = try? String(contentsOf: u, encoding: .utf8) else { return "\(name).txt is missing" }
+        // A Windows checkout may hand the record back with its lines ending the Windows way; the record is its lines.
+        let kept = read.replacingOccurrences(of: "\r\n", with: "\n")
         if kept == text { return nil }
         let a = kept.split(separator: "\n", omittingEmptySubsequences: false)
         let b = text.split(separator: "\n", omittingEmptySubsequences: false)
