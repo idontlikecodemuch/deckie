@@ -78,10 +78,15 @@ import DeckieBuild
         #expect(w.songs[0].stage == "finding the beat" && w.songs[1].stage == "working out the key")
         #expect(w.songs[2].stage == "opening it")
         #expect(w.songs[1].name == "Slow Bloom" && w.songs[1].artist == "Artist D")
+        // The card: the song furthest along, kept while it is worked on; the rest are rows, in the order taken.
+        #expect(RunNow.cardSong(w.songs, keeping: nil)?.rel == songs[1])
+        #expect(RunNow.cardSong(w.songs, keeping: songs[2])?.rel == songs[2])
+        #expect(RunNow.cardSong(w.songs, keeping: "gone.mp3")?.rel == songs[1])
+        #expect(RunNow.rows(w.songs, card: songs[1]).map(\.rel) == [songs[0], songs[2], songs[3]])
         w.done(songs[0])
         w.took(RunNow(rel: "Friday Set/e.mp3", number: nil, step: "started"))
         #expect(w.songs.map(\.name) == ["Slow Bloom", "c", "d", "e"])
-        #expect(RunNow.workingLine(4) == "Working on 4 songs" && RunNow.workingLine(1) == "Working on 1 song")
+        #expect(RunNow.alsoLine(3) == "Also working on 3 songs" && RunNow.alsoLine(1) == "Also working on 1 song")
     }
 
     /// The count beside the bar says what is done, not a song's number; a song not on a disc says "this song".

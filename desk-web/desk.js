@@ -128,7 +128,7 @@
 
   // The run screen (D37, run.js): the song on stage, the figures, the wall of waves, the quiet line and the moments.
   const politely = (text) => { const a = $("run-announce"); a.textContent = ""; setTimeout(() => { a.textContent = text; }, 30); };
-  const screen = window.DeskRunScreen({ $, el, t, n, mmss, list, timeLeft, announce: politely });
+  const screen = window.DeskRunScreen({ $, el, t, n, mmss, list, timeLeft, coded: (p, c) => coded(p, c), announce: politely });
   // The listening mode (booth.js): its own screen and the booth.* events; it reads the crate showing from here.
   const booth = window.DeskBooth ? window.DeskBooth({ $, el, t, mmss, request, render: () => render(), current: () => current(),
     shownName: () => shownName(), busy: () => !!run || !!(state && state.running), has: (k) => W[k] != null }) : null;
@@ -250,77 +250,10 @@
     } else {
       bar.classList.add("waiting"); bar.removeAttribute("aria-valuenow"); $("run-count").textContent = "";
     }
-    // The step in words beside the bar only when there is no song card (finishing, saving): while songs are read, the
-    // song card under the bar says what is being done.
-    $("run-stage").textContent = run.stage === "reading" ? "" : t({ finishing: "stageFinishing", saving: "stageSaving" }[run.stage] || "stageReading");
     $("run-left").textContent = run.remaining != null ? timeLeft(run.remaining) : "";
-    drawNow();
   }
 
-  /// The song card (RunNow in the core says the same words on the Mac). One song at a time (a music CD): that song by
-  /// the name Desk has for it, its step line ("Song 2 of 6: finding the beat") and a thin bar within the song (the
-  /// share read off the disc, then its steps done), with a turning disc. Several at once (a folder's jobs): "Working on
-  /// 4 songs" and a row a song with its step. Under either, quietly, the next song of a disc while it is read ahead.
-  /// Only what the engine said is true: the card shows the songs worked on now, and keeps its place while songs are
-  /// read. Under it, always, the stage: the last song in, with its facts.
-  const NOW_STEPS = ["hash", "decode", "resample", "beatthis", "key", "spectral", "structure", "loudness", "vocal", "windows"];
-  const nowReading = (x) => x.step === "started" || x.step === "reading";
-  /// The song's name as RunNow.name gives it: the name Desk has, else its file name without the ending.
-  function nowName(x) {
-    if (x.title) return x.title;
-    const last = String(x.rel || "").split("/").pop();
-    const dot = last.lastIndexOf(".");
-    return dot > 0 ? last.slice(0, dot) : last;
-  }
-  const nowStage = (x) => (nowReading(x) ? t("nowOpening") : coded("nowStage", x.step));
-  function nowLine(x, total) {
-    if (nowReading(x)) return x.number != null ? t("nowReadingDisc", { number: x.number, total }) : t("nowReading");
-    return x.number != null ? t("nowStageOf", { number: x.number, total, stage: nowStage(x) }) : t("nowStageAlone", { stage: nowStage(x) });
-  }
-  function nowShare(x) {
-    if (nowReading(x)) return x.read != null ? x.read : 0;
-    const i = NOW_STEPS.indexOf(x.step);
-    return i >= 0 ? (i + 1) / NOW_STEPS.length : 1;
-  }
-  /// The songs being worked on: `working` (an addition to protocol 2), else `now` alone (an engine before it).
-  const working = () => (!run ? [] : run.working && run.working.length ? run.working : run.now ? [run.now] : []);
-  /// The song card, drawn from the last `run.progress` alone: exactly the songs the engine says are being worked on,
-  /// never one that has gone (the engine sends a song's info card before it lets the song go, RunOrder). It keeps its
-  /// place under the bar the whole time songs are read; between songs it says the step with no song in it.
-  function drawNow() {
-    const card = $("now-card"), stage = $("stage");
-    const reading = !!run && run.stage === "reading";
-    card.hidden = !reading; stage.classList.toggle("now-shown", reading);
-    if (!reading) return;
-    const list = working();
-    // One at a time when the engine names the song now (or names only it, an engine before `working`).
-    const one = !list.length || !!run.now || !(run.working && run.working.length);
-    $("now-one").hidden = !one;
-    $("now-several").hidden = one;
-    const bar = $("now-bar");
-    if (one) {
-      const x = list[0];
-      const disc = $("now-disc");
-      disc.classList.toggle("turning", run.musicCD && !!x);
-      disc.toggleAttribute("hidden", !run.musicCD);   // an svg has no .hidden
-      $("now-title").textContent = x ? nowName(x) : "";
-      $("now-artist").textContent = x ? x.artist || "" : "";
-      $("now-line").textContent = x ? nowLine(x, run.total) : t("stageReading");
-      bar.hidden = !x;
-      const pct = x ? Math.round(Math.max(0, Math.min(1, nowShare(x))) * 100) : 0;
-      bar.firstElementChild.style.width = pct + "%";
-      bar.setAttribute("aria-valuenow", String(pct));
-    } else {
-      $("now-several-title").textContent = n("workingOn", list.length);
-      const ul = $("now-list");
-      ul.replaceChildren(...list.map((x) => el("li", null,
-        el("span", { class: "now-name" }, el("b", { text: nowName(x) }), x.artist ? el("span", { class: "mut", text: " " + x.artist }) : null),
-        el("span", { class: "mut now-step", text: nowStage(x) }))));
-    }
-    const ahead = $("now-ahead");
-    ahead.hidden = !run.ahead;
-    ahead.textContent = run.ahead ? t("nowAheadDisc") : "";
-  }
+  // The song card and the rows of the other songs worked on are run.js's (DeskRunScreen.progress).
 
   // ---- drawing
   function show(id) {
