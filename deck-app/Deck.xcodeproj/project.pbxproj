@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		05BCC8C1945690F7C9BD6C72 /* Recognizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = AD0D6A7A5D1690A64DABA356 /* Recognizer.swift */; };
+		097925CECEE4073189E942E9 /* PicksGoldenTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1ABC0FEAF01DCAB732A55312 /* PicksGoldenTests.swift */; };
 		120249A14C64A91581F8E627 /* FirstRun.swift in Sources */ = {isa = PBXBuildFile; fileRef = 91245B27F7670CBE85D4D3C2 /* FirstRun.swift */; };
 		15077272C4ECBD996B12A98E /* DeckieCore in Frameworks */ = {isa = PBXBuildFile; productRef = 12304D4AEAAC6FCC6B163B1D /* DeckieCore */; };
 		1778618559864DFF430F7428 /* Credits.swift in Sources */ = {isa = PBXBuildFile; fileRef = DAE49CB7BC46C4CCB55D4005 /* Credits.swift */; };
@@ -46,6 +47,7 @@
 		001E556F1E189DBC15BA3038 /* SetRecorder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SetRecorder.swift; sourceTree = "<group>"; };
 		0323AAE739FAF03D4A3174D4 /* Model.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Model.swift; sourceTree = "<group>"; };
 		0E018A3260ABD70DED456CA5 /* Mixing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Mixing.swift; sourceTree = "<group>"; };
+		1ABC0FEAF01DCAB732A55312 /* PicksGoldenTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PicksGoldenTests.swift; sourceTree = "<group>"; };
 		21AD0C7E80EC8F7390973AC9 /* OtherViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OtherViews.swift; sourceTree = "<group>"; };
 		4D87774439E98AE4851EF1BC /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		51FCBBBC567C3AF3489222CD /* ListenView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListenView.swift; sourceTree = "<group>"; };
@@ -137,6 +139,7 @@
 			isa = PBXGroup;
 			children = (
 				D92B4774934F007F10600D15 /* BoothTests.swift */,
+				1ABC0FEAF01DCAB732A55312 /* PicksGoldenTests.swift */,
 			);
 			path = DeckTests;
 			sourceTree = "<group>";
@@ -287,6 +290,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				92F4CA64942DF6C57E9879A0 /* BoothTests.swift in Sources */,
+				097925CECEE4073189E942E9 /* PicksGoldenTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

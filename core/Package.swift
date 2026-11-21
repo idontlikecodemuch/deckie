@@ -177,6 +177,10 @@ let package = Package(
         .executableTarget(name: "deckie-sound-trial", dependencies: ["DeckieChroma", "DeckieLookup", "DeckieBuild",
                                                                      "DeckieDecode", "DeckieDesk", "DeckieCrate"]),
         .testTarget(name: "DeckieChromaTests", dependencies: ["DeckieChroma", "DeckieDecode"]),
+        // DeckieBoothTests: Booth's golden records (the switching rule and the picks as the iPad app had them before the
+        // move into the core, Nov 21, 2026) and the shared code's checks against them.
+        .testTarget(name: "DeckieBoothTests", dependencies: ["DeckieCrate", "DeckieCore", "DeckieRecognition"],
+                    exclude: ["Fixtures"]),
     ]
 )
 
