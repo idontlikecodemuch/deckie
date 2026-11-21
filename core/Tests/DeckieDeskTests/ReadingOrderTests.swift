@@ -119,6 +119,29 @@ struct ReadingOrderRunTests {
             for p in calls { screen.take(p) }
             #expect(screen.problems.isEmpty, "\(screen.problems)")
         }
+        // The song card's parts (the owner's note, Nov 20, 2026): each is sent as soon as it is final and never changes,
+        // and the finished song says the same: length, tempo, bars, key, wave and where.
+        for calls in [first.all, second.all] {
+            var seen: [String: RunNow] = [:]
+            for p in calls {
+                for n in p.working {
+                    if let was = seen[n.rel] {
+                        for (a, b) in [(was.seconds, n.seconds), (was.bpm, n.bpm)] where a != nil { #expect(a == b, "\(n.rel) changed a part") }
+                        if was.bars != nil { #expect(was.bars == n.bars) }
+                        if was.key != nil { #expect(was.key == n.key) }
+                        if was.wave != nil { #expect(was.wave == n.wave) }
+                        if was.place != nil { #expect(was.place == n.place && was.folder == n.folder) }
+                    }
+                    seen[n.rel] = n
+                }
+                if let song = p.song, let rel = song.rel, let n = seen[rel], n.hasParts {
+                    #expect(n.seconds == song.seconds && n.bpm == song.bpm && n.bars == song.bars, "\(rel)")
+                    #expect(n.key == song.key && n.wave == song.wave, "\(rel)")
+                    #expect(n.place == song.place && n.folder == song.folder, "\(rel)")
+                }
+            }
+            #expect(seen.values.contains { $0.wave != nil && $0.key != nil && $0.bpm != nil && $0.seconds != nil && $0.bars != nil })
+        }
         // Carry on: the count starts at the songs already read, not at 0.
         let started = try #require(second.all.first { if case .started? = $0.line { return true }; return false })
         if case let .started(_, unchanged, _)? = started.line { #expect(unchanged == part.tracks.count && started.done == unchanged) }
