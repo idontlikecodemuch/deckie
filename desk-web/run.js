@@ -661,7 +661,7 @@
     let sayTimer = 0, lastSaid = "", fresh = [], bags = {}, pendingMoment = null;
     function stepList() {
       const lists = step === "saving" ? ["saying.saving"] : step === "finishing" ? ["saying.finishing"]
-        : info.musicCD ? ["saying.disc", "saying.reading"] : ["saying.reading"];
+        : info.musicCD ? ["saying.disc", "saying.reading"] : ["saying.reading", "saying.folder"];
       return lists.flatMap((p) => env.list(p));
     }
     function fromBag(name, list) {

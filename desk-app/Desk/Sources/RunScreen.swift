@@ -177,7 +177,9 @@ final class RunWatch: ObservableObject {
         switch step {
         case .saving: return DeskWords.list("saying.saving")
         case .finishing: return DeskWords.list("saying.finishing")
-        case .reading: return (musicCD ? DeskWords.list("saying.disc") : []) + DeskWords.list("saying.reading")
+        // A disc's lines, or a folder's: each list only what is true of what is read (saying.reading is true of both).
+        case .reading: return musicCD ? DeskWords.list("saying.disc") + DeskWords.list("saying.reading")
+            : DeskWords.list("saying.reading") + DeskWords.list("saying.folder")
         }
     }
 
