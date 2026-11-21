@@ -22,9 +22,26 @@ final class BoothModel: ObservableObject, @unchecked Sendable {
     @Published var silent = false
     private var booth: DeskBooth?
 
-    func listInputs() {
-        inputs = (try? SoundInputs.list().inputs) ?? []
-        if chosen.isEmpty || !inputs.contains(where: { $0.name == chosen }) { chosen = inputs.first?.name ?? "" }
+    /// Counts each listing asked for and each stop, so a listing that answers after the mode was left starts nothing.
+    private var asked = 0
+
+    /// Lists the inputs off the main thread (the system's sound may take up to `SoundInputs.answerWithin` seconds to
+    /// answer, and the window must not stop meanwhile; the mode says "starting"), then `then` on the main thread, unless
+    /// the mode was left meanwhile. `then` is told whether the chosen input changed (its own change starts listening).
+    func listInputs(then: @escaping @MainActor @Sendable (_ chosenChanged: Bool) -> Void) {
+        asked += 1
+        let ask = asked
+        status = DeskBooth.Status(state: "starting")
+        DispatchQueue.global(qos: .userInitiated).async { [weak self] in
+            let listed = (try? SoundInputs.list().inputs) ?? []
+            DispatchQueue.main.async {
+                guard let self, self.asked == ask else { return }
+                self.inputs = listed
+                let was = self.chosen
+                if self.chosen.isEmpty || !listed.contains(where: { $0.name == self.chosen }) { self.chosen = listed.first?.name ?? "" }
+                then(self.chosen != was)
+            }
+        }
     }
 
     func start(home: DeskHome, crateId: String, crate: Crate) {
@@ -39,6 +56,7 @@ final class BoothModel: ObservableObject, @unchecked Sendable {
     }
 
     func stop() {
+        asked += 1
         let b = booth
         booth = nil
         b?.stop()
@@ -114,7 +132,7 @@ struct BoothView: View {
         .padding(BoothLook.pad)
         .frame(maxWidth: BoothLook.maxWidth)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-        .onAppear { booth.listInputs(); start() }
+        .onAppear { booth.listInputs { changed in if !changed { start() } } }
         .onDisappear { booth.stop() }
         .onChange(of: booth.chosen) { _, _ in start() }
     }

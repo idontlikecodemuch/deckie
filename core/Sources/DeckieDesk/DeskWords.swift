@@ -143,10 +143,9 @@ public enum DeskWords {
         // Under the song card, quietly, only while the next song of a music CD comes off the disc.
         "nowAheadDisc": "Reading the next song from the disc",
         // The song card when a folder's songs are read several at once: this, then a row a song.
-        "workingOn.one": "Working on 1 song",
-        "workingOn.other": "Working on {n} songs",
+        "alsoWorkingOn.one": "Also working on 1 song",
+        "alsoWorkingOn.other": "Also working on {n} songs",
         // On the song card when nothing is being worked on (songs read before, the finishing steps): the last song in.
-        "stageJustIn": "Just in",
         "nowStageOf": "Song {number} of {total}: {stage}",
         "nowStageAlone": "This song: {stage}",
         "nowStage.hash": "reading it through",
@@ -235,7 +234,6 @@ public enum DeskWords {
         // Lists are numbered from 1 (`saying.reading.1`, `.2`, ...): a window takes them all (`DeskWords.list`), so the
         // copy audit adds, removes or rewrites lines here and nowhere else.
         "leaveRunning": "You can leave this running. If Desk is closed, you can carry on from here next time.",
-        "stageFirstSoon": "The first songs are being read.",
         "stageTempo": "Tempo",
         "stageKey": "Key",
         "stageBars": "Bars",
@@ -247,10 +245,7 @@ public enum DeskWords {
         "mode.minor": "minor",
         "homeNoteValue": "Home note {note}",
         "keyNotSureValue": "Not sure",
-        "stageBefore": "Read before",
         "stageNoWave": "No beat grid, so no bars to draw",
-        "stageMore.one": "1 more song joined the crate",
-        "stageMore.other": "{n} more songs joined the crate",
         "stageWaveLabel": "The loudness of {title}, bar by bar",
         "figMusic": "Music read",
         "figHoursMinutes": "{h} h {m} min",
@@ -317,7 +312,6 @@ public enum DeskWords {
         "fact.twoPlaces": "{title} is in two places. It's one song in the crate file, with both places kept.",
         "fact.needName": "{title} came in without a full name. You can name it when this is done.",
         "fact.copies.other": "{n} songs turned out to be copies of one recording. Each keeps its own place.",
-        "moment.first": "First one in: {title}.",
         "moment.songs.other": "{n} songs in.",
         "moment.hour.one": "An hour of music read.",
         "moment.hour.other": "{n} hours of music read.",

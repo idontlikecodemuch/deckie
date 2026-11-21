@@ -2,8 +2,10 @@ import Foundation
 import Testing
 import DeckieAudio
 import DeckieBuild
+import DeckieCore
 import DeckieCovers
 import DeckieCrate
+import DeckieEngine
 import DeckiePC
 import DeckieTestSupport
 
@@ -121,6 +123,25 @@ struct PCBuildTests {
         return folder
     }
 
+    /// The zip's layout: the key reader's file in models/ beside the program is found there; a file that is not the
+    /// pinned one is not used, and the analyser reads keys with the untrained reader.
+    @Test func theKeyReadersFileIsFoundBesideTheProgramAndAWrongOneIsNotUsed() throws {
+        guard ProcessInfo.processInfo.environment[KeyModel.environmentVariable] == nil else { return }
+        let root = try scratch("key-beside")
+        defer { try? FileManager.default.removeItem(at: root.deletingLastPathComponent()) }
+        let standIn = root.appendingPathComponent("models").appendingPathComponent(LearnedKey.Model.fileName)
+        try FileManager.default.createDirectory(at: standIn.deletingLastPathComponent(), withIntermediateDirectories: true)
+        try Data("not the key model".utf8).write(to: standIn)
+        let files = try PCBuild.EngineFiles.locate(beside: root)
+        #expect(files.keyModel == standIn.path)
+        #expect(KeyModel.usable(files.keyModel) == nil)
+        #expect(try files.analyser(jobs: 1).keyModel == nil)
+        // With nothing beside the program, the search goes on to the checkout's core/.models, as before.
+        let empty = try scratch("key-none")
+        defer { try? FileManager.default.removeItem(at: empty.deletingLastPathComponent()) }
+        #expect(try PCBuild.EngineFiles.locate(beside: empty).keyModel == KeyModel.locate())
+    }
+
     @Test func aFolderBecomesOneCrateFileWithALogAndASecondRunReadsNothing() throws {
         let root = try scratch("run")
         defer { try? FileManager.default.removeItem(at: root.deletingLastPathComponent()) }
@@ -167,6 +188,10 @@ struct PCBuildTests {
         #expect(!log.contains("One.wav") && !log.contains("Zw\u{f6}lf"))
         #expect(!log.contains(root.path))
         #expect(log.contains("\r\n"))
+        // Which key reader ran: the learned one's name when its pinned file was found, else missing.
+        let keyLine = engineFiles!.keyModel == nil ? "key model: missing (keys are read by the untrained reader)"
+            : KeyModel.usable(engineFiles!.keyModel).map { "key model: present (\($0.name))" } ?? "key model: not the pinned file"
+        #expect(log.contains(keyLine))
 
         // A second run reads nothing again and writes the same crate file (same id, same songs).
         let again = Lines()
