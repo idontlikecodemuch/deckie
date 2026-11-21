@@ -9,6 +9,9 @@
 #   3. No email address except the publisher's public contact, the commit co-author line, and those inside
 #      third-party licence texts and vendored sources.
 #   4. No Apple device identifier (a UDID: eight hex digits starting 0000, a dash, sixteen hex digits).
+#   5. No assistant session link or id, and no scratch path that embeds a home folder.
+#   6. No Apple developer team id outside the build files that need it.
+#   7. No path shaped like a personal music folder (a drive's project folder, a personal playlist folder).
 set -u
 cd "$(dirname "$0")/.."
 fail=0
@@ -47,8 +50,29 @@ if hits=$(git grep -nIE '\b0000[0-9A-Fa-f]{4}-[0-9A-Fa-f]{16}\b' -- "${skip[@]}"
     say "device identifiers:"; say "$hits"
 fi
 
+# 5. assistant session links and ids, and scratch paths that carry a home folder
+if hits=$(git grep -nIE 'Claude-Session:|claude\.ai/code/session_|session_[0-9A-Za-z]{20,}|-Users-[A-Za-z0-9]+-' -- "${skip[@]}"); then
+    say "assistant session ids or scratch paths:"; say "$hits"
+fi
+
+# 6. an Apple developer team id outside the build files that need it (prose, scripts)
+if hits=$(git grep -nIiE '(team( id)?|DEVELOPMENT_TEAM|DevelopmentTeam)[^A-Z0-9\n]{0,6}[A-Z0-9]{10}\b' -- "${skip[@]}" \
+          ':(exclude)*.pbxproj' ':(exclude)*/project.yml' ':(exclude)*.xcconfig' | grep -E '[A-Z0-9]{10}\b' \
+          | grep -E '[0-9][A-Z]|[A-Z][0-9]'); then
+    say "an Apple team id outside the build files:"; say "$hits"
+fi
+
+# 7. a music-library folder shape: a mounted drive's project folder, or a personal music folder, in a path
+if hits=$(git grep -nIiE '/Volumes/[A-Za-z0-9 _-]+/Projects/|/personal/[^ "]*(playlist|music)' -- "${skip[@]}"); then
+    say "a personal music-folder path (use /path/to/music):"; say "$hits"
+fi
+
+# What this check cannot catch: it knows no private value, so it cannot see a song title or artist of a personal
+# library, a person's name (in prose, in an identifier or in a file name), a private folder name, a date that only
+# matters privately, or a personal remark. Those need a reviewer or a scan with the private term list (D45).
+
 if [ "$fail" -ne 0 ]; then
     echo "check-private: FAILED (see docs/product/00-decisions.md, D45)"
     exit 1
 fi
-echo "check-private: no private places, home paths, addresses or device ids in the tracked files"
+echo "check-private: no private places, home or music paths, addresses, device ids, session ids or team ids in prose"
