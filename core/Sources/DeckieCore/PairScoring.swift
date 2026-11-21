@@ -228,7 +228,7 @@ public enum PairScoring {
         let (_, k, lab, r) = best!
         let s = abs(r - 1) * 100
         if s > 18 { return (0.0, k, lab, s, true) }
-        // The first party's DJ's club deck pitch range goes to +/-16 percent: free to 3, gentle to 10, usable to 16.
+        // The first party's DJ's club decks' pitch range goes to +/-16 percent: free to 3, gentle to 10, usable to 16.
         var t = s <= 3 ? 1.0 : (s <= 10 ? 1 - (s - 3) / 7 * 0.6 : 0.4 - (s - 10) / 6 * 0.3)
         t = max(t, 0.05)
         if k == 0.5 || k == 2.0 {

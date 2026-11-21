@@ -60,7 +60,7 @@ public enum SourceReading {
 
     /// The order a player shows the names of one folder in: true when `a` comes before `b`.
     ///
-    /// The rule is the disc's own. Letter K (section 1) records that the club deck plays a data CD's files "in the
+    /// The rule is the disc's own. Letter K (section 1) records that an older club deck plays a data CD's files "in the
     /// order in which they were recorded", and a data CD is ISO 9660 (with Joliet names); ISO 9660 (ECMA-119, section
     /// 9.3) records a folder's entries sorted by name, the name part compared first with the shorter padded by
     /// spaces, then the extension the same way, character by character on the character codes (Joliet's are UCS-2,
