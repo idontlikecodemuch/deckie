@@ -127,10 +127,14 @@ jobs:
         run: swift run deckie-build "${{ runner.temp }}\e2e\Music" --out "${{ runner.temp }}\e2e\E2E.deckie" --jobs 2
       - name: "End to end: validate it, as a folder and as one file"
         working-directory: core
+        # PowerShell counts only the last command's exit code, so each one is checked (as pc-package.yml does).
         run: |
           swift run deckie-e2e check "${{ runner.temp }}\e2e\E2E.deckie"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           swift run deckie-e2e pack "${{ runner.temp }}\e2e\E2E.deckie" "${{ runner.temp }}\e2e\e2e-windows.deckie"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           swift run deckie-e2e check "${{ runner.temp }}\e2e\e2e-windows.deckie"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - name: "End to end: a second run reads nothing again"
         working-directory: core
         shell: bash
@@ -146,8 +150,11 @@ jobs:
         working-directory: core
         run: |
           swift run deckie-e2e m4a-folder "${{ runner.temp }}\m4a\Music" --from "${{ runner.temp }}\e2e-mp3"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           swift run deckie-build "${{ runner.temp }}\m4a\Music" --out "${{ runner.temp }}\m4a\M4A.deckie" --jobs 2
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           swift run deckie-e2e check-m4a "${{ runner.temp }}\m4a\M4A.deckie"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - name: Keep the crate file for the comparison
         uses: actions/upload-artifact@v4
         with:
