@@ -534,6 +534,10 @@ public enum DeskWords {
         "couldntRename": "Couldn't rename the crate. {detail}",
         "couldntDelete": "Couldn't delete the crate. {detail}",
         "nothingToSendYet": "This crate has no songs yet, so there is no crate file to send. Add music first.",
+        // new (Nov 21, 2026): Export ended with no file for a reason that is not the DJ's cancel. The chooser gave
+        // no folder back; Desk was still busy reading or looking up.
+        "exportNoFolder": "Couldn't save the crate file: the folder chooser didn't give Desk a folder. Try again, and choose a folder on this computer, such as Documents.",
+        "exportBusy": "Couldn't save the crate file yet: Desk is still busy with the songs. Wait until it has finished, then export again.",
         "exportMessage": "Where the crate file goes. Desk keeps its own; this is a copy.",
         "importMessage": "Choose a crate file (a .deckie file; one made earlier may end in .deckiecrate). Desk keeps a copy; the file you choose is not changed.",
         // new (D32): the engine program could not be started or stopped answering.
@@ -957,6 +961,10 @@ public enum DeskWords {
         "error.listDoesNotMatch": "the list does not match the songs yet",
         "error.noLookupToUse": "there is no lookup to use",
         "error.noSongsNoCrateFile": "the crate has no songs yet, so there is no crate file to write",
+        // new (Nov 21, 2026): an export told no folder, or one that is not there; whole sentences, as they sit
+        // inside couldntExport.
+        "error.exportNoFolder": "No folder was chosen.",
+        "error.exportFolderNotThere": "The folder {folder} isn't there.",
         "error.notAMusicCD": "{source} is not a music CD Desk has read",
         "error.thatSource": "that source",
         "error.notALibrary": "{file} is not a DJ library Desk reads (a rekordbox XML export, Traktor's collection.nml, Engine DJ's m.db, Serato's database V2 or VirtualDJ's database.xml)",

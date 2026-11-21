@@ -232,6 +232,19 @@ public final class DeskProtocol: @unchecked Sendable {
 
     struct RequestError: Error { let code: String; let detail: String? }
 
+    /// The folder `crate.export` writes into, checked first so an export never ends somewhere no one chose: an empty
+    /// path would be the engine's own working folder, and a folder that is not there would be made anew. Each is said
+    /// in plain words, which the page puts in its "Couldn't save the crate file" line.
+    static func exportFolder(_ given: String) throws -> URL {
+        let path = given.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !path.isEmpty else { throw DeskError(DeskWords.text("error.exportNoFolder")) }
+        var isFolder: ObjCBool = false
+        guard FileManager.default.fileExists(atPath: path, isDirectory: &isFolder), isFolder.boolValue else {
+            throw DeskError(DeskWords.text("error.exportFolderNotThere", ["folder": path]))
+        }
+        return URL(fileURLWithPath: path, isDirectory: true)
+    }
+
     static func string(_ obj: [String: Any], _ key: String) throws -> String {
         guard let s = obj[key] as? String else { throw RequestError(code: "bad_request", detail: "\(key) missing") }
         return s
@@ -295,8 +308,9 @@ public final class DeskProtocol: @unchecked Sendable {
             reply(id); sendSongs()
         case "crate.export":
             try needCrate()
-            let path = try s.export(into: URL(fileURLWithPath: try Self.string(obj, "folder"), isDirectory: true))
-            reply(id, ["path": path.path])
+            let path = try s.export(into: try Self.exportFolder(try Self.string(obj, "folder")))
+            // As the system writes paths (backslashes on Windows), so the page's folder and Open folder find it.
+            reply(id, ["path": path.withUnsafeFileSystemRepresentation { $0.map { String(cString: $0) } } ?? path.path])
         case "drives.list":
             reply(id, ["drives": Self.plain(DeskDrives.list()), "musicCDs": Self.plain(MusicCDs.list(environment: environment))])
         case "run.addMusicCD":

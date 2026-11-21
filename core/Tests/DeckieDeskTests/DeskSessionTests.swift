@@ -183,6 +183,59 @@ import DeckieCrate
         #expect(s.current == nil && s.crates.isEmpty)
     }
 
+    /// Export through the engine's messages (the Windows pass, Nov 21, 2026: an export ended with no file and no
+    /// line): every export that writes nothing is a plain refusal the page shows, never a silent success or a file
+    /// written somewhere no one chose.
+    @Test func anExportThatCannotBeWrittenIsAPlainRefusal() throws {
+        let (s, _) = try make("protocol-export")
+        let out = Lines()
+        let p = DeskProtocol(home: s.home, output: out.add, makeRun: AddMusicTests.noRun, analysisCheck: {})
+        p.start()
+        #expect(out.wait { ($0["event"] as? String) == "state" } != nil)
+        func export(_ id: Int, _ folder: String) throws -> [String: Any] {
+            let line = String(decoding: try JSONSerialization.data(withJSONObject: ["id": id, "type": "crate.export", "folder": folder]), as: UTF8.self)
+            p.handle(line: line)
+            return try #require(out.wait { ($0["re"] as? Int) == id })
+        }
+        func refusal(_ r: [String: Any]) -> (code: String?, detail: String?) {
+            let e = r["error"] as? [String: Any]
+            return (e?["code"] as? String, e?["detail"] as? String)
+        }
+        let root = try scratch("protocol-export-out")
+
+        // An empty path (it would be the engine's own working folder) and one of spaces.
+        for (i, empty) in ["", "   "].enumerated() {
+            let r = try export(10 + i, empty)
+            #expect(r["ok"] as? Bool == false && refusal(r).code == "failed" && refusal(r).detail == "No folder was chosen.", "\(r)")
+        }
+        // A folder that is not there is not made anew; a file is not a folder.
+        let gone = root.appendingPathComponent("Gone")
+        let r1 = try export(20, gone.path)
+        #expect(r1["ok"] as? Bool == false && refusal(r1).detail == "The folder \(gone.path) isn't there.", "\(r1)")
+        #expect(!FileManager.default.fileExists(atPath: gone.path))
+        let file = root.appendingPathComponent("a file.txt")
+        try Data("x".utf8).write(to: file)
+        #expect(try export(21, file.path)["ok"] as? Bool == false)
+
+        #if !os(Windows)
+        // A folder Desk may not write in (Windows keeps no such bits; its own refusals come from the system).
+        let locked = root.appendingPathComponent("Locked")
+        try FileManager.default.createDirectory(at: locked, withIntermediateDirectories: true)
+        try FileManager.default.setAttributes([.posixPermissions: 0o555], ofItemAtPath: locked.path)
+        defer { try? FileManager.default.setAttributes([.posixPermissions: 0o755], ofItemAtPath: locked.path) }
+        let r2 = try export(30, locked.path)
+        #expect(r2["ok"] as? Bool == false && refusal(r2).code == "failed" && !(refusal(r2).detail ?? "").isEmpty, "\(r2)")
+        #expect(((try? FileManager.default.contentsOfDirectory(atPath: locked.path)) ?? ["?"]).isEmpty)
+        #endif
+
+        // And a folder that is there: the crate file, at the path the reply names.
+        let good = root.appendingPathComponent("Exports ö")
+        try FileManager.default.createDirectory(at: good, withIntermediateDirectories: true)
+        let r3 = try export(40, good.path)
+        let written = try #require(r3["path"] as? String)
+        #expect(r3["ok"] as? Bool == true && FileManager.default.fileExists(atPath: written) && written.hasSuffix(".deckie"), "\(r3)")
+    }
+
     /// The single-file form on export (the switch DeskSession.export makes on Windows and Linux), tried on every
     /// system: one file that holds exactly the package's files with the same bytes, replaces what an earlier export
     /// left under the name in either form, and leaves nothing behind in Desk's storage.
