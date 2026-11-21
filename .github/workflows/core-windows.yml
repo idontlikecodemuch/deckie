@@ -199,7 +199,7 @@ jobs:
           apt-get install -y --no-install-recommends ca-certificates curl
       - name: Fetch ONNX Runtime (checked by hash)
         if: steps.onnxruntime.outputs.cache-hit != 'true'
-        run: bash core/Tools/fetch-onnxruntime.sh
+        run: bash core/Tools/fetch-onnxruntime.sh --deckie
       - name: Fetch the models from the release models-1 (checked by hash)
         run: bash core/Tools/fetch-models.sh --no-export
       - name: Fetch the learned key reader's file (checked by hash; required, as above)
