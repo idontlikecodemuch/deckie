@@ -498,6 +498,10 @@ public final class DeskProtocol: @unchecked Sendable {
                 let (saved, report) = try run.run { p in
                     // The run screen's songs, notes and totals (D37), in batches at most four times a second.
                     screen.offer(p)
+                    // A song that joined, or a line about a song read: the songs waiting go out first, so the window
+                    // never names a song (the run's list, the song card letting it go) before its song info card.
+                    if p.song != nil || p.landed != nil { screen.sendSongs() }
+                    if case .file? = p.line { screen.sendSongs() }
                     // Every line goes out, and every change of the songs worked on, their steps and names, and of the
                     // song read ahead starting or ending; bare progress (a read's share) at most ten times a second.
                     let stepChanged = last.changed(Self.workingKey(p))

@@ -212,7 +212,7 @@ struct RunView: View {
         VStack(alignment: .leading, spacing: RunLook.gap) {
             // The crate's name, to rename while it is read, and Stop (research AE).
             RunHeader()
-            Text(Words.runTitle).font(Look.Fonts.screenTitle)
+            Text(Words.runTitle(model.runRead)).font(Look.Fonts.screenTitle)
             Text(Words.runReading(model.runRead, into: model.shownName)).foregroundStyle(.secondary)
             if model.discAsk != nil {
                 // A music CD with no name of its own: asked once, in passing; the run never waits (letter AA, 2.5).
@@ -269,7 +269,9 @@ struct RunProgressLine: View {
                 .animation(.easeOut(duration: RunLook.momentFlash), value: watch.moment)
             HStack {
                 Text(Words.doneOf(model.runDone, model.runTotal))
-                Text(stage).foregroundStyle(.secondary)
+                // The step beside the bar only when there is no song card (finishing, saving): while songs are read,
+                // the song card under the bar says what is being done.
+                if model.runStage != .reading { Text(stage).foregroundStyle(.secondary) }
                 if watch.figures.notIn > 0 { Text(Words.filesDidntGoIn(watch.figures.notIn)).foregroundStyle(Look.Colour.warning) }
                 Spacer()
                 if let r = model.runRemaining { Text(Words.timeLeft(r)).foregroundStyle(.secondary) }

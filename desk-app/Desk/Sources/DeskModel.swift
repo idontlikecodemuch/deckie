@@ -215,14 +215,22 @@ final class DeskModel: ObservableObject {
         catch { errorText = Words.couldntExport(error.localizedDescription) }
     }
 
+    /// The folder a crate file was last exported to (the app's own defaults).
+    static let lastExportKey = "lastExportFolder"
+
     func askExport() {
         guard let info = current, crate != nil else { errorText = Words.nothingToSendYet; return }
         saveNow()
         let s = NSSavePanel()
         s.nameFieldStringValue = info.name + "." + CrateFormat.packageExtension
         s.message = Words.exportMessage
+        // In the folder last exported to, else Documents: never where the last chooser was (the music just read).
+        let last = UserDefaults.standard.string(forKey: Self.lastExportKey).map { URL(fileURLWithPath: $0, isDirectory: true) }
+        s.directoryURL = last.flatMap { FileManager.default.fileExists(atPath: $0.path) ? $0 : nil }
+            ?? FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first
         s.begin { [weak self] r in
             guard r == .OK, let url = s.url, let self else { return }
+            UserDefaults.standard.set(url.deletingLastPathComponent().path, forKey: Self.lastExportKey)
             do { try self.shelf.exportCopy(info.id, to: url) }
             catch { self.errorText = Words.couldntExport(error.localizedDescription) }
         }
