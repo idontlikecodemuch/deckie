@@ -164,8 +164,9 @@ jobs:
           compression-level: 0
           if-no-files-found: error
 
-  # The same folder built on Linux, in the same run, to compare with: the official Swift image and the caches
-  # core-linux.yml fills (the same keys, so normally nothing is fetched here).
+  # The same folder built on Linux, in the same run, to compare with: the official Swift image. ONNX Runtime's cache
+  # has core-linux.yml's key, so it is normally there already; the models' cache is this job's own (core-linux.yml
+  # caches each model under a key of its own), so the models are fetched from the release when it misses.
   linux-crate:
     needs: test-mp3
     runs-on: ubuntu-latest
