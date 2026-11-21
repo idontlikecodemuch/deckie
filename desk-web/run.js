@@ -52,6 +52,8 @@
     if (canvas.width !== w || canvas.height !== h) { canvas.width = w; canvas.height = h; }
     return { ctx: canvas.getContext("2d"), w, h, dpr };
   }
+  /// The song's wave for Booth's screen (booth.js), drawn the same way as here.
+  window.DeskWave = { barHeights, fit, isQuiet };
   /// Adds a class for one moment's motion, then takes it away. Nothing under reduced motion (the CSS has none).
   function pulse(node, cls) {
     if (!node || reduced()) return;

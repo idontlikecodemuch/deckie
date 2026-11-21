@@ -57,8 +57,7 @@ extension DeskWords {
         "booth.notHeard": "Not heard just now",
         "booth.paused": "Paused",
         "booth.alsoHearing": "Also hearing: {song}",
-        // new (Nov 21, 2026, step 2): the picks for the song on screen, a plain first look until the Booth screen is
-        // designed (step 3).
+        // new (Nov 21, 2026, step 2): the picks for the song on screen.
         // The picks' group, as the iPad names it (step 3, Nov 21, 2026; was "Picks for this song (a first look)").
         "booth.picksTitle": "Picks",
         "booth.picksNone": "No picks for this song in this crate yet.",
@@ -67,6 +66,8 @@ extension DeskWords {
         // The screen's heading is the mode's name, with the crate under it ("Listening with {crate}", above).
         "booth.heading": "Booth",
         "booth.nowPlaying": "Now playing",
+        // Said to a screen reader when a new song comes up (once, not each second).
+        "booth.announce": "Now playing: {song}",
         // The song card before a song is named (the iPad's "Listening…" and its help line).
         "booth.waitingTitle": "Listening…",
         "booth.waitingHelp": "A song shows up after a few seconds of music.",

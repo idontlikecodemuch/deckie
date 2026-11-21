@@ -1,11 +1,99 @@
-/* The listening mode (booth.js; research booth-in-desk, step 1). Rules only: every value is a --booth-* variable in
-   desk.css's :root, or one of its others. While the mode shows, Desk's own screens step aside. */
+/* Booth, the listening mode (booth.js; the designed screen, step 3, D44). Rules only: every value is a --booth-*
+   variable in desk.css's :root, or one of its others. While the mode shows, Desk's own screens step aside, the crate's
+   editing buttons leave the bar, and the whole window, page and bar, takes Booth's ground. The narrow window's rules
+   are in desk.css's @media block (a width cannot be a variable). */
+
+/* ---- the ground: the whole window while Booth shows */
 body.booth-on > main, body.booth-on > #crate-add, body.booth-on > #status { display: none; }
-.booth { padding: var(--booth-pad); display: flex; flex-direction: column; gap: var(--booth-gap); }
-.booth > * { width: 100%; max-width: var(--booth-max-w); margin-left: auto; margin-right: auto; box-sizing: border-box; }
-.booth-top { display: flex; align-items: center; justify-content: space-between; gap: var(--booth-gap); flex-wrap: wrap; }
-.booth-input { display: flex; align-items: center; justify-content: space-between; gap: var(--booth-gap); flex-wrap: wrap; }
-.booth-input-row { display: flex; align-items: center; gap: var(--booth-input-gap); }
+html.booth-on { background: var(--booth-ground); }
+html.booth-on .bar { background: var(--booth-bar); border-bottom-color: var(--booth-bar-line); }
+body.booth-on #sources-button, body.booth-on #log-button, body.booth-on #undo, body.booth-on #redo,
+body.booth-on [id="add-button"], body.booth-on #export-button { display: none; }   /* by attribute: "#add" reads as a colour to the check */
+
+/* the switch in the bar: a dot, then the mode's name; lit while Booth shows */
+#booth-button { display: inline-flex; align-items: center; gap: var(--booth-button-dot-gap); }
+.booth-button-dot { width: var(--booth-button-dot); height: var(--booth-button-dot); border-radius: var(--r-dot);
+  background: var(--booth-button-dot-off); flex: none; }
+#booth-button[aria-pressed="true"] { background: var(--booth-on); color: var(--booth-on-ink); font-weight: var(--fw-button-main); }
+#booth-button[aria-pressed="true"] .booth-button-dot { background: var(--booth-on-ink); }
+
+/* ---- the screen: the head, the song and its picks, the foot */
+.booth { --mut: var(--booth-mut); --dim: var(--booth-dim); padding: var(--booth-pad); display: flex; flex-direction: column;
+  gap: var(--booth-gap); overflow: hidden; }
+.booth > * { width: 100%; max-width: var(--booth-max-w); margin-left: auto; margin-right: auto; }
+.booth-top { flex: none; display: flex; align-items: center; justify-content: space-between; gap: var(--booth-head-gap); flex-wrap: wrap; }
+.booth-heading-row { display: flex; align-items: center; gap: var(--booth-heading-gap); flex-wrap: wrap; }
+.booth-top h1 { font-size: var(--fs-booth-heading); }
+.booth-sub { color: var(--mut); font-size: var(--fs-booth-sub); margin-top: var(--booth-sub-above); }
+.booth-live { display: inline-flex; align-items: center; gap: var(--booth-live-gap); padding: var(--booth-live-pad);
+  border-radius: var(--r-pill); background: var(--booth-live-bg); font-size: var(--fs-booth-live); font-weight: var(--fw-booth-live);
+  color: var(--mut); }
+.booth-live-dot { width: var(--booth-live-dot); height: var(--booth-live-dot); border-radius: var(--r-dot); background: var(--dim); }
+.booth-live.on { color: var(--tx); }
+.booth-live.on .booth-live-dot { background: var(--booth-live); }
+.booth-leave { font-size: var(--fs-booth-leave); padding: var(--booth-leave-pad); }
+
+.booth-body { flex: 1; min-height: 0; display: grid; grid-template-columns: var(--booth-cols); gap: var(--booth-col-gap); }
+.booth-now { position: relative; min-width: 0; }
+.booth-picks { min-width: 0; min-height: 0; overflow: auto; display: flex; flex-direction: column; gap: var(--booth-list-gap); }
+
+/* ---- now playing */
+.booth-glow { position: absolute; inset: calc(var(--booth-glow-spread) * -1); pointer-events: none; opacity: 0;
+  background: radial-gradient(closest-side, var(--booth-glow), transparent); filter: blur(var(--booth-glow-blur)); }
+.booth.hearing .booth-glow { opacity: calc(var(--booth-glow-floor) + var(--booth-level) * var(--booth-glow-range)); }
+.booth-card { position: relative; background: var(--booth-card); border: var(--booth-card-line) solid var(--booth-card-edge);
+  border-radius: var(--booth-card-r); padding: var(--booth-card-pad); min-height: var(--booth-card-min-h);
+  display: flex; flex-direction: column; gap: var(--booth-card-gap); }
+.booth-group { font-size: var(--fs-booth-group); font-weight: var(--fw-booth-group); letter-spacing: var(--ls-booth-group);
+  text-transform: uppercase; color: var(--dim); }
+.booth-song-part, .booth-wait-part { display: flex; flex-direction: column; gap: var(--booth-card-gap); }
+.booth-song { font-size: var(--fs-booth-song); line-height: var(--lh-booth-song); overflow-wrap: anywhere;
+  display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: var(--booth-song-lines); overflow: hidden; }
+.booth-artist { font-size: var(--fs-booth-artist); color: var(--mut); }
+.booth-facts { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--booth-facts-gap); margin-top: var(--booth-facts-above);
+  font-variant-numeric: tabular-nums; }
+.booth-tempo { font-size: var(--fs-booth-tempo); font-weight: var(--fw-booth-tempo); color: var(--booth-tempo); }
+.booth-key { font-size: var(--fs-booth-key); font-weight: var(--fw-booth-key); }
+.booth-pitch { font-size: var(--fs-booth-pitch); font-weight: var(--fw-booth-pitch); color: var(--mut); }
+.booth-note { font-size: var(--fs-booth-note); color: var(--mut); }
+.booth-card.quiet .booth-song, .booth-card.quiet .booth-artist, .booth-card.quiet .booth-facts, .booth-card.quiet .booth-wave {
+  opacity: var(--booth-quiet-opacity); }
+.booth-wave { display: block; width: 100%; height: var(--booth-wave-h); margin-top: var(--booth-wave-above); }
+.booth-times { display: flex; justify-content: space-between; font-size: var(--fs-booth-times); color: var(--mut); font-variant-numeric: tabular-nums; }
+.booth-wait-part { flex: 1; justify-content: center; max-width: var(--booth-wait-w); gap: var(--booth-wait-gap); }
+.booth-wait-title { font-size: var(--fs-booth-wait); }
+.booth-state { font-size: var(--fs-booth-state); color: var(--mut); }
+.booth-state.warn { color: var(--booth-note-warn); }
+.booth-card button { align-self: flex-start; }
+.booth-card .progress { width: 100%; }
+
+/* ---- the picks */
+.booth-picks-head { display: flex; align-items: center; justify-content: space-between; gap: var(--booth-picks-head-gap); flex-wrap: wrap; }
+.booth-dial { display: flex; align-items: center; gap: var(--booth-dial-gap); font-size: var(--fs-booth-dial); color: var(--dim); }
+.booth-dial-value { color: var(--tx); min-width: var(--booth-dial-value-w); font-variant-numeric: tabular-nums; }
+.booth-dial input { width: var(--booth-dial-w); accent-color: var(--booth-on); }
+.booth-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--booth-list-gap); }
+.booth-pick { display: flex; justify-content: space-between; align-items: flex-start; gap: var(--booth-pick-gap);
+  padding: var(--booth-pick-pad); border-radius: var(--booth-pick-r); background: var(--booth-surface); }
+.booth-pick-main { min-width: 0; display: flex; flex-direction: column; gap: var(--booth-pick-lines); }
+.booth-pick-title { font-size: var(--fs-booth-pick); font-weight: var(--fw-booth-pick); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.booth-pick-artist { color: var(--mut); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.booth-pick-line { display: flex; flex-wrap: wrap; column-gap: var(--booth-line-gap); font-size: var(--fs-booth-pick-line); }
+.booth-pick-bpm { color: var(--booth-tempo); font-variant-numeric: tabular-nums; }
+.booth-pick-move { color: var(--mut); }
+.booth-pick.clash .booth-pick-move { color: var(--booth-clash); }
+.booth-pick-side { flex: none; display: flex; flex-direction: column; align-items: flex-end; gap: var(--booth-tags-gap); }
+.booth-pick-keys { font-size: var(--fs-booth-pick-keys); font-weight: var(--fw-booth-pick-keys); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.booth-tags { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: var(--booth-tags-gap); }
+.booth-list.more .booth-pick-title { font-size: var(--fs-booth-pick-small); }
+#booth-more-title { margin-top: var(--booth-more-above); }
+.booth-quiet { font-size: var(--fs-booth-quiet); color: var(--mut); }
+
+/* ---- the foot: calm and out of the way */
+.booth-foot { flex: none; display: flex; flex-wrap: wrap; align-items: center; gap: var(--booth-foot-gap); padding: var(--booth-foot-pad);
+  border-top: var(--hair-line) solid var(--booth-bar-line); }
+.booth-controls { display: flex; align-items: center; gap: var(--booth-input-gap); flex-wrap: wrap; }
+.booth-input-row { display: flex; align-items: center; gap: var(--booth-input-gap); color: var(--mut); }
 .booth select { font: inherit; color: var(--tx); background: var(--field); border: 0; border-radius: var(--booth-select-r);
   padding: var(--booth-select-pad); }
 .booth-meter { width: var(--booth-meter-w); height: var(--booth-meter-h); border-radius: var(--booth-meter-r);
@@ -13,23 +101,16 @@ body.booth-on > main, body.booth-on > #crate-add, body.booth-on > #status { disp
 .booth-meter-fill { display: block; height: 100%; width: 0; background: var(--booth-meter-fill);
   transition: width var(--booth-meter-time) linear; }
 .booth-meter.clipping .booth-meter-fill { background: var(--booth-meter-clip); }
-.booth-state { margin-top: 0; margin-bottom: 0; color: var(--mut); }
-.booth-state.error { color: var(--booth-error); }
-.booth-silent { margin-top: 0; margin-bottom: 0; color: var(--warn); }
-#booth-again { width: auto; max-width: none; align-self: center; }
-.booth-card { padding: var(--booth-card-pad); min-height: var(--booth-card-min-h); display: flex; flex-direction: column;
-  justify-content: center; }
-.booth-card.empty { opacity: var(--booth-empty-opacity); }
-.booth-song { font-size: var(--booth-song-size); line-height: var(--booth-song-lh); }
-.booth-artist { font-size: var(--booth-artist-size); margin-top: 0; margin-bottom: 0; }
-.booth-facts { font-size: var(--booth-facts-size); margin-top: 0; margin-bottom: 0; display: flex; flex-wrap: wrap; column-gap: var(--booth-fact-gap); }
+.booth-input-note { flex-basis: 100%; order: -1; color: var(--booth-note-warn); }
+.booth-privacy { flex: 1; min-width: 0; font-size: var(--fs-booth-privacy); color: var(--dim); }
+
+/* ---- motion: small, and none under reduced motion */
+@media (prefers-reduced-motion: no-preference) {
+  .booth-glow { transition: opacity var(--t-booth-level) linear; }
+  .booth-live.on .booth-live-dot { animation: booth-beat var(--t-booth-live) ease-in-out infinite; }
+  .booth-song-part.arrive { animation: booth-arrive var(--t-booth-arrive) var(--ease-booth) 1; }
+  .booth-pick.enter { animation: booth-arrive var(--t-booth-pick) var(--ease-booth) 1 both; }
+}
 @media (prefers-reduced-motion: reduce) { .booth-meter-fill { transition: none; } }
-#booth-button[aria-pressed="true"] { background: var(--acc); color: var(--ink); }
-body.booth-on #sources-button, body.booth-on #log-button { display: none; }
-/* Step 2: the song's own lines (not heard just now, paused, also hearing) and the picks as a plain first look. */
-.booth-note { margin-top: 0; margin-bottom: 0; color: var(--mut); }
-.booth-picks { display: flex; flex-direction: column; gap: var(--booth-pick-gap); }
-.booth-picks h3 { margin: 0; }
-.booth-picks ol { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: var(--booth-pick-gap); }
-.booth-pick { padding: var(--booth-pick-pad); font-size: var(--booth-pick-size); }
-.booth-pick .mut { display: block; }
+@keyframes booth-arrive { from { opacity: 0; transform: translateY(var(--booth-rise)); } to { opacity: 1; transform: none; } }
+@keyframes booth-beat { 0%, 100% { opacity: 1; } 50% { opacity: var(--booth-live-dim); } }
