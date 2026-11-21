@@ -137,9 +137,10 @@ public final class Analyser: Sendable {
     /// it, so a caller can make what it needs from the same samples (the print that finds copies) without decoding
     /// the file again. Both are called on the analysing thread.
     ///
-    /// `onPart` is told each part of the record as soon as it is final (it never changes after): the length when the
-    /// song is decoded, the tempo when the beat is found, the bars when the bar grid is laid, the key when it is read,
-    /// the per-bar loudness when it is measured (`AnalysisPart`). Also on the analysing thread.
+    /// `onPart` is told each part of the record as soon as it is final (it never changes after), in this order: the
+    /// length when the song is decoded, the key when it is read (before the beat), the tempo when the beat is found,
+    /// the bars when the bar grid is laid, the per-bar loudness when it is measured (`AnalysisPart`). Also on the
+    /// analysing thread.
     public func analyse(url: URL, bytes given: FileBytes?, sha256 givenSHA: String? = nil,
                         options: AnalysisOptions = AnalysisOptions(),
                         onStage: ((String) -> Void)? = nil, onDecoded: ((AudioBuffer) -> Void)? = nil,
@@ -219,6 +220,26 @@ public final class Analyser: Sendable {
         let m22 = Decimator.halve(mono)
         lap("resample")
 
+        // ------------------------------------------------------------------ the song's key, before the beat
+        // The key readers read the 44.1 kHz mono mix alone, nothing of the beat, so the key is read before the beat
+        // model's long stage and a screen shows it while the beat is found (the Windows pass, Nov 21, 2026: the card
+        // sat on "finding the beat" for most of each song, then filled in at the end). The record is the same to the
+        // bit; only what is held through the beat stage grows, by the readers' answers (a few kilobytes; the
+        // chromagram the mix windows need is still made after the beat, where it was). Its time counts in "key", and
+        // `timings` keep their order.
+        begin("key")
+        let keyStarted = Date()
+        // The three-answer reader (D33) reads the same frames as the plain HPCP method and carries its result.
+        let threeAnswer = try ThreeAnswerKey.read(mono, sampleRate: SR)
+        let hpcpKey = threeAnswer.hpcp
+        // The learned reader (engine 0.7.0) decides the record's key when its numbers are there; the three-answer
+        // reader stays beside it, and decides without them.
+        let learnedKey = try keyModel.map { try LearnedKey.read(mono, sampleRate: SR, model: $0) }
+        let keyAnswer = learnedKey?.answer ?? threeAnswer.answer
+        let keyReadSeconds = Date().timeIntervalSince(keyStarted)
+        onPart?(.key(Analysis.recordKey(learnedKey: learnedKey, threeAnswer: threeAnswer)))
+        started = Date()
+
         // ------------------------------------------------------------------ first / last sound, beats, grid
         begin("beatthis")
         let sound = SoundBounds(buffer)
@@ -240,18 +261,11 @@ public final class Analyser: Sendable {
         // The grid is the only candidate (the spectral stage keeps it as it is): its tempo is the record's.
         onPart?(.tempo(bpm: Py.round(60.0 / gridBT.period, 3)))
 
-        // ------------------------------------------------------------------ key (the windows' keys come later)
-        begin("key")
-        // The three-answer reader (D33) reads the same frames as the plain HPCP method and carries its result.
-        let threeAnswer = try ThreeAnswerKey.read(mono, sampleRate: SR)
-        let hpcpKey = threeAnswer.hpcp
-        // The learned reader (engine 0.7.0) decides the record's key when its numbers are there; the three-answer
-        // reader stays beside it, and decides without them.
-        let learnedKey = try keyModel.map { try LearnedKey.read(mono, sampleRate: SR, model: $0) }
-        let keyAnswer = learnedKey?.answer ?? threeAnswer.answer
+        // ------------------------------------------------------------------ key's chromagram (the windows' keys come later)
+        // The key itself was read before the beat; its time and this one's are the "key" timing, in its old place.
         let chroma = try KeyEstimator.chroma(m22, sampleRate: KeyEstimator.sampleRate)
         lap("key")
-        onPart?(.key(Analysis.recordKey(learnedKey: learnedKey, threeAnswer: threeAnswer)))
+        timings[timings.count - 1].seconds += keyReadSeconds
 
         // ------------------------------------------------------------------ grid choice and bars
         begin("spectral")

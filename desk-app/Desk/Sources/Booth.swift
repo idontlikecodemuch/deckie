@@ -69,7 +69,7 @@ final class BoothModel: ObservableObject, @unchecked Sendable {
         case let .status(s):
             status = s
             if s.state != "listening" { heard = nil }
-            if s.state != "listening" && s.state != "nothingHeard" { meter = 0; clipping = false }
+            if !Self.hearingStates.contains(s.state) { meter = 0; clipping = false }
         case let .level(l):
             meter = l.meter; clipping = l.clipped > 0; silent = l.silent
         case let .heard(h):
@@ -77,7 +77,11 @@ final class BoothModel: ObservableObject, @unchecked Sendable {
         }
     }
 
-    var hearing: Bool { status?.state == "listening" || status?.state == "nothingHeard" }
+    /// The states in which the input is on (noSound and nothingNow, added Nov 21, 2026, say themselves in their words).
+    static let hearingStates: Set<String> = ["listening", "nothingHeard", "nothingNow", "noSound"]
+    var hearing: Bool { status.map { Self.hearingStates.contains($0.state) } ?? false }
+    /// The silent line, unless the state line already says no sound is coming.
+    var showsSilent: Bool { silent && hearing && status?.state != "noSound" }
 
     /// The state line, in DeskWords' booth.* words.
     func stateLine(crate: String) -> String {
@@ -120,7 +124,7 @@ struct BoothView: View {
             }
             Text(booth.stateLine(crate: crate))
                 .foregroundStyle(booth.status?.state == "error" ? AnyShapeStyle(BoothLook.error) : AnyShapeStyle(.secondary))
-            if booth.silent && booth.hearing {
+            if booth.showsSilent {
                 Text(Words.t("booth.silent")).foregroundStyle(BoothLook.silent)
             }
             if booth.status?.state == "error" {

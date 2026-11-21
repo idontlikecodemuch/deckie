@@ -131,16 +131,38 @@ final class Window: @unchecked Sendable {
     /// The system's folder chooser; the path, or nil when the DJ cancelled.
     /// `start`: the folder it opens at (a big drive's top, research AE), or nil.
     func chooseFolder(message: String, accept: String, cancel: String, start: String? = nil) -> String? {
+        if case .chosen(let path) = chooseFolder(message: message, accept: accept, cancel: cancel, start: start, purpose: nil) { return path }
+        return nil
+    }
+
+    /// What a folder chooser ended with: a folder, the DJ's cancel, or nothing for a reason (said in `failed`).
+    enum Chosen: Equatable {
+        case chosen(String)
+        case cancelled
+        case failed(String)
+    }
+
+    /// The system's folder chooser for one purpose ("export", "addMusic"): on Windows Export keeps its own memory of
+    /// where it was last. Tells a cancel apart from a chooser that gave nothing back, so the page never ends in silence.
+    func chooseFolder(message: String, accept: String, cancel: String, start: String?, purpose: String?) -> Chosen {
         #if os(macOS)
         let p = NSOpenPanel()
         p.canChooseDirectories = true; p.canChooseFiles = false; p.allowsMultipleSelection = false
         p.message = message
         if let start { p.directoryURL = URL(fileURLWithPath: start, isDirectory: true) }
-        return p.runModal() == .OK ? p.url?.path : nil
+        guard p.runModal() == .OK else { return .cancelled }
+        guard let path = p.url?.path, !path.isEmpty else { return .failed("the chooser gave back nothing") }
+        return .chosen(path)
         #else
-        guard let c = deskshell_choose_folder_in(handle, message, accept, cancel, start ?? "") else { return nil }
-        defer { deskshell_free(c) }
-        return String(cString: c)
+        var problem: UnsafeMutablePointer<CChar>?
+        let c = deskshell_choose_folder_for(handle, message, accept, cancel, start ?? "", purpose ?? "", &problem)
+        defer { if let c { deskshell_free(c) }; if let problem { deskshell_free(problem) } }
+        if let c {
+            let path = String(cString: c)
+            return path.isEmpty ? .failed("the chooser gave back an empty path") : .chosen(path)
+        }
+        if let problem { return .failed(String(cString: problem)) }
+        return .cancelled
         #endif
     }
 

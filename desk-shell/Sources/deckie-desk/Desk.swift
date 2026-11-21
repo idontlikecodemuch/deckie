@@ -128,10 +128,20 @@ final class Desk: @unchecked Sendable {
             // Export opens in the folder a crate file was last exported to, else Documents: never where the chooser was
             // last (the music folder just read), where a crate file would land among the songs.
             let start = m["start"] as? String ?? (purpose == "export" ? Desk.exportStart() : nil)
-            let path = preset ?? window.chooseFolder(message: m["message"] as? String ?? "", accept: m["accept"] as? String ?? "",
-                                                     cancel: m["cancel"] as? String ?? "", start: start)
-            if purpose == "export", preset == nil, let path { Desk.rememberExport(path) }
-            reply(id, path.map { ["path": $0] } ?? ["cancelled": true])
+            let chosen: Window.Chosen = preset.map { .chosen($0) }
+                ?? window.chooseFolder(message: m["message"] as? String ?? "", accept: m["accept"] as? String ?? "",
+                                       cancel: m["cancel"] as? String ?? "", start: start, purpose: purpose)
+            switch chosen {
+            case .chosen(let path):
+                if purpose == "export", preset == nil { Desk.rememberExport(path) }
+                reply(id, ["path": path])
+            case .cancelled:
+                reply(id, ["cancelled": true])
+            case .failed(let problem):
+                // Not a cancel: the page says the folder could not be used (an addition to the protocol, Nov 21).
+                Notice.say("deckie-desk: the folder chooser (\(purpose ?? "add music")) gave no folder: \(problem)")
+                reply(id, ["ok": false, "error": ["code": "no_folder", "detail": problem]])
+            }
         case "shell.chooseFile":
             let preset = m["purpose"] as? String == "playlist" ? options.playlistAnswer : nil
             if preset == nil && Notice.noBoxes {
@@ -175,12 +185,19 @@ extension Desk {
     }
 
     /// The folder Export's chooser opens at: the last one exported to, while it is there, else the user's Documents.
+    /// Written as the system writes paths ("C:\Users\...\Documents" on Windows, where URL.path gives "C:/Users/..."
+    /// and the chooser was not sure to take it, and opened in the music folder instead).
     static func exportStart() -> String? {
         let fm = FileManager.default
         var isFolder: ObjCBool = false
         if let f = exportFolderFile, let last = try? String(contentsOf: f, encoding: .utf8).trimmingCharacters(in: .whitespacesAndNewlines),
            !last.isEmpty, fm.fileExists(atPath: last, isDirectory: &isFolder), isFolder.boolValue { return last }
-        return fm.urls(for: .documentDirectory, in: .userDomainMask).first?.path
+        return fm.urls(for: .documentDirectory, in: .userDomainMask).first.map(systemPath)
+    }
+
+    /// A file URL's path as this system writes it (backslashes on Windows).
+    static func systemPath(_ url: URL) -> String {
+        url.withUnsafeFileSystemRepresentation { $0.map { String(cString: $0) } } ?? url.path
     }
 
     static func rememberExport(_ folder: String) {

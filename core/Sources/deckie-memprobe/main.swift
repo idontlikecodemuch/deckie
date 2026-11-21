@@ -23,6 +23,7 @@
 import Foundation
 import DeckieAudio
 import DeckieCore
+import DeckieCrate
 import DeckieDecode
 import DeckieEngine
 import DeckieInference
@@ -143,6 +144,17 @@ func comparable(_ analysis: Analysis) -> Data {
         }
     }
     return strip(analysis.labJSON()).data
+}
+
+/// The song's entry as a crate file carries it, with the time of day, the device and how long it took fixed, as
+/// canonical JSON (keys sorted): what Desk writes, beside the lab's record.
+func comparableTrack(_ analysis: Analysis) throws -> Data {
+    var t = analysis.crateTrack(options: .init(analysedAt: "2026-01-01T00:00:00Z", device: "probe"))
+    t.analysis.secs = 0
+    if var f = t.fingerprint { f.madeAt = "2026-01-01T00:00:00Z"; t.fingerprint = f }
+    let e = JSONEncoder()
+    e.outputFormatting = [.sortedKeys]
+    return try e.encode(t)
 }
 
 // MARK: - A synthesised track
@@ -357,6 +369,8 @@ for _ in 0..<min(jobs, work.count) {
                 if let recordsDir {
                     let name = ((path as NSString).lastPathComponent as NSString).deletingPathExtension + ".json"
                     try comparable(a).write(to: URL(fileURLWithPath: recordsDir).appendingPathComponent(name))
+                    try comparableTrack(a).write(to: URL(fileURLWithPath: recordsDir)
+                        .appendingPathComponent((name as NSString).deletingPathExtension + ".track.json"))
                 }
                 log.add(line)
             } catch {

@@ -26,6 +26,12 @@ extension DeskWords {
         "booth.state.listening": "Listening",
         // The nothing-heard line (provisional).
         "booth.state.nothingHeard": "Listening. Nothing heard yet from {crate}.",
+        // new (Nov 21, 2026): the same, once a song from the crate has been named in this listening ("yet" no longer
+        // fits).
+        "booth.state.nothingNow": "Listening. Nothing from {crate} is playing right now.",
+        // new (Nov 21, 2026): the input is on but gives no sound, or almost none, for several seconds (DeskBooth's
+        // noSound): said in place of the nothing-heard line, so the DJ checks the input, not the crate.
+        "booth.state.noSound": "No sound is coming from this input. Check that the microphone is on and allowed, or pick another input.",
         "booth.state.stopped": "Not listening",
         "booth.waits": "Listening waits while Desk reads music.",
         "booth.silent": "No sound is reaching Desk. Check the input is plugged in, and that {thisComputer} lets Desk use the microphone.",

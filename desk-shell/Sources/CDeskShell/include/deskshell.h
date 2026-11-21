@@ -61,6 +61,13 @@ char *deskshell_choose_folder(deskshell_t s, const char *title, const char *acce
 /// research AE). NULL or "" starts where the system likes.
 char *deskshell_choose_folder_in(deskshell_t s, const char *title, const char *accept, const char *cancel, const char *start);
 
+/// As deskshell_choose_folder_in, for one purpose ("export", "addMusic"), and saying why when no folder comes back.
+/// On Windows Export keeps its own memory of where it was last (it never opens where Add music was), and `start` may
+/// be written with "/" or "\". When NULL is returned, `*problem` (when `problem` is given) is a short line saying what
+/// went wrong (free it with deskshell_free), or NULL when the DJ cancelled.
+char *deskshell_choose_folder_for(deskshell_t s, const char *title, const char *accept, const char *cancel,
+                                  const char *start, const char *purpose, char **problem);
+
 /// The system's own file chooser, for one file. As deskshell_choose_folder.
 char *deskshell_choose_file(deskshell_t s, const char *title, const char *accept, const char *cancel);
 
