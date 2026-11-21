@@ -11,18 +11,21 @@ import DeckieDesk
 
 // The run screen's look is RunLook, in Look.swift.
 
-/// What the run screen shows, kept as the run goes: the songs, the totals, the song on stage and those waiting, the
-/// quiet line, and the moments.
+/// What the run screen shows, kept as the run goes: the songs, the totals, the song card (the song being worked on,
+/// its parts filling in) and the rows of the others worked on at once, the wall, the quiet line, and the moments.
 @MainActor
 final class RunWatch: ObservableObject {
-    /// The song on stage: when it went on, how long it stays at least, how long its sweep in takes (0: at once), and
-    /// the wave of the song before it, which its own grows or shrinks from.
+    /// The card's wave: whose it is, when it came (its sweep in starts then), how long the sweep takes (0: at once),
+    /// and its bars to draw.
     struct Staged: Equatable { var song: RunSong; var at: Date; var hold: Double; var draw: Double; var heights: [Double]; var from: [Double] }
 
     @Published private(set) var songs: [RunSong] = []
+    /// The songs on the wall, in the order they went to it (the card's song goes after its moment complete).
+    @Published private(set) var wallSongs: [RunSong] = []
+    /// The row of the wall lit a moment as a song goes to it.
+    @Published private(set) var litRow: Int?
     @Published private(set) var figures = RunFigures()
     @Published private(set) var staged: Staged?
-    @Published private(set) var skipped = 0
     @Published private(set) var saying = ""
     @Published private(set) var sayingIsMoment = false
     /// The moment showing now, by code, until its motion is over.
@@ -31,52 +34,54 @@ final class RunWatch: ObservableObject {
     /// Bumped at most every `RunLook.wallEvery` when songs joined: the wall redraws on it.
     @Published private(set) var wallVersion = 0
     @Published var visible = true { didSet { if visible && !oldValue { wallVersion += 1 } } }
-    /// The song card (RunProgress's `now`, `working` and `ahead`): the songs being worked on, whether one at a time,
-    /// the song read ahead, and whether the card shows (while songs are read).
-    @Published private(set) var working: [RunNow] = []
-    @Published private(set) var oneAtATime = true
+    /// The song card (the owner's note, Nov 20, 2026): the song being worked on (`RunNow.cardSong`), with what is
+    /// worked out of it so far; the song just done, complete a moment (`cardDone`); the other songs worked on (`rows`);
+    /// the song read ahead; the stage (a finishing stage shows its words on the card, no song).
+    @Published private(set) var card: RunNow?
+    @Published private(set) var cardDone: RunSong?
+    @Published private(set) var rows: [RunNow] = []
     @Published private(set) var ahead: RunNow?
-    @Published private(set) var showNow = false
+    @Published private(set) var stage: RunStage = .reading
     private(set) var finishedLine: String?
     private(set) var latestBin = -1
     var reduceMotion = NSWorkspace.shared.accessibilityDisplayShouldReduceMotion
 
-    private var queue: [RunSong] = []
+    private var working: [RunNow] = []
     private var fresh: [RunNote] = []
     private var bags: [String: [String]] = [:]
     private var lastSaid = ""
     private var lastWasFact = false
     private var step: RunStage = .reading
     private var musicCD = false
-    private var stageTimer: Timer?, sayTimer: Timer?, wallTimer: Timer?
+    private var sayTimer: Timer?, wallTimer: Timer?, doneTimer: Timer?, litTimer: Timer?
     private var spoken = (done: -1, at: Date.distantPast)
 
     func start(musicCD: Bool) {
-        songs = []; figures = RunFigures(); staged = nil; skipped = 0; fresh = []; queue = []; finishedLine = nil
-        self.musicCD = musicCD; step = .reading; lastSaid = ""; saying = ""; moment = nil; latestBin = -1
+        songs = []; wallSongs = []; litRow = nil; figures = RunFigures(); staged = nil; fresh = []; finishedLine = nil
+        self.musicCD = musicCD; step = .reading; stage = .reading; lastSaid = ""; saying = ""; moment = nil; latestBin = -1
         spoken = (-1, .distantPast); wallVersion += 1
-        working = []; ahead = nil; showNow = true
+        working = []; card = nil; cardDone = nil; rows = []; ahead = nil; doneTimer?.invalidate()
         nextSaying()
     }
 
     /// One progress call of the run.
     func take(_ p: RunProgress) {
         if let s = p.song {
-            songs.append(s); queue.append(s)
+            songs.append(s)
             if let bpm = s.bpm {
                 latestBin = max(0, min(p.figures.tempos.count - 1, Int(((bpm - p.figures.tempoLow) / p.figures.tempoStep).rounded(.down))))
             }
-            wallSoon()
-            // The info card is the last song in, at once (the cards and every line agree on the last to finish).
-            queue = [s]; advance()
+            // The card's own song stays complete on the card a moment; any other goes to the wall at once.
+            if let c = card, s.rel == c.rel, c.hasParts, cardDone == nil {
+                cardDone = s
+                doneTimer?.invalidate()
+                doneTimer = once(after: RunLook.cardDone) { [weak self] in self?.endDone(); self?.drawCard() }
+            } else { toWall(s) }
         }
-        // A second place of a song already in puts that song back on the info card: it is the file just read.
-        if p.song == nil, let again = p.notes.last(where: { $0.code == "twoPlaces" })?.song,
-           let s = songs.first(where: { $0.id == again }) { queue = [s]; advance() }
         figures = p.figures
         for note in p.notes {
-            // A line about a song is said only while that song is on the info card.
-            if let about = note.song, about != staged?.song.id { continue }
+            // Lines about one song are not said: the card is the song being worked on (facts about the run are).
+            guard note.song == nil else { continue }
             if note.kind == .moment { show(moment: note) } else {
                 fresh.removeAll { $0.code == note.code }
                 fresh.append(note)
@@ -84,57 +89,61 @@ final class RunWatch: ObservableObject {
             }
         }
         if p.stage != step { step = p.stage; nextSaying() }
-        takeNow(p)
+        working = p.stage == .reading ? (!p.working.isEmpty ? p.working : (p.now.map { [$0] } ?? [])) : []
+        ahead = p.stage == .reading ? p.ahead : nil
+        stage = p.stage
+        drawCard()
         speak(p)
     }
 
-    /// The song card from one progress call (the same rule as desk.js drawNow): exactly the songs the core says are
-    /// worked on, never one gone (a song's info card comes before the song is let go, RunOrder). The card keeps its
-    /// place the whole time songs are read; between songs it says the step with no song in it.
-    private func takeNow(_ p: RunProgress) {
-        let list = !p.working.isEmpty ? p.working : (p.now.map { [$0] } ?? [])
-        if working != list { working = list }
-        oneAtATime = list.isEmpty || p.now != nil
-        if ahead != p.ahead { ahead = p.ahead }
-        showNow = p.stage == .reading
+    /// The card and the rows from the songs worked on (desk-web/run.js drawCard says the same).
+    private func drawCard() {
+        if stage != .reading { endDone(); card = nil; rows = []; staged = nil; return }
+        if let done = cardDone, let c = card {
+            rows = RunNow.rows(working, card: c.rel)
+            stageWave(c.rel, done.wave, bpm: done.bpm, bars: done.bars)
+            return
+        }
+        let next = RunNow.cardSong(working, keeping: card?.rel)
+        if next != card { card = next }
+        rows = RunNow.rows(working, card: next?.rel)
+        if let n = next { stageWave(n.rel, n.wave ?? [], bpm: n.bpm, bars: n.bars) } else { staged = nil }
+    }
+
+    /// The song done on the card goes to the wall (its row lit a moment), and the card is free for the next.
+    private func endDone() {
+        doneTimer?.invalidate(); doneTimer = nil
+        guard let done = cardDone else { return }
+        cardDone = nil; card = nil
+        toWall(done)
+    }
+
+    private func toWall(_ s: RunSong) {
+        wallSongs.append(s)
+        litRow = wallSongs.count - 1
+        litTimer?.invalidate()
+        litTimer = once(after: RunLook.wallNew) { [weak self] in self?.litRow = nil }
+        wallSoon()
+    }
+
+    /// The card's wave once its loudness is measured: swept in, then moving with the song.
+    private func stageWave(_ rel: String, _ wave: [Int], bpm: Double?, bars: Int?) {
+        guard !wave.isEmpty else { if staged?.song.id != rel { staged = nil }; return }
+        if staged?.song.id == rel, !(staged?.heights.isEmpty ?? true) { return }
+        let song = RunSong(id: rel, title: "", artist: nil, bpm: bpm, key: .init(kind: .none), bars: bars, seconds: 0,
+                           place: nil, folder: nil, wave: wave, introBars: nil, before: false)
+        let still = reduceMotion || !visible
+        staged = Staged(song: song, at: Date(), hold: RunLook.hold, draw: still ? 0 : RunLook.draw,
+                        heights: RunWatch.bars(song), from: [])
     }
 
     func stop() {
-        for t in [stageTimer, sayTimer, wallTimer] { t?.invalidate() }
-        showNow = false; working = []; ahead = nil
-        queue = []
+        for t in [sayTimer, wallTimer, doneTimer, litTimer] { t?.invalidate() }
+        if let done = cardDone { cardDone = nil; wallSongs.append(done) }
+        // The finished screen's wall has every song of the run.
+        wallSongs = songs; litRow = nil
+        card = nil; rows = []; ahead = nil; working = []
     }
-
-    // MARK: the stage
-
-    private func advance() {
-        guard !queue.isEmpty else { return }
-        if queue.count > RunLook.queueMax {
-            // Falling behind: the oldest waiting go straight to the wall (they are on it already), and the stage says so.
-            let drop = queue.count - RunLook.queueMax / 2
-            queue.removeFirst(drop); skipped += drop
-        }
-        let song = queue.removeFirst()
-        var hold = max(RunLook.holdMin, RunLook.hold / Double(1 + queue.count))
-        // Under reduced motion a song stays at least `holdStill`, so the stage changes as a still picture would.
-        if reduceMotion { hold = max(hold, RunLook.holdStill) }
-        let ticker = reduceMotion || hold < RunLook.ticker
-        staged = Staged(song: song, at: Date(), hold: hold, draw: ticker ? 0 : min(RunLook.draw, hold * RunLook.drawShare),
-                        heights: RunWatch.bars(song), from: staged?.heights ?? [])
-        // The quiet line about the song before it goes with it, at once.
-        if let about = sayingAbout, about != song.id { lastSaid = ""; saying = ""; sayingAbout = nil; nextSaying() }
-        if queue.isEmpty && skipped > 0 { stageTimerFire(after: hold) { [weak self] in self?.skipped = 0 } }
-        scheduleStage()
-    }
-
-    private func scheduleStage() {
-        stageTimer?.invalidate()
-        guard let s = staged, !queue.isEmpty else { return }
-        let wait = max(0, s.at.addingTimeInterval(s.hold).timeIntervalSinceNow)
-        stageTimer = once(after: wait) { [weak self] in self?.advance() }
-    }
-
-    private func stageTimerFire(after: Double, _ f: @escaping @MainActor () -> Void) { _ = once(after: after, f) }
 
     private func once(after: Double, _ f: @escaping @MainActor () -> Void) -> Timer {
         Timer.scheduledTimer(withTimeInterval: after, repeats: false) { _ in MainActor.assumeIsolated { f() } }
@@ -170,21 +179,16 @@ final class RunWatch: ObservableObject {
         return w
     }
 
-    /// The song the quiet line names, if any: it goes when the info card moves on from that song.
-    private var sayingAbout: String?
-
-    private func nextSaying(moment text: String? = nil, about: String? = nil) {
-        var line: String?, song: String? = about
+    private func nextSaying(moment text: String? = nil) {
+        var line: String?
         if let text { line = text }
-        else if let i = fresh.firstIndex(where: { $0.song == nil || $0.song == staged?.song.id }), !(lastWasFact && Bool.random()) {
-            fresh.removeSubrange(..<i)
-            let note = fresh.removeFirst()
-            line = Self.words(note); song = note.song; lastWasFact = true
+        else if !fresh.isEmpty && !(lastWasFact && Bool.random()) {
+            line = Self.words(fresh.removeFirst()); lastWasFact = true
         } else {
             line = fromBag("\(step)\(musicCD ? "-disc" : "")", stepList()); lastWasFact = false
         }
         if let line, line != lastSaid {
-            lastSaid = line; saying = line; sayingIsMoment = text != nil; sayingAbout = song
+            lastSaid = line; saying = line; sayingIsMoment = text != nil
         }
         sayTimer?.invalidate()
         sayTimer = once(after: RunLook.saying) { [weak self] in self?.nextSaying() }
@@ -194,7 +198,7 @@ final class RunWatch: ObservableObject {
         let text = Self.words(note)
         if note.code == "finished" { finishedLine = text; return }
         announce(text)
-        nextSaying(moment: text, about: note.song)
+        nextSaying(moment: text)
         guard !reduceMotion else { return }
         moment = note.code; momentCount += 1
         let n = momentCount
@@ -281,34 +285,46 @@ struct RunCard<Content: View>: View {
     }
 }
 
-/// The song card: the song being worked on by the name Desk has for it, its step line and a thin bar within the song,
-/// with a turning disc for a music CD's song (still under reduced motion); or, several at once, "Working on 4 songs"
-/// and a row a song with its step; under either, quietly, a disc's next song while it is read ahead. The words are
-/// the core's (`RunNow`), as the pages' are. When no song is worked on, the stage shows the last song in.
-struct NowCard: View {
+/// The song card (the owner's note, Nov 20, 2026): the song being worked on, by the name Desk has for it, its step line
+/// and a thin bar within the song (a turning disc for a music CD's song), and under them its parts filling in as Desk
+/// works them out, each in its own place (a quiet placeholder until then): its wave (swept in, then moving with the
+/// song), tempo, key, bars, length and where. Done, it stays complete a moment, then goes to the wall. With no song
+/// (between songs, before the first, while the crate is finished and saved) it says the step alone. Quietly under it,
+/// a disc's next song while it is read ahead. The words are the core's (`RunNow`), as the pages' are.
+struct RunSongCard: View {
     @ObservedObject var watch: RunWatch
     let total: Int
     let disc: Bool
     @Environment(\.accessibilityReduceMotion) private var reduce
 
     var body: some View {
-        RunCard {
-            VStack(alignment: .leading, spacing: RunLook.nowBarGap) {
-                if watch.working.isEmpty {
-                    Text(Words.stageReading).font(RunLook.nowFont).lineLimit(1)
-                } else if watch.oneAtATime, let now = watch.working.first { one(now) } else { several }
+        RunCard(moment: watch.moment == "first") {
+            VStack(alignment: .leading, spacing: RunLook.songCardGap) {
+                head
+                HStack(alignment: .center, spacing: RunLook.stageGap) {
+                    wave.frame(height: RunLook.stageHeight).frame(maxWidth: .infinity)
+                    facts.frame(maxWidth: .infinity, alignment: .leading)
+                }
+                .opacity(watch.card == nil ? 0 : 1)
                 if watch.ahead != nil {
                     Text(RunNow.aheadLine).font(RunLook.nowAheadFont).foregroundStyle(.tertiary).lineLimit(1)
                 }
             }
-            .frame(maxWidth: .infinity, minHeight: RunLook.nowCardMinHeight, alignment: .leading)
         }
     }
 
-    private func one(_ now: RunNow) -> some View {
+    private var stepWords: String {
+        switch watch.stage {
+        case .reading: return Words.stageReading
+        case .finishing: return Words.stageFinishing
+        case .saving: return Words.stageSaving
+        }
+    }
+
+    private var head: some View {
         HStack(spacing: RunLook.nowGap) {
             if disc {
-                TimelineView(.animation(paused: reduce || !watch.visible)) { context in
+                TimelineView(.animation(paused: reduce || !watch.visible || watch.card == nil || watch.cardDone != nil)) { context in
                     Image(systemName: RunLook.nowDiscSymbol)
                         .font(RunLook.nowDiscFont).foregroundStyle(.secondary)
                         .rotationEffect(.degrees(reduce ? 0 : context.date.timeIntervalSinceReferenceDate
@@ -317,100 +333,78 @@ struct NowCard: View {
                 .accessibilityHidden(true)
             }
             VStack(alignment: .leading, spacing: RunLook.nowLineGap) {
-                HStack(spacing: RunLook.stageNameGap) {
-                    Text(now.name).font(RunLook.stageFont).lineLimit(1)
-                    if let a = now.artist { Text(a).foregroundStyle(.secondary).lineLimit(1) }
-                }
-                Text(now.line(total: total)).font(RunLook.nowFont).lineLimit(1)
-                ProgressView(value: now.share).tint(RunLook.accent)
-            }
-        }
-    }
-
-    private var several: some View {
-        VStack(alignment: .leading, spacing: RunLook.nowRowsGap) {
-            Text(RunNow.workingLine(watch.working.count)).font(RunLook.nowFont)
-            ForEach(watch.working, id: \.rel) { song in
-                HStack(alignment: .firstTextBaseline, spacing: RunLook.nowRowGap) {
+                if let now = watch.card {
                     HStack(spacing: RunLook.stageNameGap) {
-                        Text(song.name).fontWeight(RunLook.stageValueWeight).lineLimit(1)
-                        if let a = song.artist { Text(a).foregroundStyle(.secondary).lineLimit(1) }
+                        Text(now.name).font(RunLook.stageFont).lineLimit(1)
+                        if let a = now.artist { Text(a).foregroundStyle(.secondary).lineLimit(1) }
                     }
-                    Spacer(minLength: 0)
-                    Text(song.stage).foregroundStyle(.secondary).lineLimit(1).layoutPriority(1)
+                    let shown = watch.cardDone != nil ? { var d = now; d.step = "windows"; return d }() : now
+                    Text(shown.line(total: total)).font(RunLook.nowFont).lineLimit(1)
+                    ProgressView(value: watch.cardDone != nil ? 1 : now.share).tint(RunLook.accent)
+                } else {
+                    Text(stepWords).font(RunLook.nowFont).lineLimit(1)
                 }
             }
         }
     }
-}
 
-/// The song info card, always on the run screen: the last song in ("Just in"), its own wave drawing in with its bars
-/// marked, and what Desk found in it.
-struct StageView: View {
-    @ObservedObject var watch: RunWatch
-    @Environment(\.accessibilityReduceMotion) private var reduce
-
-    var body: some View {
-        RunCard(moment: watch.moment == "first") {
-            if let s = watch.staged {
-                HStack(alignment: .center, spacing: RunLook.stageGap) {
-                    // Moving the whole time it is on stage (letter AD), at most `frame` apart; still under reduced
-                    // motion and while the window is hidden.
-                    TimelineView(.animation(minimumInterval: RunLook.frame, paused: reduce || !watch.visible)) { tl in
-                        Canvas { gc, size in
-                            let t0 = CACurrentMediaTime()
-                            StageView.draw(s, elapsed: tl.date.timeIntervalSince(s.at), still: reduce, in: &gc, size: size)
-                            RunCost.add(from: t0)
-                        }
-                    }
-                    .frame(height: RunLook.stageHeight).frame(maxWidth: .infinity)
-                    .accessibilityLabel(DeskWords.text("stageWaveLabel", ["title": s.song.title]))
-                    facts(s.song).frame(maxWidth: .infinity, alignment: .leading)
-                        .id(s.song.id)
-                        .transition(.opacity)
+    @ViewBuilder private var wave: some View {
+        if let s = watch.staged {
+            // Moving the whole time it is on the card (letter AD), at most `frame` apart; still under reduced motion
+            // and while the window is hidden.
+            TimelineView(.animation(minimumInterval: RunLook.frame, paused: reduce || !watch.visible)) { tl in
+                Canvas { gc, size in
+                    let t0 = CACurrentMediaTime()
+                    StageView.draw(s, elapsed: tl.date.timeIntervalSince(s.at), still: reduce, in: &gc, size: size)
+                    RunCost.add(from: t0)
                 }
-                .animation(reduce || s.draw == 0 ? nil : .easeInOut(duration: RunLook.fade), value: s.song.id)
-            } else {
-                // Before the first song is in: a quiet empty frame under the song card, or the sentence with no card.
-                Text(watch.showNow ? "" : DeskWords.text("stageFirstSoon")).foregroundStyle(.secondary)
-                    .frame(maxWidth: .infinity, minHeight: RunLook.stageHeight)
+            }
+            .accessibilityLabel(DeskWords.text("stageWaveLabel", ["title": watch.card?.name ?? ""]))
+        } else {
+            Canvas { gc, size in
+                gc.fill(Path(CGRect(x: 0, y: size.height * (1 - RunLook.stageMarkShare) / 2, width: size.width, height: 1)),
+                        with: .color(Color(nsColor: RunLook.waveNone)))
             }
         }
-        .opacity(watch.staged == nil ? RunLook.stageEmptyOpacity : 1)
     }
 
-    private func facts(_ s: RunSong) -> some View {
-        VStack(alignment: .leading, spacing: RunLook.stageFactsGap) {
-            HStack(spacing: RunLook.stageNameGap) {
-                Text(s.title).font(RunLook.stageFont).lineLimit(1)
-                if let a = s.artist { Text(a).foregroundStyle(.secondary).lineLimit(1) }
-                if s.before { chip("stageBefore") }
-                chip("stageJustIn")
-            }
+    /// Each part from the song done when it is done, else from the song worked on; nil: not worked out yet.
+    private var facts: some View {
+        let done = watch.cardDone, now = watch.card
+        let bpm = done?.bpm ?? now?.bpm, bars = done?.bars ?? now?.bars, key = done?.key ?? now?.key
+        let seconds = done?.seconds ?? now?.seconds
+        let place = done.map(RunWatch.whereLine) ?? now.flatMap { n in n.place ?? n.folder.map { $0.isEmpty ? DeskWords.text("topOfMusicFolder") : $0 } }
+        let finished = done != nil
+        return VStack(alignment: .leading, spacing: RunLook.stageFactsGap) {
             HStack(alignment: .top, spacing: RunLook.stageFactsRowGap) {
-                fact("stageTempo", RunWatch.bpm(s), color: RunLook.amber)
-                fact("stageKey", RunWatch.key(s.key), color: s.key.kind == .key ? .primary : .secondary)
-                fact("stageBars", s.bars.map(String.init) ?? DeskWords.text("none"))
-                fact("stageLength", RunWatch.clock(s.seconds))
+                fact("stageTempo", bpm.map { DeskWords.text("bpmValue", ["bpm": String(format: "%.1f", $0)]) } ?? (finished ? DeskWords.text("none") : nil), color: RunLook.amber)
+                fact("stageKey", key.map(RunWatch.key) ?? (finished ? DeskWords.text("keyNotSureValue") : nil), color: key?.kind == .key ? .primary : .secondary)
+                fact("stageBars", bars.map(String.init) ?? (finished ? DeskWords.text("none") : nil))
+                fact("stageLength", seconds.map(RunWatch.clock))
             }
-            fact("stageWhere", RunWatch.whereLine(s))
-            if watch.skipped > 0 { Text(DeskWords.count("stageMore", watch.skipped)).font(RunLook.stageNoteFont).foregroundStyle(.tertiary) }
-            else if s.wave.isEmpty { Text(DeskWords.text("stageNoWave")).font(RunLook.stageNoteFont).foregroundStyle(.tertiary) }
+            fact("stageWhere", place)
+            if let d = done, d.wave.isEmpty { Text(DeskWords.text("stageNoWave")).font(RunLook.stageNoteFont).foregroundStyle(.tertiary) }
         }
     }
 
-    private func chip(_ key: String) -> some View {
-        Text(DeskWords.text(key)).font(RunLook.chipFont).foregroundStyle(.secondary)
-            .padding(.horizontal, RunLook.chipPaddingH).padding(.vertical, RunLook.chipPaddingV).background(.quaternary, in: Capsule())
-    }
-
-    private func fact(_ label: String, _ value: String, color: Color = .primary) -> some View {
+    /// One part in its place: its words, or a quiet placeholder of the same height until it is worked out.
+    private func fact(_ label: String, _ value: String?, color: Color = .primary) -> some View {
         VStack(alignment: .leading, spacing: RunLook.stageFactGap) {
             Text(DeskWords.text(label)).font(RunLook.labelFont).foregroundStyle(.tertiary)
-            Text(value).fontWeight(RunLook.stageValueWeight).monospacedDigit().foregroundStyle(color).lineLimit(1)
+            Text(value ?? " ").fontWeight(RunLook.stageValueWeight).monospacedDigit().foregroundStyle(color).lineLimit(1)
+                .overlay(alignment: .leading) {
+                    if value == nil {
+                        Capsule().fill(RunLook.cardPending).frame(width: RunLook.cardPendingWidth, height: RunLook.cardPendingHeight)
+                    }
+                }
         }
         .accessibilityElement(children: .combine)
     }
+}
+
+/// The card's wave, drawn: the bars mirrored about a centre line, swept in, then moving with the song (StageMotion).
+@MainActor
+enum StageView {
 
     static func draw(_ st: RunWatch.Staged, elapsed: Double, still: Bool, in gc: inout GraphicsContext, size: CGSize) {
         let s = st.song, w = size.width, markH = (size.height * RunLook.stageMarkShare).rounded(), h = size.height - markH
@@ -634,6 +628,8 @@ struct FiguresView: View {
 /// keys light it up and say the song's line (its name, tempo, key, length, where) beside the title.
 struct WallView: View {
     @ObservedObject var watch: RunWatch
+    /// The rows: the songs gone to the wall (reading), or every song of the run (finished).
+    var songs: [RunSong]
     var title: String
     @State private var pick: Int?
     @FocusState private var focused: Bool
@@ -643,14 +639,14 @@ struct WallView: View {
             VStack(alignment: .leading, spacing: RunLook.wallCardGap) {
                 HStack(alignment: .firstTextBaseline, spacing: RunLook.wallHeadGap) {
                     Text(title).font(RunLook.wallTitleFont)
-                    Text(pick.flatMap { watch.songs.indices.contains($0) ? RunWatch.line(watch.songs[$0]) : nil } ?? "")
+                    Text(pick.flatMap { songs.indices.contains($0) ? RunWatch.line(songs[$0]) : nil } ?? "")
                         .font(RunLook.wallNameFont).foregroundStyle(.secondary).lineLimit(1)
                 }
                 ScrollViewReader { reader in
                     ScrollView {
                         LazyVStack(alignment: .leading, spacing: RunLook.wallRowGap) {
-                            ForEach(watch.songs.indices, id: \.self) { i in
-                                WallRow(song: watch.songs[i], picked: pick == i, newest: i == watch.songs.count - 1)
+                            ForEach(songs.indices, id: \.self) { i in
+                                WallRow(song: songs[i], picked: pick == i, newest: i == watch.litRow)
                                     .id(i)
                                     .onHover { inside in if inside { pick = i } else if pick == i && !focused { pick = nil } }
                                     .onTapGesture { focused = true; pick = i }
@@ -658,8 +654,8 @@ struct WallView: View {
                         }
                     }
                     .frame(height: min(RunLook.wallMaxHeight, max(RunLook.wallRowHeight,
-                        CGFloat(watch.songs.count) * (RunLook.wallRowHeight + RunLook.wallRowGap))))
-                    .onChange(of: watch.songs.count) { _, n in if pick == nil, n > 0 { reader.scrollTo(n - 1, anchor: .bottom) } }
+                        CGFloat(songs.count) * (RunLook.wallRowHeight + RunLook.wallRowGap))))
+                    .onChange(of: songs.count) { _, n in if pick == nil, n > 0 { reader.scrollTo(n - 1, anchor: .bottom) } }
                     .onChange(of: pick) { _, p in if let p { reader.scrollTo(p) } }
                 }
                 .focusable().focused($focused)
@@ -667,15 +663,15 @@ struct WallView: View {
                     move(press.key); return .handled
                 }
                 .accessibilityElement(children: .ignore)
-                .accessibilityLabel(watch.songs.isEmpty ? DeskWords.text("wallEmpty") : Words.wallLabel(title, songs: watch.songs.count))
-                .accessibilityValue(pick.flatMap { watch.songs.indices.contains($0) ? RunWatch.line(watch.songs[$0]) : nil } ?? "")
+                .accessibilityLabel(songs.isEmpty ? DeskWords.text("wallEmpty") : Words.wallLabel(title, songs: songs.count))
+                .accessibilityValue(pick.flatMap { songs.indices.contains($0) ? RunWatch.line(songs[$0]) : nil } ?? "")
                 Text(DeskWords.text("wallHelp")).font(RunLook.wallHelpFont).foregroundStyle(.tertiary)
             }
         }
     }
 
     private func move(_ key: KeyEquivalent) {
-        let n = watch.songs.count
+        let n = songs.count
         guard n > 0 else { return }
         var i = pick ?? (key == .end ? n - 1 : 0)
         if pick != nil {
@@ -688,7 +684,7 @@ struct WallView: View {
             }
         }
         pick = max(0, min(n - 1, i))
-        if let p = pick { watch.announce(RunWatch.line(watch.songs[p])) }
+        if let p = pick { watch.announce(RunWatch.line(songs[p])) }
     }
 }
 

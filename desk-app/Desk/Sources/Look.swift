@@ -273,7 +273,14 @@ enum RunLook {
     static let nowDiscSymbol = "opticaldisc"
     static let nowDiscFont = Font.system(size: 48)
     static let nowAheadFont = Font.caption
-    static let nowCardMinHeight: CGFloat = 100
+    /// The song card: between its head (name, step, bar) and its parts; a part not worked out yet, a quiet bar in its
+    /// place; how long a song done stays complete on it; the rows of the other songs, in from its edge (desk.css
+    /// --song-card-gap, --card-pending-*, --t-card-done, --now-rows-pad).
+    static let songCardGap: CGFloat = 14
+    static let cardPending = Color.primary.opacity(0.07)
+    static let cardPendingWidth: CGFloat = 40, cardPendingHeight: CGFloat = 9
+    static let cardDone = 1.0
+    static let nowRowsInset: CGFloat = 20
     static let nowDiscTurn = 2.4                                            // seconds a turn
     static let wholeTurn = 360.0
     static let nowFont = Font.system(size: 14, weight: .semibold)
@@ -286,7 +293,6 @@ enum RunLook {
     static let bigFont = Font.system(size: 26, weight: .bold).monospacedDigit()
     static let stageFont = Font.system(size: 17, weight: .semibold)
     static let labelFont = Font.caption2
-    static let chipFont = Font.caption2.weight(.semibold)
     static let stageNoteFont = Font.caption
     static let stageValueWeight = Font.Weight.semibold
     static let figureTextFont = Font.caption
@@ -306,7 +312,6 @@ enum RunLook {
     static let stageNameGap: CGFloat = 6
     static let stageFactsRowGap: CGFloat = 22
     static let stageFactGap: CGFloat = 1
-    static let chipPaddingH: CGFloat = 8, chipPaddingV: CGFloat = 1
     static let figuresGap: CGFloat = 10
     static let figureGap: CGFloat = 6
     static let figureListGap: CGFloat = 4
@@ -315,8 +320,6 @@ enum RunLook {
 
     // size
     static let stageHeight: CGFloat = 160
-    /// The song info card before its first song: an empty frame, quieter (desk.css --stage-empty-opacity).
-    static let stageEmptyOpacity = 0.55
     static let figureHeight: CGFloat = 70
     static let musicFigureWidth: CGFloat = 180
     /// The song on stage: the share of its height under the wave for the bar marks; half the wave's height at full
@@ -353,20 +356,17 @@ enum RunLook {
     static let wallRowHeight: CGFloat = 44, wallRowGap: CGFloat = 6, wallRowPad: CGFloat = 6
     static let wallMaxHeight: CGFloat = 440
     static let wallPickRing: CGFloat = 2
+    /// A row lit as its song goes to the wall, this long (desk.css --t-wall-new).
+    static let wallNew = 1.6
     static let wallRowFill = Color.primary.opacity(0.025)
     static let wallRowPick = Color(red: 1.0, green: 0.753, blue: 0.251).opacity(0.14)
 
     // motion
-    /// Seconds: a wave drawing in; a song on stage with nothing waiting, and with many; a fade; each quiet line; a
-    /// moment; the wall's quickest redraw.
-    static let draw = 0.9, hold = 3.2, holdMin = 0.3, holdStill = 2.0, fade = 0.42, saying = 7.0, moment = 1.6, wallEvery = 0.25
+    /// Seconds: a wave sweeping in; the card's wave's time for its motion; a fade; each quiet line; a moment; the
+    /// wall's quickest redraw.
+    static let draw = 0.9, hold = 3.2, fade = 0.42, saying = 7.0, moment = 1.6, wallEvery = 0.25
     /// A moment's glow and ring come and go in this.
     static let momentFlash = moment / 2
-    /// A song held on stage shorter than this (seconds) appears whole, not drawn in; at most this share of its time
-    /// on stage is its wave drawing in.
-    static let ticker = 0.9, drawShare = 0.45
-    /// Songs waiting for the stage before the oldest go straight to the wall.
-    static let queueMax = 24
     static let frame = 1.0 / 30
 
     // the song on stage, moving (letter AD): built from its tempo, bars and wave; still under reduced motion

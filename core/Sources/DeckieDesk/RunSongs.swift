@@ -53,6 +53,9 @@ public struct RunSong: Codable, Equatable, Sendable {
     public var introBars: Int?
     /// Worked out before (unchanged since the last run, or read for another crate): not read again now.
     public var before: Bool
+    /// The file it was read from, as the run's lines and the songs worked on (`RunNow.rel`) name it; nil when it
+    /// joined from the crate's record while saving. Lets a window hand the song card's song on to the wall.
+    public var rel: String? = nil
 
     /// 64 values a song: enough to show a song's shape (an intro, a break, a drop, the outro) at the width the stage
     /// draws it, two bars a value for a typical 128-bar song, and small enough that 5,000 songs are about 1 MB of

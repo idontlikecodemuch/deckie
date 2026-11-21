@@ -59,6 +59,10 @@ public enum SongStep: Sendable, Equatable {
     case reading(done: Int, total: Int)
     /// An analysis stage starting, by the name `Analysis.timings` gives it ("decode", "beatthis", "key", ...).
     case stage(String)
+    /// Where the song is, as its record's place will say it (just after `started`).
+    case place(CrateTrack.Place)
+    /// A part of the song's record, final (`AnalysisPart`): its length, tempo, key, bars or per-bar loudness.
+    case part(AnalysisPart)
 }
 
 /// Finding the audio files of a folder.

@@ -123,7 +123,6 @@
   --log-pad: 10px 14px; --log-margin: 4px 0 0;
   --leave-pull: -6px;                     /* "you can leave it running" sits closer to the line above */
   --chip-pad: 1px 9px; --chip-raise: 2px;
-  --stage-name-room: 36px;                /* the song on stage: room for its name beside the wave */
   --stage-dl-min: 4.5em;
   --run-list-pad: 2px 0; --run-list-gap: 8px;
   --finished-pad: 32px 24px; --finished-gap: 16px;
@@ -233,8 +232,12 @@
   --now-rows-gap: 2px; --now-row-gap: 14px;  /* several songs: between rows, and a row's name and its step */
   --fs-now: 15px; --fw-now: 600;
   --now-shine: var(--acc);
-  --stage-empty-opacity: 0.55;            /* the stage before its first song: an empty frame, quieter */
-  --now-card-min-h: 112px;
+  --now-rows-pad: 0 20px;                 /* the rows of the other songs, in from the card's edge */
+  --song-card-gap: 14px;                  /* the song card: between its head (name, step, bar) and its parts */
+  --card-pending-w: 3.2em; --card-pending-h: 0.7em;  /* a part not worked out yet: a quiet bar in its place */
+  --card-pending-bg: rgba(255, 255, 255, 0.07);
+  --t-card-done: 1000ms;                  /* a song done stays complete on the card this long, then goes to the wall */
+  --t-wall-new: 1600ms;                   /* the row it went to stays lit this long */
   --progress-h: 10px;
   --waiting-w: 30%; --waiting-from: -30%; --waiting-to: 100%;  /* the bar that waits */
   --waiting-still-opacity: .35;           /* and the same bar, still, under reduced motion */
@@ -330,8 +333,6 @@
   --stage-tick-strong-w: 2;               /* px (times the screen's scale): the cut every 32 bars */
   --stage-tick-gap: 2;                    /* px (times the screen's scale): between the wave and its marks */
   --stage-tick-short: 0.5;                /* the mark every 8 bars, as a share of the one every 32 */
-  --stage-ticker: 900;                    /* ms: a song held on stage shorter than this appears whole, not drawn in */
-  --stage-draw-share: 0.45;               /* the most of a song's time on stage its wave takes to draw in */
   --stage-frame: 33;                      /* ms: the stage draws at most this often (thirty frames a second) */
   /* the song on stage, moving (letter AD): from its tempo, bars and wave; still under reduced motion */
   --t-beat-fastest: 400ms;                /* the quickest pulse: a faster song pulses every other beat */
@@ -367,16 +368,13 @@
   --wheel-fill-min: 0.35; --wheel-fill-range: 0.65;  /* a key's cell: opacity with one song, plus this much at the most */
   --wheel-dot-base: 1.8; --wheel-dot-max: 5;     /* a home-note dot: its radius, plus the square root of its songs, up to this */
   --t-draw: 900ms;                        /* a wave sweeping in */
-  --t-hold: 3200ms;                       /* a song on stage, with nothing waiting */
-  --t-hold-min: 300ms;                    /* a song on stage, with many waiting */
-  --t-hold-still: 2000ms;                 /* a song on stage, at least, under reduced motion */
+  --t-hold: 3200ms;                       /* the card's wave: the time its motion is reckoned over */
   --t-fade: 420ms; --ease-fade: ease;
   --t-saying: 7000ms;                     /* each quiet line */
   --t-moment: 1600ms; --ease-moment: ease-out;
   --t-moment-after: 50ms;                 /* a moment's class is taken away this long after its motion */
   --t-wall: 250ms;                        /* the wall redraws at most this often */
   --t-frame-late: 250ms;                  /* no animation frame by then (a window not in front): the stage steps without one */
-  --stage-queue-max: 24;                  /* songs waiting for the stage before the oldest go straight to the wall */
   --saying-fact-skip: 0.35;               /* after a fact, the chance the next line is about the step instead */
   --ease-turn: cubic-bezier(.3, 0, .2, 1);  /* the wheel's turn at a moment */
 }
@@ -471,25 +469,28 @@ main { flex: 1; min-height: 0; display: flex; flex-direction: column; }
 .saying.out { opacity: 0; }
 .saying.moment { color: var(--tx); font-weight: var(--fw-saying-moment); }
 .leave { font-size: var(--fs-small); margin-top: var(--leave-pull); }
-.now-card { min-height: var(--now-card-min-h); display: flex; flex-direction: column; justify-content: center; gap: var(--now-bar-gap); }
-.now-card[hidden], .now-card [hidden], .stage[hidden] { display: none; }
-.now-one { display: flex; align-items: center; gap: var(--now-gap); }
+.song-card { display: flex; flex-direction: column; gap: var(--song-card-gap); }
+.song-card [hidden], .now-rows[hidden] { display: none; }
+.song-head { display: flex; align-items: center; gap: var(--now-gap); }
 .now-disc { flex: none; width: var(--now-disc); height: var(--now-disc); color: var(--mut); }
 .now-disc.turning { animation: turn var(--now-disc-turn) linear infinite; }
 .now-text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: var(--now-line-gap); }
 .now-line { font-size: var(--fs-now); font-weight: var(--fw-now); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .now-bar { height: var(--now-bar-h); }
-.now-list { list-style: none; margin: var(--now-line-gap) 0 0; padding: 0; display: flex; flex-direction: column; gap: var(--now-rows-gap); }
+.song-card.no-song .now-bar { visibility: hidden; }
+.song-card.no-song .stage { opacity: 0; }
+.now-rows { display: flex; flex-direction: column; gap: var(--now-rows-gap); padding: var(--now-rows-pad); }
+.now-rows-title { margin: 0; font-size: var(--fs-small); }
+.now-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--now-rows-gap); }
 .now-list li { display: flex; gap: var(--now-row-gap); align-items: baseline; min-width: 0; }
 .now-list .now-name { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .now-list .now-step { flex: none; white-space: nowrap; }
 .now-ahead { margin: 0; }
 @media (prefers-reduced-motion: reduce) { .now-disc.turning { animation: none; } }
 .chip { display: inline-block; font-size: var(--fs-label); font-weight: var(--fw-chip); color: var(--mut); background: var(--control); padding: var(--chip-pad); border-radius: var(--r-pill); vertical-align: var(--chip-raise); }
-.stage { display: flex; gap: var(--stage-gap); align-items: center; position: relative; min-height: calc(var(--stage-h) + var(--stage-name-room)); }
+.stage { display: flex; gap: var(--stage-gap); align-items: center; position: relative; min-height: var(--stage-h); }
 .stage-wave { width: var(--stage-wave-w); height: var(--stage-h); flex: none; display: block; }
 .stage-facts { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: var(--inner-gap); transition: opacity var(--t-fade) var(--ease-fade); }
-.stage.out .stage-facts { opacity: 0; }
 .stage-name { font-size: var(--fs-stage); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .stage-dl { display: flex; flex-wrap: wrap; gap: var(--fact-gap); margin: 0; }
 .stage-dl div { min-width: var(--stage-dl-min); }
@@ -498,12 +499,9 @@ main { flex: 1; min-height: 0; display: flex; flex-direction: column; }
 .stage-dl dd { margin: 0; font-variant-numeric: tabular-nums; font-weight: var(--fw-stage-value); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .stage-dl dd.tempo { color: var(--amber); }
 .stage-dl dd.quiet { color: var(--mut); font-weight: var(--fw-stage-quiet); }
-.stage-empty { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; }
-.stage.has-song .stage-empty { display: none; }
-/* the song card above it: before the first song is in, the stage is a quiet empty frame, with no words of its own */
-.stage.now-shown:not(.has-song) .stage-empty { visibility: hidden; }
-.stage:not(.has-song) { opacity: var(--stage-empty-opacity); }
-.stage:not(.has-song) .stage-wave, .stage:not(.has-song) .stage-facts { visibility: hidden; }
+/* a part not worked out yet: a quiet bar where it will be, the same height as its words, so nothing moves */
+.stage-dl dd.pending::before { content: ""; display: inline-block; width: var(--card-pending-w); height: var(--card-pending-h); border-radius: var(--r-pill); background: var(--card-pending-bg); }
+
 .figures { display: grid; grid-template-columns: var(--figures-cols); gap: var(--fig-gap); }
 .fig { padding: var(--fig-pad); display: flex; flex-direction: column; gap: var(--inner-gap-s); min-width: 0; }
 .fig h2 { font-size: var(--fs-label); font-weight: var(--fw-fig-head); color: var(--dim); letter-spacing: var(--ls-fig-head); }

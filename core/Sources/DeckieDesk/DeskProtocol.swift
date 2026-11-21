@@ -563,6 +563,15 @@ public final class DeskProtocol: @unchecked Sendable {
         if let read = n.read { m["read"] = (read * 1000).rounded() / 1000 }
         if let title = n.title { m["title"] = title }
         if let artist = n.artist { m["artist"] = artist }
+        // Additions (Nov 20, 2026, protocol still 2): what is worked out of the song so far, each as the finished
+        // song's `run.songs` entry will say it (absent until known).
+        if let v = n.place { m["place"] = v }
+        if let v = n.folder { m["folder"] = v }
+        if let v = n.seconds { m["seconds"] = v }
+        if let v = n.bpm { m["bpm"] = v }
+        if let v = n.bars { m["bars"] = v }
+        if let v = n.key { m["key"] = plain(v) }
+        if let v = n.wave { m["wave"] = v }
         return m
     }
 
@@ -570,7 +579,11 @@ public final class DeskProtocol: @unchecked Sendable {
     /// (not how much of a song is read: that rides with bare progress). Nil when nothing is worked on.
     static func workingKey(_ p: RunProgress) -> String? {
         guard !p.working.isEmpty || p.ahead != nil else { return nil }
-        let songs = p.working.map { [$0.rel, $0.step, $0.title ?? "", $0.artist ?? ""].joined(separator: "\u{1}") }
+        // A part worked out is a change too, sent at once.
+        let songs = p.working.map { n -> String in
+            let parts = [n.place != nil, n.seconds != nil, n.bpm != nil, n.bars != nil, n.key != nil, n.wave != nil].map { $0 ? "1" : "0" }.joined()
+            return [n.rel, n.step, n.title ?? "", n.artist ?? "", parts].joined(separator: "\u{1}")
+        }
         return (songs + ["ahead", p.ahead?.rel ?? ""]).joined(separator: "\u{0}")
     }
 
