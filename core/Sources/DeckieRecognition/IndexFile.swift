@@ -92,14 +92,17 @@ extension RecognitionIndex {
         func fail(_ why: String) -> IndexFileError { IndexFileError(description: "not a usable index file: \(why)") }
         let headerSize = 24 + 16 * Self.sections
         guard data.count >= headerSize, Array(data.prefix(4)) == Self.fileMark else { throw fail("no DKX1 mark") }
-        func u64(_ at: Int) -> Int { Int(data.withUnsafeBytes { $0.loadUnaligned(fromByteOffset: at, as: UInt64.self) }.littleEndian) }
+        // A number from the file, or nil when it does not fit an Int (a damaged or crafted file): never a crash.
+        func u64(_ at: Int) -> Int? { Int(exactly: data.withUnsafeBytes { $0.loadUnaligned(fromByteOffset: at, as: UInt64.self) }.littleEndian) }
         let version = data.withUnsafeBytes { $0.loadUnaligned(fromByteOffset: 4, as: UInt32.self) }.littleEndian
         guard version == Self.fileVersion else { throw fail("version \(version), wanted \(Self.fileVersion)") }
         guard u64(16) == Self.sections else { throw fail("parts") }
+        guard let frames = u64(8) else { throw fail("the timeline") }
         var places: [(Int, Int)] = []
         for i in 0..<Self.sections {
-            let place = u64(24 + 16 * i), length = u64(32 + 16 * i)
-            guard place >= headerSize, place % 8 == 0, length >= 0, place + length <= data.count else { throw fail("a part lies outside the file") }
+            // Compared by subtraction, never added: a place and length near the top of the range are refused.
+            guard let place = u64(24 + 16 * i), let length = u64(32 + 16 * i), place >= headerSize, place % 8 == 0,
+                  place <= data.count, length <= data.count - place else { throw fail("a part lies outside the file") }
             places.append((place, length))
         }
         guard let settings = try? JSONDecoder().decode(FileSettings.self, from: data.subdata(in: places[0].0..<(places[0].0 + places[0].1))) else { throw fail("settings") }
@@ -112,7 +115,7 @@ extension RecognitionIndex {
         }
         songStart = ints(2); pointStart = ints(3)
         guard songStart.count == ids.count + 1, pointStart.count == ids.count + 1 else { throw fail("song count") }
-        timelineFrames = u64(8)
+        timelineFrames = frames
         pointFrame = Block(data: data, offset: places[4].0, count: places[4].1 / 4)
         pointPitch = Block(data: data, offset: places[5].0, count: places[5].1 / 2)
         offsets = Block(data: data, offset: places[6].0, count: places[6].1 / 4)
