@@ -1,6 +1,7 @@
 # The Windows zip a DJ downloads: "Deckie Desk for Windows (first test)". Built on a Windows runner: Deckie Desk (the
 # window `deckie-desk` from desk-shell/, its engine `deckie-desk-engine` and the pages from desk-web/), the program
-# without a window (`deckie-make`), Swift's runtime libraries, Deckie's own ONNX Runtime, the two models, the icon,
+# without a window (`deckie-make`), the listening tool for troubleshooting a microphone (`deckie-listen`), Swift's
+# runtime libraries, Deckie's own ONNX Runtime, the two models, the icon,
 # the licences and the READ ME (core/Tools/windows/package.sh). Then tried as a DJ would use it: unzipped by
 # Windows' own tool into a fresh folder whose name has a space, started through "Deckie Desk.exe" and through
 # "Make Crate File.exe", with nothing on the path but Windows itself. The zip is kept as a run artifact only: no
@@ -17,7 +18,8 @@ env:
 
 on:
   push:
-    branches: ['pc/**']
+    # main too, so the zip is built from what is merged, not only from work branches.
+    branches: [main, 'pc/**']
     paths:
       - core/**
       - desk-shell/**
@@ -25,6 +27,10 @@ on:
       - deck-app/Deck/Assets.xcassets/AppIcon.appiconset/**
       - .github/workflows/pc-package.yml
   workflow_dispatch:
+
+# Only reads the repository (checkout); artifacts and caches use the runner's own token, not this one.
+permissions:
+  contents: read
 
 jobs:
   # The MP3 of the synthesised test track, as in core-windows.yml: encoded on Linux, since no audio is committed
@@ -106,6 +112,8 @@ jobs:
           swift build -c release --product deckie-desk-engine
           if ($LASTEXITCODE -ne 0) { exit 1 }
           swift build -c release --product deckie-e2e
+          if ($LASTEXITCODE -ne 0) { exit 1 }
+          swift build -c release --product deckie-listen
           if ($LASTEXITCODE -ne 0) { exit 1 }
       # The window, with the icon linked in. Git Bash runs it so that the resource file can be named the Windows way
       # with forward slashes, which every tool on the way to the linker takes.
@@ -195,6 +203,20 @@ jobs:
           if ($said -notmatch "Which folder is your music in") { Write-Error "it did not ask for the folder"; exit 1 }
           if ($said -notmatch "There is no folder at") { Write-Error "the wrong path was not said plainly"; exit 1 }
           if ($said -notmatch "Done\. 4 songs are in the crate file") { Write-Error "it did not finish"; exit 1 }
+      # The listening tool, for troubleshooting a tester's microphone: it starts from the unzipped folder with PATH cut
+      # down to Windows itself (so a library missing from the zip shows) and lists the inputs. The runner may have no
+      # sound input, or no sound service: then it says it cannot list them and ends with 2, which is still a start.
+      - name: "Try it: the listening tool starts and lists the sound inputs"
+        shell: pwsh
+        run: |
+          $env:PATH = "$env:SystemRoot\System32;$env:SystemRoot"
+          $exe = Join-Path $env:RUNNER_TEMP "A DJ's PC\Deckie Desk for Windows (first test)\app\deckie-listen.exe"
+          $said = & $exe --inputs 2>&1 | Out-String
+          $code = $LASTEXITCODE
+          $said
+          if ($code -ne 0 -and $code -ne 2) { Write-Error "deckie-listen --inputs ended with $code (a missing library ends with -1073741515)"; exit 1 }
+          if ($code -eq 0 -and $said -notmatch "sound system:") { Write-Error "deckie-listen --inputs did not name the sound system"; exit 1 }
+          exit 0
       - name: "Try it: started without unzipping the rest (the starter alone)"
         shell: pwsh
         run: |
@@ -216,10 +238,10 @@ jobs:
         shell: pwsh
         run: |
           $root = Join-Path $env:RUNNER_TEMP "A DJ's PC\Deckie Desk for Windows (first test)"
-          $said = python core\Tools\windows\pe_kind.py "$root\Deckie Desk.exe" "$root\Make Crate File.exe" "$root\app\deckie-desk.exe" "$root\app\deckie-desk-engine.exe" "$root\app\deckie-make.exe" | Out-String
+          $said = python core\Tools\windows\pe_kind.py "$root\Deckie Desk.exe" "$root\Make Crate File.exe" "$root\app\deckie-desk.exe" "$root\app\deckie-desk-engine.exe" "$root\app\deckie-make.exe" "$root\app\deckie-listen.exe" | Out-String
           if ($LASTEXITCODE -ne 0) { exit 1 }
           $said
-          foreach ($want in "Deckie Desk.exe: window icon", "Make Crate File.exe: console icon", "deckie-desk.exe: window icon", "deckie-desk-engine.exe: window", "deckie-make.exe: console") {
+          foreach ($want in "Deckie Desk.exe: window icon", "Make Crate File.exe: console icon", "deckie-desk.exe: window icon", "deckie-desk-engine.exe: window", "deckie-make.exe: console", "deckie-listen.exe: console") {
             if (-not $said.Contains($want)) { Write-Error "expected: $want"; exit 1 }
           }
           foreach ($f in "app\desk-web\index.html", "app\desk-web\desk.js", "app\desk-web\desk.css", "app\desk-web\booth.js", "app\desk-web\booth.css", "app\licences\miniaudio-LICENSE.txt", "app\licences\webview-LICENSE.txt", "app\licences\Microsoft-WebView2-SDK-LICENSE.txt", "app\licences\ACKNOWLEDGEMENTS.txt", "READ ME FIRST.txt") {

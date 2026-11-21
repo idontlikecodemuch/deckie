@@ -12,7 +12,7 @@ import DeckieCore
 /// agreeing with strength, and 0.45, its level for a decision with a dissent, below the line that sets
 /// `key_uncertain`. A finer mapping is unmeasured (the memo's open question); the margin and the agreement are in the
 /// lab JSON's `deckie.key` for whoever measures it. On research R's held-out tracks, sure keys were 92.0 percent exact
-/// against the lab (88 tracks) and unsure ones 65.1 (43); on the 373-track sheet (mixer/key_parity_keys.tsv) 217 are
+/// against the lab (88 tracks) and unsure ones 65.1 (43); on the 373-track sheet (the lab's key_parity_keys.tsv) 217 are
 /// sure, so 156 would be flagged `key_uncertain` (the three-profile vote flagged 88, the lab 58). Nothing here was
 /// fitted beyond the memo's 0.08, which research R set on its dev split.
 public struct KeyConfidence: Sendable, Equatable {

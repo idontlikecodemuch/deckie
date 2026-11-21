@@ -3,37 +3,40 @@ import Foundation
 import ShazamKit
 import SwiftUI
 import DeckieRecognition
+import DeckieBooth
 
 /// Listens (the microphone) or tests a file (streamed as the microphone would hear it, or rendered segments for
 /// Apple's), through Deckie's recogniser, Apple's, or both (Listening.swift), and keeps the "now playing" estimate:
-/// song, position, pitch, confidence. Every recogniser's word arrives as a `Reading`; `take` is the one place a
-/// reading becomes the playing song, the pitch shown and the set's log.
+/// song, position, pitch, confidence. Every recogniser's word arrives as a `Reading`; `take` hands it to the switching
+/// rule, which is the core's (`BoothRule`, DeckieBooth, D42: the same code as Desk's Booth), and keeps the set's log and
+/// the status line.
 @MainActor @Observable final class Recognizer {
     enum Source: Equatable { case idle, mic, file(String), manual }
-    enum PitchKind: String { case none = "", vinyl = "vinyl", masterTempo = "master tempo" }
-
-    struct Event { let date: Date; let id: String; let offset: Double; let freqRatio: Double; let speed: Double?; let audioTime: Double }
+    typealias PitchKind = BoothRule.PitchKind
 
     // public state
     var source: Source = .idle
-    var currentId: String?
-    var positionKnown = false
-    var anchorDate = Date()
-    var anchorOffset = 0.0          // seconds into the ORIGINAL track at anchorDate
-    var rate = 1.0                  // playback tempo relative to the original
-    var pitchPct = 0.0              // pitch fader estimate
-    var pitchKind: PitchKind = .none
-    var pitchFrom = ""              // how the pitch was found
-    var lastMatch: Date?
-    var lastNoMatch: Date?
-    var matchCount = 0
-    var lastLatencyMs = 0.0
-    var firstMatchSeconds: Double?  // time from start of listening/test to the first match of the current song
+    // the switching rule's (BoothRule), read through
+    /// The switching rule: which song is on screen, its place and pitch, and when it changes.
+    private(set) var rule = BoothRule()
+    var currentId: String? { rule.currentId }
+    var positionKnown: Bool { rule.positionKnown }
+    var anchorDate: Date { rule.anchorDate }
+    var anchorOffset: Double { rule.anchorOffset }    // seconds into the ORIGINAL track at anchorDate
+    var rate: Double { rule.rate }                    // playback tempo relative to the original
+    var pitchPct: Double { rule.pitchPct }            // pitch fader estimate
+    var pitchKind: PitchKind { rule.pitchKind }
+    var pitchFrom: String { rule.pitchFrom }          // how the pitch was found
+    var lastMatch: Date? { rule.lastMatch }
+    var lastNoMatch: Date? { rule.lastNoMatch }
+    var matchCount: Int { rule.matchCount }
+    var lastLatencyMs: Double { rule.lastLatencyMs }
+    var firstMatchSeconds: Double? { rule.firstMatchSeconds }  // time from start of listening/test to the first match of the current song
     var status = "starting…"
     var log: [String] = []
-    var history: [String] = []      // songs played before the current one (most recent last)
+    var history: [String] { rule.history }      // songs played before the current one (most recent last)
     var micDenied = false
-    var noMatchCount = 0
+    var noMatchCount: Int { rule.noMatchCount }
 
     // which recogniser (D35)
     /// Deckie's index for the open crate file.
@@ -66,39 +69,17 @@ import DeckieRecognition
     }
 
     // private
-    private var events: [Event] = []
-    private var pendingId: String?
-    private var pendingCount = 0
-    private var lastOnTrack = Date.distantPast
-    private var lastRaw: [String: Double] = [:]      // last raw match offset per song (stale-repeat filter)
+    private var lastRaw: [String: Double] = [:]      // last raw match offset per song (Apple's stale-repeat filter)
     private var staleCount = 0
-    private var hits: [(Date, String)] = []          // every match of the last 40 s: (time, track id)
-    private var challengerId: String?
-    private var challengerSince = Date.distantPast
-    private var challengerLast = Date.distantPast
-    static let hold: TimeInterval = 10
-    var alsoHearing: String?                          // another song heard while the current one is kept
-    // Deckie's song change (D35): the song its readings name in a row that is not on screen, how many readings named
-    // it, when the first did, how many more are needed (`deckieWait`) and the least in all (`carefulWait`).
-    private var deckieRun: (id: String, count: Int, since: Date, left: Int, least: Int)?
-    /// The song on screen was set by hand and has not been heard since.
-    private var byHand = false
-    /// How strongly Deckie's listener last heard the playing song when it followed it (its points above chance), and
-    /// when: a song coming in must be heard more strongly than that to take over on one confirmation.
-    private var currentHeld: (score: Double, at: Date)?
-    /// The song that was on screen before the playing one, and when it gave way.
-    private var leftId: String?
-    private var leftAt = Date.distantPast
-    /// Deckie's: no reading has named the playing song for `notHeardAfter` seconds (talk, silence, the music
-    /// stopped). The song stays on screen, marked as not heard just now.
-    private(set) var notHeard = false
-    /// Deckie's pitch readings of the playing song since the last song change or fader move (`updatePitch`).
-    private var speeds: (id: String, values: [Double], lone: Double?)?
+    /// Another song heard while the current one is kept.
+    var alsoHearing: String? { rule.alsoHearingId.flatMap { Library.shared.track($0)?.oneLine } }
+    /// Deckie's: no reading has named the playing song for a few seconds (talk, silence, the music stopped). The song
+    /// stays on screen, marked as not heard just now.
+    var notHeard: Bool { rule.notHeard }
     /// The song heard coming in under the playing one, when the recogniser reports one (`Reading.incoming`); the
     /// leading copy of it, never the playing song. Not shown yet: its place is the panel's foot, where "also hearing"
     /// sits now, before the switch.
-    private(set) var incoming: Reading.Incoming?
-    private var pendingJump: Event?   // a same-song match at an unexpected offset (repeated chorus?) waiting for confirmation
+    var incoming: Reading.Incoming? { rule.incoming }
     private var catalog: SHCustomCatalog?
     private var task: Task<Void, Never>?
     private var ears: [Ear] = []
@@ -112,18 +93,31 @@ import DeckieRecognition
     static let recordingKey = "recordSets"
     var recActive = false
     var recPaused = false
+    /// Why the set cannot be recorded, when its recording would not begin (nil when it began, or is not asked for).
+    private(set) var recFailed: String?
+    /// What is wrong with the recording in progress (it cannot write), read once a second; nil while it writes.
+    private(set) var recTrouble: String?
+    /// How the recording that Stop last ended went (its length, or that nothing was recorded); nil with `savedSet`.
+    private(set) var lastRecording: RecordingTally?
+    /// What listening does when iPadOS takes the sound away or the input changes (`ListenGuard`, AudioInput.swift).
+    private(set) var listenGuard = ListenGuard()
+    /// Where the sound goes (the recognisers and the recorder), while something is listened to.
+    private var sink: CaptureSink?
+    private var audioObservers: [NSObjectProtocol] = []
     private var feeder: StreamFeeder?
-    private var justSwitched = false
     private var lastRecorded = Date.distantPast
     var inputLevel: Float = 0     // dBFS-ish RMS of the microphone, for the level meter
     private var startedAt = Date()
-    private var songStartedAt = Date()
     /// The clock of the sound being heard now (the microphone's or the test file's), in seconds.
     private var audioClock: () -> Double = { 0 }
 
     static let kID = SHMediaItemProperty("deck_id"), kFlav = SHMediaItemProperty("deck_flavour"), kPct = SHMediaItemProperty("deck_pct")
 
-    init() { rebuildCatalog() }
+    init() {
+        rebuildCatalog()
+        recorder.report = { [weak self] s in Task { @MainActor in self?.note(s) } }
+        watchAudio()
+    }
 
     /// The recognition catalogues for the crate in use: Deckie's index from the crate file's fingerprints (made
     /// ready off the main thread), and Apple's from its signatures (one plain signature per track, made on the Mac).
@@ -160,7 +154,7 @@ import DeckieRecognition
 
     /// The place the playing song is at (D27): set when the song is set, the place that leads given the place playing
     /// before, or the place it was chosen from in the Crate tab.
-    private(set) var currentPlace: TrackPlace?
+    var currentPlace: TrackPlace? { rule.currentPlace }
     /// The playing song, shown at the place it is playing from.
     var current: Track? {
         guard let t = Library.shared.track(currentId) else { return nil }
@@ -168,40 +162,30 @@ import DeckieRecognition
         return t
     }
 
-    /// position frozen while the deck is paused (no matches of the song and a quiet input)
-    func position(at d: Date) -> Double { anchorOffset + max(0, min(frozenAt ?? d, d).timeIntervalSince(anchorDate)) * rate }
+    /// position frozen while the deck is paused
+    func position(at d: Date) -> Double { rule.position(at: d) }
 
     // pause / silence handling
-    var paused = false                  // current song not heard and the room is quiet: position frozen, "paused" hint
-    private var frozenAt: Date?
-    private var lastCurrentMatch = Date.distantPast
-    private var lastAnyMatch = Date.distantPast
+    var paused: Bool { rule.paused }    // current song not heard and the room is quiet: position frozen, "paused" hint
     private var heartbeat: Task<Void, Never>?
-    static let quietDB: Float = -45     // below this the input counts as silence
-    static let silenceClear: TimeInterval = 120
+    static var quietDB: Float { BoothRule.quietDB }     // below this the input counts as silence
+
+    /// The rule's view of where the sound comes from.
+    private var ruleSource: BoothRule.Source {
+        switch source { case .mic: return .listening; case .file: return .file; case .idle: return .idle; case .manual: return .manual }
+    }
+    /// The rule's log lines, into the log.
+    private func flushNotes() { for n in rule.takeNotes() { note(n) } }
 
     /// once a second: detect pauses, and only after 2 minutes without any match fall back to "listening…"
     private func tick() {
-        let now = Date()
-        guard currentId != nil, source != .manual else { return }
-        let sinceCur = now.timeIntervalSince(lastCurrentMatch)
-        // Deckie's (D35): a few seconds with no reading of the playing song and it is marked as not heard just now;
-        // it stays on screen with its picks. Apple's results come too far apart for this, so Apple's is as it was.
-        if !notHeard, listening == .deckie || listening == .both, sinceCur > Self.notHeardAfter {
-            notHeard = true
-            note("not heard just now (no reading of it for \(Int(sinceCur)) s)")
-        }
-        if !paused && sinceCur > 5 && inputLevel < Self.quietDB {
-            paused = true; frozenAt = lastCurrentMatch.addingTimeInterval(1)
-            note("paused (quiet, no match for \(Int(sinceCur)) s)")
-        }
-        if now.timeIntervalSince(lastAnyMatch) > Self.silenceClear {
-            note("nothing recognised for 2 min: back to listening")
-            currentId = nil; currentPlace = nil; paused = false; frozenAt = nil; positionKnown = false; alsoHearing = nil
-            events.removeAll(); hits.removeAll()
-            notHeard = false; deckieRun = nil; speeds = nil; incoming = nil
+        if rule.tick(now: Date(), source: ruleSource, deckie: listening == .deckie || listening == .both, level: inputLevel) {
             status = "listening…"
         }
+        flushNotes()
+        if source == .mic { perform(listenGuard.handle(.tick, now: Date())) }
+        let trouble = recActive ? recorder.trouble : nil
+        if trouble != recTrouble { recTrouble = trouble }
     }
 
     private func startHeartbeat() {
@@ -215,28 +199,7 @@ import DeckieRecognition
     }
 
     /// 0...1 from how consistent the last few matches are (same song, offsets that line up) and how recent they are.
-    var confidence: Double {
-        guard let cur = currentId else { return 0 }
-        if source == .manual { return 0 }
-        let recent = events.suffix(6)
-        guard !recent.isEmpty else { return 0 }
-        let same = recent.filter { $0.id == cur }
-        let agree = Double(same.count) / Double(recent.count)
-        var good = 0, checked = 0
-        let s = Array(same)
-        if s.count >= 2 {
-            for i in 1..<s.count {
-                let pred = s[i - 1].offset + s[i].date.timeIntervalSince(s[i - 1].date) * rate
-                checked += 1
-                if abs(pred - s[i].offset) < 2.0 { good += 1 }
-            }
-        }
-        let consistency = checked == 0 ? 0.6 : Double(good) / Double(checked)
-        let depth = min(1.0, 0.45 + 0.2 * Double(same.count))
-        let age = Date().timeIntervalSince(lastMatch ?? .distantPast)
-        let recency = paused ? 1.0 : age < 20 ? 1.0 : max(0.2, 1 - (age - 20) / 150)   // slow decay in noisy stretches
-        return agree * (0.4 + 0.6 * consistency) * depth * recency
-    }
+    var confidence: Double { rule.confidence(now: Date(), source: ruleSource) }
 
     // MARK: the recognisers
 
@@ -281,7 +244,7 @@ import DeckieRecognition
         guard let h = hearing else { if source != .manual { stop(); status = Words.notListening }; return }
         stop()
         if waitForDeckie(h, { [weak self] in self?.startMic() }) { return }
-        source = .mic; status = "listening…"; startedAt = Date(); savedSet = nil
+        source = .mic; status = "listening…"; startedAt = Date(); savedSet = nil; lastRecording = nil
         comparison.reset()
         task = Task { [weak self] in
             let granted = await AVAudioApplication.requestRecordPermission()
@@ -292,15 +255,28 @@ import DeckieRecognition
             self.audioClock = { mic.audioSeconds }
             guard let ears = self.makeEars(h) else { return }
             self.ears = ears; self.listening = h
-            let rec = self.recorder
-            do {
-                try mic.start(sink: { buf, when in for e in ears { e.hear(buf, at: when) }; rec.append(buf) }) { [weak self] level in Task { @MainActor in self?.inputLevel = level } }
-            }
-            catch { self.note("mic start failed: \(error.localizedDescription)"); self.status = "microphone unavailable"; return }
-            self.note("mic session started (\(mic.formatText)), recognising with \(h.rawValue)")
+            let sink = self.makeSink(ears)
             self.startHeartbeat()
+            do {
+                let shape = try mic.start(sink: { buf, when in sink.take(buf, at: when) }) { [weak self] level in Task { @MainActor in self?.inputLevel = level } }
+                self.perform(self.listenGuard.handle(.started(shape), now: Date()))
+            }
+            catch {
+                // It cannot start now (another app has the sound, no input): said on screen, and tried again by itself.
+                self.note("mic start failed: \(error.localizedDescription)"); self.status = "microphone unavailable"
+                self.perform(self.listenGuard.handle(.startFailed(error.localizedDescription), now: Date()))
+                return
+            }
+            self.note("mic session started (\(mic.formatText)), recognising with \(h.rawValue)")
             if let f = mic.format { self.beginRecording(f) }
         }
+    }
+
+    /// The sink every buffer goes through, for these ears.
+    private func makeSink(_ ears: [Ear]) -> CaptureSink {
+        let s = CaptureSink(ears: ears, recorder: recorder) { [weak self] line in Task { @MainActor in self?.note(line) } }
+        sink = s
+        return s
     }
 
     /// Test source that goes through the same streaming path as the microphone (recognition + recording).
@@ -310,7 +286,7 @@ import DeckieRecognition
         if waitForDeckie(h, { [weak self] in self?.startStream(url, start: start, render: render) }) { return }
         let v = TestVariant(render)
         source = .file(url.lastPathComponent + " (stream" + (render == "o" ? "" : " @\(render)") + ")")
-        status = "streaming test file"; startedAt = Date(); savedSet = nil
+        status = "streaming test file"; startedAt = Date(); savedSet = nil; lastRecording = nil
         comparison.reset()
         note("stream \(url.lastPathComponent) from \(Int(start))s render \(render), recognising with \(h.rawValue)")
         let fd = StreamFeeder(); feeder = fd
@@ -319,14 +295,13 @@ import DeckieRecognition
         self.ears = ears; listening = h
         startHeartbeat()
         beginRecording(fd.format)
-        let rec = recorder
+        let sink = makeSink(ears)
         Task.detached {
             let scoped = url.startAccessingSecurityScopedResource()
             defer { if scoped { url.stopAccessingSecurityScopedResource() } }
             var lastLevel = Date.distantPast
             do { try await fd.run(url, start: start, variant: v) { buf in
-                for e in ears { e.hear(buf, at: nil) }
-                rec.append(buf)
+                sink.take(buf, at: nil)
                 if Date().timeIntervalSince(lastLevel) > 0.25, let ch = buf.floatChannelData?[0] {
                     lastLevel = Date()
                     var sum: Float = 0; let n = Int(buf.frameLength)
@@ -344,21 +319,26 @@ import DeckieRecognition
 
     func beginRecording(_ format: AVAudioFormat) {
         guard recordingOn else { return }
-        do { try recorder.begin(format: format, hearing: listening?.rawValue); recActive = true; recPaused = false; note("recording to \(recorder.baseName ?? "?").aac") }
-        catch { note("recording failed: \(error.localizedDescription)"); recActive = false }
+        do {
+            try recorder.begin(format: format, hearing: listening?.rawValue); recActive = true; recPaused = false; recFailed = nil; recTrouble = nil
+            note("recording to \(recorder.baseName ?? "?").aac (\(AudioShape(format)) in, \(ChannelMap.kept(Int(format.channelCount))) ch recorded)")
+        }
+        catch { note("recording failed: \(error.localizedDescription)"); recActive = false; recFailed = error.localizedDescription }
     }
 
     /// Set recording on or off. Off closes the recording in progress (what was recorded stays in Files); on starts a
-    /// new one at once when the microphone is listening, otherwise with the next listening session.
+    /// new one at once when the microphone is hearing, otherwise with the next listening session (or when the sound
+    /// comes back after an interruption).
     func setRecording(_ on: Bool) {
         guard on != recordingOn else { return }
         recordingOn = on
         if !on {
             if recActive { recorder.finish(); recActive = false; recPaused = false }
+            recFailed = nil; recTrouble = nil
             note("set recording switched off")
         } else {
             note("set recording switched on")
-            if !recActive, source == .mic, let f = mic.format { beginRecording(f) }
+            if !recActive, source == .mic, listenGuard.hearing, let f = mic.format { beginRecording(f) }
         }
     }
 
@@ -384,7 +364,8 @@ import DeckieRecognition
         let saved = recActive ? recorder.baseName : nil
         stop()
         savedSet = saved
-        note(saved.map { "stopped by the DJ: \($0) saved" } ?? "stopped by the DJ")
+        if saved == nil { lastRecording = nil }
+        note(saved.map { "stopped by the DJ: \($0) saved" + (lastRecording?.nothingRecorded == true ? ", with nothing recorded in it" : "") } ?? "stopped by the DJ")
     }
 
     func stop() {
@@ -395,20 +376,108 @@ import DeckieRecognition
         // "listener: a, 142 readings, typical 61 ms, slowest 240 ms".
         for case let d as DeckieEar in ears { note(d.timesLine) }
         for e in ears { e.stop() }
-        ears = []; listening = nil
+        ears = []; listening = nil; sink = nil
         mic.stop()
-        if recActive { recorder.finish(); recActive = false; note("recording closed") }
+        _ = listenGuard.handle(.stopped, now: Date())
+        if recActive { lastRecording = recorder.finish(); recActive = false; note("recording closed") }
+        recTrouble = nil
         if source != .manual { source = .idle }
         status = "stopped"
+    }
+
+    // MARK: interruptions and changes of input
+
+    /// What listening is up against now, for the screen: nil while it hears (or is not listening).
+    enum ListenTrouble: Equatable { case interrupted, restarting, cannotListen }
+    var listenTrouble: ListenTrouble? {
+        guard source == .mic else { return nil }
+        switch listenGuard.state {
+        case .interrupted: return .interrupted
+        case .restarting: return .restarting
+        case .stalled: return .cannotListen
+        case .off, .running: return nil
+        }
+    }
+
+    /// iPadOS's word on the sound (an interruption, a route change, the engine's configuration change, its audio
+    /// restarting), turned into the guard's events. Registered once; nothing happens unless the microphone is on.
+    private func watchAudio() {
+        let nc = NotificationCenter.default
+        func on(_ name: Notification.Name, _ object: AnyObject?, _ event: @escaping @MainActor (Notification) -> ListenGuard.Event?) {
+            audioObservers.append(nc.addObserver(forName: name, object: object, queue: .main) { [weak self] n in
+                MainActor.assumeIsolated { if let self, let e = event(n) { self.audio(e, from: n.object) } }
+            })
+        }
+        on(AVAudioSession.interruptionNotification, nil) { ListenGuard.Event.interruption($0.userInfo) }
+        on(AVAudioSession.routeChangeNotification, nil) {
+            ListenGuard.Event.routeChange($0.userInfo, hasInput: !AVAudioSession.sharedInstance().currentRoute.inputs.isEmpty)
+        }
+        on(AVAudioSession.mediaServicesWereResetNotification, nil) { _ in .mediaReset }
+        on(.AVAudioEngineConfigurationChange, nil) { _ in .configurationChanged }
+    }
+
+    /// The app came to the front: listening that was interrupted, or that stopped with no word from iPadOS, starts
+    /// again (iPadOS does not always say an interruption ended). The DJ's Stop is never undone here.
+    func appBecameActive() {
+        guard source == .mic else { return }
+        if listenGuard.state == .running && !mic.isRunning { note("back at the front and the microphone had stopped"); audio(.configurationChanged); return }
+        audio(.appActive)
+    }
+
+    /// One event about the sound, from iPadOS or a test (`object`: the engine a configuration change is about).
+    func audio(_ e: ListenGuard.Event, from object: Any? = nil) {
+        guard source == .mic else { return }
+        if case .configurationChanged = e, let eng = object as? AVAudioEngine, eng !== mic.engine { return }   // an engine let go before
+        // A change that leaves the input as it was and the engine running needs nothing.
+        let inputChange: Bool = { switch e { case .configurationChanged, .routeChanged(.deviceAdded), .routeChanged(.deviceRemoved): return true; default: return false } }()
+        if inputChange, listenGuard.state == .running, mic.isRunning, mic.inputNow == listenGuard.shape {
+            note("audio: \(e), the input is as it was (\(listenGuard.shape.map { "\($0)" } ?? "?")): listening goes on"); return
+        }
+        note("audio: \(e)")
+        perform(listenGuard.handle(e, now: Date()))
+    }
+
+    /// Does what the guard says.
+    private func perform(_ actions: [ListenGuard.Action]) {
+        for a in actions {
+            switch a {
+            case .pauseCapture:
+                mic.halt()
+            case .restartCapture:
+                do {
+                    let s = try mic.restart()
+                    note("listening again (\(s))")
+                    perform(listenGuard.handle(.restarted(s), now: Date()))
+                    // A set that could not begin before the sound came (listening started during a call): begins now.
+                    if recordingOn, !recActive, recFailed == nil, let f = mic.format { beginRecording(f) }
+                } catch {
+                    note("could not start listening again: \(error.localizedDescription)")
+                    perform(listenGuard.handle(.restartFailed(error.localizedDescription), now: Date()))
+                }
+            case .gapBegan(let why):
+                note("no sound: \(why)")
+                if recActive { recorder.note("no sound from here: \(why); the recording waits") }
+            case .gapEnded(let seconds, let why):
+                note(String(format: "sound back after %.0f s (%@)", seconds, why))
+                if recActive { recorder.gap(seconds: seconds, why: why) }
+            case .formatChanged(let from, let to):
+                // The recognisers start fresh with the new format; the recording follows it in the same file.
+                note("the input is now \(to) (was \(from)): the recognisers start again with it")
+                if recActive { recorder.note("the input is now \(to) (was \(from)); the recording carries on in the same file") }
+                if let h = listening, let fresh = makeEars(h) {
+                    for case let d as DeckieEar in ears { note(d.timesLine) }
+                    for e in ears { e.stop() }
+                    ears = fresh; sink?.setEars(fresh)
+                }
+            }
+        }
     }
 
     /// Another crate file is open: nothing from the last one is playing or was played.
     func forgetSongs() {
         source = .idle
         stop()
-        currentId = nil; currentPlace = nil; history = []; positionKnown = false; paused = false; frozenAt = nil
-        alsoHearing = nil; events.removeAll(); hits.removeAll(); pendingId = nil; challengerId = nil
-        notHeard = false; deckieRun = nil; byHand = false; leftId = nil; speeds = nil; incoming = nil
+        rule.forget()
         savedSet = nil
         comparison.reset()
     }
@@ -416,13 +485,9 @@ import DeckieRecognition
     /// Sets the playing song by hand; `place` is where it was chosen (the Crate tab), else the place that leads.
     func setManual(_ id: String, place: TrackPlace? = nil) {
         stop()
-        switchTo(id, place: place)
-        source = .manual; positionKnown = false; status = "set by hand"
-        events.removeAll()
-        byHand = true
-        // The clocks of "not heard" and of the 2-minute rule start from the choice: before, the first second of
-        // listening after a song was set by hand found no match ever and cleared it.
-        lastCurrentMatch = Date(); lastAnyMatch = Date()
+        rule.setManual(id, place: place, in: Library.shared.booth, now: Date())
+        flushNotes()
+        source = .manual; status = "set by hand"
     }
 
     // MARK: file test (debug): matches rendered segments of a file, optionally simulating continuous play
@@ -533,12 +598,9 @@ import DeckieRecognition
     private func deckieReading(_ r: ListenReading, heard: Date) {
         guard listening == .deckie || listening == .both else { return }
         defer { if Self.traceShown { trace(r) } }
-        if r.state == .held && r.confidence == 0 { return }
+        // A song carried over a gap (followed, but not heard in this second) is no reading at all.
+        guard let reading = Reading(deckie: r, heard: heard) else { return }
         let speed = r.speedPercent
-        let reading = Reading(from: .deckie, date: heard, audioTime: r.time, id: r.id, position: r.positionSeconds, speedPercent: speed,
-                              keyLock: r.keyLock, pitchRatio: r.keyLock == false ? 1 + (speed ?? 0) / 100 : 1,
-                              speedFrom: Words.speedFromDeckie, confidence: r.confidence, vouched: true,
-                              fresh: r.state == .named, milliseconds: r.milliseconds, wait: Self.deckieWait(r))
         if r.state == .named, let id = r.id {
             note(String(format: "Deckie named %@ at %.1fs, speed %+.2f%%, key lock %@, confidence %.1f (%.0f ms), heard %.1fs", Library.shared.track(id)?.title ?? id,
                         r.positionSeconds ?? 0, speed ?? 0, r.keyLock.map { $0 ? "on" : "off" } ?? "?", r.confidence, r.milliseconds, r.time))
@@ -547,44 +609,17 @@ import DeckieRecognition
         take(reading)
     }
 
-    // MARK: new (D35, note of Nov 14): the booth switches sooner when Deckie's is sure
+    // MARK: the switching rule's numbers (D35, note of Nov 14): the core's (`BoothRule`), named here as before
 
-    /// The listener's own thresholds (`ListenSettings`): a search at `sure` names a song on its own; one at `fair`
-    /// names it only when the search before put the same song on the same line.
-    static let listenSettings = ListenSettings()
-    /// Readings the booth waits for before a song Deckie's names replaces the one on screen:
-    /// - named, sure (confidence 3 or more) and agreeing with the search a second or two before on place and speed:
-    ///   none, the name already rests on two searches seconds apart;
-    /// - named and sure, on one search: one, the next reading naming it too (the listener's check of it, its points
-    ///   agreeing 6 or more above chance over the last 5 s);
-    /// - named and only fair (2.6 to 3, two weak searches agreeing): `fairWait`, so the name rests on about five
-    ///   seconds of agreeing sound before it replaces the song a DJ is reading picks from;
-    /// - followed (held): one; a held reading that comes after a name of the same song is its confirmation.
-    static let fairWait = 3
-    static func deckieWait(_ r: ListenReading) -> Int {
-        switch r.state {
-        case .named where r.confidence >= listenSettings.sure: return r.searched?.agrees == true ? 0 : 1
-        case .named: return fairWait
-        default: return 1
-        }
-    }
-    /// The wait for a song that would undo a recent change or a choice: the song on screen until less than
-    /// `returnWindow` seconds ago (no flicker back in a blend), or any song while the one on screen was set by hand
-    /// and has not been heard since. That many readings in a row naming it, whatever their confidence.
-    static let carefulWait = 3
-    static let returnWindow: TimeInterval = 30
-    /// How recent the playing song's own followed reading must be for the dominance check (two readings).
-    static let dominanceWindow: TimeInterval = 2
-    /// The playing song is marked as not heard just now after this many seconds with no reading of it.
-    static let notHeardAfter: TimeInterval = 4
-    /// The pitch shown from Deckie's readings: the median of the playing song's last `pitchReadings` speeds, started
-    /// afresh on a song change, and when two readings in a row lie more than `faderJump` percent from the median and
-    /// within `faderJump` of each other (the fader moved: shown from the second, about a second after the move). One
-    /// reading that far off on its own is set aside (measured: +7.6 % once in a song at +6 % as it faded out). The
-    /// reading's own wobble in a song is a tenth to three tenths (the generated set); nine readings steady it to a
-    /// tenth, and a move of half a percent or more is shown from two readings rather than averaged in.
-    static let pitchReadings = 9
-    static let faderJump = 0.5
+    static var listenSettings: ListenSettings { BoothRule.listenSettings }
+    static var fairWait: Int { BoothRule.fairWait }
+    static func deckieWait(_ r: ListenReading) -> Int { BoothRule.deckieWait(r) }
+    static var carefulWait: Int { BoothRule.carefulWait }
+    static var returnWindow: TimeInterval { BoothRule.returnWindow }
+    static var dominanceWindow: TimeInterval { BoothRule.dominanceWindow }
+    static var notHeardAfter: TimeInterval { BoothRule.notHeardAfter }
+    static var pitchReadings: Int { BoothRule.pitchReadings }
+    static var faderJump: Double { BoothRule.faderJump }
 
     /// For measuring (launch argument `-traceShown YES`): after each of Deckie's readings, one line on the console with
     /// the sound's time, what the reading said and what the screen shows. Not in the log the details sheet shows.
@@ -613,258 +648,28 @@ import DeckieRecognition
 
     // MARK: readings into what the DJ sees
 
-    /// The one place a reading, from either recogniser, becomes the playing song, its place, the pitch shown and the
-    /// set's log.
+    /// The one place a reading, from either recogniser, becomes the playing song, its place, the pitch shown (the
+    /// shared rule, `BoothRule.take`) and the set's log.
     private func take(_ r: Reading) {
-        let now = r.date
-        guard let matched = r.id, let offset = r.position else {
-            lastNoMatch = now
-            noMatchCount += 1
-            if noMatchCount % 5 == 1 { note(String(format: "no match (%d so far), input %.0f dB", noMatchCount, inputLevel)) }
-            if let ms = r.milliseconds { lastLatencyMs = ms }
+        let outcome = rule.take(r, in: Library.shared.booth, now: Date(), source: ruleSource, level: inputLevel, startedAt: startedAt)
+        flushNotes()
+        switch outcome {
+        case .nothing:
             if currentId == nil { status = "listening…" }      // with a song on screen, keep it (2-minute rule in tick)
-            if r.wait != nil { deckieRun = nil }               // Deckie's: nothing heard breaks a run of readings
-            incoming = nil
-            return
-        }
-        let predicted = positionKnown ? position(at: now) : nil
-        // Whichever copy was heard, the song is named once: a copy of the playing song is the playing song (never a
-        // song change), and another song is the copy whose place leads (on the playing song's disc, else the first
-        // disc in order), so every copy of it counts as one challenger.
-        let lib = Library.shared
-        let id = lib.sameSong(matched, currentId) ? currentId! : lib.leadingCopy(of: matched, playingDisc: current?.disc)
-        // The song coming in (D35): kept as its leading copy, never the song this reading names.
-        incoming = r.incoming.flatMap { inc in
-            if lib.sameSong(inc.id, matched) { return nil }
-            var c = inc
-            c.id = lib.sameSong(inc.id, currentId) ? currentId! : lib.leadingCopy(of: inc.id, playingDisc: current?.disc)
-            return c
-        }
-        matchCount += 1
-        lastMatch = now
-        if let ms = r.milliseconds { lastLatencyMs = ms }
-        let ev = Event(date: now, id: id, offset: offset, freqRatio: r.pitchRatio, speed: r.speedPercent, audioTime: r.audioTime)
-        hits.append((now, id))
-        hits.removeAll { now.timeIntervalSince($0.0) > 40 }
-        lastAnyMatch = now
-        if id == currentId {
-            // a match while the room is still quiet is buffered audio from before the pause, not a resume
-            if paused && inputLevel < Self.quietDB { return }
-            let resumed = paused || now.timeIntervalSince(lastCurrentMatch) > 5
-            lastCurrentMatch = now
-            // Heard: no longer marked as not heard, no longer only set by hand, and any run of readings naming
-            // another song is broken.
-            if notHeard { note("heard again") }
-            notHeard = false; byHand = false; deckieRun = nil
-            if r.wait != nil { currentHeld = r.fresh ? nil : (r.confidence, now) }
-            if resumed {
-                // back after a pause / gap: continue from wherever the song is now, no confirmation needed
-                if paused { note(String(format: "resumed at %.1fs", offset)) }
-                paused = false; frozenAt = nil
-                if let pr = predicted, abs(offset - pr) > 2.5 { events.removeAll { $0.id == id } }
-                pendingJump = nil; pendingCount = 0; lastOnTrack = now
-            } else if let pr = predicted, abs(offset - pr) > 2.5 {
-                // same song, different place: cue restart, hot cue, loop, scratch, or a repeated section.
-                if r.vouched {
-                    // Deckie's listener checked the new place against the song itself: taken at once.
-                    note(String(format: "position jump to %.1fs (expected %.1fs)", offset, pr))
-                    events.removeAll { $0.id == id }; pendingJump = nil; pendingCount = 0; lastOnTrack = now
-                } else if offset < 15 && pr > 30 {
-                    note(String(format: "restart from the top (%.1fs)", offset))
-                    events.removeAll { $0.id == id }; pendingJump = nil; pendingCount = 0; lastOnTrack = now
-                } else {
-                    if let pj = pendingJump, abs(pj.offset + now.timeIntervalSince(pj.date) * rate - offset) < 2.5 {
-                        pendingCount += 1
-                    } else { pendingJump = ev; pendingCount = 1 }
-                    // 2 agreeing matches, and the old place no longer heard for 5 s (repeated choruses
-                    // otherwise make ShazamKit alternate between two equally good positions)
-                    if pendingCount >= 2 && now.timeIntervalSince(lastOnTrack) >= 5 {
-                        pendingJump = nil; pendingCount = 0
-                        events.removeAll { $0.id == id }
-                        lastOnTrack = now
-                        note(String(format: "position jump confirmed to %.1fs", offset))
-                    } else {
-                        note(String(format: "ignored %.1fs (expected %.1fs): repeated section?", offset, pr))
-                        return
-                    }
-                }
-            } else { pendingJump = nil; pendingCount = 0; lastOnTrack = now }
-        }
-        events.append(ev)
-        if events.count > 12 { events.removeFirst(events.count - 12) }
-
-        // hysteresis: a new song takes over only after it has out-matched the current one for ~10 s
-        // (the first party's DJ blends for long stretches); while both are heard the current one stays, with a note.
-        if id != currentId {
-            if currentId == nil {
-                lastCurrentMatch = now
-                switchTo(id)
-                firstMatchSeconds = now.timeIntervalSince(source == .mic ? max(startedAt, songStartedAt) : startedAt)
-            } else if let wait = r.wait {
-                // Deckie's (D35): its listener has already gathered the evidence across seconds, so the booth waits
-                // only as many readings as the name's standing asks (`deckieWait`), and longer for a song that would
-                // undo a recent change or a song set by hand (`carefulWait`).
-                if var run = deckieRun, run.id == id {
-                    run.count += 1; run.left = min(run.left - 1, wait); deckieRun = run
-                } else {
-                    let careful = byHand || (id == leftId && now.timeIntervalSince(leftAt) < Self.returnWindow)
-                    deckieRun = (id, 1, now, wait, careful ? Self.carefulWait : 1)
-                }
-                // Dominance, kept from the old hold: a followed reading of the new song no stronger than the playing
-                // song's own a moment ago (`dominanceWindow`) does not confirm on its own; the careful wait applies.
-                // (On the test set a wrong name once came with a weak check, 17.6 against the playing song's 62; every
-                // real change's check stood above the playing song's last.)
-                if !r.fresh, let h = currentHeld, now.timeIntervalSince(h.at) <= Self.dominanceWindow, r.confidence <= h.score {
-                    deckieRun?.least = max(deckieRun?.least ?? 0, Self.carefulWait)
-                }
-                challengerLast = now
-                guard let run = deckieRun else { return }
-                if run.left <= 0 && run.count >= run.least {
-                    note(String(format: "switch to %@ (Deckie's: %d reading%@ in %.1f s%@)", Library.shared.track(id)?.song ?? id, run.count,
-                                run.count == 1 ? "" : "s", now.timeIntervalSince(run.since), run.least > 1 ? ", the careful wait" : ""))
-                    paused = false; frozenAt = nil; lastCurrentMatch = now
-                    switchTo(id)
-                    challengerId = nil; alsoHearing = nil
-                    firstMatchSeconds = now.timeIntervalSince(run.since)
-                } else {
-                    // A wait of more than a second shows the other song meanwhile, as Apple's hold does; a one-reading
-                    // wait does not, so the foot does not flash just before the title changes.
-                    if max(run.left, run.least - run.count) > 1 { alsoHearing = Library.shared.track(id)?.oneLine }
-                    return
-                }
-            } else {
-                if challengerId != id || now.timeIntervalSince(challengerLast) > 12 { challengerId = id; challengerSince = now }
-                challengerLast = now
-                let recent = hits.filter { now.timeIntervalSince($0.0) <= Self.hold }
-                let c = recent.filter { $0.1 == id }.count, k = recent.filter { $0.1 == currentId }.count
-                // hard cut: the current song has stopped matching entirely and the new one matches consistently
-                let lastCur = hits.last { $0.1 == currentId }?.0 ?? .distantPast
-                let cRecent = hits.filter { $0.1 == id && now.timeIntervalSince($0.0) <= 6 }.count
-                let hardCut = now.timeIntervalSince(lastCur) > 3.5 && cRecent >= 3
-                // blend: both are heard; switch only after ~10 s of dominance
-                let dominated = now.timeIntervalSince(challengerSince) >= Self.hold && c > k
-                if dominated || hardCut {
-                    note("switch to \(Library.shared.track(id)?.song ?? id) (\(hardCut ? "hard cut" : "blend"): \(c) vs \(k) matches in \(Int(Self.hold)) s)")
-                    paused = false; frozenAt = nil; lastCurrentMatch = now
-                    switchTo(id)
-                    challengerId = nil; alsoHearing = nil
-                    firstMatchSeconds = now.timeIntervalSince(challengerSince)
-                } else {
-                    alsoHearing = Library.shared.track(id)?.oneLine
-                    return
-                }
+        case .kept:
+            break
+        case .shown(let newSong):
+            // The log follows the panel: a new song at once; the same song's pitch and confidence refreshed at most
+            // every few seconds (Deckie's readings come every second).
+            if recActive, let t = current, newSong || r.date.timeIntervalSince(lastRecorded) >= Self.recordEvery {
+                recorder.record(track: t, pitch: pitchPct, pitchKind: pitchKind.rawValue, confidence: confidence, newSong: newSong,
+                                keyLock: r.keyLock, heardBy: r.from.rawValue)
+                lastRecorded = r.date
             }
-        } else if now.timeIntervalSince(challengerLast) > 15 {
-            alsoHearing = nil
+            status = source == .mic ? "listening · matched" : "test file · matched"
         }
-        pendingId = nil
-        let before = (pitchPct, pitchFrom)
-        updatePitch(r, ev)
-        if abs(pitchPct - before.0) >= 0.05 || pitchFrom != before.1 { note(String(format: "pitch %+.1f%% %@ (%@)", pitchPct, pitchKind.rawValue, pitchFrom)) }
-        anchorDate = now; anchorOffset = offset; positionKnown = true
-        // The log follows the panel: a new song at once; the same song's pitch and confidence refreshed at most every
-        // few seconds (Deckie's readings come every second).
-        if recActive, let t = current, justSwitched || now.timeIntervalSince(lastRecorded) >= Self.recordEvery {
-            recorder.record(track: t, pitch: pitchPct, pitchKind: pitchKind.rawValue, confidence: confidence, newSong: justSwitched,
-                            keyLock: r.keyLock, heardBy: r.from.rawValue)
-            lastRecorded = now
-        }
-        justSwitched = false
-        status = source == .mic ? "listening · matched" : "test file · matched"
     }
     static let recordEvery: TimeInterval = 5
-
-    /// The middle value (the mean of the middle two for an even count).
-    static func median(_ v: [Double]) -> Double {
-        guard !v.isEmpty else { return 0 }
-        let s = v.sorted(), n = s.count
-        return n % 2 == 1 ? s[n / 2] : (s[n / 2 - 1] + s[n / 2]) / 2
-    }
-
-    private func switchTo(_ id: String, place: TrackPlace? = nil) {
-        justSwitched = true
-        if let c = currentId, c != id { leftId = c; leftAt = Date() }
-        notHeard = false; byHand = false; deckieRun = nil; speeds = nil; currentHeld = nil
-        if incoming?.id == id { incoming = nil }
-        if id != currentId || place != nil {
-            currentPlace = place ?? Library.shared.placed(id, playingDisc: current?.disc)?.place
-        }
-        if let c = currentId, c != id {
-            history.removeAll { $0 == c }
-            history.append(c)
-            if history.count > 30 { history.removeFirst() }
-        }
-        currentId = id
-        songStartedAt = Date()
-        events.removeAll { $0.id != id }
-        pitchPct = 0; pitchKind = .none; rate = 1; pitchFrom = ""
-    }
-
-    /// The pitch shown, from the readings of the playing song: the key moved (vinyl-style), the speed read from one
-    /// listen (Deckie's), or the speed from how fast the place moves (Apple's with the key held).
-    private func updatePitch(_ r: Reading, _ ev: Event) {
-        if r.from == .deckie, let s = r.speedPercent {
-            // Deckie's (D35): the deck's speed from each second's listen wobbles by a tenth or two; the pitch shown is
-            // the median of the playing song's last `pitchReadings`, started afresh on a song change and when two
-            // readings in a row move more than `faderJump` from it (the fader moved: not averaged in). The key
-            // held or not to be told, the tempo shown is still the tempo the song plays at (the BPM and the song time
-            // follow `rate`).
-            if var run = speeds, run.id == ev.id {
-                if abs(s - Self.median(run.values)) <= Self.faderJump {
-                    run.values.append(s); run.values = Array(run.values.suffix(Self.pitchReadings)); run.lone = nil
-                } else if let lone = run.lone, abs(s - lone) <= Self.faderJump {
-                    // Two readings in a row away from the median and agreeing: the fader moved. Start from them.
-                    note(String(format: "fader moved: %+.2f%%, %+.2f%% after %+.2f%%", lone, s, Self.median(run.values)))
-                    run.values = [lone, s]; run.lone = nil
-                } else {
-                    run.lone = s           // one reading away from the rest: set aside until the next agrees
-                }
-                speeds = run
-            } else {
-                speeds = (ev.id, [s], nil)
-            }
-            let m = Self.median(speeds?.values ?? [s])
-            pitchPct = (m * 10).rounded() / 10; rate = 1 + m / 100
-            pitchKind = r.keyLock == true ? .masterTempo : r.keyLock == false ? .vinyl : .none
-            pitchFrom = r.speedFrom
-            return
-        }
-        if abs(ev.freqRatio - 1) > 0.008 {
-            // vinyl-style (master tempo off): key and tempo moved together; the key's ratio says how much, averaged
-            // over the song's last four readings and shown to a tenth
-            let same = events.filter { $0.id == ev.id }.suffix(4).map(\.freqRatio)
-            let fr = same.reduce(0, +) / Double(same.count)
-            pitchPct = ((fr - 1) * 1000).rounded() / 10; pitchKind = .vinyl; rate = fr
-            pitchFrom = r.speedFrom
-            return
-        }
-        if r.speedPercent != nil {
-            // Deckie's: the deck's speed from each listen, the key held or not to be told; averaged over the song's
-            // last four readings and shown to a tenth. With the key held the tempo shown is still the tempo the song
-            // plays at (the BPM and the song time follow `rate`).
-            let same = events.filter { $0.id == ev.id }.compactMap(\.speed).suffix(4)
-            let s = same.reduce(0, +) / Double(same.count)
-            pitchPct = (s * 10).rounded() / 10; rate = 1 + s / 100
-            pitchKind = r.keyLock == true ? .masterTempo : .none
-            pitchFrom = r.speedFrom
-            return
-        }
-        // key unchanged (master tempo on, or no pitch): the tempo is how fast the matched position runs against the
-        // audio clock, shown from 12 s and three matches on (`speedFromPlaces`), and refined on every match after that.
-        let same = Array(events.filter { $0.id == ev.id }.suffix(12))
-        if let fit = speedFromPlaces(same.map { ($0.audioTime, $0.offset) }) {
-            let p = ((fit.ratio - 1) * 1000).rounded() / 10
-            if abs(p) >= 0.3 { pitchPct = p; pitchKind = .masterTempo; rate = fit.ratio; pitchFrom = "position drift over \(Int(fit.span)) s" }
-            else { pitchPct = 0; pitchKind = .none; rate = 1; pitchFrom = "position drift" }
-            return
-        }
-        if let hint = r.speedHint {
-            // a tempo-only variant matched: its percent stands in until the drift fit has 12 s of matches
-            pitchPct = hint; pitchKind = .masterTempo; rate = 1 + hint / 100; pitchFrom = "tempo-only variant, measuring"
-        } else if pitchKind == .vinyl {
-            pitchPct = 0; pitchKind = .none; rate = 1
-        }
-    }
 }
 
 // MARK: - offline rendering of a file segment through a pitch variant (same code path as tools/catalogtool)
@@ -916,20 +721,62 @@ enum FileRenderer {
 
 /// The microphone, asked for the least processed input iPadOS gives (measurement mode: no automatic gain on loud
 /// music), plus an RMS level for the meter. One engine, one tap: every buffer goes to `sink` (the recognisers and the
-/// set recorder).
+/// set recorder, `CaptureSink`).
+///
+/// `restart` starts it again after an interruption or a change of input: a new engine, so whatever the input is now
+/// (its sample rate, its channels) is what the tap takes; the sink and the sound's clock (`audioSeconds`) carry on.
 final class MicCapture: @unchecked Sendable {
-    private let engine = AVAudioEngine()
+    private(set) var engine = AVAudioEngine()
     private(set) var formatText = ""
     private var lastLevel = Date.distantPast
+    private var sink: ((AVAudioPCMBuffer, AVAudioTime) -> Void)?
+    private var level: ((Float) -> Void)?
 
     private(set) var format: AVAudioFormat?
-    /// seconds of audio heard so far: the clock the drift fit runs on (sample time, not wall time)
+    /// seconds of audio heard so far: the clock the drift fit runs on (sample time, not wall time); a gap does not
+    /// count, so it runs on across a restart as the recognisers' own clocks do
     private(set) var audioSeconds: Double = 0
 
-    func start(sink: @escaping (AVAudioPCMBuffer, AVAudioTime) -> Void, level: @escaping (Float) -> Void) throws {
+    /// Whether the engine is running now.
+    var isRunning: Bool { engine.isRunning }
+    /// The input's shape as iPadOS has it now (nil with no input).
+    var inputNow: AudioShape? {
+        let f = engine.inputNode.inputFormat(forBus: 0)
+        return f.sampleRate > 0 && f.channelCount > 0 ? AudioShape(f) : nil
+    }
+
+    /// The session for a set (what each choice is for is said in the README, "The sound input"):
+    /// - play and record, so another app's music on this iPad (a DJ app) is not silenced, as the record category would;
+    /// - mix with others: starting to listen never stops or ducks that music;
+    /// - measurement: no automatic gain or voice processing on loud music;
+    /// - Bluetooth A2DP allowed for output only, so music already going to a Bluetooth speaker stays there; no
+    ///   Bluetooth hands-free input is allowed, so a Bluetooth headset never becomes the microphone;
+    /// - with UIBackgroundModes=audio, capture continues when the screen locks.
+    /// The ring and silent switch never silences recording (it silences only playback, and Deckie plays nothing).
+    static let category: AVAudioSession.Category = .playAndRecord
+    static let mode: AVAudioSession.Mode = .measurement
+    static let options: AVAudioSession.CategoryOptions = [.mixWithOthers, .allowBluetoothA2DP]
+
+    /// Starts listening; the input's shape.
+    @discardableResult
+    func start(sink: @escaping (AVAudioPCMBuffer, AVAudioTime) -> Void, level: @escaping (Float) -> Void) throws -> AudioShape {
+        self.sink = sink; self.level = level
+        audioSeconds = 0
+        return try run()
+    }
+
+    /// Starts again with the input as it is now (after an interruption or a change of input); the input's shape.
+    @discardableResult
+    func restart() throws -> AudioShape {
+        halt()
+        engine = AVAudioEngine()
+        return try run()
+    }
+
+    private func run() throws -> AudioShape {
+        guard let sink, let level else { throw NSError(domain: "Deck", code: 3, userInfo: [NSLocalizedDescriptionKey: "listening was not started"]) }
         let av = AVAudioSession.sharedInstance()
-        // measurement: no automatic gain on loud music; with UIBackgroundModes=audio, capture continues when the screen locks
-        try av.setCategory(.record, mode: .measurement, options: [])
+        try av.setCategory(Self.category, mode: Self.mode, options: Self.options)
         try av.setActive(true)
         let input = engine.inputNode
         let fmt = input.outputFormat(forBus: 0)
@@ -938,24 +785,31 @@ final class MicCapture: @unchecked Sendable {
             throw NSError(domain: "Deck", code: 2, userInfo: [NSLocalizedDescriptionKey: "no microphone input available"])
         }
         input.removeTap(onBus: 0)
-        format = fmt; audioSeconds = 0
+        format = fmt
         input.installTap(onBus: 0, bufferSize: 4096, format: fmt) { [weak self] buf, when in
             sink(buf, when)
             self?.audioSeconds += Double(buf.frameLength) / fmt.sampleRate
             guard let self, let ch = buf.floatChannelData?[0], Date().timeIntervalSince(self.lastLevel) > 0.25 else { return }
             self.lastLevel = Date()
             var sum: Float = 0
-            let n = Int(buf.frameLength)
-            for i in 0..<n { sum += ch[i] * ch[i] }
+            let n = Int(buf.frameLength), step = buf.format.isInterleaved ? buf.stride : 1
+            for i in 0..<n { let x = ch[i * step]; sum += x * x }
             level(10 * log10(max(1e-9, sum / Float(max(1, n)))))
         }
         engine.prepare()
-        try engine.start()
+        do { try engine.start() } catch { input.removeTap(onBus: 0); throw error }
+        return AudioShape(fmt)
+    }
+
+    /// The engine and its tap stopped (an interruption: the session is iPadOS's to deactivate).
+    func halt() {
+        engine.inputNode.removeTap(onBus: 0)
+        engine.stop()
     }
 
     func stop() {
-        engine.inputNode.removeTap(onBus: 0)
-        engine.stop()
+        halt()
+        sink = nil; level = nil
         try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
     }
 }

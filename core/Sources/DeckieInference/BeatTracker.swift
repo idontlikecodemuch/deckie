@@ -48,7 +48,7 @@ public final class BeatTracker: @unchecked Sendable {
         if let path = ProcessInfo.processInfo.environment[modelEnvironmentVariable], !path.isEmpty { return [path] }
         // Beside a shipped program first (`models/` in OnnxRuntime.programFolder, when the program set it).
         return OnnxRuntime.candidates(named: modelFileName, in: "models",
-                                      checkout: OnnxRuntime.coreFolder.appendingPathComponent(".models").appendingPathComponent(modelFileName))
+                                      checkout: OnnxRuntime.coreFolder?.appendingPathComponent(".models").appendingPathComponent(modelFileName))
     }
 
     /// The first candidate that exists, or nil.
@@ -105,12 +105,14 @@ public final class BeatTracker: @unchecked Sendable {
         return BeatThisLogits(beat: beat.values, downbeat: downbeat.values)
     }
 
-    /// The logits for a whole spectrogram, chunk by chunk.
-    public func logits(_ spectrogram: BeatThisSpectrogram) throws -> BeatThisLogits {
+    /// The logits for a whole spectrogram, chunk by chunk; `onChunk` is told each chunk done of the chunks in all
+    /// (`BeatThisChunking.run`), so a screen can show how far the beat model is through the song.
+    public func logits(_ spectrogram: BeatThisSpectrogram,
+                       onChunk: ((_ done: Int, _ total: Int) -> Void)? = nil) throws -> BeatThisLogits {
         let count = BeatThisChunking.split(frames: spectrogram.frames).count
         let shrinking = session.options.arenaShrinkage
         var index = 0
-        return try BeatThisChunking.run(spectrogram) { input, rows in
+        return try BeatThisChunking.run(spectrogram, onChunk: onChunk) { input, rows in
             defer { index += 1 }
             let shrink = shrinking && (arenaShrinking == .everyChunk || index == 0 || index == count - 1)
             return try chunkLogits(input, rows: rows, shrinkArena: shrink)
@@ -126,14 +128,14 @@ public final class BeatTracker: @unchecked Sendable {
         }
     }
 
-    /// Beats and downbeats of `audio`.
-    public func track(_ audio: AudioBuffer) throws -> BeatTrackerResult {
+    /// Beats and downbeats of `audio`; `onChunk` as `logits` takes it (the model's chunks, the stage's long part).
+    public func track(_ audio: AudioBuffer, onChunk: ((_ done: Int, _ total: Int) -> Void)? = nil) throws -> BeatTrackerResult {
         let t0 = Date()
         let y = Self.modelRateSignal(audio.mono(), sampleRate: audio.sampleRate)
         let t1 = Date()
         let spectrogram = frontEnd.spectrogram(y)
         let t2 = Date()
-        let logits = try logits(spectrogram)
+        let logits = try logits(spectrogram, onChunk: onChunk)
         let t3 = Date()
         let beats = BeatThisPostProcessor.minimal(logits)
         let t4 = Date()

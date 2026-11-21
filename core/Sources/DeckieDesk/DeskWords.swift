@@ -121,7 +121,8 @@ public enum DeskWords {
         "takeBackOut": "Take this back out",
 
         // while it works
-        "runTitle": "Reading your crate",
+        // The reading screen's title names what is read (the owner's choice, Nov 21, 2026): "Reading Stick 3".
+        "runTitle": "Reading {read}",
         "runReading": "Adding {read} to {crate}",
         "runReading.same": "Adding the songs in {read}",
         "songsOf.one": "{done} of {total} song",
@@ -446,6 +447,8 @@ public enum DeskWords {
         "nameFromPart.user": "you",
         "nameFromPart.lab": "the lab",
         "nameFromJoin": " and ",
+        // Not shown for now (Nov 21, 2026): the Mac's song info hides its key changes, an older analysis that
+        // contradicts the song's key on about a quarter of songs. Kept for when a key-change reading is trusted.
         "rowKeyChanges": "Key changes",
         "keyFromBar": "{camelot} from bar {bar}",
         "rowLoudness": "Loudness",
@@ -996,6 +999,21 @@ public enum DeskWords {
         "reason.too_short": "Too short",
         // Desk without the part that reads music (no ONNX Runtime or no beat model): said at once, on every screen.
         "engineMissingHelp": "Reinstall Desk to put it back. Your crates and crate files are safe.",
+
+        // new (Nov 21, 2026): a crate whose crate file is there and does not read (a save stopped part-way by an
+        // earlier Desk). Shown in place of the songs, never as an empty crate; the reader's own words go under
+        // "Details". Placeholders until the copy audit.
+        "crateUnreadable": "This crate's file could not be read.",
+        "crateUnreadableHelp": "Desk still keeps what it worked out for every song, so it can rebuild the crate. Nothing is added to it until then.",
+        "crateUnreadableNoRebuild": "Add its music again to bring the songs back: songs Desk has read before go in quickly.",
+        "crateUnreadableDetails": "Details",
+        "rebuildCrate": "Rebuild this crate",
+        "rebuildCrateHelp": "Puts the crate's file right from what Desk kept for each song. A copy of the file as it was is kept.",
+        "crateRebuilt.one": "Crate rebuilt: 1 song.",
+        "crateRebuilt.other": "Crate rebuilt: {n} songs.",
+        "crateRebuiltLeftOut.one": "1 song could not be put back. Add its music again to bring it back.",
+        "crateRebuiltLeftOut.other": "{n} songs could not be put back. Add their music again to bring them back.",
+        "crateCannotRebuild": "This crate could not be rebuilt. Add its music again to bring the songs back.",
     ]
 
     /// The words named `key` with `{name}` filled from `values`; the key itself when there are none, so a missing word

@@ -2,8 +2,9 @@ import Testing
 import Foundation
 import DeckieCore
 import DeckieLab
+import DeckieTestSupport
 
-/// One pair record as mixer/score.py writes it (Fixtures/pairs_sample.json).
+/// One pair record as mixer/score.py writes it (pairs_sample.json, LabData.fixtures).
 struct SamplePair: Decodable {
     var a, b: String
     var scoreBase: Double
@@ -39,7 +40,7 @@ struct PairsSummary: Decodable {
     }
 }
 
-/// mixer/recs.json, the committed recommendations.
+/// recs.json, the recommendations score.py wrote for the lab's data (LabData).
 struct RecsFile: Decodable {
     struct Entry: Decodable {
         var id: String
@@ -66,7 +67,8 @@ struct RecsFile: Decodable {
     }
 }
 
-/// The whole pool, loaded and scored once for every test in the suite (about 140,000 directed pairs).
+/// The whole pool, loaded and scored once for every test in the suite (about 140,000 directed pairs on the lab's
+/// own data; 130 on the invented sample).
 final class ScoredPool: Sendable {
     let tracks: [Track]
     let pairs: [PairKey: PairScore]
@@ -83,21 +85,36 @@ final class ScoredPool: Sendable {
     // move one step; that shows up as 0.001 in a term rounded to three places and 0.0001 in the score.
     static let termTol = 0.0011, scoreTol = 0.00011, twoPlaceTol = 0.011, threePlaceTol = 0.0011
 
+    /// Every track loads as score.py's `load()` makes it: the fields against its feature file and candidates row.
     @Test func loadsThePoolLikeTheLab() throws {
         let pool = ScoredPool.shared
-        let summary = try RepoPaths.fixture("pairs_summary.json", as: PairsSummary.self)
-        #expect(pool.tracks.count == summary.nTracks)
-        let byId = Dictionary(uniqueKeysWithValues: pool.tracks.map { ($0.id, $0) })
-        let t = try #require(byId["[id]"])
-        #expect(t.camelot == "12A" && t.inBars == 8 && t.outBars == 16 && t.nBars == 175)
-        #expect(t.vocIn.count == 8 && t.vocOut.count == 16 && t.vocFirst16.count == 16)
-        #expect(near(t.embedding.reduce(0) { $0 + $1 * $1 }, 1, 1e-9))
-        #expect(t.kind == "dance original" && t.era == "pre-90s" && t.hal)
+        let summary = try LabData.fixture("pairs_summary.json", as: PairsSummary.self)
+        #expect(pool.tracks.count == summary.nTracks && pool.tracks.count == LabData.trackCount)
+        let cands = Dictionary(try CandidateRecord.loadAll(RepoPaths.candidates).map { ($0.id, $0) },
+                               uniquingKeysWith: { a, _ in a })
+        for t in pool.tracks {
+            let d = try FeatureFile.load(RepoPaths.features.appendingPathComponent("\(t.id).json"))
+            let raw = try #require(try JSONSerialization.jsonObject(
+                with: Data(contentsOf: RepoPaths.features.appendingPathComponent("\(t.id).json"))) as? [String: Any])
+            let mixIn = try #require(raw["mix_in"] as? [String: Any]), mixOut = try #require(raw["mix_out"] as? [String: Any])
+            let inBars = try #require(mixIn["bars"] as? Int), outBars = try #require(mixOut["bars"] as? Int)
+            #expect(t.camelot == d.key.camelot && t.nBars == d.grid.nBars, "\(t.id)")
+            #expect(t.inBars == inBars && t.outBars == outBars, "\(t.id)")
+            let i0 = (mixIn["start_bar"] as? Int ?? 1) - 1
+            #expect(t.vocIn.count == inBars && t.vocOut.count == outBars && t.vocFirst16.count == min(16, d.grid.nBars - i0),
+                    "\(t.id)")
+            #expect(near(t.embedding.reduce(0) { $0 + $1 * $1 }, 1, 1e-9), "\(t.id)")
+            if let c = cands[t.id] {
+                #expect(t.hal == (c.hal ?? false), "\(t.id)")
+                if let kind = c.kind, !kind.isEmpty { #expect(t.kind == kind, "\(t.id)") }
+                if let era = c.era, !era.isEmpty { #expect(t.era == era, "\(t.id)") }
+            }
+        }
     }
 
     @Test func totalsOverEveryPairMatchTheLab() throws {
         let pool = ScoredPool.shared
-        let s = try RepoPaths.fixture("pairs_summary.json", as: PairsSummary.self)
+        let s = try LabData.fixture("pairs_summary.json", as: PairsSummary.self)
         #expect(pool.pairs.count == s.nScored, "scored \(pool.pairs.count), lab \(s.nScored)")
         let byId = Dictionary(uniqueKeysWithValues: pool.tracks.map { ($0.id, $0) })
         var sum = 0.0, atLeast = 0
@@ -121,8 +138,8 @@ final class ScoredPool: Sendable {
 
     @Test func sampledPairsMatchTheLabFieldByField() throws {
         let pool = ScoredPool.shared
-        let sample = try RepoPaths.fixture("pairs_sample.json", as: [SamplePair].self)
-        #expect(sample.count > 2000)
+        let sample = try LabData.fixture("pairs_sample.json", as: [SamplePair].self)
+        #expect(sample.count > 2000 || sample.count == pool.pairs.count)  // the private data samples, the sample takes every pair
         var reasonMismatches: [String] = []
         var maxScoreDiff = 0.0, maxTermDiff = 0.0, maxTermName = "", termsOff = 0
         for want in sample {

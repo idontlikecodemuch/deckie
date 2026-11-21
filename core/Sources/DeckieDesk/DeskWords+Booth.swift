@@ -1,15 +1,19 @@
 import Foundation
+import DeckieBooth
 
 extension DeskWords {
-    /// The one list: Desk's words (`baseTable`, DeskWords.swift) with the listening mode's beside them. A name in both
-    /// keeps Desk's.
+    /// The one list: Desk's words (`baseTable`, DeskWords.swift) with the listening mode's beside them, and the words
+    /// Booth says about what it hears and picks, shared with the iPad app (`BoothWords`, DeckieBooth, D42). A name in
+    /// two keeps Desk's.
     public static let table: [String: String] = baseTable.merging(boothTable) { desk, _ in desk }
+        .merging(BoothWords.table) { desk, _ in desk }
 
     /// The listening mode's words (research booth-in-desk, step 1), kept apart so the two lists change without
-    /// meeting. All provisional: the owner decides the names (the mode's, the input's label, the nothing-heard line and
-    /// the microphone sentence especially). Sentence case, "songs" not "tracks", no "AI".
+    /// meeting. The mode's name, "Booth", is decided (D43, Nov 21, 2026); the rest is provisional until the owner decides
+    /// (the input's label, the nothing-heard line and the microphone sentence especially). Sentence case, "songs" not
+    /// "tracks", no "AI".
     static let boothTable: [String: String] = [
-        // The switch in the top bar into the mode and out of it (provisional name).
+        // The switch in the top bar into the mode and out of it. The name is decided: "Booth" (D43).
         "booth.mode": "Booth",
         "booth.modeHelp": "Listen to the music playing and name each song from this crate",
         "booth.leave": "Back to songs",
@@ -48,6 +52,44 @@ extension DeskWords {
         "booth.tempo": "{bpm} BPM",
         "booth.key": "Key {camelot}",
         "booth.place": "{place} of {length}",
+        // new (Nov 21, 2026, step 2): the song on screen is the iPad's (the shared switching rule), so it can stay while
+        // nothing is heard for a moment, and another song can be heard under it. Provisional, as the iPad's are.
+        "booth.notHeard": "Not heard just now",
+        "booth.paused": "Paused",
+        "booth.alsoHearing": "Also hearing: {song}",
+        // new (Nov 21, 2026, step 2): the picks for the song on screen.
+        // The picks' group, as the iPad names it (step 3, Nov 21, 2026; was "Picks for this song (a first look)").
+        "booth.picksTitle": "Picks",
+        "booth.picksNone": "No picks for this song in this crate yet.",
+        "booth.picksMore": "{n} more in the crate",
+        // new (Nov 21, 2026, step 3): the designed Booth screen. Provisional, as the rest of the mode's words.
+        // The screen's heading is the mode's name, with the crate under it ("Listening with {crate}", above).
+        "booth.heading": "Booth",
+        "booth.nowPlaying": "Now playing",
+        // Said to a screen reader when a new song comes up (once, not each second).
+        "booth.announce": "Now playing: {song}",
+        // The song card before a song is named (the iPad's "Listening…" and its help line).
+        "booth.waitingTitle": "Listening…",
+        "booth.waitingHelp": "A song shows up after a few seconds of music.",
+        // Stopped by the DJ, still in the mode: the microphone is off until Start listening.
+        "booth.stopListening": "Stop listening",
+        "booth.startListening": "Start listening",
+        "booth.stoppedHelp": "The microphone is off. Start listening when the music is playing.",
+        // The song's pitch as the deck shows it ("Pitch +3.2%"), and the time left in it.
+        "booth.pitch": "Pitch {pitch}%",
+        "booth.left": "{time} left",
+        // The iPad's More group (the rest of the shortlist), and the picks' place before a song is on screen.
+        "booth.moreTitle": "More",
+        "booth.picksWait": "Picks for the song playing show up here.",
+        // The Shuffle dial (the iPad's): its name, its value, and what it does.
+        "booth.shuffle": "Shuffle",
+        "booth.percent": "{n}%",
+        "booth.shuffleHelp": "At 0% the best matches come in order; at 100% the shortlist is shuffled. Moving it rolls the picks again.",
+        // First use: a crate with no songs, and one with only a few.
+        "booth.emptyCrate": "There are no songs in {crate} yet. Add music to it, and Booth can name what is playing.",
+        "booth.fewSongs": "{crate} has only {n} songs, so there are few picks. Add more music for more to choose from.",
+        // Between the parts of one line (a pick's facts, the song's notes): "120 BPM · 10B · blend".
+        "booth.join": " · ",
         // The microphone permission sentence (provisional): the Mac shows it when it asks (NSMicrophoneUsageDescription
         // in desk-app/project.yml and desk-shell's Info.plist carry these words; BoothTests checks they agree).
         "booth.micPermission": "Deckie Desk listens through the microphone to name the song playing from your crate. Nothing it hears is kept or sent anywhere.",

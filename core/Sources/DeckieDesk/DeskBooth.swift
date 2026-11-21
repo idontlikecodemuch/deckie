@@ -2,6 +2,7 @@ import Foundation
 import DeckieCrate
 import DeckieRecognition
 import DeckieCapture
+import DeckieBooth
 
 /// Listening inside Desk (research booth-in-desk, step 1: hearing): the crate's recognition index built or opened,
 /// sound from an input (`SoundSource`: the microphone, another input, or a stand-in in tests) fed to the shared
@@ -9,10 +10,10 @@ import DeckieCapture
 /// Windows and Linux engine sends these as `booth.*` messages (DeskProtocol, docs/architecture/desk-protocol.md); the
 /// Mac's Desk shows them in SwiftUI. Both use this one class.
 ///
-/// **The song shown is simply the listener's current named song.** This is NOT yet the iPad's switching rule (its
-/// waits, the careful wait, dominance, place jumps and pause: `deck-app/Deck/Sources/Recognizer.swift`, `take`).
-/// Step 2 of the order of work moves that rule into the core; it plugs in at `take(_:)` below, which turns each
-/// reading into what is shown, and nothing else here changes.
+/// **The song shown is the iPad's** (step 2, D42): every reading goes through the shared switching rule
+/// (DeckieBooth's `BoothRule`, the code the iPad app runs), once a second the rule's clock is ticked, and what the rule
+/// puts on screen is said as `playing`; the picks for that song (DeckieBooth's `BoothPicks`, the iPad's ranking, tags
+/// and words) as `picks`. The listener's raw reading is still said as `heard`, for what came before step 2.
 public final class DeskBooth: @unchecked Sendable {
     /// Where a crate's index is kept, in its own folder of Desk's storage (never in the crate file that leaves).
     public static let indexFile = "booth-index.dkx"
@@ -78,13 +79,85 @@ public final class DeskBooth: @unchecked Sendable {
         public var heardAt: Double
         /// Milliseconds the reading took to work out (a reading falls behind when this nears a second).
         public var milliseconds: Double
+        /// Added Nov 21, 2026 (step 3, the Booth screen): the song's wave as the crate has it (`RunSong.wave`: 64 values,
+        /// 0 to 99, of its per-bar loudness) and its bars, so the screen draws its place along it; nil when the crate has
+        /// none. Only the shown song (`Playing.song`) carries them.
+        public var wave: [Int]? = nil
+        public var bars: Int? = nil
     }
+
+    /// What the shared switching rule puts on screen (added Nov 21, 2026, step 2): the song the iPad would show, or none.
+    public struct Playing: Sendable, Equatable {
+        /// The song on screen, as the crate has it (`place` and `heardAt` are the rule's); nil when none is.
+        public var song: Heard?
+        /// The deck's pitch as the rule shows it (a tenth of a percent), how it reads (`vinyl`, `master tempo` or ""),
+        /// and the rate the place moves at.
+        public var pitch: Double
+        public var pitchKind: String
+        public var rate: Double
+        /// Not heard for a few seconds (the song stays), and paused (the room quiet as well, its place frozen).
+        public var notHeard: Bool
+        public var paused: Bool
+        /// Another song heard while this one is kept, as shown (its title); nil when none.
+        public var alsoHearing: String?
+        /// 0...1, how consistent the last readings are.
+        public var confidence: Double
+        /// The song changed with this event.
+        public var newSong: Bool
+    }
+
+    /// One pick, with the iPad's words for it.
+    public struct Pick: Sendable, Equatable {
+        public var id: String
+        /// The title as shown, the artist, the tempo and the key as the song shows them.
+        public var title: String
+        public var artist: String?
+        public var bpm: Double?
+        public var key: String
+        /// `pick`, or `pinned` (not yet: nothing pins on a computer).
+        public var kind: String
+        /// What is unexpected about it ("half time", "to CD2", "deep cut", ...).
+        public var tags: [String]
+        /// "128 BPM · pitch +3.2%", "blend · keys may clash", "8A → 9A".
+        public var bpmLine: String
+        public var moveLine: String
+        public var keys: String
+        public var score: Double?
+        /// Added Nov 21, 2026 (step 3): the two keys may clash (the join's verdict is a clash; `moveLine` says so in
+        /// words), so the screen can mark it.
+        public var keysClash: Bool = false
+    }
+
+    /// The picks for the song on screen (added Nov 21, 2026, step 2): the shortlist's size, how many more songs follow
+    /// it in the whole list, the Shuffle dial they were rolled with, and the picks the iPad shows in Full (up to 10).
+    public struct Picks: Sendable, Equatable {
+        public var forId: String
+        public var shortlist: Int
+        public var more: Int
+        public var shuffle: Double
+        public var picks: [Pick]
+        /// Added Nov 21, 2026 (step 3): the iPad's More group as far as the shortlist goes: the rest of the shortlist after
+        /// `picks`, in the same order, at most `moreShown`. `more` still counts every song after `picks`.
+        public var morePicks: [Pick] = []
+    }
+
+    /// The most of the shortlist's rest sent as `morePicks`.
+    public static let moreShown = 10
 
     public enum Event: Sendable {
         case status(Status)
         case level(SoundLevel)
         case heard(Heard)
+        /// Added Nov 21, 2026 (step 2).
+        case playing(Playing)
+        case picks(Picks)
+        /// How long the listener's readings took, in one line, once when listening stops or fails
+        /// ("listener: a, 142 readings, typical 61 ms, slowest 240 ms"). Also kept in `timesFile`.
+        case times(String)
     }
+
+    /// The file beside the index where each listening's times line is kept, one line each, with the date.
+    public static let timesFile = "booth-times.log"
 
     private let fingerprints: Crate.Fingerprints
     private let rows: [String: DeskSongRow]
@@ -107,13 +180,39 @@ public final class DeskBooth: @unchecked Sendable {
     private var lastLevelAt = 0.0
     private var watch: DispatchSourceTimer?
 
+    // The shared brains (under `lock`): the crate as Booth sees it, the switching rule, its clock, and the picks.
+    private let crate: Crate
+    /// The Shuffle dial (under `lock`): set at the start, and moved while listening (`setShuffle`).
+    private var shuffle: Double
+    /// Each song's wave and bars, for the song shown (built once, from the crate's per-bar loudness).
+    private let waves: [String: (wave: [Int], bars: Int?)]
+    private var library: BoothLibrary?
+    private var rule = BoothRule()
+    private var listenedFrom = Date()
+    private var levelDB: Float = -20
+    private var ticker: DispatchSourceTimer?
+    private var picksFor: String?
+    private var picksPitch: Double?
+    private var ranked: (list: [BoothPick], shortlist: Int)?
+    private var timesTold = false
+
     /// `indexAt`: where the crate's index is kept (`CrateShelf.file(DeskBooth.indexFile, of: id)`).
-    public init(crate: Crate, indexAt: URL, source: SoundSource, settings: ListenSettings = ListenSettings(),
+    /// `shuffle`: the Shuffle dial the picks are rolled with (0: the shortlist in score order; 1: a fair shuffle; the
+    /// iPad's own default is 0.5).
+    public init(crate: Crate, indexAt: URL, source: SoundSource, settings: ListenSettings = ListenSettings(), shuffle: Double = 0.5,
                 out: @escaping @Sendable (Event) -> Void) {
+        self.crate = crate
+        self.shuffle = shuffle.isFinite ? min(1, max(0, shuffle)) : 0.5
         fingerprints = crate.fingerprints()
         var r: [String: DeskSongRow] = [:]
-        for t in crate.tracks { r[t.id] = DeskSongRow(t) }
+        var w: [String: (wave: [Int], bars: Int?)] = [:]
+        for t in crate.tracks {
+            r[t.id] = DeskSongRow(t)
+            let wave = RunSong.wave(t.bars?[BarSeries.lufs])
+            if !wave.isEmpty { w[t.id] = (wave, t.grid?.nBars) }
+        }
         rows = r
+        waves = w
         indexURL = indexAt
         self.source = source
         self.settings = settings
@@ -185,6 +284,10 @@ public final class DeskBooth: @unchecked Sendable {
         }
         progress(100)
         if isStopped { return }
+        // The crate as Booth sees it, for the switching rule and the picks (the picks' scoring pool is built here once).
+        let lib = BoothLibrary(crate)
+        lock.lock(); library = lib; rule = BoothRule(); listenedFrom = Date(); lock.unlock()
+        if isStopped { return }
 
         // The listener, then the input.
         let booth = BoothRecogniser(index: index, settings: settings) { [weak self] reading in self?.take(reading) }
@@ -198,6 +301,7 @@ public final class DeskBooth: @unchecked Sendable {
                 guard let self, !self.isStopped else { return }
                 out(.level(level))
                 self.hearLevel(level)
+                self.lock.lock(); self.levelDB = Float(level.rmsDB); self.lock.unlock()
             }, ended: { [weak self] e in self?.fail(e) })
             // Stopped while the input was opening: it is closed again at once.
             if isStopped { capture.stop(); return }
@@ -206,6 +310,7 @@ public final class DeskBooth: @unchecked Sendable {
             s.error = nil
             say(s)
             watchForNoSamples(capture)
+            startTicking()
         } catch let e as CaptureError {
             fail(e)
         } catch {
@@ -261,19 +366,137 @@ public final class DeskBooth: @unchecked Sendable {
         timer.resume()
     }
 
+    /// The rule's clock, once a second while listening (pauses, "not heard just now", the two-minute rule).
+    private func startTicking() {
+        let timer = DispatchSource.makeTimerSource(queue: DispatchQueue(label: "deckie.booth.tick"))
+        timer.schedule(deadline: .now() + 1, repeating: 1)
+        // The handler holds the timer (on Linux a timer cannot be held weakly); cancelling it lets both go.
+        timer.setEventHandler { [weak self] in
+            guard let self, !self.isStopped else { timer.cancel(); return }
+            self.tickRule()
+        }
+        lock.lock(); ticker?.cancel(); ticker = timer; lock.unlock()
+        timer.resume()
+    }
+
+    private func tickRule() {
+        lock.lock()
+        guard let lib = library else { lock.unlock(); return }
+        let before = rule.currentId, wasNotHeard = rule.notHeard, wasPaused = rule.paused
+        rule.tick(now: Date(), source: .listening, deckie: true, level: levelDB)
+        _ = rule.takeNotes()
+        let changed = before != rule.currentId || wasNotHeard != rule.notHeard || wasPaused != rule.paused
+        let shown = changed ? playing(lib, newSong: false) : nil
+        lock.unlock()
+        if let shown { out(.playing(shown)) }
+    }
+
+    /// What the rule shows now (called with the lock held).
+    private func playing(_ lib: BoothLibrary, newSong: Bool) -> Playing {
+        let now = Date()
+        var song: Heard?
+        if let id = rule.currentId {
+            let row = rows[id]
+            song = Heard(id: id, title: row?.shown ?? lib.song(id)?.song ?? id, artist: row?.artist, bpm: row?.bpm,
+                         camelot: row?.key?.camelot, key: row?.key?.key, scale: row?.key?.scale, seconds: row?.seconds ?? 0,
+                         place: rule.positionKnown ? rule.position(at: now) : 0, confidence: rule.confidence(now: now, source: .listening),
+                         reading: "shown", speedPercent: rule.pitchPct, keyLock: rule.pitchKind == .masterTempo ? true : rule.pitchKind == .vinyl ? false : nil,
+                         heardAt: now.timeIntervalSince(listenedFrom), milliseconds: rule.lastLatencyMs,
+                         wave: waves[id]?.wave, bars: waves[id]?.bars)
+        }
+        let also = rule.alsoHearingId.map { rows[$0]?.shown ?? lib.song($0)?.song ?? $0 }
+        return Playing(song: song, pitch: rule.pitchPct, pitchKind: rule.pitchKind.rawValue, rate: rule.rate, notHeard: rule.notHeard,
+                       paused: rule.paused, alsoHearing: also, confidence: rule.confidence(now: now, source: .listening), newSong: newSong)
+    }
+
+    /// The picks for the song on screen: ranked again when the song changes (the songs played before left out, as on the
+    /// iPad), their words again when the pitch shown moves (the join's pitch follows the playing deck's). Nil when
+    /// neither changed. Called with the lock held.
+    private func picksNow(_ lib: BoothLibrary) -> Picks? {
+        guard let cur = rule.current(in: lib) else { picksFor = nil; ranked = nil; return nil }
+        let pitch = rule.pitchPct
+        if picksFor == cur.id, picksPitch == pitch { return nil }
+        if picksFor != cur.id || ranked == nil {
+            var rng = SystemRandomNumberGenerator()
+            ranked = BoothPicks(lib).ranked(cur: cur, target: BoothFilter(), exclude: Set(rule.history.suffix(12)), pinned: nil,
+                                            shuffle: shuffle, rng: &rng)
+        }
+        picksFor = cur.id; picksPitch = pitch
+        guard let ranked else { return nil }
+        let split = BoothPicks.split(ranked.list, shortlist: ranked.shortlist, full: true)
+        let picks = BoothPicks(lib)
+        func words(_ op: BoothPick) -> Pick? {
+            guard let target = lib.placed(op.id, playingDisc: cur.disc, among: picks.allowsPlace(BoothFilter())) else { return nil }
+            let ji = BoothJoin(cur, target, op.pair, deckAPitch: pitch)
+            let row = rows[op.id]
+            return Pick(id: op.id, title: row?.shown ?? target.song, artist: row?.artist, bpm: target.bpm ?? target.bpmTag, key: target.keyShown,
+                        kind: op.kind == .pinned ? "pinned" : "pick", tags: op.tags, bpmLine: BoothJoin.bpmLine(target, op.pair, ji),
+                        moveLine: BoothJoin.moveLine(op.pair, ji), keys: ji.keyText, score: op.pair?.s, keysClash: ji.verdict == "clash")
+        }
+        let shownPicks = split.shown.compactMap(words)
+        // More, as far as the shortlist goes (the iPad's More before its "rest of the crate" marker).
+        let rest = split.more.prefix(min(max(0, split.restShortlist), Self.moreShown)).compactMap(words)
+        return Picks(forId: cur.id, shortlist: ranked.shortlist, more: split.more.count, shuffle: shuffle, picks: shownPicks,
+                     morePicks: rest)
+    }
+
+    /// The Shuffle dial moved while listening (added Nov 21, 2026, step 3; the iPad's dial): the picks for the song on
+    /// screen are rolled again with it, as the iPad rolls them when the dial is let go, and said as `picks`. Before a song
+    /// is shown it is kept for the first roll. Out of 0...1 is held to it; not a number is ignored. Returns the dial as
+    /// kept.
+    @discardableResult
+    public func setShuffle(_ value: Double) -> Double {
+        lock.lock()
+        if value.isFinite { shuffle = min(1, max(0, value)) }
+        let kept = shuffle
+        var rolled: Picks?
+        if !stopped, let lib = library, rule.currentId != nil {
+            ranked = nil; picksPitch = nil
+            rolled = picksNow(lib)
+        }
+        lock.unlock()
+        if let rolled { out(.picks(rolled)) }
+        return kept
+    }
+
+    /// The dial as kept.
+    public var shuffleNow: Double { lock.lock(); defer { lock.unlock() }; return shuffle }
+
+    /// The listener's times line, said once and kept in `timesFile` beside the index.
+    private func tellTimes() {
+        lock.lock()
+        guard !timesTold, let b = listener else { lock.unlock(); return }
+        timesTold = true
+        lock.unlock()
+        let line = b.timesLine
+        let file = indexURL.deletingLastPathComponent().appendingPathComponent(Self.timesFile)
+        let stamp = ISO8601DateFormatter().string(from: Date())
+        if let data = "\(stamp) \(line)\n".data(using: .utf8) {
+            if let h = try? FileHandle(forWritingTo: file) {
+                h.seekToEndOfFile(); h.write(data); try? h.close()
+            } else {
+                try? data.write(to: file)
+            }
+        }
+        out(.times(line))
+    }
+
     private func fail(_ e: CaptureError) {
-        lock.lock(); let c = capture; capture = nil; watch?.cancel(); watch = nil; lock.unlock()
+        lock.lock(); let c = capture; capture = nil; watch?.cancel(); watch = nil; ticker?.cancel(); ticker = nil; lock.unlock()
         // The input's own thread may be the caller (an unplugged input): stop it from another.
         if let c { DispatchQueue.global().async { c.stop() } }
         var s = current
         s.state = "error"; s.error = e
         say(s)
+        tellTimes()
     }
 
-    /// Each reading becomes what is shown. Step 1: the listener's current named song as it is. Step 2 replaces this
-    /// with the iPad's switching rule, moved into the core (research booth-in-desk, section 1).
+    /// Each reading: the listener's raw answer said as `heard` (and the state line), then the reading through the shared
+    /// switching rule, as the iPad takes it (`heard`: the moment the sound ended, the reading's milliseconds before now),
+    /// and what the rule shows said as `playing`, with the picks for that song when it changed.
     private func take(_ r: ListenReading) {
         guard !isStopped else { return }
+        defer { shareReading(r) }
         guard r.state != .nothingYet, let id = r.id, let row = rows[id] else {
             // "Nothing heard yet" only until a song has been named in this listening; after that, "nothing now".
             lock.lock(); let before = namedOnce; lock.unlock()
@@ -289,6 +512,25 @@ public final class DeskBooth: @unchecked Sendable {
                          keyLock: r.keyLock, heardAt: r.time, milliseconds: r.milliseconds)))
     }
 
+    /// The reading through the shared rule (called on the listener's thread).
+    private func shareReading(_ r: ListenReading) {
+        let now = Date()
+        lock.lock()
+        guard !stopped, let lib = library else { lock.unlock(); return }
+        var shown: Playing?, picks: Picks?
+        if let reading = BoothReading(deckie: r, heard: now.addingTimeInterval(-r.milliseconds / 1000)) {
+            let outcome = rule.take(reading, in: lib, now: now, source: .listening, level: levelDB, startedAt: listenedFrom)
+            _ = rule.takeNotes()
+            var newSong = false
+            if case let .shown(n) = outcome { newSong = n }
+            shown = playing(lib, newSong: newSong)
+            picks = picksNow(lib)
+        }
+        lock.unlock()
+        if let shown { out(.playing(shown)) }
+        if let picks { out(.picks(picks)) }
+    }
+
     /// Stops the input (nothing more is heard once this returns) and says `stopped`. Does not wait for an index being
     /// built: that finishes on its own thread and is kept for next time.
     public func stop() {
@@ -299,8 +541,11 @@ public final class DeskBooth: @unchecked Sendable {
         capture = nil
         watch?.cancel()
         watch = nil
+        ticker?.cancel()
+        ticker = nil
         lock.unlock()
         c?.stop()
+        tellTimes()
         lock.lock(); status = Status(state: "stopped"); lock.unlock()
         out(.status(Status(state: "stopped")))
     }

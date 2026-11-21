@@ -2,6 +2,7 @@ import Testing
 import Foundation
 import DeckieCore
 import DeckieLab
+import DeckieTestSupport
 
 /// Field-by-field comparison of the port's block with the lab's, each number within a tolerance taken from how the
 /// lab rounds that field: half a unit of its last decimal plus a fifth (2 decimals: 0.006; 1 decimal: 0.06; 3
@@ -125,18 +126,17 @@ private struct BlockComparison {
         return bounds.compactMapValues { t0, t1 in BeatGrid.windowFit(det.filter { $0 >= t0 && $0 <= t1 })?.madMs }
     }
 
-    /// Every committed `local_tempo` block, recomputed from the same feature file's committed inputs. The current
-    /// mixer/local_tempo.py, run in Python on the committed (millisecond-rounded) data, reproduces all 373 committed
-    /// blocks exactly, so the files are the reference and no fixture is needed. The track's local tempo flags,
-    /// in the lab's order, are the ones the port's `flags` gives. Every field of 372 tracks is identical; on
-    /// [id] the mix-in residual is a rounding tie (5.25 ms to within 1e-11 ms), which numpy rounds to 5.3
-    /// and the port to 5.2; nothing else in that block differs. Of the 7,538 windows the 373 blocks fit
-    /// (profile segments included), three more sit on such a tie, all profile segments, where only the trust
-    /// decision is kept and the residual is far from 15 ms.
+    /// Every `local_tempo` block of the lab's data (LabData: the private files, else the invented sample), recomputed
+    /// from the same feature file's inputs. The current mixer/local_tempo.py, run in Python on the written
+    /// (millisecond-rounded) data, reproduces every written block exactly, so the files are the reference and no
+    /// fixture is needed. The track's local tempo flags, in the lab's order, are the ones the port's `flags` gives.
+    /// On the lab's own 373 tracks every field of 372 is identical; on one the mix-in residual is a rounding tie
+    /// (5.25 ms to within 1e-11 ms), which numpy rounds to 5.3 and the port to 5.2; nothing else in that block
+    /// differs. Of the 7,538 windows the 373 blocks fit (profile segments included), three more sit on such a tie, all
+    /// profile segments, where only the trust decision is kept and the residual is far from 15 ms.
     @Test func reproducesTheCommittedBlockOnEveryTrack() throws {
-        let files = try FileManager.default.contentsOfDirectory(atPath: RepoPaths.features.path)
-            .filter { $0.hasSuffix(".json") }.sorted()
-        #expect(files.count == 373)
+        let files = try LabData.featureNames()
+        #expect(!files.isEmpty && files.count == LabData.trackCount)
         var identical = 0, withinRounding = 0, failing: [String] = [], ties: [String] = []
         for name in files {
             let data = try Data(contentsOf: RepoPaths.features.appendingPathComponent(name))

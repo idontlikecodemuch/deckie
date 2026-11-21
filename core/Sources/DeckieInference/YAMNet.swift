@@ -137,7 +137,7 @@ public final class YAMNet: @unchecked Sendable {
         if let path = ProcessInfo.processInfo.environment[modelEnvironmentVariable], !path.isEmpty { return [path] }
         // Beside a shipped program first (`models/` in OnnxRuntime.programFolder, when the program set it).
         return OnnxRuntime.candidates(named: modelFileName, in: "models",
-                                      checkout: OnnxRuntime.coreFolder.appendingPathComponent(".models").appendingPathComponent(modelFileName))
+                                      checkout: OnnxRuntime.coreFolder?.appendingPathComponent(".models").appendingPathComponent(modelFileName))
     }
 
     /// The first candidate that exists, or nil.

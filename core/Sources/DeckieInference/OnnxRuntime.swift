@@ -86,10 +86,26 @@ public final class OnnxRuntime: @unchecked Sendable {
         #endif
     }
 
-    /// This checkout's core/ folder, found from this source file's path at build time (exists on a development
-    /// machine; elsewhere the default path simply is not there).
-    public static let coreFolder = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent()
-        .deletingLastPathComponent()
+    /// The environment variable that names a checkout (the repository's top folder) to find core/.deps and
+    /// core/.models in, for a release build run from a developer's checkout (desk-shell/build-release-mac.sh, a timing
+    /// bench). A debug build finds its own checkout without it.
+    public static let checkoutEnvironmentVariable = "DECKIE_CHECKOUT"
+
+    /// The checkout's core/ folder, or nil: the one `DECKIE_CHECKOUT` names; else, in a debug build (and so in the
+    /// tests), the one this was built in, from this source file's path at build time. A release build carries no
+    /// path of the machine that built it, so without the variable it has no checkout and finds its parts only beside
+    /// itself (`programFolder`) or by the environment variables.
+    public static let coreFolder: URL? = {
+        if let top = ProcessInfo.processInfo.environment[checkoutEnvironmentVariable], !top.isEmpty {
+            return URL(fileURLWithPath: top, isDirectory: true).appendingPathComponent("core", isDirectory: true)
+        }
+        #if DEBUG
+        return URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent()
+            .deletingLastPathComponent()
+        #else
+        return nil
+        #endif
+    }()
 
     /// The folder a shipped program's parts are in, as the Windows zip lays them out (`onnxruntime.dll` or its name
     /// on this platform, and `models/`), or nil. A program sets it once, when it starts, to the folder it is in
@@ -103,14 +119,14 @@ public final class OnnxRuntime: @unchecked Sendable {
     nonisolated(unsafe) private static var programFolderStored: URL?
 
     /// A file's candidates after the environment variable: in `programFolder` (under `subfolder`, when one is
-    /// given), then at `checkout`.
-    static func candidates(named name: String, in subfolder: String?, checkout: URL) -> [String] {
+    /// given), then at `checkout` (the path inside `coreFolder`, when there is one).
+    static func candidates(named name: String, in subfolder: String?, checkout: URL?) -> [String] {
         var out: [String] = []
         if let folder = programFolder {
             let base = subfolder.map { folder.appendingPathComponent($0) } ?? folder
             out.append(base.appendingPathComponent(name).path)
         }
-        out.append(checkout.path)
+        if let checkout { out.append(checkout.path) }
         return out
     }
 
@@ -119,7 +135,7 @@ public final class OnnxRuntime: @unchecked Sendable {
     public static func libraryCandidates() -> [String] {
         if let path = ProcessInfo.processInfo.environment[libraryEnvironmentVariable], !path.isEmpty { return [path] }
         return candidates(named: libraryFileName, in: nil,
-                          checkout: coreFolder.appendingPathComponent(".deps/onnxruntime/lib").appendingPathComponent(libraryFileName))
+                          checkout: coreFolder?.appendingPathComponent(".deps/onnxruntime/lib").appendingPathComponent(libraryFileName))
     }
 
     /// The first candidate that exists, or nil: whether ONNX Runtime is available here.

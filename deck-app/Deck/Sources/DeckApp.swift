@@ -45,7 +45,7 @@ struct DeckApp: App {
                     }
                 }
                 #if DEBUG
-                // test hook without the "Open in Deckie Booth?" prompt: simctl launch <dev> io.deckie.booth -deckURL 'deck://...'
+                // test hook without the "Open in Deckie?" prompt: simctl launch <dev> io.deckie.booth -deckURL 'deck://...'
                 // (Debug builds only, like every deck:// hook)
                 if let u = UserDefaults.standard.string(forKey: "deckURL"), URL(string: u) != nil {
                     for part in u.components(separatedBy: " ; ") { if let x = URL(string: part) { handle(x) } }
@@ -88,8 +88,10 @@ struct DeckApp: App {
                 }
             }
             .onChange(of: phase) { _, p in
-                // the audio session can be interrupted (lock, Control Centre, another app): restart listening on return
-                if p == .active && rec.source == .mic { rec.startMic() }
+                // Back at the front: listening that was interrupted (a call, Siri, another app) or stopped without a word
+                // from iPadOS starts again, and the set's recording carries on in the same file (`appBecameActive`).
+                // Before, this started listening afresh, which ended the set's recording and began a new one each time.
+                if p == .active { rec.appBecameActive() }
             }
         }
     }
@@ -285,14 +287,14 @@ struct OpenProblem: Identifiable, Equatable {
 /// a Mac writes, `io.deckie.crate-file` for the single file a PC writes (deck-app/README.md, "Crate files from a PC",
 /// for the evidence). Both also take the earlier extension, `.deckiecrate`.
 ///
-/// The type identifiers used before November 2026 (`io.example.deckie.crate` and `...crate-file`) are
+/// The type identifiers used before November 2026 (`io.christophershannon.deckie.crate` and `...crate-file`) are
 /// declared as imported types conforming to the new ones, so a file still tagged with one opens here too.
 enum CrateFileType {
     static let identifier = "io.deckie.crate"
     static let crate = UTType(exportedAs: identifier)
     static let crateFile = UTType(exportedAs: identifier + "-file")
     /// The earlier identifiers, kept importable for good.
-    static let earlierIdentifiers = ["io.example.deckie.crate", "io.example.deckie.crate-file"]
+    static let earlierIdentifiers = ["io.christophershannon.deckie.crate", "io.christophershannon.deckie.crate-file"]
     static let earlier: [UTType] = earlierIdentifiers.map { UTType(importedAs: $0) }
     /// What the chooser offers: the declared types, the earlier ones, and any type the system gives either extension
     /// (should another app declare `.deckie` differently, a crate file still shows).

@@ -63,6 +63,9 @@ public enum SongStep: Sendable, Equatable {
     case place(CrateTrack.Place)
     /// A part of the song's record, final (`AnalysisPart`): its length, tempo, key, bars or per-bar loudness.
     case part(AnalysisPart)
+    /// How far the analysis stage now running is, `done` of `total` (`Analyser.analyse`'s `onWithin`: the beat
+    /// model's chunks, for now), told as each piece of it is done.
+    case within(done: Int, total: Int)
 }
 
 /// Finding the audio files of a folder.

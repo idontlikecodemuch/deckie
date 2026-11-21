@@ -67,12 +67,27 @@ extension DeskProtocol {
             do { source = try boothSource(obj["input"] as? String) }
             catch let e as CaptureError { throw RequestError(code: "no_sound", detail: e.code) }
             let crateId = info.id
-            let b = DeskBooth(crate: crate, indexAt: session.shelf.file(DeskBooth.indexFile, of: crateId), source: source) { [weak self] e in
+            // The Shuffle dial for the picks (added Nov 21, 2026; 0 to 1, the iPad's default 0.5 when not given).
+            let shuffle = (obj["shuffle"] as? Double) ?? (obj["shuffle"] as? Int).map(Double.init) ?? 0.5
+            let b = DeskBooth(crate: crate, indexAt: session.shelf.file(DeskBooth.indexFile, of: crateId), source: source,
+                              shuffle: shuffle) { [weak self] e in
                 self?.sendBooth(e, crate: crateId)
             }
             booth = b
             reply(id, ["crate": crateId, "songs": b.songCount])
             b.start()
+        case "booth.shuffle":
+            // Added Nov 21, 2026 (step 3): the Shuffle dial moved while listening; the picks for the song on screen are
+            // rolled again with it (`booth.picks`). Not listening: nothing to roll, said in the reply (the page passes the
+            // dial to its next `booth.listen`).
+            guard let v = (obj["shuffle"] as? Double) ?? (obj["shuffle"] as? Int).map(Double.init), v.isFinite else {
+                throw RequestError(code: "bad_request", detail: "shuffle")
+            }
+            if let b = booth {
+                reply(id, ["shuffle": b.setShuffle(v), "listening": true])
+            } else {
+                reply(id, ["shuffle": min(1, max(0, v)), "listening": false])
+            }
         case "booth.stop":
             stopBooth()
             reply(id)
@@ -118,6 +133,44 @@ extension DeskProtocol {
             if let s = h.speedPercent { m["speed"] = (s * 100).rounded() / 100 }
             if let k = h.keyLock { m["keyLock"] = k }
             send(m)
+        case let .playing(p):
+            // Added Nov 21, 2026 (step 2): the song the shared switching rule shows, the iPad's.
+            var m: [String: Any] = ["event": "booth.playing", "crate": crate, "pitch": p.pitch, "pitchKind": p.pitchKind,
+                                    "rate": (p.rate * 10000).rounded() / 10000, "notHeard": p.notHeard, "paused": p.paused,
+                                    "confidence": (p.confidence * 100).rounded() / 100, "newSong": p.newSong]
+            if let h = p.song {
+                var song: [String: Any] = ["id": h.id, "title": h.title, "seconds": h.seconds]
+                if let a = h.artist { song["artist"] = a }
+                if let b = h.bpm { song["bpm"] = b }
+                if let c = h.camelot { song["camelot"] = c }
+                if let k = h.key { song["key"] = k }
+                if let s = h.scale { song["scale"] = s }
+                // Added Nov 21, 2026 (step 3): the song's wave and bars, for its place along it.
+                if let w = h.wave { song["wave"] = w }
+                if let n = h.bars { song["bars"] = n }
+                m["song"] = song
+                m["place"] = (h.place * 10).rounded() / 10
+            } else {
+                m["song"] = NSNull()
+            }
+            if let a = p.alsoHearing { m["alsoHearing"] = a }
+            send(m)
+        case let .picks(p):
+            // Added Nov 21, 2026 (step 2): the picks for the song on screen, with the iPad's words.
+            // Step 3 added `keysClash` to each pick and `morePicks` (the rest of the shortlist, the iPad's More).
+            func pick(_ k: DeskBooth.Pick) -> [String: Any] {
+                var o: [String: Any] = ["id": k.id, "title": k.title, "key": k.key, "kind": k.kind, "tags": k.tags,
+                                        "bpmLine": k.bpmLine, "moveLine": k.moveLine, "keys": k.keys, "keysClash": k.keysClash]
+                if let a = k.artist { o["artist"] = a }
+                if let b = k.bpm { o["bpm"] = b }
+                if let s = k.score { o["score"] = s }
+                return o
+            }
+            send(["event": "booth.picks", "crate": crate, "for": p.forId, "shortlist": p.shortlist, "more": p.more,
+                  "shuffle": p.shuffle, "picks": p.picks.map(pick), "morePicks": p.morePicks.map(pick)])
+        case let .times(line):
+            // Not a message: the engine's log (standard error), where the window passes it on, as before.
+            FileHandle.standardError.write(Data("deckie-desk-engine: \(line)\n".utf8))
         }
     }
 }

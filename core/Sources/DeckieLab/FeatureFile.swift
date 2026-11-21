@@ -1,6 +1,6 @@
 import Foundation
 
-/// The parts of a lab feature file (mixer/features/<id>.json) that DeckieCore's tests and scoring read.
+/// The parts of a lab feature file (features/<id>.json in the lab's data, DECKIE_LAB_DATA) that DeckieCore's tests and scoring read.
 /// Field names follow the file; see mixer/README.md for what each one means.
 public struct FeatureFile: Decodable, Sendable {
     public struct Grid: Decodable, Sendable {
@@ -103,7 +103,7 @@ public struct FeatureFile: Decodable, Sendable {
     }
 }
 
-/// One row of mixer/candidates.json: the pool's bookkeeping for a track.
+/// One row of the lab's candidates.json: the pool's bookkeeping for a track.
 public struct CandidateRecord: Decodable, Sendable {
     public var id: String
     public var title: String?

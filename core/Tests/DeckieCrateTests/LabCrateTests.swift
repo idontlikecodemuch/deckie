@@ -2,15 +2,17 @@ import Foundation
 import Testing
 import DeckieCrate
 import DeckieLab
+import DeckieTestSupport
 
-// The lab's committed feature files as crate records (FeatureFile+Crate.swift), and the example crate made from five
-// of them (core/fixtures/example.deckiecrate, written by core/Tools/make_crate_fixture.sh).
+// The lab's feature files as crate records (FeatureFile+Crate.swift): every file of the lab's data (LabData: the
+// private files when DECKIE_LAB_DATA gives them, else the public sample of invented songs), and the example crate made
+// from five of the sample's (core/fixtures/example.deckiecrate, written by core/Tools/make_crate_fixture.sh).
 
 /// A lab feature file as plain JSON, read apart from the converter, to compare against.
 struct RawFeatures {
     let d: [String: Any]
-    init(_ id: String) throws {
-        d = try JSONSerialization.jsonObject(with: Data(contentsOf: Paths.features.appendingPathComponent("\(id).json")))
+    init(_ id: String, in lab: URL = LabData.root) throws {
+        d = try JSONSerialization.jsonObject(with: Data(contentsOf: lab.appendingPathComponent("features/\(id).json")))
             as! [String: Any]
     }
     func any(_ path: String) -> Any? {
@@ -29,11 +31,11 @@ struct RawFeatures {
 @Suite struct LabCrateTests {
     static let options = FeatureFile.CrateOptions(analysedAt: "2026-10-26T00:00:00Z")
 
-    @Test func everyCommittedFeatureFileConvertsAndRoundTrips() throws {
+    @Test func everyFeatureFileConvertsAndRoundTrips() throws {
         let manifest = CrateManifest(crateId: "all", name: "All", createdAt: "2026-10-26T00:00:00Z", devicesSeen: ["lab-mac"])
         let crate = try FeatureFile.crate(featuresDir: Paths.features, candidatesFile: Paths.candidates,
                                           manifest: manifest, options: Self.options)
-        #expect(crate.tracks.count == 373)
+        #expect(!crate.tracks.isEmpty && crate.tracks.count == LabData.trackCount)
         #expect(crate.problems().isEmpty, "\(crate.problems().prefix(10))")
         let files = try CrateWriter.encode(crate)
         let back = try CrateReader.decode(files)
@@ -62,9 +64,9 @@ struct RawFeatures {
                 for (g, w) in zip(got, want) { largest = max(largest, abs(g - w)) }
             }
         }
-        #expect(clamped.count == 21)
+        if LabData.isPrivate { #expect(clamped.count == 21) }  // the lab's own files: 21 steady ends past the grid
         #expect(largest <= 0.0313)
-        print("lab to crate: 373 records, \(files.count) files, \(files.values.reduce(0) { $0 + $1.count }) bytes " +
+        print("lab to crate: \(crate.tracks.count) records, \(files.count) files, \(files.values.reduce(0) { $0 + $1.count }) bytes " +
               "(crate.json \(files["crate.json"]!.count)); steady_out_bar clamped on \(clamped.count); per-bar values " +
               "within \(largest) of the lab's")
     }
@@ -72,9 +74,9 @@ struct RawFeatures {
     @Test func theExampleCrateReadsAndMatchesItsSources() throws {
         let crate = try CrateReader.read(from: Paths.example)
         #expect(crate.manifest.name == "Example" && crate.enginesUsed == ["lab-1"])
-        #expect(crate.tracks.map(\.id) == ["[id]", "[id]", "[id]", "[id]", "[id]"])
+        #expect(crate.tracks.map(\.id) == ["sample-02", "sample-03", "sample-04", "sample-05", "sample-06"])
         for t in crate.tracks {
-            let raw = try RawFeatures(t.id)
+            let raw = try RawFeatures(t.id, in: Paths.sample)
             let n = raw.int("grid.n_bars")
             let grid = try #require(t.grid)
             #expect(grid.bpm == raw.num("grid.bpm") && grid.firstDownbeatS == raw.num("grid.first_downbeat_s"))
@@ -102,17 +104,20 @@ struct RawFeatures {
         }
         // What each was chosen for.
         let byId = Dictionary(uniqueKeysWithValues: crate.tracks.map { ($0.id, $0) })
-        #expect(byId["[id]"]?.grid?.source == "madmom-rnn-dbn")
-        #expect(try RawFeatures("[id]").any("octave_fix") != nil)
-        #expect(byId["[id]"]?.ends?.fadeOut == true && byId["[id]"]?.ends?.steadyOutBar == 151)
-        #expect(byId["[id]"]?.flags.contains("tempo_change") == true)
-        #expect(byId["[id]"]?.grid?.nBars == 44)
+        #expect(byId["sample-02"]?.grid?.source == "madmom-rnn-dbn" && byId["sample-05"]?.grid?.source == "madmom-rnn-dbn")
+        #expect(try RawFeatures("sample-03", in: Paths.sample).any("octave_fix") != nil)
+        #expect(byId["sample-04"]?.ends?.fadeOut == true && byId["sample-04"]?.ends?.steadyOutBar == 169)
+        #expect(byId["sample-05"]?.flags.contains("tempo_change") == true)
+        #expect(byId["sample-06"]?.grid?.nBars == 45)
+        #expect(byId["sample-04"]?.file.rel == "6 - 125-134/Fictional Four - Fade Away Test.mp3")
     }
 
     @Test func theExampleCrateIsWhatTheConverterMakesToday() throws {
         let committed = try CrateReader.read(from: Paths.example)
-        let rebuilt = try FeatureFile.crate(featuresDir: Paths.features, ids: committed.tracks.map(\.id),
-                                            candidatesFile: Paths.candidates, manifest: committed.manifest,
+        let rebuilt = try FeatureFile.crate(featuresDir: Paths.sample.appendingPathComponent("features"),
+                                            ids: committed.tracks.map(\.id),
+                                            candidatesFile: Paths.sample.appendingPathComponent("candidates.json"),
+                                            manifest: committed.manifest,
                                             options: Self.options)
         let files = try CrateWriter.encode(rebuilt)
         var total = 0

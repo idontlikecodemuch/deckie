@@ -8,7 +8,7 @@ import Foundation
 // profile (the engine's estimator until now), the bgate profile, and the Krumhansl-Kessler profile in madmom's slot,
 // and runs the lab's rule on them unchanged. Every profile is a published one (`KeyProfile`), none fitted to the lab's
 // tracks, and the rule has no number of its own beyond the lab's strength of 0.6. core/Tools/key_vote_eval.py chose
-// the two extra profiles from the lab's own sweep (mixer/key_light_stft.tsv): on the lab's 311 confident tracks the
+// the two extra profiles from the lab's own sweep (its key_light_stft.tsv): on the lab's 311 confident tracks the
 // vote is exact on 237 (76.2 percent, the engine alone 74.6), exact or a Camelot neighbour on 90.0 (89.1), and changes
 // the key of 7 of the 373 tracks, the gain spread over four of the lab's folders with none losing. That script's
 // held-out check also says the gain of any second profile on the same chroma is within the noise of choosing it, so

@@ -7,7 +7,7 @@ public struct PairKey: Hashable, Sendable {
     public init(_ a: String, _ b: String) { self.a = a; self.b = b }
 }
 
-/// One line of a track's recommendation list (mixer/recs.json).
+/// One line of a track's recommendation list (the lab's recs.json).
 public struct RecEntry: Sendable, Equatable {
     public var id: String
     public var title: String

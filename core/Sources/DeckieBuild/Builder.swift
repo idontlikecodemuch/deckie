@@ -50,7 +50,9 @@ public struct BuildOptions: Sendable {
     /// `folder`; `jobs` is then 1.
     public var files: BuildFiles?
     /// Stop asked for (Desk's Stop button): files not yet started are not read, the ones being read finish, and the
-    /// crate is written with what was read. A stopped build's result says so (`BuildResult.stopped`).
+    /// crate is written with what was read. Asked with `now` (Desk quitting), the ones being analysed end at their next
+    /// stage instead (`Analyser.analyse`'s `stop`) and are not reached. A stopped build's result says so
+    /// (`BuildResult.stopped`).
     public var stop: BuildStop?
     /// Each song being read, step by step (`SongStep`), with its path as the progress names it: with `jobs` above 1,
     /// several songs' steps interleave (each names its song). Called on the reading threads.
@@ -121,12 +123,19 @@ public enum BuildEvent: Sendable {
 
 /// A stop asked for while a build goes, from any thread: the build starts no further file, finishes the ones it is
 /// reading and writes the crate with what was read. Nothing about how a file is analysed changes.
+///
+/// `set(now: true)` (Desk quitting, its window closed; Nov 21, 2026) also ends the songs being analysed at their next
+/// stage, so the build does not wait for the rest of a song before it writes the crate: those songs are not reached,
+/// and are read again on Carry on.
 public final class BuildStop: @unchecked Sendable {
     private let lock = NSLock()
     private var asked = false
+    private var now = false
     public init() {}
-    public func set() { lock.lock(); asked = true; lock.unlock() }
+    public func set(now: Bool = false) { lock.lock(); asked = true; if now { self.now = true }; lock.unlock() }
     public var isSet: Bool { lock.lock(); defer { lock.unlock() }; return asked }
+    /// Whether the songs being analysed are to end at their next stage too.
+    public var isNow: Bool { lock.lock(); defer { lock.unlock() }; return now }
 }
 
 /// What a build did.
@@ -386,19 +395,20 @@ public final class Builder: Sendable {
         let queued = queue
         let engine = total == 0 ? nil : try analyser ?? Builder.makeAnalyser(jobs: min(options.jobs, total))
         runParallel(count: total, workers: options.jobs) { [self] k in
-            // Stop asked for: no further file is started; the ones being read finish.
+            // Stop asked for: no further file is started; the ones being read finish (or, asked `now`, end at their
+            // next stage).
             if self.options.stop?.isSet == true { return }
             let i = queued[k]
             var f = files[i]
             var seconds: Double? = nil
             var fingerprinted = false
-            let outcome: Done
+            let got: Done?
             if let given = self.options.files {
                 // Songs read one at a time: one worked out before, fingerprint and all, is not read; any other is
                 // fetched, read and let go.
                 if let id = given.knownId(f), let r = work.record(id), r.engine == label, r.track.fingerprint != nil,
                    r.bpmTag == self.tagTempo(rekordbox: rekordboxOf[i], tags: nil) {
-                    outcome = .ok(id: id, tags: nil)
+                    got = .ok(id: id, tags: nil)
                 } else {
                     guard !stopped.isSet else { return }
                     self.options.onStep?(f.rel, .started)
@@ -409,16 +419,19 @@ public final class Builder: Sendable {
                     // The bytes go straight into the box the analyser empties once they are decoded: nothing here
                     // keeps another hold on them through the analysis.
                     let box = given.bytes(f).map { FileBytes($0) }
-                    outcome = self.process(f, bytes: box, rekordbox: rekordboxOf[i], work: work, engine: engine!,
-                                           label: label, seconds: &seconds, fingerprinted: &fingerprinted)
+                    got = self.process(f, bytes: box, rekordbox: rekordboxOf[i], work: work, engine: engine!,
+                                       label: label, seconds: &seconds, fingerprinted: &fingerprinted)
                 }
             } else {
                 self.options.onStep?(f.rel, .started)
                 self.options.onStep?(f.rel, .place(placeOf(f.rel)))
-                outcome = self.process(f, bytes: nil, rekordbox: rekordboxOf[i], work: work, engine: engine!, label: label,
-                                       seconds: &seconds, fingerprinted: &fingerprinted)
+                got = self.process(f, bytes: nil, rekordbox: rekordboxOf[i], work: work, engine: engine!, label: label,
+                                   seconds: &seconds, fingerprinted: &fingerprinted)
             }
             defer { self.options.files?.release(f) }
+            // Stopped in the middle of the song (Desk quitting): it is not reached, so nothing of it is kept, and Carry
+            // on reads it again.
+            guard let outcome = got else { return }
             results.lock.lock()
             defer { results.lock.unlock() }
             results.done[f.rel] = outcome
@@ -659,9 +672,16 @@ public final class Builder: Sendable {
         var isFolder: ObjCBool = false
         guard fm.fileExists(atPath: options.output.path, isDirectory: &isFolder) else { return nil }
         guard isFolder.boolValue else { throw BuildError("\(options.output.path) exists and is not a crate package") }
+        // A save that was stopped is finished or undone first (`CrateWriter.write`): a first save finished now is
+        // the crate this build adds to.
+        try CrateWriter.finishInterruptedSave(options.output)
         guard fm.fileExists(atPath: options.output.appendingPathComponent(CrateFormat.manifestFile).path) else {
-            let empty = (try? fm.contentsOfDirectory(atPath: options.output.path))?.isEmpty ?? false
-            if empty { return nil }
+            // Empty, or holding only what a first build puts in before its first save (covers, signatures, and the
+            // sidecars an earlier version wrote first): a first build that was stopped, read again from the start.
+            let names = (try? fm.contentsOfDirectory(atPath: options.output.path)) ?? ["?"]
+            let early: Set<String> = [CrateFormat.coversFolder, CrateFormat.signaturesFolder, CrateFormat.barsFolder,
+                                      CrateFormat.styleFolder, CrateFormat.printsFolder, CrateFormat.tracksFile, ".DS_Store"]
+            if names.allSatisfy(early.contains) { return nil }
             throw BuildError("\(options.output.path) exists and is not a crate package (no manifest.json)")
         }
         do {
@@ -674,9 +694,10 @@ public final class Builder: Sendable {
     /// One queued file: tags, hash, then the work folder's record for those bytes or a fresh analysis. The file is
     /// read once: its bytes (`bytes`, when the source handed them over in memory, else read here) give the tags, the
     /// id and the analysis, and the analyser lets them go once they are decoded. The box is the only hold on bytes
-    /// handed over in memory, so they go when the analyser empties it, not when this returns.
+    /// handed over in memory, so they go when the analyser empties it, not when this returns. Nil when a stop `now` was
+    /// asked while the song was analysed (`BuildOptions.stop`): the analysis ends at its next stage, nothing is kept.
     private func process(_ f: SourceFile, bytes inHand: FileBytes?, rekordbox: RekordboxCollection.Track?, work: WorkStore,
-                         engine: Analyser, label: String, seconds: inout Double?, fingerprinted: inout Bool) -> Done {
+                         engine: Analyser, label: String, seconds: inout Double?, fingerprinted: inout Bool) -> Done? {
         typealias R = CrateManifest.ImportLog.Reason
         // A song in memory: its tags, and the facts `dressed` reads later, from those bytes (its file may be gone, or
         // on a disc, by then).
@@ -733,7 +754,9 @@ public final class Builder: Sendable {
             let analysis = try engine.analyse(url: f.url, bytes: box, sha256: sha, options: AnalysisOptions(bpmTag: tag),
                                               onStage: step.map { tell in { tell(f.rel, .stage($0)) } },
                                               onDecoded: withAudio.map { hand in { hand(id, f, $0) } },
-                                              onPart: step.map { tell in { tell(f.rel, .part($0)) } })
+                                              onPart: step.map { tell in { tell(f.rel, .part($0)) } },
+                                              onWithin: step.map { tell in { tell(f.rel, .within(done: $0, total: $1)) } },
+                                              stop: options.stop.map { s in { s.isNow } })
             let elapsed = Date().timeIntervalSince(t0)
             var track = analysis.crateTrack(options: .init(analysedAt: utcNow(), device: options.device))
             track.file.rel = f.rel
@@ -750,6 +773,8 @@ public final class Builder: Sendable {
             seconds = elapsed
             fingerprinted = track.fingerprint != nil
             return .ok(id: analysis.id, tags: tags)
+        } catch is AnalysisStopped {
+            return nil
         } catch {
             return failed(FileFailure.classify(error, path: f.url.path))
         }

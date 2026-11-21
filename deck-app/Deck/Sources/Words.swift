@@ -1,11 +1,18 @@
 import Foundation
 import DeckieCrate
+import DeckieBooth
 
 /// Every word the booth shows, in one list by name (D28, D36: placeholders until the copy audit, which changes this
 /// file only). Organised by screen; each says where it shows. Words built from parts are functions with named blanks,
 /// so no view joins words of its own. The spelling is the booth's as it was, oddities and all (the copy pass decides).
 /// Sentence case, "songs", a crate is the songs and a crate file is the file.
+///
+/// The words Booth says about what it hears and picks (the join's pitch and key words, the BPM and move lines, the tags,
+/// the moves, the key's other states, the filter) are the core's table (`BoothWords`, D42), shared with Desk's Booth;
+/// they are named here as before and read from there.
 enum Words {
+    private static func b(_ key: String, _ values: [String: String] = [:]) -> String { BoothWords.t(key, values) }
+
     // MARK: the app: tabs, the Minimal switch, a crate file opened or not
 
     /// The tab bar.
@@ -56,10 +63,10 @@ enum Words {
         return parts.isEmpty ? nil : parts.joined(separator: " · ")
     }
     /// A disc's name cut short for a chip: its first 9 characters and this.
-    static let cutShort = "…"
+    static let cutShort = b("pick.cutShort")
     /// The disc filter as a sentence says it: "CD1+CD2", "Singalongs+all".
-    static let filterAll = "all"
-    static let filterJoin = "+"
+    static let filterAll = b("pick.filterAll")
+    static let filterJoin = b("pick.filterJoin")
     /// "CD1, CD2 or All": choices joined for a sentence.
     static func orList(_ items: [String]) -> String {
         items.count < 2 ? items.joined() : items.dropLast().joined(separator: ", ") + " or " + items.last!
@@ -68,20 +75,29 @@ enum Words {
     // MARK: the Listen page: the playing panel
 
     /// A tempo: "128 BPM" (the playing panel and the picks).
-    static func bpm(_ value: Double) -> String { String(format: "%.0f BPM", value) }
+    static func bpm(_ value: Double) -> String { BoothWords.bpm(value) }
     /// A tempo that changes in the song: "128→140 BPM".
-    static func bpmChange(_ from: Double, _ to: Double) -> String { String(format: "%.0f→%.0f BPM", from, to) }
+    static func bpmChange(_ from: Double, _ to: Double) -> String { BoothWords.bpmChange(from, to) }
     /// While nothing has been recognised yet.
     static let listeningTitle = "Listening…"
     static let listeningHelp = "A song shows up after a few seconds of music."
     /// The panel's foot when a second song is heard under the first.
     static func alsoHearing(_ song: String) -> String { "also hearing: " + song }
     /// The set recording's corner chip ("REC 0:12:34" while recording), spoken as "Set recording" with these as its
-    /// value. "REC on": recording is on and starts when listening does.
+    /// value (`RecChip`). It says what the recording is doing now, never only what is switched on.
     static let recPaused = "REC paused"
     static func recElapsed(_ time: String) -> String { "REC " + time }
+    /// No longer shown: it read as "recording" while listening was stopped. "not recording" says it instead.
     static let recOn = "REC on"
     static let recOff = "REC off"
+    /// Set recording is on but nothing is being recorded now: listening is stopped (the next Start listening records).
+    static let recNotRecording = "not recording"
+    /// The recording would not begin, or the file will not take the sound (the foot says so in a sentence).
+    static let recCannot = "cannot record"
+    /// Through a gap in the sound (a call, an input changing): the recording waits and carries on in the same file.
+    static let recWaiting = "REC waiting"
+    /// The playing panel's foot (or under "Listening…") while the set cannot be recorded; listening goes on.
+    static let recCannotFoot = phrases("The set is not being recorded: the iPad will not save it.", "Listening goes on.")
     /// The chip's menu: pause or resume the recording in progress (listening goes on), and set recording on or off
     /// (remembered). Its note says that Stop, beside the chip, ends the set and saves it.
     static let resumeRecording = "Resume recording"
@@ -99,8 +115,35 @@ enum Words {
     static let stoppedHelp = "Deckie is not listening."
     static let stoppedSaved = phrases("The set is saved on this iPad,", "in Files under Deckie > Sets.")
     static let stoppedHow = phrases("Tap Start listening", "to listen again.")
+    /// The same with the recording's length ("0:42:10 of the set is saved…"), and when nothing reached the recording.
+    static func stoppedSavedLength(_ time: String) -> String { phrases("\(time) of the set is saved on this iPad,", "in Files under Deckie > Sets.") }
+    static let stoppedNothingRecorded = phrases("Nothing was recorded in this set:", "no sound reached the recording.")
     /// The playing panel's foot after Stop, when the song stays on screen.
     static let setSavedFoot = "Stopped. The set is saved in Files under Deckie > Sets."
+    /// The same with the recording's length, or that nothing was recorded (`empty`).
+    static func setSavedFootLength(_ time: String?, empty: Bool) -> String {
+        if empty { return "Stopped. Nothing was recorded in this set." }
+        guard let time else { return setSavedFoot }
+        return "Stopped. \(time) of the set is saved in Files under Deckie > Sets."
+    }
+
+    /// When iPadOS takes the sound away or the input changes (`Recognizer.ListenTrouble`): the corner's tiny status, the
+    /// playing panel's title when no song is on screen, and the line under it (or the panel's foot under a song). Each
+    /// lasts only while it is so; listening goes back by itself.
+    static func listenTroubleStatus(_ t: Recognizer.ListenTrouble) -> String {
+        switch t { case .interrupted: return "interrupted"; case .restarting: return "starting again"; case .cannotListen: return "cannot listen" }
+    }
+    static func listenTroubleTitle(_ t: Recognizer.ListenTrouble) -> String {
+        switch t { case .interrupted: return "Interrupted"; case .restarting: return "Starting again"; case .cannotListen: return "Cannot listen" }
+    }
+    static func listenTroubleFoot(_ t: Recognizer.ListenTrouble, recording: Bool) -> String {
+        let rec = recording ? " The recording waits." : ""
+        switch t {
+        case .interrupted: return phrases("Listening stopped for a call, Siri or an alarm." + rec, "It starts again by itself.")
+        case .restarting: return phrases("The sound input changed." + rec, "Listening starts again.")
+        case .cannotListen: return phrases("Deckie cannot hear the sound input." + rec, "It keeps trying.")
+        }
+    }
     /// The corner's "…" button, spoken.
     static let testWithFile = "Test with file and details"
     /// The corner's tiny status.
@@ -161,29 +204,29 @@ enum Words {
     /// Where the shortlist ends in More.
     static let restOfCrate = "rest of the crate, by score"
     /// A pick's BPM line: "128 BPM · pitch +3.2%", with "(x1/2)" for a half- or double-time join.
-    static func pitchAfterBPM(_ bpm: String, _ pitch: String) -> String { bpm + " · pitch " + pitch + "%" }
-    static func tempoMultiple(_ m: String) -> String { " (x\(m))" }
+    static func pitchAfterBPM(_ bpm: String, _ pitch: String) -> String { b("pick.pitchAfterBPM", ["bpm": bpm, "pitch": pitch]) }
+    static func tempoMultiple(_ m: String) -> String { b("pick.tempoMultiple", ["m": m]) }
     /// The join's pitch words (JoinInfo.pitchText; not on screen at present).
-    static let pitchCutIn = "cut in, no beat-match"
-    static func pitchCaps(_ pitch: String) -> String { "PITCH " + pitch + "%" }
-    static func pitchMultiple(_ m: String) -> String { " · x" + m }
-    static let pitchNA = "PITCH n/a"
-    static func pitchAside(_ pitch: String) -> String { " · " + pitch + "%" }
-    /// A pick's move line: "blend", "echo out · key clash", "no beat-match · brake".
-    static let noBeatMatch = "no beat-match"
-    static let keyClash = "key clash"
+    static let pitchCutIn = b("pick.pitch.cutIn")
+    static func pitchCaps(_ pitch: String) -> String { b("pick.pitch.caps", ["pitch": pitch]) }
+    static func pitchMultiple(_ m: String) -> String { b("pick.pitch.multiple", ["m": m]) }
+    static let pitchNA = b("pick.pitch.na")
+    static func pitchAside(_ pitch: String) -> String { b("pick.pitch.aside", ["pitch": pitch]) }
+    /// A pick's move line: "blend", "echo out · keys may clash", "no beat-match · brake".
+    static let noBeatMatch = b("pick.noBeatMatch")
+    static let keyClash = b("pick.keyClash")
     /// The brake move's label, and the shorter word the move line uses for it.
-    static let brakeCut = "brake/cut", brake = "brake"
-    static let movesJoin = " / "
-    static let moveLineJoin = " · "
+    static let brakeCut = b("pick.move.brake_cut"), brake = b("pick.brake")
+    static let movesJoin = b("pick.movesJoin")
+    static let moveLineJoin = b("pick.moveLineJoin")
     /// The Simple / Full switch and the Shuffle dial.
     static let simple = "Simple", full = "Full"
     static let modeJoin = "/"
     static let shuffle = "Shuffle"
     static func percent(_ n: Int) -> String { "\(n)%" }
     /// A pitch's sign, then the number to one place: "+3.2", "−1.0", "±0.0" (everywhere a pitch shows).
-    static let signPlus = "+", signMinus = "−", signNone = "±"
-    static func signed(_ sign: String, _ value: Double) -> String { sign + String(format: "%.1f", value) }
+    static let signPlus = b("pick.sign.plus"), signMinus = b("pick.sign.minus"), signNone = b("pick.sign.none")
+    static func signed(_ sign: String, _ value: Double) -> String { b("pick.signed", ["sign": sign, "value": String(format: "%.1f", value)]) }
     /// A signed pitch with its percent sign: "+3.2%".
     static func percentText(_ s: String) -> String { s + "%" }
     /// A pick's join wave: spoken hint, the count of start points, and the card's spoken hint.
@@ -194,15 +237,15 @@ enum Words {
     /// The long-press detail of a pick.
     static func artistSong(_ artist: String, _ song: String) -> String { "\(artist) – \(song)" }
     static func keyLine(_ key: String, _ keys: String, _ verdict: String) -> String { "Key \(key) · \(keys) \(verdict)" }
-    static let unknownKey = "?"
+    static let unknownKey = b("song.keyUnknown")
     /// The two songs' keys in the detail: "8A → 9A", "Home note A → 9A".
-    static func keysArrow(_ a: String, _ b: String) -> String { "\(a) → \(b)" }
+    static func keysArrow(_ a: String, _ c: String) -> String { b("pick.keys", ["a": a, "b": c]) }
     // new (D36): the key's other states, where a key shows (the Crate tab's rows, a pick's detail, the picks' move
     // line). Placeholders until the copy audit.
     /// A home note in place of the wheel code: "Home note A" (Desk's words, `DeskWords` "homeNote").
-    static func homeNote(_ note: String) -> String { "Home note \(note)" }
+    static func homeNote(_ note: String) -> String { b("song.homeNote", ["note": note]) }
     /// A row's key when Deckie read the song and was not sure of it (a key never read stays "?").
-    static let keyNotSureShort = "not sure"
+    static let keyNotSureShort = b("song.keyNotSure")
     /// A pick's detail, for the song it is about, when it has no key: Deckie was not sure, or no key was read.
     static let keyNotSureLine = "Deckie is not sure of this song's key"
     static let keyNotReadLine = "Key not read yet"
@@ -210,11 +253,11 @@ enum Words {
     static func homeNoteLine(_ homeNote: String, _ keys: String, _ verdict: String) -> String { "\(homeNote) · \(keys) \(verdict)" }
     /// The detail's verdict for a pair where a song has only its home note and the keys on it fit; and for a pair
     /// where a song's key Deckie was not sure of (the scoring leaves the key out of both kinds of pair alike).
-    static let verdictHomeNote = "fits on the home note, major or minor open"
-    static let verdictKeyNotSure = "key not sure"
+    static let verdictHomeNote = b("pick.verdict.homeNote")
+    static let verdictKeyNotSure = b("pick.verdict.keyNotSure")
     /// The picks' move line, for a pair that fits on a home note: "blend · home note". The fit was counted at the
     /// home note's lower weight, and the line says so rather than showing nothing, as for a key that was read.
-    static let moveHomeNote = "home note"
+    static let moveHomeNote = b("pick.moveHomeNote")
     static func pitchHelp(_ pitch: String) -> String { "Pitch: set the incoming deck's pitch fader to \(pitch) so the tempos match." }
     static let notAvailable = "n/a"
     static func matchScore(_ s: Double, _ stretch: Double) -> String { String(format: "Match score %.2f · %.1f%% stretch", s, stretch) }
@@ -234,7 +277,7 @@ enum Words {
         case "neighbour": return "neighbour key"
         case "relative": return "relative key"
         case "boost": return "key boost"
-        case "clash": return "keys clash"
+        case "clash": return "keys may clash"
         case "key unsure": return "key unsure"
         default: return v
         }
@@ -243,17 +286,15 @@ enum Words {
     static let startMixIn = "mix-in start", startTrack = "track start", startSteady = "steady beat"
     static func startBar(_ n: Int) -> String { "bar \(n)" }
     /// What is unexpected about a pick, as its corner chip says it.
-    static let tagHalfTime = "half time", tagDoubleTime = "double time", tagTempoChange = "tempo change"
-    static func tagTempoMultiple(_ m: String) -> String { "x\(m) tempo" }
-    static let tagHalloween = "Halloween"
-    static func tagTo(_ disc: String) -> String { "to " + disc }
-    static let tagInCrate = "in the crate"
-    static func tagIn(_ folder: String) -> String { "in " + folder }
-    static let tagDeepCut = "deep cut"
+    static let tagHalfTime = b("pick.tag.halfTime"), tagDoubleTime = b("pick.tag.doubleTime"), tagTempoChange = b("pick.tag.tempoChange")
+    static func tagTempoMultiple(_ m: String) -> String { b("pick.tag.tempoMultiple", ["m": m]) }
+    static let tagHalloween = b("pick.tag.halloween")
+    static func tagTo(_ disc: String) -> String { b("pick.tag.to", ["source": disc]) }
+    static let tagInCrate = b("pick.tag.inCrate")
+    static func tagIn(_ folder: String) -> String { b("pick.tag.in", ["folder": folder]) }
+    static let tagDeepCut = b("pick.tag.deepCut")
     /// The moves by the crate file's code (the picks' move line and the detail).
-    static let moveLabels = ["bass_swap_8": "short blend", "bass_swap_16": "blend", "bass_swap_32": "long blend",
-                             "ramped_blend": "ramp blend", "filter_sweep": "filter out", "quick_blend_echo": "echo out",
-                             "brake_cut": brakeCut]
+    static let moveLabels = BoothWords.moveLabels
 
     // MARK: the Crate tab
 
@@ -370,7 +411,7 @@ enum Words {
     static let appMemory = "App memory"
     static func megabytes(_ mb: Double) -> String { String(format: "%.0f MB", mb) }
     /// How the pitch was found, for the details sheet's pitch line.
-    static let speedFromDeckie = "Deckie's reading"
+    static let speedFromDeckie = b("heard.speedFromDeckie")
     /// Compare mode's summary, in the details sheet.
     static let compareSection = "Deckie and Apple compared"
     static func compareSummary(deckie: Int, apple: Int, deckieFirst: Int, appleFirst: Int, disagreed: Int, atChange: Int) -> String {

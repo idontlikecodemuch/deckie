@@ -1,6 +1,6 @@
 import Foundation
 
-/// One row of mixer/key_parity_keys.tsv: research R's recommended key method (row 3f) on one of the lab's tracks, as
+/// One row of the lab's key_parity_keys.tsv: research R's recommended key method (row 3f) on one of the lab's tracks, as
 /// mixer/key_parity.py (`keys`) decided it on the Mac from the track's audio, with the lab's and Apple's keys.
 public struct KeyParityRow: Sendable, Equatable {
     /// The lab's track id (the candidates row's and the feature file's).
@@ -42,17 +42,17 @@ public enum KeyParitySheetError: Error, Equatable, CustomStringConvertible {
 
     public var description: String {
         switch self {
-        case .header(let h): return "mixer/key_parity_keys.tsv: unexpected header \(h)"
-        case .row(let line, let text): return "mixer/key_parity_keys.tsv line \(line): cannot read \(text)"
+        case .header(let h): return "key_parity_keys.tsv: unexpected header \(h)"
+        case .row(let line, let text): return "key_parity_keys.tsv line \(line): cannot read \(text)"
         }
     }
 }
 
-/// mixer/key_parity_keys.tsv, read-only: research R's per-track keys (`key_parity.py keys` writes it, 373 rows, row
+/// The lab's key_parity_keys.tsv (private, in DECKIE_LAB_DATA), read-only: research R's per-track keys (`key_parity.py keys` writes it, 373 rows, row
 /// 3f's 83.3 percent exact on the lab's 311 confident keys), the reference the bench's parity column compares the
 /// engine's key with.
 public enum KeyParitySheet {
-    /// The file's name beside the lab's features folder (mixer/).
+    /// The file's name beside the lab's features folder (in the lab's data folder).
     public static let fileName = "key_parity_keys.tsv"
     /// The columns, in order.
     public static let columns = ["id", "key_3f", "margin", "agree", "sure", "lab", "lab_confident", "apple"]

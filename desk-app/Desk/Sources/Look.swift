@@ -43,6 +43,8 @@ enum Look {
         static let statusSongsWeight = Font.Weight.bold
         static let importLogFile = Font.system(.body, design: .monospaced)
         static let importLogMessage = Font.caption
+        /// The reader's own words under Details, for a crate file that could not be read.
+        static let unreadableDetail = Font.caption
         static let toolPaste = Font.system(.body, design: .monospaced)
         static let toolHelp = Font.caption
         static let toolPreviewTitle = Font.headline
@@ -303,6 +305,15 @@ enum RunLook {
     /// The song's name in the row pointed at, and its weight (desk.css --fs-note, --fw-wall-name).
     static let wallNameFont = Font.callout
     static let wallNameWeight = Font.Weight.medium
+    /// The tempo, key and length after that name, on the gold highlight: a lighter weight than the name, and a colour
+    /// that reads on the gold and the faded wave (desk.css --wall-pick-facts, --fw-wall-facts). Warm light in dark
+    /// mode, warm dark in light mode; the grey secondary colour was about 2:1 where a bar is behind it.
+    static let wallFactsWeight = Font.Weight.regular
+    static let wallPickFacts = Color(nsColor: NSColor(name: nil) { look in
+        look.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
+            ? NSColor(red: 0.910, green: 0.875, blue: 0.816, alpha: 1)    // #e8dfd0
+            : NSColor(red: 0.302, green: 0.231, blue: 0.090, alpha: 1)    // #4d3b17
+    })
     static let wallHelpFont = Font.caption
 
     // space and shape
@@ -416,29 +427,105 @@ enum LookupStyle {
     static let sheetHeight: CGFloat = 640
 }
 
-/// The listening mode's look (research booth-in-desk, step 1; Booth.swift), as the pages' --booth-* variables.
-/// Placeholders until the design pass.
+
+/// Booth's look (the designed screen, step 3, D44; Booth.swift), as the pages' --booth-* variables in desk.css.
+/// While Booth shows, the window takes Booth's ground, the toolbar included (the owner's, Nov 21, 2026: a background
+/// change between the two modes, obvious at a glance); the heading saying Booth and the lit switch say it too. Three
+/// grounds, for the owner to choose (desk.css's -a, -b and -c): `ground` names the one shown.
 enum BoothLook {
-    static let pad: CGFloat = 32
-    static let gap: CGFloat = 18
-    static let maxWidth: CGFloat = 880
-    static let title = Font.title2.bold()
-    static let song = Font.system(size: 44, weight: .bold)
-    static let artist = Font.title2
-    static let facts = Font.title3
-    static let factGap: CGFloat = 28
-    static let cardPad: CGFloat = 32
-    static let cardMinHeight: CGFloat = 180
-    static let cardRadius: CGFloat = 16
-    static let card = Color.primary.opacity(0.06)
-    static let emptyOpacity = 0.45
-    static let meterWidth: CGFloat = 260
-    static let meterHeight: CGFloat = 10
-    static let meterTrack = Color.primary.opacity(0.08)
-    static let meterFill = Color.accentColor
+    /// One ground: the window's colours top to bottom, the toolbar's, the song's card and its edge, a pick's row, the
+    /// switch lit and its ink, the live dot, the quiet and dimmest text, the wave played, ahead and quiet, the playhead.
+    struct Ground {
+        let top: Color, bottom: Color, bar: Color, line: Color
+        let card: Color, cardEdge: Color, surface: Color, glow: Color
+        let on: Color, onInk: Color, live: Color, mut: Color, dim: Color
+        let wavePlayed: Color, waveAhead: Color, waveQuiet: Color, playhead: Color
+        var background: LinearGradient { LinearGradient(colors: [top, bottom], startPoint: .top, endPoint: .bottom) }
+    }
+    private static func rgb(_ hex: UInt32, _ alpha: Double = 1) -> Color {
+        Color(red: Double((hex >> 16) & 0xff) / 255, green: Double((hex >> 8) & 0xff) / 255, blue: Double(hex & 0xff) / 255, opacity: alpha)
+    }
+    /// a, violet (the one recommended): the window floods with a deep violet, the accent's own colour.
+    static let violet = Ground(top: rgb(0x2c1762), bottom: rgb(0x1d0f45), bar: rgb(0x3a2180), line: rgb(0xb490ff, 0.5),
+                               card: .white.opacity(0.09), cardEdge: rgb(0xc4a8ff, 0.35), surface: .white.opacity(0.07), glow: rgb(0xb490ff, 0.55),
+                               on: rgb(0xb490ff), onInk: rgb(0x160f22), live: rgb(0x8fe3a2), mut: rgb(0xc8bce4), dim: rgb(0xa89cc8),
+                               wavePlayed: rgb(0xddd0ff), waveAhead: rgb(0xb490ff, 0.55), waveQuiet: rgb(0xb490ff, 0.25), playhead: .white)
+    /// b, on air: a deep warm red, like a studio's ON AIR light, the switch lit coral.
+    static let onAir = Ground(top: rgb(0x3a0f14), bottom: rgb(0x24080b), bar: rgb(0x4a1219), line: rgb(0xff6b5a, 0.55),
+                              card: .white.opacity(0.08), cardEdge: rgb(0xff8a78, 0.4), surface: .white.opacity(0.06), glow: rgb(0xff5a46, 0.5),
+                              on: rgb(0xff6b5a), onInk: rgb(0x250607), live: rgb(0xffd0c8), mut: rgb(0xe0c2c0), dim: rgb(0xc4a2a0),
+                              wavePlayed: rgb(0xffd8cf), waveAhead: rgb(0xff8a78, 0.55), waveQuiet: rgb(0xff8a78, 0.25), playhead: .white)
+    /// c, stage: darker than the crate side, nearly black, the song's card lit.
+    static let stage = Ground(top: rgb(0x0d0a16), bottom: rgb(0x050307), bar: rgb(0x000000), line: .white.opacity(0.14),
+                              card: rgb(0x2a2244), cardEdge: rgb(0xece4ff, 0.5), surface: .white.opacity(0.045), glow: rgb(0xece4ff, 0.32),
+                              on: rgb(0xf2edf9), onInk: rgb(0x0f0a17), live: rgb(0x8fe3a2), mut: rgb(0xb3a8c8), dim: rgb(0x978bb0),
+                              wavePlayed: rgb(0xece4ff), waveAhead: rgb(0xb490ff, 0.6), waveQuiet: rgb(0xb490ff, 0.25), playhead: rgb(0xffc040))
+    /// The ground shown.
+    static let ground = violet
+    /// Colours the grounds share: the text, the tempo (the iPad's amber), keys that may clash, an input with no sound.
+    static let text = rgb(0xf2edf9)
+    static let tempo = RunLook.amber
+    static let clash = Color.orange
+    static let warn = Color.orange
+    static let error = rgb(0xffb4c4)
+    static let liveFill = Color.white.opacity(0.08)
+    static let meterTrack = Color.white.opacity(0.1)
     static let meterClip = Color.orange
-    static let meterTime = 0.12
-    static let error = Color.red
-    static let silent = Color.orange
-    static let inputWidth: CGFloat = 320
+    static let field = Color.white.opacity(0.08)
+
+    // the layout
+    static let pad: CGFloat = 24, padTop: CGFloat = 16
+    static let gap: CGFloat = 16
+    static let maxWidth: CGFloat = 1320
+    static let columnGap: CGFloat = 28
+    static let headGap: CGFloat = 14, headingGap: CGFloat = 4
+    static let heading = Font.system(size: 34, weight: .bold)
+    static let sub = Font.system(size: 15)
+    static let liveFont = Font.system(size: 13, weight: .semibold)
+    static let liveDot: CGFloat = 10, liveGap: CGFloat = 8, livePadH: CGFloat = 12, livePadV: CGFloat = 4
+    static let leaveFont = Font.system(size: 16, weight: .medium)
+    // now playing
+    static let cardPad: CGFloat = 28, cardRadius: CGFloat = 24, cardLine: CGFloat = 1, cardGap: CGFloat = 10
+    static let cardMinHeight: CGFloat = 360
+    static let group = Font.system(size: 12, weight: .semibold)
+    static let groupKerning: CGFloat = 1
+    static let song = Font.system(size: 46, weight: .bold)
+    static let songLines = 3
+    static let artist = Font.system(size: 22)
+    static let factGap: CGFloat = 26
+    static let tempoFont = Font.system(size: 30, weight: .bold).monospacedDigit()
+    static let keyFont = Font.system(size: 24, weight: .semibold)
+    static let pitchFont = Font.system(size: 18, weight: .semibold).monospacedDigit()
+    static let note = Font.system(size: 16)
+    static let quietOpacity = 0.55
+    static let waveHeight: CGFloat = 96, waveRoom: CGFloat = 0.92, waveGapShare: CGFloat = 0.3, playheadWidth: CGFloat = 2
+    static let flatLine: CGFloat = 1
+    static let times = Font.system(size: 14).monospacedDigit()
+    static let waitFont = Font.system(size: 30, weight: .bold)
+    static let stateFont = Font.system(size: 17)
+    static let waitWidth: CGFloat = 520
+    static let tick = 0.25
+    static let pitchShown = 0.25
+    static let glowBlur: CGFloat = 60, glowFloor = 0.35, glowRange = 0.65, glowSpread: CGFloat = 40
+    // the picks
+    static let listGap: CGFloat = 8, moreAbove: CGFloat = 10
+    static let pickPadH: CGFloat = 16, pickPadV: CGFloat = 12, pickRadius: CGFloat = 16, pickLines: CGFloat = 2, pickGap: CGFloat = 14
+    static let pickTitle = Font.system(size: 16, weight: .semibold)
+    static let pickTitleSmall = Font.system(size: 14, weight: .semibold)
+    static let pickLine = Font.system(size: 13.5).monospacedDigit()
+    static let pickKeys = Font.system(size: 14, weight: .semibold).monospacedDigit()
+    static let tagFont = Font.system(size: 11.5, weight: .semibold)
+    static let tagPadH: CGFloat = 9, tagPadV: CGFloat = 1, tagGap: CGFloat = 4, lineGap: CGFloat = 14
+    static let quiet = Font.system(size: 14)
+    static let dialFont = Font.system(size: 13)
+    static let dialWidth: CGFloat = 180, dialValueWidth: CGFloat = 42, dialGap: CGFloat = 10
+    static let shuffleStart = 0.5, shuffleStep = 0.05
+    static let fewSongs = 10
+    // the foot
+    static let footGap: CGFloat = 18, footPadTop: CGFloat = 12
+    static let inputWidth: CGFloat = 300
+    static let meterWidth: CGFloat = 220, meterHeight: CGFloat = 8
+    static let privacy = Font.system(size: 12.5)
+    // motion (none under reduced motion)
+    static let arrive = 0.6, rise: CGFloat = 10, pickFade = 0.36
 }

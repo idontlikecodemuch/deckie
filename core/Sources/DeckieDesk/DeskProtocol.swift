@@ -161,7 +161,13 @@ public final class DeskProtocol: @unchecked Sendable {
         var current: Any = NSNull()
         if let c = session.current {
             current = ["id": c.id, "name": session.shownName ?? c.name, "hasSongs": session.crate != nil, "songs": session.crate?.tracks.count ?? 0,
-                       "sources": session.crate?.discPlan.map(\.name) ?? []] as [String: Any]
+                       "sources": session.crate?.discPlan.map(\.name) ?? [],
+                       // An addition (protocol 2 still): the crate file is there and does not read. The page shows the
+                       // plain line in place of the songs, the reader's words under Details, and Rebuild this crate
+                       // when it can be.
+                       "unreadable": session.unreadable.map { u in
+                           ["line": u.description, "detail": u.detail, "canRebuild": session.canRebuild] as [String: Any]
+                       } ?? NSNull()] as [String: Any]
         }
         var pending: Any = NSNull()
         if let p = session.pending {
@@ -216,13 +222,17 @@ public final class DeskProtocol: @unchecked Sendable {
         lock.lock(); defer { lock.unlock() }
         let readOnly: Set<String> = ["state", "drives.list", "crate.songs", "source.removeCount", "run.nameDisc", "name.split",
                                      "song.audio", "song.cover", "lookup.sent", "run.stop", "crate.rename", "add.countStop",
-                                     "booth.inputs", "booth.stop"]
+                                     "booth.inputs", "booth.stop", "booth.shuffle"]
         if running && !readOnly.contains(type) { fail(id, "busy", "a run is going"); return true }
         if lookingUp && !readOnly.contains(type) && type != "lookup.stop" { fail(id, "busy", "a lookup is going"); return true }
         do {
             try dispatch(type, obj, id)
         } catch let e as RequestError {
             fail(id, e.code, e.detail)
+        } catch let e as CrateUnreadable {
+            // Add music on a crate whose file does not read: the plain line, never the reader's words.
+            fail(id, "crate_unreadable", e.description)
+            sendState()
         } catch {
             fail(id, "failed", (error as? LocalizedError)?.errorDescription ?? "\(error)")
             sendState(); sendSongs()
@@ -258,7 +268,7 @@ public final class DeskProtocol: @unchecked Sendable {
         switch type {
         case "state":
             reply(id); sendState(); sendSongs()
-        case "booth.inputs", "booth.listen", "booth.stop":
+        case "booth.inputs", "booth.listen", "booth.stop", "booth.shuffle":
             try boothRequest(type, obj, id)
         case "crate.show":
             stopBooth()
@@ -283,6 +293,19 @@ public final class DeskProtocol: @unchecked Sendable {
         case "crate.newName":
             s.setNewCrateName(try Self.string(obj, "name"))
             reply(id, ["name": s.newCrateName]); sendState()
+        case "crate.rebuild":
+            // An addition (protocol 2 still): Rebuild this crate, for the crate showing whose file does not read.
+            guard s.current != nil else { throw RequestError(code: "no_crate", detail: nil) }
+            do {
+                let r = try s.rebuild()
+                var lines = [DeskWords.count("crateRebuilt", r.kept + r.putRight)]
+                if r.leftOut > 0 { lines.append(DeskWords.count("crateRebuiltLeftOut", r.leftOut)) }
+                reply(id, ["kept": r.kept, "putRight": r.putRight, "leftOut": r.leftOut, "lines": lines])
+                sendState(); sendSongs()
+            } catch let e as CrateRebuild.CannotRebuild {
+                fail(id, "cannot_rebuild", e.description)
+                sendState()
+            }
         case "run.stop":
             guard running, let run = currentRun else { reply(id); return }
             run.stop()
@@ -602,6 +625,9 @@ public final class DeskProtocol: @unchecked Sendable {
         if let v = n.bars { m["bars"] = v }
         if let v = n.key { m["key"] = plain(v) }
         if let v = n.wave { m["wave"] = v }
+        // An addition (Nov 21, 2026, protocol still 2): how far through its step, 0 to 1, from the work the step has
+        // done (the beat model's chunks); absent when the step does not say. A page before it shows the step's place.
+        if let v = n.within { m["within"] = (v * 1000).rounded() / 1000 }
         return m
     }
 
@@ -609,10 +635,11 @@ public final class DeskProtocol: @unchecked Sendable {
     /// (not how much of a song is read: that rides with bare progress). Nil when nothing is worked on.
     static func workingKey(_ p: RunProgress) -> String? {
         guard !p.working.isEmpty || p.ahead != nil else { return nil }
-        // A part worked out is a change too, sent at once.
+        // A part worked out is a change too, sent at once; so is a piece of a step's work done (a chunk of the beat
+        // model: a few a song, so never a flood).
         let songs = p.working.map { n -> String in
             let parts = [n.place != nil, n.seconds != nil, n.bpm != nil, n.bars != nil, n.key != nil, n.wave != nil].map { $0 ? "1" : "0" }.joined()
-            return [n.rel, n.step, n.title ?? "", n.artist ?? "", parts].joined(separator: "\u{1}")
+            return [n.rel, n.step, n.title ?? "", n.artist ?? "", parts, n.within.map { String($0) } ?? ""].joined(separator: "\u{1}")
         }
         return (songs + ["ahead", p.ahead?.rel ?? ""]).joined(separator: "\u{0}")
     }
@@ -724,6 +751,30 @@ public final class DeskProtocol: @unchecked Sendable {
         for i in samples.indices { pcm[i] = Int16(max(-1, min(1, samples[i])) * 32767) }
         pcm.withUnsafeBufferPointer { d.append(Data(buffer: $0)) }
         return d
+    }
+
+    /// The engine is leaving (its input closed, or `quit`): the microphone is let go of, a count or a lookup going is
+    /// stopped, and a run going is stopped the way the Stop button stops it (the songs already read are kept and the
+    /// crate saved), except that a song being analysed ends at its next stage rather than at its end (read again on
+    /// Carry on), and waited for, so the engine never ends in the
+    /// middle of a save. Returns the seconds the run took to stop (0 when none was going), for the engine's log.
+    @discardableResult
+    public func quit() -> Double {
+        stopBooth()
+        lock.lock()
+        counting?.set()
+        lookupRun?.stop()
+        let run = running ? currentRun : nil
+        if let run {
+            run.stop(now: true)
+            stopping = true
+            sendState()
+        }
+        lock.unlock()
+        guard run != nil else { return 0 }
+        let t0 = Date()
+        waitForRun()
+        return Date().timeIntervalSince(t0)
     }
 
     /// Waits for a run in progress to end (tests, and the engine's quit).

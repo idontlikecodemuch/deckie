@@ -1,4 +1,5 @@
 import SwiftUI
+import DeckieBooth
 import UIKit
 
 /// The picks for the song now playing: one ranked list, the song's shortlist (the best tenth of the library) in the
@@ -142,27 +143,14 @@ struct ShortlistEndMarker: View {
     }
 }
 
-/// "128 BPM · pitch +3.2%" ("128→140 BPM" when the song changes tempo; no pitch when it can't be beat-matched)
+/// "128 BPM · pitch +3.2%" ("128→140 BPM" when the song changes tempo; no pitch when it can't be beat-matched): the core's
+/// `BoothJoin.bpmLine`, shared with Desk's Booth.
 func pickBPMLine(_ t: Track, _ pair: Pair?, _ ji: JoinInfo) -> String {
-    var bpm = Words.bpm(t.bpmShown)
-    if let bi = t.bpmIn, abs(bi / max(1, t.bpmShown) - 1) > 0.02 { bpm = Words.bpmChange(bi, t.bpmShown) }
-    guard pair?.tr != "brake_cut", ji.beatMatch, let p = ji.pitch else { return bpm }
-    return Words.pitchAfterBPM(bpm, signed1(p)) + (pair.map { $0.m != "1" ? Words.tempoMultiple($0.m) : "" } ?? "")
+    guard let s = Library.shared.song(t) else { return Words.bpm(t.bpmShown) }
+    return BoothJoin.bpmLine(s, pair, ji)
 }
-/// the move: "blend", "echo out · key clash", "no beat-match · brake"
-func pickMoveLine(_ pair: Pair?, _ ji: JoinInfo) -> String {
-    var parts: [String] = []
-    if pair?.tr == "brake_cut" || !ji.beatMatch { parts.append(Words.noBeatMatch) }
-    if let p = pair {
-        // the moves as a small menu: primary / alternative
-        let mv = (p.mv?.isEmpty == false ? p.mv! : [p.trl]).map { $0 == Words.brakeCut ? Words.brake : $0 }
-        parts.append(mv.prefix(2).joined(separator: Words.movesJoin))
-    }
-    if ji.verdict == "clash" { parts.append(Words.keyClash) }
-    // A home-note pair that fits (D36): the fit rests on the note alone, with major or minor open.
-    else if ji.verdict == Words.verdictHomeNote { parts.append(Words.moveHomeNote) }
-    return parts.joined(separator: Words.moveLineJoin)
-}
+/// the move: "blend", "echo out · keys may clash", "no beat-match · brake" (the core's `BoothJoin.moveLine`)
+func pickMoveLine(_ pair: Pair?, _ ji: JoinInfo) -> String { BoothJoin.moveLine(pair, ji) }
 
 struct PickControls: View {
     @Environment(Recognizer.self) private var rec

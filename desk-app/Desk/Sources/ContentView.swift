@@ -15,6 +15,7 @@ struct ContentView: View {
             else if model.boothOn, let c = model.current, model.crate != nil { BoothView(booth: model.booth).id(c.id) }
             else if let r = model.finished { FinishedView(report: r) }
             else if model.crate != nil { CrateView() }
+            else if let u = model.unreadable { UnreadableCrateView(unreadable: u) }
             else { EmptyCrateView() }
         }
         .safeAreaInset(edge: .top) { EngineMissingBanner() }
@@ -23,15 +24,17 @@ struct ContentView: View {
             // The crate's icon and name, always; a click renames it (research AE). The menu beside it switches crates.
             ToolbarItem(placement: .navigation) { HStack { CrateName(); CrateMenu() }.controlSize(Look.Toolbar.controlSize) }
             // The listening mode's switch (Booth.swift), for a crate with songs.
+            // Lit while Booth shows (its ground's colour), as the pages' switch.
             ToolbarItem(placement: .navigation) {
                 if model.crate != nil {
-                    Toggle(isOn: $model.boothOn) { Label(Words.t("booth.mode"), systemImage: "ear") }
-                        .toggleStyle(.button).help(Words.t("booth.modeHelp")).controlSize(Look.Toolbar.controlSize)
+                    Toggle(isOn: $model.boothOn) { Label(Words.t("booth.mode"), systemImage: model.boothOn ? "dot.radiowaves.left.and.right" : "ear") }
+                        .toggleStyle(.button).tint(BoothLook.ground.on).help(Words.t("booth.modeHelp")).controlSize(Look.Toolbar.controlSize)
                 }
             }
+            // The crate's editing buttons leave the toolbar while Booth shows, as on the pages.
             ToolbarItemGroup(placement: .primaryAction) {
-                AddMusicMenu().controlSize(Look.Toolbar.controlSize)
-                if model.crate != nil {
+                if !model.boothOn { AddMusicMenu().controlSize(Look.Toolbar.controlSize) }
+                if model.crate != nil && !model.boothOn {
                     Menu {
                         Button(Words.t("pasteList")) { model.tool = "paste" }
                         Button(Words.t("namesFromFileNames")) { model.tool = "pattern" }
@@ -57,6 +60,10 @@ struct ContentView: View {
                 }
             }
         }
+        // Booth's ground reaches the toolbar too (the owner's, Nov 21, 2026: obvious which mode is showing).
+        .toolbarBackground(model.boothOn ? BoothLook.ground.bar : Color.clear, for: .windowToolbar)
+        .toolbarBackground(model.boothOn ? .visible : .automatic, for: .windowToolbar)
+        .toolbarColorScheme(model.boothOn ? .dark : nil, for: .windowToolbar)
         .onAppear { model.undoManager = undoManager }
         .onChange(of: undoManager) { _, u in model.undoManager = u }
         .sheet(isPresented: $model.showImportLog) { ImportLogView() }
@@ -150,6 +157,32 @@ struct EmptyCrateView: View {
     }
 }
 
+/// A crate whose crate file is there and could not be read (the review of Nov 21, 2026): the plain line in place of
+/// the songs, never an empty crate, with Rebuild this crate when Desk can put it right (CrateRebuild), and the
+/// reader's own words folded away under Details.
+struct UnreadableCrateView: View {
+    @EnvironmentObject var model: DeskModel
+    let unreadable: CrateUnreadable
+    @State private var showDetail = false
+    var body: some View {
+        VStack(spacing: Look.Space.firstScreen) {
+            Image(systemName: "exclamationmark.triangle").font(Look.Fonts.screenTitle).foregroundStyle(Look.Colour.warning)
+            Text(Words.t("crateUnreadable")).font(Look.Fonts.screenTitle)
+            Text(Words.t(model.canRebuild ? "crateUnreadableHelp" : "crateUnreadableNoRebuild"))
+                .multilineTextAlignment(.center).foregroundStyle(.secondary).frame(maxWidth: Look.Size.firstBodyWidth)
+            if model.canRebuild {
+                Button(Words.t("rebuildCrate")) { model.rebuild() }
+                    .buttonStyle(.borderedProminent).help(Words.t("rebuildCrateHelp"))
+            }
+            DisclosureGroup(Words.t("crateUnreadableDetails"), isExpanded: $showDetail) {
+                Text(unreadable.detail).font(Look.Fonts.unreadableDetail).foregroundStyle(.secondary).textSelection(.enabled)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
+            .frame(maxWidth: Look.Size.firstBodyWidth)
+        }.padding(Look.Space.firstScreenPadding)
+    }
+}
+
 /// A run of this crate that stopped before it finished, and the way to carry it on.
 /// Desk without the part that reads music: said at once, at the top of every screen, with what to do. Add music is
 /// off meanwhile (AddWayButtons, AddMusicMenu).
@@ -212,7 +245,9 @@ struct RunView: View {
         VStack(alignment: .leading, spacing: RunLook.gap) {
             // The crate's name, to rename while it is read, and Stop (research AE).
             RunHeader()
-            Text(Words.runTitle(model.runRead)).font(Look.Fonts.screenTitle)
+            // The title names what is read; a long name is cut short on one line, and the whole title is its tooltip.
+            Text(Words.runTitle(model.runRead)).font(Look.Fonts.screenTitle).lineLimit(1).truncationMode(.tail)
+                .help(Words.runTitle(model.runRead))
             Text(Words.runReading(model.runRead, into: model.shownName)).foregroundStyle(.secondary)
             if model.discAsk != nil {
                 // A music CD with no name of its own: asked once, in passing; the run never waits (letter AA, 2.5).

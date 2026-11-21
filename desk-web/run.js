@@ -52,6 +52,8 @@
     if (canvas.width !== w || canvas.height !== h) { canvas.width = w; canvas.height = h; }
     return { ctx: canvas.getContext("2d"), w, h, dpr };
   }
+  /// The song's wave for Booth's screen (booth.js), drawn the same way as here.
+  window.DeskWave = { barHeights, fit, isQuiet };
   /// Adds a class for one moment's motion, then takes it away. Nothing under reduced motion (the CSS has none).
   function pulse(node, cls) {
     if (!node || reduced()) return;
@@ -120,21 +122,40 @@
       if (nowReading(x)) return x.number != null ? t("nowReadingDisc", { number: x.number, total }) : t("nowReading");
       return x.number != null ? t("nowStageOf", { number: x.number, total, stage: nowStage(x) }) : t("nowStageAlone", { stage: nowStage(x) });
     }
-    /// How far through the song, 0 to 1 (RunNow.share): the share read while it is read, then its steps done.
+    /// The beat step's share of the song's bar (RunNow.beatShare: finding the beat is most of a song's time; the owner's
+    /// choice, Nov 21, 2026); the other steps share the rest equally. The steps that say how far they are (`within`).
+    const NOW_BEAT_SHARE = 0.3;
+    const NOW_SAYS_HOW_FAR = ["beatthis"];
+    const NOW_STEP_SHARES = NOW_STEPS.map((s) => (s === "beatthis" ? NOW_BEAT_SHARE : (1 - NOW_BEAT_SHARE) / (NOW_STEPS.length - 1)));
+    /// How far through the song, 0 to 1 (RunNow.share): the share read while it is read, then its steps, each its share
+    /// of the bar. The beat step moves the bar across its share as `within` says (an addition of Nov 21, 2026: the beat
+    /// model's chunks done), from its start until it says; any other step shows its share as done when it starts.
     function nowShare(x) {
       if (nowReading(x)) return x.read != null ? Math.max(0, Math.min(1, x.read)) : 0;
       const i = NOW_STEPS.indexOf(x.step);
-      return i >= 0 ? (i + 1) / NOW_STEPS.length : 1;
+      if (i < 0) return 1;
+      let start = 0;
+      for (let k = 0; k < i; k++) start += NOW_STEP_SHARES[k];
+      const inStep = NOW_SAYS_HOW_FAR.includes(x.step)
+        ? (typeof x.within === "number" ? Math.max(0, Math.min(1, x.within)) : 0) : 1;
+      return Math.min(1, start + inStep * NOW_STEP_SHARES[i]);
     }
     const hasParts = (x) => x.seconds != null || x.bpm != null || x.bars != null || x.key != null || x.wave != null;
     /// The songs being worked on: `working` (an addition to protocol 2), else `now` alone (an engine before it).
     const workingList = () => (!run ? [] : run.working && run.working.length ? run.working : run.now ? [run.now] : []);
+    /// RunNow.stepRank: where its step stands in the order (-1 while read; after them all when unknown).
+    const nowRank = (x) => (nowReading(x) ? -1 : NOW_STEPS.includes(x.step) ? NOW_STEPS.indexOf(x.step) : NOW_STEPS.length);
+    /// RunNow.isFurther: a fuller bar, or as full a bar at a later step.
+    function nowFurther(a, b) {
+      const d = nowShare(a) - nowShare(b);
+      return Math.abs(d) > 1e-9 ? d > 0 : nowRank(a) > nowRank(b);
+    }
     /// RunNow.cardSong: the card's song while it is worked on; else the furthest along, the first taken of equals.
     function cardSong(list, keep) {
       const kept = keep && list.find((x) => x.rel === keep);
       if (kept) return kept;
       let best = null;
-      for (const x of list) if (!best || nowShare(x) > nowShare(best)) best = x;
+      for (const x of list) if (!best || nowFurther(x, best)) best = x;
       return best;
     }
     /// One fact in its place on the card: its words, or a quiet placeholder until it is worked out.
@@ -514,20 +535,26 @@
       let pickAt = 0, fadeRaf = 0;   // when the row was pointed at, for its wave's fade
       /// How far the pointed-at row's wave has faded, 0 to 1: at once under reduced motion.
       const faded = () => (reduced() ? 1 : Math.min(1, (performance.now() - pickAt) / Math.max(1, time("--t-fade"))));
-      /// The pointed-at row's words, centred: the name, then its facts in the quieter colour when the whole line fits;
-      /// else the name alone, shortened with an ellipsis if it must be.
+      /// The pointed-at row's words, centred: the name, then its facts in a lighter weight and a colour that reads on
+      /// the highlight (--wall-pick-facts) when the whole line fits; else the name alone, shortened with an ellipsis if
+      /// it must be.
       function drawRowName(ctx, s, w, mid, dpr) {
         const name = rowName(s), sep = t("join.wallSong"), rest = sep + rowFacts(s).join(sep);
         const room = w - 2 * num("--wall-name-pad") * dpr;
         if (room <= 0) return;
-        ctx.font = `${css("--fw-wall-name")} ${num("--fs-note") * dpr}px ${css("--body")}`;
+        const size = `${num("--fs-note") * dpr}px ${css("--body")}`;
+        const nameFont = `${css("--fw-wall-name")} ${size}`, factsFont = `${css("--fw-wall-facts")} ${size}`;
         ctx.textBaseline = "middle";
         ctx.textAlign = "left";
-        const wName = ctx.measureText(name).width, wRest = ctx.measureText(rest).width;
+        ctx.font = factsFont;
+        const wRest = ctx.measureText(rest).width;
+        ctx.font = nameFont;
+        const wName = ctx.measureText(name).width;
         if (wName + wRest <= room) {
           const x = Math.round((w - wName - wRest) / 2);
           ctx.fillStyle = css("--tx"); ctx.fillText(name, x, mid);
-          ctx.fillStyle = css("--mut"); ctx.fillText(rest, x + wName, mid);
+          ctx.font = factsFont;
+          ctx.fillStyle = css("--wall-pick-facts"); ctx.fillText(rest, x + wName, mid);
           return;
         }
         let text = name;

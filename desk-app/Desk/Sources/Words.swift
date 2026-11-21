@@ -94,7 +94,7 @@ enum Words {
     static let dropHere = w("dropHere")
 
     // MARK: while it works
-    /// The reading screen's title, one word, given the source's name (`{read}`) in case the owner's decision puts it in.
+    /// The reading screen's title, naming what is read (`{read}`): "Reading Stick 3".
     static func runTitle(_ read: String) -> String { w("runTitle", ["read": read]) }
     static func runReading(_ read: String, into crate: String) -> String { w("runReading", ["read": read, "crate": crate]) }
     /// The run's count beside its bar: "1 of 6 done".

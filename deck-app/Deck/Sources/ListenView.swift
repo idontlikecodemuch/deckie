@@ -85,8 +85,9 @@ struct PlayingPanel: View {
                     }
                     // Not heard just now (Deckie's, D35): the song stays, its names dimmed.
                     // Stopped (the corner's Stop): the song stays with its picks, dimmed as when not heard.
-                    .opacity(rec.notHeard || rec.source == .idle ? Look.Listen.notHeardOpacity : 1)
-                    .animation(.easeInOut(duration: Look.Listen.notHeardFade), value: rec.notHeard || rec.source == .idle)
+                    // Interrupted or unable to listen: dimmed the same way.
+                    .opacity(rec.notHeard || rec.source == .idle || rec.listenTrouble != nil ? Look.Listen.notHeardOpacity : 1)
+                    .animation(.easeInOut(duration: Look.Listen.notHeardFade), value: rec.notHeard || rec.source == .idle || rec.listenTrouble != nil)
                     Text(Words.bpm(t.bpmShown * (rec.source == .manual ? 1 : rec.rate)))
                         .font(Look.Listen.bpmFont).foregroundStyle(Theme.rsn)
                     SongWave(track: t, height: waveHeight)
@@ -112,17 +113,29 @@ struct PlayingPanel: View {
                     Text(Words.stoppedTitle).font(Look.Listen.titleFont).foregroundStyle(Theme.tx)
                     Text(Words.stoppedHelp).font(Look.Listen.listeningHelpFont).foregroundStyle(Theme.mut)
                     if rec.savedSet != nil {
-                        Text(Words.stoppedSaved).font(Look.Listen.listeningHelpFont).foregroundStyle(Theme.dim).fixedSize(horizontal: false, vertical: true)
+                        let empty = rec.lastRecording?.nothingRecorded == true
+                        Text(empty ? Words.stoppedNothingRecorded : rec.lastRecording.map { Words.stoppedSavedLength(hms($0.seconds)) } ?? Words.stoppedSaved)
+                            .font(Look.Listen.listeningHelpFont).foregroundStyle(empty ? Theme.orange : Theme.dim).fixedSize(horizontal: false, vertical: true)
                     }
                     Text(Words.stoppedHow).font(Look.Listen.listeningHelpFont).foregroundStyle(Theme.dim).fixedSize(horizontal: false, vertical: true)
                     if DemoCrate.isOpen {
                         Button(Words.leaveTheDemo) { sug.leaveDemo = true }.buttonStyle(PillStyle()).padding(.top, Look.Listen.byHandButtonTop)
                     }
                 }
+            } else if let t = rec.listenTrouble {
+                // Listening interrupted (a call, Siri, an alarm), starting again, or unable to, with no song on screen:
+                // said here instead of "Listening…", while it lasts; it goes back by itself.
+                VStack(alignment: .leading, spacing: Look.Listen.listeningGap) {
+                    Text(Words.listenTroubleTitle(t)).font(Look.Listen.titleFont).foregroundStyle(Theme.tx)
+                    Text(Words.listenTroubleFoot(t, recording: rec.recActive)).font(Look.Listen.listeningHelpFont).foregroundStyle(Theme.orange).fixedSize(horizontal: false, vertical: true)
+                }
             } else {
                 VStack(alignment: .leading, spacing: Look.Listen.listeningGap) {
                     Text(Words.listeningTitle).font(Look.Listen.titleFont).foregroundStyle(Theme.tx)
                     Text(Words.listeningHelp).font(Look.Listen.listeningHelpFont).foregroundStyle(Theme.dim)
+                    if rec.isListening, rec.recordingOn, rec.recTrouble != nil || rec.recFailed != nil {
+                        Text(Words.recCannotFoot).font(Look.Listen.listeningHelpFont).foregroundStyle(Theme.orange).fixedSize(horizontal: false, vertical: true)
+                    }
                     // The demo (DemoCrate): where its songs play from, and the way back to the first-run screen.
                     if DemoCrate.isOpen {
                         Text(Words.demoHow).font(Look.Listen.demoHowFont).foregroundStyle(Theme.mut)
@@ -154,9 +167,15 @@ struct PlayingPanel: View {
         }
         .overlay { HalloweenFX(trigger: rec.current?.hal == true ? rec.currentId : nil).allowsHitTesting(false).clipShape(RoundedRectangle(cornerRadius: Look.Listen.panelRadius)) }
         .overlay(alignment: .bottomLeading) {
-            // Stopped with the song still on screen: where the set that Stop saved is.
+            // Stopped with the song still on screen: where the set that Stop saved is, and how long it is (or that
+            // nothing was recorded in it).
             if rec.current != nil, rec.source == .idle, rec.savedSet != nil {
-                Text(Words.setSavedFoot).font(Look.Listen.alsoHearingFont).foregroundStyle(Theme.mut).lineLimit(1).padding(.leading, Look.Listen.alsoHearingLeading).padding(.bottom, Look.Listen.alsoHearingBottom)
+                Text(Words.setSavedFootLength(rec.lastRecording.map { hms($0.seconds) }, empty: rec.lastRecording?.nothingRecorded == true))
+                    .font(Look.Listen.alsoHearingFont).foregroundStyle(rec.lastRecording?.nothingRecorded == true ? Theme.orange : Theme.mut).lineLimit(1).padding(.leading, Look.Listen.alsoHearingLeading).padding(.bottom, Look.Listen.alsoHearingBottom)
+            } else if rec.current != nil, let t = troubleFoot {
+                // Listening interrupted, starting again or unable to; the recording unable to write. While it lasts.
+                Text(t).font(Look.Listen.alsoHearingFont).foregroundStyle(Theme.orange).lineLimit(2).fixedSize(horizontal: false, vertical: true)
+                    .padding(.leading, Look.Listen.alsoHearingLeading).padding(.bottom, Look.Listen.alsoHearingBottom)
             } else if let h = rec.alsoHearing { Text(Words.alsoHearing(h)).font(Look.Listen.alsoHearingFont).foregroundStyle(Theme.dim).lineLimit(1).padding(.leading, Look.Listen.alsoHearingLeading).padding(.bottom, Look.Listen.alsoHearingBottom) }
         }
     }
@@ -179,7 +198,7 @@ struct PlayingPanel: View {
                     TimelineView(.periodic(from: .now, by: Look.Listen.statusTick)) { _ in
                         HStack(spacing: Look.Listen.recGap) {
                             if rec.recordingOn {
-                                Circle().fill(rec.recActive && !rec.recPaused ? Theme.bad.opacity(Look.Listen.recDotOpacity) : Theme.dim)
+                                Circle().fill(recState.live ? Theme.bad.opacity(Look.Listen.recDotOpacity) : Theme.dim)
                                     .frame(width: Look.Listen.recDot, height: Look.Listen.recDot)
                             } else {
                                 Circle().stroke(Theme.dim, lineWidth: Look.Listen.recOffLine).frame(width: Look.Listen.recDot, height: Look.Listen.recDot)
@@ -195,12 +214,20 @@ struct PlayingPanel: View {
         }
     }
 
-    /// The REC chip's words: "REC 0:12:34" while recording, "REC paused", "REC on" (on, waiting for listening to
-    /// start), "REC off".
-    private var recChip: String {
-        guard rec.recordingOn else { return Words.recOff }
-        guard rec.recActive else { return Words.recOn }
-        return rec.recPaused ? Words.recPaused : Words.recElapsed(hms(rec.recorder.elapsed))
+    /// The REC chip's state (`RecChip`): "REC 0:12:34" while recording, "REC paused", "REC waiting" through a gap in
+    /// the sound, "cannot record", "not recording" (on, but listening is stopped), "REC off".
+    private var recState: RecChip {
+        RecChip.now(recordingOn: rec.recordingOn, active: rec.recActive, paused: rec.recPaused, failed: rec.recFailed != nil,
+                    trouble: rec.recTrouble != nil, hearing: rec.listenTrouble == nil, seconds: rec.recActive ? rec.recorder.elapsed : 0)
+    }
+    private var recChip: String { recState.words }
+
+    /// The playing panel's foot when something is wrong with listening or the recording: listening first (it is what
+    /// the DJ is relying on), then the recording.
+    private var troubleFoot: String? {
+        if let t = rec.listenTrouble { return Words.listenTroubleFoot(t, recording: rec.recActive) }
+        if rec.recordingOn, rec.recTrouble != nil || (rec.recFailed != nil && rec.isListening) { return Words.recCannotFoot }
+        return nil
     }
 
     /// What the corner's one listening control shows now.
@@ -244,6 +271,7 @@ struct PlayingPanel: View {
     private var dotColor: Color {
         switch rec.source {
         case .mic, .file:
+            if rec.listenTrouble != nil { return Theme.orange }     // interrupted, starting again, or unable to listen
             if rec.notHeard { return Theme.dim }       // Deckie's (D35): the playing song not heard just now
             return rec.lastMatch.map { Date().timeIntervalSince($0) < Look.Listen.matchFresh } == true ? Theme.ok : Theme.dim
         default: return Theme.dim.opacity(Look.Listen.idleDotOpacity)
@@ -256,7 +284,9 @@ struct PlayingPanel: View {
         case .idle:
             if case .preparing = rec.deckie.state, rec.hearing != .apple { s = Words.preparingStatus }
             else { s = Library.shared.canRecognise ? Words.statusStopped : Words.notListening }
-        case .mic: s = rec.lastMatch == nil ? Words.statusListening : Words.statusListening
+        case .mic:
+            if let t = rec.listenTrouble { return Words.listenTroubleStatus(t) }   // no "sure" while nothing is heard
+            s = Words.statusListening
         case .file: s = Words.statusTestFile
         case .manual: s = Words.statusByHand
         }
@@ -381,6 +411,36 @@ func hms(_ s: Double) -> String { let t = Int(s); return String(format: "%d:%02d
 /// The Listen page's one control for listening, in the playing panel's corner: Stop while listening (the microphone
 /// or a test file), Start listening while not (stopped, or a song set by hand), nothing while Deckie's index is made
 /// or for a crate file with no fingerprints (nothing to listen for).
+/// What the REC chip says, always the truth about the recording now: recording (with its length), paused by the DJ,
+/// waiting through a gap in the sound (it carries on in the same file), cannot record (it would not begin, or the file
+/// will not take the sound), not recording (listening is stopped, or not started: the next Start listening records),
+/// or set recording off.
+enum RecChip: Equatable {
+    case off, notRecording, cannotRecord, waiting, paused, recording(seconds: Double)
+
+    static func now(recordingOn: Bool, active: Bool, paused: Bool, failed: Bool, trouble: Bool, hearing: Bool, seconds: Double) -> RecChip {
+        guard recordingOn else { return .off }
+        guard active else { return failed ? .cannotRecord : .notRecording }
+        if trouble { return .cannotRecord }
+        if paused { return .paused }
+        if !hearing { return .waiting }
+        return .recording(seconds: seconds)
+    }
+
+    var words: String {
+        switch self {
+        case .off: return Words.recOff
+        case .notRecording: return Words.recNotRecording
+        case .cannotRecord: return Words.recCannot
+        case .waiting: return Words.recWaiting
+        case .paused: return Words.recPaused
+        case .recording(let s): return Words.recElapsed(hms(s))
+        }
+    }
+    /// The dot beside the words: filled red only while sound goes into the file.
+    var live: Bool { if case .recording = self { return true }; return false }
+}
+
 enum ListenControl: Equatable {
     case stop, start, hidden
     static func now(listening: Bool, canRecognise: Bool, preparing: Bool) -> ListenControl {

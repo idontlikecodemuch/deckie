@@ -105,6 +105,18 @@ enum Tour {
                 }
             }
         }
+        // DECKIE_TOUR_WIDTH: the window's content this many points wide for the whole tour, to picture a narrow window;
+        // DECKIE_TOUR_HEIGHT (added for Booth's pictures) as high.
+        let env = ProcessInfo.processInfo.environment
+        let width = env["DECKIE_TOUR_WIDTH"].flatMap(Double.init).flatMap { $0 > 0 ? $0 : nil }
+        let height = env["DECKIE_TOUR_HEIGHT"].flatMap(Double.init).flatMap { $0 > 0 ? $0 : nil }
+        if width != nil || height != nil {
+            desk.window.onWindowThread {
+                for w in NSApplication.shared.windows where w.isVisible {
+                    w.setContentSize(NSSize(width: width ?? w.contentLayoutRect.width, height: height ?? w.contentLayoutRect.height))
+                }
+            }
+        }
         Thread.detachNewThread {
             Thread.sleep(forTimeInterval: 1.0)
             desk.window.onWindowThread { run(0) }
@@ -177,7 +189,7 @@ enum Tour {
             Step(name: nil, js: click("#add-button"), delay: 0.8),
             Step(name: nil, js: "[...document.querySelectorAll('#add-menu [role=menuitem]')].pop().click();", event: "run.finished", delay: 1.0),
             Step(name: nil, js: click("#finished-songs"), delay: 1.0),
-            Step(name: "l01-panel-lookup-button", js: row("[song]"), delay: 1.0),
+            Step(name: "l01-panel-lookup-button", js: row("Around the World"), delay: 1.0),
             Step(name: "l02-sentence-one-song", js: click("#names .foot button.net"), delay: 1.2),
             Step(name: "l03-review-one-song", js: click("#lookup-go"), event: "lookup.finished", delay: 1.0),
             Step(name: "l04-filled-from-musicbrainz", js: click("#lookup-go"), event: "songs", delay: 1.2),
@@ -243,30 +255,51 @@ enum Tour {
         ]
     }
 
-    /// The listening mode (research booth-in-desk, step 1), for a real-room try: the crate file in DECKIE_TOUR_CRATE is
-    /// imported, the Booth switch pressed, and a picture taken when it listens, when it first names a song, when it
-    /// names another (play one song, then cut to another, from outside: afplay), and after Back to songs. It listens
-    /// through the system's default input, so macOS may ask for the microphone first.
+    /// The listening mode, Booth (research booth-in-desk; the designed screen, step 3): the crate file in
+    /// DECKIE_TOUR_CRATE is imported and pictured (the crate side, for comparison), the Booth switch pressed, and a
+    /// picture taken while it waits for a song, when the first song and its picks are up, with each of the two other
+    /// grounds (desk.css's -b and -c values, swapped in for the picture, then back), after the Shuffle dial is moved,
+    /// when it names another song after a cut, when nothing from the crate is playing, after Stop listening, and back
+    /// in the crate.
+    /// Made for the engine's stand-in input (DECKIE_BOOTH_SOUND): a few seconds of quiet, one song of the crate, a cut to
+    /// another, then sound that is no song of the crate. With no stand-in it listens through the system's default input
+    /// (play the songs from outside: afplay), so macOS may ask for the microphone first.
     static func boothSteps(_ click: (String) -> String) -> [Step] {
         final class First: @unchecked Sendable { var id: String? }
         let first = First()
         let crate = ProcessInfo.processInfo.environment["DECKIE_TOUR_CRATE"] ?? ""
-        let heardId = { (m: [String: Any]) -> String? in m["event"] as? String == "booth.heard" ? (m["song"] as? [String: Any])?["id"] as? String : nil }
+        let picksFor = { (m: [String: Any]) -> String? in m["event"] as? String == "booth.picks" ? m["for"] as? String : nil }
+        let state = { (s: String) in { (m: [String: Any]) -> Bool in m["state"] as? String == s } }
+        // The ground shown, as desk.css's "the ground shown" lines name it: each value set to its -b or -c one.
+        let ground = { (look: String) -> String in
+            let names = ["ground", "bar", "bar-line", "card", "card-edge", "surface", "glow", "on", "on-ink", "live", "mut", "dim",
+                         "wave-played", "wave-ahead", "wave-quiet", "playhead"]
+            return names.map { "document.documentElement.style.setProperty('--booth-\($0)', 'var(--booth-\($0)-\(look))');" }.joined()
+                + "window.dispatchEvent(new Event('resize'));"
+        }
         return [
-            Step(name: "b01-crate", js: "desk.request('crate.import', { path: \(js(crate)) });", event: "songs", delay: 1.0),
-            Step(name: "b02-listening", js: click("#booth-button"), event: "booth.state",
-                 eventTest: { $0["state"] as? String == "listening" }, delay: 2.5),
-            Step(name: "b03-named", event: "booth.heard", eventTest: { m in
-                guard let id = heardId(m) else { return false }
+            Step(name: "b01-crate-side", js: "desk.request('crate.import', { path: \(js(crate)) });", event: "songs", delay: 1.5),
+            Step(name: "b02-waiting", js: click("#booth-button"), event: "booth.state", eventTest: state("listening"), delay: 2.0),
+            Step(name: "b03-no-sound", event: "booth.state", eventTest: state("noSound"), delay: 0.6),
+            Step(name: "b04-playing", event: "booth.picks", eventTest: { m in
+                guard let id = picksFor(m) else { return false }
                 if first.id == nil { first.id = id }
                 return true
             }, delay: 2.5),
-            Step(name: "b04-after-cut", event: "booth.heard", eventTest: { m in heardId(m).map { $0 != first.id } ?? false }, delay: 2.0),
-            Step(name: "b05-left", js: click("#booth-leave"), event: "booth.state", eventTest: { $0["state"] as? String == "stopped" },
-                 delay: 1.0),
+            Step(name: "b05-ground-b-on-air", js: ground("b"), delay: 0.8),
+            Step(name: "b06-ground-c-stage", js: ground("c"), delay: 0.8),
+            Step(name: nil, js: ground("a"), delay: 0.4),
+            Step(name: "b07-shuffle-moved", js: """
+                var d = document.getElementById('booth-shuffle'); d.value = '1';
+                d.dispatchEvent(new Event('input')); d.dispatchEvent(new Event('change'));
+                """, event: "booth.picks", eventTest: { ($0["shuffle"] as? NSNumber)?.doubleValue == 1 }, delay: 1.2),
+            Step(name: "b08-after-cut", event: "booth.picks", eventTest: { m in picksFor(m).map { $0 != first.id } ?? false }, delay: 2.5),
+            Step(name: "b09-not-playing-now", event: "booth.state", eventTest: state("nothingNow"), delay: 4.5),
+            Step(name: "b10-stopped", js: click("#booth-stop"), event: "booth.state", eventTest: state("stopped"), delay: 1.0),
+            Step(name: "b11-back-to-crate", js: click("#booth-leave"), delay: 1.2),
             // The window stays a few seconds after leaving, so whether the microphone was let go can be checked from
             // outside while it is still open.
-            Step(name: nil, delay: 6.0),
+            Step(name: nil, delay: 3.0),
         ]
     }
 
@@ -304,12 +337,18 @@ enum Tour {
         steps.append(Step(name: "r08-finished", event: "run.finished", delay: 2.4))
         steps.append(Step(name: "r09-wall-pointed", js: """
             var c = document.getElementById('done-wall'), r = c.getBoundingClientRect();
-            c.dispatchEvent(new MouseEvent('mousemove', { clientX: r.left + r.width * 0.3, clientY: r.top + r.height * 0.42, bubbles: true }));
-            """, delay: 0.8))
+            var at = { clientX: r.left + r.width * 0.3, clientY: r.top + r.height * 0.42, bubbles: true };
+            c.dispatchEvent(new MouseEvent('mousemove', at));
+            // Drawn again once the wave has faded behind the name, as a DJ sees it (a snapshot need not wait for the
+            // page's own animation frames).
+            setTimeout(function () { c.dispatchEvent(new MouseEvent('mousemove', at)); }, 500);
+            setTimeout(function () { c.parentElement.dispatchEvent(new Event('scroll')); }, 1100);
+            """, delay: 1.6))
         steps.append(Step(name: "r10-wall-keyboard", js: """
             var c = document.getElementById('done-wall'); c.focus();
             c.dispatchEvent(new KeyboardEvent('keydown', { key: 'End', bubbles: true }));
             c.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowUp', bubbles: true }));
+            setTimeout(function () { c.parentElement.dispatchEvent(new Event('scroll')); }, 600);   // drawn again once faded
             """, delay: 0.8))
         return steps
     }

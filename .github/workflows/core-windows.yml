@@ -7,10 +7,14 @@ name: core-windows
 on:
   push:
     branches: [main, pc-linux, 'pc/**', 'booth/**', 'key/**', 'trial/**', 'apps/**', 'recog/**']
-    paths: [core/**, mixer/features/**, mixer/candidates.json, mixer/recs.json, .github/workflows/core-windows.yml]
+    paths: [core/**, mixer/*.py, .github/workflows/core-windows.yml]
   pull_request:
-    paths: [core/**, mixer/features/**, mixer/candidates.json, mixer/recs.json, .github/workflows/core-windows.yml]
+    paths: [core/**, mixer/*.py, .github/workflows/core-windows.yml]
   workflow_dispatch:
+
+# Only reads the repository (checkout); artifacts and caches use the runner's own token, not this one.
+permissions:
+  contents: read
 
 jobs:
   # The MP3 of the synthesised test track, for the end-to-end folder. No audio is committed, and the Windows runner
@@ -95,11 +99,11 @@ jobs:
       - name: Fetch the models from the release models-1 (checked by hash)
         shell: bash
         run: bash core/Tools/fetch-models.sh --no-export
-      # The learned key reader's file is optional: when the release has none, or it is not the pinned file, the
-      # engine reads keys with the untrained reader and the step still succeeds (core/Tools/fetch-key-model.sh).
-      - name: Fetch the learned key reader's file, when the release has it (checked by hash)
+      # The learned key reader's file is required (--require), as in the Windows zip (pc-package.yml): the tests run
+      # with the reader that ships, and the step fails when the release does not give the pinned file. Its bash has curl.
+      - name: Fetch the learned key reader's file (checked by hash; required)
         shell: bash
-        run: bash core/Tools/fetch-key-model.sh
+        run: bash core/Tools/fetch-key-model.sh --require
       - name: Build
         working-directory: core
         run: swift build -v
@@ -127,10 +131,14 @@ jobs:
         run: swift run deckie-build "${{ runner.temp }}\e2e\Music" --out "${{ runner.temp }}\e2e\E2E.deckie" --jobs 2
       - name: "End to end: validate it, as a folder and as one file"
         working-directory: core
+        # PowerShell counts only the last command's exit code, so each one is checked (as pc-package.yml does).
         run: |
           swift run deckie-e2e check "${{ runner.temp }}\e2e\E2E.deckie"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           swift run deckie-e2e pack "${{ runner.temp }}\e2e\E2E.deckie" "${{ runner.temp }}\e2e\e2e-windows.deckie"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           swift run deckie-e2e check "${{ runner.temp }}\e2e\e2e-windows.deckie"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - name: "End to end: a second run reads nothing again"
         working-directory: core
         shell: bash
@@ -146,8 +154,11 @@ jobs:
         working-directory: core
         run: |
           swift run deckie-e2e m4a-folder "${{ runner.temp }}\m4a\Music" --from "${{ runner.temp }}\e2e-mp3"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           swift run deckie-build "${{ runner.temp }}\m4a\Music" --out "${{ runner.temp }}\m4a\M4A.deckie" --jobs 2
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           swift run deckie-e2e check-m4a "${{ runner.temp }}\m4a\M4A.deckie"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - name: Keep the crate file for the comparison
         uses: actions/upload-artifact@v4
         with:
@@ -157,12 +168,13 @@ jobs:
           compression-level: 0
           if-no-files-found: error
 
-  # The same folder built on Linux, in the same run, to compare with: the official Swift image and the caches
-  # core-linux.yml fills (the same keys, so normally nothing is fetched here).
+  # The same folder built on Linux, in the same run, to compare with: the official Swift image. ONNX Runtime's cache
+  # has core-linux.yml's key, so it is normally there already; the models' cache is this job's own (core-linux.yml
+  # caches each model under a key of its own), so the models are fetched from the release when it misses.
   linux-crate:
     needs: test-mp3
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    timeout-minutes: 45
     env:
       ORT_DISABLE_TELEMETRY: "1"
     container:
@@ -187,11 +199,11 @@ jobs:
           apt-get install -y --no-install-recommends ca-certificates curl
       - name: Fetch ONNX Runtime (checked by hash)
         if: steps.onnxruntime.outputs.cache-hit != 'true'
-        run: bash core/Tools/fetch-onnxruntime.sh
+        run: bash core/Tools/fetch-onnxruntime.sh --deckie
       - name: Fetch the models from the release models-1 (checked by hash)
         run: bash core/Tools/fetch-models.sh --no-export
-      - name: Fetch the learned key reader's file, when the release has it (checked by hash)
-        run: bash core/Tools/fetch-key-model.sh
+      - name: Fetch the learned key reader's file (checked by hash; required, as above)
+        run: bash core/Tools/fetch-key-model.sh --require
       - name: The test MP3 made in this run
         uses: actions/download-artifact@v4
         with:

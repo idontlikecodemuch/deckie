@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <!--
-Deckie Booth's privacy manifest. No tracking, no tracking domains, no data collected: the microphone's sound is
+The privacy manifest of Deckie, the iPad app. No tracking, no tracking domains, no data collected: the microphone's sound is
 heard on the iPad and never leaves it, and there is no account.
 
-The APIs Apple asks a reason for, as Booth uses them (checked in deck-app/Deck/Sources and the core targets Booth
+The APIs Apple asks a reason for, as the app uses them (checked in deck-app/Deck/Sources and the core targets the app
 links, DeckieCore, DeckieCrate, DeckieRecognition and DeckieAudio):
 - UserDefaults (CA92.1, the app's own settings): the crate file open, Minimal, the Shuffle dial, the recogniser
   chosen, the Crate tab's Details switch.

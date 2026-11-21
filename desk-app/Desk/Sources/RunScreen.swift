@@ -706,8 +706,9 @@ struct WallView: View {
 
 /// One row of a wall: the song's wave as one continuous shape across the row, mirrored about its middle (the owner's
 /// note, Nov 20, 2026: no name column); the row pointed at or chosen lit and ringed, its wave faded back and the
-/// song's name centred over it (the owner's note, Nov 21, 2026): the name, then its tempo, key and length in the
-/// quieter colour when the whole line fits, else the name alone, shortened if it must be.
+/// song's name centred over it (the owner's note, Nov 21, 2026): the name, then its tempo, key and length in a lighter
+/// weight and a colour that reads on the highlight (RunLook.wallPickFacts) when the whole line fits, else the name
+/// alone, shortened if it must be.
 struct WallRow: View {
     let song: RunSong
     let picked: Bool
@@ -727,10 +728,11 @@ struct WallRow: View {
         let title = RunWatch.rowName(song)
         let facts = Words.wallSong(["", RunWatch.bpm(song), RunWatch.key(song.key), RunWatch.clock(song.seconds)])
         return ViewThatFits(in: .horizontal) {
-            (Text(title).foregroundColor(.primary) + Text(facts).foregroundColor(.secondary)).fixedSize()
-            Text(title).foregroundStyle(.primary).truncationMode(.tail)
+            (Text(title).fontWeight(RunLook.wallNameWeight).foregroundColor(.primary)
+                + Text(facts).fontWeight(RunLook.wallFactsWeight).foregroundColor(RunLook.wallPickFacts)).fixedSize()
+            Text(title).fontWeight(RunLook.wallNameWeight).foregroundStyle(.primary).truncationMode(.tail)
         }
-        .font(RunLook.wallNameFont).fontWeight(RunLook.wallNameWeight).lineLimit(1)
+        .font(RunLook.wallNameFont).lineLimit(1)
         .accessibilityHidden(true)
     }
 

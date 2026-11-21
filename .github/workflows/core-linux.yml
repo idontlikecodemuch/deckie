@@ -4,10 +4,14 @@ name: core-linux
 on:
   push:
     branches: [main, pc-linux, 'pc/**', 'booth/**', 'key/**', 'trial/**', 'apps/**', 'recog/**']
-    paths: [core/**, mixer/features/**, mixer/candidates.json, mixer/recs.json, .github/workflows/core-linux.yml]
+    paths: [core/**, mixer/*.py, .github/workflows/core-linux.yml]
   pull_request:
-    paths: [core/**, mixer/features/**, mixer/candidates.json, mixer/recs.json, .github/workflows/core-linux.yml]
+    paths: [core/**, mixer/*.py, .github/workflows/core-linux.yml]
   workflow_dispatch:
+
+# Only reads the repository (checkout); artifacts and caches use the runner's own token, not this one.
+permissions:
+  contents: read
 
 jobs:
   build-and-test:
@@ -19,7 +23,9 @@ jobs:
     # A guard, not a target. Estimated from this session's machine (not yet timed on GitHub): the caches below add
     # about 40 s to a run when they hit (restoring 110 MB, then the beat tracker's tests), about 3 minutes when not;
     # the vocal tagger's cache and tests add about 45 s more when it hits and about 2 minutes when not.
-    timeout-minutes: 25
+    # 45: the engine's tests (a debug build, real analysis, the learned key reader) took between 12 and more than 22
+    # minutes of this job on Nov 21, 2026, and two runs were cut off at 25 with every test passing.
+    timeout-minutes: 45
     container:
       # The official Swift 6.4.1 image on Ubuntu 24.04, pinned by its multi-architecture index digest (DEPENDENCIES.md).
       image: swift@sha256:6304481cf2717966b7ba175162e397ea2f2cc3161909f2b2a5cf40036079a0f7 # swift:6.4.1-noble
@@ -72,14 +78,16 @@ jobs:
         with:
           path: core/.models/yamnet.onnx
           key: yamnet-onnx-models-1-${{ hashFiles('core/Tools/fetch-vocal-models.sh', 'core/Tools/export_yamnet.py', 'core/Tools/yamnet-export-requirements.txt') }}
-      - name: Install curl (only when a cache missed)
-        if: steps.onnxruntime.outputs.cache-hit != 'true' || steps.model.outputs.cache-hit != 'true' || steps.yamnet.outputs.cache-hit != 'true'
+      # Always: the learned key reader's file is fetched on every run (below), whether or not the caches hit.
+      - name: Install curl
         run: |
           apt-get update
           apt-get install -y --no-install-recommends ca-certificates curl
+      # --deckie: Deckie's own build of the release, the library a shipped build carries (the Windows workflows fetch
+      # the same). Microsoft's archive for this release answered 404 on Nov 21, 2026.
       - name: Fetch ONNX Runtime (checked by hash)
         if: steps.onnxruntime.outputs.cache-hit != 'true'
-        run: bash core/Tools/fetch-onnxruntime.sh
+        run: bash core/Tools/fetch-onnxruntime.sh --deckie
       # Each file is checked against the SHA-256 pinned in its export script before it is moved into place, so the
       # release cannot bring a wrong file. A model it does not have (a 404, until models-1 exists) is exported below.
       - name: Fetch the models from the release models-1 (checked by hash)
@@ -147,10 +155,10 @@ jobs:
           compression-level: 0
           if-no-files-found: error
           include-hidden-files: true # the folder .models starts with a dot, which the action otherwise skips
-      # The learned key reader's file is optional: when the release has none, or it is not the pinned file, the
-      # engine reads keys with the untrained reader and the step still succeeds (core/Tools/fetch-key-model.sh).
-      - name: Fetch the learned key reader's file, when the release has it (checked by hash)
-        run: bash core/Tools/fetch-key-model.sh
+      # The learned key reader's file is required (--require), as in the Windows zip (pc-package.yml): the tests run
+      # with the reader that ships, and the step fails when the release does not give the pinned file.
+      - name: Fetch the learned key reader's file (checked by hash; required)
+        run: bash core/Tools/fetch-key-model.sh --require
       - name: Build
         working-directory: core
         run: swift build -v

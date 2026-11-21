@@ -15,8 +15,11 @@ public final class DeskSession {
 
     /// The crate showing, or nil for the first screen (a new crate, made when music is added).
     public private(set) var current: CrateInfo?
-    /// Its crate file as Desk keeps it; nil until music has been added.
+    /// Its crate file as Desk keeps it; nil until music has been added, or when it could not be read (`unreadable`).
     public private(set) var crate: Crate?
+    /// The crate showing has a crate file that could not be read: why, for the plain line and its detail. Add music
+    /// is refused for it (it would overwrite the songs); `rebuild` may bring them back.
+    public private(set) var unreadable: CrateUnreadable?
     public private(set) var corrections = NameCorrections()
     public private(set) var placePaths = PlacePaths()
     /// Where each name was read from, field by field, and each song's release (research AA; `names.json`).
@@ -61,9 +64,11 @@ public final class DeskSession {
     public func show(_ id: String) -> Bool {
         guard let info = shelf.info(id) else { return false }
         current = (try? shelf.touch(id)) ?? info
-        let pkg = shelf.package(id)
-        crate = FileManager.default.fileExists(atPath: pkg.appendingPathComponent(CrateFormat.manifestFile).path)
-            ? (try? CrateReader.read(from: pkg)) : nil
+        // A crate file that does not read is said so (`unreadable`), never shown as a crate with no songs.
+        do { crate = try shelf.crateFile(id); unreadable = nil } catch {
+            crate = nil
+            unreadable = error as? CrateUnreadable ?? CrateUnreadable(crateId: id, reason: error)
+        }
         corrections = NameCorrections.load(from: shelf.file(DeskRun.correctionsFile, of: id))
         placePaths = PlacePaths.load(from: shelf.file(DeskRun.placesFile, of: id))
         book = NameBook.load(from: shelf.file(DeskRun.namesFile, of: id))
@@ -72,10 +77,26 @@ public final class DeskSession {
         return true
     }
 
+    /// Whether the crate showing, whose crate file does not read, can be rebuilt from what Desk keeps
+    /// (`CrateRebuild`): its manifest and list of songs read.
+    public var canRebuild: Bool {
+        guard unreadable != nil, let c = current else { return false }
+        return CrateRebuild.possible(home: home, crateId: c.id)
+    }
+
+    /// "Rebuild this crate": the crate file put right from what Desk keeps (`CrateRebuild`), then shown again.
+    @discardableResult
+    public func rebuild() throws -> CrateRebuild.Result {
+        guard let c = current else { throw DeskError(DeskWords.text("error.noCrate", ["id": ""])) }
+        let r = try CrateRebuild.rebuild(home: home, crateId: c.id)
+        _ = show(c.id)
+        return r
+    }
+
     /// The first screen: the crate is made, with the name on that screen, when music is added.
     public func newCrate() {
         newCrateName = DeskAddMusic.newCrateName(shelf: shelf)
-        current = nil; crate = nil; pending = nil
+        current = nil; crate = nil; pending = nil; unreadable = nil
         corrections = NameCorrections(); placePaths = PlacePaths(); book = NameBook()
         undoSteps = []; redoSteps = []
     }
@@ -137,6 +158,9 @@ public final class DeskSession {
     /// The crate a run goes into: the one showing, else a new one with the first screen's name (made now; never the
     /// name of what is read, research AE finding 2).
     public func crateForRun(_ request: RunRequest) throws -> CrateInfo {
+        // Music is not added to a crate whose crate file does not read: the run would start from no songs and
+        // overwrite them. The plain line instead; Rebuild this crate first.
+        if let u = unreadable { throw u }
         if let c = current { return c }
         let info = try shelf.make(name: newCrateName.isEmpty ? DeskAddMusic.defaultCrateName : newCrateName)
         current = info
@@ -152,7 +176,7 @@ public final class DeskSession {
         let renamed = nameDuringRun
         nameDuringRun = nil
         _ = show(id)
-        if crate == nil, current?.id == id, let saved { crate = saved }
+        if crate == nil, current?.id == id, let saved { crate = saved; unreadable = nil }
         if let renamed, current?.id == id { try? rename(id, to: renamed) }
         if let (source, name) = discName, current?.id == id {
             discName = nil
@@ -489,7 +513,7 @@ public final class DeskSession {
 
     /// Whether this computer hands a crate file out as one file (docs/architecture/crate-format.md, "The single-file
     /// form"): true on Windows and Linux, where a package is only a folder and awkward to send to an iPad; false on
-    /// the Mac, where Finder and AirDrop move a package as one document. Deckie Booth opens both forms.
+    /// the Mac, where Finder and AirDrop move a package as one document. The iPad app opens both forms.
     public static var exportsSingleFile: Bool {
         #if os(Windows) || os(Linux)
         return true
@@ -514,13 +538,22 @@ public final class DeskSession {
         // The copy that leaves is made as a package first, in Desk's own storage (exportCopy drops what must not
         // leave), then written as one file, whole or not at all. A crate file already there under the name, in
         // either form, is replaced.
+        // Scratch folders an earlier export could not remove (another program held them) go first, when they can.
+        for old in (try? FileManager.default.contentsOfDirectory(atPath: home.root.path)) ?? [] where old.hasPrefix("export-") {
+            try? DeckieFiles.remove(home.root.appendingPathComponent(old, isDirectory: true))
+        }
         let scratch = home.root.appendingPathComponent("export-" + UUID().uuidString, isDirectory: true)
         defer { try? DeckieFiles.remove(scratch) }
         let package = scratch.appendingPathComponent(name, isDirectory: true)
         try shelf.exportCopy(info.id, to: package)
         let dest = folder.appendingPathComponent(name, isDirectory: false)
         try DeckieFiles.createDirectory(folder)
-        try DeckieFiles.remove(dest)
+        // A crate file there in one file is replaced by the write itself (whole, in one step), so it stays as it was
+        // when the write fails; one there as a package folder has to go first.
+        var isFolder: ObjCBool = false
+        if FileManager.default.fileExists(atPath: dest.path, isDirectory: &isFolder), isFolder.boolValue {
+            try DeckieFiles.remove(dest)
+        }
         try CrateArchive.pack(package: package, to: dest)
         return dest
     }

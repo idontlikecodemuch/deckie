@@ -150,6 +150,26 @@ import DeckieRecognition
         #expect(throws: IndexFileError.self) { try RecognitionIndex(contentsOf: url) }
     }
 
+    /// A damaged or crafted index file whose header numbers are near the top of the range (a place and a length that
+    /// would overflow when added, a number too large for an Int) is refused with the usual error, never a crash.
+    @Test func anIndexFileWithHugeNumbersInItsHeaderIsRefused() throws {
+        let good = Self.index.fileData()
+        #expect(throws: Never.self) { try RecognitionIndex(file: good) }
+        func with(_ value: UInt64, at offset: Int) -> Data {
+            var d = good
+            withUnsafeBytes(of: value.littleEndian) { d.replaceSubrange(offset..<(offset + 8), with: $0) }
+            return d
+        }
+        let firstPlace = 24, firstLength = 32
+        for crafted in [with(UInt64(Int.max), at: firstLength),             // place + length would overflow
+                        with(UInt64(Int.max - 7), at: firstPlace),          // a place far past the end
+                        with(UInt64.max, at: firstPlace),                   // too large for an Int
+                        with(UInt64.max, at: firstLength),
+                        with(UInt64.max, at: 8)] {                          // the timeline's length, too large
+            #expect(throws: IndexFileError.self) { try RecognitionIndex(file: crafted) }
+        }
+    }
+
     @Test func theCachedIndexIsBuiltOnceAndMadeAgainWhenTheSongsChange() throws {
         let url = Self.temporaryFile("crate.dkx")
         defer { try? FileManager.default.removeItem(at: url.deletingLastPathComponent()) }
