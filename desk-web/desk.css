@@ -567,6 +567,8 @@ main { flex: 1; min-height: 0; display: flex; flex-direction: column; }
 .to-ipad ul { margin: 0; padding-left: var(--to-ipad-list-indent); color: var(--mut); display: flex; flex-direction: column; gap: var(--to-ipad-list-gap); }
 .to-ipad-title { margin-top: var(--to-ipad-title-gap); }
 .exported { color: var(--tx); max-width: var(--exported-max-w); width: 100%; overflow-wrap: anywhere; text-align: center; }
+/* A crate whose file could not be read: the reader's own words, folded away, as wide as the finished screen's text. */
+.unreadable-detail { max-width: var(--finished-text-max-w); width: 100%; overflow-wrap: anywhere; text-align: left; }
 
 /* the crate: the table, with the sources panel beside it */
 .crate { display: flex; min-height: 0; flex: 1; }

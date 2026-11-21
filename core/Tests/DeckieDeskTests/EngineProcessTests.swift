@@ -628,3 +628,63 @@ final class EngineProcess: @unchecked Sendable {
         #expect(late == 0)
     }
 }
+
+/// The window closing in the middle of a read (the review of Nov 21, 2026): the window closes the engine's input, and
+/// the engine stops the run as Stop does, saves the crate with the songs already read, and only then leaves. The crate
+/// opens afterwards with those songs, and the run is left to carry on.
+@Suite(.serialized) struct EngineClosedMidReadTests {
+    @Test(.enabled(if: Engine.available, "needs ONNX Runtime and the Beat This! model"))
+    func theEngineSavesTheSongsReadWhenItsInputClosesMidRun() async throws {
+        let root = try scratch("engine-closed-mid-read")
+        let music = root.appendingPathComponent("Stick/House")
+        try FileManager.default.createDirectory(at: music, withIntermediateDirectories: true)
+        let buffer = TestTrack.render()
+        for k in 1...8 {
+            let gain = Float(1.0 - Double(k) * 0.07)
+            try TestTrack.wav(AudioBuffer(sampleRate: buffer.sampleRate, channelCount: buffer.channelCount,
+                                          samples: buffer.samples.map { $0 * gain }))
+                .write(to: music.appendingPathComponent(String(format: "%02d Song.wav", k)))
+        }
+        let homeURL = root.appendingPathComponent("home")
+        let e = try EngineProcess(home: homeURL)
+        defer { if e.process.isRunning { e.process.terminate() } }
+        #expect(e.wait { $0["event"] as? String == "hello" } != nil)
+
+        let (closedAfter, code): (Double, Int32?) = try await CPUTurns.exclusive {
+            let added = try e.request("run.add", ["path": root.appendingPathComponent("Stick").path])
+            #expect(added["ok"] as? Bool == true, "\(added)")
+            // The first song has joined the run screen, and the next is in its beat stage (the longest): the window
+            // closes now, the worst moment for a quick stop.
+            let joined = e.wait(seconds: 600) { m in
+                (m["event"] as? String == "run.songs" && !((m["songs"] as? [Any]) ?? []).isEmpty)
+                    || m["event"] as? String == "run.finished" || m["event"] as? String == "run.failed"
+            }
+            #expect(joined?["event"] as? String == "run.songs", "\(joined ?? [:])")
+            let mark = e.received.count
+            let beat = e.wait(from: mark, seconds: 600) { m in
+                ((m["working"] as? [[String: Any]]) ?? []).contains { $0["step"] as? String == "beatthis" }
+                    || m["event"] as? String == "run.finished"
+            }
+            #expect(beat?["event"] as? String == "run.progress", "\(beat ?? [:])")
+            let t0 = Date()
+            e.close()
+            let code = e.exitCode(seconds: 120)
+            return (Date().timeIntervalSince(t0), code)
+        }
+        print("EngineClosedMidReadTests: the engine left \(String(format: "%.1f", closedAfter)) s after its input closed")
+        #expect(code == 0)
+        // Within the window's wait for it (EngineProcess.stop in desk-shell).
+        #expect(closedAfter < 30)
+
+        // The crate opens, with the songs that had finished, and the read is left to carry on.
+        let home = DeskHome(root: homeURL)
+        let s = DeskSession(home: home)
+        let info = try #require(s.current)
+        #expect(s.unreadable == nil)
+        let saved = try #require(s.crate)
+        print("EngineClosedMidReadTests: \(saved.tracks.count) of 8 songs in the crate after the close")
+        #expect(saved.tracks.count >= 1 && saved.tracks.count < 8, "\(saved.tracks.count) songs")
+        #expect(s.pending != nil)
+        #expect(!CrateWriter.hasInterruptedSave(home.shelf.package(info.id)))
+    }
+}

@@ -59,6 +59,18 @@ public struct CrateInfo: Codable, Equatable, Hashable, Sendable {
     public var musicFolderURL: URL? { musicFolder.map { URL(fileURLWithPath: $0) } }
 }
 
+/// A crate whose crate file is there and could not be read: the plain line a desk shows (`DeskWords`
+/// "crateUnreadable"), with the reader's own words kept apart (`detail`) for whoever looks further.
+public struct CrateUnreadable: Error, CustomStringConvertible, LocalizedError {
+    public let crateId: String
+    public let reason: Error
+    public init(crateId: String, reason: Error) { self.crateId = crateId; self.reason = reason }
+    /// The reader's words: which file, which field, which song.
+    public var detail: String { (reason as? LocalizedError)?.errorDescription ?? "\(reason)" }
+    public var description: String { DeskWords.text("crateUnreadable") }
+    public var errorDescription: String? { description }
+}
+
 /// A desk's crates (D28): made, listed most recent first, renamed, deleted, brought in from a crate file and sent
 /// out as one. Each crate is a folder below `Crates/`; see `DeskHome` for what is in it.
 public struct CrateShelf: Sendable {
@@ -85,6 +97,18 @@ public struct CrateShelf: Sendable {
         return f.appendingPathComponent(Self.packageName, isDirectory: true)
     }
     public func file(_ name: String, of id: String) -> URL { folder(id).appendingPathComponent(name) }
+
+    /// The crate's crate file as it is kept, or nil when music has not been added yet. A save that was stopped (the
+    /// window closed, the program killed) is finished or undone first (`CrateWriter.finishInterruptedSave`). Throws
+    /// `CrateUnreadable` when the crate file is there and does not read.
+    public func crateFile(_ id: String) throws -> Crate? {
+        let pkg = package(id)
+        try? CrateWriter.finishInterruptedSave(pkg)
+        guard FileManager.default.fileExists(atPath: pkg.appendingPathComponent(CrateFormat.manifestFile).path) else {
+            return nil
+        }
+        do { return try CrateReader.read(from: pkg) } catch { throw CrateUnreadable(crateId: id, reason: error) }
+    }
 
     /// Every crate, the one opened most recently first.
     public func list() -> [CrateInfo] {
@@ -186,24 +210,46 @@ public struct CrateShelf: Sendable {
     }
 
     /// Writes a copy of the crate's crate file to `destination` (replacing what is there), for the DJ to keep or
-    /// send. Throws when the crate has no music yet.
+    /// send. Throws when the crate has no music yet. The copy is made whole under a temporary name beside
+    /// `destination` first, and only then put in its place, so a copy that fails part-way leaves the DJ's earlier
+    /// export as it was.
     public func exportCopy(_ id: String, to destination: URL) throws {
         let pkg = package(id)
         let fm = FileManager.default
+        try? CrateWriter.finishInterruptedSave(pkg)
         guard fm.fileExists(atPath: pkg.appendingPathComponent(CrateFormat.manifestFile).path) else {
             throw DeskError(DeskWords.text("error.noSongsNoCrateFile"))
         }
-        try DeckieFiles.remove(destination)
-        try DeckieFiles.createDirectory(destination.deletingLastPathComponent())
-        try DeckieFiles.copy(pkg, to: destination)
-        // Signatures of songs taken out of the crate stay in Desk's own copy (an undo puts the songs back); the copy
-        // that leaves carries only the crate's own.
-        let c = try CrateReader.read(from: destination)
-        let listed = Set(c.tracks.flatMap { t in t.signatures.keys.map { "\(t.id)_\($0).shazamsignature" } })
-        let sigs = destination.appendingPathComponent(CrateFormat.signaturesFolder)
-        for name in (try? fm.contentsOfDirectory(atPath: sigs.path)) ?? [] where name.hasSuffix(".shazamsignature") && !listed.contains(name) {
-            try DeckieFiles.remove(sigs.appendingPathComponent(name))
+        let parent = destination.deletingLastPathComponent()
+        try DeckieFiles.createDirectory(parent)
+        let mark = UUID().uuidString.lowercased().prefix(8)
+        let temp = parent.appendingPathComponent(".\(destination.lastPathComponent).exporting-\(mark)", isDirectory: true)
+        let old = parent.appendingPathComponent(".\(destination.lastPathComponent).replaced-\(mark)", isDirectory: true)
+        do {
+            try DeckieFiles.copy(pkg, to: temp)
+            // Signatures of songs taken out of the crate stay in Desk's own copy (an undo puts the songs back); the
+            // copy that leaves carries only the crate's own.
+            let c = try CrateReader.read(from: temp)
+            let listed = Set(c.tracks.flatMap { t in t.signatures.keys.map { "\(t.id)_\($0).shazamsignature" } })
+            let sigs = temp.appendingPathComponent(CrateFormat.signaturesFolder)
+            for name in (try? fm.contentsOfDirectory(atPath: sigs.path)) ?? [] where name.hasSuffix(".shazamsignature") && !listed.contains(name) {
+                try DeckieFiles.remove(sigs.appendingPathComponent(name))
+            }
+        } catch {
+            try? DeckieFiles.remove(temp)
+            throw error
         }
+        // The earlier export is moved aside, the new one put in its place, then the earlier one deleted; when the new
+        // one cannot be put there, the earlier one goes back.
+        if fm.fileExists(atPath: destination.path) { try DeckieFiles.move(destination, to: old) }
+        do {
+            try DeckieFiles.move(temp, to: destination)
+        } catch {
+            if fm.fileExists(atPath: old.path) { try? DeckieFiles.move(old, to: destination) }
+            try? DeckieFiles.remove(temp)
+            throw error
+        }
+        try? DeckieFiles.remove(old)
     }
 
     /// The crate file copied to the outbox under the crate's name (`Friday night.deckie`), ready for the share

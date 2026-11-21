@@ -65,7 +65,15 @@ final class EngineProcess: @unchecked Sendable {
     }
 
     /// Closes its input, so it ends; waits up to `seconds`, then stops it.
-    func stop(seconds: Double = 5) {
+    ///
+    /// The engine ends at once when nothing is going; during a read it first stops the run as Stop does and saves the
+    /// crate (the review of Nov 21, 2026): the song being analysed ends at its next stage (the beat stage, the longest,
+    /// takes several seconds on a slow PC), then the songs read are finished, the DJ programs' libraries read for
+    /// keys and names, and the crate saved (a few seconds for thousands of songs). 5 seconds, the wait before, could
+    /// end the engine in the middle of that, so the window, already gone from the screen, waits up to a minute. An
+    /// engine stopped anyway loses nothing: a save cut short is finished or undone at the next open.
+    static let graceSeconds: Double = 60
+    func stop(seconds: Double = EngineProcess.graceSeconds) {
         writeLock.lock()
         try? input.fileHandleForWriting.close()
         writeLock.unlock()

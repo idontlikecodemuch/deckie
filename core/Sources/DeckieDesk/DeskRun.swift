@@ -429,9 +429,10 @@ public final class DeskRun: @unchecked Sendable {
     public var openMusicCD: (String) throws -> MusicCD = { try MusicCDs.open($0) }
     public var findMusicCDs: () -> [MusicCDs.Found] = { MusicCDs.list() }
     /// Stop (the run screen's button): no further song is started, the ones being read finish, and the crate is saved
-    /// with every song read so far. The run stays pending, so Carry on reads the rest (quickly: what was read is kept).
+    /// with every song read so far. `stop(now: true)` (Desk quitting, its window closed) ends the songs being analysed
+    /// at their next stage instead (a few seconds, not the rest of a song); they are read again on Carry on. The run stays pending, so Carry on reads the rest (quickly: what was read is kept).
     let stopFlag = BuildStop()
-    public func stop() { stopFlag.set() }
+    public func stop(now: Bool = false) { stopFlag.set(now: now) }
     public var stopAsked: Bool { stopFlag.isSet }
 
     public init(home: DeskHome, crateId: String, request: RunRequest, jobs: Int, device: String,
@@ -514,8 +515,8 @@ public final class DeskRun: @unchecked Sendable {
         }
         let folder = disc.map { URL(fileURLWithPath: $0.cd.location) } ?? request.folderURL
         defer { disc?.clear() }
-        let before = fm.fileExists(atPath: pkg.appendingPathComponent(CrateFormat.manifestFile).path)
-            ? try CrateReader.read(from: pkg) : nil
+        // A crate file that does not read is not added to (it would be overwritten): the plain line, not the reader's.
+        let before = try shelf.crateFile(crateId)
         let keep: Set<String> = request.source == nil
             ? Set(info.sourceRoots.keys).union(before?.tracks.flatMap { $0.ident.allPlaces.compactMap(\.disc) } ?? [])
             : []

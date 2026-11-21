@@ -10,6 +10,7 @@ import DeckieCore
 @main
 struct DeskApp: App {
     @StateObject private var model = DeskModel()
+    @NSApplicationDelegateAdaptor(QuitDuringRun.self) private var quitting
 
     init() {
         Bundled.pointEngineAtBundle()
@@ -21,6 +22,7 @@ struct DeskApp: App {
         WindowGroup(Words.appName) {
             ContentView().environmentObject(model).frame(minWidth: Look.Size.windowMinWidth, minHeight: Look.Size.windowMinHeight)
                 .onAppear {
+                    quitting.model = model
                     if let n = Headless.openOnLaunch { model.show(named: n) }
                     if let w = NamingWalk.request { NamingWalk.run(model: model, out: w.out, music: w.music) }
                     if let w = LookupWalk.request { LookupWalk.run(model: model, out: w.out, music: w.music) }
@@ -235,5 +237,20 @@ enum Headless {
                 exit(0)
             } catch { print("signing failed:", error); exit(1) }
         }
+    }
+}
+
+/// Quitting while music is read (the review of Nov 21, 2026): the run is stopped as Stop stops it (the songs read so
+/// far kept, the crate saved; a song being analysed ends at its next stage, a few seconds at most) and Desk quits once
+/// the crate is saved, so it never ends in the middle of a save. A quit that cannot wait (the Mac shutting down after
+/// its own wait) is harmless anyway: a save stopped part-way is finished or undone at the next open (CrateWriter.write).
+final class QuitDuringRun: NSObject, NSApplicationDelegate {
+    weak var model: DeskModel?
+
+    @MainActor
+    func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
+        guard let model, model.running else { return .terminateNow }
+        model.stopRunForQuit { sender.reply(toApplicationShouldTerminate: true) }
+        return .terminateLater
     }
 }
