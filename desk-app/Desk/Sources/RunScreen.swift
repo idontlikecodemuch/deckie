@@ -298,7 +298,7 @@ struct RunSongCard: View {
     @Environment(\.accessibilityReduceMotion) private var reduce
 
     var body: some View {
-        RunCard(moment: watch.moment == "first") {
+        RunCard {
             VStack(alignment: .leading, spacing: RunLook.songCardGap) {
                 head
                 HStack(alignment: .center, spacing: RunLook.stageGap) {

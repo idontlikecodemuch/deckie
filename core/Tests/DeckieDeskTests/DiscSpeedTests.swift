@@ -295,7 +295,9 @@ struct OneReadSameResultTests {
             #expect(mine.first?.step == "started")
             let reads = mine.compactMap(\.read)
             #expect(!reads.isEmpty && reads == reads.sorted() && reads.last == 1)
+            // A part worked out is a change of its own (the song card's parts), sent with the step it came in.
             let stages = mine.map(\.step).filter { $0 != "started" && $0 != "reading" }
+                .reduce(into: [String]()) { if $0.last != $1 { $0.append($1) } }
             #expect(Array(stages.prefix(4)) == ["hash", "decode", "resample", "beatthis"])
         }
         #expect(seen.counts == seen.counts.sorted())

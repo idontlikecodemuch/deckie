@@ -164,6 +164,8 @@
       stageCanvas.setAttribute("aria-label", t("stageWaveLabel", { title: nowName(x) }));
       // The wave once its loudness is measured: swept in from the left, then moving with the song.
       const wave = f.wave || [];
+      // Whose wave the canvas holds (a check reads it: the wave is always the card's song's).
+      stageCanvas.dataset.rel = wave.length ? x.rel || "" : "";
       if (!wave.length) { onStage = null; waveSpace(); return; }
       if (!onStage || onStage.rel !== x.rel || !onStage.heights.length) {
         const now = performance.now(), still = reduced() || document.hidden;
@@ -182,6 +184,7 @@
       $("now-line").textContent = t(word);
       for (const id of ["stage-tempo", "stage-key", "stage-bars", "stage-length", "stage-where"]) fact(id, null);
       $("stage-more").textContent = "";
+      stageCanvas.dataset.rel = "";
       onStage = null;
       waveSpace();
     }
@@ -633,7 +636,7 @@
     function moment(note) {
       const text = noteText(note);
       if (note.code === "finished") { lastNote = text; return; }
-      // A moment about one song (the first one in) is not said: the card is the song being worked on, not that one.
+      // A moment about one song is not said: the card is the song being worked on, not that one.
       if (!note.song) {
         env.announce(text);
         pendingMoment = text;
@@ -703,12 +706,12 @@
       },
       /// The finished screen: the run's songs as a wall of waves, and the run's last moment.
       finished(report) {
-        const card = $("done-wall-card");
-        card.hidden = !songs.length;
+        const wallCard = $("done-wall-card");
+        wallCard.hidden = !songs.length;
         if (!songs.length) return;
         running = false;
         clearTimeout(sayTimer); clearTimeout(timer); clearTimeout(card.doneTimer);
-        card.done = null; onWall = songs.slice();
+        card.done = null; card.doneTimer = 0; onWall = songs.slice();
         $("done-wall-title").textContent = t("wallTitleDone", { read: report.read });
         // "That's the lot" only for a run that read everything (the engine sends it only then).
         const note = report.stopped === true ? null : lastNote;
@@ -717,7 +720,7 @@
         doneWall.label(t("wallLabel", { title: t("wallTitleDone", { read: report.read }), songs: n("songs", songs.length) }));
         // Drawn now, not on an animation frame, which a window not in front may never give.
         doneWall.now();
-        if (!card.dataset.settled) { card.dataset.settled = "1"; doneWall.settle(); }
+        if (!wallCard.dataset.settled) { wallCard.dataset.settled = "1"; doneWall.settle(); }
       },
 
     };

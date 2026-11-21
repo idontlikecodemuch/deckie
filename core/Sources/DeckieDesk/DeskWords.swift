@@ -312,7 +312,6 @@ public enum DeskWords {
         "fact.twoPlaces": "{title} is in two places. It's one song in the crate file, with both places kept.",
         "fact.needName": "{title} came in without a full name. You can name it when this is done.",
         "fact.copies.other": "{n} songs turned out to be copies of one recording. Each keeps its own place.",
-        "moment.first": "First one in: {title}.",
         "moment.songs.other": "{n} songs in.",
         "moment.hour.one": "An hour of music read.",
         "moment.hour.other": "{n} hours of music read.",
