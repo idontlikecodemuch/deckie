@@ -23,6 +23,7 @@
 		827B79B64A1E31FD990CA700 /* DeckieCrate in Frameworks */ = {isa = PBXBuildFile; productRef = B49D1D7567EBFBB382FD970D /* DeckieCrate */; };
 		868CFC2D39BE590AE854F03D /* Listening.swift in Sources */ = {isa = PBXBuildFile; fileRef = CFF68CAE9CF7C52FEF8A465C /* Listening.swift */; };
 		92F4CA64942DF6C57E9879A0 /* BoothTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D92B4774934F007F10600D15 /* BoothTests.swift */; };
+		9D5B98954BCBF2A0CF657325 /* DeckieBooth in Frameworks */ = {isa = PBXBuildFile; productRef = DF1D870A3CCDB781CF1F22F1 /* DeckieBooth */; };
 		A363EF687A2B1A25437BA175 /* DeckApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A0CD63E51A2860949AEFB3B /* DeckApp.swift */; };
 		B530B20B2F40A10D5681F8B4 /* Words.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4EE148A8A234AAD6644DE7A /* Words.swift */; };
 		C35533EB4A9A3075F0393755 /* CreditsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5B615436E4FCBE368A4B10F7 /* CreditsView.swift */; };
@@ -78,6 +79,7 @@
 				15077272C4ECBD996B12A98E /* DeckieCore in Frameworks */,
 				827B79B64A1E31FD990CA700 /* DeckieCrate in Frameworks */,
 				4EEDFA8827370DA19CD94F81 /* DeckieRecognition in Frameworks */,
+				9D5B98954BCBF2A0CF657325 /* DeckieBooth in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -183,6 +185,7 @@
 				12304D4AEAAC6FCC6B163B1D /* DeckieCore */,
 				B49D1D7567EBFBB382FD970D /* DeckieCrate */,
 				DB6322FD4E9AC054C1C71F5B /* DeckieRecognition */,
+				DF1D870A3CCDB781CF1F22F1 /* DeckieBooth */,
 			);
 			productName = Deck;
 			productReference = 9768B101742C7EC94619E350 /* Deck.app */;
@@ -570,6 +573,10 @@
 		DB6322FD4E9AC054C1C71F5B /* DeckieRecognition */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = DeckieRecognition;
+		};
+		DF1D870A3CCDB781CF1F22F1 /* DeckieBooth */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = DeckieBooth;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

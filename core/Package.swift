@@ -79,6 +79,7 @@ let package = Package(
         .executable(name: "deckie-make", targets: ["deckie-make"]),
         .library(name: "DeckieChroma", targets: ["DeckieChroma"]),
         .library(name: "DeckieCapture", targets: ["DeckieCapture"]),
+        .library(name: "DeckieBooth", targets: ["DeckieBooth"]),
     ],
     targets: [
         .target(name: "DeckieAudio"),
@@ -110,7 +111,7 @@ let package = Package(
         // only; only DeckieDesk depends on it (NetworkIsolationTests checks no other source names a networking API).
         .target(name: "DeckieLookup"),
         .target(name: "DeckieDesk", dependencies: ["DeckieBuild", "DeckieEngine", "DeckieCrate", "DeckieCore", "DeckieDecode",
-                                                   "DeckieDisc", "DeckieLookup", "DeckieCapture", "DeckieRecognition"]),
+                                                   "DeckieDisc", "DeckieLookup", "DeckieCapture", "DeckieRecognition", "DeckieBooth"]),
         // deckie-lookup-trial: the lookup measured on a folder of music with its tags hidden from it (a development tool,
         // run only with the owner's say-so on his own music).
         .executableTarget(name: "deckie-lookup-trial", dependencies: ["DeckieDesk", "DeckieLookup", "DeckieBuild", "DeckieDecode",
@@ -177,9 +178,13 @@ let package = Package(
         .executableTarget(name: "deckie-sound-trial", dependencies: ["DeckieChroma", "DeckieLookup", "DeckieBuild",
                                                                      "DeckieDecode", "DeckieDesk", "DeckieCrate"]),
         .testTarget(name: "DeckieChromaTests", dependencies: ["DeckieChroma", "DeckieDecode"]),
+        // DeckieBooth: what decides Booth's behaviour, shared by the iPad app and Desk's Booth mode (D42): the switching
+        // rule (which song is on screen and when it changes), the crate as Booth sees it (songs, copies, places), the
+        // picks (the shortlist, the Shuffle dial, the tags, the join words) and their words. No screen, no platform.
+        .target(name: "DeckieBooth", dependencies: ["DeckieCore", "DeckieCrate", "DeckieRecognition"]),
         // DeckieBoothTests: Booth's golden records (the switching rule and the picks as the iPad app had them before the
         // move into the core, Nov 21, 2026) and the shared code's checks against them.
-        .testTarget(name: "DeckieBoothTests", dependencies: ["DeckieCrate", "DeckieCore", "DeckieRecognition"],
+        .testTarget(name: "DeckieBoothTests", dependencies: ["DeckieBooth", "DeckieCrate", "DeckieCore", "DeckieRecognition"],
                     exclude: ["Fixtures"]),
     ]
 )

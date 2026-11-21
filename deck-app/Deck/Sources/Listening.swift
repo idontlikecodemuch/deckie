@@ -4,6 +4,7 @@ import Foundation
 import ShazamKit
 import DeckieCrate
 import DeckieRecognition
+import DeckieBooth
 
 // The booth's two recognisers behind one small interface (D35). Each turns the sound it hears into readings; the
 // Recognizer (`take`) is the one place a reading becomes the playing song, the pitch shown and the set's log. Nothing
@@ -22,53 +23,9 @@ enum Hearing: String, CaseIterable, Identifiable {
     }
 }
 
-/// One recogniser's word on what is playing.
-struct Reading {
-    enum From: String { case deckie, apple }
-    var from: From
-    /// When the sound it is about was heard, and how many seconds of sound had been heard by then.
-    var date: Date
-    var audioTime: Double
-    /// The song (a crate entry's id); nil when nothing is named.
-    var id: String?
-    /// Seconds into the song as recorded, at `date`.
-    var position: Double?
-    /// The deck's speed read from this listen, in percent (nil: this recogniser reads it only over time, from how
-    /// fast the place moves).
-    var speedPercent: Double?
-    /// Whether the key held while the speed moved (true), moved with it (false), or cannot be told (nil).
-    var keyLock: Bool?
-    /// How far the key has moved, as a ratio (1: not at all).
-    var pitchRatio = 1.0
-    /// Apple's tempo-only catalogue variant: a speed in percent that stands in until it is measured.
-    var speedHint: Double?
-    /// How the speed was found, for the details sheet.
-    var speedFrom = ""
-    /// The recogniser's own confidence (Deckie: its standing, 3 and more sure; Apple: 1 for a match).
-    var confidence = 1.0
-    /// Whether the recogniser checked this place against the song itself (Deckie follows a song on its line), so a
-    /// jump to another place in the song is taken at once rather than after the wait a repeated chorus needs.
-    var vouched = false
-    /// Named by a search of the crate (not a song only followed).
-    var fresh = true
-    /// How long the reading took to work out.
-    var milliseconds: Double?
-    /// Deckie's: how many more readings naming this song the booth waits for before it replaces the song on screen
-    /// (0: at once). Nil for Apple's, whose readings keep the hold written for them (`Recognizer.take`).
-    var wait: Int?
-    /// The song heard coming in under the one playing, when the recogniser reports one (the next version of Deckie's
-    /// listener will; nothing fills it yet). The booth carries it as `Recognizer.incoming`.
-    var incoming: Incoming?
-
-    /// A second song heard under the playing one: the song (a crate entry's id), its place, its speed, how sure.
-    struct Incoming: Equatable {
-        var id: String
-        var position: Double?
-        var speedPercent: Double?
-        var keyLock: Bool?
-        var confidence: Double
-    }
-}
+/// One recogniser's word on what is playing: the core's `BoothReading` (DeckieBooth, D42), which the shared switching
+/// rule takes.
+typealias Reading = BoothReading
 
 /// Hears the booth's sound: one buffer at a time, from the microphone tap or a test file. Called off the main thread.
 protocol Ear: AnyObject, Sendable {
@@ -215,22 +172,8 @@ func appMemoryMB() -> Double {
     return kr == KERN_SUCCESS ? Double(info.phys_footprint) / 1e6 : 0
 }
 
-/// The deck's speed from how fast a song's place moves against the sound heard: the median of the slopes between
-/// every two readings at least 3 s apart (Theil-Sen, so one stray reading cannot pull it), from 12 s and three
-/// readings on (track H measured two matches 8 s apart to a few hundredths; in the app the first 10 s read rough).
-/// Nil before that, or when the slope is not a deck's.
-func speedFromPlaces(_ points: [(audioTime: Double, offset: Double)]) -> (ratio: Double, span: Double)? {
-    guard let f = points.first, let l = points.last, points.count >= 3, l.audioTime - f.audioTime >= 12 else { return nil }
-    var slopes: [Double] = []
-    for i in 0..<points.count { for j in (i + 1)..<points.count {
-        let dt = points[j].audioTime - points[i].audioTime
-        if dt >= 3 { slopes.append((points[j].offset - points[i].offset) / dt) }
-    } }
-    slopes.sort()
-    guard !slopes.isEmpty else { return nil }
-    let slope = slopes[slopes.count / 2]
-    return slope > 0.8 && slope < 1.2 ? (slope, l.audioTime - f.audioTime) : nil
-}
+// The deck's speed from how fast a song's place moves (`speedFromPlaces`) is the core's (DeckieBooth), shared with
+// the switching rule.
 
 /// Compare mode: what each recogniser named, when, and at what speed, song by song, and where they disagreed. Kept
 /// for the set and written to the set's log, so the two can be judged on a real night.
