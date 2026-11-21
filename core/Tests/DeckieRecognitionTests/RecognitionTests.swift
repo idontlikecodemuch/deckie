@@ -207,6 +207,75 @@ import DeckieRecognition
         #expect(none.allSatisfy { $0.state == .nothingYet })
     }
 
+    // MARK: The listeners compared for a quicker change of name (docs/research/faster-listening-proposals.md)
+
+    static func readings(_ sound: [Float], _ settings: ListenSettings, index: RecognitionIndex = Self.index) -> [ListenReading] {
+        let listener = SongListener(index: index, settings: settings)
+        var out: [ListenReading] = []
+        var at = 0
+        while at < sound.count {
+            let end = min(sound.count, at + Self.rate / 10)
+            out += listener.hear(Array(sound[at..<end]), sampleRate: Self.rate)
+            at = end
+        }
+        return out
+    }
+
+    @Test func theDefaultListenerIsMainReadingForReading() throws {
+        #expect(ListenSettings() == ListenSettings(.main))
+        let plain = Self.readings(Self.set, ListenSettings()).map { "\($0.time) \($0.state) \($0.id ?? "-")" }
+        let main = Self.readings(Self.set, ListenSettings(.main)).map { "\($0.time) \($0.state) \($0.id ?? "-")" }
+        #expect(plain == main)
+    }
+
+    @Test(arguments: ListenSettings.Listener.allCases)
+    func everyListenerNamesFollowsAndNoticesTheNextSong(_ which: ListenSettings.Listener) throws {
+        let readings = Self.readings(Self.set, ListenSettings(which))
+        let first = try #require(readings.first { $0.state != .nothingYet })
+        #expect(first.id == "song2" && first.time <= 3)
+        #expect(readings.filter { $0.time <= 20 && $0.state != .nothingYet }.allSatisfy { $0.id == "song2" })
+        let change = try #require(readings.first { $0.id == "song6" })
+        // The cut is at 20 s. The default names the next song by 26 s; the others are meant to be quicker.
+        #expect(change.time <= (which == .main ? 26 : 24), "\(which): named at \(change.time)")
+        #expect(readings.filter { $0.time >= 26 }.allSatisfy { $0.id == "song6" })
+    }
+
+    @Test(arguments: ListenSettings.Listener.allCases)
+    func backAndForthEveryTenSecondsIsFollowed(_ which: ListenSettings.Listener) throws {
+        // Songs 2 and 6 in turn, 10 s each, each picking up where it left off, as a DJ cutting between two decks.
+        var sound: [Float] = []
+        for k in 0..<4 { sound += Self.excerpt(Self.song(seed: k % 2 == 0 ? 102 : 106), from: 5 + Double(k / 2) * 10, seconds: 10) }
+        let readings = Self.readings(sound, ListenSettings(which))
+        for k in 1..<4 {
+            let id = k % 2 == 0 ? "song2" : "song6"
+            let cut = Double(k) * 10
+            let named = try #require(readings.first { $0.time > cut && $0.id == id }, "\(which): segment \(k) never named")
+            #expect(named.time - cut <= (which == .main ? 7 : 5), "\(which): segment \(k) named \(named.time - cut) s after its cut")
+        }
+    }
+
+    @Test(arguments: [ListenSettings.Listener.main, .a, .b, .ab])
+    func aSongThatSharesAPassageIsNotNamedWhileTheFollowedSongPlays(_ which: ListenSettings.Listener) throws {
+        // Song 10 holds 8 s of song 2 (from its 15th second) in its own middle, as a remix or a sample would. While song
+        // 2 plays on through that passage, the listener is to keep naming song 2.
+        let other = Self.song(seed: 110)
+        let version = Array(other.prefix(15 * Self.rate)) + Self.excerpt(Self.song(seed: 102), from: 15, seconds: 8) + Array(other.suffix(from: 23 * Self.rate))
+        let songs = (0..<8).map { ("song\($0)", Landmarks(mono: Self.song(seed: UInt64(100 + $0)), sampleRate: Self.rate)) }
+            + [("song10", Landmarks(mono: version, sampleRate: Self.rate))]
+        let index = RecognitionIndex(songs: songs)
+        let readings = Self.readings(Self.excerpt(Self.song(seed: 102), from: 2, seconds: 36), ListenSettings(which), index: index)
+        #expect(readings.filter { $0.state != .nothingYet }.allSatisfy { $0.id == "song2" },
+                "\(which): \(readings.filter { $0.id != "song2" && $0.state != .nothingYet }.map { "\($0.time) \($0.id ?? "")" })")
+    }
+
+    @Test func theCutWatchDoesNotRaiseAnAlarmOnASongThatPlaysOn() throws {
+        // On one song, unbroken, B is the default reading for reading.
+        let sound = Self.excerpt(Self.song(seed: 104), from: 1, seconds: 38)
+        let main = Self.readings(sound, ListenSettings(.main)).map { "\($0.time) \($0.state) \($0.id ?? "-")" }
+        let b = Self.readings(sound, ListenSettings(.b)).map { "\($0.time) \($0.state) \($0.id ?? "-")" }
+        #expect(main == b)
+    }
+
     @Test func theBoothRecogniserTakesSoundWithoutWaitingAndReadsItInOrder() throws {
         final class Box: @unchecked Sendable { let lock = NSLock(); var readings: [ListenReading] = [] }
         let box = Box()

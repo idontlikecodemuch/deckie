@@ -81,7 +81,59 @@ public struct ListenSettings: Sendable, Equatable {
     public var denseQuery = false
     /// Whether a named song is followed (false, for measuring only: every reading is a fresh search and nothing is named).
     public var follow = true
+
+    // The settings below are all off by default; with them off the listener is the one described above, reading for
+    // reading (docs/research/faster-listening-proposals.md).
+
+    /// While a song is followed, the whole-crate search looks at the last this many seconds only (the fast setting:
+    /// 4; at 8, the window, nothing changes).
+    public var followSearchWindow = 8.0
+    /// After the followed song first fails its check, the searches look at the sound since then and this many seconds
+    /// before it, not the whole window, which still holds the song that has gone (nil: off).
+    public var searchSinceMiss: Double? = nil
+    /// Proposal A. While a song is followed and passes its check, the newest `challengeWindow` seconds are also
+    /// searched every reading. Another song found there is a challenger: it is fitted against the followed song on
+    /// the same sound, and replaces it only when it is sure and its score is more than `challengeMargin` times the
+    /// followed song's.
+    public var challenger = false
+    public var challengeWindow = 4.0
+    public var challengeMargin = 2.0          // chosen on the dev half from 1.5, 2 and 3 (3 a second slower; 1.5 and 2 alike)
+    /// Proposal B. The followed song's own points are watched for the moment they stop pairing (a CUSUM test, Page
+    /// 1954): point by point, "still here" (paired at the rate this song has shown) against "gone" (paired at chance).
+    /// Its bar is set so that a false alarm comes on average no more often than once in `cutFalseAlarmSeconds` of
+    /// points whose pairing follows the model (Lorden 1971: the mean run to a false alarm is at least e^bar points).
+    /// After an alarm the crate is searched every reading in the sound since that moment only.
+    public var cutWatch = false
+    public var cutFalseAlarmSeconds = 3600.0
+    /// After an alarm, the least sound since its moment that is searched (nil: `leastWindow`, 3 s). B and A+B use 2,
+    /// chosen on the dev half against 3 (half a second sooner, no more wrong names or jumps than the default).
+    public var cutSearchFrom: Double? = nil
     public init() {}
+
+    /// The listeners compared in docs/research/faster-listening-proposals.md, by the names the tools use.
+    public enum Listener: String, CaseIterable, Sendable { case main, fast, a, b, ab }
+    public init(_ listener: Listener) {
+        self.init()
+        switch listener {
+        case .main: break
+        case .fast: self = .fast
+        case .a: challenger = true; searchSinceMiss = challengeWindow
+        case .b: cutWatch = true; cutSearchFrom = 2
+        case .ab: challenger = true; searchSinceMiss = challengeWindow; cutWatch = true; cutSearchFrom = 2
+        }
+    }
+
+    /// The fast setting of docs/research/w5-recognition-by-five-seconds.md (branch recog/fast): while a song is
+    /// followed the whole crate is searched every second in the newest 4 s, the first search is made after 2 s, and
+    /// after a failed check the search looks only at the sound since then.
+    public static var fast: ListenSettings {
+        var s = ListenSettings()
+        s.searchEvery = 1
+        s.followSearchWindow = 4
+        s.leastWindow = 2
+        s.searchSinceMiss = 4
+        return s
+    }
 }
 
 /// Listens to a stream of sound and names the song. Not thread-safe: one caller at a time (see `BoothRecogniser`).
@@ -99,10 +151,29 @@ public final class SongListener {
     /// and its pitch ratio.
     private var following: (song: Int, intercept: Double, tempo: Double, pitch: Double)?
     private var misses = 0
+    private var missedSince: Double?      // when the followed song first failed its check, until a name is taken again
+    /// A and B: after a switch made early (a challenger, or a name found after an alarm), the moment before which the
+    /// sound is not searched again, for one window's length: it holds the song just left, which would otherwise be
+    /// found there and named back.
+    private var floor: Double?
     private var sinceSearch = 0
+    /// B: the watch on the followed song's points. `sum` is the CUSUM, `lastZero` the time it last stood at 0 (the
+    /// change's estimated moment), `seenTo` the newest point fed in, `rates` the song's pairing rate on its last
+    /// readings, `points` and `seconds` for the rate of points an hour. `cut` is the moment of an alarm, until a
+    /// name is taken, the alarm is withdrawn, or a window's length of sound has followed it.
+    private var watch = Watch()
+    private struct Watch {
+        var sum = 0.0, lastZero = 0.0, seenTo = -Double.infinity
+        var rates: [Double] = [], chance = 0.0
+        var points = 0, seconds = 0.0
+        var cut: Double?
+        mutating func restart() { let p = points, s = seconds; self = Watch(); points = p; seconds = s }
+    }
     /// The last search's answer that was fair but not sure, waiting for a second to agree with it.
     private var pending: (song: Int, intercept: Double, tempo: Double)?
     public private(set) var latest: ListenReading?
+    /// B, for measuring: each alarm raised since the last reset, as (the time it was raised, the moment it names).
+    public private(set) var alarms: [(raised: Double, moment: Double)] = []
 
     public init(index: RecognitionIndex, settings: ListenSettings = ListenSettings()) {
         self.index = index; self.settings = settings
@@ -122,6 +193,7 @@ public final class SongListener {
     public func reset() {
         sound.removeAll(keepingCapacity: true); heard = 0; nextReading = 0
         following = nil; pending = nil; misses = 0; sinceSearch = 0; latest = nil
+        missedSince = nil; watch = Watch(); floor = nil; alarms = []
     }
 
     /// Takes more sound (interleaved if more than one channel) and returns a reading for each second completed.
@@ -159,38 +231,97 @@ public final class SongListener {
         let window = Array(sound.suffix(Int(have * Double(rate))))
         let marks = Landmarks(mono: window, sampleRate: rate, config: queryConfig)
         let start = now - have          // listening time of the window's first sample
+        let fs = queryConfig.frameSeconds
+        /// The window's points from listening time `t` on, and the listening time their frames count from.
+        func since(_ t: Double) -> (Landmarks, Double) {
+            guard t > start else { return (marks, start) }
+            let skip = ((t - start) / fs).rounded()
+            return (marks.suffix(fromSeconds: t - start, frameSeconds: fs), start + skip * fs)
+        }
         var state = ListenReading.State.nothingYet
         var confidence = 0.0
         var searched: ListenReading.Searched?
+        var named = false
+
+        // B: an alarm lasts until a window's length of sound has followed it.
+        if let c = watch.cut, now - c >= settings.window { watch.restart() }
+        if let fl = floor, now - fl >= settings.window { floor = nil }
 
         // Follow the song already named: one check, at the place and speed it should be at.
         if let f = following {
             // The check looks at the newest sound only: the points of the window's last `holdWindow` seconds.
-            let recent = have > settings.holdWindow ? marks.suffix(fromSeconds: have - settings.holdWindow, frameSeconds: queryConfig.frameSeconds) : marks
+            let recent = have > settings.holdWindow ? marks.suffix(fromSeconds: have - settings.holdWindow, frameSeconds: fs) : marks
             let from = now - min(have, settings.holdWindow)
-            if let m = recogniser.check(recent, song: f.song, offsetSeconds: f.intercept + f.tempo * from, tempoRatio: f.tempo, pitchRatio: f.pitch),
-               m.score >= settings.holdScore {
+            let m = recogniser.check(recent, song: f.song, offsetSeconds: f.intercept + f.tempo * from, tempoRatio: f.tempo, pitchRatio: f.pitch)
+            if settings.cutWatch, watch.cut == nil, misses == 0 { watchPoints(recent, from: from, match: m, now: now) }
+            if let m, m.score >= settings.holdScore {
                 following = (f.song, m.offsetSeconds - m.tempoRatio * from, m.tempoRatio, m.pitchRatio)
-                misses = 0; state = .held; confidence = m.score
+                misses = 0; state = .held; confidence = m.score; missedSince = nil
             } else {
                 misses += 1
+                if missedSince == nil { missedSince = now }
                 if misses >= settings.lostAfter { following = nil }
                 else { state = .held; confidence = 0 }       // carried over a gap: still shown, on its last line
+            }
+        }
+        // B: if the followed song fits the sound since the alarm after all, the alarm was false.
+        if settings.cutWatch, let c = watch.cut, let f = following, now - c >= settings.leastWindow {
+            let (after, at) = since(c)
+            if let m = recogniser.check(after, song: f.song, offsetSeconds: f.intercept + f.tempo * at, tempoRatio: f.tempo, pitchRatio: f.pitch),
+               m.score >= settings.holdScore { watch.restart() }
+        }
+        // A: a challenger in the newest sound, judged against the followed song on that same sound.
+        if settings.challenger, let f = following, misses == 0, state == .held {
+            let (short, at) = have > settings.challengeWindow ? since(now - settings.challengeWindow) : (marks, start)
+            let found = recogniser.match(short)
+            if let other = found.first(where: { $0.songIndex != f.song && !index.isRelated($0.songIndex, f.song) }), other.confidence >= settings.sure {
+                let line = (song: other.songIndex, intercept: other.offsetSeconds - other.tempoRatio * at, tempo: other.tempoRatio)
+                let held = recogniser.check(short, song: f.song, offsetSeconds: f.intercept + f.tempo * at, tempoRatio: f.tempo, pitchRatio: f.pitch)?.score ?? 0
+                searched = ListenReading.Searched(id: index.ids[other.songIndex], confidence: other.confidence, agrees: false)
+                // Only a clear lead counts. Being ahead by a hair on two readings in a row (the blend rule first
+                // proposed) is a coin toss where both songs hold the same passage, and it named the other song in
+                // a test of exactly that; a song fading in gets clearly ahead after the middle of the blend.
+                if other.score > settings.challengeMargin * max(held, 0) {
+                    following = (other.songIndex, line.intercept, other.tempoRatio, other.pitchRatio)
+                    state = .named; confidence = other.confidence; named = true
+                    pending = nil; missedSince = nil; watch.restart()
+                    floor = at
+                }
             }
         }
         // Search the whole crate: always when nothing is followed, and every few readings when something is. Then,
         // if nothing is named and there is more sound to go on, once more over the longer window.
         sinceSearch += 1
         var tries: [(Landmarks, Double)] = []
-        if following == nil || misses > 0 || sinceSearch >= settings.searchEvery {
+        let followed = misses == 0 ? following?.song : nil      // the song held at this reading, if any
+        let alarm = settings.cutWatch ? watch.cut : nil
+        if named {
+        } else if let c = alarm {
+            // B: every reading, in the sound since the song went only, once there is enough of it.
             sinceSearch = 0
-            tries.append((marks, start))
+            if now - c >= (settings.cutSearchFrom ?? settings.leastWindow) { tries.append(since(c)) }
+        } else if following == nil || misses > 0 || sinceSearch >= settings.searchEvery {
+            sinceSearch = 0
+            if followed != nil, have > settings.followSearchWindow {
+                tries.append((marks.suffix(fromSeconds: have - settings.followSearchWindow, frameSeconds: fs), now - settings.followSearchWindow))
+            } else if let lead = settings.searchSinceMiss, let since = missedSince, now - since < settings.window, have > lead + (now - since) {
+                // The song that was followed has just stopped fitting: what replaced it is in the newest sound, and
+                // the older part of the window still holds the song that has gone.
+                let span = lead + (now - since)
+                tries.append((marks.suffix(fromSeconds: have - span, frameSeconds: fs), now - span))
+            } else {
+                if let since = missedSince, now - since >= settings.window { missedSince = nil }
+                tries.append((marks, start))
+            }
+        }
+        if let fl = floor {
+            tries = tries.map { $0.1 >= fl ? $0 : since(fl) }
         }
         var tried = 0
         while tried < tries.count {
             let (marks, start) = tries[tried]
             tried += 1
-            if tried == 1, following == nil, settings.longWindow > settings.window {
+            if tried == 1, following == nil, alarm == nil, floor == nil, settings.longWindow > settings.window {
                 let longer = min(Double(sound.count) / Double(rate), settings.longWindow)
                 if longer >= have + 1 {
                     tries.append((Landmarks(mono: Array(sound.suffix(Int(longer * Double(rate)))), sampleRate: rate, config: queryConfig), now - longer))
@@ -205,7 +336,11 @@ public final class SongListener {
                 pending = best.confidence >= settings.fair || !settings.follow ? line : nil
                 if take, following?.song != best.songIndex || misses > 0 {
                     following = (best.songIndex, line.intercept, best.tempoRatio, best.pitchRatio)
-                    misses = 0; state = .named; confidence = best.confidence
+                    misses = 0; state = .named; confidence = best.confidence; missedSince = nil
+                    if let c = alarm { floor = c }          // B: named from the sound since the alarm
+                    watch.restart()
+                } else if take, alarm != nil, following?.song == best.songIndex {
+                    watch.restart()          // B: the same song again in the sound since the alarm: it was false
                 }
             } else { pending = nil }
         }
@@ -217,6 +352,43 @@ public final class SongListener {
         let lock: Bool? = abs(f.tempo - 1) < 0.01 ? nil : !(abs(log(f.pitch) - log(f.tempo)) < abs(log(f.pitch)))
         return ListenReading(time: now, state: state, songIndex: f.song, id: index.ids[f.song], positionSeconds: f.intercept + f.tempo * now,
                              speedPercent: (f.tempo - 1) * 100, keyLock: lock, confidence: confidence, milliseconds: ms, searched: searched)
+    }
+
+    /// B: feeds the points of the follow check heard since the last reading to the watch, in time order. A point that
+    /// paired with the song adds log(chance / rate), one that did not adds log((1 - chance) / (1 - rate)); the sum is
+    /// kept at 0 or above, and an alarm is raised when it passes log(points in `cutFalseAlarmSeconds`), at the moment
+    /// it last stood at 0. Silent until the song's own rate is known from two readings and stands clear of chance.
+    private func watchPoints(_ recent: Landmarks, from: Double, match m: RecognitionMatch?, now: Double) {
+        let fs = queryConfig.frameSeconds
+        let n = recogniser.usablePoints(recent)
+        var paired = [Bool](repeating: false, count: n)
+        if m != nil { for i in recogniser.lastPaired where i < n { paired[i] = true } }
+        if let m { watch.chance = m.chance }
+        // A point within the fingerprint's reach in time of the window's end was chosen without the sound after it:
+        // it is often not the point the song has there, so it would count as unpaired. Those are left for the next
+        // reading, when the sound after them has been heard.
+        let edge = now - Double(queryConfig.timeReach) * fs
+        let fresh = (0..<n).filter { let t = from + Double(recent.frames[$0]) * fs; return t > watch.seenTo && t <= edge }
+        if watch.seenTo.isFinite { watch.points += fresh.count; watch.seconds += settings.step }
+        let perSecond = watch.seconds >= 3 ? Double(watch.points) / watch.seconds : 50
+        let bar = log(settings.cutFalseAlarmSeconds * max(1, perSecond))
+        let p0 = watch.chance
+        let p1 = watch.rates.count >= 2 ? watch.rates.reduce(0, +) / Double(watch.rates.count) : 0
+        if p0 > 0, p1 > 1.5 * p0, p1 < 1 {
+            let hit = log(p0 / p1), miss = log((1 - p0) / (1 - p1))
+            for i in fresh {
+                let t = from + Double(recent.frames[i]) * fs
+                if watch.sum == 0 { watch.lastZero = t }    // a change, if one is found, begins at this point or after
+                watch.sum = max(0, watch.sum + (paired[i] ? hit : miss))
+                if watch.sum > bar { watch.cut = watch.lastZero; alarms.append((now, watch.lastZero)); break }
+            }
+        }
+        if let last = fresh.last { watch.seenTo = from + Double(recent.frames[last]) * fs }
+        // The song's own rate, from readings it passes while the watch does not doubt it.
+        if let m, m.score >= settings.holdScore, watch.cut == nil, watch.sum < 0.25 * bar, m.queryPoints > 0 {
+            watch.rates.append(Double(m.matched) / Double(m.queryPoints))
+            if watch.rates.count > 5 { watch.rates.removeFirst() }
+        }
     }
 }
 
