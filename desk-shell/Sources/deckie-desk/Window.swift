@@ -25,8 +25,24 @@ final class Window: @unchecked Sendable {
         }, Unmanaged.passUnretained(self).toOpaque())
         #if os(macOS)
         Window.installMacMenu()
+        fitToScreen()
         #endif
     }
+
+    #if os(macOS)
+    /// The first window fits the screen it opens on, as on Windows and Linux (deskshell.cc fit_to_screen): no larger
+    /// than the screen's visible part less a margin each side, centred on it; a larger screen keeps the size asked for.
+    private func fitToScreen() {
+        guard let p = deskshell_native_view(handle) else { return }
+        let view = Unmanaged<NSView>.fromOpaque(p).takeUnretainedValue()
+        guard let window = view.window, let screen = window.screen ?? NSScreen.main else { return }
+        let room = screen.visibleFrame.insetBy(dx: 24, dy: 24)
+        var frame = window.frame
+        frame.size.width = min(frame.width, room.width); frame.size.height = min(frame.height, room.height)
+        frame.origin = CGPoint(x: room.midX - frame.width / 2, y: room.midY - frame.height / 2)
+        window.setFrame(frame, display: false)
+    }
+    #endif
 
     #if os(macOS)
     /// The Mac's menu bar. Run from the command line the program has no app bundle, and the web view library makes it

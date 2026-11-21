@@ -242,8 +242,27 @@ enum Tour {
         ]
     }
 
+    /// The folder given as `--music`, if any.
+    static func musicOption() -> String? {
+        let a = ProcessInfo.processInfo.arguments
+        guard let i = a.firstIndex(of: "--music"), i + 1 < a.count else { return nil }
+        return a[i + 1]
+    }
+
+    /// The audio files in a folder and the folders inside it, by their endings (as the engine finds them).
+    static func songsIn(_ folder: String?) -> Int? {
+        guard let folder, let e = FileManager.default.enumerator(atPath: folder) else { return nil }
+        let kinds: Set<String> = ["mp3", "wav", "wave", "aif", "aiff", "flac", "m4a", "aac", "alac"]
+        var n = 0
+        for case let p as String in e where kinds.contains((p as NSString).pathExtension.lowercased()) { n += 1 }
+        return n
+    }
+
     static func runScreenSteps(_ click: (String) -> String) -> [Step] {
-        let total = ProcessInfo.processInfo.environment["DECKIE_TOUR_SONGS"].flatMap(Int.init) ?? 30
+        // The songs to wait for: DECKIE_TOUR_SONGS (30 when not set), never more than the folder has, so a short
+        // folder does not leave the tour waiting for a count the run never reaches.
+        let asked = ProcessInfo.processInfo.environment["DECKIE_TOUR_SONGS"].flatMap(Int.init) ?? 30
+        let total = songsIn(musicOption()).map { min(asked, max(1, $0)) } ?? asked
         let done = { (n: Int) -> ([String: Any]) -> Bool in
             { $0["event"] as? String == "run.progress" && (($0["done"] as? NSNumber)?.intValue ?? 0) >= n }
         }

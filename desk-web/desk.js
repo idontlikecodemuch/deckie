@@ -161,7 +161,6 @@
         finished = null; exportedPath = null; stopListening(); $("run-log").replaceChildren();
         run = { read: m.read, crateName: m.crateName, done: 0, total: 0, stage: "reading", remaining: null, lines: [],
           musicCD: !!m.musicCD, now: null, working: null, ahead: null };
-        nowSeenAt = 0;
         askDisc(m.askName);
         screen.start(m);
         break;
@@ -231,6 +230,9 @@
 
   function updateRun() {
     if (!run) return;
+    // The title is one word, given the source's name ({read}) in case the owner's decision puts it in.
+    $("run-title").textContent = t("runTitle", { read: run.read });
+    $("run-log").setAttribute("aria-label", $("run-title").textContent);
     $("run-reading").textContent = t("runReading", { read: run.read, crate: run.crateName });
     const bar = $("run-bar");
     if (run.total > 0) {
@@ -244,7 +246,9 @@
     } else {
       bar.classList.add("waiting"); bar.removeAttribute("aria-valuenow"); $("run-count").textContent = "";
     }
-    $("run-stage").textContent = t({ reading: "stageReading", finishing: "stageFinishing", saving: "stageSaving" }[run.stage] || "stageReading");
+    // The step in words beside the bar only when there is no song card (finishing, saving): while songs are read, the
+    // song card under the bar says what is being done.
+    $("run-stage").textContent = run.stage === "reading" ? "" : t({ finishing: "stageFinishing", saving: "stageSaving" }[run.stage] || "stageReading");
     $("run-left").textContent = run.remaining != null ? timeLeft(run.remaining) : "";
     drawNow();
   }
@@ -253,8 +257,8 @@
   /// the name Desk has for it, its step line ("Song 2 of 6: finding the beat") and a thin bar within the song (the
   /// share read off the disc, then its steps done), with a turning disc. Several at once (a folder's jobs): "Working on
   /// 4 songs" and a row a song with its step. Under either, quietly, the next song of a disc while it is read ahead.
-  /// Only what the engine said is true: the card shows while songs are worked on (staying --t-now-linger after, so
-  /// the moment between two songs does not flicker). Under it, always, the stage: the last song in, with its facts.
+  /// Only what the engine said is true: the card shows the songs worked on now, and keeps its place while songs are
+  /// read. Under it, always, the stage: the last song in, with its facts.
   const NOW_STEPS = ["hash", "decode", "resample", "beatthis", "key", "spectral", "structure", "loudness", "vocal", "windows"];
   const nowReading = (x) => x.step === "started" || x.step === "reading";
   /// The song's name as RunNow.name gives it: the name Desk has, else its file name without the ending.
@@ -276,35 +280,30 @@
   }
   /// The songs being worked on: `working` (an addition to protocol 2), else `now` alone (an engine before it).
   const working = () => (!run ? [] : run.working && run.working.length ? run.working : run.now ? [run.now] : []);
-  let nowSeenAt = 0, nowTimer = 0;
+  /// The song card, drawn from the last `run.progress` alone: exactly the songs the engine says are being worked on,
+  /// never one that has gone (the engine sends a song's info card before it lets the song go, RunOrder). It keeps its
+  /// place under the bar the whole time songs are read; between songs it says the step with no song in it.
   function drawNow() {
     const card = $("now-card"), stage = $("stage");
+    const reading = !!run && run.stage === "reading";
+    card.hidden = !reading; stage.classList.toggle("now-shown", reading);
+    if (!reading) return;
     const list = working();
-    clearTimeout(nowTimer); nowTimer = 0;
-    if (list.length) nowSeenAt = Date.now();
-    else {
-      const linger = num("--t-now-linger");
-      const left = linger - (Date.now() - nowSeenAt);
-      if (run && run.stage === "reading" && !card.hidden && left > 0) { nowTimer = setTimeout(drawNow, left); return; }
-      card.hidden = true; stage.classList.remove("now-shown");
-      return;
-    }
-    // The card on top; the last song in stays under it (its empty frame, quietly, until the first song is in).
-    card.hidden = false; stage.classList.add("now-shown");
     // One at a time when the engine names the song now (or names only it, an engine before `working`).
-    const one = !!run.now || !(run.working && run.working.length);
+    const one = !list.length || !!run.now || !(run.working && run.working.length);
     $("now-one").hidden = !one;
     $("now-several").hidden = one;
+    const bar = $("now-bar");
     if (one) {
       const x = list[0];
       const disc = $("now-disc");
-      disc.classList.toggle("turning", run.musicCD);
+      disc.classList.toggle("turning", run.musicCD && !!x);
       disc.toggleAttribute("hidden", !run.musicCD);   // an svg has no .hidden
-      $("now-title").textContent = nowName(x);
-      $("now-artist").textContent = x.artist || "";
-      $("now-line").textContent = nowLine(x, run.total);
-      const pct = Math.round(Math.max(0, Math.min(1, nowShare(x))) * 100);
-      const bar = $("now-bar");
+      $("now-title").textContent = x ? nowName(x) : "";
+      $("now-artist").textContent = x ? x.artist || "" : "";
+      $("now-line").textContent = x ? nowLine(x, run.total) : t("stageReading");
+      bar.hidden = !x;
+      const pct = x ? Math.round(Math.max(0, Math.min(1, nowShare(x))) * 100) : 0;
       bar.firstElementChild.style.width = pct + "%";
       bar.setAttribute("aria-valuenow", String(pct));
     } else {
@@ -1804,7 +1803,9 @@
       el("h3", { class: "to-ipad-title", text: t("toIPadTitle") }),
       el("ul", { class: "mut" }, ...toIPadSteps()));
     message([savedLine(r.path)], extra, true);
-    $("message-body").firstElementChild.title = r.path;
+    // With DECKIE_NO_BOXES (test mode) the message is not drawn: nothing to put the path on.
+    const saved = $("message-body").firstElementChild;
+    if (saved) saved.title = r.path;
   }
 
   $("crate-name-button").addEventListener("click", renameShown);

@@ -235,7 +235,6 @@
   --now-shine: var(--acc);
   --stage-empty-opacity: 0.55;            /* the stage before its first song: an empty frame, quieter */
   --now-card-min-h: 112px;
-  --t-now-linger: 900ms;                  /* the card stays this long when no song is worked on, before the stage */
   --progress-h: 10px;
   --waiting-w: 30%; --waiting-from: -30%; --waiting-to: 100%;  /* the bar that waits */
   --waiting-still-opacity: .35;           /* and the same bar, still, under reduced motion */
@@ -314,10 +313,8 @@
   /* the walls: a row a song, its name always shown at the left, its bars beside it; the rows scroll in the card */
   --wall-row-h: 44px; --wall-row-gap: 6px; --wall-row-pad: 6;  /* a row's height, between rows, above and below its bars */
   --wall-max-h: 440px;                    /* the most the rows take before they scroll */
-  --wall-name-share: 0.32; --wall-name-max-w: 260; --wall-name-gap: 14;  /* the name's column: share, most px, gap */
-  --wall-row-font: 500 13px var(--body);
-  --wall-row-name: var(--mut); --wall-row-name-new: var(--tx);
-  --wall-row-bg: rgba(255, 255, 255, 0.025); --wall-row-pick: rgba(255, 192, 64, 0.08);
+  --wall-row-bg: rgba(255, 255, 255, 0.025); --wall-row-pick: rgba(255, 192, 64, 0.14);
+  --wall-pick-ring: 2; --wall-pick-edge: var(--amber);   /* px: the ring round the row pointed at, and its colour */
   --wave: rgba(180, 144, 255, 0.82);      /* a song's wave */
   --wave-quiet: rgba(180, 144, 255, 0.28);
   --wave-new: #ece4ff;                    /* the song that joined last */
@@ -335,7 +332,6 @@
   --stage-tick-short: 0.5;                /* the mark every 8 bars, as a share of the one every 32 */
   --stage-ticker: 900;                    /* ms: a song held on stage shorter than this appears whole, not drawn in */
   --stage-draw-share: 0.45;               /* the most of a song's time on stage its wave takes to draw in */
-  --stage-swap-share: 0.6;                /* the facts change this far through their fade */
   --stage-frame: 33;                      /* ms: the stage draws at most this often (thirty frames a second) */
   /* the song on stage, moving (letter AD): from its tempo, bars and wave; still under reduced motion */
   --t-beat-fastest: 400ms;                /* the quickest pulse: a faster song pulses every other beat */
@@ -751,6 +747,10 @@ dialog.wide.lookup { max-width: min(var(--lookup-wide-max-w), var(--lookup-wide-
 .pick-go { flex: none; color: var(--acc); font-weight: var(--fw-button-main); white-space: nowrap; }
 .crate-add { display: flex; align-items: center; gap: var(--crate-add-gap); padding: var(--crate-add-pad); border-top: var(--hair-line) solid var(--hair); flex: none; }
 .crate-add .grow, .run-head .grow, dialog .buttons .grow { flex: 1; }
-.run-head { display: flex; align-items: center; gap: var(--run-head-gap); }
+.run-head { display: flex; flex-wrap: wrap; align-items: center; gap: var(--run-head-gap); }
+/* A long crate name gives way (cut with an ellipsis) so Stop always stays in the window, however narrow. */
+.run-head .crate-head { min-width: 0; max-width: 100%; }
+.run-head .crate-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.run-head #run-stop { flex: none; }
 .spinner { display: inline-block; width: var(--spinner); height: var(--spinner); border-radius: var(--r-pill); border: var(--spinner-line) solid var(--hair);
            border-top-color: var(--acc); animation: turn var(--spinner-turn) linear infinite; vertical-align: middle; }
