@@ -19,6 +19,8 @@ Needs Xcode 27, `xcodegen` (Homebrew), and the vendored runtime and models in `V
     Vendor/libonnxruntime.1.31.1.dylib            ONNX Runtime for macOS arm64 (our no-telemetry build, or Microsoft's)
     Vendor/models/beat_this_final0.onnx           release models-1
     Vendor/models/yamnet.onnx                     release models-1
+    Vendor/models/deckie-key-2b4fe8fa.f16         release models-1; optional (the learned key reader; core/Tools/fetch-key-model.sh)
+    Vendor/models/deckie-key-2b4fe8fa-credits.tsv release models-1; ships beside it (the credit CC BY asks for)
 
 Then:
 

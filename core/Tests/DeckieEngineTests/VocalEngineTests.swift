@@ -168,7 +168,7 @@ struct VocalEngineTests {
         let t = a.crateTrack(options: .init(analysedAt: "2026-10-29T12:00:00Z"))
         #expect(t.featuresPresent.contains("vocal") && t.featuresPresent.contains("bars.vocal") && t.featuresPresent.contains("style"))
         #expect(t.vocal?.source == "yamnet" && t.style?.model == "yamnet" && t.style?.dims == 1024)
-        #expect(t.engine.models.map(\.name) == [Analysis.gridSource, "yamnet"] + (KeyModel.locate() == nil ? [] : [LearnedKey.Model.pinnedName]))
+        #expect(t.engine.models.map(\.name) == [Analysis.gridSource, "yamnet"] + (KeyModel.defaultName.map { [$0] } ?? []))
         #expect(t.mixIn?.vocalFreeBars != nil && !t.flags.contains("vocal_unknown"))
         let crate = Crate(manifest: CrateManifest(crateId: "engine-vocal-test", name: "engine vocal test",
                                                   createdAt: "2026-10-29T12:00:00Z", devicesSeen: [Analysis.platform]),

@@ -100,6 +100,12 @@ done
 "$py" "$here/pe_kind.py" --set window "$app/deckie-desk.exe" "$app/deckie-desk-engine.exe" >/dev/null
 cp "$ort/lib/onnxruntime.dll" "$app/onnxruntime.dll"
 cp "$core/.models/beat_this_final0.onnx" "$core/.models/yamnet.onnx" "$app/models/"
+# The learned key reader's file and its credit list, when both pinned files are in core/.models
+# (core/Tools/fetch-key-model.sh); without them the program reads keys with the untrained reader.
+if bash "$core/Tools/fetch-key-model.sh" --check >/dev/null 2>&1; then
+    cp "$core"/.models/deckie-key-*.f16 "$app/models/"
+    cp "$core"/.models/deckie-key-*-credits.tsv "$app/licences/"
+fi
 
 # Swift's runtime libraries: every folder on PATH that holds one, then the closure of what the program imports.
 closure=()
