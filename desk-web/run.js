@@ -106,7 +106,7 @@
     let card = { rel: null, done: null, doneUntil: 0, doneTimer: 0, next: null };
     /// The songs shown as rows under the card at the last draw.
     let shownRows = new Set();
-    const NOW_STEPS = ["hash", "decode", "resample", "beatthis", "key", "spectral", "structure", "loudness", "vocal", "windows"];
+    const NOW_STEPS = ["hash", "decode", "resample", "key", "beatthis", "spectral", "structure", "loudness", "vocal", "windows"];
     const nowReading = (x) => x.step === "started" || x.step === "reading";
     /// The song's name as RunNow.name gives it: the name Desk has, else its file name without the ending.
     function nowName(x) {

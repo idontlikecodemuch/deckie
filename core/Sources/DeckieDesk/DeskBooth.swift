@@ -5,7 +5,7 @@ import DeckieCapture
 
 /// Listening inside Desk (research booth-in-desk, step 1: hearing): the crate's recognition index built or opened,
 /// sound from an input (`SoundSource`: the microphone, another input, or a stand-in in tests) fed to the shared
-/// listener (`BoothRecogniser`, with the default `ListenSettings` on main), and what it hears said as events. The
+/// listener (`BoothRecogniser`, with the default `ListenSettings`, the products' listener, D41), and what it hears said as events. The
 /// Windows and Linux engine sends these as `booth.*` messages (DeskProtocol, docs/architecture/desk-protocol.md); the
 /// Mac's Desk shows them in SwiftUI. Both use this one class.
 ///
