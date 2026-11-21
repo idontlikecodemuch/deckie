@@ -88,7 +88,17 @@ targets:
           mkdir -p "$F" "$R"
           cp -f "$V/libonnxruntime.1.31.1.dylib" "$F/"
           cp -f "$V/models/beat_this_final0.onnx" "$V/models/yamnet.onnx" "$R/"
-          # The learned key reader's file and its credit list, when they are in Vendor/models (optional: without
-          # them the engine reads keys with the untrained reader).
-          for f in "$V"/models/deckie-key-*.f16 "$V"/models/deckie-key-*-credits.tsv; do [ -f "$f" ] && cp -f "$f" "$R/"; done; true
+          # The learned key reader's file and its credit list, both or neither, when both are in Vendor/models
+          # (core/Tools/fetch-key-model.sh --into desk-app/Vendor/models, which checks their hashes; the engine checks
+          # the model's again when it loads it). Without them the engine reads keys with the untrained reader.
+          # The credit list goes to Contents/Resources/licences, with one sentence saying what it is.
+          K="$(sed -n 's/^ *public static let pinnedName = "\([a-z0-9-]*\)"$/\1/p' "$SRCROOT/../core/Sources/DeckieCore/Key/LearnedKey.swift")"
+          L="$TARGET_BUILD_DIR/$UNLOCALIZED_RESOURCES_FOLDER_PATH/licences"
+          rm -f "$R"/deckie-key-* "$L"/deckie-key-*
+          if [ -n "$K" ] && [ -f "$V/models/$K.f16" ] && [ -f "$V/models/$K-credits.tsv" ]; then
+            mkdir -p "$L"
+            cp -f "$V/models/$K.f16" "$R/"
+            cp -f "$V/models/$K-credits.tsv" "$L/"
+            printf '%s\n' "$K-credits.tsv lists every recording Deckie's key reader learned from, with its title, its page and its licence: the credit those recordings' licences ask for." > "$L/$K-credits-README.txt"
+          fi
           codesign --force --sign - "$F/libonnxruntime.1.31.1.dylib"

@@ -35,7 +35,7 @@ key is right.
 | | |
 |---|---|
 | The reader | `LearnedKey` (`core/Sources/DeckieCore/Key/LearnedKey.swift`): a log-frequency spectrogram (126 bands, five frames a second) and a convolutional model of 235,598 numbers, in plain Swift. Engine 0.7.0 |
-| Its file | `deckie-key.f16`, 471,196 bytes, name `deckie-key-2b4fe8fa`, SHA-256 `2b4fe8fabf4fc5bd301e04af6c136afe76399f0077984a7f5df78b0ba0b07f7d`. Found at `DECKIE_KEY_MODEL`, in `core/.models/`, or in `models/` beside the PC program; any other file is refused |
+| Its file | `deckie-key-2b4fe8fa.f16`, 471,196 bytes, name `deckie-key-2b4fe8fa`, SHA-256 `2b4fe8fabf4fc5bd301e04af6c136afe76399f0077984a7f5df78b0ba0b07f7d`. Found at `DECKIE_KEY_MODEL`, in `models/` beside a shipped program, or in `core/.models/` (an asset of the release `models-1`, `core/Tools/fetch-key-model.sh`); any other file is not used |
 | Trained on | 3,129 recordings under CC BY, CC0 or public-domain terms: 710 Freesound loops and 371 Free Music Archive songs with human key labels, 48 CC0 piano recordings, and 2,000 Free Music Archive clips labelled by the untrained reader. `DEPENDENCIES.md`, section 13, has the record in D15's shape |
 | Not trained on | anything from GiantSteps or Beatport, anything non-commercial or share-alike, anything of the owner's |
 | In a record | `key.source` `learned-key`; `key.confidence` the key's probability; `key_home` for a home note; `engine.models` names the model; the three-answer reader's key is kept as a vote |

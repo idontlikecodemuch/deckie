@@ -2,7 +2,7 @@
 # Fetch the learned key reader's file and its credit list into core/.models (which .gitignore keeps out of the
 # repository), from this repository's release models-1, checking each against its pinned SHA-256.
 #
-#   core/Tools/fetch-key-model.sh [--require] [--check]
+#   core/Tools/fetch-key-model.sh [--require] [--check] [--into <folder>]
 #
 #   deckie-key-<version>.f16           the model's numbers; its name and SHA-256 are pinned in
 #                                      core/Sources/DeckieCore/Key/LearnedKey.swift (pinnedName, pinnedSHA256)
@@ -13,20 +13,25 @@
 # untrained three-answer reader. So this script never fails a build for it: when the release has no such file, or the
 # download does not match, it says so, removes what did not match, and exits 0. With --require it exits 1 instead.
 # With --check it downloads nothing and exits 0 only when both pinned files are in place.
+# --into puts the two files in another folder: the Mac desk's `desk-app/Vendor/models` (desk-app/README.md), which
+# .gitignore also keeps out of the repository. DECKIE_MODELS_URL replaces the release's address for a mirror (any
+# URL curl takes, file:// included), as for fetch-models.sh.
 # A retrained model is a new file name and new pins (there and below); nothing is ever overwritten on the release.
 set -euo pipefail
 here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 models="$here/../.models"
 swift="$here/../Sources/DeckieCore/Key/LearnedKey.swift"
-release="https://github.com/idontlikecodemuch/deckie/releases/download/models-1"
+release="${DECKIE_MODELS_URL:-https://github.com/idontlikecodemuch/deckie/releases/download/models-1}"
+release="${release%/}"
 CREDITS_SHA256="8769b179fc1c09ba39ba9d84fdb03d57f67359be32cbb30771797e43d14c87f5"
 
 require=0; check=0
-for a in "$@"; do
-    case "$a" in
-        --require) require=1 ;;
-        --check) check=1 ;;
-        *) echo "fetch-key-model: unknown argument $a" >&2; exit 2 ;;
+while [ $# -gt 0 ]; do
+    case "$1" in
+        --require) require=1; shift ;;
+        --check) check=1; shift ;;
+        --into) [ $# -ge 2 ] || { echo "fetch-key-model: --into needs a folder" >&2; exit 2; }; models="$2"; shift 2 ;;
+        *) echo "fetch-key-model: unknown argument $1" >&2; exit 2 ;;
     esac
 done
 say() { echo "fetch-key-model: $*"; }
@@ -49,14 +54,17 @@ one() {  # file, pinned hash
         if [ "$got" = "$want" ]; then mv -f "$tmp" "$path"; say "$file fetched, SHA-256 $got, the pinned file"; return 0; fi
         rm -f "$tmp"; say "$file: SHA-256 mismatch (expected $want, got $got); the file was not used"
     else
-        rm -f "$tmp"; say "$file: not on the release models-1 (or the download failed): $release/$file"
+        rm -f "$tmp"; say "$file: not there yet on the release models-1 (or the download failed): $release/$file"
     fi
     missing="$missing $file"
 }
 one "$name.f16" "$pinned"
 one "$name-credits.tsv" "$CREDITS_SHA256"
 if [ -n "$missing" ]; then
-    say "not in place:$missing. Keys are read by the untrained three-answer reader."
+    say "not in place:$missing. Keys are read by the untrained three-answer reader; a package is made without the learned one."
+    if [ -n "${GITHUB_ACTIONS:-}" ] && [ "$check" = 0 ]; then
+        echo "::notice title=Learned key reader::not in place:$missing (release models-1); this run reads keys with the untrained reader"
+    fi
     if [ "$require" = 1 ] || [ "$check" = 1 ]; then exit 1; fi
 fi
 exit 0

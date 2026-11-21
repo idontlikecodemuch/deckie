@@ -10,7 +10,9 @@
 #
 # The window finds the release engine beside the checkout's core/.build/release (`--engine` names another), and the
 # engine finds ONNX Runtime and the two models as a debug build does (DECKIE_ONNXRUNTIME_LIB, DECKIE_BEAT_THIS_MODEL,
-# DECKIE_YAMNET_MODEL, else core/.deps and core/.models in the checkout).
+# DECKIE_YAMNET_MODEL, else core/.deps and core/.models in the checkout). The learned key reader's file is optional and
+# found the same way (DECKIE_KEY_MODEL, else core/.models: core/Tools/fetch-key-model.sh); the last lines say whether
+# it is there, and the engine's own line in the window's log says which key reader it uses.
 set -euo pipefail
 here="$(cd "$(dirname "$0")" && pwd)"
 jobs="${DECKIE_BUILD_JOBS:-4}"
@@ -20,3 +22,5 @@ cd "$here"
 nice -n 10 swift build -c release -j "$jobs"
 echo "engine: $here/../core/.build/release/deckie-desk-engine"
 echo "window: $here/.build/release/deckie-desk"
+if [ -n "${DECKIE_KEY_MODEL:-}" ]; then echo "key reader's file: DECKIE_KEY_MODEL=$DECKIE_KEY_MODEL (its hash is checked when the engine loads it)"
+else bash "$here/../core/Tools/fetch-key-model.sh" --check || true; fi

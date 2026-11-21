@@ -19,8 +19,16 @@ Needs Xcode 27, `xcodegen` (Homebrew), and the vendored runtime and models in `V
     Vendor/libonnxruntime.1.31.1.dylib            ONNX Runtime for macOS arm64 (our no-telemetry build, or Microsoft's)
     Vendor/models/beat_this_final0.onnx           release models-1
     Vendor/models/yamnet.onnx                     release models-1
-    Vendor/models/deckie-key-2b4fe8fa.f16         release models-1; optional (the learned key reader; core/Tools/fetch-key-model.sh)
-    Vendor/models/deckie-key-2b4fe8fa-credits.tsv release models-1; ships beside it (the credit CC BY asks for)
+    Vendor/models/deckie-key-2b4fe8fa.f16         release models-1; optional (the learned key reader)
+    Vendor/models/deckie-key-2b4fe8fa-credits.tsv release models-1; ships with it (the credit CC BY asks for)
+
+The key reader's two files are fetched by their pinned hashes, and are never committed:
+
+    bash core/Tools/fetch-key-model.sh --into desk-app/Vendor/models
+
+Without them the app reads keys with the untrained reader. With both, the post-build step puts the model in
+`Contents/Resources/models` and the credit list, with a sentence saying what it is, in `Contents/Resources/licences`;
+`"Deckie Desk" --check-engine` prints which key reader the app found (`key reader: learned, ...` or `untrained`).
 
 Then:
 

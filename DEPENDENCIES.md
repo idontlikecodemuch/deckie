@@ -1186,15 +1186,17 @@ two other models, the file is an asset of this repository's release `models-1`, 
 (`core/Tools/fetch-key-model.sh`); no trained numbers are in the git tree. Its name carries its version, so a
 retrained model is a new file and a new pin, never the same name with other bytes. The model is optional by design:
 where the file is absent, or is not the pinned file byte for byte, the engine reads keys with the untrained
-three-answer reader and says so. **The upload itself was not done from the session that wrote this** (it had no way
-to upload a release asset): until the two files below are on the release, every build fetches nothing and falls
-back; `fetch-key-model.sh` reports which.
+three-answer reader and says so. **Until the two files below are on the release**, every build fetches nothing and
+falls back, and `fetch-key-model.sh` says so in one line; `pc-package.yml` then makes the zip without them. Its
+`KEY_MODEL` setting, at the top of that workflow, is `optional` until the files are there; `required` makes a run
+fail without them.
 
 | | |
 |---|---|
 | The file | `deckie-key-2b4fe8fa.f16`: 235,598 numbers as 16-bit floats, 471,196 bytes; `https://github.com/idontlikecodemuch/deckie/releases/download/models-1/deckie-key-2b4fe8fa.f16`. Looked for at `DECKIE_KEY_MODEL`, in `models/` beside a shipped program, then in `core/.models/` (`KeyModel`). It runs in plain Swift: no model runtime |
 | Name and hash | `deckie-key-2b4fe8fa`; SHA-256 `2b4fe8fabf4fc5bd301e04af6c136afe76399f0077984a7f5df78b0ba0b07f7d`, pinned in `LearnedKey.Model`; a file with any other hash is not used |
-| Where builds get it | `core/Tools/fetch-key-model.sh`, run by `core-linux.yml`, `core-windows.yml`, `desk-window.yml` and `pc-package.yml` after the other models; the PC package copies it to `app/models/` and its credit list to `app/licences/` (`core/Tools/windows/package.sh`); the Mac desk copies both from `Vendor/models/` into its bundle (`desk-app/project.yml`) and points the engine at the file (`DeskApp.swift`, `Bundled`) |
+| Where builds get it | `core/Tools/fetch-key-model.sh`, run by `core-linux.yml`, `core-windows.yml`, `desk-window.yml` and `pc-package.yml` after the other models; the PC package copies it to `app/models/` and its credit list to `app/licences/`, both or neither, and names the list in `ACKNOWLEDGEMENTS.txt` (`core/Tools/windows/package.sh`); the Mac desk takes both from `Vendor/models/` (`fetch-key-model.sh --into desk-app/Vendor/models`), puts the model in its bundle's `models/` and the list in its `licences/` (`desk-app/project.yml`) and points the engine at the file (`DeskApp.swift`, `Bundled`); the Mac test window and `deckie-make` in a checkout find it in `core/.models/` |
+| Which reader ran | the Desk engine's log line `key reader: learned, deckie-key-2b4fe8fa, <path>` or `key reader: untrained (<why>)` (in the window's check log), the Mac desk's `--check-engine`, and `deckie-make`'s run log (`key model: present (deckie-key-2b4fe8fa)`, `missing` or `not the pinned file`) |
 | In a record | `engine.models` names the model (`deckie-key-2b4fe8fa`), and `key.source` is `learned-key`; so a crate file says which reader, and which version of it, gave each key |
 | Made by | `mixer/keytrial/kt_x4.py` (`cnn mix`, then `export mix`), Nov 14, 2026, on one computer's CPU in 47 minutes; the script, its settings and its random seeds are in the repository, the training audio is not |
 | What it holds | weights of small filters over a picture of the pitch content of sound. No audio, no picture of any recording and no list of labels is in it |
