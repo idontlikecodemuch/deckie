@@ -183,8 +183,19 @@ import DeckieBuild
         for code in facts { #expect(DeskWords.table["fact.\(code)"] != nil || DeskWords.table["fact.\(code).other"] != nil, "\(code)") }
         for code in moments { #expect(DeskWords.table["moment.\(code)"] != nil || DeskWords.table["moment.\(code).other"] != nil, "\(code)") }
         for step in ["reading", "finishing", "disc", "saving"] { #expect(DeskWords.list("saying.\(step)").count >= 3, "\(step)") }
-        #expect(DeskWords.list("saying.reading").count == DeskWords.table.keys.filter { $0.hasPrefix("saying.reading.") }.count)
-        #expect(DeskWords.list("saying.reading").contains { $0.contains(DeskWords.text("thisComputer.\(DeskWords.computerKind)")) })
+        #expect(DeskWords.list("saying.folder").count >= 2)
+        for step in ["reading", "finishing", "disc", "saving", "folder"] {
+            #expect(DeskWords.list("saying.\(step)").count == DeskWords.table.keys.filter { $0.hasPrefix("saying.\(step).") }.count, "\(step)")
+        }
+        // Where the music stays is said for a folder and for a disc, each in words true of it.
+        let here = DeskWords.text("thisComputer.\(DeskWords.computerKind)")
+        #expect(DeskWords.list("saying.folder").contains { $0.contains(here) })
+        #expect(DeskWords.list("saying.disc").contains { $0.contains(here) })
+        // A disc's read shows saying.disc and saying.reading: no line there is about the music's files, which a disc
+        // has none of (the crate file is what any read makes).
+        for w in DeskWords.list("saying.disc") + DeskWords.list("saying.reading") {
+            #expect(w.range(of: "(?<!crate )\\bfiles?\\b", options: [.regularExpression, .caseInsensitive]) == nil, "\(w)")
+        }
         // Deckie's voice (voice.md): no exclamation marks, never "AI".
         let run = DeskWords.table.filter { $0.key.hasPrefix("saying.") || $0.key.hasPrefix("fact.") || $0.key.hasPrefix("moment.") }
         #expect(run.count >= 30)

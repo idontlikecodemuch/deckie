@@ -45,8 +45,8 @@ import DeckieCrate
     }
 
     @Test func theComputerIsNamedByItsKind() {
-        #expect(DeskWords.fill(DeskWords.table["saying.reading.8"]!, DeskWords.withComputer([:], kind: "mac")).contains("stays on this Mac."))
-        #expect(DeskWords.fill(DeskWords.table["saying.reading.8"]!, DeskWords.withComputer([:], kind: "other")).contains("stays on this computer."))
+        #expect(DeskWords.fill(DeskWords.table["saying.folder.1"]!, DeskWords.withComputer([:], kind: "mac")).contains("stays on this Mac."))
+        #expect(DeskWords.fill(DeskWords.table["saying.folder.1"]!, DeskWords.withComputer([:], kind: "other")).contains("stays on this computer."))
         #if os(macOS)
         #expect(DeskWords.text("addFolderHelp").contains("on this Mac or"))
         #else

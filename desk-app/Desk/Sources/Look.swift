@@ -300,12 +300,16 @@ enum RunLook {
     static let figureValueWeight = Font.Weight.bold
     static let figureListFont = Font.callout
     static let wallTitleFont = Font.headline
+    /// The song's name in the row pointed at, and its weight (desk.css --fs-note, --fw-wall-name).
     static let wallNameFont = Font.callout
+    static let wallNameWeight = Font.Weight.medium
     static let wallHelpFont = Font.caption
 
     // space and shape
     static let cardRadius: CGFloat = 16
     static let gap: CGFloat = 14
+    /// The quiet line and "you can leave this running" under it, close together (desk.css --leave-pull).
+    static let sayingLeaveGap: CGFloat = 2
     static let cardPadding: CGFloat = 14
     static let stageGap: CGFloat = 20
     static let stageFactsGap: CGFloat = 8
@@ -354,8 +358,13 @@ enum RunLook {
     /// The walls: a row a song, its wave across the whole row; the rows scroll in the card past `wallMaxHeight`; the
     /// row pointed at lit and ringed (desk.css --wall-*).
     static let wallRowHeight: CGFloat = 44, wallRowGap: CGFloat = 6, wallRowPad: CGFloat = 6
-    static let wallMaxHeight: CGFloat = 440
+    /// Twelve rows: a wall of ten songs never scrolls on its own (desk.css --wall-max-h).
+    static let wallMaxHeight: CGFloat = 594
     static let wallPickRing: CGFloat = 2
+    /// The row pointed at: its wave's strength behind the song's name, and the least room between that name and the
+    /// row's ends (desk.css --wall-pick-wave-fade, --wall-name-pad).
+    static let wallPickWaveFade = 0.4
+    static let wallNamePad: CGFloat = 12
     /// A row lit as its song goes to the wall, this long (desk.css --t-wall-new).
     static let wallNew = 1.6
     static let wallRowFill = Color.primary.opacity(0.025)

@@ -73,10 +73,13 @@
       return k.uncertain ? t("keyWithDoubt", { key, doubt: t("keyNotSure") }) : key;
     }
     const whereText = (s) => s.place || (s.folder ? s.folder : t("topOfMusicFolder"));
+    /// The song's name as the walls say it ("Artist – Title").
+    const rowName = (s) => (s.artist ? t("wallRowName", { artist: s.artist, title: s.title }) : s.title);
+    /// What Desk found, as the wall's row shows it after the name: tempo, key and length.
+    const rowFacts = (s) => [bpmText(s), keyText(s.key), mmss(s.seconds)];
     function songLine(s) {
-      // The song's name as the walls say it ("Artist – Title"), then what Desk found.
-      const name = s.artist ? t("wallRowName", { artist: s.artist, title: s.title }) : s.title;
-      return [name, bpmText(s), keyText(s.key), mmss(s.seconds), whereText(s)].join(t("join.wallSong"));
+      // The song's name, then what Desk found and where it is: the line a screen reader hears for a row.
+      return [rowName(s), ...rowFacts(s), whereText(s)].join(t("join.wallSong"));
     }
     function noteText(note) {
       const v = Object.assign({}, note.values || {});
@@ -100,7 +103,9 @@
     const stage = $("stage"), stageCanvas = $("stage-wave"), cardEl = $("song-card");
     let onStage = null, timer = 0, raf = 0, lastFrame = 0, running = false;
     let run = null;                 // the last run.progress, as desk.js keeps it
-    let card = { rel: null, done: null, doneUntil: 0, doneTimer: 0 };
+    let card = { rel: null, done: null, doneUntil: 0, doneTimer: 0, next: null };
+    /// The songs shown as rows under the card at the last draw.
+    let shownRows = new Set();
     const NOW_STEPS = ["hash", "decode", "resample", "beatthis", "key", "spectral", "structure", "loudness", "vocal", "windows"];
     const nowReading = (x) => x.step === "started" || x.step === "reading";
     /// The song's name as RunNow.name gives it: the name Desk has, else its file name without the ending.
@@ -199,6 +204,7 @@
       ctx.fillRect(0, Math.round(waveH / 2 - look.lineH / 2), w, look.lineH);
     }
     function drawRows(list) {
+      shownRows = new Set(list.map((x) => x.rel));
       const rows = $("now-rows");
       rows.hidden = !list.length;
       $("now-rows-title").textContent = list.length ? n("alsoWorkingOn", list.length) : "";
@@ -219,18 +225,29 @@
     function drawCard() {
       if (!run) return;
       const list = workingList();
-      if (run.stage !== "reading") { endDone(); emptyCard(run.stage === "saving" ? "stageSaving" : "stageFinishing"); drawRows([]); drawAhead(); return; }
+      if (run.stage !== "reading") {
+        // The read is over: the card's song goes to the wall now, and the wall is drawn now, not on its throttle.
+        endDone(); runWall.now();
+        emptyCard(run.stage === "saving" ? "stageSaving" : "stageFinishing"); drawRows([]); drawAhead(); return;
+      }
       if (card.done && performance.now() < card.doneUntil) {
         // Called again when the moment is over (a timer may come a little early: it is set again for the rest).
         clearTimeout(card.doneTimer);
         card.doneTimer = setTimeout(drawCard, Math.max(0, card.doneUntil - performance.now()) + 1);
         fillCard(card.now, card.done);
-        drawRows(list.filter((x) => x.rel !== card.rel));
+        // A song taken while the card holds the one just done is the card's next song, not one worked on alongside:
+        // it is no row (read one at a time, a row would come and go with every song). Songs already rows stay rows.
+        if (!card.next) {
+          const next = cardSong(list.filter((x) => x.rel !== card.rel && !shownRows.has(x.rel)), null);
+          card.next = next ? next.rel : null;
+        }
+        drawRows(list.filter((x) => x.rel !== card.rel && x.rel !== card.next));
         drawAhead();
         return;
       }
       endDone();
-      const x = cardSong(list, card.rel);
+      const x = cardSong(list, card.rel || card.next);
+      card.next = null;
       card.rel = x ? x.rel : null;
       if (x) { card.number = x.number; card.now = x; fillCard(x, null); } else emptyCard("stageReading");
       drawRows(list.filter((y) => !x || y.rel !== x.rel));
@@ -245,7 +262,9 @@
     /// any other song (a row, or one worked out before) goes to the wall at once.
     let onWall = [];
     function songDone(s) {
-      const onCard = card.rel && s.rel === card.rel && card.now && hasParts(card.now) && !card.done;
+      // Its parts may come with its "done" rather than before it (the progress that carried them can be passed
+      // over): the song done has them, so it stays on the card complete all the same.
+      const onCard = card.rel && s.rel === card.rel && card.now && (hasParts(card.now) || hasParts(s)) && !card.done;
       if (onCard) {
         card.done = s; card.doneUntil = performance.now() + time("--t-card-done");
         drawCard();
@@ -486,10 +505,42 @@
     // mirrored about the row's middle, across the whole width (the owner's note, Nov 20, 2026: no name column). The
     // rows scroll inside the card; only the rows in view are drawn, on one canvas that stays in view (position:
     // sticky), so a crate of thousands draws as fast as a dozen. Pointing at a row, a tap on it, or the arrow keys
-    // light it up and say the song's line (its name, tempo, key, length, where) beside the title.
+    // light it up, fade its wave back and write the song's name in the row, centred over the wave (the owner's note,
+    // Nov 21, 2026), with its tempo, key and length after it when the whole line fits. A screen reader hears the
+    // full line, where included, from the hidden text beside the wall (nameEl).
     function Wall(canvas, nameEl, listOf) {
       const scroller = canvas.parentElement, space = scroller.querySelector(".wall-space");
       let pick = -1, wtimer = 0, newest = -1, newestTimer = 0, follow = true;
+      let pickAt = 0, fadeRaf = 0;   // when the row was pointed at, for its wave's fade
+      /// How far the pointed-at row's wave has faded, 0 to 1: at once under reduced motion.
+      const faded = () => (reduced() ? 1 : Math.min(1, (performance.now() - pickAt) / Math.max(1, time("--t-fade"))));
+      /// The pointed-at row's words, centred: the name, then its facts in the quieter colour when the whole line fits;
+      /// else the name alone, shortened with an ellipsis if it must be.
+      function drawRowName(ctx, s, w, mid, dpr) {
+        const name = rowName(s), sep = t("join.wallSong"), rest = sep + rowFacts(s).join(sep);
+        const room = w - 2 * num("--wall-name-pad") * dpr;
+        if (room <= 0) return;
+        ctx.font = `${css("--fw-wall-name")} ${num("--fs-note") * dpr}px ${css("--body")}`;
+        ctx.textBaseline = "middle";
+        ctx.textAlign = "left";
+        const wName = ctx.measureText(name).width, wRest = ctx.measureText(rest).width;
+        if (wName + wRest <= room) {
+          const x = Math.round((w - wName - wRest) / 2);
+          ctx.fillStyle = css("--tx"); ctx.fillText(name, x, mid);
+          ctx.fillStyle = css("--mut"); ctx.fillText(rest, x + wName, mid);
+          return;
+        }
+        let text = name;
+        if (wName > room) {
+          const dots = t("glyph.ellipsis");
+          let lo = 0, hi = name.length;
+          while (lo < hi) { const m = Math.ceil((lo + hi) / 2); if (ctx.measureText(name.slice(0, m).trimEnd() + dots).width <= room) lo = m; else hi = m - 1; }
+          text = name.slice(0, lo).trimEnd() + dots;
+        }
+        ctx.fillStyle = css("--tx");
+        ctx.textAlign = "center";
+        ctx.fillText(text, Math.round(w / 2), mid);
+      }
       const pitch = () => num("--wall-row-h") + num("--wall-row-gap");
       /// The rows on this wall: the songs that have gone to it, in the order they went.
       const count = () => listOf().length;
@@ -512,12 +563,15 @@
         const cPick = css("--wave-pick"), cWave = css("--wave"), cQuiet = css("--wave-quiet"), cNew = css("--wave-new"),
               cNone = css("--wave-none"), cRow = css("--wall-row-bg"), cRowPick = css("--wall-row-pick"), cRing = css("--wall-pick-edge");
         const first = Math.max(0, Math.floor(top / P)), last = Math.min(all - 1, Math.ceil((top + view) / P));
+        const fade = faded(), pickAlpha = 1 - (1 - num("--wall-pick-wave-fade")) * fade;
         // In device pixels, each bar from the end of the last to the start of the next: no gaps and no seams.
         for (let i = first; i <= last; i++) {
           const s = listOf()[i], y0 = Math.round((i * P - top) * dpr), hRow = Math.round(rowH * dpr), mid = y0 + hRow / 2;
           ctx.fillStyle = i === pick ? cRowPick : cRow;
           ctx.fillRect(0, y0, w, hRow);
           const H = barHeights(s.wave, s.bars), room = hRow - 2 * pad;
+          // The row pointed at: its wave, in the pick colour, fades back behind its name.
+          ctx.globalAlpha = i === pick ? pickAlpha : 1;
           if (!H.length) { ctx.fillStyle = cNone; ctx.fillRect(0, Math.round(mid), w, Math.max(1, dpr)); }
           for (let k = 0; k < H.length; k++) {
             const x0 = Math.round((k * w) / H.length), x1 = Math.round(((k + 1) * w) / H.length);
@@ -525,9 +579,15 @@
             ctx.fillStyle = i === pick ? cPick : i === newest ? cNew : (H[k] < floor + (1 - floor) * quietShare ? cQuiet : cWave);
             ctx.fillRect(x0, mid - v / 2, x1 - x0, v);   // mirrored about the row's middle
           }
-          // The row pointed at: a ring round it, so it is plain which wave the line above belongs to.
-          if (i === pick) { ctx.strokeStyle = cRing; ctx.lineWidth = ring; ctx.strokeRect(ring / 2, y0 + ring / 2, w - ring, hRow - ring); }
+          ctx.globalAlpha = 1;
+          // The row pointed at: a ring round it, and the song's name in it.
+          if (i === pick) {
+            ctx.strokeStyle = cRing; ctx.lineWidth = ring; ctx.strokeRect(ring / 2, y0 + ring / 2, w - ring, hRow - ring);
+            drawRowName(ctx, s, w, mid, dpr);
+          }
         }
+        // The fade under way: drawn again on the next frame until it is done.
+        if (pick >= 0 && fade < 1 && !fadeRaf) fadeRaf = requestAnimationFrame(() => { fadeRaf = 0; draw(); });
       }
       function soon() { if (!wtimer) wtimer = setTimeout(draw, time("--t-wall")); }
       function at(ev) {
@@ -543,6 +603,7 @@
         else if ((i + 1) * P > scroller.scrollTop + view) scroller.scrollTop = (i + 1) * P - view;
       }
       function choose(i, say) {
+        if (i !== pick) pickAt = performance.now();
         pick = i;
         nameEl.textContent = i >= 0 ? songLine(listOf()[i]) : "";
         if (say && i >= 0) env.announce(nameEl.textContent);
@@ -600,7 +661,7 @@
     let sayTimer = 0, lastSaid = "", fresh = [], bags = {}, pendingMoment = null;
     function stepList() {
       const lists = step === "saving" ? ["saying.saving"] : step === "finishing" ? ["saying.finishing"]
-        : info.musicCD ? ["saying.disc", "saying.reading"] : ["saying.reading"];
+        : info.musicCD ? ["saying.disc", "saying.reading"] : ["saying.reading", "saying.folder"];
       return lists.flatMap((p) => env.list(p));
     }
     function fromBag(name, list) {
@@ -670,7 +731,8 @@
       /// A run started: everything from the last one goes.
       start(m) {
         songs = []; figures = null; onStage = null; fresh = []; lastNote = null; pendingMoment = null; running = true;
-        onWall = []; clearTimeout(card.doneTimer); card = { rel: null, done: null, doneUntil: 0, doneTimer: 0 };
+        onWall = []; clearTimeout(card.doneTimer); card = { rel: null, done: null, doneUntil: 0, doneTimer: 0, next: null };
+        shownRows = new Set();
         info = { read: m.read, musicCD: !!m.musicCD }; step = "reading"; spoken = { done: -1, at: 0 };
         run = { stage: "reading", total: 0, musicCD: !!m.musicCD, working: null, now: null, ahead: null };
         saying.textContent = ""; lastSaid = ""; $("done-wall-card").dataset.settled = "";
@@ -711,15 +773,16 @@
         if (!songs.length) return;
         running = false;
         clearTimeout(sayTimer); clearTimeout(timer); clearTimeout(card.doneTimer);
-        card.done = null; card.doneTimer = 0; onWall = songs.slice();
+        card.done = null; card.doneTimer = 0; card.next = null; onWall = songs.slice();
         $("done-wall-title").textContent = t("wallTitleDone", { read: report.read });
         // "That's the lot" only for a run that read everything (the engine sends it only then).
         const note = report.stopped === true ? null : lastNote;
         $("done-moment").textContent = note || "";
         $("done-moment").hidden = !note;
         doneWall.label(t("wallLabel", { title: t("wallTitleDone", { read: report.read }), songs: n("songs", songs.length) }));
-        // Drawn now, not on an animation frame, which a window not in front may never give.
-        doneWall.now();
+        // Drawn now, not on an animation frame, which a window not in front may never give; and again once the page
+        // has laid the screen out, so every song in is on the wall at once.
+        doneWall.now(); setTimeout(doneWall.now, 0);
         if (!wallCard.dataset.settled) { wallCard.dataset.settled = "1"; doneWall.settle(); }
       },
 
