@@ -8,7 +8,7 @@
 #      with the made-up or generic names the tests and docs use (dj, someone, x, c, runner, runneradmin, Shared, you).
 #   3. No email address except the publisher's public contact, the commit co-author line, and those inside
 #      third-party licence texts and vendored sources.
-#   4. No Apple device identifier (a UDID such as <iPad UDID>).
+#   4. No Apple device identifier (a UDID: eight hex digits starting 0000, a dash, sixteen hex digits).
 set -u
 cd "$(dirname "$0")/.."
 fail=0
