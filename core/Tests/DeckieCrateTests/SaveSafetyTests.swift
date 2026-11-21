@@ -168,6 +168,66 @@ private struct Stopped: Error {}
         #expect(!CrateWriter.hasInterruptedSave(dir))
     }
 
+    /// Runs `body` with every delete of a save's tidying (the save's folder, its files, stale sidecars) below `dir`'s
+    /// folder failing, as a file held by another program through every retry does on Windows; the notes it logged.
+    func held(in dir: URL, _ body: () throws -> Void) rethrows -> [String] {
+        let root = dir.deletingLastPathComponent().standardizedFileURL.path
+        nonisolated(unsafe) var notes: [String] = []
+        let log = CrateWriter.log
+        CrateWriter.removeHook = { $0.standardizedFileURL.path.hasPrefix(root) }
+        CrateWriter.log = { notes.append($0) }
+        defer { CrateWriter.removeHook = nil; CrateWriter.log = log }
+        try body()
+        return notes
+    }
+
+    /// The Windows runner, Nov 21, 2026: the save's folder could not be removed at the end of a save ("another
+    /// program kept the file open"), and the save failed. Now the save has succeeded once its files are in place:
+    /// the tidying that cannot be done is noted and left, and the next open or save does it.
+    @Test func aSaveWhoseTidyingIsHeldStillSucceedsAndIsTidiedNextTime() throws {
+        let before = old(), after = new()
+        let dir = try package(before)
+        defer { try? FileManager.default.removeItem(at: dir.deletingLastPathComponent()) }
+        let notes = try held(in: dir) {
+            try CrateWriter.write(after, to: dir)
+            // While still held: the crate reads as the new one, and the leftover does not stop that.
+            #expect(try CrateReader.read(from: dir) == after)
+            // A further save, with the folder still there and still held, succeeds too.
+            try CrateWriter.write(before, to: dir)
+            #expect(try CrateReader.read(from: dir) == before)
+            try CrateWriter.write(after, to: dir)
+        }
+        #expect(!notes.isEmpty && notes.allSatisfy { $0.contains("left for the next save to tidy") })
+        #expect(CrateWriter.hasInterruptedSave(dir))
+        // Let go: the next open tidies it, with nothing else to do, and the stale sidecar is gone by the next save.
+        #expect(try CrateReader.read(from: dir) == after)
+        #expect(!CrateWriter.hasInterruptedSave(dir))
+        try CrateWriter.write(after, to: dir)
+        #expect(!FileManager.default.fileExists(atPath: dir.appendingPathComponent("bars/b2.bin").path))
+        #expect(try CrateReader.read(from: dir) == after)
+    }
+
+    /// A kill in the middle of a save, with a folder an earlier save could not tidy already there (and its deletes
+    /// still failing): the package is still the old crate or the new one, after every step.
+    @Test func aSaveStoppedAnywhereOverALeftoverFolderLeavesTheOldCrateOrTheNew() throws {
+        let mid = old(), after = new()
+        var n = 1
+        while n < 100 {
+            let dir = try package(new())
+            defer { try? FileManager.default.removeItem(at: dir.deletingLastPathComponent()) }
+            _ = try held(in: dir) { try CrateWriter.write(mid, to: dir) }
+            #expect(CrateWriter.hasInterruptedSave(dir))
+            var stopped = false
+            _ = try held(in: dir) {
+                stopped = try stopping(after: n, in: dir) { try CrateWriter.write(after, to: dir) }
+            }
+            let read = try CrateReader.read(from: dir)
+            #expect(read == mid || read == after, "stopped after step \(n)")
+            if !stopped { #expect(read == after); break }
+            n += 1
+        }
+    }
+
     /// A completed save leaves the same bytes as the writer did before saves were made through a folder (its steps,
     /// kept here as they were): the same three saves into two packages, compared file by file after each.
     @Test func aCompletedSaveIsByteForByteWhatItWas() throws {

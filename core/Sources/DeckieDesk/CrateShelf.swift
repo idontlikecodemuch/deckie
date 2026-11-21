@@ -223,8 +223,17 @@ public struct CrateShelf: Sendable {
         let parent = destination.deletingLastPathComponent()
         try DeckieFiles.createDirectory(parent)
         let mark = UUID().uuidString.lowercased().prefix(8)
-        let temp = parent.appendingPathComponent(".\(destination.lastPathComponent).exporting-\(mark)", isDirectory: true)
-        let old = parent.appendingPathComponent(".\(destination.lastPathComponent).replaced-\(mark)", isDirectory: true)
+        let base = "." + destination.lastPathComponent
+        // What an earlier export of this name left beside it (another program held it as it was tidied) goes first,
+        // when it can.
+        for name in (try? fm.contentsOfDirectory(atPath: parent.path)) ?? []
+        // An earlier export set aside is kept while it is the only one (its replacement never got in place).
+        where name.hasPrefix(base + ".exporting-")
+            || (name.hasPrefix(base + ".replaced-") && fm.fileExists(atPath: destination.path)) {
+            Self.tidy(parent.appendingPathComponent(name, isDirectory: true))
+        }
+        let temp = parent.appendingPathComponent("\(base).exporting-\(mark)", isDirectory: true)
+        let old = parent.appendingPathComponent("\(base).replaced-\(mark)", isDirectory: true)
         do {
             try DeckieFiles.copy(pkg, to: temp)
             // Signatures of songs taken out of the crate stay in Desk's own copy (an undo puts the songs back); the
@@ -246,11 +255,22 @@ public struct CrateShelf: Sendable {
             try DeckieFiles.move(temp, to: destination)
         } catch {
             if fm.fileExists(atPath: old.path) { try? DeckieFiles.move(old, to: destination) }
-            try? DeckieFiles.remove(temp)
+            Self.tidy(temp)
             throw error
         }
-        try? DeckieFiles.remove(old)
+        // The export has succeeded: the new crate file is in place. The earlier one set aside is tidied away, or,
+        // when another program holds it, left for the next export of this name.
+        Self.tidy(old)
     }
+
+    /// Deletes what an export leaves beside its crate file; one another program holds is left (the next export of
+    /// the name tidies it), never an error.
+    static func tidy(_ url: URL) {
+        if let failing = tidyHook, failing(url) { return }
+        try? DeckieFiles.remove(url)
+    }
+    /// The tests' stand-in for another program holding what an export tidies: a path it says yes to is not deleted.
+    nonisolated(unsafe) static var tidyHook: ((URL) -> Bool)?
 
     /// The crate file copied to the outbox under the crate's name (`Friday night.deckie`), ready for the share
     /// sheet; the outbox holds only the last one.

@@ -538,13 +538,22 @@ public final class DeskSession {
         // The copy that leaves is made as a package first, in Desk's own storage (exportCopy drops what must not
         // leave), then written as one file, whole or not at all. A crate file already there under the name, in
         // either form, is replaced.
+        // Scratch folders an earlier export could not remove (another program held them) go first, when they can.
+        for old in (try? FileManager.default.contentsOfDirectory(atPath: home.root.path)) ?? [] where old.hasPrefix("export-") {
+            try? DeckieFiles.remove(home.root.appendingPathComponent(old, isDirectory: true))
+        }
         let scratch = home.root.appendingPathComponent("export-" + UUID().uuidString, isDirectory: true)
         defer { try? DeckieFiles.remove(scratch) }
         let package = scratch.appendingPathComponent(name, isDirectory: true)
         try shelf.exportCopy(info.id, to: package)
         let dest = folder.appendingPathComponent(name, isDirectory: false)
         try DeckieFiles.createDirectory(folder)
-        try DeckieFiles.remove(dest)
+        // A crate file there in one file is replaced by the write itself (whole, in one step), so it stays as it was
+        // when the write fails; one there as a package folder has to go first.
+        var isFolder: ObjCBool = false
+        if FileManager.default.fileExists(atPath: dest.path, isDirectory: &isFolder), isFolder.boolValue {
+            try DeckieFiles.remove(dest)
+        }
         try CrateArchive.pack(package: package, to: dest)
         return dest
     }
