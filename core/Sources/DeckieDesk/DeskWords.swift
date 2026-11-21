@@ -447,6 +447,8 @@ public enum DeskWords {
         "nameFromPart.user": "you",
         "nameFromPart.lab": "the lab",
         "nameFromJoin": " and ",
+        // Not shown for now (Nov 21, 2026): the Mac's song info hides its key changes, an older analysis that
+        // contradicts the song's key on about a quarter of songs. Kept for when a key-change reading is trusted.
         "rowKeyChanges": "Key changes",
         "keyFromBar": "{camelot} from bar {bar}",
         "rowLoudness": "Loudness",

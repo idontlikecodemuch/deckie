@@ -229,7 +229,8 @@ struct Inspector: View {
                         else if t.keyState == .homeNote, let h = t.keyHome { row(Words.rowKey, Words.homeNote(h.note)); row("", TrackTable.noKeyWords(t)) }
                         else { row(Words.rowKey, TrackTable.noKeyWords(t)) }
                         if let s = t.ident.source { row(Words.rowNameFrom, Words.nameFrom(s)) }
-                        if let ch = t.key?.changes, !ch.isEmpty { row(Words.rowKeyChanges, Words.keyChanges(ch.map { Words.keyFromBar($0.camelot, $0.startBar) })) }
+                        // No "Key changes" row: `key.changes` comes from an older analysis that contradicts the song's key
+                        // on about a quarter of songs, so it stays in the crate file but is not shown (Nov 21, 2026).
                         if let l = t.loudness { row(Words.rowLoudness, Words.loudnessValue(lufs: l.integratedLufs, peak: l.truePeakDb)) }
                         if let mi = t.mixIn, let mo = t.mixOut { row(Words.rowMixWindows, Words.mixWindows(inFrom: mi.startBar, inTo: mi.endBar, outFrom: mo.startBar, outTo: mo.endBar)) }
                         if let s = t.sections { row(Words.rowSections, Words.sections(s.map { Words.sectionAt($0.label, bar: $0.startBar) })) }
