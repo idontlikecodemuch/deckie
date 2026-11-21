@@ -39,4 +39,6 @@ engine.start()
 while let line = readLine(strippingNewline: true) {
     if !engine.handle(line: line) { break }
 }
+// The window closed (or asked to quit): the microphone is let go of before the engine ends.
+engine.stopBooth()
 exit(0)

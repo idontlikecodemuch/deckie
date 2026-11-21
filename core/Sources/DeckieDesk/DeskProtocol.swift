@@ -5,6 +5,7 @@ import DeckieEngine
 import DeckieDecode
 import DeckieDisc
 import DeckieLookup
+import DeckieCapture
 
 /// The engine side of Desk's messages (docs/architecture/desk-protocol.md): requests in, one per line, replies and
 /// events out, one per line. `deckie-desk-engine` is this with standard input and output; a test can drive it in the
@@ -41,6 +42,10 @@ public final class DeskProtocol: @unchecked Sendable {
     public var openMusicCD: @Sendable (String) throws -> MusicCD = { try MusicCDs.open($0) }
     /// The drives holding a music CD now (the environment's stand-ins, when it names some).
     var listMusicCDs: () -> [MusicCDs.Found] { { [environment] in MusicCDs.list(environment: environment) } }
+    /// Listening (DeskProtocol+Booth.swift): the mode's listener while it goes, and the source for an input by name
+    /// (nil: the system's input or `DECKIE_BOOTH_SOUND`'s stand-in; a test gives its own).
+    var booth: DeskBooth?
+    public var makeSoundSource: (@Sendable (String?) throws -> SoundSource)?
 
     public init(home: DeskHome, output: @escaping Output, makeRun: @escaping RunMaker,
                 analysisCheck: () throws -> Void = { try Builder.checkEngine() },
@@ -206,7 +211,8 @@ public final class DeskProtocol: @unchecked Sendable {
         if type == "quit" { reply(id); return false }
         lock.lock(); defer { lock.unlock() }
         let readOnly: Set<String> = ["state", "drives.list", "crate.songs", "source.removeCount", "run.nameDisc", "name.split",
-                                     "song.audio", "song.cover", "lookup.sent", "run.stop", "crate.rename", "add.countStop"]
+                                     "song.audio", "song.cover", "lookup.sent", "run.stop", "crate.rename", "add.countStop",
+                                     "booth.inputs", "booth.stop"]
         if running && !readOnly.contains(type) { fail(id, "busy", "a run is going"); return true }
         if lookingUp && !readOnly.contains(type) && type != "lookup.stop" { fail(id, "busy", "a lookup is going"); return true }
         do {
@@ -235,10 +241,14 @@ public final class DeskProtocol: @unchecked Sendable {
         switch type {
         case "state":
             reply(id); sendState(); sendSongs()
+        case "booth.inputs", "booth.listen", "booth.stop":
+            try boothRequest(type, obj, id)
         case "crate.show":
+            stopBooth()
             guard s.show(try Self.string(obj, "crate")) else { throw RequestError(code: "bad_request", detail: "no such crate") }
             changed()
         case "crate.new":
+            stopBooth()
             s.newCrate(); reply(id); sendState()
         case "crate.rename":
             let crateId = try Self.string(obj, "crate")
@@ -273,6 +283,7 @@ public final class DeskProtocol: @unchecked Sendable {
         case "add.countStop":
             counting?.set(); reply(id)
         case "crate.delete":
+            stopBooth()
             try s.delete(try Self.string(obj, "crate")); changed()
         case "crate.import":
             try s.importCrate(URL(fileURLWithPath: try Self.string(obj, "path"))); changed()
@@ -459,6 +470,7 @@ public final class DeskProtocol: @unchecked Sendable {
     /// Called with the lock held.
     func startRun(_ request: RunRequest, _ id: Any?, askName: String? = nil) throws {
         guard analysis.ready else { throw RequestError(code: "engine_missing", detail: analysis.detail) }
+        stopBooth()   // listening waits while music is read
         let info = try session.crateForRun(request)
         let carriedOn = session.pending == request
         running = true
