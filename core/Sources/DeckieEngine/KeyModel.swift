@@ -22,10 +22,12 @@ public enum KeyModel {
         }
     }
 
-    /// Where the file is looked for: `DECKIE_KEY_MODEL` alone if it is set, else core/.models in the checkout.
+    /// Where the file is looked for: `DECKIE_KEY_MODEL` alone if it is set; else `models/` beside a shipped program
+    /// (`OnnxRuntime.programFolder`), then core/.models in the checkout.
     public static var candidates: [String] {
         if let p = ProcessInfo.processInfo.environment[environmentVariable], !p.isEmpty { return [p] }
-        return [OnnxRuntime.coreFolder.appendingPathComponent(".models").appendingPathComponent(LearnedKey.Model.fileName).path]
+        return OnnxRuntime.candidates(named: LearnedKey.Model.fileName, in: "models",
+                                      checkout: OnnxRuntime.coreFolder.appendingPathComponent(".models").appendingPathComponent(LearnedKey.Model.fileName))
     }
 
     /// The first place the file exists, or nil.
@@ -39,10 +41,28 @@ public enum KeyModel {
         return try LearnedKey.Model(pinnedFile: data)
     }
 
-    /// The model where it is looked for, or nil when the file is not there. A file that is there and is not the
-    /// pinned one is an error.
-    public static func loadDefault() throws -> LearnedKey.Model? { try locate().map(load(path:)) }
+    /// The model where it is looked for, or nil when the file is not there, cannot be read or is not the pinned file
+    /// byte for byte: the untrained three-answer reader then reads the keys, and `note` says
+    /// why.
+    public static func loadDefault() -> LearnedKey.Model? { usable(locate()) }
+
+    /// The model in the file at `path`, or nil when `path` is nil or the file is not usable (absent, unreadable, or
+    /// not the pinned file).
+    public static func usable(_ path: String?) -> LearnedKey.Model? {
+        guard let path else { return nil }
+        return try? load(path: path)
+    }
+
+    /// Why a default analyser has no learned key reader, or nil when it has one.
+    public static var note: String? {
+        guard let path = locate() else {
+            return "no learned key reader: \(LearnedKey.Model.fileName) is not there (core/Tools/fetch-key-model.sh); keys are read by the untrained reader"
+        }
+        do { _ = try load(path: path); return nil } catch {
+            return "no learned key reader: \(error); keys are read by the untrained reader"
+        }
+    }
 
     /// The name of the model a default analyser will have, or nil.
-    public static var defaultName: String? { locate() == nil ? nil : LearnedKey.Model.pinnedName }
+    public static var defaultName: String? { loadDefault()?.name }
 }

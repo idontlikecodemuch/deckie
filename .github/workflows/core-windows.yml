@@ -95,6 +95,11 @@ jobs:
       - name: Fetch the models from the release models-1 (checked by hash)
         shell: bash
         run: bash core/Tools/fetch-models.sh --no-export
+      # The learned key reader's file is optional: when the release has none, or it is not the pinned file, the
+      # engine reads keys with the untrained reader and the step still succeeds (core/Tools/fetch-key-model.sh).
+      - name: Fetch the learned key reader's file, when the release has it (checked by hash)
+        shell: bash
+        run: bash core/Tools/fetch-key-model.sh
       - name: Build
         working-directory: core
         run: swift build -v
@@ -185,6 +190,8 @@ jobs:
         run: bash core/Tools/fetch-onnxruntime.sh
       - name: Fetch the models from the release models-1 (checked by hash)
         run: bash core/Tools/fetch-models.sh --no-export
+      - name: Fetch the learned key reader's file, when the release has it (checked by hash)
+        run: bash core/Tools/fetch-key-model.sh
       - name: The test MP3 made in this run
         uses: actions/download-artifact@v4
         with:
