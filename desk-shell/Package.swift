@@ -42,7 +42,12 @@ let package = Package(
                 .linkedLibrary("user32", .when(platforms: [.windows])),
                 .linkedLibrary("version", .when(platforms: [.windows])),
             ]),
-        .executableTarget(name: "deckie-desk", dependencies: ["CDeskShell"]),
+        // On the Mac the window carries Info-mac.plist in its __info_plist section, so macOS can ask for the
+        // microphone (the listening mode) under the window's own name when it is not started from a terminal.
+        .executableTarget(name: "deckie-desk", dependencies: ["CDeskShell"],
+                          linkerSettings: [.unsafeFlags(["-Xlinker", "-sectcreate", "-Xlinker", "__TEXT", "-Xlinker", "__info_plist",
+                                                         "-Xlinker", Context.packageDirectory + "/Info-mac.plist"],
+                                                        .when(platforms: [.macOS]))]),
     ],
     swiftLanguageModes: [.v5],
     cxxLanguageStandard: .cxx17

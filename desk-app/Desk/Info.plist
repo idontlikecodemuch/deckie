@@ -26,6 +26,8 @@
 	<string>14.0</string>
 	<key>NSHumanReadableCopyright</key>
 	<string>App Hold Media LLC</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Deckie Desk listens through the microphone to name the song playing from your crate. Nothing it hears is kept or sent anywhere.</string>
 	<key>UTExportedTypeDeclarations</key>
 	<array>
 		<dict>

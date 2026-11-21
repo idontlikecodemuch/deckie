@@ -7,7 +7,8 @@ bytes: change one byte and it changes, so a matching hash proves a file is the o
 
 **In short:** one toolchain and six GitHub Actions helpers, used only to build and test; two vendored C files,
 dr_mp3, the MP3 decoder (section 4), and dr_flac, the FLAC decoder (section 5), which are compiled into
-`DeckieDecode` and so are runtime dependencies (code that travels inside a Deckie program); ONNX Runtime, the engine
+`DeckieDecode` and so are runtime dependencies (code that travels inside a Deckie program); miniaudio, by the same
+author under the same choice of licences, for sound in when Desk listens (section 15, Nov 20, 2026); ONNX Runtime, the engine
 that runs the beat tracker's model (section 6), of which only the C header is vendored, its library being opened at
 run time from a file fetched per machine, never linked and never committed; the Beat This! beat tracker's
 trained weights (section 7), exported once to a model file by a script whose Python tools are development-only,
@@ -35,6 +36,7 @@ alters a row goes into the JSON in the same commit.
 | Microsoft Visual C++ runtime (Windows builds only) | 14, as the Swift 6.4.1 toolchain for Windows carries it | Microsoft's own terms, not open source: the Distributable Code section of the Microsoft Software License Terms for Visual Studio; four files, unmodified (section 3) | | |
 | dr_mp3 | 0.7.4 | public domain (the Unlicense) or MIT No Attribution, taken as public domain (section 4) | | |
 | dr_flac | 0.13.4 | the same choice, taken as public domain (section 5) | | |
+| miniaudio (sound in, for listening inside Desk) | 0.11.26 | public domain (the Unlicense) or MIT No Attribution, taken as public domain (section 15) | | |
 | stb_image and stb_image_write (covers) | 2.32 and 1.18 | public domain (the Unlicense) or MIT, taken as public domain (section 11) | | |
 | ONNX Runtime | 1.31.1 | MIT; carries Eigen under MPL 2.0, unmodified by Deckie; carries ONNX Runtime's two published patches (IBM Z builds; nothing compiled on Linux, Windows or macOS differs), shipped beside Eigen's notice (section 6); the shipped library is Deckie's own build without Microsoft's usage-reporting client | | |
 | Beat This! (beat tracker, checkpoint final0) | ISMIR 2024 release, checkpoint final0 | MIT (section 7) | 15 sets, everything but GTZAN; terms range from MIT and CC BY to CC BY-NC and all rights reserved, each in section 7's table | tempo and bar grid from Deckie's own code at lower confidence (section 7) |
@@ -1266,6 +1268,51 @@ none of its LGPL parts are used)".
 `f3bc56cb42d89a01237bb3f3629329e4ec75f7c1b0217acf6e9bf952ac47979b`) was used on one Mac to check the port. It is
 not committed, not shipped and not needed by the tests, which keep what it printed for four generated sounds as
 numbers (`core/Tests/DeckieChromaTests/FpcalcPrints.swift`).
+
+## 15. miniaudio, sound in for listening inside Desk (vendored)
+
+miniaudio is a single C header file by David Reid, the author of dr_mp3 and dr_flac (sections 4 and 5), that plays
+and captures sound through each system's own interface. Deckie uses only its capture: the booth inside Desk (research
+`booth-in-desk`, step 1, Nov 20, 2026) lists the computer's inputs, opens one in shared mode at its own rate and
+channel count, and hands its samples to the shared listener. The owner approved adding one small open-licence
+sound-capture library for this (Nov 20, 2026). It is vendored: copied into the repository unmodified at
+`core/Sources/CMiniaudio/vendor/miniaudio.h` with the repository's `LICENSE` beside it, compiled as the C target
+`CMiniaudio` by `deckie_capture.c`, which switches on the implementation with only four system interfaces (WASAPI,
+Core Audio, PulseAudio, ALSA; `MA_ENABLE_ONLY_SPECIFIC_BACKENDS`) and leaves out everything else it can (decoding,
+encoding, generation, its engine, node graph and resource manager), and used by `core/Sources/DeckieCapture`.
+Nothing is downloaded at build time.
+
+| | |
+|---|---|
+| Version | the header's first lines say `miniaudio - v0.11.26 - 2026-10-31`: the tagged release `0.11.26` |
+| Source | `https://raw.githubusercontent.com/mackron/miniaudio/0.11.26/miniaudio.h` and `.../0.11.26/LICENSE`, downloaded Nov 20, 2026; the tag points at commit `877ea4a7c2601c7b0f2a44e83dfac42e6470fea6` (read with `git ls-remote`), committed Oct 31, 2026 |
+| SHA-256 | `miniaudio.h` `6b376c7fbb1352ba1e0e432ab66069b335ea9405e45cb6c30b97ef0f3c9c3e0e`; `LICENSE` `457f1b500e0adf6bc059edddfa78a2f62012e7c3bb43476c20e0bd23b25ba0eb` |
+| Size | 4,161,918 bytes, 96,949 lines (of which `deckie_capture.c` compiles the capture path and the four interfaces) |
+
+**Licence:** the same choice as dr_mp3's and dr_flac's: public domain (the Unlicense) or MIT No Attribution
+(MIT-0), "Copyright 2025 David Reid" under the second. Deckie takes it as public domain, and under MIT-0 where public
+domain is not recognised; both are on the allowlist. The file says so in its first line ("Choice of public domain or
+MIT-0. See license statements at the end of this file") and the `LICENSE` file beside it holds the two texts,
+which are the same words as dr_mp3's quoted in section 4. It travels in the Windows zip as
+`licences/miniaudio-LICENSE.txt`.
+
+**What each system needs, every line of it in `core/Package.swift`'s `CMiniaudio` target:** on the Mac, the
+frameworks CoreFoundation, CoreAudio and AudioToolbox are linked and `MA_NO_RUNTIME_LINKING` is set (so nothing is
+opened by name at run time, which Apple's notarisation wants); on Linux, `dl`, `pthread` and `m` are linked and
+PulseAudio and ALSA are opened at run time (no development package is needed to build, and a computer without one
+uses the other); on Windows, `ole32` is linked (miniaudio also loads it, and `avrt`, itself). No new package is
+installed on any build machine.
+
+**What could not be asked of the system.** No voice processing is asked for anywhere. On Windows miniaudio 0.11.26
+opens a shared stream of the category "Other" (not "Communications", so Windows' call processing is off) but has no
+setting for the RAW stream option, so a driver's own "audio enhancements" stay as the person set them; asking for
+RAW would mean changing the vendored file, which is not done. On the Mac the HAL unit it opens has no voice
+processing. On Linux nothing is added unless the person made an echo-cancelling source their default.
+
+**How to update:** download the header and `LICENSE` again from the new tag to the same paths, record the version,
+commit, hashes, size and date here and in `core/dependencies.json` (then `python3 -I
+core/Tools/render_dependencies_table.py`), check the licence is unchanged, then `swift build` and `swift test`
+(`DeckieCaptureTests` plays generated songs through the capture path and the listener).
 
 ## Checked and rejected
 

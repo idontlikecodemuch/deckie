@@ -16,6 +16,9 @@ import AVFoundation
 @MainActor
 final class DeskModel: ObservableObject {
     let home = DeskHome.standard()
+    /// The listening mode (Booth.swift): on while its switch is pressed; it shows for a crate with songs when no run goes.
+    @Published var boothOn = false
+    let booth = BoothModel()
 
     /// Every crate, the most recent first, and the one showing (nil: the first screen, for a new crate).
     @Published var crates: [CrateInfo] = []

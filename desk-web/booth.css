@@ -1,0 +1,28 @@
+/* The listening mode (booth.js; research booth-in-desk, step 1). Rules only: every value is a --booth-* variable in
+   desk.css's :root, or one of its others. While the mode shows, Desk's own screens step aside. */
+body.booth-on > main, body.booth-on > #crate-add, body.booth-on > #status { display: none; }
+.booth { padding: var(--booth-pad); display: flex; flex-direction: column; gap: var(--booth-gap); }
+.booth > * { width: 100%; max-width: var(--booth-max-w); margin-left: auto; margin-right: auto; box-sizing: border-box; }
+.booth-top { display: flex; align-items: center; justify-content: space-between; gap: var(--booth-gap); flex-wrap: wrap; }
+.booth-input { display: flex; align-items: center; justify-content: space-between; gap: var(--booth-gap); flex-wrap: wrap; }
+.booth-input-row { display: flex; align-items: center; gap: var(--booth-input-gap); }
+.booth select { font: inherit; color: var(--tx); background: var(--field); border: 0; border-radius: var(--booth-select-r);
+  padding: var(--booth-select-pad); }
+.booth-meter { width: var(--booth-meter-w); height: var(--booth-meter-h); border-radius: var(--booth-meter-r);
+  background: var(--booth-meter-bg); overflow: hidden; }
+.booth-meter-fill { display: block; height: 100%; width: 0; background: var(--booth-meter-fill);
+  transition: width var(--booth-meter-time) linear; }
+.booth-meter.clipping .booth-meter-fill { background: var(--booth-meter-clip); }
+.booth-state { margin-top: 0; margin-bottom: 0; color: var(--mut); }
+.booth-state.error { color: var(--booth-error); }
+.booth-silent { margin-top: 0; margin-bottom: 0; color: var(--warn); }
+#booth-again { width: auto; max-width: none; align-self: center; }
+.booth-card { padding: var(--booth-card-pad); min-height: var(--booth-card-min-h); display: flex; flex-direction: column;
+  justify-content: center; }
+.booth-card.empty { opacity: var(--booth-empty-opacity); }
+.booth-song { font-size: var(--booth-song-size); line-height: var(--booth-song-lh); }
+.booth-artist { font-size: var(--booth-artist-size); margin-top: 0; margin-bottom: 0; }
+.booth-facts { font-size: var(--booth-facts-size); margin-top: 0; margin-bottom: 0; display: flex; flex-wrap: wrap; column-gap: var(--booth-fact-gap); }
+@media (prefers-reduced-motion: reduce) { .booth-meter-fill { transition: none; } }
+#booth-button[aria-pressed="true"] { background: var(--acc); color: var(--ink); }
+body.booth-on #sources-button, body.booth-on #log-button { display: none; }

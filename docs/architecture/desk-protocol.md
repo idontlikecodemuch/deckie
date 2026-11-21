@@ -430,6 +430,62 @@ A stopped run's report has `stopped: true`; the songs read are in the crate, not
 import log, and `pending` stays, so `run.carryOn` reads the rest (the songs read are not read again). `run.stop`,
 `crate.rename` and `add.countStop` are answered while a run goes.
 
+### Listening: the booth inside Desk (added Nov 20, 2026; no new protocol number: only requests and events were added)
+
+Research `booth-in-desk`, step 1 (hearing). A mode of Desk's window for a crate with songs: the engine opens an input
+(the computer's microphone, or another the DJ picks), feeds it to the shared listener (`BoothRecogniser` with the
+default settings) against the crate's recognition index, and says what it hears. The page never touches sound: it
+shows the inputs, a level, a state line and the song. The engine's code is `DeskBooth` and
+`DeskProtocol+Booth.swift` in DeckieDesk; capture is DeckieCapture over miniaudio (`DEPENDENCIES.md`, section 15).
+
+**The song said is simply the listener's current named song**, reading by reading. It is not yet the iPad's switching
+rule (waits, dominance, place jumps, pause); step 2 moves that rule into the core and it plugs in at
+`DeskBooth.take`, with no change to these messages beyond, perhaps, fields added.
+
+| `type` | Fields | Reply carries | Then |
+|---|---|---|---|
+| `booth.inputs` | | `inputs`: `[{"name": "MacBook Air Microphone", "default": true}]`, the system's default first; `system` (`WASAPI`, `Core Audio`, `PulseAudio`, `ALSA`) | nothing is opened, no permission is asked |
+| `booth.listen` | `input` (a name from `booth.inputs`; absent, empty or no longer there: the system's default); `crate` (optional: must be the crate showing) | `crate`, `songs` (songs with a fingerprint) | `booth.state`…, then `booth.level` and `booth.heard` as sound comes |
+| `booth.stop` | | | `booth.state` `stopped`; the input is closed before the reply |
+
+Errors: `no_crate` (no crate with songs showing), `no_sound` (`booth.inputs` only; `detail` a code: the system's
+sound could not be reached), `busy` (a run or a lookup is going: listening waits while music is read). The engine
+never waits on the system's sound while it reads requests: `booth.inputs` is answered from a thread of its own, and
+`booth.listen` finds and opens its input on the listener's thread, its failures said as `booth.state` `error`. Each
+is given at most 5 seconds (`SoundInputs.answerWithin`; a sound server that is stuck, or a stopped Windows Audio
+service, can otherwise hold miniaudio's calls for good): past that, `no_sound` `noSystem` for the inputs and
+`booth.state` `error` `noSystem` for listening. `booth.inputs` and `booth.stop`
+are answered while a run goes. Listening stops by itself, with `booth.state` `stopped`, when another crate is
+shown, a crate is deleted, the first screen is asked for, a run starts, and when the engine's input closes (the
+window closed): the microphone is never left open.
+
+Events:
+
+- `{"event": "booth.state", "crate", "state", ...}`: `state` is `starting`; `index` (getting the crate's index
+  ready: `percent` 0 to 100, `songs`; the first half is the crate's fingerprints read, the second the index made, or
+  opened as kept when it was made from the same songs before: `indexKept`); `listening` (the input is on, with
+  `input`, its name as the system gives it, `rate` and `channels`, its own format, `songs`, `indexKept`; the latest
+  reading named a song, or none has come yet); `nothingHeard` (on, and the latest reading named nothing);
+  `error` (`error: {"code", "detail"}`, the input is off; codes `noInput`, `notAllowed`, `busy`, `gone` (it stopped
+  without being asked: unplugged), `noSystem`, `noPrints` (no song has a fingerprint), `index`, `failed`; words
+  `booth.error.<code>`); `stopped`.
+- `{"event": "booth.level", "meter", "rmsDb", "peakDb", "clipped", "silent", "seconds"}`, five times a second of
+  sound (counted by samples, not timed): `meter` 0 to 1 (-60 dB to 0 dB of the average power), the average and
+  loudest in dB below full scale, `clipped` samples at full scale in that fifth of a second, `silent` true after 3
+  seconds of nothing but exact zeros (no sound is arriving at all: on Windows the privacy switch for microphones, on
+  a Mac a refused permission), `seconds` heard since listening started.
+- `{"event": "booth.heard", "song": {"id", "title", "artist", "bpm", "camelot", "key", "scale", "seconds"}, "place",
+  "confidence", "reading", "speed", "keyLock", "heardAt", "ms"}`: a reading that names a song, about once a second
+  while one is named. `song` is the crate's: `title` as shown (with its version), its tempo and key (absent when the
+  crate has none), its length. `place` is where in the song the sound is, in seconds; `confidence` the listener's
+  (3 or more is a sure name from a search); `reading` `named` (just named by a search of the whole crate) or `held`
+  (the song named before, still where it should be); `speed` the deck's speed in percent as the fader would show it,
+  `keyLock` whether the key seems held (absent within 1 % of zero); `heardAt` the seconds heard; `ms` what the reading
+  took to work out.
+
+For checks with no microphone, `DECKIE_BOOTH_SOUND=<audio file>` in the engine's environment makes that file the one
+input, played as if heard at the speed of sound.
+
 ## Requests the shell answers
 
 | `type` | Fields | Reply carries |

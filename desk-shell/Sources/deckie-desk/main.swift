@@ -8,6 +8,8 @@
 //                                       the Mac only: walks every screen with the music given and writes a picture
 //                                       of each into <folder> (Tour.swift); `--naming` walks the naming screens
 //                                       instead (a music CD from DECKIE_DESK_MUSIC_CD, `--playlist <file.m3u>`);
+//                                       `--booth` the listening mode with the crate file in DECKIE_TOUR_CRATE (a real
+//                                       microphone; play songs from outside), and
 //                                       `--run-screen` the run screen (D37) at a few song counts and finished, and
 //                                       with `--record`, a picture every half second while it runs; `--add-music`
 //                                       the ways in, a big drive, the count and question, Stop and Carry on
