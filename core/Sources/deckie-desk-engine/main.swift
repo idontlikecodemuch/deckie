@@ -1,7 +1,8 @@
 // deckie-desk-engine: Deckie Desk's engine on Windows and Linux (D32), a program with no window. The window
 // (desk-shell) starts it and speaks to it in one JSON message a line over standard input and output
 // (docs/architecture/desk-protocol.md); everything it does is DeckieDesk's (DeskProtocol, DeskSession, DeskRun).
-// Its own log lines go to standard error. It exits when its input closes or on {"type":"quit"}.
+// Its own log lines go to standard error. It exits when its input closes or on {"type":"quit"}, once a run going has
+// stopped and saved.
 //
 // Desk's storage is DeskHome.standard (DECKIE_DESK_HOME moves it, for tests and trials); DJ libraries are looked for
 // as DeskLocalFacts says (DECKIE_DJ_HOME). DECKIE_DESK_JOBS sets the run's jobs; else half the cores, at most 4,
@@ -45,6 +46,12 @@ engine.start()
 while let line = readLine(strippingNewline: true) {
     if !engine.handle(line: line) { break }
 }
-// The window closed (or asked to quit): the microphone is let go of before the engine ends.
-engine.stopBooth()
+// The window closed (or asked to quit): the microphone is let go of, and a run going is stopped as Stop stops it (the
+// songs read so far kept, the crate saved) and waited for, so the engine never ends in the middle of a save. The window
+// waits for this (EngineProcess.stop, desk-shell); a save stopped anyway (the window's wait ran out, the PC turned off)
+// is finished or undone at the next open (CrateWriter.write).
+let stopSeconds = engine.quit()
+if stopSeconds > 0 {
+    FileHandle.standardError.write(Data("deckie-desk-engine: the run stopped and the crate was saved in \(String(format: "%.1f", stopSeconds)) s\n".utf8))
+}
 exit(0)

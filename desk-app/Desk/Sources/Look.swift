@@ -43,6 +43,8 @@ enum Look {
         static let statusSongsWeight = Font.Weight.bold
         static let importLogFile = Font.system(.body, design: .monospaced)
         static let importLogMessage = Font.caption
+        /// The reader's own words under Details, for a crate file that could not be read.
+        static let unreadableDetail = Font.caption
         static let toolPaste = Font.system(.body, design: .monospaced)
         static let toolHelp = Font.caption
         static let toolPreviewTitle = Font.headline

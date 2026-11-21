@@ -161,7 +161,13 @@ public final class DeskProtocol: @unchecked Sendable {
         var current: Any = NSNull()
         if let c = session.current {
             current = ["id": c.id, "name": session.shownName ?? c.name, "hasSongs": session.crate != nil, "songs": session.crate?.tracks.count ?? 0,
-                       "sources": session.crate?.discPlan.map(\.name) ?? []] as [String: Any]
+                       "sources": session.crate?.discPlan.map(\.name) ?? [],
+                       // An addition (protocol 2 still): the crate file is there and does not read. The page shows the
+                       // plain line in place of the songs, the reader's words under Details, and Rebuild this crate
+                       // when it can be.
+                       "unreadable": session.unreadable.map { u in
+                           ["line": u.description, "detail": u.detail, "canRebuild": session.canRebuild] as [String: Any]
+                       } ?? NSNull()] as [String: Any]
         }
         var pending: Any = NSNull()
         if let p = session.pending {
@@ -223,6 +229,10 @@ public final class DeskProtocol: @unchecked Sendable {
             try dispatch(type, obj, id)
         } catch let e as RequestError {
             fail(id, e.code, e.detail)
+        } catch let e as CrateUnreadable {
+            // Add music on a crate whose file does not read: the plain line, never the reader's words.
+            fail(id, "crate_unreadable", e.description)
+            sendState()
         } catch {
             fail(id, "failed", (error as? LocalizedError)?.errorDescription ?? "\(error)")
             sendState(); sendSongs()
@@ -283,6 +293,19 @@ public final class DeskProtocol: @unchecked Sendable {
         case "crate.newName":
             s.setNewCrateName(try Self.string(obj, "name"))
             reply(id, ["name": s.newCrateName]); sendState()
+        case "crate.rebuild":
+            // An addition (protocol 2 still): Rebuild this crate, for the crate showing whose file does not read.
+            guard s.current != nil else { throw RequestError(code: "no_crate", detail: nil) }
+            do {
+                let r = try s.rebuild()
+                var lines = [DeskWords.count("crateRebuilt", r.kept + r.putRight)]
+                if r.leftOut > 0 { lines.append(DeskWords.count("crateRebuiltLeftOut", r.leftOut)) }
+                reply(id, ["kept": r.kept, "putRight": r.putRight, "leftOut": r.leftOut, "lines": lines])
+                sendState(); sendSongs()
+            } catch let e as CrateRebuild.CannotRebuild {
+                fail(id, "cannot_rebuild", e.description)
+                sendState()
+            }
         case "run.stop":
             guard running, let run = currentRun else { reply(id); return }
             run.stop()
@@ -728,6 +751,30 @@ public final class DeskProtocol: @unchecked Sendable {
         for i in samples.indices { pcm[i] = Int16(max(-1, min(1, samples[i])) * 32767) }
         pcm.withUnsafeBufferPointer { d.append(Data(buffer: $0)) }
         return d
+    }
+
+    /// The engine is leaving (its input closed, or `quit`): the microphone is let go of, a count or a lookup going is
+    /// stopped, and a run going is stopped the way the Stop button stops it (the songs already read are kept and the
+    /// crate saved), except that a song being analysed ends at its next stage rather than at its end (read again on
+    /// Carry on), and waited for, so the engine never ends in the
+    /// middle of a save. Returns the seconds the run took to stop (0 when none was going), for the engine's log.
+    @discardableResult
+    public func quit() -> Double {
+        stopBooth()
+        lock.lock()
+        counting?.set()
+        lookupRun?.stop()
+        let run = running ? currentRun : nil
+        if let run {
+            run.stop(now: true)
+            stopping = true
+            sendState()
+        }
+        lock.unlock()
+        guard run != nil else { return 0 }
+        let t0 = Date()
+        waitForRun()
+        return Date().timeIntervalSince(t0)
     }
 
     /// Waits for a run in progress to end (tests, and the engine's quit).
