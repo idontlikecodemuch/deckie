@@ -1,0 +1,21 @@
+# The privacy check (decision D44): fails when private data is back in the tracked files (tools/check-private.sh:
+# the removed private places, personal home and volume paths, email addresses, device identifiers). Every push and
+# pull request, whatever it touches; it takes seconds.
+name: privacy check
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Search the tracked files
+        run: bash tools/check-private.sh
