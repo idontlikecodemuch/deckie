@@ -8,11 +8,12 @@
 name: pc-package
 
 # The learned key reader's file (deckie-key-<version>.f16, with its credit list) is an asset of the release models-1
-# (core/Tools/fetch-key-model.sh). "optional": when the release does not have it yet, the fetch step says so and the
-# zip is made without it, reading keys with the untrained reader. "required": the run fails without it. Changing
-# the one line below to KEY_MODEL: required is the whole change, once the file is on the release.
+# (core/Tools/fetch-key-model.sh). "required": the run fails without it, so no zip ships reading keys with the
+# untrained reader. "optional": when the release does not have it, the fetch step says so and the zip is made
+# without it. Required since Nov 21, 2026: the file is on the release, and run 44929760087 showed it in the zip and
+# the engine saying "key reader: learned".
 env:
-  KEY_MODEL: optional
+  KEY_MODEL: required
 
 on:
   push:
