@@ -156,8 +156,10 @@
       stateLine.textContent = stateText();
       stateLine.classList.toggle("error", !!status && status.state === "error" && !waiting);
       again.hidden = !(status && status.state === "error" && !waiting);
-      const hearing = !!status && (status.state === "listening" || status.state === "nothingHeard") && !waiting;
-      silentLine.hidden = !(silent && hearing);
+      // The input is on (noSound and nothingNow, added Nov 21, are the engine's: their own words say them).
+      const hearing = !!status && ["listening", "nothingHeard", "nothingNow", "noSound"].includes(status.state) && !waiting;
+      // No sound coming is said by the state line itself; the silent line would say it twice.
+      silentLine.hidden = !(silent && hearing && status.state !== "noSound");
       // The level shows only while the input is on.
       if (!hearing) { meterFill.style.width = "0%"; meter.setAttribute("aria-valuenow", "0"); meter.classList.remove("clipping"); }
       drawCard();
