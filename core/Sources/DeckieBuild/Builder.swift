@@ -374,6 +374,12 @@ public final class Builder: Sendable {
         progress(.started(files: files.count, unchanged: unchanged, queued: queue.count, jobs: options.jobs,
                           rekordbox: rbSummary))
 
+        /// Where a file is, as its record's place will say it: on a source, its place there; else its folder.
+        @Sendable func placeOf(_ fullRel: String) -> CrateTrack.Place {
+            let rel = String(fullRel.dropFirst(prefix.count))
+            return places[rel].map { CrateTrack.Place(disc: $0.source, folder: $0.group, track: $0.number) }
+                ?? CrateTrack.Place(disc: nil, folder: SourceReading.group(of: rel), track: nil)
+        }
         let results = Results()
         let stopped = Stopped()
         let total = queue.count
@@ -396,6 +402,7 @@ public final class Builder: Sendable {
                 } else {
                     guard !stopped.isSet else { return }
                     self.options.onStep?(f.rel, .started)
+                    self.options.onStep?(f.rel, .place(placeOf(f.rel)))
                     do { f.url = try given.fetch(f) } catch { given.release(f); stopped.set(error); return }
                     // The next song is read while this one is analysed (one job: the queue goes in order).
                     if k + 1 < total, self.options.stop?.isSet != true { given.readAhead(files[queued[k + 1]]) }
@@ -407,6 +414,7 @@ public final class Builder: Sendable {
                 }
             } else {
                 self.options.onStep?(f.rel, .started)
+                self.options.onStep?(f.rel, .place(placeOf(f.rel)))
                 outcome = self.process(f, bytes: nil, rekordbox: rekordboxOf[i], work: work, engine: engine!, label: label,
                                        seconds: &seconds, fingerprinted: &fingerprinted)
             }
@@ -724,7 +732,8 @@ public final class Builder: Sendable {
             let withAudio = options.withAudio
             let analysis = try engine.analyse(url: f.url, bytes: box, sha256: sha, options: AnalysisOptions(bpmTag: tag),
                                               onStage: step.map { tell in { tell(f.rel, .stage($0)) } },
-                                              onDecoded: withAudio.map { hand in { hand(id, f, $0) } })
+                                              onDecoded: withAudio.map { hand in { hand(id, f, $0) } },
+                                              onPart: step.map { tell in { tell(f.rel, .part($0)) } })
             let elapsed = Date().timeIntervalSince(t0)
             var track = analysis.crateTrack(options: .init(analysedAt: utcNow(), device: options.device))
             track.file.rel = f.rel

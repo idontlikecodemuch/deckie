@@ -283,7 +283,7 @@ final class EngineProcess: @unchecked Sendable {
         let started = try #require(e.received.first { $0["event"] as? String == "run.started" })
         #expect(started["crateName"] as? String == "My crate")   // a new crate is never named after its first source (research AE)
         // The run screen (D37): each song that went in joined it once, with its wave and what Desk found, and the
-        // totals count them; the first song and the end are moments.
+        // totals count them; the end is a moment.
         let screen = e.received.filter { $0["event"] as? String == "run.songs" }
         let shown = screen.flatMap { ($0["songs"] as? [[String: Any]]) ?? [] }
         #expect(shown.count == 2)
@@ -294,7 +294,7 @@ final class EngineProcess: @unchecked Sendable {
         let figures = try #require(screen.last { $0["figures"] != nil }?["figures"] as? [String: Any])
         #expect((figures["songs"] as? NSNumber)?.intValue == 2 && (figures["notIn"] as? NSNumber)?.intValue == 1)
         let notes = screen.flatMap { ($0["notes"] as? [[String: Any]]) ?? [] }
-        #expect(notes.contains { $0["code"] as? String == "first" && $0["kind"] as? String == "moment" })
+        #expect(!notes.contains { $0["code"] as? String == "first" })
         #expect(notes.last?["code"] as? String == "finished")
         let finishedAt = try #require(e.received.firstIndex { $0["event"] as? String == "run.finished" })
         #expect(e.received.lastIndex { $0["event"] as? String == "run.songs" }! < finishedAt)

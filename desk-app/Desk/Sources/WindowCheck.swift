@@ -28,9 +28,9 @@ enum WindowCheck {
 
     static func still(_ model: DeskModel, name: String, out: String) {
         let view = VStack(spacing: RunLook.gap) {
-            StageView(watch: model.watch)
+            RunSongCard(watch: model.watch, total: model.runTotal, disc: model.runIsMusicCD)
             FiguresView(watch: model.watch)
-            WallView(watch: model.watch, title: DeskWords.text("wallTitle"))
+            WallView(watch: model.watch, songs: model.watch.wallSongs, title: DeskWords.text("wallTitle"))
         }
         .padding(RunLook.gap).frame(width: stillWidth)
         .background(Color(nsColor: .windowBackgroundColor)).environment(\.colorScheme, .dark)

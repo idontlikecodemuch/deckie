@@ -127,9 +127,43 @@ public struct RunNow: Sendable, Equatable {
     /// nil until there is one (`name` is then its file name).
     public var title: String?
     public var artist: String?
+    /// What Desk has worked out of it so far, each part as soon as it is final and as the finished record (and the
+    /// song's `RunSong`) will hold it; nil until then (the owner's note, Nov 20, 2026: the card is the song being worked
+    /// on, its parts filling in). Where it is, from the start; its length when decoded; its tempo when the beat is
+    /// found; its bars when the bar grid is laid; its key when read (`kind` none: read and not sure); its wave when
+    /// the loudness of its bars is measured.
+    public var place: String?
+    public var folder: String?
+    public var seconds: Double?
+    public var bpm: Double?
+    public var bars: Int?
+    public var key: RunSong.Key?
+    public var wave: [Int]?
     public init(rel: String, number: Int?, step: String, read: Double? = nil, title: String? = nil, artist: String? = nil) {
         self.rel = rel; self.number = number; self.step = step; self.read = read; self.title = title; self.artist = artist
     }
+
+    /// A part of the song's record (the analyser's `AnalysisPart`), in the run screen's own form: the same rounding
+    /// and the same key rule as `RunSong` makes from the finished record, so the card's values never change when the
+    /// song is done.
+    public mutating func take(_ part: AnalysisPart) {
+        switch part {
+        case let .length(s): seconds = (s * 10).rounded() / 10
+        case let .tempo(b): bpm = (b * 10).rounded() / 10
+        case let .bars(n): bars = n
+        case let .key(k): key = RunSong.key(k)
+        case let .loudness(lufs): wave = RunSong.wave(lufs)
+        }
+    }
+
+    /// Where it is, as `RunSong` says it from the same place.
+    public mutating func take(_ p: CrateTrack.Place) {
+        place = Crate.placeLine(p)
+        folder = p.disc == nil ? (p.folder ?? SourceReading.group(of: rel)) : nil
+    }
+
+    /// Whether any part of it has been worked out (a song taken from what was worked out before has none).
+    public var hasParts: Bool { seconds != nil || bpm != nil || bars != nil || key != nil || wave != nil }
 
     /// The analysis stages in the order they run (desk.js's NOW_STEPS says the same).
     public static let analysisSteps = ["hash", "decode", "resample", "beatthis", "key", "spectral", "structure", "loudness",
@@ -172,8 +206,21 @@ public struct RunNow: Sendable, Equatable {
     /// The quiet line under the song card while the next song is read ahead.
     public static var aheadLine: String { DeskWords.text("nowAheadDisc") }
 
-    /// The heading of the song card when several songs are worked on at once: "Working on 4 songs".
-    public static func workingLine(_ n: Int) -> String { DeskWords.count("workingOn", n) }
+    /// The heading of the rows under the song card when several songs are worked on at once: "Also working on 3 songs".
+    public static func alsoLine(_ n: Int) -> String { DeskWords.count("alsoWorkingOn", n) }
+
+    /// The song the card shows (the owner's note, Nov 20, 2026: the card is the song being worked on): the one it
+    /// shows already while it is still worked on; else, of the songs worked on, the furthest along (the one that will
+    /// finish next), the first taken when two are as far. desk.js `cardSong` does the same.
+    public static func cardSong(_ working: [RunNow], keeping current: String?) -> RunNow? {
+        if let current, let kept = working.first(where: { $0.rel == current }) { return kept }
+        var best: RunNow?
+        for n in working where best == nil || n.share > best!.share { best = n }
+        return best
+    }
+
+    /// The songs worked on other than the card's, in the order taken: the rows under the card.
+    public static func rows(_ working: [RunNow], card: String?) -> [RunNow] { working.filter { $0.rel != card } }
 }
 
 /// The songs a run is working on, kept as their steps come (from the builder's jobs and the disc's read ahead, under
@@ -208,6 +255,16 @@ struct RunWorking: Sendable, Equatable {
         if ahead?.rel == rel { ahead?.read = read } else {
             ahead = RunNow(rel: rel, number: DiscSongFiles.number(of: rel), step: "reading", read: read)
         }
+    }
+
+    /// A part of a song in hand, as it is worked out; where it is.
+    mutating func part(_ rel: String, _ part: AnalysisPart) {
+        guard let i = songs.firstIndex(where: { $0.rel == rel }) else { return }
+        songs[i].take(part)
+    }
+    mutating func placed(_ rel: String, _ p: CrateTrack.Place) {
+        guard let i = songs.firstIndex(where: { $0.rel == rel }) else { return }
+        songs[i].take(p)
     }
 
     /// The name Desk has for a song in hand (a name already given, a disc's CD-Text, stays when this gives none).
@@ -520,6 +577,7 @@ public final class DeskRun: @unchecked Sendable {
                 return
             }
             var song = RunSong(t, title: title, artist: artist, place: place, before: before)
+            song.rel = rel
             state.lock.lock()
             let notes = state.tally.add(&song)
             state.lock.unlock()
@@ -590,6 +648,8 @@ public final class DeskRun: @unchecked Sendable {
             case let .reading(done, total):
                 change { $0.step(rel, step: "reading", read: total > 0 ? Double(done) / Double(total) : nil) }
             case .stage(let name): change { $0.step(rel, step: name) }
+            case .place(let p): change { $0.placed(rel, p) }
+            case .part(let part): change { $0.part(rel, part) }
             }
         }
         disc?.onRead = { rel, done, total in
