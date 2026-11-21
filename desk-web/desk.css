@@ -336,7 +336,11 @@
   --wall-pick-ring: 2; --wall-pick-edge: var(--amber);   /* px: the ring round the row pointed at, and its colour */
   --wall-pick-wave-fade: 0.4;             /* the row pointed at: its wave's strength behind the song's name */
   --wall-name-pad: 12;                    /* px: the least room between that name and the row's ends */
-  --fw-wall-name: 500;                    /* the name's weight (the --fs-note size; tempo, key, length in --mut) */
+  --fw-wall-name: 500;                    /* the name's weight (the --fs-note size) */
+  /* The tempo, key and length after the name, on the gold highlight: a warm light colour that reads on the gold and
+     the faded wave (about 10:1 on the row, 3.9:1 where a full bar is behind it; --mut was 2:1 there), in a lighter
+     weight than the name, so the name stays the stronger of the two. */
+  --wall-pick-facts: #e8dfd0; --fw-wall-facts: 400;
   --wave: rgba(180, 144, 255, 0.82);      /* a song's wave */
   --wave-quiet: rgba(180, 144, 255, 0.28);
   --wave-new: #ece4ff;                    /* the song that joined last */
