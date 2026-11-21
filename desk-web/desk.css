@@ -294,7 +294,9 @@
   --chev-opacity: 0.7;
 
   /* ---- motion */
-  --t-progress: .25s;
+  /* the bars jump to what is done: a window not in front gives no frames, and a transition left waiting for them
+     showed a bar stuck where it was (the real window, Nov 21, 2026) */
+  --t-progress: 0s;
   --t-waiting: 1.4s; --ease-waiting: ease-in-out;
 
   /* ---- the run screen (D37): every colour, size and time it uses, here, for the design pass to change in one
