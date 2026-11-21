@@ -167,7 +167,8 @@ Each song in `run.songs` carries `rel` (an addition of Nov 20, 2026): the file i
 run's lines name it, so a window can hand the song card's song on to the wall; absent for a song that joined from the
 crate's record while saving. One order holds between the two (Nov 20, 2026, DeskRun's `RunOrder`): a song read comes in `run.songs` before any
 `run.progress` that leaves it out of `working` or `now`, and before the `run.progress` whose `line` names its file,
-so a window that draws each message as it comes never names a song its song info card has not shown. A song that
+so a window that draws each message as it comes never names a song it has not shown, and the song card can keep a
+song done complete a moment, then hand it to the wall. A song that
 did not go in is let go by its `notRead` line. On a run carried on after Stop, `done` starts at the files read
 before (`line.unchanged`), not at 0.
 When a run ends, `state` and `songs` with the crate as saved come first, then `run.finished` (or `run.failed`):

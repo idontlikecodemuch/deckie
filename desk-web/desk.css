@@ -236,6 +236,7 @@
   --song-card-gap: 14px;                  /* the song card: between its head (name, step, bar) and its parts */
   --card-pending-w: 3.2em; --card-pending-h: 0.7em;  /* a part not worked out yet: a quiet bar in its place */
   --card-pending-bg: rgba(255, 255, 255, 0.07);
+  --card-pending-content: "";             /* the placeholder is a shape, no words */
   --t-card-done: 1000ms;                  /* a song done stays complete on the card this long, then goes to the wall */
   --t-wall-new: 1600ms;                   /* the row it went to stays lit this long */
   --progress-h: 10px;
@@ -306,7 +307,7 @@
   --stage-h: 140px;                       /* the song on stage: its wave's height */
   --stage-wave-w: 46%;
   --fig-h: 58px;                          /* a figure's picture */
-  /* A song's wave, wherever it is drawn (the song info card, the walls): separate bars mirrored about a centre line, one a bar of
+  /* A song's wave, wherever it is drawn (the song card, the walls): separate bars mirrored about a centre line, one a bar of
      music for a song with fewer than 64 bars, else one a stretch of the wave's 64; each song stretched to its own
      range (RunSong.barHeights): its tenth-quietest value in a hundred (and anything quieter) at --wave-bar-floor of the room, its loudest at the top; values within
      --wave-range-min (of the 0 to 99 scale, about 2 LU) of each other count as that range below the loudest. */
@@ -500,7 +501,7 @@ main { flex: 1; min-height: 0; display: flex; flex-direction: column; }
 .stage-dl dd.tempo { color: var(--amber); }
 .stage-dl dd.quiet { color: var(--mut); font-weight: var(--fw-stage-quiet); }
 /* a part not worked out yet: a quiet bar where it will be, the same height as its words, so nothing moves */
-.stage-dl dd.pending::before { content: ""; display: inline-block; width: var(--card-pending-w); height: var(--card-pending-h); border-radius: var(--r-pill); background: var(--card-pending-bg); }
+.stage-dl dd.pending::before { content: var(--card-pending-content); display: inline-block; width: var(--card-pending-w); height: var(--card-pending-h); border-radius: var(--r-pill); background: var(--card-pending-bg); }
 
 .figures { display: grid; grid-template-columns: var(--figures-cols); gap: var(--fig-gap); }
 .fig { padding: var(--fig-pad); display: flex; flex-direction: column; gap: var(--inner-gap-s); min-width: 0; }
