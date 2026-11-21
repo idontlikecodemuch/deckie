@@ -63,7 +63,7 @@ def prepare(data, work, jobs, music=None):
                     songs.append((sid, path, "library"))
         songs.sort()
     else:
-        for bucket, pattern in [("dance", "songs/dance/*.mp3"), ("other", "songs/other/*.mp3"), ("gsplus", "gsplus/**/*.mp3")]:
+        for bucket, pattern in [("dance", "songs/dance/*.mp3"), ("other", "songs/other/*.mp3"), ("remix", "songs/remix/*.mp3"), ("gsplus", "gsplus/**/*.mp3")]:
             listing = os.path.join(data, f"songs_{bucket}.json")
             # Only the songs in the fetch's own list (each with its licence on record) are used.
             listed = {g["id"] for g in json.load(open(listing))} if os.path.exists(listing) else None

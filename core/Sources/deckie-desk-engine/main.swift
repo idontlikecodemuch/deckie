@@ -11,6 +11,7 @@ import Foundation
 import DeckieDesk
 import DeckieEngine
 import DeckieInference
+import DeckieRecognition
 
 // In the Windows zip the engine's files sit beside this program (onnxruntime.dll, models/), as they do beside
 // deckie-make; they are looked for there before the checkout a developer runs from.
@@ -22,10 +23,17 @@ let home = DeskHome.standard()
 let device = Analysis.platform
 let jobs = DeskJobs.current()
 
+// When listening stops (or stops on an error), how long the listener's readings took, in one log line:
+// "listener: a, 142 readings, typical 61 ms, slowest 240 ms". Seen as the booth's `stopped` or `error` goes out.
+let boothState = Data("\"booth.state\"".utf8), stopped = Data("\"stopped\"".utf8), errored = Data("\"error\"".utf8)
 let engine = DeskProtocol(home: home, output: { data in
     var line = data
     line.append(0x0A)
     stdout.write(line)
+    if data.range(of: boothState) != nil, data.range(of: stopped) != nil || data.range(of: errored) != nil,
+       let times = BoothRecogniser.newestTimesLineOnce() {
+        FileHandle.standardError.write(Data("deckie-desk-engine: \(times)\n".utf8))
+    }
 }, makeRun: { home, crateId, request in
     // No recognition signatures here: ShazamKit is Apple's only. The print that finds copies is the shared decoder's,
     // made from the audio the analysis decoded (the same samples), so each song is read once.
