@@ -9,7 +9,8 @@
 #   3. No email address except the publisher's public contact, the commit co-author line, and those inside
 #      third-party licence texts and vendored sources.
 #   4. No Apple device identifier (a UDID: eight hex digits starting 0000, a dash, sixteen hex digits).
-#   5. No assistant session link or id, and no scratch path that embeds a home folder.
+#   5. No assistant session link or id, no link to a private assistant page (artifact, chat, share), and no scratch
+#      path that embeds a home folder.
 #   6. No Apple developer team id outside the build files that need it.
 #   7. No path shaped like a personal music folder (a drive's project folder, a personal playlist folder).
 set -u
@@ -51,8 +52,8 @@ if hits=$(git grep -nIE '\b0000[0-9A-Fa-f]{4}-[0-9A-Fa-f]{16}\b' -- "${skip[@]}"
 fi
 
 # 5. assistant session links and ids, and scratch paths that carry a home folder
-if hits=$(git grep -nIE 'Claude-Session:|claude\.ai/code/session_|session_[0-9A-Za-z]{20,}|-Users-[A-Za-z0-9]+-' -- "${skip[@]}"); then
-    say "assistant session ids or scratch paths:"; say "$hits"
+if hits=$(git grep -nIE 'Claude-Session:|claude\.ai/(code/session_|artifact/|chat/|share/)|session_[0-9A-Za-z]{20,}|-Users-[A-Za-z0-9]+-' -- "${skip[@]}"); then
+    say "assistant session ids, private assistant links or scratch paths:"; say "$hits"
 fi
 
 # 6. an Apple developer team id outside the build files that need it (prose, scripts)
