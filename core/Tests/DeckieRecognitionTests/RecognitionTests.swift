@@ -221,11 +221,73 @@ import DeckieRecognition
         return out
     }
 
-    @Test func theDefaultListenerIsMainReadingForReading() throws {
-        #expect(ListenSettings() == ListenSettings(.main))
-        let plain = Self.readings(Self.set, ListenSettings()).map { "\($0.time) \($0.state) \($0.id ?? "-")" }
-        let main = Self.readings(Self.set, ListenSettings(.main)).map { "\($0.time) \($0.state) \($0.id ?? "-")" }
-        #expect(plain == main)
+    /// Readings as runs: "3 named song2, 4-24 held song2, ..." (each reading's whole second, state and song).
+    static func runs(_ readings: [ListenReading]) -> String {
+        var out: [(from: Int, to: Int, what: String)] = []
+        for r in readings {
+            let t = Int(r.time.rounded()), what = "\(r.state.rawValue) \(r.id ?? "-")"
+            if let last = out.last, last.what == what, last.to == t - 1 { out[out.count - 1].to = t } else { out.append((t, t, what)) }
+        }
+        return out.map { ($0.from == $0.to ? "\($0.from)" : "\($0.from)-\($0.to)") + " " + $0.what }.joined(separator: ", ")
+    }
+
+    /// Songs 2 and 6 in turn, 10 s each, each picking up where it left off.
+    static let turns: [Float] = (0..<4).flatMap { k in excerpt(song(seed: k % 2 == 0 ? 102 : 106), from: 5 + Double(k / 2) * 10, seconds: 10) }
+
+    @Test func theProductsListenerIsA() throws {
+        // D41: the iPad app, Desk's Booth mode and deckie-listen all take the default settings, and the default is A.
+        #expect(ListenSettings.Listener.product == .a)
+        #expect(ListenSettings() == ListenSettings(.a))
+        #expect(ListenSettings().name == "a")
+        #expect(ListenSettings.Listener.allCases.filter(\.isProduct) == [.a])
+        #expect(SongListener(index: Self.index).settings == ListenSettings(.a))
+        #expect(BoothRecogniser(index: Self.index) { _ in }.listenerName == "a")
+        // A's numbers are the ones chosen on the research branch's dev half and run once on its held-out half; the
+        // rest are today's listener's.
+        let a = ListenSettings(.a)
+        var expected = ListenSettings(.main)
+        expected.challenger = true; expected.challengeWindow = 4; expected.challengeMargin = 2; expected.searchSinceMiss = 4
+        #expect(a == expected)
+        #expect(ListenSettings(.main).name == "main" && ListenSettings(.fast).name == "fast" && ListenSettings(.b).name == "b")
+        var changed = a; changed.challengeMargin = 3
+        #expect(changed.name == "custom")
+    }
+
+    @Test func mainIsStillTheListenerBeforeD41ReadingForReading() throws {
+        // Written from main at 205d35c (before A became the products' listener), its default settings on these sounds.
+        #expect(!ListenSettings(.main).challenger && !ListenSettings(.main).cutWatch && ListenSettings(.main).searchSinceMiss == nil)
+        #expect(Self.runs(Self.readings(Self.set, ListenSettings(.main)))
+                == "3 named song2, 4-24 held song2, 25 named song6, 26-40 held song6")
+        #expect(Self.runs(Self.readings(Self.turns, ListenSettings(.main)))
+                == "3 named song2, 4-14 held song2, 15 named song6, 16-24 held song6, 25 named song2, 26-34 held song2, 35 named song6, 36-40 held song6")
+        #expect(Self.runs(Self.readings(Self.excerpt(Self.song(seed: 104), from: 1, seconds: 38), ListenSettings(.main)))
+                == "3 named song4, 4-38 held song4")
+    }
+
+    @Test func aListenerKeepsHowLongItsReadingsTook() throws {
+        var t = ReadingTimes()
+        #expect(t.line(listener: "a") == "listener: a, no readings")
+        for ms in [12.4, 61.2, 61.9, 240.4, 30.0] { t.add(ms) }
+        #expect(t.count == 5 && t.typicalMilliseconds == 61 && abs(t.slowestMilliseconds - 240.4) < 1e-9)
+        #expect(abs(t.meanMilliseconds - (12.4 + 61.2 + 61.9 + 240.4 + 30) / 5) < 1e-9)
+        #expect(t.line(listener: "a") == "listener: a, 5 readings, typical 61 ms, slowest 240 ms")
+        var u = ReadingTimes()
+        u.add(5000); u.add(3)
+        t.merge(u)
+        #expect(t.count == 7 && t.typicalMilliseconds == 61 && t.slowestMilliseconds == 5000)
+        // The listener's own record: one entry a reading, kept through a reset.
+        let listener = SongListener(index: Self.index)
+        var n = 0
+        var at = 0
+        while at < Self.set.count {
+            let end = min(Self.set.count, at + Self.rate / 10)
+            n += listener.hear(Array(Self.set[at..<end]), sampleRate: Self.rate).count
+            at = end
+        }
+        #expect(n > 30 && listener.times.count == n)
+        listener.reset()
+        #expect(listener.times.count == n)
+        #expect(listener.timesLine.hasPrefix("listener: a, \(n) readings, typical "))
     }
 
     @Test(arguments: ListenSettings.Listener.allCases)
@@ -296,6 +358,9 @@ import DeckieRecognition
         #expect(box.readings.map(\.time) == box.readings.map(\.time).sorted())
         #expect(box.readings.last?.id == "song2")
         #expect(booth.latest == box.readings.last)
+        // Its record of how long the readings took, for the log line where listening stops.
+        #expect(booth.times.count == 10)
+        #expect(booth.timesLine.hasPrefix("listener: a, 10 readings, typical "))
     }
 
     // MARK: Songs that hold the same sound

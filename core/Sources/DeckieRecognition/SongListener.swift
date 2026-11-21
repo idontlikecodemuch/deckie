@@ -82,8 +82,9 @@ public struct ListenSettings: Sendable, Equatable {
     /// Whether a named song is followed (false, for measuring only: every reading is a fresh search and nothing is named).
     public var follow = true
 
-    // The settings below are all off by default; with them off the listener is the one described above, reading for
-    // reading (docs/research/faster-listening-proposals.md).
+    // The settings below are all off in the values written here; with them off the listener is the one described
+    // above, reading for reading (`ListenSettings(.main)`; docs/research/faster-listening-proposals.md). The products'
+    // listener, `ListenSettings()`, turns proposal A on (`Listener.product`).
 
     /// While a song is followed, the whole-crate search looks at the last this many seconds only (the fast setting:
     /// 4; at 8, the window, nothing changes).
@@ -108,12 +109,27 @@ public struct ListenSettings: Sendable, Equatable {
     /// After an alarm, the least sound since its moment that is searched (nil: `leastWindow`, 3 s). B and A+B use 2,
     /// chosen on the dev half against 3 (half a second sooner, no more wrong names or jumps than the default).
     public var cutSearchFrom: Double? = nil
-    public init() {}
+
+    /// The products' listener: what the iPad app, Desk's Booth mode and `deckie-listen` use unless told otherwise.
+    public init() { self.init(Listener.product) }
+
+    /// The values as written above: today's listener before A (`main`), from which every named listener starts.
+    private init(asWritten: Void) {}
 
     /// The listeners compared in docs/research/faster-listening-proposals.md, by the names the tools use.
-    public enum Listener: String, CaseIterable, Sendable { case main, fast, a, b, ab }
+    ///
+    /// - `main`: the listener before D41, reading for reading; still there for comparing (`--listener main`).
+    /// - `a`: proposal A, the challenger rule (D41, Nov 21 2026): **the products' listener**.
+    /// - `fast`, `b`, `ab`: research only, used by no product.
+    public enum Listener: String, CaseIterable, Sendable {
+        case main, fast, a, b, ab
+        /// The one place the products' listener is chosen (D41).
+        public static let product: Listener = .a
+        /// Whether a product uses it (the others are kept for research).
+        public var isProduct: Bool { self == .product }
+    }
     public init(_ listener: Listener) {
-        self.init()
+        self.init(asWritten: ())
         switch listener {
         case .main: break
         case .fast: self = .fast
@@ -127,12 +143,61 @@ public struct ListenSettings: Sendable, Equatable {
     /// followed the whole crate is searched every second in the newest 4 s, the first search is made after 2 s, and
     /// after a failed check the search looks only at the sound since then.
     public static var fast: ListenSettings {
-        var s = ListenSettings()
+        var s = ListenSettings(asWritten: ())
         s.searchEvery = 1
         s.followSearchWindow = 4
         s.leastWindow = 2
         s.searchSinceMiss = 4
         return s
+    }
+
+    /// The listener these settings are, by its tool name (`a`, `main`, ...), or `custom` when a number was changed.
+    public var name: String { Listener.allCases.first { ListenSettings($0) == self }?.rawValue ?? "custom" }
+}
+
+/// How long a listener's readings took, kept as they come: cheap enough to keep for a whole set (a count, a sum, the
+/// slowest, and a count per whole millisecond up to two seconds for the median; one addition a reading).
+public struct ReadingTimes: Sendable, Equatable {
+    public private(set) var count = 0
+    public private(set) var totalMilliseconds = 0.0
+    public private(set) var slowestMilliseconds = 0.0
+    /// Readings by whole milliseconds taken, 0 to 1999; the last holds 2000 and more.
+    private var byMillisecond = [UInt32](repeating: 0, count: 2001)
+    public init() {}
+
+    public mutating func add(_ milliseconds: Double) {
+        count += 1
+        totalMilliseconds += milliseconds
+        if milliseconds > slowestMilliseconds { slowestMilliseconds = milliseconds }
+        byMillisecond[min(byMillisecond.count - 1, max(0, Int(milliseconds)))] &+= 1
+    }
+
+    /// Adds another record's readings to this one (listeners on several threads, one run).
+    public mutating func merge(_ other: ReadingTimes) {
+        count += other.count
+        totalMilliseconds += other.totalMilliseconds
+        slowestMilliseconds = max(slowestMilliseconds, other.slowestMilliseconds)
+        for i in byMillisecond.indices { byMillisecond[i] &+= other.byMillisecond[i] }
+    }
+
+    public var meanMilliseconds: Double { count == 0 ? 0 : totalMilliseconds / Double(count) }
+
+    /// The median, to the whole millisecond (2000 when it is two seconds or more).
+    public var typicalMilliseconds: Int {
+        guard count > 0 else { return 0 }
+        let half = (count + 1) / 2
+        var seen = 0
+        for (ms, n) in byMillisecond.enumerated() {
+            seen += Int(n)
+            if seen >= half { return ms }
+        }
+        return byMillisecond.count - 1
+    }
+
+    /// One line for a log: `listener: a, 142 readings, typical 61 ms, slowest 240 ms`.
+    public func line(listener: String) -> String {
+        guard count > 0 else { return "listener: \(listener), no readings" }
+        return "listener: \(listener), \(count) reading\(count == 1 ? "" : "s"), typical \(typicalMilliseconds) ms, slowest \(Int(slowestMilliseconds.rounded())) ms"
     }
 }
 
@@ -174,6 +239,10 @@ public final class SongListener {
     public private(set) var latest: ListenReading?
     /// B, for measuring: each alarm raised since the last reset, as (the time it was raised, the moment it names).
     public private(set) var alarms: [(raised: Double, moment: Double)] = []
+    /// How long every reading since this listener was made took (kept through `reset`: it is the listener's work, not
+    /// what it heard). `timesLine` says it in one line for a log.
+    public private(set) var times = ReadingTimes()
+    public var timesLine: String { times.line(listener: settings.name) }
 
     public init(index: RecognitionIndex, settings: ListenSettings = ListenSettings()) {
         self.index = index; self.settings = settings
@@ -218,7 +287,7 @@ public final class SongListener {
             }
             i += take; heard += take
             if sound.count > 2 * keep { sound.removeFirst(sound.count - keep) }
-            if heard == nextReading, let reading = pooled({ read() }) { out.append(reading); latest = reading }
+            if heard == nextReading, let reading = pooled({ read() }) { out.append(reading); latest = reading; times.add(reading.milliseconds) }
         }
         return out
     }
@@ -403,15 +472,40 @@ public final class BoothRecogniser: @unchecked Sendable {
     private var waiting: [(samples: [Float], channels: Int, rate: Int)] = []
     private var working = false
     private var last: ListenReading?
+    private var kept = ReadingTimes()
+    private var told = false
     private let onReading: @Sendable (ListenReading) -> Void
+    /// The listener's name (`a`, `main`, ...), for the times line.
+    public let listenerName: String
 
     public init(index: RecognitionIndex, settings: ListenSettings = ListenSettings(), onReading: @escaping @Sendable (ListenReading) -> Void) {
         listener = SongListener(index: index, settings: settings)
+        listenerName = settings.name
         self.onReading = onReading
+        Self.newest.lock.lock(); Self.newest.one = self; Self.newest.lock.unlock()
     }
 
     /// The most recent reading (nil until three seconds have been heard).
     public var latest: ListenReading? { lock.lock(); defer { lock.unlock() }; return last }
+
+    /// How long its readings have taken so far, and the same in one line for a log
+    /// (`listener: a, 142 readings, typical 61 ms, slowest 240 ms`).
+    public var times: ReadingTimes { lock.lock(); defer { lock.unlock() }; return kept }
+    public var timesLine: String { times.line(listener: listenerName) }
+
+    /// The process's newest recogniser, for a log line where listening stops in code that does not hold it (Desk's
+    /// engine, which sees the booth's `stopped` go out): its times line, given once per recogniser (nil after that,
+    /// or when none was made).
+    public static func newestTimesLineOnce() -> String? {
+        newest.lock.lock(); let b = newest.one; newest.lock.unlock()
+        guard let b else { return nil }
+        b.lock.lock(); defer { b.lock.unlock() }
+        if b.told { return nil }
+        b.told = true
+        return b.kept.line(listener: b.listenerName)
+    }
+    private final class Newest: @unchecked Sendable { let lock = NSLock(); weak var one: BoothRecogniser? }
+    private static let newest = Newest()
 
     /// Hands over more sound: copies it and returns.
     public func feed(_ samples: [Float], channels: Int = 1, sampleRate: Int) {
@@ -431,7 +525,7 @@ public final class BoothRecogniser: @unchecked Sendable {
             lock.unlock()
             for b in batch {
                 for reading in listener.hear(b.samples, channels: b.channels, sampleRate: b.rate) {
-                    lock.lock(); last = reading; lock.unlock()
+                    lock.lock(); last = reading; kept.add(reading.milliseconds); lock.unlock()
                     onReading(reading)
                 }
             }
