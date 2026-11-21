@@ -27,6 +27,10 @@ on:
       - .github/workflows/pc-package.yml
   workflow_dispatch:
 
+# Only reads the repository (checkout); artifacts and caches use the runner's own token, not this one.
+permissions:
+  contents: read
+
 jobs:
   # The MP3 of the synthesised test track, as in core-windows.yml: encoded on Linux, since no audio is committed
   # and the Windows runner has no MP3 encoder.

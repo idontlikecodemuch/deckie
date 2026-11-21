@@ -9,6 +9,10 @@ on:
     paths: [core/**, mixer/features/**, mixer/candidates.json, mixer/recs.json, .github/workflows/core-linux.yml]
   workflow_dispatch:
 
+# Only reads the repository (checkout); artifacts and caches use the runner's own token, not this one.
+permissions:
+  contents: read
+
 jobs:
   build-and-test:
     runs-on: ubuntu-latest

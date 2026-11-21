@@ -12,6 +12,10 @@ on:
     paths: [core/**, mixer/features/**, mixer/candidates.json, mixer/recs.json, .github/workflows/core-windows.yml]
   workflow_dispatch:
 
+# Only reads the repository (checkout); artifacts and caches use the runner's own token, not this one.
+permissions:
+  contents: read
+
 jobs:
   # The MP3 of the synthesised test track, for the end-to-end folder. No audio is committed, and the Windows runner
   # has no MP3 encoder, so it is encoded here once per run, with Ubuntu's ffmpeg program, and the same bytes go to

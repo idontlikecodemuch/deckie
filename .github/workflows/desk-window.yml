@@ -14,6 +14,10 @@ on:
     paths: [desk-shell/**, desk-web/**, core/**, .github/workflows/desk-window.yml]
   workflow_dispatch:
 
+# Only reads the repository (checkout); artifacts and caches use the runner's own token, not this one.
+permissions:
+  contents: read
+
 jobs:
   linux:
     runs-on: ubuntu-latest
