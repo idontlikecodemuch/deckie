@@ -98,7 +98,7 @@ struct BoothView: View {
                 Spacer()
                 Meter(value: booth.meter, clipping: booth.clipping)
                     .accessibilityLabel(Words.t("booth.level"))
-                    .accessibilityValue("\(Int((booth.meter * 100).rounded()))")
+                    .accessibilityValue(String(Int((booth.meter * 100).rounded())))
             }
             Text(booth.stateLine(crate: crate))
                 .foregroundStyle(booth.status?.state == "error" ? AnyShapeStyle(BoothLook.error) : AnyShapeStyle(.secondary))
