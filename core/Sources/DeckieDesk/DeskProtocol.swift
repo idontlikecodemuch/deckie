@@ -46,6 +46,10 @@ public final class DeskProtocol: @unchecked Sendable {
     /// (nil: the system's input or `DECKIE_BOOTH_SOUND`'s stand-in; a test gives its own).
     var booth: DeskBooth?
     public var makeSoundSource: (@Sendable (String?) throws -> SoundSource)?
+    /// The system's inputs as `booth.inputs` lists them (a test gives a stand-in), and the seconds the system's sound is
+    /// given to answer it or to open an input (`SoundInputs.answerWithin`; a test gives less).
+    public var listSoundInputs: @Sendable () throws -> SoundInputs.Listed = { try SoundInputs.systemList() }
+    public var soundWait: Double = SoundInputs.answerWithin
 
     public init(home: DeskHome, output: @escaping Output, makeRun: @escaping RunMaker,
                 analysisCheck: () throws -> Void = { try Builder.checkEngine() },

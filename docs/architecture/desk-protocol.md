@@ -440,8 +440,13 @@ rule (waits, dominance, place jumps, pause); step 2 moves that rule into the cor
 | `booth.listen` | `input` (a name from `booth.inputs`; absent, empty or no longer there: the system's default); `crate` (optional: must be the crate showing) | `crate`, `songs` (songs with a fingerprint) | `booth.state`…, then `booth.level` and `booth.heard` as sound comes |
 | `booth.stop` | | | `booth.state` `stopped`; the input is closed before the reply |
 
-Errors: `no_crate` (no crate with songs showing), `no_sound` (`detail` a code: the system's sound could not be
-reached), `busy` (a run or a lookup is going: listening waits while music is read). `booth.inputs` and `booth.stop`
+Errors: `no_crate` (no crate with songs showing), `no_sound` (`booth.inputs` only; `detail` a code: the system's
+sound could not be reached), `busy` (a run or a lookup is going: listening waits while music is read). The engine
+never waits on the system's sound while it reads requests: `booth.inputs` is answered from a thread of its own, and
+`booth.listen` finds and opens its input on the listener's thread, its failures said as `booth.state` `error`. Each
+is given at most 5 seconds (`SoundInputs.answerWithin`; a sound server that is stuck, or a stopped Windows Audio
+service, can otherwise hold miniaudio's calls for good): past that, `no_sound` `noSystem` for the inputs and
+`booth.state` `error` `noSystem` for listening. `booth.inputs` and `booth.stop`
 are answered while a run goes. Listening stops by itself, with `booth.state` `stopped`, when another crate is
 shown, a crate is deleted, the first screen is asked for, a run starts, and when the engine's input closes (the
 window closed): the microphone is never left open.

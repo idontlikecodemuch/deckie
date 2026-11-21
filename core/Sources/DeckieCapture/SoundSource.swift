@@ -39,7 +39,8 @@ public protocol SoundSource: AnyObject, Sendable {
 /// Samples played as if they were captured, for tests and tools: interleaved floats at `format`, delivered in blocks of
 /// `blockSeconds` on a thread of their own, as fast as they can be taken (`pace` 0) or at `pace` times the speed of
 /// sound (1: as a microphone would). `endsWith` makes the source end on its own after the samples, as an input that was
-/// unplugged does (nil: it just goes quiet, delivering nothing more).
+/// unplugged does (nil: it just goes quiet, delivering nothing more). `opensAfter` makes `start` take that many seconds
+/// before it answers, as a system's sound that is slow or stuck does (tests of the time limits, Bounded.swift).
 public final class SampleSource: SoundSource, @unchecked Sendable {
     public let name: String
     private let samples: [Float]
@@ -48,6 +49,7 @@ public final class SampleSource: SoundSource, @unchecked Sendable {
     private let pace: Double
     private let endsWith: CaptureError?
     private let failsToStart: CaptureError?
+    private let opensAfter: Double
     private let lock = NSLock()
     private var running = false
     private var thread: Thread?
@@ -56,13 +58,14 @@ public final class SampleSource: SoundSource, @unchecked Sendable {
     public private(set) var delivered = 0
 
     public init(name: String = "Test sound", samples: [Float], format: SoundFormat, blockSeconds: Double = 0.05,
-                pace: Double = 0, endsWith: CaptureError? = nil, failsToStart: CaptureError? = nil) {
+                pace: Double = 0, endsWith: CaptureError? = nil, failsToStart: CaptureError? = nil, opensAfter: Double = 0) {
         self.name = name; self.samples = samples; self.format = format; self.blockSeconds = blockSeconds
-        self.pace = pace; self.endsWith = endsWith; self.failsToStart = failsToStart
+        self.pace = pace; self.endsWith = endsWith; self.failsToStart = failsToStart; self.opensAfter = opensAfter
     }
 
     public func start(sound: @escaping @Sendable ([Float], SoundFormat) -> Void,
                       ended: @escaping @Sendable (CaptureError) -> Void) throws -> SoundFormat {
+        if opensAfter > 0 { Thread.sleep(forTimeInterval: opensAfter) }
         if let failsToStart { throw failsToStart }
         lock.lock()
         guard !running else { lock.unlock(); throw CaptureError("busy", "already started") }
@@ -108,13 +111,22 @@ public final class SampleSource: SoundSource, @unchecked Sendable {
         let d = done
         done = nil
         lock.unlock()
-        d?.wait()
+        // Signalled again once seen, as in waitUntilPlayed: either may be waiting on it, and each must wake.
+        d?.wait(); d?.signal()
     }
 
-    /// Waits until every sample has been delivered (or the source was stopped).
-    public func waitUntilPlayed() {
+    /// Waits until every sample has been delivered (or the source was stopped): at most `seconds` (nil: for as long as
+    /// it takes). False when the time ran out first.
+    @discardableResult
+    public func waitUntilPlayed(within seconds: Double? = nil) -> Bool {
         lock.lock(); let d = done; lock.unlock()
-        guard let d else { return }
-        d.wait(); d.signal()
+        guard let d else { return true }
+        if let seconds {
+            guard d.wait(timeout: .now() + seconds) == .success else { return false }
+        } else {
+            d.wait()
+        }
+        d.signal()
+        return true
     }
 }

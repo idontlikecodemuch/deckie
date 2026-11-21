@@ -8,6 +8,9 @@ public struct SoundInput: Sendable, Equatable {
     /// The input the system's sound settings choose.
     public var isDefault: Bool
     let id: [UInt8]
+    /// An input by name alone (a stand-in in tests; opening one opens the system's default).
+    public init(name: String, isDefault: Bool) { self.name = name; self.isDefault = isDefault; id = [] }
+    init(name: String, isDefault: Bool, id: [UInt8]) { self.name = name; self.isDefault = isDefault; self.id = id }
 }
 
 /// The inputs this computer has, through miniaudio (WASAPI on Windows, Core Audio on the Mac, PulseAudio or ALSA on
@@ -17,9 +20,28 @@ public enum SoundInputs {
         public var inputs: [SoundInput]
         /// The system's sound interface used: "WASAPI", "Core Audio", "PulseAudio", "ALSA".
         public var system: String
+        public init(inputs: [SoundInput], system: String) { self.inputs = inputs; self.system = system }
     }
 
-    public static func list() throws -> Listed {
+    /// Seconds the system's sound is given to answer: to list its inputs, or to open, start or close one
+    /// (Bounded.swift says why and what each system's calls can wait on). Past that, `noSystem`.
+    public static let answerWithin: Double = 5
+
+    /// The inputs, asked of the system and waited for at most `seconds` (past that: `noSystem`).
+    public static func list(within seconds: Double = answerWithin) throws -> Listed {
+        try list(within: seconds, using: systemList)
+    }
+
+    /// The inputs from `lister` (the system's, or a stand-in in tests), waited for at most `seconds`.
+    public static func list(within seconds: Double, using lister: @escaping @Sendable () throws -> Listed) throws -> Listed {
+        guard let answer = bounded(seconds: seconds, { Result { try lister() } }) else {
+            throw CaptureError("noSystem", "the system's sound did not answer within \(BoundedSource.plain(seconds)) seconds")
+        }
+        return try answer.get()
+    }
+
+    /// The system's inputs, asked directly (no time limit: `list` gives one).
+    public static func systemList() throws -> Listed {
         var system = [CChar](repeating: 0, count: 64)
         var message = [CChar](repeating: 0, count: 256)
         let most = 64
@@ -53,10 +75,40 @@ public enum SoundInputs {
 }
 
 /// A real input through miniaudio, opened in shared mode at its own rate and channel count, with no voice processing
-/// asked for (`deckie_capture.c` says what each system allows). `input` nil is the system's default input.
+/// asked for (`deckie_capture.c` says what each system allows). `input` nil is the system's default input. Opening,
+/// starting and closing are each waited for at most `within` seconds (`SoundInputs.answerWithin`; Bounded.swift): an
+/// input the system does not open in that time is a plain `noSystem` error, never a wait without end.
 public final class Microphone: SoundSource, @unchecked Sendable {
-    public private(set) var name: String
-    private let input: SoundInput?
+    private let source: BoundedSource
+
+    public init(_ input: SoundInput? = nil, within seconds: Double = SoundInputs.answerWithin) {
+        source = BoundedSource(SystemInput(input), within: seconds)
+    }
+
+    /// The input of that name, found when it starts (listing and opening within the one time limit); nil, empty or a
+    /// name no longer there is the system's default.
+    public init(named: String?, within seconds: Double = SoundInputs.answerWithin) {
+        source = BoundedSource(SystemInput(named: named), within: seconds)
+    }
+
+    public var name: String { source.name }
+
+    public func start(sound: @escaping @Sendable ([Float], SoundFormat) -> Void,
+                      ended: @escaping @Sendable (CaptureError) -> Void) throws -> SoundFormat {
+        try source.start(sound: sound, ended: ended)
+    }
+
+    public func stop() { source.stop() }
+
+    deinit { source.stop() }
+}
+
+/// The input itself, with no time limits (Microphone gives them).
+final class SystemInput: SoundSource, @unchecked Sendable {
+    private var shown: String
+    private var input: SoundInput?
+    /// Set when the input is to be found by name as it starts.
+    private let byName: String??
     private let lock = NSLock()
     private var capture: OpaquePointer?
     private var box: Unmanaged<Callbacks>?
@@ -78,10 +130,21 @@ public final class Microphone: SoundSource, @unchecked Sendable {
         func silence() { lock.lock(); over = true; lock.unlock() }
     }
 
-    public init(_ input: SoundInput? = nil) {
+    init(_ input: SoundInput?) {
         self.input = input
-        name = input?.name ?? ""
+        byName = .none
+        shown = input?.name ?? ""
     }
+
+    init(named: String?) {
+        input = nil
+        byName = .some(named)
+        shown = named ?? ""
+    }
+
+    /// Its own lock, so the name can be read while an opening waits on the system.
+    private let nameLock = NSLock()
+    var name: String { nameLock.lock(); defer { nameLock.unlock() }; return shown }
 
     static func code(_ c: Int32) -> String {
         switch c {
@@ -93,10 +156,15 @@ public final class Microphone: SoundSource, @unchecked Sendable {
         }
     }
 
-    public func start(sound: @escaping @Sendable ([Float], SoundFormat) -> Void,
-                      ended: @escaping @Sendable (CaptureError) -> Void) throws -> SoundFormat {
+    func start(sound: @escaping @Sendable ([Float], SoundFormat) -> Void,
+               ended: @escaping @Sendable (CaptureError) -> Void) throws -> SoundFormat {
         lock.lock(); defer { lock.unlock() }
         guard capture == nil else { throw CaptureError("busy", "already started") }
+        if case let .some(wanted) = byName {
+            input = SoundInputs.named(wanted, in: try SoundInputs.systemList().inputs)
+        }
+        // An input known by name alone (no system id) opens the system's default.
+        let input = self.input.flatMap { $0.id.count == Int(DECKIE_CAPTURE_ID_BYTES) ? $0 : nil }
         let callbacks = Callbacks(sound: sound, ended: ended)
         let retained = Unmanaged.passRetained(callbacks)
         var rate: UInt32 = 0, channels: UInt32 = 0, error: Int32 = 0
@@ -126,10 +194,10 @@ public final class Microphone: SoundSource, @unchecked Sendable {
         }
         let format = SoundFormat(rate: Int(rate), channels: Int(channels))
         callbacks.format = format
-        var shown = [CChar](repeating: 0, count: 256)
-        deckie_capture_name(opened, &shown, shown.count)
-        let opensAs = SoundInputs.text(shown)
-        if !opensAs.isEmpty { name = opensAs }
+        var given = [CChar](repeating: 0, count: 256)
+        deckie_capture_name(opened, &given, given.count)
+        let opensAs = SoundInputs.text(given)
+        if !opensAs.isEmpty { nameLock.lock(); shown = opensAs; nameLock.unlock() }
         let started = deckie_capture_start(opened)
         guard started == DECKIE_CAPTURE_OK else {
             deckie_capture_close(opened)
@@ -141,7 +209,7 @@ public final class Microphone: SoundSource, @unchecked Sendable {
         return format
     }
 
-    public func stop() {
+    func stop() {
         lock.lock()
         let c = capture, b = box
         capture = nil; box = nil
