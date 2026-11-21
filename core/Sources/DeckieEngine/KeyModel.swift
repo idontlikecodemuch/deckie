@@ -30,11 +30,11 @@ public enum KeyModel {
 
     /// The same for a given environment, program folder and checkout (`core/`), so a test can name each place.
     public static func candidates(environment: [String: String], programFolder: URL?,
-                                  coreFolder: URL = OnnxRuntime.coreFolder) -> [String] {
+                                  coreFolder: URL? = OnnxRuntime.coreFolder) -> [String] {
         if let p = environment[environmentVariable], !p.isEmpty { return [p] }
         var out: [String] = []
         if let programFolder { out.append(programFolder.appendingPathComponent("models").appendingPathComponent(LearnedKey.Model.fileName).path) }
-        out.append(coreFolder.appendingPathComponent(".models").appendingPathComponent(LearnedKey.Model.fileName).path)
+        if let coreFolder { out.append(coreFolder.appendingPathComponent(".models").appendingPathComponent(LearnedKey.Model.fileName).path) }
         return out
     }
 

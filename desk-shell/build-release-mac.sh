@@ -6,11 +6,14 @@
 # Gentle on a Mac that is doing something else (a CD being read in another Desk): low priority, at most 4 jobs.
 #
 #   desk-shell/build-release-mac.sh
-#   DECKIE_DESK_HOME=<scratch folder> DECKIE_DJ_HOME=<empty folder> desk-shell/.build/release/deckie-desk
+#   DECKIE_CHECKOUT=<this repository> DECKIE_DESK_HOME=<scratch folder> DECKIE_DJ_HOME=<empty folder> \
+#       desk-shell/.build/release/deckie-desk
 #
-# The window finds the release engine beside the checkout's core/.build/release (`--engine` names another), and the
-# engine finds ONNX Runtime and the two models as a debug build does (DECKIE_ONNXRUNTIME_LIB, DECKIE_BEAT_THIS_MODEL,
-# DECKIE_YAMNET_MODEL, else core/.deps and core/.models in the checkout). The learned key reader's file is optional and
+# A release build carries no path of the machine that built it, so DECKIE_CHECKOUT names the checkout (the last
+# line below prints the command with it). The window finds the release engine in the checkout's core/.build/release
+# (`--engine` names another), and the engine, which inherits the variable, finds ONNX Runtime and the two models as a
+# debug build does (DECKIE_ONNXRUNTIME_LIB, DECKIE_BEAT_THIS_MODEL, DECKIE_YAMNET_MODEL, else core/.deps and
+# core/.models in the checkout). The learned key reader's file is optional and
 # found the same way (DECKIE_KEY_MODEL, else core/.models: core/Tools/fetch-key-model.sh); the last lines say whether
 # it is there, and the engine's own line in the window's log says which key reader it uses.
 set -euo pipefail
@@ -22,5 +25,6 @@ cd "$here"
 nice -n 10 swift build -c release -j "$jobs"
 echo "engine: $here/../core/.build/release/deckie-desk-engine"
 echo "window: $here/.build/release/deckie-desk"
+echo "start:  DECKIE_CHECKOUT=\"$(cd "$here/.." && pwd)\" DECKIE_DESK_HOME=<scratch folder> DECKIE_DJ_HOME=<empty folder> $here/.build/release/deckie-desk"
 if [ -n "${DECKIE_KEY_MODEL:-}" ]; then echo "key reader's file: DECKIE_KEY_MODEL=$DECKIE_KEY_MODEL (its hash is checked when the engine loads it)"
 else bash "$here/../core/Tools/fetch-key-model.sh" --check || true; fi
