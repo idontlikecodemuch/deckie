@@ -45,7 +45,7 @@ struct DeckApp: App {
                     }
                 }
                 #if DEBUG
-                // test hook without the "Open in Deckie Booth?" prompt: simctl launch <dev> io.deckie.booth -deckURL 'deck://...'
+                // test hook without the "Open in Deckie?" prompt: simctl launch <dev> io.deckie.booth -deckURL 'deck://...'
                 // (Debug builds only, like every deck:// hook)
                 if let u = UserDefaults.standard.string(forKey: "deckURL"), URL(string: u) != nil {
                     for part in u.components(separatedBy: " ; ") { if let x = URL(string: part) { handle(x) } }
