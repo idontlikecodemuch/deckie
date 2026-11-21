@@ -141,4 +141,61 @@ import DeckieBuild
         p.working[0].step = "spectral"
         #expect(DeskProtocol.workingKey(p) != k2)
     }
+
+    /// The bar within the beat step (the Windows pass, Nov 21, 2026: the card sat still for most of each song): it
+    /// moves as the beat model's chunks are done, from the beat step's place toward the next step's, never backwards
+    /// through the song, and reaches the next step's place only when every chunk is done.
+    @Test func theBarMovesWithTheBeatModelsChunksAndNeverBack() {
+        var w = RunWorking(oneAtATime: true)
+        w.took(RunNow(rel: one, number: nil, step: "started"))
+        var shares: [Double] = [w.now!.share]
+        func at(_ step: String) { w.step(one, step: step); shares.append(w.now!.share) }
+        at("hash"); at("decode"); at("resample"); at("key"); at("beatthis")
+        #expect(w.now?.share == 0.5 && w.now?.within == nil)
+        for done in 1...4 {
+            w.within(one, done: done, total: 4)
+            shares.append(w.now!.share)
+        }
+        #expect(abs(w.now!.share - 0.6) < 1e-12 && w.now?.within == 1)
+        // A report out of order never moves the bar back.
+        w.within(one, done: 2, total: 4)
+        #expect(w.now?.within == 1)
+        at("spectral")
+        #expect(w.now?.within == nil && abs(w.now!.share - 0.6) < 1e-12)
+        at("structure"); at("loudness"); at("vocal"); at("windows")
+        #expect(zip(shares, shares.dropFirst()).allSatisfy { $0 <= $1 + 1e-12 }, "the bar went back: \(shares)")
+        // Within the beat step it moved by a quarter of the step's share a chunk.
+        let beat = Array(shares[5...9])
+        #expect(zip(beat, beat.dropFirst()).allSatisfy { abs(($1 - $0) - 0.025) < 1e-12 }, "\(beat)")
+        // A song still being read says nothing of a step's work.
+        w.took(RunNow(rel: two, number: nil, step: "started"))
+        w.done(one)
+        w.step(two, step: "reading", read: 0.3)
+        w.within(two, done: 1, total: 2)
+        #expect(w.now?.within == nil && w.now?.share == 0.3)
+    }
+
+    /// An entry without `within` (a step that does not say, or an engine before it) gives the bar as before: the
+    /// step's place, the same tenth for every step. The protocol sends `within` only when there is one, and a chunk
+    /// done is sent at once.
+    @Test func anEntryWithoutWithinGivesTheStepsPlace() {
+        for (i, step) in RunNow.analysisSteps.enumerated() {
+            let n = RunNow(rel: one, number: nil, step: step)
+            #expect(n.share == Double(i + 1) / 10, "\(step)")
+            #expect(DeskProtocol.now(n)["within"] == nil)
+        }
+        var n = RunNow(rel: one, number: nil, step: "beatthis")
+        var p = RunProgress(stage: .reading, done: 0, total: 1, remaining: nil, line: nil)
+        p.now = n; p.working = [n]
+        let before = DeskProtocol.workingKey(p)
+        n.within = 1.0 / 3
+        p.now = n; p.working = [n]
+        #expect(DeskProtocol.now(n)["within"] as? Double == 0.333)
+        #expect(DeskProtocol.workingKey(p) != before)
+        // Out of range or a step not known: held to the song's bar.
+        n.within = 7
+        #expect(abs(n.share - 0.6) < 1e-12)
+        n.step = "something new"
+        #expect(n.share == 1)
+    }
 }

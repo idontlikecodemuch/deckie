@@ -733,7 +733,8 @@ public final class Builder: Sendable {
             let analysis = try engine.analyse(url: f.url, bytes: box, sha256: sha, options: AnalysisOptions(bpmTag: tag),
                                               onStage: step.map { tell in { tell(f.rel, .stage($0)) } },
                                               onDecoded: withAudio.map { hand in { hand(id, f, $0) } },
-                                              onPart: step.map { tell in { tell(f.rel, .part($0)) } })
+                                              onPart: step.map { tell in { tell(f.rel, .part($0)) } },
+                                              onWithin: step.map { tell in { tell(f.rel, .within(done: $0, total: $1)) } })
             let elapsed = Date().timeIntervalSince(t0)
             var track = analysis.crateTrack(options: .init(analysedAt: utcNow(), device: options.device))
             track.file.rel = f.rel

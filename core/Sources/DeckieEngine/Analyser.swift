@@ -141,10 +141,15 @@ public final class Analyser: Sendable {
     /// length when the song is decoded, the key when it is read (before the beat), the tempo when the beat is found,
     /// the bars when the bar grid is laid, the per-bar loudness when it is measured (`AnalysisPart`). Also on the
     /// analysing thread.
+    ///
+    /// `onWithin` is told how far the stage now running is, as work done of work in all, while it runs: for now only
+    /// the beat stage ("beatthis") tells it, once per chunk of about 30 s the beat model has run (1 of n ... n of n).
+    /// It only watches: the record is the same with it or without. Also on the analysing thread.
     public func analyse(url: URL, bytes given: FileBytes?, sha256 givenSHA: String? = nil,
                         options: AnalysisOptions = AnalysisOptions(),
                         onStage: ((String) -> Void)? = nil, onDecoded: ((AudioBuffer) -> Void)? = nil,
-                        onPart: ((AnalysisPart) -> Void)? = nil) throws -> Analysis {
+                        onPart: ((AnalysisPart) -> Void)? = nil,
+                        onWithin: ((_ done: Int, _ total: Int) -> Void)? = nil) throws -> Analysis {
         let SR = Analysis.sampleRate
         var timings: [Analysis.Timing] = []
         var started = Date()
@@ -244,7 +249,7 @@ public final class Analyser: Sendable {
         begin("beatthis")
         let sound = SoundBounds(buffer)
         let tracked = try beatTracker.track(AudioBuffer(sampleRate: SpectralFeatures.sampleRate, channelCount: 1,
-                                                        samples: m22))
+                                                        samples: m22), onChunk: onWithin)
         var beats = tracked.beats.beats, downbeats = tracked.beats.downbeats
         guard var gridBT = BeatGrid.fit(beats: beats, downbeats: downbeats) else { throw noBeat(AnalyserError.noGrid) }
         let tag = options.bpmTag.flatMap { $0 != 0 ? $0 : nil }

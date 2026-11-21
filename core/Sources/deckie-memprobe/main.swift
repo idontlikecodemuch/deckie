@@ -7,7 +7,10 @@
 //   deckie-memprobe synth <out.wav> [--seconds 240] [--bpm 124] [--seed 1]
 //   deckie-memprobe <file>... [--jobs N] [--repeat R] [--arena on|off] [--pattern on|off] [--shrink on|off]
 //                   [--threads T] [--no-vocal] [--records DIR] [--sample-ms MS] [--logits]
-//                   [--model-runs M] [--beat-shrink every|ends]
+//                   [--model-runs M] [--beat-shrink every|ends] [--within]
+//
+// --within takes the beat stage's report chunk by chunk (`Analyser.analyse`'s `onWithin`), as the run screen does,
+// and prints what was told after each file's time, so the report can be shown to change nothing and cost nothing.
 //
 // --beat-shrink chooses when the beat model's chunks shrink the arena (BeatTracker.ArenaShrinking): after every
 // chunk, or after a piece's first and last (the default).
@@ -233,7 +236,7 @@ if args.first == "-h" || args.first == "--help" || args.isEmpty {
           deckie-memprobe synth <out.wav> [--seconds 240] [--bpm 124] [--seed 1]
           deckie-memprobe <file>... [--jobs N] [--repeat R] [--arena on|off] [--pattern on|off] [--shrink on|off]
                           [--threads T] [--no-vocal] [--records DIR] [--sample-ms MS] [--logits]
-                          [--model-runs M] [--beat-shrink every|ends]
+                          [--model-runs M] [--beat-shrink every|ends] [--within]
         """)
     exit(0)
 }
@@ -274,11 +277,12 @@ if args.first == "synth" {
     exit(0)
 }
 
-let (files, o) = options(args, flags: ["no-vocal", "logits"],
+let (files, o) = options(args, flags: ["no-vocal", "logits", "within"],
                          values: ["jobs", "repeat", "arena", "pattern", "shrink", "threads", "records", "sample-ms",
                                   "model-runs", "beat-shrink"])
 guard !files.isEmpty else { fail("no audio files given", code: 2) }
 let jobs = max(1, Int(o["jobs"] ?? "1") ?? 1)
+let within = o["within"] != nil
 let repeatCount = max(1, Int(o["repeat"] ?? "1") ?? 1)
 let defaults = OnnxRuntime.SessionOptions()
 let cores = max(1, ProcessInfo.processInfo.activeProcessorCount)
@@ -351,9 +355,13 @@ for _ in 0..<min(jobs, work.count) {
             let path = work[k]
             let t0 = Date()
             do {
-                let a = try analyser.analyse(url: URL(fileURLWithPath: path))
+                // --within: the beat stage's report chunk by chunk taken, as the run screen takes it (it only watches).
+                var told: [String] = []
+                let a = try analyser.analyse(url: URL(fileURLWithPath: path), bytes: nil,
+                                             onWithin: within ? { told.append("\($0)/\($1)") } : nil)
                 let t1 = Date()
                 var line = String(format: "%@: %.1f s", (path as NSString).lastPathComponent, t1.timeIntervalSince(t0))
+                if within { line += " (beat chunks told: " + told.joined(separator: " ") + ")" }
                 if jobs == 1 {
                     // The stages' peaks from the samples: the analysis's own stage times laid end to end.
                     var from = t0

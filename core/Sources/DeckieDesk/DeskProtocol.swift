@@ -602,6 +602,9 @@ public final class DeskProtocol: @unchecked Sendable {
         if let v = n.bars { m["bars"] = v }
         if let v = n.key { m["key"] = plain(v) }
         if let v = n.wave { m["wave"] = v }
+        // An addition (Nov 21, 2026, protocol still 2): how far through its step, 0 to 1, from the work the step has
+        // done (the beat model's chunks); absent when the step does not say. A page before it shows the step's place.
+        if let v = n.within { m["within"] = (v * 1000).rounded() / 1000 }
         return m
     }
 
@@ -609,10 +612,11 @@ public final class DeskProtocol: @unchecked Sendable {
     /// (not how much of a song is read: that rides with bare progress). Nil when nothing is worked on.
     static func workingKey(_ p: RunProgress) -> String? {
         guard !p.working.isEmpty || p.ahead != nil else { return nil }
-        // A part worked out is a change too, sent at once.
+        // A part worked out is a change too, sent at once; so is a piece of a step's work done (a chunk of the beat
+        // model: a few a song, so never a flood).
         let songs = p.working.map { n -> String in
             let parts = [n.place != nil, n.seconds != nil, n.bpm != nil, n.bars != nil, n.key != nil, n.wave != nil].map { $0 ? "1" : "0" }.joined()
-            return [n.rel, n.step, n.title ?? "", n.artist ?? "", parts].joined(separator: "\u{1}")
+            return [n.rel, n.step, n.title ?? "", n.artist ?? "", parts, n.within.map { String($0) } ?? ""].joined(separator: "\u{1}")
         }
         return (songs + ["ahead", p.ahead?.rel ?? ""]).joined(separator: "\u{0}")
     }

@@ -123,6 +123,10 @@ public struct RunNow: Sendable, Equatable {
     public var step: String
     /// The share of the song read off the disc so far, 0 to 1, while it is read; nil otherwise.
     public var read: Double?
+    /// How far through its analysis step it is, 0 to 1, from the work that step has done (the beat model's chunks
+    /// done of the song's chunks, for now: the beat step is most of a song's time); nil when the step does not say.
+    /// A new step starts at nil.
+    public var within: Double?
     /// The name Desk has for it so far: a music CD's CD-Text name, then rekordbox's or its tags' once they are read;
     /// nil until there is one (`name` is then its file name).
     public var title: String?
@@ -179,11 +183,15 @@ public struct RunNow: Sendable, Equatable {
         return (CratePath.lastName(rel) as NSString).deletingPathExtension
     }
 
-    /// How far through the song, 0 to 1: the share read while it is read, then its analysis steps done of all of them.
+    /// How far through the song, 0 to 1: the share read while it is read, then its analysis steps done of all of them,
+    /// each step an equal share; within a step that says how far it is (`within`), the bar moves from that step's place
+    /// toward the next step's in proportion to the work done, and reaches it only when the step's work is all done.
+    /// run.js `nowShare` does the same.
     public var share: Double {
         if isReading { return max(0, min(1, read ?? 0)) }
         guard let i = Self.analysisSteps.firstIndex(of: step) else { return 1 }
-        return Double(i + 1) / Double(Self.analysisSteps.count)
+        let inStep = max(0, min(1, within ?? 0))
+        return min(1, (Double(i + 1) + inStep) / Double(Self.analysisSteps.count))
     }
 
     /// The step line on the song card, in Desk's words: "Reading song 2 of 6 from the disc", "Song 2 of 6: finding
@@ -248,7 +256,7 @@ struct RunWorking: Sendable, Equatable {
     /// has all been read). Steps of a song neither in hand nor being read are let go.
     mutating func step(_ rel: String, step: String, read: Double? = nil) {
         if let i = songs.firstIndex(where: { $0.rel == rel }) {
-            songs[i].step = step; songs[i].read = read
+            songs[i].step = step; songs[i].read = read; songs[i].within = nil
             return
         }
         guard step == "reading" else { return }
@@ -256,6 +264,14 @@ struct RunWorking: Sendable, Equatable {
         if ahead?.rel == rel { ahead?.read = read } else {
             ahead = RunNow(rel: rel, number: DiscSongFiles.number(of: rel), step: "reading", read: read)
         }
+    }
+
+    /// How far a song in hand is through its analysis step: `done` of `total` (the beat model's chunks). Never moves
+    /// back within the step, and says nothing of a song being read.
+    mutating func within(_ rel: String, done: Int, total: Int) {
+        guard total > 0, let i = songs.firstIndex(where: { $0.rel == rel }), !songs[i].isReading else { return }
+        let share = max(0, min(1, Double(done) / Double(total)))
+        songs[i].within = max(share, songs[i].within ?? 0)
     }
 
     /// A part of a song in hand, as it is worked out; where it is.
@@ -658,6 +674,8 @@ public final class DeskRun: @unchecked Sendable {
             case .stage(let name): change { $0.step(rel, step: name) }
             case .place(let p): change { $0.placed(rel, p) }
             case .part(let part): change { $0.part(rel, part) }
+            // One a chunk of the beat model (about 30 s of the song each): a few a song, each sent at once.
+            case let .within(done, total): change { $0.within(rel, done: done, total: total) }
             }
         }
         disc?.onRead = { rel, done, total in

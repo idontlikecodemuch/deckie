@@ -120,11 +120,15 @@
       if (nowReading(x)) return x.number != null ? t("nowReadingDisc", { number: x.number, total }) : t("nowReading");
       return x.number != null ? t("nowStageOf", { number: x.number, total, stage: nowStage(x) }) : t("nowStageAlone", { stage: nowStage(x) });
     }
-    /// How far through the song, 0 to 1 (RunNow.share): the share read while it is read, then its steps done.
+    /// How far through the song, 0 to 1 (RunNow.share): the share read while it is read, then its steps done, each an
+    /// equal share; within a step that says how far it is (`within`, an addition of Nov 21, 2026: the beat model's
+    /// chunks done), toward the next step's place in proportion. An entry without `within` gives the step's place.
     function nowShare(x) {
       if (nowReading(x)) return x.read != null ? Math.max(0, Math.min(1, x.read)) : 0;
       const i = NOW_STEPS.indexOf(x.step);
-      return i >= 0 ? (i + 1) / NOW_STEPS.length : 1;
+      if (i < 0) return 1;
+      const within = typeof x.within === "number" ? Math.max(0, Math.min(1, x.within)) : 0;
+      return Math.min(1, (i + 1 + within) / NOW_STEPS.length);
     }
     const hasParts = (x) => x.seconds != null || x.bpm != null || x.bars != null || x.key != null || x.wave != null;
     /// The songs being worked on: `working` (an addition to protocol 2), else `now` alone (an engine before it).
