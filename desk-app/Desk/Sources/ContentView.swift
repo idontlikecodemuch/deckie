@@ -225,10 +225,14 @@ struct RunView: View {
                 }.padding(Look.Space.discAskPadding).background(.quaternary, in: RoundedRectangle(cornerRadius: Look.Shape.discAsk))
             }
             RunProgressLine(watch: model.watch)
+            // What is happening, above the song card (the owner's note of Nov 21, 2026): the quiet line, then "you can
+            // leave this running", close together as one small block.
+            VStack(alignment: .leading, spacing: RunLook.sayingLeaveGap) {
+                SayingLine(watch: model.watch)
+                Text(DeskWords.text("leaveRunning")).font(Look.Fonts.leaveRunning).foregroundStyle(.tertiary)
+            }
             // The song card: the song (or songs) being worked on; when none is, the last song in.
             SongCardSlot(watch: model.watch)
-            SayingLine(watch: model.watch)
-            Text(DeskWords.text("leaveRunning")).font(Look.Fonts.leaveRunning).foregroundStyle(.tertiary)
             FiguresView(watch: model.watch)
             WallView(watch: model.watch, songs: model.watch.wallSongs, title: DeskWords.text("wallTitle"))
             DisclosureGroup(DeskWords.text("runListTitle"), isExpanded: $showList) {
@@ -366,19 +370,22 @@ struct FinishedView: View {
 }
 
 /// The quiet line under the progress: a line for the step Desk is on, or something true it just found, or a moment.
-/// It changes every several seconds and never jumps: a fade, or under reduced motion a plain change.
+/// It changes every several seconds and never jumps: a fade, or under reduced motion a plain change. The old line and
+/// the new one cross in the same place, and the line keeps its height when empty, so the song card under it never moves.
 struct SayingLine: View {
     @ObservedObject var watch: RunWatch
     @Environment(\.accessibilityReduceMotion) private var reduce
     var body: some View {
-        Text(watch.saying)
-            .fontWeight(watch.sayingIsMoment ? Look.Fonts.sayingMomentWeight : Look.Fonts.sayingWeight)
-            .foregroundStyle(watch.sayingIsMoment ? .primary : .secondary)
-            .lineLimit(1)
-            .frame(maxWidth: .infinity, minHeight: Look.Size.sayingMinHeight, alignment: .leading)
-            .id(watch.saying)
-            .transition(.opacity)
-            .animation(reduce ? nil : .easeInOut(duration: RunLook.fade), value: watch.saying)
+        ZStack(alignment: .leading) {
+            Text(watch.saying)
+                .fontWeight(watch.sayingIsMoment ? Look.Fonts.sayingMomentWeight : Look.Fonts.sayingWeight)
+                .foregroundStyle(watch.sayingIsMoment ? .primary : .secondary)
+                .lineLimit(1)
+                .id(watch.saying)
+                .transition(.opacity)
+        }
+        .frame(maxWidth: .infinity, minHeight: Look.Size.sayingMinHeight, alignment: .leading)
+        .animation(reduce ? nil : .easeInOut(duration: RunLook.fade), value: watch.saying)
     }
 }
 

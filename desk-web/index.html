@@ -108,6 +108,10 @@
         <span class="grow"></span>
         <span id="run-left" class="mut"></span>
       </div>
+      <!-- What is happening, above the song card (the owner's note of Nov 21, 2026): the quiet line, then "you can leave
+           this running". The quiet line keeps its height when it changes or is empty, so the card never moves. -->
+      <p id="run-saying" class="saying"></p>
+      <p class="leave dim" data-w="leaveRunning"></p>
       <!-- The song card (run.js, the owner's note of Nov 20, 2026): the song being worked on, by the name Desk has for
            it, its step line and a thin bar within the song (a turning disc for a music CD's song), and under them its
            parts filling in as Desk works them out, each in its own place (a quiet placeholder until then): its wave,
@@ -144,9 +148,6 @@
         <p id="now-rows-title" class="now-rows-title mut"></p>
         <ul id="now-list" class="now-list"></ul>
       </div>
-
-      <p id="run-saying" class="saying"></p>
-      <p class="leave dim" data-w="leaveRunning"></p>
 
       <!-- What Desk has found so far: each a true count. -->
       <div class="figures">

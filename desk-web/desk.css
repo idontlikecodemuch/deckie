@@ -131,6 +131,8 @@
   --run-line-gap: 12px;
   --log-pad: 10px 14px; --log-margin: 4px 0 0;
   --leave-pull: -6px;                     /* "you can leave it running" sits closer to the line above */
+  --saying-above: 4px;                    /* the quiet line and "you can leave it running": a little room above them, */
+  --leave-below: 6px;                     /* after the progress, and below them, before the song card */
   --chip-pad: 1px 9px; --chip-raise: 2px;
   --stage-dl-min: 4.5em;
   --run-list-pad: 2px 0; --run-list-gap: 8px;
@@ -476,11 +478,11 @@ main { flex: 1; min-height: 0; display: flex; flex-direction: column; }
 /* the run screen (D37) */
 .run .warn { color: var(--warn); }
 .small { font-size: var(--fs-small); }
-.saying { min-height: var(--saying-min-h); color: var(--mut); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+.saying { min-height: var(--saying-min-h); margin-top: var(--saying-above); color: var(--mut); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
           transition: opacity var(--t-fade) var(--ease-fade); }
 .saying.out { opacity: 0; }
 .saying.moment { color: var(--tx); font-weight: var(--fw-saying-moment); }
-.leave { font-size: var(--fs-small); margin-top: var(--leave-pull); }
+.leave { font-size: var(--fs-small); margin-top: var(--leave-pull); margin-bottom: var(--leave-below); }
 .song-card { display: flex; flex-direction: column; gap: var(--song-card-gap); }
 .song-card [hidden], .now-rows[hidden] { display: none; }
 .song-head { display: flex; align-items: center; gap: var(--now-gap); }

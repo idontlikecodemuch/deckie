@@ -306,6 +306,8 @@ enum RunLook {
     // space and shape
     static let cardRadius: CGFloat = 16
     static let gap: CGFloat = 14
+    /// The quiet line and "you can leave this running" under it, close together (desk.css --leave-pull).
+    static let sayingLeaveGap: CGFloat = 2
     static let cardPadding: CGFloat = 14
     static let stageGap: CGFloat = 20
     static let stageFactsGap: CGFloat = 8
