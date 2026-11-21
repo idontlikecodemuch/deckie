@@ -35,6 +35,9 @@ targets:
         product: DeckieCrate
       - package: DeckieCore
         product: DeckieRecognition
+      # The switching rule, the picks and their words, shared with Desk's Booth (D42).
+      - package: DeckieCore
+        product: DeckieBooth
     info:
       path: Deck/Info.plist
       properties:
@@ -71,17 +74,17 @@ targets:
         # each conforms to its new id. They claim no extension: .deckiecrate resolves to the new ids above, one type
         # for a folder and one for a file, as before.
         UTImportedTypeDeclarations:
-          - UTTypeIdentifier: io.example.deckie.crate
+          - UTTypeIdentifier: io.christophershannon.deckie.crate
             UTTypeDescription: Deckie crate file
             UTTypeConformsTo: [io.deckie.crate, com.apple.package, public.composite-content]
-          - UTTypeIdentifier: io.example.deckie.crate-file
+          - UTTypeIdentifier: io.christophershannon.deckie.crate-file
             UTTypeDescription: Deckie crate file
             UTTypeConformsTo: [io.deckie.crate-file, public.data, public.composite-content]
         CFBundleDocumentTypes:
           - CFBundleTypeName: Deckie crate file
             CFBundleTypeRole: Viewer
             LSHandlerRank: Owner
-            LSItemContentTypes: [io.deckie.crate, io.deckie.crate-file, io.example.deckie.crate, io.example.deckie.crate-file]
+            LSItemContentTypes: [io.deckie.crate, io.deckie.crate-file, io.christophershannon.deckie.crate, io.christophershannon.deckie.crate-file]
         # No URL scheme here: the deck:// test hooks are for Debug builds only, and the script below adds the scheme to
         # a Debug build's Info.plist. A tester's build opens crate files through the document types above.
     settings:

@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		05BCC8C1945690F7C9BD6C72 /* Recognizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = AD0D6A7A5D1690A64DABA356 /* Recognizer.swift */; };
+		097925CECEE4073189E942E9 /* PicksGoldenTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1ABC0FEAF01DCAB732A55312 /* PicksGoldenTests.swift */; };
 		120249A14C64A91581F8E627 /* FirstRun.swift in Sources */ = {isa = PBXBuildFile; fileRef = 91245B27F7670CBE85D4D3C2 /* FirstRun.swift */; };
 		15077272C4ECBD996B12A98E /* DeckieCore in Frameworks */ = {isa = PBXBuildFile; productRef = 12304D4AEAAC6FCC6B163B1D /* DeckieCore */; };
 		1778618559864DFF430F7428 /* Credits.swift in Sources */ = {isa = PBXBuildFile; fileRef = DAE49CB7BC46C4CCB55D4005 /* Credits.swift */; };
@@ -22,6 +23,7 @@
 		827B79B64A1E31FD990CA700 /* DeckieCrate in Frameworks */ = {isa = PBXBuildFile; productRef = B49D1D7567EBFBB382FD970D /* DeckieCrate */; };
 		868CFC2D39BE590AE854F03D /* Listening.swift in Sources */ = {isa = PBXBuildFile; fileRef = CFF68CAE9CF7C52FEF8A465C /* Listening.swift */; };
 		92F4CA64942DF6C57E9879A0 /* BoothTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D92B4774934F007F10600D15 /* BoothTests.swift */; };
+		9D5B98954BCBF2A0CF657325 /* DeckieBooth in Frameworks */ = {isa = PBXBuildFile; productRef = DF1D870A3CCDB781CF1F22F1 /* DeckieBooth */; };
 		A363EF687A2B1A25437BA175 /* DeckApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A0CD63E51A2860949AEFB3B /* DeckApp.swift */; };
 		B530B20B2F40A10D5681F8B4 /* Words.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4EE148A8A234AAD6644DE7A /* Words.swift */; };
 		C35533EB4A9A3075F0393755 /* CreditsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5B615436E4FCBE368A4B10F7 /* CreditsView.swift */; };
@@ -46,6 +48,7 @@
 		001E556F1E189DBC15BA3038 /* SetRecorder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SetRecorder.swift; sourceTree = "<group>"; };
 		0323AAE739FAF03D4A3174D4 /* Model.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Model.swift; sourceTree = "<group>"; };
 		0E018A3260ABD70DED456CA5 /* Mixing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Mixing.swift; sourceTree = "<group>"; };
+		1ABC0FEAF01DCAB732A55312 /* PicksGoldenTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PicksGoldenTests.swift; sourceTree = "<group>"; };
 		21AD0C7E80EC8F7390973AC9 /* OtherViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OtherViews.swift; sourceTree = "<group>"; };
 		4D87774439E98AE4851EF1BC /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		51FCBBBC567C3AF3489222CD /* ListenView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListenView.swift; sourceTree = "<group>"; };
@@ -76,6 +79,7 @@
 				15077272C4ECBD996B12A98E /* DeckieCore in Frameworks */,
 				827B79B64A1E31FD990CA700 /* DeckieCrate in Frameworks */,
 				4EEDFA8827370DA19CD94F81 /* DeckieRecognition in Frameworks */,
+				9D5B98954BCBF2A0CF657325 /* DeckieBooth in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -137,6 +141,7 @@
 			isa = PBXGroup;
 			children = (
 				D92B4774934F007F10600D15 /* BoothTests.swift */,
+				1ABC0FEAF01DCAB732A55312 /* PicksGoldenTests.swift */,
 			);
 			path = DeckTests;
 			sourceTree = "<group>";
@@ -180,6 +185,7 @@
 				12304D4AEAAC6FCC6B163B1D /* DeckieCore */,
 				B49D1D7567EBFBB382FD970D /* DeckieCrate */,
 				DB6322FD4E9AC054C1C71F5B /* DeckieRecognition */,
+				DF1D870A3CCDB781CF1F22F1 /* DeckieBooth */,
 			);
 			productName = Deck;
 			productReference = 9768B101742C7EC94619E350 /* Deck.app */;
@@ -287,6 +293,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				92F4CA64942DF6C57E9879A0 /* BoothTests.swift in Sources */,
+				097925CECEE4073189E942E9 /* PicksGoldenTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -566,6 +573,10 @@
 		DB6322FD4E9AC054C1C71F5B /* DeckieRecognition */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = DeckieRecognition;
+		};
+		DF1D870A3CCDB781CF1F22F1 /* DeckieBooth */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = DeckieBooth;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

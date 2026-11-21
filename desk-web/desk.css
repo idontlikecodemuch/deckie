@@ -19,6 +19,8 @@
   --booth-meter-bg: rgba(255, 255, 255, 0.08); --booth-meter-fill: #b490ff; --booth-meter-clip: #ffb35c;
   --booth-meter-time: 120ms; --booth-input-gap: 10px; --booth-select-pad: 6px 12px; --booth-select-r: 12px;
   --booth-error: #ffb4c4;
+  /* the picks' first look (step 2; the designed screen is step 3) */
+  --booth-pick-gap: 10px; --booth-pick-pad: 12px 16px; --booth-pick-size: 16px;
 
   /* ---- colour */
   --bg: #0f0a17;

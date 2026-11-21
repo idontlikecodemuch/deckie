@@ -15,7 +15,8 @@ import DeckieTestSupport
     static let started = 60.0
 
     /// A crate of generated songs with fingerprints, kept in a desk's storage as a run would leave it.
-    static func home(_ name: String, songs: Int = 5) throws -> (home: DeskHome, id: String, crate: Crate) {
+    /// `scored`: each song also has what the picks' scoring needs (mix windows, loudness, a style vector).
+    static func home(_ name: String, songs: Int = 5, scored: Bool = false) throws -> (home: DeskHome, id: String, crate: Crate) {
         let home = DeskHome(root: try scratch(name))
         try home.prepare()
         let info = try home.shelf.make(name: "Generated")
@@ -32,6 +33,12 @@ import DeckieTestSupport
                            bpmIn: 120, bpmOut: 120, inTrusted: true, outTrusted: true)
             t.key = .init(source: "test", confidence: 1, camelot: "8A", key: "A", scale: "minor", votes: [:], changes: nil)
             t.fingerprint = CrateTrack.Fingerprint(Landmarks(mono: a, sampleRate: rate), madeBy: "test", madeAt: "2026-11-20T00:00:00Z")
+            if scored {
+                t.mixIn = .init(startBar: 1, endBar: 5, vocalFreeBars: 4)
+                t.mixOut = .init(startBar: 16, endBar: 21, vocalFreeBars: 4)
+                t.loudness = .init(source: "test", confidence: nil, integratedLufs: -9, lra: 4, truePeakDb: -0.5)
+                t.style = .init(model: "test", values: (0..<16).map { sin(Double($0 + i)) })
+            }
             tracks.append(t)
         }
         let crate = Crate(manifest: CrateManifest(crateId: info.id, name: "Generated", createdAt: "2026-11-20T00:00:00Z",
@@ -193,6 +200,48 @@ import DeckieTestSupport
 
     // MARK: the messages
 
+    /// Step 2 (D42): the song shown is the shared switching rule's, and its picks come with it. One song, then a hard
+    /// cut to another: the rule shows the first, then the second once its wait is over; the picks are for the song on
+    /// screen, never the song itself, and the song before is left out of the second's. When listening stops the
+    /// listener's times line is said once and kept beside the index.
+    @Test func theSongShownIsTheSharedRulesAndItsPicksComeWithIt() throws {
+        let (home, id, crate) = try Self.home("booth-rule", songs: 5, scored: true)
+        let index = home.shelf.file(DeskBooth.indexFile, of: id)
+        let events = Events()
+        let sound = Self.sound(song: 2, from: 5, seconds: 12) + Self.sound(song: 4, from: 3, seconds: 14)
+        let source = SampleSource(samples: sound, format: SoundFormat(rate: 48000, channels: 2))
+        let booth = DeskBooth(crate: crate, indexAt: index, source: source, shuffle: 0, out: events.add)
+        booth.start()
+        try #require(booth.waitUntilStarted(within: Self.started) && source.waitUntilPlayed(within: Self.started))
+        booth.finishReading()
+        booth.stop()
+        let all = events.all
+        let playing = all.compactMap { if case let .playing(p) = $0 { return p }; return nil }
+        let picks = all.compactMap { if case let .picks(p) = $0 { return p }; return nil }
+        let shownIds = playing.compactMap { $0.song?.id }
+        #expect(shownIds.first == "song2")
+        #expect(shownIds.last == "song4")
+        // Shown in that order, each once: no flicker back.
+        var order: [String] = []
+        for s in shownIds where order.last != s { order.append(s) }
+        #expect(order == ["song2", "song4"], "\(order)")
+        #expect(playing.filter(\.newSong).count == 2)
+        #expect(playing.last?.song?.title == "Song 4" && playing.last?.song?.bpm == 124)
+        let first = try #require(picks.first { $0.forId == "song2" })
+        let second = try #require(picks.last { $0.forId == "song4" })
+        #expect(!first.picks.isEmpty && !first.picks.contains { $0.id == "song2" })
+        #expect(!second.picks.isEmpty && !second.picks.contains { $0.id == "song4" || $0.id == "song2" })
+        #expect(first.shuffle == 0 && first.shortlist == min(10, 4))
+        // The iPad's words for each pick.
+        for p in second.picks {
+            #expect(p.bpmLine.contains("BPM") && !p.moveLine.isEmpty && p.keys.contains("→") && p.key == "8A")
+        }
+        let times = all.compactMap { if case let .times(t) = $0 { return t }; return nil }
+        #expect(times.count == 1 && times.first?.hasPrefix("listener: ") == true, "\(times)")
+        let kept = try String(contentsOf: index.deletingLastPathComponent().appendingPathComponent(DeskBooth.timesFile), encoding: .utf8)
+        #expect(kept.contains(times.first ?? "-"))
+    }
+
     @Test func theProtocolListsInputsListensSaysWhatItHearsAndStops() throws {
         let (home, id, _) = try Self.home("booth-protocol", songs: 4)
         let out = Lines()
@@ -218,6 +267,12 @@ import DeckieTestSupport
         #expect(song["id"] as? String == "song1" && song["title"] as? String == "Song 1" && song["artist"] as? String == "Generated")
         #expect((song["bpm"] as? NSNumber)?.doubleValue == 121 && song["camelot"] as? String == "8A" && song["key"] as? String == "A")
         #expect(heard["place"] is NSNumber && heard["confidence"] is NSNumber && heard["reading"] is String)
+        // Step 2: what the shared rule shows, and its picks (none: these songs have nothing the scoring reads).
+        let playing = try #require(out.wait(seconds: 30) { ($0["event"] as? String) == "booth.playing" && $0["song"] is [String: Any] })
+        #expect((playing["song"] as? [String: Any])?["id"] as? String == "song1" && playing["crate"] as? String == id)
+        #expect(playing["notHeard"] as? Bool == false && playing["paused"] as? Bool == false && playing["pitch"] is NSNumber)
+        let picks = try #require(out.wait(seconds: 30) { ($0["event"] as? String) == "booth.picks" })
+        #expect(picks["for"] as? String == "song1" && (picks["picks"] as? [[String: Any]])?.isEmpty == true && picks["shortlist"] is NSNumber)
         let level = try #require(out.wait { ($0["event"] as? String) == "booth.level" })
         #expect(level["meter"] is NSNumber && level["rmsDb"] is NSNumber && level["peakDb"] is NSNumber && level["silent"] as? Bool == false)
         let states = out.all.filter { ($0["event"] as? String) == "booth.state" }

@@ -1,6 +1,7 @@
 import Foundation
 import SwiftUI
 import DeckieCrate
+import DeckieBooth
 
 // MARK: - the crate's data as the booth reads it (CrateLibrary makes it from a crate file)
 
@@ -194,41 +195,18 @@ struct Track: Codable, Identifiable, Hashable {
 }
 
 /// One place of a track (D26, D27): the source by its own label (nil when it has none), the folder, and the number
-/// there (nil in a folder with no source).
-struct TrackPlace: Codable, Hashable {
-    let disc: String?
-    let folder: String
-    let num: Int?
-}
+/// there (nil in a folder with no source). The core's, shared with Desk's Booth (DeckieBooth, D42).
+typealias TrackPlace = BoothPlace
 
-struct Pair: Codable, Hashable {
-    let b: String
-    let s: Double
-    let st: Double
-    let m: String
-    let pitch: Double?
-    let tr: String
-    let trl: String
-    let ka: String
-    let kb: String
-    let reasons: [String]
-    let mv: [String]?        // up to three moves, primary first (labels)
-    let ks: Int?
-    /// D36: true when either song has only a home note, so `ka` and `kb` are the codes the scoring compared it as
-    /// (the better fit of the two keys on the note), not keys that were read..
-    var kh: Bool? = nil
-}
+/// One scored pair from the playing song (the core's `BoothPair`, D42).
+typealias Pair = BoothPair
 
 struct DiscFolder: Codable, Hashable { let name: String; let ids: [String] }
 struct Disc: Codable, Hashable {
     let disc: String; let cd: Int; let name: String; let folders: [DiscFolder]
     /// The disc's name as a chip and a tag show it: the whole name up to 10 characters, else its first word when that
     /// fits ("CD1 Singalongs" reads "CD1"), else the name cut to 9 characters and an ellipsis.
-    var short: String {
-        if name.count <= 10 { return name }
-        if let w = name.split(separator: " ").first, w.count <= 10 { return String(w) }
-        return String(name.prefix(9)) + Words.cutShort
-    }
+    var short: String { BoothDisc.short(name) }
     var color: Color { Theme.disc(cd) }
 }
 
@@ -248,6 +226,13 @@ final class Library {
     /// The crate in use; nil until a crate file is opened, and the booth then shows its first-run screen
     /// (FirstRun.swift). No song data ships inside the app.
     private(set) var crate: CrateLibrary?
+    /// The crate as the shared code sees it (DeckieBooth, D42): what the switching rule and the picks read. Empty with
+    /// no crate file open.
+    var booth: BoothLibrary { crate?.booth ?? BoothLibrary.empty }
+    /// A track as the shared code sees it, at the place it is shown at.
+    func song(_ t: Track) -> BoothSong? { booth.song(t.id)?.at(t.place) }
+    /// A shared song as a track, at its place.
+    func track(_ s: BoothSong) -> Track? { byId[s.id]?.at(s.place) }
 
     private init() {
         data = DeckData(generated: "", tracks: [], discs: [], pairs: [:], catalogVariants: nil)
@@ -293,7 +278,7 @@ final class Library {
     func close() {
         crate = nil; pendingFingerprints = nil
         data = DeckData(generated: "", tracks: [], discs: [], pairs: [:], catalogVariants: nil)
-        byId = [:]; overview = [:]; copiesByCut = [:]
+        byId = [:]; overview = [:]
         recentPicks = [:]; recentOrder = []
         UserDefaults.standard.removeObject(forKey: "cratePath")
     }
@@ -327,48 +312,34 @@ final class Library {
         data = c.data
         byId = Dictionary(uniqueKeysWithValues: c.data.tracks.map { ($0.id, $0) })
         overview = c.overview
-        indexCopies()
     }
 
     // MARK: the same song (D24)
 
     /// The copies of each recording (`Track.cut`, the crate's cut_key, else the entry's id), in crate order. Two
-    /// entries are the same song only when they are the same recording; nothing is folded by title.
-    private(set) var copiesByCut: [String: [String]] = [:]
-    private func indexCopies() {
-        copiesByCut = [:]
-        for t in data.tracks { copiesByCut[t.cut, default: []].append(t.id) }
-    }
+    /// entries are the same song only when they are the same recording; nothing is folded by title. The places of a
+    /// song, the copy that leads and the place a row shows are the shared code's (`BoothLibrary`), turned into tracks.
+    var copiesByCut: [String: [String]] { booth.copiesByCut }
     /// How many songs the library holds, counting copies of one recording once.
-    var songCount: Int { copiesByCut.count }
+    var songCount: Int { booth.songCount }
     /// Whether two entries are the same song (the same recording).
-    func sameSong(_ a: String?, _ b: String?) -> Bool {
-        guard let a, let b, let x = byId[a], let y = byId[b] else { return false }
-        return x.cut == y.cut
-    }
+    func sameSong(_ a: String?, _ b: String?) -> Bool { booth.sameSong(a, b) }
     /// Every place of the song `id` is, as tracks shown at each place: each copy's own place and its other places
     /// (D27; a copy of the same recording, D24, and the same file found twice are treated alike), in the order the
     /// booth shows them: the one that leads first (on `playingDisc`, else on the first disc in the crate's disc order;
     /// `SameSong.ordered`), then the rest. `among` keeps only those places (for a filter); empty when none is left.
     func places(of id: String, playingDisc: String?, among: ((Track) -> Bool)? = nil) -> [Track] {
-        guard let t = byId[id] else { return [] }
-        let all = (copiesByCut[t.cut] ?? [id]).compactMap { byId[$0] }.flatMap { c in c.places.map { c.at($0) } }
-            .filter { among?($0) ?? true }
-        let places = all.enumerated().map { SameSong.Place(id: String($0.offset), disc: $0.element.disc, folder: $0.element.folder, track: $0.element.num) }
-        return SameSong.ordered(places, playingDisc: playingDisc, discOrder: data.discs.map(\.disc)).map { all[Int($0.id)!] }
+        booth.places(of: id, playingDisc: playingDisc, among: among.map { f in { s in self.track(s).map(f) ?? false } }).compactMap(track)
     }
     /// The copy of the song `id` is whose place leads (see `places(of:playingDisc:among:)`).
-    func leadingCopy(of id: String, playingDisc: String?) -> String {
-        places(of: id, playingDisc: playingDisc).first?.id ?? id
-    }
+    func leadingCopy(of id: String, playingDisc: String?) -> String { booth.leadingCopy(of: id, playingDisc: playingDisc) }
     /// The entry `id` shown at the place of its own that leads: among the places `among` allows when there is one,
     /// else among all of them. This is the place a row shows; the rest are its "also on".
     func placed(_ id: String, playingDisc: String?, among: ((Track) -> Bool)? = nil) -> Track? {
-        let mine = { (ts: [Track]) in ts.first { $0.id == id } }
-        return mine(places(of: id, playingDisc: playingDisc, among: among)) ?? mine(places(of: id, playingDisc: playingDisc)) ?? byId[id]
+        booth.placed(id, playingDisc: playingDisc, among: among.map { f in { s in self.track(s).map(f) ?? false } }).flatMap(track)
     }
     /// Whether the filter allows the entry: when it allows any of its places (D27).
-    func allows(_ t: Track, _ filter: LibraryFilter) -> Bool { t.places.contains { filter.allows(t.at($0)) } }
+    func allows(_ t: Track, _ filter: LibraryFilter) -> Bool { song(t).map { booth.allows($0, filter) } ?? false }
     /// "also on Stick 3 / Peak / 04 · also in Album": every other place of the song `t` is shown at (its copies'
     /// and its own other places), in order; nil when it has none.
     func alsoOn(_ t: Track, playingDisc: String?) -> String? {
@@ -443,4 +414,4 @@ func fmtTime(_ s: Double) -> String {
     let t = max(0, Int(s.rounded()))
     return String(format: "%d:%02d", t / 60, t % 60)
 }
-func signed1(_ p: Double) -> String { Words.signed(p > 0.05 ? Words.signPlus : p < -0.05 ? Words.signMinus : Words.signNone, abs(p)) }
+func signed1(_ p: Double) -> String { BoothWords.signed1(p) }
