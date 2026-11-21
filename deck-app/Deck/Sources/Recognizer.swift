@@ -93,6 +93,17 @@ import DeckieBooth
     static let recordingKey = "recordSets"
     var recActive = false
     var recPaused = false
+    /// Why the set cannot be recorded, when its recording would not begin (nil when it began, or is not asked for).
+    private(set) var recFailed: String?
+    /// What is wrong with the recording in progress (it cannot write), read once a second; nil while it writes.
+    private(set) var recTrouble: String?
+    /// How the recording that Stop last ended went (its length, or that nothing was recorded); nil with `savedSet`.
+    private(set) var lastRecording: RecordingTally?
+    /// What listening does when iPadOS takes the sound away or the input changes (`ListenGuard`, AudioInput.swift).
+    private(set) var listenGuard = ListenGuard()
+    /// Where the sound goes (the recognisers and the recorder), while something is listened to.
+    private var sink: CaptureSink?
+    private var audioObservers: [NSObjectProtocol] = []
     private var feeder: StreamFeeder?
     private var lastRecorded = Date.distantPast
     var inputLevel: Float = 0     // dBFS-ish RMS of the microphone, for the level meter
@@ -102,7 +113,11 @@ import DeckieBooth
 
     static let kID = SHMediaItemProperty("deck_id"), kFlav = SHMediaItemProperty("deck_flavour"), kPct = SHMediaItemProperty("deck_pct")
 
-    init() { rebuildCatalog() }
+    init() {
+        rebuildCatalog()
+        recorder.report = { [weak self] s in Task { @MainActor in self?.note(s) } }
+        watchAudio()
+    }
 
     /// The recognition catalogues for the crate in use: Deckie's index from the crate file's fingerprints (made
     /// ready off the main thread), and Apple's from its signatures (one plain signature per track, made on the Mac).
@@ -168,6 +183,9 @@ import DeckieBooth
             status = "listening…"
         }
         flushNotes()
+        if source == .mic { perform(listenGuard.handle(.tick, now: Date())) }
+        let trouble = recActive ? recorder.trouble : nil
+        if trouble != recTrouble { recTrouble = trouble }
     }
 
     private func startHeartbeat() {
@@ -226,7 +244,7 @@ import DeckieBooth
         guard let h = hearing else { if source != .manual { stop(); status = Words.notListening }; return }
         stop()
         if waitForDeckie(h, { [weak self] in self?.startMic() }) { return }
-        source = .mic; status = "listening…"; startedAt = Date(); savedSet = nil
+        source = .mic; status = "listening…"; startedAt = Date(); savedSet = nil; lastRecording = nil
         comparison.reset()
         task = Task { [weak self] in
             let granted = await AVAudioApplication.requestRecordPermission()
@@ -237,15 +255,28 @@ import DeckieBooth
             self.audioClock = { mic.audioSeconds }
             guard let ears = self.makeEars(h) else { return }
             self.ears = ears; self.listening = h
-            let rec = self.recorder
-            do {
-                try mic.start(sink: { buf, when in for e in ears { e.hear(buf, at: when) }; rec.append(buf) }) { [weak self] level in Task { @MainActor in self?.inputLevel = level } }
-            }
-            catch { self.note("mic start failed: \(error.localizedDescription)"); self.status = "microphone unavailable"; return }
-            self.note("mic session started (\(mic.formatText)), recognising with \(h.rawValue)")
+            let sink = self.makeSink(ears)
             self.startHeartbeat()
+            do {
+                let shape = try mic.start(sink: { buf, when in sink.take(buf, at: when) }) { [weak self] level in Task { @MainActor in self?.inputLevel = level } }
+                self.perform(self.listenGuard.handle(.started(shape), now: Date()))
+            }
+            catch {
+                // It cannot start now (another app has the sound, no input): said on screen, and tried again by itself.
+                self.note("mic start failed: \(error.localizedDescription)"); self.status = "microphone unavailable"
+                self.perform(self.listenGuard.handle(.startFailed(error.localizedDescription), now: Date()))
+                return
+            }
+            self.note("mic session started (\(mic.formatText)), recognising with \(h.rawValue)")
             if let f = mic.format { self.beginRecording(f) }
         }
+    }
+
+    /// The sink every buffer goes through, for these ears.
+    private func makeSink(_ ears: [Ear]) -> CaptureSink {
+        let s = CaptureSink(ears: ears, recorder: recorder) { [weak self] line in Task { @MainActor in self?.note(line) } }
+        sink = s
+        return s
     }
 
     /// Test source that goes through the same streaming path as the microphone (recognition + recording).
@@ -255,7 +286,7 @@ import DeckieBooth
         if waitForDeckie(h, { [weak self] in self?.startStream(url, start: start, render: render) }) { return }
         let v = TestVariant(render)
         source = .file(url.lastPathComponent + " (stream" + (render == "o" ? "" : " @\(render)") + ")")
-        status = "streaming test file"; startedAt = Date(); savedSet = nil
+        status = "streaming test file"; startedAt = Date(); savedSet = nil; lastRecording = nil
         comparison.reset()
         note("stream \(url.lastPathComponent) from \(Int(start))s render \(render), recognising with \(h.rawValue)")
         let fd = StreamFeeder(); feeder = fd
@@ -264,14 +295,13 @@ import DeckieBooth
         self.ears = ears; listening = h
         startHeartbeat()
         beginRecording(fd.format)
-        let rec = recorder
+        let sink = makeSink(ears)
         Task.detached {
             let scoped = url.startAccessingSecurityScopedResource()
             defer { if scoped { url.stopAccessingSecurityScopedResource() } }
             var lastLevel = Date.distantPast
             do { try await fd.run(url, start: start, variant: v) { buf in
-                for e in ears { e.hear(buf, at: nil) }
-                rec.append(buf)
+                sink.take(buf, at: nil)
                 if Date().timeIntervalSince(lastLevel) > 0.25, let ch = buf.floatChannelData?[0] {
                     lastLevel = Date()
                     var sum: Float = 0; let n = Int(buf.frameLength)
@@ -289,21 +319,26 @@ import DeckieBooth
 
     func beginRecording(_ format: AVAudioFormat) {
         guard recordingOn else { return }
-        do { try recorder.begin(format: format, hearing: listening?.rawValue); recActive = true; recPaused = false; note("recording to \(recorder.baseName ?? "?").aac") }
-        catch { note("recording failed: \(error.localizedDescription)"); recActive = false }
+        do {
+            try recorder.begin(format: format, hearing: listening?.rawValue); recActive = true; recPaused = false; recFailed = nil; recTrouble = nil
+            note("recording to \(recorder.baseName ?? "?").aac (\(AudioShape(format)) in, \(ChannelMap.kept(Int(format.channelCount))) ch recorded)")
+        }
+        catch { note("recording failed: \(error.localizedDescription)"); recActive = false; recFailed = error.localizedDescription }
     }
 
     /// Set recording on or off. Off closes the recording in progress (what was recorded stays in Files); on starts a
-    /// new one at once when the microphone is listening, otherwise with the next listening session.
+    /// new one at once when the microphone is hearing, otherwise with the next listening session (or when the sound
+    /// comes back after an interruption).
     func setRecording(_ on: Bool) {
         guard on != recordingOn else { return }
         recordingOn = on
         if !on {
             if recActive { recorder.finish(); recActive = false; recPaused = false }
+            recFailed = nil; recTrouble = nil
             note("set recording switched off")
         } else {
             note("set recording switched on")
-            if !recActive, source == .mic, let f = mic.format { beginRecording(f) }
+            if !recActive, source == .mic, listenGuard.hearing, let f = mic.format { beginRecording(f) }
         }
     }
 
@@ -329,7 +364,8 @@ import DeckieBooth
         let saved = recActive ? recorder.baseName : nil
         stop()
         savedSet = saved
-        note(saved.map { "stopped by the DJ: \($0) saved" } ?? "stopped by the DJ")
+        if saved == nil { lastRecording = nil }
+        note(saved.map { "stopped by the DJ: \($0) saved" + (lastRecording?.nothingRecorded == true ? ", with nothing recorded in it" : "") } ?? "stopped by the DJ")
     }
 
     func stop() {
@@ -340,11 +376,101 @@ import DeckieBooth
         // "listener: a, 142 readings, typical 61 ms, slowest 240 ms".
         for case let d as DeckieEar in ears { note(d.timesLine) }
         for e in ears { e.stop() }
-        ears = []; listening = nil
+        ears = []; listening = nil; sink = nil
         mic.stop()
-        if recActive { recorder.finish(); recActive = false; note("recording closed") }
+        _ = listenGuard.handle(.stopped, now: Date())
+        if recActive { lastRecording = recorder.finish(); recActive = false; note("recording closed") }
+        recTrouble = nil
         if source != .manual { source = .idle }
         status = "stopped"
+    }
+
+    // MARK: interruptions and changes of input
+
+    /// What listening is up against now, for the screen: nil while it hears (or is not listening).
+    enum ListenTrouble: Equatable { case interrupted, restarting, cannotListen }
+    var listenTrouble: ListenTrouble? {
+        guard source == .mic else { return nil }
+        switch listenGuard.state {
+        case .interrupted: return .interrupted
+        case .restarting: return .restarting
+        case .stalled: return .cannotListen
+        case .off, .running: return nil
+        }
+    }
+
+    /// iPadOS's word on the sound (an interruption, a route change, the engine's configuration change, its audio
+    /// restarting), turned into the guard's events. Registered once; nothing happens unless the microphone is on.
+    private func watchAudio() {
+        let nc = NotificationCenter.default
+        func on(_ name: Notification.Name, _ object: AnyObject?, _ event: @escaping @MainActor (Notification) -> ListenGuard.Event?) {
+            audioObservers.append(nc.addObserver(forName: name, object: object, queue: .main) { [weak self] n in
+                MainActor.assumeIsolated { if let self, let e = event(n) { self.audio(e, from: n.object) } }
+            })
+        }
+        on(AVAudioSession.interruptionNotification, nil) { ListenGuard.Event.interruption($0.userInfo) }
+        on(AVAudioSession.routeChangeNotification, nil) {
+            ListenGuard.Event.routeChange($0.userInfo, hasInput: !AVAudioSession.sharedInstance().currentRoute.inputs.isEmpty)
+        }
+        on(AVAudioSession.mediaServicesWereResetNotification, nil) { _ in .mediaReset }
+        on(.AVAudioEngineConfigurationChange, nil) { _ in .configurationChanged }
+    }
+
+    /// The app came to the front: listening that was interrupted, or that stopped with no word from iPadOS, starts
+    /// again (iPadOS does not always say an interruption ended). The DJ's Stop is never undone here.
+    func appBecameActive() {
+        guard source == .mic else { return }
+        if listenGuard.state == .running && !mic.isRunning { note("back at the front and the microphone had stopped"); audio(.configurationChanged); return }
+        audio(.appActive)
+    }
+
+    /// One event about the sound, from iPadOS or a test (`object`: the engine a configuration change is about).
+    func audio(_ e: ListenGuard.Event, from object: Any? = nil) {
+        guard source == .mic else { return }
+        if case .configurationChanged = e, let eng = object as? AVAudioEngine, eng !== mic.engine { return }   // an engine let go before
+        // A change that leaves the input as it was and the engine running needs nothing.
+        let inputChange: Bool = { switch e { case .configurationChanged, .routeChanged(.deviceAdded), .routeChanged(.deviceRemoved): return true; default: return false } }()
+        if inputChange, listenGuard.state == .running, mic.isRunning, mic.inputNow == listenGuard.shape {
+            note("audio: \(e), the input is as it was (\(listenGuard.shape.map { "\($0)" } ?? "?")): listening goes on"); return
+        }
+        note("audio: \(e)")
+        perform(listenGuard.handle(e, now: Date()))
+    }
+
+    /// Does what the guard says.
+    private func perform(_ actions: [ListenGuard.Action]) {
+        for a in actions {
+            switch a {
+            case .pauseCapture:
+                mic.halt()
+            case .restartCapture:
+                do {
+                    let s = try mic.restart()
+                    note("listening again (\(s))")
+                    perform(listenGuard.handle(.restarted(s), now: Date()))
+                    // A set that could not begin before the sound came (listening started during a call): begins now.
+                    if recordingOn, !recActive, recFailed == nil, let f = mic.format { beginRecording(f) }
+                } catch {
+                    note("could not start listening again: \(error.localizedDescription)")
+                    perform(listenGuard.handle(.restartFailed(error.localizedDescription), now: Date()))
+                }
+            case .gapBegan(let why):
+                note("no sound: \(why)")
+                if recActive { recorder.note("no sound from here: \(why); the recording waits") }
+            case .gapEnded(let seconds, let why):
+                note(String(format: "sound back after %.0f s (%@)", seconds, why))
+                if recActive { recorder.gap(seconds: seconds, why: why) }
+            case .formatChanged(let from, let to):
+                // The recognisers start fresh with the new format; the recording follows it in the same file.
+                note("the input is now \(to) (was \(from)): the recognisers start again with it")
+                if recActive { recorder.note("the input is now \(to) (was \(from)); the recording carries on in the same file") }
+                if let h = listening, let fresh = makeEars(h) {
+                    for case let d as DeckieEar in ears { note(d.timesLine) }
+                    for e in ears { e.stop() }
+                    ears = fresh; sink?.setEars(fresh)
+                }
+            }
+        }
     }
 
     /// Another crate file is open: nothing from the last one is playing or was played.
@@ -595,20 +721,62 @@ enum FileRenderer {
 
 /// The microphone, asked for the least processed input iPadOS gives (measurement mode: no automatic gain on loud
 /// music), plus an RMS level for the meter. One engine, one tap: every buffer goes to `sink` (the recognisers and the
-/// set recorder).
+/// set recorder, `CaptureSink`).
+///
+/// `restart` starts it again after an interruption or a change of input: a new engine, so whatever the input is now
+/// (its sample rate, its channels) is what the tap takes; the sink and the sound's clock (`audioSeconds`) carry on.
 final class MicCapture: @unchecked Sendable {
-    private let engine = AVAudioEngine()
+    private(set) var engine = AVAudioEngine()
     private(set) var formatText = ""
     private var lastLevel = Date.distantPast
+    private var sink: ((AVAudioPCMBuffer, AVAudioTime) -> Void)?
+    private var level: ((Float) -> Void)?
 
     private(set) var format: AVAudioFormat?
-    /// seconds of audio heard so far: the clock the drift fit runs on (sample time, not wall time)
+    /// seconds of audio heard so far: the clock the drift fit runs on (sample time, not wall time); a gap does not
+    /// count, so it runs on across a restart as the recognisers' own clocks do
     private(set) var audioSeconds: Double = 0
 
-    func start(sink: @escaping (AVAudioPCMBuffer, AVAudioTime) -> Void, level: @escaping (Float) -> Void) throws {
+    /// Whether the engine is running now.
+    var isRunning: Bool { engine.isRunning }
+    /// The input's shape as iPadOS has it now (nil with no input).
+    var inputNow: AudioShape? {
+        let f = engine.inputNode.inputFormat(forBus: 0)
+        return f.sampleRate > 0 && f.channelCount > 0 ? AudioShape(f) : nil
+    }
+
+    /// The session for a set (what each choice is for is said in the README, "The sound input"):
+    /// - play and record, so another app's music on this iPad (a DJ app) is not silenced, as the record category would;
+    /// - mix with others: starting to listen never stops or ducks that music;
+    /// - measurement: no automatic gain or voice processing on loud music;
+    /// - Bluetooth A2DP allowed for output only, so music already going to a Bluetooth speaker stays there; no
+    ///   Bluetooth hands-free input is allowed, so a Bluetooth headset never becomes the microphone;
+    /// - with UIBackgroundModes=audio, capture continues when the screen locks.
+    /// The ring and silent switch never silences recording (it silences only playback, and Deckie plays nothing).
+    static let category: AVAudioSession.Category = .playAndRecord
+    static let mode: AVAudioSession.Mode = .measurement
+    static let options: AVAudioSession.CategoryOptions = [.mixWithOthers, .allowBluetoothA2DP]
+
+    /// Starts listening; the input's shape.
+    @discardableResult
+    func start(sink: @escaping (AVAudioPCMBuffer, AVAudioTime) -> Void, level: @escaping (Float) -> Void) throws -> AudioShape {
+        self.sink = sink; self.level = level
+        audioSeconds = 0
+        return try run()
+    }
+
+    /// Starts again with the input as it is now (after an interruption or a change of input); the input's shape.
+    @discardableResult
+    func restart() throws -> AudioShape {
+        halt()
+        engine = AVAudioEngine()
+        return try run()
+    }
+
+    private func run() throws -> AudioShape {
+        guard let sink, let level else { throw NSError(domain: "Deck", code: 3, userInfo: [NSLocalizedDescriptionKey: "listening was not started"]) }
         let av = AVAudioSession.sharedInstance()
-        // measurement: no automatic gain on loud music; with UIBackgroundModes=audio, capture continues when the screen locks
-        try av.setCategory(.record, mode: .measurement, options: [])
+        try av.setCategory(Self.category, mode: Self.mode, options: Self.options)
         try av.setActive(true)
         let input = engine.inputNode
         let fmt = input.outputFormat(forBus: 0)
@@ -617,24 +785,31 @@ final class MicCapture: @unchecked Sendable {
             throw NSError(domain: "Deck", code: 2, userInfo: [NSLocalizedDescriptionKey: "no microphone input available"])
         }
         input.removeTap(onBus: 0)
-        format = fmt; audioSeconds = 0
+        format = fmt
         input.installTap(onBus: 0, bufferSize: 4096, format: fmt) { [weak self] buf, when in
             sink(buf, when)
             self?.audioSeconds += Double(buf.frameLength) / fmt.sampleRate
             guard let self, let ch = buf.floatChannelData?[0], Date().timeIntervalSince(self.lastLevel) > 0.25 else { return }
             self.lastLevel = Date()
             var sum: Float = 0
-            let n = Int(buf.frameLength)
-            for i in 0..<n { sum += ch[i] * ch[i] }
+            let n = Int(buf.frameLength), step = buf.format.isInterleaved ? buf.stride : 1
+            for i in 0..<n { let x = ch[i * step]; sum += x * x }
             level(10 * log10(max(1e-9, sum / Float(max(1, n)))))
         }
         engine.prepare()
-        try engine.start()
+        do { try engine.start() } catch { input.removeTap(onBus: 0); throw error }
+        return AudioShape(fmt)
+    }
+
+    /// The engine and its tap stopped (an interruption: the session is iPadOS's to deactivate).
+    func halt() {
+        engine.inputNode.removeTap(onBus: 0)
+        engine.stop()
     }
 
     func stop() {
-        engine.inputNode.removeTap(onBus: 0)
-        engine.stop()
+        halt()
+        sink = nil; level = nil
         try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
     }
 }

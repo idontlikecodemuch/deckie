@@ -84,11 +84,20 @@ enum Words {
     /// The panel's foot when a second song is heard under the first.
     static func alsoHearing(_ song: String) -> String { "also hearing: " + song }
     /// The set recording's corner chip ("REC 0:12:34" while recording), spoken as "Set recording" with these as its
-    /// value. "REC on": recording is on and starts when listening does.
+    /// value (`RecChip`). It says what the recording is doing now, never only what is switched on.
     static let recPaused = "REC paused"
     static func recElapsed(_ time: String) -> String { "REC " + time }
+    /// No longer shown: it read as "recording" while listening was stopped. "not recording" says it instead.
     static let recOn = "REC on"
     static let recOff = "REC off"
+    /// Set recording is on but nothing is being recorded now: listening is stopped (the next Start listening records).
+    static let recNotRecording = "not recording"
+    /// The recording would not begin, or the file will not take the sound (the foot says so in a sentence).
+    static let recCannot = "cannot record"
+    /// Through a gap in the sound (a call, an input changing): the recording waits and carries on in the same file.
+    static let recWaiting = "REC waiting"
+    /// The playing panel's foot (or under "Listening…") while the set cannot be recorded; listening goes on.
+    static let recCannotFoot = phrases("The set is not being recorded: the iPad will not save it.", "Listening goes on.")
     /// The chip's menu: pause or resume the recording in progress (listening goes on), and set recording on or off
     /// (remembered). Its note says that Stop, beside the chip, ends the set and saves it.
     static let resumeRecording = "Resume recording"
@@ -106,8 +115,35 @@ enum Words {
     static let stoppedHelp = "Deckie is not listening."
     static let stoppedSaved = phrases("The set is saved on this iPad,", "in Files under Deckie > Sets.")
     static let stoppedHow = phrases("Tap Start listening", "to listen again.")
+    /// The same with the recording's length ("0:42:10 of the set is saved…"), and when nothing reached the recording.
+    static func stoppedSavedLength(_ time: String) -> String { phrases("\(time) of the set is saved on this iPad,", "in Files under Deckie > Sets.") }
+    static let stoppedNothingRecorded = phrases("Nothing was recorded in this set:", "no sound reached the recording.")
     /// The playing panel's foot after Stop, when the song stays on screen.
     static let setSavedFoot = "Stopped. The set is saved in Files under Deckie > Sets."
+    /// The same with the recording's length, or that nothing was recorded (`empty`).
+    static func setSavedFootLength(_ time: String?, empty: Bool) -> String {
+        if empty { return "Stopped. Nothing was recorded in this set." }
+        guard let time else { return setSavedFoot }
+        return "Stopped. \(time) of the set is saved in Files under Deckie > Sets."
+    }
+
+    /// When iPadOS takes the sound away or the input changes (`Recognizer.ListenTrouble`): the corner's tiny status, the
+    /// playing panel's title when no song is on screen, and the line under it (or the panel's foot under a song). Each
+    /// lasts only while it is so; listening goes back by itself.
+    static func listenTroubleStatus(_ t: Recognizer.ListenTrouble) -> String {
+        switch t { case .interrupted: return "interrupted"; case .restarting: return "starting again"; case .cannotListen: return "cannot listen" }
+    }
+    static func listenTroubleTitle(_ t: Recognizer.ListenTrouble) -> String {
+        switch t { case .interrupted: return "Interrupted"; case .restarting: return "Starting again"; case .cannotListen: return "Cannot listen" }
+    }
+    static func listenTroubleFoot(_ t: Recognizer.ListenTrouble, recording: Bool) -> String {
+        let rec = recording ? " The recording waits." : ""
+        switch t {
+        case .interrupted: return phrases("Listening stopped for a call, Siri or an alarm." + rec, "It starts again by itself.")
+        case .restarting: return phrases("The sound input changed." + rec, "Listening starts again.")
+        case .cannotListen: return phrases("Deckie cannot hear the sound input." + rec, "It keeps trying.")
+        }
+    }
     /// The corner's "…" button, spoken.
     static let testWithFile = "Test with file and details"
     /// The corner's tiny status.
