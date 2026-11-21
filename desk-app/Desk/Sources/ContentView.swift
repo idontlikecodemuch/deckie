@@ -212,7 +212,9 @@ struct RunView: View {
         VStack(alignment: .leading, spacing: RunLook.gap) {
             // The crate's name, to rename while it is read, and Stop (research AE).
             RunHeader()
-            Text(Words.runTitle(model.runRead)).font(Look.Fonts.screenTitle)
+            // The title names what is read; a long name is cut short on one line, and the whole title is its tooltip.
+            Text(Words.runTitle(model.runRead)).font(Look.Fonts.screenTitle).lineLimit(1).truncationMode(.tail)
+                .help(Words.runTitle(model.runRead))
             Text(Words.runReading(model.runRead, into: model.shownName)).foregroundStyle(.secondary)
             if model.discAsk != nil {
                 // A music CD with no name of its own: asked once, in passing; the run never waits (letter AA, 2.5).

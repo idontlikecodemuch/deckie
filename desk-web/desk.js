@@ -234,8 +234,9 @@
 
   function updateRun() {
     if (!run) return;
-    // The title is one word, given the source's name ({read}) in case the owner's decision puts it in.
+    // The title names what is read ({read}): "Reading Stick 3". A long name ends in "…"; the whole title is its tooltip.
     $("run-title").textContent = t("runTitle", { read: run.read });
+    $("run-title").title = $("run-title").textContent;
     $("run-log").setAttribute("aria-label", $("run-title").textContent);
     $("run-reading").textContent = t("runReading", { read: run.read, crate: run.crateName });
     const bar = $("run-bar");

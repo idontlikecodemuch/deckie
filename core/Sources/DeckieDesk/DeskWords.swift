@@ -121,7 +121,8 @@ public enum DeskWords {
         "takeBackOut": "Take this back out",
 
         // while it works
-        "runTitle": "Reading your crate",
+        // The reading screen's title names what is read (the owner's choice, Nov 21, 2026): "Reading Stick 3".
+        "runTitle": "Reading {read}",
         "runReading": "Adding {read} to {crate}",
         "runReading.same": "Adding the songs in {read}",
         "songsOf.one": "{done} of {total} song",

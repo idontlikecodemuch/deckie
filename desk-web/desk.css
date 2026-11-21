@@ -771,5 +771,7 @@ dialog.wide.lookup { max-width: min(var(--lookup-wide-max-w), var(--lookup-wide-
 .run-head .crate-head { min-width: 0; max-width: 100%; }
 .run-head .crate-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .run-head #run-stop { flex: none; }
+/* The title names what is read ("Reading Stick 3"): a long name is cut with an ellipsis on one line, never wraps. */
+#run-title { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .spinner { display: inline-block; width: var(--spinner); height: var(--spinner); border-radius: var(--r-pill); border: var(--spinner-line) solid var(--hair);
            border-top-color: var(--acc); animation: turn var(--spinner-turn) linear infinite; vertical-align: middle; }
