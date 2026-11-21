@@ -300,7 +300,9 @@ enum RunLook {
     static let figureValueWeight = Font.Weight.bold
     static let figureListFont = Font.callout
     static let wallTitleFont = Font.headline
+    /// The song's name in the row pointed at, and its weight (desk.css --fs-note, --fw-wall-name).
     static let wallNameFont = Font.callout
+    static let wallNameWeight = Font.Weight.medium
     static let wallHelpFont = Font.caption
 
     // space and shape
@@ -358,6 +360,10 @@ enum RunLook {
     static let wallRowHeight: CGFloat = 44, wallRowGap: CGFloat = 6, wallRowPad: CGFloat = 6
     static let wallMaxHeight: CGFloat = 440
     static let wallPickRing: CGFloat = 2
+    /// The row pointed at: its wave's strength behind the song's name, and the least room between that name and the
+    /// row's ends (desk.css --wall-pick-wave-fade, --wall-name-pad).
+    static let wallPickWaveFade = 0.4
+    static let wallNamePad: CGFloat = 12
     /// A row lit as its song goes to the wall, this long (desk.css --t-wall-new).
     static let wallNew = 1.6
     static let wallRowFill = Color.primary.opacity(0.025)

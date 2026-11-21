@@ -162,10 +162,10 @@
         </div>
       </div>
 
-      <!-- The crate filling up: a row a song, its wave across the row; pointed at, its name above (run.js Wall). -->
+      <!-- The crate filling up: a row a song, its wave across the row; pointed at, its name in the row (run.js Wall). -->
       <div class="wall-card card">
-        <div class="wall-head"><h2 id="run-wall-title" data-w="wallTitle"></h2><span id="run-wall-name" class="wall-name mut"></span></div>
-        <div class="wall-scroll"><canvas id="run-wall" class="wall" tabindex="0" role="img" aria-describedby="run-wall-help"></canvas><div class="wall-space"></div></div>
+        <div class="wall-head"><h2 id="run-wall-title" data-w="wallTitle"></h2><span id="run-wall-name" class="sr"></span></div>
+        <div class="wall-scroll"><canvas id="run-wall" class="wall" tabindex="0" role="img" aria-describedby="run-wall-name run-wall-help"></canvas><div class="wall-space"></div></div>
         <p id="run-wall-help" class="dim small" data-w="wallHelp"></p>
       </div>
 
@@ -185,8 +185,8 @@
       <!-- The crate as sound (D37): the run's songs, one line each, as they joined. -->
       <div id="done-wall-card" class="wall-card card done" hidden>
         <p id="done-moment" class="saying moment"></p>
-        <div class="wall-head"><h2 id="done-wall-title"></h2><span id="done-wall-name" class="wall-name mut"></span></div>
-        <div class="wall-scroll"><canvas id="done-wall" class="wall" tabindex="0" role="img" aria-describedby="done-wall-help"></canvas><div class="wall-space"></div></div>
+        <div class="wall-head"><h2 id="done-wall-title"></h2><span id="done-wall-name" class="sr"></span></div>
+        <div class="wall-scroll"><canvas id="done-wall" class="wall" tabindex="0" role="img" aria-describedby="done-wall-name done-wall-help"></canvas><div class="wall-space"></div></div>
         <p id="done-wall-help" class="dim small" data-w="wallHelp"></p>
       </div>
       <div id="finished-summary" class="summary card"></div>

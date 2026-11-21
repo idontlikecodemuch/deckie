@@ -327,11 +327,14 @@
   --wave-bar-floor: 0.12; --wave-range-min: 8;
   --wave-bar-gap-share: 0.3;              /* of each bar's slot left empty between bars */
   --wave-quiet-share: 0.35;               /* bars under this share of the room above the floor take --wave-quiet */
-  /* the walls: a row a song, its name always shown at the left, its bars beside it; the rows scroll in the card */
+  /* the walls: a row a song, its bars across the row; pointed at, its name over them; the rows scroll in the card */
   --wall-row-h: 44px; --wall-row-gap: 6px; --wall-row-pad: 6;  /* a row's height, between rows, above and below its bars */
   --wall-max-h: 440px;                    /* the most the rows take before they scroll */
   --wall-row-bg: rgba(255, 255, 255, 0.025); --wall-row-pick: rgba(255, 192, 64, 0.14);
   --wall-pick-ring: 2; --wall-pick-edge: var(--amber);   /* px: the ring round the row pointed at, and its colour */
+  --wall-pick-wave-fade: 0.4;             /* the row pointed at: its wave's strength behind the song's name */
+  --wall-name-pad: 12;                    /* px: the least room between that name and the row's ends */
+  --fw-wall-name: 500;                    /* the name's weight (the --fs-note size; tempo, key, length in --mut) */
   --wave: rgba(180, 144, 255, 0.82);      /* a song's wave */
   --wave-quiet: rgba(180, 144, 255, 0.28);
   --wave-new: #ece4ff;                    /* the song that joined last */
@@ -530,7 +533,6 @@ main { flex: 1; min-height: 0; display: flex; flex-direction: column; }
 .wall-card { display: flex; flex-direction: column; gap: var(--inner-gap); }
 .wall-head { display: flex; align-items: baseline; gap: var(--fig-gap); min-width: 0; }
 .wall-head h2 { font-size: var(--fs-head); flex: none; }
-.wall-name { font-size: var(--fs-note); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
 .wall-scroll { position: relative; overflow-y: auto; overscroll-behavior: contain; border-radius: var(--r-wall); }
 .wall { width: 100%; display: block; position: sticky; top: 0; border-radius: var(--r-wall); cursor: crosshair; }
 .wall:focus-visible { outline: var(--focus-ring) solid var(--acc); outline-offset: var(--wall-focus-offset); }

@@ -637,11 +637,9 @@ struct WallView: View {
     var body: some View {
         RunCard(moment: watch.moment == "disc") {
             VStack(alignment: .leading, spacing: RunLook.wallCardGap) {
-                HStack(alignment: .firstTextBaseline, spacing: RunLook.wallHeadGap) {
-                    Text(title).font(RunLook.wallTitleFont)
-                    Text(pick.flatMap { songs.indices.contains($0) ? RunWatch.line(songs[$0]) : nil } ?? "")
-                        .font(RunLook.wallNameFont).foregroundStyle(.secondary).lineLimit(1)
-                }
+                // The row pointed at says its song's name in the row itself (WallRow); a screen reader hears the full
+                // line from the wall's value below.
+                Text(title).font(RunLook.wallTitleFont)
                 ScrollViewReader { reader in
                     ScrollView {
                         LazyVStack(alignment: .leading, spacing: RunLook.wallRowGap) {
@@ -689,16 +687,33 @@ struct WallView: View {
 }
 
 /// One row of a wall: the song's wave as one continuous shape across the row, mirrored about its middle (the owner's
-/// note, Nov 20, 2026: no name column); the row pointed at or chosen lit and ringed.
+/// note, Nov 20, 2026: no name column); the row pointed at or chosen lit and ringed, its wave faded back and the
+/// song's name centred over it (the owner's note, Nov 21, 2026): the name, then its tempo, key and length in the
+/// quieter colour when the whole line fits, else the name alone, shortened if it must be.
 struct WallRow: View {
     let song: RunSong
     let picked: Bool
     let newest: Bool
+    @Environment(\.accessibilityReduceMotion) private var reduce
     var body: some View {
         Canvas { gc, size in WallRow.draw(song, picked: picked, newest: newest, in: &gc, size: size) }
+            .opacity(picked ? RunLook.wallPickWaveFade : 1)
+            .animation(reduce ? nil : .easeInOut(duration: RunLook.fade), value: picked)
             .frame(height: RunLook.wallRowHeight)
             .background(picked ? RunLook.wallRowPick : RunLook.wallRowFill)
+            .overlay { if picked { name.padding(.horizontal, RunLook.wallNamePad) } }
             .overlay(Rectangle().strokeBorder(picked ? RunLook.amber : .clear, lineWidth: RunLook.wallPickRing))
+    }
+
+    private var name: some View {
+        let title = RunWatch.rowName(song)
+        let facts = Words.wallSong(["", RunWatch.bpm(song), RunWatch.key(song.key), RunWatch.clock(song.seconds)])
+        return ViewThatFits(in: .horizontal) {
+            (Text(title).foregroundColor(.primary) + Text(facts).foregroundColor(.secondary)).fixedSize()
+            Text(title).foregroundStyle(.primary).truncationMode(.tail)
+        }
+        .font(RunLook.wallNameFont).fontWeight(RunLook.wallNameWeight).lineLimit(1)
+        .accessibilityHidden(true)
     }
 
     static func draw(_ s: RunSong, picked: Bool, newest: Bool, in gc: inout GraphicsContext, size: CGSize) {
