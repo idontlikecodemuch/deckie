@@ -35,6 +35,9 @@ let engine = DeskProtocol(home: home, output: { data in
 
 FileHandle.standardError.write(Data("deckie-desk-engine: protocol \(DeskProtocol.version), storage \(home.root.path)\n".utf8))
 FileHandle.standardError.write(Data("deckie-desk-engine: \(jobs.count) songs at once (by \(jobs.reason.rawValue))\n".utf8))
+// Which key reader the runs use, for a tester's check log (the window passes these lines on): the learned one when its
+// pinned file was found, else the untrained one and why.
+FileHandle.standardError.write(Data("deckie-desk-engine: \(KeyModel.readerLine)\n".utf8))
 engine.start()
 while let line = readLine(strippingNewline: true) {
     if !engine.handle(line: line) { break }

@@ -25,10 +25,12 @@
 #     app/deckie-make.exe          the program without a window (core/Sources/deckie-make), a console program
 #     app/*.dll                    Swift's runtime libraries, exactly those the three programs need (read from the
 #                                  program files' own import tables by pe_imports.py), and onnxruntime.dll
-#     app/models/                  beat_this_final0.onnx, yamnet.onnx
+#     app/models/                  beat_this_final0.onnx, yamnet.onnx, and the learned key reader's
+#                                  deckie-key-<version>.f16 when core/.models has it (optional)
 #     app/licences/                ACKNOWLEDGEMENTS.txt (from core/dependencies.json), DEPENDENCIES.md (every quote
 #                                  and the models' training sets), the licence files themselves, FILES.txt (every file
-#                                  here with its size and SHA-256, and what is expected from Windows)
+#                                  here with its size and SHA-256, and what is expected from Windows), and with the
+#                                  key reader's file its credit list, deckie-key-<version>-credits.tsv
 #   Deckie-Desk-for-Windows-first-test.zip   the folder, zipped
 #   package-report.md              sizes, the library list and what Windows must provide, for the workflow's summary
 #
@@ -100,6 +102,22 @@ done
 "$py" "$here/pe_kind.py" --set window "$app/deckie-desk.exe" "$app/deckie-desk-engine.exe" >/dev/null
 cp "$ort/lib/onnxruntime.dll" "$app/onnxruntime.dll"
 cp "$core/.models/beat_this_final0.onnx" "$core/.models/yamnet.onnx" "$app/models/"
+# The learned key reader's file and its credit list, both or neither, when both pinned files are in core/.models
+# (core/Tools/fetch-key-model.sh); without them the program reads keys with the untrained reader.
+# DECKIE_KEY_MODEL_REQUIRED=1 (pc-package.yml's KEY_MODEL: required) stops here instead of packaging without them.
+key_name="$(sed -n 's/^ *public static let pinnedName = "\([a-z0-9-]*\)"$/\1/p' "$core/Sources/DeckieCore/Key/LearnedKey.swift")"
+[ -n "$key_name" ] || die "cannot read the key model's pinned name from LearnedKey.swift"
+key_shipped=0
+if bash "$core/Tools/fetch-key-model.sh" --check >/dev/null 2>&1; then
+    cp "$core/.models/$key_name.f16" "$app/models/"
+    cp "$core/.models/$key_name-credits.tsv" "$app/licences/"
+    key_shipped=1
+    echo "package.sh: the learned key reader ($key_name) and its credit list are in the zip"
+elif [ "${DECKIE_KEY_MODEL_REQUIRED:-0}" = 1 ]; then
+    die "the learned key reader's two pinned files are not in core/.models: bash core/Tools/fetch-key-model.sh --require"
+else
+    echo "package.sh: the learned key reader's file is not in core/.models; the zip reads keys with the untrained reader"
+fi
 
 # Swift's runtime libraries: every folder on PATH that holds one, then the closure of what the program imports.
 closure=()
@@ -170,9 +188,12 @@ cp "$vendor/webview/LICENSE" "$lic/webview-LICENSE.txt"
 cp "$vendor/WebView2/LICENSE.txt" "$lic/Microsoft-WebView2-SDK-LICENSE.txt"
 mkdir -p "$lic/eigen-patches"
 cp "$core/notices/eigen/"* "$lic/eigen-patches/"
-"$py" - "$core/dependencies.json" > "$lic/ACKNOWLEDGEMENTS.txt" <<'PY'
+"$py" - "$core/dependencies.json" "$key_shipped" "$key_name" > "$lic/ACKNOWLEDGEMENTS.txt" <<'PY'
 import json, sys
 entries = json.load(open(sys.argv[1], encoding="utf-8"))["entries"]
+key_shipped, key_name = sys.argv[2] == "1", sys.argv[3]
+# The key reader's row only when its file is in the zip.
+entries = [e for e in entries if e.get("id") != "deckie-key" or key_shipped]
 print("Deckie Desk for Windows: acknowledgements")
 print("========================================")
 print()
@@ -195,6 +216,10 @@ print("it are in eigen-patches. Eigen's source: https://gitlab.com/libeigen/eige
 print()
 print("ICU (inside Foundation) is under the Unicode License V3: ICU-76.1-LICENSE.txt.")
 print()
+if key_shipped:
+    print(f"{key_name}-credits.tsv lists every recording Deckie's key reader learned from, with its title,")
+    print("its page and its licence: the credit those recordings' licences ask for.")
+    print()
 print("Microsoft's Visual C++ runtime (four files) is Microsoft's own, not open source, and is")
 print("included unmodified under Microsoft's terms: Microsoft-Visual-C++-runtime-NOTICE.txt.")
 print()
@@ -241,6 +266,11 @@ PY
     echo "| Unzipped | $(cd "$root" && find . -type f | wc -l) files, $(du -sb "$root" | cut -f1) bytes |"
     echo "| The window | \`app/deckie-desk.exe\`, $(wc -c < "$app/deckie-desk.exe") bytes |"
     echo "| The engine | \`app/deckie-desk-engine.exe\`, $(wc -c < "$app/deckie-desk-engine.exe") bytes |"
+    if [ "$key_shipped" = 1 ]; then
+        echo "| The learned key reader | \`app/models/$key_name.f16\`, $(wc -c < "$app/models/$key_name.f16") bytes, with \`app/licences/$key_name-credits.tsv\` |"
+    else
+        echo "| The learned key reader | not in the zip (the release models-1 did not have it): keys are read by the untrained reader |"
+    fi
     echo "| The pages | \`app/desk-web\`, $(du -sb "$app/desk-web" | cut -f1) bytes |"
     echo "| The program without a window | \`app/deckie-make.exe\`, $(wc -c < "$app/deckie-make.exe") bytes |"
     echo "| The starters | \`Deckie Desk.exe\`, $(wc -c < "$root/Deckie Desk.exe") bytes; \`Make Crate File.exe\`, $(wc -c < "$root/Make Crate File.exe") bytes |"

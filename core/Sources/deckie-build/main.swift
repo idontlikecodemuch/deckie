@@ -110,6 +110,7 @@ do {
                                    jobs: jobs(o), ids: o["ids"].map { $0.split(separator: ",").map(String.init) },
                                    fresh: o["fresh"] != nil)
         if let note = Builder.vocalTaggerNote { say(note) }
+        if let note = KeyModel.note { say(note) }
         let report = try Bench.run(options, progress: { say($0) })
         say("")
         say(report.table)
@@ -147,6 +148,7 @@ do {
         say("\(Builder.programLabel), engine \(Builder.engineLabel) on \(Analysis.platform); work folder "
             + options.workFolder.path)
         if let note = Builder.vocalTaggerNote { say(note) }
+        if let note = KeyModel.note { say(note) }
         let result = try builder.run(progress: { say(ProgressText.line($0)) })
         say("")
         FileHandle.standardOutput.write(Data(result.summary.utf8))
