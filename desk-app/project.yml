@@ -39,6 +39,8 @@ targets:
         product: DeckieDisc
       - package: DeckieCore
         product: DeckieLookup
+      - package: DeckieCore
+        product: DeckieCapture
       - sdk: ShazamKit.framework
       - sdk: AVFoundation.framework
     info:
@@ -50,6 +52,9 @@ targets:
         LSMinimumSystemVersion: "14.0"
         NSHumanReadableCopyright: "App Hold Media LLC"
         LSApplicationCategoryType: public.app-category.music
+        # The listening mode (Booth.swift) asks for the microphone with these words: DeskWords' booth.micPermission,
+        # word for word (BoothTests checks).
+        NSMicrophoneUsageDescription: "Deckie Desk listens through the microphone to name the song playing from your crate. Nothing it hears is kept or sent anywhere."
         # The crate file, declared as the booth declares it (deck-app/project.yml), so the Mac shows a crate file as
         # one file of the kind "Deckie crate file", not a plain folder: one extension, .deckie, and the earlier
         # .deckiecrate; a type id for the package form and one for the single-file form; the earlier type ids kept

@@ -91,7 +91,7 @@ import DeckieLookup
     }
 
     @Test func thePagesScriptsHoldNoWords() {
-        let found = Self.pageWords("desk-web/desk.js") + Self.pageWords("desk-web/run.js")
+        let found = Self.pageWords("desk-web/desk.js") + Self.pageWords("desk-web/run.js") + Self.pageWords("desk-web/booth.js")
         #expect(!Self.read("desk-web/desk.js").isEmpty && !Self.read("desk-web/run.js").isEmpty)
         #expect(found.isEmpty, "\(found.joined(separator: "\n"))")
     }
@@ -129,7 +129,7 @@ import DeckieLookup
 
     @Test func theRunScreenDrawsWithTheStyleSheetsNumbers() {
         // Every variable run.js and desk.js read is defined in desk.css's :root, and run.js keeps no fallback numbers.
-        let css = Self.read("desk-web/desk.css"), js = Self.read("desk-web/run.js") + Self.read("desk-web/desk.js")
+        let css = Self.read("desk-web/desk.css"), js = Self.read("desk-web/run.js") + Self.read("desk-web/desk.js") + Self.read("desk-web/booth.js")
         let defined = Set(Self.matches(#"(--[\w-]+)\s*:"#, css))
         let read = Set(Self.matches(#"(?:css|num|time)\("(--[\w-]+)"\)"#, js))
         #expect(!read.isEmpty)
@@ -184,7 +184,7 @@ import DeckieLookup
 
     /// Source files of the Mac's window that are views; the word list, the look and the headless tools are not.
     static let macViews = ["AddMusic", "ContentView", "DeskApp", "DeskModel", "ImportLogView", "Lookup", "Naming", "RunScreen",
-                           "SourcesPanel", "TrackTable"].map { "desk-app/Desk/Sources/\($0).swift" }
+                           "SourcesPanel", "TrackTable", "Booth"].map { "desk-app/Desk/Sources/\($0).swift" }
 
     static let swiftLit = #""(?:[^"\\]|\\.)*""#
 

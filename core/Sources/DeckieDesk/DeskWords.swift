@@ -19,7 +19,7 @@ public enum DeskWords {
     /// The table's format; the pages check it.
     public static let version = 1
 
-    public static let table: [String: String] = [
+    static let baseTable: [String: String] = [
         // the app
         "appName": "Deckie Desk",
         // The computer Desk runs on, as words name it: `{thisComputer}` in any word is filled with the form for this
