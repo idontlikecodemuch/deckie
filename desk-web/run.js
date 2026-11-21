@@ -103,7 +103,9 @@
     const stage = $("stage"), stageCanvas = $("stage-wave"), cardEl = $("song-card");
     let onStage = null, timer = 0, raf = 0, lastFrame = 0, running = false;
     let run = null;                 // the last run.progress, as desk.js keeps it
-    let card = { rel: null, done: null, doneUntil: 0, doneTimer: 0 };
+    let card = { rel: null, done: null, doneUntil: 0, doneTimer: 0, next: null };
+    /// The songs shown as rows under the card at the last draw.
+    let shownRows = new Set();
     const NOW_STEPS = ["hash", "decode", "resample", "beatthis", "key", "spectral", "structure", "loudness", "vocal", "windows"];
     const nowReading = (x) => x.step === "started" || x.step === "reading";
     /// The song's name as RunNow.name gives it: the name Desk has, else its file name without the ending.
@@ -202,6 +204,7 @@
       ctx.fillRect(0, Math.round(waveH / 2 - look.lineH / 2), w, look.lineH);
     }
     function drawRows(list) {
+      shownRows = new Set(list.map((x) => x.rel));
       const rows = $("now-rows");
       rows.hidden = !list.length;
       $("now-rows-title").textContent = list.length ? n("alsoWorkingOn", list.length) : "";
@@ -222,18 +225,29 @@
     function drawCard() {
       if (!run) return;
       const list = workingList();
-      if (run.stage !== "reading") { endDone(); emptyCard(run.stage === "saving" ? "stageSaving" : "stageFinishing"); drawRows([]); drawAhead(); return; }
+      if (run.stage !== "reading") {
+        // The read is over: the card's song goes to the wall now, and the wall is drawn now, not on its throttle.
+        endDone(); runWall.now();
+        emptyCard(run.stage === "saving" ? "stageSaving" : "stageFinishing"); drawRows([]); drawAhead(); return;
+      }
       if (card.done && performance.now() < card.doneUntil) {
         // Called again when the moment is over (a timer may come a little early: it is set again for the rest).
         clearTimeout(card.doneTimer);
         card.doneTimer = setTimeout(drawCard, Math.max(0, card.doneUntil - performance.now()) + 1);
         fillCard(card.now, card.done);
-        drawRows(list.filter((x) => x.rel !== card.rel));
+        // A song taken while the card holds the one just done is the card's next song, not one worked on alongside:
+        // it is no row (read one at a time, a row would come and go with every song). Songs already rows stay rows.
+        if (!card.next) {
+          const next = cardSong(list.filter((x) => x.rel !== card.rel && !shownRows.has(x.rel)), null);
+          card.next = next ? next.rel : null;
+        }
+        drawRows(list.filter((x) => x.rel !== card.rel && x.rel !== card.next));
         drawAhead();
         return;
       }
       endDone();
-      const x = cardSong(list, card.rel);
+      const x = cardSong(list, card.rel || card.next);
+      card.next = null;
       card.rel = x ? x.rel : null;
       if (x) { card.number = x.number; card.now = x; fillCard(x, null); } else emptyCard("stageReading");
       drawRows(list.filter((y) => !x || y.rel !== x.rel));
@@ -248,7 +262,9 @@
     /// any other song (a row, or one worked out before) goes to the wall at once.
     let onWall = [];
     function songDone(s) {
-      const onCard = card.rel && s.rel === card.rel && card.now && hasParts(card.now) && !card.done;
+      // Its parts may come with its "done" rather than before it (the progress that carried them can be passed
+      // over): the song done has them, so it stays on the card complete all the same.
+      const onCard = card.rel && s.rel === card.rel && card.now && (hasParts(card.now) || hasParts(s)) && !card.done;
       if (onCard) {
         card.done = s; card.doneUntil = performance.now() + time("--t-card-done");
         drawCard();
@@ -715,7 +731,8 @@
       /// A run started: everything from the last one goes.
       start(m) {
         songs = []; figures = null; onStage = null; fresh = []; lastNote = null; pendingMoment = null; running = true;
-        onWall = []; clearTimeout(card.doneTimer); card = { rel: null, done: null, doneUntil: 0, doneTimer: 0 };
+        onWall = []; clearTimeout(card.doneTimer); card = { rel: null, done: null, doneUntil: 0, doneTimer: 0, next: null };
+        shownRows = new Set();
         info = { read: m.read, musicCD: !!m.musicCD }; step = "reading"; spoken = { done: -1, at: 0 };
         run = { stage: "reading", total: 0, musicCD: !!m.musicCD, working: null, now: null, ahead: null };
         saying.textContent = ""; lastSaid = ""; $("done-wall-card").dataset.settled = "";
@@ -756,15 +773,16 @@
         if (!songs.length) return;
         running = false;
         clearTimeout(sayTimer); clearTimeout(timer); clearTimeout(card.doneTimer);
-        card.done = null; card.doneTimer = 0; onWall = songs.slice();
+        card.done = null; card.doneTimer = 0; card.next = null; onWall = songs.slice();
         $("done-wall-title").textContent = t("wallTitleDone", { read: report.read });
         // "That's the lot" only for a run that read everything (the engine sends it only then).
         const note = report.stopped === true ? null : lastNote;
         $("done-moment").textContent = note || "";
         $("done-moment").hidden = !note;
         doneWall.label(t("wallLabel", { title: t("wallTitleDone", { read: report.read }), songs: n("songs", songs.length) }));
-        // Drawn now, not on an animation frame, which a window not in front may never give.
-        doneWall.now();
+        // Drawn now, not on an animation frame, which a window not in front may never give; and again once the page
+        // has laid the screen out, so every song in is on the wall at once.
+        doneWall.now(); setTimeout(doneWall.now, 0);
         if (!wallCard.dataset.settled) { wallCard.dataset.settled = "1"; doneWall.settle(); }
       },
 

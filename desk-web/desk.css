@@ -329,7 +329,7 @@
   --wave-quiet-share: 0.35;               /* bars under this share of the room above the floor take --wave-quiet */
   /* the walls: a row a song, its bars across the row; pointed at, its name over them; the rows scroll in the card */
   --wall-row-h: 44px; --wall-row-gap: 6px; --wall-row-pad: 6;  /* a row's height, between rows, above and below its bars */
-  --wall-max-h: 440px;                    /* the most the rows take before they scroll */
+  --wall-max-h: 594px;                    /* the most the rows take before they scroll: 12 rows (a 10-song read never does) */
   --wall-row-bg: rgba(255, 255, 255, 0.025); --wall-row-pick: rgba(255, 192, 64, 0.14);
   --wall-pick-ring: 2; --wall-pick-edge: var(--amber);   /* px: the ring round the row pointed at, and its colour */
   --wall-pick-wave-fade: 0.4;             /* the row pointed at: its wave's strength behind the song's name */
@@ -389,6 +389,7 @@
   --t-fade: 420ms; --ease-fade: ease;
   --t-saying: 7000ms;                     /* each quiet line */
   --t-moment: 1600ms; --ease-moment: ease-out;
+  --settle-from-opacity: 0.55;            /* the wall settling in starts this bright, every row on it */
   --t-moment-after: 50ms;                 /* a moment's class is taken away this long after its motion */
   --t-wall: 250ms;                        /* the wall redraws at most this often */
   --t-frame-late: 250ms;                  /* no animation frame by then (a window not in front): the stage steps without one */
@@ -533,7 +534,8 @@ main { flex: 1; min-height: 0; display: flex; flex-direction: column; }
 .wall-card { display: flex; flex-direction: column; gap: var(--inner-gap); }
 .wall-head { display: flex; align-items: baseline; gap: var(--fig-gap); min-width: 0; }
 .wall-head h2 { font-size: var(--fs-head); flex: none; }
-.wall-scroll { position: relative; overflow-y: auto; overscroll-behavior: contain; border-radius: var(--r-wall); }
+/* No overscroll-behavior on the rows: at their top or bottom the wheel carries on to the page. */
+.wall-scroll { position: relative; overflow-y: auto; border-radius: var(--r-wall); }
 .wall { width: 100%; display: block; position: sticky; top: 0; border-radius: var(--r-wall); cursor: crosshair; }
 .wall:focus-visible { outline: var(--focus-ring) solid var(--acc); outline-offset: var(--wall-focus-offset); }
 .run-list summary { cursor: pointer; color: var(--mut); font-size: var(--fs-note); padding: var(--run-list-pad); }
@@ -551,7 +553,8 @@ main { flex: 1; min-height: 0; display: flex; flex-direction: column; }
 @keyframes sweep { from { background-position: 100% 0; } to { background-position: -100% 0; } }
 @keyframes glow { 0% { box-shadow: 0 0 0 0 var(--glow-off); } 30% { box-shadow: 0 0 0 var(--glow-spread) var(--glow-on); } 100% { box-shadow: 0 0 0 0 var(--glow-off); } }
 @keyframes turn { from { transform: rotate(0); } to { transform: rotate(360deg); } }
-@keyframes settle { from { clip-path: inset(0 0 100% 0); } to { clip-path: inset(0 0 0 0); } }
+/* The wall settling in brightens as a whole: every row is on it from the start (no wipe that shows rows one by one). */
+@keyframes settle { from { opacity: var(--settle-from-opacity); } to { opacity: 1; } }
 @media (prefers-reduced-motion: reduce) { .saying, .stage-facts { transition: none; } }
 
 /* the finished screen */

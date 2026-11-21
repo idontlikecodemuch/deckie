@@ -358,7 +358,8 @@ enum RunLook {
     /// The walls: a row a song, its wave across the whole row; the rows scroll in the card past `wallMaxHeight`; the
     /// row pointed at lit and ringed (desk.css --wall-*).
     static let wallRowHeight: CGFloat = 44, wallRowGap: CGFloat = 6, wallRowPad: CGFloat = 6
-    static let wallMaxHeight: CGFloat = 440
+    /// Twelve rows: a wall of ten songs never scrolls on its own (desk.css --wall-max-h).
+    static let wallMaxHeight: CGFloat = 594
     static let wallPickRing: CGFloat = 2
     /// The row pointed at: its wave's strength behind the song's name, and the least room between that name and the
     /// row's ends (desk.css --wall-pick-wave-fade, --wall-name-pad).

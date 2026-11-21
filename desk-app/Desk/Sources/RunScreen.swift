@@ -47,6 +47,9 @@ final class RunWatch: ObservableObject {
     var reduceMotion = NSWorkspace.shared.accessibilityDisplayShouldReduceMotion
 
     private var working: [RunNow] = []
+    /// The songs shown as rows at the last draw, and the song that takes the card when the one held there goes.
+    private var shownRows: Set<String> = []
+    private var nextCard: String?
     private var fresh: [RunNote] = []
     private var bags: [String: [String]] = [:]
     private var lastSaid = ""
@@ -61,6 +64,7 @@ final class RunWatch: ObservableObject {
         self.musicCD = musicCD; step = .reading; stage = .reading; lastSaid = ""; saying = ""; moment = nil; latestBin = -1
         spoken = (-1, .distantPast); wallVersion += 1
         working = []; card = nil; cardDone = nil; rows = []; ahead = nil; doneTimer?.invalidate()
+        shownRows = []; nextCard = nil
         nextSaying()
     }
 
@@ -72,7 +76,8 @@ final class RunWatch: ObservableObject {
                 latestBin = max(0, min(p.figures.tempos.count - 1, Int(((bpm - p.figures.tempoLow) / p.figures.tempoStep).rounded(.down))))
             }
             // The card's own song stays complete on the card a moment; any other goes to the wall at once.
-            if let c = card, s.rel == c.rel, c.hasParts, cardDone == nil {
+            // Its parts may come with its "done" rather than before it: the song done has them, so it stays all the same.
+            if let c = card, s.rel == c.rel, c.hasParts || s.seconds > 0 || s.bpm != nil || !s.wave.isEmpty, cardDone == nil {
                 cardDone = s
                 doneTimer?.invalidate()
                 doneTimer = once(after: RunLook.cardDone) { [weak self] in self?.endDone(); self?.drawCard() }
@@ -98,15 +103,23 @@ final class RunWatch: ObservableObject {
 
     /// The card and the rows from the songs worked on (desk-web/run.js drawCard says the same).
     private func drawCard() {
-        if stage != .reading { endDone(); card = nil; rows = []; staged = nil; return }
+        if stage != .reading { endDone(); card = nil; rows = []; shownRows = []; staged = nil; return }
         if let done = cardDone, let c = card {
-            rows = RunNow.rows(working, card: c.rel)
+            // A song taken while the card holds the one just done is the card's next song, not one worked on
+            // alongside: it is no row (read one at a time, a row would come and go with every song). Rows stay rows.
+            if nextCard == nil {
+                nextCard = RunNow.cardSong(working.filter { $0.rel != c.rel && !shownRows.contains($0.rel) }, keeping: nil)?.rel
+            }
+            rows = RunNow.rows(working, card: c.rel).filter { $0.rel != nextCard }
+            shownRows = Set(rows.map(\.rel))
             stageWave(c.rel, done.wave, bpm: done.bpm, bars: done.bars)
             return
         }
-        let next = RunNow.cardSong(working, keeping: card?.rel)
+        let next = RunNow.cardSong(working, keeping: card?.rel ?? nextCard)
+        nextCard = nil
         if next != card { card = next }
         rows = RunNow.rows(working, card: next?.rel)
+        shownRows = Set(rows.map(\.rel))
         if let n = next { stageWave(n.rel, n.wave ?? [], bpm: n.bpm, bars: n.bars) } else { staged = nil }
     }
 
@@ -653,6 +666,9 @@ struct WallView: View {
                     }
                     .frame(height: min(RunLook.wallMaxHeight, max(RunLook.wallRowHeight,
                         CGFloat(songs.count) * (RunLook.wallRowHeight + RunLook.wallRowGap))))
+                    // Rows that all fit do not scroll on their own: the wheel over them scrolls the screen.
+                    .scrollDisabled(CGFloat(songs.count) * (RunLook.wallRowHeight + RunLook.wallRowGap) - RunLook.wallRowGap
+                        <= RunLook.wallMaxHeight)
                     .onChange(of: songs.count) { _, n in if pick == nil, n > 0 { reader.scrollTo(n - 1, anchor: .bottom) } }
                     .onChange(of: pick) { _, p in if let p { reader.scrollTo(p) } }
                 }
