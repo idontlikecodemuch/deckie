@@ -77,12 +77,14 @@ import DeckieTestSupport
 /// read before and whose time is the whole reading time.
 @Suite(.enabled(if: Engine.available, "needs ONNX Runtime and the Beat This! model"))
 struct ReadingOrderRunTests {
-    @Test func aRealRunNeverNamesASongBeforeItJoinsAndCarryOnCarriesOn() async throws {
+    /// Stop comes from the run's own calls, not a clock: as soon as the first song is taken, so whatever the
+    /// machine's speed, the songs already in hand (one to `jobs`) are read and the rest wait for Carry on.
+    @Test(arguments: [1, 4]) func aRealRunNeverNamesASongBeforeItJoinsAndCarryOnCarriesOn(jobs: Int) async throws {
         let root = try scratch("reading-order")
         let folder = root.appendingPathComponent("Gig/House")
         try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
         let buffer = TestTrack.render()
-        for (i, gain) in [1.0, 0.85, 0.7, 0.6, 0.5, 0.42, 0.35, 0.3].enumerated() {
+        for (i, gain) in [1.0, 0.85, 0.7, 0.6, 0.5, 0.4].enumerated() {
             try TestTrack.wav(AudioBuffer(sampleRate: buffer.sampleRate, channelCount: buffer.channelCount,
                                           samples: buffer.samples.map { $0 * Float(gain) }))
                 .write(to: folder.appendingPathComponent("0\(i + 1) Song.wav"))
@@ -90,27 +92,28 @@ struct ReadingOrderRunTests {
         let home = DeskHome(root: root.appendingPathComponent("home"))
         try home.prepare()
         let info = try home.shelf.make(name: "Gig")
-        let analyser = try Builder.makeAnalyser(jobs: 4)
+        let analyser = try Builder.makeAnalyser(jobs: jobs)
         let request = RunRequest(folder: root.appendingPathComponent("Gig"), source: "Gig")
         func run() -> DeskRun {
-            DeskRun(home: home, crateId: info.id, request: request, jobs: 4, device: "Mac15,6", analyser: analyser,
+            DeskRun(home: home, crateId: info.id, request: request, jobs: jobs, device: "Mac15,6", analyser: analyser,
                     signer: nil, printer: DeskRun.portablePrint)
         }
         final class Calls: @unchecked Sendable { let lock = NSLock(); var all: [RunProgress] = [] }
         let first = Calls(), second = Calls()
-        // Stopped as the first song is read: the others in hand finish, the rest wait.
+        // Stopped as the first song is taken: the songs in hand finish, no other is started.
         let one = run()
-        let (_, stopped) = try await CPUTurns.exclusive {
+        let (part, stopped) = try await CPUTurns.exclusive {
             try one.run { p in
                 first.lock.lock(); first.all.append(p); first.lock.unlock()
-                if case .file? = p.line { one.stop() }
+                if !p.working.isEmpty { one.stop() }
             }
         }
-        #expect(stopped.stopped == true && stopped.songsSeen < 8)
+        #expect(stopped.stopped == true)
+        #expect((1...jobs).contains(part.tracks.count), "\(part.tracks.count) read before Stop, \(jobs) at once")
         let (all, rest) = try await CPUTurns.exclusive {
             try run().run { p in second.lock.lock(); second.all.append(p); second.lock.unlock() }
         }
-        #expect(all.tracks.count == 8 && rest.stopped == nil && rest.carriedOn)
+        #expect(all.tracks.count == 6 && rest.stopped == nil && rest.carriedOn)
         for calls in [first.all, second.all] {
             var screen = ReadingOrderTests.Screen()
             for p in calls { screen.take(p) }
@@ -118,11 +121,11 @@ struct ReadingOrderRunTests {
         }
         // Carry on: the count starts at the songs already read, not at 0.
         let started = try #require(second.all.first { if case .started? = $0.line { return true }; return false })
-        if case let .started(_, unchanged, _)? = started.line { #expect(unchanged > 0 && started.done == unchanged) }
+        if case let .started(_, unchanged, _)? = started.line { #expect(unchanged == part.tracks.count && started.done == unchanged) }
         #expect(second.all.map(\.done) == second.all.map(\.done).sorted())
         // The whole reading time, the part before Stop included, and the rate from it.
         #expect(rest.secondsBefore == stopped.seconds)
-        #expect(rest.seconds > stopped.seconds && rest.seconds - stopped.seconds < rest.seconds)
+        #expect(rest.seconds > stopped.seconds)
         #expect(abs(rest.songsPerMinute - Double(rest.songsSeen) / rest.seconds * 60) < 1e-9)
         #expect(DeskRun.runs(home: home, crateId: info.id).last?.secondsBefore == stopped.seconds)
     }

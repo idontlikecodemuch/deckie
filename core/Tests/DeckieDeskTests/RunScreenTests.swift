@@ -201,6 +201,7 @@ import DeckieBuild
                 lock.lock(); all.append(d); lock.unlock()
             }
             var count: Int { lock.lock(); defer { lock.unlock() }; return all.count }
+            var copy: [Data] { lock.lock(); defer { lock.unlock() }; return all }
         }
         let lines = Lines()
         let out = RunScreenOut { lines.add($0) }
@@ -245,12 +246,19 @@ import DeckieBuild
         let end = Date().addingTimeInterval(2)
         while alone.count < 2 && Date() < end { Thread.sleep(forTimeInterval: 0.02) }
         #expect(alone.count >= 2)
-        // The totals at most once a second: the second song went without them, and they follow.
+        // The totals at most once a second: the second song went without them and they follow, or, on a machine slow
+        // enough that its batch went out a second or more after the first, with them. Either way each song once,
+        // the first line with the totals, the last line with both songs counted, and never more than three lines.
         let later = Date().addingTimeInterval(3)
-        while alone.count < 3 && Date() < later { Thread.sleep(forTimeInterval: 0.02) }
-        let sent = try alone.all.map { try #require(JSONSerialization.jsonObject(with: $0) as? [String: Any]) }
-        #expect(sent.count == 3)
-        #expect(sent.map { $0["figures"] != nil } == [true, false, true])
+        while Date() < later {
+            let last = alone.copy.last.flatMap { try? JSONSerialization.jsonObject(with: $0) as? [String: Any] }
+            if ((last?["figures"] as? [String: Any])?["songs"] as? NSNumber)?.intValue == 2 { break }
+            Thread.sleep(forTimeInterval: 0.02)
+        }
+        let sent = try alone.copy.map { try #require(JSONSerialization.jsonObject(with: $0) as? [String: Any]) }
+        let shape = sent.map { $0["figures"] != nil }
+        #expect(shape == [true, false, true] || shape == [true, true], "\(shape)")
+        #expect(sent.flatMap { ($0["songs"] as? [[String: Any]]) ?? [] }.count == 2)
         #expect(((sent.last?["figures"] as? [String: Any])?["songs"] as? NSNumber)?.intValue == 2)
     }
 }
