@@ -18,8 +18,14 @@ public enum CrateReader {
             }
             return try decode(try CrateArchive.read(package))
         }
-        return try decode(file: { try? Data(contentsOf: package.appendingPathComponent($0)) },
-                          exists: { FileManager.default.fileExists(atPath: package.appendingPathComponent($0).path) })
+        // A save to this package that was stopped is finished or undone first (`CrateWriter.write`), and a save going
+        // in this program is waited for, so what is read is the old crate or the new one, never half of each. Where
+        // the package cannot be written (a crate file on a read-only disc), it is read as it is.
+        return try CrateWriter.withNoSaveGoing {
+            try? CrateWriter.finishInterruptedSave(package)
+            return try decode(file: { try? Data(contentsOf: package.appendingPathComponent($0)) },
+                              exists: { FileManager.default.fileExists(atPath: package.appendingPathComponent($0).path) })
+        }
     }
 
     private static func problem(_ file: String, _ path: String, _ message: String) -> CrateError {

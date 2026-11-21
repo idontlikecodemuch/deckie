@@ -141,10 +141,14 @@ public final class Analyser: Sendable {
     /// length when the song is decoded, the key when it is read (before the beat), the tempo when the beat is found,
     /// the bars when the bar grid is laid, the per-bar loudness when it is measured (`AnalysisPart`). Also on the
     /// analysing thread.
+    ///
+    /// `stop`, asked before each stage starts: when it says yes, the analysis ends there with `AnalysisStopped`, so a
+    /// stop asked in the middle of a song waits at most for the stage going (Desk quitting, its window closed), not
+    /// for the whole song. Nothing is kept of a song stopped this way.
     public func analyse(url: URL, bytes given: FileBytes?, sha256 givenSHA: String? = nil,
                         options: AnalysisOptions = AnalysisOptions(),
                         onStage: ((String) -> Void)? = nil, onDecoded: ((AudioBuffer) -> Void)? = nil,
-                        onPart: ((AnalysisPart) -> Void)? = nil) throws -> Analysis {
+                        onPart: ((AnalysisPart) -> Void)? = nil, stop: (() -> Bool)? = nil) throws -> Analysis {
         let SR = Analysis.sampleRate
         var timings: [Analysis.Timing] = []
         var started = Date()
@@ -153,13 +157,16 @@ public final class Analyser: Sendable {
             timings.append(Analysis.Timing(stage: stage, seconds: now.timeIntervalSince(started)))
             started = now
         }
-        func begin(_ stage: String) { onStage?(stage) }
+        func begin(_ stage: String) throws {
+            if stop?() == true { throw AnalysisStopped(stage: stage) }
+            onStage?(stage)
+        }
 
         // ------------------------------------------------------------------ hash
         // The file's bytes are let go as soon as they are hashed (the decoder reads the file itself), so they are not
         // held through the whole analysis: for a WAV that is as much memory again as the decoded audio. Bytes given
         // in memory are kept only until they are decoded, then let go.
-        begin("hash")
+        try begin("hash")
         let sha: String, format: AudioFormat, bytes: Int
         if let data = given?.data {
             sha = givenSHA ?? CrateIDs.sha256(of: data)
@@ -183,7 +190,7 @@ public final class Analyser: Sendable {
         // ------------------------------------------------------------------ decode (44.1 kHz, mono = channel mean)
         // A damaged MP3 frame comes out silent, and is listed (`damagedFrames`): everything below, the true peak
         // included, is measured on the audio as it plays, without the frame's burst.
-        begin("decode")
+        try begin("decode")
         var buffer: AudioBuffer, damagedFrames: [DamagedFrame], startUncertain: String?, cutShort: String?
         do {
             // In a block of its own, so the decoded samples are not held beyond `buffer` once it is resampled.
@@ -216,7 +223,7 @@ public final class Analyser: Sendable {
         onPart?(.length(seconds: Py.round(duration, 3)))
 
         // ------------------------------------------------------------------ the 22,050 Hz mono mix
-        begin("resample")
+        try begin("resample")
         let m22 = Decimator.halve(mono)
         lap("resample")
 
@@ -227,7 +234,7 @@ public final class Analyser: Sendable {
         // bit; only what is held through the beat stage grows, by the readers' answers (a few kilobytes; the
         // chromagram the mix windows need is still made after the beat, where it was). Its time counts in "key", and
         // `timings` keep their order.
-        begin("key")
+        try begin("key")
         let keyStarted = Date()
         // The three-answer reader (D33) reads the same frames as the plain HPCP method and carries its result.
         let threeAnswer = try ThreeAnswerKey.read(mono, sampleRate: SR)
@@ -241,7 +248,7 @@ public final class Analyser: Sendable {
         started = Date()
 
         // ------------------------------------------------------------------ first / last sound, beats, grid
-        begin("beatthis")
+        try begin("beatthis")
         let sound = SoundBounds(buffer)
         let tracked = try beatTracker.track(AudioBuffer(sampleRate: SpectralFeatures.sampleRate, channelCount: 1,
                                                         samples: m22))
@@ -268,7 +275,7 @@ public final class Analyser: Sendable {
         timings[timings.count - 1].seconds += keyReadSeconds
 
         // ------------------------------------------------------------------ grid choice and bars
-        begin("spectral")
+        try begin("spectral")
         func tagDev(_ g: GridFit) -> Double {
             guard let tag else { return 999.0 }
             return Tempo.closest(bpm: g.bpm, reference: tag, among: Tempo.octaveMultipliers).deviationPct
@@ -306,7 +313,7 @@ public final class Analyser: Sendable {
         onPart?(.bars(bars.nBars))
 
         // ------------------------------------------------------------------ structure (Foote novelty)
-        begin("structure")
+        try begin("structure")
         let novelty = spectral.novelty(grid: bars)
         let phrase = Phrase(peaks: novelty.peaks)
         let boundaries = Phrase.boundaries(peaks: novelty.peaks, latticePhaseBar: phrase.latticePhaseBar,
@@ -314,7 +321,7 @@ public final class Analyser: Sendable {
         lap("structure")
 
         // ------------------------------------------------------------------ per-bar loudness, bands, onsets; loudness
-        begin("loudness")
+        try begin("loudness")
         // The K-weighted running sum (8 bytes a sample) is needed only here, so it lives only in this block.
         let lufs: [Double], levels: BandSplit.Levels, loudness: Analysis.Loudness
         do {
@@ -334,7 +341,7 @@ public final class Analyser: Sendable {
         // ------------------------------------------------------------------ vocal probability (optional)
         var vocal: VocalActivity? = nil
         if let tagger = vocalTagger {
-            begin("vocal")
+            try begin("vocal")
             let v = try tagger.vocalActivity(mono: mono, sampleRate: SR, barTimes: bars.barTimes)
             guard v.perBar.count == bars.nBars else { throw AnalyserError.vocalBars(got: v.perBar.count, bars: bars.nBars) }
             vocal = v
@@ -344,7 +351,7 @@ public final class Analyser: Sendable {
         let voc = vocal?.perBar ?? [Double](repeating: 0, count: bars.nBars)
 
         // ------------------------------------------------------------------ sections, fade-out, mix windows
-        begin("windows")
+        try begin("windows")
         let sections = Section.sections(boundariesBars: boundaries, lufsSt: lufs, vocalProb: voc)
         let ls = sound.lastSound
         let end = EndLoudness(t20: Loudness.shortTerm(buffer, endingAt: ls - 17.0),
@@ -439,4 +446,10 @@ public enum AnalysisPart: Sendable, Equatable {
     case bars(Int)
     /// The loudness of each bar (`bars.lufs`), when it is measured.
     case loudness(perBar: [Double])
+}
+
+/// An analysis ended before `stage` because a stop was asked (`Analyser.analyse`'s `stop`): not a failure of the song.
+public struct AnalysisStopped: Error, Sendable, CustomStringConvertible {
+    public let stage: String
+    public var description: String { "stopped before the \(stage) stage" }
 }
