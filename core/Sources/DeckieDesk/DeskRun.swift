@@ -56,6 +56,60 @@ public struct RunProgress: Sendable {
     /// The next song of a music CD while it is read ahead (its sound coming off the disc while `now` is analysed),
     /// with the share read; nil when nothing is read ahead. Never the song `now` names.
     public var ahead: RunNow? = nil
+    /// The file (its `rel`, as the run's lines and `working` name it) whose song has just joined the screen, or whose
+    /// second place was just noted, or that turned out to have nothing to show: the song card may let it go now.
+    /// Nil on any other call.
+    public var landed: String? = nil
+}
+
+/// Puts a run's progress calls in the order the run screen shows them, so its two cards agree with each other and
+/// with every other line on it: a song leaves the songs worked on (`working`) only in the same call as, or after, the
+/// call that brings it onto the screen (`song`, `landed`), and no line about it (the run's list) goes out before then.
+/// A call that lets go of a song not yet on the screen is held, with every call after it, in order; when the song
+/// joins, its own call goes first (the songs worked on as last let out), then the held ones. A song read that never
+/// joins (a read that went wrong) is let go by its line. A stage other than reading lets everything out.
+/// One per run, called one call at a time (DeskRun's delivery lock).
+public struct RunOrder: Sendable {
+    /// The songs worked on in the last call taken, and in the last call let out.
+    private var latest: [String] = []
+    private var released: RunProgress?
+    private var held: [RunProgress] = []
+    /// Songs that left the songs worked on and have not yet joined the screen.
+    private(set) var waiting: Set<String> = []
+
+    public init() {}
+
+    /// The calls to let out now, in order, for one call taken.
+    public mutating func take(_ p: RunProgress) -> [RunProgress] {
+        if p.stage != .reading {
+            let out = held + [p]
+            held = []; waiting = []; latest = []; released = p
+            return out
+        }
+        let rels = p.working.map(\.rel)
+        for r in latest where !rels.contains(r) { waiting.insert(r) }
+        latest = rels
+        if let r = p.landed { waiting.remove(r) }
+        if case let .file(rel, outcome)? = p.line, case .failed = outcome { waiting.remove(rel) }
+        if held.isEmpty && waiting.isEmpty { released = p; return [p] }
+        var out: [RunProgress] = []
+        var rest = p
+        if p.song != nil || p.landed != nil {
+            // The song first, beside the songs worked on as they were last let out.
+            var first = released ?? RunProgress(stage: .reading, done: 0, total: p.total)
+            first.line = nil
+            first.song = p.song; first.notes = p.notes; first.figures = p.figures; first.landed = p.landed
+            out.append(first); released = first
+            rest.song = nil; rest.notes = []; rest.landed = nil
+        }
+        held.append(rest)
+        if waiting.isEmpty {
+            out += held
+            released = held.last
+            held = []
+        }
+        return out
+    }
 }
 
 /// A song a run is working on now, and what is happening to it: taken (`started`), its sound coming off the disc
@@ -244,6 +298,10 @@ public struct RunReport: Codable, Equatable, Sendable {
     /// Why `jobs` is what it is (`DeskJobs.Reason`): `cores`, `memory`, `set` (DECKIE_DESK_JOBS), or `disc` (a music
     /// CD, read one song at a time whatever `jobs` says). Nil when the caller did not say, and in a line written before it.
     public var jobsBy: String? = nil
+    /// A run carried on after Stop: the seconds of the part or parts before it, which `seconds` (and so
+    /// `songsPerMinute`) includes; the pause between is not counted. Nil for a run that did not carry one on, and in a
+    /// line written before it.
+    public var secondsBefore: Double? = nil
 
     enum CodingKeys: String, CodingKey {
         case crate, read, seconds, analysed, reused, copies, jobs, device, engine, damaged
@@ -254,7 +312,7 @@ public struct RunReport: Codable, Equatable, Sendable {
         case songsInCrate = "songs_in_crate", songsPerMinute = "songs_per_minute", carriedOn = "carried_on"
         case local, disc, covers, fingerprinted, songsWithFingerprint = "songs_with_fingerprint", stopped
         case songsRead = "songs_read", filesFound = "files_found"
-        case jobsBy = "jobs_by"
+        case jobsBy = "jobs_by", secondsBefore = "seconds_before"
     }
 
     /// Songs that did not go in.
@@ -368,6 +426,8 @@ public final class DeskRun: @unchecked Sendable {
         var tally = RunTally()
         /// The songs being worked on now and the song read ahead (`RunProgress.now`, `working`, `ahead`).
         var working = RunWorking(oneAtATime: true)
+        /// The order the calls go out in (RunOrder); used under the delivery lock.
+        var order = RunOrder()
         /// Songs whose print was made from the analysis's audio in this run (counted as made, not kept).
         var printedInHand = Set<String>()
     }
@@ -427,7 +487,7 @@ public final class DeskRun: @unchecked Sendable {
         // under one lock, so a step reported on the analysing thread is never overtaken by a later snapshot from
         // another thread (the disc's read ahead, the finishing queue, the screen's queue), nor folded into it.
         let deliver = NSRecursiveLock()
-        @Sendable func emit(_ stage: RunStage, _ line: RunLine?, song: RunSong? = nil, notes: [RunNote] = []) {
+        @Sendable func emit(_ stage: RunStage, _ line: RunLine?, song: RunSong? = nil, notes: [RunNote] = [], landed: String? = nil) {
             deliver.lock(); defer { deliver.unlock() }
             state.lock.lock()
             var p = RunProgress(stage: stage, done: min(state.done, state.total), total: state.total, remaining: estimate(),
@@ -436,28 +496,34 @@ public final class DeskRun: @unchecked Sendable {
             if stage == .reading {
                 p.now = state.working.now; p.working = state.working.songs; p.ahead = state.working.ahead
             }
+            p.landed = landed
             state.lock.unlock()
-            progress(p)
+            // Out in the order the screen shows them (RunOrder): a song leaves the songs worked on only as it joins.
+            for q in state.order.take(p) { progress(q) }
         }
         // The run screen (D37): a song joins it when it is read, from its record in the store (on a queue of its own,
         // so the reading never waits for it); a second place of a song on it already is noted, not shown twice.
         let screen = DispatchQueue(label: "deckie.desk.screen", qos: .utility)
+        // `rel`: the file read, which the song card lets go of as the song joins (RunProgress.landed).
         @Sendable func show(_ id: String, title: String?, artist: String?, place: CrateTrack.Place?, before: Bool,
-                            stage: RunStage, track: CrateTrack? = nil) {
+                            stage: RunStage, track: CrateTrack? = nil, rel: String? = nil) {
             state.lock.lock()
             if state.tally.has(id) {
                 let notes = state.tally.again(id, title: title ?? "", place: place.flatMap(Crate.placeLine))
                 state.lock.unlock()
-                emit(stage, nil, notes: notes)
+                emit(stage, nil, notes: notes, landed: rel)
                 return
             }
             state.lock.unlock()
-            guard let t = track ?? Builder.finishedRecord(id, records: store.records) else { return }
+            guard let t = track ?? Builder.finishedRecord(id, records: store.records) else {
+                if rel != nil { emit(stage, nil, landed: rel) }
+                return
+            }
             var song = RunSong(t, title: title, artist: artist, place: place, before: before)
             state.lock.lock()
             let notes = state.tally.add(&song)
             state.lock.unlock()
-            emit(stage, nil, song: song, notes: notes)
+            emit(stage, nil, song: song, notes: notes, landed: rel)
         }
         /// Makes (or takes from the store) the signature and the print of one file. Called on the finishing queue.
         @Sendable func finish(_ id: String, _ url: URL) {
@@ -545,7 +611,9 @@ public final class DeskRun: @unchecked Sendable {
         do { result = try builder.run { event in
             switch event {
             case let .started(files, unchanged, queued, _, _):
-                state.lock.lock(); state.total = files; state.lock.unlock()
+                // Files unchanged since a run (one that stopped, carried on now, among them) are done already: the
+                // count carries on from them. Their signatures and prints are looked at after the read, as before.
+                state.lock.lock(); state.total = files; state.done = unchanged; state.lock.unlock()
                 emit(.reading, .started(files: files, unchanged: unchanged, queued: queued))
             case let .file(p):
                 state.lock.lock()
@@ -557,7 +625,7 @@ public final class DeskRun: @unchecked Sendable {
                     let before: Bool = { if case .analysed = p.outcome { return false }; return true }()
                     // A music CD's song named only by its file name ("Track 02") is shown by its CD-Text name.
                     let (title, artist) = disc.map { DiscSongFiles.shownName(rel: p.rel, title: p.title, artist: p.artist, record: $0.base) } ?? (p.title, p.artist)
-                    screen.async { show(id, title: title, artist: artist, place: p.place, before: before, stage: .reading) }
+                    screen.async { show(id, title: title, artist: artist, place: p.place, before: before, stage: .reading, rel: p.rel) }
                 }
                 if let id = p.id, let disc {
                     // A music CD's song is finished now, while its file is here; then the builder lets it go.
@@ -626,7 +694,6 @@ public final class DeskRun: @unchecked Sendable {
             }
             state.lock.lock()
             state.waiting -= 1
-            state.done += result.placesRead[t.id]?.count ?? 0
             state.lock.unlock()
             emit(.finishing, nil)
         }
@@ -688,7 +755,10 @@ public final class DeskRun: @unchecked Sendable {
         }
         var notIn: [String: Int] = [:]
         for e in mine where e.reason != Reason.damagedFrames && e.reason != Reason.skipped { notIn[e.reason, default: 0] += 1 }
-        let seconds = Date().timeIntervalSince(t0)
+        // The whole reading time: a run carried on after Stop adds the time of the part (or parts) before it, as the
+        // stopped run's line says it; the pause between is not counted.
+        let partsBefore = carriedOn ? Self.runs(home: home, crateId: crateId).last.flatMap { $0.stopped == true ? $0.seconds : nil } : nil
+        let seconds = Date().timeIntervalSince(t0) + (partsBefore ?? 0)
         state.lock.lock()
         var report = RunReport(
             crate: info.name, read: request.name, startedAt: Self.utc(t0), seconds: seconds, buildSeconds: buildSeconds,
@@ -709,6 +779,7 @@ public final class DeskRun: @unchecked Sendable {
             fingerprinted: result.fingerprinted, songsWithFingerprint: crate.tracks.filter { $0.fingerprint != nil }.count,
             songsRead: state.tally.figures.songs, filesFound: max(state.total, result.filesSeen))
         state.lock.unlock()
+        report.secondsBefore = partsBefore
         report.jobsBy = disc != nil ? DeskJobs.Reason.disc.rawValue : jobsBy?.rawValue
         var line = report
         line.stopped = result.stopped ? true : nil
