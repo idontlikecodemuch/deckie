@@ -25,10 +25,21 @@ public enum KeyModel {
     /// Where the file is looked for: `DECKIE_KEY_MODEL` alone if it is set; else `models/` beside a shipped program
     /// (`OnnxRuntime.programFolder`), then core/.models in the checkout.
     public static var candidates: [String] {
-        if let p = ProcessInfo.processInfo.environment[environmentVariable], !p.isEmpty { return [p] }
-        return OnnxRuntime.candidates(named: LearnedKey.Model.fileName, in: "models",
-                                      checkout: OnnxRuntime.coreFolder.appendingPathComponent(".models").appendingPathComponent(LearnedKey.Model.fileName))
+        candidates(environment: ProcessInfo.processInfo.environment, programFolder: OnnxRuntime.programFolder)
     }
+
+    /// The same for a given environment, program folder and checkout (`core/`), so a test can name each place.
+    public static func candidates(environment: [String: String], programFolder: URL?,
+                                  coreFolder: URL = OnnxRuntime.coreFolder) -> [String] {
+        if let p = environment[environmentVariable], !p.isEmpty { return [p] }
+        var out: [String] = []
+        if let programFolder { out.append(programFolder.appendingPathComponent("models").appendingPathComponent(LearnedKey.Model.fileName).path) }
+        out.append(coreFolder.appendingPathComponent(".models").appendingPathComponent(LearnedKey.Model.fileName).path)
+        return out
+    }
+
+    /// The first of `candidates` that exists, or nil.
+    public static func locate(in candidates: [String]) -> String? { candidates.first { FileManager.default.fileExists(atPath: $0) } }
 
     /// The first place the file exists, or nil.
     public static func locate() -> String? { candidates.first { FileManager.default.fileExists(atPath: $0) } }
@@ -65,4 +76,18 @@ public enum KeyModel {
 
     /// The name of the model a default analyser will have, or nil.
     public static var defaultName: String? { loadDefault()?.name }
+
+    /// One line for a tester's log: `key reader: learned, <model>, <path>` when the pinned file was found, else
+    /// `key reader: untrained (<why>)`.
+    public static var readerLine: String { readerLine(path: locate()) }
+
+    /// The same for the file at `path` (nil: not found).
+    public static func readerLine(path: String?) -> String {
+        guard let path else {
+            return "key reader: untrained (\(LearnedKey.Model.fileName) was not found; core/Tools/fetch-key-model.sh)"
+        }
+        do { return "key reader: learned, \(try load(path: path).name), \(path)" } catch {
+            return "key reader: untrained (\(error))"
+        }
+    }
 }

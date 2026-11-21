@@ -7,6 +7,13 @@
 # release, no tag, nothing public beyond the artifact.
 name: pc-package
 
+# The learned key reader's file (deckie-key-<version>.f16, with its credit list) is an asset of the release models-1
+# (core/Tools/fetch-key-model.sh). "optional": when the release does not have it yet, the fetch step says so and the
+# zip is made without it, reading keys with the untrained reader. "required": the run fails without it. Changing
+# the one line below to KEY_MODEL: required is the whole change, once the file is on the release.
+env:
+  KEY_MODEL: optional
+
 on:
   push:
     branches: ['pc/**']
@@ -79,10 +86,12 @@ jobs:
       - name: Fetch the models from the release models-1 (checked by hash)
         shell: bash
         run: bash core/Tools/fetch-models.sh --no-export
-      # Optional: packaged when the release has it; otherwise the package reads keys with the untrained reader.
+      # KEY_MODEL (top of this file): optional, packaged when the release has it, otherwise the package reads keys
+      # with the untrained reader; required, this step fails without it.
       - name: Fetch the learned key reader's file, when the release has it (checked by hash)
         shell: bash
-        run: bash core/Tools/fetch-key-model.sh
+        run: |
+          if [ "$KEY_MODEL" = required ]; then bash core/Tools/fetch-key-model.sh --require; else bash core/Tools/fetch-key-model.sh; fi
       # The icon is made here from the iPad app's picture and compiled into a resource file, the form a linker takes;
       # no .ico is committed (core/Tools/windows/icon.sh, make_ico.py).
       - name: Make the icon
@@ -110,7 +119,8 @@ jobs:
       - name: Assemble the zip
         shell: bash
         run: |
-          DECKIE_ICON="$RUNNER_TEMP/icon" bash core/Tools/windows/package.sh "$RUNNER_TEMP/package"
+          required=0; [ "$KEY_MODEL" = required ] && required=1
+          DECKIE_KEY_MODEL_REQUIRED=$required DECKIE_ICON="$RUNNER_TEMP/icon" bash core/Tools/windows/package.sh "$RUNNER_TEMP/package"
           {
             echo "## The zip"
             cat "$RUNNER_TEMP/package/package-report.md"
@@ -214,6 +224,13 @@ jobs:
           foreach ($f in "app\desk-web\index.html", "app\desk-web\desk.js", "app\desk-web\desk.css", "app\licences\webview-LICENSE.txt", "app\licences\Microsoft-WebView2-SDK-LICENSE.txt", "app\licences\ACKNOWLEDGEMENTS.txt", "READ ME FIRST.txt") {
             if (-not (Test-Path (Join-Path $root $f) -PathType Leaf)) { Write-Error "not in the zip: $f"; exit 1 }
           }
+          # The learned key reader: its file and its credit list, both or neither; both when KEY_MODEL is required.
+          $keyName = (Select-String -Path core\Sources\DeckieCore\Key\LearnedKey.swift -Pattern 'public static let pinnedName = "([a-z0-9-]+)"').Matches[0].Groups[1].Value
+          $keyFile = Test-Path (Join-Path $root "app\models\$keyName.f16") -PathType Leaf
+          $keyCredits = Test-Path (Join-Path $root "app\licences\$keyName-credits.tsv") -PathType Leaf
+          "learned key reader ($keyName) in the zip: file $keyFile, credit list $keyCredits (KEY_MODEL $env:KEY_MODEL)"
+          if ($keyFile -ne $keyCredits) { Write-Error "the key reader's file and its credit list must ship together"; exit 1 }
+          if ($env:KEY_MODEL -eq "required" -and -not $keyFile) { Write-Error "not in the zip: app\models\$keyName.f16 (KEY_MODEL is required)"; exit 1 }
       # Every start below goes through core/Tools/windows/try-desk.ps1: PATH cut down to Windows itself, no message
       # box that would wait for a click (DECKIE_NO_BOXES), and, when a program does not end or ends badly, what
       # Windows itself noted about it.
@@ -263,6 +280,7 @@ jobs:
             if ($said -notmatch "its own icon on the window: yes") { Write-Error "the window does not carry Desk's icon"; exit 1 }
             if ($said -notmatch 'heading "[^"]+", button "Add music"') { Write-Error "the page did not show the engine's words"; exit 1 }
             if ($said -notmatch 'ready": (1|true)') { Write-Error "the engine did not find ONNX Runtime and the models beside itself"; exit 1 }
+            if ($env:KEY_MODEL -eq "required" -and $said -notmatch "key reader: learned") { Write-Error "the engine did not find the learned key reader's file beside itself"; exit 1 }
             if ($said -notmatch "PASSED") { Write-Error "the check did not pass"; exit 1 }
             if ($said -notmatch "at unix ms (\d+)") { Write-Error "no start-up time in the log"; exit 1 }
             $whole = ([double]$Matches[1] - $r.Started) / 1000

@@ -392,7 +392,7 @@ struct RunLog {
             "",
             "program: deckie-make \(PCBuild.version), builder \(Builder.version), engine \(Builder.engineLabel)",
             "vocal model: \(engine.vocalModel == nil ? "missing" : "present")",
-            "key model: \(KeyModel.usable(engine.keyModel)?.name ?? "missing or not the pinned file (keys are read by the untrained reader)")",
+            "key model: \(engine.keyModel == nil ? "missing (keys are read by the untrained reader)" : KeyModel.usable(engine.keyModel).map { "present (\($0.name))" } ?? "not the pinned file (keys are read by the untrained reader)")",
             "platform: \(Analysis.platform)",
             "system: \(info.operatingSystemVersionString)",
             "processors: \(info.activeProcessorCount), memory: \(String(format: "%.1f", Double(info.physicalMemory) / Double(1 << 30))) GB, songs read at once: \(jobs)",

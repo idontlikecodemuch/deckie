@@ -109,6 +109,7 @@ enum Headless {
                 print("runtime:", OnnxRuntime.locateLibrary() ?? "not found")
                 print("beat model:", BeatTracker.locateModel() ?? "not found")
                 print("vocal model:", YAMNet.locateModel() ?? "not found")
+                print(KeyModel.readerLine)
                 print("engine:", Builder.engineLabel, "on", Analysis.platform, "device", Device.modelLabel())
                 exit(0)
             } catch { print("engine check failed:", error); exit(1) }
