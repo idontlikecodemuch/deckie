@@ -12,6 +12,10 @@ Plain HTML, CSS and JavaScript, no framework, no build step, nothing fetched fro
   counted so far (music read, a tempo histogram, a wheel of keys), the crate as a wall of waves, the quiet line and
   the moments, from the engine's `run.songs`. Throttled, still while the window is hidden, and still under reduced
   motion; its colours, sizes and times are `desk.css`'s run-screen variables.
+- `booth.js` and `booth.css`: the listening mode (research booth-in-desk, step 1): the Booth switch in the top bar
+  for a crate with songs, an input chooser, a level, a state line and the song heard, from the engine's `booth.*`
+  messages. Leaving the mode or closing the window stops the microphone; while music is read, listening waits. Its
+  values are the `--booth-*` variables at the top of desk.css's `:root`.
 - `desk.css`: the look of the site and the booth (`../site/site.css`'s tokens: flat dark page, rounded surfaces, one
   lavender accent), laid out as a desktop window; every value is a variable in its `:root` block.
 

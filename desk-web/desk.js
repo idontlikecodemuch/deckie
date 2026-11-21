@@ -129,6 +129,9 @@
   // The run screen (D37, run.js): the song on stage, the figures, the wall of waves, the quiet line and the moments.
   const politely = (text) => { const a = $("run-announce"); a.textContent = ""; setTimeout(() => { a.textContent = text; }, 30); };
   const screen = window.DeskRunScreen({ $, el, t, n, mmss, list, timeLeft, announce: politely });
+  // The listening mode (booth.js): its own screen and the booth.* events; it reads the crate showing from here.
+  const booth = window.DeskBooth ? window.DeskBooth({ $, el, t, mmss, request, render: () => render(), current: () => current(),
+    shownName: () => shownName(), busy: () => !!run || !!(state && state.running), has: (k) => W[k] != null }) : null;
 
   function showError(e, word) {
     if (e.code === "busy") return;
@@ -141,6 +144,7 @@
 
   function receive(m) {
     if (m.re != null && replies.has(m.re)) { const f = replies.get(m.re); replies.delete(m.re); f(m); return; }
+    if (typeof m.event === "string" && m.event.startsWith("booth.")) { if (booth) booth.receive(m); return; }
     switch (m.event) {
       case "hello":
         hello = m; W = m.words || {}; computer = m.computer || "other";
@@ -358,6 +362,7 @@
     $("log-button").disabled = busy;
     $("export-button").hidden = !songsHere;
     $("export-button").disabled = busy;
+    if (booth) booth.render({ songsHere, busy });
 
     // a run that stopped
     const p = state.pending;
