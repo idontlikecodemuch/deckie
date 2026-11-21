@@ -13,7 +13,10 @@ What it fetches:
   rir/     room impulse responses: OpenSLR 28 (RIRS_NOISES, Apache 2.0), the real rooms only.
   noise/   DEMAND (Zenodo 1227121, CC BY 4.0): the cafeteria, restaurant and station recordings, 16 kHz.
 
-Usage: fetch_data.py DATA_DIR [--dance 320] [--other 160] [--skip-gsplus]
+  songs/remix/  whole remix releases from the same collection (--remix N songs): an original and its remixes, or
+           several remixes of one song, kept together with the release as their group.
+
+Usage: fetch_data.py DATA_DIR [--dance 320] [--other 160] [--remix 0] [--skip-gsplus]
 """
 import argparse, concurrent.futures as cf, hashlib, json, os, random, subprocess, sys, time, urllib.parse, urllib.request, zipfile
 
@@ -82,6 +85,79 @@ def pick_song(identifier, rng):
             "subject": "; ".join(subj) if isinstance(subj, list) else subj}
 
 
+def pick_versions(identifier, most=6):
+    """Up to `most` MP3s of 2 to 9 minutes from one remix release, or []. A remix release usually holds an original
+    and several remixes of it, or several remixes of one song: versions that share real passages, which is where a
+    short search can mistake one for another. All are kept, with the release as their group."""
+    try:
+        meta = json.loads(get("https://archive.org/metadata/" + identifier))
+    except Exception:
+        return []
+    lic = meta.get("metadata", {}).get("licenseurl", "")
+    if "creativecommons.org" not in lic:
+        return []
+    files = []
+    for f in meta.get("files", []):
+        if not f.get("name", "").lower().endswith(".mp3") or f.get("source") != "original":
+            continue
+        try:
+            length = f.get("length", "0")
+            secs = float(length) if ":" not in length else sum(float(x) * 60 ** i for i, x in enumerate(reversed(length.split(":"))))
+            size = int(f.get("size", 0))
+        except ValueError:
+            continue
+        if 120 <= secs <= 540 and size < 25_000_000:
+            files.append((f["name"], secs, size))
+    if len(files) < 2:
+        return []
+    subj = meta["metadata"].get("subject", "")
+    return [{"identifier": identifier, "file": name, "seconds": secs, "bytes": size, "licence": lic, "group": identifier,
+             "subject": "; ".join(subj) if isinstance(subj, list) else subj} for name, secs, size in sorted(files)[:most]]
+
+
+def fetch_versions(data, want, seed=3):
+    """The remix bucket: whole remix releases (several songs each) until `want` songs."""
+    rng = random.Random(seed)
+    out = os.path.join(data, "songs", "remix")
+    os.makedirs(out, exist_ok=True)
+    listing = os.path.join(data, "songs_remix.json")
+    got = json.load(open(listing)) if os.path.exists(listing) else []
+    seen = {g["identifier"] for g in got}
+    query = "collection:netlabels AND mediatype:audio AND (title:remix* OR subject:remix*) AND licenseurl:*creativecommons*"
+    pages = list(range(1, 12))
+    rng.shuffle(pages)
+    for page in pages:
+        if len(got) >= want:
+            break
+        try:
+            ids = [i for i in search(query, 100, page) if i not in seen]
+        except Exception as e:
+            print("search failed", e, file=sys.stderr)
+            continue
+        with cf.ThreadPoolExecutor(4) as ex:
+            releases = [r for r in ex.map(pick_versions, ids) if r]
+
+        def grab(p):
+            p["id"] = "r" + hashlib.sha1((p["identifier"] + "/" + p["file"]).encode()).hexdigest()[:10]
+            path = os.path.join(out, p["id"] + ".mp3")
+            try:
+                download(f"https://archive.org/download/{urllib.parse.quote(p['identifier'])}/{urllib.parse.quote(p['file'])}", path)
+                return p
+            except Exception as e:
+                print("skip", p["identifier"], e, file=sys.stderr)
+                return None
+        for release in releases:
+            if len(got) >= want:
+                break
+            with cf.ThreadPoolExecutor(4) as ex:
+                songs = [p for p in ex.map(grab, release) if p]
+            if len(songs) >= 2:
+                got.extend(songs); seen.add(release[0]["identifier"])
+            json.dump(got, open(listing, "w"), indent=1)
+        print("remix", len(got), "of", want, flush=True)
+    return got
+
+
 def fetch_songs(data, bucket, query, want, seed):
     rng = random.Random(seed)
     out = os.path.join(data, "songs", bucket)
@@ -90,7 +166,8 @@ def fetch_songs(data, bucket, query, want, seed):
     got = json.load(open(listing)) if os.path.exists(listing) else []
     seen = {g["identifier"] for g in got}
     # Pages spread across the whole result list (sorted by identifier), so no one label dominates.
-    pages = list(range(1, 60))
+    # Enough pages for the count asked (a page gives at most 25 releases), and no fewer than the first study used.
+    pages = list(range(1, max(60, want // 12)))
     rng.shuffle(pages)
     for page in pages:
         if len(got) >= want:
@@ -129,8 +206,9 @@ def main():
     ap.add_argument("data")
     ap.add_argument("--dance", type=int, default=320)
     ap.add_argument("--other", type=int, default=160)
+    ap.add_argument("--remix", type=int, default=0, help="songs from whole remix releases (several versions each)")
     ap.add_argument("--skip-gsplus", action="store_true")
-    ap.add_argument("--part", choices=["small", "songs", "gsplus"], help="fetch one part only (the parts can run side by side)")
+    ap.add_argument("--part", choices=["small", "songs", "remix", "gsplus"], help="fetch one part only (the parts can run side by side)")
     a = ap.parse_args()
     data = a.data
     os.makedirs(data, exist_ok=True)
@@ -140,6 +218,8 @@ def main():
     if a.part in (None, "songs"):
         fetch_songs(data, "dance", DANCE, a.dance, 1)
         fetch_songs(data, "other", f"{OTHER} AND NOT subject:{DANCE}", a.other, 2)
+    if a.part in (None, "remix") and a.remix:
+        fetch_versions(data, a.remix)
     if a.part in (None, "gsplus") and not a.skip_gsplus:
         os.makedirs(os.path.join(data, "gsplus"), exist_ok=True)
         z = os.path.join(data, "gsplus", "audio.zip")

@@ -10,6 +10,7 @@
 #include <string>
 
 #if defined(_WIN32)
+#include <cwctype>
 #include <io.h>
 #include <shobjidl.h>
 #include <shellapi.h>
@@ -223,11 +224,38 @@ std::wstring registry_text(HKEY root, const wchar_t *key, const wchar_t *name) {
   return text;
 }
 
-char *choose(deskshell *s, const char *title, bool folders, const char *, const char *, const char *start = nullptr) {
-  IFileOpenDialog *dialog = nullptr;
-  if (FAILED(CoCreateInstance(CLSID_FileOpenDialog, nullptr, CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&dialog)))) {
+// A path as Windows' shell parses it: "\" between the folders, not "/", and no "\" in front of a drive letter. Swift's
+// URL.path on Windows gives "C:/Users/..." (or "/C:/Users/..."), which SHCreateItemFromParsingName is not sure to
+// take: the chooser was then not told where to open, said nothing, and opened where it was last (the music folder).
+std::wstring windows_path(const char *p) {
+  std::wstring w = widen(p);
+  for (auto &c : w) if (c == L'/') c = L'\\';
+  if (w.size() >= 3 && w[0] == L'\\' && w[2] == L':' && iswalpha(w[1])) w.erase(0, 1);
+  return w;
+}
+
+// Export's own memory in Windows' chooser (IFileDialog::SetClientGuid). Without one, every chooser in the program
+// shares one memory of the folder used last, so Export, whenever it was not told where to open, opened in the music
+// folder Add music had just chosen, where a crate file would land among the songs. A fixed value: Windows keys the
+// memory by it, so it must never change.
+const GUID kExportChooser = {0x5b8f3c2e, 0x7a41, 0x4d6b, {0x9e, 0x12, 0x3c, 0x58, 0xa7, 0x0d, 0x61, 0xf4}};
+
+// `problem`, when given, is set (with dup) to a short line saying what went wrong; left alone when the DJ cancelled or
+// a folder came back.
+char *choose(deskshell *s, const char *title, bool folders, const char *, const char *, const char *start = nullptr,
+             const char *purpose = nullptr, char **problem = nullptr) {
+  auto fail = [problem](const char *what, HRESULT hr) -> char * {
+    if (problem) {
+      char line[160];
+      std::snprintf(line, sizeof line, "%s (0x%08lX)", what, static_cast<unsigned long>(hr));
+      *problem = dup(line);
+    }
     return nullptr;
-  }
+  };
+  IFileOpenDialog *dialog = nullptr;
+  HRESULT hr = CoCreateInstance(CLSID_FileOpenDialog, nullptr, CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&dialog));
+  if (FAILED(hr) || !dialog) return fail("the chooser could not be made", hr);
+  if (purpose && std::strcmp(purpose, "export") == 0) dialog->SetClientGuid(kExportChooser);
   DWORD options = 0;
   dialog->GetOptions(&options);
   options |= FOS_FORCEFILESYSTEM | FOS_PATHMUSTEXIST;
@@ -236,32 +264,47 @@ char *choose(deskshell *s, const char *title, bool folders, const char *, const 
   std::wstring t = widen(title);
   dialog->SetTitle(t.c_str());
   if (start && *start) {
-    // Opens inside the folder given (a big drive's top).
+    // Opens inside the folder given (a big drive's top; Export's last folder, or Documents).
     IShellItem *folder = nullptr;
-    std::wstring w = widen(start);
-    if (SUCCEEDED(SHCreateItemFromParsingName(w.c_str(), nullptr, IID_PPV_ARGS(&folder)))) {
+    std::wstring w = windows_path(start);
+    if (SUCCEEDED(SHCreateItemFromParsingName(w.c_str(), nullptr, IID_PPV_ARGS(&folder))) && folder) {
       dialog->SetFolder(folder);
       folder->Release();
     }
   }
-  char *out = nullptr;
   HWND owner = s ? static_cast<HWND>(webview_get_window(s->w)) : nullptr;
-  if (SUCCEEDED(dialog->Show(owner))) {
-    IShellItem *item = nullptr;
-    if (SUCCEEDED(dialog->GetResult(&item))) {
-      PWSTR path = nullptr;
-      if (SUCCEEDED(item->GetDisplayName(SIGDN_FILESYSPATH, &path))) {
-        out = dup(narrow(path));
-        CoTaskMemFree(path);
-      }
-      item->Release();
-    }
+  hr = dialog->Show(owner);
+  if (hr == HRESULT_FROM_WIN32(ERROR_CANCELLED)) {   // the DJ cancelled: nothing to tell
+    dialog->Release();
+    return nullptr;
   }
+  if (FAILED(hr)) {
+    dialog->Release();
+    return fail("the chooser did not open", hr);
+  }
+  IShellItem *item = nullptr;
+  hr = dialog->GetResult(&item);
+  if (FAILED(hr) || !item) {
+    dialog->Release();
+    return fail("the chooser gave back nothing", hr);
+  }
+  char *out = nullptr;
+  PWSTR path = nullptr;
+  hr = item->GetDisplayName(SIGDN_FILESYSPATH, &path);
+  if (SUCCEEDED(hr) && path) {
+    std::string p = narrow(path);
+    CoTaskMemFree(path);
+    if (!p.empty()) out = dup(p); else fail("the place chosen has no path on this computer's drives", E_FAIL);
+  } else {
+    fail("the place chosen has no path on this computer's drives", hr);
+  }
+  item->Release();
   dialog->Release();
   return out;
 }
 #elif defined(WEBVIEW_GTK)
-char *choose(deskshell *s, const char *title, bool folders, const char *accept, const char *cancel, const char *start = nullptr) {
+char *choose(deskshell *s, const char *title, bool folders, const char *accept, const char *cancel, const char *start = nullptr,
+             const char * = nullptr, char ** = nullptr) {
   GtkWindow *owner = s ? static_cast<GtkWindow *>(webview_get_window(s->w)) : nullptr;
 #if GTK_MAJOR_VERSION >= 4
   (void)owner; (void)title; (void)folders; (void)accept; (void)cancel; (void)start;
@@ -284,7 +327,8 @@ char *choose(deskshell *s, const char *title, bool folders, const char *accept, 
 #endif
 }
 #else
-char *choose(deskshell *, const char *, bool, const char *, const char *, const char * = nullptr) { return nullptr; }
+char *choose(deskshell *, const char *, bool, const char *, const char *, const char * = nullptr, const char * = nullptr,
+             char ** = nullptr) { return nullptr; }
 #endif
 
 
@@ -394,13 +438,19 @@ char *deskshell_choose_folder_in(deskshell_t s, const char *title, const char *a
   return choose(s, title, true, accept, cancel, start);
 }
 
+char *deskshell_choose_folder_for(deskshell_t s, const char *title, const char *accept, const char *cancel,
+                                  const char *start, const char *purpose, char **problem) {
+  if (problem) *problem = nullptr;
+  return choose(s, title, true, accept, cancel, start, purpose, problem);
+}
+
 char *deskshell_choose_file(deskshell_t s, const char *title, const char *accept, const char *cancel) {
   return choose(s, title, false, accept, cancel);
 }
 
 void deskshell_open_folder(const char *path) {
 #if defined(_WIN32)
-  std::wstring p = widen(path);
+  std::wstring p = windows_path(path);
   ShellExecuteW(nullptr, L"open", p.c_str(), nullptr, nullptr, SW_SHOWNORMAL);
 #elif defined(WEBVIEW_GTK)
   GFile *f = g_file_new_for_path(path);

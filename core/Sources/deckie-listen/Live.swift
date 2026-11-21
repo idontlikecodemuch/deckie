@@ -15,8 +15,13 @@ import DeckieCapture
 //     --sound FILE: a recording played as if heard, at the speed of sound, in place of an input (a check with no
 //     microphone). --log FILE: every reading and level, tab-separated, for measuring. Stops with Ctrl+C or after
 //     --seconds. The song shown is the listener's current named song (the iPad's switching rule is not applied).
+//     --listener main|fast|a|b|ab: as for a recording (a, the products' listener, when left out). At the end, how
+//     long the readings took: "listener: a, 142 readings, typical 61 ms, slowest 240 ms".
 
 func liveFail(_ message: String) -> Never { FileHandle.standardError.write(Data((message + "\n").utf8)); exit(2) }
+
+/// Set by Ctrl+C: the loop below stops at its next second and says how long the readings took.
+nonisolated(unsafe) var liveStopAsked = false
 
 func listInputs() -> Never {
     do {
@@ -79,8 +84,13 @@ func runLive(_ values: [String: String], _ flags: Set<String>) -> Never {
         state.log = FileHandle(forWritingAtPath: path)
         state.write("kind\tseconds\tstate\tsong\tplace\tconfidence\tms\trmsDb\tpeakDb\tclipped\twall")
     }
+    var settings = ListenSettings()
+    if let name = values["--listener"] {
+        guard let l = ListenSettings.Listener(rawValue: name) else { liveFail("--listener is one of \(ListenSettings.Listener.allCases.map(\.rawValue).joined(separator: ", "))") }
+        settings = ListenSettings(l)
+    }
     let wall0 = Date()
-    let booth = BoothRecogniser(index: index) { r in
+    let booth = BoothRecogniser(index: index, settings: settings) { r in
         state.lock.lock(); state.reading = r; state.lock.unlock()
         state.write(String(format: "reading\t%.1f\t%@\t%@\t%@\t%.2f\t%.0f\t\t\t\t%.2f", r.time, r.state.rawValue, r.id ?? "-",
                            r.positionSeconds.map { String(format: "%.1f", $0) } ?? "-", r.confidence, r.milliseconds,
@@ -104,8 +114,8 @@ func runLive(_ values: [String: String], _ flags: Set<String>) -> Never {
     FileHandle.standardError.write(Data("listening to \(source.name) at \(format.rate) Hz, \(format.channels) channel(s); Ctrl+C stops\n".utf8))
     print("seconds\tlevel dB\tpeak dB\tclipped\tsong\tplace\tsure\tms")
     let stopAfter = Double(values["--seconds"] ?? "") ?? .infinity
-    signal(SIGINT) { _ in exit(0) }
-    while true {
+    signal(SIGINT) { _ in liveStopAsked = true }
+    while !liveStopAsked {
         Thread.sleep(forTimeInterval: 1)
         state.lock.lock()
         let l = state.level, r = state.reading, e = state.ended, clipped = state.clippedSince
@@ -123,6 +133,7 @@ func runLive(_ values: [String: String], _ flags: Set<String>) -> Never {
     capture.stop()
     booth.finish()
     recorder?.queue.sync {}
+    FileHandle.standardError.write(Data((booth.timesLine + "\n").utf8))
     exit(0)
 }
 

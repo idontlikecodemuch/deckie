@@ -90,7 +90,8 @@ import DeckieTestSupport
     @Test func silenceIsNothingHeardAndAnInputGoingAwayIsAPlainError() throws {
         let (home, id, crate) = try Self.home("booth-gone", songs: 3)
         let quiet = Events()
-        let silence = SampleSource(samples: [Float](repeating: 0, count: 48000 * 5), format: SoundFormat(rate: 48000, channels: 1))
+        // Shorter than DeskBooth.noSoundAfter: a pause, not an input giving no sound (that is the test below).
+        let silence = SampleSource(samples: [Float](repeating: 0, count: 48000 * 4), format: SoundFormat(rate: 48000, channels: 1))
         let one = DeskBooth(crate: crate, indexAt: home.shelf.file(DeskBooth.indexFile, of: id), source: silence, out: quiet.add)
         one.start()
         try #require(one.waitUntilStarted(within: Self.started) && silence.waitUntilPlayed(within: Self.started))
@@ -108,6 +109,75 @@ import DeckieTestSupport
         Thread.sleep(forTimeInterval: 0.3)
         #expect(events.states.last?.state == "error" && events.states.last?.error?.code == "gone")
         booth.stop()
+    }
+
+    /// The Windows pass, Nov 21, 2026: a virtual machine's microphone gave pure silence, and the mode said "Nothing
+    /// heard yet from" the crate, as if the crate were at fault. An input that gives no sound, or almost none, for
+    /// `noSoundAfter` seconds is `noSound`; sound arriving is never `noSound`; and sound coming back is `listening`.
+    @Test func anInputGivingNoSoundIsSaidApartFromNothingHeard() throws {
+        let (home, id, crate) = try Self.home("booth-no-sound", songs: 3)
+        let index = home.shelf.file(DeskBooth.indexFile, of: id)
+        let rate = 48000
+        func heard(_ samples: [Float]) throws -> Events {
+            let events = Events()
+            let source = SampleSource(samples: samples, format: SoundFormat(rate: rate, channels: 1))
+            let booth = DeskBooth(crate: crate, indexAt: index, source: source, out: events.add)
+            booth.start()
+            try #require(booth.waitUntilStarted(within: Self.started) && source.waitUntilPlayed(within: Self.started))
+            booth.finishReading()
+            booth.stop()
+            return events
+        }
+        let long = Int(DeskBooth.noSoundAfter + 3) * rate
+        // Digital silence, and a hiss at about -80 dB (under the floor; a fixed pattern, no randomness).
+        var seed: UInt32 = 1
+        let hiss = (0..<long).map { _ -> Float in seed = seed &* 1_664_525 &+ 1_013_904_223; return (Float(seed >> 8) / Float(1 << 24) - 0.5) * 0.0002 }
+        for (name, samples) in [("silence", [Float](repeating: 0, count: long)), ("hiss", hiss)] {
+            let states = try heard(samples).states.map(\.state)
+            #expect(states.contains("noSound"), "\(name): \(states)")
+            #expect(states.dropLast().last == "noSound", "\(name): \(states)")   // the last before stop
+        }
+        // Music, and a quiet song (40 dB down) for as long: never noSound, and the song is named.
+        let song = Self.sound(song: 1, from: 5, seconds: DeskBooth.noSoundAfter + 3, rate: rate, stereo: false)
+        for (name, samples) in [("music", song), ("quiet music", song.map { $0 * 0.01 })] {
+            let events = try heard(samples)
+            #expect(!events.states.map(\.state).contains("noSound"), "\(name)")
+            #expect(events.heard.contains { $0.id == "song1" }, "\(name)")
+        }
+        // No sound, then music: noSound, then back to listening by itself, and the song named.
+        let both = try heard([Float](repeating: 0, count: long) + song)
+        let states = both.states.map(\.state)
+        let firstNoSound = try #require(states.firstIndex(of: "noSound"), "\(states)")
+        #expect(states[firstNoSound...].contains("listening") && states.dropLast().last == "listening", "\(states)")
+        #expect(both.heard.contains { $0.id == "song1" })
+
+        // Sound that is no song of the crate (a loud hiss): "nothing heard yet" at first; after a song was named, and
+        // the music then gives way to it, "nothing playing right now", never "yet" again.
+        seed = 7
+        let other = (0..<(12 * rate)).map { _ -> Float in seed = seed &* 1_664_525 &+ 1_013_904_223; return (Float(seed >> 8) / Float(1 << 24) - 0.5) * 0.2 }
+        let first = try heard(other).states.map(\.state)
+        #expect(first.contains("nothingHeard") && !first.contains("nothingNow") && !first.contains("noSound"), "\(first)")
+        let after = try heard(song + other)
+        let afterStates = after.states.map(\.state)
+        let named = try #require(afterStates.firstIndex(of: "listening"), "\(afterStates)")
+        #expect(after.heard.contains { $0.id == "song1" })
+        #expect(afterStates.dropLast().last == "nothingNow" && !afterStates[named...].contains("nothingHeard"), "\(afterStates)")
+        #expect(DeskWords.text("booth.state.nothingNow", ["crate": "My crate"]) == "Listening. Nothing from My crate is playing right now.")
+    }
+
+    /// An input that opens and then gives no samples at all (no levels to measure): `noSound` by the clock.
+    @Test func anInputGivingNoSamplesAtAllIsNoSound() throws {
+        let (home, id, crate) = try Self.home("booth-no-samples", songs: 2)
+        let events = Events()
+        let source = SampleSource(samples: [], format: SoundFormat(rate: 48000, channels: 1))
+        let booth = DeskBooth(crate: crate, indexAt: home.shelf.file(DeskBooth.indexFile, of: id), source: source, out: events.add)
+        booth.start()
+        try #require(booth.waitUntilStarted(within: Self.started))
+        let end = Date().addingTimeInterval(DeskBooth.noSoundAfter + 5)
+        while Date() < end && events.states.last?.state != "noSound" { Thread.sleep(forTimeInterval: 0.1) }
+        #expect(events.states.last?.state == "noSound", "\(events.states.map(\.state))")
+        booth.stop()
+        #expect(events.states.last?.state == "stopped")
     }
 
     @Test func anInputThatCannotOpenIsAPlainError() throws {
@@ -232,7 +302,7 @@ import DeckieTestSupport
     // MARK: the words and the look
 
     @Test func everyStateAndErrorHasItsWords() {
-        for s in ["starting", "index", "listening", "nothingHeard", "stopped"] { #expect(DeskWords.table["booth.state." + s] != nil, "\(s)") }
+        for s in ["starting", "index", "listening", "nothingHeard", "nothingNow", "noSound", "stopped"] { #expect(DeskWords.table["booth.state." + s] != nil, "\(s)") }
         for c in ["noInput", "notAllowed", "busy", "gone", "noSystem", "noPrints", "index", "other"] {
             #expect(DeskWords.table["booth.error." + c] != nil, "\(c)")
         }

@@ -1731,9 +1731,24 @@
   async function exportCrate() {
     if (!hasSongs()) { message([t("nothingToSendYet")]); return; }
     const f = await request("shell.chooseFolder", Object.assign({ purpose: "export", message: t("exportMessage") }, chooserWords(true)), { quiet: true });
-    if (!f.ok || !f.path) return;
-    const r = await request("crate.export", { folder: f.path }, { errorWord: "couldntExport" });
-    if (!r.ok) return;
+    // An export ends in one of three ways: the saved line, a line saying why it couldn't be saved, or nothing, only
+    // when the DJ cancelled the chooser (Windows pass, Nov 21: a chooser that gave nothing back ended in silence).
+    if (f.ok && f.cancelled) return;
+    const notSaved = (text, detail) => {
+      message([text]);
+      const first = $("message-body").firstElementChild;
+      if (first && detail) first.title = detail;
+    };
+    if (!f.ok || !f.path) { notSaved(t("exportNoFolder"), f.error && f.error.detail); return; }
+    const r = await request("crate.export", { folder: f.path }, { quiet: true });
+    if (!r.ok) {
+      const e = r.error || {};
+      // "busy" is kept quiet everywhere else (the page's own buttons wait); an export the DJ asked for is told.
+      if (e.code === "busy") notSaved(t("exportBusy"), e.detail);
+      else showError(e, "couldntExport");
+      return;
+    }
+    if (!r.path) { notSaved(t("couldntExport", { detail: "" }).replace(/\s+/g, " ").trim()); return; }
     exportedPath = r.path;
     if (finished) { render(); return; }
     const extra = el("div", null,

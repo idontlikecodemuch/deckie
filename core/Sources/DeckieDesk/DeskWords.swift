@@ -284,17 +284,19 @@ public enum DeskWords {
         "saying.reading.5": "A key goes on a song only when Desk is sure of it.",
         "saying.reading.6": "Marking where each song can be mixed in and out.",
         "saying.reading.7": "Splitting each song into its intro, main parts, breaks and outro.",
-        "saying.reading.8": "Your music stays on {thisComputer}. Only what Desk finds goes in the crate file.",
-        "saying.reading.9": "What Desk works out is kept, so the next run is quicker.",
-        "saying.reading.10": "Noting any part of a file that won't play.",
+        "saying.reading.8": "What Desk works out is kept, so the next run is quicker.",
+        // True of a folder's files only: a disc's read says its own (saying.disc).
+        "saying.folder.1": "Your music stays on {thisComputer}. Only what Desk finds goes in the crate file.",
+        "saying.folder.2": "Noting any part of a file that won't play.",
         "saying.finishing.1": "Looking for the same recording under two names.",
         "saying.finishing.2": "Comparing how the songs sound, not what they're called.",
         "saying.finishing.3": "A remix or an edit is its own song. Only the same recording counts as a copy.",
         "saying.finishing.4": "Copies of one recording keep every place they're in.",
-        "saying.disc.1": "Reading the disc one song at a time. None of it is kept.",
+        "saying.disc.1": "Reading the disc one song at a time. None of its sound is kept.",
         "saying.disc.2": "A part that won't read is tried a second time.",
         "saying.disc.3": "On a disc, the drive sets the pace.",
         "saying.disc.4": "The songs keep the order the disc has them in.",
+        "saying.disc.5": "The disc is read here on {thisComputer}. Only what Desk finds goes in the crate file.",
         "saying.saving.1": "Writing the crate file: what Desk found, never the audio.",
         "saying.saving.2": "Putting back any names you fixed before.",
         "saying.saving.3": "Looking for keys and names your DJ programs already have on {thisComputer}.",
@@ -534,6 +536,10 @@ public enum DeskWords {
         "couldntRename": "Couldn't rename the crate. {detail}",
         "couldntDelete": "Couldn't delete the crate. {detail}",
         "nothingToSendYet": "This crate has no songs yet, so there is no crate file to send. Add music first.",
+        // new (Nov 21, 2026): Export ended with no file for a reason that is not the DJ's cancel. The chooser gave
+        // no folder back; Desk was still busy reading or looking up.
+        "exportNoFolder": "Couldn't save the crate file: the folder chooser didn't give Desk a folder. Try again, and choose a folder on this computer, such as Documents.",
+        "exportBusy": "Couldn't save the crate file yet: Desk is still busy with the songs. Wait until it has finished, then export again.",
         "exportMessage": "Where the crate file goes. Desk keeps its own; this is a copy.",
         "importMessage": "Choose a crate file (a .deckie file; one made earlier may end in .deckiecrate). Desk keeps a copy; the file you choose is not changed.",
         // new (D32): the engine program could not be started or stopped answering.
@@ -957,6 +963,10 @@ public enum DeskWords {
         "error.listDoesNotMatch": "the list does not match the songs yet",
         "error.noLookupToUse": "there is no lookup to use",
         "error.noSongsNoCrateFile": "the crate has no songs yet, so there is no crate file to write",
+        // new (Nov 21, 2026): an export told no folder, or one that is not there; whole sentences, as they sit
+        // inside couldntExport.
+        "error.exportNoFolder": "No folder was chosen.",
+        "error.exportFolderNotThere": "The folder {folder} isn't there.",
         "error.notAMusicCD": "{source} is not a music CD Desk has read",
         "error.thatSource": "that source",
         "error.notALibrary": "{file} is not a DJ library Desk reads (a rekordbox XML export, Traktor's collection.nml, Engine DJ's m.db, Serato's database V2 or VirtualDJ's database.xml)",

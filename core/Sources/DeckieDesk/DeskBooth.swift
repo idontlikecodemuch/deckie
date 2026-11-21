@@ -5,7 +5,7 @@ import DeckieCapture
 
 /// Listening inside Desk (research booth-in-desk, step 1: hearing): the crate's recognition index built or opened,
 /// sound from an input (`SoundSource`: the microphone, another input, or a stand-in in tests) fed to the shared
-/// listener (`BoothRecogniser`, with the default `ListenSettings` on main), and what it hears said as events. The
+/// listener (`BoothRecogniser`, with the default `ListenSettings`, the products' listener, D41), and what it hears said as events. The
 /// Windows and Linux engine sends these as `booth.*` messages (DeskProtocol, docs/architecture/desk-protocol.md); the
 /// Mac's Desk shows them in SwiftUI. Both use this one class.
 ///
@@ -17,9 +17,22 @@ public final class DeskBooth: @unchecked Sendable {
     /// Where a crate's index is kept, in its own folder of Desk's storage (never in the crate file that leaves).
     public static let indexFile = "booth-index.dkx"
 
+    /// Below this loudest-sample level, in dB below full scale, the input is taken to be giving no sound at all. It
+    /// sits well above the floor of 16-bit sound and its dither (about -90 to -96 dB), where an input that is switched
+    /// off, refused or not connected rests (the Windows pass, Nov 21, 2026: a virtual machine's microphone), and well
+    /// under the noise any working microphone picks up in a room. Not fitted to any recording.
+    public static let noSoundFloorDB = -70.0
+    /// Seconds the input stays under that floor, or gives nothing at all, before the mode says no sound is coming:
+    /// longer than the gaps inside music and between songs, short enough that a DJ is told while still looking.
+    public static let noSoundAfter = 5.0
+
     /// What the mode is doing: `starting`, `index` (getting the crate's index ready: `percent`), `listening` (the
     /// input is on and the latest reading named a song, or none has come yet), `nothingHeard` (the input is on and the
-    /// latest reading named nothing), `error` (`error` says why; the input is off), `stopped`.
+    /// latest reading named nothing, and no song has been named since listening started), `nothingNow` (added Nov 21,
+    /// 2026: as `nothingHeard`, after a song was named earlier in this listening), `noSound` (added Nov 21, 2026: the
+    /// input is on but has given no sound, or only
+    /// sound under `noSoundFloorDB`, for `noSoundAfter` seconds; back to `listening` by itself when sound comes),
+    /// `error` (`error` says why; the input is off), `stopped`.
     public struct Status: Sendable, Equatable {
         public var state: String
         public var percent: Int?
@@ -86,6 +99,13 @@ public final class DeskBooth: @unchecked Sendable {
     private var status = Status(state: "starting")
     private var thread: Thread?
     private let finished = DispatchSemaphore(value: 0)
+    /// The no-sound watch: where the quiet began, in seconds heard (the level's own queue alone uses these two), and
+    /// the clock for an input that gives no samples at all.
+    private var quietFrom: Double?
+    /// Whether a song has been named since this listening started (under `lock`).
+    private var namedOnce = false
+    private var lastLevelAt = 0.0
+    private var watch: DispatchSourceTimer?
 
     /// `indexAt`: where the crate's index is kept (`CrateShelf.file(DeskBooth.indexFile, of: id)`).
     public init(crate: Crate, indexAt: URL, source: SoundSource, settings: ListenSettings = ListenSettings(),
@@ -177,6 +197,7 @@ public final class DeskBooth: @unchecked Sendable {
             }, level: { [weak self] level in
                 guard let self, !self.isStopped else { return }
                 out(.level(level))
+                self.hearLevel(level)
             }, ended: { [weak self] e in self?.fail(e) })
             // Stopped while the input was opening: it is closed again at once.
             if isStopped { capture.stop(); return }
@@ -184,6 +205,7 @@ public final class DeskBooth: @unchecked Sendable {
                            channels: format.channels, indexKept: !built)
             s.error = nil
             say(s)
+            watchForNoSamples(capture)
         } catch let e as CaptureError {
             fail(e)
         } catch {
@@ -191,8 +213,56 @@ public final class DeskBooth: @unchecked Sendable {
         }
     }
 
+    /// Moves the state from one of `from` to `to`, and says it; nothing when the state is another, or after stop.
+    private func move(from: Set<String>, to state: String) {
+        lock.lock()
+        guard !stopped, from.contains(status.state) else { lock.unlock(); return }
+        var n = status
+        n.state = state
+        status = n
+        lock.unlock()
+        out(.status(n))
+    }
+
+    /// The states in which the input is on and heard.
+    private static let hearing: Set<String> = ["listening", "nothingHeard", "nothingNow"]
+
+    /// Each level, on the level's queue: under the floor for `noSoundAfter` seconds of sound is `noSound`; a level over
+    /// it, while `noSound`, is `listening` again (the next reading says whether a song is named).
+    private func hearLevel(_ l: SoundLevel) {
+        let start = lastLevelAt
+        lastLevelAt = l.seconds
+        if l.peakDB < Self.noSoundFloorDB {
+            let from = quietFrom ?? start
+            quietFrom = from
+            if l.seconds - from >= Self.noSoundAfter { move(from: Self.hearing, to: "noSound") }
+        } else {
+            quietFrom = nil
+            move(from: ["noSound"], to: "listening")
+        }
+    }
+
+    /// An input that gives no samples at all has no levels to measure: a clock checks, twice a second, and says
+    /// `noSound` once `noSoundAfter` seconds have passed with nothing. Only until the first samples come; from then on
+    /// the levels say it.
+    private func watchForNoSamples(_ capture: LiveCapture) {
+        let timer = DispatchSource.makeTimerSource(queue: DispatchQueue(label: "deckie.booth.watch"))
+        let began = DispatchTime.now().uptimeNanoseconds
+        timer.schedule(deadline: .now() + 0.5, repeating: 0.5)
+        // The handler holds the timer (on Linux a timer cannot be held weakly); cancelling it lets both go.
+        timer.setEventHandler { [weak self] in
+            guard let self else { timer.cancel(); return }
+            if capture.framesHeard > 0 || self.isStopped { timer.cancel(); return }
+            if Double(DispatchTime.now().uptimeNanoseconds - began) / 1e9 >= Self.noSoundAfter {
+                self.move(from: Self.hearing, to: "noSound")
+            }
+        }
+        lock.lock(); watch?.cancel(); watch = timer; lock.unlock()
+        timer.resume()
+    }
+
     private func fail(_ e: CaptureError) {
-        lock.lock(); let c = capture; capture = nil; lock.unlock()
+        lock.lock(); let c = capture; capture = nil; watch?.cancel(); watch = nil; lock.unlock()
         // The input's own thread may be the caller (an unplugged input): stop it from another.
         if let c { DispatchQueue.global().async { c.stop() } }
         var s = current
@@ -205,12 +275,14 @@ public final class DeskBooth: @unchecked Sendable {
     private func take(_ r: ListenReading) {
         guard !isStopped else { return }
         guard r.state != .nothingYet, let id = r.id, let row = rows[id] else {
-            let s = current
-            if s.state == "listening" { var n = s; n.state = "nothingHeard"; say(n) }
+            // "Nothing heard yet" only until a song has been named in this listening; after that, "nothing now".
+            lock.lock(); let before = namedOnce; lock.unlock()
+            move(from: ["listening"], to: before ? "nothingNow" : "nothingHeard")
             return
         }
-        let s = current
-        if s.state == "nothingHeard" { var n = s; n.state = "listening"; say(n) }
+        lock.lock(); namedOnce = true; lock.unlock()
+        // A song named is sound arriving.
+        move(from: ["nothingHeard", "nothingNow", "noSound"], to: "listening")
         out(.heard(Heard(id: id, title: row.shown, artist: row.artist, bpm: row.bpm, camelot: row.key?.camelot,
                          key: row.key?.key, scale: row.key?.scale, seconds: row.seconds, place: r.positionSeconds ?? 0,
                          confidence: r.confidence, reading: r.state.rawValue, speedPercent: r.speedPercent,
@@ -225,6 +297,8 @@ public final class DeskBooth: @unchecked Sendable {
         stopped = true
         let c = capture
         capture = nil
+        watch?.cancel()
+        watch = nil
         lock.unlock()
         c?.stop()
         lock.lock(); status = Status(state: "stopped"); lock.unlock()

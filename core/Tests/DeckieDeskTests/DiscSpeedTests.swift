@@ -245,7 +245,7 @@ struct OneReadSameResultTests {
             #expect(fromFile.landmarks == inMemory.landmarks)
             let audio = try #require(seen.audio)
             #expect(try DeskRun.portablePrint(url) == DeskRun.portableAudioPrint(url, audio))
-            #expect(Array(seen.stages.prefix(5)) == ["hash", "decode", "resample", "beatthis", "key"])
+            #expect(Array(seen.stages.prefix(5)) == ["hash", "decode", "resample", "key", "beatthis"])
             #expect(seen.stages.last == "windows")
             #expect(FileTags.read(url) == FileTags.read(bytes: bytes))
             #expect(FileFacts.read(url) == FileFacts.read(bytes: bytes))
@@ -298,7 +298,14 @@ struct OneReadSameResultTests {
             // A part worked out is a change of its own (the song card's parts), sent with the step it came in.
             let stages = mine.map(\.step).filter { $0 != "started" && $0 != "reading" }
                 .reduce(into: [String]()) { if $0.last != $1 { $0.append($1) } }
-            #expect(Array(stages.prefix(4)) == ["hash", "decode", "resample", "beatthis"])
+            #expect(Array(stages.prefix(5)) == ["hash", "decode", "resample", "key", "beatthis"])
+            // Its length from the disc's table from the moment it is taken (before its sound is read), the same
+            // value its decoded sound gives; the key before the beat stage, the tempo, bars and wave after it.
+            let song = try #require(toc.songs.first { $0.number == number })
+            #expect(mine.first?.seconds == (song.seconds * 10).rounded() / 10)
+            #expect(mine.compactMap(\.seconds).allSatisfy { $0 == mine.first?.seconds })
+            let beat = try #require(mine.firstIndex { $0.step == "beatthis" })
+            #expect(mine[beat].key != nil && mine[beat].bpm == nil && mine[beat].bars == nil && mine[beat].wave == nil)
         }
         #expect(seen.counts == seen.counts.sorted())
         // The song card names the song now by its CD-Text name from the moment it is taken; a read ahead is never it.

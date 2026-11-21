@@ -16,6 +16,11 @@ import DeckieRecognition
 //       way the copies the index knows are counted: groups from the keys alone, and all groups.
 //       --memory-every N: every N readings of a clip, a line on standard error with the readings' time and the
 //       process's memory footprint (the system's own figure: the clean pages of a file opened in place left out).
+//   --listener main|fast|a|b|ab: which listener; docs/research/faster-listening-proposals.md. Left out: a, the
+//       listener the products use (D41), so this tool hears what the iPad and Desk hear. main: the listener before
+//       D41, reading for reading. fast, b, ab: research only, used by no product.
+//       --challenge-margin X, --challenge-window S (A), --cut-false-alarm S, --cut-search-from S (B): its numbers,
+//       for choosing them on the dev half.
 //   deckie-listen --live --crate <crate file> [--input NAME] [--seconds N] [--sound FILE] [--log FILE]
 //   deckie-listen --inputs
 //       live: the computer's microphone or another input, heard with a crate's songs (Live.swift).
@@ -25,7 +30,8 @@ import DeckieRecognition
 //
 // A reading: seconds heard, state (nothingYet, named, held), the song's id, the place in it (s), the deck's speed
 // (percent), key lock (yes, no, ?), confidence, milliseconds taken. At the end: the time readings took and the
-// most memory the process held.
+// most memory the process held, and the listener's own line for a log ("listener: a, 142 readings, typical 61 ms,
+// slowest 240 ms"), as Desk's engine and the iPad's log give it.
 
 func fail(_ message: String) -> Never { FileHandle.standardError.write(Data((message + "\n").utf8)); exit(2) }
 
@@ -150,11 +156,27 @@ FileHandle.standardError.write(Data(String(format: "index: %d songs, %.1f MB (%.
                                             Double(DispatchTime.now().uptimeNanoseconds - t0) / 1e6).utf8))
 FileHandle.standardError.write(Data(String(format: "index in memory: %.1f MB of table and entries, %.1f MB of the songs' points; footprint now %.0f MB\n",
                                             Double(index.memoryBytes) / 1e6, Double(index.pointBytes) / 1e6, Double(footprint() ?? 0) / 1e6).utf8))
+// --related-out FILE: the pairs of songs the index holds to be the same sound (id <tab> id), for scoring.
+if let path = values["--related-out"] {
+    var out = ""
+    for a in 0..<min(index.songCount, index.related.count) { for b in index.related[a] where Int(b) > a { out += index.ids[a] + "\t" + index.ids[Int(b)] + "\n" } }
+    guard (try? out.write(toFile: path, atomically: true, encoding: .utf8)) != nil else { fail("cannot write \(path)") }
+}
 if flags.contains("--build-only") { exit(0) }
 let chunkSeconds = Double(values["--chunk"] ?? "") ?? 0.1
 let memoryEvery = Int(values["--memory-every"] ?? "") ?? 0
 let settings: ListenSettings = {
+    // --listener main|fast|a|b|ab: the listeners of docs/research/faster-listening-proposals.md (a, the products',
+    // without it; --fast is the same as --listener fast). The settings below then change it further.
     var s = ListenSettings()
+    if let name = values["--listener"] {
+        guard let l = ListenSettings.Listener(rawValue: name) else { fail("--listener is one of \(ListenSettings.Listener.allCases.map(\.rawValue).joined(separator: ", "))") }
+        s = ListenSettings(l)
+    } else if flags.contains("--fast") { s = ListenSettings(.fast) }
+    if let v = values["--challenge-margin"].flatMap(Double.init) { s.challengeMargin = v }
+    if let v = values["--challenge-window"].flatMap(Double.init) { s.challengeWindow = v }
+    if let v = values["--cut-false-alarm"].flatMap(Double.init) { s.cutFalseAlarmSeconds = v }
+    if let v = values["--cut-search-from"].flatMap(Double.init) { s.cutSearchFrom = v }
     if let v = values["--window"].flatMap(Double.init) { s.window = v }
     if let v = values["--sure"].flatMap(Double.init) { s.sure = v }
     if let v = values["--fair"].flatMap(Double.init) { s.fair = v }
@@ -183,8 +205,11 @@ if let list = values["--list"] {
     let clips = text.split(separator: "\n").map { $0.split(separator: "\t").map(String.init) }
     let jobs = Int(values["--jobs"] ?? "") ?? ProcessInfo.processInfo.activeProcessorCount
     let lock = NSLock()
+    nonisolated(unsafe) var allTimes = ReadingTimes()
     nonisolated(unsafe) var next = 0
     nonisolated(unsafe) var rows = [String](repeating: "", count: clips.count)
+    // --alarms-out FILE: B's alarms per clip (clip, time raised, the moment named), for measuring.
+    nonisolated(unsafe) var alarmRows = [String](repeating: "", count: clips.count)
     let group = DispatchGroup()
     for _ in 0..<max(1, jobs) {
         group.enter()
@@ -206,8 +231,12 @@ if let list = values["--list"] {
                                                                     Double(footprint() ?? 0) / 1e6, Double(listener.workingBytes) / 1e6).utf8))
                     }
                 }
-                lock.lock(); rows[i] = mine; lock.unlock()
+                let alarms = listener.alarms.map { String(format: "%@\t%.2f\t%.2f\n", c[0], $0.raised, $0.moment) }.joined()
+                lock.lock(); rows[i] = mine; alarmRows[i] = alarms; lock.unlock()
             }
+            // This thread's readings, every clip it read, into the run's.
+            let mine = listener.times
+            lock.lock(); allTimes.merge(mine); lock.unlock()
             group.leave()
         }
         thread.stackSize = 16 << 20
@@ -215,7 +244,9 @@ if let list = values["--list"] {
     }
     group.wait()
     guard (try? rows.joined().write(toFile: out, atomically: true, encoding: .utf8)) != nil else { fail("cannot write \(out)") }
+    if let path = values["--alarms-out"] { try? alarmRows.joined().write(toFile: path, atomically: true, encoding: .utf8) }
     FileHandle.standardError.write(Data(String(format: "footprint at the end %.0f MB\n", Double(footprint() ?? 0) / 1e6).utf8))
+    FileHandle.standardError.write(Data((allTimes.line(listener: settings.name) + "\n").utf8))
 } else if let audio = values["--audio"] {
     var samples: [Float]
     var rate: Int
@@ -232,4 +263,5 @@ if let list = values["--list"] {
                          times.count, Double(samples.count) / Double(rate), times.isEmpty ? 0 : times[times.count / 2],
                          times.isEmpty ? 0 : times[min(times.count - 1, times.count * 95 / 100)], times.last ?? 0, Double(listener.workingBytes) / 1e6)
     FileHandle.standardError.write(Data((summary + (peakMemory().map { String(format: "; the process's peak memory %.0f MB (mapped index pages included)", Double($0) / 1e6) } ?? "") + "\n").utf8))
+    FileHandle.standardError.write(Data((listener.timesLine + "\n").utf8))
 } else { fail("give --audio FILE or --list clips.tsv") }
