@@ -105,6 +105,14 @@ enum Tour {
                 }
             }
         }
+        // DECKIE_TOUR_WIDTH: the window's content this many points wide for the whole tour, to picture a narrow window.
+        if let width = ProcessInfo.processInfo.environment["DECKIE_TOUR_WIDTH"].flatMap(Double.init), width > 0 {
+            desk.window.onWindowThread {
+                for w in NSApplication.shared.windows where w.isVisible {
+                    w.setContentSize(NSSize(width: width, height: w.contentLayoutRect.height))
+                }
+            }
+        }
         Thread.detachNewThread {
             Thread.sleep(forTimeInterval: 1.0)
             desk.window.onWindowThread { run(0) }
@@ -308,12 +316,18 @@ enum Tour {
         steps.append(Step(name: "r08-finished", event: "run.finished", delay: 2.4))
         steps.append(Step(name: "r09-wall-pointed", js: """
             var c = document.getElementById('done-wall'), r = c.getBoundingClientRect();
-            c.dispatchEvent(new MouseEvent('mousemove', { clientX: r.left + r.width * 0.3, clientY: r.top + r.height * 0.42, bubbles: true }));
-            """, delay: 0.8))
+            var at = { clientX: r.left + r.width * 0.3, clientY: r.top + r.height * 0.42, bubbles: true };
+            c.dispatchEvent(new MouseEvent('mousemove', at));
+            // Drawn again once the wave has faded behind the name, as a DJ sees it (a snapshot need not wait for the
+            // page's own animation frames).
+            setTimeout(function () { c.dispatchEvent(new MouseEvent('mousemove', at)); }, 500);
+            setTimeout(function () { c.parentElement.dispatchEvent(new Event('scroll')); }, 1100);
+            """, delay: 1.6))
         steps.append(Step(name: "r10-wall-keyboard", js: """
             var c = document.getElementById('done-wall'); c.focus();
             c.dispatchEvent(new KeyboardEvent('keydown', { key: 'End', bubbles: true }));
             c.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowUp', bubbles: true }));
+            setTimeout(function () { c.parentElement.dispatchEvent(new Event('scroll')); }, 600);   // drawn again once faded
             """, delay: 0.8))
         return steps
     }
