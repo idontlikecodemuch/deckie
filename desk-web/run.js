@@ -120,25 +120,40 @@
       if (nowReading(x)) return x.number != null ? t("nowReadingDisc", { number: x.number, total }) : t("nowReading");
       return x.number != null ? t("nowStageOf", { number: x.number, total, stage: nowStage(x) }) : t("nowStageAlone", { stage: nowStage(x) });
     }
-    /// How far through the song, 0 to 1 (RunNow.share): the share read while it is read, then its steps done, each an
-    /// equal share; within a step that says how far it is (`within`, an addition of Nov 21, 2026: the beat model's
-    /// chunks done), toward the next step's place in proportion. An entry without `within` gives the step's place.
+    /// The beat step's share of the song's bar (RunNow.beatShare: finding the beat is most of a song's time; the owner's
+    /// choice, Nov 21, 2026); the other steps share the rest equally. The steps that say how far they are (`within`).
+    const NOW_BEAT_SHARE = 0.3;
+    const NOW_SAYS_HOW_FAR = ["beatthis"];
+    const NOW_STEP_SHARES = NOW_STEPS.map((s) => (s === "beatthis" ? NOW_BEAT_SHARE : (1 - NOW_BEAT_SHARE) / (NOW_STEPS.length - 1)));
+    /// How far through the song, 0 to 1 (RunNow.share): the share read while it is read, then its steps, each its share
+    /// of the bar. The beat step moves the bar across its share as `within` says (an addition of Nov 21, 2026: the beat
+    /// model's chunks done), from its start until it says; any other step shows its share as done when it starts.
     function nowShare(x) {
       if (nowReading(x)) return x.read != null ? Math.max(0, Math.min(1, x.read)) : 0;
       const i = NOW_STEPS.indexOf(x.step);
       if (i < 0) return 1;
-      const within = typeof x.within === "number" ? Math.max(0, Math.min(1, x.within)) : 0;
-      return Math.min(1, (i + 1 + within) / NOW_STEPS.length);
+      let start = 0;
+      for (let k = 0; k < i; k++) start += NOW_STEP_SHARES[k];
+      const inStep = NOW_SAYS_HOW_FAR.includes(x.step)
+        ? (typeof x.within === "number" ? Math.max(0, Math.min(1, x.within)) : 0) : 1;
+      return Math.min(1, start + inStep * NOW_STEP_SHARES[i]);
     }
     const hasParts = (x) => x.seconds != null || x.bpm != null || x.bars != null || x.key != null || x.wave != null;
     /// The songs being worked on: `working` (an addition to protocol 2), else `now` alone (an engine before it).
     const workingList = () => (!run ? [] : run.working && run.working.length ? run.working : run.now ? [run.now] : []);
+    /// RunNow.stepRank: where its step stands in the order (-1 while read; after them all when unknown).
+    const nowRank = (x) => (nowReading(x) ? -1 : NOW_STEPS.includes(x.step) ? NOW_STEPS.indexOf(x.step) : NOW_STEPS.length);
+    /// RunNow.isFurther: a fuller bar, or as full a bar at a later step.
+    function nowFurther(a, b) {
+      const d = nowShare(a) - nowShare(b);
+      return Math.abs(d) > 1e-9 ? d > 0 : nowRank(a) > nowRank(b);
+    }
     /// RunNow.cardSong: the card's song while it is worked on; else the furthest along, the first taken of equals.
     function cardSong(list, keep) {
       const kept = keep && list.find((x) => x.rel === keep);
       if (kept) return kept;
       let best = null;
-      for (const x of list) if (!best || nowShare(x) > nowShare(best)) best = x;
+      for (const x of list) if (!best || nowFurther(x, best)) best = x;
       return best;
     }
     /// One fact in its place on the card: its words, or a quiet placeholder until it is worked out.

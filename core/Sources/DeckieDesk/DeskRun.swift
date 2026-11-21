@@ -183,15 +183,35 @@ public struct RunNow: Sendable, Equatable {
         return (CratePath.lastName(rel) as NSString).deletingPathExtension
     }
 
-    /// How far through the song, 0 to 1: the share read while it is read, then its analysis steps done of all of them,
-    /// each step an equal share; within a step that says how far it is (`within`), the bar moves from that step's place
-    /// toward the next step's in proportion to the work done, and reaches it only when the step's work is all done.
-    /// run.js `nowShare` does the same.
+    /// The beat step's share of the song's bar (run.js's NOW_BEAT_SHARE must say the same). Finding the beat is most of
+    /// a song's time (about 70% on the Windows pass), so with one tenth of the bar the bar sat still for most of each
+    /// song; with a wider share the bar's place is closer to how much of the wait is behind. Not all of it: the quick
+    /// steps still move the bar in small jumps, which the owner likes (his choice, Nov 21, 2026: a wider share, but not all of the bar). A display proportion only, the same on every machine and for every song; nothing measured.
+    public static let beatShare = 0.3
+
+    /// Each step's share of the song's bar, in `analysisSteps`' order: a step named in `ownShares` has its own; the
+    /// rest share what is left equally.
+    static let ownShares: [String: Double] = ["beatthis": beatShare]
+    public static let stepShares: [Double] = {
+        let others = analysisSteps.filter { ownShares[$0] == nil }.count
+        let left = 1 - ownShares.values.reduce(0, +)
+        return analysisSteps.map { ownShares[$0] ?? left / Double(others) }
+    }()
+
+    /// The steps that say how far through them the song is (`within`): only the beat step, for now.
+    public static let stepsThatSayHowFar: Set<String> = ["beatthis"]
+
+    /// How far through the song, 0 to 1: the share read while it is read, then its analysis steps, each its share of
+    /// the bar (`stepShares`). A step that says how far it is (`stepsThatSayHowFar`) moves the bar across its own share
+    /// in proportion to the work done: at its start until it says, at its end only when all its work is done. Any
+    /// other step shows its share as done from the moment it starts, as every step did before (when the shares were
+    /// tenths, step n of ten showed n tenths). run.js `nowShare` does the same.
     public var share: Double {
         if isReading { return max(0, min(1, read ?? 0)) }
         guard let i = Self.analysisSteps.firstIndex(of: step) else { return 1 }
-        let inStep = max(0, min(1, within ?? 0))
-        return min(1, (Double(i + 1) + inStep) / Double(Self.analysisSteps.count))
+        let start = Self.stepShares[..<i].reduce(0, +)
+        let inStep = Self.stepsThatSayHowFar.contains(step) ? max(0, min(1, within ?? 0)) : 1
+        return min(1, start + inStep * Self.stepShares[i])
     }
 
     /// The step line on the song card, in Desk's words: "Reading song 2 of 6 from the disc", "Song 2 of 6: finding
@@ -220,12 +240,26 @@ public struct RunNow: Sendable, Equatable {
 
     /// The song the card shows (the owner's note, Nov 20, 2026: the card is the song being worked on): the one it
     /// shows already while it is still worked on; else, of the songs worked on, the furthest along (the one that will
-    /// finish next), the first taken when two are as far. desk.js `cardSong` does the same.
+    /// finish next): by its bar, and where two bars are level, the later step (a song starting the beat stands where a
+    /// song on its key stands, and is further on); the first taken when two are as far. run.js `cardSong` does the same.
     public static func cardSong(_ working: [RunNow], keeping current: String?) -> RunNow? {
         if let current, let kept = working.first(where: { $0.rel == current }) { return kept }
         var best: RunNow?
-        for n in working where best == nil || n.share > best!.share { best = n }
+        for n in working where best == nil || n.isFurther(than: best!) { best = n }
         return best
+    }
+
+    /// Where its step stands in the order: before every analysis step while it is read; after them all when unknown.
+    var stepRank: Int {
+        if isReading { return -1 }
+        return Self.analysisSteps.firstIndex(of: step) ?? Self.analysisSteps.count
+    }
+
+    /// Further along than `other`: a fuller bar, or as full a bar at a later step.
+    func isFurther(than other: RunNow) -> Bool {
+        let a = share, b = other.share
+        if abs(a - b) > 1e-9 { return a > b }
+        return stepRank > other.stepRank
     }
 
     /// The songs worked on other than the card's, in the order taken: the rows under the card.
