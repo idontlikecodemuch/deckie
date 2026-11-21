@@ -18,7 +18,7 @@ choosing by the tempos and keys the engine read. No engine setting or rule was c
 
 - Five songs in the same key, 10B (D major), at 120 and 130 BPM; one in the next key round the wheel, 9B (G major),
   at 130; so most pairs are the same key or a neighbour key, at the same tempo or 8 percent apart (a ramp blend).
-- One deliberate key contrast: **Street of love** (8B, C major). From the 10B songs it reads "key clash" (two steps
+- One deliberate key contrast: **Street of love** (8B, C major). From the 10B songs it reads "keys may clash" (two steps
   back round the wheel); from Street of love to them it is a two-step energy boost, which fits.
 - "No beat-match" shows where a song has no steady beat at the join, as the engine read it: into **La montagne**
   (its start) from the 120 BPM songs, a brake rather than a blend.
