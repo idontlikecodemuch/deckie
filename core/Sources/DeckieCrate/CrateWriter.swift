@@ -122,7 +122,10 @@ public enum CrateWriter {
         }
         if staged.isEmpty && remove.isEmpty { return }
         let folder = savingFolder(for: package)
-        try DeckieFiles.remove(folder)
+        // A folder an earlier save could not remove (another program held it) is used again: files left in it are
+        // replaced or ignored (only the list says what is put in place, each with its bytes' hash), and its list, if
+        // still there, is replaced by this one.
+        leaveOrRemove(folder, package)
         let stagedRoot = folder.appendingPathComponent(stagedFolder, isDirectory: true)
         for path in staged {
             try DeckieFiles.write(files[path]!, to: stagedRoot.appendingPathComponent(path))
@@ -203,7 +206,7 @@ public enum CrateWriter {
                 return
             }
         }
-        try DeckieFiles.remove(folder)
+        leaveOrRemove(folder, package)
         try step(package, "undone")
     }
 
@@ -224,7 +227,7 @@ public enum CrateWriter {
                 // Put in place already, when the package has its bytes.
                 let there = try? Data(contentsOf: package.appendingPathComponent(path))
                 if let want = list.sha256[path], there.map(CrateIDs.sha256(of:)) != want {
-                    try DeckieFiles.remove(folder)
+                    leaveOrRemove(folder, package)
                     try step(package, "abandoned")
                     return
                 }
@@ -232,21 +235,54 @@ public enum CrateWriter {
             }
             let data = try DeckieFiles.retrying("read", from.path) { try Data(contentsOf: from) }
             if let want = list.sha256[path], CrateIDs.sha256(of: data) != want {
-                try DeckieFiles.remove(folder)
+                leaveOrRemove(folder, package)
                 try step(package, "abandoned")
                 return
             }
             try DeckieFiles.write(data, to: package.appendingPathComponent(path))
             try step(package, "placed \(path)")
-            try DeckieFiles.remove(from)
+            // Taken from the save's folder, so a later finish does not put it again; one that cannot be taken now is
+            // found in place by its hash next time.
+            tryRemove(from)
         }
+        // From here the save has succeeded: every listed file is in place with its bytes. What is left is tidying,
+        // and a file another program holds (a virus scanner, the search indexer, on Windows) must not undo that. A
+        // stale sidecar that cannot be deleted now is a file no record names, deleted by the next save; a save's
+        // folder that cannot be removed is removed at the next open or save (`finishLocked`), which then finds every
+        // file in place and has nothing else to do.
         for path in list.remove {
-            try DeckieFiles.remove(package.appendingPathComponent(path))
+            tryRemove(package.appendingPathComponent(path))
             try step(package, "deleted \(path)")
         }
-        try DeckieFiles.remove(folder)
+        leaveOrRemove(folder, package)
         try step(package, "finished")
     }
+
+    /// Deletes a save's folder, its list first; when another program holds it, says so on standard error and leaves
+    /// it for the next open or save. Never throws: by then the package is a whole crate, the old one or the new one.
+    private static func leaveOrRemove(_ folder: URL, _ package: URL) {
+        guard FileManager.default.fileExists(atPath: folder.path) else { return }
+        tryRemove(folder.appendingPathComponent(listFile))
+        tryRemove(folder)
+    }
+
+    private static func tryRemove(_ url: URL) {
+        do {
+            if let failing = removeHook, failing(url) {
+                throw DeckieFiles.HeldError(operation: "delete", path: url.path, attempts: 1,
+                                            underlying: CocoaError(.fileWriteNoPermission))
+            }
+            try DeckieFiles.remove(url)
+        } catch {
+            log("deckie: the crate file is saved; \(url.path) is left for the next save to tidy (\(error))")
+        }
+    }
+
+    /// The tests' stand-in for another program holding a file: a delete of a path it says yes to fails, as one held
+    /// through every retry does on Windows. Only a save's tidying asks it.
+    nonisolated(unsafe) static var removeHook: ((URL) -> Bool)?
+    /// Where the tidying's notes go: standard error (the engine's log, which Desk's window passes on).
+    nonisolated(unsafe) static var log: (String) -> Void = { FileHandle.standardError.write(Data(($0 + "\n").utf8)) }
 
     /// The order files are put in place: sidecars first, then `crate.json`, then `manifest.json`, so the manifest,
     /// by which Desk knows a crate has a crate file, comes last.

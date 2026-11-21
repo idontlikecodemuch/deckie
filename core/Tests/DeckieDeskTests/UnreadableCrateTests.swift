@@ -1,6 +1,6 @@
 import Foundation
 import Testing
-import DeckieCrate
+@testable import DeckieCrate
 @testable import DeckieBuild
 @testable import DeckieDesk
 
@@ -93,6 +93,45 @@ import DeckieCrate
         let s = DeskSession(home: home)
         #expect(s.unreadable != nil && !s.canRebuild)
         #expect(throws: CrateRebuild.CannotRebuild.self) { try s.rebuild() }
+    }
+
+    /// An export has succeeded once its new crate file is in place: the earlier one set aside, held by another
+    /// program so it cannot be deleted, is left (no error), and the next export of the name tidies it.
+    @Test func anExportWhoseTidyingIsHeldStillSucceeds() throws {
+        let (home, info, _) = try torn("export-held")
+        try CrateRebuild.rebuild(home: home, crateId: info.id)
+        let out = try scratch("export-held-out")
+        let dest = out.appendingPathComponent("Friday.deckie", isDirectory: true)
+        try home.shelf.exportCopy(info.id, to: dest)
+        let root = out.standardizedFileURL.path
+        CrateShelf.tidyHook = { $0.standardizedFileURL.path.hasPrefix(root) }
+        defer { CrateShelf.tidyHook = nil }
+        try home.shelf.exportCopy(info.id, to: dest)
+        #expect(try CrateReader.read(from: dest).tracks.count == 2)
+        let left = try FileManager.default.contentsOfDirectory(atPath: out.path).sorted()
+        #expect(left.count == 2 && left.contains("Friday.deckie") && left.contains { $0.hasPrefix(".Friday.deckie.replaced-") }, "\(left)")
+        CrateShelf.tidyHook = nil
+        try home.shelf.exportCopy(info.id, to: dest)
+        #expect(try FileManager.default.contentsOfDirectory(atPath: out.path) == ["Friday.deckie"])
+    }
+
+    /// A save whose tidying is held (CrateWriter's own test seam, as the Windows runner saw it on Nov 21, 2026) does
+    /// not fail what Desk does with it: the session's edit is saved and kept, and the next open tidies.
+    @Test func aDeskSaveWhoseTidyingIsHeldIsNotAnError() throws {
+        let (home, info, _) = try torn("save-held")
+        try CrateRebuild.rebuild(home: home, crateId: info.id)
+        let s = DeskSession(home: home)
+        let root = home.root.standardizedFileURL.path
+        CrateWriter.removeHook = { $0.standardizedFileURL.path.contains(CrateWriter.savingExtension) && $0.standardizedFileURL.path.hasPrefix(root) }
+        CrateWriter.log = { _ in }
+        try s.fixName("aaaa000000000001", title: "Song A, fixed", artist: "")
+        CrateWriter.removeHook = nil
+        CrateWriter.log = { FileHandle.standardError.write(Data(($0 + "\n").utf8)) }
+        #expect(CrateWriter.hasInterruptedSave(home.shelf.package(info.id)))
+        let again = DeskSession(home: home)
+        #expect(again.unreadable == nil)
+        #expect(again.crate?.tracks.first { $0.id == "aaaa000000000001" }?.ident.title == "Song A, fixed")
+        #expect(!CrateWriter.hasInterruptedSave(home.shelf.package(info.id)))
     }
 
     /// The export replaces the DJ's earlier one only once the new copy is whole: a copy that cannot be made leaves
