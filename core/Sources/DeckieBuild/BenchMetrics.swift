@@ -2,7 +2,7 @@ import Foundation
 import DeckieCore
 import DeckieLab
 
-/// The fields of a lab feature file (mixer/features/<id>.json) that the bench compares, read from either side: the
+/// The fields of a lab feature file (features/<id>.json in the lab's data) that the bench compares, read from either side: the
 /// lab's committed file, or the engine's record in the same shape (`Analysis.labJSON()`).
 public struct BenchRecord: Decodable, Sendable {
     public struct Grid: Decodable, Sendable {
@@ -119,7 +119,7 @@ public struct TrackScore: Sendable, Equatable {
     public var keyConfidenceLab: Double?
     /// `exact`, `neighbour` (the relative key, or one step round the wheel) or `other`.
     public var keyRelation: String
-    /// mixer/key_parity_keys.tsv's row for the track (research R's key method as key_parity.py decided it), nil when
+    /// The lab's key_parity_keys.tsv row for the track (research R's key method as key_parity.py decided it), nil when
     /// the sheet was not given or has no row for it.
     public var keyParityReference: KeyParityRow?
     /// The engine's own key decision (`deckie.key`: the HPCP method with the literature's profile numbers), nil in
@@ -241,7 +241,7 @@ public enum BenchMetrics {
     static func everyOther(_ a: [Double]) -> [Double] { stride(from: 0, to: a.count, by: 2).map { a[$0] } }
 
     /// Compares the engine's record with the lab's for one track, and its key with key_parity.py's (`parity`, the
-    /// track's row of mixer/key_parity_keys.tsv) when given.
+    /// track's row of the lab's key_parity_keys.tsv) when given.
     public static func compare(engine e: BenchRecord, lab l: BenchRecord, rel: String, seconds: Double?,
                                parity: KeyParityRow? = nil) -> TrackScore {
         let eb = e.detectedBeatsS ?? [], lb = l.detectedBeatsS ?? []

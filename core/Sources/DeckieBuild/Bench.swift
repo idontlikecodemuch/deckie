@@ -8,9 +8,9 @@ import DeckieCrate
 public struct BenchOptions: Sendable {
     /// Where the lab's audio is on this machine.
     public var folder: URL
-    /// The lab's feature files (mixer/features).
+    /// The lab's feature files (`features/` in the lab's private data folder, DECKIE_LAB_DATA).
     public var features: URL
-    /// The lab's candidates (mixer/candidates.json): each row's `path` and `id`.
+    /// The lab's candidates (its `candidates.json`): each row's `path` and `id`.
     public var candidates: URL
     /// The folder the rows' paths start with on the lab's machine; nil takes the folder the paths share.
     public var musicRoot: String?
@@ -26,7 +26,7 @@ public struct BenchOptions: Sendable {
     public var ids: [String]?
     /// Analyse every track again, ignoring kept records.
     public var fresh: Bool
-    /// research R's per-track keys (mixer/key_parity_keys.tsv), for the "key vs key_parity.py" column; by default
+    /// research R's per-track keys (the lab's key_parity_keys.tsv), for the "key vs key_parity.py" column; by default
     /// the file of that name beside the features folder, when it is there; nil leaves the column out.
     public var keyParity: URL?
 

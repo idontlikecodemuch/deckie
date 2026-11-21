@@ -1,6 +1,6 @@
 import Foundation
 
-/// What `LocalTempo.compute` reads from a track: the fields of a lab feature file (mixer/features/<id>.json) that
+/// What `LocalTempo.compute` reads from a track: the fields of a lab feature file (features/<id>.json in the lab's data) that
 /// `compute(feat)` in mixer/local_tempo.py uses. Times are seconds from the start of the decoded audio; the lab's
 /// field names are in brackets.
 public struct LocalTempoInput: Sendable, Equatable {

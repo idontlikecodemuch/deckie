@@ -3,7 +3,8 @@
 //
 //   deckie-build <folder> --out <name>.deckie [--rekordbox export.xml] [--jobs N] [--bpm-tags] [--name N]
 //                [--fresh]
-//   deckie-build bench <folder> --features mixer/features --candidates mixer/candidates.json [--music-root path]
+//   deckie-build bench <folder> --features <lab data>/features --candidates <lab data>/candidates.json
+//                      [--music-root path]
 //                [--out bench.json] [--records dir] [--jobs N] [--ids id,id,...] [--fresh]
 //   deckie-build mp3-check <folder> [--jobs N]
 //
@@ -103,8 +104,8 @@ do {
         args.removeFirst()
         let (folder, o) = parse(args, flags: ["fresh"],
                                 values: ["features", "candidates", "music-root", "out", "records", "jobs", "ids"])
-        guard let features = o["features"] else { fail("bench needs --features <dir> (mixer/features)", code: 2) }
-        guard let candidates = o["candidates"] else { fail("bench needs --candidates <file> (mixer/candidates.json)", code: 2) }
+        guard let features = o["features"] else { fail("bench needs --features <dir> (the lab's features folder)", code: 2) }
+        guard let candidates = o["candidates"] else { fail("bench needs --candidates <file> (the lab's candidates.json)", code: 2) }
         let options = BenchOptions(folder: url(folder), features: url(features), candidates: url(candidates),
                                    musicRoot: o["music-root"], output: o["out"].map(url), records: o["records"].map(url),
                                    jobs: jobs(o), ids: o["ids"].map { $0.split(separator: ",").map(String.init) },

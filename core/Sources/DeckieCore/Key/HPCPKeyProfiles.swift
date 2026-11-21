@@ -22,7 +22,7 @@ import Foundation
 // Essentia's key.cpp, for the STFT estimator and the quick vote, which are ported from that file. The two agree in
 // every number but one: edma major at the minor sixth, 0.32 in the thesis (its plotted point reads 0.3159) and 0.31
 // in key.cpp. The literature wins for the engine's key; key_light's value stays for parity with mixer/key_parity.py,
-// whose per-track sheet (mixer/key_parity_keys.tsv) was made with it (`HPCPKey.Table.keyLight`).
+// whose per-track sheet (the lab's key_parity_keys.tsv) was made with it (`HPCPKey.Table.keyLight`).
 
 /// One key profile pair of the HPCP key method: its name and twelve weights per mode, tonic first, rising by semitone.
 public struct HPCPProfile: Sendable, Equatable {
