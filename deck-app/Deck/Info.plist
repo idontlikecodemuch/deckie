@@ -19,8 +19,8 @@
 			<array>
 				<string>io.deckie.crate</string>
 				<string>io.deckie.crate-file</string>
-				<string>io.example.deckie.crate</string>
-				<string>io.example.deckie.crate-file</string>
+				<string>io.christophershannon.deckie.crate</string>
+				<string>io.christophershannon.deckie.crate-file</string>
 			</array>
 		</dict>
 	</array>
@@ -37,7 +37,7 @@
 	<key>CFBundleShortVersionString</key>
 	<string>0.1.0</string>
 	<key>CFBundleVersion</key>
-	<string>2</string>
+	<string>3</string>
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
 	<key>LSSupportsOpeningDocumentsInPlace</key>
@@ -121,7 +121,7 @@
 			<key>UTTypeDescription</key>
 			<string>Deckie crate file</string>
 			<key>UTTypeIdentifier</key>
-			<string>io.example.deckie.crate</string>
+			<string>io.christophershannon.deckie.crate</string>
 		</dict>
 		<dict>
 			<key>UTTypeConformsTo</key>
@@ -133,7 +133,7 @@
 			<key>UTTypeDescription</key>
 			<string>Deckie crate file</string>
 			<key>UTTypeIdentifier</key>
-			<string>io.example.deckie.crate-file</string>
+			<string>io.christophershannon.deckie.crate-file</string>
 		</dict>
 	</array>
 </dict>

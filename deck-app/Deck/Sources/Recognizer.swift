@@ -391,6 +391,9 @@ import DeckieRecognition
         heartbeat?.cancel(); heartbeat = nil
         task?.cancel(); task = nil
         feeder?.cancel(); feeder = nil
+        // How long Deckie's readings took while it listened, for the log (the details sheet's Log, and the console):
+        // "listener: a, 142 readings, typical 61 ms, slowest 240 ms".
+        for case let d as DeckieEar in ears { note(d.timesLine) }
         for e in ears { e.stop() }
         ears = []; listening = nil
         mic.stop()

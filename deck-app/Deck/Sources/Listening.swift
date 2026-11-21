@@ -87,8 +87,9 @@ final class AppleEar: Ear, @unchecked Sendable {
 
 /// Deckie's recogniser: the buffers, made mono, go to the core's `BoothRecogniser`, which returns at once and reads on
 /// a thread of its own about once a second. Each reading is handed to `onReading` on the main actor. The listener
-/// itself follows a named song cheaply and searches the whole crate every other second; nothing here restarts or
-/// searches on its own.
+/// itself follows a named song cheaply and searches the whole crate every other second, and (listener A, D41: the
+/// core's default `ListenSettings`) its newest 4 s every second for a challenger; nothing here restarts or searches
+/// on its own.
 final class DeckieEar: Ear, @unchecked Sendable {
     private var booth: BoothRecogniser!
     private let lock = NSLock()
@@ -127,6 +128,9 @@ final class DeckieEar: Ear, @unchecked Sendable {
     }
 
     func stop() { lock.lock(); stopped = true; lock.unlock() }
+
+    /// How long the listener's readings took so far, in one line for the log.
+    var timesLine: String { booth.timesLine }
 }
 
 /// Deckie's index for the open crate file: built once from its fingerprints (off the main thread), kept beside the
