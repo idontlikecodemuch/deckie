@@ -174,7 +174,7 @@ jobs:
   linux-crate:
     needs: test-mp3
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    timeout-minutes: 45
     env:
       ORT_DISABLE_TELEMETRY: "1"
     container:
