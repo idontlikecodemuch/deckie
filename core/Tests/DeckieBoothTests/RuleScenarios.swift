@@ -139,6 +139,15 @@ enum RuleScripts {
                     + [named(51, C, pos: 80, conf: 2.7), .tick(t: 51.5), named(52, C, pos: 81, conf: 2.7, agrees: true), .tick(t: 52.5)]
                     + follow(A, 53, 60, start: 50, namedFirst: false)))
 
+        // A new song named only fairly, again and again (the fair wait), then sure and agreeing (no wait at all).
+        var fair = follow(A, 3, 20, start: 0)
+        for i in 21...26 { fair.append(named(Double(i), B, pos: Double(i) - 21, conf: 2.8, agrees: true)); fair.append(.tick(t: Double(i) + 0.5)) }
+        fair += follow(B, 27, 35, start: 6, namedFirst: false)
+        for i in 36...38 { fair.append(named(Double(i), C, pos: Double(i), conf: 3.5, agrees: true)); fair.append(.tick(t: Double(i) + 0.5)) }
+        // The song before, back after the return window has passed: the plain wait.
+        fair += follow(C, 39, 70, start: 39, namedFirst: false) + [named(71, B, pos: 50), .tick(t: 71.5)] + follow(B, 72, 74, start: 51, namedFirst: false)
+        out.append(("a fair name, again and again", fair))
+
         // Silence: the song is not heard, the room goes quiet (paused), and after two minutes the screen lets go.
         var silence = follow(A, 3, 20, start: 40, speed: 1)
         silence.append(.level(-60))
@@ -146,6 +155,15 @@ enum RuleScripts {
         silence.append(.level(-18))
         silence += follow(A, 171, 180, start: 90)
         out.append(("silence", silence))
+
+        // A quiet room just under the line (-48 dB): paused, a reading from sound buffered before the pause set aside,
+        // then the music back.
+        var hush = follow(A, 3, 15, start: 20)
+        hush.append(.level(-48))
+        for i in 16...24 { hush.append(nothing(Double(i))); hush.append(.tick(t: Double(i) + 0.5)) }
+        hush += [held(25, A, pos: 33), .tick(t: 25.5), .level(-43), nothing(26), .tick(t: 26.5), .level(-20)]
+        hush += follow(A, 27, 32, start: 34, namedFirst: false)
+        out.append(("a quiet room", hush))
 
         // Talk over the music: not heard, the room not quiet, then heard again at the place it should be.
         var talk = follow(A, 3, 20, start: 40)
