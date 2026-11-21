@@ -81,9 +81,11 @@ jobs:
         run: |
           apt-get update
           apt-get install -y --no-install-recommends ca-certificates curl
+      # --deckie: Deckie's own build of the release, the library a shipped build carries (the Windows workflows fetch
+      # the same). Microsoft's archive for this release answered 404 on Nov 21, 2026.
       - name: Fetch ONNX Runtime (checked by hash)
         if: steps.onnxruntime.outputs.cache-hit != 'true'
-        run: bash core/Tools/fetch-onnxruntime.sh
+        run: bash core/Tools/fetch-onnxruntime.sh --deckie
       # Each file is checked against the SHA-256 pinned in its export script before it is moved into place, so the
       # release cannot bring a wrong file. A model it does not have (a 404, until models-1 exists) is exported below.
       - name: Fetch the models from the release models-1 (checked by hash)
