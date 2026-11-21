@@ -15,6 +15,7 @@ struct ContentView: View {
             else if model.boothOn, let c = model.current, model.crate != nil { BoothView(booth: model.booth).id(c.id) }
             else if let r = model.finished { FinishedView(report: r) }
             else if model.crate != nil { CrateView() }
+            else if let u = model.unreadable { UnreadableCrateView(unreadable: u) }
             else { EmptyCrateView() }
         }
         .safeAreaInset(edge: .top) { EngineMissingBanner() }
@@ -146,6 +147,32 @@ struct EmptyCrateView: View {
             }
             .font(Look.First.importFont)
             Text(Words.dropHere).foregroundStyle(.tertiary)
+        }.padding(Look.Space.firstScreenPadding)
+    }
+}
+
+/// A crate whose crate file is there and could not be read (the review of Nov 21, 2026): the plain line in place of
+/// the songs, never an empty crate, with Rebuild this crate when Desk can put it right (CrateRebuild), and the
+/// reader's own words folded away under Details.
+struct UnreadableCrateView: View {
+    @EnvironmentObject var model: DeskModel
+    let unreadable: CrateUnreadable
+    @State private var showDetail = false
+    var body: some View {
+        VStack(spacing: Look.Space.firstScreen) {
+            Image(systemName: "exclamationmark.triangle").font(Look.Fonts.screenTitle).foregroundStyle(Look.Colour.warning)
+            Text(Words.t("crateUnreadable")).font(Look.Fonts.screenTitle)
+            Text(Words.t(model.canRebuild ? "crateUnreadableHelp" : "crateUnreadableNoRebuild"))
+                .multilineTextAlignment(.center).foregroundStyle(.secondary).frame(maxWidth: Look.Size.firstBodyWidth)
+            if model.canRebuild {
+                Button(Words.t("rebuildCrate")) { model.rebuild() }
+                    .buttonStyle(.borderedProminent).help(Words.t("rebuildCrateHelp"))
+            }
+            DisclosureGroup(Words.t("crateUnreadableDetails"), isExpanded: $showDetail) {
+                Text(unreadable.detail).font(Look.Fonts.unreadableDetail).foregroundStyle(.secondary).textSelection(.enabled)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
+            .frame(maxWidth: Look.Size.firstBodyWidth)
         }.padding(Look.Space.firstScreenPadding)
     }
 }

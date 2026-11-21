@@ -1,0 +1,3 @@
+# Recorded test files are compared line by line: the same line endings on every system.
+core/Tests/DeckieBoothTests/Fixtures/*.txt text eol=lf
+deck-app/DeckTests/**/*.txt text eol=lf

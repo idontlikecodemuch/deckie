@@ -258,7 +258,7 @@
 
   // ---- drawing
   function show(id) {
-    for (const s of ["first", "run", "finished", "crate"]) $(s).hidden = s !== id;
+    for (const s of ["first", "run", "finished", "crate", "unreadable"]) $(s).hidden = s !== id;
     $("crate-add").hidden = true;
   }
   const current = () => (state && state.current) || null;
@@ -315,6 +315,17 @@
       $("crate-add").hidden = false;
       $("crate-add-label").textContent = t("addMoreMusicTo", { crate: shownName() });
       drawWays($("crate-ways"), false, busy || cannotRead());
+      return;
+    }
+    // A crate file that does not read: said so, never shown as a crate with no songs (protocol addition, Nov 21).
+    const bad = current() && current().unreadable;
+    if (bad) {
+      show("unreadable");
+      $("status").hidden = true;
+      $("unreadable-help").textContent = t(bad.canRebuild ? "crateUnreadableHelp" : "crateUnreadableNoRebuild");
+      $("unreadable-rebuild").hidden = !bad.canRebuild;
+      $("unreadable-rebuild").title = t("rebuildCrateHelp");
+      $("unreadable-detail").textContent = bad.detail || "";
       return;
     }
     show("first");
@@ -1751,7 +1762,17 @@
     }
     if (!r.path) { notSaved(t("couldntExport", { detail: "" }).replace(/\s+/g, " ").trim()); return; }
     exportedPath = r.path;
-    if (finished) { render(); return; }
+    if (finished) {
+      // The finished screen says it in its own line, under the buttons: brought into view, so a window too short to
+      // show it (1024x768, the Windows pass of Nov 21) does not leave the DJ seeing nothing happen.
+      render();
+      const line = $("exported");
+      if (line && !line.hidden && line.scrollIntoView) {
+        const still = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+        line.scrollIntoView({ block: "nearest", behavior: still ? "auto" : "smooth" });
+      }
+      return;
+    }
     const extra = el("div", null,
       el("p", null, el("button", { class: "link", text: t("openFolder"), on: { click: () => request("shell.openFolder", { path: parentOf(r.path) }, { quiet: true }) } })),
       el("h3", { class: "to-ipad-title", text: t("toIPadTitle") }),
@@ -1771,6 +1792,11 @@
     if (finished && await askRemove(finished.read)) { finished = null; render(); }
   });
   $("first-import").addEventListener("click", importCrate);
+  $("unreadable-rebuild").addEventListener("click", async () => {
+    const r = await request("crate.rebuild", {}, { quiet: true });
+    if (r.ok) message(r.lines || [], null, true);
+    else if (r.error) message([r.error.detail || t("crateCannotRebuild")]);
+  });
   $("carry-on").addEventListener("click", () => request("run.carryOn", {}, { errorWord: "runStopped" }));
   $("undo").addEventListener("click", () => request("edit.undo"));
   $("redo").addEventListener("click", () => request("edit.redo"));

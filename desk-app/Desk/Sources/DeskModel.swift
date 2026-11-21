@@ -24,6 +24,11 @@ final class DeskModel: ObservableObject {
     @Published var crates: [CrateInfo] = []
     @Published var current: CrateInfo?
     @Published var crate: Crate?
+    /// The crate showing has a crate file that could not be read: said in place of the songs (UnreadableCrateView),
+    /// never shown as an empty crate; Add music waits until it is rebuilt.
+    @Published var unreadable: CrateUnreadable?
+    /// Whether `unreadable` can be put right from what Desk keeps (CrateRebuild).
+    @Published var canRebuild = false
     @Published var selection: Set<String> = []
     /// The table shows only the songs that still need a name (D30).
     @Published var onlyNeedName = false
@@ -135,9 +140,12 @@ final class DeskModel: ObservableObject {
         saveNow()
         undoManager?.removeAllActions()
         current = (try? shelf.touch(info.id)) ?? info
-        let pkg = shelf.package(info.id)
-        crate = FileManager.default.fileExists(atPath: pkg.appendingPathComponent(CrateFormat.manifestFile).path)
-            ? (try? CrateReader.read(from: pkg)) : nil
+        // A crate file that does not read is said so (UnreadableCrateView), never shown as a crate with no songs.
+        do { crate = try shelf.crateFile(info.id); unreadable = nil; canRebuild = false } catch {
+            crate = nil
+            unreadable = error as? CrateUnreadable ?? CrateUnreadable(crateId: info.id, reason: error)
+            canRebuild = CrateRebuild.possible(home: home, crateId: info.id)
+        }
         corrections = NameCorrections.load(from: shelf.file(DeskRun.correctionsFile, of: info.id))
         placePaths = PlacePaths.load(from: shelf.file(DeskRun.placesFile, of: info.id))
         book = NameBook.load(from: shelf.file(DeskRun.namesFile, of: info.id))
@@ -155,7 +163,7 @@ final class DeskModel: ObservableObject {
         saveNow()
         newCrateName = DeskAddMusic.newCrateName(shelf: shelf)
         undoManager?.removeAllActions()
-        current = nil; crate = nil; pending = nil; finished = nil; selection = []; sourceSelection = nil
+        current = nil; crate = nil; unreadable = nil; canRebuild = false; pending = nil; finished = nil; selection = []; sourceSelection = nil
         book = NameBook(); listener.stop(); undoLine = nil
     }
 
@@ -384,11 +392,43 @@ final class DeskModel: ObservableObject {
         addSource(url, name: name)
     }
 
-    /// Stop, on the run screen: the songs being read finish, and every song read so far stays in the crate.
-    func stopRun() {
+    /// Stop, on the run screen: the songs being read finish, and every song read so far stays in the crate. `now`
+    /// (quitting): the songs being analysed end at their next stage instead, and are read again on Carry on.
+    func stopRun(now: Bool = false) {
         guard running, let r = runHandle else { return }
-        r.stop()
+        r.stop(now: now)
         stopping = true
+    }
+
+    /// Quitting while a run goes: the run is stopped as Stop stops it, and the app quits once the crate is saved
+    /// (DeskApp's `applicationShouldTerminate`), so it never ends in the middle of a save. `then` is called on the
+    /// main thread when it may quit.
+    func stopRunForQuit(then: @escaping @MainActor () -> Void) {
+        guard running else { then(); return }
+        quitWhenStopped.append(then)
+        stopRun(now: true)
+    }
+    private var quitWhenStopped: [@MainActor () -> Void] = []
+    private func runEndedForQuit() {
+        let waiting = quitWhenStopped
+        quitWhenStopped = []
+        for f in waiting { f() }
+    }
+
+    /// "Rebuild this crate" (CrateRebuild): the crate file put right from what Desk kept, then shown again; a line
+    /// says how many songs it holds and how many could not be put back.
+    func rebuild() {
+        guard let info = current, unreadable != nil else { return }
+        do {
+            let r = try CrateRebuild.rebuild(home: home, crateId: info.id)
+            show(info)
+            var lines = [Words.c("crateRebuilt", r.kept + r.putRight)]
+            if r.leftOut > 0 { lines.append(Words.c("crateRebuiltLeftOut", r.leftOut)) }
+            undoLine = lines.joined(separator: " ")
+        } catch {
+            errorText = (error as? LocalizedError)?.errorDescription ?? "\(error)"
+            canRebuild = false
+        }
     }
 
     /// The rekordbox route, where it was: a collection export, then the folder of music, read as a source named after
@@ -424,6 +464,8 @@ final class DeskModel: ObservableObject {
         guard !running else { return }
         // A read that cannot finish is never started (the part that reads music is missing).
         guard !cannotRead else { errorText = Words.engineMissing + " " + Words.engineMissingHelp; return }
+        // Nor into a crate whose crate file does not read: the run would start from no songs and overwrite them.
+        if let u = unreadable { errorText = u.description; return }
         saveNow()
         let info: CrateInfo
         do {
@@ -453,11 +495,13 @@ final class DeskModel: ObservableObject {
                     model.reloadCrates()
                     if let i = model.crates.first(where: { $0.id == info.id }) { model.show(i) }
                     model.crate = crate
+                    model.unreadable = nil; model.canRebuild = false
                     var shown = report
                     model.applyNameDuringRun()
                     if let n = model.current?.name { shown.crate = n }
                     model.finished = shown
                     model.applyDiscName()
+                    model.runEndedForQuit()
                 }
             } catch {
                 await MainActor.run {
@@ -468,6 +512,7 @@ final class DeskModel: ObservableObject {
                     model.applyNameDuringRun()
                     model.applyDiscName()
                     model.errorText = Words.runStopped(error.localizedDescription)
+                    model.runEndedForQuit()
                 }
             }
         }

@@ -999,6 +999,21 @@ public enum DeskWords {
         "reason.too_short": "Too short",
         // Desk without the part that reads music (no ONNX Runtime or no beat model): said at once, on every screen.
         "engineMissingHelp": "Reinstall Desk to put it back. Your crates and crate files are safe.",
+
+        // new (Nov 21, 2026): a crate whose crate file is there and does not read (a save stopped part-way by an
+        // earlier Desk). Shown in place of the songs, never as an empty crate; the reader's own words go under
+        // "Details". Placeholders until the copy audit.
+        "crateUnreadable": "This crate's file could not be read.",
+        "crateUnreadableHelp": "Desk still keeps what it worked out for every song, so it can rebuild the crate. Nothing is added to it until then.",
+        "crateUnreadableNoRebuild": "Add its music again to bring the songs back: songs Desk has read before go in quickly.",
+        "crateUnreadableDetails": "Details",
+        "rebuildCrate": "Rebuild this crate",
+        "rebuildCrateHelp": "Puts the crate's file right from what Desk kept for each song. A copy of the file as it was is kept.",
+        "crateRebuilt.one": "Crate rebuilt: 1 song.",
+        "crateRebuilt.other": "Crate rebuilt: {n} songs.",
+        "crateRebuiltLeftOut.one": "1 song could not be put back. Add its music again to bring it back.",
+        "crateRebuiltLeftOut.other": "{n} songs could not be put back. Add their music again to bring them back.",
+        "crateCannotRebuild": "This crate could not be rebuilt. Add its music again to bring the songs back.",
     ]
 
     /// The words named `key` with `{name}` filled from `values`; the key itself when there are none, so a missing word

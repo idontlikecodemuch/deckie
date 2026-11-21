@@ -26,6 +26,21 @@ enum Check {
         }
     }
 
+    enum ExportFolder: Equatable { case there, made, failed(String) }
+
+    /// `--export-to`'s folder made (with the folders above it) when it is not there yet.
+    static func makeExportFolder(_ path: String) -> ExportFolder {
+        var isFolder: ObjCBool = false
+        if FileManager.default.fileExists(atPath: path, isDirectory: &isFolder) {
+            return isFolder.boolValue ? .there : .failed("it is a file, not a folder")
+        }
+        do {
+            try FileManager.default.createDirectory(at: URL(fileURLWithPath: path, isDirectory: true),
+                                                    withIntermediateDirectories: true)
+            return .made
+        } catch { return .failed("\(error)") }
+    }
+
     static func arm(_ desk: Desk, music: String?, exportTo: String?) {
         let started = Notice.started
         @Sendable func say(_ s: String) {
@@ -47,6 +62,18 @@ enum Check {
         }
         let fullRun = music != nil && exportTo != nil
         seen.window = true
+        // The engine refuses to export into a folder that is not there (a folder chosen in a chooser always is, and
+        // making a mistyped one would hide the crate file somewhere no one chose). The check names its folder on the
+        // command line, so it makes it first, as a DJ would before choosing it, and says so.
+        if fullRun, let exportTo {
+            switch makeExportFolder(exportTo) {
+            case .there: break
+            case .made: say("the export folder was not there; made it: \(exportTo)")
+            case .failed(let why):
+                say("FAILED: the export folder \(exportTo) is not there and could not be made: \(why)")
+                end(3)
+            }
+        }
 
         say("window made with \(Window.engineName); its own icon on the window: \(desk.window.hasIcon ? "yes" : "no")")
         desk.watchers.append { line in
