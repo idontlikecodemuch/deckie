@@ -74,3 +74,44 @@ site/film/sound/*.png
 site/film/words/*.png
 site/share/*.png
 desk-app/build-next/
+
+# The lab's private data (decision D42): the lab analysed a personal music library, so nothing made from it may be
+# committed. Its folder is DECKIE_LAB_DATA, outside the repository (mixer/labdata.py, mixer/README.md); these rules
+# keep the old in-repository places out of commits if a copy is ever restored there. tools/check-private.sh (run in
+# CI) also fails if any of them is tracked.
+mixer/features/
+mixer/candidates.json
+mixer/recs.json
+mixer/recs.md
+mixer/plan*.json
+mixer/mixes/
+mixer/models/
+mixer/mixmap.html
+mixer/mixwaves.json
+mixer/*_ids.json
+mixer/*_ids.txt
+mixer/keep_from_sampler.json
+mixer/summary.md
+mixer/summary.tsv
+mixer/sprint_check.md
+mixer/sprint_check.tsv
+mixer/sprint_check/
+mixer/key_ends_*.tsv
+mixer/key_light_*.tsv
+mixer/key_parity_keys.tsv
+mixer/key_change_tests.json
+mixer/mu_bench.tsv
+mixer/set_*_songs.tsv
+mixer/set_*_transitions.tsv
+mixer/analyze_errors.log
+mixer/pool.json
+mixer/web-player/
+mixer/bench/
+pool/
+web-player/
+docs/discs/
+docs/history/
+docs/architecture/bench/
+BRIEF.md
+*.shazamcatalog
+*.shazamsignature
