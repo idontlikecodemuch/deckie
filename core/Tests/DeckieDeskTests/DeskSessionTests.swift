@@ -218,14 +218,17 @@ import DeckieCrate
         #expect(try export(21, file.path)["ok"] as? Bool == false)
 
         #if !os(Windows)
-        // A folder Desk may not write in (Windows keeps no such bits; its own refusals come from the system).
-        let locked = root.appendingPathComponent("Locked")
-        try FileManager.default.createDirectory(at: locked, withIntermediateDirectories: true)
-        try FileManager.default.setAttributes([.posixPermissions: 0o555], ofItemAtPath: locked.path)
-        defer { try? FileManager.default.setAttributes([.posixPermissions: 0o755], ofItemAtPath: locked.path) }
-        let r2 = try export(30, locked.path)
-        #expect(r2["ok"] as? Bool == false && refusal(r2).code == "failed" && !(refusal(r2).detail ?? "").isEmpty, "\(r2)")
-        #expect(((try? FileManager.default.contentsOfDirectory(atPath: locked.path)) ?? ["?"]).isEmpty)
+        // A folder Desk may not write in (Windows keeps no such bits; its own refusals come from the system). Not
+        // as the administrator, who may write anywhere whatever the bits say (the Linux build machine's tests run so).
+        if geteuid() != 0 {
+            let locked = root.appendingPathComponent("Locked")
+            try FileManager.default.createDirectory(at: locked, withIntermediateDirectories: true)
+            try FileManager.default.setAttributes([.posixPermissions: 0o555], ofItemAtPath: locked.path)
+            defer { try? FileManager.default.setAttributes([.posixPermissions: 0o755], ofItemAtPath: locked.path) }
+            let r2 = try export(30, locked.path)
+            #expect(r2["ok"] as? Bool == false && refusal(r2).code == "failed" && !(refusal(r2).detail ?? "").isEmpty, "\(r2)")
+            #expect(((try? FileManager.default.contentsOfDirectory(atPath: locked.path)) ?? ["?"]).isEmpty)
+        }
         #endif
 
         // And a folder that is there: the crate file, at the path the reply names.

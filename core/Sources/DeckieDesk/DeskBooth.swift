@@ -249,9 +249,10 @@ public final class DeskBooth: @unchecked Sendable {
         let timer = DispatchSource.makeTimerSource(queue: DispatchQueue(label: "deckie.booth.watch"))
         let began = DispatchTime.now().uptimeNanoseconds
         timer.schedule(deadline: .now() + 0.5, repeating: 0.5)
-        timer.setEventHandler { [weak self, weak timer] in
-            guard let self else { timer?.cancel(); return }
-            if capture.framesHeard > 0 || self.isStopped { timer?.cancel(); return }
+        // The handler holds the timer (on Linux a timer cannot be held weakly); cancelling it lets both go.
+        timer.setEventHandler { [weak self] in
+            guard let self else { timer.cancel(); return }
+            if capture.framesHeard > 0 || self.isStopped { timer.cancel(); return }
             if Double(DispatchTime.now().uptimeNanoseconds - began) / 1e9 >= Self.noSoundAfter {
                 self.move(from: Self.hearing, to: "noSound")
             }
