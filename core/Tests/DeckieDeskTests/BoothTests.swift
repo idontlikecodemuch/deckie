@@ -7,9 +7,12 @@ import DeckieTestSupport
 @testable import DeckieDesk
 
 /// Listening inside Desk (research booth-in-desk, step 1): the index made and kept per crate, a stand-in input heard
-/// with the shared listener, and the `booth.*` messages. No real microphone is opened.
-@Suite(.serialized) struct BoothTests {
+/// with the shared listener, and the `booth.*` messages. No real input is listed or opened: the system's sound is a
+/// stand-in. Every wait has an end and each test a time limit, so a stuck test fails on its own.
+@Suite(.serialized, .timeLimit(.minutes(2))) struct BoothTests {
     static let rate = 44100
+    /// The longest the index and a stand-in's few seconds of sound take here.
+    static let started = 60.0
 
     /// A crate of generated songs with fingerprints, kept in a desk's storage as a run would leave it.
     static func home(_ name: String, songs: Int = 5) throws -> (home: DeskHome, id: String, crate: Crate) {
@@ -59,8 +62,8 @@ import DeckieTestSupport
             let source = SampleSource(samples: Self.sound(song: 2, from: 12, seconds: 8), format: SoundFormat(rate: 48000, channels: 2))
             let booth = DeskBooth(crate: crate, indexAt: url, source: source, out: events.add)
             booth.start()
-            booth.waitUntilStarted()
-            source.waitUntilPlayed()
+            try #require(booth.waitUntilStarted(within: Self.started))
+            try #require(source.waitUntilPlayed(within: Self.started))
             booth.finishReading()
             let states = events.states
             #expect(states.first?.state == "starting")
@@ -89,7 +92,9 @@ import DeckieTestSupport
         let quiet = Events()
         let silence = SampleSource(samples: [Float](repeating: 0, count: 48000 * 5), format: SoundFormat(rate: 48000, channels: 1))
         let one = DeskBooth(crate: crate, indexAt: home.shelf.file(DeskBooth.indexFile, of: id), source: silence, out: quiet.add)
-        one.start(); one.waitUntilStarted(); silence.waitUntilPlayed(); one.finishReading()
+        one.start()
+        try #require(one.waitUntilStarted(within: Self.started) && silence.waitUntilPlayed(within: Self.started))
+        one.finishReading()
         #expect(quiet.states.last?.state == "nothingHeard")
         #expect(quiet.heard.isEmpty)
         one.stop()
@@ -98,7 +103,8 @@ import DeckieTestSupport
         let source = SampleSource(samples: [Float](repeating: 0.01, count: 4800), format: SoundFormat(rate: 48000, channels: 1),
                                   endsWith: CaptureError("gone", "unplugged"))
         let booth = DeskBooth(crate: crate, indexAt: home.shelf.file(DeskBooth.indexFile, of: id), source: source, out: events.add)
-        booth.start(); booth.waitUntilStarted(); source.waitUntilPlayed()
+        booth.start()
+        try #require(booth.waitUntilStarted(within: Self.started) && source.waitUntilPlayed(within: Self.started))
         Thread.sleep(forTimeInterval: 0.3)
         #expect(events.states.last?.state == "error" && events.states.last?.error?.code == "gone")
         booth.stop()
@@ -109,7 +115,8 @@ import DeckieTestSupport
         let events = Events()
         let source = SampleSource(samples: [], format: SoundFormat(rate: 48000, channels: 1), failsToStart: CaptureError("notAllowed", "denied"))
         let booth = DeskBooth(crate: crate, indexAt: home.shelf.file(DeskBooth.indexFile, of: id), source: source, out: events.add)
-        booth.start(); booth.waitUntilStarted()
+        booth.start()
+        try #require(booth.waitUntilStarted(within: Self.started))
         #expect(events.states.last?.state == "error" && events.states.last?.error?.code == "notAllowed")
         booth.stop()
     }
@@ -122,17 +129,16 @@ import DeckieTestSupport
         let p = DeskProtocol(home: home, output: out.add, makeRun: AddMusicTests.noRun, analysisCheck: {})
         let sound = Self.sound(song: 1, from: 5, seconds: 7, rate: 44100, stereo: false)
         p.makeSoundSource = { name in SampleSource(name: name ?? "Stand-in", samples: sound, format: SoundFormat(rate: 44100, channels: 1)) }
+        p.listSoundInputs = { SoundInputs.Listed(inputs: [SoundInput(name: "Stand-in", isDefault: true), SoundInput(name: "Line In", isDefault: false)],
+                                                 system: "stand-in") }
         p.start()
         #expect(out.wait { ($0["event"] as? String) == "state" } != nil)
 
         p.handle(line: #"{"id": 1, "type": "booth.inputs"}"#)
         let inputs = try #require(out.wait { ($0["re"] as? Int) == 1 })
-        // The real inputs of this computer (listing opens none), or a plain no_sound on a machine with no sound system.
-        if inputs["ok"] as? Bool == true {
-            #expect(inputs["inputs"] is [[String: Any]] && inputs["system"] is String)
-        } else {
-            #expect((inputs["error"] as? [String: Any])?["code"] as? String == "no_sound")
-        }
+        #expect(inputs["ok"] as? Bool == true && inputs["system"] as? String == "stand-in")
+        let listed = try #require(inputs["inputs"] as? [[String: Any]])
+        #expect(listed.map { $0["name"] as? String } == ["Stand-in", "Line In"] && listed.map { $0["default"] as? Bool } == [true, false])
 
         p.handle(line: #"{"id": 2, "type": "booth.listen", "input": "Stand-in", "crate": "\#(id)"}"#)
         let listen = try #require(out.wait { ($0["re"] as? Int) == 2 })
@@ -181,6 +187,46 @@ import DeckieTestSupport
         let n = out.all.count
         Thread.sleep(forTimeInterval: 0.5)
         #expect(!out.all.dropFirst(n).contains { ($0["event"] as? String)?.hasPrefix("booth.") == true }, "nothing heard after it stopped")
+    }
+
+    /// A machine whose sound system does not answer (no PulseAudio, a stopped Windows Audio service): the inputs are a
+    /// plain no_sound and listening a plain noSystem, each at the time limit, and the engine answers other requests
+    /// meanwhile; the input that opens late is closed again at once.
+    @Test func aSoundSystemThatDoesNotAnswerIsAPlainErrorInTimeAndHoldsNothingUp() throws {
+        let (home, id, _) = try Self.home("booth-stuck", songs: 2)
+        let out = Lines()
+        let p = DeskProtocol(home: home, output: out.add, makeRun: AddMusicTests.noRun, analysisCheck: {})
+        p.soundWait = 0.3
+        p.listSoundInputs = { Thread.sleep(forTimeInterval: 3); return SoundInputs.Listed(inputs: [], system: "stand-in") }
+        let late = SampleSource(samples: [Float](repeating: 0.1, count: 48000 * 10), format: SoundFormat(rate: 48000, channels: 1),
+                                pace: 1, opensAfter: 1.5)
+        p.makeSoundSource = { [soundWait = p.soundWait] _ in BoundedSource(late, within: soundWait) }
+        p.start()
+        #expect(out.wait { ($0["event"] as? String) == "state" } != nil)
+
+        let t0 = Date()
+        p.handle(line: #"{"id": 1, "type": "booth.inputs"}"#)
+        p.handle(line: #"{"id": 2, "type": "booth.stop"}"#)
+        #expect(Date().timeIntervalSince(t0) < 0.25, "the loop does not wait on the system's sound")
+        #expect(out.wait(seconds: 1) { ($0["re"] as? Int) == 2 }?["ok"] as? Bool == true)
+        let inputs = try #require(out.wait(seconds: 2) { ($0["re"] as? Int) == 1 })
+        #expect(Date().timeIntervalSince(t0) < 2, "given up on at the limit, not when the system answered")
+        #expect(inputs["ok"] as? Bool == false && (inputs["error"] as? [String: Any])?["code"] as? String == "no_sound"
+                && (inputs["error"] as? [String: Any])?["detail"] as? String == "noSystem")
+
+        p.handle(line: #"{"id": 3, "type": "booth.listen", "crate": "\#(id)"}"#)
+        #expect(out.wait { ($0["re"] as? Int) == 3 }?["ok"] as? Bool == true)
+        let failed = try #require(out.wait(seconds: 30) { ($0["event"] as? String) == "booth.state" && $0["state"] as? String == "error" })
+        #expect((failed["error"] as? [String: Any])?["code"] as? String == "noSystem")
+        #expect(!out.all.contains { ($0["event"] as? String) == "booth.state" && $0["state"] as? String == "listening" })
+        // The input that opens after all is stopped again: it does not play its ten seconds.
+        Thread.sleep(forTimeInterval: 1.6)
+        let delivered = late.delivered
+        Thread.sleep(forTimeInterval: 0.5)
+        #expect(late.delivered == delivered && delivered < 48000)
+        #expect(!out.all.contains { ($0["event"] as? String) == "booth.level" }, "nothing heard from an input given up on")
+        p.handle(line: #"{"id": 4, "type": "booth.stop"}"#)
+        #expect(out.wait { ($0["re"] as? Int) == 4 }?["ok"] as? Bool == true)
     }
 
     // MARK: the words and the look

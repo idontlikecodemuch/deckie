@@ -231,8 +231,18 @@ public final class DeskBooth: @unchecked Sendable {
         out(.status(Status(state: "stopped")))
     }
 
-    /// Waits until the index is ready and the input started or failed (tests and tools).
-    public func waitUntilStarted() { finished.wait(); finished.signal() }
+    /// Waits until the index is ready and the input started or failed (tests and tools): at most `seconds` (nil: for
+    /// as long as it takes). False when the time ran out first.
+    @discardableResult
+    public func waitUntilStarted(within seconds: Double? = nil) -> Bool {
+        if let seconds {
+            guard finished.wait(timeout: .now() + seconds) == .success else { return false }
+        } else {
+            finished.wait()
+        }
+        finished.signal()
+        return true
+    }
 
     /// Waits until everything heard so far has been read (tests and tools).
     public func finishReading() {

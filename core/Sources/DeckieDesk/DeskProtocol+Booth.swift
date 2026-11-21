@@ -9,18 +9,24 @@ import DeckieCapture
 // While a run reads music, listening waits: `booth.listen` is refused with `busy` (as every request that is not
 // read-only is), and a run that starts while listening stops the listening first (`booth.state` `stopped`). Reading
 // music and listening are never both going, so neither slows the other and only one thing holds the processor.
+//
+// Nothing here waits on the system's sound while holding the message loop: `booth.inputs` is listed on a thread of its
+// own and answered from there, and `booth.listen` finds and opens its input on the listener's thread. Each is waited
+// for at most `soundWait` seconds (`SoundInputs.answerWithin`, Bounded.swift in DeckieCapture); past that the answer
+// is a plain `no_sound` (`noSystem`) for the inputs, and `booth.state` `error` `noSystem` for listening.
 
 extension DeskProtocol {
     /// The engine's stand-in for an input, for checks and pictures with no microphone: `DECKIE_BOOTH_SOUND` names an
     /// audio file, played as if it were heard, at the speed of sound; `booth.inputs` then lists it alone.
     static let soundStandIn = "DECKIE_BOOTH_SOUND"
 
-    /// The inputs this computer has (the stand-in alone when the environment names one).
+    /// The inputs this computer has (the stand-in alone when the environment names one), waited for at most
+    /// `soundWait` seconds.
     func boothInputs() throws -> (inputs: [[String: Any]], system: String) {
         if let file = environment[Self.soundStandIn] {
             return ([["name": URL(fileURLWithPath: file).lastPathComponent, "default": true]], "stand-in")
         }
-        let listed = try SoundInputs.list()
+        let listed = try SoundInputs.list(within: soundWait, using: listSoundInputs)
         return (listed.inputs.map { ["name": $0.name, "default": $0.isDefault] }, listed.system)
     }
 
@@ -32,20 +38,27 @@ extension DeskProtocol {
             return SampleSource(name: URL(fileURLWithPath: file).lastPathComponent, samples: b.samples,
                                 format: SoundFormat(rate: b.sampleRate, channels: b.channelCount), pace: 1)
         }
-        let listed = try SoundInputs.list()
-        return Microphone(SoundInputs.named(name, in: listed.inputs))
+        // Found by name as it starts, on the listener's thread, within the same time limit as its opening.
+        return Microphone(named: name, within: soundWait)
     }
 
     /// Called with the lock held.
     func boothRequest(_ type: String, _ obj: [String: Any], _ id: Any?) throws {
         switch type {
         case "booth.inputs":
-            do {
-                let (inputs, system) = try boothInputs()
-                reply(id, ["inputs": inputs, "system": system])
-            } catch let e as CaptureError {
-                throw RequestError(code: "no_sound", detail: e.code)
+            // Off the loop: the answer comes from this thread when the system gives it, or when it is given up on.
+            nonisolated(unsafe) let id = id   // the request's id, a JSON value, only read
+            let t = Thread { [self] in
+                do {
+                    let (inputs, system) = try boothInputs()
+                    reply(id, ["inputs": inputs, "system": system])
+                } catch let e as CaptureError {
+                    fail(id, "no_sound", e.code)
+                } catch {
+                    fail(id, "no_sound", "failed")
+                }
             }
+            t.start()
         case "booth.listen":
             guard let info = session.current, let crate = session.crate else { throw RequestError(code: "no_crate", detail: nil) }
             if let wanted = obj["crate"] as? String, wanted != info.id { throw RequestError(code: "bad_request", detail: "not the crate showing") }

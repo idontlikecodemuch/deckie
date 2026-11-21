@@ -44,8 +44,12 @@ final class Collected: @unchecked Sendable {
     var frames = 0
 }
 
-@Suite(.serialized) struct CaptureTests {
+/// Every wait in these tests has an end (`played`), and each test a time limit, so a stuck test fails on its own
+/// instead of holding the whole run. No real input is listed or opened: the system's sound is a stand-in here.
+@Suite(.serialized, .timeLimit(.minutes(2))) struct CaptureTests {
     static let built = generatedCrate()
+    /// The longest any stand-in's sound takes to play here (a few seconds of sound, read as fast as it can be).
+    static let played = 60.0
     static let index: RecognitionIndex = { try! built.crate.recognitionIndex(cachedAt: scratchFile("index.dkx")) }()
 
     /// Plays song `song` from `from` seconds through a stand-in input at `rate` with `channels` channels and returns the
@@ -61,7 +65,7 @@ final class Collected: @unchecked Sendable {
                                        level: { l in got.lock.lock(); got.levels.append(l); got.lock.unlock() },
                                        ended: { _ in })
         #expect(format == SoundFormat(rate: rate, channels: channels))
-        source.waitUntilPlayed()
+        try #require(source.waitUntilPlayed(within: Self.played))
         capture.stop()
         booth.finish()
         capture.flushLevels()
@@ -93,7 +97,7 @@ final class Collected: @unchecked Sendable {
         let source = SampleSource(samples: a + b, format: SoundFormat(rate: rate, channels: 1))
         let capture = LiveCapture(source)
         try capture.start(sound: { s, f in booth.feed(s, channels: f.channels, sampleRate: f.rate) }, level: { _ in }, ended: { _ in })
-        source.waitUntilPlayed(); capture.stop(); booth.finish()
+        try #require(source.waitUntilPlayed(within: Self.played)); capture.stop(); booth.finish()
         let ids = got.readings.compactMap { $0.state == .nothingYet ? nil : $0.id }
         #expect(ids.first == "song1")
         #expect(ids.last == "song4")
@@ -109,7 +113,7 @@ final class Collected: @unchecked Sendable {
         let source = SampleSource(samples: s, format: SoundFormat(rate: rate, channels: 1))
         let capture = LiveCapture(source)
         try capture.start(sound: { _, _ in }, level: { l in got.lock.lock(); got.levels.append(l); got.lock.unlock() }, ended: { _ in })
-        source.waitUntilPlayed(); capture.stop(); capture.flushLevels()
+        try #require(source.waitUntilPlayed(within: Self.played)); capture.stop(); capture.flushLevels()
         #expect(got.levels.count == 5)
         let first = got.levels[0]
         #expect(abs(first.rmsDB - -9.03) < 0.1 && abs(first.peakDB - -6.02) < 0.1)
@@ -125,7 +129,7 @@ final class Collected: @unchecked Sendable {
         let source = SampleSource(samples: [Float](repeating: 0, count: rate * 4), format: SoundFormat(rate: rate, channels: 1))
         let capture = LiveCapture(source)
         try capture.start(sound: { _, _ in }, level: { l in got.lock.lock(); got.levels.append(l); got.lock.unlock() }, ended: { _ in })
-        source.waitUntilPlayed(); capture.stop(); capture.flushLevels()
+        try #require(source.waitUntilPlayed(within: Self.played)); capture.stop(); capture.flushLevels()
         #expect(got.levels.first?.silent == false)
         #expect(got.levels.last?.silent == true)
         #expect(got.levels.last?.peakDB == -120)
@@ -137,7 +141,7 @@ final class Collected: @unchecked Sendable {
                                   endsWith: CaptureError("gone", "unplugged"))
         let capture = LiveCapture(source)
         try capture.start(sound: { _, _ in }, level: { _ in }, ended: { e in got.lock.lock(); got.ended.append(e); got.lock.unlock() })
-        source.waitUntilPlayed()
+        try #require(source.waitUntilPlayed(within: Self.played))
         capture.stop()
         #expect(got.ended == [CaptureError("gone", "unplugged")])
 
@@ -165,21 +169,61 @@ final class Collected: @unchecked Sendable {
         }
     }
 
-    /// The real inputs are listed without opening one (no permission is asked); on a machine with no sound system at
-    /// all (a build machine), listing says so with a plain error instead.
-    @Test func theInputsAreListedOrTheirAbsenceIsSaidPlainly() {
+    /// Listing goes through a lister (the system's, or a stand-in here) and is waited for at most the time given: a
+    /// system that does not answer is a plain `noSystem` in that time, and a lister's own error comes through.
+    @Test func theInputsAreListedWithinATimeLimitOrTheirAbsenceIsSaidPlainly() throws {
+        let two = SoundInputs.Listed(inputs: [SoundInput(name: "USB Mixer", isDefault: true), SoundInput(name: "Line In", isDefault: false)],
+                                     system: "stand-in")
+        let listed = try SoundInputs.list(within: 5, using: { two })
+        #expect(listed.inputs.map(\.name) == ["USB Mixer", "Line In"] && listed.system == "stand-in")
+        #expect(SoundInputs.named("line in", in: listed.inputs)?.name == "Line In")
+        #expect(SoundInputs.named("no such input \(UUID())", in: listed.inputs) == nil)
+        #expect(SoundInputs.named(nil, in: listed.inputs) == nil && SoundInputs.named("", in: listed.inputs) == nil)
+
+        #expect(throws: CaptureError("noInput", "none")) { try SoundInputs.list(within: 5, using: { throw CaptureError("noInput", "none") }) }
+
+        // A system that never answers (here: answers after 3 seconds) is given up on at the time limit.
+        let t0 = Date()
         do {
-            let listed = try SoundInputs.list()
-            #expect(!listed.system.isEmpty)
-            #expect(listed.inputs.filter(\.isDefault).count <= 1)
-            if let d = listed.inputs.firstIndex(where: \.isDefault) { #expect(d == 0, "the default comes first") }
-            for i in listed.inputs { #expect(SoundInputs.named(i.name, in: listed.inputs)?.name == i.name) }
-            #expect(SoundInputs.named("no such input \(UUID())", in: listed.inputs) == nil)
-            #expect(SoundInputs.named(nil, in: listed.inputs) == nil)
+            _ = try SoundInputs.list(within: 0.3, using: { Thread.sleep(forTimeInterval: 3); return two })
+            Issue.record("a slow system was waited for")
         } catch let e as CaptureError {
             #expect(e.code == "noSystem")
-        } catch {
-            Issue.record("listing threw \(error)")
         }
+        #expect(Date().timeIntervalSince(t0) < 2, "given up on at the limit, not when the system answered")
+        #expect(SoundInputs.answerWithin > 0 && SoundInputs.answerWithin <= 10)
+    }
+
+    /// An input that does not open in time is a plain `noSystem` at the limit; when it opens after all, it is closed
+    /// again at once and nothing it gives arrives. One that opens in time works as it would, and stops as it would.
+    @Test func anInputThatOpensTooSlowlyIsGivenUpOnAndClosedWhenItDoesOpen() throws {
+        let got = Collected()
+        let slow = SampleSource(samples: [Float](repeating: 0.1, count: 48000 * 4), format: SoundFormat(rate: 48000, channels: 1),
+                                pace: 1, opensAfter: 1)
+        let bounded = BoundedSource(slow, within: 0.2)
+        let t0 = Date()
+        #expect(throws: CaptureError.self) {
+            try bounded.start(sound: { s, _ in got.lock.lock(); got.frames += s.count; got.lock.unlock() }, ended: { _ in })
+        }
+        #expect(Date().timeIntervalSince(t0) < 0.9, "given up on before the input opened")
+        Thread.sleep(forTimeInterval: 1.6)
+        got.lock.lock(); let frames = got.frames; got.lock.unlock()
+        #expect(frames == 0, "nothing from an input given up on")
+        let delivered = slow.delivered
+        Thread.sleep(forTimeInterval: 0.5)
+        #expect(slow.delivered == delivered && delivered < 48000, "the late input was stopped again, not left playing")
+        bounded.stop()   // after a start given up on: nothing happens
+
+        let quick = SampleSource(samples: [Float](repeating: 0.1, count: 48000 * 20), format: SoundFormat(rate: 48000, channels: 1), pace: 1)
+        let ok = BoundedSource(quick, within: 5)
+        let format = try ok.start(sound: { s, _ in got.lock.lock(); got.frames += s.count; got.lock.unlock() }, ended: { _ in })
+        #expect(format == SoundFormat(rate: 48000, channels: 1) && ok.name == quick.name)
+        Thread.sleep(forTimeInterval: 0.3)
+        ok.stop()
+        got.lock.lock(); let after = got.frames; got.lock.unlock()
+        Thread.sleep(forTimeInterval: 0.2)
+        got.lock.lock(); let later = got.frames; got.lock.unlock()
+        #expect(after > 0 && later == after, "nothing arrives once stop returns")
+        ok.stop()
     }
 }
