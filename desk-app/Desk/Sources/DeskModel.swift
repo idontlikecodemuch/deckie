@@ -19,6 +19,12 @@ final class DeskModel: ObservableObject {
     /// The listening mode (Booth.swift): on while its switch is pressed; it shows for a crate with songs when no run goes.
     @Published var boothOn = false
     let booth = BoothModel()
+    /// The quick start (D46, QuickStart.swift): what Desk remembers (the card hidden, the film played), the player's
+    /// sheet, and whether the film can play here (false once it is missing, not playable or failed: then its steps
+    /// in words show instead).
+    @Published private(set) var quickStart = DeskQuickStart()
+    @Published var showFilm = false
+    @Published var filmPlays = QuickStartFiles.film != nil
 
     /// Every crate, the most recent first, and the one showing (nil: the first screen, for a new crate).
     @Published var crates: [CrateInfo] = []
@@ -124,7 +130,30 @@ final class DeskModel: ObservableObject {
         reloadCrates()
         newCrateName = DeskAddMusic.newCrateName(shelf: shelf)
         lookupExplained = LookupLog.load(home).explained
+        quickStart = DeskQuickStart.load(home)
         if let first = crates.first { show(first) }
+        // The very first open, when the core's switch says so (off): the film starts by itself, once.
+        if crates.isEmpty && quickStart.playsItself() { showFilm = true }
+    }
+
+    // MARK: the quick start (D46)
+
+    /// The first screen's card hidden: remembered in Desk's storage; Help > Watch the quick start still plays it.
+    func hideQuickStart() {
+        try? DeskQuickStart.dismiss(home)
+        quickStart = DeskQuickStart.load(home)
+    }
+
+    /// The film started: remembered, so it never starts by itself again.
+    func filmStarted() {
+        try? DeskQuickStart.markPlayed(home)
+        quickStart = DeskQuickStart.load(home)
+    }
+
+    /// Asks the system once whether it can play the film; when it cannot, the card shows the steps in words.
+    func checkFilm() async {
+        guard filmPlays, let u = QuickStartFiles.film else { filmPlays = false; return }
+        if let playable = try? await AVURLAsset(url: u).load(.isPlayable), !playable { filmPlays = false }
     }
 
     // MARK: the crates

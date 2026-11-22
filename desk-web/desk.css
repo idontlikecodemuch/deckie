@@ -505,6 +505,32 @@
   --t-frame-late: 250ms;                  /* no animation frame by then (a window not in front): the stage steps without one */
   --saying-fact-skip: 0.35;               /* after a fact, the chance the next line is about the step instead */
   --ease-turn: cubic-bezier(.3, 0, .2, 1);  /* the wheel's turn at a moment */
+
+  /* ---- the quick start (D46, quickstart.js): the first screen's card and the film's player */
+  --qs-card-w: 40rem;                     /* the card, at the top of the first screen */
+  --qs-card-gap: 18px; --qs-card-pad: 14px 16px 14px 14px;
+  --qs-card-edge: rgba(180, 144, 255, 0.45); --qs-card-line: 1.5px;
+  --qs-card-bg: rgba(180, 144, 255, 0.10);
+  --qs-poster-w: 176px;                   /* the poster, 16 by 9 */
+  --qs-poster-ratio: 16 / 9;
+  --qs-poster-r: var(--r-field);
+  --qs-play-size: 46px;                   /* the round play button over the poster */
+  --qs-play-bg: rgba(15, 10, 23, 0.72); --qs-play-bg-on: var(--acc);
+  --qs-play-mark: 9px;                    /* half the play triangle's height; its width is 1.6 times that */
+  --qs-play-mark-w: 15px;
+  --qs-play-mark-nudge: 3px;              /* the triangle sits a little right of centre, to look centred */
+  --qs-play-mark-colour: #ffffff; --qs-play-mark-on: var(--ink);
+  --fs-qs-new: 19px; --fw-qs-new: 700; --qs-new-below: 2px;
+  --fs-qs-watch: 16px; --fw-qs-watch: 600;
+  --qs-card-w-words: 48rem;               /* wider when it holds the steps in words, so it stays short */
+  --qs-words-gap: 6px; --fs-qs-words-head: 16px;
+  --qs-steps-indent: 20px; --qs-steps-gap: 4px; --fs-qs-steps: 13.5px;
+  --qs-hide-self: flex-start;
+  --film-max-w: 1000px; --film-max-vw: 92vw;   /* the player */
+  --film-r: var(--r-field);
+  --film-bg: #000000;
+  --qs-start-wait: 6000;                  /* milliseconds: a film not started by then is taken not to play here */
+  --to-ipad-then-above: 4px;              /* "Then open it in Deckie" under the ways to the iPad */
 }
 * { box-sizing: border-box; }
 html, body { height: 100%; }
@@ -565,7 +591,7 @@ input[type=text]:focus { border-color: var(--acc); outline: none; }
 /* the screens */
 main { flex: 1; min-height: 0; display: flex; flex-direction: column; }
 .screen { flex: 1; min-height: 0; overflow: auto; }
-.center { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: var(--center-gap); padding: var(--center-pad); }
+.center { display: flex; flex-direction: column; align-items: center; justify-content: safe center; text-align: center; gap: var(--center-gap); padding: var(--center-pad); }
 .center .body { max-width: var(--text-col); color: var(--mut); }
 .actions { display: flex; flex-wrap: wrap; gap: var(--actions-gap); justify-content: center; }
 .card { background: var(--surface); border-radius: var(--r-card); padding: var(--card-pad); }
@@ -888,3 +914,31 @@ dialog.wide.lookup { max-width: min(var(--lookup-wide-max-w), var(--lookup-wide-
 #run-title { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .spinner { display: inline-block; width: var(--spinner); height: var(--spinner); border-radius: var(--r-pill); border: var(--spinner-line) solid var(--hair);
            border-top-color: var(--acc); animation: turn var(--spinner-turn) linear infinite; vertical-align: middle; }
+
+/* ---- the quick start (D46): a card at the top of the first screen, and the player. The card's poster takes the play
+   button; where the film cannot play the card shows the steps in words (.words) beside the poster instead. */
+.qs-card { display: flex; align-items: center; gap: var(--qs-card-gap); text-align: left; max-width: var(--qs-card-w); width: 100%;
+           padding: var(--qs-card-pad); background: var(--qs-card-bg); border: var(--qs-card-line) solid var(--qs-card-edge); }
+.qs-card.words { align-items: flex-start; max-width: var(--qs-card-w-words); }
+#first.offering .crate-big { display: none; }
+.qs-poster { position: relative; flex: none; width: var(--qs-poster-w); aspect-ratio: var(--qs-poster-ratio); border-radius: var(--qs-poster-r);
+             overflow: hidden; background: var(--film-bg); }
+.qs-poster img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.qs-play { position: absolute; inset: 0; margin: auto; width: var(--qs-play-size); height: var(--qs-play-size); padding: 0;
+           border-radius: var(--r-pill); background: var(--qs-play-bg); display: flex; align-items: center; justify-content: center; }
+.qs-play:hover:not(:disabled), .qs-play:focus-visible { background: var(--qs-play-bg-on); }
+.qs-play-mark { width: 0; height: 0; margin-left: var(--qs-play-mark-nudge); border-style: solid; border-color: transparent;
+                border-width: var(--qs-play-mark) 0 var(--qs-play-mark) var(--qs-play-mark-w); border-left-color: var(--qs-play-mark-colour); }
+.qs-play:hover:not(:disabled) .qs-play-mark, .qs-play:focus-visible .qs-play-mark { border-left-color: var(--qs-play-mark-on); }
+.qs-text { flex: 1; min-width: 0; }
+.qs-offer { display: flex; flex-direction: column; align-items: flex-start; }
+.qs-new { margin: 0 0 var(--qs-new-below); font-size: var(--fs-qs-new); font-weight: var(--fw-qs-new); }
+.qs-watch { font-size: var(--fs-qs-watch); font-weight: var(--fw-qs-watch); text-align: left; white-space: normal; }
+.qs-words { display: flex; flex-direction: column; gap: var(--qs-words-gap); text-align: left; }
+.qs-words h2 { font-size: var(--fs-qs-words-head); margin: 0; }
+.qs-steps { margin: 0; padding-left: var(--qs-steps-indent); display: flex; flex-direction: column; gap: var(--qs-steps-gap);
+            font-size: var(--fs-qs-steps); color: var(--mut); text-wrap: pretty; }
+.qs-hide { flex: none; align-self: var(--qs-hide-self); }
+dialog.film { max-width: min(var(--film-max-w), var(--film-max-vw)); }
+.film-video { display: block; width: 100%; aspect-ratio: var(--qs-poster-ratio); border-radius: var(--film-r); background: var(--film-bg); }
+.to-ipad-then { margin: var(--to-ipad-then-above) 0 0; }

@@ -163,9 +163,32 @@ enum Check {
                     deckieShell.send(JSON.stringify({ type: 'shell.drawn', screen: shown.id,
                       heading: h1 ? h1.textContent : '', button: document.getElementById('add-label').textContent,
                       engine: deckieShell.engine, cannotRead: !document.getElementById('engine-missing').hidden }));
-                    desk.request('drives.list', {}, { quiet: true }).then(function (r) {
-                      deckieShell.send(JSON.stringify({ type: 'shell.checked', drives: r.ok ? r.drives.length : -1 }));
-                    });
+                    // The quick start (D46): what the first screen's card shows in this web view, whether this web
+                    // view can load the bundled film, and the fall-back to its steps in words, tried here for real.
+                    // Then a request from the page through the shell and the engine and back: the list of drives.
+                    var listDrives = function () {
+                      desk.request('drives.list', {}, { quiet: true }).then(function (r) {
+                        deckieShell.send(JSON.stringify({ type: 'shell.checked', drives: r.ok ? r.drives.length : -1 }));
+                      });
+                    };
+                    var qs = window.desk.quickStart;
+                    if (!(qs && qs.available())) listDrives();
+                    else {
+                      var before = qs.state();
+                      var probe = document.createElement('video'); probe.muted = true; probe.preload = 'metadata';
+                      var told = false;
+                      var tell = function (loads) {
+                        if (told) return; told = true;
+                        qs.fallBack();
+                        deckieShell.send(JSON.stringify({ type: 'shell.checkQuickStart', before: before, loads: loads, after: qs.state(),
+                          wordsShown: !document.getElementById('qs-words').hidden, steps: document.getElementById('qs-steps').innerText }));
+                        listDrives();
+                      };
+                      probe.addEventListener('loadedmetadata', function () { tell(true); });
+                      probe.addEventListener('error', function () { tell(false); });
+                      setTimeout(function () { tell(null); }, 8000);
+                      probe.src = document.querySelector('#qs-poster-img').getAttribute('src').replace(/[^/]*$/, '') + 'deckie-desk-quick-start.mp4';
+                    }
                     """)
             case "shell.drawn":
                 seen.drawn = true
@@ -174,6 +197,23 @@ enum Check {
                     + ((m["cannotRead"] as? Bool) == true ? "; the banner says Desk cannot read music here" : ""))
                 say(String(format: "start-up: the page showed the engine's words %.2f s after the program started (at unix ms %.0f)",
                            now.timeIntervalSince(started), now.timeIntervalSince1970 * 1000))
+            case "shell.checkQuickStart":
+                // The card before (as this web view drew it), whether the film loads here, and the card after the
+                // fall-back: the steps in words and no play button. A card that offers a film this web view says it
+                // cannot play, or a fall-back that leaves a player, fails the check.
+                let before = m["before"] as? [String: Any] ?? [:], after = m["after"] as? [String: Any] ?? [:]
+                let loads = m["loads"] as? Bool
+                func yes(_ v: Any?) -> String { (v as? Bool).map { $0 ? "yes" : "no" } ?? "?" }
+                say("quick start: card offered \(yes(before["offered"])), shows \(before["mode"] ?? "?") (this web view can play H.264: "
+                    + "\(yes(before["canPlay"]))); the bundled film \(loads == true ? "loads" : loads == false ? "does not load" : "gave no answer in 8 s") here")
+                let steps = (m["steps"] as? String ?? "").split(whereSeparator: \.isNewline).count
+                let consistent = !((before["mode"] as? String) == "film" && (before["canPlay"] as? Bool) == false)
+                let fellBack = (after["mode"] as? String) == "words" && (after["player"] as? Bool) == false && m["wordsShown"] as? Bool == true && steps == 4
+                say("quick start: after the fall-back the card shows \(steps) steps in words, play button \((after["player"] as? Bool) == true ? "still there" : "gone")")
+                if !consistent || !fellBack {
+                    say("FAILED: the quick start's card \(consistent ? "did not fall back to its steps" : "offers a film this web view cannot play")")
+                    end(3)
+                }
             case "shell.checked":
                 let drives = (m["drives"] as? NSNumber)?.intValue ?? -1
                 say("a request from the page came back from the engine: \(drives) drives listed")

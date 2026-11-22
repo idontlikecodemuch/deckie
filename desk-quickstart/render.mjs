@@ -6,7 +6,7 @@
 //   node render.mjs --work <capture folder> --page walkthrough/sketch.html --stills <folder> --at 1,2,3,4,5
 //   options: --from <s> --to <s> (a part only), --crf 20, --chrome <path>
 import { spawn } from "node:child_process";
-import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
+import { readFileSync, writeFileSync, mkdirSync, existsSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, resolve } from "node:path";
 
@@ -19,7 +19,8 @@ const CHROME = opt("chrome", "/Applications/Google Chrome.app/Contents/MacOS/Goo
 const FPS = 30, CRF = opt("crf", "20");
 if (!opt("work") || (!OUT && !STILLS)) { console.error("usage: node render.mjs --work <folder> (--out <mp4> | --stills <folder> --at 1,2)"); process.exit(2); }
 const marks = JSON.parse(readFileSync(`${WORK}/marks.json`, "utf8"));
-const booth = resolve(HERE, "../site/assets/booth-listen.jpg");
+// The iPad: the picture capture/ipad.sh made of Deckie on the iPad simulator, else the site's own still (older).
+const booth = opt("ipad", existsSync(`${WORK}/ipad.png`) ? `${WORK}/ipad.png` : resolve(HERE, "../site/assets/booth-listen.jpg"));
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 const PORT = 9800 + Math.floor(Math.random() * 150);

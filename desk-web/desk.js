@@ -132,6 +132,9 @@
   // The listening mode (booth.js): its own screen and the booth.* events; it reads the crate showing from here.
   const booth = window.DeskBooth ? window.DeskBooth({ $, el, t, mmss, request, render: () => render(), current: () => current(),
     shownName: () => shownName(), busy: () => !!run || !!(state && state.running), has: (k) => W[k] != null }) : null;
+  // The quick start (quickstart.js, D46): the first screen's card, the player, and its way back in the ⋯ menu.
+  const quickStart = window.DeskQuickStart ? window.DeskQuickStart({ $, el, t, list, num, request }) : null;
+  window.desk.quickStart = quickStart;
 
   function showError(e, word) {
     if (e.code === "busy") return;
@@ -149,6 +152,7 @@
       case "hello":
         hello = m; W = m.words || {}; computer = m.computer || "other";
         applyWords(document);
+        if (quickStart) quickStart.hello(m.quickStart);
         if (m.protocol !== 2) {
           message([PAGE_WORDS.protocol]);
           const first = $("message-body").firstElementChild;
@@ -331,6 +335,7 @@
     show("first");
     $("status").hidden = true;
     $("first-body").textContent = t("firstBody");
+    if (quickStart) quickStart.firstScreen();
   }
 
   /// Whether this computer's Desk is missing the part that reads music (the engine's first message says analysis is
@@ -1546,6 +1551,11 @@
     list.append(sep());
     list.append(item(t("importCrateFile"), () => { close(true); importCrate(); }));
     list.append(item(t("exportCrateFile"), () => { close(true); exportCrate(); }, { disabled: !songsHere }));
+    // The quick start, any time (D46): the film, or its steps where it cannot play.
+    if (quickStart && quickStart.available()) {
+      list.append(sep());
+      list.append(item(t("quickStartMenu"), () => { close(true); quickStart.open(); }));
+    }
   });
 
   function lookedAgainLines(s) {

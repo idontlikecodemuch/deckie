@@ -5,9 +5,16 @@
 //
 //   node live.mjs --engine <deckie-desk-engine> --pages <desk-web folder> --work <scratch folder>
 //
-// <work> must hold drives/<a folder per stand-in drive> (songs.py's songs in "Friday stick"). It writes
-// <work>/frames/f00000.jpg onward, <work>/marks.json (what happened at which frame, and where each click landed, in
-// the page's own pixels) and <work>/engine.jsonl (every line the engine sent, with its time).
+// <work> must hold drives/<a folder per stand-in drive> (songs.py's songs in "Friday stick") and, for the Booth beat,
+// <work>/booth/Microphone: a song of that drive as sound, which the engine plays to its listener as if the computer's
+// microphone heard it (the engine's own stand-in for an input, DECKIE_BOOTH_SOUND; the input list then shows the file's
+// name, "Microphone"). It writes <work>/frames/f00000.jpg onward, <work>/marks.json (what happened at which frame,
+// where each click landed, in the page's own pixels, and each frame's moment on the page's clock) and
+// <work>/engine.jsonl (every line the engine sent, with its time).
+//
+// The page's clock is stepped, a thirtieth of a second a frame, so every animation is exact. While Booth listens the
+// engine hears the stand-in in real time, so from there on each frame moves the page's clock on by the real time it
+// took; the film plays that stretch by those moments (marks.json `times`).
 import { spawn } from "node:child_process";
 import { mkdirSync, writeFileSync, readFileSync, createWriteStream, rmSync } from "node:fs";
 import { createInterface } from "node:readline";
@@ -24,6 +31,8 @@ const FRAMES = `${WORK}/frames`;
 rmSync(FRAMES, { recursive: true, force: true });
 rmSync(`${WORK}/desk-home`, { recursive: true, force: true });
 for (const d of [FRAMES, `${WORK}/desk-home`, `${WORK}/dj-home`, `${WORK}/Documents`, `${WORK}/chrome-profile`]) mkdirSync(d, { recursive: true });
+// The quick start's own card (D46) is hidden, as it is for a DJ who has seen it: the film does not show itself.
+writeFileSync(`${WORK}/desk-home/quick-start.json`, JSON.stringify({ dismissed: true, played: true }));
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 // ---- the engine, at low priority, in scratch folders, with no lookups
@@ -33,6 +42,7 @@ const env = Object.assign({}, process.env, {
   DECKIE_DESK_HOME: `${WORK}/desk-home`, DECKIE_DJ_HOME: `${WORK}/dj-home`, DECKIE_LOOKUP_OFF: "1",
   DECKIE_DESK_COMPUTER: "other", DECKIE_DESK_JOBS: "2", DECKIE_DESK_DRIVES: `${WORK}/drives`,
   DECKIE_DESK_BIG_DRIVE_BYTES: String(4e12),           // the stand-in drives are folders on this Mac's disk
+  DECKIE_BOOTH_SOUND: `${WORK}/booth/Microphone`,      // Booth's input: a song of the stick, heard as if by the microphone
 });
 const engine = spawn("nice", ["-n", "19", ENGINE], { stdio: ["pipe", "pipe", "pipe"], env });
 engine.stderr.on("data", (d) => process.stderr.write("[engine] " + d));
@@ -110,11 +120,18 @@ for (let i = 0; i < 50 && (await js("document.readyState")) !== "complete"; i++)
 // ---- frames
 let frame = 0;
 const marks = [];
+const times = [];          // each frame's moment on the page's clock, in milliseconds
+let pageNow = 0;
+let realTime = false, lastReal = 0;
 const mark = (label, extra = {}) => { marks.push(Object.assign({ frame, label }, extra)); console.error(`frame ${frame}: ${label}`); };
 async function tick() {
   while (fromPage.length) shellMessage(fromPage.shift());
   if (pageReady && fromEngine.length) { const lines = fromEngine.splice(0); await js(`__feed(${JSON.stringify(lines)})`); }
-  await js(`__advance(${STEP})`);
+  // A thirtieth of a second a frame; in real time (Booth listening), the real time this frame took.
+  let step = STEP;
+  if (realTime) { const now = Date.now(); step = Math.max(STEP, now - lastReal); lastReal = now; }
+  pageNow = await js(`__advance(${step})`);
+  times.push(Math.round(pageNow));
   // The one place the pages show a folder's whole path, "The crate file is in …": the work folder's path on this
   // Mac is not for a film, so the line says only the folder's own name, "Documents". The only change to the page.
   await js(`(function(){ const e = document.getElementById('exported-text'), p = ${JSON.stringify(WORK + "/")}; if (e && e.textContent.indexOf(p) >= 0) e.textContent = e.textContent.split(p).join(''); })()`);
@@ -177,7 +194,7 @@ await click("choose-stick", `[...document.querySelectorAll('#pick-list .pick-row
 // 4. The run, to its end
 await until(() => seenEvents.includes("run.started"), 9000, 0);
 await until(() => shown("#run-stop"), 300, 0);
-mark("run-started", { rect: await rectOf(q("#run-stop")) });
+mark("run-started", { rect: await rectOf(q("#run-stop")), leave: await rectOf(q("#run .leave")) });
 await until(() => seenEvents.includes("run.finished"), 60000, 0);
 mark("run-finished");
 await until(() => shown("#finished-export"), 600, 0);
@@ -204,15 +221,26 @@ await until(() => shown("#exported"), 900, 0);
 if (!(await shown("#exported"))) throw new Error("the crate file was not exported");
 await hold(15);
 await scrollToShow(toIPad);
-mark("exported", { rect: await rectOf(q("#exported")), box: await rectOf(toIPad) });
+mark("exported", { rect: await rectOf(q("#exported")), box: await rectOf(toIPad), then: await rectOf(q(".to-ipad-then")) });
 await hold(75);
 
 // 6. The songs
 await click("see-songs", q("#finished-songs"));
-await hold(75);
+await hold(45);
 mark("songs");
 
-writeFileSync(`${WORK}/marks.json`, JSON.stringify({ size: [W, H, DPR], fps: FPS, frames: frame, marks }, null, 1));
+// 7. Booth: the switch in the bar; Desk listens (the stand-in), names the song playing and shows the picks. From the
+// click on, the page's clock keeps real time with the engine's listener.
+await click("booth", q("#booth-button"));
+realTime = true; lastReal = Date.now();
+mark("booth-on");
+await until(() => js(`(function(){ const e = document.getElementById('booth-song'); return !!(e && e.textContent.trim() && !e.closest('[hidden]')); })()`), 3000, 0);
+mark("booth-named", { rect: await rectOf(q("#booth-song")), picks: await rectOf(`document.querySelector('.booth-picks')`) });
+const namedAt = Date.now();
+while (Date.now() - namedAt < 14000) await tick();
+mark("booth-end");
+
+writeFileSync(`${WORK}/marks.json`, JSON.stringify({ size: [W, H, DPR], fps: FPS, frames: frame, marks, times }, null, 1));
 console.error(`done: ${frame} frames`);
 ws.close();
 chrome.kill();

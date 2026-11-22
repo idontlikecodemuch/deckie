@@ -1,9 +1,9 @@
 # Deckie Desk's quick start
 
-A first cut of the film a DJ could watch the first time they open Deckie Desk, and a sketch of the alternative, a
-walkthrough over the real screens. The reasons, the options and the recommendation are research letter AG
-(`docs/research/ag-desk-quick-start.md`); the beats and their words are `storyboard.md`. Nothing here is wired into
-Desk yet: that waits for the owner's choice.
+Desk's opening video (D46): a silent film of 58 seconds, captions in the picture, that a DJ starts from the card on
+Desk's first screen, or from the Help menu (Mac) or the "⋯" menu (Windows and Linux). The reasons and the options are
+research letter AG (`docs/research/ag-desk-quick-start.md`); the beats and their words are `storyboard.md`. The film
+that ships, 720p, and its poster are in `desk-web/quick-start/`; this folder is how they are made.
 
 ## What is here
 
@@ -14,14 +14,22 @@ Desk yet: that waits for the owner's choice.
   "your" and "Deckie" only. It has no sound.
 - `render.mjs`: renders the film (or single pictures of it) in headless Chrome, frame by frame, into ffmpeg.
 - `capture/songs.py`: twelve generated songs with invented titles and acts (made the way the demo crate's names are);
-  drums, bass and chords made from nothing. Never a real song or artist.
+  steady-beat dance tracks of drums, bass and chords made from nothing. Never a real song or artist.
 - `capture/live.mjs` and `capture/clock.js`: the capture. Desk's Windows and Linux window (the pages in `desk-web/`,
   unchanged) in headless Chrome, talking to the real engine (`deckie-desk-engine`) on the generated songs, clicked
   through as a DJ would: the new crate's name typed, Add drive, the stick, the whole run, the finished screen,
-  Export crate file, the box "To get it to your iPad". Every frame is taken on a stepped clock, so animations are
-  exact. Words name "this computer", as Windows and Linux do (`DECKIE_DESK_COMPUTER=other`).
-- `walkthrough/sketch.html`, `sketch.js`: the in-app walkthrough sketch (option B): five boxes over frames of the same
-  capture. Pictures only.
+  Export crate file, the box "To get it to your iPad", the crate's songs, then **Booth**: Desk listening, naming the
+  song playing and showing its picks on its violet ground. Every frame is taken on a stepped clock, so animations are
+  exact; once Booth listens, the clock keeps real time with the engine's listener (marks.json `times`). Words name
+  "this computer", as Windows and Linux do (`DECKIE_DESK_COMPUTER=other`). The quick start's own card is hidden in the
+  capture's storage, so the film does not show itself.
+- `capture/ipad.sh`: the iPad picture: Deckie on the iPad simulator (a Debug build installed there), Booth naming a song
+  of the crate file the capture exported, with its picks. The simulator records while the Mac is locked.
+- `capture/card.mjs`: pictures of the quick start where a DJ meets it, in the same window with the real engine and fresh
+  storage: the first screen with the card, the "⋯" menu, the player, the card when the web view cannot play the film
+  (the poster and the four steps in words), the player when the film fails while playing, and the first screen after
+  Hide (also after the engine is started again). It checks each and says what it found.
+- `walkthrough/sketch.html`, `sketch.js`: the in-app walkthrough sketch from the first cut (option B, not chosen).
 
 ## What it does not touch
 
@@ -33,35 +41,47 @@ own profile in the work folder and no network services. Nothing is read from a D
 
 With Node, ffmpeg, Python 3 with numpy, and Google Chrome. One heavy step at a time.
 
-    W=.scratch/quick-start                                   # the work folder, outside git
+    W=$PWD/.scratch/quick-start-2                            # the work folder, outside git
     python3 desk-quickstart/capture/songs.py $W/songs
-    mkdir -p "$W/drives/Friday stick" && cp $W/songs/*.mp3 "$W/drives/Friday stick/"
+    mkdir -p "$W/drives/Friday stick" "$W/booth" && cp $W/songs/*.mp3 "$W/drives/Friday stick/"
+    # Booth's input: one of the stick's songs as sound, from its first beat, named as the input list will show it
+    ffmpeg -ss 15 -i "$W/songs/05 Ember Motel - Static Garden.mp3" -ac 1 -ar 44100 -f wav "$W/booth/Microphone"
     (cd core && nice -n 19 swift build --product deckie-desk-engine -j 2)
 
     # ONNX Runtime and the two models: wherever this machine has them (here, desk-app/Vendor of the main checkout)
     export DECKIE_ONNXRUNTIME_LIB=…/libonnxruntime.1.31.1.dylib
     export DECKIE_BEAT_THIS_MODEL=…/models/beat_this_final0.onnx DECKIE_YAMNET_MODEL=…/models/yamnet.onnx
     nice -n 19 node desk-quickstart/capture/live.mjs --engine $PWD/core/.build/debug/deckie-desk-engine \
-        --pages $PWD/desk-web --work $W                      # about 4 minutes; frames, marks.json
+        --pages $PWD/desk-web --work $W                      # about 5 minutes; frames, marks.json
+    nice -n 19 desk-quickstart/capture/ipad.sh <iPad simulator udid> $W   # writes $W/ipad.png
 
     nice -n 19 node desk-quickstart/render.mjs --work $W --out $W/deckie-desk-quick-start-1080p.mp4
-    nice -n 19 ffmpeg -i $W/deckie-desk-quick-start-1080p.mp4 -vf scale=1280:-2 -c:v libx264 -preset slow \
-        -crf 27 -pix_fmt yuv420p -movflags +faststart $W/deckie-desk-quick-start-phone.mp4
+    # the film that ships: 720p, H.264 Main 3.1 (the pages ask the web view for exactly this), no sound, about 1.7 MB
+    nice -n 19 ffmpeg -i $W/deckie-desk-quick-start-1080p.mp4 -vf scale=1280:720:flags=lanczos -c:v libx264 \
+        -profile:v main -level 3.1 -preset slow -crf 28 -pix_fmt yuv420p -movflags +faststart -an \
+        desk-web/quick-start/deckie-desk-quick-start.mp4
+    nice -n 19 ffmpeg -ss 2.4 -i $W/deckie-desk-quick-start-1080p.mp4 -frames:v 1 -vf scale=1280:720 -q:v 4 \
+        desk-web/quick-start/poster.jpg
     nice -n 19 ffmpeg -i $W/deckie-desk-quick-start-1080p.mp4 \
         -vf "fps=1/2.5,scale=480:-1,tile=4x6:padding=6:color=0x222222" -frames:v 1 $W/contact-sheet.png
-    nice -n 19 node desk-quickstart/render.mjs --work $W --page walkthrough/sketch.html --stills $W/walkthrough --at 1,2,3,4,5
+    nice -n 19 node desk-quickstart/capture/card.mjs --engine $PWD/core/.build/debug/deckie-desk-engine \
+        --pages $PWD/desk-web --work $W                      # $W/card/*.png, and a check of the card
 
-The film reads the capture's `marks.json` (what happened at which frame, and where each click landed), so a new
-capture with different timings still lines up; only the seconds in `film.js` and `storyboard.md` are fixed.
+The film reads the capture's `marks.json` (what happened at which frame, where each click landed, and each frame's
+moment), so a new capture with different timings still lines up; only the seconds in `film.js` and `storyboard.md` are
+fixed. When the film's length changes, `DeskQuickStart.filmSeconds` in the core changes with it.
 
 ## Known limits of this cut
 
-- The Mac's own window (`desk-app/`) is not in it: the Mac was locked, and that window can only be captured
-  unlocked. The film shows the Windows and Linux window, with "Export crate file…" where the Mac has "Send to iPad".
-- The stand-in drive is a folder on this Mac's disk, so the drive list gives "Friday stick" that disk's size
-  (494 GB). Disk images that would give a stick's size could not be made here.
-- After Export, the pages say "The crate file is in" and the folder's whole path. The capture shortens that one line
-  to the folder's own name, "Documents", so no path on this Mac is in a film. It is the only change made to a page.
-- The finished screen is taller than a 1280 by 800 window, so the capture scrolls down to its buttons.
-- The booth beat is a still from the site's own capture of Deckie Booth (`site/assets/booth-listen.jpg`, the demo
-  crate), not a recording made for this film; the step of opening the crate file on the iPad is not shown.
+- The Mac's own window (`desk-app/`) is not in it: the Mac was locked, and that window can only be captured unlocked.
+  The one film serves the Mac too, so its captions are true on a Mac: "Export the crate file" (the Mac's File menu has
+  it), "iCloud Drive, a stick or a cable" with "On a Mac, AirDrop too", "Click Booth at the top of the window", and
+  "your computer" on the end card. A Mac cut would show Send to iPad in step 3.
+- The engine ran on this Mac, so the box "To get it to your iPad" in the picture lists the Mac's ways (AirDrop first);
+  on Windows and Linux the box lists that computer's ways. The caption names the ways all three share.
+- The stand-in drive is a folder on this Mac's disk, so the drive list gives "Friday stick" that disk's size.
+- Booth hears a song file, not a room: the engine's own stand-in for an input (`DECKIE_BOOTH_SOUND`) plays one of the
+  stick's songs to the listener as if the microphone heard it, so the input list shows the file's name, "Microphone".
+  Everything else on the Booth screen (the song named, its place, the picks, the Shuffle dial) is the engine's own.
+- The iPad picture is the simulator, fed the same song from its file (the app's Debug test hook); its small status
+  line says "test file".

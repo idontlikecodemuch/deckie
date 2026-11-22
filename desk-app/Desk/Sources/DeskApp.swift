@@ -51,6 +51,10 @@ struct DeskApp: App {
                 Button(Words.sendToIPad) { model.sendToIPad() }.disabled(model.crate == nil || model.running)
             }
             CommandGroup(replacing: .saveItem) {}
+            // The quick start, any time (D46): the film, or its steps where it cannot play.
+            CommandGroup(replacing: .help) {
+                Button(Words.t("quickStartMenu")) { model.showFilm = true }
+            }
             CommandGroup(after: .sidebar) {
                 Button(model.showSources ? Words.hideSources : Words.showSourcesMenu) { model.showSources.toggle() }
                     .keyboardShortcut("d", modifiers: [.command, .shift]).disabled(model.crate == nil)

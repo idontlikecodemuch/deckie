@@ -150,7 +150,10 @@ public final class DeskProtocol: @unchecked Sendable {
               "computer": DeskWords.computerKind,
               // The three ways to add music, the same as the Mac's (DeskAddMusic.ways): each one's word, help and icon.
               "addWays": DeskAddMusic.ways.map { ["id": $0.id, "word": $0.word, "help": $0.help, "icon": $0.pageIcon] },
-              "lookup": ["service": "MusicBrainz", "available": lookupClient.available] as [String: Any]])
+              "lookup": ["service": "MusicBrainz", "available": lookupClient.available] as [String: Any],
+              // The quick start (D46, an addition to protocol 2): the bundled film beside the pages, its length, and
+              // whether the first screen offers it and whether it starts by itself (DeskQuickStart).
+              "quickStart": DeskQuickStart.hello(session.home)])
         lock.lock(); defer { lock.unlock() }
         sendState(); sendSongs()
     }
@@ -222,7 +225,7 @@ public final class DeskProtocol: @unchecked Sendable {
         lock.lock(); defer { lock.unlock() }
         let readOnly: Set<String> = ["state", "drives.list", "crate.songs", "source.removeCount", "run.nameDisc", "name.split",
                                      "song.audio", "song.cover", "lookup.sent", "run.stop", "crate.rename", "add.countStop",
-                                     "booth.inputs", "booth.stop", "booth.shuffle"]
+                                     "booth.inputs", "booth.stop", "booth.shuffle", "quickStart.dismiss", "quickStart.played"]
         if running && !readOnly.contains(type) { fail(id, "busy", "a run is going"); return true }
         if lookingUp && !readOnly.contains(type) && type != "lookup.stop" { fail(id, "busy", "a lookup is going"); return true }
         do {
@@ -473,6 +476,13 @@ public final class DeskProtocol: @unchecked Sendable {
             reply(id, ["sent": Self.plainDated(s.lookupLog.sent), "service": "MusicBrainz"])
         case "lookup.clearSent":
             try s.clearSent(); reply(id)
+        case "quickStart.dismiss":
+            // The first screen's quick-start card closed (D46): remembered in Desk's storage; the film stays in the
+            // "…" menu. The reply carries the quick start as the hello does, now.
+            try DeskQuickStart.dismiss(s.home); reply(id, ["quickStart": DeskQuickStart.hello(s.home)])
+        case "quickStart.played":
+            // The film started (by the DJ, or by itself on the very first open when that is switched on).
+            try DeskQuickStart.markPlayed(s.home); reply(id, ["quickStart": DeskQuickStart.hello(s.home)])
         default:
             throw RequestError(code: "unknown_type", detail: type)
         }

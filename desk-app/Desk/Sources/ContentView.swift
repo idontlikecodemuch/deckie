@@ -67,6 +67,7 @@ struct ContentView: View {
         .onAppear { model.undoManager = undoManager }
         .onChange(of: undoManager) { _, u in model.undoManager = u }
         .sheet(isPresented: $model.showImportLog) { ImportLogView() }
+        .sheet(isPresented: $model.showFilm) { QuickStartPlayer().environmentObject(model) }
         .sheet(item: $model.addStep) { step in AddStepSheet(step: step).environmentObject(model) }
         // A folder, a drive or a disc dropped on the window is added as Add folder adds one.
         .onDrop(of: [.fileURL], isTargeted: nil) { providers in
@@ -137,7 +138,9 @@ struct EmptyCrateView: View {
     @EnvironmentObject var model: DeskModel
     var body: some View {
         VStack(spacing: Look.Space.firstScreen) {
-            CrateIcon(size: Look.First.crateIcon).foregroundStyle(.secondary)
+            // The quick start, offered at the top until the DJ hides it (D46).
+            // It takes the place of the crate's big drawing while it is offered, as on the pages.
+            if model.quickStart.offers { QuickStartCard() } else { CrateIcon(size: Look.First.crateIcon).foregroundStyle(.secondary) }
             Text(Words.firstTitle).font(Look.Fonts.screenTitle)
             Text(Words.firstBody)
                 .multilineTextAlignment(.center).foregroundStyle(.secondary).frame(maxWidth: Look.Size.firstBodyWidth)
@@ -265,6 +268,8 @@ struct RunView: View {
             VStack(alignment: .leading, spacing: RunLook.sayingLeaveGap) {
                 SayingLine(watch: model.watch)
                 Text(DeskWords.text("leaveRunning")).font(Look.Fonts.leaveRunning).foregroundStyle(.tertiary)
+                // That Stop keeps what was read (D46, research AG): said here, not only in Stop's tooltip.
+                Text(DeskWords.text("stopAnyTime")).font(Look.Fonts.leaveRunning).foregroundStyle(.tertiary)
             }
             // The song card: the song (or songs) being worked on; when none is, the last song in.
             SongCardSlot(watch: model.watch)
@@ -386,6 +391,12 @@ struct FinishedView: View {
             }
             .frame(maxWidth: Look.Size.finishedSummaryWidth, alignment: .leading)
             Text(Words.nextStep).padding(.top, Look.Space.nextStepAbove)
+            // How the file gets to the iPad, and what happens there (D46, research AG): the Mac's finished screen had
+            // neither.
+            Text(Words.t("sendToIPadHow")).foregroundStyle(.secondary).multilineTextAlignment(.center)
+                .frame(maxWidth: Look.Size.finishedSummaryWidth)
+            Text(Words.t("thenOpenInDeckie")).foregroundStyle(.secondary).multilineTextAlignment(.center)
+                .frame(maxWidth: Look.Size.finishedSummaryWidth)
             HStack {
                 if stopped, model.pending != nil { Button(Words.carryOn) { model.carryOn() }.buttonStyle(.borderedProminent) }
                 Button(Words.sendToIPad) { model.sendToIPad() }.buttonStyle(.borderedProminent)

@@ -1,14 +1,15 @@
-// Deckie Desk's quick start, first cut: a pure function of time. `await seek(t)` paints the moment t (in seconds).
+// Deckie Desk's quick start (D46): a pure function of time. `await seek(t)` paints the moment t (in seconds).
 // The picture of Desk is the real Windows and Linux window (desk-web, unchanged) captured frame by frame by
 // capture/live.mjs while the real engine read generated songs; this file only frames it, moves the camera, draws the
-// pointer where the capture clicked, and sets the captions. The booth is the site's own capture (site/assets).
+// pointer where the capture clicked, and sets the captions. The iPad is a picture of Deckie on the iPad simulator, made
+// for this film (capture/ipad.sh), or the site's own still when there is none.
 // The plan it follows is storyboard.md. The look is the explainer film's (site/film): the booth's colours, Inter, and
 // Pacifico for "you", "your" and "Deckie" only.
 
 const W = 1920, H = 1080;
 const C = { bg: '#0f0a17', bg2: '#1c1036', card: '#1d1530', line: '#30254a', tx: '#f2edf9', mut: '#ab9fc2', dim: '#76698f', acc: '#b490ff', ink: '#160f22' };
 const UI = 'Inter', SCRIPT = 'Pacifico';
-export const DURATION = 52.5;
+export const DURATION = 58.0;
 
 const canvas = document.getElementById('film');
 const ctx = canvas.getContext('2d');
@@ -93,49 +94,63 @@ export async function init(opts) {
   CAP = { w: MARKS.size[0], h: MARKS.size[1], dpr: MARKS.size[2] };
   for (const m of MARKS.marks) F[m.label] = m.frame;
   CLICKS = MARKS.marks.filter((m) => m.click).map((m) => ({ frame: m.frame, x: m.click[0], y: m.click[1] }));
+  const times = MARKS.times || [];
+  // The frame at a moment of the page's clock (Booth's stretch keeps real time, so its frames are not evenly spaced).
+  const frameAt = (ms) => { let i = 0; while (i < times.length - 1 && times[i] < ms) i++; return i; };
   const runLen = F['run-finished'] - F['run-started'];
+  const named = F['booth-named'];
   FRAME_KEYS = [
     [0, F['first-screen']],
-    [4.2, F['first-screen']],
-    [6.0, F['first-screen'] + 18],                 // the first screen, still a moment; the pointer comes in
-    [8.4, F['add-drive'] + 4],                     // the name typed, Add drive clicked: the capture's own pace
-    [9.4, F['drive-list'] + 6],
-    [11.6, F['drive-list'] + 22],                  // the list held at half speed while the caption is read
-    [12.6, F['choose-stick'] + 6],
-    [13.4, F['run-started'] + 4],
-    [25.4, F['run-started'] + runLen],             // the whole run in twelve seconds
-    [26.0, F['finished']],
-    [29.6, F['finished'] + 60],
-    [29.6 + 0.01, F['scroll']],                    // the scroll down to the buttons, Export and the box: real time
-    [T_EXPORT = 29.6 + (F['export'] - F['scroll']) / 30, F['export']],
-    [T_EXPORTED = 29.6 + (F['exported'] - F['scroll']) / 30, F['exported']],
-    [38.8, F['exported'] + 74],
-    [DURATION, F['exported'] + 74],
+    [3.6, F['first-screen']],
+    [5.4, F['first-screen'] + 18],                 // the first screen, still a moment; the pointer comes in
+    [7.8, F['add-drive'] + 4],                     // the name typed, Add drive clicked: the capture's own pace
+    [8.8, F['drive-list'] + 6],
+    [11.0, F['drive-list'] + 22],                  // the list held at half speed while the caption is read
+    [11.8, F['choose-stick'] + 6],
+    [12.4, F['run-started'] + 4],
+    [22.4, F['run-started'] + runLen],             // the whole run in ten seconds
+    [23.0, F['finished']],
+    [26.4, F['finished'] + 60],
+    [26.4 + 0.01, F['scroll']],                    // the scroll down to the buttons, Export and the box: real time
+    [T_EXPORT = 26.4 + (F['export'] - F['scroll']) / 30, F['export']],
+    [T_EXPORTED = 26.4 + (F['exported'] - F['scroll']) / 30, F['exported']],
+    [36.0, F['exported'] + 74],
+    // Booth: the crate's songs, the switch clicked, Desk getting the crate ready (shortened), then real time.
+    [36.01, F['see-songs'] + 12],
+    [45.0, F['see-songs'] + 12],
+    [T_BOOTH = 46.4, F['booth']],
+    [47.4, named],
+    [DURATION, frameAt((times[named] || 0) + (DURATION - 47.4) * 1000)],
   ];
   const full = [640, 400, 1];
-  const stop = mk('run-started').rect, box = mk('exported').box || mk('exported').rect;
+  const stop = mk('run-started').rect, leave = mk('run-started').leave || stop;
+  const box = mk('exported').box || mk('exported').rect;
   const mid = (r) => [r[0] + r[2] / 2, r[1] + r[3] / 2];
   const pick = mk('drive-list').rect || [384, 250, 512, 300];
   const stage = [640, 330, 1.3];                                   // the run's top half: title, count, the song on stage
-  // Stop at the top right, and the lines under the count from their start
-  const atStop = [stop[0] + stop[2] + 30 - 1280 / 1.35 / 2, stop[1] - 40 + 800 / 1.35 / 2, 1.35];
+  // Stop at the top right and the line under the count ("You can stop at any time…"), together
+    // Stop and the whole line under the count ("…You can stop at any time: songs already read stay in your crate.").
+  const atStop = [640, (stop[1] + leave[1] + leave[3]) / 2, Math.min(1.3, 1280 / (leave[2] + 100))];
   CAM_KEYS = [
-    [0, full], [4.6, full],
-    [5.6, [640, 470, 1.45]], [7.8, [640, 470, 1.45]],  // the name and the three ways
-    [8.8, full], [9.4, full],
-    [10.2, [...mid(pick), 1.6]], [12.4, [...mid(pick), 1.6]],      // Add a drive's list
-    [13.2, full], [13.8, full],
-    [14.8, stage], [18.6, stage],
-    [19.6, atStop], [24.6, atStop],
-    [25.6, full], [Math.max(33.4, T_EXPORTED + 0.3), full],
-    [Math.max(34.4, T_EXPORTED + 1.3), [mid(box)[0], mid(box)[1], 1.6]], [38.8, [mid(box)[0], mid(box)[1], 1.6]],
-    [DURATION, [mid(box)[0], mid(box)[1], 1.6]],
+    [0, full], [4.0, full],
+    [5.0, [640, 470, 1.45]], [7.2, [640, 470, 1.45]],  // the name and the three ways
+    [8.2, full], [8.8, full],
+    [9.6, [...mid(pick), 1.6]], [11.8, [...mid(pick), 1.6]],      // Add a drive's list
+    [12.4, full], [12.8, full],
+    [13.8, stage], [17.6, stage],
+    [18.6, atStop], [22.4, atStop],
+    [23.2, full], [Math.max(30.2, T_EXPORTED + 0.3), full],
+    [Math.max(31.2, T_EXPORTED + 1.3), [mid(box)[0], mid(box)[1], 1.5]], [36.0, [mid(box)[0], mid(box)[1], 1.5]],
+    [36.01, full], [48.6, full],
+
   ];
-  // The Stop button and the iPad box, ringed while their captions show.
-  RINGS = [{ from: 19.6, to: 25.0, rect: stop }, { from: Math.max(34.6, T_EXPORTED + 1.5), to: 38.6, rect: box }];
+  // Stop and the line that says it keeps what was read, and the iPad box, ringed while their captions show.
+  RINGS = [{ from: 18.6, to: 22.4, rect: stop },
+           { from: Math.max(31.4, T_EXPORTED + 1.5), to: 35.8, rect: box }];
   await Promise.all([document.fonts.load(`800 40px ${UI}`), document.fonts.load(`400 40px ${UI}`), document.fonts.load(`40px ${SCRIPT}`),
     loadStill('booth', opts.booth)]);
 }
+let T_BOOTH = 46.4;
 let RINGS = [];
 
 // ------------------------------------------------------------------ the window
@@ -224,7 +239,7 @@ function drawIPad(t, alpha, dx) {
   const im = still.booth; if (!im) return;
   const w = 1150, h = Math.round(w * im.height / im.width), bez = 26;
   const x = 90 + dx, y = (H - h) / 2;
-  const z = 1 + 0.04 * prog(t, 38.6, 48.2);
+  const z = 1 + 0.04 * prog(t, 35.8, 45.0);
   ctx.save(); ctx.globalAlpha = alpha;
   ctx.save(); ctx.shadowColor = 'rgba(0,0,0,0.55)'; ctx.shadowBlur = 70; ctx.shadowOffsetY = 26;
   rrect(x - bez, y - bez, w + 2 * bez, h + 2 * bez, 44); ctx.fillStyle = '#08060c'; ctx.fill(); ctx.restore();
@@ -238,22 +253,26 @@ function drawIPad(t, alpha, dx) {
 // ------------------------------------------------------------------ the words
 // Steps: the number and the step's name stand at the top of the column for as long as the step lasts.
 const STEPS = [
-  { n: 1, from: 4.4, to: 12.8, name: ['Add your music'] },
-  { n: 2, from: 12.8, to: 29.6, name: ['Desk reads', 'every song'] },
-  { n: 3, from: 29.6, to: 38.8, name: ['Get the crate file', 'to your iPad'] },
-  { n: 4, from: 38.8, to: 48.2, name: ['Open it in', 'Deckie Booth'] },
+  { n: 1, from: 3.8, to: 12.0, name: ['Add your music'] },
+  { n: 2, from: 12.0, to: 26.4, name: ['Desk reads', 'every song'] },
+  { n: 3, from: 26.4, to: 36.0, name: ['Get the crate file', 'to your iPad'] },
+  { n: 4, from: 36.0, to: 45.0, name: ['Open it', 'in Deckie'] },
+  // Not a fifth step: the way for a DJ with no iPad. Its label stands where "Step n of 4" does, with no number.
+  { n: 0, label: 'No iPad?', from: 45.0, to: 54.6, name: ['Switch Desk', 'to Booth'] },
 ];
-// Captions: lines set by phrase, a few words to a line, never one word alone.
+// Captions: lines set by phrase, a few words to a line, never one word alone, each sentence on a new line.
 const CAPS = [
-  { from: 4.8, to: 8.5, lines: ['Name your crate,', 'then add a stick,', 'a CD or a folder.'] },
-  { from: 8.7, to: 12.7, lines: ['Pick the one', 'your songs are on.'], note: ['Desk reads them', 'where they are.'] },
-  { from: 13.2, to: 19.2, lines: ['Tempo, key, bars', 'and vocals,', 'song by song.'] },
-  { from: 19.4, to: 25.4, lines: ['Stop at any time.', 'Songs already read', 'stay in your crate.'] },
-  { from: 25.6, to: 29.5, lines: ['When it’s done,', 'it tells you', 'what went in.'] },
-  { from: 30.0, to: 33.9, lines: ['Export the crate file.', 'It’s small:', 'no music inside.'] },
-  { from: 34.1, to: 38.7, lines: ['A stick, iCloud Drive', 'or a cable', 'gets it there.'] },
-  { from: 39.2, to: 43.4, lines: ['Set the iPad', 'beside the decks.'] },
-  { from: 43.6, to: 48.0, lines: ['It names the song playing', 'and shows what', 'could come next.'] },
+  { from: 4.2, to: 8.2, lines: ['Name your crate,', 'then add a stick,', 'a CD or a folder.'] },
+  { from: 8.4, to: 11.9, lines: ['Pick the one', 'your songs are on.'], note: ['Desk reads them', 'where they are.'] },
+  { from: 12.4, to: 17.6, lines: ['Tempo, key and bars,', 'song by song.'] },
+  { from: 17.8, to: 22.6, lines: ['Stop at any time.', 'Songs already read', 'stay in your crate.'] },
+  { from: 22.8, to: 26.3, lines: ['When it’s done,', 'it tells you', 'what went in.'] },
+  { from: 26.8, to: 30.8, lines: ['Export the crate file.', 'It’s small:', 'no music inside.'] },
+  { from: 31.0, to: 35.9, lines: ['iCloud Drive, a stick', 'or a cable', 'gets it there.'], note: ['On a Mac,', 'AirDrop too.'] },
+  { from: 36.4, to: 40.4, lines: ['Set the iPad', 'beside the decks.'], note: ['Open the crate file', 'from the Files app.'] },
+  { from: 40.6, to: 44.9, lines: ['It names the song playing', 'and shows what', 'could come next.'] },
+  { from: 45.4, to: 48.8, lines: ['Click Booth', 'at the top', 'of the window.'] },
+  { from: 49.0, to: 54.4, lines: ['Desk listens', 'through the microphone', 'and names the song.'], note: ['The picks beside it', 'are the iPad’s own.'] },
 ];
 const COL = 1336;
 function inOut(t, a, b, d = 0.35) { return Math.min(prog(t, a, a + d), 1 - prog(t, b - d, b)); }
@@ -264,10 +283,15 @@ function drawStep(t) {
     if (a <= 0) continue;
     ctx.save(); ctx.globalAlpha = a;
     const y = 250 + (1 - ease(prog(t, s.from, s.from + 0.5))) * 16;
-    ctx.fillStyle = C.acc; ctx.beginPath(); ctx.arc(COL + 30, y - 18, 30, 0, Math.PI * 2); ctx.fill();
-    ctx.font = `800 34px ${UI}`; ctx.fillStyle = C.ink; ctx.textAlign = 'center'; ctx.fillText(String(s.n), COL + 30, y - 6);
     ctx.textAlign = 'left';
-    ctx.font = `600 20px ${UI}`; ctx.fillStyle = C.dim; ctx.fillText(`Step ${s.n} of 4`, COL + 78, y - 10);
+    if (s.n) {
+      ctx.fillStyle = C.acc; ctx.beginPath(); ctx.arc(COL + 30, y - 18, 30, 0, Math.PI * 2); ctx.fill();
+      ctx.font = `800 34px ${UI}`; ctx.fillStyle = C.ink; ctx.textAlign = 'center'; ctx.fillText(String(s.n), COL + 30, y - 6);
+      ctx.textAlign = 'left';
+      ctx.font = `600 20px ${UI}`; ctx.fillStyle = C.dim; ctx.fillText(`Step ${s.n} of 4`, COL + 78, y - 10);
+    } else {
+      ctx.font = `700 26px ${UI}`; ctx.fillStyle = C.acc; ctx.fillText(s.label, COL, y - 8);
+    }
     s.name.forEach((line, i) => rich(line, COL, y + 66 + i * 58, 50, C.tx, 800));
     ctx.restore();
   }
@@ -285,7 +309,7 @@ function drawCaption(t) {
 }
 
 function drawTitle(t) {
-  const a = inOut(t, 0.2, 4.2, 0.5);
+  const a = inOut(t, 0.2, 3.6, 0.5);
   if (a <= 0) return;
   ctx.save(); ctx.globalAlpha = a; ctx.textAlign = 'left';
   const rise = (1 - ease(prog(t, 0.2, 0.9))) * 20;
@@ -300,11 +324,12 @@ function drawTitle(t) {
   ctx.restore();
 }
 function drawEnd(t) {
-  const a = prog(t, 48.4, 49.0);
+  const a = prog(t, 54.8, 55.4);
   if (a <= 0) return;
   ctx.save(); ctx.globalAlpha = a;
-  ['Your music never leaves', 'this computer.'].forEach((line, i) => rich(line, W / 2, 480 + i * 74, 62, C.tx, 800, 'center'));
-  ctx.globalAlpha = a * prog(t, 49.4, 50.0);
+  // "your computer", not "this computer": the same film plays on the Mac, where Desk says "this Mac".
+  ['Your music never leaves', 'your computer.'].forEach((line, i) => rich(line, W / 2, 480 + i * 74, 62, C.tx, 800, 'center'));
+  ctx.globalAlpha = a * prog(t, 55.8, 56.4);
   rich('Know Your Crate', W / 2, 700, 36, C.mut, 700, 'center');
   ctx.restore();
 }
@@ -320,15 +345,18 @@ export async function seek(t) {
   const f = keyed(FRAME_KEYS, t, false);
   const img = await frameImage(f);
   background(t);
-  // The window: in after the title, out to the left as the iPad comes in, gone for the end card.
-  const winIn = ease(prog(t, 3.8, 4.6)), winOut = ease(prog(t, 38.6, 39.4));
-  const winA = winIn * (1 - winOut);
+  // The window: in after the title, out to the left as the iPad comes in, back for Booth, gone for the end card.
+  const winIn = ease(prog(t, 3.2, 4.0)), winOut = ease(prog(t, 35.6, 36.4));
+  const winBack = ease(prog(t, 44.8, 45.6)), winEnd = ease(prog(t, 54.4, 55.0));
+  const first = winIn * (1 - winOut), second = winBack * (1 - winEnd);
+  const winA = Math.max(first, second);
   let r = null;
-  if (winA > 0) r = drawWindow(img, t, winA, -winOut * 140 + (1 - winIn) * 40, 0.98 + 0.02 * winIn);
-  const ipadA = ease(prog(t, 38.8, 39.6)) * (1 - ease(prog(t, 47.9, 48.5)));
-  if (ipadA > 0) drawIPad(t, ipadA, (1 - ease(prog(t, 38.8, 39.6))) * 120);
-  // The pointer shows while the DJ is clicking: the first screen to the stick, and Export.
-  const ptrA = Math.max(inOut(t, 4.8, 13.4, 0.3), inOut(t, T_EXPORT - 1.4, T_EXPORT + 0.9, 0.3));
+  if (first > 0) r = drawWindow(img, t, first, -winOut * 140 + (1 - winIn) * 40, 0.98 + 0.02 * winIn);
+  else if (second > 0) r = drawWindow(img, t, second, (1 - winBack) * 140, 0.98 + 0.02 * winBack);
+  const ipadA = ease(prog(t, 36.0, 36.8)) * (1 - ease(prog(t, 44.6, 45.2)));
+  if (ipadA > 0) drawIPad(t, ipadA, (1 - ease(prog(t, 36.0, 36.8))) * 120);
+  // The pointer shows while the DJ is clicking: the first screen to the stick, Export, and the Booth switch.
+  const ptrA = Math.max(inOut(t, 4.2, 12.6, 0.3), inOut(t, T_EXPORT - 1.4, T_EXPORT + 0.9, 0.3), inOut(t, 45.6, T_BOOTH + 0.8, 0.3));
   if (r && winA > 0.99) drawPointer(r, f, t, ptrA);
   drawTitle(t);
   drawStep(t);

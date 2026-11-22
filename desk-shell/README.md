@@ -1,0 +1,85 @@
+# Deckie Desk's window on Windows and Linux
+
+D32: Desk on Windows and Linux is web pages (`../desk-web/`) in a window of its own. This folder is that window: a
+small Swift program, `deckie-desk`, over the system's own web view (WebView2 on Windows, WebKitGTK on Linux, WKWebView
+on the Mac) through the vendored `webview` library (`DEPENDENCIES.md`, sections 9 and 10). It starts the engine
+program, `deckie-desk-engine` (`../core`), and passes messages between it and the pages
+(`../docs/architecture/desk-protocol.md`). It holds no Deckie logic: folder choosers, opening a folder, folders
+dropped on the window, and the passing of messages.
+
+The Mac keeps its own Desk (`../desk-app/`); this builds on the Mac too, so the pages can be seen there.
+
+## Build and run
+
+    cd core && swift build --product deckie-desk-engine        # the engine
+    cd desk-shell && swift build                               # the window
+    DECKIE_DESK_HOME=/tmp/desk DECKIE_DJ_HOME=/tmp/dj .build/debug/deckie-desk
+
+It finds the engine and the pages beside itself, then in this checkout (`--engine`, `--pages` say otherwise). The
+engine in turn finds ONNX Runtime and the two models beside itself, then in the checkout. A debug build knows its
+checkout from where it was built; a release build carries no path of the machine that built it, so it uses a checkout
+only when `DECKIE_CHECKOUT` names one (the repository's top folder). On Linux it needs
+`libwebkit2gtk-4.1-dev` to build; on Windows, the WebView2 runtime to run. In the checkout the window takes
+`core/.build/release/deckie-desk-engine` before `core/.build/debug/`, whichever window was built: an old release engine
+left there is the one that runs, so rebuild it or name the engine with `--engine`.
+
+**Timing tests use release builds.** A debug build analyses a song several times slower than a release build, so a
+time measured with one says nothing about what a DJ waits for. On the Mac, one command builds both in release, at low
+priority and at most 4 jobs (`DECKIE_BUILD_JOBS` changes that):
+
+    desk-shell/build-release-mac.sh
+    DECKIE_CHECKOUT="$PWD" DECKIE_DESK_HOME=/tmp/desk DECKIE_DJ_HOME=/tmp/dj desk-shell/.build/release/deckie-desk
+
+Run from the command line on the Mac, the window has a menu bar of its own (Quit with Cmd+Q, Close Window with Cmd+W,
+Hide, and Cut, Copy, Paste and Select All for its text fields); Quit closes the window as its close button does.
+
+## Listening (the Booth switch)
+
+The listening mode (research booth-in-desk, step 1) opens the microphone in the engine, never in the page. On the
+Mac, macOS asks once for the microphone, under the name of the program that started Desk's window: started from a
+terminal, it asks for the terminal (or whatever app the terminal runs inside); started on its own (`open`, Finder),
+it asks for Deckie Desk with the sentence in `Info-mac.plist`, which the build links into the program's
+`__info_plist` section. Windows asks nothing of a desktop program (its privacy switch for microphones can silence
+every program; the page then says no sound is arriving). On Linux nothing is asked. Closing the window ends the
+engine, which lets the microphone go.
+
+## Checks
+
+- `deckie-desk --self-test`: the window alone; one message each way with a small page, then exits.
+- `deckie-desk --check`: the window, the engine and the pages; the page draws the engine's first screen and a
+  request goes through it and back. It says how long after the program started the page showed the engine's words.
+  It also says what the quick start's card shows in this web view and whether the bundled film loads here, then makes
+  the card fall back to the film's steps in words and fails if a play button is left or the card offered a film the
+  web view says it cannot play (D46).
+- `deckie-desk --check --music <folder> --export-to <folder>`: the same, then as a DJ would, through the page's own
+  buttons: the new crate named after that folder in the first screen's field, Add music's Add folder with that
+  folder (counted, then read), the run to its end, Export crate file. On the Mac a check sends no lookup over the
+  internet (the engine answers from an empty set of recorded answers). `--check-log <file>` writes what a
+  check says to a file as well (a Windows program with no console has no standard error to read).
+- `deckie-desk --tour <out> --music <folder> --export-to <folder>` (Mac only): steps through every screen with the
+  music given and writes a picture of each (from the web view itself, so no screen-recording permission is needed).
+  `DECKIE_DESK_DRIVES=<folder>` lists that folder's folders as the drives plugged in.
+
+CI: `.github/workflows/desk-window.yml` builds and runs all of this on Linux (under Xvfb) and Windows.
+
+## On Windows, in the zip
+
+`core/Tools/windows/package.sh` puts the release build in the zip a DJ downloads, started by `Deckie Desk.exe`
+(`.github/workflows/pc-package.yml` builds it and tries it from the unzipped folder):
+
+- **No console window.** The copies of `deckie-desk.exe` and `deckie-desk-engine.exe` in the zip are marked as
+  programs of the "windows" kind (`core/Tools/windows/pe_kind.py`). Such a program started by a double click has no
+  standard output or error, so the shell gives itself harmless ones first (`deskshell_prepare_process`).
+- **The icon** is the program's resource number 1 (`core/Tools/windows/icon.sh` makes it from the iPad app's
+  picture; linked in with `-Xlinker <folder>/desk.res`). The shell sets it on the window (`set_icon` in
+  `deskshell.cc`); a build without it keeps the plain icon.
+- **A PC without Microsoft's WebView2 Runtime** gets no window. The shell then says so in a message box, names
+  Microsoft's page, offers to open it and points to `Make Crate File`, and ends with code 4 (`Notice.swift`,
+  `main.swift`). `DECKIE_NO_BOXES` says it on standard error instead, for checks; `DECKIE_DESK_NO_WEBVIEW2` makes
+  the shell behave as on such a PC.
+- **No boxes** (`DECKIE_NO_BOXES`, and every `--check`): no box opens anywhere, so nothing waits for a click. The
+  shell's message boxes and the starter's write their words down; Windows' own boxes for a missing library or a
+  program that stops are off; a chooser the check gave no answer for is not opened; the page writes its boxes and
+  questions down too (a question is answered No). A check fails with the words of any box but one that says
+  something went right (`Notice.noBoxes`).
+- The shell's own words to a DJ are the few in `Notice.swift`, since they must be said before there is a window.

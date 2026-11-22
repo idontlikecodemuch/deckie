@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; media-src blob:; connect-src 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; media-src 'self' blob:; connect-src 'none'">
 <title>Deckie Desk</title>
 <link rel="stylesheet" href="desk.css">
 <link rel="stylesheet" href="booth.css">
@@ -66,6 +66,27 @@
 <main>
   <!-- The first screen: no crate showing yet. -->
   <section id="first" class="screen center" aria-labelledby="first-title" hidden>
+    <!-- The quick start (D46, quickstart.js): the bundled film, offered at the top of the first screen until the DJ
+         hides it. The poster with a play button and one line; where the film cannot play, the poster with its steps
+         in words instead. Never plays by itself unless the core's switch says so (off). -->
+    <div id="qs-card" class="qs-card card" hidden>
+      <div class="qs-poster">
+        <img id="qs-poster-img" alt="">
+        <button id="qs-play" class="qs-play" data-w-label="quickStartPlay" data-w-title="quickStartPlay"><span class="qs-play-mark" aria-hidden="true"></span></button>
+      </div>
+      <div class="qs-text">
+        <div id="qs-offer" class="qs-offer">
+          <p class="qs-new" data-w="quickStartOffer"></p>
+          <button id="qs-watch" class="link qs-watch" data-w="quickStartWatch"></button>
+        </div>
+        <div id="qs-words" class="qs-words" hidden>
+          <h2 data-w="quickStartInWords"></h2>
+          <p class="dim small" data-w="quickStartNoPlayer"></p>
+          <ol id="qs-steps" class="qs-steps"></ol>
+        </div>
+      </div>
+      <button id="qs-hide" class="small qs-hide" data-w="quickStartHide"></button>
+    </div>
     <svg class="icon crate-big" aria-hidden="true"><use href="#icon-crate"/></svg>
     <h1 id="first-title" data-w="firstTitle"></h1>
     <p id="first-body" class="body"></p>
@@ -122,7 +143,7 @@
       <!-- What is happening, above the song card (the owner's note of Nov 21, 2026): the quiet line, then "you can leave
            this running". The quiet line keeps its height when it changes or is empty, so the card never moves. -->
       <p id="run-saying" class="saying"></p>
-      <p class="leave dim" data-w="leaveRunning"></p>
+      <p class="leave dim"><span data-w="leaveRunning"></span> <span data-w="stopAnyTime"></span></p>
       <!-- The song card (run.js, the owner's note of Nov 20, 2026): the song being worked on, by the name Desk has for
            it, its step line and a thin bar within the song (a turning disc for a music CD's song), and under them its
            parts filling in as Desk works them out, each in its own place (a quiet placeholder until then): its wave,
@@ -219,6 +240,8 @@
         <h2 data-w="toIPadTitle"></h2>
         <!-- The steps for this computer (desk.js toIPadSteps): the Mac's, Windows' or Linux's. -->
         <ul id="to-ipad-steps"></ul>
+        <!-- What happens next, in the booth (D46, research AG). -->
+        <p class="to-ipad-then" data-w="thenOpenInDeckie"></p>
       </div>
     </div>
   </section>
@@ -420,10 +443,25 @@
   </form>
 </dialog>
 
+<!-- The quick start's player (D46, quickstart.js): the film from quick-start/ beside these pages, or its steps in
+     words where it cannot play. -->
+<dialog id="film" class="film" data-w-label="quickStartTitle">
+  <form method="dialog">
+    <video id="film-video" class="film-video" controls playsinline preload="none"></video>
+    <div id="film-words" class="qs-words" hidden>
+      <h2 data-w="quickStartInWords"></h2>
+      <p class="dim small" data-w="quickStartNoPlayer"></p>
+      <ol id="film-steps" class="qs-steps"></ol>
+    </div>
+    <div class="buttons"><button value="close" class="main" data-w="quickStartClose"></button></div>
+  </form>
+</dialog>
+
 <audio id="audio" preload="auto" hidden></audio>
 <div id="announce" class="sr" aria-live="assertive"></div>
 <script src="run.js"></script>
 <script src="booth.js"></script>
+<script src="quickstart.js"></script>
 <script src="desk.js"></script>
 </body>
 </html>
