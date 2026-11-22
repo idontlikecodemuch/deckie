@@ -36,7 +36,7 @@
  "image": "https://deckie.io/assets/share-home.jpg",
  "applicationCategory": "MusicApplication",
  "operatingSystem": "iPadOS, macOS",
- "description": "Deckie is a second screen for DJs on decks that do not know their music: turntables, older CDJs, a venue's own gear. Deckie Desk, on the DJ's computer, reads a crate (a group of the DJ's own songs) for tempo, key, bars and vocals, and writes a crate file with no audio in it. On an iPad beside the decks, Deckie names the playing song from that crate, reads the pitch fader and shows what could come next and how it could be brought in. It plays nothing and does not mix or beatmatch. Everything runs on the DJ's own devices. In development; coming soon.",
+ "description": "Deckie is a second screen for DJs on decks that do not know their music: turntables, older CDJs, a venue's own gear. Deckie Desk, on the DJ's computer, reads a crate (a group of the DJ's own songs) for tempo, key, bars and vocals, and writes a crate file with no audio in it. On an iPad beside the decks, Deckie names the playing song from that crate, reads the pitch fader and shows what could come next and how it could be brought in. A DJ with no iPad can switch Deckie Desk to Booth: it listens through the computer's microphone, names the song and shows the picks. It plays nothing and does not mix or beatmatch. Everything runs on the DJ's own devices. In development; coming soon.",
  "softwareHelp": {
   "@type": "CreativeWork",
   "name": "The Deckie dictionary",
@@ -114,12 +114,13 @@
         <li>Deckie knows your crate. It hears what’s playing. It names the song, reads the pitch, and shows what could come next.</li>
         <li>Know the beat. Nail the mix. Then the name, Deckie, and the line Know Your Crate.</li>
         <li>Deckie Desk, on your Mac. Desk reads your crate and writes a crate file: tempo, key, bars, style and fingerprints. Edits, bootlegs and burned CDs too. No audio goes in the file.</li>
-        <li>Sort your crate into discs and folders, in the order your player shows them. Send the file to your iPad by AirDrop, iCloud Drive or Files. No server.</li>
-        <li>Deckie Booth, on your iPad. Put the iPad by the decks and press play. A song shows up after a few seconds of music.</li>
+        <li>It reads sticks, CDs and folders as they are: names, folders and order, as your player shows them. Send the file to your iPad by AirDrop, iCloud Drive or Files. No server.</li>
+        <li>Deckie, on your iPad. Put the iPad by the decks and press play. A song shows up after a few seconds of music.</li>
         <li>It names the song from your crate, with its disc, folder and track, as on your player.</li>
         <li>It reads the pitch fader. The deck on screen runs 3 percent fast, so the tempo reads 128 BPM.</li>
         <li>What could come next, best first. Each pick says where to set the pitch and how you could bring it in, and a wave shows the transition: the end of this song over the start of that one.</li>
-        <li>Turn up Shuffle for less obvious picks. Pin the one you want. Or search the rest of your crate.</li>
+        <li>Turn up Shuffle for less obvious picks. At zero they stay in score order. Pin the one you want.</li>
+        <li id="film-booth-in-desk">Booth, in Deckie Desk. No iPad? Desk listens too. Through the microphone, it names the song and shows the picks.</li>
         <li>The dictionary. Every DJ starts somewhere. DJ speak, in plain words. Then how it’s used on the decks.</li>
         <li>Your music, your mix. It never leaves your devices. No account. No upload. Works with no signal.</li>
         <li>Deckie. Know Your Crate. Coming soon. Help us beta test. deckie.io</li>
@@ -135,7 +136,7 @@
     <p class="lede">Other apps can name a released song. Deckie names yours.</p>
     <div class="tiles">
       <article class="pick tile">
-        <div class="detail"><img src="assets/tile-song.jpg" alt="Deckie on the iPad, showing the playing song: 13, First Light, by Meridian Works." loading="lazy" width="600" height="150"></div>
+        <div class="detail"><img src="assets/tile-song.jpg" alt="Deckie on the iPad, showing the playing song: 02, Copper Weather, by Cobalt Parade, from Friday stick." loading="lazy" width="660" height="220"></div>
         <p class="top">Hears the room</p>
         <h3>It names the song</h3>
         <p>From your crate, a few seconds in, with its disc, folder and track, as on your player.</p>
@@ -147,7 +148,7 @@
         <p>It hears how fast the deck is running and shows the tempo the song is really playing at.</p>
       </article>
       <article class="pick tile">
-        <div class="detail"><img src="assets/tile-pick.jpg" alt="A pick in Deckie on the iPad: 31, Late Bus Home, 126 BPM, pitch plus 1.4 percent, long blend or blend." loading="lazy" width="800" height="160"></div>
+        <div class="detail"><img src="assets/tile-pick.jpg" alt="A pick in Deckie on the iPad: 05, Static Garden, 128 BPM, pitch minus 0.2 percent, short blend or echo out." loading="lazy" width="762" height="200"></div>
         <p class="top">Picks</p>
         <h3>It shows what could come next</h3>
         <p>Picks from your crate, best first. Each says where to set the pitch and how you could bring it in.</p>
@@ -165,7 +166,7 @@
         <p>Turn it up for less obvious picks. At zero they stay in score order.</p>
       </article>
       <article class="pick tile pinned">
-        <div class="detail"><img src="assets/tile-pin.jpg" alt="A pick pinned as next in Deckie on the iPad: 09, Night Hearts, 128 BPM, long blend or blend." loading="lazy" width="800" height="132"></div>
+        <div class="detail"><img src="assets/tile-pin.jpg" alt="A pick pinned as next in Deckie on the iPad: 12, Second Harbour, 127 BPM, short blend or echo out." loading="lazy" width="762" height="140"></div>
         <p class="top">Next</p>
         <h3>You pick</h3>
         <p>Pin the one you want. Or search the rest of your crate.</p>
@@ -192,14 +193,20 @@
     <p class="where">Deckie Desk, on your Mac</p>
     <h2 id="desk-h">Desk reads <span class="you">your</span> crate</h2>
     <div class="split">
-      <div class="screen"><img src="assets/desk.jpg" alt="Deckie Desk on a Mac: a table of songs with tempo and key, and a panel of discs and folders." loading="lazy" width="1600" height="1000"></div>
+      <figure class="howto">
+        <div class="film"><video controls playsinline preload="none" poster="assets/quick-start-poster.jpg" width="1280" height="720" aria-label="Deckie Desk's quick start: a short film with no sound and the words on screen. The four steps beside it say the same.">
+          <source src="assets/deckie-desk-quick-start.mp4" type="video/mp4">
+        </video></div>
+        <figcaption class="filmnote">The quick start: 58 seconds, no sound. The steps say the same in words.</figcaption>
+      </figure>
       <ol class="steps">
-        <li class="pick"><p class="top">Step 1</p><h3>Point it at your music.</h3><p>Your own files: releases, edits, bootlegs, the songs on your burned CDs.</p></li>
-        <li class="pick"><p class="top">Step 2</p><h3>It writes a crate file.</h3><p>Tempo, key, bars and style for every song, and a fingerprint to recognise it by. No audio goes in it.</p></li>
-        <li class="pick"><p class="top">Step 3</p><h3>Sort it into discs and folders.</h3><p>In the order your player shows them, so the booth can say disc and track.</p></li>
-        <li class="pick"><p class="top">Step 4</p><h3>Send it to your iPad.</h3><p>AirDrop, iCloud Drive or Files. No server.</p></li>
+        <li class="pick"><p class="top">Step 1</p><h3>Add your music.</h3><p>A stick, a burned CD or a folder of your own files: releases, edits, bootlegs. Desk reads them where they are, in the order your player shows them.</p></li>
+        <li class="pick"><p class="top">Step 2</p><h3>Desk reads every song.</h3><p>Tempo, key, bars and style, and a fingerprint to recognise it by. Stop at any time: the songs already read stay in your crate.</p></li>
+        <li class="pick"><p class="top">Step 3</p><h3>Get the crate file to your iPad.</h3><p>It’s small: no audio goes in it. AirDrop, iCloud Drive, a stick or a cable. No server.</p></li>
+        <li class="pick"><p class="top">Step 4</p><h3>Open it in Deckie.</h3><p>Set the iPad beside the decks. It names the song playing and shows what could come next.</p></li>
       </ol>
     </div>
+    <p class="noipad" id="booth-in-desk"><b>No iPad?</b> Switch Desk to Booth. It listens through the microphone, names the song and shows the picks.</p>
     <p class="aside">A crate is a group of your songs. It can be your whole library.</p>
   </div>
 </section>

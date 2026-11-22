@@ -321,6 +321,13 @@ footer .planned { font-size: 0.75rem; }
 .steps li.pick::before { content: none; }
 .aside { margin-top: 20px; color: var(--dim); font-size: 0.9375rem; }
 #desk .where { margin-bottom: 8px; }
+/* the how-to: Desk's quick start in the player, never playing by itself and loaded only when played (preload="none") */
+.howto { margin: 0; align-self: start; }
+@media (min-width: 900px) { .howto { position: sticky; top: 96px; } }   /* stays beside the steps while they are read */
+.howto .film video { height: auto; }
+/* Booth in Desk, one line: to drop it, delete this rule and <p class="noipad"> in index.html */
+.noipad { margin-top: 28px; color: var(--mut); max-width: var(--read); }
+.noipad b { color: var(--tx); font-weight: 650; }
 .pick.wide { padding: clamp(28px, 5vw, 56px); border-radius: var(--r-panel); }
 .pick.wide h2 { margin-top: 4px; }
 .words { font-family: var(--head); font-weight: 650; font-size: clamp(1.25rem, 2.4vw, 1.7rem); letter-spacing: -0.015em; margin-top: 18px !important; }
