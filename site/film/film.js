@@ -1,8 +1,9 @@
-// Deckie explainer, fifth cut (76 s): a pure function of time. window.seek(t) paints frame t (lib/motion.js).
+// Deckie explainer, sixth cut (76 s, Nov 21): a pure function of time. window.seek(t) paints frame t (lib/motion.js).
 // Timing is in beats (u) at 120 bpm, so one beat is half a second and one bar is two seconds.
-// The plan this file follows is docs/shotlist.md. Every screen is a real capture: the booth frames are a
-// simulator recording, the Desk stills come from Desk's own --snapshot mode, the dictionary stills are the
-// vocabulary page in a headless browser. Nothing on a screen is drawn by this file.
+// The plan this file follows is docs/shotlist.md. Every screen is a real capture: the iPad frames are a simulator
+// recording of Deckie (Nov 21), the Desk still comes from Desk's own --snapshot mode (Nov 12), Booth in Desk is
+// Desk's pages in headless Chrome with the real engine (Nov 21), the dictionary stills are the built dictionary page
+// in a headless browser. Nothing on a screen is drawn by this file.
 import * as M from './lib/motion.js';
 
 const { W, H, E, prog, lerp, clamp, springU, springKeys, SPRING, font, layout, glyph, text, fill, rrect } = M;
@@ -77,18 +78,17 @@ function rich(ctx, str, x, y, size, color, draw = null) {
 }
 
 // ------------------------------------------------------------------ booth frames (image sequence, loaded on demand)
-const BOOTH_N = 1976, BW = 1600, BH = 1102;
+const BOOTH_N = 1938, BW = 1600, BH = 1102;   // the recording's last frame before the app was closed
 // film seconds -> frame of the 30 fps simulator recording. Real time unless noted.
 function boothF(t) {
   let f;
-  if (t < 12) f = 500 + (t - 4) * 30;                  // what it is: a named song, its position line moving
-  else if (t < 48) f = 249 + (t - 31) * 30;            // Listening, then the song is named at t = 31 (frame 249); picks, Simple
-  else if (t < 52) f = 1048 + (t - 49) * 30;           // Full; Shuffle moves at t = 49 (frame 1048)
-  else if (t < 55) f = 1287 + (t - 53) * 30;           // a pick is pinned at t = 53 (frame 1287)
-  else if (t < 56.6) f = 1512 + (t - 55.5) * 30;       // the list scrolls to More at t = 55.5 (frame 1512)
-  else if (t < 60) f = 1678 + (t - 57) * 30;           // the search fills at t = 57 (frame 1678)
+  if (t < 12) f = 400 + (t - 4) * 30;                  // what it is: a named song, its position line moving
+  else if (t < 28) f = 100 + (t - 24.75) * 30;         // the crate file arrives: "Gig Friday is open: 12 songs.", stopped
+  else if (t < 48) f = 321 + (t - 31) * 30;            // Listening, then the song is named at t = 31 (frame 321); picks, Simple
+  else if (t < 52) f = 1035 + (t - 49) * 30;           // Full (frame 857 on); Shuffle moves at t = 49 (frame 1035)
+  else if (t < 60) f = 1285 + (t - 53) * 30;           // a pick is pinned as NEXT at t = 53 (frame 1285)
   else f = 600 + (t - 68) * 30;                        // end card
-  return clamp(Math.round(f), 100, BOOTH_N - 1);
+  return clamp(Math.round(f), 96, BOOTH_N - 1);
 }
 const cache = new Map();
 function loadFrame(i) {
@@ -181,9 +181,14 @@ const QUAL_SIZE = 34, QUAL_GAP = 18;         // the header's qualifier ("on your
 const HEAD_Y = 322, HEAD_SIZE = 48;          // header baseline and type size, the same in every shot
 const TITLE_Y = 440, TITLE_LH = 82;          // first headline baseline and line height, the same in every shot
 // [in, out, app name words (script, written once as the section opens), a name in Inter, a smaller grey qualifier]
+// Booth in Desk (beats 110 to 118): Desk's listening mode, for a DJ with no iPad. Set BOOTH_IN_DESK to false to leave
+// it out: the iPad's section then runs to beat 118 and the pin shot holds until the dictionary.
+const BOOTH_IN_DESK = true;
+const IPAD_END = BOOTH_IN_DESK ? 110 : 118;
 const SECTIONS = [
   [32, 56, ['Deckie', 'Desk'], '', 'on your Mac'],
-  [56, 118, ['Deckie', 'Booth'], '', 'on your iPad'],
+  [56, IPAD_END, ['Deckie'], '', 'on your iPad'],
+  ...(BOOTH_IN_DESK ? [[110, 118, ['Booth'], '', 'in Deckie Desk']] : []),
   [118, 128, [], 'The dictionary', ''],
 ];
 // Every break is set by hand ('|'): no line of one word, names and terms unbroken, a new sentence starts a line.
@@ -192,7 +197,7 @@ const CAPS = [
   [8, 13, 'Deckie knows|your crate.', 'It hears what’s playing.', 1.1],
   [13, 18, 'It names the song,|reads the pitch,|and shows what|could come next.', ''],
   [32, 42, 'Desk reads|your crate|and writes|a crate file.', 'Edits, bootlegs|and burned CDs too.|No audio goes in the file.'],
-  [42, 50, 'Sort your crate|into discs|and folders.', 'In the order your|player shows them.'],
+  [42, 50, 'It reads sticks,|CDs and folders|as they are.', 'Names, folders and order,|as your player shows them.'],
   [50, 56, 'Send the file|to your iPad.', 'AirDrop, iCloud Drive or Files.|No server.'],
   [56, 62, 'Put the iPad|by the decks|and press play.', 'A song shows up|after a few seconds of music.'],
   [62, 68, 'It names the song|from your crate.', 'Disc, folder and track,|as on your player.', 0.9],
@@ -201,8 +206,8 @@ const CAPS = [
   [82, 90, 'Where to set|the pitch.|How you could|bring it in.', 'Every pick says both, on one line.'],
   [90, 96, 'The wave shows|the transition.', 'The end of this song|over the start of that one.'],
   [96, 104, 'Turn up Shuffle|for less|obvious picks.', 'At zero they stay in score order.'],
-  [104, 110, 'Pin the one|you want.', '', 0.9],
-  [110, 118, 'Or search the rest|of your crate.', 'More lists every other song,|by score.'],
+  [104, IPAD_END, 'Pin the one|you want.', '', 0.9],
+  ...(BOOTH_IN_DESK ? [[110, 118, 'No iPad?|Desk listens too.', 'Through the microphone,|it names the song|and shows the picks.']] : []),
   [118, 122, 'Every DJ|starts somewhere.', ''],
   [122, 124, 'DJ speak,|in plain words.', ''],
   [124, 128, 'Then how it’s used|on the decks.', ''],
@@ -432,7 +437,7 @@ const OFF_L = (b) => [-b[2] - 80, b[1], b[2], b[3]];
 function boothBox(u) {
   if (u >= 135.5) return springKeys(u, [[136, [1180, 1200, 644, 444]], [136.6, [1180, 318, 644, 444]]], { stiffness: 150, damping: 22 });
   if (u < 30) return springKeys(u, [[7.6, OFF_R(MAIN)], [7.7, MAIN], [17.6, OFF_R(MAIN)]], { stiffness: 150, damping: 22 });
-  return springKeys(u, [[49.6, OFF_R(SEND.booth)], [50, SEND.booth], [55.4, MAIN], [117.5, [MAIN[0], H + 120, MAIN[2], MAIN[3]]]], { stiffness: 150, damping: 22 });
+  return springKeys(u, [[49.6, OFF_R(SEND.booth)], [50, SEND.booth], [55.4, MAIN], [IPAD_END - 0.5, [MAIN[0], H + 120, MAIN[2], MAIN[3]]]], { stiffness: 150, damping: 22 });
 }
 const BFULL = [800, 551, 1];
 function boothCam(u) {
@@ -440,15 +445,19 @@ function boothCam(u) {
     [0, BFULL],
     [68, [400, 400, 1.75]],        // the playing panel: status line, song, tempo
     [76, [1210, 400, 1.7]],        // the picks
-    [82, [1250, 330, 1.9]],        // one pick: tempo, pitch, the move; then its wave
-    [96, [1200, 300, 1.55]],       // the Shuffle dial and the list under it
-    [110, [1180, 400, 1.35]],      // More and its search
-    [117, BFULL],
+    [82, [1170, 330, 1.9]],        // one pick: tempo, pitch, the move; then its wave
+    [96, [1240, 300, 1.8]],         // the Shuffle dial and the list under it; then the pick pinned as NEXT
   ], { stiffness: 90, damping: 20 });
 }
 function deskBox(u) {
   return springKeys(u, [[31.6, OFF_R(SEND.desk)], [32, SEND.desk], [41.8, DESK], [49.8, SEND.desk], [55, OFF_L(SEND.desk)]], { stiffness: 150, damping: 22 });
 }
+// Booth in Desk: Desk's pages (1280 x 800 at 2x) in the Desk card's place, in from the right as the iPad goes down.
+function dboothBox(u) {
+  return springKeys(u, [[109.5, OFF_R(DESK)], [109.9, DESK], [117.5, [DESK[0], H + 120, DESK[2], DESK[3]]]], { stiffness: 150, damping: 22 });
+}
+// the whole page while it listens; once the song is named, in towards the song and the first picks
+function dboothCam(u) { return springKeys(u, [[0, [800, 500, 1]], [114.4, [655, 470, 1.22]]], { stiffness: 60, damping: 20 }); }
 function vocBox(u) {
   return springKeys(u, [[117.4, [VOC[0], -VOC[3] - 120, VOC[2], VOC[3]]], [117.6, VOC], [127.6, [VOC[0], H + 100, VOC[2], VOC[3]]]], { stiffness: 150, damping: 22 });
 }
@@ -459,10 +468,11 @@ function vocCam(u) {
   // "echo" typed in the search, the results under it; then the Echo out card: its meaning, then "On the decks"
   return springKeys(u, [[0, [900, 535, 1.45]], [124, [1880, 760, 2.05]], [126, [1880, 890, 2.15]]], { stiffness: 110, damping: 21 });
 }
-// Desk stills (from Desk's --snapshot): the table for "reads your crate", the table with the Discs panel for "discs and folders".
+// Desk's still (from Desk's --snapshot, Nov 12; site/assets/desk.jpg, 1600 x 1000): its table for "reads your crate", then
+// the camera moves onto its Discs panel for "sticks, CDs and folders". desk.json names it and the table's camera.
 let DESKCAM = [[0, [1280, 800, 1]]], DESK_READY = false;
 function deskImg(u, IMG) { return u >= 42 && u < 50 && IMG.desk_discs ? IMG.desk_discs : IMG.desk_open; }
-function deskCam(u) { return u >= 42 && u < 50 ? springKeys(u, [[42, [900, 562, 1]], [44.5, [1150, 540, 1.3]]], { stiffness: 90, damping: 20 }) : springKeys(u, DESKCAM, { stiffness: 90, damping: 20 }); }
+function deskCam(u) { return u >= 42 && u < 50 ? springKeys(u, [[42, [800, 500, 1]], [44.5, [1100, 560, 1.45]]], { stiffness: 90, damping: 20 }) : springKeys(u, DESKCAM, { stiffness: 90, damping: 20 }); }
 
 // Every accent, with its sound. Kept sparse: the bed carries the pulse, the accents mark the steps.
 const HITS = [
@@ -476,13 +486,14 @@ const HITS = [
   [50, 'step 2', 'bell', { pitch: 'A5' }], [51.4, 'crate file leaves', 'whoosh', { len: 0.7, from: 500, to: 2600 }], [54, 'crate file lands', 'pop', { pitch: 'E5' }],
   [56, 'step 3', 'bell', { pitch: 'C6' }], [62, 'the song is named', 'bell', { pitch: 'E6' }],
   [68, 'pitch fader', 'tick'], [76, 'picks', 'tick'], [82, 'one pick', 'tick'], [90, 'the wave', 'tick'],
-  [98, 'Shuffle moves', 'whoosh', { len: 0.4, from: 800, to: 2200 }], [106, 'pin', 'pop', { pitch: 'E5' }], [110, 'More', 'tick'], [114, 'search', 'type', { len: 0.5 }],
+  [98, 'Shuffle moves', 'whoosh', { len: 0.4, from: 800, to: 2200 }], [106, 'pin', 'pop', { pitch: 'E5' }], [110, BOOTH_IN_DESK ? 'Booth in Desk' : 'the pin holds', 'tick'], [114, BOOTH_IN_DESK ? 'Booth names the song' : 'the pin holds', 'type', { len: 0.5 }],
   [117.6, 'the dictionary drops in', 'whoosh', { len: 0.5 }], [122, 'plain', 'tick'], [124, 'DJ', 'tick'], [126, 'Deckie', 'tick'],
   [128, 'Your music', 'thud', { gain: 0.3 }], [130, 'Your mix', 'bell', { pitch: 'A5' }], [132, 'the promise', 'tick'],
   [136, 'Deckie', 'impact', { gain: 0.6 }], [138.4, 'Know your crate', 'tick'], [141, 'Coming soon', 'pop', { pitch: 'A4' }], [148, 'Help us beta test', 'bell', { pitch: 'E6' }],
 ];
 
 const images = { d_top: 'assets/vocab2/d_top.png', d_echo: 'assets/vocab2/d_echo.png' };
+if (BOOTH_IN_DESK) Object.assign(images, { dbooth_wait: 'assets/deskbooth/wait.jpg', dbooth_named: 'assets/deskbooth/named.jpg' });
 const deskCfg = await fetch('assets/desk/desk.json').then((r) => (r.ok ? r.json() : null)).catch(() => null);
 if (deskCfg) { Object.assign(images, deskCfg.images); DESKCAM = deskCfg.cam; DESK_READY = true; }
 await loadWords();
@@ -497,15 +508,19 @@ M.film({
     // cards
     if (DESK_READY && u >= 31.5 && u < 57) card(ctx, deskImg(u, IMG), deskBox(u), deskCam(u));
     if (u >= 117 && u < 130) card(ctx, u < 122 ? IMG.d_top : IMG.d_echo, vocBox(u), vocCam(u), { srcH: VOC_H });
-    if ((u >= 7 && u < 20) || (u >= 49.5 && u < 119) || u >= 135.5) {
+    // Booth in Desk: waiting, then the song named at beat 114, its card and picks crossfading in
+    if (BOOTH_IN_DESK && u >= 109.5 && u < 119) {
+      card(ctx, u < 114 ? IMG.dbooth_wait : IMG.dbooth_named, dboothBox(u), dboothCam(u));
+      if (u >= 114 && u < 114.6) { ctx.save(); ctx.globalAlpha = 1 - E.inOutCubic(prog(u, 114, 114.6)); card(ctx, IMG.dbooth_wait, dboothBox(u), dboothCam(u)); ctx.restore(); }
+    }
+    if ((u >= 7 && u < 20) || (u >= 49.5 && u < IPAD_END + 1) || u >= 135.5) {
       const map = card(ctx, boothImg(t), boothBox(u), u >= 135.5 || u < 30 ? BFULL : boothCam(u));
-      callout(ctx, map, u, 69, 75, [356, 122, 250, 38]);         // "sure · deck +3.0%"
-      callout(ctx, map, u, 70.5, 75, [58, 506, 150, 50]);        // 128 BPM
-      callout(ctx, map, u, 82.6, 89.4, [812, 351, 250, 64]);     // tempo, pitch and the move
-      callout(ctx, map, u, 90.4, 95.4, [1190, 243, 410, 170]);   // the wave
-      callout(ctx, map, u, 98, 102.5, [940, 116, 280, 46]);      // Shuffle
-      callout(ctx, map, u, 106, 109.4, [786, 216, 814, 126]);    // NEXT
-      callout(ctx, map, u, 114.2, 117, [791, 226, 687, 58]);     // the search field
+      callout(ctx, map, u, 69, 75, [255, 130, 125, 26]);         // "sure · deck +3.0%"
+      callout(ctx, map, u, 70.5, 75, [64, 526, 118, 34]);        // 128 BPM
+      callout(ctx, map, u, 82.6, 89.4, [815, 352, 245, 60]);     // tempo, pitch and the move
+      callout(ctx, map, u, 90.4, 95.4, [1200, 253, 330, 152]);   // the wave
+      callout(ctx, map, u, 98, 102.5, [948, 124, 400, 34]);      // Shuffle
+      callout(ctx, map, u, 106, IPAD_END - 0.6, [792, 204, 760, 138]);   // NEXT
     }
     crateLabel(ctx, u);
     fileChip(ctx, u);
