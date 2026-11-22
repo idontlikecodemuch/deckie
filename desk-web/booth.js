@@ -1,5 +1,6 @@
 // Booth, the listening mode of Deckie Desk's window (research booth-in-desk; step 3, the designed screen, D44). A
-// switch in the top bar opens it for the crate showing, and the whole window changes its ground (the owner's decision, Nov 21, 2026: the background changes between the two modes): while Booth shows, the page and the bar take
+// switch in the top bar opens it for the crate showing, and the whole window changes its ground (the owner's decision,
+// Nov 21, 2026: the background changes between the two modes): while Booth shows, the page and the bar take
 // Booth's ground (booth.css, desk.css's --booth-ground-* values), the heading says Booth and the switch is lit, so
 // listening is never mistaken for the crate side.
 //

@@ -6,7 +6,8 @@ import DeckieBuild
 import DeckieTestSupport
 @testable import DeckieDesk
 
-/// The reading screen's one order (owner's note, Nov 20, 2026: the top line must not move on to a song before the card below shows it): a song leaves the song card only as it joins the song info card, and no line names a song read before then.
+/// The reading screen's one order (owner's note, Nov 20, 2026: the top line must not move on to a song before the card
+/// below shows it): a song leaves the song card only as it joins the song info card, and no line names a song read before then.
 /// Checked on the calls a run makes (RunOrder), on a made-up sequence and on a real run of several songs at once.
 @Suite struct ReadingOrderTests {
     /// What a window shows, from the calls in the order they go out: the songs in progress (the song card), the songs

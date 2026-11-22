@@ -3,7 +3,8 @@ import DeckieCrate
 import DeckieBuild
 import DeckieDisc
 
-/// A music CD as a source, without keeping its music (the note on D33, Nov 14: the owner decided that the crate file never holds a copy of the music). Desk reads a disc's songs to work them out and keeps what it learned, never
+/// A music CD as a source, without keeping its music (the note on D33, Nov 14: the owner decided that the crate file
+/// never holds a copy of the music). Desk reads a disc's songs to work them out and keeps what it learned, never
 /// the sound:
 ///
 ///     <home>/Files/discs/<disc id>.json   what Desk learned from a disc, by the id its table of contents gives

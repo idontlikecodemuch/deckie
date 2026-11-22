@@ -186,7 +186,8 @@ public struct RunNow: Sendable, Equatable {
     /// The beat step's share of the song's bar (run.js's NOW_BEAT_SHARE must say the same). Finding the beat is most of
     /// a song's time (about 70% on the Windows pass), so with one tenth of the bar the bar sat still for most of each
     /// song; with a wider share the bar's place is closer to how much of the wait is behind. Not all of it: the quick
-    /// steps still move the bar in small jumps, which the owner likes (his choice, Nov 21, 2026: a wider share, but not all of the bar). A display proportion only, the same on every machine and for every song; nothing measured.
+    /// steps still move the bar in small jumps, which the owner likes (his choice, Nov 21, 2026: a wider share, but not all of
+    /// the bar). A display proportion only, the same on every machine and for every song; nothing measured.
     public static let beatShare = 0.3
 
     /// Each step's share of the song's bar, in `analysisSteps`' order: a step named in `ownShares` has its own; the
