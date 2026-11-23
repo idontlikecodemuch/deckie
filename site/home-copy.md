@@ -262,3 +262,14 @@ and the page now describes it as it is.
 - **Pictures.** The three tile pictures and the share card's iPad screen are from the new recording; the share card
   showed the old status bar name and tabs.
 - **Structured data and `llms.txt`** say the same: Booth is Desk's listening mode, and the quick start is listed.
+
+## Tenth change: Desk's own window in the film
+
+Nov 23, 2026. The film's Desk shots (16 to 28 s) now show Desk's Mac window as it is today, with the crate "Gig
+Friday", the same crate as the iPad shots: its songs, then its Sources panel with the stick, its folder and its songs
+in the stick's order. Until now they showed a still from Nov 12, an older window with other names. The label and the
+tag that travels to the iPad say "Gig Friday" (they said "Friday night"). The pictures leave out the window's toolbar:
+Desk drew them itself, and without permission to record the screen the toolbar's buttons do not draw. The words on
+screen, the timing and the sound did not change, so the written description under the film, the poster, the
+fifteen-second clip and `llms.txt` stay as they were. Booth in Desk (55 to 59 s) is still Desk's pages. Desk's quick
+start is unchanged: it still shows the Windows and Linux window, under the section's label "Deckie Desk, on your Mac".

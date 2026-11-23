@@ -99,7 +99,8 @@ struct QuickStartPlayer: View {
                     QuickStartPoster()
                         .frame(width: Look.QuickStart.posterWidth, height: Look.QuickStart.posterWidth / Look.QuickStart.ratio)
                         .clipShape(RoundedRectangle(cornerRadius: Look.QuickStart.posterCorner))
-                    QuickStartWords().frame(maxWidth: Look.QuickStart.wordsWidth, alignment: .leading)
+                    // A set width: given only a most, the sheet squeezed the steps to half of it (Nov 23, 2026).
+                    QuickStartWords().frame(width: Look.QuickStart.wordsWidth, alignment: .leading)
                 }
             }
             Button(Words.t("quickStartClose")) { model.showFilm = false }.keyboardShortcut(.cancelAction).buttonStyle(.borderedProminent)

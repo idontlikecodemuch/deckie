@@ -1,7 +1,8 @@
 // Deckie explainer, sixth cut (76 s, Nov 21): a pure function of time. window.seek(t) paints frame t (lib/motion.js).
 // Timing is in beats (u) at 120 bpm, so one beat is half a second and one bar is two seconds.
 // The plan this file follows is docs/shotlist.md. Every screen is a real capture: the iPad frames are a simulator
-// recording of Deckie (Nov 21), the Desk still comes from Desk's own --snapshot mode (Nov 12), Booth in Desk is
+// recording of Deckie (Nov 21), the Desk stills are Desk's Mac window with the crate Gig Friday (Nov 23, drawn by Desk
+// itself: desk-app's --film-walk), Booth in Desk is
 // Desk's pages in headless Chrome with the real engine (Nov 21), the dictionary stills are the built dictionary page
 // in a headless browser. Nothing on a screen is drawn by this file.
 import * as M from './lib/motion.js';
@@ -360,7 +361,7 @@ function crateLabel(ctx, u) {
   ctx.fillStyle = C.card; ctx.fillRect(0, 0, w, h);
   ctx.shadowColor = 'transparent';
   ctx.strokeStyle = C.warm; ctx.lineWidth = 4; ctx.strokeRect(14, 14, w - 28, h - 28);
-  text(ctx, 'Friday night', 44 * sc, 112 * sc, font(80 * sc, 800, DISPLAY), C.warm, 'left', TRK * 80 * sc);
+  text(ctx, 'Gig Friday', 44 * sc, 112 * sc, font(80 * sc, 800, DISPLAY), C.warm, 'left', TRK * 80 * sc);
   text(ctx, 'Crate file', 46 * sc, 160 * sc, font(34 * sc, 600, UI), C.mut);
   ctx.fillStyle = C.line; ctx.fillRect(44 * sc, 190 * sc, w - 88 * sc, 3);
   const pos = [[44, 280], [262, 280], [400, 280], [44, 362], [226, 362]];
@@ -386,7 +387,7 @@ function fileChip(ctx, u) {
   ctx.fillStyle = C.card; ctx.fillRect(-w / 2, -h / 2, w, h);
   ctx.shadowColor = 'transparent';
   ctx.strokeStyle = C.warm; ctx.lineWidth = 3; ctx.strokeRect(-w / 2 + 7, -h / 2 + 7, w - 14, h - 14);
-  text(ctx, 'Friday night', -w / 2 + 26, 4, font(38, 800, DISPLAY), C.warm, 'left', -1);
+  text(ctx, 'Gig Friday', -w / 2 + 26, 4, font(38, 800, DISPLAY), C.warm, 'left', -1);
   text(ctx, 'Crate file', -w / 2 + 27, 32, font(20, 600, UI), C.mut);
   ctx.restore();
 }
@@ -468,11 +469,12 @@ function vocCam(u) {
   // "echo" typed in the search, the results under it; then the Echo out card: its meaning, then "On the decks"
   return springKeys(u, [[0, [900, 535, 1.45]], [124, [1880, 760, 2.05]], [126, [1880, 890, 2.15]]], { stiffness: 110, damping: 21 });
 }
-// Desk's still (from Desk's --snapshot, Nov 12; site/assets/desk.jpg, 1600 x 1000): its table for "reads your crate", then
-// the camera moves onto its Discs panel for "sticks, CDs and folders". desk.json names it and the table's camera.
+// Desk's Mac window with the crate Gig Friday (Nov 23; desk-app --film-walk, 1600 x 1000 below the toolbar): its songs for
+// "reads your crate", then the same window with its Sources panel, and the camera moves onto the panel for "sticks, CDs
+// and folders" (the stick, its folder, its songs in order). desk.json names the two stills and the songs' camera.
 let DESKCAM = [[0, [1280, 800, 1]]], DESK_READY = false;
 function deskImg(u, IMG) { return u >= 42 && u < 50 && IMG.desk_discs ? IMG.desk_discs : IMG.desk_open; }
-function deskCam(u) { return u >= 42 && u < 50 ? springKeys(u, [[42, [800, 500, 1]], [44.5, [1100, 560, 1.45]]], { stiffness: 90, damping: 20 }) : springKeys(u, DESKCAM, { stiffness: 90, damping: 20 }); }
+function deskCam(u) { return u >= 42 && u < 50 ? springKeys(u, [[42, [800, 500, 1]], [44.5, [1250, 380, 1.4]]], { stiffness: 90, damping: 20 }) : springKeys(u, DESKCAM, { stiffness: 90, damping: 20 }); }
 
 // Every accent, with its sound. Kept sparse: the bed carries the pulse, the accents mark the steps.
 const HITS = [

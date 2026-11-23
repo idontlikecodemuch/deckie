@@ -46,6 +46,8 @@ struct AddWayButtons: View {
                     Button { model.addWay(w.id) } label: {
                         VStack(spacing: Look.First.wayGap) {
                             Image(systemName: w.macSymbol).font(Look.First.wayIconFont).foregroundStyle(.tint)
+                                // one height for the three drawings, so the three tiles are one size
+                                .frame(height: Look.First.wayIconHeight)
                             Text(w.title).font(Look.First.wayFont)
                         }
                     }

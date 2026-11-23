@@ -217,6 +217,14 @@ replaced by a brand frame: Deckie's icon, the name written on in the script face
 explainer film closes. The privacy sentence stays on Desk's first screen, where it was already said; a quick start ends
 on the name. The film is now 57.6 seconds; the bundled 720p file is still 1.7 MB and the poster is unchanged.
 
+**Nov 23, 2026: seen in the Mac app.** The quick start was looked at in the running Mac app for the first time, on
+scratch storage (`--quick-start-walk`, desk-app/README.md). The card, the film in its sheet, Help > Watch the quick
+start, Hide and both fall-backs (a file that is not a film, no file) work. Three things looked wrong and were fixed: at
+the smallest window the first screen did not fit (the body cut short with "…", the last line below the window), the
+three tiles of the ways in were three heights, and the sheet's steps in words were squeezed to half their width. A Mac
+cut of the film was not made: without Screen Recording permission for Deckie Desk, the toolbar (Send to iPad, the
+Booth switch) and the share sheet cannot be pictured, and those are the Mac cut's own steps.
+
 **Still open for the owner.** Silent, or with a quiet bed of music; one film, or a Mac cut made from the Mac's own
 window once it can be captured unlocked; whether the film plays by itself on the very first open (built, switched
 off); whether the film also goes on the site.

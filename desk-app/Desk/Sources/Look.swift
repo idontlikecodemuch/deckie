@@ -244,6 +244,7 @@ enum Look {
         static let look: TileLook = .a
         static let crateIcon: CGFloat = 150
         static let wayIconFont = Font.system(size: 96, weight: .light)
+        static let wayIconHeight: CGFloat = 112
         static let wayFont = Font.system(size: 13, weight: .medium)
         static let wayPadH: CGFloat = 22, wayPadTop: CGFloat = 20, wayPadBottom: CGFloat = 16
         static let wayGap: CGFloat = 8, waysGap: CGFloat = 16
