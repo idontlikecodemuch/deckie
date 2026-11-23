@@ -10,8 +10,9 @@ mkdir -p "$D/assets" "$D/fonts"
 cp icon.svg 404.html site.js site.css index.html robots.txt sitemap.xml llms.txt favicon.ico favicon.svg apple-touch-icon.png .htaccess "$D/"
 cp fonts/inter.woff2 fonts/pacifico.woff2 fonts/LICENSE-Inter.txt fonts/LICENSE-Pacifico.txt "$D/fonts/"
 cp assets/share-home.jpg assets/share-dictionary.jpg assets/poster.jpg assets/deckie-15s.mp4 assets/tile-song.jpg assets/tile-pick.jpg assets/tile-pin.jpg "$D/assets/"
-# the pictures at the size the page shows them (the cards are about 360 px wide, the booth picture about 600)
-for f in desk.jpg; do ffmpeg -hide_banner -loglevel error -y -i "assets/$f" -vf scale=900:-2 -q:v 4 "$D/assets/$f"; done
+# the how-to in "Desk reads your crate": Desk's quick start (720p, no sound, about 1.7 MB) and its poster, as made on
+# the quick start's branch (desk-web/quick-start/); copied as they are. The page loads the film only when it is played.
+cp assets/deckie-desk-quick-start.mp4 assets/quick-start-poster.jpg "$D/assets/"
 
 # the film at web weight: same picture size and frame rate, smaller file, starts playing before it has all arrived
 nice -n 19 ffmpeg -hide_banner -loglevel error -y -i assets/deckie-explainer.mp4 -c:v libx264 -preset slow -crf 23 -pix_fmt yuv420p \
