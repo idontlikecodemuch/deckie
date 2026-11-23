@@ -225,6 +225,36 @@ public enum DeskWords {
         "toIPadCableMac": "A cable: connect the iPad, choose it in the Finder's sidebar, then Files, and drag the crate file onto Deckie.",
         "toIPadICloudLinux": "iCloud Drive: open icloud.com in a browser and upload the crate file to iCloud Drive; it shows in Files on the iPad.",
         "openFolder": "Show the folder",
+        // new (D46, research AG): the steps a screen left unsaid. Under the run's "you can leave this running", that
+        // Stop keeps what was read (until now only in Stop's tooltip); on the finished screen, what happens in the
+        // booth; and on the Mac's finished screen, which has no "To get it to your iPad" box, how the file gets there.
+        "stopAnyTime": "You can stop at any time: songs already read stay in your crate.",
+        "thenOpenInDeckie": "Then open it in Deckie on the iPad, and set the iPad beside the decks.",
+        "sendToIPadHow": "Send to iPad opens the share sheet: AirDrop it, or save it to iCloud Drive and open it from Files on the iPad.",
+
+        // new (D46): the quick start, a silent film of about a minute bundled with Desk. Offered on the first screen
+        // as a card the DJ starts; afterwards in the Help menu (Mac) or the ⋯ menu (Windows, Linux). When the film
+        // cannot play on a computer, the card shows its steps in words instead (quickStartStep.1 to .4), never an
+        // error. Phrases are held together with no-break spaces so no word is left alone on a line.
+        "quickStartOffer": "New to Desk?",
+        "quickStartWatch": "Watch the quick\u{00A0}start (1\u{00A0}minute)",
+        "quickStartPlay": "Play the quick start",
+        "quickStartMenu": "Watch the quick start",
+        "quickStartTitle": "Quick start",
+        "quickStartClose": "Close",
+        "quickStartHide": "Hide",
+        "quickStartHideHelp": "The quick start stays in {quickStartAt}.",
+        // Where the quick start is once the card is hidden, filled into quickStartHideHelp by each window.
+        "quickStartAt.menu": "the Help menu",
+        "quickStartAt.more": "the ⋯ menu",
+        "quickStartInWords": "The quick start, in\u{00A0}four\u{00A0}steps",
+        "quickStartNoPlayer": "The film doesn't play on {thisComputer}, so here are its steps.",
+        // One step as the Mac lists them under each other: its number, then its words.
+        "quickStartStepLine": "{n}. {step}",
+        "quickStartStep.1": "Name your crate, then add a\u{00A0}stick, a\u{00A0}CD or a\u{00A0}folder.",
+        "quickStartStep.2": "Desk reads every song: its tempo, key\u{00A0}and\u{00A0}bars. You can stop at any time; songs already read stay in\u{00A0}your\u{00A0}crate.",
+        "quickStartStep.3": "Get the crate file to your\u{00A0}iPad. It's small: no\u{00A0}music\u{00A0}inside. Open it in Deckie and set the iPad beside\u{00A0}the\u{00A0}decks.",
+        "quickStartStep.4": "No iPad? Switch Desk to\u{00A0}Booth. It listens through the microphone and names the\u{00A0}song\u{00A0}playing.",
 
         // a run that stopped
         "stoppedReading": "Desk stopped before it finished reading {read}. Songs already read are kept.",

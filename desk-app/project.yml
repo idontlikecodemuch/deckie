@@ -22,6 +22,11 @@ targets:
     platform: macOS
     sources:
       - path: Desk/Sources
+      # The quick start's film and poster (D46), from the pages' folder, so both windows ship the same film; a folder
+      # reference, so they land in Contents/Resources/quick-start/.
+      - path: ../desk-web/quick-start
+        type: folder
+        buildPhase: resources
     dependencies:
       - package: DeckieCore
         product: DeckieBuild
@@ -71,10 +76,10 @@ targets:
             UTTypeTagSpecification:
               public.filename-extension: [deckie, deckiecrate]
         UTImportedTypeDeclarations:
-          - UTTypeIdentifier: io.example.deckie.crate
+          - UTTypeIdentifier: io.christophershannon.deckie.crate
             UTTypeDescription: Deckie crate file
             UTTypeConformsTo: [io.deckie.crate, com.apple.package, public.composite-content]
-          - UTTypeIdentifier: io.example.deckie.crate-file
+          - UTTypeIdentifier: io.christophershannon.deckie.crate-file
             UTTypeDescription: Deckie crate file
             UTTypeConformsTo: [io.deckie.crate-file, public.data, public.composite-content]
     settings:

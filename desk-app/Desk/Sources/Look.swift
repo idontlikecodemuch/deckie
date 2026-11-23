@@ -216,6 +216,29 @@ enum Look {
     /// Quiet at rest, the full accent with dark symbol and word when pointed at, focused or pressed (a short colour fade).
     /// Two looks, as the pages' desk.css: (a) a soft tint of the accent, (b) an outline with no fill; `look` picks one.
     /// Import crate file stays secondary.
+    /// The quick start (D46, QuickStart.swift): the first screen's card and the film's player. As the pages'
+    /// --qs-* values in desk.css.
+    enum QuickStart {
+        static let cardWidth: CGFloat = 640, cardGap: CGFloat = 18, cardPadding: CGFloat = 14
+        static let cardCorner: CGFloat = 16, cardLine: CGFloat = 1.5
+        static var cardFill: Color { RunLook.accent.opacity(0.10) }
+        static var cardEdge: Color { RunLook.accent.opacity(0.45) }
+        static let posterWidth: CGFloat = 176, posterCorner: CGFloat = 12
+        static let ratio: CGFloat = 16.0 / 9.0
+        static let playSize: CGFloat = 46
+        static let playFont = Font.system(size: 18, weight: .bold)
+        static let playMark = Color.white
+        static let playGround = Color.black.opacity(0.72)
+        static let filmGround = Color.black
+        static let newFont = Font.system(size: 19, weight: .bold)
+        static let offerFont = Font.system(size: 16, weight: .semibold)
+        static let wordsGap: CGFloat = 6, wordsWidth: CGFloat = 420
+        static let wordsHeading = Font.headline
+        static let wordsNote = Font.caption
+        static let stepFont = Font.callout
+        static let playerGap: CGFloat = 14, playerPadding: CGFloat = 20, playerMinWidth: CGFloat = 800
+    }
+
     enum First {
         enum TileLook { case a, b }
         static let look: TileLook = .a
