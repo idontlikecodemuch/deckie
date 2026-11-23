@@ -88,9 +88,16 @@ re-encoded at web weight (about 10 MB). It needs ffmpeg. An earlier build is set
 deleted. The script ends by listing every file with its size and fails if the home page points at a file that is
 not in the build.
 
-In the built pages, every link to a CSS or JS file carries `?v=` and the first 10 hex characters of that file's
-SHA-256, so a changed file gets a new address while an unchanged one keeps its stamp and the visitor's day-long cache.
-The pages in `site/` stay unstamped, so they still open straight from the repository.
+In the built pages, every reference to a local file the browser caches carries `?v=` and the first 10 hex characters
+of that file's SHA-256: the CSS and JS files (cached a day), and the pictures, icons, films and the demo page's
+songs (cached 30 days), in `src`, `href`, `poster` and `srcset`, the films' `<source src>`, the icons in the head,
+and the share card's absolute `https://deckie.io/...` address in `og:image`, `twitter:image` and the structured
+data's `image`, so a crawler re-reading the page fetches a new card. A changed file gets a new address; an unchanged
+one keeps its stamp and its cache. Not stamped: links to other pages, external addresses, `mailto:`, `sitemap.xml`,
+`robots.txt`, `llms.txt`, and the two fonts, which `site.css` loads by `url()` and which never change (a new font
+would take a new file name). No CSS file refers to a picture. The build fails if a stamped reference names a file not
+in the build, or if any reference to a local picture, film, song, stylesheet or script is left unstamped (HTML
+comments aside). The pages in `site/` stay unstamped, so they still open straight from the repository.
 
 `site/dist/` is uploaded to the host over FTPS. The login is not in this repository and is never committed. After
 an upload, check the live pages, the film, the 404 page and both redirects, and compare file sizes with the build.
