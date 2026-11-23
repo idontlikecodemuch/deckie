@@ -22,8 +22,12 @@ it follows is `shotlist.md`. The research behind it is `docs/research/v-explaine
 - `capture/make_demo_crate.py`: makes the demo crate file from a copy of a crate file (invented names, same analysis).
 - `capture/booth.sh`: records Deckie's walk-through in the iPad simulator (a Debug build, for its hooks; the
   simulator records with the Mac locked).
-- `capture/desk.sh`: Deckie Desk's own stills (`--snapshot`); the Mac must be unlocked. The film uses the Nov 12 still,
-  `site/assets/desk.jpg` (letter V, 7o).
+- `capture/desk.sh`: Deckie Desk's own stills (`--snapshot`); the Mac must be unlocked. Since Nov 23 the film uses two
+  stills of the Mac window with the crate "Gig Friday" (the twelve songs of `desk-quickstart/capture/songs.py`, read
+  into a scratch Desk with `--add-music`): `site/assets/desk.jpg` (its songs) and `site/assets/desk-sources.jpg` (the
+  Sources panel), made by `"Deckie Desk" --film-walk <out> "Gig Friday"` (`desk-app/Desk/Sources/FilmWalk.swift`) and
+  cut to the window below its toolbar, 1800 by 1125 pixels from (0, 100), scaled to 1600 by 1000. Desk draws those
+  frames itself; without Screen Recording permission for Deckie Desk the toolbar's buttons do not draw, hence the cut.
 - Booth in Desk (shot 16): Desk's pages (`desk-web/`) in headless Chrome with the real engine, the crate file
   imported and its Booth switch pressed, the engine hearing a song of the crate through its stand-in input
   (`DECKIE_BOOTH_SOUND`). It is Desk's quick-start capture (`desk-quickstart/capture/live.mjs` and `clock.js`) cut down to
@@ -51,7 +55,7 @@ In an empty work folder outside the repository, with Node, Playwright's Chromium
 2. Captures into `deckie/assets/`: `booth/f0000.jpg` onward (booth.sh), `vocab2/d_top.png` and `d_echo.png`
    (dictionary.mjs, against the site served locally), `deskbooth/wait.jpg` and `named.jpg` (Booth in Desk, at
    1600 x 1000), and `desk/` with Desk's still plus a `desk.json` naming it and the table's camera:
-   `{"images":{"desk_open":"assets/desk/desk.jpg","desk_discs":"assets/desk/desk.jpg"},"cam":[[0,[494,312,1.62]]]}`.
+   `{"images":{"desk_open":"assets/desk/desk.jpg","desk_discs":"assets/desk/desk-sources.jpg"},"cam":[[0,[494,312,1.62]]]}`.
    The word maps: `node words/rasterise.mjs site/fonts/pacifico.woff2 deckie/assets/words`, then `uv run
    words/skel.py` and `uv run words/strokes.py` on that folder.
 3. Music and beat grid: `uv run <skill>/scripts/beats.py deckie --synth --bpm 120 --tonic A --mode minor --flavor house --drop 8 --seed 7`
@@ -62,6 +66,17 @@ In an empty work folder outside the repository, with Node, Playwright's Chromium
 6. The fifteen-second clip: `ffmpeg -i final.mp4 -t 15 -af afade=t=out:st=14.4:d=0.6 deckie-15s.mp4`.
 
 One heavy job at a time; run the render with `nice -n 19`.
+
+## Nov 23, 2026: Desk's shots, spliced into the master
+
+Only shots 5 to 7 changed, so only 12.2 to 28.0 s was rendered again (`render.mjs --range 12.2:28 --video-only`; both
+ends are cuts where the master has a key frame). Its work folder had the new Desk stills, the word maps made again
+(`words.json` came out byte for byte the same), and for frames 90 to 199 of `booth/` one still of Deckie in the
+iPad simulator (a Debug build, the crate file "Gig Friday" opened with `deck://crate`, landscape, the status bar at
+9:41), the state the recording showed there. The new span was joined to the master's frames before and after it and the
+picture encoded once more as `render.mjs` encodes (x264, CRF 16, slow); the sound is the master's, copied. A rendered
+frame at 12.2 s matched the master's to within the encoder's noise. The fifteen-second clip and the poster (32.5 s)
+show nothing that changed and were left as they were.
 
 ## The site
 

@@ -1,6 +1,7 @@
 # Deckie explainer: shot list
 
-The film's sixth cut, Nov 21, 2026 (the Nov 12 cut, as published, is in `v6/`).
+The film's sixth cut, Nov 21, 2026, with Desk's shots (5 to 7) renewed on Nov 23 (the Nov 12 cut, as published, is
+in `v6/`).
 
 76 s · 120 BPM (one beat is half a second, one bar is two) · 152 beats · 16:9, 1920 x 1080, 60 frames a second.
 Sound: soundtrack D, "in between" (letter V, section 7g): a swung house groove with organ stabs, heard through a
@@ -17,8 +18,8 @@ names "Deckie Desk", "Deckie" and "Booth" in the headers are in Pacifico and wri
 below marks a break).
 No boxed stamps. Every screen is a capture of the real apps showing a demo crate file with invented names. The iPad
 is a simulator recording of Deckie (Nov 21) with "Gig Friday", twelve generated songs; Booth in Desk is Desk's pages
-in headless Chrome with the real engine and the same crate file (Nov 21); Desk's own window is the Nov 12 still (the
-Mac was locked; letter V, 7o). The first 15 s are also cut as a clip of their own.
+in headless Chrome with the real engine and the same crate file (Nov 21); Desk's own window is the Mac's, with the same
+crate, captured Nov 23 (until then it was the Nov 12 still, taken while the Mac was locked; letter V, 7o). The first 15 s are also cut as a clip of their own.
 
 The reasons are in `docs/research/v-explainer-video-and-page.md`, sections 7c to 7e. Earlier cuts: `v1/` (84 s),
 `v2/` (60 s), `v3/` and `v4/` (76 s, before rounds six and seven).
@@ -29,9 +30,9 @@ The reasons are in `docs/research/v-explainer-video-and-page.md`, sections 7c to
 | 2 | 8-18 | 4-9 s | | The booth, a song named, picks listed (recording, real time) | "*Deckie* knows / *your* crate. It hears what's playing." then "It names the song, / reads the pitch, / and shows what / could come next." | whoosh, ticks |
 | 3 | 18-24 | 9-12 s | | Type only | "Know the beat." "Nail the mix." | thud, bell |
 | 4 | 24-32 | 12-16 s | | The name, written over 1.3 s; the tagline; the address | "*Deckie*" "Know *Your* Crate" "deckie.io" | impact, tick |
-| 5 | 32-42 | 16-21 s | Deckie Desk on your Mac | Desk's table; a label that fills in: "Friday night · Crate file · Tempo Key Bars Style Fingerprints" | "Desk reads / *your* crate / and writes / a crate file. Edits, bootlegs / and burned CDs too. / No audio goes in the file." | impact (the beat comes in), five ticks |
-| 6 | 42-50 | 21-25 s | Deckie Desk on your Mac | Desk's table with its Discs panel; the camera moves onto the panel | "It reads sticks, / CDs and folders / as they are." "Names, folders and order, / as your player shows them." | click |
-| 7 | 50-56 | 25-28 s | Deckie Desk on your Mac | A tag, "Friday night · Crate file", travels from Desk to the iPad card | "Send the file / to *your* iPad. AirDrop, iCloud Drive or Files. / No server." | bell, whoosh, pop |
+| 5 | 32-42 | 16-21 s | Deckie Desk on your Mac | Desk's Mac window: the songs of Gig Friday (title, artist, tempo, key, where the key came from, bars); a label that fills in: "Gig Friday · Crate file · Tempo Key Bars Style Fingerprints" | "Desk reads / *your* crate / and writes / a crate file. Edits, bootlegs / and burned CDs too. / No audio goes in the file." | impact (the beat comes in), five ticks |
+| 6 | 42-50 | 21-25 s | Deckie Desk on your Mac | The same window with its Sources panel: the stick "Friday stick · 12 songs", its folder and its songs numbered 01 to 12 in the stick's order; the camera moves onto the panel | "It reads sticks, / CDs and folders / as they are." "Names, folders and order, / as your player shows them." | click |
+| 7 | 50-56 | 25-28 s | Deckie Desk on your Mac | A tag, "Gig Friday · Crate file", travels from Desk to the iPad card, which shows "Gig Friday is open: 12 songs." (a still of today's Deckie, Nov 23) | "Send the file / to *your* iPad. AirDrop, iCloud Drive or Files. / No server." | bell, whoosh, pop |
 | 8 | 56-62 | 28-31 s | Deckie on your iPad | "Listening…" (real time); before it, in shot 7, the iPad shows "Gig Friday is open: 12 songs." | "Put the iPad / by the decks / and press play. A song shows up / after a few seconds of music." | bell |
 | 9 | 62-68 | 31-34 s | Deckie on your iPad | The song, "02 · Copper Weather", appears at 31 s | "It names the song / from *your* crate. Disc, folder and track, / as on your player." | bell |
 | 10 | 68-76 | 34-38 s | Deckie on your iPad | Push in on the playing panel; outlines on "deck +3.0%" and "128 BPM" | "It reads the / pitch fader. This deck runs 3 percent fast, / so the tempo reads 128 BPM." | tick |
@@ -52,3 +53,12 @@ line change across those cuts.
 Shot 16 is separable: `BOOTH_IN_DESK = false` in `film.js` leaves it out, the iPad section then runs to beat 118 and
 the pin shot holds until the dictionary (the soundtrack is unchanged; its accents at 55 and 57 s then fall on a held
 shot).
+
+**Nov 23, 2026: Desk's shots renewed.** Shots 5, 6 and 7 show Desk's Mac window as it is today, with the crate
+"Gig Friday" (the iPad shots' crate): the songs and, for shot 6, the Sources panel. The pictures are the window below
+its toolbar, drawn by Desk itself (`--film-walk`, `desk-app/Desk/Sources/FilmWalk.swift`): macOS has not allowed
+Desk to record the screen, and without that the toolbar's buttons do not draw, so the toolbar is left out. The label
+and the tag say "Gig Friday", the crate's name in both apps (they said "Friday night"). The iPad card in shot 7 is a
+still of today's Deckie with that crate file just opened, taken in the simulator, as the recording's frames there
+were. Captions, timing and sound are unchanged; shot 16 (Booth in Desk) is still Desk's pages: the Mac window's Booth
+draws by itself only without the soft glow behind the song, so it would not be a true picture.
