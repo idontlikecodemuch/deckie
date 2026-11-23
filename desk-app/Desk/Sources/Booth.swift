@@ -48,7 +48,9 @@ final class BoothModel: ObservableObject, @unchecked Sendable {
         let ask = asked
         status = DeskBooth.Status(state: "starting")
         DispatchQueue.global(qos: .userInitiated).async { [weak self] in
-            let listed = (try? SoundInputs.list().inputs) ?? []
+            // The engine's stand-in for an input (DECKIE_BOOTH_SOUND, pictures with no microphone): listed alone, as on the pages.
+            let standIn = Self.standIn.map { [SoundInput(name: URL(fileURLWithPath: $0).lastPathComponent, isDefault: true)] }
+            let listed = standIn ?? (try? SoundInputs.list().inputs) ?? []
             DispatchQueue.main.async {
                 guard let self, self.asked == ask else { return }
                 self.inputs = listed
@@ -63,7 +65,8 @@ final class BoothModel: ObservableObject, @unchecked Sendable {
         stop()
         stopped = false
         heard = nil; playing = nil; picks = nil; silent = false; meter = 0; status = DeskBooth.Status(state: "starting")
-        let source = Microphone(SoundInputs.named(chosen, in: inputs))
+        let source: SoundSource = Self.standIn.flatMap { try? DeskProtocol.standInSource($0) }
+            ?? Microphone(SoundInputs.named(chosen, in: inputs))
         let b = DeskBooth(crate: crate, indexAt: home.shelf.file(DeskBooth.indexFile, of: crateId), source: source, shuffle: shuffle) { [weak self] e in
             DispatchQueue.main.async { self?.take(e) }
         }
@@ -71,6 +74,9 @@ final class BoothModel: ObservableObject, @unchecked Sendable {
         songs = b.songCount
         b.start()
     }
+
+    /// The file `DECKIE_BOOTH_SOUND` names, played as if the microphone heard it (checks and pictures; never set by Desk).
+    static var standIn: String? { ProcessInfo.processInfo.environment[DeskProtocol.soundStandIn] }
 
     func stop() {
         asked += 1

@@ -30,6 +30,14 @@ struct DeskApp: App {
                         if let n = s.crate { model.show(named: n) }
                         Snapshot.run(model: model, out: s.out)
                     }
+                    if let out = QuickStartWalk.request { QuickStartWalk.run(model: model, out: out) }
+                    if let w = FilmWalk.request {
+                        if let n = w.crate { model.show(named: n) }
+                        FilmWalk.run(model: model, out: w.out)
+                    }
+                    if let out = ProcessInfo.processInfo.environment["DECKIE_SNAP_ON_SIGNAL"] {
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { MainActor.assumeIsolated { Snapshot.captureOnSignal(out: out) } }
+                    }
                     if let c = WindowCheck.request { WindowCheck.run(model: model, out: c.out, add: c.add) }
                 }
         }

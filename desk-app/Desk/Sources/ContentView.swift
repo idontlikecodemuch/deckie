@@ -135,6 +135,19 @@ struct CrateMenu: View {
 }
 
 struct EmptyCrateView: View {
+    // As it is while it fits; in a scroll view when it does not. In a small window, or with the quick start's steps in
+    // words, the first screen is taller than the window: nothing is cut off or shortened (seen Nov 23, 2026 at the
+    // smallest window: the body ended in "…" and the last line was below the window).
+    var body: some View {
+        ViewThatFits(in: .vertical) {
+            FirstScreen()
+            ScrollView(.vertical) { FirstScreen().frame(maxWidth: .infinity) }
+        }
+    }
+}
+
+/// The first screen's content (EmptyCrateView places it).
+struct FirstScreen: View {
     @EnvironmentObject var model: DeskModel
     var body: some View {
         VStack(spacing: Look.Space.firstScreen) {
@@ -144,6 +157,7 @@ struct EmptyCrateView: View {
             Text(Words.firstTitle).font(Look.Fonts.screenTitle)
             Text(Words.firstBody)
                 .multilineTextAlignment(.center).foregroundStyle(.secondary).frame(maxWidth: Look.Size.firstBodyWidth)
+                .fixedSize(horizontal: false, vertical: true)
             // Quieter than the body: "Your music never leaves this Mac."
             Text(Words.firstNote).font(Look.Fonts.firstNote).foregroundStyle(.tertiary).multilineTextAlignment(.center)
             PendingBanner()

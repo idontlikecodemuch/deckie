@@ -22,6 +22,19 @@ enum Snapshot {
         try? FileManager.default.createDirectory(at: outDir, withIntermediateDirectories: true)
     }
 
+    /// DECKIE_SNAP_ON_SIGNAL=<out folder>: while a person (or a tool) works the window, each SIGUSR1 sent to Desk writes a
+    /// PNG of the window, with its sheet, into that folder. For pictures of states no scripted walk reaches.
+    private static var signalSource: DispatchSourceSignal?
+    static func captureOnSignal(out: String) {
+        prepare(out: out)
+        sizeWindow()
+        signal(SIGUSR1, SIG_IGN)
+        let s = DispatchSource.makeSignalSource(signal: SIGUSR1, queue: .main)
+        s.setEventHandler { MainActor.assumeIsolated { capture("shot", hold: 1, withSheet: true) } }
+        s.resume()
+        signalSource = s
+    }
+
     static func sizeWindow() { if let w = window { w.setContentSize(NSSize(width: 1280, height: 800)); w.center() } }
 
     static func run(model: DeskModel, out: String) {
@@ -82,6 +95,15 @@ enum Snapshot {
                 catch { print("write failed: \(error)") }
             }
         }
+        // Without the window server (no Screen Recording permission, or the screen locked): the window's layers drawn
+        // by the app itself, the sheet's on top.
+        if let image = layerImage(w, sheet: withSheet ? w.attachedSheet : nil) {
+            let rep = NSBitmapImageRep(cgImage: image)
+            if let png = rep.representation(using: .png, properties: [:]) {
+                do { try png.write(to: url); frames.append((file, hold)); print("frame \(file) \(image.width)x\(image.height) via layers"); return }
+                catch { print("write failed: \(error)") }
+            }
+        }
         // Fallback while the screen is locked (the window server then gives nothing, even to the window's own app): the
         // frame view draws itself. That picture has the table and the title bar but not the SwiftUI-drawn parts (toolbar
         // items, selection highlight, inspector) nor a sheet, so it is a still of the table, not the window.
@@ -91,6 +113,30 @@ enum Snapshot {
         if let png = rep.representation(using: .png, properties: [:]) {
             try? png.write(to: url); frames.append((file, hold)); print("frame \(file) \(rep.pixelsWide)x\(rep.pixelsHigh) via cacheDisplay (table only; unlock the Mac for the whole window)")
         }
+    }
+
+    /// The window drawn from its own layer tree (Core Animation's `render(in:)`), with a sheet's window laid over it
+    /// where it sits. No permission is involved: the app draws what it already has. Video layers and the system's
+    /// blur materials may not draw this way; a frame is checked by eye before it is used.
+    static func layerImage(_ w: NSWindow, sheet: NSWindow?) -> CGImage? {
+        guard let root = w.contentView?.superview, let layer = root.layer else { return nil }
+        let scale = w.backingScaleFactor, size = w.frame.size
+        guard let ctx = CGContext(data: nil, width: Int(size.width * scale), height: Int(size.height * scale), bitsPerComponent: 8,
+                                  bytesPerRow: 0, space: CGColorSpace(name: CGColorSpace.sRGB)!,
+                                  bitmapInfo: CGImageAlphaInfo.premultipliedFirst.rawValue) else { return nil }
+        ctx.scaleBy(x: scale, y: scale)
+        func draw(_ l: CALayer, at origin: CGPoint, height: CGFloat) {
+            ctx.saveGState()
+            ctx.translateBy(x: origin.x, y: origin.y)
+            if l.isGeometryFlipped || root.isFlipped { ctx.translateBy(x: 0, y: height); ctx.scaleBy(x: 1, y: -1) }
+            l.render(in: ctx)
+            ctx.restoreGState()
+        }
+        draw(layer, at: .zero, height: size.height)
+        if let s = sheet, let sl = s.contentView?.superview?.layer {
+            draw(sl, at: CGPoint(x: s.frame.minX - w.frame.minX, y: s.frame.minY - w.frame.minY), height: s.frame.height)
+        }
+        return ctx.makeImage()
     }
 
     static func finish() {

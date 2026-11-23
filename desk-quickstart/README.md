@@ -76,6 +76,15 @@ fixed. When the film's length changes, `DeskQuickStart.filmSeconds` in the core 
 
 ## Known limits of this cut
 
+- **Nov 23, 2026: no Mac cut yet.** With the Mac unlocked, Desk's window was pictured from inside the app
+  (`desk-app/README.md`, Pictures). macOS has not allowed Deckie Desk (or the tools that drove it) to record the screen,
+  so the window server gives no picture of it, and a picture the app draws itself has no toolbar buttons and no share
+  sheet. The Mac cut's own steps are exactly those: Send to iPad in the toolbar, the share sheet and AirDrop, and
+  the Booth switch in the toolbar. A cut without them would be weaker than this one, so none was made. With Screen
+  Recording allowed for Deckie Desk, `Snapshot.capture` takes the whole window, sheet included, and a Mac cut can be
+  made from stills of each state. The share sheet's AirDrop list shows nearby people's devices, so that frame has to
+  be staged with none in range, or cut.
+
 - The Mac's own window (`desk-app/`) is not in it: the Mac was locked, and that window can only be captured unlocked.
   The one film serves the Mac too, so its captions are true on a Mac: "Export the crate file" (the Mac's File menu has
   it), "iCloud Drive, a stick or a cable" with "On a Mac, AirDrop too", "Click Booth at the top of the window", and

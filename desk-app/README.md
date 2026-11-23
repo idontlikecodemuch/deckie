@@ -112,9 +112,17 @@ itself (`DeskQuickStart.playsItselfOnFirstOpen` in the core is the one switch, o
 quick start. The film and poster are the pages' (`desk-web/quick-start/`), copied into `Contents/Resources/quick-start/`
 by `project.yml`; nothing is fetched. If the Mac cannot play it (missing, not playable, or the player fails), the card
 and the sheet show the poster and the film's four steps in words. Whether the card was hidden is in `quick-start.json`
-in Desk's storage, where the Windows and Linux window keeps it too. Until the Mac's window can be captured (it needs
-the Mac unlocked), the Mac plays the same film as Windows and Linux, made from their window; its captions are true on a
-Mac.
+in Desk's storage, where the Windows and Linux window keeps it too. The Mac plays the same film as Windows and Linux,
+made from their window; its captions are true on a Mac. A Mac cut needs the Mac's whole window, toolbar and share
+sheet included, which only the window server can picture (see Pictures, below).
+
+**Seen running, Nov 23, 2026** (`--quick-start-walk`, below): the card on the first screen; the film in its sheet (the
+player said ready, 1280 by 720, its time going on); Help > Watch the quick start, the Help menu's one item, opening the
+same sheet; Hide, after which the first screen shows the crate's drawing and `quick-start.json` says hidden and
+played; a film file that is not a film and a missing film file, each giving the poster and the four steps in words on
+the card and in the sheet. Fixed then: at the window's smallest size the first screen was taller than the window (the
+body cut to one line ending in "…", the last line below the window), so it now scrolls when it does not fit; the three
+tiles of the ways in were three heights, now one; the sheet's steps in words were squeezed to half their width.
 
 **Add music** (toolbar, the first screen, or File > Add music to …) adds to the crate showing and says so ("Add music
 to Friday night"). It lists the CDs and drives mounted on this Mac by their own names, then "Choose a folder…" for
@@ -227,6 +235,24 @@ Desk's own crates, in the storage the window uses (`DECKIE_DESK_HOME` moves it),
     "Deckie Desk.app/Contents/MacOS/Deckie Desk" --look-again [crate]
     "Deckie Desk.app/Contents/MacOS/Deckie Desk" --open <crate>
     "Deckie Desk.app/Contents/MacOS/Deckie Desk" --snapshot <out folder> [crate]
+
+Pictures of the window, with no one at the keyboard (each run with `DECKIE_DESK_HOME` set to a scratch folder):
+
+    "Deckie Desk.app/Contents/MacOS/Deckie Desk" --quick-start-walk <out folder>
+    "Deckie Desk.app/Contents/MacOS/Deckie Desk" --film-walk <out folder> [crate]
+    DECKIE_SNAP_ON_SIGNAL=<out folder> "Deckie Desk.app/Contents/MacOS/Deckie Desk"     (each SIGUSR1 writes a picture)
+
+`--quick-start-walk` (`QuickStartWalk.swift`) walks the quick start: the card at the usual size and at the smallest, the
+film started as the play button starts it with what the player reports, Help > Watch the quick start, Hide; it prints
+what it finds. `--film-walk` (`FilmWalk.swift`) writes the stills the site's film uses: the crate's songs, the Sources
+panel, then Booth a frame a second. With `DECKIE_BOOTH_SOUND` naming a sound file, Booth hears that file as if the
+microphone did, as the engine's stand-in does for the pages (no microphone is opened). Run the app's binary directly
+with `-NSTreatUnknownArgumentsAsOpen NO` after the arguments, so the environment reaches it. Where macOS has not
+allowed Deckie Desk to record the screen (Privacy & Security > Screen Recording), the window server gives the app
+nothing, even of its own window, and the pictures are the window drawn by the app itself (`Snapshot.layerImage`): true
+for the songs, the Sources panel, the first screen and Booth's text, but without the toolbar's buttons (they
+come out as blank shapes), the inspector (blank), a playing film (black), blurs (Booth's glow comes out a hard-edged
+panel) and anything in another process's window (the share sheet). Those pictures are cut or not used.
 
 `--add-music` is the window's one run, into that crate (made if missing), else the most recent, else a new crate named
 after what is read; it prints each file, the progress about once a second, and the run's report, with the keys and names taken from this
@@ -395,7 +421,9 @@ None of the music CD code has read a real disc on this Mac: there is no drive he
 - `Words.swift`: every word on screen, by name.
 - `Naming.swift`: the Listen bar, the naming tools' sheet with its preview, and the naming walk.
 - `HeadlessDesk.swift`: Desk's own crates from a terminal.
-- `Snapshot.swift`: `--snapshot` steps through the window and writes PNGs.
+- `Snapshot.swift`: `--snapshot` steps through the window and writes PNGs; the window's own picture when the window
+  server gives none; `DECKIE_SNAP_ON_SIGNAL`.
+- `QuickStartWalk.swift`, `FilmWalk.swift`: the quick start's walk and the site film's stills.
 - `Signatures.swift`: AVFoundation into ShazamKit's signature generator, and into the print that finds copies.
 - In the core, `DeckieDesk`: `DeskHome` (where), `CrateShelf` (the crates, import, export), `FileStore` (per-file
   results), `NameCorrections`, `PlacePaths` and `SourceNaming`, `removeSource`, and `DeskRun` (the one run, its

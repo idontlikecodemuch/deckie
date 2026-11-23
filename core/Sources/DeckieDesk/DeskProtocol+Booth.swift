@@ -18,7 +18,15 @@ import DeckieCapture
 extension DeskProtocol {
     /// The engine's stand-in for an input, for checks and pictures with no microphone: `DECKIE_BOOTH_SOUND` names an
     /// audio file, played as if it were heard, at the speed of sound; `booth.inputs` then lists it alone.
-    static let soundStandIn = "DECKIE_BOOTH_SOUND"
+    public static let soundStandIn = "DECKIE_BOOTH_SOUND"
+
+    /// The stand-in's sound: the file, played as if heard, at the speed of sound, named as the input list shows it.
+    /// The Mac's window takes it too (Booth.swift), so its pictures need no microphone either.
+    public static func standInSource(_ file: String) throws -> SoundSource {
+        let b = try AudioDecoder.decode(URL(fileURLWithPath: file))
+        return SampleSource(name: URL(fileURLWithPath: file).lastPathComponent, samples: b.samples,
+                            format: SoundFormat(rate: b.sampleRate, channels: b.channelCount), pace: 1)
+    }
 
     /// The inputs this computer has (the stand-in alone when the environment names one), waited for at most
     /// `soundWait` seconds.
@@ -33,11 +41,7 @@ extension DeskProtocol {
     /// The source for an input by its name (nil or "": the system's default).
     func boothSource(_ name: String?) throws -> SoundSource {
         if let made = makeSoundSource { return try made(name) }
-        if let file = environment[Self.soundStandIn] {
-            let b = try AudioDecoder.decode(URL(fileURLWithPath: file))
-            return SampleSource(name: URL(fileURLWithPath: file).lastPathComponent, samples: b.samples,
-                                format: SoundFormat(rate: b.sampleRate, channels: b.channelCount), pace: 1)
-        }
+        if let file = environment[Self.soundStandIn] { return try Self.standInSource(file) }
         // Found by name as it starts, on the listener's thread, within the same time limit as its opening.
         return Microphone(named: name, within: soundWait)
     }
