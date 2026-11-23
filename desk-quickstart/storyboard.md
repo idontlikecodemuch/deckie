@@ -1,6 +1,6 @@
 # Quick start storyboard
 
-Desk's opening video (D46): 58 seconds, silent, captions in the picture, one path. The DJ starts it from the card on
+Desk's opening video (D46): 57.6 seconds, silent, captions in the picture, one path. The DJ starts it from the card on
 the first screen, or from the Help menu (Mac) or the "⋯" menu (Windows and Linux); it does not play by itself. The
 pictures of Desk are the real Windows and Linux window, captured by `capture/live.mjs` against today's pages and
 today's engine on twelve generated songs; the iPad is a picture of Deckie made for this film in the iPad simulator
@@ -26,7 +26,7 @@ names a button only one window has (see "For the Mac" below).
 | 4b | 40.5 to 45.0 | The iPad, a slow push in | (same) | It names the song playing / and shows what / could come next. |
 | 5a | 45.0 to 48.9 | The window comes back on the crate's songs; the pointer clicks **Booth** in the bar; the window turns violet, "Getting ready…" | No iPad? · Switch Desk / to Booth | Click Booth / at the top / of the window. |
 | 5b | 48.9 to 54.6 | Booth in Desk, listening: "Static Garden" named, big, its tempo and key, its place along its wave; the picks beside it with the Shuffle dial; at the foot the input, its level, Stop listening | (same) | Desk listens / through the microphone / and names the song. *Smaller:* The picks beside it / are the iPad's own. |
-| 6 | 54.6 to 58.0 | End card, no picture | | Your music never leaves / your computer. *Smaller:* Know Your Crate |
+| 6 | 54.6 to 57.6 | Brand frame on the dark ground, no window: Deckie's icon comes in; the name **Deckie** is written on stroke by stroke in the script face; then the tagline | | Know Your Crate ("Your" written in, in the script face) |
 
 **Why these beats.** The film teaches the one path a new DJ needs (research AG): add music, let Desk read it, get
 the crate file to the iPad, use it beside the decks. Since D42 to D44 a DJ with no iPad can listen with Desk itself,
@@ -39,7 +39,9 @@ crate" are Desk's own words (DeskWords: `firstBody`, `stopRunHelp`, and since D4
 count). "iCloud Drive, a stick or a cable" and "AirDrop" summarise the box the window shows (`toIPad*`). "No music
 inside" is D21: a crate file holds what Desk found, never audio (the one exported in the capture is a few hundred
 kilobytes for 12 songs and 25 MB of music). "The picks beside it are the iPad's own" is D42: one picks list, shared.
-The end card says "your computer", not "this computer", because the same film plays on the Mac.
+The film closes on a brand frame as the site's explainer film does (the name written from the same pen paths, then the
+tagline), not on a sentence: a quick start ends on what Deckie is called. "Your music never leaves this computer"
+stays on Desk's first screen, where it is said already; on the owner's decision of Nov 23, 2026, it left the film.
 
 **For the Mac.** One film serves both for now: the Mac's own window can only be captured with the Mac unlocked, and
 it was locked. The captions are true on a Mac: Export crate file is in the Mac's File menu; iCloud Drive, a stick

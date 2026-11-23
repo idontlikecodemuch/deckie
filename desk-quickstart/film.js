@@ -9,7 +9,7 @@
 const W = 1920, H = 1080;
 const C = { bg: '#0f0a17', bg2: '#1c1036', card: '#1d1530', line: '#30254a', tx: '#f2edf9', mut: '#ab9fc2', dim: '#76698f', acc: '#b490ff', ink: '#160f22' };
 const UI = 'Inter', SCRIPT = 'Pacifico';
-export const DURATION = 58.0;
+export const DURATION = 57.6;
 
 const canvas = document.getElementById('film');
 const ctx = canvas.getContext('2d');
@@ -148,7 +148,7 @@ export async function init(opts) {
   RINGS = [{ from: 18.6, to: 22.4, rect: stop },
            { from: Math.max(31.4, T_EXPORTED + 1.5), to: 35.8, rect: box }];
   await Promise.all([document.fonts.load(`800 40px ${UI}`), document.fonts.load(`400 40px ${UI}`), document.fonts.load(`40px ${SCRIPT}`),
-    loadStill('booth', opts.booth)]);
+    loadStill('booth', opts.booth), loadStill('icon', opts.icon), loadWords(opts.words)]);
 }
 let T_BOOTH = 46.4;
 let RINGS = [];
@@ -323,14 +323,82 @@ function drawTitle(t) {
   ['From your music', 'to the booth', 'in four steps.'].forEach((line, i) => rich(line, W / 2, 640 + i * 60, 46, C.tx, 700, 'center'));
   ctx.restore();
 }
-function drawEnd(t) {
-  const a = prog(t, 54.8, 55.4);
-  if (a <= 0) return;
-  ctx.save(); ctx.globalAlpha = a;
-  // "your computer", not "this computer": the same film plays on the Mac, where Desk says "this Mac".
-  ['Your music never leaves', 'your computer.'].forEach((line, i) => rich(line, W / 2, 480 + i * 74, 62, C.tx, 800, 'center'));
-  ctx.globalAlpha = a * prog(t, 55.8, 56.4);
-  rich('Know Your Crate', W / 2, 700, 36, C.mut, 700, 'center');
+// ------------------------------------------------------------------ the brand frame
+// The close, as the site's explainer film closes (site/film/film.js, the name and the tagline): Deckie's icon, the name
+// written on stroke by stroke in the script face, then "Know Your Crate" with "Your" written in. The pen paths are the
+// site film's time maps (site/film/words: words.json, and the *_map.png files strokes.py makes there): for every pixel
+// of the word, the moment the pen passes it; a word at progress p shows the pixels already passed, so at p = 1 it is
+// the font's own rendering.
+const WORDS = {};
+async function loadWords(dir) {
+  if (!dir) return;
+  try {
+    const meta = await fetch(`${dir}/words.json`).then((r) => r.json());
+    await Promise.all(['deckie', 'cap_your'].map(async (key) => {
+      const m = meta[key], im = new Image(); im.src = `${dir}/${key}_map.png`; await im.decode();
+      const c = document.createElement('canvas'); c.width = m.w; c.height = m.h;
+      const x = c.getContext('2d', { willReadFrequently: true }); x.drawImage(im, 0, 0);
+      const d = x.getImageData(0, 0, m.w, m.h).data, n = m.w * m.h;
+      const tm = new Float32Array(n), cov = new Uint8Array(n);
+      for (let i = 0; i < n; i++) { tm[i] = (d[i * 4] * 256 + d[i * 4 + 1]) / 65535; cov[i] = d[i * 4 + 2]; }
+      WORDS[key] = { ...m, tm, cov, canvas: c, cx: x };
+    }));
+  } catch (e) { /* no maps: the name fades in instead */ }
+}
+const SOFT = 0.035;                          // how soft the pen's leading edge is, as a share of the whole word
+const hexRgb = (h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16));
+/// One script word from its time map, its text origin at (x, base), written to progress p (0 to 1); its advance.
+function writtenWord(key, x, base, size, color, p) {
+  const w = WORDS[key];
+  if (!w) return 0;
+  const s = size / w.S;
+  if (p > 0) {
+    const [r, g, b] = hexRgb(color), img = w.cx.createImageData(w.w, w.h), d = img.data, edge = Math.min(p, 1) * (1 + SOFT);
+    for (let i = 0; i < w.w * w.h; i++) {
+      const c = w.cov[i]; if (!c) continue;
+      const a = p >= 1 ? 1 : (edge - w.tm[i]) / SOFT;
+      if (a <= 0) continue;
+      const o = i * 4; d[o] = r; d[o + 1] = g; d[o + 2] = b; d[o + 3] = a >= 1 ? c : c * a;
+    }
+    w.cx.putImageData(img, 0, 0);
+    ctx.imageSmoothingQuality = 'high';
+    ctx.drawImage(w.canvas, x - w.ox * s, base - w.base * s, w.w * s, w.h * s);
+  }
+  return w.adv * s;
+}
+const BRAND = { from: 54.7, icon: 54.8, name: 55.05, nameDur: 1.3, tag: 56.1, your: 56.25, yourDur: 0.6 };
+function drawBrand(t) {
+  if (t < BRAND.from) return;
+  ctx.save();
+  // The icon: in with a small rise and scale.
+  const ki = ease(prog(t, BRAND.icon, BRAND.icon + 0.6)), im = still.icon;
+  if (im && ki > 0) {
+    const size = 176 * (0.92 + 0.08 * ki), x = W / 2 - size / 2, y = 228 + (1 - ki) * 24;
+    ctx.globalAlpha = ki;
+    ctx.save(); ctx.shadowColor = 'rgba(0,0,0,0.5)'; ctx.shadowBlur = 50; ctx.shadowOffsetY = 18;
+    rrect(x, y, size, size, size * 0.225); ctx.fillStyle = C.bg; ctx.fill(); ctx.restore();
+    ctx.save(); rrect(x, y, size, size, size * 0.225); ctx.clip(); ctx.drawImage(im, x, y, size, size); ctx.restore();
+  }
+  // The name, written on.
+  ctx.globalAlpha = 1;
+  const nameSize = 200, dk = WORDS.deckie;
+  if (dk) writtenWord('deckie', W / 2 - dk.adv * nameSize / dk.S / 2, 640, nameSize, C.tx, prog(t, BRAND.name, BRAND.name + BRAND.nameDur));
+  else { ctx.globalAlpha = prog(t, BRAND.name, BRAND.name + 0.6); rich('Deckie', W / 2, 640, nameSize / 1.08, C.tx, 400, 'center'); }
+  // The tagline: "Know" and "Crate" in Inter, "Your" written in, in the accent.
+  const kt = ease(prog(t, BRAND.tag, BRAND.tag + 0.5));
+  if (kt > 0) {
+    const size = 54, y = 760 + (1 - kt) * 18, yr = WORDS.cap_your, ss = size * 1.08;
+    ctx.globalAlpha = kt; ctx.font = `700 ${size}px ${UI}`; ctx.letterSpacing = `${-0.02 * size}px`; ctx.textBaseline = 'alphabetic'; ctx.textAlign = 'left';
+    const know = 'Know ', crate = ' Crate';
+    const wk = ctx.measureText(know).width, wc = ctx.measureText(crate).width, wy = yr ? yr.adv * ss / yr.S : ctx.measureText('Your').width;
+    let x = W / 2 - (wk + wy + wc) / 2;
+    ctx.fillStyle = C.tx; ctx.fillText(know, x, y); x += wk;
+    if (yr) { ctx.globalAlpha = 1; writtenWord('cap_your', x, y + size * 0.02, ss, C.acc, prog(t, BRAND.your, BRAND.your + BRAND.yourDur)); ctx.globalAlpha = kt; }
+    else { ctx.font = `${Math.round(ss)}px ${SCRIPT}`; ctx.fillStyle = C.acc; ctx.fillText('Your', x, y); ctx.font = `700 ${size}px ${UI}`; }
+    x += wy;
+    ctx.font = `700 ${size}px ${UI}`; ctx.fillStyle = C.tx; ctx.fillText(crate, x, y);
+    ctx.letterSpacing = '0px';
+  }
   ctx.restore();
 }
 
@@ -345,7 +413,7 @@ export async function seek(t) {
   const f = keyed(FRAME_KEYS, t, false);
   const img = await frameImage(f);
   background(t);
-  // The window: in after the title, out to the left as the iPad comes in, back for Booth, gone for the end card.
+  // The window: in after the title, out to the left as the iPad comes in, back for Booth, gone for the brand frame.
   const winIn = ease(prog(t, 3.2, 4.0)), winOut = ease(prog(t, 35.6, 36.4));
   const winBack = ease(prog(t, 44.8, 45.6)), winEnd = ease(prog(t, 54.4, 55.0));
   const first = winIn * (1 - winOut), second = winBack * (1 - winEnd);
@@ -361,7 +429,7 @@ export async function seek(t) {
   drawTitle(t);
   drawStep(t);
   drawCaption(t);
-  drawEnd(t);
+  drawBrand(t);
   return Math.round(f);
 }
 window.__film = { init, seek, DURATION };

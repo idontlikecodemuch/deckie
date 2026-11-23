@@ -55,7 +55,12 @@ await cdp("Emulation.setDeviceMetricsOverride", { width: 1920, height: 1080, dev
 // --page walkthrough/sketch.html draws the walkthrough sketch instead (its moments are its steps, 1 to 5).
 await cdp("Page.navigate", { url: "file://" + resolve(HERE, opt("page", "film.html")) });
 for (let i = 0; i < 100 && !(await js("!!window.__film")); i++) await sleep(100);
-await js(`window.__film.init(${JSON.stringify({ marks, work: WORK, booth: "file://" + booth })})`);
+// The brand frame at the close: Deckie's icon, and the script word maps the site's film writes its name from
+// (site/film/words: words.json is in git; the *_map.png files are made there by strokes.py, or copied to <work>/words).
+const icon = resolve(HERE, "../deck-app/Deck/Assets.xcassets/AppIcon.appiconset/icon1024.png");
+const words = opt("words", existsSync(`${WORK}/words/deckie_map.png`) ? `${WORK}/words` : resolve(HERE, "../site/film/words"));
+if (!existsSync(`${words}/words.json`)) writeFileSync(`${words}/words.json`, readFileSync(resolve(HERE, "../site/film/words/words.json")));
+await js(`window.__film.init(${JSON.stringify({ marks, work: WORK, booth: "file://" + booth, icon: "file://" + icon, words: "file://" + words })})`);
 const duration = await js("window.__film.DURATION");
 const shot = async (format) => Buffer.from((await cdp("Page.captureScreenshot", { format, quality: format === "jpeg" ? 95 : undefined, captureBeyondViewport: false })).data, "base64");
 

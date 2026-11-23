@@ -1,6 +1,6 @@
 # Deckie Desk's quick start
 
-Desk's opening video (D46): a silent film of 58 seconds, captions in the picture, that a DJ starts from the card on
+Desk's opening video (D46): a silent film of 57.6 seconds, captions in the picture, that a DJ starts from the card on
 Desk's first screen, or from the Help menu (Mac) or the "⋯" menu (Windows and Linux). The reasons and the options are
 research letter AG (`docs/research/ag-desk-quick-start.md`); the beats and their words are `storyboard.md`. The film
 that ships, 720p, and its poster are in `desk-web/quick-start/`; this folder is how they are made.
@@ -11,7 +11,10 @@ that ships, 720p, and its poster are in `desk-web/quick-start/`; this folder is 
 - `film.html`, `film.js`: the film, drawn on a canvas as a pure function of time (`film.seek(t)`). It frames the
   capture, moves the camera, draws the pointer where the capture clicked, rings what a caption names, and sets the
   captions. The look is the explainer film's (`site/film/`): the booth's colours, Inter, and Pacifico for "you",
-  "your" and "Deckie" only. It has no sound.
+  "your" and "Deckie" only. It closes as that film does: Deckie's icon (the app icon in `deck-app/`), the name written
+  on stroke by stroke, and "Know Your Crate". The pen paths are the site film's word maps: `site/film/words/words.json`
+  is in git; the `*_map.png` files are made there by `strokes.py` (or copied into `<work>/words/`, which `render.mjs`
+  prefers). Without them the name fades in instead. It has no sound.
 - `render.mjs`: renders the film (or single pictures of it) in headless Chrome, frame by frame, into ffmpeg.
 - `capture/songs.py`: twelve generated songs with invented titles and acts (made the way the demo crate's names are);
   steady-beat dance tracks of drums, bass and chords made from nothing. Never a real song or artist.
@@ -76,7 +79,7 @@ fixed. When the film's length changes, `DeskQuickStart.filmSeconds` in the core 
 - The Mac's own window (`desk-app/`) is not in it: the Mac was locked, and that window can only be captured unlocked.
   The one film serves the Mac too, so its captions are true on a Mac: "Export the crate file" (the Mac's File menu has
   it), "iCloud Drive, a stick or a cable" with "On a Mac, AirDrop too", "Click Booth at the top of the window", and
-  "your computer" on the end card. A Mac cut would show Send to iPad in step 3.
+  and the brand frame says nothing about a computer. A Mac cut would show Send to iPad in step 3.
 - The engine ran on this Mac, so the box "To get it to your iPad" in the picture lists the Mac's ways (AirDrop first);
   on Windows and Linux the box lists that computer's ways. The caption names the ways all three share.
 - The stand-in drive is a folder on this Mac's disk, so the drive list gives "Friday stick" that disk's size.
