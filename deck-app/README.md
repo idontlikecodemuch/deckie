@@ -354,23 +354,49 @@ through it in real time, as the microphone would hear it; waits for Deckie's ind
 
 ## TestFlight (remote updates)
 
-`project.yml` sets `ITSAppUsesNonExemptEncryption = false` (no export-compliance prompt), version 0.1.0, build 1
-(raise `CFBundleVersion` for every later upload). The fields to fill in App Store Connect are in
-`docs/product/testflight/app-store-connect-fields.md`. Archived on Nov 19, 2026 (`pc/booth-build-1`, signed with
-the development certificate): the app is 3.8 MB, holds no library data, and carries `Demo.deckie`,
-`PrivacyInfo.xcprivacy` and no `deck` URL scheme. Archive and upload:
+`project.yml` sets `ITSAppUsesNonExemptEncryption = false` (no export-compliance prompt), version 0.1.0, build 3
+(raise `CFBundleVersion` for every later upload; builds 1 and 2 were never uploaded). The fields to fill in App Store
+Connect are in `docs/product/testflight/app-store-connect-fields.md`.
+
+**Build 3, archived Nov 24, 2026** (`pc/testflight-3`, main at d6c3091), signed with what was already on the Mac (the
+development certificate and the team's wildcard development profile) and without `-allowProvisioningUpdates`, so
+nothing in the developer account was made or changed. The app is 3.9 MB (2.2 MB zipped), arm64 only, iPad only
+(device family 2), minimum iPadOS 17.0, all four orientations, full screen; it holds no library data and carries
+`Demo.deckie` (unchanged from the checkout), `PrivacyInfo.xcprivacy`, the microphone line, a launch screen, the
+1024-point icon (no alpha channel) in the asset catalogue, and no `deck` URL scheme. DeckTests passed first (41 tests).
 
 ```
-xcodebuild -project Deck.xcodeproj -scheme Deck -configuration Release -destination 'generic/platform=iOS' -archivePath build/Deck.xcarchive -allowProvisioningUpdates archive
-xcodebuild -exportArchive -archivePath build/Deck.xcarchive -exportOptionsPlist build/exportOptions.plist -exportPath build/export -allowProvisioningUpdates
+cd deck-app && xcodegen generate
+nice -n 19 xcodebuild -project Deck.xcodeproj -scheme Deck -configuration Release -destination 'generic/platform=iOS' -archivePath build/Deck.xcarchive -derivedDataPath build/dd-archive -jobs 2 archive
 ```
 
-The upload needs App Store Connect access on this Mac: either an Apple ID with the Admin or App Manager role in
-the project's developer team added in Xcode > Settings > Accounts, or an App Store Connect API key (add
-`-authenticationKeyPath ~/.appstoreconnect/private_keys/AuthKey_<KEYID>.p8 -authenticationKeyID <KEYID>
--authenticationKeyIssuerID <ISSUER>` to the export command). The App Store Connect app record for
-`io.deckie.booth` must exist (Apps > + > New App), and the explicit App ID `io.deckie.booth` in the developer account
-(automatic signing makes it on the first device build).
+`build/exportOptions.plist` (git-ignored, made on the Mac; the team id is read from the project, not written here):
+
+```
+TEAM=$(xcodebuild -project Deck.xcodeproj -target Deck -configuration Release -showBuildSettings | awk '$1=="DEVELOPMENT_TEAM"{print $3}')
+/usr/libexec/PlistBuddy -c "Add :method string app-store-connect" -c "Add :destination string upload" \
+  -c "Add :signingStyle string automatic" -c "Add :teamID string $TEAM" -c "Add :uploadSymbols bool true" \
+  -c "Add :manageAppVersionAndBuildNumber bool false" build/exportOptions.plist
+```
+
+Export and upload in one step (`destination` `upload` sends the build to App Store Connect as it exports). The Mac
+has no Apple Distribution certificate and no App Store profile for `io.deckie.booth` yet, so this one needs
+`-allowProvisioningUpdates`: Xcode makes both on this first export, through the account signed in to Xcode (Admin or
+App Manager role in the team). It re-signs the app for distribution, which also drops the development build's
+`get-task-allow`.
+
+```
+nice -n 19 xcodebuild -exportArchive -archivePath build/Deck.xcarchive -exportOptionsPlist build/exportOptions.plist -exportPath build/export -allowProvisioningUpdates
+```
+
+Without an account in Xcode, an App Store Connect API key does the same (add `-authenticationKeyPath
+~/.appstoreconnect/private_keys/AuthKey_<KEYID>.p8 -authenticationKeyID <KEYID> -authenticationKeyIssuerID <ISSUER>`
+to the export command). The App Store Connect app record for `io.deckie.booth` must exist (Apps > + > New App), and
+before it, the explicit App ID `io.deckie.booth` in the developer account. Both were made by hand on Nov 24, 2026.
+Automatic signing did not make the App ID on the device builds, as these notes said before: they were signed with the
+team's wildcard development profile, so no explicit App ID existed and the bundle id was missing from App Store
+Connect's list. It was registered under Certificates, Identifiers & Profiles > Identifiers (App IDs > App, explicit
+bundle id, no capabilities).
 
 ## Crate files from a PC, and songs with no name (Nov 13, 2026)
 
