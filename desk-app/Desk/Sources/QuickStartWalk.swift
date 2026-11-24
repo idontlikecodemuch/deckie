@@ -33,7 +33,8 @@ enum QuickStartWalk {
 
         step(0) {
             Snapshot.sizeWindow()
-            say("film file: \(QuickStartFiles.film?.lastPathComponent ?? "missing"); poster: \(QuickStartFiles.poster?.lastPathComponent ?? "missing")")
+            say("film file: \(QuickStartFiles.film?.lastPathComponent ?? "missing"); poster: \(QuickStartFiles.poster?.lastPathComponent ?? "missing"); "
+                + "card's picture: \(QuickStartFiles.cardPicture?.lastPathComponent ?? "missing (the card shows the poster)")")
             say("card offered: \(model.quickStart.offers); film plays (before the check): \(model.filmPlays)")
         }
         step(1.5) {

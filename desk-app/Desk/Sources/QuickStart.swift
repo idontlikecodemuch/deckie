@@ -12,6 +12,9 @@ import DeckieDesk
 enum QuickStartFiles {
     static var film: URL? { file(DeskQuickStart.filmFile) }
     static var poster: URL? { file(DeskQuickStart.posterFile) }
+    /// The card's own picture (Nov 24, 2026), with nothing to read behind the play button; the poster is the film's
+    /// title frame, unreadable at card size.
+    static var cardPicture: URL? { file(DeskQuickStart.cardFile) }
     private static func file(_ name: String) -> URL? {
         guard let u = Bundle.main.resourceURL?.appendingPathComponent(DeskQuickStart.folder).appendingPathComponent(name),
               FileManager.default.fileExists(atPath: u.path) else { return nil }
@@ -26,7 +29,9 @@ struct QuickStartCard: View {
     var body: some View {
         HStack(alignment: model.filmPlays ? .center : .top, spacing: Look.QuickStart.cardGap) {
             ZStack {
-                QuickStartPoster()
+                // Behind the play button, the card's own picture; where the film cannot play, the title frame,
+                // as nothing covers it there.
+                QuickStartPoster(forCard: model.filmPlays)
                 if model.filmPlays {
                     Button { model.showFilm = true } label: {
                         Image(systemName: "play.fill").font(Look.QuickStart.playFont).foregroundStyle(Look.QuickStart.playMark)
@@ -59,13 +64,21 @@ struct QuickStartCard: View {
     }
 }
 
+/// The poster, the film's title frame; with `forCard`, the card's own picture, or the poster when that is missing or
+/// does not read.
 struct QuickStartPoster: View {
+    var forCard = false
     var body: some View {
-        if let u = QuickStartFiles.poster, let image = NSImage(contentsOf: u) {
+        if let image = Self.image(forCard: forCard) {
             Image(nsImage: image).resizable().aspectRatio(contentMode: .fill)
         } else {
             Rectangle().fill(Look.QuickStart.filmGround)
         }
+    }
+
+    static func image(forCard: Bool) -> NSImage? {
+        if forCard, let u = QuickStartFiles.cardPicture, let image = NSImage(contentsOf: u), image.isValid { return image }
+        return QuickStartFiles.poster.flatMap { NSImage(contentsOf: $0) }
     }
 }
 
