@@ -56,6 +56,8 @@ import Testing
         let q = try #require(hello["quickStart"] as? [String: Any])
         #expect(q["film"] as? String == "quick-start/deckie-desk-quick-start.mp4")
         #expect(q["poster"] as? String == "quick-start/poster.jpg")
+        // Added Nov 24, 2026, by addition only: the card's own picture; the poster stays for the player and older pages.
+        #expect(q["cardPicture"] as? String == "quick-start/card.jpg")
         #expect(q["seconds"] as? Int == DeskQuickStart.filmSeconds)
         #expect(q["offer"] as? Bool == true && q["playsItself"] as? Bool == false)
 
@@ -98,6 +100,68 @@ import Testing
         #expect(String(decoding: film.dropFirst(4).prefix(4), as: UTF8.self) == "ftyp")
         let poster = try Data(contentsOf: folder.appendingPathComponent(DeskQuickStart.posterFile)).prefix(2)
         #expect(Array(poster) == [0xFF, 0xD8])
+    }
+
+    /// The width and height a JPEG's frame header gives (its first SOF marker), or nil when there is none.
+    static func jpegSize(_ d: Data) -> (Int, Int)? {
+        let b = [UInt8](d)
+        guard b.count > 4, b[0] == 0xFF, b[1] == 0xD8 else { return nil }
+        var i = 2
+        while i + 9 < b.count {
+            guard b[i] == 0xFF else { return nil }
+            let marker = b[i + 1]
+            if marker == 0xFF { i += 1; continue }
+            let length = Int(b[i + 2]) << 8 | Int(b[i + 3])
+            if (0xC0...0xCF).contains(marker) && ![0xC4, 0xC8, 0xCC].contains(marker) {
+                return (Int(b[i + 7]) << 8 | Int(b[i + 8]), Int(b[i + 5]) << 8 | Int(b[i + 6]))
+            }
+            i += 2 + length
+        }
+        return nil
+    }
+
+    /// Nov 24, 2026: the card has its own picture, because the title frame cannot be read at card size and sat under
+    /// the play button. It ships beside the poster (so the Mac's folder reference and the Windows zip carry it), it is
+    /// a small 16:9 JPEG no bigger than the poster, and both candidates are kept in desk-quickstart/ so swapping is
+    /// one file; the one not chosen is not bundled.
+    @Test func theCardHasItsOwnSmallPictureBesideThePosterAndBothCandidatesAreKept() throws {
+        let folder = Self.repo.appendingPathComponent("desk-web").appendingPathComponent(DeskQuickStart.folder)
+        let card = try Data(contentsOf: folder.appendingPathComponent(DeskQuickStart.cardFile))
+        let poster = try Data(contentsOf: folder.appendingPathComponent(DeskQuickStart.posterFile))
+        #expect(card.count > 1_000 && card.count <= 60_000, "the card's picture is \(card.count) bytes")
+        let size = try #require(Self.jpegSize(card), "the card's picture is a JPEG")
+        let posterSize = try #require(Self.jpegSize(poster))
+        #expect(size.0 * 9 == size.1 * 16, "16:9, not \(size)")
+        #expect(size.0 <= posterSize.0 && size.1 <= posterSize.1)
+        #expect(card != poster, "the card's picture is not the title frame")
+        let made = Self.repo.appendingPathComponent("desk-quickstart")
+        var candidates: [Data] = []
+        for name in ["card-window.jpg", "card-plain.jpg"] {
+            let d = try Data(contentsOf: made.appendingPathComponent(name))
+            let s = try #require(Self.jpegSize(d), "\(name) is a JPEG")
+            #expect(s.0 * 9 == s.1 * 16, "\(name) is 16:9")
+            candidates.append(d)
+        }
+        #expect(candidates.contains(card), "the card's picture is one of the two candidates")
+        let bundled = try FileManager.default.contentsOfDirectory(atPath: folder.path).filter { !$0.hasPrefix(".") }
+        #expect(Set(bundled) == [DeskQuickStart.filmFile, DeskQuickStart.posterFile, DeskQuickStart.cardFile],
+                "only the film, the poster and the card's picture ship (\(bundled.sorted()))")
+        #expect(VariablesTests.read("desk-quickstart/card-poster.sh").contains("card-plain.jpg"), "the step that makes them")
+        // The Mac takes the whole folder; the Windows zip checks the card's picture is in it.
+        #expect(VariablesTests.read("desk-app/project.yml").contains("path: ../desk-web/quick-start"))
+        #expect(VariablesTests.read(".github/workflows/pc-package.yml").contains("quick-start\\card.jpg"))
+    }
+
+    /// The card shows its own picture while the film can play, the poster where it cannot (steps in words) and whenever
+    /// the picture is not sent (an older engine) or does not load; the player keeps the poster.
+    @Test func thePagesAndTheMacShowTheCardPictureAndFallBackToThePoster() {
+        let qs = VariablesTests.read("desk-web/quickstart.js")
+        #expect(qs.contains("mode === \"film\" && info.cardPicture && !cardFailed ? info.cardPicture : info.poster"))
+        #expect(qs.contains("if (wantsCard) { cardFailed = true; draw(); return; }"))
+        #expect(qs.contains("video.poster = info.poster"))
+        let mac = VariablesTests.read("desk-app/Desk/Sources/QuickStart.swift")
+        #expect(mac.contains("QuickStartPoster(forCard: model.filmPlays)"))
+        #expect(mac.contains("return QuickStartFiles.poster.flatMap"), "the Mac falls back to the poster")
     }
 
     @Test func thePagesOfferTheCardTheMenuItemAndTheFallBackAndMayPlayTheBundledFilm() {

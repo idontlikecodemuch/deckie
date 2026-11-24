@@ -547,6 +547,11 @@ input, played as if heard at the speed of sound.
 itself now (only with the core's switch on, before it has ever played). An engine before D46 sends none, and the
 pages then show no card and no menu item.
 
+Added Nov 24, 2026 (by addition only): `quickStart.cardPicture`, `"quick-start/card.jpg"`, the picture the card shows
+behind its play button (the poster is the film's title frame, unreadable at card size). The player, and the card when
+the film cannot play here, keep `poster`. A page shows `poster` on the card when `cardPicture` is absent (an older
+engine) or does not load; an older page ignores the field.
+
 | `type` | Fields | Reply carries |
 |---|---|---|
 | `quickStart.dismiss` | | `quickStart` as `hello` has it, now with `offer: false`; remembered in Desk's storage (`quick-start.json`) |

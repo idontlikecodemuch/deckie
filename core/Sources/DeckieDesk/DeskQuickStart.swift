@@ -28,6 +28,10 @@ public struct DeskQuickStart: Codable, Equatable, Sendable {
     public static let folder = "quick-start"
     public static let filmFile = "deckie-desk-quick-start.mp4"
     public static let posterFile = "poster.jpg"
+    /// The card's own picture (Nov 24, 2026): the poster is the film's title frame, whose words cannot be read at card
+    /// size and sat under the play button, so the card shows a picture with nothing to read behind the button
+    /// (`desk-quickstart/card-poster.sh`). The player, and the card when the film cannot play, keep the poster.
+    public static let cardFile = "card.jpg"
     /// The film's length in whole seconds, for the words that say how long it is ("1 minute").
     public static let filmSeconds = 58
 
@@ -71,10 +75,11 @@ public struct DeskQuickStart: Codable, Equatable, Sendable {
 
     /// The film's facts as the engine's first message carries them to the pages (`hello.quickStart`, an addition to
     /// protocol 2): where the film and its poster are, relative to the pages, its length, whether to offer the card and
-    /// whether to start the film by itself.
+    /// whether to start the film by itself. `cardPicture` (added Nov 24, 2026, by addition only) is the card's own
+    /// picture; a page that does not know it, or cannot load it, shows `poster` on the card as before.
     public static func hello(_ home: DeskHome) -> [String: Any] {
         let q = load(home)
-        return ["film": folder + "/" + filmFile, "poster": folder + "/" + posterFile, "seconds": filmSeconds,
-                "offer": q.offers, "playsItself": q.playsItself()]
+        return ["film": folder + "/" + filmFile, "poster": folder + "/" + posterFile, "cardPicture": folder + "/" + cardFile,
+                "seconds": filmSeconds, "offer": q.offers, "playsItself": q.playsItself()]
     }
 }
