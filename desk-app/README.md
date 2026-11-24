@@ -106,7 +106,7 @@ shows the first screen; the crate is made when music is added, named after the s
 night 2"). With no crate at all, the first screen offers Add music the same way.
 
 **The quick start** (D46, `QuickStart.swift`). Until the DJ hides it, the first screen opens with a card in place of
-the crate's big drawing: the card's picture (`card.jpg`, Desk's window from the film, softened; since Nov 24, 2026,
+the crate's big drawing: the card's picture (`card.jpg`, Desk reading songs, from the film; since Nov 24, 2026,
 in place of the film's title frame, which could not be read at that size) with a play button, "New to Desk?", "Watch the quick start
 (1 minute)" and Hide. The film (about a minute, silent, captions in the picture) plays in a sheet; it never starts by
 itself (`DeskQuickStart.playsItselfOnFirstOpen` in the core is the one switch, off). Afterwards it is Help > Watch the

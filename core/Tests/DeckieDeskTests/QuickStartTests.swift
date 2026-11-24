@@ -136,7 +136,7 @@ import Testing
         #expect(card != poster, "the card's picture is not the title frame")
         let made = Self.repo.appendingPathComponent("desk-quickstart")
         var candidates: [Data] = []
-        for name in ["card-window.jpg", "card-plain.jpg"] {
+        for name in ["card-reading.jpg", "card-plain.jpg"] {
             let d = try Data(contentsOf: made.appendingPathComponent(name))
             let s = try #require(Self.jpegSize(d), "\(name) is a JPEG")
             #expect(s.0 * 9 == s.1 * 16, "\(name) is 16:9")

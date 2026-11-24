@@ -838,8 +838,10 @@ opening video. Built on the branch `pc/quick-start-2`.
   iPad gets it there.
 - **The card's own picture (Nov 24, 2026).** The card on the first screen shows a picture of its own
   (`desk-web/quick-start/card.jpg`), not the poster: the poster is the film's title frame, whose words cannot be read
-  at card size and sat under the play button. It ships as Desk's window from the film, softened and dimmed; a plain
-  candidate (the film's ground and violet glow, no words) is kept in `desk-quickstart/`, and swapping is one file.
+  at card size and sat under the play button. The card's picture shows Desk reading songs: the run screen from the
+  film, mid-run, with the progress bar and the song being read, lightly softened. The owner chose this kind of
+  picture, Desk's own window, and asked that it show a song being read (Nov 24, 2026). A plain picture (the film's
+  ground and violet glow, no words) is kept in `desk-quickstart/` as the swap-in, and swapping is one file.
   The player, and the card where the film cannot play, keep the title frame. Protocol 2 gains, by addition only,
   `hello.quickStart.cardPicture`; a page shows the poster when it is absent or does not load.
 
