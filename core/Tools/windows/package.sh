@@ -23,7 +23,7 @@
 #     app/deckie-desk-engine.exe   Desk's engine (core/Sources/deckie-desk-engine), marked the same way, so that no
 #                                  console window opens when the window starts it
 #     app/desk-web/                the pages the window shows (desk-web/: every .html, .css and .js), and the quick
-#                                  start's film and poster (desk-web/quick-start/, D46)
+#                                  start's film, poster and card picture (desk-web/quick-start/, D46)
 #     app/deckie-make.exe          the program without a window (core/Sources/deckie-make), a console program
 #     app/deckie-listen.exe        the command-line listening tool (core/Sources/deckie-listen), a console program, for
 #                                  troubleshooting a tester's microphone: its inputs (--inputs), and a crate heard live
@@ -101,8 +101,9 @@ cp "$listen" "$app/deckie-listen.exe"
 mkdir -p "$app/desk-web"
 # Every page file, whatever is added later (the run screen's run.js was once left out, and the window drew nothing).
 cp "$pages"/*.html "$pages"/*.css "$pages"/*.js "$app/desk-web/"
-# The quick start's film and its poster (D46), bundled: nothing is fetched. The pages fall back to its steps in words
-# when the film cannot play, so a folder without it still works, but the zip must have it.
+# The quick start's film, its poster and the card's picture (card.jpg) (D46), bundled: nothing is fetched. The pages
+# fall back to its steps in words when the film cannot play, so a folder without it still works, but the zip must
+# have it.
 mkdir -p "$app/desk-web/quick-start"
 cp "$pages"/quick-start/*.mp4 "$pages"/quick-start/*.jpg "$app/desk-web/quick-start/"
 # Every file index.html names must be in the zip.

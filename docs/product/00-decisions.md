@@ -836,6 +836,12 @@ opening video. Built on the branch `pc/quick-start-2`.
   time: songs already read stay in your crate."; on both finished screens, "Then open it in Deckie on the iPad, and set
   the iPad beside the decks."; and on the Mac's finished screen, which has no "To get it to your iPad" box, how Send to
   iPad gets it there.
+- **The card's own picture (Nov 24, 2026).** The card on the first screen shows a picture of its own
+  (`desk-web/quick-start/card.jpg`), not the poster: the poster is the film's title frame, whose words cannot be read
+  at card size and sat under the play button. It ships as Desk's window from the film, softened and dimmed; a plain
+  candidate (the film's ground and violet glow, no words) is kept in `desk-quickstart/`, and swapping is one file.
+  The player, and the card where the film cannot play, keep the title frame. Protocol 2 gains, by addition only,
+  `hello.quickStart.cardPicture`; a page shows the poster when it is absent or does not load.
 
 ### Note on D22 (Nov 21): the iPad app is now called Deckie
 D22 named the iPad app "Deckie Booth". Since D43 it is called just "Deckie"; Desk's listening mode is "Booth".

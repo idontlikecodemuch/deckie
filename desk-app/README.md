@@ -106,10 +106,11 @@ shows the first screen; the crate is made when music is added, named after the s
 night 2"). With no crate at all, the first screen offers Add music the same way.
 
 **The quick start** (D46, `QuickStart.swift`). Until the DJ hides it, the first screen opens with a card in place of
-the crate's big drawing: the poster of the quick-start film with a play button, "New to Desk?", "Watch the quick start
+the crate's big drawing: the card's picture (`card.jpg`, Desk's window from the film, softened; since Nov 24, 2026,
+in place of the film's title frame, which could not be read at that size) with a play button, "New to Desk?", "Watch the quick start
 (1 minute)" and Hide. The film (about a minute, silent, captions in the picture) plays in a sheet; it never starts by
 itself (`DeskQuickStart.playsItselfOnFirstOpen` in the core is the one switch, off). Afterwards it is Help > Watch the
-quick start. The film and poster are the pages' (`desk-web/quick-start/`), copied into `Contents/Resources/quick-start/`
+quick start. The film, poster and card's picture are the pages' (`desk-web/quick-start/`), copied into `Contents/Resources/quick-start/`
 by `project.yml`; nothing is fetched. If the Mac cannot play it (missing, not playable, or the player fails), the card
 and the sheet show the poster and the film's four steps in words. Whether the card was hidden is in `quick-start.json`
 in Desk's storage, where the Windows and Linux window keeps it too. The Mac plays the same film as Windows and Linux,

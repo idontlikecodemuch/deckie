@@ -244,7 +244,7 @@ jobs:
           foreach ($want in "Deckie Desk.exe: window icon", "Make Crate File.exe: console icon", "deckie-desk.exe: window icon", "deckie-desk-engine.exe: window", "deckie-make.exe: console", "deckie-listen.exe: console") {
             if (-not $said.Contains($want)) { Write-Error "expected: $want"; exit 1 }
           }
-          foreach ($f in "app\desk-web\index.html", "app\desk-web\desk.js", "app\desk-web\desk.css", "app\desk-web\booth.js", "app\desk-web\booth.css", "app\desk-web\quickstart.js", "app\desk-web\quick-start\deckie-desk-quick-start.mp4", "app\desk-web\quick-start\poster.jpg", "app\licences\miniaudio-LICENSE.txt", "app\licences\webview-LICENSE.txt", "app\licences\Microsoft-WebView2-SDK-LICENSE.txt", "app\licences\ACKNOWLEDGEMENTS.txt", "READ ME FIRST.txt") {
+          foreach ($f in "app\desk-web\index.html", "app\desk-web\desk.js", "app\desk-web\desk.css", "app\desk-web\booth.js", "app\desk-web\booth.css", "app\desk-web\quickstart.js", "app\desk-web\quick-start\deckie-desk-quick-start.mp4", "app\desk-web\quick-start\poster.jpg", "app\desk-web\quick-start\card.jpg", "app\licences\miniaudio-LICENSE.txt", "app\licences\webview-LICENSE.txt", "app\licences\Microsoft-WebView2-SDK-LICENSE.txt", "app\licences\ACKNOWLEDGEMENTS.txt", "READ ME FIRST.txt") {
             if (-not (Test-Path (Join-Path $root $f) -PathType Leaf)) { Write-Error "not in the zip: $f"; exit 1 }
           }
           # The learned key reader: its file and its credit list, both or neither; both when KEY_MODEL is required.

@@ -17,7 +17,8 @@ Plain HTML, CSS and JavaScript, no framework, no build step, nothing fetched fro
   messages. Leaving the mode or closing the window stops the microphone; while music is read, listening waits. Its
   values are the `--booth-*` variables at the top of desk.css's `:root`.
 - `quickstart.js` and `quick-start/`: the quick start (D46): the film (`deckie-desk-quick-start.mp4`, 720p, silent, about
-  a minute) and its poster, shown from beside the pages (nothing fetched; the CSP allows `media-src 'self'`). A card at
+  a minute), its poster (the title frame, for the player) and the card's picture (`card.jpg`, since Nov 24, 2026:
+  nothing to read behind the play button; the poster when it is missing), shown from beside the pages (nothing fetched; the CSP allows `media-src 'self'`). A card at
   the top of the first screen offers it until the DJ hides it (the engine remembers that, `quickStart.dismiss`); the
   "⋯" menu's last item plays it any time. Where the web view cannot play it (WebKitGTK may have no H.264 decoder), it
   is said once in plain words and the card and the player show the poster and the film's four steps instead: the

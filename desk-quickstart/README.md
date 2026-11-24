@@ -3,7 +3,7 @@
 Desk's opening video (D46): a silent film of 57.6 seconds, captions in the picture, that a DJ starts from the card on
 Desk's first screen, or from the Help menu (Mac) or the "⋯" menu (Windows and Linux). The reasons and the options are
 research letter AG (`docs/research/ag-desk-quick-start.md`); the beats and their words are `storyboard.md`. The film
-that ships, 720p, and its poster are in `desk-web/quick-start/`; this folder is how they are made.
+that ships, 720p, its poster and the card's picture are in `desk-web/quick-start/`; this folder is how they are made.
 
 ## What is here
 
@@ -32,6 +32,12 @@ that ships, 720p, and its poster are in `desk-web/quick-start/`; this folder is 
   storage: the first screen with the card, the "⋯" menu, the player, the card when the web view cannot play the film
   (the poster and the four steps in words), the player when the film fails while playing, and the first screen after
   Hide (also after the engine is started again). It checks each and says what it found.
+- `card-poster.sh`, `card-window.jpg`, `card-plain.jpg` (Nov 24, 2026): the card's own picture. The poster is the
+  film's title frame, unreadable at card size and under the play button, so the card shows a picture with nothing to
+  read behind the button. Two candidates, cut from the film that ships with ffmpeg alone: "window" (Desk's window on
+  the crate's songs, softened and dimmed) and "plain" (the film's ground and violet glow, no words). The one that
+  ships is `desk-web/quick-start/card.jpg`, a copy of `card-window.jpg`; to swap, copy `card-plain.jpg` over it. The
+  player, and the card where the film cannot play (the steps in words), keep the poster.
 - `walkthrough/sketch.html`, `sketch.js`: the in-app walkthrough sketch from the first cut (option B, not chosen).
 
 ## What it does not touch
@@ -65,6 +71,8 @@ With Node, ffmpeg, Python 3 with numpy, and Google Chrome. One heavy step at a t
         desk-web/quick-start/deckie-desk-quick-start.mp4
     nice -n 19 ffmpeg -ss 2.4 -i $W/deckie-desk-quick-start-1080p.mp4 -frames:v 1 -vf scale=1280:720 -q:v 4 \
         desk-web/quick-start/poster.jpg
+    # the card's picture: both candidates from the film that ships, then the chosen one beside the poster
+    sh desk-quickstart/card-poster.sh && cp desk-quickstart/card-window.jpg desk-web/quick-start/card.jpg
     nice -n 19 ffmpeg -i $W/deckie-desk-quick-start-1080p.mp4 \
         -vf "fps=1/2.5,scale=480:-1,tile=4x6:padding=6:color=0x222222" -frames:v 1 $W/contact-sheet.png
     nice -n 19 node desk-quickstart/capture/card.mjs --engine $PWD/core/.build/debug/deckie-desk-engine \
