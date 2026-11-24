@@ -1,8 +1,21 @@
-# App Store Connect: every field for Deckie, build 2
+# App Store Connect: every field for Deckie, build 3
 
-Draft, Nov 19, 2026. What the owner types when creating the app record and filling TestFlight's test information,
-with the text to paste. Nothing here has been sent to Apple. The build these describe: Deckie 0.1.0 (2), bundle
-id `io.deckie.booth`, iPad only, iPadOS 17 or later, built from `pc/booth-build-2` (build 1 was archived from `pc/booth-build-1`; the app was called Deckie Booth until build 2).
+Draft, Nov 19, 2026; brought to build 3 on Nov 24, 2026. What the owner types when creating the app record and filling
+TestFlight's test information, with the text to paste. No build has been sent to Apple yet. The build these describe:
+Deckie 0.1.0 (3), bundle id `io.deckie.booth`, iPad only, iPadOS 17 or later, archived on Nov 24, 2026 from
+`pc/testflight-3` (main as of that day). Builds 1 and 2 were never uploaded; the app was called Deckie Booth until
+build 2.
+
+**Done on Nov 24, 2026, in the developer account:** the explicit App ID `io.deckie.booth` is registered, and the App
+Store Connect app record for it exists. The fields of section 1 that were typed then (the name, the SKU and the rest)
+are as the owner entered them; the suggestions below stay as they were written, for reference.
+
+**The App ID, corrected (Nov 24, 2026).** These notes said that automatic signing makes the App ID on the first device
+build. It did not: every device build was signed with the team's wildcard development profile ("iOS Team Provisioning
+Profile: *"), so no explicit App ID existed, and `io.deckie.booth` was missing from App Store Connect's Bundle ID list.
+The step is to register it by hand first: Certificates, Identifiers & Profiles > Identifiers > + > App IDs > App,
+Explicit, bundle id `io.deckie.booth`, no capabilities (the app uses ShazamKit with its own catalogues only, which needs
+no capability). Then it appears in the New App form's list.
 
 ## 1. The app record (Apps > + > New App)
 
@@ -11,7 +24,7 @@ id `io.deckie.booth`, iPad only, iPadOS 17 or later, built from `pc/booth-build-
 | Platforms | iOS (the app is iPad only; the build says so) |
 | Name | `Deckie`. The App Store name must be unique across the whole store, and "Deckie" may already be taken; if App Store Connect refuses it, use `Deckie Booth` (the name of builds before 2). The name on the home screen is the build's own (`CFBundleDisplayName`, "Deckie") whichever store name is chosen. |
 | Primary Language | English (U.S.) |
-| Bundle ID | `io.deckie.booth` (pick it from the list; automatic signing made the App ID on the first device build. If it is not listed, add it under Certificates, Identifiers & Profiles > Identifiers first) |
+| Bundle ID | `io.deckie.booth` (pick it from the list; it is listed only once the explicit App ID is registered, above. Done Nov 24, 2026) |
 | SKU | `DECKIE-BOOTH-IPAD` (any text; never shown to anyone, cannot be changed later) |
 | User Access | Full Access |
 
@@ -59,14 +72,18 @@ Or tap any song in the Crate tab to set it as playing. "Leave the demo crate" go
 
 | Field | What to enter |
 |---|---|
-| What to Test | the text of `what-to-test-build-2.md`, below the title |
+| What to Test | the text of `what-to-test-build-3.md`, below the title |
 | Export Compliance | no question should appear: the build's Info.plist sets `ITSAppUsesNonExemptEncryption` to NO. If App Store Connect asks anyway, answer **No** to "Does your app use encryption?" (more precisely: it uses none beyond what iPadOS itself provides, and it makes no network connections at all; the crate file's SHA-256 checks are hashing, not encryption). |
 
 ## 4. Before the upload (not fields, but the order)
 
-1. deckie.io/privacy/ and deckie.io/demo/ published (TestFlight checks that the privacy URL opens).
-2. The app record above created.
-3. Archive and upload from `deck-app/` (README, "TestFlight"); the export needs an Apple Distribution certificate,
-   which Xcode makes on the first export with an Admin or App Manager account. The archive itself was proved on
-   Nov 19, 2026 with the development certificate.
+1. deckie.io/privacy/ and deckie.io/demo/ published (TestFlight checks that the privacy URL opens). Both answer 200
+   (checked Nov 24, 2026; deckie.io/demo without the slash is redirected to deckie.io/demo/).
+2. The explicit App ID and the app record above created (done Nov 24, 2026).
+3. Archive and upload from `deck-app/` (README, "TestFlight"). The Release archive of build 3 was made and checked on
+   Nov 24, 2026, signed with what was already on the Mac (the development certificate and the wildcard development
+   profile), with nothing changed in the developer account. The export for App Store Connect needs an Apple
+   Distribution certificate and an App Store profile for `io.deckie.booth`; neither is on the Mac yet, so the export
+   command carries `-allowProvisioningUpdates`, with which Xcode makes both on the first export, through an account
+   with the Admin or App Manager role signed in to Xcode. That export is also the upload (`destination` `upload`).
 4. Internal testers (the team) can test as soon as the build is processed; outside testers wait for Beta App Review.
