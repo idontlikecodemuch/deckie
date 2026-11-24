@@ -3,8 +3,9 @@ import SwiftUI
 
 /// "Deckie Desk" --snapshot <out folder> [crate name]: show that crate of Desk's own (the most recent by default) in the window, step through it the way a
 /// DJ would (arrow down the list, look at a track, the Sources panel when the crate has sources, open the import log) and write a PNG of the window at each step,
-/// plus an ffmpeg concat list with how long each frame holds. The app draws its own windows, so no screen-recording
-/// permission is involved; then it quits. Made for showing the app when nobody is at the Mac. The Mac must be unlocked
+/// plus an ffmpeg concat list with how long each frame holds; then it quits. With Screen Recording allowed for Deckie
+/// Desk and Desk launched through `open`, each frame is the window server's image of the window; otherwise the window
+/// drawn by the app itself (layerImage). Made for showing the app when nobody is at the Mac. The Mac must be unlocked
 /// for whole-window frames; DECKIE_SNAP_ROWS=<n> changes how many rows the walk goes down (12 by default).
 @MainActor
 enum Snapshot {
@@ -17,9 +18,13 @@ enum Snapshot {
     private static var frames: [(name: String, hold: Double)] = []
     private static var outDir = URL(fileURLWithPath: ".")
 
+    private static var saidHow = false
+
+    /// Also says, once per run, which way the pictures are made and why (ScreenRecording.pictureLine).
     static func prepare(out: String) {
         outDir = URL(fileURLWithPath: out)
         try? FileManager.default.createDirectory(at: outDir, withIntermediateDirectories: true)
+        if !saidHow { saidHow = true; print(ScreenRecording.pictureLine) }
     }
 
     /// DECKIE_SNAP_ON_SIGNAL=<out folder>: while a person (or a tool) works the window, each SIGUSR1 sent to Desk writes a

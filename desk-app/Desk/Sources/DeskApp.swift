@@ -13,6 +13,8 @@ struct DeskApp: App {
     @NSApplicationDelegateAdaptor(QuitDuringRun.self) private var quitting
 
     init() {
+        ScreenRecording.runIfAsked()
+        ScreenRecording.refuseRealStorageForPictures()
         Bundled.pointEngineAtBundle()
         Headless.runIfAsked()
         HeadlessDesk.runIfAsked()
