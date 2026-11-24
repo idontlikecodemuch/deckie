@@ -2,7 +2,8 @@
 // offered on the first screen as a card the DJ starts, and played again from the ⋯ menu. The engine's first message
 // says where the film and its poster are, whether the card is offered (it is until the DJ hides it; the engine
 // remembers that in Desk's storage) and whether the film starts by itself the very first time (a switch in the core,
-// DeskQuickStart.playsItselfOnFirstOpen, off).
+// DeskQuickStart.playsItselfOnFirstOpen, off). The card shows its own picture (cardPicture, since Nov 24, 2026), with
+// nothing to read behind the play button; the player and the steps in words keep the poster, the film's title frame.
 //
 // A film that cannot play here never shows as a dead player. WebKitGTK may have no H.264 decoder, and any web view
 // can fail on a file: so the card asks the web view first (canPlayType), then loads the film's first bytes quietly
@@ -20,7 +21,8 @@
 
   window.DeskQuickStart = function (d) {
     const { $, el, t, list, num, request } = d;
-    let info = null;         // hello.quickStart: { film, poster, seconds, offer, playsItself }
+    let info = null;         // hello.quickStart: { film, poster, cardPicture, seconds, offer, playsItself }
+    let cardFailed = false;  // the card's own picture did not load: the card shows the poster instead
     let mode = "film";       // "film" while the film can play here, "words" once it cannot
     let probed = false;
     let startedItself = false;
@@ -73,9 +75,17 @@
       $("qs-hide").title = t("quickStartHideHelp", { quickStartAt: t("quickStartAt.more") });
       if (info) {
         const img = $("qs-poster-img");
-        if (img.getAttribute("src") !== info.poster) img.setAttribute("src", info.poster);
-        // A poster that is not there leaves no broken picture: the card keeps its words.
-        img.onerror = () => { img.hidden = true; };
+        // The card's own picture, with nothing to read behind the play button; the title frame (the poster) where
+        // the film cannot play, as nothing covers it there, and whenever the card's picture is not sent or not there.
+        const want = mode === "film" && info.cardPicture && !cardFailed ? info.cardPicture : info.poster;
+        const wantsCard = want !== info.poster;
+        if (img.getAttribute("src") !== want) { img.hidden = false; img.setAttribute("src", want); }
+        img.onerror = () => {
+          // The card's picture is not there: the poster instead.
+          if (wantsCard) { cardFailed = true; draw(); return; }
+          // A poster that is not there leaves no broken picture: the card keeps its words.
+          img.hidden = true;
+        };
       }
     }
 
@@ -137,7 +147,7 @@
       close,
       // For the window's check (desk-shell, `--check`) and tests: what the card shows, and the way it falls back.
       state: () => ({ offered: !card.hidden, mode, canPlay: webViewCanPlay(), steps: $("qs-steps").children.length,
-                      player: !$("qs-play").hidden }),
+                      player: !$("qs-play").hidden, picture: $("qs-poster-img").getAttribute("src") }),
       fallBack: toWords,
     };
   };

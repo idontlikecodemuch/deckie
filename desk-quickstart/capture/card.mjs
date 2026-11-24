@@ -1,7 +1,9 @@
 // Pictures of the quick start where a DJ meets it (D46): Desk's Windows and Linux window (the pages in desk-web/,
 // unchanged) in headless Chrome, talking to the real engine with fresh scratch storage, so the first screen offers the
-// card. It also checks the card's ways out, and says what it found:
-//   card.png      the first screen with the card (the film can play)
+// card. It also checks the card's ways out (and, since Nov 24, 2026, that the card shows its own picture, falling back
+// to the poster when the picture is missing or an older engine does not send it), and says what it found:
+//   card.png      the first screen with the card (the film can play), the card showing its own picture (card.jpg)
+//   card-only.png the card alone, at the size a DJ sees it
 //   menu.png      the ⋯ menu, with "Watch the quick start"
 //   player.png    the player, a few seconds into the film
 //   words.png     the first screen when the web view says it cannot play the film: the poster and the steps in words
@@ -95,8 +97,17 @@ const click = (sel) => js(`document.querySelector(${JSON.stringify(sel)}).click(
 await open();
 let s = await state();
 check(s.offered && s.mode === "film" && s.player, `the first screen offers the card with a play button (${JSON.stringify(s)})`);
-check(await js("document.getElementById('qs-poster-img').naturalWidth > 0"), "the poster is drawn");
+// The card's own picture (Nov 24, 2026): sent by the engine, loaded, and not the title frame; the player keeps the poster.
+check(s.picture === "quick-start/card.jpg", `the card shows its own picture, not the title frame (${s.picture})`);
+for (let i = 0; i < 30 && !(await js("document.getElementById('qs-poster-img').complete")); i++) await sleep(100);
+check(await js("document.getElementById('qs-poster-img').naturalWidth > 0 && !document.getElementById('qs-poster-img').hidden"),
+  "the card's picture is drawn");
 await shot("card.png");
+// Pictures of the card alone, at the size a DJ sees it (the page's own pixels, twice over on this screen).
+const cardRect = await js("(function () { const r = document.getElementById('qs-card').getBoundingClientRect(); return [r.x, r.y, r.width, r.height]; })()");
+const pad = 24;
+writeFileSync(`${OUT}/card-only.png`, Buffer.from((await cdp("Page.captureScreenshot", { format: "png", clip: {
+  x: Math.max(0, cardRect[0] - pad), y: Math.max(0, cardRect[1] - pad), width: cardRect[2] + 2 * pad, height: cardRect[3] + 2 * pad, scale: 1 } })).data, "base64"));
 
 // 2. The ⋯ menu has the quick start.
 await click("#more-button"); await sleep(300);
@@ -109,6 +120,7 @@ await js("document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' })
 await click("#qs-play");
 for (let i = 0; i < 60 && !(await js("document.getElementById('film-video').currentTime > 3")); i++) await sleep(100);
 check(await js("document.getElementById('film').open && document.getElementById('film-video').currentTime > 0"), "the film plays in the player");
+check(await js("/quick-start\\/poster\\.jpg$/.test(document.getElementById('film-video').poster)"), "the player keeps the title frame as its poster");
 await js("document.getElementById('film-video').pause()");
 await shot("player.png");
 await js("document.getElementById('film').close()");
@@ -118,7 +130,22 @@ check(JSON.parse(readFileSync(`${WORK}/card-home/quick-start.json`, "utf8")).pla
 await open("HTMLMediaElement.prototype.canPlayType = function () { return ''; };");
 s = await state();
 check(s.offered && s.mode === "words" && !s.player && s.steps === 4, `with no decoder the card shows the four steps, no player (${JSON.stringify(s)})`);
+check(s.picture === "quick-start/poster.jpg", "with no play button the card shows the title frame, which nothing covers there");
 await shot("words.png");
+
+// 4b. The card's picture missing (a folder without card.jpg): the card shows the poster, never a broken picture.
+await open("const __set = Element.prototype.setAttribute; Element.prototype.setAttribute = function (k, v) { return __set.call(this, k, k === 'src' ? String(v).replace('card.jpg', 'not-there.jpg') : v); };");
+for (let i = 0; i < 30 && (await state()).picture !== "quick-start/poster.jpg"; i++) await sleep(100);
+s = await state();
+check(s.mode === "film" && s.player && s.picture === "quick-start/poster.jpg", `a card picture that does not load falls back to the poster (${s.picture})`);
+for (let i = 0; i < 30 && !(await js("document.getElementById('qs-poster-img').complete")); i++) await sleep(100);
+check(await js("document.getElementById('qs-poster-img').naturalWidth > 0 && !document.getElementById('qs-poster-img').hidden"), "and the poster is drawn");
+
+// 4c. An engine from before the card's picture (no cardPicture in its first message): the card shows the poster.
+await open("const __feed0 = window.__feed; window.__feed = (lines) => __feed0(lines.map(function (l) { try { const m = JSON.parse(l);"
+  + " if (m.event === 'hello' && m.quickStart) { delete m.quickStart.cardPicture; return JSON.stringify(m); } } catch (e) {} return l; }));");
+s = await state();
+check(s.mode === "film" && s.player && s.picture === "quick-start/poster.jpg", `an older engine's hello gives the poster on the card (${s.picture})`);
 
 // 5. The film fails while playing (a file the web view takes and cannot decode): the player turns to the steps.
 await open("");
