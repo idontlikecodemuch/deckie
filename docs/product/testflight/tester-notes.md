@@ -40,7 +40,8 @@ then On My iPad > Deckie > Sets. Each set has its recording (`.aac`), a list of 
 log.
 
 The small **REC** in the top corner of the Listen screen says what recording is doing: "REC 0:12:34" while it records,
-"REC paused", or "REC off". Tap it for its menu:
+"REC paused", "REC waiting" while no sound comes in, "not recording" while listening is stopped, "cannot record" if
+something goes wrong, or "REC off". Tap it for its menu:
 
 - **Pause recording, keep listening** or **Resume recording**, for this set.
 - **Record each set**, ticked when on. Untick it and Deckie stops recording, until you tick it again; it remembers
@@ -52,6 +53,10 @@ When the set is over, tap **Stop** in the top corner of the Listen screen. Decki
 the set's recording in Files. The last song stays on screen with its picks. Tap **Start listening** to listen again;
 a new set recording starts with it.
 
+If a call, Siri or an alarm interrupts, or you plug a sound interface in or out, Deckie stops listening for a moment
+and starts again by itself; the set's recording carries on in the same file. Music from another app on the iPad keeps
+playing while Deckie listens.
+
 ## Deckie Desk on a Windows PC
 
 Desk for Windows is not signed yet, so Windows is careful with it the first time:
@@ -59,8 +64,8 @@ Desk for Windows is not signed yet, so Windows is careful with it the first time
 - The first launch can take a while with nothing on screen. Wait for it; it is only slow the first time.
 - Windows may show a blue box, "Windows protected your PC". Click **More info**, then **Run anyway**.
 
-A crate file made on a PC has no song fingerprints yet, so Deckie cannot name songs from it. Set the song playing by
-hand: tap it in the Crate tab.
+A crate file made on a PC carries the song fingerprints Deckie listens for, but none has been tried on an iPad yet. If
+Deckie cannot name songs from one, set the song playing by hand (tap it in the Crate tab) and tell us.
 
 ## Your privacy
 
