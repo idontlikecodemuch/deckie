@@ -40,6 +40,15 @@ The post-build step copies the runtime into `Contents/Frameworks` and the models
 the app points the engine at them on launch (environment variables set in-process, which a developer's own
 `DECKIE_*` variables override). Code signing is ad hoc for now.
 
+**A signed local build, for privacy grants.** macOS ties a privacy grant (Screen Recording, for the window server's
+pictures below) to the app's signature. An ad hoc signature names the binary's hash, so every rebuild loses the
+grant; a certificate's names the bundle id and the certificate, so the grant survives rebuilds. `tools/build-signed.sh`
+builds as above, then signs the app again, inside out, with the keychain's one valid code-signing identity (or the
+one `DECKIE_SIGN_IDENTITY` names), checks it with `codesign --verify --deep --strict`, and refuses a designated
+requirement that is a hash. The committed settings stay ad hoc; nothing about the certificate is written anywhere.
+
+    desk-app/tools/build-signed.sh                 (DECKIE_SIGN_ONLY=1 signs the app already built)
+
 **Bundle id and the crate file's type.** The bundle id is `io.deckie.desk` (until November 2026 it was under an
 earlier prefix). Desk declares the crate file's type as the booth does (`project.yml`, `UTExportedTypeDeclarations`):
 `io.deckie.crate` for the package form, `io.deckie.crate-file` for the single-file form, both under the extension
@@ -236,19 +245,34 @@ Desk's own crates, in the storage the window uses (`DECKIE_DESK_HOME` moves it),
     "Deckie Desk.app/Contents/MacOS/Deckie Desk" --open <crate>
     "Deckie Desk.app/Contents/MacOS/Deckie Desk" --snapshot <out folder> [crate]
 
-Pictures of the window, with no one at the keyboard (each run with `DECKIE_DESK_HOME` set to a scratch folder):
+Pictures of the window, with no one at the keyboard (each run with `DECKIE_DESK_HOME` set to a scratch folder; the
+picture modes print the storage they use first and refuse Desk's real storage):
 
     "Deckie Desk.app/Contents/MacOS/Deckie Desk" --quick-start-walk <out folder>
     "Deckie Desk.app/Contents/MacOS/Deckie Desk" --film-walk <out folder> [crate]
     DECKIE_SNAP_ON_SIGNAL=<out folder> "Deckie Desk.app/Contents/MacOS/Deckie Desk"     (each SIGUSR1 writes a picture)
+    "Deckie Desk.app/Contents/MacOS/Deckie Desk" --screen-recording     (may Desk record the screen? if not, asks macOS once)
+
+**Which way to launch.** For the window server's pictures (everything a DJ sees), launch Desk through LaunchServices,
+with a signed build (above) that macOS allows to record the screen: `tools/open-desk.sh` does it with `open -n -W`,
+passes every `DECKIE_*` variable with `--env`, and prints what Desk printed once it quits. Run directly from a shell,
+macOS asks about the shell's app instead of Deckie Desk, so the pictures are the ones the app draws itself. Each
+picture run says which at its start (`pictures: through the window server` or `pictures: drawn by the app itself`, with
+why). `--screen-recording` asks once and puts Deckie Desk in System Settings > Privacy & Security > Screen Recording;
+the switch there counts from Desk's next launch.
+
+    DECKIE_DESK_HOME=$PWD/.scratch/home desk-app/tools/open-desk.sh .scratch/ask.log --screen-recording
+    DECKIE_DESK_HOME=$PWD/.scratch/home DECKIE_LOOKUP_OFF=1 DECKIE_NO_BOXES=1 \
+      desk-app/tools/open-desk.sh .scratch/walk.log --quick-start-walk $PWD/.scratch/walk
 
 `--quick-start-walk` (`QuickStartWalk.swift`) walks the quick start: the card at the usual size and at the smallest, the
 film started as the play button starts it with what the player reports, Help > Watch the quick start, Hide; it prints
 what it finds. `--film-walk` (`FilmWalk.swift`) writes the stills the site's film uses: the crate's songs, the Sources
 panel, then Booth a frame a second. With `DECKIE_BOOTH_SOUND` naming a sound file, Booth hears that file as if the
-microphone did, as the engine's stand-in does for the pages (no microphone is opened). Run the app's binary directly
-with `-NSTreatUnknownArgumentsAsOpen NO` after the arguments, so the environment reaches it. Where macOS has not
-allowed Deckie Desk to record the screen (Privacy & Security > Screen Recording), the window server gives the app
+microphone did, as the engine's stand-in does for the pages (no microphone is opened). Launched with `open`, the
+environment reaches Desk only through `--env` (as `tools/open-desk.sh` passes it); its binary run directly takes the
+shell's environment, with `-NSTreatUnknownArgumentsAsOpen NO` after the arguments. Where macOS has not
+allowed Deckie Desk to record the screen (Privacy & Security > Screen Recording), or Desk was run directly from a shell, the window server gives the app
 nothing, even of its own window, and the pictures are the window drawn by the app itself (`Snapshot.layerImage`): true
 for the songs, the Sources panel, the first screen and Booth's text, but without the toolbar's buttons (they
 come out as blank shapes), the inspector (blank), a playing film (black), blurs (Booth's glow comes out a hard-edged
@@ -424,6 +448,9 @@ None of the music CD code has read a real disc on this Mac: there is no drive he
 - `Snapshot.swift`: `--snapshot` steps through the window and writes PNGs; the window's own picture when the window
   server gives none; `DECKIE_SNAP_ON_SIGNAL`.
 - `QuickStartWalk.swift`, `FilmWalk.swift`: the quick start's walk and the site film's stills.
+- `ScreenRecording.swift`: may Desk record the screen (`--screen-recording` asks), the picture runs' first line, and
+  their refusal of the real storage. `tools/build-signed.sh` and `tools/open-desk.sh`: the signed build and the
+  launch through `open` that the window server's pictures need.
 - `Signatures.swift`: AVFoundation into ShazamKit's signature generator, and into the print that finds copies.
 - In the core, `DeckieDesk`: `DeskHome` (where), `CrateShelf` (the crates, import, export), `FileStore` (per-file
   results), `NameCorrections`, `PlacePaths` and `SourceNaming`, `removeSource`, and `DeskRun` (the one run, its
