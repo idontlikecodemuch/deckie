@@ -588,7 +588,8 @@ window and says what it must in a message box, and "Make Crate File.exe", which 
 the window open. Both say in plain words when the folder was not unzipped or Microsoft's Visual C++ runtime is
 missing. Beside them in `Tools/windows`:
 
-- `icon.sh` and `make_ico.py`: the icon, made from the iPad app's picture with Python's standard library and
+- `icon.sh` and `make_ico.py`: the icon, made from Deckie's plain icon picture (`deck-app/tools/icon-base1024.png`;
+  the iPad app's icon adds "Booth", Desk's does not) with Python's standard library and
   compiled as a resource; linked into the starters and the window. No `.ico` is committed.
 - `pe_kind.py`: says whether a program opens a console window and whether it carries an icon, and marks the zip's
   copies of the window and the engine as programs that open none.

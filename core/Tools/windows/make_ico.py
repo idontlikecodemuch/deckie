@@ -1,18 +1,21 @@
 #!/usr/bin/env python3
-"""make_ico.py: Deckie's Windows icon file (.ico) from the app's icon picture, with Python's standard library only.
+"""make_ico.py: Deckie's Windows icon file (.ico) from the plain icon picture, with Python's standard library only.
 
-    python make_ico.py <icon1024.png> <out.ico> [--corner 230/1024] [--sizes 16,20,24,32,40,48,64,256]
+    python make_ico.py <icon-base1024.png> <out.ico> [--corner 230/1024] [--sizes 16,20,24,32,40,48,64,256]
 
 An .ico is one file holding the same picture at several sizes; Windows picks the size it needs (16 pixels in a title
 bar, 32 to 48 on the taskbar and in a folder, 256 for large views). No .ico is committed (the repository holds no
-binaries that can be made): package.sh makes it from the iPad app's picture each time, with this file.
+binaries that can be made): package.sh makes it each time, with this file, from deck-app/tools/icon-base1024.png,
+Deckie's plain icon (drawn by deck-app/tools/draw_icon.py from site/icon.svg; the iPad app's icon is that picture
+with "Booth" added, and Desk's icon does not carry the word).
 
 What it does, and nothing else:
   1. reads the PNG (8 bits a channel, RGB or RGBA, not interlaced) with zlib and the PNG filters undone by hand;
   2. scales it to each size by area averaging: each small pixel is the exact average of the square of large pixels
      it covers (whole-number arithmetic, so the result is the same on every machine);
-  3. rounds the corners as the site's icon does (site/icon.svg: a corner radius of 230 in 1024), since the iPad
-     picture is a full square that iOS rounds itself, and Windows shows a picture as it is;
+  3. rounds the corners as the site's icon does (site/icon.svg: a corner radius of 230 in 1024), since the
+     picture is a full square (the dark ground to every corner, as Apple wants for the iPad) and Windows shows a
+     picture as it is;
   4. writes the .ico: the 256-pixel picture as a PNG inside it, the smaller ones as plain 32-bit bitmaps with their
      masks, which is the layout every Windows since Vista and both resource compilers read.
 """

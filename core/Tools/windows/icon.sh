@@ -5,8 +5,9 @@
 #
 # Run in Git Bash on a Windows machine with the Swift toolchain (or on Linux with llvm-rc, to try it). It downloads
 # nothing. It makes, in <output folder>:
-#   deckie.ico    the icon file, from the iPad app's picture (deck-app/.../AppIcon.appiconset/icon1024.png) by
-#                 make_ico.py: 16, 20, 24, 32, 40, 48, 64 and 256 pixels, corners rounded as site/icon.svg has them
+#   deckie.ico    the icon file, from Deckie's plain icon picture (deck-app/tools/icon-base1024.png, the record
+#                 with no word; the iPad app's own icon adds "Booth" and is not used here) by make_ico.py:
+#                 16, 20, 24, 32, 40, 48, 64 and 256 pixels, corners rounded as site/icon.svg has them
 #   desk.res      the icon and the program's description ("Deckie Desk") as a compiled resource file, the form a
 #                 linker takes, for "Deckie Desk.exe" and deckie-desk.exe
 #   make.res      the same for "Make Crate File.exe"
@@ -27,8 +28,8 @@ repo="$(cd "$core/.." && pwd)"
 mkdir -p "$1"
 out="$(cd "$1" && pwd)"
 py="$(command -v python || command -v python3)" || die "needs Python"
-picture="$repo/deck-app/Deck/Assets.xcassets/AppIcon.appiconset/icon1024.png"
-[ -f "$picture" ] || die "the app's icon picture is not at $picture"
+picture="$repo/deck-app/tools/icon-base1024.png"
+[ -f "$picture" ] || die "the plain icon picture is not at $picture"
 
 "$py" "$here/make_ico.py" "$picture" "$out/deckie.ico"
 
