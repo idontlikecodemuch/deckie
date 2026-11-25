@@ -1,7 +1,7 @@
 import Foundation
 import Testing
 import DeckieCrate
-import DeckieBuild
+@testable import DeckieBuild
 @testable import DeckieDesk
 
 /// The top of a drive is a folder like any other (the Windows hand pass of Nov 25, 2026: "Read this drive" on a
@@ -20,16 +20,20 @@ import DeckieBuild
     /// The top of this computer's own disk, as each part of the way writes it: a folder, and listed, as text and as a
     /// URL. On Windows that is the system drive (`C:` on the CI runner): as text `C:`, `C:\` and `C:/`; as a URL made
     /// the way Desk makes one from a request (`Folders.folderURL`, which never makes a bare `C:` into a folder named
-    /// "C:" in the working folder), and from `C:\` and `C:/` directly, each also standardised. The walk's first step
-    /// said "C:/ is not a folder." for a URL until Nov 25, 2026 (core-windows run 45698235586). Each form's values at
-    /// every step are printed, so the log says what Windows gave, pass or fail. Nothing is walked below the top.
+    /// "C:" in the working folder) and from `C:\` and `C:/` directly. Each form's values at every step are printed
+    /// (`drive-root:` lines), so the log says what Windows gave, pass or fail. Nothing is walked below the top.
+    ///
+    /// Established on the runner (core-windows runs 45698235586 and 45712545553, Nov 25, 2026): Foundation's
+    /// `standardizedFileURL` of a drive's top gives a path in the working folder (`<cwd>/C:`), from which the drive
+    /// cannot be found again; that is why the walk said "C:/ is not a folder.", and why Desk never standardises a URL
+    /// that can be a drive's top except through `Folders.standardized`, which keeps it. The test checks that this is
+    /// still what Foundation does (so the reason stays known) and that `Folders.standardized` keeps the drive.
     @Test func theTopOfThisComputersDiskIsAFolderAndIsListed() throws {
         #if os(Windows)
         let drive = (ProcessInfo.processInfo.environment["SystemDrive"] ?? "C:").uppercased()
         let texts = [drive, drive + "\\", drive + "/"]
         var urls = texts.map { ("folderURL(\($0))", Folders.folderURL($0)) }
         urls += [drive + "\\", drive + "/"].map { ("URL(\($0))", URL(fileURLWithPath: $0, isDirectory: true)) }
-        urls += urls.map { ("\($0.0).standardized", $0.1.standardizedFileURL) }
         // Why a bare drive letter is never made into a URL: it is a path in the working folder.
         print("drive-root: URL(fileURLWithPath: \"\(drive)\").path = \(URL(fileURLWithPath: drive, isDirectory: true).path)")
         #else
@@ -45,17 +49,10 @@ import DeckieBuild
         func count(_ list: () throws -> [String]) -> String {
             do { return "\(try list().count) names" } catch { return "cannot list: \(error)" }
         }
-        for path in texts {
-            let line = "text \"\(path)\": driveRoot \(Folders.driveRoot(path) ?? "nil"), isFolder \(Folders.isFolder(path)), "
-                + "\(exists(path)), \(count { try Folders.names(in: path) })"
-            print("drive-root: " + line)
-            #expect(Folders.isFolder(path), "\(line)")
-            let names = (try? Folders.names(in: path)) ?? []
-            #expect(!names.isEmpty && !names.contains(".") && !names.contains(".."), "\(line)")
-        }
-        for (made, url) in urls {
+        func describe(_ made: String, _ url: URL) -> String {
             let native = url.withUnsafeFileSystemRepresentation { $0.map { String(cString: $0) } } ?? "nil"
             var line = "\(made): path \"\(url.path)\", native \"\(native)\", standardized \"\(url.standardizedFileURL.path)\", "
+                + "Folders.standardized \"\(Folders.standardized(url).path)\", "
                 + "driveRoot(path) \(Folders.driveRoot(url.path) ?? "nil"), driveRoot(of:) \(Folders.driveRoot(of: url) ?? "nil"), "
                 + "isFolder \(Folders.isFolder(url)), \(exists(url.path)), \(count { try Folders.names(in: url) })"
             do {
@@ -65,17 +62,80 @@ import DeckieBuild
                 line += ", checkedRoot threw \"\(error)\""
             }
             print("drive-root: " + line)
+            return line
+        }
+        for path in texts {
+            let line = "text \"\(path)\": driveRoot \(Folders.driveRoot(path) ?? "nil"), isFolder \(Folders.isFolder(path)), "
+                + "\(exists(path)), \(count { try Folders.names(in: path) })"
+            print("drive-root: " + line)
+            #expect(Folders.isFolder(path), "\(line)")
+            let names = (try? Folders.names(in: path)) ?? []
+            #expect(!names.isEmpty && !names.contains(".") && !names.contains(".."), "\(line)")
+        }
+        for (made, url) in urls {
+            let line = describe(made, url)
             #expect(Folders.isFolder(url), "\(line)")
             #expect(((try? Folders.names(in: url)) ?? []).isEmpty == false, "\(line)")
             #expect(throws: Never.self, "\(line)") { _ = try AudioFiles.checkedRoot(url) }
+            // Desk's own standardising keeps it a folder that lists.
+            let kept = Folders.standardized(url)
+            #expect(Folders.isFolder(kept) && ((try? Folders.names(in: kept)) ?? []).isEmpty == false, "\(line)")
+            #expect(Folders.same(url, kept), "\(line)")
+            #if os(Windows)
+            #expect(Folders.driveRoot(of: kept) == drive + "\\", "\(line)")
+            // Foundation's own: the drive is lost (see above). If this ever changes, the reason above is out of date.
+            let lost = url.standardizedFileURL
+            let lostLine = describe(made + ".standardized", lost)
+            #expect(Folders.driveRoot(lost.path) == nil && Folders.driveRoot(of: lost) == nil, "\(lostLine)")
+            #expect(!Folders.isFolder(lost), "\(lostLine)")
+            #endif
         }
         #if os(Windows)
-        // A name in the top is a path below it that Foundation reads as before, and the drive's top is a drive.
-        let first = try #require(try Folders.names(in: drive + "\\").sorted().first)
-        let below = Folders.folderURL(drive).appendingPathComponent(first)
-        #expect(FileManager.default.fileExists(atPath: below.path), "\(below.path)")
-        #expect(DeskDrives.isTopOfDrive(Folders.folderURL(drive)))
+        try placesBelowTheTop(of: Folders.folderURL(drive), source: "Stick")
+        #expect(DeskDrives.isTopOfDrive(Folders.folderURL(drive)) && DeskDrives.readsADrive(Folders.folderURL(drive), environment: [:]))
+        // A source read from the drive's top keeps its name when read from there again, by any form of the top.
+        let roots = ["Stick": Folders.folderURL(drive)]
+        for form in texts { #expect(SourceNaming.unique("Stick", root: Folders.folderURL(form), roots: roots) == "Stick", "\(form)") }
         #endif
+    }
+
+    /// The paths and places of the files directly at a folder's top and in one folder below it, built the way the walk
+    /// builds them (`AudioFiles.walk`, names from the listing; no file is read): a path below the top with "/" between
+    /// names and no drive in it, a URL that is there, and a place whose group is the folder below the top. On Windows
+    /// the folder is the drive's top itself.
+    func placesBelowTheTop(of top: URL, source: String) throws {
+        var entries: [(rel: String, url: URL, folder: Bool)] = []
+        AudioFiles.walk(top, below: "") { rel, _, url, type in entries.append((rel, url, type == .typeDirectory)); return false }
+        #expect(!entries.isEmpty, "\(top.path) gave no names")
+        var below: [(rel: String, url: URL, folder: Bool)] = []
+        for dir in entries.filter(\.folder).prefix(5) {
+            AudioFiles.walk(dir.url, below: dir.rel) { rel, _, url, type in below.append((rel, url, type == .typeDirectory)); return false }
+            if !below.isEmpty { break }
+        }
+        for e in entries.prefix(20) + below.prefix(20) {
+            let line = "\(top.path) + \"\(e.rel)\" = \(e.url.path)"
+            #expect(!e.rel.contains("\\") && !e.rel.contains(":") && !e.rel.hasPrefix("/"), "\(line)")
+            #expect(FileManager.default.fileExists(atPath: e.url.path), "\(line)")
+            // The URL Desk rebuilds from the source's root and the path below it (PlacePaths) is the same file.
+            #expect(FileManager.default.fileExists(atPath: top.appendingPathComponent(e.rel).path), "\(line)")
+        }
+        let files = (entries + below).filter { !$0.folder }.map(\.rel)
+        let places = SourceReading.places(source: source, paths: files)
+        for rel in files {
+            let place = try #require(places[rel], "\(rel)")
+            #expect(place.source == source && place.group == SourceReading.group(of: rel), "\(rel): \(place)")
+            #expect(rel.contains("/") ? !place.group.isEmpty : place.group.isEmpty, "\(rel): \(place)")
+        }
+        print("drive-root: \(top.path): \(entries.count) names at the top, \(below.count) in the first folder below, \(files.count) files placed")
+    }
+
+    /// The same paths and places for a folder of known files (every system).
+    @Test func pathsAndPlacesBelowAFoldersTop() throws {
+        let top = try scratch("top")
+        try FileManager.default.createDirectory(at: top.appendingPathComponent("House"), withIntermediateDirectories: true)
+        for rel in ["01 Song.mp3", "House/02 Song.mp3"] { try Data("x".utf8).write(to: top.appendingPathComponent(rel)) }
+        try placesBelowTheTop(of: top, source: "Stick")
+        #expect(Folders.same(top, Folders.standardized(top)) && Folders.standardized(top) == top.standardizedFileURL)
     }
 
     @Test func aFolderAndNotAFolder() throws {

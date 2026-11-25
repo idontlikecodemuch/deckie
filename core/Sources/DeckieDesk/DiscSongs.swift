@@ -152,7 +152,7 @@ public enum DiscReading {
                 try? DiscRecords.save(r, home: home)
             }
             for var info in home.shelf.list() {
-                let sources = info.sourceRoots.filter { URL(fileURLWithPath: $0.value).standardizedFileURL.path == f.standardizedFileURL.path }.keys
+                let sources = info.sourceRoots.filter { Folders.same(URL(fileURLWithPath: $0.value), f) }.keys
                 guard !sources.isEmpty else { continue }
                 for s in sources { info.discs[s] = id }
                 try? home.shelf.save(info)

@@ -127,7 +127,7 @@ public enum SourceNaming {
         func free(_ n: String) -> Bool {
             if taken.contains(n) { return false }
             guard let r = roots[n] else { return true }
-            return r.standardizedFileURL.path == root.standardizedFileURL.path || !exists(r)
+            return Folders.same(r, root) || !exists(r)
         }
         if free(name) { return name }
         var k = 2

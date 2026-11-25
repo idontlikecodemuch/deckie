@@ -59,6 +59,23 @@ public enum Folders {
         return URL(fileURLWithPath: path, isDirectory: true)
     }
 
+    /// `url.standardizedFileURL`, except that a Windows drive's top is returned as `E:\`, untouched by Foundation.
+    /// Established on the core-windows runner (run 45712545553, Nov 25, 2026): `standardizedFileURL` of a drive's top
+    /// (`URL(fileURLWithPath: "C:\\")`, whose path is `C:/`) gives a path in the working folder, `<cwd>/C:`, which
+    /// is not there; once standardised the drive cannot be found again. Every URL that can be a drive's top (the
+    /// folder a run reads, a source's root, an export folder, a folder named on the command line) is standardised
+    /// through here, never with `standardizedFileURL` directly. `resolvingLinks` also resolves links, for anything
+    /// that is not a drive's top.
+    public static func standardized(_ url: URL, resolvingLinks: Bool = false) -> URL {
+        if let root = driveRoot(of: url) { return URL(fileURLWithPath: root, isDirectory: true) }
+        let s = url.standardizedFileURL
+        return resolvingLinks ? s.resolvingSymlinksInPath() : s
+    }
+
+    /// Whether two folder URLs name the same folder, by their `standardized` paths (a drive's top as `E:\`, any case
+    /// of its letter).
+    public static func same(_ a: URL, _ b: URL) -> Bool { standardized(a).path == standardized(b).path }
+
     /// The path to hand `names(in:)`, `isFolder` and Foundation for a folder URL: a drive's top as `E:\`, else its
     /// path.
     public static func path(of url: URL) -> String { driveRoot(of: url) ?? url.path }

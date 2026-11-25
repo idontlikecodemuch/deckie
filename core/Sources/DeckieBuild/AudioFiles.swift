@@ -141,7 +141,7 @@ public enum AudioFiles {
     /// A drive's top is found from the URL as given, before it is standardised (which on Windows stopped it being
     /// taken for one), and walked from as `E:\`.
     public static func checkedRoot(_ folder: URL) throws -> URL {
-        let root = Folders.driveRoot(of: folder).map { URL(fileURLWithPath: $0, isDirectory: true) } ?? folder.standardizedFileURL
+        let root = Folders.standardized(folder)
         guard Folders.isFolder(root) else { throw BuildError("\(folder.path) is not a folder.") }
         guard (try? Folders.names(in: root)) != nil else { throw BuildError("Cannot list \(folder.path).") }
         return root

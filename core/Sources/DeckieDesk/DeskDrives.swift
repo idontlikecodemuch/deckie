@@ -124,8 +124,8 @@ public enum DeskDrives {
     /// (`list`, stand-ins included). What a run says when the place goes away part-way depends on it ("The drive was
     /// taken out", or "The folder was moved or removed"), so it is asked before the run reads anything.
     public static func readsADrive(_ url: URL, environment: [String: String] = ProcessInfo.processInfo.environment) -> Bool {
-        let path = url.standardizedFileURL.resolvingSymlinksInPath().path
-        if list(environment: environment).contains(where: { URL(fileURLWithPath: $0.path).standardizedFileURL.resolvingSymlinksInPath().path == path }) {
+        let path = Folders.standardized(url, resolvingLinks: true).path
+        if list(environment: environment).contains(where: { Folders.standardized(URL(fileURLWithPath: $0.path), resolvingLinks: true).path == path }) {
             return true
         }
         return environment[standInVariable]?.isEmpty == false ? false : isTopOfDrive(url)
@@ -133,7 +133,7 @@ public enum DeskDrives {
 
     /// Whether `url` is the top of a drive (the root of a mounted volume, or a Windows drive's letter).
     public static func isTopOfDrive(_ url: URL) -> Bool {
-        let path = url.standardizedFileURL.path
+        let path = Folders.standardized(url).path
         #if os(macOS)
         let v = try? url.resourceValues(forKeys: [.volumeURLKey])
         return v?.volume?.standardizedFileURL.path == path
