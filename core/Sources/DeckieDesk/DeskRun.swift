@@ -429,7 +429,15 @@ public struct RunReport: Codable, Equatable, Sendable {
     /// Songs not read because the drive was taken out (or the folder read went away) part-way through the run
     /// (`source_gone`). The finished screen then says so (`goneTitle`, `goneBody`) in place of a tick and "That's the
     /// lot"; desk.js `drawFinished` reads the same count from `not_in`.
-    public var notReadGone: Int { notIn[CrateManifest.ImportLog.Reason.sourceGone] ?? 0 }
+    public var notReadGone: Int { CrateManifest.ImportLog.Reason.gone.reduce(0) { $0 + (notIn[$1] ?? 0) } }
+    /// Whether the place gone was a folder, not a drive (only `folder_gone` songs lost): its words are a folder's.
+    public var goneWasFolder: Bool {
+        (notIn[CrateManifest.ImportLog.Reason.folderGone] ?? 0) > 0 && (notIn[CrateManifest.ImportLog.Reason.sourceGone] ?? 0) == 0
+    }
+    /// The finished screen's title and the line under it for `notReadGone`, a drive's or a folder's words. desk.js
+    /// `drawFinished` says the same.
+    public var goneTitle: String { DeskWords.text(goneWasFolder ? "goneTitle.folder" : "goneTitle") }
+    public var goneBody: String { DeskWords.count(goneWasFolder ? "goneBody.folder" : "goneBody", notReadGone) }
 
     /// The finished screen's first lines, in Desk's words (desk.js `drawFinished` says the same): the songs that went
     /// in, counted as the crate counts them (a song in two places once, as "That's the lot" and the sources say); for
@@ -479,6 +487,10 @@ public final class DeskRun: @unchecked Sendable {
     let signer: SignatureMaker?
     let printer: PrintMaker
     let audioPrinter: AudioPrintMaker?
+    /// Whether the run reads a drive (its top, or a drive listed), for what it says when the place goes away part-way
+    /// ("The drive was taken out", else "The folder was moved or removed"); nil finds out (`DeskDrives.readsADrive`)
+    /// before anything is read.
+    public var readsADrive: Bool? = nil
     /// Opens a music CD by its location (`MusicCDs.open`; a test gives a stand-in), and lists the drives holding
     /// one (to find the disc when it is in another drive).
     public var openMusicCD: (String) throws -> MusicCD = { try MusicCDs.open($0) }
@@ -544,6 +556,8 @@ public final class DeskRun: @unchecked Sendable {
         var order = RunOrder()
         /// Songs whose print was made from the analysis's audio in this run (counted as made, not kept).
         var printedInHand = Set<String>()
+        /// Songs whose signature or print could not be made from their file.
+        var finishFailed = Set<String>()
     }
 
     public func run(progress: @escaping @Sendable (RunProgress) -> Void = { _ in }) throws -> (crate: Crate, report: RunReport) {
@@ -580,6 +594,7 @@ public final class DeskRun: @unchecked Sendable {
                                    source: request.source, keepSources: keep, sharedRecords: store.records,
                                    files: disc)
         options.stop = stopFlag
+        options.readsADrive = disc != nil || (readsADrive ?? DeskDrives.readsADrive(folder))
         let prefix = request.source.map { $0 + "/" } ?? ""
         let state = State()
         let queue = DispatchQueue(label: "deckie.desk.finish", qos: .userInitiated)
@@ -653,7 +668,7 @@ public final class DeskRun: @unchecked Sendable {
                         try store.saveSignature(data, made: .init(madeBy: device, madeAt: Self.utcNow()), id: id)
                         made = true
                         state.lock.lock(); state.sigMade += 1; state.lock.unlock()
-                    } catch { state.lock.lock(); state.sigFailed += 1; state.lock.unlock() }
+                    } catch { state.lock.lock(); state.sigFailed += 1; state.finishFailed.insert(id); state.lock.unlock() }
                 }
             }
             if store.print(id) != nil {
@@ -666,7 +681,7 @@ public final class DeskRun: @unchecked Sendable {
                     try store.savePrint(try printer(url), id: id)
                     made = true
                     state.lock.lock(); state.printMade += 1; state.lock.unlock()
-                } catch { state.lock.lock(); state.printFailed += 1; state.lock.unlock() }
+                } catch { state.lock.lock(); state.printFailed += 1; state.finishFailed.insert(id); state.lock.unlock() }
             }
             state.lock.lock()
             state.finishedIds.insert(id)
@@ -826,6 +841,36 @@ public final class DeskRun: @unchecked Sendable {
         state.lock.lock(); state.done = state.total; state.lock.unlock()
         emit(.saving, nil)
 
+        // A song of this read that could not be finished because the drive was taken out (or the folder moved) before
+        // its signature or print was made from its file is not kept half made (Nov 25, 2026: songs went in that the
+        // booth could not name): it is not in the crate, it is listed as not read for the place gone, and adding the
+        // drive again finishes it (its analysis is kept, so it is not analysed again). One with a place elsewhere
+        // than this read keeps it.
+        var goneEntries: [CrateManifest.ImportLog.Entry] = []
+        var droppedFromScreen = 0
+        if disc == nil {
+            state.lock.lock(); let unfinished = state.finishFailed; state.lock.unlock()
+            let gone = FileFailure.gone(drive: options.readsADrive)
+            for id in unfinished.sorted() {
+                guard let reads = result.placesRead[id], let first = reads.first,
+                      FileFailure.placeIsGone(root: folder, file: folder.appendingPathComponent(first.rel)),
+                      let i = crate.tracks.firstIndex(where: { $0.id == id }) else { continue }
+                let here = Set(reads.map(\.place))
+                guard crate.tracks[i].ident.allPlaces.allSatisfy(here.contains) else { continue }
+                crate.tracks.remove(at: i)
+                state.lock.lock(); if state.tally.has(id) { droppedFromScreen += 1 }; state.lock.unlock()
+                for r in reads {
+                    goneEntries.append(.init(rel: prefix + r.rel, ext: CratePath.fileExtension(of: r.rel).lowercased(),
+                                             reason: gone.reason, message: gone.message))
+                }
+            }
+            if !goneEntries.isEmpty, var log = crate.manifest.importLog {
+                log.entries = (log.entries + goneEntries).sorted { $0.rel.utf8.lexicographicallyPrecedes($1.rel.utf8) }
+                log.tracks = crate.tracks.count
+                crate.manifest.importLog = log
+            }
+        }
+
         // 3. Save: signatures and fingerprints into the crate file, copies linked, the DJ's fixes put back, the crate's name.
         // The name as it is now: the DJ may have renamed the crate while it was read.
         if let now = shelf.info(crateId) { info.name = now.name }
@@ -875,7 +920,7 @@ public final class DeskRun: @unchecked Sendable {
 
         // 4. The report, and the run's line in the crate's log.
         typealias Reason = CrateManifest.ImportLog.Reason
-        let mine = result.entries.filter { e in
+        let mine = (result.entries + goneEntries).filter { e in
             if let s = request.source { return e.rel.hasPrefix(s + "/") }
             return !keep.contains { e.rel.hasPrefix($0 + "/") }
         }
@@ -903,7 +948,7 @@ public final class DeskRun: @unchecked Sendable {
                            damagedSectors: r.damagedSectors, titled: r.discTitle != nil, textDetail: r.textDetail)
             }, covers: result.covers,
             fingerprinted: result.fingerprinted, songsWithFingerprint: crate.tracks.filter { $0.fingerprint != nil }.count,
-            songsRead: state.tally.figures.songs, filesFound: max(state.total, result.filesSeen))
+            songsRead: max(0, state.tally.figures.songs - droppedFromScreen), filesFound: max(state.total, result.filesSeen))
         state.lock.unlock()
         report.secondsBefore = partsBefore
         report.jobsBy = disc != nil ? DeskJobs.Reason.disc.rawValue : jobsBy?.rawValue

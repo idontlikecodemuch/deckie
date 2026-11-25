@@ -110,18 +110,12 @@ public enum AudioFiles {
     /// The walk itself; `skipFolder(rel, name)` says whether a folder (and all below it) is left out.
     static func find(in folder: URL, skipFolder: (String, String) -> Bool) throws -> [SourceFile] {
         let fm = FileManager.default
-        let root = folder.standardizedFileURL
-        var isFolder: ObjCBool = false
-        guard fm.fileExists(atPath: root.path, isDirectory: &isFolder), isFolder.boolValue else {
-            throw BuildError("\(folder.path) is not a folder")
-        }
-        guard (try? fm.contentsOfDirectory(atPath: root.path)) != nil else { throw BuildError("cannot list \(folder.path)") }
+        let root = try checkedRoot(folder)
         var found: [SourceFile] = []
         walk(root, below: "") { rel, name, url, type in
             let isFolder = type == .typeDirectory
-            if name.hasPrefix(".") || hiddenByWindows(url) { return false }
+            if isLeftOut(name: name, url: url) { return false }
             let ext = CratePath.fileExtension(of: name).lowercased()
-            if CrateFormat.isCrateExtension(ext) || ext == Builder.workExtension { return false }
             if isFolder { return !skipFolder(rel, name) }
             guard extensions.contains(ext) else { return false }
             var attrs: [FileAttributeKey: Any]
@@ -140,6 +134,33 @@ public enum AudioFiles {
             return false
         }
         return found.sorted { $0.rel.utf8.lexicographicallyPrecedes($1.rel.utf8) }
+    }
+
+    /// The folder a walk starts from, checked: there, a folder, and listable (`Folders`, right for a drive's top on
+    /// Windows too, where "E:/ is not a folder" stopped every read of a whole drive until Nov 25, 2026).
+    public static func checkedRoot(_ folder: URL) throws -> URL {
+        let root = folder.standardizedFileURL
+        guard Folders.isFolder(root.path) else { throw BuildError("\(folder.path) is not a folder.") }
+        guard (try? Folders.names(in: root.path)) != nil else { throw BuildError("Cannot list \(folder.path).") }
+        return root
+    }
+
+    /// Folders a system keeps for itself on a drive, never a DJ's music, left out wherever they are on every system
+    /// (Nov 25, 2026: a stick's `$RECYCLE.BIN` was read on a Mac, and a deleted copy of a song became its place).
+    /// Compared without case. Windows' recycle bins (`$RECYCLE.BIN`; `RECYCLER` and `RECYCLED` on older Windows) and
+    /// its restore points and index (`System Volume Information`); `lost+found`, where Linux's disk check puts what
+    /// it recovers. The Mac's own (`.Trashes`, `.Spotlight-V100`, `.fseventsd`, `.TemporaryItems`) start with a dot
+    /// and are left out by that rule already.
+    public static let systemFolders: Set<String> = ["$recycle.bin", "recycler", "recycled", "system volume information", "lost+found"]
+
+    /// Whether a walk leaves out this file or folder, with all below it: hidden (a name starting with a dot, or
+    /// marked hidden by Windows), a system's own folder (`systemFolders`), a crate package or a builder work folder.
+    /// The one rule the read (`find`) and the count before it (`DeskAddMusic.count`) follow, so they agree.
+    public static func isLeftOut(name: String, url: URL) -> Bool {
+        if name.hasPrefix(".") || systemFolders.contains(name.lowercased()) { return true }
+        let ext = CratePath.fileExtension(of: name).lowercased()
+        if CrateFormat.isCrateExtension(ext) || ext == Builder.workExtension { return true }
+        return hiddenByWindows(url)
     }
 
     /// Whether Windows marks the file or folder hidden (its "hidden" attribute, what Explorer's "Hidden items" switch
@@ -165,7 +186,7 @@ public enum AudioFiles {
     /// the same files and the same paths on every platform.
     static func walk(_ folder: URL, below rel: String, visit: (String, String, URL, FileAttributeType?) -> Bool) {
         let fm = FileManager.default
-        guard let names = try? fm.contentsOfDirectory(atPath: folder.path) else { return }
+        guard let names = try? Folders.names(in: folder.path) else { return }
         for name in names.sorted() {
             let url = folder.appendingPathComponent(name)
             let path = CratePath.join(rel, name)
@@ -229,13 +250,17 @@ public struct FileFailure: Sendable, Equatable {
     /// could not be read, which may be a passing problem (a disk not mounted, a permission), or whose drive went away.
     var isLasting: Bool {
         typealias R = CrateManifest.ImportLog.Reason
-        return reason != R.decodeError && reason != R.sourceGone
+        return reason != R.decodeError && !R.gone.contains(reason)
     }
 
-    /// A file that could not be read or decoded because the place it was read from went away (`placeIsGone`).
-    static let sourceGone = FileFailure(
-        reason: CrateManifest.ImportLog.Reason.sourceGone,
-        message: "not read: the drive or folder it was read from went away while it was read")
+    /// A file that could not be read, decoded or finished because the place it was read from went away
+    /// (`placeIsGone`): `source_gone` for a drive, `folder_gone` for a folder that is not a drive's top.
+    public static func gone(drive: Bool) -> FileFailure {
+        drive ? FileFailure(reason: CrateManifest.ImportLog.Reason.sourceGone,
+                            message: "not read: the drive it was read from was taken out while it was read")
+              : FileFailure(reason: CrateManifest.ImportLog.Reason.folderGone,
+                            message: "not read: the folder it was read from was moved or removed while it was read")
+    }
 
     /// Whether the place a build reads from went away (a drive taken out, the folder moved or removed), told apart
     /// from a file that cannot be read: the folder read (`root`, a drive's top or the folder chosen) is not there,
@@ -244,7 +269,7 @@ public struct FileFailure: Sendable, Equatable {
     /// the same on macOS, Linux and Windows: a drive taken out leaves its path missing or unreadable on each.
     public static func placeIsGone(root: URL, file: URL) -> Bool {
         let fm = FileManager.default
-        guard let names = try? fm.contentsOfDirectory(atPath: root.path), !names.isEmpty else { return true }
+        guard let names = try? Folders.names(in: root.path), !names.isEmpty else { return true }
         let folder = file.deletingLastPathComponent()
         if folder.standardizedFileURL.path != root.standardizedFileURL.path {
             var isFolder: ObjCBool = false

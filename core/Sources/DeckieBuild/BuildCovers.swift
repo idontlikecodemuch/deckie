@@ -128,10 +128,14 @@ final class BuildCovers: @unchecked Sendable {
     }
 
     /// Finds the cover of each of `files` (the files that have a record), several at once.
-    func find(_ files: [SourceFile], jobs: Int) {
+    /// `root`: the folder the build reads. A file whose drive was taken out (`FileFailure.placeIsGone`) is not looked
+    /// at, and nothing is remembered for it: its cover is the one the crate file had (`looked`), and the next run
+    /// looks again.
+    func find(_ files: [SourceFile], jobs: Int, root: URL? = nil) {
         guard enabled else { return }
         runParallel(count: files.count, workers: jobs) { [self] i in
             let f = files[i]
+            if let root, FileFailure.placeIsGone(root: root, file: f.url) { return }
             let line = work.line(for: f.rel)
             let note = resolve(f, known: line?.cover)
             state.lock()
@@ -142,6 +146,13 @@ final class BuildCovers: @unchecked Sendable {
                 try? work.append(line)
             }
         }
+    }
+
+    /// Whether `find` looked at the file's cover (it did unless covers are off or its drive was taken out).
+    func looked(_ f: SourceFile) -> Bool {
+        guard enabled else { return true }
+        state.lock(); defer { state.unlock() }
+        return notes[f.rel] != nil
     }
 
     /// The cover's name (`file.cover`) for a file given to `find`, or nil.

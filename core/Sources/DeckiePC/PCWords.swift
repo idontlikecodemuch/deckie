@@ -115,6 +115,7 @@ public enum PCWords {
         case R.damaged: return "the file is damaged or incomplete"
         case R.decodeError: return "the file could not be opened"
         case R.sourceGone: return "the drive was taken out before it was read; plug it back in and run again to read it"
+        case R.folderGone: return "the folder was moved or removed before it was read; put it back and run again to read it"
         case R.noBeat: return "no steady beat was found"
         case R.tooShort: return "it is too short to be a song"
         case R.analysisError: return "it could not be analysed; the log says why"

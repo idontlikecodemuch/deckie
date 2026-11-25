@@ -101,20 +101,20 @@ public enum DeskAddMusic {
         public var isSet: Bool { lock.lock(); defer { lock.unlock() }; return asked }
     }
 
-    /// Counts the audio files below `folder` the way a run finds them (by extension; hidden files, crate files and
-    /// work folders left out; a link to a folder not followed), reporting the count as it rises. Nothing is decoded,
+    /// Counts the audio files below `folder` the way a run finds them (by extension; what `AudioFiles.isLeftOut`
+    /// leaves out, left out; a link to a folder not followed), reporting the count as it rises. Nothing is decoded,
     /// so this is quick even on a big drive.
     public static func count(_ folder: URL, stop: CountStop? = nil, progress: (Int) -> Void = { _ in }) -> Count {
         var c = Count()
         let fm = FileManager.default
         func walk(_ dir: URL) {
-            guard !c.stopped, let names = try? fm.contentsOfDirectory(atPath: dir.path) else { return }
+            guard !c.stopped, let names = try? Folders.names(in: dir.path) else { return }
             for name in names {
                 if stop?.isSet == true { c.stopped = true; return }
-                if name.hasPrefix(".") { continue }
                 let url = dir.appendingPathComponent(name)
+                // The read's own rule (hidden, a system's own folder, crate files and work folders), so they agree.
+                if AudioFiles.isLeftOut(name: name, url: url) { continue }
                 let ext = CratePath.fileExtension(of: name).lowercased()
-                if CrateFormat.isCrateExtension(ext) || ext == Builder.workExtension { continue }
                 guard let attrs = try? fm.attributesOfItem(atPath: url.path), let type = attrs[.type] as? FileAttributeType else { continue }
                 if type == .typeDirectory { walk(url); if c.stopped { return }; continue }
                 guard AudioFiles.extensions.contains(ext) else { continue }

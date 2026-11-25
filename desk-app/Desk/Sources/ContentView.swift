@@ -364,10 +364,10 @@ struct FinishedView: View {
         ScrollView {
         VStack(spacing: Look.Space.finishedScreen) {
             Image(systemName: stopped || gone > 0 ? "pause.circle" : "checkmark.circle").font(Look.Fonts.finishedIcon).foregroundStyle(.secondary)
-            Text(gone > 0 ? Words.t("goneTitle")
+            Text(gone > 0 ? report.goneTitle
                  : stopped ? Words.stoppedTitle(report.songsRead ?? report.wentIn, report.read, report.crate) : Words.finishedTitle(report.read, report.crate))
                 .font(Look.Fonts.screenTitle)
-            if gone > 0 { Text(Words.c("goneBody", gone)).foregroundStyle(.secondary) }
+            if gone > 0 { Text(report.goneBody).foregroundStyle(.secondary) }
             else if stopped { Text(Words.stoppedBody).foregroundStyle(.secondary) }
             // The crate as sound (D37): the run's songs, one line each, as they joined, and the run's last moment.
             if !model.watch.songs.isEmpty {

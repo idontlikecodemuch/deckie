@@ -169,11 +169,16 @@ A drive taken out part-way (added Nov 25, 2026; no new protocol number, as only 
 that could not be read because the folder the run reads (a drive's top, or the folder chosen) was gone, could not be
 listed or held nothing any more, or its own folder was gone, has the reason `source_gone` (`reason.source_gone`, "The
 drive was taken out"), in a `notRead` line, the import log and the report's `not_in`, where it was `decode_error`
-before. A file that cannot be read while its drive is there is still `decode_error`. The finished screen of a run with
-any `source_gone` says `goneTitle` and `goneBody` (the count of them) in place of a tick and its usual title, and the
-engine sends no `finished` moment ("That's the lot") for it; adding the drive again reads only those songs, as a
-`source_gone` file is never taken as a lasting result. A page or window from before it shows the code's heading from
-the words the engine sends, or the code itself in words ("Source Gone") if it has none; it changes nothing else.
+before. When what was read is a folder, not a drive (not the top of a drive, nor a drive Desk lists; decided before
+the run reads anything), the reason is `folder_gone` ("The folder was moved or removed") instead. A song read before
+the place went whose signature or print could not then be made from its file is not kept half made: it is left out
+of the crate file with the same reason, and its analysis is kept, so adding the drive again finishes it without
+analysing it again. A file that cannot be read while its drive is there is still `decode_error`. The finished screen of
+a run with any of them says `goneTitle` and `goneBody` (the count of them; `goneTitle.folder` and `goneBody.folder`
+when only `folder_gone` songs were lost) in place of a tick and its usual title, and the engine sends no `finished`
+moment ("That's the lot") for it; adding the drive again reads only those songs, as neither code is ever taken as a
+lasting result. A page or window from before it shows the code's heading from the words the engine sends, or the
+code itself in words ("Source Gone") if it has none; it changes nothing else.
 
 ### The run screen (D37, added Nov 14, 2026; no new protocol number, as only an event was added)
 

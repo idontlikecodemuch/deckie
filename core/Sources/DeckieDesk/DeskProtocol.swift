@@ -251,10 +251,7 @@ public final class DeskProtocol: @unchecked Sendable {
     static func exportFolder(_ given: String) throws -> URL {
         let path = given.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !path.isEmpty else { throw DeskError(DeskWords.text("error.exportNoFolder")) }
-        var isFolder: ObjCBool = false
-        guard FileManager.default.fileExists(atPath: path, isDirectory: &isFolder), isFolder.boolValue else {
-            throw DeskError(DeskWords.text("error.exportFolderNotThere", ["folder": path]))
-        }
+        guard Folders.isFolder(path) else { throw DeskError(DeskWords.text("error.exportFolderNotThere", ["folder": path])) }
         return URL(fileURLWithPath: path, isDirectory: true)
     }
 
@@ -318,10 +315,8 @@ public final class DeskProtocol: @unchecked Sendable {
             // Nothing is counted for a read that cannot finish: the part that reads music is missing.
             guard analysis.ready else { throw RequestError(code: "engine_missing", detail: analysis.detail) }
             let path = try Self.string(obj, "path")
-            var isDir: ObjCBool = false
-            guard FileManager.default.fileExists(atPath: path, isDirectory: &isDir), isDir.boolValue else {
-                throw RequestError(code: "bad_request", detail: "\(path) is not a folder")
-            }
+            // `Folders`: right for a drive's top on Windows too.
+            guard Folders.isFolder(path) else { throw RequestError(code: "bad_request", detail: "\(path) is not a folder.") }
             startCount(URL(fileURLWithPath: path, isDirectory: true), given: path, name: obj["name"] as? String, id)
         case "add.countStop":
             counting?.set(); reply(id)
@@ -385,10 +380,8 @@ public final class DeskProtocol: @unchecked Sendable {
             } else { reply(id, ["cover": false]) }
         case "run.add":
             let path = try Self.string(obj, "path")
-            var isDir: ObjCBool = false
-            guard FileManager.default.fileExists(atPath: path, isDirectory: &isDir), isDir.boolValue else {
-                throw RequestError(code: "bad_request", detail: "\(path) is not a folder")
-            }
+            // `Folders`: right for a drive's top on Windows too.
+            guard Folders.isFolder(path) else { throw RequestError(code: "bad_request", detail: "\(path) is not a folder.") }
             // A new crate's name, as the first screen or the question before a large read has it (research AE).
             if s.current == nil, let crateName = obj["crateName"] as? String { s.setNewCrateName(crateName) }
             try startRun(s.addRequest(URL(fileURLWithPath: path, isDirectory: true), name: obj["name"] as? String), id)
