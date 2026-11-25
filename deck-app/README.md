@@ -66,20 +66,38 @@ to a new path makes a new id.
 
 ## Build 4: the icon (Nov 24, 2026, `pc/ipad-icon`)
 
-The icon picture, `Deck/Assets.xcassets/AppIcon.appiconset/icon1024.png`, is drawn from `site/icon.svg` by
-`tools/draw_icon.py` (Python's standard library only): 1024 by 1024, 8-bit RGB with no alpha channel, marked sRGB, the
-dark ground (#160f2b) filling the whole square, every edge mixed by how much of each shape covers the pixel. iPadOS and
-the App Store round the corners themselves, so none are drawn in; the SVG's corner rounding is the one thing left out.
-Build 3's picture had rounded corners drawn in on white (all four corner pixels 255,255,255) and was an enlarged small
-picture (ring edges 3 to 5 pixels soft, about 17,000 colours); the new one has edges one pixel wide and 426 colours.
-Its rings are the SVG's: eleven thin grooves with a band of plain orange round the label, where build 3's picture had
-eight wider ones. The Windows icon (`core/Tools/windows/make_ico.py`) and the Desk film's close
-(`desk-quickstart/film.js`) are made from this picture and round the corners themselves. To redraw it after a change
-to `site/icon.svg`:
+`tools/draw_icon.py` draws two pictures from `site/icon.svg`, both 1024 by 1024, 8-bit RGB with no alpha channel,
+marked sRGB, the dark ground (#160f2b) filling the whole square, every edge mixed by how much of each shape covers the
+pixel. iPadOS and the App Store round the corners themselves, so none are drawn in; the SVG's corner rounding is the
+one thing left out.
+
+- `tools/icon-base1024.png`, the plain icon: the record, no word. Desk's Windows icon
+  (`core/Tools/windows/icon.sh`, `make_ico.py`) and the Desk film's close (`desk-quickstart/render.mjs`) are made from
+  it and round the corners themselves.
+- `Deck/Assets.xcassets/AppIcon.appiconset/icon1024.png`, the iPad app's icon: the record made smaller (77 percent)
+  and moved up, and "Booth" beneath it in the brand script (Pacifico, the site's own `site/fonts/pacifico.woff2`, set
+  as the font's outlines by `tools/woff2_outlines.py`, its final-letter form included), off-white (#f2edf9) with a
+  soft dark edge, rising 13 degrees from left to right, the "th" just over the record's rim, at least 46 (in 1024)
+  inside the rounded square Apple's mask leaves. The name under the icon is "Deckie" (D43); the word says which
+  Deckie app it is (decided Nov 24, 2026). Desk's and the site's icons do not carry it.
+
+Three layouts were drawn and judged at 1024, 152 and 120 pixels: the word large across the record (a), beneath it
+(b), and on a dark sticker strip across the record (c); b at 9, 13 and 18 degrees. b at 13 was shipped: the record
+stays whole and recognisable at 120 pixels and the word reads on the plain dark ground with nothing behind it; 9
+degrees looked nearly level, as if placed, and 18 had to be set smaller to keep clear of the corners and read less
+well at 120. Across the record (a) the rings and the label fight the letters at small sizes; the strip (c) hides the
+label and leaves a sliver of record below it. Any of them is one command:
 
 ```
-python3 deck-app/tools/draw_icon.py
+python3 deck-app/tools/draw_icon.py                          # both pictures, as shipped
+python3 deck-app/tools/draw_icon.py --layout a --angle 12    # the iPad icon as layout a (or b, c) at another angle
 ```
+
+The font is unpacked by the `brotli` program (Homebrew), since Brotli is not in Python's standard library; the plain
+picture needs no font. Build 3's picture had rounded corners drawn in on white (all four corner pixels 255,255,255)
+and was an enlarged small picture (ring edges 3 to 5 pixels soft, about 17,000 colours); the plain picture has edges
+one pixel wide and 426 colours. Its rings are the SVG's: eleven thin grooves with a band of plain orange round the
+label, where build 3's picture had eight wider ones.
 
 Version 0.1.0, build 4; nothing else differs from build 3.
 

@@ -23,8 +23,9 @@ as "Demo crate" in the Crate tab. New in build 3 (`what-to-test-build-3.md`): li
 after a cut (D41); other music on the iPad keeps playing while Deckie listens; a call, Siri, an alarm or a change of
 input stops listening cleanly and it starts again by itself; REC says what the recording is really doing; the set's
 files are named "Deckie set <date>". New in build 4 (Nov 24, 2026, `pc/ipad-icon`): the icon picture is redrawn from
-`site/icon.svg` at 1024 pixels, sharp, with the dark ground filling the whole square; build 3's had its corners drawn
-in on white and was an enlarged small picture, so white could show at the corners iPadOS rounds.
+`site/icon.svg` at 1024 pixels, sharp, with the dark ground filling the whole square, and carries the word "Booth" in
+the brand script beneath the record (decided Nov 24, 2026); build 3's had its corners drawn in on white and was an
+enlarged small picture, so white could show at the corners iPadOS rounds.
 
 The Release archive of build 3 was made and checked on Nov 24, 2026 (`pc/testflight-3`: a 3.9 MB app, arm64 only, no
 library data, the demo crate file and the privacy manifest inside, no `deck` URL scheme, the 1024-point icon with no

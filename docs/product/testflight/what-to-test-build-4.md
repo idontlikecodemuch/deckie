@@ -3,7 +3,7 @@
 Thanks for trying Deckie on the iPad. New in this build: Deckie names the next song sooner after a quick change,
 it no longer silences other music playing on the iPad, it keeps going through a call or a change of input, and REC
 always says what the recording is really doing.
-The app's icon is redrawn sharp, with its dark ground to every corner. Please try these and tell us how each went:
+The app's icon is redrawn sharp, with its dark ground to every corner, and now says "Booth". Please try these and tell us how each went:
 
 1. **The demo crate.** Tap "Try the demo crate", then on a phone or laptop open deckie.io/demo, press play and put it
    near the iPad. How soon does Deckie name each song? When you tap another song on the page, how many seconds until
