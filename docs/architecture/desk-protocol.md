@@ -165,6 +165,16 @@ A `line` is one of `{"kind": "started", "files": 40, "unchanged": 3, "queued": 3
 (part of a music CD's song 3 could not be read even on a second try: `sectors` of 1/75 s each were read as silence).
 A music CD's songs are named `Track 01.wav` and so on in `rel` (`.aiff` on the Mac).
 
+A drive taken out part-way (added Nov 25, 2026; no new protocol number, as only a reason code was added): a file
+that could not be read because the folder the run reads (a drive's top, or the folder chosen) was gone, could not be
+listed or held nothing any more, or its own folder was gone, has the reason `source_gone` (`reason.source_gone`, "The
+drive was taken out"), in a `notRead` line, the import log and the report's `not_in`, where it was `decode_error`
+before. A file that cannot be read while its drive is there is still `decode_error`. The finished screen of a run with
+any `source_gone` says `goneTitle` and `goneBody` (the count of them) in place of a tick and its usual title, and the
+engine sends no `finished` moment ("That's the lot") for it; adding the drive again reads only those songs, as a
+`source_gone` file is never taken as a lasting result. A page or window from before it shows the code's heading from
+the words the engine sends, or the code itself in words ("Source Gone") if it has none; it changes nothing else.
+
 ### The run screen (D37, added Nov 14, 2026; no new protocol number, as only an event was added)
 
 While a run goes, `run.songs` carries what the run screen draws: the songs that joined it, what is true of them, and

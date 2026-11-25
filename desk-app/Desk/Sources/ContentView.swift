@@ -356,14 +356,19 @@ struct FinishedView: View {
     let report: RunReport
     /// Stopped by the DJ (Stop): the songs read are in, and the rest can be carried on.
     private var stopped: Bool { report.stopped == true }
+    /// The drive was taken out part-way (songs `source_gone`): said in place of a tick and "That's the lot"; adding it
+    /// again reads the rest (the pages say the same).
+    private var gone: Int { report.notReadGone }
 
     var body: some View {
         ScrollView {
         VStack(spacing: Look.Space.finishedScreen) {
-            Image(systemName: stopped ? "pause.circle" : "checkmark.circle").font(Look.Fonts.finishedIcon).foregroundStyle(.secondary)
-            Text(stopped ? Words.stoppedTitle(report.songsRead ?? report.wentIn, report.read, report.crate) : Words.finishedTitle(report.read, report.crate))
+            Image(systemName: stopped || gone > 0 ? "pause.circle" : "checkmark.circle").font(Look.Fonts.finishedIcon).foregroundStyle(.secondary)
+            Text(gone > 0 ? Words.t("goneTitle")
+                 : stopped ? Words.stoppedTitle(report.songsRead ?? report.wentIn, report.read, report.crate) : Words.finishedTitle(report.read, report.crate))
                 .font(Look.Fonts.screenTitle)
-            if stopped { Text(Words.stoppedBody).foregroundStyle(.secondary) }
+            if gone > 0 { Text(Words.c("goneBody", gone)).foregroundStyle(.secondary) }
+            else if stopped { Text(Words.stoppedBody).foregroundStyle(.secondary) }
             // The crate as sound (D37): the run's songs, one line each, as they joined, and the run's last moment.
             if !model.watch.songs.isEmpty {
                 VStack(alignment: .leading, spacing: Look.Space.finishedWall) {

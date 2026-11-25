@@ -723,6 +723,10 @@ public final class Builder: Sendable {
             if failure.isLasting { try? work.append(line("failed", failure: failure)) }
             return .failed(failure)
         }
+        // A file read from a folder (not handed over in memory) that cannot be read, or whose decoder fails, is first
+        // asked whether its drive or folder went away (taken out part-way through a run), before the file is blamed.
+        let fromFolder = inHand == nil && options.files == nil
+        func gone() -> Bool { fromFolder && FileFailure.placeIsGone(root: options.folder, file: f.url) }
 
         let box: FileBytes
         if let inHand {
@@ -731,6 +735,7 @@ public final class Builder: Sendable {
             do {
                 box = FileBytes(try Data(contentsOf: f.url))
             } catch {
+                if gone() { return failed(.sourceGone) }
                 return failed(FileFailure(reason: R.decodeError, message: "could not be read (\(error.localizedDescription))"))
             }
         }
@@ -776,6 +781,9 @@ public final class Builder: Sendable {
         } catch is AnalysisStopped {
             return nil
         } catch {
+            // A decoder that reads the file itself (Core Audio, Media Foundation) fails in its own words when the
+            // drive went away under it; the analysis of bytes already read does not depend on the drive.
+            if error is AudioDecodeError, gone() { return failed(.sourceGone) }
             return failed(FileFailure.classify(error, path: f.url.path))
         }
     }

@@ -118,6 +118,11 @@ public enum DeskWords {
         "stoppedTitle.same.one": "Stopped: 1 song from {read} is in the crate",
         "stoppedTitle.same.other": "Stopped: {n} songs from {read} are in the crate",
         "stoppedBody": "The rest isn't read yet. Carry on whenever you like: the songs already read are not read again.",
+        // new (Nov 25, 2026): the finished screen when the drive was taken out part-way (songs not read, reason
+        // `source_gone`), in place of a tick and "That's the lot". Adding the drive again reads only the rest.
+        "goneTitle": "Stopped: the drive was taken out",
+        "goneBody.one": "1 song was not read. Plug it back in and add it again to read the rest.",
+        "goneBody.other": "{n} songs were not read. Plug it back in and add it again to read the rest.",
         "takeBackOut": "Take this back out",
 
         // while it works
@@ -538,6 +543,8 @@ public enum DeskWords {
         "reason.duplicate": "The same file as another",
         "reason.damaged": "Damaged or incomplete",
         "reason.decode_error": "Could not be decoded",
+        // new (Nov 25, 2026): a file not read because its drive was taken out (or the folder read went away) part-way.
+        "reason.source_gone": "The drive was taken out",
         "reason.analysis_error": "Analysis failed",
         "reason.skipped": "Folder left out",
         // new (Nov 20, 2026): the line under a file that didn't go in, in place of the decoder's own words (kept in the

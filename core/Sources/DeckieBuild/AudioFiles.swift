@@ -226,6 +226,30 @@ public struct FileFailure: Sendable, Equatable {
     }
 
     /// Whether a later run may take this result as it is while the file is unchanged: everything but a file that
-    /// could not be read, which may be a passing problem (a disk not mounted, a permission).
-    var isLasting: Bool { reason != CrateManifest.ImportLog.Reason.decodeError }
+    /// could not be read, which may be a passing problem (a disk not mounted, a permission), or whose drive went away.
+    var isLasting: Bool {
+        typealias R = CrateManifest.ImportLog.Reason
+        return reason != R.decodeError && reason != R.sourceGone
+    }
+
+    /// A file that could not be read or decoded because the place it was read from went away (`placeIsGone`).
+    static let sourceGone = FileFailure(
+        reason: CrateManifest.ImportLog.Reason.sourceGone,
+        message: "not read: the drive or folder it was read from went away while it was read")
+
+    /// Whether the place a build reads from went away (a drive taken out, the folder moved or removed), told apart
+    /// from a file that cannot be read: the folder read (`root`, a drive's top or the folder chosen) is not there,
+    /// cannot be listed, or holds nothing now (an empty mount point is left behind on some systems); or the file's
+    /// own folder below it is not there. Asked after a file failed, before the file is blamed. Plain Foundation calls,
+    /// the same on macOS, Linux and Windows: a drive taken out leaves its path missing or unreadable on each.
+    public static func placeIsGone(root: URL, file: URL) -> Bool {
+        let fm = FileManager.default
+        guard let names = try? fm.contentsOfDirectory(atPath: root.path), !names.isEmpty else { return true }
+        let folder = file.deletingLastPathComponent()
+        if folder.standardizedFileURL.path != root.standardizedFileURL.path {
+            var isFolder: ObjCBool = false
+            if !fm.fileExists(atPath: folder.path, isDirectory: &isFolder) || !isFolder.boolValue { return true }
+        }
+        return false
+    }
 }

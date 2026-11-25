@@ -493,9 +493,11 @@ record, counted by reason and extension, and the files in the crate with damaged
 - **Nothing left out silently** (decision P18). Every file that cannot be analysed is counted by reason and extension
   in the summary and listed in the manifest's `import_log` with its path below the folder and the reason in words:
   `unsupported` (a format this platform cannot decode: AAC, M4A and WMA on Linux, Ogg, Opus), `protected` (FairPlay),
-  `damaged`, `decode_error` (could not be read), `analysis_error` (no beat grid, too few bars, the model failed) and
-  `duplicate` (the same bytes as another file, which has the record). Failures are remembered in the work folder too,
-  except a file that could not be read, which is tried again. The log's `built_by` is the building device's model
+  `damaged`, `decode_error` (could not be read), `source_gone` (not read because the folder read went away part-way:
+  a drive taken out; told apart by asking, when a file fails, whether the folder read is still there, can be listed
+  and is not empty, and whether the file's own folder is there), `analysis_error` (no beat grid, too few bars, the
+  model failed) and `duplicate` (the same bytes as another file, which has the record). Failures are remembered in the
+  work folder too, except a file that could not be read or whose drive went away, which is tried again. The log's `built_by` is the building device's model
   label, the same as each record's `analysis.device`, never the machine's own name. A file that is in the crate but
   whose decoder played damaged MP3 frames as silence is listed too, reason `damaged_frames`, with the frames' times
   ("damaged frame at 1:01.234 (26 ms), played as silence"), so the DJ knows the file is faulty though playable.

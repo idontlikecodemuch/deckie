@@ -426,6 +426,10 @@ public struct RunReport: Codable, Equatable, Sendable {
 
     /// Songs that did not go in.
     public var notInCount: Int { notIn.values.reduce(0, +) }
+    /// Songs not read because the drive was taken out (or the folder read went away) part-way through the run
+    /// (`source_gone`). The finished screen then says so (`goneTitle`, `goneBody`) in place of a tick and "That's the
+    /// lot"; desk.js `drawFinished` reads the same count from `not_in`.
+    public var notReadGone: Int { notIn[CrateManifest.ImportLog.Reason.sourceGone] ?? 0 }
 
     /// The finished screen's first lines, in Desk's words (desk.js `drawFinished` says the same): the songs that went
     /// in, counted as the crate counts them (a song in two places once, as "That's the lot" and the sources say); for
@@ -908,8 +912,8 @@ public final class DeskRun: @unchecked Sendable {
         try Self.appendRun(line, to: shelf.file(Self.runsFile, of: crateId))
         // A stopped run stays pending, so Carry on reads the rest.
         if !result.stopped { try? DeckieFiles.remove(pendingURL) }
-        // "That's the lot" only when it is: a stopped run has more to read.
-        if !result.stopped {
+        // "That's the lot" only when it is: a stopped run has more to read, and so has one whose drive was taken out.
+        if !result.stopped && report.notReadGone == 0 {
             state.lock.lock(); let last = state.tally.finished(); state.lock.unlock()
             emit(.saving, nil, notes: [last])
         }
