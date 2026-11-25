@@ -29,8 +29,39 @@ public enum Folders {
         return FileManager.default.fileExists(atPath: path, isDirectory: &folder) && folder.boolValue
     }
 
-    /// `isFolder` for a file URL's path.
-    public static func isFolder(_ url: URL) -> Bool { isFolder(url.path) }
+    /// `isFolder` for a file URL: a drive's top is found from any form the URL gives (`driveRoot(of:)`), else its
+    /// path goes to Foundation.
+    public static func isFolder(_ url: URL) -> Bool { isFolder(driveRoot(of: url) ?? url.path) }
+
+    /// The top of a Windows drive (`E:\`) that `url` names, from any of the forms a URL gives for it: its path, its
+    /// path as the file system takes it, and its standardised path. The CI runner of Nov 25, 2026 showed that a
+    /// drive's top made into a URL and standardised (`URL(fileURLWithPath: "C:\\").standardizedFileURL`) was no
+    /// longer taken for one, so the walk said "C:/ is not a folder." while the same path as text was a folder: each
+    /// form is asked, the URL as given first. Nil for anything else, and always nil where there are no drive letters.
+    public static func driveRoot(of url: URL) -> String? {
+        #if os(Windows)
+        let native = url.withUnsafeFileSystemRepresentation { $0.map { String(cString: $0) } }
+        for form in [url.path, native, url.standardizedFileURL.path].compactMap({ $0 }) {
+            if let root = driveRoot(form) { return root }
+        }
+        #endif
+        return nil
+    }
+
+    /// The folder at `path` as a URL, with a Windows drive's top in the one form every part of Desk reads as the top
+    /// (`E:\`): a bare `E:` made into a URL is a folder named "E:" in the working folder, not the drive (the CI runner
+    /// of Nov 25, 2026: `URL(fileURLWithPath: "C:")` came out as `D:/a/.../core/C:`). Every request's path is made
+    /// into a URL through here.
+    public static func folderURL(_ path: String) -> URL {
+        #if os(Windows)
+        if let root = driveRoot(path) { return URL(fileURLWithPath: root, isDirectory: true) }
+        #endif
+        return URL(fileURLWithPath: path, isDirectory: true)
+    }
+
+    /// The path to hand `names(in:)`, `isFolder` and Foundation for a folder URL: a drive's top as `E:\`, else its
+    /// path.
+    public static func path(of url: URL) -> String { driveRoot(of: url) ?? url.path }
 
     /// The names in the folder at `path` (a drive's top included), as `FileManager.contentsOfDirectory` gives them
     /// (not `.` or `..`, in no set order); throws when it cannot be listed.
@@ -59,7 +90,7 @@ public enum Folders {
     }
 
     /// `names(in:)` for a file URL's path.
-    public static func names(in url: URL) throws -> [String] { try names(in: url.path) }
+    public static func names(in url: URL) throws -> [String] { try names(in: path(of: url)) }
 
     /// The top of a Windows drive as Windows' own calls take it (`E:\`), when `path` is one, in any of the ways it
     /// is written on the way: `E:`, `E:\`, `E:/`, or with a slash in front as a file URL's path has it (`/E:/`).

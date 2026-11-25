@@ -108,7 +108,7 @@ public enum DeskAddMusic {
         var c = Count()
         let fm = FileManager.default
         func walk(_ dir: URL) {
-            guard !c.stopped, let names = try? Folders.names(in: dir.path) else { return }
+            guard !c.stopped, let names = try? Folders.names(in: dir) else { return }
             for name in names {
                 if stop?.isSet == true { c.stopped = true; return }
                 let url = dir.appendingPathComponent(name)

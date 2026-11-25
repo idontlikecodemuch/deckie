@@ -252,7 +252,7 @@ public final class DeskProtocol: @unchecked Sendable {
         let path = given.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !path.isEmpty else { throw DeskError(DeskWords.text("error.exportNoFolder")) }
         guard Folders.isFolder(path) else { throw DeskError(DeskWords.text("error.exportFolderNotThere", ["folder": path])) }
-        return URL(fileURLWithPath: path, isDirectory: true)
+        return Folders.folderURL(path)
     }
 
     static func string(_ obj: [String: Any], _ key: String) throws -> String {
@@ -317,7 +317,7 @@ public final class DeskProtocol: @unchecked Sendable {
             let path = try Self.string(obj, "path")
             // `Folders`: right for a drive's top on Windows too.
             guard Folders.isFolder(path) else { throw RequestError(code: "bad_request", detail: "\(path) is not a folder.") }
-            startCount(URL(fileURLWithPath: path, isDirectory: true), given: path, name: obj["name"] as? String, id)
+            startCount(Folders.folderURL(path), given: path, name: obj["name"] as? String, id)
         case "add.countStop":
             counting?.set(); reply(id)
         case "crate.delete":
@@ -384,7 +384,7 @@ public final class DeskProtocol: @unchecked Sendable {
             guard Folders.isFolder(path) else { throw RequestError(code: "bad_request", detail: "\(path) is not a folder.") }
             // A new crate's name, as the first screen or the question before a large read has it (research AE).
             if s.current == nil, let crateName = obj["crateName"] as? String { s.setNewCrateName(crateName) }
-            try startRun(s.addRequest(URL(fileURLWithPath: path, isDirectory: true), name: obj["name"] as? String), id)
+            try startRun(s.addRequest(Folders.folderURL(path), name: obj["name"] as? String), id)
         case "run.carryOn":
             guard let p = s.pending else { throw RequestError(code: "bad_request", detail: "no run to carry on") }
             try startRun(p, id)

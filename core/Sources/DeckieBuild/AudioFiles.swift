@@ -138,10 +138,12 @@ public enum AudioFiles {
 
     /// The folder a walk starts from, checked: there, a folder, and listable (`Folders`, right for a drive's top on
     /// Windows too, where "E:/ is not a folder" stopped every read of a whole drive until Nov 25, 2026).
+    /// A drive's top is found from the URL as given, before it is standardised (which on Windows stopped it being
+    /// taken for one), and walked from as `E:\`.
     public static func checkedRoot(_ folder: URL) throws -> URL {
-        let root = folder.standardizedFileURL
-        guard Folders.isFolder(root.path) else { throw BuildError("\(folder.path) is not a folder.") }
-        guard (try? Folders.names(in: root.path)) != nil else { throw BuildError("Cannot list \(folder.path).") }
+        let root = Folders.driveRoot(of: folder).map { URL(fileURLWithPath: $0, isDirectory: true) } ?? folder.standardizedFileURL
+        guard Folders.isFolder(root) else { throw BuildError("\(folder.path) is not a folder.") }
+        guard (try? Folders.names(in: root)) != nil else { throw BuildError("Cannot list \(folder.path).") }
         return root
     }
 
@@ -186,7 +188,7 @@ public enum AudioFiles {
     /// the same files and the same paths on every platform.
     static func walk(_ folder: URL, below rel: String, visit: (String, String, URL, FileAttributeType?) -> Bool) {
         let fm = FileManager.default
-        guard let names = try? Folders.names(in: folder.path) else { return }
+        guard let names = try? Folders.names(in: folder) else { return }
         for name in names.sorted() {
             let url = folder.appendingPathComponent(name)
             let path = CratePath.join(rel, name)
@@ -268,13 +270,8 @@ public struct FileFailure: Sendable, Equatable {
     /// own folder below it is not there. Asked after a file failed, before the file is blamed. Plain Foundation calls,
     /// the same on macOS, Linux and Windows: a drive taken out leaves its path missing or unreadable on each.
     public static func placeIsGone(root: URL, file: URL) -> Bool {
-        let fm = FileManager.default
-        guard let names = try? Folders.names(in: root.path), !names.isEmpty else { return true }
-        let folder = file.deletingLastPathComponent()
-        if folder.standardizedFileURL.path != root.standardizedFileURL.path {
-            var isFolder: ObjCBool = false
-            if !fm.fileExists(atPath: folder.path, isDirectory: &isFolder) || !isFolder.boolValue { return true }
-        }
-        return false
+        guard let names = try? Folders.names(in: root), !names.isEmpty else { return true }
+        // The file's own folder (the drive's top itself, for a file at the top: `Folders` takes it as one).
+        return !Folders.isFolder(file.deletingLastPathComponent())
     }
 }

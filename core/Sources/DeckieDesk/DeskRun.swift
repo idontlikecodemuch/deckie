@@ -522,7 +522,7 @@ public final class DeskRun: @unchecked Sendable {
     public static func canCarryOn(_ r: RunRequest, home: DeskHome,
                                   open: (String) throws -> MusicCD = { try MusicCDs.open($0) },
                                   musicCDs: () -> [MusicCDs.Found] = { MusicCDs.list() }) -> Bool {
-        guard let id = r.discId, r.musicCD != nil else { return FileManager.default.fileExists(atPath: r.folder) }
+        guard let id = r.discId, r.musicCD != nil else { return Folders.isFolder(Folders.folderURL(r.folder)) }
         return DiscRecords.find(id, near: r.musicCD, open: open, musicCDs: musicCDs) != nil
     }
 
