@@ -219,8 +219,24 @@ public enum SourceNaming {
             if a.inside == b.inside { return true }
             return holdsMostOf(s.files, at: root, size: size)
         }
-        if found.ownDisk, let r = s.root, r.standardizedFileURL.path == root.standardizedFileURL.path { return true }
+        if found.ownDisk, let r = s.root, comparablePath(r) == comparablePath(root) { return true }
         return holdsMostOf(s.files, at: root, size: size)
+    }
+
+    /// A place's path in a form two places can be compared by. On Windows a drive's top (`E:\`) is never standardised
+    /// (Foundation's `standardizedFileURL` makes it a path below the working folder), and `E:\`, `E:/` and `e:\` are
+    /// one place. The one line to swap for the shared helper in `DeckieCrate/Folders.swift` when it lands is the
+    /// Windows branch's first line.
+    static func comparablePath(_ url: URL) -> String {
+        #if os(Windows)
+        let raw = url.withUnsafeFileSystemRepresentation { $0.map { String(cString: $0) } } ?? url.path
+        var p = raw.replacingOccurrences(of: "/", with: "\\").lowercased()
+        while p.count > 3, p.hasSuffix("\\") { p.removeLast() }
+        if p.count == 2, p.hasSuffix(":") { p += "\\" }
+        return p
+        #else
+        return url.standardizedFileURL.path
+        #endif
     }
 
     /// More than half of `files` are below `root`, each with its size when the size is known. Stops as soon as the

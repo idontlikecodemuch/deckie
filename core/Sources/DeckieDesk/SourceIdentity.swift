@@ -56,10 +56,17 @@ public struct SourceIdentity: Codable, Hashable, Sendable {
     static let zeroUUID = "00000000-0000-0000-0000-000000000000"
 
     /// `path` below `top`, with "/" between its parts and none at either end; `path` itself when it is not below `top`.
+    /// With Windows' separator ("\"), "/" separates too and letters' case does not matter (`E:\Sets`, `e:/Sets`).
+    /// Plain string work: nothing here standardises a drive's top.
     static func inside(_ path: String, below top: String, separator: Character) -> String {
-        let cut = { (s: String) in s.split(separator: separator, omittingEmptySubsequences: true).map(String.init) }
+        let windows = separator == "\\"
+        let cut = { (s: String) in
+            s.split(omittingEmptySubsequences: true) { $0 == separator || (windows && $0 == "/") }.map(String.init)
+        }
         let p = cut(path), t = cut(top)
-        let below = p.starts(with: t) ? Array(p.dropFirst(t.count)) : p
+        let below = p.count >= t.count
+            && zip(p, t).allSatisfy { windows ? $0.lowercased() == $1.lowercased() : $0 == $1 }
+            ? Array(p.dropFirst(t.count)) : p
         return below.joined(separator: "/")
     }
 

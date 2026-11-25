@@ -6,7 +6,7 @@ import DeckieBuild
 import DeckieTestSupport
 @testable import DeckieDesk
 
-/// Which source a stick is (Nov 25, 2026): two sticks that share a name ("NO NAME") and are mounted one after the
+/// Which source a stick is (Nov 25, 2026): two sticks that share a name ("USB") and are mounted one after the
 /// other at the same path are two sources, and the same stick is one source wherever it is mounted. The system's
 /// identity of a drive comes through one seam (`SourceIdentity.Reader`), so these run alike on every platform.
 @Suite struct SourceIdentityTests {
@@ -31,40 +31,40 @@ import DeckieTestSupport
 
     @Test func twoSticksWithOneNameAtOnePathAreTwoSources() throws {
         let root = try scratch("ids-two")
-        let mount = root.appendingPathComponent("NO NAME"), second = root.appendingPathComponent("NO NAME 1")
+        let mount = root.appendingPathComponent("USB"), second = root.appendingPathComponent("USB 1")
         // Stick B is in now, where stick A was; it even holds copies of A's songs: its identity says it is another.
         try stick(mount, Self.songsOfA)
-        let recordedA = SourceNaming.Recorded(name: "NO NAME", root: mount, identity: Self.a, files: files(Self.songsOfA))
-        #expect(SourceNaming.choose("NO NAME", root: mount, found: Self.onB, recorded: [recordedA]) == "NO NAME 2")
+        let recordedA = SourceNaming.Recorded(name: "USB", root: mount, identity: Self.a, files: files(Self.songsOfA))
+        #expect(SourceNaming.choose("USB", root: mount, found: Self.onB, recorded: [recordedA]) == "USB 2")
         // Both in: A at the path the system gives the second, B where A was. Each is its own source.
-        let both = [SourceNaming.Recorded(name: "NO NAME", root: second, identity: Self.a, files: files(Self.songsOfA)),
-                    SourceNaming.Recorded(name: "NO NAME 2", root: mount, identity: Self.b, files: [])]
-        #expect(SourceNaming.choose("NO NAME", root: mount, found: Self.onA, recorded: both) == "NO NAME")
-        #expect(SourceNaming.choose("NO NAME", root: second, found: Self.onB, recorded: both) == "NO NAME 2")
+        let both = [SourceNaming.Recorded(name: "USB", root: second, identity: Self.a, files: files(Self.songsOfA)),
+                    SourceNaming.Recorded(name: "USB 2", root: mount, identity: Self.b, files: [])]
+        #expect(SourceNaming.choose("USB", root: mount, found: Self.onA, recorded: both) == "USB")
+        #expect(SourceNaming.choose("USB", root: second, found: Self.onB, recorded: both) == "USB 2")
         // A third stick with the same name and no identity of its own, holding none of their songs, is a third.
         try FileManager.default.removeItem(at: mount)
         try FileManager.default.createDirectory(at: mount, withIntermediateDirectories: true)
-        #expect(SourceNaming.choose("NO NAME", root: mount, found: Self.none, recorded: both) == "NO NAME 3")
+        #expect(SourceNaming.choose("USB", root: mount, found: Self.none, recorded: both) == "USB 3")
     }
 
     @Test func theSameStickIsOneSourceWhereverItMounts() throws {
-        let recorded = [SourceNaming.Recorded(name: "NO NAME", root: URL(fileURLWithPath: "/Volumes/NO NAME"),
+        let recorded = [SourceNaming.Recorded(name: "USB", root: URL(fileURLWithPath: "/Volumes/USB"),
                                               identity: Self.a, files: files(Self.songsOfA))]
         // Mounted under another path, with nothing there to look at: its identity is enough.
-        #expect(SourceNaming.choose("NO NAME", root: URL(fileURLWithPath: "/Volumes/NO NAME 1"), found: Self.onA,
-                                    recorded: recorded, size: { _ in nil }) == "NO NAME")
+        #expect(SourceNaming.choose("USB", root: URL(fileURLWithPath: "/Volumes/USB 1"), found: Self.onA,
+                                    recorded: recorded, size: { _ in nil }) == "USB")
         // Renamed by the DJ, it is still that source; its old name is free for another stick.
-        let renamed = [SourceNaming.Recorded(name: "Friday", root: URL(fileURLWithPath: "/Volumes/NO NAME"),
+        let renamed = [SourceNaming.Recorded(name: "Friday", root: URL(fileURLWithPath: "/Volumes/USB"),
                                              identity: Self.a, files: [])]
-        #expect(SourceNaming.choose("NO NAME", root: URL(fileURLWithPath: "/Volumes/NO NAME"), found: Self.onA,
+        #expect(SourceNaming.choose("USB", root: URL(fileURLWithPath: "/Volumes/USB"), found: Self.onA,
                                     recorded: renamed) == "Friday")
-        #expect(SourceNaming.choose("NO NAME", root: URL(fileURLWithPath: "/Volumes/NO NAME"), found: Self.onB,
-                                    recorded: renamed) == "NO NAME")
+        #expect(SourceNaming.choose("USB", root: URL(fileURLWithPath: "/Volumes/USB"), found: Self.onB,
+                                    recorded: renamed) == "USB")
     }
 
     @Test func aFolderOnAStickIsToldApartByTheStickAndFoundWhereItMoved() throws {
         let root = try scratch("ids-folder")
-        let music = root.appendingPathComponent("NO NAME/Music"), moved = root.appendingPathComponent("NO NAME/Sets/Music")
+        let music = root.appendingPathComponent("USB/Music"), moved = root.appendingPathComponent("USB/Sets/Music")
         let rels = ["01 One.mp3", "02 Two.mp3", "03 Three.mp3"]
         let recorded = [SourceNaming.Recorded(name: "Music", root: music,
                                               identity: SourceIdentity(volume: Self.a.volume, inside: "Music"), files: files(rels))]
@@ -77,7 +77,7 @@ import DeckieTestSupport
         let atMoved = SourceIdentity.Found(identity: SourceIdentity(volume: Self.a.volume, inside: "Sets/Music"), ownDisk: false)
         #expect(SourceNaming.choose("Music", root: moved, found: atMoved, recorded: recorded) == "Music")
         // Another folder of that name on the same stick, without its songs: another source.
-        let other = root.appendingPathComponent("NO NAME/Old/Music")
+        let other = root.appendingPathComponent("USB/Old/Music")
         try FileManager.default.createDirectory(at: other, withIntermediateDirectories: true)
         let atOther = SourceIdentity.Found(identity: SourceIdentity(volume: Self.a.volume, inside: "Old/Music"), ownDisk: false)
         #expect(SourceNaming.choose("Music", root: other, found: atOther, recorded: recorded) == "Music 2")
@@ -85,21 +85,21 @@ import DeckieTestSupport
 
     @Test func withNoIdentityTheSongsThemselvesDecideAndDoubtMakesANewSource() throws {
         let root = try scratch("ids-none")
-        let mount = root.appendingPathComponent("NO NAME")
-        let recorded = [SourceNaming.Recorded(name: "NO NAME", root: mount, identity: nil, files: files(Self.songsOfA))]
+        let mount = root.appendingPathComponent("USB")
+        let recorded = [SourceNaming.Recorded(name: "USB", root: mount, identity: nil, files: files(Self.songsOfA))]
         // A stranger at the very path, holding none of its songs.
         try stick(mount, ["01 Other.mp3"])
-        #expect(SourceNaming.choose("NO NAME", root: mount, found: Self.none, recorded: recorded) == "NO NAME 2")
+        #expect(SourceNaming.choose("USB", root: mount, found: Self.none, recorded: recorded) == "USB 2")
         // Its own stick, at another path, holding its songs.
-        let back = root.appendingPathComponent("NO NAME 1")
+        let back = root.appendingPathComponent("USB 1")
         try stick(back, Self.songsOfA)
-        #expect(SourceNaming.choose("NO NAME", root: back, found: Self.none, recorded: recorded) == "NO NAME")
+        #expect(SourceNaming.choose("USB", root: back, found: Self.none, recorded: recorded) == "USB")
         // The stick gives an identity now and gave none before: the songs decide, as above.
-        #expect(SourceNaming.choose("NO NAME", root: back, found: Self.onA, recorded: recorded) == "NO NAME")
+        #expect(SourceNaming.choose("USB", root: back, found: Self.onA, recorded: recorded) == "USB")
         // Recorded with an identity, read where the system gives none: the songs decide too.
-        let withId = [SourceNaming.Recorded(name: "NO NAME", root: mount, identity: Self.a, files: files(Self.songsOfA))]
-        #expect(SourceNaming.choose("NO NAME", root: back, found: Self.none, recorded: withId) == "NO NAME")
-        #expect(SourceNaming.choose("NO NAME", root: mount, found: Self.none, recorded: withId) == "NO NAME 2")
+        let withId = [SourceNaming.Recorded(name: "USB", root: mount, identity: Self.a, files: files(Self.songsOfA))]
+        #expect(SourceNaming.choose("USB", root: back, found: Self.none, recorded: withId) == "USB")
+        #expect(SourceNaming.choose("USB", root: mount, found: Self.none, recorded: withId) == "USB 2")
 
         // More than half of its songs, each at its path with its size: two of four is not enough, three is.
         let half = root.appendingPathComponent("half"), most = root.appendingPathComponent("most")
@@ -125,14 +125,14 @@ import DeckieTestSupport
     /// the stick's identity.
     @Test func anOldRecordMeetsItsOwnStickAndAStranger() throws {
         let root = try scratch("ids-old")
-        let mount = root.appendingPathComponent("NO NAME")
+        let mount = root.appendingPathComponent("USB")
         let home = DeskHome(root: root.appendingPathComponent("home"))
         let info0 = try home.shelf.make(name: "Friday")
         var info = try #require(home.shelf.info(info0.id))
-        info.sourceRoots["NO NAME"] = mount.path
+        info.sourceRoots["USB"] = mount.path
         try home.shelf.save(info)
         let tracks = Self.songsOfA.enumerated().map { i, rel in
-            entry(String(repeating: "\(i + 1)", count: 16), "Song \(i + 1)", disc: "NO NAME",
+            entry(String(repeating: "\(i + 1)", count: 16), "Song \(i + 1)", disc: "USB",
                   folder: String(rel.split(separator: "/")[0]), track: i + 1, rel: rel)
         }
         try CrateWriter.write(crate(tracks), to: home.shelf.package(info.id))
@@ -143,37 +143,37 @@ import DeckieTestSupport
         #expect(s.current?.id == info.id && s.current?.sourceIds.isEmpty == true)
 
         try stick(mount, ["01 Other.mp3", "02 Other.mp3"])
-        let stranger = s.addRequest(mount, name: "NO NAME", identify: { _ in Self.onB })
-        #expect(stranger.source == "NO NAME 2" && stranger.volume == Self.b)
+        let stranger = s.addRequest(mount, name: "USB", identify: { _ in Self.onB })
+        #expect(stranger.source == "USB 2" && stranger.volume == Self.b)
 
         try FileManager.default.removeItem(at: mount)
         try stick(mount, Self.songsOfA)
-        let own = s.addRequest(mount, name: "NO NAME", identify: { _ in Self.onA })
-        #expect(own.source == "NO NAME" && own.volume == Self.a)
+        let own = s.addRequest(mount, name: "USB", identify: { _ in Self.onA })
+        #expect(own.source == "USB" && own.volume == Self.a)
     }
 
     @Test func identitiesAreKeptOnlyByAdditionAndFollowTheSource() throws {
         // A crate.json written before has none, and reads.
-        let old = Data(#"{"id":"x","name":"Friday","created_at":1,"opened_at":2,"source_roots":{"NO NAME":"/Volumes/NO NAME"},"discs":{}}"#.utf8)
+        let old = Data(#"{"id":"x","name":"Friday","created_at":1,"opened_at":2,"source_roots":{"USB":"/Volumes/USB"},"discs":{}}"#.utf8)
         var info = try JSONDecoder().decode(CrateInfo.self, from: old)
-        #expect(info.sourceIds.isEmpty && info.sourceRoots["NO NAME"] == "/Volumes/NO NAME")
+        #expect(info.sourceIds.isEmpty && info.sourceRoots["USB"] == "/Volumes/USB")
         // Written back with none, it has no new field.
         #expect(!String(decoding: try JSONEncoder().encode(info), as: UTF8.self).contains("source_ids"))
         // With one, it goes and comes back, and follows a rename and a removal.
-        info.sourceIds["NO NAME"] = Self.a
+        info.sourceIds["USB"] = Self.a
         let again = try JSONDecoder().decode(CrateInfo.self, from: try JSONEncoder().encode(info))
         #expect(again == info)
-        info.renameSource("NO NAME", to: "Friday stick")
-        #expect(info.sourceIds["Friday stick"] == Self.a && info.sourceIds["NO NAME"] == nil)
+        info.renameSource("USB", to: "Friday stick")
+        #expect(info.sourceIds["Friday stick"] == Self.a && info.sourceIds["USB"] == nil)
         info.forget(source: "Friday stick")
         #expect(info.sourceIds.isEmpty)
         // Identities in a form this desk does not know are no identities; the crate still reads, and so does a field
         // it has never heard of.
-        let later = Data(#"{"id":"x","name":"Friday","created_at":1,"opened_at":2,"source_roots":{},"discs":{},"source_ids":{"NO NAME":"some-later-form"},"later":true}"#.utf8)
+        let later = Data(#"{"id":"x","name":"Friday","created_at":1,"opened_at":2,"source_roots":{},"discs":{},"source_ids":{"USB":"some-later-form"},"later":true}"#.utf8)
         #expect(try JSONDecoder().decode(CrateInfo.self, from: later).sourceIds.isEmpty)
 
         // A stopped run kept before has no identity, and reads; one asked for on stick A does not carry on with B.
-        let pending = Data(#"{"folder":"/Volumes/NO NAME","source":"NO NAME"}"#.utf8)
+        let pending = Data(#"{"folder":"/Volumes/USB","source":"USB"}"#.utf8)
         var r = try JSONDecoder().decode(RunRequest.self, from: pending)
         #expect(r.volume == nil)
         #expect(!String(decoding: try JSONEncoder().encode(r), as: UTF8.self).contains("volume"))
@@ -185,18 +185,18 @@ import DeckieTestSupport
 
     @Test func theCratesOwnSourcesAreWeighedWithTheFilesTheyHold() throws {
         var info = CrateInfo(id: "x", name: "Friday", createdAt: 1, openedAt: 1,
-                             sourceRoots: ["NO NAME": "/Volumes/NO NAME", "Music CD": "/dev/disk9"],
-                             discs: ["Music CD": "toc"], sourceIds: ["NO NAME": Self.a])
-        let one = entry("1111111111111111", "One", disc: "NO NAME", folder: "House", track: 1, rel: "House/01 One.mp3",
+                             sourceRoots: ["USB": "/Volumes/USB", "Music CD": "/dev/disk9"],
+                             discs: ["Music CD": "toc"], sourceIds: ["USB": Self.a])
+        let one = entry("1111111111111111", "One", disc: "USB", folder: "House", track: 1, rel: "House/01 One.mp3",
                         others: [.init(disc: "Brought in", folder: "", track: 3)])
         var c = crate([one, entry("2222222222222222", "Two", disc: "Music CD", folder: "", track: 1, rel: nil)])
         c.tracks[0].file.bytes = 1234
         var paths = PlacePaths()
-        paths.byId["1111111111111111"] = [.init(source: "NO NAME", folder: "House", rel: "House/01 One.mp3"),
-                                          .init(source: "NO NAME", folder: "Copies", rel: "Copies/One.mp3")]
+        paths.byId["1111111111111111"] = [.init(source: "USB", folder: "House", rel: "House/01 One.mp3"),
+                                          .init(source: "USB", folder: "Copies", rel: "Copies/One.mp3")]
         let r = info.recordedSources(crate: c, paths: paths)
         // The music CD is left out; a source only the crate names (brought in from elsewhere) is in, with nothing known.
-        #expect(r.map(\.name) == ["Brought in", "NO NAME"])
+        #expect(r.map(\.name) == ["Brought in", "USB"])
         #expect(r[0].root == nil && r[0].identity == nil && r[0].files.isEmpty)
         #expect(r[1].identity == Self.a && r[1].files == [.init(rel: "Copies/One.mp3", bytes: 1234), .init(rel: "House/01 One.mp3", bytes: 1234)])
         // The music CD's name is never taken by a drive.
@@ -222,9 +222,18 @@ import DeckieTestSupport
     #endif
 
     @Test func aPathBelowAVolumesTop() {
-        #expect(SourceIdentity.inside("/Volumes/NO NAME", below: "/Volumes/NO NAME", separator: "/") == "")
-        #expect(SourceIdentity.inside("/Volumes/NO NAME/Sets/Music/", below: "/Volumes/NO NAME", separator: "/") == "Sets/Music")
+        #expect(SourceIdentity.inside("/Volumes/USB", below: "/Volumes/USB", separator: "/") == "")
+        #expect(SourceIdentity.inside("/Volumes/USB/Sets/Music/", below: "/Volumes/USB", separator: "/") == "Sets/Music")
         #expect(SourceIdentity.inside("E:\\Sets\\Music", below: "E:\\", separator: "\\") == "Sets/Music")
+        // A drive's top on Windows, written either way and in either case, is that top.
+        #expect(SourceIdentity.inside("e:/Sets/Music", below: "E:\\", separator: "\\") == "Sets/Music")
+        #expect(SourceIdentity.inside("E:\\", below: "E:\\", separator: "\\") == "")
+        #expect(SourceIdentity.inside("E:", below: "E:\\", separator: "\\") == "")
+        #if os(Windows)
+        // Two spellings of one drive's top are one place, and neither becomes a path below the working folder.
+        #expect(SourceNaming.comparablePath(URL(fileURLWithPath: "E:\\")) == SourceNaming.comparablePath(URL(fileURLWithPath: "e:/")))
+        #expect(SourceNaming.comparablePath(URL(fileURLWithPath: "E:\\")) == "e:\\")
+        #endif
         #expect(SourceIdentity.inside("/home/dj/Music", below: "/", separator: "/") == "home/dj/Music")
     }
 }
@@ -239,7 +248,7 @@ struct SticksWithOneNameRunTests {
     @Test func twoSticksNamedNoNameKeepEachOthersSongs() async throws {
         let root = try scratch("ids-run")
         let fm = FileManager.default
-        let mount = root.appendingPathComponent("Volumes/NO NAME"), second = root.appendingPathComponent("Volumes/NO NAME 1")
+        let mount = root.appendingPathComponent("Volumes/USB"), second = root.appendingPathComponent("Volumes/USB 1")
         let shelfA = root.appendingPathComponent("A"), shelfB = root.appendingPathComponent("B")
         try fm.createDirectory(at: shelfA.appendingPathComponent("House"), withIntermediateDirectories: true)
         try fm.createDirectory(at: shelfB, withIntermediateDirectories: true)
@@ -271,7 +280,7 @@ struct SticksWithOneNameRunTests {
         let analyser = try Builder.makeAnalyser(jobs: 1)
         let s = DeskSession(home: home)
         func add(_ path: URL) async throws -> RunReport {
-            let request = s.addRequest(path, name: "NO NAME", identify: identify)
+            let request = s.addRequest(path, name: "USB", identify: identify)
             let info = try s.crateForRun(request)
             let run = DeskRun(home: home, crateId: info.id, request: request, jobs: 1, device: "Mac15,6", analyser: analyser,
                               signer: nil, printer: DeskRun.portablePrint)
@@ -290,7 +299,7 @@ struct SticksWithOneNameRunTests {
         // 1. Stick A alone.
         try plug(shelfA, A, at: mount)
         #expect(try await add(mount).wentIn == 2)
-        #expect(bySource() == ["NO NAME": 2] && s.current?.sourceIds["NO NAME"] == A)
+        #expect(bySource() == ["USB": 2] && s.current?.sourceIds["USB"] == A)
         // As if recorded before identities were kept: the next read has only the songs to go by.
         var info = try #require(s.current)
         info.sourceIds = [:]
@@ -301,28 +310,28 @@ struct SticksWithOneNameRunTests {
         // 2. Stick B alone, at the same path: a new source; A's songs stay.
         try plug(shelfB, B, at: mount)
         #expect(try await add(mount).wentIn == 1)
-        #expect(bySource() == ["NO NAME": 2, "NO NAME 2": 1] && s.crate?.tracks.count == 3)
-        #expect(s.current?.sourceIds["NO NAME 2"] == B && s.current?.sourceIds["NO NAME"] == nil)
+        #expect(bySource() == ["USB": 2, "USB 2": 1] && s.crate?.tracks.count == 3)
+        #expect(s.current?.sourceIds["USB 2"] == B && s.current?.sourceIds["USB"] == nil)
         try unplug(mount, to: shelfB)
 
         // 3. Stick A alone again, at that path: found by its songs, and its identity learned.
         try plug(shelfA, A, at: mount)
         _ = try await add(mount)
-        #expect(bySource() == ["NO NAME": 2, "NO NAME 2": 1] && s.current?.sourceIds["NO NAME"] == A)
+        #expect(bySource() == ["USB": 2, "USB 2": 1] && s.current?.sourceIds["USB"] == A)
         try unplug(mount, to: shelfA)
 
         // 4. Both in: B where A was, A at the second path. Each is read into its own source.
         try plug(shelfB, B, at: mount)
         try plug(shelfA, A, at: second)
-        #expect(s.addRequest(second, name: "NO NAME", identify: identify).source == "NO NAME")
-        #expect(s.addRequest(mount, name: "NO NAME", identify: identify).source == "NO NAME 2")
+        #expect(s.addRequest(second, name: "USB", identify: identify).source == "USB")
+        #expect(s.addRequest(mount, name: "USB", identify: identify).source == "USB 2")
         _ = try await add(second)
-        #expect(bySource() == ["NO NAME": 2, "NO NAME 2": 1] && s.crate?.tracks.count == 3)
+        #expect(bySource() == ["USB": 2, "USB 2": 1] && s.crate?.tracks.count == 3)
         #expect(s.crate?.tracks.allSatisfy { $0.ident.otherPlaces.isEmpty } == true)
-        #expect(s.current?.roots["NO NAME"]?.standardizedFileURL.path == second.standardizedFileURL.path)
+        #expect(s.current?.roots["USB"]?.standardizedFileURL.path == second.standardizedFileURL.path)
 
         // A run asked for on A does not carry on with B at A's path.
-        var asked = s.addRequest(second, name: "NO NAME", identify: identify)
+        var asked = s.addRequest(second, name: "USB", identify: identify)
         asked.folder = mount.path
         #expect(!DeskRun.canCarryOn(asked, home: home, identify: identify))
     }
