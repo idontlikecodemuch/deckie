@@ -166,7 +166,7 @@ def main(argv):
     for pt in POINTS:
         for scale in (1, 2):
             px = pt * scale
-            name = f"icon_{pt}x{pt}{'@2x' if scale == 2 else ''}.png"
+            name = f"icon_{pt}x{pt}{'-2x' if scale == 2 else ''}.png"
             if px not in made:
                 made[px] = picture(px)
             write_png(os.path.join(OUT, name), made[px])

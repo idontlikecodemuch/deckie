@@ -265,7 +265,12 @@ stage_package() {
     # The volume's icon is Desk's own: .VolumeIcon.icns at the top of the volume, made from the icon set's pictures,
     # and the volume's custom-icon flag. hdiutil does not carry the flag over from a folder, so the image is made
     # writable first, the flag set on it mounted, then the image compressed.
-    cp "$desk/Desk/Assets.xcassets/AppIcon.appiconset/"icon_*.png "$iconset/"
+    # iconutil wants the 2x pictures named "@2x"; the icon set names them "-2x", because a file name with "@" in it
+    # reads as an email address to tools/check-private.sh.
+    local p
+    for p in "$desk/Desk/Assets.xcassets/AppIcon.appiconset/"icon_*.png; do
+        cp "$p" "$iconset/$(basename "$p" | sed 's/-2x\.png$/@2x.png/')"
+    done
     iconutil -c icns -o "$root/.VolumeIcon.icns" "$iconset" || die "iconutil could not make the volume icon"
     fresh "$iconset"
     hdiutil create -quiet -volname "$app_name" -srcfolder "$root" -fs HFS+ -format UDRW -ov "$rw" || die "hdiutil could not make the disk image"
