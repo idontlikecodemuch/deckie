@@ -113,12 +113,13 @@ on another Mac. Today Desk is signed ad hoc (it opens only on the Mac that built
 - *Why:* without it a DJ cannot open Desk at all (`desk.md`, section 5).
 - *Depends on:* a Developer ID certificate on the App Hold Media team; the models and runtime bundled, not read from
   the developer's checkout (Now-9).
-- *State:* on branch `pc/mac-release`: `desk-app/tools/release-mac.sh` builds, signs with the hardened runtime,
-  verifies, makes the disk image and (only when named) notarises and staples; one entitlement, the microphone
-  (`desk-app/README.md`, "Releasing Desk for Mac"). Proven Nov 25, 2026 with a trial signature (the team's
-  development certificate): the signature verifies, songs are read end to end under the hardened runtime, the disk
-  image mounts. Waiting on the owner: the Developer ID certificate and the notary profile, then one command. Not
-  proven: notarisation, Gatekeeper, a second Mac. The tester's page is `mac-first-test.md`. *Size:* medium.
+- *State:* merged to `main` (`desk-app/tools/release-mac.sh`; `desk-app/README.md`, "Releasing Desk for Mac"): it
+  builds, signs with the hardened runtime, verifies and makes the disk image; one entitlement, the microphone. The
+  Developer ID signature is proven, Nov 25, 2026 (Gatekeeper: unnotarised, as expected). Notarisation goes through
+  Xcode's signed-in account (decided Nov 25, 2026; no app-specific password or API key): the `notarise` stage, on
+  branch `pc/mac-release-xcode`, its local export proven, the upload not yet run. Xcode notarises the app only, so
+  the disk image is signed, not notarised; the zip of the stapled app is the fallback. Not proven: Apple's answer,
+  Gatekeeper's yes, a second Mac. The tester's page is `mac-first-test.md`. *Size:* medium.
 
 **Now-7. An app icon and a credits screen for Desk.** Desk for Mac had no icon set; neither Desk shows the credits that
 Booth now shows (`CreditsView.swift`), which D15 and the licences ask for.

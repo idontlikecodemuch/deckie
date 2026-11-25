@@ -46,11 +46,16 @@ opened" or "is damaged", say that word for word: it is the most useful thing thi
 
 ## For whoever hands this to a tester
 
-- Hand out only a disk image that went through the notarise stage of `desk-app/tools/release-mac.sh`: that stage
-  ends with Gatekeeper accepting the image and the app. A disk image from the default run (no notarisation) opens
-  only after the tester overrides Gatekeeper, and should not be handed out.
-- Proven on the build Mac, Nov 25, 2026, with a trial signature (the team's development certificate, not Developer
-  ID): the signature with the hardened runtime and its entitlement verifies, the app reads songs end to end under
-  the hardened runtime, the disk image mounts and the app inside verifies. Not proven until the Developer ID
-  certificate exists: notarisation, stapling, Gatekeeper's yes, and opening on a second Mac. The microphone question
-  under the release signature needs a person at the Mac.
+- Hand out only what the notarise stage of `desk-app/tools/release-mac.sh` made: it ends with the notarised,
+  stapled app checked and Gatekeeper accepting it. A disk image from the default run (no notarisation) opens only
+  after the tester overrides Gatekeeper, and should not be handed out.
+- Notarisation goes through Xcode's signed-in account (decided Nov 25, 2026), which notarises the app only. The disk
+  image is signed with Developer ID but not itself notarised; the app inside it is the notarised part. On the build
+  Mac, Gatekeeper rejects a copy of such an image marked as downloaded ("Unnotarized Developer ID"). Whether a
+  tester's Mac then warns before opening the image is not known until it is tried on a second Mac. If it does, hand
+  out `Deckie Desk.zip` instead: double-click it, then drag Deckie Desk to Applications.
+- Proven on the build Mac, Nov 25, 2026: the Developer ID signature with the hardened runtime and its one
+  entitlement; the app reading songs end to end under the hardened runtime (with a trial signature); the disk image
+  mounting with the app inside verifying; Xcode's Developer ID re-sign keeping the runtime and the entitlement. Not
+  proven: Apple's answer, Gatekeeper's yes, opening on a second Mac, and the microphone question under the release
+  signature, which needs a person at the Mac.
