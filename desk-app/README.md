@@ -86,8 +86,9 @@ the file to hand out is `desk-app/build/release/Deckie Desk.dmg`. Testers get `d
 - *verify*: `codesign --verify --deep --strict`, the signature's flags and entitlements, each piece of code checked
   for the runtime flag and the app's team (what library validation asks), and `spctl -a -vv`, which rejects the app
   until it is notarised; reported, not a failure.
-- *package*: `Deckie Desk.dmg`, volume name "Deckie Desk", holding the app and an alias to Applications, signed with
-  the same identity, then mounted read-only to check that the app inside verifies.
+- *package*: `Deckie Desk.dmg`, volume name "Deckie Desk", holding the app and an alias to Applications, with Desk's
+  icon as the volume's icon (made writable to set the volume's custom-icon flag with `SetFile`, then compressed),
+  signed with the same identity, then mounted read-only to check that the app inside verifies.
 - *notarise*: the app zipped with `ditto -c -k --keepParent`, sent with `notarytool submit --wait`, stapled; the
   disk image made again from the stapled app, signed, sent, stapled; then `spctl -a -vv -t open --context
   context:primary-signature` on the image and `spctl -a -vv` on the app. On a refusal it prints the service's log.
@@ -128,6 +129,28 @@ these. So the Mac shows a crate file as one file of the kind "Deckie crate file"
 document type, so a double-click does not open Desk; a crate file comes in through File > Import crate file. What
 Desk keeps (`~/Library/Application Support/Deckie Desk`) does not depend on the bundle id, so a Desk with the new id
 finds every crate made before. Desk keeps no settings under its bundle id.
+
+## The icon
+
+Desk for Mac has the same picture as Desk for Windows: the orange record on the dark ground, with no word on it
+(decided Nov 25, 2026; the iPad app's icon is the same record with "Booth" across it). The pictures are in
+`Desk/Assets.xcassets/AppIcon.appiconset` (16, 32, 128, 256 and 512 points, each at 1x and 2x), and `project.yml`
+names the set with `ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon`. The build turns them into `Assets.car` and
+`AppIcon.icns` in `Contents/Resources`, and the app's Info.plist says where they are (`CFBundleIconName` and
+`CFBundleIconFile`, both `AppIcon`).
+
+`tools/draw_mac_icon.py` draws them, with Python's standard library only:
+
+    python3 desk-app/tools/draw_mac_icon.py
+
+It draws the record at each size from the site's vector icon (`site/icon.svg`), using the drawing code of
+`deck-app/tools/draw_icon.py` (the iPad's icon and the plain picture the Windows icon is made from), so the colours
+and rings are the same as theirs. It puts the record in the shape Apple gives every Mac app icon: a square with
+rounded corners, 824 of the 1024-wide canvas, with clear space around it and a soft shadow underneath. At 128 pixels
+and below, the edges of the shape are put on whole pixels so the small sizes stay sharp. Run it again after a change
+to `site/icon.svg` and commit the pictures it writes. The same input always gives the same files.
+
+The release script puts the same icon on the disk image's volume (`.VolumeIcon.icns`, made from these pictures).
 
 ## Words and design values (D36)
 

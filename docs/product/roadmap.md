@@ -120,11 +120,13 @@ on another Mac. Today Desk is signed ad hoc (it opens only on the Mac that built
   image mounts. Waiting on the owner: the Developer ID certificate and the notary profile, then one command. Not
   proven: notarisation, Gatekeeper, a second Mac. The tester's page is `mac-first-test.md`. *Size:* medium.
 
-**Now-7. An app icon and a credits screen for Desk.** Desk for Mac has no icon set; neither Desk shows the credits that
+**Now-7. An app icon and a credits screen for Desk.** Desk for Mac had no icon set; neither Desk shows the credits that
 Booth now shows (`CreditsView.swift`), which D15 and the licences ask for.
 - *Why:* the credits are a licence duty for the models and libraries shipped (D15, `DEPENDENCIES.md`).
 - *Depends on:* `core/dependencies.json` (the source the screens read, note on D13).
-- *State:* decided, not started. *Size:* small.
+- *State:* the icon is done on branch `pc/mac-desk-icon` (Nov 25, 2026): Desk for Mac uses the same word-free record
+  as Desk for Windows, in Apple's Mac icon shape, drawn by `desk-app/tools/draw_mac_icon.py`, and the disk image
+  carries it as its volume icon (`desk-app/README.md`, "The icon"). The credits screen is not started. *Size:* small.
 
 **Now-8. The learned key reader bundled.** Its two files (the model and its credit list) are on release `models-1`
 (D38). The Windows zip requires them (`pc-package.yml`, `KEY_MODEL: required` since Nov 21, 2026: a package run

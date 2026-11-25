@@ -22,6 +22,8 @@ targets:
     platform: macOS
     sources:
       - path: Desk/Sources
+      # The app icon (desk-app/tools/draw_mac_icon.py makes its pictures).
+      - path: Desk/Assets.xcassets
       # The quick start's film and poster (D46), from the pages' folder, so both windows ship the same film; a folder
       # reference, so they land in Contents/Resources/quick-start/.
       - path: ../desk-web/quick-start
@@ -86,6 +88,7 @@ targets:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: io.deckie.desk
         PRODUCT_NAME: Deckie Desk
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         INFOPLIST_KEY_NSHumanReadableCopyright: "App Hold Media LLC"
     postBuildScripts:
       - name: Embed the model runtime and the models
