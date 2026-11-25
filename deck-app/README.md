@@ -385,6 +385,13 @@ nothing in the developer account was made or changed. The app is 3.9 MB (2.2 MB 
 `Demo.deckie` (unchanged from the checkout), `PrivacyInfo.xcprivacy`, the microphone line, a launch screen, the
 1024-point icon (no alpha channel) in the asset catalogue, and no `deck` URL scheme. DeckTests passed first (41 tests).
 
+**Build 4, archived Nov 24, 2026** (`pc/ipad-icon`, at 96ee9da), the same way and with the same commands: nothing in
+the developer account was made or changed. Version 0.1.0, build 4; the app is 3.4 MB, arm64 only, with `Demo.deckie`,
+`PrivacyInfo.xcprivacy` and no `deck` URL scheme. Its icons: `AppIcon60x60@2x.png` (120 pixels) and
+`AppIcon76x76@2x~ipad.png` (152 pixels) loose in the app, and the 1024-pixel rendition in `Assets.car` (opaque, sRGB,
+by `xcrun assetutil --info`); the two loose ones, converted back to ordinary PNGs, are square, fully opaque and the
+dark ground (22,15,43) in all four corners. DeckTests passed first (41 tests in 3 suites).
+
 ```
 cd deck-app && xcodegen generate
 nice -n 19 xcodebuild -project Deck.xcodeproj -scheme Deck -configuration Release -destination 'generic/platform=iOS' -archivePath build/Deck.xcarchive -derivedDataPath build/dd-archive -jobs 2 archive

@@ -32,8 +32,9 @@ alpha channel), signed with the development certificate already on the Mac. The 
 the App Store Connect app record were made by hand on Nov 24, 2026. deckie.io/demo/ and deckie.io/privacy/ are
 published and answer 200 (Nov 24, 2026).
 
-The Release archive of build 4 was made and checked on Nov 24, 2026 (`pc/ipad-icon`), the same way, with nothing
-changed in the developer account.
+The Release archive of build 4 was made and checked on Nov 24, 2026 (`pc/ipad-icon`: a 3.4 MB app, arm64 only,
+version 0.1.0 build 4, the redrawn icon opaque to every corner in the app and in its asset catalogue), the same way,
+with nothing changed in the developer account.
 
 Still to do: the export and upload of build 4 (`deck-app/README.md`, "TestFlight"), on the owner's word; the contact
 details for the review form.
