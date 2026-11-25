@@ -533,8 +533,9 @@ record, counted by reason and extension, and the files in the crate with damaged
   `docs/architecture/crate-format.md`, "Additions with the crate builder"). The reader is written here (`XMLScanner`,
   `RekordboxCollection`) from the format pyrekordbox documents, so no XML library is needed at run time.
 - **File tags.** A file's own title and artist (ID3v2 2.2 to 2.4 at the front of the file or in a WAV or AIFF chunk,
-  or a FLAC Vorbis comment) name the track when rekordbox does not (source `tag`; else the file name, `filename`).
-  `--bpm-tags` also takes the file's tempo tag (TBPM, or BPM in a Vorbis comment) as the tag tempo where rekordbox gives
+  a FLAC Vorbis comment, or an MP4's `ilst` in an `.m4a`, read since Nov 25, 2026) name the track when rekordbox does
+  not (source `tag`; else the file name, `filename`).
+  `--bpm-tags` also takes the file's tempo tag (TBPM, BPM in a Vorbis comment, or an MP4's `tmpo`) as the tag tempo where rekordbox gives
   none. The tag tempo used is a fact about the file, recorded in `file.tag_bpm`; its source is not kept, as rekordbox's
   tempo is taken whenever there is one, so the tag is rekordbox's exactly when it equals `imported.rekordbox.bpm`.
 

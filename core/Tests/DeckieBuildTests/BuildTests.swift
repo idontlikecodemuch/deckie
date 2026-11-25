@@ -267,6 +267,45 @@ struct BuildTests {
         #expect(second.analysed == 0 && second.reused == 1 && second.entries == [entry])
     }
 
+    /// An M4A is named from its MP4 tags (`ilst`), not its file name (the hand test of Nov 25, 2026): the run's first
+    /// name for it is its tags', and where this platform decodes AAC (a Mac, Windows) the crate's record has them too.
+    @Test(.enabled(if: Available.ffmpeg != nil, "needs the ffmpeg program to make the M4A"))
+    func anM4AIsNamedFromItsTags() async throws {
+        let music = try await Fixture.shared.music()
+        let analyser = try await Fixture.shared.analyser()
+        let folder = try temporaryFolder("m4a-music")
+        let name = "01 track one.m4a"
+        let p = Process()
+        p.executableURL = URL(fileURLWithPath: Available.ffmpeg!)
+        p.arguments = ["-y", "-hide_banner", "-loglevel", "error", "-i", music.appendingPathComponent(Fixture.firstTrack).path,
+                       "-t", "40", "-codec:a", "aac", "-b:a", "128k", "-metadata", "title=Night Drive",
+                       "-metadata", "artist=Marlo Dune", "-metadata", "album=Late Set", folder.appendingPathComponent(name).path]
+        try p.run()
+        p.waitUntilExit()
+        #expect(p.terminationStatus == 0)
+        let bytes = try Data(contentsOf: folder.appendingPathComponent(name))
+        #expect(FileTags.read(bytes: bytes).title == "Night Drive" && FileTags.read(bytes: bytes).artist == "Marlo Dune")
+
+        final class Names: @unchecked Sendable {
+            let lock = NSLock(); var all: [String] = []
+            func add(_ s: String) { lock.lock(); all.append(s); lock.unlock() }
+        }
+        let names = Names()
+        let out = try temporaryFolder("m4a-build").appendingPathComponent("Tagged.deckie")
+        var options = BuildOptions(folder: folder, output: out, jobs: 1, fresh: true)
+        options.onStep = { _, step in if case let .named(title, artist) = step { names.add("\(title) / \(artist ?? "-")") } }
+        let result = try await CPUTurns.exclusive { try Builder(options: options, analyser: analyser).run() }
+        print(result.summary)
+        #expect(names.all == ["Night Drive / Marlo Dune"])
+        #if os(Linux)
+        // Linux has no AAC decoder yet: the file is counted, not analysed.
+        #expect(result.entries.map(\.reason) == [CrateManifest.ImportLog.Reason.unsupported])
+        #else
+        let t = try #require(try CrateReader.read(from: out).tracks.first)
+        #expect(t.file.rel == name && t.ident.title == "Night Drive" && t.ident.artist == "Marlo Dune" && t.ident.source == "tag")
+        #endif
+    }
+
     /// An output that is not a crate is never overwritten.
     @Test func refusesToOverwriteSomethingElse() throws {
         let out = try temporaryFolder("not-a-crate")

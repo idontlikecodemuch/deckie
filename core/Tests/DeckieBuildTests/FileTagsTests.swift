@@ -82,6 +82,104 @@ import Testing
     }
 }
 
+/// MP4 tags (`moov/udta/meta/ilst`) built box by box, as an `.m4a` carries them (bug of Nov 25, 2026: M4A songs were
+/// named from their file names though their tags named them).
+@Suite struct MP4TagsTests {
+    static func box(_ type: String, _ body: [UInt8]) -> [UInt8] { FileTagsTests.be32(8 + body.count) + Array(type.utf8) + body }
+    static func box(_ type: [UInt8], _ body: [UInt8]) -> [UInt8] { FileTagsTests.be32(8 + body.count) + type + body }
+    /// A `data` box: version 0, the type in three bytes, four bytes of locale, the value.
+    static func data(_ kind: UInt8, _ value: [UInt8]) -> [UInt8] { box("data", [0, 0, 0, kind, 0, 0, 0, 0] + value) }
+    static func text(_ s: String) -> [UInt8] { data(1, Array(s.utf8)) }
+    static func item(_ name: String, _ body: [UInt8]) -> [UInt8] {
+        // The copyright sign is one byte (0xA9) in an MP4 box type.
+        let type: [UInt8] = name.unicodeScalars.map { UInt8($0.value) }
+        return box(type, body)
+    }
+    static func freeForm(mean: String = "com.apple.iTunes", _ name: String, _ value: String) -> [UInt8] {
+        box("----", box("mean", [0, 0, 0, 0] + Array(mean.utf8)) + box("name", [0, 0, 0, 0] + Array(name.utf8)) + text(value))
+    }
+    /// A minimal MP4: `ftyp`, then a `moov` holding `udta/meta/ilst` with the items, then some stand-in audio.
+    static func m4a(_ items: [[UInt8]]) -> [UInt8] {
+        let ilst = box("ilst", items.flatMap { $0 })
+        let meta = box("meta", [0, 0, 0, 0] + ilst)
+        let moov = box("moov", box("udta", meta))
+        return box("ftyp", Array("M4A ".utf8) + [0, 0, 2, 0] + Array("M4A mp42isom".utf8)) + moov
+            + box("mdat", [UInt8](repeating: 0x21, count: 64))
+    }
+    static func tags(_ bytes: [UInt8], _ name: String = "song.m4a") throws -> FileTags {
+        // A name of its own: the tests run at once, in one folder.
+        let fromFile = FileTags.read(try FileTagsTests.write(bytes, UUID().uuidString + "-" + name))
+        // The same answer from bytes in memory as from the file.
+        #expect(FileTags.read(bytes: Data(bytes)) == fromFile)
+        return fromFile
+    }
+
+    @Test func titleArtistAlbumTrackTempoKeyAndComment() throws {
+        let file = Self.m4a([
+            Self.item("\u{A9}nam", Self.text("  Night Drive \n")), Self.item("\u{A9}ART", Self.text("Marlo Dune")),
+            Self.item("\u{A9}alb", Self.text("Late Set")), Self.item("aART", Self.text("Various Artists")),
+            Self.item("trkn", Self.data(0, [0, 0, 0, 7, 0, 12, 0, 0])), Self.item("tmpo", Self.data(21, [0, 124])),
+            Self.freeForm("initialkey", "8A"), Self.item("\u{A9}cmt", Self.text("8A - Energy 6")),
+        ])
+        #expect(try Self.tags(file) == FileTags(bpm: 124, title: "Night Drive", artist: "Marlo Dune", album: "Late Set",
+                                               trackNumber: 7, key: "8A", comment: "8A - Energy 6"))
+        // The same bytes under the other names an MP4 goes by.
+        for name in ["song.mp4", "book.m4b", "SONG.M4A"] { #expect(try Self.tags(file, name).title == "Night Drive") }
+    }
+
+    @Test func utf16TextAndTheOtherKeySpellings() throws {
+        let utf16 = "Café Noir".utf16.flatMap { [UInt8($0 >> 8), UInt8($0 & 0xFF)] }
+        let file = Self.m4a([Self.item("\u{A9}nam", Self.data(2, utf16)), Self.freeForm("KEY", "Am")])
+        #expect(try Self.tags(file) == FileTags(title: "Café Noir", key: "Am"))
+        #expect(try Self.tags(Self.m4a([Self.freeForm("Initial Key", "11B")])).key == "11B")
+        // Another program's name space is not the key a DJ program wrote for iTunes.
+        #expect(try Self.tags(Self.m4a([Self.freeForm(mean: "com.serato.dj", "initialkey", "5A")])).key == nil)
+        // A tempo as one, two, four or eight bytes; zero, or a length no number has, is none.
+        #expect(try Self.tags(Self.m4a([Self.item("tmpo", Self.data(21, [0, 0, 0, 128]))])).bpm == 128)
+        #expect(try Self.tags(Self.m4a([Self.item("tmpo", Self.data(21, [0, 0]))])).bpm == nil)
+        #expect(try Self.tags(Self.m4a([Self.item("tmpo", Self.data(21, [0, 0, 124]))])).bpm == nil)
+        #expect(try Self.tags(Self.m4a([Self.item("tmpo", Self.data(21, [0xFF, 0x84]))])).bpm == nil)  // -124
+    }
+
+    @Test func whatDoesNotHoldTogetherGivesNothingAndNeverACrash() throws {
+        let artist = Self.item("\u{A9}ART", Self.text("Kaya Venn"))
+        // An item with no `data` box, or an empty or blank one, or text that is not UTF-8: no value, the rest read.
+        #expect(try Self.tags(Self.m4a([Self.item("\u{A9}nam", []), artist])) == FileTags(artist: "Kaya Venn"))
+        #expect(try Self.tags(Self.m4a([Self.item("\u{A9}nam", Self.text("   ")), artist])) == FileTags(artist: "Kaya Venn"))
+        #expect(try Self.tags(Self.m4a([Self.item("\u{A9}nam", Self.data(1, [0xC3, 0x28])), artist])) == FileTags(artist: "Kaya Venn"))
+        // UTF-16 of an odd length.
+        #expect(try Self.tags(Self.m4a([Self.item("\u{A9}nam", Self.data(2, [0, 0x41, 0])), artist])) == FileTags(artist: "Kaya Venn"))
+        // A `data` box shorter than its header, and a track number too short to hold one.
+        #expect(try Self.tags(Self.m4a([Self.item("\u{A9}nam", Self.box("data", [0, 0, 0, 1])), artist])).title == nil)
+        #expect(try Self.tags(Self.m4a([Self.item("trkn", Self.data(0, [0, 0, 0])), artist])).trackNumber == nil)
+
+        // A `data` box whose length runs past its item: nothing read from it, the next item still read.
+        var long = Self.text("Too Long")
+        long.replaceSubrange(0..<4, with: FileTagsTests.be32(200))
+        #expect(try Self.tags(Self.m4a([Self.item("\u{A9}nam", long), artist])) == FileTags(artist: "Kaya Venn"))
+        // An item whose length runs past the list: the list ends there, what came before it stays.
+        var overLong = Self.item("\u{A9}alb", Self.text("Never"))
+        overLong.replaceSubrange(0..<4, with: FileTagsTests.be32(0x7FFF_FFF0))
+        #expect(try Self.tags(Self.m4a([artist, overLong])) == FileTags(artist: "Kaya Venn"))
+        // A 64-bit length as large as can be, at the top level and in the list.
+        let huge: [UInt8] = FileTagsTests.be32(1) + Array("free".utf8) + [0x7F, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF]
+        let plain = Self.m4a([artist]), ftyp = 28  // the length of `m4a`'s ftyp box
+        #expect(try Self.tags(Array(plain.prefix(ftyp)) + huge + Array(plain.dropFirst(ftyp))).isEmpty)
+        #expect(try Self.tags(Self.m4a([artist, huge])) == FileTags(artist: "Kaya Venn"))
+
+        // The file cut short at every length: never a crash, and nothing is made up (only tags that were there).
+        let whole = Self.m4a([Self.item("\u{A9}nam", Self.text("Night Drive")), artist, Self.freeForm("initialkey", "8A")])
+        for n in 0..<whole.count {
+            let tags = FileTags.read(bytes: Data(whole.prefix(n)))
+            #expect(tags.title == nil || tags.title == "Night Drive")
+            #expect(tags.artist == nil || tags.artist == "Kaya Venn")
+            #expect(tags.key == nil || tags.key == "8A")
+        }
+        // An MP4 with no tags at all.
+        #expect(try Self.tags(Self.m4a([])).isEmpty)
+    }
+}
+
 @Suite struct XMLScannerTests {
     func events(_ text: String) throws -> [String] {
         var out: [String] = []
