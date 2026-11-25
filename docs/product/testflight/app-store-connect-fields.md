@@ -4,7 +4,7 @@ Draft, Nov 19, 2026; brought to build 3 on Nov 24, 2026, and to build 4 the same
 the app record and filling TestFlight's test information, with the text to paste. Build 3 was uploaded to TestFlight on
 Nov 24, 2026, the first upload. The build these describe now: Deckie 0.1.0 (4), bundle id `io.deckie.booth`, iPad only,
 iPadOS 17 or later, archived on Nov 24, 2026 from `pc/ipad-icon`; it differs from build 3 only by the icon, redrawn with
-the dark ground to every corner and the word "Booth" beneath the record. Builds 1 and 2 were never uploaded; the app was called Deckie Booth until build 2.
+the dark ground to every corner and the word "Booth" across the record. Builds 1 and 2 were never uploaded; the app was called Deckie Booth until build 2.
 
 **Done on Nov 24, 2026, in the developer account:** the explicit App ID `io.deckie.booth` is registered, and the App
 Store Connect app record for it exists. The fields of section 1 that were typed then (the name, the SKU and the rest)

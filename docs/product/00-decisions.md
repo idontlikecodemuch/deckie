@@ -732,8 +732,9 @@ The owner named the iPad app Deckie (Nov 21, 2026).
   or "the iPad app", where the whole product and the app have to be told apart); research letters, dated notes and
   the film as made keep the name they were written with.
 - **The iPad app's icon carries the word "Booth"** (decided Nov 24, 2026, from build 4), in the brand script
-  (Pacifico, the face "Deckie" is written in on the site), rising from left to right beneath the record, so the icon
-  says which Deckie app it is while the name under it says "Deckie". Desk's icons (the Windows icon, the Desk film)
+  (Pacifico, the face "Deckie" is written in on the site), so the icon says which Deckie app it is while the name
+  under it says "Deckie". The placement was chosen Nov 25, 2026: the word large across the record, flat off-white
+  with no shadow or edge, centred on the icon, rising 10 degrees from left to right. Desk's icons (the Windows icon, the Desk film)
   and the site's icons do not carry the word: they are drawn from the plain picture, `deck-app/tools/icon-base1024.png`
   (`deck-app/tools/draw_icon.py` makes both).
 - **The bundle id is unchanged**: `io.deckie.booth` (D1, D40). It is never shown, and changing it would make a
