@@ -214,7 +214,7 @@ Today the DJ has to know this table. With one run, they do not.
 
 | | Today | Needed |
 |---|---|---|
-| Signing | Everyday builds ad hoc: open only on the Mac that built them. `desk-app/tools/release-mac.sh` signs with Developer ID and the hardened runtime (proven Nov 25, 2026) and notarises the app through Xcode's signed-in account (the local part proven; the upload not yet run) | The upload, then a second Mac |
+| Signing | Everyday builds ad hoc: open only on the Mac that built them. `desk-app/tools/release-mac.sh` signs with Developer ID and the hardened runtime (proven Nov 25, 2026) and notarises the app: the upload through Xcode's signed-in account (worked Nov 25, 2026), the notarised app collected by stapling, which needs no sign-in | Apple's answer, then a second Mac |
 | How a DJ gets it | A disk image, `Deckie Desk.dmg`: drag Desk to Applications (`mac-first-test.md`); the app inside is notarised, the image only signed; `Deckie Desk.zip` as the fallback | Where it is put up. **Open** |
 | Intel Macs | Not supported: the release is built for Apple silicon only | **Open**: support them or say so |
 | Size | Nov 25, 2026: the app 144 MB (144,427,340 bytes: the three models 98 MB of it, ONNX Runtime 29 MB, the program 16 MB), the disk image 107 MB (106,609,485 bytes) | |

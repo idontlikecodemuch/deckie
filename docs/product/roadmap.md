@@ -115,9 +115,10 @@ on another Mac. Today Desk is signed ad hoc (it opens only on the Mac that built
   the developer's checkout (Now-9).
 - *State:* merged to `main` (`desk-app/tools/release-mac.sh`; `desk-app/README.md`, "Releasing Desk for Mac"): it
   builds, signs with the hardened runtime, verifies and makes the disk image; one entitlement, the microphone. The
-  Developer ID signature is proven, Nov 25, 2026 (Gatekeeper: unnotarised, as expected). Notarisation goes through
-  Xcode's signed-in account (decided Nov 25, 2026; no app-specific password or API key): the `notarise` stage, on
-  branch `pc/mac-release-xcode`, its local export proven, the upload not yet run. Xcode notarises the app only, so
+  Developer ID signature is proven, Nov 25, 2026 (Gatekeeper: unnotarised, as expected). The upload for notarisation
+  goes through Xcode's signed-in account (decided Nov 25, 2026; no app-specific password or API key) and worked on
+  Nov 25, 2026; collecting the notarised app staples Apple's ticket to the app Xcode sent and needs no sign-in (on
+  branch `pc/mac-release-staple`, tried with stand-ins, not yet against a real ticket). Xcode notarises the app only, so
   the disk image is signed, not notarised; the zip of the stapled app is the fallback. Not proven: Apple's answer,
   Gatekeeper's yes, a second Mac. The tester's page is `mac-first-test.md`. *Size:* medium.
 

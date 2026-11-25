@@ -49,7 +49,8 @@ opened" or "is damaged", say that word for word: it is the most useful thing thi
 - Hand out only what the notarise stage of `desk-app/tools/release-mac.sh` made: it ends with the notarised,
   stapled app checked and Gatekeeper accepting it. A disk image from the default run (no notarisation) opens only
   after the tester overrides Gatekeeper, and should not be handed out.
-- Notarisation goes through Xcode's signed-in account (decided Nov 25, 2026), which notarises the app only. The disk
+- The upload for notarisation goes through Xcode's signed-in account (decided Nov 25, 2026), which notarises the app
+  only; the notarised app is then collected by stapling, with no sign-in needed. The disk
   image is signed with Developer ID but not itself notarised; the app inside it is the notarised part. On the build
   Mac, Gatekeeper rejects a copy of such an image marked as downloaded ("Unnotarized Developer ID"). Whether a
   tester's Mac then warns before opening the image is not known until it is tried on a second Mac. If it does, hand

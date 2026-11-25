@@ -51,15 +51,18 @@ ad hoc. Decided Nov 25, 2026 (roadmap Now-6).
 **What the owner does once**, on the Mac that makes releases: the "Developer ID Application" certificate (Xcode >
 Settings > Accounts, the App Hold Media team, Manage Certificates, +), made Nov 25, 2026 and in the login keychain.
 The script finds it there by name each time, so no team id or certificate is written in this repository. After that,
-the only thing to keep is the team's account signed in at Xcode > Settings > Accounts, with the login keychain
-unlocked: notarisation goes through that account (decided Nov 25, 2026: no app-specific password, no API key, no
-notarytool profile).
+the upload goes through the team's account signed in at Xcode > Settings > Accounts, with the login keychain unlocked
+(decided Nov 25, 2026: no app-specific password, no API key, no notarytool profile). Collecting the notarised app
+afterwards needs no sign-in: it staples Apple's ticket to the app Xcode sent.
 
 **Then, from the main checkout**, with `Vendor/` filled as for the everyday build:
 
     bash desk-app/tools/release-mac.sh                  # build, sign, verify, package (nothing sent to Apple)
     bash desk-app/tools/release-mac.sh notarise         # sends the app to Apple through Xcode, waits, finishes
     bash desk-app/tools/release-mac.sh notarise-finish  # only the wait and the rest, when the upload already went
+
+Run `notarise` once per build. If the wait stops (the time limit, a closed terminal), run `notarise-finish`, never
+`notarise` again for the same upload.
 
 The first command needs no network but for the two pinned downloads below and Apple's timestamp server. `notarise`
 is the only stage that sends anything to Apple, and it runs only when named. It ends with the notarised, stapled app
@@ -97,17 +100,26 @@ app inside it is the notarised part. Testers get `docs/product/mac-first-test.md
   Application", and the team read from the signed app's signature), then runs `xcodebuild -exportArchive ...
   -allowProvisioningUpdates`, which re-signs the app with the certificate and sends it to Apple's notary service
   under the account signed in to Xcode. Then it does what notarise-finish does.
-- *notarise-finish*: asks `xcodebuild -exportNotarizedApp` every minute (`DECKIE_NOTARY_INTERVAL`, seconds) for up
-  to an hour (`DECKIE_NOTARY_MINUTES`) until Xcode hands back the notarised, stapled app; it stops early with Xcode's
-  words if Apple refused the app or the account cannot be used. It runs only on an archive the notarise stage sent.
-  It checks the app strictly: Developer ID, the runtime flag and a secure timestamp on the app and on every piece of
-  code in it, one team throughout, the entitlements exactly the microphone and nothing added, the ONNX Runtime
-  library still Deckie's own (the scan, and the same code as the pinned library once the signatures are taken off),
-  `stapler validate`, and `spctl` accepting it as Notarized Developer ID. Then it puts it in place of the app, makes
-  and signs the disk image from it (the package stage), makes the zip (`ditto -c -k --keepParent`), and marks a
-  copy of the image as a browser marks a download and says what Gatekeeper makes of it and of the app inside.
-- If Xcode cannot use the account (not signed in, keychain locked), these stages end saying so: unlock the login
-  keychain and sign in at Xcode > Settings > Accounts.
+- *notarise-finish*: runs only on an archive the notarise stage sent. Xcode keeps the exact app it uploaded in the
+  archive (`Submissions/<id>/Deckie Desk.app`); the stage copies it into `build/release/staple/` and tries
+  `xcrun stapler staple` on the copy every 5 minutes (`DECKIE_NOTARY_INTERVAL`, seconds) for up to 4 hours
+  (`DECKIE_NOTARY_MINUTES`). Until Apple's ticket exists the stapler answers "Record not found" (Error 65), taken as
+  not ready yet. Stapling asks Apple's public ticket service and needs no Xcode account, so a sign-in that drops
+  during the wait does not stop it (it dropped twice during the first real wait, Nov 25, 2026). With several
+  uploads in one archive, `DECKIE_NOTARY_SUBMISSION` names the one meant. Stapling cannot tell an app Apple is still
+  checking from one it refused, so at the time limit the stage asks `xcodebuild -exportNotarizedApp` once and
+  prints its words (never failing on an account error), and says where to see the answer: double-click the archive
+  to open it in Xcode's Organizer. `DECKIE_NOTARY_VIA=xcode` collects through `-exportNotarizedApp` instead, which
+  needs the account signed in for the whole wait.
+  Then it checks the app strictly: Developer ID, the runtime flag and a secure timestamp on the app and on every
+  piece of code in it, one team throughout, the entitlements exactly the microphone and nothing added, the ONNX
+  Runtime library still Deckie's own (the scan, and the same code as the pinned library once the signatures are
+  taken off), `stapler validate`, and `spctl` accepting it as Notarized Developer ID. Then it puts it in place of the
+  app, makes and signs the disk image from it (the package stage), makes the zip (`ditto -c -k --keepParent`), and
+  marks a copy of the image as a browser marks a download and says what Gatekeeper makes of it and of the app
+  inside.
+- If Xcode cannot use the account for the upload (not signed in, keychain locked), the stage ends saying so: unlock
+  the login keychain and sign in at Xcode > Settings > Accounts.
 
 The script writes only in `desk-app/build/release/` (git-ignored), and refuses any other path, except the generated
 `Desk.xcodeproj` and the key reader's two files in `Vendor/models`, which the everyday build makes too. Every run of
@@ -140,7 +152,13 @@ ID", as expected before notarisation); and notarise-check: Xcode exported the ha
 Developer ID re-sign, keeping the runtime flag and the timestamp on the app and the library, the one entitlement
 with nothing added (no `get-task-allow`), one team, and the ONNX Runtime library's code unchanged. A copy of the
 signed image marked as downloaded was rejected by `spctl -t open` as "Unnotarized Developer ID", and so was the app
-inside before notarisation. **Not proven:** the upload and Apple's answer, the stapled app and Gatekeeper's yes;
+inside before notarisation. **The first real upload, Nov 25, 2026:** `notarise` sent the app ("Uploaded Deckie Desk", `** EXPORT
+SUCCEEDED **`); while Apple worked, `-exportNotarizedApp` answered that the archive "is processing", and twice
+Xcode's account stopped being usable by `xcodebuild` mid-wait though Xcode's window still showed it signed in, which
+is why collecting now staples instead. The stapling path was tried with stand-ins for `xcrun`, `xcodebuild` and
+`spctl` (no ticket yet, a ticket on the third try, the time limit with Xcode processing or without an account, one or
+several uploads), not yet against a real ticket. **Not proven:** Apple's answer, the stapled app and Gatekeeper's
+yes;
 whether a tester's Mac opens a disk image that is signed but not notarised without a warning (only a second Mac can
 show it; the zip is the fallback); the microphone question under the release signature, which needs a person.
 

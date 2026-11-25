@@ -26,8 +26,10 @@
 #   DECKIE_SIGN_IDENTITY    the signing identity, by name or hash, as codesign takes it. By default the keychain's one
 #                           "Developer ID Application" identity, found by name when the script runs; none is written
 #                           in this repository.
-#   DECKIE_NOTARY_INTERVAL, DECKIE_NOTARY_MINUTES   how often (seconds, default 60) and how long (minutes, default 60)
-#                           notarise-finish asks Xcode for the notarised app
+#   DECKIE_NOTARY_INTERVAL, DECKIE_NOTARY_MINUTES   how often (seconds, default 300) and how long (minutes, default
+#                           240) notarise-finish tries for the notarised app
+#   DECKIE_NOTARY_VIA       staple (default: needs no Xcode account) or xcode (xcodebuild -exportNotarizedApp)
+#   DECKIE_NOTARY_SUBMISSION   which upload, by its folder in the archive's Submissions, when there are several
 #   DECKIE_SIGN_TIMESTAMP   1 (default) asks Apple's timestamp server for a secure timestamp, which notarisation
 #                           requires; 0 leaves it out, for trial signatures when the server cannot be reached
 #   DECKIE_ONNXRUNTIME_ARCHIVE   where to get Deckie's own ONNX Runtime archive for macOS, any address curl takes
@@ -313,11 +315,14 @@ stage_package() {
 #                    what Xcode's manual Developer ID re-sign does; nothing is sent to Apple
 #   notarise         the archive, then `xcodebuild -exportArchive` with method developer-id and destination upload,
 #                    which sends the app to Apple's notary service; then what notarise-finish does
-#   notarise-finish  tries `xcodebuild -exportNotarizedApp` every DECKIE_NOTARY_INTERVAL seconds (default 60) for at
-#                    most DECKIE_NOTARY_MINUTES minutes (default 60) until Apple has notarised the app and Xcode hands
-#                    it back stapled; checks it strictly; puts it in place of the app; makes and signs the disk image
-#                    from it (Xcode notarises the app only, so the image is signed, not notarised); makes the zip; and
-#                    checks a copy of the image marked as downloaded, as a tester's Mac would see it
+#   notarise-finish  copies the app Xcode sent (the archive's Submissions/<id>/Deckie Desk.app) and tries
+#                    `xcrun stapler staple` on the copy every DECKIE_NOTARY_INTERVAL seconds (default 300) for at most
+#                    DECKIE_NOTARY_MINUTES minutes (default 240) until Apple's ticket is there; stapling needs no Xcode
+#                    account. At the time limit it asks `xcodebuild -exportNotarizedApp` once, for its words only.
+#                    DECKIE_NOTARY_VIA=xcode collects with -exportNotarizedApp instead (the account signed in all
+#                    along). Then it checks the app strictly; puts it in place of the app; makes and signs the disk
+#                    image from it (Xcode notarises the app only, so the image is signed, not notarised); makes the
+#                    zip; and checks a copy of the image marked as downloaded, as a tester's Mac would see it
 #
 # The archive is made by hand around the app already built, signed and verified here, not by `xcodebuild archive`: a
 # real archive builds the app again (ad hoc, as project.yml signs everyday builds) and its app would have to be
@@ -327,8 +332,9 @@ stage_package() {
 
 archive="$out/$app_name.xcarchive"
 sent_mark="$out/$app_name.xcarchive-sent"   # written once the upload went, so notarise-finish never asks about an archive that was not sent
-notary_interval="${DECKIE_NOTARY_INTERVAL:-60}"
-notary_minutes="${DECKIE_NOTARY_MINUTES:-60}"
+notary_interval="${DECKIE_NOTARY_INTERVAL:-300}"
+notary_minutes="${DECKIE_NOTARY_MINUTES:-240}"
+notary_via="${DECKIE_NOTARY_VIA:-staple}"
 account_help="Xcode could not use the account. Unlock the login keychain (Keychain Access, or log in again), and make
   sure the team's account is signed in at Xcode > Settings > Accounts, then run this stage again."
 
@@ -514,7 +520,106 @@ stage_notarise_finish() {
     step "notarise-finish: waiting for Apple's answer"
     [ -d "$archive" ] && [ -f "$sent_mark" ] ||
         die "no archive sent to Apple in desk-app/build/release; the notarise stage makes it and sends it (notarise-check's archive is never sent)"
-    local dest="$out/notarised" log="$out/notarised.log" got="" tries=0 deadline
+    local got=""
+    case "$notary_via" in
+        staple) collect_by_stapling ;;
+        xcode) collect_via_xcode ;;
+        *) die "DECKIE_NOTARY_VIA is \"$notary_via\"; it can be staple (the default) or xcode" ;;
+    esac
+    check_release_app "$got" "the notarised app" notarised
+
+    # The notarised app takes the place of the one built here, and the disk image is made from it.
+    fresh "$app"; ditto "$got" "$app"
+    stage_package
+    say "the disk image is signed with Developer ID but not itself notarised (Xcode notarises the app only); the app inside is notarised and stapled"
+    local zip="$out/$app_name.zip"
+    fresh "$zip"; ditto -c -k --keepParent "$app" "$zip"
+    say "zip, the fallback hand-out: $zip ($(du -h "$zip" | cut -f1))"
+    downloaded_check
+    say "ready to hand out: $dmg ($(du -h "$dmg" | cut -f1)), or $zip"
+}
+
+# The app Xcode sent, as it keeps it in the archive after the upload: Submissions/<id>/Deckie Desk.app. One upload
+# makes one; with several, DECKIE_NOTARY_SUBMISSION names the one meant (its folder's name).
+submitted_app() {
+    local subs="$archive/Submissions" found n
+    if [ -n "${DECKIE_NOTARY_SUBMISSION:-}" ]; then
+        case "$DECKIE_NOTARY_SUBMISSION" in */*|.*) die "DECKIE_NOTARY_SUBMISSION is a folder name in Submissions, not a path" ;; esac
+        [ -d "$subs/$DECKIE_NOTARY_SUBMISSION/$app_name.app" ] ||
+            die "no $app_name.app in the archive's Submissions/$DECKIE_NOTARY_SUBMISSION"
+        printf '%s\n' "$subs/$DECKIE_NOTARY_SUBMISSION/$app_name.app"; return 0
+    fi
+    found="$(ls -dt "$subs"/*/"$app_name.app" 2>/dev/null || true)"
+    n="$(printf '%s' "$found" | grep -c . || true)"
+    case "$n" in
+        0) die "the archive holds no submitted app (no Submissions/*/$app_name.app in $archive). Xcode keeps the app it
+  sent there; if the upload said \"Uploaded $app_name\", look in the archive, otherwise run the notarise stage again." ;;
+        1) printf '%s\n' "$found" ;;
+        *) die "the archive holds $n submitted apps, newest first:
+$(printf '%s\n' "$found" | sed "s|^$subs/|  |; s|/$app_name.app\$||")
+  Set DECKIE_NOTARY_SUBMISSION to the one meant (the newest is the last upload) and run notarise-finish again." ;;
+    esac
+}
+
+# The default: staple a copy of the submitted app until Apple's ticket is there. Stapling asks Apple's public ticket
+# service and needs no Xcode account, so a sign-in that drops during the wait (seen twice on Nov 25, 2026) does not
+# matter. It cannot tell "still working" from "refused": both are "Record not found" until a ticket exists.
+collect_by_stapling() {
+    local sub id copy log="$out/staple.log" tries=0 deadline
+    sub="$(submitted_app)"
+    id="$(basename "$(dirname "$sub")")"
+    copy="$out/staple/$id/$app_name.app"
+    if [ ! -d "$copy" ]; then
+        fresh "$out/staple"; mkdir -p "$out/staple/$id"
+        ditto "$sub" "$copy"
+    fi
+    say "the app Xcode sent (submission $id), copied to $copy; stapling it every $notary_interval s for at most $notary_minutes minutes"
+    deadline=$(( $(date +%s) + notary_minutes * 60 ))
+    while :; do
+        tries=$((tries + 1))
+        inside "$log"
+        if xcrun stapler staple "$copy" > "$log" 2>&1; then
+            say "  try $tries: stapled"
+            got="$copy"; break
+        fi
+        if grep -qE 'Record not found|Error 65' "$log"; then
+            say "  try $tries: no ticket yet (Apple is still working, or refused it); trying again in $notary_interval s"
+        else
+            say "  try $tries: stapler said: $(grep -v '^ *$' "$log" | tail -1 | cut -c1-160); trying again in $notary_interval s"
+        fi
+        if [ "$(( $(date +%s) + notary_interval ))" -gt "$deadline" ]; then
+            notarise_time_up "$tries"
+            [ -n "$got" ] && break
+            die "no ticket after $notary_minutes minutes ($tries tries). Stapling cannot tell an app Apple is still
+  checking from one it refused. To see which: double-click $archive to open it in Xcode's Organizer, where the
+  submission shows its state; or read Xcode's words above, if the account answered. If Apple is still working, run
+  the notarise-finish stage again later (DECKIE_NOTARY_MINUTES sets how long it waits); never notarise again for this
+  upload. The stapler's last answer is in $log."
+        fi
+        sleep "$notary_interval"
+    done
+    say "Apple notarised the app; its ticket is stapled to the copy"
+}
+
+# At the time limit, one try of Xcode's own way, for its words: never a failure of its own, whatever the account says.
+notarise_time_up() {
+    local dest="$out/notarised" log="$out/notarised.log"
+    say "time is up; asking Xcode once what Apple says (this needs the account, and is only for its words)"
+    fresh "$dest"
+    if xcodebuild -exportNotarizedApp -archivePath "$archive" -exportPath "$dest" > "$log" 2>&1 && [ -d "$dest/$app_name.app" ]; then
+        say "  Xcode handed back the notarised app, though stapling had not found the ticket yet"
+        got="$dest/$app_name.app"; return 0
+    fi
+    say "  Xcode said:"; grep -iE 'error|processing|invalid|rejected|account|credential' "$log" | tail -4 | cut -c1-200 | sed 's/^/    /' || true
+    if grep -qiE 'keychain|not signed in|no accounts?\b|authenticat|credential' "$log"; then
+        say "  (the account could not be used just now, so Xcode could not say; that is not Apple's answer)"
+    fi
+}
+
+# The second way, when asked for (DECKIE_NOTARY_VIA=xcode): Xcode fetches the notarised app itself. It needs the
+# account signed in for the whole wait.
+collect_via_xcode() {
+    local dest="$out/notarised" log="$out/notarised.log" tries=0 deadline
     deadline=$(( $(date +%s) + notary_minutes * 60 ))
     while :; do
         tries=$((tries + 1))
@@ -526,7 +631,8 @@ stage_notarise_finish() {
         # must not be read as Apple refusing the app (seen Nov 25, 2026, when the account was signed out mid-wait).
         if grep -qiE 'keychain|not signed in|no accounts?\b|authenticat|credential' "$log"; then
             tail -15 "$log"; die "$account_help
-  The upload already went: once the account is back, run the notarise-finish stage, not notarise."
+  The upload already went: once the account is back, run the notarise-finish stage, not notarise. Without
+  DECKIE_NOTARY_VIA=xcode it collects the app by stapling, which needs no account."
         fi
         if grep -qiE 'invalid|rejected|not accepted' "$log"; then
             cat "$log"; die "Apple did not notarise the app; what Xcode said is above (and in $log)"
@@ -539,17 +645,6 @@ stage_notarise_finish() {
         sleep "$notary_interval"
     done
     say "Apple notarised the app; Xcode handed it back stapled"
-    check_release_app "$got" "the notarised app" notarised
-
-    # The notarised app takes the place of the one built here, and the disk image is made from it.
-    fresh "$app"; ditto "$got" "$app"
-    stage_package
-    say "the disk image is signed with Developer ID but not itself notarised (Xcode notarises the app only); the app inside is notarised and stapled"
-    local zip="$out/$app_name.zip"
-    fresh "$zip"; ditto -c -k --keepParent "$app" "$zip"
-    say "zip, the fallback hand-out: $zip ($(du -h "$zip" | cut -f1))"
-    downloaded_check
-    say "ready to hand out: $dmg ($(du -h "$dmg" | cut -f1)), or $zip"
 }
 
 # As far as this Mac can stand in for a tester's: a copy of the image marked as a browser marks a download.
