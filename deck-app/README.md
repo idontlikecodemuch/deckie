@@ -394,7 +394,7 @@ through it in real time, as the microphone would hear it; waits for Deckie's ind
 
 `project.yml` sets `ITSAppUsesNonExemptEncryption = false` (no export-compliance prompt), version 0.1.0, build 4 (raise
 `CFBundleVersion` for every later upload; builds 1 and 2 were never uploaded; build 3 was uploaded to TestFlight on Nov
-24, 2026, the first upload; build 4 is the next upload and differs from it only by the icon). The fields to fill in App
+24, 2026, the first upload; build 4 was uploaded on Nov 25, 2026, and differs from it only by the icon; the next upload is build 5). The fields to fill in App
 Store Connect are in `docs/product/testflight/app-store-connect-fields.md`.
 
 **Build 3, archived Nov 24, 2026** (`pc/testflight-3`, main at d6c3091), signed with what was already on the Mac (the

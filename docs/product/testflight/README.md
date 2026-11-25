@@ -1,7 +1,7 @@
 # TestFlight paperwork: Deckie for iPad, build 4
 
 Drafts for approval, Nov 19, 2026; brought to build 3 on Nov 24, 2026, and to build 4 the same day. Build 3 was
-uploaded to TestFlight on Nov 24, 2026, the first upload; it has had no testers. Build 4 is the next upload and differs
+uploaded to TestFlight on Nov 24, 2026, the first upload; it has had no testers. Build 4 was uploaded on Nov 25, 2026, and differs
 from build 3 only by the icon (below). Each file is the text for one box in App Store Connect or one page for
 testers; copy it in once approved.
 
