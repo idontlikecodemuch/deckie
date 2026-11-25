@@ -403,12 +403,15 @@ nothing in the developer account was made or changed. The app is 3.9 MB (2.2 MB 
 `Demo.deckie` (unchanged from the checkout), `PrivacyInfo.xcprivacy`, the microphone line, a launch screen, the
 1024-point icon (no alpha channel) in the asset catalogue, and no `deck` URL scheme. DeckTests passed first (41 tests).
 
-**Build 4, archived Nov 24, 2026** (`pc/ipad-icon`, at 96ee9da), the same way and with the same commands: nothing in
-the developer account was made or changed. Version 0.1.0, build 4; the app is 3.4 MB, arm64 only, with `Demo.deckie`,
-`PrivacyInfo.xcprivacy` and no `deck` URL scheme. Its icons: the `AppIcon60x60` file at 2x (120 pixels) and
-the `AppIcon76x76` iPad file at 2x (152 pixels) loose in the app, and the 1024-pixel rendition in `Assets.car` (opaque, sRGB,
-by `xcrun assetutil --info`); the two loose ones, converted back to ordinary PNGs, are square, fully opaque and the
-dark ground (22,15,43) in all four corners. DeckTests passed first (41 tests in 3 suites).
+**Build 4, archived Nov 24, 2026** (`pc/ipad-icon`, at 10eaef2, the icon with "Booth"), the same way and with the
+same commands: nothing in the developer account was made or changed. Version 0.1.0, build 4; the app is 3.4 MB, arm64
+only, with `Demo.deckie`, `PrivacyInfo.xcprivacy` and no `deck` URL scheme. Its icons: the `AppIcon60x60` file at 2x
+(120 pixels) and the `AppIcon76x76` iPad file at 2x (152 pixels) loose in the app, and the 1024-pixel rendition in
+`Assets.car` (opaque, sRGB, by `xcrun assetutil --info`); the two loose ones, converted back to ordinary PNGs, are
+square, fully opaque, the dark ground (22,15,43) in all four corners, the record and "Booth" both clear. DeckTests
+passed (41 tests in 3 suites) on this branch with build 4's code and the first redraw; the app's code and tests have
+not changed since, only the icon picture. Two later runs on the simulator stopped short when its sound input
+deadlocked ("AURemoteIO: RPC timeout", "no microphone input available"), with every test that ran passing.
 
 ```
 cd deck-app && xcodegen generate
