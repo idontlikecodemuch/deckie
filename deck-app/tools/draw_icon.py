@@ -4,14 +4,16 @@
     python3 deck-app/tools/draw_icon.py                  both committed pictures, as shipped:
         deck-app/tools/icon-base1024.png                 the plain icon, no word (Desk's Windows icon, the Desk film)
         deck-app/Deck/Assets.xcassets/AppIcon.appiconset/icon1024.png   the iPad app's icon: the plain one + "Booth"
-    python3 deck-app/tools/draw_icon.py --layout b --angle 13 [--font sans] [--size 152] [--out <png>]
+    python3 deck-app/tools/draw_icon.py --layout a --angle 10 [--font sans] [--size 152] [--out <png>]
         one picture: a candidate layout (below), to look at or to ship (with no --out it replaces the iPad's icon)
 
 Layouts ("Booth" is set in the brand's script face, Pacifico, from site/fonts/pacifico.woff2, as the font's own
 outlines; --font sans sets it in the site's plain face, Inter, for comparison only):
     base   the plain icon: site/icon.svg with its ground filling the whole square
-    a      the word large across the record, off-white with a soft dark edge so it reads over the rings and label
-    b      the record moved up and made smaller, the word beneath it on the dark ground, its end over the record's rim
+    a      the word large across the record, flat off-white, its ink centred on the icon (shipped, at 10 degrees)
+    a-outline the same with a 3-unit hairline in the ground's colour round the letters (an alternative, not shipped)
+    a-shadow  the same with a soft dark edge, lower and right of centre (the first sheet's A, 13 degrees)
+    bthe record moved up and made smaller, the word beneath it on the dark ground, its end over the record's rim
     c      the word on a dark sticker strip laid across the lower half of the record, overlapping its edge
 The word always rises from left to right (--angle, in degrees; each layout has its own default). The shipped layout
 and angle are SHIP below.
@@ -47,11 +49,14 @@ FONTS = {"script": os.path.join(REPO, "site", "fonts", "pacifico.woff2"),
 GRID = 16                      # sample points across (and down) an edge pixel of the record
 WORD = "Booth"
 INK = (0xF2, 0xED, 0xF9)       # the site's off-white (--tx), the colour "Deckie" is written in on the site
-SHIP = ("b", 13.0)             # the layout and angle of the iPad app's icon (chosen Nov 24, 2026; see the README)
+SHIP = ("a", 10.0)             # the layout and angle of the iPad app's icon (chosen Nov 25, 2026; see the README)
 # Each layout, in the SVG's 1024 units: where the record sits (scale about its centre, then moved down by dy), the
-# word's size (font size), the point the word's box is centred on, its default angle, and its effects.
+# word's size (font size), the point the word is centred on (its outline's box before the slant, or with ink=True
+# the box of the ink as drawn, after the slant), its default angle, and its effects.
 LAYOUTS = {
-    "a": dict(record=(1.0, 0), font=318, centre=(520, 548), angle=13.0, halo=True),
+    "a": dict(record=(1.0, 0), font=318, centre=(512, 512), angle=10.0, ink=True),
+    "a-outline": dict(record=(1.0, 0), font=318, centre=(512, 512), angle=10.0, ink=True, outline=3),
+    "a-shadow": dict(record=(1.0, 0), font=318, centre=(520, 548), angle=13.0, halo=True),
     "b": dict(record=(0.77, -100), font=246, centre=(534, 796), angle=13.0, halo=True),
     "c": dict(record=(1.0, 0), font=206, centre=(560, 772), angle=12.0, strip=True),
 }
@@ -267,7 +272,31 @@ def blur(mask, radius):
     return out
 
 
-def word_polys(font, size, centre, angle, scale):
+def grow(mask, radius):
+    """The mask grown by `radius` pixels (a round pen: each pixel takes the most of any pixel within the radius)."""
+    size = len(mask)
+    r = int(math.ceil(radius))
+    offs = [(dx, dy) for dy in range(-r, r + 1) for dx in range(-r, r + 1) if dx * dx + dy * dy <= radius * radius]
+    out = [list(line) for line in mask]
+    rows = [y for y, line in enumerate(mask) if any(v > 0 for v in line)]
+    if not rows:
+        return out
+    for y in range(max(0, rows[0] - r), min(size, rows[-1] + r + 1)):
+        for x in range(size):
+            best = 0.0
+            for dx, dy in offs:
+                yy, xx = y + dy, x + dx
+                if 0 <= yy < size and 0 <= xx < size:
+                    v = mask[yy][xx]
+                    if v > best:
+                        best = v
+                        if best >= 1.0:
+                            break
+            out[y][x] = best
+    return out
+
+
+def word_polys(font, size, centre, angle, scale, ink_centre=False):
     """The word's outlines as pixel-space polygons: `size` px font size, its box centred on `centre`, risen by angle."""
     sys.path.insert(0, HERE)
     import woff2_outlines
@@ -286,6 +315,12 @@ def word_polys(font, size, centre, angle, scale):
             X, Y = (x - mx) * k, -(y - my) * k          # font units (y up) to picture units (y down), box-centred
             out.append(((centre[0] + X * cos + Y * sin) * scale, (centre[1] - X * sin + Y * cos) * scale))
         polys.append(out)
+    if ink_centre:   # the box of the ink as drawn (after the slant), centred on `centre`
+        xs = [x for p in polys for x, _ in p]
+        ys = [y for p in polys for _, y in p]
+        dx = centre[0] * scale - (min(xs) + max(xs)) / 2
+        dy = centre[1] * scale - (min(ys) + max(ys)) / 2
+        polys = [[(x + dx, y + dy) for x, y in p] for p in polys]
     return polys
 
 
@@ -372,7 +407,7 @@ def picture(layout, angle, font, size):
     # (or its strip) keeps the margin inside Apple's rounded square.
     font_size = spec["font"]
     while True:
-        polys = word_polys(font, font_size, spec["centre"], angle, scale)
+        polys = word_polys(font, font_size, spec["centre"], angle, scale, spec.get("ink", False))
         word = fill(polys, size)
         strip = fill(strip_poly(polys, angle, scale), size) if spec.get("strip") else None
         try:
@@ -387,6 +422,8 @@ def picture(layout, angle, font, size):
         over(rows, strip, ground)
     if spec.get("halo"):
         over(rows, blur(word, 12 * scale), ground, 0.85)           # a soft dark edge, so it reads over the rings
+    if spec.get("outline"):
+        over(rows, grow(word, spec["outline"] * scale), ground)    # a hairline in the ground's colour
     over(rows, word, INK)
     return rows, (angle, safe, font_size)
 
@@ -399,7 +436,7 @@ def main(argv):
             opts[argv[i]] = argv[i + 1]
             i += 2
         else:
-            raise SystemExit("usage: draw_icon.py [--layout base|a|b|c] [--angle deg] [--font script|sans] "
+            raise SystemExit("usage: draw_icon.py [--layout base|a|a-shadow|b|c] [--angle deg] [--font script|sans] "
                              "[--size 1024] [--out <png>]")
     size = int(opts["--size"])
     if opts["--font"] not in FONTS:
@@ -410,7 +447,7 @@ def main(argv):
             raise SystemExit("draw_icon: --out, --angle and --size go with --layout")
     else:
         if opts["--layout"] not in ("base",) + tuple(LAYOUTS):
-            raise SystemExit("draw_icon: --layout is base, a, b or c")
+            raise SystemExit("draw_icon: --layout is base or one of " + ", ".join(LAYOUTS))
         jobs = [(opts["--layout"], float(opts["--angle"]) if opts["--angle"] else None,
                  opts["--out"] or (BASE_OUT if opts["--layout"] == "base" else IPAD_OUT))]
     for layout, angle, out in jobs:
@@ -418,7 +455,7 @@ def main(argv):
         write_png(out, rows)
         what = "the plain icon" if info is None else \
             f"layout {layout}, \"{WORD}\" in {'Pacifico' if opts['--font'] == 'script' else 'Inter'} rising " \
-            f"{info[0]:g} degrees at a font size of {info[2]:.0f} (in 1024), {info[1] * 1024 / size:.0f} (in 1024) clear of" \
+            f"{info[0]:g} degrees at a font size of {info[2]:.0f} (in 1024), {info[1] * 1024 / size:.0f} (in 1024) clear of " \
             f"Apple's corners"
         print(f"draw_icon: {os.path.relpath(out, REPO) if out.startswith(REPO) else out}: {size} x {size}, RGB, "
               f"no alpha; {what}")
