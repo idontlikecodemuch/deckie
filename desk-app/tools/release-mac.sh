@@ -522,11 +522,14 @@ stage_notarise_finish() {
         if xcodebuild -exportNotarizedApp -archivePath "$archive" -exportPath "$dest" > "$log" 2>&1 && [ -d "$dest/$app_name.app" ]; then
             got="$dest/$app_name.app"; break
         fi
+        # The account first: Xcode's own words for a missing sign-in include "Invalid credentials in keychain", which
+        # must not be read as Apple refusing the app (seen Nov 25, 2026, when the account was signed out mid-wait).
+        if grep -qiE 'keychain|not signed in|no accounts?\b|authenticat|credential' "$log"; then
+            tail -15 "$log"; die "$account_help
+  The upload already went: once the account is back, run the notarise-finish stage, not notarise."
+        fi
         if grep -qiE 'invalid|rejected|not accepted' "$log"; then
             cat "$log"; die "Apple did not notarise the app; what Xcode said is above (and in $log)"
-        fi
-        if grep -qiE 'keychain|not signed in|no account|authenticat|credential' "$log"; then
-            tail -15 "$log"; die "$account_help"
         fi
         if [ "$(date +%s)" -ge "$deadline" ]; then
             tail -15 "$log"; die "no notarised app after $notary_minutes minutes ($tries tries). Apple may still be working: run
