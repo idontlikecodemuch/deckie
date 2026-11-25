@@ -575,9 +575,8 @@ public final class DeskRun: @unchecked Sendable {
         if let asked = request.volume, let now = drive?.identity, asked != now {
             throw DeskError(DeskWords.text("error.notInADrive", ["name": request.name]))
         }
-        var kept = request
-        if kept.volume == nil { kept.volume = drive?.identity }
-        try JSONFile.write(kept, to: pendingURL)
+        // The request is kept as it was asked for (the windows put the drive's identity in it, `sourceRequest`).
+        try JSONFile.write(request, to: pendingURL)
 
         let fm = FileManager.default
         // 0. A music CD: the disc in a drive (the one asked for; a stopped run carries on only with it), what Desk
