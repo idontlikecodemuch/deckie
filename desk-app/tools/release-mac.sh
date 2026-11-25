@@ -7,7 +7,8 @@
 #   build      a clean Release build for Apple silicon, with the learned key reader and Deckie's own ONNX Runtime
 #   sign       signs every piece of code in the app from the inside out, then the app, with the hardened runtime
 #   verify     checks the signature and prints its flags, its entitlements and Gatekeeper's answer
-#   package    makes "Deckie Desk.dmg" (the app and an Applications alias), signs it and checks it mounts
+#   package    makes "Deckie Desk.dmg" (the app, an Applications alias, Desk's icon on the volume), signs it and
+#              checks it mounts
 #   notarise   sends the app, then the disk image, to Apple's notary service, staples both and checks them; never
 #              part of a run without stage names, and needs the owner's notary profile
 #
@@ -257,12 +258,30 @@ stage_package() {
     [ -d "$app" ] || die "no $app_name.app in desk-app/build/release; run build and sign first"
     codesign --verify --deep --strict "$app" 2>/dev/null || die "the app's signature does not verify; run the sign stage first"
     find_identity
-    local root="$out/dmg-root" mnt="$out/mnt"
-    fresh "$root"; fresh "$dmg"; mkdir -p "$root"
+    local root="$out/dmg-root" mnt="$out/mnt" rw="$out/dmg-rw.dmg" iconset="$out/volume.iconset"
+    fresh "$root"; fresh "$dmg"; fresh "$rw"; fresh "$iconset"; mkdir -p "$root" "$iconset"
     ditto "$app" "$root/$app_name.app"
     ln -s /Applications "$root/Applications"
-    hdiutil create -quiet -volname "$app_name" -srcfolder "$root" -fs HFS+ -format UDZO -ov "$dmg" || die "hdiutil could not make the disk image"
+    # The volume's icon is Desk's own: .VolumeIcon.icns at the top of the volume, made from the icon set's pictures,
+    # and the volume's custom-icon flag. hdiutil does not carry the flag over from a folder, so the image is made
+    # writable first, the flag set on it mounted, then the image compressed.
+    # iconutil wants the 2x pictures named "@2x"; the icon set names them "-2x", because a file name with "@" in it
+    # reads as an email address to tools/check-private.sh.
+    local p
+    for p in "$desk/Desk/Assets.xcassets/AppIcon.appiconset/"icon_*.png; do
+        cp "$p" "$iconset/$(basename "$p" | sed 's/-2x\.png$/@2x.png/')"
+    done
+    iconutil -c icns -o "$root/.VolumeIcon.icns" "$iconset" || die "iconutil could not make the volume icon"
+    fresh "$iconset"
+    hdiutil create -quiet -volname "$app_name" -srcfolder "$root" -fs HFS+ -format UDRW -ov "$rw" || die "hdiutil could not make the disk image"
     fresh "$root"
+    fresh "$mnt"; mkdir -p "$mnt"
+    hdiutil attach -quiet -nobrowse -readwrite -noautoopen -mountpoint "$mnt" "$rw" || die "the writable disk image does not mount"
+    if command -v SetFile >/dev/null; then SetFile -a C "$mnt" || say "  SetFile could not set the volume's custom-icon flag"
+    else say "  no SetFile (Xcode's command line tools): the volume keeps the plain disk icon"; fi
+    hdiutil detach -quiet "$mnt" || hdiutil detach -quiet -force "$mnt"
+    hdiutil convert -quiet "$rw" -format UDZO -ov -o "$dmg" || die "hdiutil could not compress the disk image"
+    fresh "$rw"
     local args=(--force --sign "$identity")
     [ "$timestamp" = 0 ] && args+=(--timestamp=none) || args+=(--timestamp)
     codesign "${args[@]}" "$dmg" || die "codesign failed on the disk image"
@@ -274,6 +293,8 @@ stage_package() {
     local ok=1
     ls -l "$mnt" | sed 's/^/  /'
     [ "$(readlink "$mnt/Applications")" = /Applications ] || { say "  no Applications alias"; ok=0; }
+    if [ -f "$mnt/.VolumeIcon.icns" ] && GetFileInfo -a "$mnt" 2>/dev/null | grep -q C; then say "  volume icon: Desk's"
+    else say "  volume icon: the plain disk icon"; fi
     codesign --verify --deep --strict --verbose=2 "$mnt/$app_name.app" 2>&1 | sed 's/^/  /' || ok=0
     codesign --verify --deep --strict "$mnt/$app_name.app" 2>/dev/null || ok=0
     hdiutil detach -quiet "$mnt" || hdiutil detach -quiet -force "$mnt"
