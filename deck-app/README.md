@@ -64,6 +64,25 @@ to a new path makes a new id.
   console as `DECK ...`) gets one line: `listener: a, 142 readings, typical 61 ms, slowest 240 ms`. Nothing new on
   the normal screen. Version 0.1.0, build 3.
 
+## Build 4: the icon (Nov 24, 2026, `pc/ipad-icon`)
+
+The icon picture, `Deck/Assets.xcassets/AppIcon.appiconset/icon1024.png`, is drawn from `site/icon.svg` by
+`tools/draw_icon.py` (Python's standard library only): 1024 by 1024, 8-bit RGB with no alpha channel, marked sRGB, the
+dark ground (#160f2b) filling the whole square, every edge mixed by how much of each shape covers the pixel. iPadOS and
+the App Store round the corners themselves, so none are drawn in; the SVG's corner rounding is the one thing left out.
+Build 3's picture had rounded corners drawn in on white (all four corner pixels 255,255,255) and was an enlarged small
+picture (ring edges 3 to 5 pixels soft, about 17,000 colours); the new one has edges one pixel wide and 426 colours.
+Its rings are the SVG's: eleven thin grooves with a band of plain orange round the label, where build 3's picture had
+eight wider ones. The Windows icon (`core/Tools/windows/make_ico.py`) and the Desk film's close
+(`desk-quickstart/film.js`) are made from this picture and round the corners themselves. To redraw it after a change
+to `site/icon.svg`:
+
+```
+python3 deck-app/tools/draw_icon.py
+```
+
+Version 0.1.0, build 4; nothing else differs from build 3.
+
 ## The sound input (Nov 21, 2026, `pc/ipad-recording-interruptions`)
 
 Not yet tried on a real iPad; everything below is tested in the simulator with made-up buffers and events
@@ -354,9 +373,10 @@ through it in real time, as the microphone would hear it; waits for Deckie's ind
 
 ## TestFlight (remote updates)
 
-`project.yml` sets `ITSAppUsesNonExemptEncryption = false` (no export-compliance prompt), version 0.1.0, build 3
-(raise `CFBundleVersion` for every later upload; builds 1 and 2 were never uploaded). The fields to fill in App Store
-Connect are in `docs/product/testflight/app-store-connect-fields.md`.
+`project.yml` sets `ITSAppUsesNonExemptEncryption = false` (no export-compliance prompt), version 0.1.0, build 4 (raise
+`CFBundleVersion` for every later upload; builds 1 and 2 were never uploaded; build 3 was uploaded to TestFlight on Nov
+24, 2026, the first upload; build 4 is the next upload and differs from it only by the icon). The fields to fill in App
+Store Connect are in `docs/product/testflight/app-store-connect-fields.md`.
 
 **Build 3, archived Nov 24, 2026** (`pc/testflight-3`, main at d6c3091), signed with what was already on the Mac (the
 development certificate and the team's wildcard development profile) and without `-allowProvisioningUpdates`, so
