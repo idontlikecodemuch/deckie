@@ -19,6 +19,10 @@ public struct RunRequest: Codable, Equatable, Sendable {
     /// the same disc is in a drive again.
     public var musicCD: String?
     public var discId: String?
+    /// The identity of the drive `folder` was on when the run was asked for (`SourceIdentity`; Nov 25, 2026), when
+    /// the system gave one: a run carried on reads only that drive, never another mounted at the same path since.
+    /// Nil in a run asked for before, or where there is none. Left out of `pending.json` when nil.
+    public var volume: SourceIdentity?
     public init(folder: URL, source: String?, rekordbox: URL? = nil, musicCD: String? = nil, discId: String? = nil) {
         self.folder = folder.path; self.source = source; self.rekordbox = rekordbox?.path
         self.musicCD = musicCD; self.discId = discId
@@ -483,6 +487,8 @@ public final class DeskRun: @unchecked Sendable {
     /// one (to find the disc when it is in another drive).
     public var openMusicCD: (String) throws -> MusicCD = { try MusicCDs.open($0) }
     public var findMusicCDs: () -> [MusicCDs.Found] = { MusicCDs.list() }
+    /// What the system says of the drive the run reads (`SourceIdentity.read`; a test gives a stand-in).
+    public var identify: SourceIdentity.Reader = SourceIdentity.read
     /// Stop (the run screen's button): no further song is started, the ones being read finish, and the crate is saved
     /// with every song read so far. `stop(now: true)` (Desk quitting, its window closed) ends the songs being analysed
     /// at their next stage instead (a few seconds, not the rest of a song); they are read again on Carry on. The run stays pending, so Carry on reads the rest (quickly: what was read is kept).
@@ -505,13 +511,22 @@ public final class DeskRun: @unchecked Sendable {
     public static let placesFile = "places.json"
     public static let namesFile = NameBook.file
 
-    /// Whether a run that stopped can carry on now: its folder is here, or for a music CD, the same disc is in a
-    /// drive.
+    /// Whether a run that stopped can carry on now: its folder is here (on the same drive, when the drive's identity
+    /// was known: another stick mounted at the same path is not it), or for a music CD, the same disc is in a drive.
     public static func canCarryOn(_ r: RunRequest, home: DeskHome,
                                   open: (String) throws -> MusicCD = { try MusicCDs.open($0) },
-                                  musicCDs: () -> [MusicCDs.Found] = { MusicCDs.list() }) -> Bool {
-        guard let id = r.discId, r.musicCD != nil else { return FileManager.default.fileExists(atPath: r.folder) }
+                                  musicCDs: () -> [MusicCDs.Found] = { MusicCDs.list() },
+                                  identify: SourceIdentity.Reader = SourceIdentity.read) -> Bool {
+        guard let id = r.discId, r.musicCD != nil else {
+            return FileManager.default.fileExists(atPath: r.folder) && !otherDrive(r, identify: identify)
+        }
         return DiscRecords.find(id, near: r.musicCD, open: open, musicCDs: musicCDs) != nil
+    }
+
+    /// The run's folder is on a drive other than the one it was asked for: both identities known, and different.
+    static func otherDrive(_ r: RunRequest, identify: SourceIdentity.Reader) -> Bool {
+        guard let asked = r.volume, let now = identify(r.folderURL).identity else { return false }
+        return asked != now
     }
 
     /// The run a crate has left unfinished, if any.
@@ -554,7 +569,15 @@ public final class DeskRun: @unchecked Sendable {
         let pkg = shelf.package(crateId)
         let pendingURL = shelf.file(Self.pendingFile, of: crateId)
         let carriedOn = FileManager.default.fileExists(atPath: pendingURL.path)
-        try JSONFile.write(request, to: pendingURL)
+        // A folder or a drive: what the system says of it now. A run asked for on one drive reads that drive only; a
+        // different stick mounted at the same path since is not in a drive as far as this run goes.
+        let drive = request.musicCD == nil ? identify(request.folderURL) : nil
+        if let asked = request.volume, let now = drive?.identity, asked != now {
+            throw DeskError(DeskWords.text("error.notInADrive", ["name": request.name]))
+        }
+        var kept = request
+        if kept.volume == nil { kept.volume = drive?.identity }
+        try JSONFile.write(kept, to: pendingURL)
 
         let fm = FileManager.default
         // 0. A music CD: the disc in a drive (the one asked for; a stopped run carries on only with it), what Desk
@@ -798,6 +821,12 @@ public final class DeskRun: @unchecked Sendable {
         if let s = request.source {
             info.sourceRoots[s] = folder.path
             info.discs[s] = disc?.base.toc.id
+            // The drive's identity, learned now for a source recorded before identities were kept. One identity
+            // names one source: no other keeps it. Where the system gives none this time, the one known is kept.
+            if let id = drive?.identity {
+                for (other, i) in info.sourceIds where other != s && i == id { info.sourceIds[other] = nil }
+                info.sourceIds[s] = id
+            }
         } else { info.musicFolder = folder.path }
         let roots = info.roots, music = info.musicFolderURL
         let todo = crate.tracks.filter { t in

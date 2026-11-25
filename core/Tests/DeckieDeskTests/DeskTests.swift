@@ -243,12 +243,19 @@ func crate(_ tracks: [CrateTrack], name: String = "Night") -> Crate {
         let one = root.appendingPathComponent("one/Music"), two = root.appendingPathComponent("two/Music")
         try FileManager.default.createDirectory(at: one, withIntermediateDirectories: true)
         try FileManager.default.createDirectory(at: two, withIntermediateDirectories: true)
-        #expect(SourceNaming.unique("Music", root: one, roots: [:]) == "Music")
-        #expect(SourceNaming.unique("Music", root: one, roots: ["Music": one]) == "Music")
-        #expect(SourceNaming.unique("Music", root: two, roots: ["Music": one]) == "Music 2")
-        #expect(SourceNaming.unique("Music", root: two, roots: ["Music": one, "Music 2": two]) == "Music 2")
-        // A stick now mounted under another path is the same stick.
-        #expect(SourceNaming.unique("Stick", root: two, roots: ["Stick": root.appendingPathComponent("gone")]) == "Stick")
+        // Folders on the computer's own disk, where the system gives no identity: the same folder is the same source.
+        let own = SourceIdentity.Found(identity: nil, ownDisk: true)
+        func music(_ r: URL) -> SourceNaming.Recorded { .init(name: "Music", root: r, identity: nil, files: []) }
+        #expect(SourceNaming.choose("Music", root: one, found: own, recorded: []) == "Music")
+        #expect(SourceNaming.choose("Music", root: one, found: own, recorded: [music(one)]) == "Music")
+        #expect(SourceNaming.choose("Music", root: two, found: own, recorded: [music(one)]) == "Music 2")
+        let both = [music(one), SourceNaming.Recorded(name: "Music 2", root: two, identity: nil, files: [])]
+        #expect(SourceNaming.choose("Music", root: two, found: own, recorded: both) == "Music 2")
+        // A place that is gone is no evidence (Nov 25, 2026): another stick mounted where it was is another source.
+        let gone = SourceNaming.Recorded(name: "Stick", root: root.appendingPathComponent("gone"), identity: nil, files: [])
+        #expect(SourceNaming.choose("Stick", root: two, found: .init(identity: nil, ownDisk: false), recorded: [gone]) == "Stick 2")
+        // Music CDs' names are never free.
+        #expect(SourceNaming.unique("Music CD", taken: ["Music CD", "Music CD 2"]) == "Music CD 3")
     }
 }
 

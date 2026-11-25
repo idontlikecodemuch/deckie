@@ -183,11 +183,16 @@ public enum DeskDrives {
 
     /// The mount points with their file system's type (the third field).
     static func linuxMountsWithTypes() -> [(path: String, type: String)] {
+        linuxMountTable().map { ($0.path, $0.type) }
+    }
+
+    /// Each mount with its device (the first field), mount point and file system's type, in the kernel's order.
+    static func linuxMountTable() -> [(device: String, path: String, type: String)] {
         guard let text = try? String(contentsOfFile: "/proc/self/mounts", encoding: .utf8) else { return [] }
         return text.split(separator: "\n").compactMap { line in
             let fields = line.split(separator: " ")
             guard fields.count > 2 else { return nil }
-            return (unescape(String(fields[1])), String(fields[2]))
+            return (unescape(String(fields[0])), unescape(String(fields[1])), String(fields[2]))
         }
     }
 

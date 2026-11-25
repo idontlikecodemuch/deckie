@@ -343,7 +343,19 @@ final class DeskModel: ObservableObject {
     /// Reads a CD, a drive or a folder as a source into the crate showing, or into a new crate with the first screen's
     /// name.
     func addSource(_ url: URL, name: String) {
-        start(RunRequest(folder: url, source: current?.sourceName(name, root: url) ?? name))
+        start(request(url, name: name))
+    }
+
+    /// What a run reads for a folder or a drive: the source it already is in the crate showing (the same drive,
+    /// wherever it is mounted), else a new one named `name`, numbered when the name is in use; the engine's rule
+    /// (`CrateInfo.sourceRequest`, `SourceNaming.choose`), so both windows choose alike.
+    func request(_ url: URL, name: String, rekordbox: URL? = nil) -> RunRequest {
+        guard let c = current else {
+            var r = RunRequest(folder: url, source: name, rekordbox: rekordbox)
+            r.volume = SourceIdentity.read(url).identity
+            return r
+        }
+        return c.sourceRequest(name, root: url, crate: crate, paths: placePaths, rekordbox: rekordbox)
     }
 
     /// Any folder: the top of a big drive offers a folder inside it first; anything else is counted, then read.
@@ -475,9 +487,7 @@ final class DeskModel: ObservableObject {
             p.message = Words.rekordboxFolderMessage
             p.begin { [weak self] r in
                 guard r == .OK, let folder = p.url, let self else { return }
-                let name = MountedSource.name(of: folder)
-                let source = self.current?.sourceName(name, root: folder) ?? name
-                self.start(RunRequest(folder: folder, source: source, rekordbox: xml))
+                self.start(self.request(folder, name: MountedSource.name(of: folder), rekordbox: xml))
             }
         }
     }

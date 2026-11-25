@@ -154,14 +154,17 @@ real storage is never touched). The layout (`DeskHome`, `core/Sources/DeckieDesk
     libraries.json                 DJ libraries the DJ chose by hand (File > Choose a DJ library…), read on every run
     quick-start.json               the quick start's card hidden, and the film played once (D46, DeskQuickStart)
     Crates/<id>/                   one folder per crate; <id> is a lowercase UUID made with the crate
-      crate.json                   its name, when it was made and last opened, where each source and the music folder were read from
+      crate.json                   its name, when it was made and last opened, where each source and the music folder were read from,
+                                   and (since Nov 25, 2026, `source_ids`, left out when empty) the identity of the drive
+                                   each source was read from
       crate.deckie/                the crate file itself (crate v1, unchanged), written as the DJ works; a crate
                                    made before November 2026 keeps `crate.deckiecrate/`, read and written there
       crate.deckiebuild/           the builder's work folder (which file is which record), for a quick re-read
       corrections.json             the DJ's name fixes, by entry id, each field with how the DJ gave it
       names.json                   where each name was read from, field by field, and each song's release
       places.json                  where each place's file was, below its source's top or the music folder
-      pending.json                 a run that started and has not finished; gone when it finishes
+      pending.json                 a run that started and has not finished; gone when it finishes (since Nov 25, 2026,
+                                   with the identity of the drive it reads, `volume`, when there is one)
       runs.jsonl                   one line per finished run: counts and timings
     Files/                         what was worked out for each file, by the file's id (the hash of its bytes)
       records/<id>.json            the analysis (the builder's records, shared by every crate's work folder)
@@ -206,9 +209,31 @@ tiles of the ways in were three heights, now one; the sheet's steps in words wer
 
 **Add music** (toolbar, the first screen, or File > Add music to …) adds to the crate showing and says so ("Add music
 to Friday night"). It lists the CDs and drives mounted on this Mac by their own names, then "Choose a folder…" for
-anything else; whatever is chosen is read as a source, named after its volume or its folder (see below). A folder
-whose name is already a source of this crate, read from somewhere else that is still there, is named "Music 2"
-(`SourceNaming`), so two folders that share a name do not become one source. The rekordbox route stays where it was
+anything else; whatever is chosen is read as a source, named after its volume or its folder (see below). What is
+added is either a source the crate already has (read again: its songs are replaced by what is found now) or a new
+source, named "Music 2", "Music 3", ... when its name is in use. Since Nov 25, 2026 this is decided by the drive's own
+identity (`SourceIdentity`, `SourceNaming.choose`), because unbranded sticks nearly all share a name ("NO NAME",
+"Untitled", "USB DISK") and are mounted one after another at the same path. The identity is the volume UUID on the Mac
+(FAT32 and exFAT sticks have one, made from the serial number written when the stick was formatted; a FAT stick whose
+serial number is 0 has none), the volume serial number on Windows, and the file system UUID on Linux
+(`/dev/disk/by-uuid`, no privileges needed), with the folder's path below the drive's top. It is kept in `crate.json`
+(`source_ids`), never in the crate file. The rule, against each source of the crate:
+
+1. A source whose drive has the same identity and the same place on it is that source, whatever its name now and
+   wherever the drive is mounted.
+2. Both identities known: a different drive is a different source; the same drive at another place on it (a folder
+   moved on the stick) is decided by evidence.
+3. An identity missing on either side (a file system that gives none, or a source recorded before Nov 25, 2026): the
+   very same folder on the computer's own disk is the same source (a path there is not reused by another drive, as a
+   mount point is); anything else is decided by evidence.
+4. Evidence: more than half of the files the source is known to hold (`places.json` and each song's own path) are at
+   the place added, under the same path below its top with the same size. A source with no known files never passes.
+5. When nothing says it is the same, it is a new source: a wrong "same" would replace that source's songs, a wrong
+   "new" only lists a song in two places.
+
+A source recorded before Nov 25, 2026 keeps working: when its stick comes back it is found by evidence, and its
+identity is kept from that read on. A run carried on reads only the drive it was asked for (`pending.json`'s
+`volume`): another stick mounted at that path since is "not in a drive". The rekordbox route stays where it was
 (the first screen, and File > Add music with a rekordbox collection…): an export, then a folder read as a source named
 after it like any other (D31), with names, tempos, keys and cues from rekordbox (matched by the path below the folder,
 so a source named "Music 2" still finds its entries). The folder chooser says so: "Choose the folder your music is in.

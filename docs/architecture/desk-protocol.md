@@ -283,6 +283,13 @@ any other folder takes its own name, and the folders inside it are its groups. T
 become "Name" and "Name 2". The run goes into the crate showing, or, on the first screen, into a new crate named after
 what is read.
 
+Since Nov 25, 2026 a drive is told apart by its own identity, not by its name or the path it is mounted at
+(`SourceIdentity`, `SourceNaming.choose`; the rule is in `desk-app/README.md`, "Add music"): two sticks both called
+"NO NAME" are two sources, "NO NAME" and "NO NAME 2", whichever path each is mounted at, and the same stick is the
+same source wherever it is mounted. Adding one source never takes another's songs. Nothing in the protocol changed:
+the reply's `source` and `run.started`'s `read` carry the name chosen, as before, and the identity is kept in Desk's
+own storage only.
+
 `crate.export` writes `<folder>/<crate name>.deckie` as **one file**, the single-file form of a crate file
 (`docs/architecture/crate-format.md`: the same files with the same bytes in one uncompressed archive), replacing a
 crate file of that name in either form. This is where Desk on Windows and Linux hands a crate file out

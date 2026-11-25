@@ -149,10 +149,18 @@ public final class DeskSession {
 
     /// What Add music reads for a CD, a drive or a folder at `url` (D31: whatever is added is a source, named after the
     /// drive or the top folder chosen): a source named `name` when given (a drive's own name), else after the drive
-    /// when `url` is the top of one, else after the folder; made unique among the crate's sources.
-    public func addRequest(_ url: URL, name: String? = nil) -> RunRequest {
+    /// when `url` is the top of one, else after the folder. It is the source it already is when it is one of the
+    /// crate's (the same drive, wherever it is mounted), else a new one, numbered when the name is in use
+    /// (`SourceNaming.choose`).
+    public func addRequest(_ url: URL, name: String? = nil, identify: SourceIdentity.Reader = SourceIdentity.read,
+                           size: (URL) -> Int? = SourceNaming.fileSize) -> RunRequest {
         let base = name ?? DeskDrives.sourceName(of: url)
-        return RunRequest(folder: url, source: current?.sourceName(base, root: url) ?? base)
+        guard let c = current else {
+            var r = RunRequest(folder: url, source: base)
+            r.volume = identify(url).identity
+            return r
+        }
+        return c.sourceRequest(base, root: url, crate: crate, paths: placePaths, identify: identify, size: size)
     }
 
     /// The crate a run goes into: the one showing, else a new one with the first screen's name (made now; never the
@@ -213,7 +221,7 @@ public final class DeskSession {
         // The same disc already a source of this crate keeps its name; another never takes a name in use.
         let existing = current?.discs.first { $0.value == record.toc.id }?.key
         let names = Set(current.map { Array($0.sourceRoots.keys) } ?? [])
-        let unique = existing ?? SourceNaming.unique(base, root: URL(fileURLWithPath: "/"), roots: [:], taken: names)
+        let unique = existing ?? SourceNaming.unique(base, taken: names)
         let request = RunRequest(folder: URL(fileURLWithPath: cd.location), source: unique, musicCD: cd.location,
                                  discId: record.toc.id)
         return (request, record.discTitle == nil && existing == nil ? unique : nil)
