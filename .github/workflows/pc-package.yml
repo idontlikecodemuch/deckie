@@ -24,7 +24,7 @@ on:
       - core/**
       - desk-shell/**
       - desk-web/**
-      - deck-app/Deck/Assets.xcassets/AppIcon.appiconset/**
+      - deck-app/tools/icon-base1024.png
       - .github/workflows/pc-package.yml
   workflow_dispatch:
 
@@ -99,8 +99,9 @@ jobs:
         shell: bash
         run: |
           if [ "$KEY_MODEL" = required ]; then bash core/Tools/fetch-key-model.sh --require; else bash core/Tools/fetch-key-model.sh; fi
-      # The icon is made here from the iPad app's picture and compiled into a resource file, the form a linker takes;
-      # no .ico is committed (core/Tools/windows/icon.sh, make_ico.py).
+      # The icon is made here from Deckie's plain icon picture (deck-app/tools/icon-base1024.png, no word on it) and
+      # compiled into a resource file, the form a linker takes; no .ico is committed (core/Tools/windows/icon.sh,
+      # make_ico.py).
       - name: Make the icon
         shell: bash
         run: bash core/Tools/windows/icon.sh "$RUNNER_TEMP/icon"

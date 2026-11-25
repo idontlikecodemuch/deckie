@@ -64,6 +64,44 @@ to a new path makes a new id.
   console as `DECK ...`) gets one line: `listener: a, 142 readings, typical 61 ms, slowest 240 ms`. Nothing new on
   the normal screen. Version 0.1.0, build 3.
 
+## Build 4: the icon (Nov 24, 2026, `pc/ipad-icon`)
+
+`tools/draw_icon.py` draws two pictures from `site/icon.svg`, both 1024 by 1024, 8-bit RGB with no alpha channel,
+marked sRGB, the dark ground (#160f2b) filling the whole square, every edge mixed by how much of each shape covers the
+pixel. iPadOS and the App Store round the corners themselves, so none are drawn in; the SVG's corner rounding is the
+one thing left out.
+
+- `tools/icon-base1024.png`, the plain icon: the record, no word. Desk's Windows icon
+  (`core/Tools/windows/icon.sh`, `make_ico.py`) and the Desk film's close (`desk-quickstart/render.mjs`) are made from
+  it and round the corners themselves.
+- `Deck/Assets.xcassets/AppIcon.appiconset/icon1024.png`, the iPad app's icon: the whole record, and "Booth" large
+  across it in the brand script (Pacifico, the site's own `site/fonts/pacifico.woff2`, set as the font's outlines by
+  `tools/woff2_outlines.py`, its final-letter form included), flat off-white (#f2edf9) with no shadow or edge, rising
+  10 degrees from left to right, the box of its ink (after the slant) centred on the icon, at least 100 (in 1024)
+  inside the rounded square Apple's mask leaves. The name under the icon is "Deckie" (D43); the word says which
+  Deckie app it is (decided Nov 24, 2026; this placement chosen Nov 25, 2026). Desk's and the site's icons do not
+  carry it.
+
+Candidates drawn and judged at 1024, 152 and 120 pixels on Nov 24, 2026: the word across the record (a, with a soft
+dark edge, 13 degrees), beneath a smaller record (b, at 9, 13 and 18 degrees) and on a dark sticker strip (c). On
+Nov 25, 2026 the owner chose a, with no edge, centred and at 10 degrees. Without the edge the two o's are weakest
+where they cross the violet label (off-white on light violet): their outer edges there almost disappear at 120 pixels
+and they read by their violet counters; `--layout a-outline` (not shipped) draws the same with a 3-unit hairline in
+the ground's colour, which brings those edges back. Any of them is one command:
+
+```
+python3 deck-app/tools/draw_icon.py                                  # both pictures, as shipped
+python3 deck-app/tools/draw_icon.py --layout b --angle 13            # another layout (a, a-outline, a-shadow, b, c)
+```
+
+The font is unpacked by the `brotli` program (Homebrew), since Brotli is not in Python's standard library; the plain
+picture needs no font. Build 3's picture had rounded corners drawn in on white (all four corner pixels 255,255,255)
+and was an enlarged small picture (ring edges 3 to 5 pixels soft, about 17,000 colours); the plain picture has edges
+one pixel wide and 426 colours. Its rings are the SVG's: eleven thin grooves with a band of plain orange round the
+label, where build 3's picture had eight wider ones.
+
+Version 0.1.0, build 4; nothing else differs from build 3.
+
 ## The sound input (Nov 21, 2026, `pc/ipad-recording-interruptions`)
 
 Not yet tried on a real iPad; everything below is tested in the simulator with made-up buffers and events
@@ -354,9 +392,10 @@ through it in real time, as the microphone would hear it; waits for Deckie's ind
 
 ## TestFlight (remote updates)
 
-`project.yml` sets `ITSAppUsesNonExemptEncryption = false` (no export-compliance prompt), version 0.1.0, build 3
-(raise `CFBundleVersion` for every later upload; builds 1 and 2 were never uploaded). The fields to fill in App Store
-Connect are in `docs/product/testflight/app-store-connect-fields.md`.
+`project.yml` sets `ITSAppUsesNonExemptEncryption = false` (no export-compliance prompt), version 0.1.0, build 4 (raise
+`CFBundleVersion` for every later upload; builds 1 and 2 were never uploaded; build 3 was uploaded to TestFlight on Nov
+24, 2026, the first upload; build 4 is the next upload and differs from it only by the icon). The fields to fill in App
+Store Connect are in `docs/product/testflight/app-store-connect-fields.md`.
 
 **Build 3, archived Nov 24, 2026** (`pc/testflight-3`, main at d6c3091), signed with what was already on the Mac (the
 development certificate and the team's wildcard development profile) and without `-allowProvisioningUpdates`, so
@@ -364,6 +403,19 @@ nothing in the developer account was made or changed. The app is 3.9 MB (2.2 MB 
 (device family 2), minimum iPadOS 17.0, all four orientations, full screen; it holds no library data and carries
 `Demo.deckie` (unchanged from the checkout), `PrivacyInfo.xcprivacy`, the microphone line, a launch screen, the
 1024-point icon (no alpha channel) in the asset catalogue, and no `deck` URL scheme. DeckTests passed first (41 tests).
+
+**Build 4, archived again Nov 25, 2026** (`pc/ipad-icon`, at cb4f0c3, the chosen icon: "Booth" across the record), the
+same way and with the same commands: nothing in the developer account was made or changed. Version 0.1.0, build 4; the
+app is 3.4 MB, arm64 only, with `Demo.deckie`, `PrivacyInfo.xcprivacy` and no `deck` URL scheme. Its icons: the
+`AppIcon60x60` file at 2x (120 pixels) and the `AppIcon76x76` iPad file at 2x (152 pixels) loose in the app, and the
+1024-pixel rendition in `Assets.car` (opaque, sRGB, by `xcrun assetutil --info`); the two loose ones, converted back to
+ordinary PNGs, are square, fully opaque, the dark ground (22,15,43) in all four corners, the record and "Booth" both
+clear. DeckTests passed (41 tests in 3 suites) on this branch with build 4's code and the first redraw; the app's code
+and tests have not changed since, only the icon picture. Two later runs on the simulator (Nov 24, 2026) stopped short
+with every test that ran passing: the Mac's lid was closed, which turns its built-in microphone off, so the simulator's
+sound input reported 0 Hz and deadlocked ("AURemoteIO: RPC timeout", "no microphone input available"). The lid's state
+is in `ioreg -r -k AppleClamshellState -d 4`; on Nov 25, 2026 it read `AppleClamshellState = No` (open). The tests were
+not run again for the final icon, since only the picture changed.
 
 ```
 cd deck-app && xcodegen generate

@@ -45,7 +45,7 @@
 # and deckie-desk-engine.exe placed in the zip are marked so after the build (pe_kind.py says how and why), which
 # leaves the builds the tests use as console programs.
 #
-# The icon: icon.sh makes deckie.ico from the iPad app's picture and compiles it; it is linked into deckie-desk.exe
+# The icon: icon.sh makes deckie.ico from Deckie's plain icon picture (no word on it) and compiles it; it is linked into deckie-desk.exe
 # when that is built, and into both starters here. This script stops if a program that should carry it does not.
 #
 # Included since Nov 13, 2026 (the owner's yes): Microsoft's Visual C++ runtime (msvcp140.dll, msvcp140_1.dll,

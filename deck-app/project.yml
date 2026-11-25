@@ -43,7 +43,7 @@ targets:
       properties:
         CFBundleDisplayName: Deckie
         CFBundleShortVersionString: "0.1.0"
-        CFBundleVersion: "3"
+        CFBundleVersion: "4"
         UILaunchScreen:
           UIColorName: ""
         NSMicrophoneUsageDescription: "Deckie listens to the music to recognise which song is playing. Audio never leaves the iPad."

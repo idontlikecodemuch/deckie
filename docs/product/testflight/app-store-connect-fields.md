@@ -1,10 +1,10 @@
-# App Store Connect: every field for Deckie, build 3
+# App Store Connect: every field for Deckie, build 4
 
-Draft, Nov 19, 2026; brought to build 3 on Nov 24, 2026. What the owner types when creating the app record and filling
-TestFlight's test information, with the text to paste. No build has been sent to Apple yet. The build these describe:
-Deckie 0.1.0 (3), bundle id `io.deckie.booth`, iPad only, iPadOS 17 or later, archived on Nov 24, 2026 from
-`pc/testflight-3` (main as of that day). Builds 1 and 2 were never uploaded; the app was called Deckie Booth until
-build 2.
+Draft, Nov 19, 2026; brought to build 3 on Nov 24, 2026, and to build 4 the same day. What the owner types when creating
+the app record and filling TestFlight's test information, with the text to paste. Build 3 was uploaded to TestFlight on
+Nov 24, 2026, the first upload. The build these describe now: Deckie 0.1.0 (4), bundle id `io.deckie.booth`, iPad only,
+iPadOS 17 or later, archived on Nov 24, 2026 from `pc/ipad-icon`; it differs from build 3 only by the icon, redrawn with
+the dark ground to every corner and the word "Booth" across the record. Builds 1 and 2 were never uploaded; the app was called Deckie Booth until build 2.
 
 **Done on Nov 24, 2026, in the developer account:** the explicit App ID `io.deckie.booth` is registered, and the App
 Store Connect app record for it exists. The fields of section 1 that were typed then (the name, the SKU and the rest)
@@ -72,7 +72,7 @@ Or tap any song in the Crate tab to set it as playing. "Leave the demo crate" go
 
 | Field | What to enter |
 |---|---|
-| What to Test | the text of `what-to-test-build-3.md`, below the title |
+| What to Test | the text of `what-to-test-build-4.md`, below the title |
 | Export Compliance | no question should appear: the build's Info.plist sets `ITSAppUsesNonExemptEncryption` to NO. If App Store Connect asks anyway, answer **No** to "Does your app use encryption?" (more precisely: it uses none beyond what iPadOS itself provides, and it makes no network connections at all; the crate file's SHA-256 checks are hashing, not encryption). |
 
 ## 4. Before the upload (not fields, but the order)
@@ -80,8 +80,8 @@ Or tap any song in the Crate tab to set it as playing. "Leave the demo crate" go
 1. deckie.io/privacy/ and deckie.io/demo/ published (TestFlight checks that the privacy URL opens). Both answer 200
    (checked Nov 24, 2026; deckie.io/demo without the slash is redirected to deckie.io/demo/).
 2. The explicit App ID and the app record above created (done Nov 24, 2026).
-3. Archive and upload from `deck-app/` (README, "TestFlight"). The Release archive of build 3 was made and checked on
-   Nov 24, 2026, signed with what was already on the Mac (the development certificate and the wildcard development
+3. Archive and upload from `deck-app/` (README, "TestFlight"). Build 3 was uploaded on Nov 24, 2026. The Release
+   archive of build 4 was made and checked on Nov 24, 2026, signed with what was already on the Mac (the development certificate and the wildcard development
    profile), with nothing changed in the developer account. The export for App Store Connect needs an Apple
    Distribution certificate and an App Store profile for `io.deckie.booth`; neither is on the Mac yet, so the export
    command carries `-allowProvisioningUpdates`, with which Xcode makes both on the first export, through an account

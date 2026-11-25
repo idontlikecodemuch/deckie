@@ -57,7 +57,8 @@ await cdp("Page.navigate", { url: "file://" + resolve(HERE, opt("page", "film.ht
 for (let i = 0; i < 100 && !(await js("!!window.__film")); i++) await sleep(100);
 // The brand frame at the close: Deckie's icon, and the script word maps the site's film writes its name from
 // (site/film/words: words.json is in git; the *_map.png files are made there by strokes.py, or copied to <work>/words).
-const icon = resolve(HERE, "../deck-app/Deck/Assets.xcassets/AppIcon.appiconset/icon1024.png");
+// The plain icon (no word): the iPad app's own icon carries "Booth", and Desk's film shows Deckie's icon without it.
+const icon = resolve(HERE, "../deck-app/tools/icon-base1024.png");
 const words = opt("words", existsSync(`${WORK}/words/deckie_map.png`) ? `${WORK}/words` : resolve(HERE, "../site/film/words"));
 if (!existsSync(`${words}/words.json`)) writeFileSync(`${words}/words.json`, readFileSync(resolve(HERE, "../site/film/words/words.json")));
 await js(`window.__film.init(${JSON.stringify({ marks, work: WORK, booth: "file://" + booth, icon: "file://" + icon, words: "file://" + words })})`);
