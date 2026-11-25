@@ -83,6 +83,12 @@ public struct CrateManifest: Codable, Equatable, Sendable {
             /// nothing now, or the file's own folder is gone. Not the file's fault, and read again next time
             /// (added Nov 25, 2026).
             public static let sourceGone = "source_gone"
+            /// The same for a folder that is not the top of a drive (the folder read was moved or removed while the build
+            /// read it): told apart from `sourceGone` by the caller, which knows what it asked to read (added
+            /// Nov 25, 2026, the same day).
+            public static let folderGone = "folder_gone"
+            /// The two reasons of a place gone.
+            public static let gone: Set<String> = [sourceGone, folderGone]
             /// Decoded, but the analysis failed (the model failed; before Nov 18, 2026 also no beat grid or too few bars).
             public static let analysisError = "analysis_error"
             /// Decoded, but too few beats were found to fit a beat grid: no steady beat (added Nov 18, 2026).
@@ -95,7 +101,7 @@ public struct CrateManifest: Codable, Equatable, Sendable {
             /// `_stale - safe to delete`); one entry per folder, saying how many audio files it holds.
             public static let skipped = "skipped"
             /// The reasons a file has no record of its own.
-            public static let all = [unsupported, protected, damaged, decodeError, sourceGone, analysisError, noBeat, tooShort, duplicate, skipped]
+            public static let all = [unsupported, protected, damaged, decodeError, sourceGone, folderGone, analysisError, noBeat, tooShort, duplicate, skipped]
         }
 
         /// One file without a record of its own, or with damaged frames.

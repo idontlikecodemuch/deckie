@@ -61,6 +61,10 @@ public struct BuildOptions: Sendable {
     /// it), with its id and file, so a caller makes what it needs from the same samples instead of decoding the file
     /// again (Desk's print that finds copies). Called on the analysing thread.
     public var withAudio: (@Sendable (_ id: String, _ file: SourceFile, _ audio: AudioBuffer) -> Void)?
+    /// Whether `folder` is the top of a drive (a stick, a card, a hard drive), as the caller knows from what it was
+    /// asked to read: a file not read because the place went away is then `source_gone` ("The drive was taken
+    /// out"), else `folder_gone` ("The folder was moved or removed"). True by default, as for the command line.
+    public var readsADrive = true
 
     public init(folder: URL, output: URL, rekordbox: URL? = nil, jobs: Int = defaultJobs, fileBPMTags: Bool = false,
                 fresh: Bool = false, name: String? = nil, device: String = Analysis.platform,
@@ -472,7 +476,8 @@ public final class Builder: Sendable {
         let notReached = options.stop?.isSet == true ? files.filter { done[$0.rel] == nil }.count : 0
         // Covers (D36, `BuildCovers`): each file's picture found and its thumbnail made, or taken from the last run.
         let covers = BuildCovers(work: work, output: options.output, enabled: options.files == nil)
-        covers.find(files.filter { if case .ok? = done[$0.rel] { return true } else { return false } }, jobs: options.jobs)
+        covers.find(files.filter { if case .ok? = done[$0.rel] { return true } else { return false } }, jobs: options.jobs,
+                    root: options.files == nil ? options.folder : nil)
 
         // Places (D27): every file read now is a place of the entry for its bytes. A place belongs to this read when it
         // is on the source being read, or, for an ordinary folder, has no source or one not kept (`belongsToRead`);
@@ -592,9 +597,11 @@ public final class Builder: Sendable {
             let from = here.first { $0.place == lead }!
             let f = files[from.file]
             guard case .ok(_, let tags)? = done[f.rel], let record = work.record(id) else { continue }
+            let previous = existing?.tracks.first(where: { $0.id == id })
             var t = dressed(record, file: f, tags: tags, rekordbox: rekordboxOf[from.file], collection: collection,
-                            importedAt: importedAt)
-            t.file.cover = covers.cover(of: f)
+                            importedAt: importedAt, previous: previous)
+            // A cover not looked for now, its drive taken out (`BuildCovers.find`), stays what the crate file had.
+            t.file.cover = covers.looked(f) ? covers.cover(of: f) : previous?.file.cover
             // An ordinary folder's entry keeps no folder label of its own, as before: its place is `file.rel`'s.
             t.ident.ownPlace = options.source == nil ? Place(disc: nil, folder: nil, track: nil) : lead
             let rest = (before?.own.map { [$0] } ?? []) + (before?.others ?? []) + here.map(\.place).filter { $0 != lead }
@@ -735,10 +742,13 @@ public final class Builder: Sendable {
             do {
                 box = FileBytes(try Data(contentsOf: f.url))
             } catch {
-                if gone() { return failed(.sourceGone) }
+                if gone() { return failed(.gone(drive: options.readsADrive)) }
                 return failed(FileFailure(reason: R.decodeError, message: "could not be read (\(error.localizedDescription))"))
             }
         }
+        // The facts in the file's tags, from the bytes read now (Nov 25, 2026): a song read in this run needs nothing
+        // more from its file, so it is whole even when its drive is taken out before the crate is written.
+        if inHand == nil, let d = box.data { factsInHand.set(f.rel, FileFacts.read(bytes: d)) }
         let sha = CrateIDs.sha256(of: box.data ?? Data())
         let id = CrateIDs.id(forSHA256: sha)
         if var record = work.record(id), record.engine == label, record.bpmTag == tag {
@@ -783,7 +793,7 @@ public final class Builder: Sendable {
         } catch {
             // A decoder that reads the file itself (Core Audio, Media Foundation) fails in its own words when the
             // drive went away under it; the analysis of bytes already read does not depend on the drive.
-            if error is AudioDecodeError, gone() { return failed(.sourceGone) }
+            if error is AudioDecodeError, gone() { return failed(.gone(drive: options.readsADrive)) }
             return failed(FileFailure.classify(error, path: f.url.path))
         }
     }
@@ -821,7 +831,7 @@ public final class Builder: Sendable {
     /// DJ's key as a vote, and the `imported` block, its rekordbox entry
     /// taken at `importedAt`. The tag tempo is already in the record (`file.tag_bpm`), as the analysis was given it.
     func dressed(_ record: WorkStore.Record, file f: SourceFile, tags: FileTags?, rekordbox rb: RekordboxCollection.Track?,
-                 collection: RekordboxCollection?, importedAt: String) -> CrateTrack {
+                 collection: RekordboxCollection?, importedAt: String, previous: CrateTrack? = nil) -> CrateTrack {
         var t = record.crateTrack
         t.file.name = CratePath.lastName(f.rel)  // split on "/" only, on every platform (CratePath)
         t.file.rel = String(f.rel.dropFirst(options.logPrefix.count))
@@ -846,8 +856,16 @@ public final class Builder: Sendable {
             t.key?.votes["rekordbox-xml"] = code
         }
         // Whatever the file's tags say beyond its names (D34), then what the rekordbox export adds.
-        t.ident.facts = [:]
-        (factsInHand.take(f.rel) ?? FileFacts.read(f.url)).apply(to: &t)
+        // A file read in this run gave its facts from the bytes read then; one not read now (unchanged) is read here.
+        // When its drive was taken out since, the facts the crate file had for it stay, rather than none.
+        if let facts = factsInHand.take(f.rel)
+            ?? (options.files == nil && FileFailure.placeIsGone(root: options.folder, file: f.url) ? nil : FileFacts.read(f.url)) {
+            t.ident.facts = [:]
+            facts.apply(to: &t)
+        } else {
+            t.ident.facts = previous?.ident.facts ?? [:]
+            t.file.otherTags = previous?.file.otherTags
+        }
         for (name, values) in rb?.facts ?? [:] { t.ident.offer(name, .init(values, from: DJProgram.rekordbox.rawValue)) }
         // The DJ's own data under the name of the program it came from; null when nothing was imported.
         if let rb, let collection {

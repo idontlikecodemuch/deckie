@@ -1,4 +1,5 @@
 import Foundation
+import DeckieCrate
 #if os(Windows)
 import WinSDK
 #endif
@@ -74,7 +75,8 @@ public struct SourceIdentity: Codable, Hashable, Sendable {
     /// The volume serial number of the volume `url` is on (`GetVolumePathNameW`, `GetVolumeInformationW`), written as
     /// Windows writes it ("1A2B-3C4D"); none when it is 0. The drive Windows is on is the computer's own disk.
     static func windows(_ url: URL) -> Found {
-        let path = url.withUnsafeFileSystemRepresentation { $0.map { String(cString: $0) } } ?? url.path
+        // A drive's top in the one form Windows takes it (`E:\`), else the path as the file system takes it.
+        let path = Folders.driveRoot(of: url) ?? url.withUnsafeFileSystemRepresentation { $0.map { String(cString: $0) } } ?? url.path
         var buffer = [WCHAR](repeating: 0, count: Int(MAX_PATH) + 1)
         let gotTop = path.withCString(encodedAs: UTF16.self) { GetVolumePathNameW($0, &buffer, DWORD(buffer.count)) }
         guard gotTop else { return Found(identity: nil, ownDisk: false) }

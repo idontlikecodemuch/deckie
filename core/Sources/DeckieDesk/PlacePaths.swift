@@ -223,19 +223,16 @@ public enum SourceNaming {
         return holdsMostOf(s.files, at: root, size: size)
     }
 
-    /// A place's path in a form two places can be compared by. On Windows a drive's top (`E:\`) is never standardised
-    /// (Foundation's `standardizedFileURL` makes it a path below the working folder), and `E:\`, `E:/` and `e:\` are
-    /// one place. The one line to swap for the shared helper in `DeckieCrate/Folders.swift` when it lands is the
-    /// Windows branch's first line.
+    /// A place's path in a form two places can be compared by: `Folders.standardized` (a Windows drive's top is kept
+    /// as `E:\`, never standardised into a path below the working folder), and on Windows in lower case, because
+    /// Windows' names do not tell case apart (`C:\Music` and `c:\music` are one folder), which `Folders.same` does
+    /// only for the drive's letter.
     static func comparablePath(_ url: URL) -> String {
+        let p = Folders.standardized(url).path
         #if os(Windows)
-        let raw = url.withUnsafeFileSystemRepresentation { $0.map { String(cString: $0) } } ?? url.path
-        var p = raw.replacingOccurrences(of: "/", with: "\\").lowercased()
-        while p.count > 3, p.hasSuffix("\\") { p.removeLast() }
-        if p.count == 2, p.hasSuffix(":") { p += "\\" }
-        return p
+        return p.lowercased()
         #else
-        return url.standardizedFileURL.path
+        return p
         #endif
     }
 

@@ -183,6 +183,23 @@ import DeckieTestSupport
         #expect(!DeskRun.otherDrive(r, identify: { _ in Self.onA }) && !DeskRun.otherDrive(r, identify: { _ in Self.none }))
     }
 
+    /// A music CD is found by its disc, never by a drive's identity: a stopped run of one carries on or not by the
+    /// disc alone, and the reader is not asked.
+    @Test func aMusicCDIsNeverAskedForADrivesIdentity() throws {
+        let home = DeskHome(root: try scratch("ids-cd").appendingPathComponent("home"))
+        var r = RunRequest(folder: URL(fileURLWithPath: "/dev/disk9"), source: "Music CD", musicCD: "/dev/disk9", discId: "toc")
+        r.volume = Self.a   // even with one recorded, as no window writes for a disc
+        let asked = Asked()
+        #expect(!DeskRun.canCarryOn(r, home: home, open: { _ in throw DeskError("no disc") }, musicCDs: { [] },
+                                    identify: { _ in asked.count += 1; return Self.onB }))
+        #expect(asked.count == 0)
+        // A folder whose place is gone does not carry on, whatever its identity says.
+        var gone = RunRequest(folder: URL(fileURLWithPath: "/nowhere/USB"), source: "USB")
+        gone.volume = Self.a
+        #expect(!DeskRun.canCarryOn(gone, home: home, identify: { _ in Self.onA }))
+    }
+    final class Asked { var count = 0 }
+
     @Test func theCratesOwnSourcesAreWeighedWithTheFilesTheyHold() throws {
         var info = CrateInfo(id: "x", name: "Friday", createdAt: 1, openedAt: 1,
                              sourceRoots: ["USB": "/Volumes/USB", "Music CD": "/dev/disk9"],
@@ -232,7 +249,7 @@ import DeckieTestSupport
         #if os(Windows)
         // Two spellings of one drive's top are one place, and neither becomes a path below the working folder.
         #expect(SourceNaming.comparablePath(URL(fileURLWithPath: "E:\\")) == SourceNaming.comparablePath(URL(fileURLWithPath: "e:/")))
-        #expect(SourceNaming.comparablePath(URL(fileURLWithPath: "E:\\")) == "e:\\")
+        #expect(Folders.driveRoot(SourceNaming.comparablePath(URL(fileURLWithPath: "E:\\"))) == "E:\\")
         #endif
         #expect(SourceIdentity.inside("/home/dj/Music", below: "/", separator: "/") == "home/dj/Music")
     }
@@ -262,6 +279,12 @@ struct SticksWithOneNameRunTests {
         try song(1).write(to: shelfA.appendingPathComponent("House/01 One.wav"))
         try song(0.8).write(to: shelfA.appendingPathComponent("House/02 Two.wav"))
         try song(0.6).write(to: shelfB.appendingPathComponent("01 Three.wav"))
+        // The system's own folders on A, which a read leaves out (AudioFiles.isLeftOut): a song in the bin and one in
+        // System Volume Information are not songs A holds, so they are not evidence either.
+        try fm.createDirectory(at: shelfA.appendingPathComponent("$RECYCLE.BIN"), withIntermediateDirectories: true)
+        try fm.createDirectory(at: shelfA.appendingPathComponent("System Volume Information"), withIntermediateDirectories: true)
+        try song(0.4).write(to: shelfA.appendingPathComponent("$RECYCLE.BIN/Deleted.wav"))
+        try song(0.3).write(to: shelfA.appendingPathComponent("System Volume Information/Kept.wav"))
 
         // Which stick is at which path: the seam the system's reader stands behind.
         let plugged = Plugged()
@@ -300,6 +323,9 @@ struct SticksWithOneNameRunTests {
         try plug(shelfA, A, at: mount)
         #expect(try await add(mount).wentIn == 2)
         #expect(bySource() == ["USB": 2] && s.current?.sourceIds["USB"] == A)
+        // What A is known to hold, the evidence a later read weighs: its two songs, nothing from the system's folders.
+        let held = try #require(s.current).recordedSources(crate: s.crate, paths: s.placePaths).first { $0.name == "USB" }
+        #expect(held?.files.map(\.rel) == ["House/01 One.wav", "House/02 Two.wav"])
         // As if recorded before identities were kept: the next read has only the songs to go by.
         var info = try #require(s.current)
         info.sourceIds = [:]

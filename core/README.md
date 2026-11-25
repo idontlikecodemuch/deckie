@@ -467,7 +467,7 @@ deckie-build <folder> --out <name>.deckie [--rekordbox export.xml] [--jobs N] [-
 ```
 
 It finds every audio file below the folder by its extension (mp3, flac, wav, aif, aiff, aifc, m4a, mp4, aac, wma,
-ogg, opus and the protected m4p; hidden files and folders, crate packages and work folders are skipped), analyses each
+ogg, opus and the protected m4p; hidden files and folders, a system's own folders on a drive ($RECYCLE.BIN, RECYCLER, RECYCLED, System Volume Information, lost+found, any case, at any depth), crate packages and work folders are skipped), analyses each
 with the engine, several at a time, and writes the crate with `CrateWriter`. While it runs it prints a line per file:
 the count, the time since the start, an estimate of the time left and the file's own analysis time, or why it could
 not be analysed. At the end it prints a summary: files seen, analysed, taken from the work folder, the files with no
@@ -495,7 +495,8 @@ record, counted by reason and extension, and the files in the crate with damaged
   `unsupported` (a format this platform cannot decode: AAC, M4A and WMA on Linux, Ogg, Opus), `protected` (FairPlay),
   `damaged`, `decode_error` (could not be read), `source_gone` (not read because the folder read went away part-way:
   a drive taken out; told apart by asking, when a file fails, whether the folder read is still there, can be listed
-  and is not empty, and whether the file's own folder is there), `analysis_error` (no beat grid, too few bars, the
+  and is not empty, and whether the file's own folder is there; `folder_gone` instead when the caller says the folder
+  is not a drive, `BuildOptions.readsADrive`), `analysis_error` (no beat grid, too few bars, the
   model failed) and `duplicate` (the same bytes as another file, which has the record). Failures are remembered in the
   work folder too, except a file that could not be read or whose drive went away, which is tried again. The log's `built_by` is the building device's model
   label, the same as each record's `analysis.device`, never the machine's own name. A file that is in the crate but

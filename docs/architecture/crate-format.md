@@ -332,8 +332,10 @@ renames, applied here: `import_log.built_by` is a device label, the block is `im
   and Apple Lossless on Linux, WMA, Ogg, Opus), `protected` (copy protection: no decoder will ever read it), `damaged`
   (cut short or corrupted; since Nov 18, 2026 also an MP3 cut short whose remaining audio is too little to read),
   `decode_error` (could not be read, or failed otherwise while decoding), `source_gone` (added Nov 25, 2026: not read
-  because the drive or folder it was read from went away part-way through the build, such as a stick taken out; not
-  the file's fault, and read again by the next build; a reader that does not know the code shows it as it shows any
+  because the drive it was read from was taken out part-way through the build; `folder_gone` the same for a folder
+  that is not a drive's top, moved or removed; not the file's fault, and read again by the next build; a song whose
+  signature or print could not be finished from its file for it is left out with it too; a reader that does not know
+  the code shows it as it shows any
   other), `analysis_error` (decoded, but the analysis
   failed; before Nov 18, 2026 also no beat grid or too few bars), `no_beat` (added Nov 18, 2026: decoded, but too few
   beats to fit a beat grid), `too_short` (added Nov 18, 2026: a beat, but too few whole bars) and `duplicate` (the same bytes as another file, which has the record:

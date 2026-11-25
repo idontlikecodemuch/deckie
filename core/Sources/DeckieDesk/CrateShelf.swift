@@ -65,7 +65,7 @@ public struct CrateInfo: Codable, Equatable, Hashable, Sendable {
     /// Where each source that is a folder or a drive was read from. A music CD's drive is left out: its songs are
     /// not files there, and are found through the disc (`DeskAudio`).
     public var roots: [String: URL] {
-        sourceRoots.filter { discs[$0.key] == nil }.mapValues { URL(fileURLWithPath: $0) }
+        sourceRoots.filter { discs[$0.key] == nil }.mapValues { Folders.folderURL($0) }
     }
 
     /// A source taken out of the crate: where it was read from, and its disc id when it was a music CD.

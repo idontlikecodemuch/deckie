@@ -41,6 +41,21 @@ import DeckieTestSupport
         #expect(FileFailure.placeIsGone(root: stick, file: other))
     }
 
+    /// A drive's words for a drive, a folder's for a folder: what was asked to be read says which.
+    @Test func aFolderMovedIsSaidAsAFolder() throws {
+        let top = try scratch("which")
+        let stick = top.appendingPathComponent("Stick")
+        try FileManager.default.createDirectory(at: stick.appendingPathComponent("House"), withIntermediateDirectories: true)
+        // A folder somewhere is no drive; one the drive list names (here a stand-in list) is.
+        #expect(!DeskDrives.readsADrive(stick.appendingPathComponent("House"), environment: [:]))
+        #expect(DeskDrives.readsADrive(stick, environment: [DeskDrives.standInVariable: top.path]))
+        #expect(!DeskDrives.readsADrive(stick.appendingPathComponent("House"), environment: [DeskDrives.standInVariable: top.path]))
+        #expect(FileFailure.gone(drive: true).reason == R.sourceGone && FileFailure.gone(drive: false).reason == R.folderGone)
+        #expect(DeskWords.coded("reason", R.folderGone) == "The folder was moved or removed")
+        #expect(DeskWords.text("goneTitle.folder") == "Stopped: the folder was moved or removed")
+        #expect(DeskWords.count("goneBody.folder", 3) == "3 songs were not read. Put the folder back and add it again to read the rest.")
+    }
+
     @Test func theNewReasonHasItsWords() {
         #expect(R.all.contains(R.sourceGone) && R.sourceGone == "source_gone")
         #expect(DeskWords.coded("reason", R.sourceGone) == "The drive was taken out")
@@ -53,11 +68,13 @@ import DeckieTestSupport
     /// The run on a made-up stick:
     ///
     ///   S/House/00 broken.mp3   an ID3 tag and no audio: damaged, whatever happens to the drive
-    ///   S/House/01 Song X.wav   read; the drive is taken out while it is analysed, from its bytes already read
+    ///   S/House/01 Song X.wav   the drive is taken out while it is analysed: its analysis ends from the bytes read,
+    ///                           but its signature (made from the file) cannot be, so it is source_gone, not half made
     ///   S/House/02 Song Y.wav   not reached before the drive went: source_gone
     ///
-    /// Then the drive is put back with a fourth file, and added again: only Y is read (X and the broken file are known),
-    /// and the fourth, deleted while Y is analysed with the drive there, is the file's own problem: decode_error.
+    /// Then the drive is put back with a fourth file, and added again: X is finished from its kept analysis, only Y is
+    /// analysed, and the fourth, deleted while Y is analysed with the drive there, is the file's own problem:
+    /// decode_error.
     @Test(.enabled(if: Engine.available, "needs ONNX Runtime and the Beat This! model"))
     func aDriveTakenOutPartWaySaysSoAndAddingItAgainReadsTheRest() async throws {
         let fm = FileManager.default
@@ -92,39 +109,46 @@ import DeckieTestSupport
             hook.run(url)
             return DeskRun.portableAudioPrint(url, audio)
         }
+        // A signature made from the song's file after its analysis, as the Mac's is (ShazamKit reads the file).
+        let signer: DeskRun.SignatureMaker = { url in Data("sig ".utf8) + (try Data(contentsOf: url)).prefix(64) }
         let info = try home.shelf.make(name: "Night")
         func run(_ notes: Notes) throws -> (crate: Crate, report: RunReport) {
-            try DeskRun(home: home, crateId: info.id, request: RunRequest(folder: stick, source: "S"), jobs: 1,
-                        device: "Mac15,6", analyser: analyser, signer: nil, printer: DeskRun.portablePrint,
-                        audioPrinter: printer).run(progress: { notes.add($0) })
+            let r = DeskRun(home: home, crateId: info.id, request: RunRequest(folder: stick, source: "S"), jobs: 1,
+                            device: "Mac15,6", analyser: analyser, signer: signer, printer: DeskRun.portablePrint,
+                            audioPrinter: printer)
+            r.readsADrive = true   // a stick: a made-up one is a folder, which `DeskDrives.readsADrive` would say
+            return try r.run(progress: { notes.add($0) })
         }
 
-        // 1. Taken out while X is analysed: X goes in from the bytes already read, Y is not read.
+        // 1. Taken out while X is analysed. X's analysis ends from the bytes already read, but its signature, made
+        // from its file after that, cannot be: X is not kept half made, it is not read for the drive gone, as Y is.
         hook.action = { url in
             #expect(url.lastPathComponent == "01 Song X.wav")
             try? fm.moveItem(at: stick, to: away)
         }
         let notes1 = Notes()
         let one = try await CPUTurns.exclusive { try run(notes1) }
-        #expect(one.report.notIn == [R.damaged: 1, R.sourceGone: 1], "\(one.report.notIn)")
-        #expect(one.report.wentIn == 1 && one.report.analysed == 1 && one.report.notReadGone == 1)
-        #expect(one.crate.tracks.map(\.file.rel) == ["House/01 Song X.wav"])  // below the source's top
+        #expect(one.report.notIn == [R.damaged: 1, R.sourceGone: 2], "\(one.report.notIn)")
+        #expect(one.report.wentIn == 0 && one.report.analysed == 1 && one.report.notReadGone == 2)
+        #expect(one.report.songsRead == 0 && one.crate.tracks.isEmpty)
         let log = try #require(one.crate.manifest.importLog)
-        #expect(log.entries.map(\.rel) == ["S/House/00 broken.mp3", "S/House/02 Song Y.wav"])
-        #expect(log.entries.map(\.reason) == [R.damaged, R.sourceGone])
+        #expect(log.entries.map(\.rel) == ["S/House/00 broken.mp3", "S/House/01 Song X.wav", "S/House/02 Song Y.wav"])
+        #expect(log.entries.map(\.reason) == [R.damaged, R.sourceGone, R.sourceGone])
+        #expect(log.tracks == 0)
         #expect(!log.entries.contains { $0.message.contains(root.path) })
+        #expect(try CrateReader.read(from: home.shelf.package(info.id)).tracks.isEmpty)
         // No "That's the lot", no tick: the finished screen's words (both windows read them from the report).
         #expect(!notes1.all.contains { $0.code == "finished" })
-        #expect(one.report.stopped == nil)
-        #expect(DeskWords.count("goneBody", one.report.notReadGone)
-                == "1 song was not read. Plug it back in and add it again to read the rest.")
-        #expect(one.report.summaryLines == ["1 song went in."])
-        #expect(DeskWords.text("reasonCount", ["reason": DeskWords.coded("reason", R.sourceGone), "n": "1"])
-                == "The drive was taken out (1)")
+        #expect(one.report.stopped == nil && !one.report.goneWasFolder)
+        #expect(one.report.goneTitle == "Stopped: the drive was taken out")
+        #expect(one.report.goneBody == "2 songs were not read. Plug it back in and add it again to read the rest.")
+        #expect(DeskWords.text("reasonCount", ["reason": DeskWords.coded("reason", R.sourceGone), "n": "2"])
+                == "The drive was taken out (2)")
         #expect(notes1.lines.contains { if case .file("S/House/02 Song Y.wav", .failed(let f)) = $0 { f.reason == R.sourceGone } else { false } })
 
-        // 2. Put back, with a fourth file, and added again: Y is read now (a drive gone is not the file's lasting
-        // result); the fourth file is deleted while Y is analysed, the drive still there: the file's own problem.
+        // 2. Put back, with a fourth file, and added again: X is finished now from its kept analysis (signed, not
+        // analysed again) and Y is read (a drive gone is never a lasting result); the fourth file is deleted while Y
+        // is analysed, the drive still there: the file's own problem, "Could not be decoded".
         try fm.moveItem(at: away, to: stick)
         try TestTrack.wav(AudioBuffer(sampleRate: buffer.sampleRate, channelCount: buffer.channelCount,
                                       samples: buffer.samples.map { $0 * 0.25 }))
@@ -138,6 +162,7 @@ import DeckieTestSupport
         #expect(two.report.analysed == 1 && two.report.notReadGone == 0)
         #expect(two.report.notIn == [R.damaged: 1, R.decodeError: 1], "\(two.report.notIn)")
         #expect(Set(two.crate.tracks.map(\.file.rel)) == ["House/01 Song X.wav", "House/02 Song Y.wav"])
+        #expect(two.crate.tracks.allSatisfy { $0.signatures["o"] != nil && $0.fingerprint != nil }, "every song whole")
         #expect(DeskWords.coded("reason", R.decodeError) == "Could not be decoded")
         // Nothing was lost to a drive this time: the run ends as it always did.
         #expect(notes2.all.contains { $0.code == "finished" })
