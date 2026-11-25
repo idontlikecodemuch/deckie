@@ -113,7 +113,12 @@ on another Mac. Today Desk is signed ad hoc (it opens only on the Mac that built
 - *Why:* without it a DJ cannot open Desk at all (`desk.md`, section 5).
 - *Depends on:* a Developer ID certificate on the App Hold Media team; the models and runtime bundled, not read from
   the developer's checkout (Now-9).
-- *State:* decided, not started. *Size:* medium.
+- *State:* on branch `pc/mac-release`: `desk-app/tools/release-mac.sh` builds, signs with the hardened runtime,
+  verifies, makes the disk image and (only when named) notarises and staples; one entitlement, the microphone
+  (`desk-app/README.md`, "Releasing Desk for Mac"). Proven Nov 25, 2026 with a trial signature (the team's
+  development certificate): the signature verifies, songs are read end to end under the hardened runtime, the disk
+  image mounts. Waiting on the owner: the Developer ID certificate and the notary profile, then one command. Not
+  proven: notarisation, Gatekeeper, a second Mac. The tester's page is `mac-first-test.md`. *Size:* medium.
 
 **Now-7. An app icon and a credits screen for Desk.** Desk for Mac has no icon set; neither Desk shows the credits that
 Booth now shows (`CreditsView.swift`), which D15 and the licences ask for.
@@ -159,7 +164,7 @@ one on Dec 14, 2026). The Mac download has no home yet.
 
 **Now-13. Tester pages for Desk.** `windows-first-test.md` is the Windows page; a Mac page is needed, and both updated
 for the log and the lookup (`pc/lookup-transports` rewrites the Windows one).
-- *State:* Windows drafted; Mac not started. *Size:* small.
+- *State:* Windows drafted; Mac drafted on branch `pc/mac-release` (`mac-first-test.md`, Nov 25, 2026). *Size:* small.
 
 ---
 

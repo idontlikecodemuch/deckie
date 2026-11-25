@@ -40,6 +40,86 @@ The post-build step copies the runtime into `Contents/Frameworks` and the models
 the app points the engine at them on launch (environment variables set in-process, which a developer's own
 `DECKIE_*` variables override). Code signing is ad hoc for now.
 
+## Releasing Desk for Mac
+
+A download that opens on another Mac needs three things the everyday build above does not have: a Developer ID
+signature, the hardened runtime (a set of limits macOS puts on a signed app, which notarisation requires), and
+Apple's notarisation (Apple checks the app for malicious code and issues a ticket that is stapled to it, so
+Gatekeeper lets it open without asking twice). `tools/release-mac.sh` does all of it; the everyday build and CI stay
+ad hoc. Decided Nov 25, 2026 (roadmap Now-6).
+
+**What the owner does once**, on the Mac that makes releases:
+
+1. The certificate: Xcode > Settings > Accounts, the App Hold Media team, Manage Certificates, + and "Developer ID
+   Application". Only the team's account holder can make one. It goes into the login keychain; the script finds it
+   there by name each time, so no team id or certificate is written in this repository.
+2. The notary profile: an app-specific password for the team's Apple Account (account.apple.com, Sign-In and
+   Security), then
+
+       xcrun notarytool store-credentials deckie-notary --apple-id <the account's Apple ID> --team-id <the team>
+
+   which asks for that password and keeps it in the keychain under the name `deckie-notary`.
+
+**Then, from the main checkout**, with `Vendor/` filled as for the everyday build:
+
+    bash desk-app/tools/release-mac.sh                 # build, sign, verify, package
+    bash desk-app/tools/release-mac.sh notarise        # sends the app and the disk image to Apple, staples, checks
+
+The first command needs no network but for the two pinned downloads below and Apple's timestamp server. The second
+is the only one that sends anything to Apple, and runs only when named. It ends with Gatekeeper's answer on both;
+the file to hand out is `desk-app/build/release/Deckie Desk.dmg`. Testers get `docs/product/mac-first-test.md`.
+
+**The stages**, each runnable alone and in order (`release-mac.sh sign verify`, and so on):
+
+- *build*: a clean Release build for Apple silicon only (`ARCHS=arm64`; the runtime in `Vendor/` is arm64),
+  `nice -n 19`, two jobs, with 30 GB free on the disk. It makes sure the app ships what the Windows zip ships:
+  the learned key reader's file and its credit list (fetched into `Vendor/models` by `core/Tools/fetch-key-model.sh`
+  when missing, checked by their pinned hashes; the stage stops if they cannot be had), and Deckie's own ONNX
+  Runtime, the build without Microsoft's usage-reporting client (DEPENDENCIES.md, section 6), fetched into
+  `build/release/onnxruntime` from this repository's release, checked by the archive's and the library's pinned
+  hashes and by `core/Tools/scan-onnxruntime.sh`, and put in the app in place of whatever library `Vendor/` holds.
+  It ends with the app's own `--check-engine`, which must say `key reader: learned`.
+- *sign*: every piece of code in the app, found by looking at each file (today only the ONNX Runtime library; the
+  Swift packages are linked into the app's program), then the app, with `--options runtime --timestamp` and
+  `Desk/Desk.entitlements`. The identity is the keychain's one "Developer ID Application" identity, or
+  `DECKIE_SIGN_IDENTITY`; with neither, it stops and says what is missing.
+- *verify*: `codesign --verify --deep --strict`, the signature's flags and entitlements, each piece of code checked
+  for the runtime flag and the app's team (what library validation asks), and `spctl -a -vv`, which rejects the app
+  until it is notarised; reported, not a failure.
+- *package*: `Deckie Desk.dmg`, volume name "Deckie Desk", holding the app and an alias to Applications, signed with
+  the same identity, then mounted read-only to check that the app inside verifies.
+- *notarise*: the app zipped with `ditto -c -k --keepParent`, sent with `notarytool submit --wait`, stapled; the
+  disk image made again from the stapled app, signed, sent, stapled; then `spctl -a -vv -t open --context
+  context:primary-signature` on the image and `spctl -a -vv` on the app. On a refusal it prints the service's log.
+  It refuses a signature that is not Developer ID or has no secure timestamp.
+
+The script writes only in `desk-app/build/release/` (git-ignored), and refuses any other path, except the generated
+`Desk.xcodeproj` and the key reader's two files in `Vendor/models`, which the everyday build makes too. Every run of
+Desk it makes uses scratch storage there, never the real one.
+
+**The entitlements** (`Desk/Desk.entitlements`), decided on what the code does, Nov 25, 2026:
+
+- `com.apple.security.device.audio-input`, the only one: Booth listens through the microphone (DeckieCapture's
+  `Microphone`, miniaudio on Core Audio). macOS still asks the DJ, with `NSMicrophoneUsageDescription`.
+- No `disable-library-validation`: ONNX Runtime is opened with `dlopen` from `Contents/Frameworks`
+  (`core/Sources/COnnxRuntime/deckie_ort.c`) and signed by the same team as the app, which is what library
+  validation asks. No `allow-jit` or `allow-unsigned-executable-memory`: nothing writes code at run time; a song
+  read end to end under the hardened runtime without them showed it. No Apple Events: Desk sends none.
+- ShazamKit: Desk only makes signatures from files (`SHSignatureGenerator`, `Signatures.swift`) and never matches
+  against Shazam's catalogue; Booth names songs with Deckie's own recogniser (DeckieRecognition). Neither needs an
+  entitlement. No App Sandbox.
+
+**Proven Nov 25, 2026, with a trial signature** (the team's Apple Development identity through
+`DECKIE_SIGN_IDENTITY`; same team, so library validation behaves as it will with Developer ID): the signature
+verifies with the runtime flag and the one entitlement, the app reads the demo songs (`site/demo/audio`, CC0) end to
+end under the hardened runtime, the ONNX Runtime library loading and all three models running (the beat grid from
+Beat This!, vocals from YAMNet, keys from the learned reader), and the disk image mounts with the app inside
+verifying and reading a song from there. A copy whose ONNX Runtime library was signed ad hoc instead could not open
+it ("different Team IDs"), so library validation is really in force and the same-team signature is what lets the
+library load. **Not proven until the certificate and the profile exist:** a Developer ID
+signature, notarisation, stapling, Gatekeeper's yes, and opening on a second Mac. The microphone question under the
+release signature needs a person at the Mac.
+
 **Bundle id and the crate file's type.** The bundle id is `io.deckie.desk` (until November 2026 it was under an
 earlier prefix). Desk declares the crate file's type as the booth does (`project.yml`, `UTExportedTypeDeclarations`):
 `io.deckie.crate` for the package form, `io.deckie.crate-file` for the single-file form, both under the extension

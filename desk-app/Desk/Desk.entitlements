@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  Deckie Desk's entitlements under the hardened runtime, for the release signature only (desk-app/tools/release-mac.sh
+  signs with them; everyday builds stay ad hoc, without the runtime, and do not read this file). No App Sandbox.
+  Each one was decided on what the code does (desk-app/README.md, "Releasing Desk for Mac", says the same):
+
+  com.apple.security.device.audio-input: the Booth mode listens through the microphone (Booth.swift, DeckieCapture's
+    Microphone through miniaudio's Core Audio backend). Under the hardened runtime the microphone gives nothing without
+    it; macOS still asks the DJ once, in the words of NSMicrophoneUsageDescription.
+
+  Left out, on evidence:
+  - disable-library-validation: ONNX Runtime is opened with dlopen from Contents/Frameworks (deckie_ort.c), and the
+    release script signs that library with the app's own identity, so library validation passes. Nothing else is
+    loaded at run time; the Swift packages are linked into the app's program.
+  - allow-jit, allow-unsigned-executable-memory: ONNX Runtime's CPU provider and the rest of the engine write no code
+    at run time. A song read end to end under the hardened runtime without them showed it (Nov 25, 2026).
+  - allow-dyld-environment-variables: the DECKIE_* variables the app sets for itself are read by its own code, not by
+    the dynamic loader.
+  - automation.apple-events: Desk sends no Apple Events (no AppleScript, no scripting of other apps).
+  - ShazamKit: Desk only makes signatures from files (SHSignatureGenerator); its Booth mode names songs with Deckie's
+    own recogniser, not Shazam's catalogue. Making signatures on the Mac needs no entitlement.
+  - network.client: only the App Sandbox restricts the network; the lookup (MusicBrainz, when the DJ asks) needs none.
+  - Files the DJ chooses, drives and CDs: outside the sandbox these are macOS's privacy questions, not entitlements.
+-->
+<plist version="1.0">
+<dict>
+	<key>com.apple.security.device.audio-input</key>
+	<true/>
+</dict>
+</plist>
