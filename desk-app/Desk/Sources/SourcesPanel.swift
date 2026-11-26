@@ -17,6 +17,35 @@ enum SourceItem: Hashable {
     case track(String, source: String, folder: String)
 }
 
+/// A folder's or a song's identity in the Sources panel's one list: which source and folder it is in, and for a song
+/// which song, so it is unique across the whole list (a song is in a folder once; `nth` keeps the id unique even if
+/// one were there twice). The list reuses a row by its id, so an id that repeated in another folder showed that
+/// folder's row in its place.
+struct SourceRowID: Hashable {
+    var item: SourceItem
+    var nth = 0
+
+    var folder: String {
+        switch item {
+        case let .folder(_, f), let .track(_, _, f): return f
+        case .source: return ""
+        }
+    }
+
+    /// One song's row in a folder: its id in the list, the song, and its number there.
+    struct Song { var id: SourceRowID; var song: String; var number: Int? }
+
+    /// A folder's songs in their order, each with its own id.
+    static func songs(_ places: [(id: String, number: Int?)], source: String, folder: String) -> [Song] {
+        var seen: [String: Int] = [:]
+        return places.map { p in
+            let n = seen[p.id, default: 0]
+            seen[p.id] = n + 1
+            return Song(id: SourceRowID(item: .track(p.id, source: source, folder: folder), nth: n), song: p.id, number: p.number)
+        }
+    }
+}
+
 // MARK: - the corrections, through the shared core
 
 extension DeskModel {
@@ -107,20 +136,24 @@ struct SourcesPanel: View {
                 }
                 .padding(Look.Space.sourcesEmptyPadding).frame(maxHeight: .infinity)
             } else {
+                // One list holds every source, folder and song, and the list tells its rows apart by their ids alone:
+                // each id says which source, folder and song it is (`SourceRowID`), so no two rows anywhere share one.
+                // (Ids that were only a song's index in its folder repeated in every folder, and the list showed one
+                // folder's songs under the others; Nov 25, 2026.)
                 List(selection: $model.sourceSelection) {
                     ForEach(outline, id: \.name) { s in
                         let count = DeskSourceRow.songs(in: s)
                         Label(Words.sourceLine(s.name, songs: count), systemImage: "externaldrive")
                             .font(Look.Fonts.sourceName).tag(SourceItem.source(s.name))
-                        ForEach(s.folders, id: \.name) { f in
-                            Label(f.name.isEmpty ? Words.topFolder : f.name, systemImage: "folder")
-                                .padding(.leading, Look.Space.sourcesFolderIndent).tag(SourceItem.folder(source: s.name, folder: f.name))
-                            let rows = model.crate?.folderPlaces(disc: s.name, folder: f.name) ?? []
-                            ForEach(rows.indices, id: \.self) { i in
-                                trackRow(rows[i].id, number: rows[i].number, source: s.name)
-                                    .tag(SourceItem.track(rows[i].id, source: s.name, folder: f.name))
+                        ForEach(s.folders.map { SourceRowID(item: .folder(source: s.name, folder: $0.name)) }, id: \.self) { fid in
+                            let f = fid.folder
+                            Label(f.isEmpty ? Words.topFolder : f, systemImage: "folder")
+                                .padding(.leading, Look.Space.sourcesFolderIndent).tag(fid.item)
+                            let rows = SourceRowID.songs(model.crate?.folderPlaces(disc: s.name, folder: f) ?? [], source: s.name, folder: f)
+                            ForEach(rows, id: \.id) { row in
+                                trackRow(row.song, number: row.number, source: s.name).tag(row.id.item)
                             }
-                            .onMove { from, to in model.moveInFolder(source: s.name, folder: f.name, from: from, to: to) }
+                            .onMove { from, to in model.moveInFolder(source: s.name, folder: f, from: from, to: to) }
                         }
                     }
                 }

@@ -467,7 +467,7 @@ deckie-build <folder> --out <name>.deckie [--rekordbox export.xml] [--jobs N] [-
 ```
 
 It finds every audio file below the folder by its extension (mp3, flac, wav, aif, aiff, aifc, m4a, mp4, aac, wma,
-ogg, opus and the protected m4p; hidden files and folders, crate packages and work folders are skipped), analyses each
+ogg, opus and the protected m4p; hidden files and folders, a system's own folders on a drive ($RECYCLE.BIN, RECYCLER, RECYCLED, System Volume Information, lost+found, any case, at any depth), crate packages and work folders are skipped), analyses each
 with the engine, several at a time, and writes the crate with `CrateWriter`. While it runs it prints a line per file:
 the count, the time since the start, an estimate of the time left and the file's own analysis time, or why it could
 not be analysed. At the end it prints a summary: files seen, analysed, taken from the work folder, the files with no
@@ -493,9 +493,12 @@ record, counted by reason and extension, and the files in the crate with damaged
 - **Nothing left out silently** (decision P18). Every file that cannot be analysed is counted by reason and extension
   in the summary and listed in the manifest's `import_log` with its path below the folder and the reason in words:
   `unsupported` (a format this platform cannot decode: AAC, M4A and WMA on Linux, Ogg, Opus), `protected` (FairPlay),
-  `damaged`, `decode_error` (could not be read), `analysis_error` (no beat grid, too few bars, the model failed) and
-  `duplicate` (the same bytes as another file, which has the record). Failures are remembered in the work folder too,
-  except a file that could not be read, which is tried again. The log's `built_by` is the building device's model
+  `damaged`, `decode_error` (could not be read), `source_gone` (not read because the folder read went away part-way:
+  a drive taken out; told apart by asking, when a file fails, whether the folder read is still there, can be listed
+  and is not empty, and whether the file's own folder is there; `folder_gone` instead when the caller says the folder
+  is not a drive, `BuildOptions.readsADrive`), `analysis_error` (no beat grid, too few bars, the
+  model failed) and `duplicate` (the same bytes as another file, which has the record). Failures are remembered in the
+  work folder too, except a file that could not be read or whose drive went away, which is tried again. The log's `built_by` is the building device's model
   label, the same as each record's `analysis.device`, never the machine's own name. A file that is in the crate but
   whose decoder played damaged MP3 frames as silence is listed too, reason `damaged_frames`, with the frames' times
   ("damaged frame at 1:01.234 (26 ms), played as silence"), so the DJ knows the file is faulty though playable.
@@ -533,8 +536,9 @@ record, counted by reason and extension, and the files in the crate with damaged
   `docs/architecture/crate-format.md`, "Additions with the crate builder"). The reader is written here (`XMLScanner`,
   `RekordboxCollection`) from the format pyrekordbox documents, so no XML library is needed at run time.
 - **File tags.** A file's own title and artist (ID3v2 2.2 to 2.4 at the front of the file or in a WAV or AIFF chunk,
-  or a FLAC Vorbis comment) name the track when rekordbox does not (source `tag`; else the file name, `filename`).
-  `--bpm-tags` also takes the file's tempo tag (TBPM, or BPM in a Vorbis comment) as the tag tempo where rekordbox gives
+  a FLAC Vorbis comment, or an MP4's `ilst` in an `.m4a`, read since Nov 25, 2026) name the track when rekordbox does
+  not (source `tag`; else the file name, `filename`).
+  `--bpm-tags` also takes the file's tempo tag (TBPM, BPM in a Vorbis comment, or an MP4's `tmpo`) as the tag tempo where rekordbox gives
   none. The tag tempo used is a fact about the file, recorded in `file.tag_bpm`; its source is not kept, as rekordbox's
   tempo is taken whenever there is one, so the tag is rekordbox's exactly when it equals `imported.rekordbox.bpm`.
 

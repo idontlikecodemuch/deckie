@@ -118,6 +118,15 @@ public enum DeskWords {
         "stoppedTitle.same.one": "Stopped: 1 song from {read} is in the crate",
         "stoppedTitle.same.other": "Stopped: {n} songs from {read} are in the crate",
         "stoppedBody": "The rest isn't read yet. Carry on whenever you like: the songs already read are not read again.",
+        // new (Nov 25, 2026): the finished screen when the drive was taken out part-way (songs not read, reason
+        // `source_gone`), in place of a tick and "That's the lot". Adding the drive again reads only the rest.
+        "goneTitle": "Stopped: the drive was taken out",
+        "goneBody.one": "1 song was not read. Plug it back in and add it again to read the rest.",
+        "goneBody.other": "{n} songs were not read. Plug it back in and add it again to read the rest.",
+        // The same when what was read is a folder, not a drive.
+        "goneTitle.folder": "Stopped: the folder was moved or removed",
+        "goneBody.folder.one": "1 song was not read. Put the folder back and add it again to read the rest.",
+        "goneBody.folder.other": "{n} songs were not read. Put the folder back and add it again to read the rest.",
         "takeBackOut": "Take this back out",
 
         // while it works
@@ -451,6 +460,8 @@ public enum DeskWords {
         "keyFrom.hpcp-whitened": "read by Deckie",
         "keyFrom.three-answer": "read by Deckie",
         "keyFrom.stft-edma": "read by Deckie",
+        // new (Nov 25, 2026): Deckie's learned key reader (engine 0.7.0) was shown by its code.
+        "keyFrom.learned-key": "read by Deckie",
         "keyFrom.other": "from {code}",
         "programName.rekordbox-xml": "rekordbox",
         "programName.traktor": "Traktor",
@@ -466,6 +477,7 @@ public enum DeskWords {
         "programName.hpcp-whitened": "Deckie",
         "programName.three-answer": "Deckie",
         "programName.stft-edma": "Deckie",
+        "programName.learned-key": "Deckie",
         "programName.other": "{code}",
         "nameFromPart.tag": "the file's tags",
         "nameFromPart.filename": "the file name",
@@ -538,6 +550,10 @@ public enum DeskWords {
         "reason.duplicate": "The same file as another",
         "reason.damaged": "Damaged or incomplete",
         "reason.decode_error": "Could not be decoded",
+        // new (Nov 25, 2026): a file not read because its drive was taken out (or the folder read went away) part-way.
+        "reason.source_gone": "The drive was taken out",
+        // The same for a folder that is not a drive's top, moved or removed part-way.
+        "reason.folder_gone": "The folder was moved or removed",
         "reason.analysis_error": "Analysis failed",
         "reason.skipped": "Folder left out",
         // new (Nov 20, 2026): the line under a file that didn't go in, in place of the decoder's own words (kept in the
@@ -1145,6 +1161,10 @@ public enum DeskWords {
         return out
     }
 
+    /// The words with their blanks filled. A `{detail}` (what went wrong, in the words of the part that failed) set
+    /// between sentences or at the end is made a sentence of its own: a full stop is put after it when it ends with
+    /// no mark of its own ("E:/ is not a folder Songs already read are kept." until Nov 25, 2026), and an empty one
+    /// leaves no double space. One inside brackets is left as it is. desk.js `fill` does the same.
     public static func fill(_ template: String, _ values: [String: String]) -> String {
         guard template.contains("{"), !values.isEmpty else { return template }
         var out = ""
@@ -1153,14 +1173,31 @@ public enum DeskWords {
             out += rest[..<open]
             let after = rest[rest.index(after: open)...]
             if let close = after.firstIndex(of: "}"), let v = values[String(after[..<close])] {
-                out += v
+                let name = after[..<close]
                 rest = after[after.index(after: close)...]
+                if name == "detail", rest.isEmpty || rest.first == " " {
+                    let d = sentence(v)
+                    if d.isEmpty {
+                        if rest.first == " " { rest = rest.dropFirst() } else if out.hasSuffix(" ") { out.removeLast() }
+                    }
+                    out += d
+                } else {
+                    out += v
+                }
             } else {
                 out += "{"
                 rest = after
             }
         }
         return out + rest
+    }
+
+    /// `text` as a sentence of its own in a longer message: trimmed, with a full stop after it unless it already
+    /// ends with one, a question or exclamation mark, or an ellipsis.
+    public static func sentence(_ text: String) -> String {
+        let t = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard let last = t.last else { return "" }
+        return ".!?…".contains(last) ? t : t + "."
     }
 
     /// The table as JSON with its keys sorted, as the engine sends it to the pages.

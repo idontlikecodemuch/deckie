@@ -19,11 +19,15 @@ public struct RunRequest: Codable, Equatable, Sendable {
     /// the same disc is in a drive again.
     public var musicCD: String?
     public var discId: String?
+    /// The identity of the drive `folder` was on when the run was asked for (`SourceIdentity`; Nov 25, 2026), when
+    /// the system gave one: a run carried on reads only that drive, never another mounted at the same path since.
+    /// Nil in a run asked for before, or where there is none. Left out of `pending.json` when nil.
+    public var volume: SourceIdentity?
     public init(folder: URL, source: String?, rekordbox: URL? = nil, musicCD: String? = nil, discId: String? = nil) {
         self.folder = folder.path; self.source = source; self.rekordbox = rekordbox?.path
         self.musicCD = musicCD; self.discId = discId
     }
-    public var folderURL: URL { URL(fileURLWithPath: folder) }
+    public var folderURL: URL { Folders.folderURL(folder) }
     /// What the run reads, by its own name: the source's, or the folder's.
     public var name: String { source ?? URL(fileURLWithPath: folder).lastPathComponent }
 }
@@ -426,6 +430,18 @@ public struct RunReport: Codable, Equatable, Sendable {
 
     /// Songs that did not go in.
     public var notInCount: Int { notIn.values.reduce(0, +) }
+    /// Songs not read because the drive was taken out (or the folder read went away) part-way through the run
+    /// (`source_gone`). The finished screen then says so (`goneTitle`, `goneBody`) in place of a tick and "That's the
+    /// lot"; desk.js `drawFinished` reads the same count from `not_in`.
+    public var notReadGone: Int { CrateManifest.ImportLog.Reason.gone.reduce(0) { $0 + (notIn[$1] ?? 0) } }
+    /// Whether the place gone was a folder, not a drive (only `folder_gone` songs lost): its words are a folder's.
+    public var goneWasFolder: Bool {
+        (notIn[CrateManifest.ImportLog.Reason.folderGone] ?? 0) > 0 && (notIn[CrateManifest.ImportLog.Reason.sourceGone] ?? 0) == 0
+    }
+    /// The finished screen's title and the line under it for `notReadGone`, a drive's or a folder's words. desk.js
+    /// `drawFinished` says the same.
+    public var goneTitle: String { DeskWords.text(goneWasFolder ? "goneTitle.folder" : "goneTitle") }
+    public var goneBody: String { DeskWords.count(goneWasFolder ? "goneBody.folder" : "goneBody", notReadGone) }
 
     /// The finished screen's first lines, in Desk's words (desk.js `drawFinished` says the same): the songs that went
     /// in, counted as the crate counts them (a song in two places once, as "That's the lot" and the sources say); for
@@ -475,10 +491,16 @@ public final class DeskRun: @unchecked Sendable {
     let signer: SignatureMaker?
     let printer: PrintMaker
     let audioPrinter: AudioPrintMaker?
+    /// Whether the run reads a drive (its top, or a drive listed), for what it says when the place goes away part-way
+    /// ("The drive was taken out", else "The folder was moved or removed"); nil finds out (`DeskDrives.readsADrive`)
+    /// before anything is read.
+    public var readsADrive: Bool? = nil
     /// Opens a music CD by its location (`MusicCDs.open`; a test gives a stand-in), and lists the drives holding
     /// one (to find the disc when it is in another drive).
     public var openMusicCD: (String) throws -> MusicCD = { try MusicCDs.open($0) }
     public var findMusicCDs: () -> [MusicCDs.Found] = { MusicCDs.list() }
+    /// What the system says of the drive the run reads (`SourceIdentity.read`; a test gives a stand-in).
+    public var identify: SourceIdentity.Reader = SourceIdentity.read
     /// Stop (the run screen's button): no further song is started, the ones being read finish, and the crate is saved
     /// with every song read so far. `stop(now: true)` (Desk quitting, its window closed) ends the songs being analysed
     /// at their next stage instead (a few seconds, not the rest of a song); they are read again on Carry on. The run stays pending, so Carry on reads the rest (quickly: what was read is kept).
@@ -501,13 +523,22 @@ public final class DeskRun: @unchecked Sendable {
     public static let placesFile = "places.json"
     public static let namesFile = NameBook.file
 
-    /// Whether a run that stopped can carry on now: its folder is here, or for a music CD, the same disc is in a
-    /// drive.
+    /// Whether a run that stopped can carry on now: its folder is here (on the same drive, when the drive's identity
+    /// was known: another stick mounted at the same path is not it), or for a music CD, the same disc is in a drive.
     public static func canCarryOn(_ r: RunRequest, home: DeskHome,
                                   open: (String) throws -> MusicCD = { try MusicCDs.open($0) },
-                                  musicCDs: () -> [MusicCDs.Found] = { MusicCDs.list() }) -> Bool {
-        guard let id = r.discId, r.musicCD != nil else { return FileManager.default.fileExists(atPath: r.folder) }
+                                  musicCDs: () -> [MusicCDs.Found] = { MusicCDs.list() },
+                                  identify: SourceIdentity.Reader = SourceIdentity.read) -> Bool {
+        guard let id = r.discId, r.musicCD != nil else {
+            return Folders.isFolder(Folders.folderURL(r.folder)) && !otherDrive(r, identify: identify)
+        }
         return DiscRecords.find(id, near: r.musicCD, open: open, musicCDs: musicCDs) != nil
+    }
+
+    /// The run's folder is on a drive other than the one it was asked for: both identities known, and different.
+    static func otherDrive(_ r: RunRequest, identify: SourceIdentity.Reader) -> Bool {
+        guard let asked = r.volume, let now = identify(r.folderURL).identity else { return false }
+        return asked != now
     }
 
     /// The run a crate has left unfinished, if any.
@@ -540,6 +571,8 @@ public final class DeskRun: @unchecked Sendable {
         var order = RunOrder()
         /// Songs whose print was made from the analysis's audio in this run (counted as made, not kept).
         var printedInHand = Set<String>()
+        /// Songs whose signature or print could not be made from their file.
+        var finishFailed = Set<String>()
     }
 
     public func run(progress: @escaping @Sendable (RunProgress) -> Void = { _ in }) throws -> (crate: Crate, report: RunReport) {
@@ -550,6 +583,13 @@ public final class DeskRun: @unchecked Sendable {
         let pkg = shelf.package(crateId)
         let pendingURL = shelf.file(Self.pendingFile, of: crateId)
         let carriedOn = FileManager.default.fileExists(atPath: pendingURL.path)
+        // A folder or a drive: what the system says of it now. A run asked for on one drive reads that drive only; a
+        // different stick mounted at the same path since is not in a drive as far as this run goes.
+        let drive = request.musicCD == nil ? identify(request.folderURL) : nil
+        if let asked = request.volume, let now = drive?.identity, asked != now {
+            throw DeskError(DeskWords.text("error.notInADrive", ["name": request.name]))
+        }
+        // The request is kept as it was asked for (the windows put the drive's identity in it, `sourceRequest`).
         try JSONFile.write(request, to: pendingURL)
 
         let fm = FileManager.default
@@ -576,6 +616,7 @@ public final class DeskRun: @unchecked Sendable {
                                    source: request.source, keepSources: keep, sharedRecords: store.records,
                                    files: disc)
         options.stop = stopFlag
+        options.readsADrive = disc != nil || (readsADrive ?? DeskDrives.readsADrive(folder))
         let prefix = request.source.map { $0 + "/" } ?? ""
         let state = State()
         let queue = DispatchQueue(label: "deckie.desk.finish", qos: .userInitiated)
@@ -649,7 +690,7 @@ public final class DeskRun: @unchecked Sendable {
                         try store.saveSignature(data, made: .init(madeBy: device, madeAt: Self.utcNow()), id: id)
                         made = true
                         state.lock.lock(); state.sigMade += 1; state.lock.unlock()
-                    } catch { state.lock.lock(); state.sigFailed += 1; state.lock.unlock() }
+                    } catch { state.lock.lock(); state.sigFailed += 1; state.finishFailed.insert(id); state.lock.unlock() }
                 }
             }
             if store.print(id) != nil {
@@ -662,7 +703,7 @@ public final class DeskRun: @unchecked Sendable {
                     try store.savePrint(try printer(url), id: id)
                     made = true
                     state.lock.lock(); state.printMade += 1; state.lock.unlock()
-                } catch { state.lock.lock(); state.printFailed += 1; state.lock.unlock() }
+                } catch { state.lock.lock(); state.printFailed += 1; state.finishFailed.insert(id); state.lock.unlock() }
             }
             state.lock.lock()
             state.finishedIds.insert(id)
@@ -794,6 +835,12 @@ public final class DeskRun: @unchecked Sendable {
         if let s = request.source {
             info.sourceRoots[s] = folder.path
             info.discs[s] = disc?.base.toc.id
+            // The drive's identity, learned now for a source recorded before identities were kept. One identity
+            // names one source: no other keeps it. Where the system gives none this time, the one known is kept.
+            if let id = drive?.identity {
+                for (other, i) in info.sourceIds where other != s && i == id { info.sourceIds[other] = nil }
+                info.sourceIds[s] = id
+            }
         } else { info.musicFolder = folder.path }
         let roots = info.roots, music = info.musicFolderURL
         let todo = crate.tracks.filter { t in
@@ -821,6 +868,36 @@ public final class DeskRun: @unchecked Sendable {
         }
         state.lock.lock(); state.done = state.total; state.lock.unlock()
         emit(.saving, nil)
+
+        // A song of this read that could not be finished because the drive was taken out (or the folder moved) before
+        // its signature or print was made from its file is not kept half made (Nov 25, 2026: songs went in that the
+        // booth could not name): it is not in the crate, it is listed as not read for the place gone, and adding the
+        // drive again finishes it (its analysis is kept, so it is not analysed again). One with a place elsewhere
+        // than this read keeps it.
+        var goneEntries: [CrateManifest.ImportLog.Entry] = []
+        var droppedFromScreen = 0
+        if disc == nil {
+            state.lock.lock(); let unfinished = state.finishFailed; state.lock.unlock()
+            let gone = FileFailure.gone(drive: options.readsADrive)
+            for id in unfinished.sorted() {
+                guard let reads = result.placesRead[id], let first = reads.first,
+                      FileFailure.placeIsGone(root: folder, file: folder.appendingPathComponent(first.rel)),
+                      let i = crate.tracks.firstIndex(where: { $0.id == id }) else { continue }
+                let here = Set(reads.map(\.place))
+                guard crate.tracks[i].ident.allPlaces.allSatisfy(here.contains) else { continue }
+                crate.tracks.remove(at: i)
+                state.lock.lock(); if state.tally.has(id) { droppedFromScreen += 1 }; state.lock.unlock()
+                for r in reads {
+                    goneEntries.append(.init(rel: prefix + r.rel, ext: CratePath.fileExtension(of: r.rel).lowercased(),
+                                             reason: gone.reason, message: gone.message))
+                }
+            }
+            if !goneEntries.isEmpty, var log = crate.manifest.importLog {
+                log.entries = (log.entries + goneEntries).sorted { $0.rel.utf8.lexicographicallyPrecedes($1.rel.utf8) }
+                log.tracks = crate.tracks.count
+                crate.manifest.importLog = log
+            }
+        }
 
         // 3. Save: signatures and fingerprints into the crate file, copies linked, the DJ's fixes put back, the crate's name.
         // The name as it is now: the DJ may have renamed the crate while it was read.
@@ -871,7 +948,7 @@ public final class DeskRun: @unchecked Sendable {
 
         // 4. The report, and the run's line in the crate's log.
         typealias Reason = CrateManifest.ImportLog.Reason
-        let mine = result.entries.filter { e in
+        let mine = (result.entries + goneEntries).filter { e in
             if let s = request.source { return e.rel.hasPrefix(s + "/") }
             return !keep.contains { e.rel.hasPrefix($0 + "/") }
         }
@@ -899,7 +976,7 @@ public final class DeskRun: @unchecked Sendable {
                            damagedSectors: r.damagedSectors, titled: r.discTitle != nil, textDetail: r.textDetail)
             }, covers: result.covers,
             fingerprinted: result.fingerprinted, songsWithFingerprint: crate.tracks.filter { $0.fingerprint != nil }.count,
-            songsRead: state.tally.figures.songs, filesFound: max(state.total, result.filesSeen))
+            songsRead: max(0, state.tally.figures.songs - droppedFromScreen), filesFound: max(state.total, result.filesSeen))
         state.lock.unlock()
         report.secondsBefore = partsBefore
         report.jobsBy = disc != nil ? DeskJobs.Reason.disc.rawValue : jobsBy?.rawValue
@@ -908,8 +985,8 @@ public final class DeskRun: @unchecked Sendable {
         try Self.appendRun(line, to: shelf.file(Self.runsFile, of: crateId))
         // A stopped run stays pending, so Carry on reads the rest.
         if !result.stopped { try? DeckieFiles.remove(pendingURL) }
-        // "That's the lot" only when it is: a stopped run has more to read.
-        if !result.stopped {
+        // "That's the lot" only when it is: a stopped run has more to read, and so has one whose drive was taken out.
+        if !result.stopped && report.notReadGone == 0 {
             state.lock.lock(); let last = state.tally.finished(); state.lock.unlock()
             emit(.saving, nil, notes: [last])
         }

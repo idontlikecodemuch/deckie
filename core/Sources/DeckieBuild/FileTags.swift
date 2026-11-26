@@ -6,9 +6,11 @@ import Foundation
 /// 2.2 names) at the start of the file (MP3, FLAC or AAC with ID3 in front) or in a WAV or AIFF file's `id3 ` chunk;
 /// from a FLAC file's Vorbis comment (BPM, TITLE, ARTIST, ALBUM, TRACKNUMBER, INITIALKEY or KEY, COMMENT or
 /// DESCRIPTION); from a WAV file's LIST INFO chunk (INAM, IART, IPRD, ITRK, ICMT; its IKEY is "keywords", not a
-/// musical key, and is not read); and from an MP3's ID3v1 tag at its end, for what the ID3v2 tag does not have. The key
-/// is kept as written (`key`): `KeyNotation` reads it. MP4 tags are not read: those files cannot be decoded yet. Nothing
-/// is read but the tags, and a tag that does not hold together gives nothing rather than an error.
+/// musical key, and is not read); from an MP4's (`.m4a`, `.mp4`, `.m4b`) list of tags in `moov/udta/meta/ilst` (©nam,
+/// ©ART, ©alb, trkn, tmpo, ©cmt, and iTunes' free-form `----:com.apple.iTunes:` atoms named INITIALKEY, KEY or INITIAL
+/// KEY); and from an MP3's ID3v1 tag at its end, for what the ID3v2 tag does not have. The key is kept as written
+/// (`key`): `KeyNotation` reads it. Nothing is read but the tags, and a tag that does not hold together gives nothing
+/// rather than an error.
 public struct FileTags: Codable, Equatable, Sendable {
     public var bpm: Double?
     public var title: String?
@@ -46,6 +48,7 @@ public struct FileTags: Codable, Equatable, Sendable {
         func ascii(_ at: Int, _ s: String) -> Bool { Array(b[at..<(at + s.utf8.count)]) == Array(s.utf8) }
         if ascii(0, "RIFF") && ascii(8, "WAVE") { return riffTags(file, bigEndian: false) }
         if ascii(0, "FORM") && (ascii(8, "AIFF") || ascii(8, "AIFC")) { return riffTags(file, bigEndian: true) }
+        if ascii(4, "ftyp") { return mp4Tags(file) }
         var offset = 0
         var tags = FileTags()
         if ascii(0, "ID3") {
@@ -150,6 +153,63 @@ public struct FileTags: Codable, Equatable, Sendable {
         return tags
     }
 
+    /// The tags in an MP4's `ilst` (found by `FileFacts.mp4Items`, which the cover reader shares). Each item is a box
+    /// whose `data` boxes hold its value: four bytes of version and type (1 UTF-8, 2 UTF-16 big-endian; 0 and 21 the
+    /// number atoms), four of locale, then the value. Text is cut at a NUL and trimmed, and an empty one is no value,
+    /// as in an ID3v2 tag; the first item of a kind that gives a value is kept. A box whose length runs past the box
+    /// around it, or is shorter than its header, ends the reading of that box: what was read before it stays, nothing
+    /// is read from it.
+    static func mp4Tags(_ file: TagFile) -> FileTags {
+        guard let (m, ilst) = FileFacts.mp4Items(file) else { return FileTags() }
+        var tags = FileTags()
+        for (type, body) in MP4Boxes.strict(m, ilst) {
+            let item = MP4Boxes.strict(m, body)
+            func datas() -> [(kind: Int, value: ArraySlice<UInt8>)] {
+                item.compactMap { t, r in
+                    guard t == "data", r.count >= 8 else { return nil }
+                    let kind = Int(m[r.lowerBound + 1]) << 16 | Int(m[r.lowerBound + 2]) << 8 | Int(m[r.lowerBound + 3])
+                    return (kind, m[(r.lowerBound + 8)..<r.upperBound])
+                }
+            }
+            func text() -> String? { datas().lazy.compactMap { MP4Boxes.text(kind: $0.kind, $0.value) }.first }
+            switch type {
+            case "\u{A9}nam": tags.title = tags.title ?? text()
+            case "\u{A9}ART": tags.artist = tags.artist ?? text()
+            case "\u{A9}alb": tags.album = tags.album ?? text()
+            case "\u{A9}cmt": tags.comment = tags.comment ?? text()
+            case "trkn":
+                // Two bytes kept, the track number, the track count (and two more kept): the number is all we read.
+                let n = datas().lazy.compactMap { d -> Int? in
+                    guard d.kind == 0 || d.kind == 21, d.value.count >= 6 else { return nil }
+                    let a = Array(d.value)
+                    let n = Int(a[2]) << 8 | Int(a[3])
+                    return n > 0 ? n : nil
+                }.first
+                tags.trackNumber = tags.trackNumber ?? n
+            case "tmpo":
+                let v = datas().lazy.compactMap { d -> Double? in
+                    guard d.kind == 0 || d.kind == 21, let n = MP4Boxes.integer(d.value), n > 0 else { return nil }
+                    return FileTags.bpm(String(n))
+                }.first
+                tags.bpm = tags.bpm ?? v
+            case "----":
+                // iTunes' free-form atom: `mean` (four bytes of version and flags, then the name space), `name` (the
+                // same, then the name), then the value. Only Apple's name space, as Mixed In Key and iTunes write it.
+                func label(_ box: String) -> String? {
+                    guard let r = item.first(where: { $0.0 == box })?.1, r.count >= 4 else { return nil }
+                    return String(bytes: m[(r.lowerBound + 4)..<r.upperBound], encoding: .utf8)
+                }
+                guard label("mean")?.lowercased() == "com.apple.itunes", let name = label("name") else { continue }
+                switch name.lowercased() {
+                case "initialkey", "key", "initial key": tags.key = tags.key ?? text()
+                default: break
+                }
+            default: break
+            }
+        }
+        return tags
+    }
+
     /// The Vorbis comment of a FLAC file whose metadata blocks start at `at`.
     private static func flacComment(_ file: TagFile, at start: Int) -> FileTags {
         var at = start
@@ -196,6 +256,72 @@ public struct FileTags: Codable, Equatable, Sendable {
 func nonEmpty(_ s: String?) -> String? {
     guard let t = s?.trimmingCharacters(in: .whitespacesAndNewlines), !t.isEmpty else { return nil }
     return t
+}
+
+/// MP4 boxes for the tag reader: strict about lengths, never reading past the bytes.
+enum MP4Boxes {
+    /// The boxes inside `range` of `m`: each box's four-letter type and the range of its body. A box with a 64-bit
+    /// length (a length of 1, then eight bytes) is read; a length of 0 runs to the end of `range`. A length shorter than
+    /// the box's header, or one that runs past `range`, ends the list there.
+    static func strict(_ m: [UInt8], _ range: Range<Int>) -> [(String, Range<Int>)] {
+        guard range.lowerBound >= 0, range.upperBound <= m.count else { return [] }
+        var out: [(String, Range<Int>)] = []
+        var o = range.lowerBound
+        while range.upperBound - o >= 8 {
+            var size = Int(m[o]) << 24 | Int(m[o + 1]) << 16 | Int(m[o + 2]) << 8 | Int(m[o + 3])
+            var header = 8
+            if size == 1 {
+                guard range.upperBound - o >= 16, m[o + 8] < 0x80 else { break }
+                size = m[(o + 8)..<(o + 16)].reduce(0) { $0 << 8 | Int($1) }; header = 16
+            } else if size == 0 { size = range.upperBound - o }
+            guard size >= header, size <= range.upperBound - o else { break }
+            out.append((String(m[(o + 4)..<(o + 8)].map { Character(Unicode.Scalar($0)) }), (o + header)..<(o + size)))
+            o += size
+        }
+        return out
+    }
+
+    /// A `data` box's text: type 1 UTF-8 (not valid UTF-8 is no value), type 2 UTF-16 big-endian (a byte-order mark,
+    /// when there is one, is followed; an odd length is no value). Cut at a NUL and trimmed; empty is no value. Other
+    /// types are not text.
+    static func text(kind: Int, _ d: ArraySlice<UInt8>) -> String? {
+        var s: String
+        switch kind {
+        case 1:
+            guard let t = String(bytes: d, encoding: .utf8) else { return nil }
+            s = t
+        case 2:
+            guard d.count % 2 == 0 else { return nil }
+            let b = Array(d)
+            var i = 0
+            var bigEndian = true
+            if b.count >= 2 {
+                if b[0] == 0xFE && b[1] == 0xFF { i = 2 }
+                else if b[0] == 0xFF && b[1] == 0xFE { bigEndian = false; i = 2 }
+            }
+            var units: [UInt16] = []
+            while i + 1 < b.count {
+                units.append(bigEndian ? UInt16(b[i]) << 8 | UInt16(b[i + 1]) : UInt16(b[i + 1]) << 8 | UInt16(b[i]))
+                i += 2
+            }
+            if let nul = units.firstIndex(of: 0) { units = Array(units[..<nul]) }
+            s = String(decoding: units, as: UTF16.self)
+        default: return nil
+        }
+        if let nul = s.firstIndex(of: "\u{0}") { s = String(s[..<nul]) }
+        return nonEmpty(s)
+    }
+
+    /// A number atom's value: 1, 2, 4 or 8 bytes, big-endian, signed (type 21 is a signed integer; the tempo and the
+    /// number atoms are never large enough for the sign bit to be theirs). Nil for any other length.
+    static func integer(_ d: ArraySlice<UInt8>) -> Int? {
+        guard [1, 2, 4, 8].contains(d.count) else { return nil }
+        let bits = d.count * 8
+        let raw = d.reduce(UInt64(0)) { $0 << 8 | UInt64($1) }
+        if bits == 64 { return Int(Int64(bitPattern: raw)) }
+        let signBit = UInt64(1) << UInt64(bits - 1)
+        return raw & signBit != 0 ? Int(raw) - Int(UInt64(1) << UInt64(bits)) : Int(raw)
+    }
 }
 
 /// ID3v2 tags, versions 2.2, 2.3 and 2.4.

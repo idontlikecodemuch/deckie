@@ -165,6 +165,21 @@ A `line` is one of `{"kind": "started", "files": 40, "unchanged": 3, "queued": 3
 (part of a music CD's song 3 could not be read even on a second try: `sectors` of 1/75 s each were read as silence).
 A music CD's songs are named `Track 01.wav` and so on in `rel` (`.aiff` on the Mac).
 
+A drive taken out part-way (added Nov 25, 2026; no new protocol number, as only a reason code was added): a file
+that could not be read because the folder the run reads (a drive's top, or the folder chosen) was gone, could not be
+listed or held nothing any more, or its own folder was gone, has the reason `source_gone` (`reason.source_gone`, "The
+drive was taken out"), in a `notRead` line, the import log and the report's `not_in`, where it was `decode_error`
+before. When what was read is a folder, not a drive (not the top of a drive, nor a drive Desk lists; decided before
+the run reads anything), the reason is `folder_gone` ("The folder was moved or removed") instead. A song read before
+the place went whose signature or print could not then be made from its file is not kept half made: it is left out
+of the crate file with the same reason, and its analysis is kept, so adding the drive again finishes it without
+analysing it again. A file that cannot be read while its drive is there is still `decode_error`. The finished screen of
+a run with any of them says `goneTitle` and `goneBody` (the count of them; `goneTitle.folder` and `goneBody.folder`
+when only `folder_gone` songs were lost) in place of a tick and its usual title, and the engine sends no `finished`
+moment ("That's the lot") for it; adding the drive again reads only those songs, as neither code is ever taken as a
+lasting result. A page or window from before it shows the code's heading from the words the engine sends, or the
+code itself in words ("Source Gone") if it has none; it changes nothing else.
+
 ### The run screen (D37, added Nov 14, 2026; no new protocol number, as only an event was added)
 
 While a run goes, `run.songs` carries what the run screen draws: the songs that joined it, what is true of them, and
@@ -272,6 +287,13 @@ Every request gets a reply. While a run goes, only `state`, `drives.list`, `crat
 any other folder takes its own name, and the folders inside it are its groups. Two different folders with one name
 become "Name" and "Name 2". The run goes into the crate showing, or, on the first screen, into a new crate named after
 what is read.
+
+Since Nov 25, 2026 a drive is told apart by its own identity, not by its name or the path it is mounted at
+(`SourceIdentity`, `SourceNaming.choose`; the rule is in `desk-app/README.md`, "Add music"): two sticks both called
+"NO NAME" are two sources, "NO NAME" and "NO NAME 2", whichever path each is mounted at, and the same stick is the
+same source wherever it is mounted. Adding one source never takes another's songs. Nothing in the protocol changed:
+the reply's `source` and `run.started`'s `read` carry the name chosen, as before, and the identity is kept in Desk's
+own storage only.
 
 `crate.export` writes `<folder>/<crate name>.deckie` as **one file**, the single-file form of a crate file
 (`docs/architecture/crate-format.md`: the same files with the same bytes in one uncompressed archive), replacing a

@@ -120,15 +120,26 @@ public enum DeskDrives {
         return n.int64Value
     }
 
+    /// Whether a run of `url` reads a drive: the top of one (`isTopOfDrive`), or one of the drives listed
+    /// (`list`, stand-ins included). What a run says when the place goes away part-way depends on it ("The drive was
+    /// taken out", or "The folder was moved or removed"), so it is asked before the run reads anything.
+    public static func readsADrive(_ url: URL, environment: [String: String] = ProcessInfo.processInfo.environment) -> Bool {
+        let path = Folders.standardized(url, resolvingLinks: true).path
+        if list(environment: environment).contains(where: { Folders.standardized(URL(fileURLWithPath: $0.path), resolvingLinks: true).path == path }) {
+            return true
+        }
+        return environment[standInVariable]?.isEmpty == false ? false : isTopOfDrive(url)
+    }
+
     /// Whether `url` is the top of a drive (the root of a mounted volume, or a Windows drive's letter).
     public static func isTopOfDrive(_ url: URL) -> Bool {
-        let path = url.standardizedFileURL.path
+        let path = Folders.standardized(url).path
         #if os(macOS)
         let v = try? url.resourceValues(forKeys: [.volumeURLKey])
         return v?.volume?.standardizedFileURL.path == path
         #elseif os(Windows)
         let trimmed = url.withUnsafeFileSystemRepresentation { $0.map { String(cString: $0) } } ?? path
-        return trimmed.count <= 3 && trimmed.dropFirst().hasPrefix(":")
+        return (trimmed.count <= 3 && trimmed.dropFirst().hasPrefix(":")) || Folders.driveRoot(path) != nil
         #else
         return linuxMounts().contains(path)
         #endif
@@ -183,11 +194,16 @@ public enum DeskDrives {
 
     /// The mount points with their file system's type (the third field).
     static func linuxMountsWithTypes() -> [(path: String, type: String)] {
+        linuxMountTable().map { ($0.path, $0.type) }
+    }
+
+    /// Each mount with its device (the first field), mount point and file system's type, in the kernel's order.
+    static func linuxMountTable() -> [(device: String, path: String, type: String)] {
         guard let text = try? String(contentsOfFile: "/proc/self/mounts", encoding: .utf8) else { return [] }
         return text.split(separator: "\n").compactMap { line in
             let fields = line.split(separator: " ")
             guard fields.count > 2 else { return nil }
-            return (unescape(String(fields[1])), String(fields[2]))
+            return (unescape(String(fields[0])), unescape(String(fields[1])), String(fields[2]))
         }
     }
 

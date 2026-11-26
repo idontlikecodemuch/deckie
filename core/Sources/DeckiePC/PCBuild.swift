@@ -123,13 +123,14 @@ public struct PCBuild: Sendable {
     /// be written (a drive's top folder, a read-only disc), into `fallback` (the DJ's Documents folder).
     public static func plan(folder: URL, workRoot: URL = defaultWorkRoot, fallback: URL? = nil) throws -> Plan {
         let fm = FileManager.default
-        let folder = folder.standardizedFileURL
-        var isFolder: ObjCBool = false
-        guard fm.fileExists(atPath: folder.path, isDirectory: &isFolder) else { throw PCError.notThere(folder.path) }
-        guard isFolder.boolValue else { throw PCError.isAFile(folder.lastPathComponent) }
+        // Never `standardizedFileURL` on a drive's top: on Windows it turns `E:/` into a folder of the working folder.
+        let folder = Folders.standardized(folder)
+        guard fm.fileExists(atPath: folder.path) || Folders.isFolder(folder) else { throw PCError.notThere(folder.path) }
+        guard Folders.isFolder(folder) else { throw PCError.isAFile(folder.lastPathComponent) }
 
-        let parent = folder.deletingLastPathComponent().standardizedFileURL
-        let isTop = parent.path == folder.path || folder.pathComponents.count <= 1
+        let driveTop = Folders.driveRoot(of: folder) != nil
+        let parent = driveTop ? folder : Folders.standardized(folder.deletingLastPathComponent())
+        let isTop = driveTop || parent.path == folder.path || folder.pathComponents.count <= 1
         var name = isTop ? "" : folder.lastPathComponent
         // A drive's top folder has no name of its own ("D:\").
         name = name.trimmingCharacters(in: CharacterSet(charactersIn: "/\\: ")).isEmpty ? "Music" : name

@@ -85,7 +85,13 @@ func jobs(_ options: [String: String]) -> Int {
     return n
 }
 
-func url(_ path: String) -> URL { URL(fileURLWithPath: (path as NSString).expandingTildeInPath).standardizedFileURL }
+// A drive's top (`E:\`) is never standardised by Foundation, nor made from a bare `E:` (`Folders`); any other
+// path, a file's or a folder's, as before.
+func url(_ path: String) -> URL {
+    let expanded = (path as NSString).expandingTildeInPath
+    if Folders.driveRoot(expanded) != nil { return Folders.folderURL(expanded) }
+    return Folders.standardized(URL(fileURLWithPath: expanded))
+}
 
 // An interrupted run keeps every finished file in the work folder; say so.
 #if !os(Windows)

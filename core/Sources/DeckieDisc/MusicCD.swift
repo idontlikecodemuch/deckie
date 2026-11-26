@@ -388,7 +388,7 @@ public enum MusicCDs {
     /// Opens the music CD at `location` (as `list` gave it).
     public static func open(_ location: String, environment: [String: String] = ProcessInfo.processInfo.environment) throws -> MusicCD {
         if let stands = standIns(environment) {
-            guard let f = stands.first(where: { $0.standardizedFileURL.path == URL(fileURLWithPath: location).standardizedFileURL.path }) else {
+            guard let f = stands.first(where: { Folders.same($0, URL(fileURLWithPath: location)) }) else {
                 throw DiscError("no music CD at \(location)")
             }
             return SectorMusicCD(location: f.path, device: StandInDrive(folder: f))

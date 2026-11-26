@@ -665,7 +665,8 @@ public struct FileFacts: Equatable, Sendable {
                 guard let big = file.read(at: at + 8, count: 8) else { return nil }
                 boxSize = big.reduce(0) { $0 << 8 | Int($1) }; header = 16
             } else if boxSize == 0 { boxSize = size - at }
-            guard boxSize >= header else { return nil }
+            // A box longer than the file is a file cut short (or a wrong length): nothing after it can be found.
+            guard boxSize >= header, boxSize <= size - at else { return nil }
             if b[4...7].elementsEqual("moov".utf8) {
                 guard boxSize - header <= ID3.maxTagBytes, let moov = file.read(at: at + header, count: boxSize - header) else { return nil }
                 let m = [UInt8](moov)

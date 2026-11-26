@@ -19,16 +19,20 @@ public struct CrateInfo: Codable, Equatable, Hashable, Sendable {
     /// put in again. Its `sourceRoots` entry is the drive it was last read in; none of its music is kept (the note on
     /// D33, Nov 14).
     public var discs: [String: String]
+    /// The drive each source that is a drive or a folder was last read from, by its own identity (`SourceIdentity`),
+    /// by the source's name; none for a source read where the system gives no identity, or recorded before Nov 25,
+    /// 2026 (it is learned when the source is next read). `source_ids` in `crate.json`, left out when empty.
+    public var sourceIds: [String: SourceIdentity]
 
     public init(id: String, name: String, createdAt: Double, openedAt: Double, sourceRoots: [String: String] = [:],
-                musicFolder: String? = nil, discs: [String: String] = [:]) {
+                musicFolder: String? = nil, discs: [String: String] = [:], sourceIds: [String: SourceIdentity] = [:]) {
         self.id = id; self.name = name; self.createdAt = createdAt; self.openedAt = openedAt
-        self.sourceRoots = sourceRoots; self.musicFolder = musicFolder; self.discs = discs
+        self.sourceRoots = sourceRoots; self.musicFolder = musicFolder; self.discs = discs; self.sourceIds = sourceIds
     }
 
     enum CodingKeys: String, CodingKey {
         case id, name, createdAt = "created_at", openedAt = "opened_at", sourceRoots = "source_roots"
-        case musicFolder = "music_folder", discs
+        case musicFolder = "music_folder", discs, sourceIds = "source_ids"
     }
 
     public init(from decoder: Decoder) throws {
@@ -40,21 +44,38 @@ public struct CrateInfo: Codable, Equatable, Hashable, Sendable {
         sourceRoots = try c.decodeIfPresent([String: String].self, forKey: .sourceRoots) ?? [:]
         musicFolder = try c.decodeIfPresent(String.self, forKey: .musicFolder)
         discs = try c.decodeIfPresent([String: String].self, forKey: .discs) ?? [:]
+        // Identities this desk cannot read (written in a form a later desk chose) are no identities: those sources
+        // are then told apart by evidence (SourceNaming), and the crate still opens.
+        sourceIds = (try? c.decodeIfPresent([String: SourceIdentity].self, forKey: .sourceIds)) ?? [:]
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var c = encoder.container(keyedBy: CodingKeys.self)
+        try c.encode(id, forKey: .id)
+        try c.encode(name, forKey: .name)
+        try c.encode(createdAt, forKey: .createdAt)
+        try c.encode(openedAt, forKey: .openedAt)
+        try c.encode(sourceRoots, forKey: .sourceRoots)
+        try c.encodeIfPresent(musicFolder, forKey: .musicFolder)
+        try c.encode(discs, forKey: .discs)
+        // Left out when there are none, so a crate with no drive read keeps the bytes it had.
+        if !sourceIds.isEmpty { try c.encode(sourceIds, forKey: .sourceIds) }
     }
 
     /// Where each source that is a folder or a drive was read from. A music CD's drive is left out: its songs are
     /// not files there, and are found through the disc (`DeskAudio`).
     public var roots: [String: URL] {
-        sourceRoots.filter { discs[$0.key] == nil }.mapValues { URL(fileURLWithPath: $0) }
+        sourceRoots.filter { discs[$0.key] == nil }.mapValues { Folders.folderURL($0) }
     }
 
     /// A source taken out of the crate: where it was read from, and its disc id when it was a music CD.
-    public mutating func forget(source: String) { sourceRoots[source] = nil; discs[source] = nil }
+    public mutating func forget(source: String) { sourceRoots[source] = nil; discs[source] = nil; sourceIds[source] = nil }
 
-    /// A source renamed: where it was read from, and its disc id, follow the name.
+    /// A source renamed: where it was read from, its disc id and its drive's identity follow the name.
     public mutating func renameSource(_ old: String, to new: String) {
         if let p = sourceRoots.removeValue(forKey: old) { sourceRoots[new] = p }
         if let d = discs.removeValue(forKey: old) { discs[new] = d }
+        if let i = sourceIds.removeValue(forKey: old) { sourceIds[new] = i }
     }
     public var musicFolderURL: URL? { musicFolder.map { URL(fileURLWithPath: $0) } }
 }

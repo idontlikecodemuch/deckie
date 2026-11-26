@@ -78,7 +78,8 @@ enum HeadlessDesk {
                 } else {
                     info = try shelf.mostRecent ?? shelf.make(name: name)
                 }
-                request = RunRequest(folder: url, source: info.sourceName(name, root: url))
+                request = info.sourceRequest(name, root: url, crate: try? load(info, home),
+                                             paths: PlacePaths.load(from: shelf.file(DeskRun.placesFile, of: info.id)))
                 jobs = args.count >= 3 ? Int(args[2]) ?? 2 : 2
             }
             print("adding \(request.name) to \(info.name), \(jobs) at a time")

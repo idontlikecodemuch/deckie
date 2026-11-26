@@ -43,7 +43,16 @@
   /// A count as this computer's language writes it, its thousands grouped ("4,812" in English): every whole number a
   /// word is given goes through here (DeskWords.number says the same for the Mac and the engine).
   const grouped = (x) => (typeof x === "number" && Number.isInteger(x) ? x.toLocaleString() : String(x));
-  const fill = (tpl, v) => tpl.replace(/\{(\w+)\}/g, (m, k) => (v && v[k] != null ? grouped(v[k]) : m));
+  // A {detail} between sentences or at the end is a sentence of its own: a full stop after it when it has no mark of
+  // its own, and no double space when it is empty; one inside brackets is left as it is (DeskWords.fill does the same).
+  const sentence = (x) => { const s = String(x).trim(); return !s || /[.!?…]$/.test(s) ? s : s + "."; };
+  const fill = (tpl, v) => tpl
+    .replace(/ ?\{detail\}( |$)/g, (m, after) => {
+      if (!v || v.detail == null) return m;
+      const d = sentence(v.detail);
+      return d ? (m.startsWith(" ") ? " " : "") + d + after : (m.startsWith(" ") && after ? " " : "");
+    })
+    .replace(/\{(\w+)\}/g, (m, k) => (v && v[k] != null ? grouped(v[k]) : m));
   // {thisComputer} in any word: "this Mac" or "this computer", by the kind the engine says this computer is.
   let computer = "other";
   const withComputer = (v) => Object.assign({ thisComputer: W["thisComputer." + computer] ?? W["thisComputer.other"] ?? "" }, v || {});
@@ -195,7 +204,8 @@
         updateRun(); screen.progress(run); return;
       case "run.finished":
         dropCovers();
-        run = null; finished = m.report; $("disc-ask").hidden = true; announce(t("finishedTitle", { read: m.report.read, crate: m.report.crate }));
+        run = null; finished = m.report; $("disc-ask").hidden = true;
+        announce(goneCount(m.report) > 0 ? goneTitle(m.report) : t("finishedTitle", { read: m.report.read, crate: m.report.crate }));
         setTimeout(nextDrop, 0);
         break;
       case "run.failed":
@@ -343,6 +353,13 @@
   function cannotRead() { return !!(hello && hello.analysis && !hello.analysis.ready); }
   function sayCannotRead() { message([t("engineMissing"), t("engineMissingHelp")]); }
 
+  /// Songs not read because the drive was taken out part-way (`source_gone`, RunReport.notReadGone on the Mac): the
+  /// finished screen says so in place of a tick and "That's the lot".
+  const goneCount = (r) => ((r.not_in || {}).source_gone || 0) + ((r.not_in || {}).folder_gone || 0);
+  // A folder's words when the place gone was a folder, not a drive (RunReport.goneWasFolder, goneTitle, goneBody).
+  const goneWasFolder = (r) => (r.not_in || {}).folder_gone > 0 && !((r.not_in || {}).source_gone > 0);
+  const goneTitle = (r) => t(goneWasFolder(r) ? "goneTitle.folder" : "goneTitle");
+
   function drawFinished() {
     const r = finished;
     // The name the DJ gave the disc while it was read replaces the placeholder the report was written with.
@@ -351,9 +368,17 @@
     // Songs as the crate counts them: a song in two places once, as "That's the lot" and the sources say
     // (RunReport.songsRead; went_in counts files). An engine before it gives files only.
     const songsRead = r.songs_read != null ? r.songs_read : r.went_in;
-    $("finished-title").textContent = stopped ? n("stoppedTitle", songsRead, { read: named(r.read), crate: named(r.crate) })
+    const gone = goneCount(r);
+    $("finished-title").textContent = gone > 0 ? goneTitle(r)
+      : stopped ? n("stoppedTitle", songsRead, { read: named(r.read), crate: named(r.crate) })
       : t("finishedTitle", { read: named(r.read), crate: named(r.crate) });
-    $("finished-stopped").hidden = !stopped;
+    // A tick only for a run that read everything; a pause, as on the Mac, for one that stopped or lost its drive.
+    // (Each is an SVG element, which has no `hidden` property: the attribute is set.)
+    $("finished-tick").toggleAttribute("hidden", stopped || gone > 0);
+    $("finished-pause").toggleAttribute("hidden", !(stopped || gone > 0));
+    $("finished-stopped").hidden = !stopped || gone > 0;
+    $("finished-gone").hidden = gone === 0;
+    $("finished-gone").textContent = gone > 0 ? n(goneWasFolder(r) ? "goneBody.folder" : "goneBody", gone) : "";
     $("finished-carryon").hidden = !(stopped && state.pending && state.pending.here);
     // Take this back out: the source just read, while it is in the crate (research AE, problem 13).
     $("finished-takeout").hidden = !(current() && (current().sources || []).includes(named(r.read)));
