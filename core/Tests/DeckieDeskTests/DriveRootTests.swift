@@ -164,7 +164,8 @@ import WinSDK
     /// (`AudioFiles.isLeftOut`: "System Volume Information", a recycle bin, a hidden name), or on Windows it is a
     /// reparse point (`FILE_ATTRIBUTE_REPARSE_POINT` from `GetFileAttributesW` on the entry itself: a junction such as
     /// "Documents and Settings", whose target is refused), or Windows refuses to say (`GetFileAttributesW` fails with
-    /// `ERROR_ACCESS_DENIED`, which is not "not there": a missing entry still fails the check).
+    /// `ERROR_ACCESS_DENIED`, or with `ERROR_SHARING_VIOLATION` for a file Windows holds open; neither is "not there": a
+    /// missing entry still fails the check).
     static func refused(name: String, url: URL) -> String? {
         if AudioFiles.isLeftOut(name: name, url: url) { return "left out by the read" }
         #if os(Windows)
@@ -175,7 +176,13 @@ import WinSDK
             if a == DWORD.max { error = GetLastError() }
             return a
         }
-        if attributes == DWORD.max { return error == DWORD(ERROR_ACCESS_DENIED) ? "access denied" : nil }
+        if attributes == DWORD.max {
+            if error == DWORD(ERROR_ACCESS_DENIED) { return "access denied" }
+            // A file Windows itself holds open at the top of the system drive (DumpStack.log.tmp, pagefile.sys): it is
+            // listed, but Windows gives no answer about it (seen Nov 26, 2026, core-windows run 45730756711).
+            if error == DWORD(ERROR_SHARING_VIOLATION) { return "held open by Windows (sharing violation)" }
+            return nil
+        }
         if attributes & DWORD(FILE_ATTRIBUTE_REPARSE_POINT) != 0 { return "a junction or link (reparse point)" }
         #endif
         return nil
