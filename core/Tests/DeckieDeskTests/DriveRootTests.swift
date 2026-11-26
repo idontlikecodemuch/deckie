@@ -1,6 +1,9 @@
 import Foundation
 import Testing
 import DeckieCrate
+#if os(Windows)
+import WinSDK
+#endif
 @testable import DeckieBuild
 @testable import DeckieDesk
 
@@ -130,13 +133,23 @@ import DeckieCrate
             AudioFiles.walk(dir.url, below: dir.rel) { rel, _, url, type in below.append((rel, url, type == .typeDirectory)); return false }
             if !below.isEmpty { break }
         }
+        var checked = 0
         for e in entries.prefix(20) + below.prefix(20) {
             let line = "\(top.path) + \"\(e.rel)\" = \(e.url.path)"
             #expect(!e.rel.contains("\\") && !e.rel.contains(":") && !e.rel.hasPrefix("/"), "\(line)")
+            // An entry the system lists but will not answer about (a protected junction, a protected system folder)
+            // says nothing about paths: it is named and passed over, and every other entry is checked.
+            if let why = Self.refused(name: String(e.rel.split(separator: "/").last ?? ""), url: e.url) {
+                print("drive-root: \(line): not checked, \(why)")
+                continue
+            }
             #expect(FileManager.default.fileExists(atPath: e.url.path), "\(line)")
             // The URL Desk rebuilds from the source's root and the path below it (PlacePaths) is the same file.
             #expect(FileManager.default.fileExists(atPath: top.appendingPathComponent(e.rel).path), "\(line)")
+            checked += 1
         }
+        // Never vacuous: a top with names has entries the system answers about, and they were checked.
+        #expect(checked >= min(3, entries.count), "\(top.path): only \(checked) entries checked")
         let files = (entries + below).filter { !$0.folder }.map(\.rel)
         let places = SourceReading.places(source: source, paths: files)
         for rel in files {
@@ -145,6 +158,27 @@ import DeckieCrate
             #expect(rel.contains("/") ? !place.group.isEmpty : place.group.isEmpty, "\(rel): \(place)")
         }
         print("drive-root: \(top.path): \(entries.count) names at the top, \(below.count) in the first folder below, \(files.count) files placed")
+    }
+
+    /// Why the system will not answer about an entry it listed, or nil when it will: the read leaves it out anyway
+    /// (`AudioFiles.isLeftOut`: "System Volume Information", a recycle bin, a hidden name), or on Windows it is a
+    /// reparse point (`FILE_ATTRIBUTE_REPARSE_POINT` from `GetFileAttributesW` on the entry itself: a junction such as
+    /// "Documents and Settings", whose target is refused), or Windows refuses to say (`GetFileAttributesW` fails with
+    /// `ERROR_ACCESS_DENIED`, which is not "not there": a missing entry still fails the check).
+    static func refused(name: String, url: URL) -> String? {
+        if AudioFiles.isLeftOut(name: name, url: url) { return "left out by the read" }
+        #if os(Windows)
+        let path = url.withUnsafeFileSystemRepresentation { $0.map { String(cString: $0) } } ?? url.path
+        var error: DWORD = 0
+        let attributes = path.withCString(encodedAs: UTF16.self) { p -> DWORD in
+            let a = GetFileAttributesW(p)
+            if a == DWORD.max { error = GetLastError() }
+            return a
+        }
+        if attributes == DWORD.max { return error == DWORD(ERROR_ACCESS_DENIED) ? "access denied" : nil }
+        if attributes & DWORD(FILE_ATTRIBUTE_REPARSE_POINT) != 0 { return "a junction or link (reparse point)" }
+        #endif
+        return nil
     }
 
     /// The same paths and places for a folder of known files (every system).
