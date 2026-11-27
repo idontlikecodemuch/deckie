@@ -107,7 +107,10 @@ memo Q's vocal fields, `vocal_structure` and `hooks`, are instead left out when 
   song's number in that group, counted from 1 in the order a player shows (`SourceReading` in DeckieCrate, which holds
   the one rule); a file on the source that is not in the crate still holds its number, so a folder may have gaps. An
   entry with no `disc` has no source: it is only in a folder on the Mac, and its place is that folder (`rel`'s). Readers
-  show a source by `disc` itself, never by a word of their own. A source reads as it is, so the same file content on
+  show a source by `disc` itself, never by a word of their own. A source's name never makes `rel` look absolute (Nov
+  27, 2026): a Windows drive with no label is "Drive E", not its letter and a colon, and a name with "/" or "\", a
+  colon as its second character, or nothing but dots is made safe when the source is first named
+  (`SourceReading.safeName`); other names are kept exactly as they are. A source reads as it is, so the same file content on
   two sources is one entry (ids are unique): its own place is one of them, and the others are listed in
   `other_places` (D27, below). Earlier crate files may hold discs made by hand in Desk (D20); they read the same way.
   `cut_key` (D24, Nov 13, 2026; meaning only, the field is unchanged): entries with the same `cut_key` are copies of
