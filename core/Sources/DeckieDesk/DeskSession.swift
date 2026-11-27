@@ -154,7 +154,7 @@ public final class DeskSession {
     /// (`SourceNaming.choose`).
     public func addRequest(_ url: URL, name: String? = nil, identify: SourceIdentity.Reader = SourceIdentity.read,
                            size: (URL) -> Int? = SourceNaming.fileSize) -> RunRequest {
-        let base = name ?? DeskDrives.sourceName(of: url)
+        let base = SourceReading.safeName(name ?? DeskDrives.sourceName(of: url))
         guard let c = current else {
             var r = RunRequest(folder: url, source: base)
             r.volume = identify(url).identity
@@ -217,7 +217,7 @@ public final class DeskSession {
         try home.prepare()
         let record = try DiscRecords.prepare(cd, home: home)
         let placeholder = Self.placeholderName(record.toc)
-        let base = record.discTitle ?? placeholder
+        let base = SourceReading.safeName(record.discTitle ?? placeholder)
         // The same disc already a source of this crate keeps its name; another never takes a name in use.
         let existing = current?.discs.first { $0.value == record.toc.id }?.key
         let names = Set(current.map { Array($0.sourceRoots.keys) } ?? [])
@@ -312,8 +312,10 @@ public final class DeskSession {
 
     /// Corrects a source's name (D26) everywhere Desk keeps it: the crate, where it was read from, its paths.
     public func renameSource(_ name: String, to new: String) throws {
-        let n = new.trimmingCharacters(in: .whitespaces)
-        guard !n.isEmpty, n != name, crate != nil else { return }
+        let t = new.trimmingCharacters(in: .whitespaces)
+        guard !t.isEmpty else { return }
+        let n = SourceReading.safeName(t)   // a name the source's songs can be read again under (Nov 27, 2026)
+        guard n != name, crate != nil else { return }
         try change("undoRename") {
             crate!.renameDisc(name, to: n)
             current?.renameSource(name, to: n)
