@@ -190,14 +190,24 @@ public enum SourceNaming {
     /// place on it, is that source, whatever its name now and wherever the drive is mounted. Otherwise `name` itself
     /// when no source has it, or when the source of that name is this one (`same`); else "name 2", "name 3", ...,
     /// the first that is free or is this one. `taken`: names never free (the crate's music CDs).
-    public static func choose(_ name: String, root: URL, found: SourceIdentity.Found, recorded: [Recorded],
+    /// The name is made safe first (`SourceReading.safeName`), and a source recorded under a name whose songs' paths
+    /// the crate refuses (one named "E:" by a build before Nov 27, 2026, which could hold no songs) is never chosen:
+    /// the drive is read into a source of a safe name instead, and the run forgets the old one.
+    public static func choose(_ given: String, root: URL, found: SourceIdentity.Found, recorded all: [Recorded],
                               taken: Set<String> = [], size: (URL) -> Int? = fileSize) -> String {
+        let name = SourceReading.safeName(given)
+        let recorded = all.filter { SourceReading.keepsPathsRelative($0.name) }
         if let id = found.identity, let s = recorded.first(where: { $0.identity == id }) { return s.name }
         let byName = Dictionary(recorded.map { ($0.name, $0) }, uniquingKeysWith: { a, _ in a })
         func free(_ n: String) -> Bool {
             if taken.contains(n) { return false }
             guard let s = byName[n] else { return true }
             return same(s, root: root, found: found, size: size)
+        }
+        // A source read before names were made safe, whose songs went in under its name as it was ("A/B"), stays
+        // that source.
+        if name != given, !taken.contains(given), let s = byName[given], same(s, root: root, found: found, size: size) {
+            return given
         }
         if free(name) { return name }
         var k = 2

@@ -26,10 +26,43 @@ public enum SourceReading {
     }
 
     /// The source's name: the volume's own name when the folder is the top of a mounted volume, else the folder's
-    /// name. An empty or missing volume name falls back to the folder's.
+    /// name. An empty or missing volume name falls back to the folder's. The name is made safe (`safeName`).
     public static func name(volumeName: String?, folderName: String) -> String {
-        if let v = volumeName?.trimmingCharacters(in: .whitespacesAndNewlines), !v.isEmpty { return v }
-        return folderName
+        if let v = volumeName?.trimmingCharacters(in: .whitespacesAndNewlines), !v.isEmpty { return safeName(v) }
+        return safeName(folderName)
+    }
+
+    /// The name of a Windows drive with no label of its own: "Drive E" (Nov 27, 2026). Its letter and a colon ("E:")
+    /// made every song's path look like a path from the top of a disk, and the crate refused every song.
+    public static func driveName(letter: String) -> String { "Drive " + letter.uppercased() }
+
+    /// Whether the paths a source named `name` gives its songs (`name/...`) are relative, by the crate's own check
+    /// (`isAbsolute`, CrateValidation): a crate refuses every song of a source whose name fails it.
+    public static func keepsPathsRelative(_ name: String) -> Bool { !isAbsolute(name + "/x") }
+
+    /// A source's name with nothing that would break the paths of its songs (Nov 27, 2026). A name that is safe is
+    /// returned as it is, so a DJ's ordinary names never change. Otherwise: a drive's letter and a colon alone ("E:",
+    /// "E:\") is that drive's name (`driveName`); "/" and "\" become "-" (a Mac folder Finder shows as "A/B" is
+    /// really named "A:B"; a volume can be named anything); a colon as the second character becomes "-"; an empty name,
+    /// or one of dots only, is "Music".
+    public static func safeName(_ name: String) -> String {
+        if isSafeName(name) { return name }
+        let chars = Array(name)
+        if chars.count >= 2, chars.count <= 3, chars[0].isASCII, chars[0].isLetter, chars[1] == ":",
+           chars.count == 2 || chars[2] == "\\" || chars[2] == "/" {
+            return driveName(letter: String(chars[0]))
+        }
+        var n = name.replacingOccurrences(of: "/", with: "-").replacingOccurrences(of: "\\", with: "-")
+        if n.dropFirst().hasPrefix(":") { n = String(n.prefix(1)) + "-" + String(n.dropFirst(2)) }
+        return isSafeName(n) ? n : "Music"
+    }
+
+    /// Whether `name` may be a source's name as it is: not empty, not dots only, no "/" or "\", and its songs' paths
+    /// are relative (`keepsPathsRelative`).
+    public static func isSafeName(_ name: String) -> Bool {
+        let t = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        return !t.isEmpty && !t.allSatisfy { $0 == "." } && !name.contains("/") && !name.contains("\\")
+            && keepsPathsRelative(name)
     }
 
     /// The group of a file: its folder's path below the source's top, "" at the top. `path` is the file's path below

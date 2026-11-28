@@ -226,7 +226,9 @@ DJ can send back, and a report-only check on Windows for Arm.
 songs as the player shows it, names, CD-Text, the time it takes.
 - *Why:* this is how many DJs carry music; every disc figure so far is inferred (letters K, AA).
 - *Depends on:* a drive and real discs.
-- *State:* decided, not started. *Size:* medium.
+- *State:* decided, not started. *Size:* medium. Nov 27, 2026: a stick with no label, read whole in Desk for Windows,
+  had every song refused after it was analysed (the stick was named "E:"); it is named "Drive E" now, and a run stops
+  before reading anything when a source's name would break its songs' paths (branch `pc/drive-letter-name`).
 
 **Next-10. Desk for Windows signed.** The letter recommends the Microsoft Store for the first testers (free, no warning)
 and Azure Artifact Signing started in parallel (identity checks take days to weeks).

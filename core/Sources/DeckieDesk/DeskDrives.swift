@@ -93,7 +93,7 @@ public enum DeskDrives {
             guard let label = volumeLabel(root) else { continue }   // no medium in the drive
             // A music CD shows its songs as Track01.cda stubs; it is offered as a music CD instead (MusicCDs).
             if type == UINT(DRIVE_CDROM) && MusicCDs.isCDAudioRoot(URL(fileURLWithPath: root, isDirectory: true)) { continue }
-            drives.append(described(name: SourceReading.name(volumeName: label, folderName: letter + ":"), path: root,
+            drives.append(described(name: Self.name(label: label, letter: letter), path: root,
                                     kind: type == UINT(DRIVE_CDROM) ? Kind.cd : Kind.drive, environment: environment))
         }
         #else
@@ -168,13 +168,20 @@ public enum DeskDrives {
             return d.name
         }
         if trimmed.count <= 3, trimmed.dropFirst().hasPrefix(":") {   // a drive's top, not removable
-            return SourceReading.name(volumeName: volumeLabel(String(trimmed.prefix(2)) + "\\"), folderName: String(trimmed.prefix(2)))
+            return Self.name(label: volumeLabel(String(trimmed.prefix(2)) + "\\"), letter: String(trimmed.prefix(1)))
         }
-        return url.lastPathComponent
+        return SourceReading.name(volumeName: nil, folderName: url.lastPathComponent)
         #else
         if let d = list().first(where: { $0.path == path }) { return d.name }
-        return url.lastPathComponent
+        return SourceReading.name(volumeName: nil, folderName: url.lastPathComponent)
         #endif
+    }
+
+    /// A Windows drive's source name: its label, or, with none, "Drive E" (`SourceReading.driveName`, Nov 27, 2026),
+    /// never the letter and a colon, which made every song's path look like one from the top of a disk. Used by the
+    /// drive list and by `sourceName`, so the two always agree; on every system, so it is tested everywhere.
+    public static func name(label: String?, letter: String) -> String {
+        SourceReading.name(volumeName: label, folderName: SourceReading.driveName(letter: letter))
     }
 
     #if os(Windows)

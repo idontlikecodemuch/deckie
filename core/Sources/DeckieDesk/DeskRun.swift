@@ -577,6 +577,11 @@ public final class DeskRun: @unchecked Sendable {
 
     public func run(progress: @escaping @Sendable (RunProgress) -> Void = { _ in }) throws -> (crate: Crate, report: RunReport) {
         let t0 = Date()
+        // A source whose name gives its songs paths the crate refuses would have every song analysed and then refused
+        // (an unlabelled Windows drive named "E:", Nov 27, 2026): the run stops before it reads anything.
+        if let s = request.source, !SourceReading.keepsPathsRelative(s) {
+            throw DeskError(DeskWords.text("error.sourceNameBreaks", ["name": s]))
+        }
         try home.prepare()
         let shelf = home.shelf, store = home.store
         guard var info = shelf.info(crateId) else { throw DeskError(DeskWords.text("error.noCrate", ["id": crateId])) }
@@ -841,6 +846,8 @@ public final class DeskRun: @unchecked Sendable {
                 for (other, i) in info.sourceIds where other != s && i == id { info.sourceIds[other] = nil }
                 info.sourceIds[s] = id
             }
+            // A source kept under a name whose songs the crate refuses holds none ("E:", before Nov 27, 2026): forgotten.
+            for other in info.sourceRoots.keys where !SourceReading.keepsPathsRelative(other) { info.forget(source: other) }
         } else { info.musicFolder = folder.path }
         let roots = info.roots, music = info.musicFolderURL
         let todo = crate.tracks.filter { t in

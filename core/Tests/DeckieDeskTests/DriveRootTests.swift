@@ -1,6 +1,6 @@
 import Foundation
 import Testing
-import DeckieCrate
+@testable import DeckieCrate
 #if os(Windows)
 import WinSDK
 #endif
@@ -237,5 +237,35 @@ import WinSDK
         for name in ["PIONEER", "_Serato_", "Engine Library", "_old", "House"] {
             #expect(!AudioFiles.isLeftOut(name: name, url: stick.appendingPathComponent(name)), "\(name)")
         }
+    }
+
+    /// Every drive's source name, as the drive list gives it and as the name for a URL gives it, makes paths the crate
+    /// keeps (Nov 27, 2026: a stick with no label was named "E:", and every song of it was refused after it was
+    /// analysed). The runner's drives have labels, so a drive with none is tested through the seam (`DeskDrives.name`).
+    /// Each name is printed (`drive-root:` lines), pass or fail.
+    @Test func everyDrivesNameMakesPathsTheCrateKeeps() {
+        func check(_ made: String, _ name: String) {
+            let rel = name + "/x.mp3"
+            print("drive-root: \(made) = \"\(name)\", rel \"\(rel)\" absolute \(isAbsolute(rel))")
+            #expect(!name.dropFirst().hasPrefix(":"), "\(made): \(name)")
+            #expect(!isAbsolute(rel), "\(made): \(rel)")
+        }
+        for letter in ["C", "D", "E", "Z"] { check("name(label: \"\", letter: \(letter))", DeskDrives.name(label: "", letter: letter)) }
+        #expect(DeskDrives.name(label: "", letter: "E") == "Drive E" && DeskDrives.name(label: "USB", letter: "E") == "USB")
+        #if os(Windows)
+        let drive = (ProcessInfo.processInfo.environment["SystemDrive"] ?? "C:").uppercased()
+        let listed = DeskDrives.list(environment: ["SystemDrive": drive])
+        for d in listed {
+            check("list \(d.path)", d.name)
+            check("sourceName(of: \(d.path))", DeskDrives.sourceName(of: Folders.folderURL(d.path)))
+        }
+        for form in [drive, drive + "\\", drive + "/"] {
+            check("sourceName(of: \(form))", DeskDrives.sourceName(of: Folders.folderURL(form)))
+        }
+        // The label the system gives each letter, and the name made from it with no label.
+        let label = DeskDrives.volumeLabel(drive + "\\")
+        print("drive-root: label of \(drive) \"\(label ?? "nil")\", drives listed \(listed.count)")
+        check("name(label: nil, letter: \(drive.prefix(1)))", DeskDrives.name(label: nil, letter: String(drive.prefix(1))))
+        #endif
     }
 }

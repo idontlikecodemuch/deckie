@@ -1020,6 +1020,7 @@ public enum DeskWords {
         "error.thatSource": "that source",
         "error.notALibrary": "{file} is not a DJ library Desk reads (a rekordbox XML export, Traktor's collection.nml, Engine DJ's m.db, Serato's database V2 or VirtualDJ's database.xml)",
         "error.notInADrive": "{name} is not in a drive. Put {name} back in to carry on.",
+        "error.sourceNameBreaks": "Songs can't be kept under the name {name}, so Desk read nothing. Add the drive or folder again and Desk gives it a name that works.",
         "error.couldNotRead": "{name} could not be read ({detail}). Put {name} back in to carry on.",
         "error.newerHome": "{path} was made by a newer Deckie Desk (format {found}); this one reads format {format}",
 
